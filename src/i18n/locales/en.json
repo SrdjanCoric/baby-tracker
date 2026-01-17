@@ -1,0 +1,170 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "done": "Done",
+    "start": "Start",
+    "stop": "Stop",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "retry": "Retry",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "now": "Now"
+  },
+  "navigation": {
+    "timeline": "Timeline",
+    "log": "Log",
+    "statistics": "Statistics",
+    "settings": "Settings"
+  },
+  "feeding": {
+    "title": "Feeding",
+    "breast": "Breastfeed",
+    "bottle": "Bottle",
+    "solid": "Solid Food",
+    "leftSide": "Left",
+    "rightSide": "Right",
+    "bothSides": "Both",
+    "lastSide": "Last side: {{side}}",
+    "duration": "Duration",
+    "amount": "Amount",
+    "formula": "Formula",
+    "breastMilk": "Breast Milk",
+    "foodType": "Food Type",
+    "startFeeding": "Start Feeding",
+    "stopFeeding": "Stop Feeding"
+  },
+  "sleep": {
+    "title": "Sleep",
+    "nap": "Nap",
+    "night": "Night Sleep",
+    "startSleep": "Start Sleep",
+    "wakeUp": "Wake Up",
+    "duration": "Duration",
+    "sleepType": "Sleep Type"
+  },
+  "diaper": {
+    "title": "Diaper",
+    "wet": "Wet",
+    "dirty": "Dirty",
+    "mixed": "Mixed",
+    "stoolColor": "Stool Color",
+    "logDiaper": "Log Diaper"
+  },
+  "stoolColors": {
+    "yellow": "Yellow (mustard)",
+    "brown": "Brown",
+    "green": "Green",
+    "black": "Black (meconium)",
+    "white": "White/Pale",
+    "red": "Red-tinged",
+    "orange": "Orange"
+  },
+  "pumping": {
+    "title": "Pumping",
+    "startPumping": "Start Pumping",
+    "stopPumping": "Stop Pumping",
+    "amount": "Amount",
+    "side": "Side"
+  },
+  "growth": {
+    "title": "Growth",
+    "weight": "Weight",
+    "height": "Height",
+    "headCircumference": "Head Circumference",
+    "measurementDate": "Measurement Date",
+    "logMeasurement": "Log Measurement"
+  },
+  "tummyTime": {
+    "title": "Tummy Time",
+    "startTummyTime": "Start Tummy Time",
+    "stopTummyTime": "Stop Tummy Time",
+    "dailyGoal": "Daily Goal",
+    "progress": "Progress",
+    "goalComplete": "Goal Complete!"
+  },
+  "baby": {
+    "title": "Baby",
+    "name": "Name",
+    "birthDate": "Birth Date",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "addBaby": "Add Baby",
+    "editBaby": "Edit Baby",
+    "selectBaby": "Select Baby",
+    "age": "Age",
+    "weeks": "{{count}} week",
+    "weeks_plural": "{{count}} weeks",
+    "months": "{{count}} month",
+    "months_plural": "{{count}} months"
+  },
+  "settings": {
+    "title": "Settings",
+    "units": "Units",
+    "metric": "Metric (kg, cm, ml)",
+    "imperial": "Imperial (lbs, in, oz)",
+    "theme": "Theme",
+    "lightMode": "Light",
+    "darkMode": "Dark",
+    "nightMode": "Night",
+    "systemDefault": "System Default",
+    "notifications": "Notifications",
+    "feedingReminders": "Feeding Reminders",
+    "export": "Export Data",
+    "account": "Account",
+    "signOut": "Sign Out",
+    "deleteAccount": "Delete Account",
+    "about": "About",
+    "version": "Version",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "statistics": {
+    "title": "Statistics",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "totalFeedings": "Total Feedings",
+    "totalSleep": "Total Sleep",
+    "totalDiapers": "Total Diapers",
+    "averageFeedingDuration": "Avg. Feeding Duration",
+    "averageSleepDuration": "Avg. Sleep Duration"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "noEntries": "No entries yet",
+    "startTracking": "Start tracking your baby's activities",
+    "timeSince": "{{time}} ago"
+  },
+  "sync": {
+    "synced": "Synced",
+    "syncing": "Syncing...",
+    "offline": "Offline",
+    "pendingChanges": "{{count}} pending change",
+    "pendingChanges_plural": "{{count}} pending changes"
+  },
+  "household": {
+    "title": "Household",
+    "inviteCode": "Invite Code",
+    "joinHousehold": "Join Household",
+    "createHousehold": "Create Household",
+    "caregivers": "Caregivers",
+    "copied": "Copied to clipboard"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "invalidCode": "Invalid invite code",
+    "requiredField": "This field is required"
+  }
+}

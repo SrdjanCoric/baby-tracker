@@ -1,0 +1,1 @@
+export { useAppTranslation } from "./useAppTranslation";
