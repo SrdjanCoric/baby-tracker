@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 interface SettingsRowProps {
   icon: string;
@@ -77,7 +78,7 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="👶"
             label={t("baby.addBaby")}
-            onPress={() => {}}
+            onPress={() => router.push("/baby/add")}
           />
         </SettingsSection>
 
