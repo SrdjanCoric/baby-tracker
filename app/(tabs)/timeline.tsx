@@ -1,87 +1,139 @@
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useMemo, useCallback } from "react";
 import {
   TimelineItem,
   TimelineDayHeader,
   TimelineDivider,
 } from "@/components";
+import { useFeeding } from "@/contexts";
+import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
+import type { StoredFeedingEntry } from "@/services/feeding-storage";
 
-// Mock data for demonstration - will be replaced with real data
-const MOCK_TIMELINE = [
-  {
-    id: "1",
-    activity: "feeding" as const,
-    time: "2:30 PM",
-    title: "Bottle Feeding",
-    subtitle: "4 oz · Breast milk",
-  },
-  {
-    id: "2",
-    activity: "sleep" as const,
-    time: "1:45 PM",
-    title: "Nap ended",
-    subtitle: "Duration: 1h 15m",
-  },
-  {
-    id: "3",
-    activity: "diaper" as const,
-    time: "12:30 PM",
-    title: "Diaper Change",
-    subtitle: "Wet",
-  },
-  {
-    id: "4",
-    activity: "feeding" as const,
-    time: "11:00 AM",
-    title: "Breastfeeding",
-    subtitle: "Left side · 18 min",
-  },
-];
+interface TimelineEntry {
+  id: string;
+  activity: "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime";
+  time: string;
+  title: string;
+  subtitle: string;
+  date: Date;
+}
+
+interface GroupedEntries {
+  header: string;
+  dateLabel: string;
+  entries: TimelineEntry[];
+}
+
+function groupEntriesByDay(entries: TimelineEntry[]): GroupedEntries[] {
+  const grouped: Map<string, TimelineEntry[]> = new Map();
+
+  for (const entry of entries) {
+    const dateKey = entry.date.toDateString();
+    if (!grouped.has(dateKey)) {
+      grouped.set(dateKey, []);
+    }
+    grouped.get(dateKey)!.push(entry);
+  }
+
+  const result: GroupedEntries[] = [];
+  const now = new Date();
+
+  for (const [dateKey, dayEntries] of grouped) {
+    const date = new Date(dateKey);
+    const header = formatDayHeader(date, now);
+    const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+    dayEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    result.push({ header, dateLabel, entries: dayEntries });
+  }
+
+  result.sort((a, b) => {
+    const dateA = new Date(a.entries[0]?.date || 0);
+    const dateB = new Date(b.entries[0]?.date || 0);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  return result;
+}
 
 export default function TimelineScreen() {
   const { t } = useTranslation();
+  const { feedings } = useFeeding();
 
-  const hasEntries = MOCK_TIMELINE.length > 0;
+  const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
+    const date = new Date(feeding.startedAt);
+    const time = formatTime(date);
+
+    let title = "";
+    let subtitle = "";
+
+    if (feeding.type === "breast") {
+      title = t("feeding.breastfeeding");
+      const sideLabel = feeding.side === "left"
+        ? t("feeding.left")
+        : feeding.side === "right"
+          ? t("feeding.right")
+          : t("feeding.both");
+      const durationLabel = feeding.durationSeconds
+        ? formatDuration(feeding.durationSeconds, "short")
+        : "";
+      subtitle = durationLabel ? `${sideLabel} · ${durationLabel}` : sideLabel;
+    } else if (feeding.type === "bottle") {
+      title = t("feeding.bottle");
+      subtitle = feeding.amountMl ? `${feeding.amountMl} ml` : "";
+    } else {
+      title = t("feeding.solid");
+      subtitle = feeding.foodType || "";
+    }
+
+    return {
+      id: feeding.id,
+      activity: "feeding",
+      time,
+      title,
+      subtitle,
+      date,
+    };
+  }, [t]);
+
+  const timelineEntries = useMemo(() => {
+    const feedingEntries = feedings.map(feedingToTimelineEntry);
+    return feedingEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [feedings, feedingToTimelineEntry]);
+
+  const groupedEntries = useMemo(() => {
+    return groupEntriesByDay(timelineEntries);
+  }, [timelineEntries]);
+
+  const hasEntries = timelineEntries.length > 0;
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
       {hasEntries ? (
         <ScrollView className="flex-1">
-          <TimelineDayHeader title={t("common.today")} date="Jan 17" />
+          {groupedEntries.map((group) => (
+            <View key={group.header + group.dateLabel}>
+              <TimelineDayHeader title={group.header} date={group.dateLabel} />
 
-          {MOCK_TIMELINE.map((item, index) => (
-            <View key={item.id}>
-              <TimelineItem
-                activity={item.activity}
-                time={item.time}
-                title={item.title}
-                subtitle={item.subtitle}
-                onPress={() => {
-                  // Navigate to edit screen
-                }}
-              />
-              {index < MOCK_TIMELINE.length - 1 && <TimelineDivider />}
+              {group.entries.map((item, index) => (
+                <View key={item.id}>
+                  <TimelineItem
+                    activity={item.activity}
+                    time={item.time}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    onPress={() => {
+                      // Navigate to edit screen
+                    }}
+                  />
+                  {index < group.entries.length - 1 && <TimelineDivider />}
+                </View>
+              ))}
             </View>
           ))}
-
-          <TimelineDayHeader title={t("common.yesterday")} date="Jan 16" />
-
-          {/* More mock items for yesterday */}
-          <TimelineItem
-            activity="diaper"
-            time="8:00 PM"
-            title="Diaper Change"
-            subtitle="Mixed · Brown"
-            onPress={() => {}}
-          />
-          <TimelineDivider />
-          <TimelineItem
-            activity="sleep"
-            time="7:30 PM"
-            title="Night Sleep started"
-            onPress={() => {}}
-          />
         </ScrollView>
       ) : (
         <View className="flex-1 items-center justify-center px-6">
