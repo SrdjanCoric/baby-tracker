@@ -48,22 +48,12 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] BabyHeader component
   - [x] Home dashboard with 6 activity cards
   - [x] Dark mode support with useColorScheme
-- [x] Comprehensive Test Foundation (165 tests)
+- [x] Comprehensive Test Foundation (137 tests)
   - [x] Time utilities with tests (formatDuration, timeSince, calculateDuration, formatDayHeader)
   - [x] Volume utilities with tests (mlToOz, ozToMl, formatVolume, parseVolume)
   - [x] Activity constants with tests (STOOL_COLORS, ACTIVITY_CONFIG, type guards)
   - [x] Baby validators with tests (validateBabyName, validateBirthDate, calculateBabyAge)
   - [x] Feeding validators with tests (validateBreastfeeding, validateBottleFeeding)
-  - [x] BabyStorageService with tests (AsyncStorage CRUD operations)
-  - [x] BabyContext reducer with tests (state management)
-- [x] Baby Profile Management (Ready for Manual Testing)
-  - [x] BabyStorageService for AsyncStorage persistence
-  - [x] BabyContext provider with state management
-  - [x] BabyProfileForm component with validation
-  - [x] BabySelector component for switching babies
-  - [x] Add Baby screen (/baby/add)
-  - [x] Edit Baby screen (/baby/[id])
-  - [x] BabyHeader integrated with real data
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -72,7 +62,7 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
 |------|---------|-------------|--------|
 | 1 | Navigation with Expo Router | Tap between tabs | ✅ Done |
 | 2 | **UI/UX Foundation** (see below) | Visual design matches ui-ux-design-plan | ✅ Done |
-| 3 | Baby profile management | Add baby, see in header | ✅ Done |
+| 3 | Baby profile management | Add baby, see in header | Pending |
 | 4 | Breastfeeding timer | Start/stop timer, see in timeline | Pending |
 
 ---
@@ -992,13 +982,13 @@ appId: com.babytracker.app
 6. Build Add/Edit Baby screens
 
 **Definition of Done:**
-- [x] All unit tests pass
-- [ ] All component tests pass (skipped - React 19 peer dependency issues)
-- [ ] E2E test passes (Maestro not yet configured)
-- [x] Can add multiple babies
-- [x] Can edit baby profile
-- [x] Can switch between babies
-- [x] Selected baby persists across app restarts
+- [ ] All unit tests pass
+- [ ] All component tests pass
+- [ ] E2E test passes
+- [ ] Can add multiple babies
+- [ ] Can edit baby profile
+- [ ] Can switch between babies
+- [ ] Selected baby persists across app restarts
 
 ---
 

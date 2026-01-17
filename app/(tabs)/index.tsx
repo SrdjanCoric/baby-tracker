@@ -12,10 +12,7 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
 
-  // Mock state - will be replaced with real data from context/store
   const mockData = {
-    babyName: "Emma",
-    babyAge: "3 months old",
     feedingTimeSince: "2h 15m",
     sleepTimeSince: "45 min",
     diaperTimeSince: "1h 30m",
@@ -29,54 +26,36 @@ export default function HomeScreen() {
   };
 
   const handleAddFeeding = () => {
-    // Navigate to feeding screen or open modal
     console.log("Add feeding");
   };
 
   const handleAddSleep = () => {
-    // Navigate to sleep screen or start timer
     console.log("Add sleep");
   };
 
   const handleAddDiaper = () => {
-    // Navigate to diaper screen or quick log
     console.log("Add diaper");
   };
 
   const handleAddGrowth = () => {
-    // Navigate to growth tracking screen
     console.log("Add growth");
   };
 
   const handleAddPumping = () => {
-    // Navigate to pumping screen or start timer
     console.log("Add pumping");
   };
 
   const handleAddTummyTime = () => {
-    // Navigate to tummy time screen or start timer
     console.log("Add tummy time");
   };
 
-  const handleBabyPress = () => {
-    // Navigate to baby selection/management
-    console.log("Baby pressed");
-  };
-
   const handleSettingsPress = () => {
-    // Navigate to settings/profile
     router.push("/(tabs)/profile");
   };
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]}>
-      {/* Header with baby info */}
-      <BabyHeader
-        babyName={mockData.babyName}
-        babyAge={mockData.babyAge}
-        onBabyPress={handleBabyPress}
-        onSettingsPress={handleSettingsPress}
-      />
+      <BabyHeader onSettingsPress={handleSettingsPress} />
 
       <ScrollView
         className="flex-1"

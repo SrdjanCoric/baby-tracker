@@ -6,7 +6,7 @@ export interface BabyProfile {
   id?: string;
   name: string;
   birthDate?: Date;
-  gender?: "male" | "female" | "other";
+  gender?: "male" | "female";
   photoUri?: string;
 }
 

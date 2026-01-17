@@ -36,3 +36,11 @@ export {
   type TimelineActivityType,
   type TimelineDayHeaderProps,
 } from "./TimelineItem";
+
+// Baby profile components
+export {
+  BabyProfileForm,
+  type BabyProfileFormData,
+  type BabyProfileFormProps,
+} from "./BabyProfileForm";
+export { BabySelector, type BabySelectorProps } from "./BabySelector";
