@@ -5,13 +5,25 @@
 A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch support, home screen widgets, and real-time multi-caregiver sync.
 
 **Development Approach:**
+- **TDD (Test-Driven Development)** - ALWAYS write tests FIRST before implementing new features
+  - Write failing tests that define the expected behavior
+  - Implement the minimum code to make tests pass
+  - Refactor while keeping tests green
 - **Testable First** - Prioritize getting working, testable features before completing all infrastructure
-- Test-Driven Development (TDD) - Write tests first, then implement
 - Feature Branch Workflow - Each feature on separate branch, merge to main when complete
 - CI/CD with GitHub Actions - Automated testing on every PR
 - **Frontend Design Skill** - Use `/frontend-design` for all UI components to ensure production-grade, beautiful interfaces
 - **Create PR Skill** - Use `/createpr feature-name` to create pull requests with proper formatting
 - **Manual Developer Testing** - Every feature must be manually tested and verified by developer before merging
+
+**TDD Workflow for Every Feature:**
+1. Create feature branch
+2. Write unit tests for validators/utilities FIRST (these tests will fail)
+3. Implement validators/utilities to make tests pass
+4. Write integration tests if needed
+5. Implement UI components
+6. Manual testing
+7. Create PR
 
 ---
 
@@ -36,6 +48,12 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] BabyHeader component
   - [x] Home dashboard with 6 activity cards
   - [x] Dark mode support with useColorScheme
+- [x] Comprehensive Test Foundation (137 tests)
+  - [x] Time utilities with tests (formatDuration, timeSince, calculateDuration, formatDayHeader)
+  - [x] Volume utilities with tests (mlToOz, ozToMl, formatVolume, parseVolume)
+  - [x] Activity constants with tests (STOOL_COLORS, ACTIVITY_CONFIG, type guards)
+  - [x] Baby validators with tests (validateBabyName, validateBirthDate, calculateBabyAge)
+  - [x] Feeding validators with tests (validateBreastfeeding, validateBottleFeeding)
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
