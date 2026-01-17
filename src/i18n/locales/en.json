@@ -22,10 +22,12 @@
     "now": "Now"
   },
   "navigation": {
+    "home": "Home",
     "timeline": "Timeline",
     "log": "Log",
-    "statistics": "Statistics",
-    "settings": "Settings"
+    "statistics": "Stats",
+    "settings": "Settings",
+    "profile": "Profile"
   },
   "feeding": {
     "title": "Feeding",
