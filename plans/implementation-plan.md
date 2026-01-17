@@ -2749,6 +2749,11 @@ Every PR to main requires:
 5. Branch is up-to-date with main
 6. **Developer manual testing completed and verified** (see below)
 
+### Commit Message Guidelines
+- **Never** add "Co-Authored-By" lines to commits
+- **Never** reference AI tools or assistants in commits or PRs
+- Write clear, concise commit messages describing the changes
+
 ---
 
 ## Manual Developer Testing & Progress Tracking
