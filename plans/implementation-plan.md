@@ -5,11 +5,40 @@
 A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch support, home screen widgets, and real-time multi-caregiver sync.
 
 **Development Approach:**
+- **Testable First** - Prioritize getting working, testable features before completing all infrastructure
 - Test-Driven Development (TDD) - Write tests first, then implement
 - Feature Branch Workflow - Each feature on separate branch, merge to main when complete
 - CI/CD with GitHub Actions - Automated testing on every PR
-- **Frontend Design Skill** - Use for all UI components to ensure production-grade, beautiful interfaces
+- **Frontend Design Skill** - Use `/frontend-design` for all UI components to ensure production-grade, beautiful interfaces
+- **Create PR Skill** - Use `/createpr feature-name` to create pull requests with proper formatting
 - **Manual Developer Testing** - Every feature must be manually tested and verified by developer before merging
+
+---
+
+## Current Progress
+
+### Completed
+- [x] Expo + TypeScript project with NativeWind v4
+- [x] Path aliases and folder structure
+- [x] Vitest for unit tests
+- [x] i18n with i18next + English translations
+- [x] Base UI components (Button, Card, Input)
+- [x] ESLint 9 + Prettier + GitHub Actions CI
+
+### Next Milestone: Testable App
+**Goal:** Navigation + Baby Profile + First Tracking Feature
+
+| Step | Feature | Manual Test |
+|------|---------|-------------|
+| 1 | Navigation with Expo Router | Tap between tabs |
+| 2 | Baby profile management | Add baby, see in header |
+| 3 | Breastfeeding timer | Start/stop timer, see in timeline |
+
+### Deferred Until Later
+- Supabase backend (needs UI first)
+- PowerSync offline sync (needs UI first)
+- Dark/Night mode toggle
+- Maestro E2E tests
 
 ---
 
