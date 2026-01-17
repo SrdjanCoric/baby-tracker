@@ -19,7 +19,10 @@
     "retry": "Retry",
     "today": "Today",
     "yesterday": "Yesterday",
-    "now": "Now"
+    "now": "Now",
+    "timer": "Timer",
+    "stopTimer": "Stop Timer",
+    "noBabySelected": "No baby selected"
   },
   "navigation": {
     "home": "Home",
@@ -32,11 +35,15 @@
   "feeding": {
     "title": "Feeding",
     "breast": "Breastfeed",
+    "breastfeeding": "Breastfeeding",
     "bottle": "Bottle",
     "solid": "Solid Food",
-    "leftSide": "Left",
-    "rightSide": "Right",
-    "bothSides": "Both",
+    "left": "Left",
+    "right": "Right",
+    "both": "Both",
+    "leftSide": "Left Side",
+    "rightSide": "Right Side",
+    "bothSides": "Both Sides",
     "lastSide": "Last side: {{side}}",
     "duration": "Duration",
     "amount": "Amount",
@@ -44,7 +51,13 @@
     "breastMilk": "Breast Milk",
     "foodType": "Food Type",
     "startFeeding": "Start Feeding",
-    "stopFeeding": "Stop Feeding"
+    "stopFeeding": "Stop Feeding",
+    "startBreastfeeding": "Start Breastfeeding",
+    "selectSideToStart": "Select a side to start the timer",
+    "suggested": "Suggested",
+    "suggestedSideHint": "{{side}} is suggested based on your last feeding",
+    "timerRunning": "Timer running",
+    "tapToStop": "Tap to stop"
   },
   "sleep": {
     "title": "Sleep",
