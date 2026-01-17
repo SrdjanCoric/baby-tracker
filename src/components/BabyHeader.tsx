@@ -1,80 +1,112 @@
-import { Pressable, Text, View, Image } from "react-native";
-import { forwardRef } from "react";
+import { Pressable, Text, View } from "react-native";
+import { forwardRef, useCallback } from "react";
+import { router } from "expo-router";
+import { useBaby } from "@/contexts";
+import { BabySelector } from "./BabySelector";
 
 interface BabyHeaderProps {
-  babyName?: string;
-  babyAge?: string;
-  photoUri?: string;
-  onBabyPress?: () => void;
   onSettingsPress?: () => void;
   testID?: string;
 }
 
 const BabyHeader = forwardRef<View, BabyHeaderProps>(
-  (
-    {
-      babyName = "Add Baby",
-      babyAge,
-      photoUri,
-      onBabyPress,
-      onSettingsPress,
-      testID,
-    },
-    ref
-  ) => {
+  ({ onSettingsPress, testID }, ref) => {
+    const { selectedBaby, isLoading } = useBaby();
+
+    const handleAddBaby = useCallback(() => {
+      router.push("/baby/add");
+    }, []);
+
+    const handleEditBaby = useCallback(() => {
+      if (selectedBaby) {
+        router.push(`/baby/${selectedBaby.id}`);
+      }
+    }, [selectedBaby]);
+
+    if (isLoading) {
+      return (
+        <View
+          ref={ref}
+          testID={testID}
+          className="flex-row items-center justify-between px-4 py-3"
+        >
+          <View className="flex-row items-center flex-1">
+            <View className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mr-3" />
+            <View>
+              <View className="w-24 h-5 rounded bg-gray-200 dark:bg-gray-700 mb-1" />
+              <View className="w-16 h-4 rounded bg-gray-100 dark:bg-gray-800" />
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    if (!selectedBaby) {
+      return (
+        <View
+          ref={ref}
+          testID={testID}
+          className="flex-row items-center justify-between px-4 py-3"
+        >
+          <Pressable
+            onPress={handleAddBaby}
+            className="flex-row items-center flex-1 active:opacity-70"
+            accessibilityRole="button"
+            accessibilityLabel="Add your first baby"
+          >
+            <View className="w-12 h-12 rounded-full bg-action-primary/10 dark:bg-action-dark-primary/20 items-center justify-center mr-3">
+              <Text className="text-2xl">➕</Text>
+            </View>
+            <Text className="text-lg font-semibold text-action-primary dark:text-action-dark-primary">
+              Add Baby
+            </Text>
+          </Pressable>
+
+          {onSettingsPress && (
+            <Pressable
+              onPress={onSettingsPress}
+              className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+            >
+              <Text className="text-xl">⚙️</Text>
+            </Pressable>
+          )}
+        </View>
+      );
+    }
+
     return (
       <View
         ref={ref}
         testID={testID}
         className="flex-row items-center justify-between px-4 py-3"
       >
-        {/* Baby info */}
-        <Pressable
-          onPress={onBabyPress}
-          className="flex-row items-center flex-1 active:opacity-70"
-          accessibilityRole="button"
-          accessibilityLabel={`${babyName}${babyAge ? `, ${babyAge}` : ""}. Tap to change baby.`}
-        >
-          {/* Avatar */}
-          <View className="w-12 h-12 rounded-full bg-activity-feeding-muted items-center justify-center overflow-hidden mr-3">
-            {photoUri ? (
-              <Image
-                source={{ uri: photoUri }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            ) : (
-              <Text className="text-2xl">👶</Text>
-            )}
-          </View>
+        <View className="flex-1">
+          <BabySelector onAddBaby={handleAddBaby} />
+        </View>
 
-          {/* Name and age */}
-          <View className="flex-1">
-            <View className="flex-row items-center">
-              <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-                {babyName}
-              </Text>
-              <Text className="ml-1 text-content-tertiary dark:text-content-dark-tertiary">
-                ▾
-              </Text>
-            </View>
-            {babyAge && (
-              <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-                {babyAge}
-              </Text>
-            )}
-          </View>
-        </Pressable>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={handleEditBaby}
+            className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
+            accessibilityRole="button"
+            accessibilityLabel="Edit baby profile"
+          >
+            <Text className="text-lg">✏️</Text>
+          </Pressable>
 
-        {/* Settings button */}
-        <Pressable
-          onPress={onSettingsPress}
-          className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
-          accessibilityRole="button"
-          accessibilityLabel="Settings"
-        >
-          <Text className="text-xl">⚙️</Text>
-        </Pressable>
+          {onSettingsPress && (
+            <Pressable
+              onPress={onSettingsPress}
+              className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+            >
+              <Text className="text-xl">⚙️</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
     );
   }
