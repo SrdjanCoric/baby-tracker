@@ -24,15 +24,16 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
 - [x] i18n with i18next + English translations
 - [x] Base UI components (Button, Card, Input)
 - [x] ESLint 9 + Prettier + GitHub Actions CI
+- [x] Navigation with Expo Router (4 tabs: Timeline, Log, Statistics, Settings)
 
 ### Next Milestone: Testable App
 **Goal:** Navigation + Baby Profile + First Tracking Feature
 
-| Step | Feature | Manual Test |
-|------|---------|-------------|
-| 1 | Navigation with Expo Router | Tap between tabs |
-| 2 | Baby profile management | Add baby, see in header |
-| 3 | Breastfeeding timer | Start/stop timer, see in timeline |
+| Step | Feature | Manual Test | Status |
+|------|---------|-------------|--------|
+| 1 | Navigation with Expo Router | Tap between tabs | ✅ Done |
+| 2 | Baby profile management | Add baby, see in header | Pending |
+| 3 | Breastfeeding timer | Start/stop timer, see in timeline | Pending |
 
 ### Deferred Until Later
 - Supabase backend (needs UI first)
@@ -707,10 +708,10 @@ describe('Navigation', () => {
 4. Add navigation types
 
 **Definition of Done:**
-- [ ] All navigation tests pass
-- [ ] Tab bar renders with icons
-- [ ] Navigation between all screens works
-- [ ] Deep linking configured
+- [x] All navigation tests pass
+- [x] Tab bar renders with icons
+- [x] Navigation between all screens works
+- [x] Deep linking configured
 
 ---
 
