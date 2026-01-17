@@ -2,31 +2,59 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useMemo } from "react";
 import {
   BabyHeader,
   DashboardCard,
   TodaySummary,
 } from "@/components";
+import { useFeeding } from "@/contexts";
+import { timeSince } from "@/utils/time";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { feedings, activeTimer, getLastFeeding } = useFeeding();
+
+  const feedingTimeSince = useMemo(() => {
+    if (activeTimer?.isRunning) {
+      return t("common.now");
+    }
+    const lastFeeding = getLastFeeding();
+    if (!lastFeeding) {
+      return "--";
+    }
+    return timeSince(new Date(lastFeeding.startedAt));
+  }, [activeTimer, getLastFeeding, t]);
+
+  const isFeedingActive = activeTimer?.isRunning ?? false;
+
+  const todayFeedings = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return feedings.filter(f => new Date(f.startedAt) >= today);
+  }, [feedings]);
 
   const mockData = {
-    feedingTimeSince: "2h 15m",
     sleepTimeSince: "45 min",
     diaperTimeSince: "1h 30m",
     pumpingTimeSince: "4h 20m",
     tummyTimeTimeSince: "3h",
     growthTimeSince: "5 days",
     isSleeping: false,
-    todayFeedingTotal: "18 oz",
+    todayFeedingTotal: `${todayFeedings.length} feeding${todayFeedings.length !== 1 ? "s" : ""}`,
     todayNapCount: 3,
     todayDiaperCount: 6,
   };
 
   const handleAddFeeding = () => {
-    console.log("Add feeding");
+    router.push("/feeding/breastfeed");
+  };
+
+  const handleFeedingCardPress = () => {
+    if (isFeedingActive) {
+      router.push("/feeding/breastfeed");
+    }
   };
 
   const handleAddSleep = () => {
@@ -69,10 +97,12 @@ export default function HomeScreen() {
             <DashboardCard
               activity="feeding"
               label={t("feeding.title")}
-              timeSince={mockData.feedingTimeSince}
-              onPress={() => {}}
+              timeSince={feedingTimeSince}
+              isActive={isFeedingActive}
+              activeLabel={t("common.now")}
+              onPress={handleFeedingCardPress}
               onActionPress={handleAddFeeding}
-              actionLabel="+"
+              actionLabel={isFeedingActive ? undefined : "+"}
             />
             <DashboardCard
               activity="sleep"

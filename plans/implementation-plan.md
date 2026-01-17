@@ -48,7 +48,7 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] BabyHeader component
   - [x] Home dashboard with 6 activity cards
   - [x] Dark mode support with useColorScheme
-- [x] Comprehensive Test Foundation (165 tests)
+- [x] Comprehensive Test Foundation (203 tests)
   - [x] Time utilities with tests (formatDuration, timeSince, calculateDuration, formatDayHeader)
   - [x] Volume utilities with tests (mlToOz, ozToMl, formatVolume, parseVolume)
   - [x] Activity constants with tests (STOOL_COLORS, ACTIVITY_CONFIG, type guards)
@@ -64,6 +64,15 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Add Baby screen (/baby/add)
   - [x] Edit Baby screen (/baby/[id])
   - [x] BabyHeader integrated with real data
+- [x] Breastfeeding Timer (Ready for Manual Testing)
+  - [x] FeedingStorageService for AsyncStorage persistence (with 20 tests)
+  - [x] FeedingContext provider with timer state management (with 18 tests)
+  - [x] Breastfeeding screen with timer and side selection
+  - [x] Side memory (suggests opposite side from last feeding)
+  - [x] Timer persists through app restarts (via AsyncStorage)
+  - [x] Home screen shows time since last feeding
+  - [x] Timeline shows real feeding entries
+  - [ ] **REFACTOR NEEDED**: Migrate FeedingContext to Zustand store (see State Management Guidelines below)
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -73,7 +82,7 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
 | 1 | Navigation with Expo Router | Tap between tabs | ✅ Done |
 | 2 | **UI/UX Foundation** (see below) | Visual design matches ui-ux-design-plan | ✅ Done |
 | 3 | Baby profile management | Add baby, see in header | ✅ Done |
-| 4 | Breastfeeding timer | Start/stop timer, see in timeline | Pending |
+| 4 | Breastfeeding timer | Start/stop timer, see in timeline | ✅ Done |
 
 ---
 
