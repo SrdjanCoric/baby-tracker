@@ -24,22 +24,174 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
 - [x] i18n with i18next + English translations
 - [x] Base UI components (Button, Card, Input)
 - [x] ESLint 9 + Prettier + GitHub Actions CI
-- [x] Navigation with Expo Router (4 tabs: Timeline, Log, Statistics, Settings)
+- [x] Navigation with Expo Router (4 tabs: Home, Timeline, Stats, Profile)
+- [x] UI/UX Foundation with design system and core components
+  - [x] Design tokens (colors, typography, spacing) in tailwind.config.js
+  - [x] Activity-specific color palette (6 activities with unique colors)
+  - [x] DashboardCard component with time-since display
+  - [x] QuickActionButton component
+  - [x] TimerDisplay component
+  - [x] TimelineItem component
+  - [x] TodaySummary component
+  - [x] BabyHeader component
+  - [x] Home dashboard with 6 activity cards
+  - [x] Dark mode support with useColorScheme
 
 ### Next Milestone: Testable App
-**Goal:** Navigation + Baby Profile + First Tracking Feature
+**Goal:** Baby Profile + First Tracking Feature
 
 | Step | Feature | Manual Test | Status |
 |------|---------|-------------|--------|
 | 1 | Navigation with Expo Router | Tap between tabs | ✅ Done |
-| 2 | Baby profile management | Add baby, see in header | Pending |
-| 3 | Breastfeeding timer | Start/stop timer, see in timeline | Pending |
+| 2 | **UI/UX Foundation** (see below) | Visual design matches ui-ux-design-plan | ✅ Done |
+| 3 | Baby profile management | Add baby, see in header | Pending |
+| 4 | Breastfeeding timer | Start/stop timer, see in timeline | Pending |
+
+---
+
+## Step 2: UI/UX Foundation Implementation
+
+**Reference:** See `plans/ui-ux-design-plan.md` for complete design specifications.
+
+### Branch: `feature/ui-ux-foundation`
+**Scope:** Implement the visual design system and core UI components using `/frontend-design` skill
+
+### Tasks
+
+#### 2.1 Design System Setup
+Use `/frontend-design` to establish:
+
+1. **Color Palette** (from ui-ux-design-plan.md):
+   | Activity | Color | Hex |
+   |----------|-------|-----|
+   | Sleep | Soft Purple/Blue | #6B5B95 |
+   | Feeding | Soft Green | #88B04B |
+   | Diaper | Soft Peach | #F7CAC9 |
+   | Pumping | Light Blue | #92A8D1 |
+   | Growth | Teal | #009B77 |
+
+2. **Light Mode Colors**:
+   - Background: #FAFAFA
+   - Card background: #FFFFFF
+   - Primary text: #1A1A1A
+   - Secondary text: #6B6B6B
+   - Primary action: #2E7D32 (calming green)
+
+3. **Dark Mode Colors**:
+   - Background: #121212
+   - Card background: #1E1E1E
+   - Primary text: #FFFFFF
+   - Secondary text: #A0A0A0
+   - Primary action: #81C784
+
+4. **Typography**:
+   - Headers: 20-24pt, semibold
+   - Body: 16-18pt, regular
+   - Captions: 14pt, secondary color
+
+5. **Spacing**:
+   - Base unit: 16px
+   - Card padding: 16px
+   - Between cards: 12px
+   - Touch targets: minimum 48px (prefer 60px+)
+
+#### 2.2 Core Components to Create/Update
+Use `/frontend-design` for each:
+
+1. **Updated Bottom Tab Navigation**
+   - 4 tabs: Home, Timeline, Stats, Profile (not Settings)
+   - Consider FAB (Floating Action Button) for quick logging
+
+2. **Dashboard Cards** (Home Screen)
+   - "Time since" display prominently
+   - Activity-specific colors
+   - One-tap action buttons [+]
+   - Active timer highlight
+
+3. **Quick Action Buttons**
+   - Large touch targets (60px+)
+   - Color-coded by activity type
+   - Haptic feedback indication
+
+4. **Timer Display Component**
+   - Large, readable timer numbers
+   - Side selector (L/R) for breastfeeding
+   - Stop button prominent
+
+5. **Timeline Item Component**
+   - Color-coded activity icons
+   - Time display (not "X hours ago")
+   - Tap to edit functionality
+
+6. **Stat Cards**
+   - Large numbers, glanceable
+   - Comparison to previous day/week
+
+#### 2.3 Screen Layouts to Implement
+
+1. **Home/Dashboard Screen**
+   ```
+   ┌─────────────────────────────────────┐
+   │  [Baby Name & Photo]    [Settings]  │
+   ├─────────────────────────────────────┤
+   │  ┌──────────┐  ┌──────────┐        │
+   │  │ FEEDING  │  │  SLEEP   │        │
+   │  │ 2h 15m   │  │ Sleeping │        │
+   │  │  [+]     │  │  [Stop]  │        │
+   │  └──────────┘  └──────────┘        │
+   │  ┌──────────┐  ┌──────────┐        │
+   │  │  DIAPER  │  │  GROWTH  │        │
+   │  │  45 min  │  │  Track   │        │
+   │  │   [+]    │  │   [+]    │        │
+   │  └──────────┘  └──────────┘        │
+   │  ─────── TODAY ───────             │
+   │  Total: 18oz | 3 naps | 6 diapers  │
+   └─────────────────────────────────────┘
+   │  [Home]  [Timeline]  [Stats]  [Me] │
+   └─────────────────────────────────────┘
+   ```
+
+2. **Timeline Screen** (basic structure)
+3. **Statistics Screen** (basic structure)
+4. **Profile/Settings Screen** (basic structure)
+
+### Definition of Done
+- [x] Design tokens configured in NativeWind/Tailwind
+- [x] Color palette implemented (light + dark mode)
+- [x] Typography scale configured
+- [x] Spacing scale configured
+- [x] Dashboard cards component created
+- [x] Quick action buttons created
+- [x] Timer display component created
+- [x] Timeline item component created
+- [x] Home screen layout matches design
+- [x] All touch targets >= 48px
+- [x] Visual consistency across all screens
+- [x] `/frontend-design` skill used for each component
+- [x] Dark mode tested and working
 
 ### Deferred Until Later
 - Supabase backend (needs UI first)
 - PowerSync offline sync (needs UI first)
 - Dark/Night mode toggle
 - Maestro E2E tests
+
+### Future Enhancements (Post-MVP)
+
+#### Dashboard Customization
+**Branch:** `feature/dashboard-customization`
+
+1. **Custom Card Colors**
+   - Allow users to customize the color of each activity card
+   - Color picker UI in settings or long-press on card
+   - Persist color preferences in user settings
+   - Default colors remain as fallback
+
+2. **Drag-and-Drop Card Reordering**
+   - Allow users to reorder dashboard cards via drag-and-drop
+   - Use `react-native-reanimated` + `react-native-gesture-handler` for smooth animations
+   - Persist card order in user settings
+   - Reset to default option available
 
 ---
 
@@ -712,6 +864,51 @@ describe('Navigation', () => {
 - [x] Tab bar renders with icons
 - [x] Navigation between all screens works
 - [x] Deep linking configured
+
+---
+
+#### Branch: `feature/ui-ux-foundation`
+**Scope:** Implement visual design system and core UI components based on ui-ux-design-plan.md
+
+**Design:** Use `/frontend-design` skill to create:
+- Complete design system (colors, typography, spacing)
+- Dashboard with "time since" cards
+- Activity-specific color coding
+- Quick action components
+- Timer display component
+- All components optimized for one-handed, sleep-deprived parent use
+
+**Reference:** See `plans/ui-ux-design-plan.md` and "Step 2: UI/UX Foundation Implementation" section above for complete specifications.
+
+**Key Design Requirements:**
+- Maximum 2 taps to log any activity
+- Touch targets minimum 48px, prefer 60px+
+- "Time since last" prominently displayed
+- Auto-suggest opposite breast for feeding
+- Color-coded activities (Sleep: #6B5B95, Feeding: #88B04B, Diaper: #F7CAC9)
+
+**Tasks:**
+1. Configure design tokens in NativeWind/Tailwind config
+2. Update tab navigation to: Home, Timeline, Stats, Profile
+3. Create DashboardCard component with time-since display
+4. Create QuickActionButton component
+5. Create TimerDisplay component (for feeding/sleep)
+6. Create TimelineItem component
+7. Build Home/Dashboard screen layout
+8. Ensure dark mode support throughout
+
+**Definition of Done:**
+- [ ] Design tokens configured
+- [ ] Color palette implemented (light + dark)
+- [ ] Typography and spacing scales configured
+- [ ] DashboardCard component created
+- [ ] QuickActionButton component created
+- [ ] TimerDisplay component created
+- [ ] TimelineItem component created
+- [ ] Home screen matches ui-ux-design-plan layout
+- [ ] All touch targets >= 48px
+- [ ] Dark mode tested and working
+- [ ] `/frontend-design` skill used for components
 
 ---
 
@@ -1463,6 +1660,13 @@ describe('SettingsScreen', () => {
 - [ ] CI pipeline green
 - [ ] App runs on iOS simulator without crashes
 - [ ] App runs on Android emulator without crashes
+- [ ] UI/UX Foundation complete:
+  - [ ] Design tokens configured (colors, typography, spacing)
+  - [ ] Dashboard cards show "time since" prominently
+  - [ ] Activity color coding consistent
+  - [ ] All touch targets >= 48px
+  - [ ] Home screen matches ui-ux-design-plan layout
+  - [ ] Dark mode works throughout
 - [ ] Can add and switch between multiple babies
 - [ ] All tracking features work:
   - [ ] Breastfeeding with timer and side memory
