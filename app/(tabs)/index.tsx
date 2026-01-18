@@ -10,7 +10,7 @@ import {
   FeedingTypeMenu,
   type FeedingMenuOption,
 } from "@/components";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } from "@/contexts";
 import { timeSince, formatDate } from "@/utils/time";
 
 export default function HomeScreen() {
@@ -21,6 +21,7 @@ export default function HomeScreen() {
   const { getLastDiaper, getTodaysCounts } = useDiaper();
   const { activeTimer: pumpingActiveTimer, getLastPumping } = usePumping();
   const { getLastMeasurement } = useGrowth();
+  const { activeTimer: tummyTimeActiveTimer, getLastTummyTime, getDailyProgress } = useTummyTime();
   const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
@@ -82,6 +83,23 @@ export default function HomeScreen() {
     return formatDate(new Date(lastMeasurement.measuredAt));
   }, [getLastMeasurement]);
 
+  const tummyTimeTimeSince = useMemo(() => {
+    if (tummyTimeActiveTimer?.isRunning) {
+      return t("common.now");
+    }
+    const lastTummyTime = getLastTummyTime();
+    if (!lastTummyTime) {
+      return "--";
+    }
+    return timeSince(new Date(lastTummyTime.startedAt));
+  }, [tummyTimeActiveTimer, getLastTummyTime, t]);
+
+  const isTummyTimeActive = tummyTimeActiveTimer?.isRunning ?? false;
+
+  const tummyTimeProgress = useMemo(() => {
+    return getDailyProgress();
+  }, [getDailyProgress]);
+
   const todayFeedings = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -95,7 +113,6 @@ export default function HomeScreen() {
   }, [sleeps]);
 
   const mockData = {
-    tummyTimeTimeSince: "3h",
     todayFeedingTotal: todayFeedings.length.toString(),
     todayNapCount: todaySleeps.length,
   };
@@ -150,9 +167,15 @@ export default function HomeScreen() {
     }
   }, [isPumpingActive, router]);
 
-  const handleAddTummyTime = () => {
-    console.log("Add tummy time");
-  };
+  const handleAddTummyTime = useCallback(() => {
+    router.push("/tummyTime");
+  }, [router]);
+
+  const handleTummyTimeCardPress = useCallback(() => {
+    if (isTummyTimeActive) {
+      router.push("/tummyTime");
+    }
+  }, [isTummyTimeActive, router]);
 
   const handleSettingsPress = () => {
     router.push("/(tabs)/profile");
@@ -220,10 +243,13 @@ export default function HomeScreen() {
             <DashboardCard
               activity="tummyTime"
               label={t("tummyTime.title")}
-              timeSince={mockData.tummyTimeTimeSince}
-              onPress={() => {}}
+              timeSince={tummyTimeTimeSince}
+              isActive={isTummyTimeActive}
+              activeLabel={t("tummyTime.inProgress")}
+              onPress={handleTummyTimeCardPress}
               onActionPress={handleAddTummyTime}
-              actionLabel="+"
+              actionLabel={isTummyTimeActive ? undefined : "+"}
+              progress={tummyTimeProgress}
             />
             <DashboardCard
               activity="growth"

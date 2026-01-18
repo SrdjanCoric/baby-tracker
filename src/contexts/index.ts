@@ -15,3 +15,6 @@ export type { PumpingState, PumpingAction, ActivePumpingTimer } from "./pumping-
 
 export { GrowthProvider, useGrowth, growthReducer, initialGrowthState } from "./growth-context";
 export type { GrowthState, GrowthAction } from "./growth-context";
+
+export { TummyTimeProvider, useTummyTime, tummyTimeReducer, initialTummyTimeState } from "./tummyTime-context";
+export type { TummyTimeState, TummyTimeAction, ActiveTummyTimeTimer } from "./tummyTime-context";
