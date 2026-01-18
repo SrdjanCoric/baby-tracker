@@ -49,6 +49,7 @@
     "bothSides": "Both Sides",
     "lastSide": "Last side: {{side}}",
     "duration": "Duration",
+    "side": "Side",
     "amount": "Amount",
     "amountPlaceholder": "Enter amount",
     "formula": "Formula",
@@ -321,7 +322,17 @@
     "title": "Timeline",
     "noEntries": "No entries yet",
     "startTracking": "Start tracking your baby's activities",
-    "timeSince": "{{time}} ago"
+    "timeSince": "{{time}} ago",
+    "editEntry": "Edit Entry",
+    "deleteEntry": "Delete Entry",
+    "deleteConfirmTitle": "Delete Entry?",
+    "deleteConfirmMessage": "This action cannot be undone.",
+    "entryDeleted": "Entry deleted",
+    "entrySaved": "Entry saved",
+    "discardChangesTitle": "Discard Changes?",
+    "discardChangesMessage": "You have unsaved changes. Are you sure you want to discard them?",
+    "discard": "Discard",
+    "keepEditing": "Keep Editing"
   },
   "sync": {
     "synced": "Synced",

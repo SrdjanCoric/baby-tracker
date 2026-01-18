@@ -1899,7 +1899,7 @@ appId: com.babytracker.app
 
 ---
 
-#### Branch: `feature/edit-delete-entries`
+#### Branch: `feature/timeline-edit-delete` ✅ COMPLETED
 **Scope:** Edit and delete any logged entry
 
 **TDD Approach:**
@@ -1925,12 +1925,32 @@ describe('EditEntryScreen', () => {
 3. Add delete confirmation modal
 4. Update Timeline after edit/delete
 
+**Implementation:**
+- Created `app/edit/` folder with screens for all 6 activity types:
+  - `feeding.tsx` - handles breast, bottle, and solids editing
+  - `sleep.tsx` - handles sleep type and duration editing
+  - `diaper.tsx` - handles diaper type and stool color editing
+  - `pumping.tsx` - handles side, duration, and volume editing
+  - `growth.tsx` - handles weight, height, and head circumference editing
+  - `tummyTime.tsx` - handles duration editing
+- Each screen includes delete button with native Alert confirmation
+- Timeline items navigate to edit screens via `handleEditEntry` callback
+- Added translations for edit/delete UI elements
+- **Unsaved Changes Protection:**
+  - Uses `usePreventRemove` hook from `@react-navigation/native`
+  - When user swipes down or taps back with unsaved changes, shows confirmation dialog
+  - Dialog options: "Keep Editing" (cancel) or "Discard" (dismiss and lose changes)
+  - Change detection via `hasChanges` useMemo comparing current form state to original values
+  - `isInitialized` flag prevents false positives during initial form population
+- Modal presentation configured in root `_layout.tsx` with `gestureEnabled: true`
+
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Can edit all entry types
-- [ ] Can delete all entry types
-- [ ] Delete confirmation required
-- [ ] Timeline updates immediately
+- [x] All tests pass
+- [x] Can edit all entry types
+- [x] Can delete all entry types
+- [x] Delete confirmation required
+- [x] Timeline updates immediately
+- [x] Unsaved changes protection on swipe/back with confirmation dialog
 
 ---
 
@@ -2106,7 +2126,7 @@ describe('SettingsScreen', () => {
 - [ ] Timers survive app background
 - [ ] Timers survive app kill/restart
 - [ ] Timeline shows all entries correctly
-- [ ] Edit/delete works for all entry types
+- [x] Edit/delete works for all entry types
 - [ ] Basic statistics display correctly
 - [ ] Dark mode works
 - [ ] Night mode works
