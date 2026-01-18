@@ -10,8 +10,8 @@ import {
   FeedingTypeMenu,
   type FeedingMenuOption,
 } from "@/components";
-import { useFeeding, useSleep, useDiaper, usePumping } from "@/contexts";
-import { timeSince } from "@/utils/time";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth } from "@/contexts";
+import { timeSince, formatDate } from "@/utils/time";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -20,6 +20,7 @@ export default function HomeScreen() {
   const { sleeps, activeTimer: sleepActiveTimer, getLastSleep } = useSleep();
   const { getLastDiaper, getTodaysCounts } = useDiaper();
   const { activeTimer: pumpingActiveTimer, getLastPumping } = usePumping();
+  const { getLastMeasurement } = useGrowth();
   const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
@@ -73,6 +74,14 @@ export default function HomeScreen() {
 
   const isPumpingActive = pumpingActiveTimer?.isRunning ?? false;
 
+  const growthTimeSince = useMemo(() => {
+    const lastMeasurement = getLastMeasurement();
+    if (!lastMeasurement) {
+      return "--";
+    }
+    return formatDate(new Date(lastMeasurement.measuredAt));
+  }, [getLastMeasurement]);
+
   const todayFeedings = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -87,7 +96,6 @@ export default function HomeScreen() {
 
   const mockData = {
     tummyTimeTimeSince: "3h",
-    growthTimeSince: "5 days",
     todayFeedingTotal: todayFeedings.length.toString(),
     todayNapCount: todaySleeps.length,
   };
@@ -128,9 +136,9 @@ export default function HomeScreen() {
     router.push("/diaper");
   }, [router]);
 
-  const handleAddGrowth = () => {
-    console.log("Add growth");
-  };
+  const handleAddGrowth = useCallback(() => {
+    router.push("/growth");
+  }, [router]);
 
   const handleAddPumping = useCallback(() => {
     router.push("/pumping");
@@ -220,7 +228,7 @@ export default function HomeScreen() {
             <DashboardCard
               activity="growth"
               label={t("growth.title")}
-              timeSince={mockData.growthTimeSince}
+              timeSince={growthTimeSince}
               onPress={() => {}}
               onActionPress={handleAddGrowth}
               actionLabel="+"
