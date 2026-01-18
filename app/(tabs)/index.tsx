@@ -37,10 +37,21 @@ export default function HomeScreen() {
 
   const feedingSubtitle = useMemo(() => {
     if (feedingActiveTimer?.isRunning) return undefined;
-    const lastFeeding = getLastFeeding();
-    if (!lastFeeding || lastFeeding.type !== "breast") return undefined;
+
+    // Find the last breast feeding (not just any feeding)
+    const sortedFeedings = [...feedings].sort((a, b) =>
+      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    );
+    const lastBreastFeeding = sortedFeedings.find(f => f.type === "breast");
+
+    if (!lastBreastFeeding) return undefined;
+
+    // Only show suggested side if last breastfeeding was within 24 hours
+    const hoursSinceBreastfeeding = (Date.now() - new Date(lastBreastFeeding.startedAt).getTime()) / (1000 * 60 * 60);
+    if (hoursSinceBreastfeeding > 24) return undefined;
+
     return `Next: ${suggestedSide === "left" ? "Left" : "Right"} side`;
-  }, [feedingActiveTimer, getLastFeeding, suggestedSide]);
+  }, [feedingActiveTimer, feedings, suggestedSide]);
 
   const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
 
@@ -264,8 +275,6 @@ export default function HomeScreen() {
       router.push("/feeding/bottle");
     } else if (option === "solids") {
       router.push("/feeding/solids");
-    } else if (option === "manual") {
-      router.push("/feeding/manual");
     }
   }, [router]);
 

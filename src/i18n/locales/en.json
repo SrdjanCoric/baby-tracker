@@ -98,7 +98,13 @@
     "howDidBabyLikeIt": "How did baby like it?",
     "loved": "Loved it",
     "meh": "Meh",
-    "refused": "Refused"
+    "refused": "Refused",
+    "logPastBreastfeeding": "Log Past Breastfeeding",
+    "logPastBottle": "Log Past Bottle Feeding",
+    "logPastSolid": "Log Past Solid Food",
+    "selectContentAndAmount": "Please select what's in the bottle and enter an amount",
+    "enterAmountValidation": "Please enter the amount",
+    "enterFoodValidation": "Please enter or select a food"
   },
   "sleep": {
     "title": "Sleep",
