@@ -1,4 +1,4 @@
-import type { BreastSide, FeedingType } from "@constants/activities";
+import type { BreastSide, FeedingType, BottleContentType } from "@constants/activities";
 
 export interface FeedingEntry {
   id?: string;
@@ -9,6 +9,7 @@ export interface FeedingEntry {
   endedAt?: Date;
   durationSeconds?: number;
   amountMl?: number;
+  contentType?: BottleContentType;
   foodType?: string;
   notes?: string;
 }
@@ -69,6 +70,19 @@ export function validateBottleAmount(amountMl: number | undefined, type: Feeding
   return null;
 }
 
+export function validateBottleContentType(contentType: BottleContentType | undefined, type: FeedingType): string | null {
+  if (type !== "bottle") {
+    return null;
+  }
+  if (!contentType) {
+    return "Content type is required for bottle feeding";
+  }
+  if (!["formula", "breastMilk"].includes(contentType)) {
+    return "Invalid content type";
+  }
+  return null;
+}
+
 export function validateBreastfeeding(entry: Partial<FeedingEntry>): FeedingValidationResult {
   const errors: Record<string, string> = {};
 
@@ -109,6 +123,9 @@ export function validateBottleFeeding(entry: Partial<FeedingEntry>): FeedingVali
 
   const amountError = validateBottleAmount(entry.amountMl, "bottle");
   if (amountError) errors.amountMl = amountError;
+
+  const contentTypeError = validateBottleContentType(entry.contentType, "bottle");
+  if (contentTypeError) errors.contentType = contentTypeError;
 
   return {
     isValid: Object.keys(errors).length === 0,
