@@ -2,7 +2,7 @@
  * Feeding storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { BreastSide, FeedingType } from "@/constants/activities";
+import type { BreastSide, FeedingType, BottleContentType } from "@/constants/activities";
 
 const FEEDINGS_KEY_PREFIX = "@feedings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_feeding_timer:";
@@ -16,6 +16,7 @@ export interface StoredFeedingEntry {
   endedAt?: string;
   durationSeconds?: number;
   amountMl?: number;
+  contentType?: BottleContentType;
   foodType?: string;
   notes?: string;
   createdAt: string;
@@ -30,6 +31,7 @@ export interface CreateFeedingInput {
   endedAt?: Date;
   durationSeconds?: number;
   amountMl?: number;
+  contentType?: BottleContentType;
   foodType?: string;
   notes?: string;
 }
@@ -38,6 +40,7 @@ export interface UpdateFeedingInput {
   endedAt?: Date;
   durationSeconds?: number;
   amountMl?: number;
+  contentType?: BottleContentType;
   foodType?: string;
   notes?: string;
   side?: BreastSide;
@@ -86,6 +89,7 @@ export const FeedingStorageService = {
       endedAt: input.endedAt?.toISOString(),
       durationSeconds: input.durationSeconds,
       amountMl: input.amountMl,
+      contentType: input.contentType,
       foodType: input.foodType,
       notes: input.notes,
       createdAt: now,
@@ -113,6 +117,7 @@ export const FeedingStorageService = {
       ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
       ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
       ...(input.amountMl !== undefined && { amountMl: input.amountMl }),
+      ...(input.contentType !== undefined && { contentType: input.contentType }),
       ...(input.foodType !== undefined && { foodType: input.foodType }),
       ...(input.notes !== undefined && { notes: input.notes }),
       ...(input.side !== undefined && { side: input.side }),

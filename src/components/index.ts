@@ -44,3 +44,9 @@ export {
   type BabyProfileFormProps,
 } from "./BabyProfileForm";
 export { BabySelector, type BabySelectorProps } from "./BabySelector";
+
+// Feeding components
+export {
+  FeedingTypeMenu,
+  type FeedingMenuOption,
+} from "./FeedingTypeMenu";
