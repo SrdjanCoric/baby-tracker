@@ -7,7 +7,7 @@ import {
   TimelineDayHeader,
   TimelineDivider,
 } from "@/components";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
@@ -16,6 +16,7 @@ import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredGrowthEntry } from "@/services/growth-storage";
+import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 
 interface TimelineEntry {
   id: string;
@@ -72,6 +73,7 @@ export default function TimelineScreen() {
   const { diapers } = useDiaper();
   const { pumpings } = usePumping();
   const { measurements } = useGrowth();
+  const { tummyTimes } = useTummyTime();
 
   const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
     const date = new Date(feeding.startedAt);
@@ -222,15 +224,36 @@ export default function TimelineScreen() {
     };
   }, [t]);
 
+  const tummyTimeToTimelineEntry = useCallback((tummyTime: StoredTummyTimeEntry): TimelineEntry => {
+    const date = new Date(tummyTime.startedAt);
+    const time = formatTime(date);
+
+    const title = t("tummyTime.title");
+    const durationLabel = tummyTime.durationSeconds
+      ? formatDuration(tummyTime.durationSeconds, "short")
+      : "";
+    const subtitle = durationLabel;
+
+    return {
+      id: tummyTime.id,
+      activity: "tummyTime",
+      time,
+      title,
+      subtitle,
+      date,
+    };
+  }, [t]);
+
   const timelineEntries = useMemo(() => {
     const feedingEntries = feedings.map(feedingToTimelineEntry);
     const sleepEntries = sleeps.map(sleepToTimelineEntry);
     const diaperEntries = diapers.map(diaperToTimelineEntry);
     const pumpingEntries = pumpings.map(pumpingToTimelineEntry);
     const growthEntries = measurements.map(growthToTimelineEntry);
-    const allEntries = [...feedingEntries, ...sleepEntries, ...diaperEntries, ...pumpingEntries, ...growthEntries];
+    const tummyTimeEntries = tummyTimes.map(tummyTimeToTimelineEntry);
+    const allEntries = [...feedingEntries, ...sleepEntries, ...diaperEntries, ...pumpingEntries, ...growthEntries, ...tummyTimeEntries];
     return allEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [feedings, sleeps, diapers, pumpings, measurements, feedingToTimelineEntry, sleepToTimelineEntry, diaperToTimelineEntry, pumpingToTimelineEntry, growthToTimelineEntry]);
+  }, [feedings, sleeps, diapers, pumpings, measurements, tummyTimes, feedingToTimelineEntry, sleepToTimelineEntry, diaperToTimelineEntry, pumpingToTimelineEntry, growthToTimelineEntry, tummyTimeToTimelineEntry]);
 
   const groupedEntries = useMemo(() => {
     return groupEntriesByDay(timelineEntries);

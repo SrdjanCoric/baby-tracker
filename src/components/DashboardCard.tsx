@@ -13,6 +13,7 @@ interface DashboardCardProps {
   onActionPress?: () => void;
   actionLabel?: string;
   testID?: string;
+  progress?: number;
 }
 
 const activityConfig: Record<
@@ -74,6 +75,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
       onActionPress,
       actionLabel = "+",
       testID,
+      progress,
     },
     ref
   ) => {
@@ -138,12 +140,35 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
               </Text>
             </View>
           ) : (
-            <Text
-              className="text-2xl font-bold"
-              style={{ color: textColor }}
-            >
-              {timeSince || "--:--"}
-            </Text>
+            <View>
+              <Text
+                className="text-2xl font-bold"
+                style={{ color: textColor }}
+              >
+                {timeSince || "--:--"}
+              </Text>
+              {progress !== undefined && (
+                <View className="mt-2">
+                  <View className="flex-row items-center">
+                    <View
+                      className="h-1.5 rounded-full flex-1 mr-2"
+                      style={{ backgroundColor: isDark ? "#3A3A3A" : "#E0E0E0" }}
+                    >
+                      <View
+                        className="h-1.5 rounded-full"
+                        style={{
+                          backgroundColor: progress >= 100 ? "#4CAF50" : config.accentColor,
+                          width: `${Math.min(100, progress)}%`
+                        }}
+                      />
+                    </View>
+                    <Text className="text-xs font-medium" style={{ color: secondaryTextColor }}>
+                      {progress}%
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
           )}
         </View>
 

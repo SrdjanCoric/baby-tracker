@@ -195,7 +195,22 @@
     "stopTummyTime": "Stop Tummy Time",
     "dailyGoal": "Daily Goal",
     "progress": "Progress",
-    "goalComplete": "Goal Complete!"
+    "goalComplete": "Goal Complete!",
+    "tapToStart": "Tap to start tracking tummy time",
+    "tapToStop": "Tap to stop",
+    "inProgress": "Tummy time in progress",
+    "timerRunning": "Timer is running",
+    "thisSession": "This session",
+    "todaysProgress": "Today's progress",
+    "today": "today",
+    "logPastTummyTime": "Log Past Tummy Time",
+    "pastTummyTimeTitle": "Log Past Tummy Time",
+    "startTime": "Start Time",
+    "durationMinutes": "Duration (minutes)",
+    "durationPlaceholder": "Enter duration",
+    "quickDurations": "Quick durations",
+    "notesPlaceholder": "Add notes (optional)",
+    "logManualTummyTime": "Save Tummy Time"
   },
   "baby": {
     "title": "Baby",

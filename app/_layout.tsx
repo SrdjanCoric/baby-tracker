@@ -2,7 +2,7 @@ import "../global.css";
 import "../src/i18n";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider } from "@/contexts";
+import { BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider } from "@/contexts";
 
 export default function RootLayout() {
   return (
@@ -12,52 +12,61 @@ export default function RootLayout() {
           <DiaperProvider>
             <PumpingProvider>
               <GrowthProvider>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen
-                    name="baby"
-                    options={{
-                      presentation: "modal",
-                      animation: "slide_from_bottom",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="feeding"
-                    options={{
-                      presentation: "modal",
-                      animation: "slide_from_bottom",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="sleep"
-                    options={{
-                      presentation: "modal",
-                      animation: "slide_from_bottom",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="diaper"
-                    options={{
-                      presentation: "modal",
-                      animation: "slide_from_bottom",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="pumping"
-                    options={{
-                      presentation: "modal",
-                      animation: "slide_from_bottom",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="growth"
-                    options={{
-                      presentation: "modal",
-                      animation: "slide_from_bottom",
-                    }}
-                  />
-                </Stack>
-                <StatusBar style="auto" />
+                <TummyTimeProvider>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen
+                      name="baby"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                      }}
+                    />
+                    <Stack.Screen
+                      name="feeding"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                      }}
+                    />
+                    <Stack.Screen
+                      name="sleep"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                      }}
+                    />
+                    <Stack.Screen
+                      name="diaper"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                      }}
+                    />
+                    <Stack.Screen
+                      name="pumping"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                      }}
+                    />
+                    <Stack.Screen
+                      name="growth"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                      }}
+                    />
+                    <Stack.Screen
+                      name="tummyTime"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                      }}
+                    />
+                  </Stack>
+                  <StatusBar style="auto" />
+                </TummyTimeProvider>
               </GrowthProvider>
             </PumpingProvider>
           </DiaperProvider>
