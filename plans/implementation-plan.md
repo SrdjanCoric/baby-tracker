@@ -147,11 +147,11 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Manual tummy time entry with quick duration buttons
   - [x] Home screen shows time since last session and daily progress %
   - [x] Timeline shows tummy time entries with duration
-- [ ] Tummy Time Smart Goals
-  - [ ] Age-based default goals (15-60 min based on baby age from AAP/WHO research)
-  - [ ] User customization with settings screen
-  - [ ] Goal suggestion modal at age milestones (1mo, 2mo, 3mo, 6mo)
-  - [ ] 6+ month transition messaging about floor play
+- [x] Tummy Time Smart Goals
+  - [x] Age-based default goals (15-60 min based on baby age from AAP/WHO research)
+  - [x] User customization with settings screen
+  - [x] Goal suggestion modal at age milestones (1mo, 2mo, 3mo, 6mo)
+  - [x] 6+ month transition messaging about floor play
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature

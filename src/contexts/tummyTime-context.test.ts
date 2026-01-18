@@ -182,6 +182,97 @@ describe("tummyTimeReducer", () => {
     });
   });
 
+  describe("SET_GOAL_SOURCE", () => {
+    it("should set goal source to age_based", () => {
+      const action: TummyTimeAction = { type: "SET_GOAL_SOURCE", payload: "age_based" };
+
+      const result = tummyTimeReducer(initialTummyTimeState, action);
+
+      expect(result.goalSource).toBe("age_based");
+    });
+
+    it("should set goal source to custom", () => {
+      const action: TummyTimeAction = { type: "SET_GOAL_SOURCE", payload: "custom" };
+
+      const result = tummyTimeReducer(initialTummyTimeState, action);
+
+      expect(result.goalSource).toBe("custom");
+    });
+  });
+
+  describe("SET_AGE_GROUP", () => {
+    it("should set current age group", () => {
+      const ageGroup = {
+        label: "1-2 months",
+        minAgeDays: 29,
+        maxAgeDays: 60,
+        defaultGoalSeconds: 30 * 60,
+        rationale: "WHO baseline",
+      };
+      const action: TummyTimeAction = { type: "SET_AGE_GROUP", payload: ageGroup };
+
+      const result = tummyTimeReducer(initialTummyTimeState, action);
+
+      expect(result.currentAgeGroup).toEqual(ageGroup);
+    });
+
+    it("should set age group to null", () => {
+      const state: TummyTimeState = {
+        ...initialTummyTimeState,
+        currentAgeGroup: {
+          label: "0-4 weeks",
+          minAgeDays: 0,
+          maxAgeDays: 28,
+          defaultGoalSeconds: 15 * 60,
+          rationale: "Realistic for newborns",
+        },
+      };
+      const action: TummyTimeAction = { type: "SET_AGE_GROUP", payload: null };
+
+      const result = tummyTimeReducer(state, action);
+
+      expect(result.currentAgeGroup).toBeNull();
+    });
+  });
+
+  describe("SET_SHOW_MILESTONE_SUGGESTION", () => {
+    it("should set show milestone suggestion to true", () => {
+      const action: TummyTimeAction = { type: "SET_SHOW_MILESTONE_SUGGESTION", payload: true };
+
+      const result = tummyTimeReducer(initialTummyTimeState, action);
+
+      expect(result.showMilestoneSuggestion).toBe(true);
+    });
+
+    it("should set show milestone suggestion to false", () => {
+      const state: TummyTimeState = { ...initialTummyTimeState, showMilestoneSuggestion: true };
+      const action: TummyTimeAction = { type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false };
+
+      const result = tummyTimeReducer(state, action);
+
+      expect(result.showMilestoneSuggestion).toBe(false);
+    });
+  });
+
+  describe("SET_SUGGESTED_GOAL", () => {
+    it("should set suggested goal seconds", () => {
+      const action: TummyTimeAction = { type: "SET_SUGGESTED_GOAL", payload: 2700 };
+
+      const result = tummyTimeReducer(initialTummyTimeState, action);
+
+      expect(result.suggestedGoalSeconds).toBe(2700);
+    });
+
+    it("should set suggested goal to null", () => {
+      const state: TummyTimeState = { ...initialTummyTimeState, suggestedGoalSeconds: 2700 };
+      const action: TummyTimeAction = { type: "SET_SUGGESTED_GOAL", payload: null };
+
+      const result = tummyTimeReducer(state, action);
+
+      expect(result.suggestedGoalSeconds).toBeNull();
+    });
+  });
+
   describe("Timer state management", () => {
     describe("START_TIMER", () => {
       it("should start timer", () => {
