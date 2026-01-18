@@ -127,6 +127,7 @@ interface TummyTimeContextValue extends TummyTimeState {
   getLastTummyTime: () => StoredTummyTimeEntry | null;
   getTodaysTotalSeconds: () => number;
   getDailyProgress: () => number;
+  getTodaysSessionCount: () => number;
   setDailyGoal: (goalSeconds: number) => Promise<void>;
   setCustomGoal: (goalSeconds: number) => Promise<void>;
   resetToAgeBasedGoal: () => Promise<void>;
@@ -307,6 +308,17 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     return Math.min(100, Math.round(percentage));
   }, [getTodaysTotalSeconds, state.dailyGoalSeconds]);
 
+  const getTodaysSessionCount = useCallback((): number => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return state.tummyTimes.filter(t => {
+      const tummyTimeDate = new Date(t.startedAt);
+      tummyTimeDate.setHours(0, 0, 0, 0);
+      return tummyTimeDate.getTime() === today.getTime();
+    }).length;
+  }, [state.tummyTimes]);
+
   const setDailyGoalCallback = useCallback(
     async (goalSeconds: number): Promise<void> => {
       if (!selectedBaby) return;
@@ -368,6 +380,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     getLastTummyTime,
     getTodaysTotalSeconds,
     getDailyProgress,
+    getTodaysSessionCount,
     setDailyGoal: setDailyGoalCallback,
     setCustomGoal,
     resetToAgeBasedGoal,
