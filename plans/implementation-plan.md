@@ -73,6 +73,15 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Home screen shows time since last feeding
   - [x] Timeline shows real feeding entries
   - [ ] **REFACTOR NEEDED**: Migrate FeedingContext to Zustand store (see State Management Guidelines below)
+- [x] Bottle Feeding (Ready for Manual Testing)
+  - [x] Bottle feeding validators with content type validation (5 new tests, 209 total)
+  - [x] BottleContentType added to activity constants
+  - [x] Storage service updated with contentType support
+  - [x] Bottle feeding screen with volume input (ml/oz toggle)
+  - [x] Quick amount buttons (1-6 oz or 30-180 ml)
+  - [x] Formula/Breast milk content type selection
+  - [x] FeedingTypeMenu modal for choosing feeding type from home
+  - [x] Timeline displays bottle feedings with content type and amount
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -1132,11 +1141,60 @@ describe('BottleFeedingForm', () => {
 4. Add bottle feeding to Timeline
 
 **Definition of Done:**
+- [x] All tests pass
+- [x] Volume input works in ml and oz
+- [ ] Unit preference persists (deferred - requires user settings feature)
+- [x] Formula/breast milk selection works
+- [x] Quick volume buttons (1oz, 2oz, etc.)
+
+---
+
+#### Branch: `feature/feeding-manual-entry`
+**Scope:** Manual/retroactive entry for breastfeeding and bottle feeding
+
+**Why This Feature:**
+- Parents often forget to start the timer, especially during night feedings
+- Another caregiver fed the baby and reports it verbally
+- Phone died or app crashed during feeding
+- Logging past feedings when first setting up the app
+
+**TDD Approach:**
+```typescript
+// Unit tests
+describe('Manual feeding validators', () => {
+  it('should validate start time is not in the future', () => {});
+  it('should validate end time is after start time', () => {});
+  it('should calculate duration from start and end time', () => {});
+  it('should validate duration is reasonable (1 min to 2 hours)', () => {});
+});
+
+// Component tests
+describe('ManualFeedingEntry', () => {
+  it('should render date/time picker for start time', () => {});
+  it('should render duration input or end time picker', () => {});
+  it('should show side selector for breastfeeding', () => {});
+  it('should save feeding with correct timestamps', () => {});
+});
+```
+
+**Tasks:**
+1. Add time validation utilities (not in future, reasonable duration)
+2. Create ManualFeedingEntry component with:
+   - Date/time picker for start time (defaults to now)
+   - Duration picker OR end time picker (user choice)
+   - Side selector (for breastfeeding)
+   - Content type selector (for bottle feeding)
+   - Amount input (for bottle feeding)
+3. Update FeedingTypeMenu to show "Log Past Feeding" option
+4. Add to breastfeeding screen: toggle between Timer and Manual modes
+
+**Definition of Done:**
 - [ ] All tests pass
-- [ ] Volume input works in ml and oz
-- [ ] Unit preference persists
-- [ ] Formula/breast milk selection works
-- [ ] Quick volume buttons (1oz, 2oz, etc.)
+- [ ] Can manually enter breastfeeding with start time, duration, and side
+- [ ] Can manually enter bottle feeding with start time and amount
+- [ ] Start time defaults to current time but can be changed
+- [ ] Validation prevents future times and unreasonable durations
+- [ ] Entries appear correctly in Timeline
 
 ---
 

@@ -10,6 +10,7 @@ export default function FeedingLayout() {
       }}
     >
       <Stack.Screen name="breastfeed" />
+      <Stack.Screen name="bottle" />
     </Stack>
   );
 }
