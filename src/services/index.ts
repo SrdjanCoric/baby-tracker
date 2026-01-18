@@ -24,3 +24,11 @@ export type {
   UpdateDiaperInput,
   DiaperCounts,
 } from "./diaper-storage";
+
+export { TummyTimeStorageService } from "./tummyTime-storage";
+export type {
+  StoredTummyTimeEntry,
+  CreateTummyTimeInput,
+  UpdateTummyTimeInput,
+  ActiveTummyTimeTimerData,
+} from "./tummyTime-storage";

@@ -136,6 +136,22 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Growth tracking screen with weight, height, head circumference inputs
   - [x] Home screen shows last measurement date
   - [x] Timeline shows growth entries with measurements
+- [x] Tummy Time Tracking (Ready for Manual Testing)
+  - [x] Tummy time validators with 48 tests (664 total)
+  - [x] validateTummyTimeStartTime, validateTummyTimeDuration, validateManualTummyTime
+  - [x] calculateDailyProgress, calculateTodaysTotalSeconds utility functions
+  - [x] TummyTimeStorageService for AsyncStorage persistence (23 tests)
+  - [x] TummyTimeContext provider with state management (16 tests)
+  - [x] Tummy time tracking screen with timer and progress ring
+  - [x] Daily goal with visual progress indicator
+  - [x] Manual tummy time entry with quick duration buttons
+  - [x] Home screen shows time since last session and daily progress %
+  - [x] Timeline shows tummy time entries with duration
+- [ ] Tummy Time Smart Goals
+  - [ ] Age-based default goals (15-60 min based on baby age from AAP/WHO research)
+  - [ ] User customization with settings screen
+  - [ ] Goal suggestion modal at age milestones (1mo, 2mo, 3mo, 6mo)
+  - [ ] 6+ month transition messaging about floor play
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -1653,11 +1669,11 @@ describe('TummyTimeGoalSetting', () => {
 5. Add celebration for goal completion
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Timer works correctly
-- [ ] Daily goal can be set
-- [ ] Progress toward goal displayed
-- [ ] Goal completion celebrated
+- [x] All tests pass
+- [x] Timer works correctly
+- [x] Daily goal can be set
+- [x] Progress toward goal displayed
+- [x] Goal completion celebrated
 
 ---
 
@@ -1683,12 +1699,68 @@ describe('Manual tummy time validators', () => {
 5. Add "Log Past Tummy Time" option accessible from home screen
 
 **Definition of Done:**
+- [x] All tests pass
+- [x] Can manually enter tummy time with start time and duration
+- [x] Start time defaults to current time but can be changed
+- [x] Manual entries count toward daily goal progress
+- [x] Validation prevents future times and unreasonable durations
+- [x] Entries appear correctly in Timeline
+
+---
+
+#### Branch: `feature/tummy-time-smart-goals`
+**Scope:** Age-based smart goals with user customization based on AAP/WHO research
+
+**Research-Backed Goals:**
+| Baby Age | Default Goal | Rationale |
+|----------|--------------|-----------|
+| 0-4 weeks | 15 min | Realistic for newborns |
+| 1-2 months | 30 min | WHO baseline |
+| 2-3 months | 45 min | Building toward 60 min |
+| 3-6 months | 60 min | AAP target |
+| 6+ months | 60 min | With transition note |
+
+**TDD Approach:**
+```typescript
+// Unit tests for goal utilities
+describe('Tummy time goal utilities', () => {
+  it('should return 15 min goal for 0-4 weeks', () => {});
+  it('should return 30 min goal for 1-2 months', () => {});
+  it('should return 45 min goal for 2-3 months', () => {});
+  it('should return 60 min goal for 3-6 months', () => {});
+  it('should return 60 min goal for 6+ months', () => {});
+  it('should return age group label for birthdate', () => {});
+  it('should suggest goal update when crossing milestone', () => {});
+});
+
+// Storage tests
+describe('TummyTimeStorageService goal methods', () => {
+  it('should detect if user has custom goal set', () => {});
+  it('should return age-based goal when no custom goal', () => {});
+  it('should return custom goal when set', () => {});
+  it('should track goal suggestion dismissals', () => {});
+});
+```
+
+**Tasks:**
+1. Add goal calculation utilities to `src/utils/tummyTime.ts`
+2. Update TummyTimeStorageService with hasCustomGoal, goal suggestion tracking
+3. Update TummyTimeContext with goalSource, setDailyGoal
+4. Create goal settings screen (`app/tummyTime/settings.tsx`)
+5. Add goal suggestion modal component
+6. Update main tummy time screen with settings link and goal source
+7. Add 6+ months transition note
+8. Add new translation keys
+
+**Definition of Done:**
 - [ ] All tests pass
-- [ ] Can manually enter tummy time with start time and duration
-- [ ] Start time defaults to current time but can be changed
-- [ ] Manual entries count toward daily goal progress
-- [ ] Validation prevents future times and unreasonable durations
-- [ ] Entries appear correctly in Timeline
+- [ ] Goal defaults to age-appropriate value based on baby birthdate
+- [ ] User can customize goal from settings screen
+- [ ] Goal source shown ("Based on AAP guidelines" vs "Your custom goal")
+- [ ] Suggestion modal appears when baby crosses age milestone
+- [ ] User can dismiss suggestion or update goal
+- [ ] 6+ month babies see transition note about floor play
+- [ ] Custom goal persists and isn't overwritten
 
 ---
 
