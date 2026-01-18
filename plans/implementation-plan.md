@@ -72,7 +72,6 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Timer persists through app restarts (via AsyncStorage)
   - [x] Home screen shows time since last feeding
   - [x] Timeline shows real feeding entries
-  - [ ] **REFACTOR NEEDED**: Migrate FeedingContext to Zustand store (see State Management Guidelines below)
 - [x] Bottle Feeding (Ready for Manual Testing)
   - [x] Bottle feeding validators with content type validation (5 new tests, 209 total)
   - [x] BottleContentType added to activity constants
@@ -82,6 +81,15 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Formula/Breast milk content type selection
   - [x] FeedingTypeMenu modal for choosing feeding type from home
   - [x] Timeline displays bottle feedings with content type and amount
+- [x] Manual Feeding Entry (Ready for Manual Testing)
+  - [x] Manual feeding validators (19 new tests, 228 total)
+  - [x] validateStartTimeNotInFuture with 10s tolerance
+  - [x] validateManualFeedingDuration (1 min to 2 hours)
+  - [x] validateManualBreastfeeding and validateManualBottleFeeding
+  - [x] Manual feeding screen with date/time picker
+  - [x] Tab-based UI for breastfeeding vs bottle selection
+  - [x] Quick duration buttons (5, 10, 15, 20, 30, 45 min)
+  - [x] FeedingTypeMenu updated with "Log Past Feeding" option
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -1189,12 +1197,12 @@ describe('ManualFeedingEntry', () => {
 4. Add to breastfeeding screen: toggle between Timer and Manual modes
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Can manually enter breastfeeding with start time, duration, and side
-- [ ] Can manually enter bottle feeding with start time and amount
-- [ ] Start time defaults to current time but can be changed
-- [ ] Validation prevents future times and unreasonable durations
-- [ ] Entries appear correctly in Timeline
+- [x] All tests pass (228 tests, including 19 new manual feeding validator tests)
+- [x] Can manually enter breastfeeding with start time, duration, and side
+- [x] Can manually enter bottle feeding with start time and amount
+- [x] Start time defaults to current time but can be changed
+- [x] Validation prevents future times and unreasonable durations
+- [x] Entries appear correctly in Timeline
 
 ---
 

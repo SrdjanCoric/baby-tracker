@@ -67,7 +67,20 @@
     "oz": "oz",
     "feedingSaved": "Feeding saved",
     "enterAmount": "Enter the amount",
-    "notesPlaceholder": "Add notes (optional)"
+    "notesPlaceholder": "Add notes (optional)",
+    "logPastFeeding": "Log Past Feeding",
+    "logPastFeedingDesc": "Record a feeding from earlier",
+    "manualEntry": "Manual Entry",
+    "startTime": "Start Time",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time",
+    "durationMinutes": "Duration (minutes)",
+    "durationPlaceholder": "Enter duration",
+    "logManualBreastfeeding": "Log Breastfeeding",
+    "logManualBottleFeeding": "Log Bottle Feeding",
+    "pastFeedingTitle": "Log Past Feeding",
+    "breastfeedingTab": "Breastfeed",
+    "bottleTab": "Bottle"
   },
   "sleep": {
     "title": "Sleep",

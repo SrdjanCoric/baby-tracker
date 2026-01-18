@@ -45,7 +45,7 @@ export default function HomeScreen() {
     tummyTimeTimeSince: "3h",
     growthTimeSince: "5 days",
     isSleeping: false,
-    todayFeedingTotal: `${todayFeedings.length} feeding${todayFeedings.length !== 1 ? "s" : ""}`,
+    todayFeedingTotal: todayFeedings.length.toString(),
     todayNapCount: 3,
     todayDiaperCount: 6,
   };
@@ -57,8 +57,10 @@ export default function HomeScreen() {
   const handleFeedingMenuSelect = useCallback((option: FeedingMenuOption) => {
     if (option === "breastfeed") {
       router.push("/feeding/breastfeed");
-    } else {
+    } else if (option === "bottle") {
       router.push("/feeding/bottle");
+    } else if (option === "manual") {
+      router.push("/feeding/manual");
     }
   }, [router]);
 

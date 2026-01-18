@@ -137,3 +137,83 @@ export function calculateFeedingDuration(startedAt: Date, endedAt: Date): number
   const diffMs = endedAt.getTime() - startedAt.getTime();
   return Math.max(0, Math.floor(diffMs / 1000));
 }
+
+const FUTURE_TIME_TOLERANCE_MS = 10000;
+
+export function validateStartTimeNotInFuture(startedAt: Date): string | null {
+  const now = Date.now();
+  if (startedAt.getTime() > now + FUTURE_TIME_TOLERANCE_MS) {
+    return "Start time cannot be in the future";
+  }
+  return null;
+}
+
+export function validateManualFeedingDuration(durationSeconds: number | undefined): string | null {
+  if (durationSeconds === undefined) {
+    return "Duration is required for manual entry";
+  }
+  if (durationSeconds < 60) {
+    return "Duration must be at least 1 minute";
+  }
+  if (durationSeconds > 7200) {
+    return "Duration seems too long (over 2 hours)";
+  }
+  return null;
+}
+
+export function validateManualBreastfeeding(entry: Partial<FeedingEntry>): FeedingValidationResult {
+  const errors: Record<string, string> = {};
+
+  if (entry.type !== "breast") {
+    errors.type = "Invalid feeding type for breastfeeding";
+  }
+
+  const startError = validateStartTime(entry.startedAt);
+  if (startError) {
+    errors.startedAt = startError;
+  } else if (entry.startedAt) {
+    const futureError = validateStartTimeNotInFuture(entry.startedAt);
+    if (futureError) errors.startedAt = futureError;
+  }
+
+  const durationError = validateManualFeedingDuration(entry.durationSeconds);
+  if (durationError) errors.durationSeconds = durationError;
+
+  if (!entry.side) {
+    errors.side = "Side is required for breastfeeding";
+  } else if (!validateBreastSide(entry.side)) {
+    errors.side = "Invalid breast side";
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+}
+
+export function validateManualBottleFeeding(entry: Partial<FeedingEntry>): FeedingValidationResult {
+  const errors: Record<string, string> = {};
+
+  if (entry.type !== "bottle") {
+    errors.type = "Invalid feeding type for bottle feeding";
+  }
+
+  const startError = validateStartTime(entry.startedAt);
+  if (startError) {
+    errors.startedAt = startError;
+  } else if (entry.startedAt) {
+    const futureError = validateStartTimeNotInFuture(entry.startedAt);
+    if (futureError) errors.startedAt = futureError;
+  }
+
+  const amountError = validateBottleAmount(entry.amountMl, "bottle");
+  if (amountError) errors.amountMl = amountError;
+
+  const contentTypeError = validateBottleContentType(entry.contentType, "bottle");
+  if (contentTypeError) errors.contentType = contentTypeError;
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+}
