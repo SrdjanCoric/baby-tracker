@@ -67,7 +67,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
         <View className="flex-row items-center justify-center">
           <SummaryStat
             value={feedingTotal}
-            label="Fed"
+            label={feedingTotal === "1" ? "Feeding" : "Feedings"}
             color="#88B04B"
           />
 

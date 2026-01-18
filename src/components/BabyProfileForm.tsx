@@ -202,7 +202,13 @@ function BabyProfileForm({
               <View className="flex-row justify-end mt-2">
                 <Button
                   variant="ghost"
-                  onPress={() => setShowDatePicker(false)}
+                  onPress={() => {
+                    if (!birthDate) {
+                      setBirthDate(new Date());
+                      setTouched((prev) => ({ ...prev, birthDate: true }));
+                    }
+                    setShowDatePicker(false);
+                  }}
                 >
                   Done
                 </Button>

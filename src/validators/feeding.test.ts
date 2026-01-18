@@ -9,7 +9,11 @@ import {
   validateBottleContentType,
   validateBreastfeeding,
   validateBottleFeeding,
-  calculateFeedingDuration
+  calculateFeedingDuration,
+  validateStartTimeNotInFuture,
+  validateManualFeedingDuration,
+  validateManualBreastfeeding,
+  validateManualBottleFeeding
 } from "./feeding";
 
 describe("validateFeedingType", () => {
@@ -253,5 +257,171 @@ describe("calculateFeedingDuration", () => {
     const start = new Date(2024, 5, 15, 10, 30);
     const end = new Date(2024, 5, 15, 10, 0);
     expect(calculateFeedingDuration(start, end)).toBe(0);
+  });
+});
+
+describe("validateStartTimeNotInFuture", () => {
+  it("returns null for past time", () => {
+    const pastTime = new Date(Date.now() - 60000);
+    expect(validateStartTimeNotInFuture(pastTime)).toBeNull();
+  });
+
+  it("returns null for current time", () => {
+    const now = new Date();
+    expect(validateStartTimeNotInFuture(now)).toBeNull();
+  });
+
+  it("returns error for future time", () => {
+    const futureTime = new Date(Date.now() + 60000);
+    expect(validateStartTimeNotInFuture(futureTime)).toBe("Start time cannot be in the future");
+  });
+
+  it("allows small tolerance for near-future times", () => {
+    const nearFuture = new Date(Date.now() + 5000);
+    expect(validateStartTimeNotInFuture(nearFuture)).toBeNull();
+  });
+});
+
+describe("validateManualFeedingDuration", () => {
+  it("returns error for duration less than 1 minute", () => {
+    expect(validateManualFeedingDuration(30)).toBe("Duration must be at least 1 minute");
+    expect(validateManualFeedingDuration(59)).toBe("Duration must be at least 1 minute");
+  });
+
+  it("returns null for duration of exactly 1 minute", () => {
+    expect(validateManualFeedingDuration(60)).toBeNull();
+  });
+
+  it("returns null for valid duration", () => {
+    expect(validateManualFeedingDuration(300)).toBeNull();
+    expect(validateManualFeedingDuration(1800)).toBeNull();
+    expect(validateManualFeedingDuration(7200)).toBeNull();
+  });
+
+  it("returns error for duration over 2 hours", () => {
+    expect(validateManualFeedingDuration(7201)).toBe("Duration seems too long (over 2 hours)");
+  });
+
+  it("returns error for undefined duration", () => {
+    expect(validateManualFeedingDuration(undefined)).toBe("Duration is required for manual entry");
+  });
+});
+
+describe("validateManualBreastfeeding", () => {
+  it("returns valid for correct manual breastfeeding entry", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateManualBreastfeeding({
+      type: "breast",
+      startedAt: pastTime,
+      durationSeconds: 600,
+      side: "left"
+    });
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toEqual({});
+  });
+
+  it("returns error for future start time", () => {
+    const futureTime = new Date(Date.now() + 3600000);
+    const result = validateManualBreastfeeding({
+      type: "breast",
+      startedAt: futureTime,
+      durationSeconds: 600,
+      side: "left"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+  });
+
+  it("returns error for missing duration", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateManualBreastfeeding({
+      type: "breast",
+      startedAt: pastTime,
+      side: "left"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.durationSeconds).toBe("Duration is required for manual entry");
+  });
+
+  it("returns error for duration too short", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateManualBreastfeeding({
+      type: "breast",
+      startedAt: pastTime,
+      durationSeconds: 30,
+      side: "left"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.durationSeconds).toBe("Duration must be at least 1 minute");
+  });
+
+  it("returns error for wrong feeding type", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateManualBreastfeeding({
+      type: "bottle",
+      startedAt: pastTime,
+      durationSeconds: 600
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.type).toBeDefined();
+  });
+
+  it("returns error for missing side", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateManualBreastfeeding({
+      type: "breast",
+      startedAt: pastTime,
+      durationSeconds: 600
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.side).toBe("Side is required for breastfeeding");
+  });
+});
+
+describe("validateManualBottleFeeding", () => {
+  it("returns valid for correct manual bottle feeding entry", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateManualBottleFeeding({
+      type: "bottle",
+      startedAt: pastTime,
+      amountMl: 120,
+      contentType: "formula"
+    });
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toEqual({});
+  });
+
+  it("returns error for future start time", () => {
+    const futureTime = new Date(Date.now() + 3600000);
+    const result = validateManualBottleFeeding({
+      type: "bottle",
+      startedAt: futureTime,
+      amountMl: 120,
+      contentType: "formula"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+  });
+
+  it("returns error for missing amount", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateManualBottleFeeding({
+      type: "bottle",
+      startedAt: pastTime,
+      contentType: "formula"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.amountMl).toBeDefined();
+  });
+
+  it("returns error for missing content type", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateManualBottleFeeding({
+      type: "bottle",
+      startedAt: pastTime,
+      amountMl: 120
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.contentType).toBeDefined();
   });
 });
