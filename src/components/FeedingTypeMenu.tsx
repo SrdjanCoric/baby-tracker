@@ -6,7 +6,7 @@ const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
 const FEEDING_GREEN_DARK = "#6A9030";
 
-export type FeedingMenuOption = "breastfeed" | "bottle";
+export type FeedingMenuOption = "breastfeed" | "bottle" | "manual";
 
 interface FeedingTypeMenuProps {
   visible: boolean;
@@ -60,6 +60,12 @@ export function FeedingTypeMenu({ visible, onClose, onSelect }: FeedingTypeMenuP
               label={t("feeding.bottleFeeding")}
               description={t("feeding.enterAmount")}
               onPress={() => handleSelect("bottle")}
+            />
+            <FeedingOption
+              emoji="📝"
+              label={t("feeding.logPastFeeding")}
+              description={t("feeding.logPastFeedingDesc")}
+              onPress={() => handleSelect("manual")}
             />
           </View>
 
