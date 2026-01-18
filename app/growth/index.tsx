@@ -29,12 +29,20 @@ export default function GrowthScreen() {
     router.back();
   }, [router]);
 
+  const parseDecimal = (value: string): number | undefined => {
+    if (!value) return undefined;
+    // Handle both comma and period as decimal separators
+    const normalized = value.replace(",", ".");
+    const parsed = parseFloat(normalized);
+    return isNaN(parsed) ? undefined : parsed;
+  };
+
   const handleSave = useCallback(async () => {
     if (!selectedBaby) return;
 
-    const weight = weightKg ? parseFloat(weightKg) : undefined;
-    const height = heightCm ? parseFloat(heightCm) : undefined;
-    const head = headCircumferenceCm ? parseFloat(headCircumferenceCm) : undefined;
+    const weight = parseDecimal(weightKg);
+    const height = parseDecimal(heightCm);
+    const head = parseDecimal(headCircumferenceCm);
 
     const validation = validateGrowthMeasurement({
       babyId: selectedBaby.id,
