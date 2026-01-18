@@ -10,8 +10,6 @@ import {
   isValidActivityType,
   isValidStoolColor,
   type ActivityType,
-  type TimerActivityType,
-  type BreastSide
 } from "./activities";
 
 describe("STOOL_COLORS", () => {
