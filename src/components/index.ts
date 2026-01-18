@@ -50,3 +50,6 @@ export {
   FeedingTypeMenu,
   type FeedingMenuOption,
 } from "./FeedingTypeMenu";
+
+// Sleep components
+export { SleepMilestoneSuggestionModal } from "./SleepMilestoneSuggestionModal";

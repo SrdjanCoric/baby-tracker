@@ -8,6 +8,7 @@ import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import type { SleepType } from "@/constants/activities";
 import { determineSleepType } from "@/validators/sleep";
+import { SleepMilestoneSuggestionModal } from "@/components";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_MUTED = "#E8E4F0";
@@ -22,6 +23,12 @@ export default function SleepScreen() {
     startSleep,
     stopSleep,
     changeSleepType,
+    dailyGoalMinutes,
+    currentAgeGroup,
+    showMilestoneSuggestion,
+    suggestedGoalMinutes,
+    acceptMilestoneSuggestion,
+    dismissMilestoneSuggestion,
   } = useSleep();
 
   const [tick, setTick] = useState(0);
@@ -72,6 +79,22 @@ export default function SleepScreen() {
     router.push("/sleep/manual");
   }, [router]);
 
+  const handleSettings = useCallback(() => {
+    router.push("/sleep/settings");
+  }, [router]);
+
+  const handleAcceptMilestone = useCallback(async () => {
+    await acceptMilestoneSuggestion();
+  }, [acceptMilestoneSuggestion]);
+
+  const handleDismissMilestone = useCallback(async () => {
+    await dismissMilestoneSuggestion(true);
+  }, [dismissMilestoneSuggestion]);
+
+  const handleKeepCurrentGoal = useCallback(async () => {
+    await dismissMilestoneSuggestion(false);
+  }, [dismissMilestoneSuggestion]);
+
   if (!selectedBaby) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
@@ -104,7 +127,14 @@ export default function SleepScreen() {
             {selectedBaby.name}
           </Text>
         </View>
-        <View className="w-touch" />
+        <Pressable
+          onPress={handleSettings}
+          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+          accessibilityRole="button"
+          accessibilityLabel={t("sleep.goalSettings")}
+        >
+          <Text className="text-xl">⚙️</Text>
+        </Pressable>
       </View>
 
       <View className="flex-1 items-center justify-center px-6">
@@ -123,6 +153,16 @@ export default function SleepScreen() {
           />
         )}
       </View>
+
+      <SleepMilestoneSuggestionModal
+        visible={showMilestoneSuggestion}
+        currentGoalMinutes={dailyGoalMinutes}
+        suggestedGoalMinutes={suggestedGoalMinutes ?? dailyGoalMinutes}
+        ageGroupLabel={currentAgeGroup?.label ?? ""}
+        onAccept={handleAcceptMilestone}
+        onDismiss={handleDismissMilestone}
+        onKeepCurrent={handleKeepCurrentGoal}
+      />
     </SafeAreaView>
   );
 }
