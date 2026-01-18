@@ -65,6 +65,10 @@ export default function BreastfeedingScreen() {
     router.back();
   }, [router]);
 
+  const handleLogPast = useCallback(() => {
+    router.push("/feeding/manual?type=breastfeed");
+  }, [router]);
+
   if (!selectedBaby) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
@@ -112,6 +116,7 @@ export default function BreastfeedingScreen() {
           <SideSelectionView
             suggestedSide={suggestedSide}
             onSelectSide={handleStartFeeding}
+            onLogPast={handleLogPast}
           />
         )}
       </View>
@@ -122,9 +127,10 @@ export default function BreastfeedingScreen() {
 interface SideSelectionViewProps {
   suggestedSide: BreastSide;
   onSelectSide: (side: BreastSide) => void;
+  onLogPast: () => void;
 }
 
-function SideSelectionView({ suggestedSide, onSelectSide }: SideSelectionViewProps) {
+function SideSelectionView({ suggestedSide, onSelectSide, onLogPast }: SideSelectionViewProps) {
   const { t } = useTranslation();
 
   return (
@@ -188,6 +194,19 @@ function SideSelectionView({ suggestedSide, onSelectSide }: SideSelectionViewPro
           </Text>
         </View>
       )}
+
+      {/* Log Past Button */}
+      <Pressable
+        onPress={onLogPast}
+        className="mt-8 py-3 px-6 rounded-button-lg active:opacity-70"
+        style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+        accessibilityRole="button"
+        accessibilityLabel={t("feeding.logPastBreastfeeding")}
+      >
+        <Text className="text-base font-medium" style={{ color: FEEDING_GREEN }}>
+          {t("feeding.logPastBreastfeeding")}
+        </Text>
+      </Pressable>
     </View>
   );
 }

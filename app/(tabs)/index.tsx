@@ -11,14 +11,14 @@ import {
   type FeedingMenuOption,
 } from "@/components";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } from "@/contexts";
-import { timeSince, formatDate } from "@/utils/time";
+import { timeSince, formatDate, hoursSince } from "@/utils/time";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { feedings, activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide } = useFeeding();
   const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes } = useSleep();
-  const { diapers, getLastDiaper, getTodaysCounts } = useDiaper();
+  const { diapers, getTodaysCounts } = useDiaper();
   const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide } = usePumping();
   const { getLastMeasurement, getWeightChange } = useGrowth();
   const { activeTimer: tummyTimeActiveTimer, getLastTummyTime, getDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds } = useTummyTime();
@@ -35,12 +35,22 @@ export default function HomeScreen() {
     return `Last: ${timeSince(new Date(lastFeeding.startedAt))}`;
   }, [feedingActiveTimer, getLastFeeding, t]);
 
+  const lastBreastFeeding = useMemo(() => {
+    const sortedFeedings = [...feedings].sort((a, b) =>
+      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    );
+    return sortedFeedings.find(f => f.type === "breast") ?? null;
+  }, [feedings]);
+
   const feedingSubtitle = useMemo(() => {
     if (feedingActiveTimer?.isRunning) return undefined;
-    const lastFeeding = getLastFeeding();
-    if (!lastFeeding || lastFeeding.type !== "breast") return undefined;
+    if (!lastBreastFeeding) return undefined;
+
+    // Only show suggested side if last breastfeeding was within 24 hours
+    if (hoursSince(new Date(lastBreastFeeding.startedAt)) > 24) return undefined;
+
     return `Next: ${suggestedSide === "left" ? "Left" : "Right"} side`;
-  }, [feedingActiveTimer, getLastFeeding, suggestedSide]);
+  }, [feedingActiveTimer?.isRunning, lastBreastFeeding, suggestedSide]);
 
   const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
 
@@ -264,8 +274,6 @@ export default function HomeScreen() {
       router.push("/feeding/bottle");
     } else if (option === "solids") {
       router.push("/feeding/solids");
-    } else if (option === "manual") {
-      router.push("/feeding/manual");
     }
   }, [router]);
 

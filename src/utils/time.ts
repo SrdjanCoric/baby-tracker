@@ -110,3 +110,11 @@ export function formatDate(date: Date): string {
   };
   return date.toLocaleDateString("en-US", options);
 }
+
+/**
+ * Calculates hours elapsed since a given date
+ */
+export function hoursSince(date: Date, now: Date = new Date()): number {
+  const diffMs = now.getTime() - date.getTime();
+  return diffMs / (1000 * 60 * 60);
+}
