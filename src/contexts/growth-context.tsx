@@ -62,6 +62,7 @@ interface GrowthContextValue extends GrowthState {
   refreshMeasurements: () => Promise<void>;
   getLastMeasurement: () => StoredGrowthEntry | null;
   getMeasurementHistory: (limit?: number) => StoredGrowthEntry[];
+  getWeightChange: () => { change: number; hasPrevious: boolean } | null;
 }
 
 const GrowthContext = createContext<GrowthContextValue | null>(null);
@@ -155,6 +156,23 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
     [state.measurements]
   );
 
+  const getWeightChange = useCallback((): { change: number; hasPrevious: boolean } | null => {
+    const history = getMeasurementHistory(2);
+    if (history.length < 1) return null;
+
+    const latest = history[0];
+    if (latest.weightKg === undefined) return null;
+
+    if (history.length < 2 || history[1].weightKg === undefined) {
+      return { change: 0, hasPrevious: false };
+    }
+
+    return {
+      change: Math.round((latest.weightKg - history[1].weightKg) * 1000),
+      hasPrevious: true
+    };
+  }, [getMeasurementHistory]);
+
   const value: GrowthContextValue = {
     ...state,
     addMeasurement,
@@ -163,6 +181,7 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
     refreshMeasurements: loadMeasurements,
     getLastMeasurement,
     getMeasurementHistory,
+    getWeightChange,
   };
 
   return <GrowthContext.Provider value={value}>{children}</GrowthContext.Provider>;

@@ -94,6 +94,7 @@ interface SleepContextValue extends SleepState {
   refreshSleeps: () => Promise<void>;
   getLastSleep: () => StoredSleepEntry | null;
   getTodaysTotalSleepMinutes: () => number;
+  getWakeWindowProgress: () => number | undefined;
 }
 
 const SleepContext = createContext<SleepContextValue | null>(null);
@@ -233,6 +234,21 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     return Math.floor(totalSeconds / 60);
   }, [state.sleeps]);
 
+  const getWakeWindowProgress = useCallback((): number | undefined => {
+    const lastSleep = getLastSleep();
+    if (!lastSleep || !lastSleep.endedAt) return undefined;
+
+    const awakeMinutes = Math.floor(
+      (Date.now() - new Date(lastSleep.endedAt).getTime()) / (1000 * 60)
+    );
+
+    // Age-based wake windows (in minutes) - default to 2.5 hours for 4-6 month old
+    // This could be enhanced to use baby's actual age from baby-context
+    const maxWakeWindow = 150;
+
+    return Math.min(100, Math.round((awakeMinutes / maxWakeWindow) * 100));
+  }, [getLastSleep]);
+
   const value: SleepContextValue = {
     ...state,
     startSleep,
@@ -244,6 +260,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     refreshSleeps: loadSleeps,
     getLastSleep,
     getTodaysTotalSleepMinutes,
+    getWakeWindowProgress,
   };
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
