@@ -10,6 +10,7 @@ export default function SleepLayout() {
       }}
     >
       <Stack.Screen name="index" />
+      <Stack.Screen name="manual" />
     </Stack>
   );
 }
