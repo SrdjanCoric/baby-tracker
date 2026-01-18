@@ -1508,11 +1508,11 @@ describe('PumpingTimer', () => {
 4. Add pumping to Timeline
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Timer works correctly
-- [ ] Volume entry in ml/oz
-- [ ] Side tracking works
-- [ ] Displayed in Timeline
+- [x] All tests pass
+- [x] Timer works correctly
+- [x] Volume entry in ml/oz
+- [x] Side tracking works
+- [x] Displayed in Timeline
 
 ---
 
@@ -1539,12 +1539,12 @@ describe('Manual pumping validators', () => {
 6. Add "Log Past Pumping" option accessible from home screen
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Can manually enter pumping with start time, duration, and volume
-- [ ] Side selection works
-- [ ] Start time defaults to current time but can be changed
-- [ ] Validation prevents future times and unreasonable values
-- [ ] Entries appear correctly in Timeline
+- [x] All tests pass
+- [x] Can manually enter pumping with start time, duration, and volume
+- [x] Side selection works
+- [x] Start time defaults to current time but can be changed
+- [x] Validation prevents future times and unreasonable values
+- [x] Entries appear correctly in Timeline
 
 ---
 
@@ -1950,7 +1950,7 @@ describe('SettingsScreen', () => {
   - [ ] Solid food tracking
   - [ ] Sleep tracking with timer
   - [ ] Diaper tracking with stool color
-  - [ ] Pumping tracking with timer
+  - [x] Pumping tracking with timer
   - [ ] Growth measurements
   - [ ] Tummy time with goals
 - [ ] Timers survive app background
