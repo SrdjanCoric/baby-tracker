@@ -8,3 +8,11 @@ export type {
   UpdateFeedingInput,
   ActiveTimerData,
 } from "./feeding-storage";
+
+export { SleepStorageService } from "./sleep-storage";
+export type {
+  StoredSleepEntry,
+  CreateSleepInput,
+  UpdateSleepInput,
+  ActiveSleepTimerData,
+} from "./sleep-storage";

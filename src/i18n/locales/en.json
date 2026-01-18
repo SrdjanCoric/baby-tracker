@@ -103,9 +103,17 @@
     "nap": "Nap",
     "night": "Night Sleep",
     "startSleep": "Start Sleep",
+    "startNap": "Start Nap",
+    "startNightSleep": "Start Night Sleep",
     "wakeUp": "Wake Up",
     "duration": "Duration",
-    "sleepType": "Sleep Type"
+    "sleepType": "Sleep Type",
+    "selectTypeToStart": "Select a sleep type to start the timer",
+    "timerRunning": "Timer running",
+    "tapToStop": "Tap to wake baby",
+    "sleeping": "Sleeping",
+    "sleepSaved": "Sleep saved",
+    "autoDetectHint": "Sleep type detected based on time of day"
   },
   "diaper": {
     "title": "Diaper",
