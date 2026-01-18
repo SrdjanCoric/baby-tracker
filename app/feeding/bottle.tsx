@@ -107,8 +107,6 @@ export default function BottleFeedingScreen() {
     }
   }, [selectedBaby, contentType, amountMl, notes, addFeeding, router]);
 
-  const canSave = contentType !== null && amountMl !== null && amountMl > 0;
-
   const validationMessage = useMemo(() => {
     if (!showValidation) return null;
     if (!contentType && (!amountMl || amountMl <= 0)) {
