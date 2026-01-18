@@ -21,7 +21,7 @@ export default function TummyTimeSettingsScreen() {
     goalSource,
     currentAgeGroup,
     setCustomGoal,
-    useAgeBasedGoal,
+    resetToAgeBasedGoal,
   } = useTummyTime();
 
   const [customMinutes, setCustomMinutes] = useState(
@@ -41,8 +41,8 @@ export default function TummyTimeSettingsScreen() {
   );
 
   const handleUseAgeBased = useCallback(async () => {
-    await useAgeBasedGoal();
-  }, [useAgeBasedGoal]);
+    await resetToAgeBasedGoal();
+  }, [resetToAgeBasedGoal]);
 
   const handleSetCustomGoal = useCallback(async () => {
     const minutes = parseInt(customMinutes, 10);

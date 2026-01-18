@@ -9,7 +9,6 @@ import { useBaby } from "./baby-context";
 import {
   AgeGroup,
   GoalSource,
-  getAgeGroupForBaby,
   getGoalInfo,
   checkMilestoneCrossing,
 } from "@/utils/tummyTimeGoals";
@@ -130,7 +129,7 @@ interface TummyTimeContextValue extends TummyTimeState {
   getDailyProgress: () => number;
   setDailyGoal: (goalSeconds: number) => Promise<void>;
   setCustomGoal: (goalSeconds: number) => Promise<void>;
-  useAgeBasedGoal: () => Promise<void>;
+  resetToAgeBasedGoal: () => Promise<void>;
   dismissMilestoneSuggestion: () => Promise<void>;
   acceptMilestoneSuggestion: () => Promise<void>;
 }
@@ -327,7 +326,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     [selectedBaby]
   );
 
-  const useAgeBasedGoal = useCallback(async (): Promise<void> => {
+  const resetToAgeBasedGoal = useCallback(async (): Promise<void> => {
     if (!selectedBaby) return;
 
     await TummyTimeStorageService.clearCustomGoal(selectedBaby.id);
@@ -371,7 +370,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     getDailyProgress,
     setDailyGoal: setDailyGoalCallback,
     setCustomGoal,
-    useAgeBasedGoal,
+    resetToAgeBasedGoal,
     dismissMilestoneSuggestion,
     acceptMilestoneSuggestion,
   };
