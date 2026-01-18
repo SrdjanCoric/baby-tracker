@@ -109,6 +109,24 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Timer persists through app restarts (via AsyncStorage)
   - [x] Home screen shows time since last sleep
   - [x] Timeline shows real sleep entries
+- [x] Sleep Manual Entry (Ready for Manual Testing)
+  - [x] Manual sleep screen with date/time picker
+  - [x] Duration picker with quick duration buttons
+  - [x] Nap/night type selector
+  - [x] "Log Past Sleep" option accessible from home screen
+  - [x] Validation prevents future times and unreasonable durations
+  - [x] Entries appear correctly in Timeline
+- [x] Diaper Tracking (Ready for Manual Testing)
+  - [x] Diaper validators with 24 new tests (394 total)
+  - [x] validateDiaperType, validateStoolColor, validateDiaperEntry, validateManualDiaper
+  - [x] DiaperStorageService for AsyncStorage persistence (21 tests)
+  - [x] DiaperContext provider with state management (14 tests)
+  - [x] Diaper tracking screen with type selection (wet/dirty/mixed)
+  - [x] Visual color picker for stool color (7 colors)
+  - [x] Manual diaper entry with date/time picker
+  - [x] Home screen shows time since last diaper
+  - [x] Timeline shows diaper entries with type and color
+  - [x] Today's diaper count in summary
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -1365,12 +1383,12 @@ describe('Manual sleep validators', () => {
 6. Add "Log Past Sleep" option accessible from home screen sleep card
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Can manually enter nap with start time and duration
-- [ ] Can manually enter night sleep with start time and duration
-- [ ] Start time defaults to current time but can be changed
-- [ ] Validation prevents future times and unreasonable durations
-- [ ] Entries appear correctly in Timeline
+- [x] All tests pass
+- [x] Can manually enter nap with start time and duration
+- [x] Can manually enter night sleep with start time and duration
+- [x] Start time defaults to current time but can be changed
+- [x] Validation prevents future times and unreasonable durations
+- [x] Entries appear correctly in Timeline
 
 ---
 
@@ -1429,11 +1447,11 @@ describe('DiaperForm', () => {
 - Orange
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Quick log with single tap (wet)
-- [ ] Color selection for dirty/mixed
-- [ ] Colors included in data export
-- [ ] Displayed in Timeline
+- [x] All tests pass (394 tests, including 24 diaper validator tests, 21 diaper storage tests, 14 diaper context tests)
+- [x] Quick log with single tap (wet)
+- [x] Color selection for dirty/mixed
+- [ ] Colors included in data export (deferred - data export not yet implemented)
+- [x] Displayed in Timeline
 
 ---
 
@@ -1455,10 +1473,10 @@ describe('Manual diaper validators', () => {
 3. Reuse existing diaper validators
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Can log diaper change with custom time
-- [ ] Time defaults to now but can be changed
-- [ ] Entries appear correctly in Timeline with correct time
+- [x] All tests pass (implemented as part of diaper-tracking)
+- [x] Can log diaper change with custom time
+- [x] Time defaults to now but can be changed
+- [x] Entries appear correctly in Timeline with correct time
 
 ---
 

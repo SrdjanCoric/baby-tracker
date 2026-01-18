@@ -6,3 +6,6 @@ export type { FeedingState, FeedingAction, ActiveTimer } from "./feeding-context
 
 export { SleepProvider, useSleep, sleepReducer, initialSleepState } from "./sleep-context";
 export type { SleepState, SleepAction, ActiveSleepTimer } from "./sleep-context";
+
+export { DiaperProvider, useDiaper, diaperReducer, initialDiaperState } from "./diaper-context";
+export type { DiaperState, DiaperAction } from "./diaper-context";
