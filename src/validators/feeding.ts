@@ -1,4 +1,5 @@
-import type { BreastSide, FeedingType, BottleContentType } from "@constants/activities";
+import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@constants/activities";
+import { SOLID_AMOUNTS, SOLID_REACTIONS } from "@constants/activities";
 
 export interface FeedingEntry {
   id?: string;
@@ -11,6 +12,8 @@ export interface FeedingEntry {
   amountMl?: number;
   contentType?: BottleContentType;
   foodType?: string;
+  amount?: SolidAmount;
+  reaction?: SolidReaction;
   notes?: string;
 }
 
@@ -211,6 +214,70 @@ export function validateManualBottleFeeding(entry: Partial<FeedingEntry>): Feedi
 
   const contentTypeError = validateBottleContentType(entry.contentType, "bottle");
   if (contentTypeError) errors.contentType = contentTypeError;
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+}
+
+export function validateFoodType(foodType: string | undefined): string | null {
+  if (!foodType || foodType.trim() === "") {
+    return "Food type is required";
+  }
+  if (foodType.length > 100) {
+    return "Food type is too long (max 100 characters)";
+  }
+  return null;
+}
+
+export function validateSolidAmount(amount: SolidAmount | undefined): string | null {
+  if (amount === undefined) {
+    return null;
+  }
+  if (!SOLID_AMOUNTS.includes(amount)) {
+    return "Invalid amount";
+  }
+  return null;
+}
+
+export function validateSolidReaction(reaction: SolidReaction | undefined): string | null {
+  if (reaction === undefined) {
+    return null;
+  }
+  if (!SOLID_REACTIONS.includes(reaction)) {
+    return "Invalid reaction";
+  }
+  return null;
+}
+
+export function validateSolidFeeding(entry: Partial<FeedingEntry>): FeedingValidationResult {
+  const errors: Record<string, string> = {};
+
+  if (entry.type !== "solid") {
+    errors.type = "Invalid feeding type for solid food";
+  }
+
+  const startError = validateStartTime(entry.startedAt);
+  if (startError) {
+    errors.startedAt = startError;
+  } else if (entry.startedAt) {
+    const futureError = validateStartTimeNotInFuture(entry.startedAt);
+    if (futureError) errors.startedAt = futureError;
+  }
+
+  const foodTypeError = validateFoodType(entry.foodType);
+  if (foodTypeError) errors.foodType = foodTypeError;
+
+  if (entry.amount !== undefined) {
+    const amountError = validateSolidAmount(entry.amount);
+    if (amountError) errors.amount = amountError;
+  }
+
+  if (entry.reaction !== undefined) {
+    const reactionError = validateSolidReaction(entry.reaction);
+    if (reactionError) errors.reaction = reactionError;
+  }
 
   return {
     isValid: Object.keys(errors).length === 0,
