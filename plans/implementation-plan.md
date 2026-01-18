@@ -99,6 +99,16 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Recent foods quick selection from feeding history
   - [x] FeedingTypeMenu updated with "Solid Food" option
   - [x] Timeline displays solid feedings with food type and amount
+- [x] Sleep Tracking (Ready for Manual Testing)
+  - [x] Sleep validators with 45 new tests (335 total)
+  - [x] validateSleepType, validateSleepDuration, determineSleepType
+  - [x] SleepStorageService for AsyncStorage persistence (22 tests)
+  - [x] SleepContext provider with timer state management (18 tests)
+  - [x] Sleep tracking screen with timer and nap/night selection
+  - [x] Auto-detection of sleep type based on time of day
+  - [x] Timer persists through app restarts (via AsyncStorage)
+  - [x] Home screen shows time since last sleep
+  - [x] Timeline shows real sleep entries
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -1321,11 +1331,46 @@ appId: com.babytracker.app
 - Multiple short naps
 
 **Definition of Done:**
+- [x] All tests pass (335 tests, including 45 sleep validator tests, 22 sleep storage tests, 18 sleep context tests)
+- [x] Timer works correctly
+- [x] Nap/night distinction works (auto-detection based on time of day)
+- [x] Timer survives app background/kill (via AsyncStorage persistence)
+- [x] Sleep displayed in Timeline
+- [x] Home dashboard shows real sleep data
+- [x] Sleep tracking screen with timer UI
+
+---
+
+#### Branch: `feature/sleep-manual-entry`
+**Scope:** Manual/retroactive sleep entry (similar to feeding manual entry)
+
+**TDD Approach:**
+```typescript
+// Unit tests
+describe('Manual sleep validators', () => {
+  it('should validate start time is not in future', () => {});
+  it('should require duration for manual entry', () => {});
+  it('should validate duration is at least 1 minute', () => {});
+  it('should validate duration is not over 24 hours', () => {});
+  it('should require sleep type (nap or night)', () => {});
+});
+```
+
+**Tasks:**
+1. Create manual sleep screen (`app/sleep/manual.tsx`)
+2. Add date/time picker for start time (defaults to now)
+3. Add duration picker with quick duration buttons (15, 30, 45 min, 1h, 2h, etc.)
+4. Add nap/night type selector
+5. Reuse existing `validateManualSleep` validator
+6. Add "Log Past Sleep" option accessible from home screen sleep card
+
+**Definition of Done:**
 - [ ] All tests pass
-- [ ] Timer works correctly
-- [ ] Nap/night distinction works
-- [ ] Timer survives app background/kill
-- [ ] Sleep displayed in Timeline
+- [ ] Can manually enter nap with start time and duration
+- [ ] Can manually enter night sleep with start time and duration
+- [ ] Start time defaults to current time but can be changed
+- [ ] Validation prevents future times and unreasonable durations
+- [ ] Entries appear correctly in Timeline
 
 ---
 
@@ -1392,6 +1437,31 @@ describe('DiaperForm', () => {
 
 ---
 
+#### Branch: `feature/diaper-manual-entry`
+**Scope:** Allow retroactive diaper logging with custom time
+
+**TDD Approach:**
+```typescript
+// Unit tests
+describe('Manual diaper validators', () => {
+  it('should validate change time is not in future', () => {});
+  it('should require diaper type', () => {});
+});
+```
+
+**Tasks:**
+1. Add date/time picker to diaper form (defaults to now)
+2. Allow user to change time for retroactive logging
+3. Reuse existing diaper validators
+
+**Definition of Done:**
+- [ ] All tests pass
+- [ ] Can log diaper change with custom time
+- [ ] Time defaults to now but can be changed
+- [ ] Entries appear correctly in Timeline with correct time
+
+---
+
 #### Branch: `feature/pumping-tracking`
 **Scope:** Pumping session tracking with timer and volume
 
@@ -1425,6 +1495,38 @@ describe('PumpingTimer', () => {
 - [ ] Volume entry in ml/oz
 - [ ] Side tracking works
 - [ ] Displayed in Timeline
+
+---
+
+#### Branch: `feature/pumping-manual-entry`
+**Scope:** Manual/retroactive pumping entry (similar to feeding manual entry)
+
+**TDD Approach:**
+```typescript
+// Unit tests
+describe('Manual pumping validators', () => {
+  it('should validate start time is not in future', () => {});
+  it('should require volume for manual entry', () => {});
+  it('should validate volume is positive and reasonable', () => {});
+  it('should validate side is left, right, or both', () => {});
+});
+```
+
+**Tasks:**
+1. Create manual pumping screen (`app/pumping/manual.tsx`)
+2. Add date/time picker for start time (defaults to now)
+3. Add duration picker with quick duration buttons (5, 10, 15, 20, 30 min)
+4. Add volume input with ml/oz toggle
+5. Add side selector (left/right/both)
+6. Add "Log Past Pumping" option accessible from home screen
+
+**Definition of Done:**
+- [ ] All tests pass
+- [ ] Can manually enter pumping with start time, duration, and volume
+- [ ] Side selection works
+- [ ] Start time defaults to current time but can be changed
+- [ ] Validation prevents future times and unreasonable values
+- [ ] Entries appear correctly in Timeline
 
 ---
 
@@ -1525,6 +1627,37 @@ describe('TummyTimeGoalSetting', () => {
 - [ ] Daily goal can be set
 - [ ] Progress toward goal displayed
 - [ ] Goal completion celebrated
+
+---
+
+#### Branch: `feature/tummy-time-manual-entry`
+**Scope:** Manual/retroactive tummy time entry
+
+**TDD Approach:**
+```typescript
+// Unit tests
+describe('Manual tummy time validators', () => {
+  it('should validate start time is not in future', () => {});
+  it('should require duration for manual entry', () => {});
+  it('should validate duration is at least 1 minute', () => {});
+  it('should validate duration is reasonable (max 2 hours)', () => {});
+});
+```
+
+**Tasks:**
+1. Create manual tummy time screen (`app/tummy-time/manual.tsx`)
+2. Add date/time picker for start time (defaults to now)
+3. Add duration picker with quick duration buttons (1, 2, 3, 5, 10, 15 min)
+4. Update daily progress after manual entry
+5. Add "Log Past Tummy Time" option accessible from home screen
+
+**Definition of Done:**
+- [ ] All tests pass
+- [ ] Can manually enter tummy time with start time and duration
+- [ ] Start time defaults to current time but can be changed
+- [ ] Manual entries count toward daily goal progress
+- [ ] Validation prevents future times and unreasonable durations
+- [ ] Entries appear correctly in Timeline
 
 ---
 

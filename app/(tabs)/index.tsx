@@ -10,17 +10,18 @@ import {
   FeedingTypeMenu,
   type FeedingMenuOption,
 } from "@/components";
-import { useFeeding } from "@/contexts";
+import { useFeeding, useSleep } from "@/contexts";
 import { timeSince } from "@/utils/time";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { feedings, activeTimer, getLastFeeding } = useFeeding();
+  const { feedings, activeTimer: feedingActiveTimer, getLastFeeding } = useFeeding();
+  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep } = useSleep();
   const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
-    if (activeTimer?.isRunning) {
+    if (feedingActiveTimer?.isRunning) {
       return t("common.now");
     }
     const lastFeeding = getLastFeeding();
@@ -28,9 +29,22 @@ export default function HomeScreen() {
       return "--";
     }
     return timeSince(new Date(lastFeeding.startedAt));
-  }, [activeTimer, getLastFeeding, t]);
+  }, [feedingActiveTimer, getLastFeeding, t]);
 
-  const isFeedingActive = activeTimer?.isRunning ?? false;
+  const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
+
+  const sleepTimeSince = useMemo(() => {
+    if (sleepActiveTimer?.isRunning) {
+      return t("common.now");
+    }
+    const lastSleep = getLastSleep();
+    if (!lastSleep) {
+      return "--";
+    }
+    return timeSince(new Date(lastSleep.startedAt));
+  }, [sleepActiveTimer, getLastSleep, t]);
+
+  const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
   const todayFeedings = useMemo(() => {
     const today = new Date();
@@ -38,15 +52,19 @@ export default function HomeScreen() {
     return feedings.filter(f => new Date(f.startedAt) >= today);
   }, [feedings]);
 
+  const todaySleeps = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return sleeps.filter(s => new Date(s.startedAt) >= today);
+  }, [sleeps]);
+
   const mockData = {
-    sleepTimeSince: "45 min",
     diaperTimeSince: "1h 30m",
     pumpingTimeSince: "4h 20m",
     tummyTimeTimeSince: "3h",
     growthTimeSince: "5 days",
-    isSleeping: false,
     todayFeedingTotal: todayFeedings.length.toString(),
-    todayNapCount: 3,
+    todayNapCount: todaySleeps.length,
     todayDiaperCount: 6,
   };
 
@@ -72,9 +90,15 @@ export default function HomeScreen() {
     }
   }, [isFeedingActive, router]);
 
-  const handleAddSleep = () => {
-    console.log("Add sleep");
-  };
+  const handleAddSleep = useCallback(() => {
+    router.push("/sleep");
+  }, [router]);
+
+  const handleSleepCardPress = useCallback(() => {
+    if (isSleepActive) {
+      router.push("/sleep");
+    }
+  }, [isSleepActive, router]);
 
   const handleAddDiaper = () => {
     console.log("Add diaper");
@@ -122,12 +146,12 @@ export default function HomeScreen() {
             <DashboardCard
               activity="sleep"
               label={t("sleep.title")}
-              timeSince={mockData.sleepTimeSince}
-              isActive={mockData.isSleeping}
-              activeLabel="Sleeping"
-              onPress={() => {}}
+              timeSince={sleepTimeSince}
+              isActive={isSleepActive}
+              activeLabel={t("sleep.sleeping")}
+              onPress={handleSleepCardPress}
               onActionPress={handleAddSleep}
-              actionLabel={mockData.isSleeping ? undefined : "+"}
+              actionLabel={isSleepActive ? undefined : "+"}
             />
           </View>
 
