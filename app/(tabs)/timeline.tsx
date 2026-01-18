@@ -7,10 +7,11 @@ import {
   TimelineDayHeader,
   TimelineDivider,
 } from "@/components";
-import { useFeeding, useSleep } from "@/contexts";
+import { useFeeding, useSleep, useDiaper } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
+import type { StoredDiaperEntry } from "@/services/diaper-storage";
 
 interface TimelineEntry {
   id: string;
@@ -64,6 +65,7 @@ export default function TimelineScreen() {
   const { t } = useTranslation();
   const { feedings } = useFeeding();
   const { sleeps } = useSleep();
+  const { diapers } = useDiaper();
 
   const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
     const date = new Date(feeding.startedAt);
@@ -136,12 +138,40 @@ export default function TimelineScreen() {
     };
   }, [t]);
 
+  const diaperToTimelineEntry = useCallback((diaper: StoredDiaperEntry): TimelineEntry => {
+    const date = new Date(diaper.changedAt);
+    const time = formatTime(date);
+
+    const typeLabels: Record<string, string> = {
+      wet: t("diaper.wet"),
+      dirty: t("diaper.dirty"),
+      mixed: t("diaper.mixed"),
+    };
+
+    const title = t("diaper.title");
+    const typeLabel = typeLabels[diaper.type] || diaper.type;
+    const colorLabel = diaper.stoolColor
+      ? t(`stoolColors.${diaper.stoolColor}`)
+      : "";
+    const subtitle = colorLabel ? `${typeLabel} · ${colorLabel}` : typeLabel;
+
+    return {
+      id: diaper.id,
+      activity: "diaper",
+      time,
+      title,
+      subtitle,
+      date,
+    };
+  }, [t]);
+
   const timelineEntries = useMemo(() => {
     const feedingEntries = feedings.map(feedingToTimelineEntry);
     const sleepEntries = sleeps.map(sleepToTimelineEntry);
-    const allEntries = [...feedingEntries, ...sleepEntries];
+    const diaperEntries = diapers.map(diaperToTimelineEntry);
+    const allEntries = [...feedingEntries, ...sleepEntries, ...diaperEntries];
     return allEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [feedings, sleeps, feedingToTimelineEntry, sleepToTimelineEntry]);
+  }, [feedings, sleeps, diapers, feedingToTimelineEntry, sleepToTimelineEntry, diaperToTimelineEntry]);
 
   const groupedEntries = useMemo(() => {
     return groupEntriesByDay(timelineEntries);
