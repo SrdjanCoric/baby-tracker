@@ -9,3 +9,6 @@ export type { SleepState, SleepAction, ActiveSleepTimer } from "./sleep-context"
 
 export { DiaperProvider, useDiaper, diaperReducer, initialDiaperState } from "./diaper-context";
 export type { DiaperState, DiaperAction } from "./diaper-context";
+
+export { PumpingProvider, usePumping, pumpingReducer, initialPumpingState } from "./pumping-context";
+export type { PumpingState, PumpingAction, ActivePumpingTimer } from "./pumping-context";
