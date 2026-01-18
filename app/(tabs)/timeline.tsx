@@ -82,7 +82,10 @@ export default function TimelineScreen() {
         : "";
       subtitle = durationLabel ? `${sideLabel} · ${durationLabel}` : sideLabel;
     } else if (feeding.type === "bottle") {
-      title = t("feeding.bottle");
+      const contentLabel = feeding.contentType === "breastMilk"
+        ? t("feeding.breastMilk")
+        : t("feeding.formula");
+      title = `${t("feeding.bottle")} (${contentLabel})`;
       subtitle = feeding.amountMl ? `${feeding.amountMl} ml` : "";
     } else {
       title = t("feeding.solid");

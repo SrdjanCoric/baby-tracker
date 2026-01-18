@@ -2,11 +2,13 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   BabyHeader,
   DashboardCard,
   TodaySummary,
+  FeedingTypeMenu,
+  type FeedingMenuOption,
 } from "@/components";
 import { useFeeding } from "@/contexts";
 import { timeSince } from "@/utils/time";
@@ -15,6 +17,7 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { feedings, activeTimer, getLastFeeding } = useFeeding();
+  const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
     if (activeTimer?.isRunning) {
@@ -47,15 +50,23 @@ export default function HomeScreen() {
     todayDiaperCount: 6,
   };
 
-  const handleAddFeeding = () => {
-    router.push("/feeding/breastfeed");
-  };
+  const handleAddFeeding = useCallback(() => {
+    setShowFeedingMenu(true);
+  }, []);
 
-  const handleFeedingCardPress = () => {
+  const handleFeedingMenuSelect = useCallback((option: FeedingMenuOption) => {
+    if (option === "breastfeed") {
+      router.push("/feeding/breastfeed");
+    } else {
+      router.push("/feeding/bottle");
+    }
+  }, [router]);
+
+  const handleFeedingCardPress = useCallback(() => {
     if (isFeedingActive) {
       router.push("/feeding/breastfeed");
     }
-  };
+  }, [isFeedingActive, router]);
 
   const handleAddSleep = () => {
     console.log("Add sleep");
@@ -166,6 +177,13 @@ export default function HomeScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Feeding Type Menu Modal */}
+      <FeedingTypeMenu
+        visible={showFeedingMenu}
+        onClose={() => setShowFeedingMenu(false)}
+        onSelect={handleFeedingMenuSelect}
+      />
     </SafeAreaView>
   );
 }

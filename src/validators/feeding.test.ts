@@ -6,6 +6,7 @@ import {
   validateEndTime,
   validateFeedingDuration,
   validateBottleAmount,
+  validateBottleContentType,
   validateBreastfeeding,
   validateBottleFeeding,
   calculateFeedingDuration
@@ -110,6 +111,26 @@ describe("validateBottleAmount", () => {
   });
 });
 
+describe("validateBottleContentType", () => {
+  it("returns null for non-bottle feeding", () => {
+    expect(validateBottleContentType(undefined, "breast")).toBeNull();
+    expect(validateBottleContentType(undefined, "solid")).toBeNull();
+  });
+
+  it("returns error for bottle feeding without content type", () => {
+    expect(validateBottleContentType(undefined, "bottle")).toBe("Content type is required for bottle feeding");
+  });
+
+  it("returns null for valid content types", () => {
+    expect(validateBottleContentType("formula", "bottle")).toBeNull();
+    expect(validateBottleContentType("breastMilk", "bottle")).toBeNull();
+  });
+
+  it("returns error for invalid content type", () => {
+    expect(validateBottleContentType("water" as "formula", "bottle")).toBe("Invalid content type");
+  });
+});
+
 describe("validateBreastfeeding", () => {
   it("returns valid for correct breastfeeding entry", () => {
     const result = validateBreastfeeding({
@@ -166,7 +187,8 @@ describe("validateBottleFeeding", () => {
     const result = validateBottleFeeding({
       type: "bottle",
       startedAt: new Date(),
-      amountMl: 120
+      amountMl: 120,
+      contentType: "formula"
     });
     expect(result.isValid).toBe(true);
     expect(result.errors).toEqual({});
@@ -176,7 +198,8 @@ describe("validateBottleFeeding", () => {
     const result = validateBottleFeeding({
       type: "breast",
       startedAt: new Date(),
-      amountMl: 120
+      amountMl: 120,
+      contentType: "formula"
     });
     expect(result.isValid).toBe(false);
     expect(result.errors.type).toBeDefined();
@@ -185,10 +208,32 @@ describe("validateBottleFeeding", () => {
   it("returns error for missing amount", () => {
     const result = validateBottleFeeding({
       type: "bottle",
-      startedAt: new Date()
+      startedAt: new Date(),
+      contentType: "formula"
     });
     expect(result.isValid).toBe(false);
     expect(result.errors.amountMl).toBeDefined();
+  });
+
+  it("returns error for missing content type", () => {
+    const result = validateBottleFeeding({
+      type: "bottle",
+      startedAt: new Date(),
+      amountMl: 120
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.contentType).toBeDefined();
+  });
+
+  it("returns valid for breast milk content type", () => {
+    const result = validateBottleFeeding({
+      type: "bottle",
+      startedAt: new Date(),
+      amountMl: 90,
+      contentType: "breastMilk"
+    });
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toEqual({});
   });
 });
 
