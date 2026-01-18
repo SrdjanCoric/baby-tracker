@@ -90,6 +90,15 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Tab-based UI for breastfeeding vs bottle selection
   - [x] Quick duration buttons (5, 10, 15, 20, 30, 45 min)
   - [x] FeedingTypeMenu updated with "Log Past Feeding" option
+- [x] Solid Food Tracking (Ready for Manual Testing)
+  - [x] SolidAmount type (aLittle, some, aLot) and SOLID_AMOUNTS constant
+  - [x] Common foods list in src/constants/foods.ts
+  - [x] Solid feeding validators with 17 new tests (245 total)
+  - [x] validateFoodType, validateSolidAmount, validateSolidFeeding
+  - [x] Solid feeding screen with food selection and amount
+  - [x] Recent foods quick selection from feeding history
+  - [x] FeedingTypeMenu updated with "Solid Food" option
+  - [x] Timeline displays solid feedings with food type and amount
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -1233,11 +1242,24 @@ describe('SolidFeedingForm', () => {
 4. Add amount selector
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Can log food type
-- [ ] Food suggestions work
-- [ ] Amount tracking works
-- [ ] Recent foods shown for quick entry
+- [x] All tests pass (245 tests, including 17 new solid feeding validator tests)
+- [x] Can log food type via quick select or custom input
+- [x] Food suggestions work (recent foods from history, common foods fallback)
+- [x] Amount tracking works (a little, some, a lot)
+- [x] Recent foods shown for quick entry
+
+**Architecture Rethink - Reaction-Based Tracking:**
+
+Based on research of 10 baby tracker apps (Huckleberry, Solid Starts, Glow Baby, etc.), replaced amount tracking with reaction tracking since parents care more about whether baby liked the food than how much they ate.
+
+- [x] Added `SolidReaction` type: `"loved" | "meh" | "refused"` (3 options like Huckleberry)
+- [x] Updated storage interfaces to support reaction field
+- [x] Added `validateSolidReaction()` validator with tests
+- [x] Replaced amount buttons with emoji reaction buttons (😍 Loved it | 😐 Meh | 😣 Refused)
+- [x] Updated timeline to display reaction with emoji (e.g., "Banana · 😍 Loved it")
+- [x] Added reaction translations to i18n
+- [x] Fixed food input styling (min-height 48px, proper padding, light green background)
+- [x] All 250 tests pass
 
 ---
 

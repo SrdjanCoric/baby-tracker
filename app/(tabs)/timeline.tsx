@@ -89,7 +89,19 @@ export default function TimelineScreen() {
       subtitle = feeding.amountMl ? `${feeding.amountMl} ml` : "";
     } else {
       title = t("feeding.solid");
-      subtitle = feeding.foodType || "";
+      const foodLabel = feeding.foodType || "";
+      let reactionDisplay = "";
+      if (feeding.reaction) {
+        const reactionEmojis: Record<string, string> = {
+          loved: "😍",
+          meh: "😐",
+          refused: "😣",
+        };
+        const emoji = reactionEmojis[feeding.reaction] || "";
+        const label = t(`feeding.${feeding.reaction}`);
+        reactionDisplay = `${emoji} ${label}`;
+      }
+      subtitle = reactionDisplay ? `${foodLabel} · ${reactionDisplay}` : foodLabel;
     }
 
     return {

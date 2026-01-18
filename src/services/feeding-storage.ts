@@ -2,7 +2,7 @@
  * Feeding storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { BreastSide, FeedingType, BottleContentType } from "@/constants/activities";
+import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 
 const FEEDINGS_KEY_PREFIX = "@feedings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_feeding_timer:";
@@ -18,6 +18,8 @@ export interface StoredFeedingEntry {
   amountMl?: number;
   contentType?: BottleContentType;
   foodType?: string;
+  amount?: SolidAmount;
+  reaction?: SolidReaction;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -33,6 +35,8 @@ export interface CreateFeedingInput {
   amountMl?: number;
   contentType?: BottleContentType;
   foodType?: string;
+  amount?: SolidAmount;
+  reaction?: SolidReaction;
   notes?: string;
 }
 
@@ -42,6 +46,8 @@ export interface UpdateFeedingInput {
   amountMl?: number;
   contentType?: BottleContentType;
   foodType?: string;
+  amount?: SolidAmount;
+  reaction?: SolidReaction;
   notes?: string;
   side?: BreastSide;
 }
@@ -91,6 +97,8 @@ export const FeedingStorageService = {
       amountMl: input.amountMl,
       contentType: input.contentType,
       foodType: input.foodType,
+      amount: input.amount,
+      reaction: input.reaction,
       notes: input.notes,
       createdAt: now,
       updatedAt: now,
@@ -119,6 +127,8 @@ export const FeedingStorageService = {
       ...(input.amountMl !== undefined && { amountMl: input.amountMl }),
       ...(input.contentType !== undefined && { contentType: input.contentType }),
       ...(input.foodType !== undefined && { foodType: input.foodType }),
+      ...(input.amount !== undefined && { amount: input.amount }),
+      ...(input.reaction !== undefined && { reaction: input.reaction }),
       ...(input.notes !== undefined && { notes: input.notes }),
       ...(input.side !== undefined && { side: input.side }),
       updatedAt: new Date().toISOString(),

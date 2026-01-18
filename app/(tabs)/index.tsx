@@ -59,6 +59,8 @@ export default function HomeScreen() {
       router.push("/feeding/breastfeed");
     } else if (option === "bottle") {
       router.push("/feeding/bottle");
+    } else if (option === "solids") {
+      router.push("/feeding/solids");
     } else if (option === "manual") {
       router.push("/feeding/manual");
     }

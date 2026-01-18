@@ -13,7 +13,11 @@ import {
   validateStartTimeNotInFuture,
   validateManualFeedingDuration,
   validateManualBreastfeeding,
-  validateManualBottleFeeding
+  validateManualBottleFeeding,
+  validateFoodType,
+  validateSolidAmount,
+  validateSolidFeeding,
+  validateSolidReaction
 } from "./feeding";
 
 describe("validateFeedingType", () => {
@@ -423,5 +427,189 @@ describe("validateManualBottleFeeding", () => {
     });
     expect(result.isValid).toBe(false);
     expect(result.errors.contentType).toBeDefined();
+  });
+});
+
+describe("validateFoodType", () => {
+  it("returns null for valid food type string", () => {
+    expect(validateFoodType("banana")).toBeNull();
+    expect(validateFoodType("avocado puree")).toBeNull();
+    expect(validateFoodType("sweet potato")).toBeNull();
+  });
+
+  it("returns error for empty food type", () => {
+    expect(validateFoodType("")).toBe("Food type is required");
+    expect(validateFoodType("   ")).toBe("Food type is required");
+  });
+
+  it("returns error for undefined food type", () => {
+    expect(validateFoodType(undefined)).toBe("Food type is required");
+  });
+
+  it("returns error for food type that is too long", () => {
+    const longFood = "a".repeat(101);
+    expect(validateFoodType(longFood)).toBe("Food type is too long (max 100 characters)");
+  });
+
+  it("returns null for food type at max length", () => {
+    const maxFood = "a".repeat(100);
+    expect(validateFoodType(maxFood)).toBeNull();
+  });
+});
+
+describe("validateSolidAmount", () => {
+  it("returns null for valid amounts", () => {
+    expect(validateSolidAmount("aLittle")).toBeNull();
+    expect(validateSolidAmount("some")).toBeNull();
+    expect(validateSolidAmount("aLot")).toBeNull();
+  });
+
+  it("returns error for invalid amount", () => {
+    expect(validateSolidAmount("invalid" as "aLittle")).toBe("Invalid amount");
+    expect(validateSolidAmount("" as "aLittle")).toBe("Invalid amount");
+  });
+
+  it("returns null for undefined amount (optional)", () => {
+    expect(validateSolidAmount(undefined)).toBeNull();
+  });
+});
+
+describe("validateSolidReaction", () => {
+  it("returns null for valid reactions", () => {
+    expect(validateSolidReaction("loved")).toBeNull();
+    expect(validateSolidReaction("meh")).toBeNull();
+    expect(validateSolidReaction("refused")).toBeNull();
+  });
+
+  it("returns error for invalid reaction", () => {
+    expect(validateSolidReaction("invalid" as "loved")).toBe("Invalid reaction");
+    expect(validateSolidReaction("" as "loved")).toBe("Invalid reaction");
+  });
+
+  it("returns null for undefined reaction (optional)", () => {
+    expect(validateSolidReaction(undefined)).toBeNull();
+  });
+});
+
+describe("validateSolidFeeding", () => {
+  it("returns valid for correct solid feeding entry", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateSolidFeeding({
+      type: "solid",
+      startedAt: pastTime,
+      foodType: "banana"
+    });
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toEqual({});
+  });
+
+  it("returns valid with amount specified", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateSolidFeeding({
+      type: "solid",
+      startedAt: pastTime,
+      foodType: "avocado",
+      amount: "some"
+    });
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toEqual({});
+  });
+
+  it("returns valid with reaction specified", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateSolidFeeding({
+      type: "solid",
+      startedAt: pastTime,
+      foodType: "banana",
+      reaction: "loved"
+    });
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toEqual({});
+  });
+
+  it("returns error for invalid reaction", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateSolidFeeding({
+      type: "solid",
+      startedAt: pastTime,
+      foodType: "banana",
+      reaction: "invalid" as "loved"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.reaction).toBe("Invalid reaction");
+  });
+
+  it("returns error for wrong feeding type", () => {
+    const result = validateSolidFeeding({
+      type: "bottle",
+      startedAt: new Date(),
+      foodType: "banana"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.type).toBe("Invalid feeding type for solid food");
+  });
+
+  it("returns error for missing food type", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateSolidFeeding({
+      type: "solid",
+      startedAt: pastTime
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.foodType).toBe("Food type is required");
+  });
+
+  it("returns error for empty food type", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateSolidFeeding({
+      type: "solid",
+      startedAt: pastTime,
+      foodType: ""
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.foodType).toBe("Food type is required");
+  });
+
+  it("returns error for future start time", () => {
+    const futureTime = new Date(Date.now() + 3600000);
+    const result = validateSolidFeeding({
+      type: "solid",
+      startedAt: futureTime,
+      foodType: "banana"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+  });
+
+  it("returns error for missing start time", () => {
+    const result = validateSolidFeeding({
+      type: "solid",
+      foodType: "banana"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.startedAt).toBe("Start time is required");
+  });
+
+  it("returns error for invalid amount", () => {
+    const pastTime = new Date(Date.now() - 3600000);
+    const result = validateSolidFeeding({
+      type: "solid",
+      startedAt: pastTime,
+      foodType: "banana",
+      amount: "invalid" as "aLittle"
+    });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.amount).toBe("Invalid amount");
+  });
+
+  it("returns multiple errors when multiple fields invalid", () => {
+    const futureTime = new Date(Date.now() + 3600000);
+    const result = validateSolidFeeding({
+      type: "breast",
+      startedAt: futureTime,
+      foodType: ""
+    });
+    expect(result.isValid).toBe(false);
+    expect(Object.keys(result.errors).length).toBeGreaterThanOrEqual(2);
   });
 });
