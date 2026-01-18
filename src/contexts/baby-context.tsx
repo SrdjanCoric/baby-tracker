@@ -111,9 +111,17 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     const result = await BabyStorageService.deleteBaby(id);
     if (result) {
       dispatch({ type: "DELETE_BABY", payload: id });
+
+      if (state.selectedBaby?.id === id) {
+        const remainingBabies = state.babies.filter(b => b.id !== id);
+        if (remainingBabies.length > 0) {
+          await BabyStorageService.setSelectedBabyId(remainingBabies[0].id);
+          dispatch({ type: "SET_SELECTED_BABY", payload: remainingBabies[0] });
+        }
+      }
     }
     return result;
-  }, []);
+  }, [state.selectedBaby?.id, state.babies]);
 
   const selectBaby = useCallback(async (id: string | null) => {
     await BabyStorageService.setSelectedBabyId(id);

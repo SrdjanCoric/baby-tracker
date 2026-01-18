@@ -156,7 +156,7 @@ function BabyProfileForm({
         <Pressable
           onPress={() => setShowDatePicker(true)}
           className={`
-            min-h-[56px] px-4 rounded-2xl border-2 flex-row items-center justify-between
+            min-h-[48px] px-4 rounded-2xl border-2 flex-row items-center justify-between
             ${
               touched.birthDate && errors.birthDate
                 ? "border-red-400 bg-red-50"
