@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTummyTime, useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
+import { MilestoneSuggestionModal } from "@/components/MilestoneSuggestionModal";
 import Svg, { Circle } from "react-native-svg";
 
 const TUMMY_ORANGE = "#E67E22";
@@ -22,6 +23,12 @@ export default function TummyTimeScreen() {
     getTodaysTotalSeconds,
     getDailyProgress,
     dailyGoalSeconds,
+    goalSource,
+    currentAgeGroup,
+    showMilestoneSuggestion,
+    suggestedGoalSeconds,
+    acceptMilestoneSuggestion,
+    dismissMilestoneSuggestion,
   } = useTummyTime();
 
   const [tick, setTick] = useState(0);
@@ -76,6 +83,22 @@ export default function TummyTimeScreen() {
     router.push("/tummyTime/manual");
   }, [router]);
 
+  const handleGoalSettings = useCallback(() => {
+    router.push("/tummyTime/settings");
+  }, [router]);
+
+  const handleAcceptSuggestion = useCallback(async () => {
+    await acceptMilestoneSuggestion();
+  }, [acceptMilestoneSuggestion]);
+
+  const handleDismissSuggestion = useCallback(async () => {
+    await dismissMilestoneSuggestion();
+  }, [dismissMilestoneSuggestion]);
+
+  const handleKeepCurrent = useCallback(() => {
+    dismissMilestoneSuggestion();
+  }, [dismissMilestoneSuggestion]);
+
   if (!selectedBaby) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
@@ -108,7 +131,14 @@ export default function TummyTimeScreen() {
             {selectedBaby.name}
           </Text>
         </View>
-        <View className="w-touch" />
+        <Pressable
+          onPress={handleGoalSettings}
+          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+          accessibilityRole="button"
+          accessibilityLabel={t("tummyTime.goalSettings")}
+        >
+          <Text className="text-xl">⚙️</Text>
+        </Pressable>
       </View>
 
       <View className="flex-1 items-center justify-center px-6">
@@ -125,11 +155,25 @@ export default function TummyTimeScreen() {
             todaysTotal={todaysTotal}
             progress={progress}
             dailyGoalSeconds={dailyGoalSeconds}
+            goalSource={goalSource}
+            currentAgeGroup={currentAgeGroup}
             onStart={handleStartTummyTime}
             onLogPast={handleLogPastTummyTime}
+            onGoalSettings={handleGoalSettings}
           />
         )}
       </View>
+
+      {/* Milestone Suggestion Modal */}
+      <MilestoneSuggestionModal
+        visible={showMilestoneSuggestion}
+        currentGoalSeconds={dailyGoalSeconds}
+        suggestedGoalSeconds={suggestedGoalSeconds ?? 0}
+        ageGroupLabel={currentAgeGroup?.label ?? ""}
+        onAccept={handleAcceptSuggestion}
+        onDismiss={handleDismissSuggestion}
+        onKeepCurrent={handleKeepCurrent}
+      />
     </SafeAreaView>
   );
 }
@@ -177,16 +221,22 @@ interface StartViewProps {
   todaysTotal: number;
   progress: number;
   dailyGoalSeconds: number;
+  goalSource: "age_based" | "custom";
+  currentAgeGroup: { label: string; rationale: string } | null;
   onStart: () => void;
   onLogPast: () => void;
+  onGoalSettings: () => void;
 }
 
 function StartView({
   todaysTotal,
   progress,
   dailyGoalSeconds,
+  goalSource,
+  currentAgeGroup,
   onStart,
   onLogPast,
+  onGoalSettings,
 }: StartViewProps) {
   const { t } = useTranslation();
   const isGoalComplete = progress >= 100;
@@ -222,16 +272,24 @@ function StartView({
           <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-1">
             {t("tummyTime.todaysProgress")}
           </Text>
-          <Text className="text-xl font-semibold text-content-primary dark:text-content-dark-primary">
-            {formatDuration(todaysTotal)} / {formatDuration(dailyGoalSeconds)}
-          </Text>
+          <Pressable onPress={onGoalSettings} className="items-center active:opacity-70">
+            <Text className="text-xl font-semibold text-content-primary dark:text-content-dark-primary text-center">
+              {formatDuration(todaysTotal)} / {formatDuration(dailyGoalSeconds)}
+            </Text>
+            {goalSource === "age_based" && currentAgeGroup ? (
+              <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary text-center mt-1">
+                {t("tummyTime.basedOnGuidelines", { ageGroup: currentAgeGroup.label })}
+              </Text>
+            ) : goalSource === "custom" ? (
+              <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary text-center mt-1">
+                {t("tummyTime.customGoalNote")}
+              </Text>
+            ) : null}
+          </Pressable>
         </View>
       )}
 
-      {/* Title */}
-      <Text className="text-2xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
-        {t("tummyTime.startTummyTime")}
-      </Text>
+      {/* Tap to start instruction */}
       <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-8 text-center">
         {t("tummyTime.tapToStart")}
       </Text>
