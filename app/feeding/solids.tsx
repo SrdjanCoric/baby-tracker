@@ -91,8 +91,6 @@ export default function SolidFeedingScreen() {
     }
   }, [selectedBaby, foodType, reaction, notes, addFeeding, router]);
 
-  const canSave = foodType.trim().length > 0;
-
   const validationMessage = useMemo(() => {
     if (!showValidation) return null;
     if (!foodType.trim()) {

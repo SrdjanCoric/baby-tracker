@@ -340,6 +340,7 @@ export default function ManualFeedingScreen() {
     notes,
     addFeeding,
     router,
+    t,
   ]);
 
   const canSave =
