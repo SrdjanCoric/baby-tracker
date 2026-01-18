@@ -152,6 +152,15 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] User customization with settings screen
   - [x] Goal suggestion modal at age milestones (1mo, 2mo, 3mo, 6mo)
   - [x] 6+ month transition messaging about floor play
+- [ ] Feeding UX Improvement - Log Past by Type
+  - [ ] Remove "Log Past Feeding" option from FeedingTypeMenu (now 3 options instead of 4)
+  - [ ] Add "Log Past Breastfeeding" button to breastfeeding screen
+  - [ ] Add "Log Past Bottle Feeding" button to bottle screen
+  - [ ] Add "Log Past Solid Food" button to solid food screen
+  - [ ] Update manual.tsx to accept type parameter and show type-specific UI
+  - [ ] Add solid food manual entry support
+  - [ ] Add new translation keys for each log past button
+  - [ ] UX matches diaper/sleep pattern (button at bottom of each screen)
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
@@ -1313,6 +1322,45 @@ Based on research of 10 baby tracker apps (Huckleberry, Solid Starts, Glow Baby,
 - [x] Added reaction translations to i18n
 - [x] Fixed food input styling (min-height 48px, proper padding, light green background)
 - [x] All 250 tests pass
+
+---
+
+#### Branch: `feature/feeding-log-past-ux`
+**Scope:** Update "Log Past Feeding" UX to match diaper/sleep pattern
+
+**Why This Change:**
+- Currently "Log Past Feeding" is a 4th option in FeedingTypeMenu alongside breastfeeding, bottle, and solid
+- Diaper and sleep screens have "Log Past" buttons within the activity screen itself
+- This change makes the feeding UX consistent with other activities
+
+**Tasks:**
+1. Remove "Log Past Feeding" option from `FeedingTypeMenu.tsx`
+2. Add "Log Past Breastfeeding" button to `breastfeed.tsx` (shown when timer not running)
+3. Add "Log Past Bottle Feeding" button to `bottle.tsx`
+4. Add "Log Past Solid Food" button to `solids.tsx`
+5. Update `manual.tsx` to accept `type` query parameter (breastfeed/bottle/solids)
+6. When type param provided, show only that type's form (no tabs)
+7. Add solid food manual entry support to `manual.tsx`
+8. Add new translation keys
+
+**Files to Modify:**
+- `src/components/FeedingTypeMenu.tsx` - Remove manual option
+- `app/feeding/breastfeed.tsx` - Add "Log Past" button
+- `app/feeding/bottle.tsx` - Add "Log Past" button
+- `app/feeding/solids.tsx` - Add "Log Past" button
+- `app/feeding/manual.tsx` - Accept type param, add solids support
+- `src/i18n/locales/en.json` - Add new translations
+- `app/(tabs)/index.tsx` - Remove manual option handling
+
+**Definition of Done:**
+- [ ] FeedingTypeMenu shows only 3 options (breastfeed, bottle, solids)
+- [ ] Breastfeeding screen shows "Log Past Breastfeeding" button
+- [ ] Bottle screen shows "Log Past Bottle Feeding" button
+- [ ] Solids screen shows "Log Past Solid Food" button
+- [ ] Manual entry shows type-specific UI when type param provided
+- [ ] Can manually log past solid food entries
+- [ ] All unit tests pass
+- [ ] UX matches diaper/sleep pattern
 
 ---
 

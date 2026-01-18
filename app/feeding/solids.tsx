@@ -22,6 +22,7 @@ export default function SolidFeedingScreen() {
   const [reaction, setReaction] = useState<SolidReaction | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
 
   const recentFoods = useMemo(() => {
     const solidFeedings = feedings
@@ -52,8 +53,13 @@ export default function SolidFeedingScreen() {
     router.back();
   }, [router]);
 
+  const handleLogPast = useCallback(() => {
+    router.push("/feeding/manual?type=solids");
+  }, [router]);
+
   const handleFoodSelect = useCallback((food: string) => {
     setFoodType(food);
+    setShowValidation(false);
     Keyboard.dismiss();
   }, []);
 
@@ -62,7 +68,12 @@ export default function SolidFeedingScreen() {
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!selectedBaby || !foodType.trim()) return;
+    if (!selectedBaby) return;
+
+    if (!foodType.trim()) {
+      setShowValidation(true);
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -81,6 +92,21 @@ export default function SolidFeedingScreen() {
   }, [selectedBaby, foodType, reaction, notes, addFeeding, router]);
 
   const canSave = foodType.trim().length > 0;
+
+  const validationMessage = useMemo(() => {
+    if (!showValidation) return null;
+    if (!foodType.trim()) {
+      return t("feeding.enterFoodValidation");
+    }
+    return null;
+  }, [showValidation, foodType, t]);
+
+  const handleFoodInputChange = useCallback((text: string) => {
+    setFoodType(text);
+    if (text.trim()) {
+      setShowValidation(false);
+    }
+  }, []);
 
   const getFoodLabel = (food: string): string => {
     const foodLabels: Record<string, string> = {
@@ -184,7 +210,7 @@ export default function SolidFeedingScreen() {
               className="flex-1"
               style={{ fontSize: 16, lineHeight: 20, paddingBottom: 6, paddingTop: 6, color: FEEDING_GREEN_DARK }}
               value={foodType}
-              onChangeText={setFoodType}
+              onChangeText={handleFoodInputChange}
               placeholder={t("feeding.foodPlaceholder")}
               placeholderTextColor="#9CA3AF"
               returnKeyType="done"
@@ -260,20 +286,44 @@ export default function SolidFeedingScreen() {
             style={{ minHeight: 80 }}
           />
         </View>
+
+        {/* Log Past Button */}
+        <View className="items-center mt-8 mb-8">
+          <Pressable
+            onPress={handleLogPast}
+            className="py-3 px-6 rounded-button-lg active:opacity-70"
+            style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+            accessibilityRole="button"
+            accessibilityLabel={t("feeding.logPastSolid")}
+          >
+            <Text className="text-base font-medium" style={{ color: FEEDING_GREEN }}>
+              {t("feeding.logPastSolid")}
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
 
-      {/* Save Button - Fixed at bottom */}
-      <View className="px-6 pb-6 pt-2 bg-surface dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
+      {/* Bottom Section - Validation & Save */}
+      <View className="px-6 pb-6 pt-3 bg-surface dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
+        {/* Validation Message */}
+        {validationMessage && (
+          <View className="mb-3 items-center">
+            <Text className="text-sm text-amber-600 dark:text-amber-400 text-center">
+              {validationMessage}
+            </Text>
+          </View>
+        )}
+
         <Pressable
           onPress={handleSave}
-          disabled={!canSave || isSaving}
+          disabled={isSaving}
           className={`py-4 rounded-button-lg items-center active:scale-[0.98] ${
-            !canSave || isSaving ? "opacity-50" : ""
+            isSaving ? "opacity-50" : ""
           }`}
           style={{ backgroundColor: FEEDING_GREEN }}
           accessibilityRole="button"
           accessibilityLabel={t("common.save")}
-          accessibilityState={{ disabled: !canSave || isSaving }}
+          accessibilityState={{ disabled: isSaving }}
         >
           <Text className="text-lg font-semibold text-white">
             {isSaving ? t("common.loading") : t("feeding.logSolidFeeding")}

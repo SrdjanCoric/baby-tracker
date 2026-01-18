@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View, ScrollView, Keyboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -29,13 +29,19 @@ export default function BottleFeedingScreen() {
   const [inputValue, setInputValue] = useState("");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
 
   const handleBack = useCallback(() => {
     router.back();
   }, [router]);
 
+  const handleLogPast = useCallback(() => {
+    router.push("/feeding/manual?type=bottle");
+  }, [router]);
+
   const handleContentTypeSelect = useCallback((type: BottleContentType) => {
     setContentType(type);
+    setShowValidation(false);
   }, []);
 
   const handleQuickAmountSelect = useCallback((amount: number) => {
@@ -47,6 +53,7 @@ export default function BottleFeedingScreen() {
       setAmountMl(amount);
       setInputValue(amount.toString());
     }
+    setShowValidation(false);
     Keyboard.dismiss();
   }, [unit]);
 
@@ -59,6 +66,7 @@ export default function BottleFeedingScreen() {
       } else {
         setAmountMl(value);
       }
+      setShowValidation(false);
     } else {
       setAmountMl(null);
     }
@@ -76,7 +84,12 @@ export default function BottleFeedingScreen() {
   }, [unit, amountMl]);
 
   const handleSave = useCallback(async () => {
-    if (!selectedBaby || !contentType || !amountMl) return;
+    if (!selectedBaby) return;
+
+    if (!contentType || !amountMl || amountMl <= 0) {
+      setShowValidation(true);
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -95,6 +108,20 @@ export default function BottleFeedingScreen() {
   }, [selectedBaby, contentType, amountMl, notes, addFeeding, router]);
 
   const canSave = contentType !== null && amountMl !== null && amountMl > 0;
+
+  const validationMessage = useMemo(() => {
+    if (!showValidation) return null;
+    if (!contentType && (!amountMl || amountMl <= 0)) {
+      return t("feeding.selectContentAndAmount");
+    }
+    if (!contentType) {
+      return t("feeding.selectContentType");
+    }
+    if (!amountMl || amountMl <= 0) {
+      return t("feeding.enterAmountValidation");
+    }
+    return null;
+  }, [showValidation, contentType, amountMl, t]);
 
   if (!selectedBaby) {
     return (
@@ -244,20 +271,44 @@ export default function BottleFeedingScreen() {
             </Text>
           </View>
         )}
+
+        {/* Log Past Button */}
+        <View className="items-center mt-8 mb-8">
+          <Pressable
+            onPress={handleLogPast}
+            className="py-3 px-6 rounded-button-lg active:opacity-70"
+            style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+            accessibilityRole="button"
+            accessibilityLabel={t("feeding.logPastBottle")}
+          >
+            <Text className="text-base font-medium" style={{ color: FEEDING_GREEN }}>
+              {t("feeding.logPastBottle")}
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
 
-      {/* Save Button - Fixed at bottom */}
-      <View className="px-6 pb-6 pt-2 bg-surface dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
+      {/* Bottom Section - Validation & Save */}
+      <View className="px-6 pb-6 pt-3 bg-surface dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
+        {/* Validation Message */}
+        {validationMessage && (
+          <View className="mb-3 items-center">
+            <Text className="text-sm text-amber-600 dark:text-amber-400 text-center">
+              {validationMessage}
+            </Text>
+          </View>
+        )}
+
         <Pressable
           onPress={handleSave}
-          disabled={!canSave || isSaving}
+          disabled={isSaving}
           className={`py-4 rounded-button-lg items-center active:scale-[0.98] ${
-            !canSave || isSaving ? "opacity-50" : ""
+            isSaving ? "opacity-50" : ""
           }`}
           style={{ backgroundColor: FEEDING_GREEN }}
           accessibilityRole="button"
           accessibilityLabel={t("common.save")}
-          accessibilityState={{ disabled: !canSave || isSaving }}
+          accessibilityState={{ disabled: isSaving }}
         >
           <Text className="text-lg font-semibold text-white">
             {isSaving ? t("common.loading") : t("feeding.logBottleFeeding")}
