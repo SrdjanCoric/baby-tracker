@@ -131,7 +131,21 @@
     "dirty": "Dirty",
     "mixed": "Mixed",
     "stoolColor": "Stool Color",
-    "logDiaper": "Log Diaper"
+    "logDiaper": "Log Diaper",
+    "logDiaperChange": "Log Diaper Change",
+    "selectType": "What type of diaper?",
+    "selectColor": "What color?",
+    "wetOnly": "Wet only - no solid waste",
+    "dirtyOnly": "Dirty - solid waste present",
+    "mixedType": "Both wet and dirty",
+    "diaperSaved": "Diaper change saved",
+    "quickLog": "Quick log",
+    "optionalColor": "Color (optional)",
+    "notes": "Notes",
+    "notesPlaceholder": "Add notes (optional)",
+    "logPastDiaper": "Log Past Diaper",
+    "logPastDiaperDesc": "Record a diaper change from earlier",
+    "changeTime": "Change Time"
   },
   "stoolColors": {
     "yellow": "Yellow (mustard)",
