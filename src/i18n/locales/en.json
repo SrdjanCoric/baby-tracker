@@ -113,7 +113,17 @@
     "tapToStop": "Tap to wake baby",
     "sleeping": "Sleeping",
     "sleepSaved": "Sleep saved",
-    "autoDetectHint": "Sleep type detected based on time of day"
+    "autoDetectHint": "Sleep type detected based on time of day",
+    "pastSleepTitle": "Log Past Sleep",
+    "logPastSleep": "Log Past Sleep",
+    "logPastSleepDesc": "Record a sleep from earlier",
+    "startTime": "Start Time",
+    "durationMinutes": "Duration (minutes)",
+    "durationPlaceholder": "Enter duration",
+    "quickDurations": "Quick Durations",
+    "logManualSleep": "Log Sleep",
+    "notes": "Notes",
+    "notesPlaceholder": "Add notes (optional)"
   },
   "diaper": {
     "title": "Diaper",

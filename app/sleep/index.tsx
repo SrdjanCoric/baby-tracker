@@ -68,6 +68,10 @@ export default function SleepScreen() {
     router.back();
   }, [router]);
 
+  const handleLogPastSleep = useCallback(() => {
+    router.push("/sleep/manual");
+  }, [router]);
+
   if (!selectedBaby) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
@@ -115,6 +119,7 @@ export default function SleepScreen() {
           <SleepTypeSelectionView
             suggestedType={suggestedType}
             onSelectType={handleStartSleep}
+            onLogPastSleep={handleLogPastSleep}
           />
         )}
       </View>
@@ -125,9 +130,10 @@ export default function SleepScreen() {
 interface SleepTypeSelectionViewProps {
   suggestedType: SleepType;
   onSelectType: (sleepType: SleepType) => void;
+  onLogPastSleep: () => void;
 }
 
-function SleepTypeSelectionView({ suggestedType, onSelectType }: SleepTypeSelectionViewProps) {
+function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }: SleepTypeSelectionViewProps) {
   const { t } = useTranslation();
 
   return (
@@ -176,6 +182,19 @@ function SleepTypeSelectionView({ suggestedType, onSelectType }: SleepTypeSelect
           {t("sleep.autoDetectHint")}
         </Text>
       </View>
+
+      {/* Log Past Sleep Link */}
+      <Pressable
+        onPress={onLogPastSleep}
+        className="mt-8 py-3 px-6 rounded-button-lg active:opacity-70"
+        style={{ backgroundColor: SLEEP_PURPLE_MUTED }}
+        accessibilityRole="button"
+        accessibilityLabel={t("sleep.logPastSleep")}
+      >
+        <Text className="text-base font-medium" style={{ color: SLEEP_PURPLE }}>
+          {t("sleep.logPastSleep")}
+        </Text>
+      </Pressable>
     </View>
   );
 }
