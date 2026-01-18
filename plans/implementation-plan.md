@@ -152,20 +152,21 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] User customization with settings screen
   - [x] Goal suggestion modal at age milestones (1mo, 2mo, 3mo, 6mo)
   - [x] 6+ month transition messaging about floor play
-- [ ] Sleep Smart Goals (Age-Based Targets)
-  - [ ] Add age-based sleep constants in src/constants/sleep-goals.ts
+- [x] Sleep Smart Goals (Age-Based Targets)
+  - [x] Add age-based sleep constants in src/utils/sleepGoals.ts
     - Total sleep hours by age (0-2mo: 15-17h, 3-5mo: 14-15h, 6-8mo: 14h, 9-12mo: 13-14h, 13-18mo: 13-14h, 19+mo: 11-12h)
     - Number of naps by age (0-2mo: 4-5, 3-5mo: 3-4, 6-8mo: 2-3, 9-12mo: 2, 13-18mo: 1-2, 19+mo: 0-1)
     - Wake windows by age (0-2mo: 30-60min, 3-5mo: 1-2h, 6-8mo: 2-3h, 9-12mo: 2.5-3.5h, 13-18mo: 3-4h, 19+mo: 4-6h)
-  - [ ] Add getSleepGoalForAge() utility function with tests
-  - [ ] Add getWakeWindowForAge() utility function with tests
-  - [ ] Update SleepContext to use age-based wake window (currently hardcoded 150 min)
-  - [ ] Update Sleep dashboard card to show "Today: Xh / Goal: X-Xh"
-  - [ ] Add user customization for sleep goals (similar to tummy time)
-    - [ ] Store custom goals in AsyncStorage per baby
-    - [ ] Sleep settings screen to adjust daily sleep goal
-    - [ ] Goal suggestion modal at age milestones
-  - [ ] Add translation keys for sleep goals
+  - [x] Add getSleepGoalForAge() utility function with tests (47 tests)
+  - [x] Add getWakeWindowForAge() utility function with tests
+  - [x] Update SleepContext to use age-based wake window (replaced hardcoded 150 min)
+  - [x] Update Sleep dashboard card to show "Xh Xm / Yh" with progress bar
+  - [x] Add user customization for sleep goals (similar to tummy time)
+    - [x] Store custom goals in AsyncStorage per baby
+    - [x] Sleep settings screen to adjust daily sleep goal
+    - [x] Goal suggestion modal at age milestones
+  - [x] Add translation keys for sleep goals
+  - [x] Simplified dashboard UX: Sleep shows only "Awake: Xh Xm", Tummy Time shows only session count
 - [ ] One-Tap Feeding (Tabbed UI)
   - [ ] Remove FeedingTypeMenu modal entirely
   - [ ] Create new unified FeedingScreen with tabs at top (🤱 Breast | 🍼 Bottle | 🥣 Solids)
