@@ -17,11 +17,11 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { feedings, activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide } = useFeeding();
-  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes } = useSleep();
+  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress } = useSleep();
   const { diapers, getTodaysCounts } = useDiaper();
   const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide } = usePumping();
   const { getLastMeasurement, getWeightChange } = useGrowth();
-  const { activeTimer: tummyTimeActiveTimer, getLastTummyTime, getDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds } = useTummyTime();
+  const { activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds } = useTummyTime();
   const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
@@ -58,48 +58,32 @@ export default function HomeScreen() {
     if (sleepActiveTimer?.isRunning) {
       return t("common.now");
     }
-    const lastSleep = getLastSleep();
-    if (!lastSleep) {
-      return "--";
-    }
-    // Show awake time (time since sleep ended)
-    if (lastSleep.endedAt) {
-      return `Awake: ${timeSince(new Date(lastSleep.endedAt))}`;
-    }
-    return timeSince(new Date(lastSleep.startedAt));
-  }, [sleepActiveTimer, getLastSleep, t]);
 
-  const sleepSubtitle = useMemo(() => {
+    const totalMinutes = getTodaysTotalSleepMinutes();
+    const goalHours = Math.round(dailyGoalMinutes / 60);
+    const totalHours = Math.floor(totalMinutes / 60);
+    const remainingMins = totalMinutes % 60;
+
+    if (totalMinutes === 0) {
+      return `0h / ${goalHours}h goal`;
+    }
+
+    if (remainingMins > 0) {
+      return `${totalHours}h ${remainingMins}m / ${goalHours}h`;
+    }
+    return `${totalHours}h / ${goalHours}h goal`;
+  }, [sleepActiveTimer, getTodaysTotalSleepMinutes, dailyGoalMinutes, t]);
+
+  const sleepSecondaryInfo = useMemo(() => {
     if (sleepActiveTimer?.isRunning) return undefined;
     const lastSleep = getLastSleep();
 
-    const parts: string[] = [];
-
-    // Show last nap duration
-    if (lastSleep?.durationSeconds) {
-      const hours = Math.floor(lastSleep.durationSeconds / 3600);
-      const minutes = Math.floor((lastSleep.durationSeconds % 3600) / 60);
-      if (hours > 0) {
-        parts.push(`Last: ${hours}h ${minutes}m`);
-      } else {
-        parts.push(`Last: ${minutes}m`);
-      }
+    if (lastSleep?.endedAt) {
+      return `Awake: ${timeSince(new Date(lastSleep.endedAt))}`;
     }
 
-    // Show total sleep today
-    const totalMinutes = getTodaysTotalSleepMinutes();
-    if (totalMinutes > 0) {
-      const totalHours = Math.floor(totalMinutes / 60);
-      const remainingMins = totalMinutes % 60;
-      if (totalHours > 0) {
-        parts.push(`Today: ${totalHours}h ${remainingMins}m`);
-      } else {
-        parts.push(`Today: ${remainingMins}m`);
-      }
-    }
-
-    return parts.length > 0 ? parts.join(" • ") : undefined;
-  }, [sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes]);
+    return undefined;
+  }, [sleepActiveTimer, getLastSleep]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
@@ -227,24 +211,23 @@ export default function HomeScreen() {
     if (tummyTimeActiveTimer?.isRunning) return undefined;
 
     const sessionCount = getTodaysSessionCount();
-    const lastTummyTime = getLastTummyTime();
 
-    const parts: string[] = [];
     if (sessionCount > 0) {
-      parts.push(`${sessionCount} session${sessionCount !== 1 ? "s" : ""}`);
-    }
-    if (lastTummyTime) {
-      parts.push(timeSince(new Date(lastTummyTime.startedAt)));
+      return `${sessionCount} session${sessionCount !== 1 ? "s" : ""}`;
     }
 
-    return parts.length > 0 ? parts.join(" • ") : undefined;
-  }, [tummyTimeActiveTimer, getTodaysSessionCount, getLastTummyTime]);
+    return undefined;
+  }, [tummyTimeActiveTimer, getTodaysSessionCount]);
 
   const isTummyTimeActive = tummyTimeActiveTimer?.isRunning ?? false;
 
   const tummyTimeProgress = useMemo(() => {
-    return getDailyProgress();
-  }, [getDailyProgress]);
+    return getTummyTimeDailyProgress();
+  }, [getTummyTimeDailyProgress]);
+
+  const sleepProgress = useMemo(() => {
+    return getSleepDailyProgress();
+  }, [getSleepDailyProgress]);
 
   const todayFeedings = useMemo(() => {
     const today = new Date();
@@ -353,12 +336,13 @@ export default function HomeScreen() {
               activity="sleep"
               label={t("sleep.title")}
               timeSince={sleepTimeSince}
-              subtitle={sleepSubtitle}
+              secondaryInfo={sleepSecondaryInfo}
               isActive={isSleepActive}
               activeLabel={t("sleep.sleeping")}
               onPress={handleSleepCardPress}
               onActionPress={handleAddSleep}
               actionLabel={isSleepActive ? undefined : "+"}
+              progress={sleepProgress}
             />
           </View>
 
