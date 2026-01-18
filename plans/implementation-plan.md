@@ -167,17 +167,17 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
     - [x] Goal suggestion modal at age milestones
   - [x] Add translation keys for sleep goals
   - [x] Simplified dashboard UX: Sleep shows only "Awake: Xh Xm", Tummy Time shows only session count
-- [ ] One-Tap Feeding (Tabbed UI)
-  - [ ] Remove FeedingTypeMenu modal entirely
-  - [ ] Create new unified FeedingScreen with tabs at top (🤱 Breast | 🍼 Bottle | 🥣 Solids)
-  - [ ] Store last-used feeding type in AsyncStorage (default: breastfeeding)
-  - [ ] On open, automatically select last-used tab
-  - [ ] Each tab shows its respective form inline (no navigation)
-  - [ ] Add "Log Past" button at bottom of each tab section
-  - [ ] Update manual.tsx to accept type parameter for type-specific past logging
-  - [ ] Add solid food manual entry support
-  - [ ] Update navigation: Feed card opens /feeding directly (no menu)
-  - [ ] Add translation keys for tab labels
+- [x] One-Tap Feeding (Tabbed UI)
+  - [x] Remove FeedingTypeMenu modal entirely (removed from dashboard)
+  - [x] Create new unified FeedingScreen with tabs at top (🤱 Breast | 🍼 Bottle | 🥣 Solids)
+  - [x] Store last-used feeding type in AsyncStorage (default: breastfeeding)
+  - [x] On open, automatically select last-used tab
+  - [x] Each tab shows its respective form inline (no navigation)
+  - [x] Add "Log Past" button at bottom of each tab section
+  - [x] Update manual.tsx to accept type parameter for type-specific past logging (already done)
+  - [x] Add solid food manual entry support (already done)
+  - [x] Update navigation: Feed card opens /feeding directly (no menu)
+  - [x] Uses existing translation keys (breastfeedingTab, bottleTab, solidFood)
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
