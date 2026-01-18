@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo, useCallback } from "react";
+import { useRouter } from "expo-router";
 import {
   TimelineItem,
   TimelineDayHeader,
@@ -68,12 +69,17 @@ function groupEntriesByDay(entries: TimelineEntry[]): GroupedEntries[] {
 
 export default function TimelineScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { feedings } = useFeeding();
   const { sleeps } = useSleep();
   const { diapers } = useDiaper();
   const { pumpings } = usePumping();
   const { measurements } = useGrowth();
   const { tummyTimes } = useTummyTime();
+
+  const handleEditEntry = useCallback((activity: TimelineEntry["activity"], id: string) => {
+    router.push(`/edit/${activity}?id=${id}`);
+  }, [router]);
 
   const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
     const date = new Date(feeding.startedAt);
@@ -276,9 +282,7 @@ export default function TimelineScreen() {
                     time={item.time}
                     title={item.title}
                     subtitle={item.subtitle}
-                    onPress={() => {
-                      // Navigate to edit screen
-                    }}
+                    onPress={() => handleEditEntry(item.activity, item.id)}
                   />
                   {index < group.entries.length - 1 && <TimelineDivider />}
                 </View>

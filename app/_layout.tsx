@@ -64,6 +64,15 @@ export default function RootLayout() {
                         animation: "slide_from_bottom",
                       }}
                     />
+                    <Stack.Screen
+                      name="edit"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                        gestureEnabled: true,
+                        gestureDirection: "vertical",
+                      }}
+                    />
                   </Stack>
                   <StatusBar style="auto" />
                 </TummyTimeProvider>
