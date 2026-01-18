@@ -160,8 +160,20 @@
     "title": "Pumping",
     "startPumping": "Start Pumping",
     "stopPumping": "Stop Pumping",
+    "pumping": "Pumping",
     "amount": "Amount",
-    "side": "Side"
+    "side": "Side",
+    "selectSideToStart": "Select a side to start the timer",
+    "suggestedSideHint": "{{side}} is suggested based on your last session",
+    "timerRunning": "Timer running",
+    "tapToStop": "Tap to stop",
+    "howMuchPumped": "How much did you pump?",
+    "enterVolume": "Enter the volume pumped",
+    "logPastPumping": "Log Past Pumping",
+    "logPastPumpingDesc": "Record a pumping session from earlier",
+    "pastPumpingTitle": "Log Past Pumping",
+    "logManualPumping": "Log Pumping",
+    "pumpingSaved": "Pumping session saved"
   },
   "growth": {
     "title": "Growth",
