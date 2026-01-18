@@ -19,7 +19,7 @@ export default function HomeScreen() {
   const { feedings, activeTimer: feedingActiveTimer, getLastFeeding } = useFeeding();
   const { sleeps, activeTimer: sleepActiveTimer, getLastSleep } = useSleep();
   const { getLastDiaper, getTodaysCounts } = useDiaper();
-  const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume } = usePumping();
+  const { activeTimer: pumpingActiveTimer, getLastPumping } = usePumping();
   const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
