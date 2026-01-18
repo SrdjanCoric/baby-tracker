@@ -14,6 +14,8 @@ interface DashboardCardProps {
   actionLabel?: string;
   testID?: string;
   progress?: number;
+  subtitle?: string;
+  secondaryInfo?: string;
 }
 
 const activityConfig: Record<
@@ -76,6 +78,8 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
       actionLabel = "+",
       testID,
       progress,
+      subtitle,
+      secondaryInfo,
     },
     ref
   ) => {
@@ -147,6 +151,14 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
               >
                 {timeSince || "--:--"}
               </Text>
+              {subtitle && (
+                <Text
+                  className="text-sm mt-1"
+                  style={{ color: secondaryTextColor }}
+                >
+                  {subtitle}
+                </Text>
+              )}
               {progress !== undefined && (
                 <View className="mt-2">
                   <View className="flex-row items-center">
@@ -167,6 +179,14 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
                     </Text>
                   </View>
                 </View>
+              )}
+              {secondaryInfo && (
+                <Text
+                  className="text-xs mt-1"
+                  style={{ color: secondaryTextColor }}
+                >
+                  {secondaryInfo}
+                </Text>
               )}
             </View>
           )}

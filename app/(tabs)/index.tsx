@@ -16,12 +16,12 @@ import { timeSince, formatDate } from "@/utils/time";
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { feedings, activeTimer: feedingActiveTimer, getLastFeeding } = useFeeding();
-  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep } = useSleep();
-  const { getLastDiaper, getTodaysCounts } = useDiaper();
-  const { activeTimer: pumpingActiveTimer, getLastPumping } = usePumping();
-  const { getLastMeasurement } = useGrowth();
-  const { activeTimer: tummyTimeActiveTimer, getLastTummyTime, getDailyProgress } = useTummyTime();
+  const { feedings, activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide } = useFeeding();
+  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes } = useSleep();
+  const { diapers, getLastDiaper, getTodaysCounts } = useDiaper();
+  const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide } = usePumping();
+  const { getLastMeasurement, getWeightChange } = useGrowth();
+  const { activeTimer: tummyTimeActiveTimer, getLastTummyTime, getDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds } = useTummyTime();
   const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
@@ -32,8 +32,15 @@ export default function HomeScreen() {
     if (!lastFeeding) {
       return "--";
     }
-    return timeSince(new Date(lastFeeding.startedAt));
+    return `Last: ${timeSince(new Date(lastFeeding.startedAt))}`;
   }, [feedingActiveTimer, getLastFeeding, t]);
+
+  const feedingSubtitle = useMemo(() => {
+    if (feedingActiveTimer?.isRunning) return undefined;
+    const lastFeeding = getLastFeeding();
+    if (!lastFeeding || lastFeeding.type !== "breast") return undefined;
+    return `Next: ${suggestedSide === "left" ? "Left" : "Right"} side`;
+  }, [feedingActiveTimer, getLastFeeding, suggestedSide]);
 
   const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
 
@@ -45,18 +52,71 @@ export default function HomeScreen() {
     if (!lastSleep) {
       return "--";
     }
+    // Show awake time (time since sleep ended)
+    if (lastSleep.endedAt) {
+      return `Awake: ${timeSince(new Date(lastSleep.endedAt))}`;
+    }
     return timeSince(new Date(lastSleep.startedAt));
   }, [sleepActiveTimer, getLastSleep, t]);
+
+  const sleepSubtitle = useMemo(() => {
+    if (sleepActiveTimer?.isRunning) return undefined;
+    const lastSleep = getLastSleep();
+
+    const parts: string[] = [];
+
+    // Show last nap duration
+    if (lastSleep?.durationSeconds) {
+      const hours = Math.floor(lastSleep.durationSeconds / 3600);
+      const minutes = Math.floor((lastSleep.durationSeconds % 3600) / 60);
+      if (hours > 0) {
+        parts.push(`Last: ${hours}h ${minutes}m`);
+      } else {
+        parts.push(`Last: ${minutes}m`);
+      }
+    }
+
+    // Show total sleep today
+    const totalMinutes = getTodaysTotalSleepMinutes();
+    if (totalMinutes > 0) {
+      const totalHours = Math.floor(totalMinutes / 60);
+      const remainingMins = totalMinutes % 60;
+      if (totalHours > 0) {
+        parts.push(`Today: ${totalHours}h ${remainingMins}m`);
+      } else {
+        parts.push(`Today: ${remainingMins}m`);
+      }
+    }
+
+    return parts.length > 0 ? parts.join(" • ") : undefined;
+  }, [sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
   const diaperTimeSince = useMemo(() => {
-    const lastDiaper = getLastDiaper();
-    if (!lastDiaper) {
-      return "--";
-    }
-    return timeSince(new Date(lastDiaper.changedAt));
-  }, [getLastDiaper]);
+    // Show today's wet count (hydration tracking - target 6+ per day)
+    const counts = getTodaysCounts();
+    if (counts.total === 0) return "--";
+    return `${counts.wet} wet today`;
+  }, [getTodaysCounts]);
+
+  const diaperSubtitle = useMemo(() => {
+    // Show time since last dirty diaper (what pediatricians ask about)
+    if (diapers.length === 0) return undefined;
+
+    // Find the last dirty or mixed diaper
+    const sortedDiapers = [...diapers].sort((a, b) =>
+      new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
+    );
+
+    const lastDirty = sortedDiapers.find(d => d.type === "dirty" || d.type === "mixed");
+    if (!lastDirty) return undefined;
+
+    const colorInfo = lastDirty.stoolColor
+      ? ` (${lastDirty.stoolColor})`
+      : "";
+    return `Last dirty: ${timeSince(new Date(lastDirty.changedAt))} ago${colorInfo}`;
+  }, [diapers]);
 
   const todayDiaperCounts = useMemo(() => {
     return getTodaysCounts();
@@ -66,33 +126,109 @@ export default function HomeScreen() {
     if (pumpingActiveTimer?.isRunning) {
       return t("common.now");
     }
-    const lastPumping = getLastPumping();
-    if (!lastPumping) {
-      return "--";
+
+    // Show daily total as primary (most important for supply tracking)
+    const todayVolume = getTodaysTotalVolume();
+    if (todayVolume > 0) {
+      return `Today: ${todayVolume}ml`;
     }
-    return timeSince(new Date(lastPumping.startedAt));
-  }, [pumpingActiveTimer, getLastPumping, t]);
+    return "--";
+  }, [pumpingActiveTimer, getTodaysTotalVolume, t]);
+
+  const pumpingSubtitle = useMemo(() => {
+    if (pumpingActiveTimer?.isRunning) return undefined;
+
+    const lastPumping = getLastPumping();
+    const lastSide = getLastSide();
+
+    if (!lastPumping) return undefined;
+
+    const parts: string[] = [];
+    parts.push(timeSince(new Date(lastPumping.startedAt)));
+    if (lastSide) {
+      parts.push(lastSide === "left" ? "Left" : lastSide === "right" ? "Right" : "Both");
+    }
+
+    return parts.join(" • ");
+  }, [pumpingActiveTimer, getLastPumping, getLastSide]);
 
   const isPumpingActive = pumpingActiveTimer?.isRunning ?? false;
 
   const growthTimeSince = useMemo(() => {
     const lastMeasurement = getLastMeasurement();
-    if (!lastMeasurement) {
-      return "--";
+    if (!lastMeasurement) return "--";
+
+    const parts: string[] = [];
+    if (lastMeasurement.weightKg !== undefined) {
+      const weight = Number(lastMeasurement.weightKg);
+      parts.push(`${weight.toFixed(1)} kg`);
     }
-    return formatDate(new Date(lastMeasurement.measuredAt));
+    if (lastMeasurement.heightCm !== undefined) {
+      const height = Number(lastMeasurement.heightCm);
+      parts.push(`${height.toFixed(1)} cm`);
+    }
+
+    return parts.length > 0 ? parts.join(" | ") : formatDate(new Date(lastMeasurement.measuredAt));
   }, [getLastMeasurement]);
+
+  const growthSubtitle = useMemo(() => {
+    const lastMeasurement = getLastMeasurement();
+    const weightChange = getWeightChange();
+
+    if (!lastMeasurement) return undefined;
+
+    const parts: string[] = [];
+
+    if (weightChange?.hasPrevious && weightChange.change !== 0) {
+      const sign = weightChange.change > 0 ? "+" : "";
+      parts.push(`${sign}${weightChange.change}g`);
+    }
+
+    // For growth, show days ago instead of minutes/hours
+    const measuredDate = new Date(lastMeasurement.measuredAt);
+    const now = new Date();
+    const diffMs = now.getTime() - measuredDate.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      parts.push("today");
+    } else if (diffDays === 1) {
+      parts.push("yesterday");
+    } else {
+      parts.push(`${diffDays}d ago`);
+    }
+
+    return parts.join(" • ");
+  }, [getLastMeasurement, getWeightChange]);
 
   const tummyTimeTimeSince = useMemo(() => {
     if (tummyTimeActiveTimer?.isRunning) {
       return t("common.now");
     }
+
+    const totalSeconds = getTodaysTotalSeconds();
+    const goalMinutes = Math.round(dailyGoalSeconds / 60);
+    const totalMinutes = Math.round(totalSeconds / 60);
+
+    return `${totalMinutes} / ${goalMinutes} min`;
+  }, [tummyTimeActiveTimer, getTodaysTotalSeconds, dailyGoalSeconds, t]);
+
+  const tummyTimeSecondaryInfo = useMemo(() => {
+    if (tummyTimeActiveTimer?.isRunning) return undefined;
+
+    const sessionCount = getTodaysSessionCount();
     const lastTummyTime = getLastTummyTime();
-    if (!lastTummyTime) {
-      return "--";
+
+    const parts: string[] = [];
+    if (sessionCount > 0) {
+      parts.push(`${sessionCount} session${sessionCount !== 1 ? "s" : ""}`);
     }
-    return timeSince(new Date(lastTummyTime.startedAt));
-  }, [tummyTimeActiveTimer, getLastTummyTime, t]);
+    if (lastTummyTime) {
+      parts.push(timeSince(new Date(lastTummyTime.startedAt)));
+    }
+
+    return parts.length > 0 ? parts.join(" • ") : undefined;
+  }, [tummyTimeActiveTimer, getTodaysSessionCount, getLastTummyTime]);
 
   const isTummyTimeActive = tummyTimeActiveTimer?.isRunning ?? false;
 
@@ -198,6 +334,7 @@ export default function HomeScreen() {
               activity="feeding"
               label={t("feeding.title")}
               timeSince={feedingTimeSince}
+              subtitle={feedingSubtitle}
               isActive={isFeedingActive}
               activeLabel={t("common.now")}
               onPress={handleFeedingCardPress}
@@ -208,6 +345,7 @@ export default function HomeScreen() {
               activity="sleep"
               label={t("sleep.title")}
               timeSince={sleepTimeSince}
+              subtitle={sleepSubtitle}
               isActive={isSleepActive}
               activeLabel={t("sleep.sleeping")}
               onPress={handleSleepCardPress}
@@ -222,6 +360,7 @@ export default function HomeScreen() {
               activity="diaper"
               label={t("diaper.title")}
               timeSince={diaperTimeSince}
+              subtitle={diaperSubtitle}
               onPress={() => {}}
               onActionPress={handleAddDiaper}
               actionLabel="+"
@@ -230,6 +369,7 @@ export default function HomeScreen() {
               activity="pumping"
               label={t("pumping.title")}
               timeSince={pumpingTimeSince}
+              subtitle={pumpingSubtitle}
               isActive={isPumpingActive}
               activeLabel={t("pumping.pumping")}
               onPress={handlePumpingCardPress}
@@ -244,6 +384,7 @@ export default function HomeScreen() {
               activity="tummyTime"
               label={t("tummyTime.title")}
               timeSince={tummyTimeTimeSince}
+              secondaryInfo={tummyTimeSecondaryInfo}
               isActive={isTummyTimeActive}
               activeLabel={t("tummyTime.inProgress")}
               onPress={handleTummyTimeCardPress}
@@ -255,6 +396,7 @@ export default function HomeScreen() {
               activity="growth"
               label={t("growth.title")}
               timeSince={growthTimeSince}
+              subtitle={growthSubtitle}
               onPress={() => {}}
               onActionPress={handleAddGrowth}
               actionLabel="+"
