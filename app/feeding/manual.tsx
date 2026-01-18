@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import {
   Pressable,
   Text,
@@ -9,7 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFeeding } from "@/contexts";
@@ -19,7 +19,8 @@ import {
   validateManualBreastfeeding,
   validateManualBottleFeeding,
 } from "@/validators/feeding";
-import type { BreastSide, BottleContentType } from "@/constants/activities";
+import { COMMON_FOODS } from "@/constants/foods";
+import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
@@ -29,16 +30,27 @@ const QUICK_AMOUNTS_OZ = [1, 2, 3, 4, 5, 6];
 const QUICK_AMOUNTS_ML = [30, 60, 90, 120, 150, 180];
 const QUICK_DURATIONS = [5, 10, 15, 20, 30, 45];
 
-type FeedingTab = "breast" | "bottle";
+type FeedingTab = "breast" | "bottle" | "solids";
 type VolumeUnit = "ml" | "oz";
+type FeedingTypeParam = "breastfeed" | "bottle" | "solids";
 
 export default function ManualFeedingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const params = useLocalSearchParams<{ type?: FeedingTypeParam }>();
   const { selectedBaby } = useBaby();
-  const { addFeeding } = useFeeding();
+  const { addFeeding, feedings } = useFeeding();
 
-  const [activeTab, setActiveTab] = useState<FeedingTab>("breast");
+  // Map URL param to tab type
+  const getInitialTab = (): FeedingTab => {
+    if (params.type === "breastfeed") return "breast";
+    if (params.type === "bottle") return "bottle";
+    if (params.type === "solids") return "solids";
+    return "breast";
+  };
+
+  const [activeTab, setActiveTab] = useState<FeedingTab>(getInitialTab);
+  const isTypeFromParam = !!params.type;
   const [startTime, setStartTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -55,6 +67,36 @@ export default function ManualFeedingScreen() {
   const [amountMl, setAmountMl] = useState<number | null>(null);
   const [unit, setUnit] = useState<VolumeUnit>("oz");
   const [amountInput, setAmountInput] = useState("");
+
+  // Solid food state
+  const [foodType, setFoodType] = useState("");
+  const [reaction, setReaction] = useState<SolidReaction | null>(null);
+
+  // Get recent foods for suggestions
+  const recentFoods = useMemo(() => {
+    const solidFeedings = feedings
+      .filter((f) => f.type === "solid" && f.foodType)
+      .sort(
+        (a, b) =>
+          new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+      );
+
+    const uniqueFoods: string[] = [];
+    for (const f of solidFeedings) {
+      if (f.foodType && !uniqueFoods.includes(f.foodType)) {
+        uniqueFoods.push(f.foodType);
+      }
+      if (uniqueFoods.length >= 6) break;
+    }
+    return uniqueFoods;
+  }, [feedings]);
+
+  const suggestedFoods = useMemo(() => {
+    if (recentFoods.length > 0) {
+      return recentFoods;
+    }
+    return COMMON_FOODS.slice(0, 8);
+  }, [recentFoods]);
 
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -150,6 +192,55 @@ export default function ManualFeedingScreen() {
     setUnit((prev) => (prev === "oz" ? "ml" : "oz"));
   }, [unit, amountMl]);
 
+  // Solid food handlers
+  const handleFoodSelect = useCallback((food: string) => {
+    setFoodType(food);
+    Keyboard.dismiss();
+  }, []);
+
+  const handleReactionSelect = useCallback((selectedReaction: SolidReaction) => {
+    setReaction(selectedReaction);
+  }, []);
+
+  const getFoodLabel = (food: string): string => {
+    const foodLabels: Record<string, string> = {
+      banana: t("foods.banana"),
+      avocado: t("foods.avocado"),
+      apple: t("foods.apple"),
+      pear: t("foods.pear"),
+      mango: t("foods.mango"),
+      peach: t("foods.peach"),
+      blueberries: t("foods.blueberries"),
+      strawberries: t("foods.strawberries"),
+      sweetPotato: t("foods.sweetPotato"),
+      carrot: t("foods.carrot"),
+      peas: t("foods.peas"),
+      broccoli: t("foods.broccoli"),
+      zucchini: t("foods.zucchini"),
+      spinach: t("foods.spinach"),
+      butternutSquash: t("foods.butternutSquash"),
+      greenBeans: t("foods.greenBeans"),
+      chicken: t("foods.chicken"),
+      turkey: t("foods.turkey"),
+      beef: t("foods.beef"),
+      egg: t("foods.egg"),
+      tofu: t("foods.tofu"),
+      lentils: t("foods.lentils"),
+      salmon: t("foods.salmon"),
+      oatmeal: t("foods.oatmeal"),
+      rice: t("foods.rice"),
+      pasta: t("foods.pasta"),
+      bread: t("foods.bread"),
+      cereal: t("foods.cereal"),
+      yogurt: t("foods.yogurt"),
+      cheese: t("foods.cheese"),
+    };
+    if (foodLabels[food]) {
+      return foodLabels[food];
+    }
+    return food.charAt(0).toUpperCase() + food.slice(1).replace(/([A-Z])/g, " $1");
+  };
+
   const handleSave = useCallback(async () => {
     if (!selectedBaby) return;
 
@@ -187,7 +278,7 @@ export default function ManualFeedingScreen() {
       } finally {
         setIsSaving(false);
       }
-    } else {
+    } else if (activeTab === "bottle") {
       const validation = validateManualBottleFeeding({
         type: "bottle",
         startedAt: startTime,
@@ -214,6 +305,27 @@ export default function ManualFeedingScreen() {
       } finally {
         setIsSaving(false);
       }
+    } else if (activeTab === "solids") {
+      // Validate solid food
+      if (!foodType.trim()) {
+        setErrors({ foodType: t("feeding.enterFoodValidation") });
+        return;
+      }
+
+      setIsSaving(true);
+      try {
+        await addFeeding({
+          babyId: selectedBaby.id,
+          type: "solid",
+          foodType: foodType.trim(),
+          reaction: reaction ?? undefined,
+          startedAt: startTime,
+          notes: notes || undefined,
+        });
+        router.back();
+      } finally {
+        setIsSaving(false);
+      }
     }
   }, [
     selectedBaby,
@@ -223,15 +335,37 @@ export default function ManualFeedingScreen() {
     durationMinutes,
     contentType,
     amountMl,
+    foodType,
+    reaction,
     notes,
     addFeeding,
     router,
+    t,
   ]);
 
   const canSave =
     activeTab === "breast"
       ? side !== null && durationMinutes !== null && durationMinutes > 0
-      : contentType !== null && amountMl !== null && amountMl > 0;
+      : activeTab === "bottle"
+        ? contentType !== null && amountMl !== null && amountMl > 0
+        : foodType.trim().length > 0;
+
+  // Get the screen title based on type
+  const getScreenTitle = () => {
+    if (isTypeFromParam) {
+      if (activeTab === "breast") return t("feeding.logPastBreastfeeding");
+      if (activeTab === "bottle") return t("feeding.logPastBottle");
+      if (activeTab === "solids") return t("feeding.logPastSolid");
+    }
+    return t("feeding.pastFeedingTitle");
+  };
+
+  // Get the save button label based on type
+  const getSaveButtonLabel = () => {
+    if (activeTab === "breast") return t("feeding.logManualBreastfeeding");
+    if (activeTab === "bottle") return t("feeding.logManualBottleFeeding");
+    return t("feeding.logSolidFeeding");
+  };
 
   if (!selectedBaby) {
     return (
@@ -272,7 +406,7 @@ export default function ManualFeedingScreen() {
         </Pressable>
         <View className="flex-1 items-center">
           <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            {t("feeding.pastFeedingTitle")}
+            {getScreenTitle()}
           </Text>
           <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
             {selectedBaby.name}
@@ -281,11 +415,12 @@ export default function ManualFeedingScreen() {
         <View className="w-touch" />
       </View>
 
-      {/* Tab Selector */}
-      <View className="px-6 mb-4">
-        <View
-          className="flex-row rounded-pill p-1"
-          style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+      {/* Tab Selector - only show when type not specified in URL */}
+      {!isTypeFromParam && (
+        <View className="px-6 mb-4">
+          <View
+            className="flex-row rounded-pill p-1"
+            style={{ backgroundColor: FEEDING_GREEN_MUTED }}
         >
           <TabButton
             label={t("feeding.breastfeedingTab")}
@@ -298,7 +433,8 @@ export default function ManualFeedingScreen() {
             onPress={() => setActiveTab("bottle")}
           />
         </View>
-      </View>
+        </View>
+      )}
 
       <ScrollView
         className="flex-1"
@@ -455,7 +591,7 @@ export default function ManualFeedingScreen() {
               )}
             </View>
           </>
-        ) : (
+        ) : activeTab === "bottle" ? (
           <>
             {/* Content Type Selection */}
             <View className="mb-6">
@@ -552,6 +688,86 @@ export default function ManualFeedingScreen() {
               </View>
             )}
           </>
+        ) : (
+          <>
+            {/* Solid Food Form */}
+            {/* Food Selection */}
+            <View className="mb-6">
+              <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
+                {t("feeding.selectFood")}
+              </Text>
+
+              {/* Food input */}
+              <View
+                className="flex-row items-center min-h-[48px] px-4 rounded-2xl mb-4"
+                style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+              >
+                <TextInput
+                  className="flex-1"
+                  style={{ fontSize: 16, lineHeight: 20, paddingBottom: 6, paddingTop: 6, color: FEEDING_GREEN_DARK }}
+                  value={foodType}
+                  onChangeText={setFoodType}
+                  placeholder={t("feeding.foodPlaceholder")}
+                  placeholderTextColor="#9CA3AF"
+                  returnKeyType="done"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  accessibilityLabel={t("feeding.foodPlaceholder")}
+                />
+              </View>
+              {errors.foodType && (
+                <Text className="text-red-500 text-sm mt-2">{errors.foodType}</Text>
+              )}
+
+              {/* Quick food selection */}
+              <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-2">
+                {recentFoods.length > 0
+                  ? t("feeding.recentFoods")
+                  : t("feeding.commonFoods")}
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {suggestedFoods.map((food) => (
+                  <FoodButton
+                    key={food}
+                    food={food}
+                    label={getFoodLabel(food)}
+                    isSelected={foodType === food}
+                    onPress={() => handleFoodSelect(food)}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {/* Reaction Selection */}
+            <View className="mb-6">
+              <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
+                {t("feeding.howDidBabyLikeIt")}
+              </Text>
+              <View className="flex-row gap-3">
+                <ReactionButton
+                  reaction="loved"
+                  emoji="😍"
+                  label={t("feeding.loved")}
+                  isSelected={reaction === "loved"}
+                  onPress={() => handleReactionSelect("loved")}
+                />
+                <ReactionButton
+                  reaction="meh"
+                  emoji="😐"
+                  label={t("feeding.meh")}
+                  isSelected={reaction === "meh"}
+                  onPress={() => handleReactionSelect("meh")}
+                />
+                <ReactionButton
+                  reaction="refused"
+                  emoji="😣"
+                  label={t("feeding.refused")}
+                  isSelected={reaction === "refused"}
+                  onPress={() => handleReactionSelect("refused")}
+                />
+              </View>
+            </View>
+          </>
         )}
 
         {/* Notes */}
@@ -583,19 +799,11 @@ export default function ManualFeedingScreen() {
           }`}
           style={{ backgroundColor: FEEDING_GREEN }}
           accessibilityRole="button"
-          accessibilityLabel={
-            activeTab === "breast"
-              ? t("feeding.logManualBreastfeeding")
-              : t("feeding.logManualBottleFeeding")
-          }
+          accessibilityLabel={getSaveButtonLabel()}
           accessibilityState={{ disabled: !canSave || isSaving }}
         >
           <Text className="text-lg font-semibold text-white">
-            {isSaving
-              ? t("common.loading")
-              : activeTab === "breast"
-                ? t("feeding.logManualBreastfeeding")
-                : t("feeding.logManualBottleFeeding")}
+            {isSaving ? t("common.loading") : getSaveButtonLabel()}
           </Text>
         </Pressable>
       </View>
@@ -767,6 +975,66 @@ function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
       <Text
         className="text-base font-semibold"
         style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+interface FoodButtonProps {
+  food: string;
+  label: string;
+  isSelected: boolean;
+  onPress: () => void;
+}
+
+function FoodButton({ label, isSelected, onPress }: FoodButtonProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="py-2 px-4 rounded-button-lg active:scale-95"
+      style={{
+        backgroundColor: isSelected ? FEEDING_GREEN : FEEDING_GREEN_MUTED,
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isSelected }}
+    >
+      <Text
+        className="text-base font-medium"
+        style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+interface ReactionButtonProps {
+  reaction: SolidReaction;
+  emoji: string;
+  label: string;
+  isSelected: boolean;
+  onPress: () => void;
+}
+
+function ReactionButton({ emoji, label, isSelected, onPress }: ReactionButtonProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-1 items-center py-4 rounded-card-lg active:scale-[0.97]"
+      style={{
+        backgroundColor: isSelected ? FEEDING_GREEN : FEEDING_GREEN_MUTED,
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isSelected }}
+    >
+      <Text className="text-2xl mb-1">{emoji}</Text>
+      <Text
+        className="text-sm font-semibold"
+        style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN_DARK }}
       >
         {label}
       </Text>
