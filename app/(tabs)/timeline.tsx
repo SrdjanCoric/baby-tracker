@@ -7,9 +7,10 @@ import {
   TimelineDayHeader,
   TimelineDivider,
 } from "@/components";
-import { useFeeding } from "@/contexts";
+import { useFeeding, useSleep } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
+import type { StoredSleepEntry } from "@/services/sleep-storage";
 
 interface TimelineEntry {
   id: string;
@@ -62,6 +63,7 @@ function groupEntriesByDay(entries: TimelineEntry[]): GroupedEntries[] {
 export default function TimelineScreen() {
   const { t } = useTranslation();
   const { feedings } = useFeeding();
+  const { sleeps } = useSleep();
 
   const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
     const date = new Date(feeding.startedAt);
@@ -114,10 +116,32 @@ export default function TimelineScreen() {
     };
   }, [t]);
 
+  const sleepToTimelineEntry = useCallback((sleep: StoredSleepEntry): TimelineEntry => {
+    const date = new Date(sleep.startedAt);
+    const time = formatTime(date);
+
+    const title = sleep.type === "nap" ? t("sleep.nap") : t("sleep.night");
+    const durationLabel = sleep.durationSeconds
+      ? formatDuration(sleep.durationSeconds, "short")
+      : "";
+    const subtitle = durationLabel;
+
+    return {
+      id: sleep.id,
+      activity: "sleep",
+      time,
+      title,
+      subtitle,
+      date,
+    };
+  }, [t]);
+
   const timelineEntries = useMemo(() => {
     const feedingEntries = feedings.map(feedingToTimelineEntry);
-    return feedingEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [feedings, feedingToTimelineEntry]);
+    const sleepEntries = sleeps.map(sleepToTimelineEntry);
+    const allEntries = [...feedingEntries, ...sleepEntries];
+    return allEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [feedings, sleeps, feedingToTimelineEntry, sleepToTimelineEntry]);
 
   const groupedEntries = useMemo(() => {
     return groupEntriesByDay(timelineEntries);
