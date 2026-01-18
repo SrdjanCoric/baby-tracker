@@ -10,6 +10,11 @@ export type DiaperType = "wet" | "dirty" | "mixed";
 export type FeedingType = "breast" | "bottle" | "solid";
 export type SleepType = "nap" | "night";
 export type BottleContentType = "formula" | "breastMilk";
+export type SolidAmount = "aLittle" | "some" | "aLot";
+export type SolidReaction = "loved" | "meh" | "refused";
+
+export const SOLID_AMOUNTS: SolidAmount[] = ["aLittle", "some", "aLot"];
+export const SOLID_REACTIONS: SolidReaction[] = ["loved", "meh", "refused"];
 
 /**
  * Stool color options for diaper tracking
