@@ -6,6 +6,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const TUMMY_TIMES_KEY_PREFIX = "@tummyTimes:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_tummyTime_timer:";
 const DAILY_GOAL_KEY_PREFIX = "@tummyTime_goal:";
+const CUSTOM_GOAL_KEY_PREFIX = "@tummyTime_custom_goal:";
+const MILESTONE_CHECK_KEY_PREFIX = "@tummyTime_milestone_check:";
+const DISMISSED_MILESTONES_KEY_PREFIX = "@tummyTime_dismissed_milestones:";
 const DEFAULT_DAILY_GOAL_SECONDS = 1800;
 
 export interface StoredTummyTimeEntry {
@@ -51,6 +54,18 @@ function getActiveTimerKey(babyId: string): string {
 
 function getDailyGoalKey(babyId: string): string {
   return `${DAILY_GOAL_KEY_PREFIX}${babyId}`;
+}
+
+function getCustomGoalKey(babyId: string): string {
+  return `${CUSTOM_GOAL_KEY_PREFIX}${babyId}`;
+}
+
+function getMilestoneCheckKey(babyId: string): string {
+  return `${MILESTONE_CHECK_KEY_PREFIX}${babyId}`;
+}
+
+function getDismissedMilestonesKey(babyId: string): string {
+  return `${DISMISSED_MILESTONES_KEY_PREFIX}${babyId}`;
 }
 
 function isToday(date: Date): boolean {
@@ -168,5 +183,43 @@ export const TummyTimeStorageService = {
 
   async setDailyGoal(babyId: string, goalSeconds: number): Promise<void> {
     await AsyncStorage.setItem(getDailyGoalKey(babyId), goalSeconds.toString());
+  },
+
+  async hasCustomGoal(babyId: string): Promise<boolean> {
+    const data = await AsyncStorage.getItem(getCustomGoalKey(babyId));
+    return data === "true";
+  },
+
+  async setCustomGoal(babyId: string, goalSeconds: number): Promise<void> {
+    await AsyncStorage.setItem(getDailyGoalKey(babyId), goalSeconds.toString());
+    await AsyncStorage.setItem(getCustomGoalKey(babyId), "true");
+  },
+
+  async clearCustomGoal(babyId: string): Promise<void> {
+    await AsyncStorage.removeItem(getCustomGoalKey(babyId));
+  },
+
+  async getLastMilestoneCheckDate(babyId: string): Promise<Date | null> {
+    const data = await AsyncStorage.getItem(getMilestoneCheckKey(babyId));
+    if (!data) return null;
+    return new Date(data);
+  },
+
+  async setLastMilestoneCheckDate(babyId: string, date: Date): Promise<void> {
+    await AsyncStorage.setItem(getMilestoneCheckKey(babyId), date.toISOString());
+  },
+
+  async getDismissedMilestones(babyId: string): Promise<string[]> {
+    const data = await AsyncStorage.getItem(getDismissedMilestonesKey(babyId));
+    if (!data) return [];
+    return JSON.parse(data) as string[];
+  },
+
+  async dismissMilestone(babyId: string, milestoneLabel: string): Promise<void> {
+    const dismissed = await this.getDismissedMilestones(babyId);
+    if (!dismissed.includes(milestoneLabel)) {
+      dismissed.push(milestoneLabel);
+    }
+    await AsyncStorage.setItem(getDismissedMilestonesKey(babyId), JSON.stringify(dismissed));
   },
 };

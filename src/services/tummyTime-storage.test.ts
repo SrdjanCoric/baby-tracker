@@ -380,5 +380,133 @@ describe("TummyTimeStorageService", () => {
         );
       });
     });
+
+    describe("hasCustomGoal", () => {
+      it("should return false when no custom goal exists", async () => {
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+
+        const result = await TummyTimeStorageService.hasCustomGoal("baby-123");
+
+        expect(result).toBe(false);
+        expect(AsyncStorage.getItem).toHaveBeenCalledWith("@tummyTime_custom_goal:baby-123");
+      });
+
+      it("should return true when custom goal exists", async () => {
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue("true");
+
+        const result = await TummyTimeStorageService.hasCustomGoal("baby-123");
+
+        expect(result).toBe(true);
+      });
+    });
+
+    describe("setCustomGoal", () => {
+      it("should save custom goal and mark as custom", async () => {
+        await TummyTimeStorageService.setCustomGoal("baby-123", 2700);
+
+        expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+          "@tummyTime_goal:baby-123",
+          "2700"
+        );
+        expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+          "@tummyTime_custom_goal:baby-123",
+          "true"
+        );
+      });
+    });
+
+    describe("clearCustomGoal", () => {
+      it("should remove custom goal marker", async () => {
+        await TummyTimeStorageService.clearCustomGoal("baby-123");
+
+        expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@tummyTime_custom_goal:baby-123");
+      });
+    });
+  });
+
+  describe("Milestone Suggestion Tracking", () => {
+    describe("getLastMilestoneCheckDate", () => {
+      it("should return null when not set", async () => {
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+
+        const result = await TummyTimeStorageService.getLastMilestoneCheckDate("baby-123");
+
+        expect(result).toBeNull();
+        expect(AsyncStorage.getItem).toHaveBeenCalledWith("@tummyTime_milestone_check:baby-123");
+      });
+
+      it("should return saved date when exists", async () => {
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue("2024-01-17T13:00:00.000Z");
+
+        const result = await TummyTimeStorageService.getLastMilestoneCheckDate("baby-123");
+
+        expect(result).toEqual(new Date("2024-01-17T13:00:00.000Z"));
+      });
+    });
+
+    describe("setLastMilestoneCheckDate", () => {
+      it("should save milestone check date", async () => {
+        const date = new Date("2024-01-17T13:00:00.000Z");
+        await TummyTimeStorageService.setLastMilestoneCheckDate("baby-123", date);
+
+        expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+          "@tummyTime_milestone_check:baby-123",
+          "2024-01-17T13:00:00.000Z"
+        );
+      });
+    });
+
+    describe("getDismissedMilestones", () => {
+      it("should return empty array when not set", async () => {
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+
+        const result = await TummyTimeStorageService.getDismissedMilestones("baby-123");
+
+        expect(result).toEqual([]);
+        expect(AsyncStorage.getItem).toHaveBeenCalledWith("@tummyTime_dismissed_milestones:baby-123");
+      });
+
+      it("should return saved dismissed milestones", async () => {
+        const dismissed = ["1-2 months", "2-3 months"];
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(dismissed));
+
+        const result = await TummyTimeStorageService.getDismissedMilestones("baby-123");
+
+        expect(result).toEqual(dismissed);
+      });
+    });
+
+    describe("dismissMilestone", () => {
+      it("should add milestone to dismissed list", async () => {
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+
+        await TummyTimeStorageService.dismissMilestone("baby-123", "1-2 months");
+
+        expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+          "@tummyTime_dismissed_milestones:baby-123",
+          JSON.stringify(["1-2 months"])
+        );
+      });
+
+      it("should not duplicate dismissed milestones", async () => {
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(["1-2 months"]));
+
+        await TummyTimeStorageService.dismissMilestone("baby-123", "1-2 months");
+
+        const setItemCall = vi.mocked(AsyncStorage.setItem).mock.calls[0];
+        const saved = JSON.parse(setItemCall[1]);
+        expect(saved).toEqual(["1-2 months"]);
+      });
+
+      it("should append to existing dismissed milestones", async () => {
+        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(["1-2 months"]));
+
+        await TummyTimeStorageService.dismissMilestone("baby-123", "2-3 months");
+
+        const setItemCall = vi.mocked(AsyncStorage.setItem).mock.calls[0];
+        const saved = JSON.parse(setItemCall[1]);
+        expect(saved).toEqual(["1-2 months", "2-3 months"]);
+      });
+    });
   });
 });

@@ -6,6 +6,13 @@ import {
   UpdateTummyTimeInput,
 } from "@/services/tummyTime-storage";
 import { useBaby } from "./baby-context";
+import {
+  AgeGroup,
+  GoalSource,
+  getAgeGroupForBaby,
+  getGoalInfo,
+  checkMilestoneCrossing,
+} from "@/utils/tummyTimeGoals";
 
 export interface ActiveTummyTimeTimer {
   isRunning: boolean;
@@ -17,6 +24,10 @@ export interface TummyTimeState {
   activeTimer: ActiveTummyTimeTimer | null;
   isLoading: boolean;
   dailyGoalSeconds: number;
+  goalSource: GoalSource;
+  currentAgeGroup: AgeGroup | null;
+  showMilestoneSuggestion: boolean;
+  suggestedGoalSeconds: number | null;
 }
 
 export type TummyTimeAction =
@@ -26,6 +37,10 @@ export type TummyTimeAction =
   | { type: "DELETE_TUMMY_TIME"; payload: string }
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_DAILY_GOAL"; payload: number }
+  | { type: "SET_GOAL_SOURCE"; payload: GoalSource }
+  | { type: "SET_AGE_GROUP"; payload: AgeGroup | null }
+  | { type: "SET_SHOW_MILESTONE_SUGGESTION"; payload: boolean }
+  | { type: "SET_SUGGESTED_GOAL"; payload: number | null }
   | { type: "START_TIMER"; payload: { startTime: Date } }
   | { type: "STOP_TIMER" };
 
@@ -36,6 +51,10 @@ export const initialTummyTimeState: TummyTimeState = {
   activeTimer: null,
   isLoading: true,
   dailyGoalSeconds: DEFAULT_DAILY_GOAL_SECONDS,
+  goalSource: "age_based",
+  currentAgeGroup: null,
+  showMilestoneSuggestion: false,
+  suggestedGoalSeconds: null,
 };
 
 export function tummyTimeReducer(
@@ -66,6 +85,18 @@ export function tummyTimeReducer(
 
     case "SET_DAILY_GOAL":
       return { ...state, dailyGoalSeconds: action.payload };
+
+    case "SET_GOAL_SOURCE":
+      return { ...state, goalSource: action.payload };
+
+    case "SET_AGE_GROUP":
+      return { ...state, currentAgeGroup: action.payload };
+
+    case "SET_SHOW_MILESTONE_SUGGESTION":
+      return { ...state, showMilestoneSuggestion: action.payload };
+
+    case "SET_SUGGESTED_GOAL":
+      return { ...state, suggestedGoalSeconds: action.payload };
 
     case "START_TIMER":
       return {
@@ -98,6 +129,10 @@ interface TummyTimeContextValue extends TummyTimeState {
   getTodaysTotalSeconds: () => number;
   getDailyProgress: () => number;
   setDailyGoal: (goalSeconds: number) => Promise<void>;
+  setCustomGoal: (goalSeconds: number) => Promise<void>;
+  useAgeBasedGoal: () => Promise<void>;
+  dismissMilestoneSuggestion: () => Promise<void>;
+  acceptMilestoneSuggestion: () => Promise<void>;
 }
 
 const TummyTimeContext = createContext<TummyTimeContextValue | null>(null);
@@ -118,8 +153,36 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     const tummyTimes = await TummyTimeStorageService.getAllTummyTimes(selectedBaby.id);
     dispatch({ type: "SET_TUMMY_TIMES", payload: tummyTimes });
 
-    const dailyGoal = await TummyTimeStorageService.getDailyGoal(selectedBaby.id);
-    dispatch({ type: "SET_DAILY_GOAL", payload: dailyGoal });
+    const hasCustomGoal = await TummyTimeStorageService.hasCustomGoal(selectedBaby.id);
+    const storedGoal = await TummyTimeStorageService.getDailyGoal(selectedBaby.id);
+
+    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    const goalInfo = getGoalInfo(
+      birthDate,
+      hasCustomGoal ? storedGoal : null
+    );
+
+    dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.goalSeconds });
+    dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
+    dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
+
+    if (birthDate && !hasCustomGoal) {
+      const lastCheckDate = await TummyTimeStorageService.getLastMilestoneCheckDate(selectedBaby.id);
+      const dismissedMilestones = await TummyTimeStorageService.getDismissedMilestones(selectedBaby.id);
+
+      if (lastCheckDate) {
+        const milestoneCrossing = checkMilestoneCrossing(birthDate, lastCheckDate);
+        if (
+          milestoneCrossing?.shouldSuggestGoalUpdate &&
+          !dismissedMilestones.includes(milestoneCrossing.newGroup.label)
+        ) {
+          dispatch({ type: "SET_SUGGESTED_GOAL", payload: milestoneCrossing.newGroup.defaultGoalSeconds });
+          dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: true });
+        }
+      }
+
+      await TummyTimeStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
+    }
 
     const activeTimer = await TummyTimeStorageService.getActiveTimer(selectedBaby.id);
     if (activeTimer) {
@@ -254,6 +317,47 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     [selectedBaby]
   );
 
+  const setCustomGoal = useCallback(
+    async (goalSeconds: number): Promise<void> => {
+      if (!selectedBaby) return;
+      await TummyTimeStorageService.setCustomGoal(selectedBaby.id, goalSeconds);
+      dispatch({ type: "SET_DAILY_GOAL", payload: goalSeconds });
+      dispatch({ type: "SET_GOAL_SOURCE", payload: "custom" });
+    },
+    [selectedBaby]
+  );
+
+  const useAgeBasedGoal = useCallback(async (): Promise<void> => {
+    if (!selectedBaby) return;
+
+    await TummyTimeStorageService.clearCustomGoal(selectedBaby.id);
+
+    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    const goalInfo = getGoalInfo(birthDate, null);
+
+    await TummyTimeStorageService.setDailyGoal(selectedBaby.id, goalInfo.goalSeconds);
+    dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.goalSeconds });
+    dispatch({ type: "SET_GOAL_SOURCE", payload: "age_based" });
+    dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
+  }, [selectedBaby]);
+
+  const dismissMilestoneSuggestion = useCallback(async (): Promise<void> => {
+    if (!selectedBaby || !state.currentAgeGroup) return;
+
+    await TummyTimeStorageService.dismissMilestone(selectedBaby.id, state.currentAgeGroup.label);
+    dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
+    dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
+  }, [selectedBaby, state.currentAgeGroup]);
+
+  const acceptMilestoneSuggestion = useCallback(async (): Promise<void> => {
+    if (!selectedBaby || !state.suggestedGoalSeconds) return;
+
+    await TummyTimeStorageService.setDailyGoal(selectedBaby.id, state.suggestedGoalSeconds);
+    dispatch({ type: "SET_DAILY_GOAL", payload: state.suggestedGoalSeconds });
+    dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
+    dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
+  }, [selectedBaby, state.suggestedGoalSeconds]);
+
   const value: TummyTimeContextValue = {
     ...state,
     startTummyTime,
@@ -266,6 +370,10 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     getTodaysTotalSeconds,
     getDailyProgress,
     setDailyGoal: setDailyGoalCallback,
+    setCustomGoal,
+    useAgeBasedGoal,
+    dismissMilestoneSuggestion,
+    acceptMilestoneSuggestion,
   };
 
   return (
