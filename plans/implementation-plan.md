@@ -152,15 +152,32 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] User customization with settings screen
   - [x] Goal suggestion modal at age milestones (1mo, 2mo, 3mo, 6mo)
   - [x] 6+ month transition messaging about floor play
-- [ ] Feeding UX Improvement - Log Past by Type
-  - [ ] Remove "Log Past Feeding" option from FeedingTypeMenu (now 3 options instead of 4)
-  - [ ] Add "Log Past Breastfeeding" button to breastfeeding screen
-  - [ ] Add "Log Past Bottle Feeding" button to bottle screen
-  - [ ] Add "Log Past Solid Food" button to solid food screen
-  - [ ] Update manual.tsx to accept type parameter and show type-specific UI
+- [x] Sleep Smart Goals (Age-Based Targets)
+  - [x] Add age-based sleep constants in src/utils/sleepGoals.ts
+    - Total sleep hours by age (0-2mo: 15-17h, 3-5mo: 14-15h, 6-8mo: 14h, 9-12mo: 13-14h, 13-18mo: 13-14h, 19+mo: 11-12h)
+    - Number of naps by age (0-2mo: 4-5, 3-5mo: 3-4, 6-8mo: 2-3, 9-12mo: 2, 13-18mo: 1-2, 19+mo: 0-1)
+    - Wake windows by age (0-2mo: 30-60min, 3-5mo: 1-2h, 6-8mo: 2-3h, 9-12mo: 2.5-3.5h, 13-18mo: 3-4h, 19+mo: 4-6h)
+  - [x] Add getSleepGoalForAge() utility function with tests (47 tests)
+  - [x] Add getWakeWindowForAge() utility function with tests
+  - [x] Update SleepContext to use age-based wake window (replaced hardcoded 150 min)
+  - [x] Update Sleep dashboard card to show "Xh Xm / Yh" with progress bar
+  - [x] Add user customization for sleep goals (similar to tummy time)
+    - [x] Store custom goals in AsyncStorage per baby
+    - [x] Sleep settings screen to adjust daily sleep goal
+    - [x] Goal suggestion modal at age milestones
+  - [x] Add translation keys for sleep goals
+  - [x] Simplified dashboard UX: Sleep shows only "Awake: Xh Xm", Tummy Time shows only session count
+- [ ] One-Tap Feeding (Tabbed UI)
+  - [ ] Remove FeedingTypeMenu modal entirely
+  - [ ] Create new unified FeedingScreen with tabs at top (🤱 Breast | 🍼 Bottle | 🥣 Solids)
+  - [ ] Store last-used feeding type in AsyncStorage (default: breastfeeding)
+  - [ ] On open, automatically select last-used tab
+  - [ ] Each tab shows its respective form inline (no navigation)
+  - [ ] Add "Log Past" button at bottom of each tab section
+  - [ ] Update manual.tsx to accept type parameter for type-specific past logging
   - [ ] Add solid food manual entry support
-  - [ ] Add new translation keys for each log past button
-  - [ ] UX matches diaper/sleep pattern (button at bottom of each screen)
+  - [ ] Update navigation: Feed card opens /feeding directly (no menu)
+  - [ ] Add translation keys for tab labels
 
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature

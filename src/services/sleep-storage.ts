@@ -6,6 +6,11 @@ import type { SleepType } from "@/constants/activities";
 
 const SLEEPS_KEY_PREFIX = "@sleeps:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_sleep_timer:";
+const DAILY_GOAL_KEY_PREFIX = "@sleep_goal:";
+const CUSTOM_GOAL_KEY_PREFIX = "@sleep_custom_goal:";
+const MILESTONE_CHECK_KEY_PREFIX = "@sleep_milestone_check:";
+const DISMISSED_MILESTONES_KEY_PREFIX = "@sleep_dismissed_milestones:";
+const DEFAULT_DAILY_GOAL_MINUTES = 14 * 60; // 14 hours in minutes
 
 export interface StoredSleepEntry {
   id: string;
@@ -50,6 +55,22 @@ function getSleepsKey(babyId: string): string {
 
 function getActiveTimerKey(babyId: string): string {
   return `${ACTIVE_TIMER_KEY_PREFIX}${babyId}`;
+}
+
+function getDailyGoalKey(babyId: string): string {
+  return `${DAILY_GOAL_KEY_PREFIX}${babyId}`;
+}
+
+function getCustomGoalKey(babyId: string): string {
+  return `${CUSTOM_GOAL_KEY_PREFIX}${babyId}`;
+}
+
+function getMilestoneCheckKey(babyId: string): string {
+  return `${MILESTONE_CHECK_KEY_PREFIX}${babyId}`;
+}
+
+function getDismissedMilestonesKey(babyId: string): string {
+  return `${DISMISSED_MILESTONES_KEY_PREFIX}${babyId}`;
 }
 
 function isToday(date: Date): boolean {
@@ -159,5 +180,53 @@ export const SleepStorageService = {
 
   async clearActiveTimer(babyId: string): Promise<void> {
     await AsyncStorage.removeItem(getActiveTimerKey(babyId));
+  },
+
+  async getDailyGoal(babyId: string): Promise<number> {
+    const data = await AsyncStorage.getItem(getDailyGoalKey(babyId));
+    if (!data) return DEFAULT_DAILY_GOAL_MINUTES;
+    return parseInt(data, 10);
+  },
+
+  async setDailyGoal(babyId: string, goalMinutes: number): Promise<void> {
+    await AsyncStorage.setItem(getDailyGoalKey(babyId), goalMinutes.toString());
+  },
+
+  async hasCustomGoal(babyId: string): Promise<boolean> {
+    const data = await AsyncStorage.getItem(getCustomGoalKey(babyId));
+    return data === "true";
+  },
+
+  async setCustomGoal(babyId: string, goalMinutes: number): Promise<void> {
+    await AsyncStorage.setItem(getDailyGoalKey(babyId), goalMinutes.toString());
+    await AsyncStorage.setItem(getCustomGoalKey(babyId), "true");
+  },
+
+  async clearCustomGoal(babyId: string): Promise<void> {
+    await AsyncStorage.removeItem(getCustomGoalKey(babyId));
+  },
+
+  async getLastMilestoneCheckDate(babyId: string): Promise<Date | null> {
+    const data = await AsyncStorage.getItem(getMilestoneCheckKey(babyId));
+    if (!data) return null;
+    return new Date(data);
+  },
+
+  async setLastMilestoneCheckDate(babyId: string, date: Date): Promise<void> {
+    await AsyncStorage.setItem(getMilestoneCheckKey(babyId), date.toISOString());
+  },
+
+  async getDismissedMilestones(babyId: string): Promise<string[]> {
+    const data = await AsyncStorage.getItem(getDismissedMilestonesKey(babyId));
+    if (!data) return [];
+    return JSON.parse(data) as string[];
+  },
+
+  async dismissMilestone(babyId: string, milestoneLabel: string): Promise<void> {
+    const dismissed = await this.getDismissedMilestones(babyId);
+    if (!dismissed.includes(milestoneLabel)) {
+      dismissed.push(milestoneLabel);
+    }
+    await AsyncStorage.setItem(getDismissedMilestonesKey(babyId), JSON.stringify(dismissed));
   },
 };

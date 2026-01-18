@@ -7,6 +7,13 @@ import {
 } from "@/services/sleep-storage";
 import type { SleepType } from "@/constants/activities";
 import { useBaby } from "./baby-context";
+import {
+  SleepAgeGroup,
+  GoalSource,
+  getSleepGoalInfo,
+  getWakeWindowForAge,
+  checkSleepMilestoneCrossing,
+} from "@/utils/sleepGoals";
 
 export interface ActiveSleepTimer {
   isRunning: boolean;
@@ -18,6 +25,12 @@ export interface SleepState {
   sleeps: StoredSleepEntry[];
   activeTimer: ActiveSleepTimer | null;
   isLoading: boolean;
+  dailyGoalMinutes: number;
+  goalSource: GoalSource;
+  currentAgeGroup: SleepAgeGroup | null;
+  wakeWindowMinutes: number;
+  showMilestoneSuggestion: boolean;
+  suggestedGoalMinutes: number | null;
 }
 
 export type SleepAction =
@@ -28,12 +41,27 @@ export type SleepAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "START_TIMER"; payload: { startTime: Date; sleepType: SleepType } }
   | { type: "STOP_TIMER" }
-  | { type: "UPDATE_TIMER_TYPE"; payload: SleepType };
+  | { type: "UPDATE_TIMER_TYPE"; payload: SleepType }
+  | { type: "SET_DAILY_GOAL"; payload: number }
+  | { type: "SET_GOAL_SOURCE"; payload: GoalSource }
+  | { type: "SET_AGE_GROUP"; payload: SleepAgeGroup | null }
+  | { type: "SET_WAKE_WINDOW"; payload: number }
+  | { type: "SET_SHOW_MILESTONE_SUGGESTION"; payload: boolean }
+  | { type: "SET_SUGGESTED_GOAL"; payload: number | null };
+
+const DEFAULT_DAILY_GOAL_MINUTES = 14 * 60; // 14 hours
+const DEFAULT_WAKE_WINDOW_MINUTES = 150; // 2.5 hours
 
 export const initialSleepState: SleepState = {
   sleeps: [],
   activeTimer: null,
   isLoading: true,
+  dailyGoalMinutes: DEFAULT_DAILY_GOAL_MINUTES,
+  goalSource: "age_based",
+  currentAgeGroup: null,
+  wakeWindowMinutes: DEFAULT_WAKE_WINDOW_MINUTES,
+  showMilestoneSuggestion: false,
+  suggestedGoalMinutes: null,
 };
 
 export function sleepReducer(state: SleepState, action: SleepAction): SleepState {
@@ -79,6 +107,24 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
         activeTimer: { ...state.activeTimer, sleepType: action.payload },
       };
 
+    case "SET_DAILY_GOAL":
+      return { ...state, dailyGoalMinutes: action.payload };
+
+    case "SET_GOAL_SOURCE":
+      return { ...state, goalSource: action.payload };
+
+    case "SET_AGE_GROUP":
+      return { ...state, currentAgeGroup: action.payload };
+
+    case "SET_WAKE_WINDOW":
+      return { ...state, wakeWindowMinutes: action.payload };
+
+    case "SET_SHOW_MILESTONE_SUGGESTION":
+      return { ...state, showMilestoneSuggestion: action.payload };
+
+    case "SET_SUGGESTED_GOAL":
+      return { ...state, suggestedGoalMinutes: action.payload };
+
     default:
       return state;
   }
@@ -95,6 +141,11 @@ interface SleepContextValue extends SleepState {
   getLastSleep: () => StoredSleepEntry | null;
   getTodaysTotalSleepMinutes: () => number;
   getWakeWindowProgress: () => number | undefined;
+  getDailyProgress: () => number;
+  setCustomGoal: (goalMinutes: number) => Promise<void>;
+  resetToAgeBasedGoal: () => Promise<void>;
+  dismissMilestoneSuggestion: (permanent?: boolean) => Promise<void>;
+  acceptMilestoneSuggestion: () => Promise<void>;
 }
 
 const SleepContext = createContext<SleepContextValue | null>(null);
@@ -114,6 +165,47 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     const sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
     dispatch({ type: "SET_SLEEPS", payload: sleeps });
+
+    const hasCustomGoal = await SleepStorageService.hasCustomGoal(selectedBaby.id);
+    const storedGoal = await SleepStorageService.getDailyGoal(selectedBaby.id);
+
+    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    const goalInfo = getSleepGoalInfo(
+      birthDate,
+      hasCustomGoal ? storedGoal : null
+    );
+
+    dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.targetMinutes });
+    dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
+    dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
+
+    if (birthDate) {
+      const wakeWindowInfo = getWakeWindowForAge(birthDate);
+      dispatch({ type: "SET_WAKE_WINDOW", payload: wakeWindowInfo.targetMinutes });
+    }
+
+    if (birthDate && !hasCustomGoal) {
+      const lastCheckDate = await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
+      const dismissedMilestones = await SleepStorageService.getDismissedMilestones(selectedBaby.id);
+
+      if (lastCheckDate) {
+        const milestoneCrossing = checkSleepMilestoneCrossing(birthDate, lastCheckDate);
+        if (
+          milestoneCrossing?.shouldSuggestGoalUpdate &&
+          !dismissedMilestones.includes(milestoneCrossing.newGroup.label)
+        ) {
+          const newGoalMinutes =
+            ((milestoneCrossing.newGroup.totalSleepHoursMin +
+              milestoneCrossing.newGroup.totalSleepHoursMax) /
+              2) *
+            60;
+          dispatch({ type: "SET_SUGGESTED_GOAL", payload: newGoalMinutes });
+          dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: true });
+        }
+      }
+
+      await SleepStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
+    }
 
     const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
     if (activeTimer) {
@@ -242,12 +334,58 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       (Date.now() - new Date(lastSleep.endedAt).getTime()) / (1000 * 60)
     );
 
-    // Age-based wake windows (in minutes) - default to 2.5 hours for 4-6 month old
-    // This could be enhanced to use baby's actual age from baby-context
-    const maxWakeWindow = 150;
+    return Math.min(100, Math.round((awakeMinutes / state.wakeWindowMinutes) * 100));
+  }, [getLastSleep, state.wakeWindowMinutes]);
 
-    return Math.min(100, Math.round((awakeMinutes / maxWakeWindow) * 100));
-  }, [getLastSleep]);
+  const getDailyProgress = useCallback((): number => {
+    const totalMinutes = getTodaysTotalSleepMinutes();
+    if (state.dailyGoalMinutes <= 0) return 100;
+    const percentage = (totalMinutes / state.dailyGoalMinutes) * 100;
+    return Math.min(100, Math.round(percentage));
+  }, [getTodaysTotalSleepMinutes, state.dailyGoalMinutes]);
+
+  const setCustomGoal = useCallback(
+    async (goalMinutes: number): Promise<void> => {
+      if (!selectedBaby) return;
+      await SleepStorageService.setCustomGoal(selectedBaby.id, goalMinutes);
+      dispatch({ type: "SET_DAILY_GOAL", payload: goalMinutes });
+      dispatch({ type: "SET_GOAL_SOURCE", payload: "custom" });
+    },
+    [selectedBaby]
+  );
+
+  const resetToAgeBasedGoal = useCallback(async (): Promise<void> => {
+    if (!selectedBaby) return;
+
+    await SleepStorageService.clearCustomGoal(selectedBaby.id);
+
+    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    const goalInfo = getSleepGoalInfo(birthDate, null);
+
+    await SleepStorageService.setDailyGoal(selectedBaby.id, goalInfo.targetMinutes);
+    dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.targetMinutes });
+    dispatch({ type: "SET_GOAL_SOURCE", payload: "age_based" });
+    dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
+  }, [selectedBaby]);
+
+  const dismissMilestoneSuggestion = useCallback(async (permanent = false): Promise<void> => {
+    if (!selectedBaby || !state.currentAgeGroup) return;
+
+    if (permanent) {
+      await SleepStorageService.dismissMilestone(selectedBaby.id, state.currentAgeGroup.label);
+    }
+    dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
+    dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
+  }, [selectedBaby, state.currentAgeGroup]);
+
+  const acceptMilestoneSuggestion = useCallback(async (): Promise<void> => {
+    if (!selectedBaby || !state.suggestedGoalMinutes) return;
+
+    await SleepStorageService.setDailyGoal(selectedBaby.id, state.suggestedGoalMinutes);
+    dispatch({ type: "SET_DAILY_GOAL", payload: state.suggestedGoalMinutes });
+    dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
+    dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
+  }, [selectedBaby, state.suggestedGoalMinutes]);
 
   const value: SleepContextValue = {
     ...state,
@@ -261,6 +399,11 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     getLastSleep,
     getTodaysTotalSleepMinutes,
     getWakeWindowProgress,
+    getDailyProgress,
+    setCustomGoal,
+    resetToAgeBasedGoal,
+    dismissMilestoneSuggestion,
+    acceptMilestoneSuggestion,
   };
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
