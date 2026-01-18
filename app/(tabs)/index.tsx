@@ -10,7 +10,7 @@ import {
   FeedingTypeMenu,
   type FeedingMenuOption,
 } from "@/components";
-import { useFeeding, useSleep, useDiaper } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping } from "@/contexts";
 import { timeSince } from "@/utils/time";
 
 export default function HomeScreen() {
@@ -19,6 +19,7 @@ export default function HomeScreen() {
   const { feedings, activeTimer: feedingActiveTimer, getLastFeeding } = useFeeding();
   const { sleeps, activeTimer: sleepActiveTimer, getLastSleep } = useSleep();
   const { getLastDiaper, getTodaysCounts } = useDiaper();
+  const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume } = usePumping();
   const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
@@ -59,6 +60,19 @@ export default function HomeScreen() {
     return getTodaysCounts();
   }, [getTodaysCounts]);
 
+  const pumpingTimeSince = useMemo(() => {
+    if (pumpingActiveTimer?.isRunning) {
+      return t("common.now");
+    }
+    const lastPumping = getLastPumping();
+    if (!lastPumping) {
+      return "--";
+    }
+    return timeSince(new Date(lastPumping.startedAt));
+  }, [pumpingActiveTimer, getLastPumping, t]);
+
+  const isPumpingActive = pumpingActiveTimer?.isRunning ?? false;
+
   const todayFeedings = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -72,7 +86,6 @@ export default function HomeScreen() {
   }, [sleeps]);
 
   const mockData = {
-    pumpingTimeSince: "4h 20m",
     tummyTimeTimeSince: "3h",
     growthTimeSince: "5 days",
     todayFeedingTotal: todayFeedings.length.toString(),
@@ -119,9 +132,15 @@ export default function HomeScreen() {
     console.log("Add growth");
   };
 
-  const handleAddPumping = () => {
-    console.log("Add pumping");
-  };
+  const handleAddPumping = useCallback(() => {
+    router.push("/pumping");
+  }, [router]);
+
+  const handlePumpingCardPress = useCallback(() => {
+    if (isPumpingActive) {
+      router.push("/pumping");
+    }
+  }, [isPumpingActive, router]);
 
   const handleAddTummyTime = () => {
     console.log("Add tummy time");
@@ -179,10 +198,12 @@ export default function HomeScreen() {
             <DashboardCard
               activity="pumping"
               label={t("pumping.title")}
-              timeSince={mockData.pumpingTimeSince}
-              onPress={() => {}}
+              timeSince={pumpingTimeSince}
+              isActive={isPumpingActive}
+              activeLabel={t("pumping.pumping")}
+              onPress={handlePumpingCardPress}
               onActionPress={handleAddPumping}
-              actionLabel="+"
+              actionLabel={isPumpingActive ? undefined : "+"}
             />
           </View>
 
