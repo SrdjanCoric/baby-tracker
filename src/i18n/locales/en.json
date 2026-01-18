@@ -22,7 +22,9 @@
     "now": "Now",
     "timer": "Timer",
     "stopTimer": "Stop Timer",
-    "noBabySelected": "No baby selected"
+    "noBabySelected": "No baby selected",
+    "notes": "Notes",
+    "optional": "Optional"
   },
   "navigation": {
     "home": "Home",
@@ -181,7 +183,11 @@
     "height": "Height",
     "headCircumference": "Head Circumference",
     "measurementDate": "Measurement Date",
-    "logMeasurement": "Log Measurement"
+    "logMeasurement": "Log Measurement",
+    "saveMeasurement": "Save Measurement",
+    "notesPlaceholder": "e.g., Doctor's visit",
+    "quickEntryHint": "Enter at least one measurement. You don't need to fill in all fields.",
+    "lastMeasurement": "Last measurement"
   },
   "tummyTime": {
     "title": "Tummy Time",
@@ -213,6 +219,12 @@
     "units": "Units",
     "metric": "Metric (kg, cm, ml)",
     "imperial": "Imperial (lbs, in, oz)",
+    "kg": "kg",
+    "lbs": "lbs",
+    "cm": "cm",
+    "in": "in",
+    "ml": "ml",
+    "oz": "oz",
     "theme": "Theme",
     "lightMode": "Light",
     "darkMode": "Dark",

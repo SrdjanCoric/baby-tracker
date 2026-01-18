@@ -12,3 +12,6 @@ export type { DiaperState, DiaperAction } from "./diaper-context";
 
 export { PumpingProvider, usePumping, pumpingReducer, initialPumpingState } from "./pumping-context";
 export type { PumpingState, PumpingAction, ActivePumpingTimer } from "./pumping-context";
+
+export { GrowthProvider, useGrowth, growthReducer, initialGrowthState } from "./growth-context";
+export type { GrowthState, GrowthAction } from "./growth-context";
