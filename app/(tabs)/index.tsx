@@ -10,7 +10,7 @@ import {
   FeedingTypeMenu,
   type FeedingMenuOption,
 } from "@/components";
-import { useFeeding, useSleep } from "@/contexts";
+import { useFeeding, useSleep, useDiaper } from "@/contexts";
 import { timeSince } from "@/utils/time";
 
 export default function HomeScreen() {
@@ -18,6 +18,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { feedings, activeTimer: feedingActiveTimer, getLastFeeding } = useFeeding();
   const { sleeps, activeTimer: sleepActiveTimer, getLastSleep } = useSleep();
+  const { getLastDiaper, getTodaysCounts } = useDiaper();
   const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
@@ -46,6 +47,18 @@ export default function HomeScreen() {
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
+  const diaperTimeSince = useMemo(() => {
+    const lastDiaper = getLastDiaper();
+    if (!lastDiaper) {
+      return "--";
+    }
+    return timeSince(new Date(lastDiaper.changedAt));
+  }, [getLastDiaper]);
+
+  const todayDiaperCounts = useMemo(() => {
+    return getTodaysCounts();
+  }, [getTodaysCounts]);
+
   const todayFeedings = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -59,13 +72,11 @@ export default function HomeScreen() {
   }, [sleeps]);
 
   const mockData = {
-    diaperTimeSince: "1h 30m",
     pumpingTimeSince: "4h 20m",
     tummyTimeTimeSince: "3h",
     growthTimeSince: "5 days",
     todayFeedingTotal: todayFeedings.length.toString(),
     todayNapCount: todaySleeps.length,
-    todayDiaperCount: 6,
   };
 
   const handleAddFeeding = useCallback(() => {
@@ -100,9 +111,9 @@ export default function HomeScreen() {
     }
   }, [isSleepActive, router]);
 
-  const handleAddDiaper = () => {
-    console.log("Add diaper");
-  };
+  const handleAddDiaper = useCallback(() => {
+    router.push("/diaper");
+  }, [router]);
 
   const handleAddGrowth = () => {
     console.log("Add growth");
@@ -160,7 +171,7 @@ export default function HomeScreen() {
             <DashboardCard
               activity="diaper"
               label={t("diaper.title")}
-              timeSince={mockData.diaperTimeSince}
+              timeSince={diaperTimeSince}
               onPress={() => {}}
               onActionPress={handleAddDiaper}
               actionLabel="+"
@@ -201,7 +212,7 @@ export default function HomeScreen() {
           <TodaySummary
             feedingTotal={mockData.todayFeedingTotal}
             napCount={mockData.todayNapCount}
-            diaperCount={mockData.todayDiaperCount}
+            diaperCount={todayDiaperCounts.total}
           />
         </View>
       </ScrollView>

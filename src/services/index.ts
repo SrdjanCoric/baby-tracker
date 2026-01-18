@@ -16,3 +16,11 @@ export type {
   UpdateSleepInput,
   ActiveSleepTimerData,
 } from "./sleep-storage";
+
+export { DiaperStorageService } from "./diaper-storage";
+export type {
+  StoredDiaperEntry,
+  CreateDiaperInput,
+  UpdateDiaperInput,
+  DiaperCounts,
+} from "./diaper-storage";
