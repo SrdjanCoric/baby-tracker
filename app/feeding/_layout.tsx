@@ -9,6 +9,7 @@ export default function FeedingLayout() {
         animation: "slide_from_bottom",
       }}
     >
+      <Stack.Screen name="index" />
       <Stack.Screen name="breastfeed" />
       <Stack.Screen name="bottle" />
       <Stack.Screen name="solids" />

@@ -2,13 +2,11 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   BabyHeader,
   DashboardCard,
   TodaySummary,
-  FeedingTypeMenu,
-  type FeedingMenuOption,
 } from "@/components";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } from "@/contexts";
 import { timeSince, formatDate, hoursSince } from "@/utils/time";
@@ -22,7 +20,6 @@ export default function HomeScreen() {
   const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide } = usePumping();
   const { getLastMeasurement, getWeightChange } = useGrowth();
   const { activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds } = useTummyTime();
-  const [showFeedingMenu, setShowFeedingMenu] = useState(false);
 
   const feedingTimeSince = useMemo(() => {
     if (feedingActiveTimer?.isRunning) {
@@ -247,24 +244,12 @@ export default function HomeScreen() {
   };
 
   const handleAddFeeding = useCallback(() => {
-    setShowFeedingMenu(true);
-  }, []);
-
-  const handleFeedingMenuSelect = useCallback((option: FeedingMenuOption) => {
-    if (option === "breastfeed") {
-      router.push("/feeding/breastfeed");
-    } else if (option === "bottle") {
-      router.push("/feeding/bottle");
-    } else if (option === "solids") {
-      router.push("/feeding/solids");
-    }
+    router.push("/feeding");
   }, [router]);
 
   const handleFeedingCardPress = useCallback(() => {
-    if (isFeedingActive) {
-      router.push("/feeding/breastfeed");
-    }
-  }, [isFeedingActive, router]);
+    router.push("/feeding");
+  }, [router]);
 
   const handleAddSleep = useCallback(() => {
     router.push("/sleep");
@@ -405,13 +390,6 @@ export default function HomeScreen() {
           />
         </View>
       </ScrollView>
-
-      {/* Feeding Type Menu Modal */}
-      <FeedingTypeMenu
-        visible={showFeedingMenu}
-        onClose={() => setShowFeedingMenu(false)}
-        onSelect={handleFeedingMenuSelect}
-      />
     </SafeAreaView>
   );
 }
