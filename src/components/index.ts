@@ -53,3 +53,6 @@ export {
 
 // Sleep components
 export { SleepMilestoneSuggestionModal } from "./SleepMilestoneSuggestionModal";
+
+// Statistics components
+export { SimpleBarChart } from "./SimpleBarChart";
