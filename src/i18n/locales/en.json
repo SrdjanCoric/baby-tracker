@@ -315,8 +315,13 @@
     "totalFeedings": "Total Feedings",
     "totalSleep": "Total Sleep",
     "totalDiapers": "Total Diapers",
+    "totalPumping": "Pumped",
+    "tummyTime": "Tummy Time",
     "averageFeedingDuration": "Avg. Feeding Duration",
-    "averageSleepDuration": "Avg. Sleep Duration"
+    "averageSleepDuration": "Avg. Sleep Duration",
+    "noDataToday": "No data recorded today. Start tracking to see your statistics!",
+    "noDataThisWeek": "No data recorded this week. Start tracking to see your statistics!",
+    "weeklyOverview": "Weekly Overview"
   },
   "timeline": {
     "title": "Timeline",
