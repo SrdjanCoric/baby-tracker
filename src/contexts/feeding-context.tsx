@@ -13,6 +13,9 @@ export interface ActiveTimer {
   isRunning: boolean;
   startTime: Date;
   side?: BreastSide;
+  leftAccumulatedSeconds: number;
+  rightAccumulatedSeconds: number;
+  currentSideStartedAt: Date;
 }
 
 export interface FeedingState {
@@ -30,8 +33,9 @@ export type FeedingAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_LAST_BREAST_SIDE"; payload: BreastSide | null }
   | { type: "START_TIMER"; payload: { startTime: Date; side?: BreastSide } }
+  | { type: "RESTORE_TIMER"; payload: ActiveTimer }
   | { type: "STOP_TIMER" }
-  | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide };
+  | { type: "UPDATE_TIMER_SIDE"; payload: { side: BreastSide; accumulatedSeconds: number } };
 
 export const initialFeedingState: FeedingState = {
   feedings: [],
@@ -47,8 +51,11 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
 
     case "ADD_FEEDING": {
       const newState = { ...state, feedings: [...state.feedings, action.payload] };
-      if (action.payload.type === "breast" && action.payload.side) {
-        newState.lastBreastSide = action.payload.side;
+      if (action.payload.type === "breast") {
+        const sideForSuggestion = action.payload.lastFinishedSide ?? action.payload.side;
+        if (sideForSuggestion) {
+          newState.lastBreastSide = sideForSuggestion;
+        }
       }
       return newState;
     }
@@ -78,18 +85,49 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
           isRunning: true,
           startTime: action.payload.startTime,
           side: action.payload.side,
+          leftAccumulatedSeconds: 0,
+          rightAccumulatedSeconds: 0,
+          currentSideStartedAt: action.payload.startTime,
         },
+      };
+
+    case "RESTORE_TIMER":
+      return {
+        ...state,
+        activeTimer: action.payload,
       };
 
     case "STOP_TIMER":
       return { ...state, activeTimer: null };
 
-    case "UPDATE_TIMER_SIDE":
+    case "UPDATE_TIMER_SIDE": {
       if (!state.activeTimer) return state;
+      const { side, accumulatedSeconds } = action.payload;
+      const prevSide = state.activeTimer.side;
+
+      let leftAccumulated = state.activeTimer.leftAccumulatedSeconds;
+      let rightAccumulated = state.activeTimer.rightAccumulatedSeconds;
+
+      if (prevSide === "left") {
+        leftAccumulated += accumulatedSeconds;
+      } else if (prevSide === "right") {
+        rightAccumulated += accumulatedSeconds;
+      } else if (prevSide === "both") {
+        leftAccumulated += accumulatedSeconds;
+        rightAccumulated += accumulatedSeconds;
+      }
+
       return {
         ...state,
-        activeTimer: { ...state.activeTimer, side: action.payload },
+        activeTimer: {
+          ...state.activeTimer,
+          side,
+          leftAccumulatedSeconds: leftAccumulated,
+          rightAccumulatedSeconds: rightAccumulated,
+          currentSideStartedAt: new Date(),
+        },
       };
+    }
 
     default:
       return state;
@@ -132,10 +170,16 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     const activeTimer = await FeedingStorageService.getActiveTimer(selectedBaby.id);
     if (activeTimer) {
       dispatch({
-        type: "START_TIMER",
+        type: "RESTORE_TIMER",
         payload: {
+          isRunning: true,
           startTime: new Date(activeTimer.startedAt),
           side: activeTimer.side,
+          leftAccumulatedSeconds: activeTimer.leftAccumulatedSeconds ?? 0,
+          rightAccumulatedSeconds: activeTimer.rightAccumulatedSeconds ?? 0,
+          currentSideStartedAt: activeTimer.currentSideStartedAt
+            ? new Date(activeTimer.currentSideStartedAt)
+            : new Date(activeTimer.startedAt),
         },
       });
     }
@@ -157,6 +201,9 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       startedAt: startTime.toISOString(),
       side,
       type: "breast",
+      leftAccumulatedSeconds: 0,
+      rightAccumulatedSeconds: 0,
+      currentSideStartedAt: startTime.toISOString(),
     });
   }, [selectedBaby]);
 
@@ -168,13 +215,35 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       (endTime.getTime() - state.activeTimer.startTime.getTime()) / 1000
     );
 
+    const currentSideElapsed = Math.floor(
+      (endTime.getTime() - state.activeTimer.currentSideStartedAt.getTime()) / 1000
+    );
+
+    let leftDurationSeconds = state.activeTimer.leftAccumulatedSeconds;
+    let rightDurationSeconds = state.activeTimer.rightAccumulatedSeconds;
+
+    if (state.activeTimer.side === "left") {
+      leftDurationSeconds += currentSideElapsed;
+    } else if (state.activeTimer.side === "right") {
+      rightDurationSeconds += currentSideElapsed;
+    } else if (state.activeTimer.side === "both") {
+      leftDurationSeconds += currentSideElapsed;
+      rightDurationSeconds += currentSideElapsed;
+    }
+
+    const lastSide = leftDurationSeconds >= rightDurationSeconds ? "left" : "right";
+    const effectiveSide = leftDurationSeconds > 0 && rightDurationSeconds > 0 ? "both" : lastSide;
+
     const feeding = await FeedingStorageService.addFeeding({
       babyId: selectedBaby.id,
       type: "breast",
-      side: state.activeTimer.side,
+      side: effectiveSide,
+      lastFinishedSide: state.activeTimer.side,
       startedAt: state.activeTimer.startTime,
       endedAt: endTime,
       durationSeconds,
+      leftDurationSeconds: leftDurationSeconds > 0 ? leftDurationSeconds : undefined,
+      rightDurationSeconds: rightDurationSeconds > 0 ? rightDurationSeconds : undefined,
     });
 
     dispatch({ type: "ADD_FEEDING", payload: feeding });
@@ -185,12 +254,36 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   }, [selectedBaby, state.activeTimer]);
 
   const changeSide = useCallback((side: BreastSide) => {
-    dispatch({ type: "UPDATE_TIMER_SIDE", payload: side });
-    if (selectedBaby && state.activeTimer) {
+    if (!state.activeTimer) return;
+
+    const now = new Date();
+    const accumulatedSeconds = Math.floor(
+      (now.getTime() - state.activeTimer.currentSideStartedAt.getTime()) / 1000
+    );
+
+    dispatch({ type: "UPDATE_TIMER_SIDE", payload: { side, accumulatedSeconds } });
+
+    if (selectedBaby) {
+      const prevSide = state.activeTimer.side;
+      let leftAccumulated = state.activeTimer.leftAccumulatedSeconds;
+      let rightAccumulated = state.activeTimer.rightAccumulatedSeconds;
+
+      if (prevSide === "left") {
+        leftAccumulated += accumulatedSeconds;
+      } else if (prevSide === "right") {
+        rightAccumulated += accumulatedSeconds;
+      } else if (prevSide === "both") {
+        leftAccumulated += accumulatedSeconds;
+        rightAccumulated += accumulatedSeconds;
+      }
+
       FeedingStorageService.setActiveTimer(selectedBaby.id, {
         startedAt: state.activeTimer.startTime.toISOString(),
         side,
         type: "breast",
+        leftAccumulatedSeconds: leftAccumulated,
+        rightAccumulatedSeconds: rightAccumulated,
+        currentSideStartedAt: now.toISOString(),
       });
     }
   }, [selectedBaby, state.activeTimer]);

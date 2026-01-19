@@ -48,6 +48,31 @@ export default function BreastfeedingScreen() {
     return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
   }, [activeTimer, tick]);
 
+  const { leftSeconds, rightSeconds } = useMemo(() => {
+    if (!activeTimer?.isRunning) {
+      return { leftSeconds: 0, rightSeconds: 0 };
+    }
+    void tick;
+    const now = new Date();
+    const currentSideElapsed = Math.floor(
+      (now.getTime() - activeTimer.currentSideStartedAt.getTime()) / 1000
+    );
+
+    let left = activeTimer.leftAccumulatedSeconds;
+    let right = activeTimer.rightAccumulatedSeconds;
+
+    if (activeTimer.side === "left") {
+      left += currentSideElapsed;
+    } else if (activeTimer.side === "right") {
+      right += currentSideElapsed;
+    } else if (activeTimer.side === "both") {
+      left += currentSideElapsed;
+      right += currentSideElapsed;
+    }
+
+    return { leftSeconds: left, rightSeconds: right };
+  }, [activeTimer, tick]);
+
   const handleStartFeeding = useCallback(async (side: BreastSide) => {
     await startBreastfeeding(side);
   }, [startBreastfeeding]);
@@ -109,6 +134,8 @@ export default function BreastfeedingScreen() {
           <RunningTimerView
             elapsedSeconds={elapsedSeconds}
             side={activeTimer?.side}
+            leftSeconds={leftSeconds}
+            rightSeconds={rightSeconds}
             onSideChange={handleSideChange}
             onStop={handleStopFeeding}
           />
@@ -263,6 +290,8 @@ function SideStartButton({ side: _side, label, shortLabel, isSuggested, onPress 
 interface RunningTimerViewProps {
   elapsedSeconds: number;
   side?: BreastSide;
+  leftSeconds: number;
+  rightSeconds: number;
   onSideChange: (side: BreastSide) => void;
   onStop: () => void;
 }
@@ -270,11 +299,14 @@ interface RunningTimerViewProps {
 function RunningTimerView({
   elapsedSeconds,
   side,
+  leftSeconds,
+  rightSeconds,
   onSideChange,
   onStop
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
   const formattedTime = formatDuration(elapsedSeconds);
+  const hasMultipleSides = leftSeconds > 0 && rightSeconds > 0;
 
   return (
     <View className="items-center w-full">
@@ -313,7 +345,7 @@ function RunningTimerView({
 
       {/* Timer display - Hero element */}
       <View
-        className="px-12 py-8 rounded-card-lg mb-8"
+        className="px-12 py-8 rounded-card-lg mb-4"
         style={{ backgroundColor: FEEDING_GREEN_MUTED }}
       >
         <Text
@@ -324,6 +356,40 @@ function RunningTimerView({
           {formattedTime}
         </Text>
       </View>
+
+      {/* Per-side duration display */}
+      {(leftSeconds > 0 || rightSeconds > 0 || hasMultipleSides) && (
+        <View className="flex-row items-center justify-center mb-6 gap-6">
+          <View className="items-center">
+            <Text
+              className="text-xs uppercase font-semibold mb-1"
+              style={{ color: side === "left" || side === "both" ? FEEDING_GREEN : "#888" }}
+            >
+              {t("feeding.left")}
+            </Text>
+            <Text
+              className="text-xl font-bold"
+              style={{ color: side === "left" || side === "both" ? FEEDING_GREEN : "#888" }}
+            >
+              {formatDuration(leftSeconds, "short")}
+            </Text>
+          </View>
+          <View className="items-center">
+            <Text
+              className="text-xs uppercase font-semibold mb-1"
+              style={{ color: side === "right" || side === "both" ? FEEDING_GREEN : "#888" }}
+            >
+              {t("feeding.right")}
+            </Text>
+            <Text
+              className="text-xl font-bold"
+              style={{ color: side === "right" || side === "both" ? FEEDING_GREEN : "#888" }}
+            >
+              {formatDuration(rightSeconds, "short")}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Pulsing status indicator */}
       <View className="flex-row items-center mb-10">

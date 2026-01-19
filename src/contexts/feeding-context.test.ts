@@ -52,6 +52,19 @@ describe("feedingReducer", () => {
       expect(result.lastBreastSide).toBe("left");
     });
 
+    it("should prefer lastFinishedSide over side for lastBreastSide", () => {
+      const dualSideFeeding: StoredFeedingEntry = {
+        ...mockFeeding,
+        side: "both",
+        lastFinishedSide: "right",
+      };
+      const action: FeedingAction = { type: "ADD_FEEDING", payload: dualSideFeeding };
+
+      const result = feedingReducer(initialFeedingState, action);
+
+      expect(result.lastBreastSide).toBe("right");
+    });
+
     it("should not update lastBreastSide when adding bottle feeding", () => {
       const bottleFeeding: StoredFeedingEntry = {
         ...mockFeeding,
@@ -181,6 +194,9 @@ describe("feedingReducer", () => {
           isRunning: true,
           startTime,
           side: "left",
+          leftAccumulatedSeconds: 0,
+          rightAccumulatedSeconds: 0,
+          currentSideStartedAt: startTime,
         });
       });
 
@@ -197,18 +213,25 @@ describe("feedingReducer", () => {
           isRunning: true,
           startTime,
           side: undefined,
+          leftAccumulatedSeconds: 0,
+          rightAccumulatedSeconds: 0,
+          currentSideStartedAt: startTime,
         });
       });
     });
 
     describe("STOP_TIMER", () => {
       it("should stop timer", () => {
+        const startTime = new Date("2024-01-17T10:00:00.000Z");
         const state: FeedingState = {
           ...initialFeedingState,
           activeTimer: {
             isRunning: true,
-            startTime: new Date("2024-01-17T10:00:00.000Z"),
+            startTime,
             side: "left",
+            leftAccumulatedSeconds: 0,
+            rightAccumulatedSeconds: 0,
+            currentSideStartedAt: startTime,
           },
         };
         const action: FeedingAction = { type: "STOP_TIMER" };
@@ -221,23 +244,35 @@ describe("feedingReducer", () => {
 
     describe("UPDATE_TIMER_SIDE", () => {
       it("should update timer side when timer is running", () => {
+        const startTime = new Date("2024-01-17T10:00:00.000Z");
         const state: FeedingState = {
           ...initialFeedingState,
           activeTimer: {
             isRunning: true,
-            startTime: new Date("2024-01-17T10:00:00.000Z"),
+            startTime,
             side: "left",
+            leftAccumulatedSeconds: 0,
+            rightAccumulatedSeconds: 0,
+            currentSideStartedAt: startTime,
           },
         };
-        const action: FeedingAction = { type: "UPDATE_TIMER_SIDE", payload: "right" };
+        const action: FeedingAction = {
+          type: "UPDATE_TIMER_SIDE",
+          payload: { side: "right", accumulatedSeconds: 300 },
+        };
 
         const result = feedingReducer(state, action);
 
         expect(result.activeTimer?.side).toBe("right");
+        expect(result.activeTimer?.leftAccumulatedSeconds).toBe(300);
+        expect(result.activeTimer?.rightAccumulatedSeconds).toBe(0);
       });
 
       it("should not update if timer is not running", () => {
-        const action: FeedingAction = { type: "UPDATE_TIMER_SIDE", payload: "right" };
+        const action: FeedingAction = {
+          type: "UPDATE_TIMER_SIDE",
+          payload: { side: "right", accumulatedSeconds: 300 },
+        };
 
         const result = feedingReducer(initialFeedingState, action);
 
