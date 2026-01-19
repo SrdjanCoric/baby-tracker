@@ -189,8 +189,11 @@ Based on manual testing, the following issues were identified:
   - Added "Done" button in top-right corner to dismiss picker
   - Added year to date display format (e.g., "Mon, Jan 19, '26")
   - Made UI uniform across all log past screens (removed tummy time illustration, updated diaper buttons to match other screens)
-- [ ] **Feeding Tab Memory** - Change tab selection to be based on last actual feeding type (not last clicked tab)
+- [x] **Feeding Tab Memory** - Change tab selection to be based on last actual feeding type (not last clicked tab)
   - File: `app/feeding/index.tsx`
+  - **Solution:** Created `getLastFeedingType()` and `feedingTypeToTab()` utility functions in `src/utils/feeding.ts`
+  - Tab now initializes based on most recent feeding from history instead of AsyncStorage
+  - Added 9 new tests for the utility functions (787 total tests)
 - [ ] **Sleep Progress Bar Visibility** - Improve progress bar visibility in light mode
   - File: `src/components/DashboardCard.tsx`
 - [ ] **Dashboard Card Tap** - Make all card taps navigate to activity screen (same as + button)
