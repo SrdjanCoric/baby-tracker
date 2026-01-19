@@ -197,7 +197,7 @@ Based on manual testing, the following issues were identified:
 - [x] **Sleep Progress Bar Visibility** - Improve progress bar visibility in light mode
   - File: `src/components/DashboardCard.tsx`
   - **Solution:** Increased progress bar height, changed track background to use activity's accent color at 25% opacity, added subtle border with accent color at 40% opacity
-- [ ] **Dashboard Card Tap** - Make all card taps navigate to activity screen (same as + button)
+- [x] **Dashboard Card Tap** - Make all card taps navigate to activity screen (same as + button)
   - File: `app/(tabs)/index.tsx`
 - [ ] **Breastfeeding Dual-Side Tracking** - Track both sides separately during a session (like Huckleberry)
   - Display as "L: 8m, R: 12m" instead of just "Left"
