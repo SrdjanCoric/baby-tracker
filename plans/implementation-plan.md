@@ -183,8 +183,12 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
 
 Based on manual testing, the following issues were identified:
 
-- [ ] **Date/Time Picker Bug** - Fix iOS time picker not closing after selection; fix picker only showing 12am/1am
+- [x] **Date/Time Picker Bug** - Fix iOS time picker not closing after selection; fix picker only showing 12am/1am
   - Files: All manual.tsx screens (feeding, sleep, diaper, pumping, tummyTime)
+  - **Solution:** Use combined `mode="datetime"` picker on iOS instead of separate date/time pickers
+  - Added "Done" button in top-right corner to dismiss picker
+  - Added year to date display format (e.g., "Mon, Jan 19, '26")
+  - Made UI uniform across all log past screens (removed tummy time illustration, updated diaper buttons to match other screens)
 - [ ] **Feeding Tab Memory** - Change tab selection to be based on last actual feeding type (not last clicked tab)
   - File: `app/feeding/index.tsx`
 - [ ] **Sleep Progress Bar Visibility** - Improve progress bar visibility in light mode
