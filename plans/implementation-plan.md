@@ -179,6 +179,27 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Update navigation: Feed card opens /feeding directly (no menu)
   - [x] Uses existing translation keys (breastfeedingTab, bottleTab, solidFood)
 
+### Upcoming: Bug Fixes from Manual Testing (`bugfix/manual-testing-issues`)
+
+Based on manual testing, the following issues were identified:
+
+- [x] **Date/Time Picker Bug** - Fix iOS time picker not closing after selection; fix picker only showing 12am/1am
+  - Files: All manual.tsx screens (feeding, sleep, diaper, pumping, tummyTime)
+  - **Solution:** Use combined `mode="datetime"` picker on iOS instead of separate date/time pickers
+  - Added "Done" button in top-right corner to dismiss picker
+  - Added year to date display format (e.g., "Mon, Jan 19, '26")
+  - Made UI uniform across all log past screens (removed tummy time illustration, updated diaper buttons to match other screens)
+- [ ] **Feeding Tab Memory** - Change tab selection to be based on last actual feeding type (not last clicked tab)
+  - File: `app/feeding/index.tsx`
+- [ ] **Sleep Progress Bar Visibility** - Improve progress bar visibility in light mode
+  - File: `src/components/DashboardCard.tsx`
+- [ ] **Dashboard Card Tap** - Make all card taps navigate to activity screen (same as + button)
+  - File: `app/(tabs)/index.tsx`
+- [ ] **Breastfeeding Dual-Side Tracking** - Track both sides separately during a session (like Huckleberry)
+  - Display as "L: 8m, R: 12m" instead of just "Left"
+  - Store leftDurationSeconds and rightDurationSeconds
+  - Files: feeding-storage.ts, feeding-context.tsx, breastfeed.tsx, TimelineItem.tsx
+
 ### Next Milestone: Testable App
 **Goal:** Baby Profile + First Tracking Feature
 
@@ -2832,16 +2853,23 @@ describe('NotificationSettings', () => {
 3. Implement feeding reminders:
    - Configurable interval (2, 2.5, 3, 4 hours)
    - Based on last feeding time
-4. Implement timer alerts:
-   - Configurable max duration
-   - Alert when exceeded
+4. Implement timer duration alerts (notify if timer still running past reasonable duration):
+   | Activity | Threshold | Message |
+   |----------|-----------|---------|
+   | Breastfeeding | 60 min | "Still breastfeeding?" |
+   | Pumping | 45 min | "Still pumping?" |
+   | Tummy Time | 30 min | "Still doing tummy time?" |
+   | Nap | 3 hours | "Baby still napping?" |
+   | Night Sleep | 12 hours | "Baby still sleeping?" |
+   - Should be user-configurable in settings
+   - Alert when threshold exceeded while timer is running
 5. Add quiet hours setting
 6. Handle notification permissions
 
 **Definition of Done:**
 - [ ] All tests pass
 - [ ] Feeding reminders work
-- [ ] Timer alerts work
+- [ ] Timer duration alerts work for all timer types
 - [ ] Quiet hours respected
 - [ ] Settings persist
 - [ ] Permissions handled gracefully
