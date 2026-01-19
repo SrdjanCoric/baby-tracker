@@ -12,9 +12,12 @@ export interface StoredFeedingEntry {
   babyId: string;
   type: FeedingType;
   side?: BreastSide;
+  lastFinishedSide?: BreastSide;
   startedAt: string;
   endedAt?: string;
   durationSeconds?: number;
+  leftDurationSeconds?: number;
+  rightDurationSeconds?: number;
   amountMl?: number;
   contentType?: BottleContentType;
   foodType?: string;
@@ -29,9 +32,12 @@ export interface CreateFeedingInput {
   babyId: string;
   type: FeedingType;
   side?: BreastSide;
+  lastFinishedSide?: BreastSide;
   startedAt: Date;
   endedAt?: Date;
   durationSeconds?: number;
+  leftDurationSeconds?: number;
+  rightDurationSeconds?: number;
   amountMl?: number;
   contentType?: BottleContentType;
   foodType?: string;
@@ -43,6 +49,8 @@ export interface CreateFeedingInput {
 export interface UpdateFeedingInput {
   endedAt?: Date;
   durationSeconds?: number;
+  leftDurationSeconds?: number;
+  rightDurationSeconds?: number;
   amountMl?: number;
   contentType?: BottleContentType;
   foodType?: string;
@@ -56,6 +64,9 @@ export interface ActiveTimerData {
   startedAt: string;
   side?: BreastSide;
   type: FeedingType;
+  leftAccumulatedSeconds?: number;
+  rightAccumulatedSeconds?: number;
+  currentSideStartedAt?: string;
 }
 
 function generateId(): string {
@@ -91,9 +102,12 @@ export const FeedingStorageService = {
       babyId: input.babyId,
       type: input.type,
       side: input.side,
+      lastFinishedSide: input.lastFinishedSide,
       startedAt: input.startedAt.toISOString(),
       endedAt: input.endedAt?.toISOString(),
       durationSeconds: input.durationSeconds,
+      leftDurationSeconds: input.leftDurationSeconds,
+      rightDurationSeconds: input.rightDurationSeconds,
       amountMl: input.amountMl,
       contentType: input.contentType,
       foodType: input.foodType,
@@ -124,6 +138,8 @@ export const FeedingStorageService = {
       ...feedings[index],
       ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
       ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
+      ...(input.leftDurationSeconds !== undefined && { leftDurationSeconds: input.leftDurationSeconds }),
+      ...(input.rightDurationSeconds !== undefined && { rightDurationSeconds: input.rightDurationSeconds }),
       ...(input.amountMl !== undefined && { amountMl: input.amountMl }),
       ...(input.contentType !== undefined && { contentType: input.contentType }),
       ...(input.foodType !== undefined && { foodType: input.foodType }),
@@ -164,14 +180,15 @@ export const FeedingStorageService = {
 
   async getLastBreastSide(babyId: string): Promise<BreastSide | null> {
     const feedings = await this.getAllFeedings(babyId);
-    const breastFeedings = feedings.filter(f => f.type === "breast" && f.side);
+    const breastFeedings = feedings.filter(f => f.type === "breast" && (f.lastFinishedSide || f.side));
 
     if (breastFeedings.length === 0) return null;
 
     const sorted = [...breastFeedings].sort((a, b) =>
       new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
     );
-    return sorted[0].side ?? null;
+    // Prefer lastFinishedSide (new entries), fall back to side (old entries)
+    return sorted[0].lastFinishedSide ?? sorted[0].side ?? null;
   },
 
   async getActiveTimer(babyId: string): Promise<ActiveTimerData | null> {

@@ -199,7 +199,7 @@ Based on manual testing, the following issues were identified:
   - **Solution:** Increased progress bar height, changed track background to use activity's accent color at 25% opacity, added subtle border with accent color at 40% opacity
 - [x] **Dashboard Card Tap** - Make all card taps navigate to activity screen (same as + button)
   - File: `app/(tabs)/index.tsx`
-- [ ] **Breastfeeding Dual-Side Tracking** - Track both sides separately during a session (like Huckleberry)
+- [x] **Breastfeeding Dual-Side Tracking** - Track both sides separately during a session (like Huckleberry)
   - Display as "L: 8m, R: 12m" instead of just "Left"
   - Store leftDurationSeconds and rightDurationSeconds
   - Files: feeding-storage.ts, feeding-context.tsx, breastfeed.tsx, TimelineItem.tsx
