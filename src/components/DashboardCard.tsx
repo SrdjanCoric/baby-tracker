@@ -163,11 +163,15 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
                 <View className="mt-2">
                   <View className="flex-row items-center">
                     <View
-                      className="h-1.5 rounded-full flex-1 mr-2"
-                      style={{ backgroundColor: isDark ? "#3A3A3A" : "#E0E0E0" }}
+                      className="h-2 rounded-full flex-1 mr-2"
+                      style={{
+                        backgroundColor: isDark ? "#3A3A3A" : `${config.accentColor}25`,
+                        borderWidth: isDark ? 0 : 1,
+                        borderColor: isDark ? "transparent" : `${config.accentColor}40`,
+                      }}
                     >
                       <View
-                        className="h-1.5 rounded-full"
+                        className="h-full rounded-full"
                         style={{
                           backgroundColor: progress >= 100 ? "#4CAF50" : config.accentColor,
                           width: `${Math.min(100, progress)}%`
