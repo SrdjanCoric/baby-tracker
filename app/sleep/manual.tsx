@@ -30,6 +30,7 @@ export default function ManualSleepScreen() {
   const { addSleep } = useSleep();
 
   const [startTime, setStartTime] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -53,7 +54,9 @@ export default function ManualSleepScreen() {
 
   const handleDateChange = useCallback(
     (_event: unknown, selectedDate?: Date) => {
-      setShowDatePicker(Platform.OS === "ios");
+      if (Platform.OS === "android") {
+        setShowDatePicker(false);
+      }
       if (selectedDate) {
         const newDateTime = new Date(startTime);
         newDateTime.setFullYear(selectedDate.getFullYear());
@@ -67,7 +70,9 @@ export default function ManualSleepScreen() {
 
   const handleTimeChange = useCallback(
     (_event: unknown, selectedTime?: Date) => {
-      setShowTimePicker(Platform.OS === "ios");
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
       if (selectedTime) {
         const newDateTime = new Date(startTime);
         newDateTime.setHours(selectedTime.getHours());
@@ -76,6 +81,15 @@ export default function ManualSleepScreen() {
       }
     },
     [startTime]
+  );
+
+  const handleDateTimeChange = useCallback(
+    (_event: unknown, selectedDateTime?: Date) => {
+      if (selectedDateTime) {
+        setStartTime(selectedDateTime);
+      }
+    },
+    []
   );
 
   const handleDurationChange = useCallback((text: string) => {
@@ -155,6 +169,7 @@ export default function ManualSleepScreen() {
       weekday: "short",
       month: "short",
       day: "numeric",
+      year: "2-digit",
     });
   };
 
@@ -228,7 +243,7 @@ export default function ManualSleepScreen() {
           </Text>
           <View className="flex-row gap-3">
             <Pressable
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
               style={{ backgroundColor: SLEEP_PURPLE_MUTED }}
               accessibilityRole="button"
@@ -240,7 +255,7 @@ export default function ManualSleepScreen() {
               <Text style={{ color: SLEEP_PURPLE }}>📅</Text>
             </Pressable>
             <Pressable
-              onPress={() => setShowTimePicker(true)}
+              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
               style={{ backgroundColor: SLEEP_PURPLE_MUTED }}
               accessibilityRole="button"
@@ -257,21 +272,46 @@ export default function ManualSleepScreen() {
           )}
         </View>
 
-        {showDatePicker && (
+        {/* iOS: Combined datetime picker */}
+        {showDateTimePicker && Platform.OS === "ios" && (
+          <View>
+            <View className="flex-row justify-end px-2">
+              <Pressable
+                onPress={() => setShowDateTimePicker(false)}
+                className="py-1 px-3"
+              >
+                <Text className="text-sm font-semibold" style={{ color: SLEEP_PURPLE }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+            <DateTimePicker
+              value={startTime}
+              mode="datetime"
+              display="spinner"
+              onChange={handleDateTimeChange}
+              maximumDate={new Date()}
+            />
+          </View>
+        )}
+
+        {/* Android: Separate date picker */}
+        {showDatePicker && Platform.OS === "android" && (
           <DateTimePicker
             value={startTime}
             mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            display="default"
             onChange={handleDateChange}
             maximumDate={new Date()}
           />
         )}
 
-        {showTimePicker && (
+        {/* Android: Separate time picker */}
+        {showTimePicker && Platform.OS === "android" && (
           <DateTimePicker
             value={startTime}
             mode="time"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            display="default"
             onChange={handleTimeChange}
           />
         )}

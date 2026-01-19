@@ -32,6 +32,7 @@ export default function ManualDiaperScreen() {
   const [selectedType, setSelectedType] = useState<DiaperType | null>(null);
   const [selectedColor, setSelectedColor] = useState<StoolColor | null>(null);
   const [changeTime, setChangeTime] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -52,7 +53,9 @@ export default function ManualDiaperScreen() {
   }, []);
 
   const handleDateChange = useCallback((_event: unknown, date?: Date) => {
-    setShowDatePicker(false);
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
     if (date) {
       const newDateTime = new Date(changeTime);
       newDateTime.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
@@ -61,13 +64,21 @@ export default function ManualDiaperScreen() {
   }, [changeTime]);
 
   const handleTimeChange = useCallback((_event: unknown, date?: Date) => {
-    setShowTimePicker(false);
+    if (Platform.OS === "android") {
+      setShowTimePicker(false);
+    }
     if (date) {
       const newDateTime = new Date(changeTime);
       newDateTime.setHours(date.getHours(), date.getMinutes());
       setChangeTime(newDateTime);
     }
   }, [changeTime]);
+
+  const handleDateTimeChange = useCallback((_event: unknown, selectedDateTime?: Date) => {
+    if (selectedDateTime) {
+      setChangeTime(selectedDateTime);
+    }
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!selectedBaby || !selectedType) return;
@@ -91,6 +102,7 @@ export default function ManualDiaperScreen() {
       weekday: "short",
       month: "short",
       day: "numeric",
+      year: "2-digit",
     });
   };
 
@@ -149,46 +161,73 @@ export default function ManualDiaperScreen() {
         <View className="flex-row gap-3 mb-6">
           {/* Date Picker */}
           <Pressable
-            onPress={() => setShowDatePicker(true)}
-            className="flex-1 p-4 rounded-card-lg border border-border dark:border-border-dark active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+            onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
+            className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
+            style={{ backgroundColor: DIAPER_PEACH_MUTED }}
+            accessibilityRole="button"
+            accessibilityLabel={t("feeding.selectDate")}
           >
-            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-1">
-              {t("feeding.selectDate")}
-            </Text>
-            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
+            <Text className="text-base" style={{ color: DIAPER_PEACH_DARK }}>
               {formatDate(changeTime)}
             </Text>
+            <Text style={{ color: DIAPER_PEACH }}>📅</Text>
           </Pressable>
 
           {/* Time Picker */}
           <Pressable
-            onPress={() => setShowTimePicker(true)}
-            className="flex-1 p-4 rounded-card-lg border border-border dark:border-border-dark active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+            onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
+            className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
+            style={{ backgroundColor: DIAPER_PEACH_MUTED }}
+            accessibilityRole="button"
+            accessibilityLabel={t("feeding.selectTime")}
           >
-            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-1">
-              {t("feeding.selectTime")}
-            </Text>
-            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
+            <Text className="text-base" style={{ color: DIAPER_PEACH_DARK }}>
               {formatTime(changeTime)}
             </Text>
+            <Text style={{ color: DIAPER_PEACH }}>🕐</Text>
           </Pressable>
         </View>
 
-        {/* Date/Time Pickers (iOS shows inline, Android shows modal) */}
-        {showDatePicker && (
+        {/* iOS: Combined datetime picker */}
+        {showDateTimePicker && Platform.OS === "ios" && (
+          <View className="mb-4">
+            <View className="flex-row justify-end px-2">
+              <Pressable
+                onPress={() => setShowDateTimePicker(false)}
+                className="py-1 px-3"
+              >
+                <Text className="text-sm font-semibold" style={{ color: DIAPER_PEACH }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+            <DateTimePicker
+              value={changeTime}
+              mode="datetime"
+              display="spinner"
+              onChange={handleDateTimeChange}
+              maximumDate={new Date()}
+            />
+          </View>
+        )}
+
+        {/* Android: Separate date picker */}
+        {showDatePicker && Platform.OS === "android" && (
           <DateTimePicker
             value={changeTime}
             mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            display="default"
             onChange={handleDateChange}
             maximumDate={new Date()}
           />
         )}
-        {showTimePicker && (
+
+        {/* Android: Separate time picker */}
+        {showTimePicker && Platform.OS === "android" && (
           <DateTimePicker
             value={changeTime}
             mode="time"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            display="default"
             onChange={handleTimeChange}
           />
         )}

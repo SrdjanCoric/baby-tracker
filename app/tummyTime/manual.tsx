@@ -28,6 +28,7 @@ export default function ManualTummyTimeScreen() {
   const { addTummyTime } = useTummyTime();
 
   const [startTime, setStartTime] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -44,7 +45,9 @@ export default function ManualTummyTimeScreen() {
 
   const handleDateChange = useCallback(
     (_event: unknown, selectedDate?: Date) => {
-      setShowDatePicker(Platform.OS === "ios");
+      if (Platform.OS === "android") {
+        setShowDatePicker(false);
+      }
       if (selectedDate) {
         const newDateTime = new Date(startTime);
         newDateTime.setFullYear(selectedDate.getFullYear());
@@ -58,7 +61,9 @@ export default function ManualTummyTimeScreen() {
 
   const handleTimeChange = useCallback(
     (_event: unknown, selectedTime?: Date) => {
-      setShowTimePicker(Platform.OS === "ios");
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
       if (selectedTime) {
         const newDateTime = new Date(startTime);
         newDateTime.setHours(selectedTime.getHours());
@@ -67,6 +72,15 @@ export default function ManualTummyTimeScreen() {
       }
     },
     [startTime]
+  );
+
+  const handleDateTimeChange = useCallback(
+    (_event: unknown, selectedDateTime?: Date) => {
+      if (selectedDateTime) {
+        setStartTime(selectedDateTime);
+      }
+    },
+    []
   );
 
   const handleDurationChange = useCallback((text: string) => {
@@ -136,6 +150,7 @@ export default function ManualTummyTimeScreen() {
       weekday: "short",
       month: "short",
       day: "numeric",
+      year: "2-digit",
     });
   };
 
@@ -174,16 +189,6 @@ export default function ManualTummyTimeScreen() {
         contentContainerClassName="px-6 pb-6"
         keyboardShouldPersistTaps="handled"
       >
-        {/* Illustration */}
-        <View className="items-center mb-6">
-          <View
-            className="w-24 h-24 rounded-full items-center justify-center"
-            style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
-          >
-            <Text className="text-4xl">💪</Text>
-          </View>
-        </View>
-
         {/* Start Time Selection */}
         <View className="mb-6">
           <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
@@ -191,7 +196,7 @@ export default function ManualTummyTimeScreen() {
           </Text>
           <View className="flex-row gap-3">
             <Pressable
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
               style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
               accessibilityRole="button"
@@ -203,7 +208,7 @@ export default function ManualTummyTimeScreen() {
               <Text style={{ color: TUMMY_ORANGE }}>📅</Text>
             </Pressable>
             <Pressable
-              onPress={() => setShowTimePicker(true)}
+              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
               style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
               accessibilityRole="button"
@@ -220,21 +225,46 @@ export default function ManualTummyTimeScreen() {
           )}
         </View>
 
-        {showDatePicker && (
+        {/* iOS: Combined datetime picker */}
+        {showDateTimePicker && Platform.OS === "ios" && (
+          <View>
+            <View className="flex-row justify-end px-2">
+              <Pressable
+                onPress={() => setShowDateTimePicker(false)}
+                className="py-1 px-3"
+              >
+                <Text className="text-sm font-semibold" style={{ color: TUMMY_ORANGE }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+            <DateTimePicker
+              value={startTime}
+              mode="datetime"
+              display="spinner"
+              onChange={handleDateTimeChange}
+              maximumDate={new Date()}
+            />
+          </View>
+        )}
+
+        {/* Android: Separate date picker */}
+        {showDatePicker && Platform.OS === "android" && (
           <DateTimePicker
             value={startTime}
             mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            display="default"
             onChange={handleDateChange}
             maximumDate={new Date()}
           />
         )}
 
-        {showTimePicker && (
+        {/* Android: Separate time picker */}
+        {showTimePicker && Platform.OS === "android" && (
           <DateTimePicker
             value={startTime}
             mode="time"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            display="default"
             onChange={handleTimeChange}
           />
         )}
