@@ -194,8 +194,9 @@ Based on manual testing, the following issues were identified:
   - **Solution:** Created `getLastFeedingType()` and `feedingTypeToTab()` utility functions in `src/utils/feeding.ts`
   - Tab now initializes based on most recent feeding from history instead of AsyncStorage
   - Added 9 new tests for the utility functions (787 total tests)
-- [ ] **Sleep Progress Bar Visibility** - Improve progress bar visibility in light mode
+- [x] **Sleep Progress Bar Visibility** - Improve progress bar visibility in light mode
   - File: `src/components/DashboardCard.tsx`
+  - **Solution:** Increased progress bar height, changed track background to use activity's accent color at 25% opacity, added subtle border with accent color at 40% opacity
 - [ ] **Dashboard Card Tap** - Make all card taps navigate to activity screen (same as + button)
   - File: `app/(tabs)/index.tsx`
 - [ ] **Breastfeeding Dual-Side Tracking** - Track both sides separately during a session (like Huckleberry)
