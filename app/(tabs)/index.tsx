@@ -256,16 +256,22 @@ export default function HomeScreen() {
   }, [router]);
 
   const handleSleepCardPress = useCallback(() => {
-    if (isSleepActive) {
-      router.push("/sleep");
-    }
-  }, [isSleepActive, router]);
+    router.push("/sleep");
+  }, [router]);
 
   const handleAddDiaper = useCallback(() => {
     router.push("/diaper");
   }, [router]);
 
+  const handleDiaperCardPress = useCallback(() => {
+    router.push("/diaper");
+  }, [router]);
+
   const handleAddGrowth = useCallback(() => {
+    router.push("/growth");
+  }, [router]);
+
+  const handleGrowthCardPress = useCallback(() => {
     router.push("/growth");
   }, [router]);
 
@@ -274,20 +280,16 @@ export default function HomeScreen() {
   }, [router]);
 
   const handlePumpingCardPress = useCallback(() => {
-    if (isPumpingActive) {
-      router.push("/pumping");
-    }
-  }, [isPumpingActive, router]);
+    router.push("/pumping");
+  }, [router]);
 
   const handleAddTummyTime = useCallback(() => {
     router.push("/tummyTime");
   }, [router]);
 
   const handleTummyTimeCardPress = useCallback(() => {
-    if (isTummyTimeActive) {
-      router.push("/tummyTime");
-    }
-  }, [isTummyTimeActive, router]);
+    router.push("/tummyTime");
+  }, [router]);
 
   const handleSettingsPress = () => {
     router.push("/(tabs)/profile");
@@ -338,7 +340,7 @@ export default function HomeScreen() {
               label={t("diaper.title")}
               timeSince={diaperTimeSince}
               subtitle={diaperSubtitle}
-              onPress={() => {}}
+              onPress={handleDiaperCardPress}
               onActionPress={handleAddDiaper}
               actionLabel="+"
             />
@@ -374,7 +376,7 @@ export default function HomeScreen() {
               label={t("growth.title")}
               timeSince={growthTimeSince}
               subtitle={growthSubtitle}
-              onPress={() => {}}
+              onPress={handleGrowthCardPress}
               onActionPress={handleAddGrowth}
               actionLabel="+"
             />
