@@ -12,6 +12,7 @@ import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } 
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
+import { formatDualSideDuration } from "@/utils/feeding";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
@@ -90,15 +91,28 @@ export default function TimelineScreen() {
 
     if (feeding.type === "breast") {
       title = t("feeding.breastfeeding");
-      const sideLabel = feeding.side === "left"
-        ? t("feeding.left")
-        : feeding.side === "right"
-          ? t("feeding.right")
-          : t("feeding.both");
-      const durationLabel = feeding.durationSeconds
-        ? formatDuration(feeding.durationSeconds, "short")
-        : "";
-      subtitle = durationLabel ? `${sideLabel} · ${durationLabel}` : sideLabel;
+
+      const hasDualSideDurations = feeding.leftDurationSeconds || feeding.rightDurationSeconds;
+      if (hasDualSideDurations) {
+        const dualSideLabel = formatDualSideDuration(
+          feeding.leftDurationSeconds,
+          feeding.rightDurationSeconds
+        );
+        const totalLabel = feeding.durationSeconds
+          ? ` (${formatDuration(feeding.durationSeconds, "short")})`
+          : "";
+        subtitle = dualSideLabel + totalLabel;
+      } else {
+        const sideLabel = feeding.side === "left"
+          ? t("feeding.left")
+          : feeding.side === "right"
+            ? t("feeding.right")
+            : t("feeding.both");
+        const durationLabel = feeding.durationSeconds
+          ? formatDuration(feeding.durationSeconds, "short")
+          : "";
+        subtitle = durationLabel ? `${sideLabel} · ${durationLabel}` : sideLabel;
+      }
     } else if (feeding.type === "bottle") {
       const contentLabel = feeding.contentType === "breastMilk"
         ? t("feeding.breastMilk")
