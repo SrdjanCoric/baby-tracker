@@ -3,19 +3,17 @@ import { Pressable, Text, TextInput, View, ScrollView, Keyboard } from "react-na
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFeeding, useBaby } from "@/contexts";
 import type { CreateFeedingInput, StoredFeedingEntry } from "@/services/feeding-storage";
 import { formatDuration } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
+import { getLastFeedingType, feedingTypeToTab } from "@/utils/feeding";
 import { COMMON_FOODS } from "@/constants/foods";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
 const FEEDING_GREEN_DARK = "#6A9030";
-
-const LAST_FEEDING_TYPE_KEY = "@feeding_last_type";
 
 type FeedingTab = "breast" | "bottle" | "solids";
 
@@ -38,19 +36,12 @@ export default function FeedingScreen() {
     feedings,
   } = useFeeding();
 
-  const [activeTab, setActiveTab] = useState<FeedingTab>("breast");
-  const [isLoadingTab, setIsLoadingTab] = useState(true);
   const [tick, setTick] = useState(0);
 
-  // Load last used tab
-  useEffect(() => {
-    AsyncStorage.getItem(LAST_FEEDING_TYPE_KEY).then((value) => {
-      if (value === "breast" || value === "bottle" || value === "solids") {
-        setActiveTab(value);
-      }
-      setIsLoadingTab(false);
-    });
-  }, []);
+  const [activeTab, setActiveTab] = useState<FeedingTab>(() => {
+    const lastType = getLastFeedingType(feedings);
+    return lastType ? feedingTypeToTab(lastType) : "breast";
+  });
 
   // Timer tick for breastfeeding
   useEffect(() => {
@@ -66,9 +57,8 @@ export default function FeedingScreen() {
     return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
   }, [activeTimer, tick]);
 
-  const handleTabChange = useCallback(async (tab: FeedingTab) => {
+  const handleTabChange = useCallback((tab: FeedingTab) => {
     setActiveTab(tab);
-    await AsyncStorage.setItem(LAST_FEEDING_TYPE_KEY, tab);
   }, []);
 
   const handleBack = useCallback(() => {
@@ -103,15 +93,6 @@ export default function FeedingScreen() {
     );
   }
 
-  if (isLoadingTab) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.loading")}
-        </Text>
-      </SafeAreaView>
-    );
-  }
 
   const isTimerRunning = activeTimer?.isRunning ?? false;
 
