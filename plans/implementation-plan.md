@@ -2099,178 +2099,6 @@ describe('Insight generation', () => {
 
 ---
 
-#### Branch: `feature/day-comparison-view`
-**Scope:** Side-by-side day comparison (like Huckleberry's Week View)
-
-**Research-Based Features:**
-- Visual timeline showing 2-3 days side by side
-- Color-coded activity blocks (sleep=purple, feed=green, diaper=peach)
-- Quick pattern recognition across days
-- Helps parents see routine consistency
-
-**TDD Approach:**
-```typescript
-// Unit tests
-describe('Day comparison utilities', () => {
-  it('should group activities by hour for a day', () => {});
-  it('should calculate activity density per time slot', () => {});
-  it('should align multiple days for comparison', () => {});
-});
-
-// Component tests
-describe('DayComparisonView', () => {
-  it('should render 3 days side by side', () => {});
-  it('should show color-coded activity blocks', () => {});
-  it('should scroll horizontally to show more days', () => {});
-});
-```
-
-**Tasks:**
-1. Create day-to-timeline data transformation utility
-2. Build DayColumn component (24-hour vertical timeline)
-3. Build DayComparisonView with horizontal scroll
-4. Add activity block rendering with proper colors
-5. Add day selector (today, yesterday, 2 days ago, etc.)
-6. Integrate into Statistics screen as new tab/view
-
-**Design - Day Comparison:**
-```
-│ Yesterday │  Today   │
-├───────────┼──────────┤
-│   ████    │   ████   │  ← Sleep (purple)
-│           │          │
-│   ██      │    ██    │  ← Feed (green)
-│    █      │     █    │  ← Diaper (peach)
-│   ████    │  ██████  │  ← Nap (purple)
-│     ██    │    ██    │  ← Feed
-│   ██████  │ ████████ │  ← Night sleep
-```
-
-**Definition of Done:**
-- [ ] All tests pass
-- [ ] Can view 2-3 days side by side
-- [ ] Activities color-coded by type
-- [ ] Time alignment accurate
-- [ ] Scrollable for more days
-- [ ] Accessible via Statistics screen
-
----
-
-#### Branch: `feature/quick-doctor-summary`
-**Scope:** One-tap summary view optimized for pediatrician visits
-
-**Research-Based Features:**
-- Parents frequently show tracking data to doctors
-- Need quick, clean summary without navigating
-- Key metrics at a glance for common questions
-
-**TDD Approach:**
-```typescript
-// Unit tests
-describe('Doctor summary generation', () => {
-  it('should calculate average daily feedings for period', () => {});
-  it('should calculate average sleep per day', () => {});
-  it('should calculate diaper frequency', () => {});
-  it('should include latest growth measurements', () => {});
-  it('should format for easy reading', () => {});
-});
-```
-
-**Tasks:**
-1. Create doctor summary data aggregation utility
-2. Build DoctorSummaryScreen with clean layout
-3. Add configurable time period (1 week, 2 weeks, 1 month)
-4. Include:
-   - Average daily feedings (count + duration/volume)
-   - Average daily sleep (total + nap count)
-   - Average daily diapers (wet/dirty breakdown)
-   - Latest growth measurements with dates
-   - Any notes/concerns flagged
-5. Add "Share" button for quick screenshot or PDF
-6. Accessible from Profile/Settings screen
-
-**Design - Doctor Summary:**
-```
-┌─────────────────────────────────┐
-│  📋 Summary for Dr. Visit       │
-│  Last 2 weeks                   │
-├─────────────────────────────────┤
-│  🍼 Feeding: 8x/day (avg)       │
-│     Breastfeeding: 6x, Bottle: 2x│
-│     Total: ~24 oz/day           │
-├─────────────────────────────────┤
-│  😴 Sleep: 14.5h/day (avg)      │
-│     Night: 10h, Naps: 3x (4.5h) │
-├─────────────────────────────────┤
-│  🚼 Diapers: 8x/day (avg)       │
-│     Wet: 5, Dirty: 3            │
-├─────────────────────────────────┤
-│  📏 Growth (Jan 15)             │
-│     Weight: 4.2 kg (25th %)     │
-│     Height: 52 cm (50th %)      │
-└─────────────────────────────────┘
-        [ Share Summary ]
-```
-
-**Definition of Done:**
-- [ ] All tests pass
-- [ ] Summary shows key metrics clearly
-- [ ] Time period selectable
-- [ ] Growth percentiles shown (if available)
-- [ ] Share functionality works
-- [ ] Optimized for showing to doctor on phone
-
----
-
-#### Branch: `feature/weekly-insights-notification`
-**Scope:** Weekly digest with insights and trends
-
-**Research-Based Features:**
-- Parents want proactive insights, not just raw data
-- Weekly summary helps identify patterns over time
-- Celebration of milestones and achievements
-
-**TDD Approach:**
-```typescript
-// Unit tests
-describe('Weekly insights generation', () => {
-  it('should identify top 3 notable changes', () => {});
-  it('should generate positive insights for improvements', () => {});
-  it('should flag concerning patterns gently', () => {});
-  it('should include milestone achievements', () => {});
-});
-
-describe('Weekly notification scheduling', () => {
-  it('should schedule for configured day/time', () => {});
-  it('should include summary in notification', () => {});
-});
-```
-
-**Tasks:**
-1. Create weekly insights generation utility
-2. Implement insight prioritization (most notable first)
-3. Add milestone detection (e.g., "First week sleeping through night!")
-4. Create WeeklyDigestScreen showing full insights
-5. Schedule weekly notification with summary
-6. Add setting to configure digest day/time
-7. Make digest shareable
-
-**Insight Examples:**
-- "🎉 Sleep improved 15% this week!"
-- "📈 Feeding routine becoming more consistent"
-- "💪 Tummy time goal met 5 out of 7 days"
-- "📊 Total of 52 diapers changed this week"
-
-**Definition of Done:**
-- [ ] All tests pass
-- [ ] Weekly insights generated accurately
-- [ ] Notification delivered on schedule
-- [ ] Insights screen accessible from notification
-- [ ] Insights shareable
-- [ ] Configurable notification day/time
-
----
-
 #### Branch: `feature/dark-mode`
 **Scope:** System-aware dark theme
 
@@ -3694,6 +3522,97 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
 | Bug Fix | `fix/[issue]` | `fix/timer-persistence` |
 | Hotfix | `hotfix/[issue]` | `hotfix/sync-crash` |
 | Release | `release/[version]` | `release/1.0.0` |
+
+---
+
+## Future Development (Post-Launch)
+
+These features are planned for after the initial launch, based on user feedback and usage patterns.
+
+### Enhanced Statistics & Insights
+
+#### Branch: `feature/day-comparison-view`
+**Scope:** Side-by-side day comparison (like Huckleberry's Week View)
+
+**Research-Based Features:**
+- Visual timeline showing 2-3 days side by side
+- Color-coded activity blocks (sleep=purple, feed=green, diaper=peach)
+- Quick pattern recognition across days
+- Helps parents see routine consistency
+
+**Tasks:**
+1. Create day-to-timeline data transformation utility
+2. Build DayColumn component (24-hour vertical timeline)
+3. Build DayComparisonView with horizontal scroll
+4. Add activity block rendering with proper colors
+5. Add day selector (today, yesterday, 2 days ago, etc.)
+6. Integrate into Statistics screen as new tab/view
+
+**Definition of Done:**
+- [ ] All tests pass
+- [ ] Can view 2-3 days side by side
+- [ ] Activities color-coded by type
+- [ ] Time alignment accurate
+- [ ] Scrollable for more days
+- [ ] Accessible via Statistics screen
+
+---
+
+#### Branch: `feature/quick-doctor-summary`
+**Scope:** One-tap summary view optimized for pediatrician visits
+
+**Research-Based Features:**
+- Parents frequently show tracking data to doctors
+- Need quick, clean summary without navigating
+- Key metrics at a glance for common questions
+
+**Tasks:**
+1. Create doctor summary data aggregation utility
+2. Build DoctorSummaryScreen with clean layout
+3. Add configurable time period (1 week, 2 weeks, 1 month)
+4. Include:
+   - Average daily feedings (count + duration/volume)
+   - Average daily sleep (total + nap count)
+   - Average daily diapers (wet/dirty breakdown)
+   - Latest growth measurements with dates
+   - Any notes/concerns flagged
+5. Add "Share" button for quick screenshot or PDF
+6. Accessible from Profile/Settings screen
+
+**Definition of Done:**
+- [ ] All tests pass
+- [ ] Summary shows key metrics clearly
+- [ ] Time period selectable
+- [ ] Growth percentiles shown (if available)
+- [ ] Share functionality works
+- [ ] Optimized for showing to doctor on phone
+
+---
+
+#### Branch: `feature/weekly-insights-notification`
+**Scope:** Weekly digest with insights and trends
+
+**Research-Based Features:**
+- Parents want proactive insights, not just raw data
+- Weekly summary helps identify patterns over time
+- Celebration of milestones and achievements
+
+**Tasks:**
+1. Create weekly insights generation utility
+2. Implement insight prioritization (most notable first)
+3. Add milestone detection (e.g., "First week sleeping through night!")
+4. Create WeeklyDigestScreen showing full insights
+5. Schedule weekly notification with summary
+6. Add setting to configure digest day/time
+7. Make digest shareable
+
+**Definition of Done:**
+- [ ] All tests pass
+- [ ] Weekly insights generated accurately
+- [ ] Notification delivered on schedule
+- [ ] Insights screen accessible from notification
+- [ ] Insights shareable
+- [ ] Configurable notification day/time
 
 ---
 
