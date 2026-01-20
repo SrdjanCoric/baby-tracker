@@ -18,3 +18,6 @@ export type { GrowthState, GrowthAction } from "./growth-context";
 
 export { TummyTimeProvider, useTummyTime, tummyTimeReducer, initialTummyTimeState } from "./tummyTime-context";
 export type { TummyTimeState, TummyTimeAction, ActiveTummyTimeTimer } from "./tummyTime-context";
+
+export { ThemeProvider, useTheme, themeReducer, initialThemeState } from "./theme-context";
+export type { ThemeState, ThemeAction, ThemePreference, ThemeMode } from "./theme-context";
