@@ -2254,7 +2254,7 @@ describe('Feature flow', () => {
 
 ---
 
-#### Branch: `feature/night-mode`
+#### Branch: `feature/night-mode` ✅ COMPLETED
 **Scope:** Extra dim/red mode for late night
 
 **TDD Approach:**
@@ -2274,11 +2274,22 @@ describe('NightMode', () => {
 3. Implement optional auto-enable (sunset to sunrise)
 4. Apply night mode overlay
 
+**Implementation:**
+- Added "night" as a new theme preference option (system/light/dark/night)
+- Created `NightModeOverlay` component with 50% opacity red-tinted overlay
+- Added `isNightModeEnabled` and `shouldAutoEnableNightMode` utility functions
+- Updated theme context with `isNight` state
+- Added night mode option to theme settings screen
+- Night mode uses dark color scheme as base with warm red overlay
+- Added 9 new unit tests for night mode utilities
+- Updated component tests for night mode option
+- Configured Metro to exclude test files from bundling
+
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Night mode reduces eye strain
-- [ ] Easy to toggle
-- [ ] Works with dark mode
+- [x] All tests pass (910 unit + 301 component tests)
+- [x] Night mode reduces eye strain (red-tinted overlay at 50% opacity)
+- [x] Easy to toggle (available in Settings > Appearance)
+- [x] Works with dark mode (uses dark theme as base)
 
 ---
 
