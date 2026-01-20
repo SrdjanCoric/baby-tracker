@@ -27,7 +27,7 @@ interface DiaperContextValue {
 }
 
 function createMockDiaperContext(): DiaperContextValue {
-  let diapers: DiaperEntry[] = [];
+  const diapers: DiaperEntry[] = [];
 
   return {
     diapers,

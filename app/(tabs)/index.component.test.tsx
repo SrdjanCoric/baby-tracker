@@ -62,7 +62,7 @@ jest.mock("@/components", () => ({
     progress?: number;
     subtitle?: string;
   }) => {
-    const { Pressable, Text, View } = require("react-native");
+    const { Pressable, Text } = require("react-native");
     return (
       <Pressable testID={`dashboard-card-${activity}`} onPress={onPress}>
         <Text>{label}</Text>
@@ -105,9 +105,9 @@ jest.mock("@/contexts", () => ({
 }));
 
 jest.mock("@/utils/time", () => ({
-  timeSince: (date: Date) => "2h ago",
-  formatDate: (date: Date) => "Jan 20",
-  hoursSince: (date: Date) => 2,
+  timeSince: (_date: Date) => "2h ago",
+  formatDate: (_date: Date) => "Jan 20",
+  hoursSince: (_date: Date) => 2,
 }));
 
 import HomeScreen from "./index";

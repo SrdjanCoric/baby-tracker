@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react-native";
+import { render, screen, fireEvent, act } from "@testing-library/react-native";
 import { View, Text, Pressable } from "react-native";
 
 const mockAsyncStorage: Record<string, string> = {};
