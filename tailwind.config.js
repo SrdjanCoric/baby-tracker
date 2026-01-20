@@ -114,6 +114,21 @@ module.exports = {
           "primary-pressed": "#66BB6A",
         },
 
+        // Primary dark mode color (matches action-dark.primary)
+        "primary-dark": "#81C784",
+
+        // Border colors for light mode
+        border: {
+          DEFAULT: "#E5E7EB",
+          subtle: "#F3F4F6",
+        },
+
+        // Border colors for dark mode
+        "border-dark": {
+          DEFAULT: "#374151",
+          subtle: "#4B5563",
+        },
+
         // ============================================
         // LEGACY COLORS (keeping for compatibility)
         // ============================================

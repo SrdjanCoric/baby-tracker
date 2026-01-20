@@ -16,7 +16,8 @@ Check the implementation plan at `plans/implementation-plan.md` and identify the
 4. **Implementation**:
    - Write unit tests for validators/utilities first
    - Implement the code to make tests pass
-   - Write integration tests if needed
+   - Write component tests for UI components
+   - Write integration tests for user flows
    - Implement UI components
    - Run all tests to ensure everything passes
 
