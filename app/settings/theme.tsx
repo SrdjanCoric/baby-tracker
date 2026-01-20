@@ -23,12 +23,17 @@ const THEME_OPTIONS: ThemeOptionConfig[] = [
     value: "dark",
     icon: "\u{1F319}",
   },
+  {
+    value: "night",
+    icon: "\u{1F303}",
+  },
 ];
 
 const THEME_LABELS = {
   system: { label: "settings.systemDefault", description: "settings.systemDefaultDesc" },
   light: { label: "settings.lightMode", description: "settings.lightModeDesc" },
   dark: { label: "settings.darkMode", description: "settings.darkModeDesc" },
+  night: { label: "settings.nightMode", description: "settings.nightModeDesc" },
 } as const;
 
 export default function ThemeSettingsScreen() {

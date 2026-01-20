@@ -205,18 +205,24 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Insights generated for significant changes (≥20% threshold)
   - [x] Translation keys added for trends and insights
 
-### Next Step: Test Suite Evaluation & Improvement
+### Completed: Test Suite Evaluation & Improvement
 
-**Status:** In Progress
+**Status:** Done
 
-Based on analysis of the test suite (901 tests), we identified that all tests are unit tests with zero component/integration tests. This explains why the theme color bug was missed despite extensive test coverage.
+Based on analysis of the test suite (901 tests), we identified that all tests were unit tests with zero component/integration tests. This explains why the theme color bug was missed despite extensive test coverage.
 
 **Tasks:**
-- [ ] Evaluate existing tests for effectiveness (do they catch real bugs?)
-- [ ] Set up component testing infrastructure (Vitest + React Native Testing Library)
-- [ ] Add component tests for critical UI components
-- [ ] Add integration tests for key user flows
-- [ ] Fix missing Tailwind color definitions (`primary-dark`, `border-*`)
+- [x] Evaluate existing tests for effectiveness (do they catch real bugs?)
+- [x] Set up component testing infrastructure (Jest + React Native Testing Library)
+- [x] Add component tests for critical UI components (300 component tests across 17 component test files)
+- [x] Add integration tests for key user flows (6 integration test files)
+- [x] Fix missing Tailwind color definitions (`primary-dark`, `border-*`)
+
+**Results:**
+- Total tests: 1,201 (901 unit + 300 component/integration)
+- Component tests cover: Button, Card, Input, DashboardCard, TimerDisplay, TimelineItem, BabyHeader, BabySelector, QuickActionButton, TodaySummary, FeedingTypeMenu, SimpleBarChart, InsightCard, TrendIndicator
+- Integration tests cover: baby-selection, diaper-flow, feeding-flow, sleep-flow, theme-flow, timer-activities
+- All Tailwind color definitions added for primary-dark, border, and border-dark
 
 **Reference:** See `~/.claude/plans/cheerful-purring-stearns.md` for detailed analysis and implementation plan.
 
@@ -2248,7 +2254,7 @@ describe('Feature flow', () => {
 
 ---
 
-#### Branch: `feature/night-mode`
+#### Branch: `feature/night-mode` ✅ COMPLETED
 **Scope:** Extra dim/red mode for late night
 
 **TDD Approach:**
@@ -2268,11 +2274,22 @@ describe('NightMode', () => {
 3. Implement optional auto-enable (sunset to sunrise)
 4. Apply night mode overlay
 
+**Implementation:**
+- Added "night" as a new theme preference option (system/light/dark/night)
+- Created `NightModeOverlay` component with 50% opacity red-tinted overlay
+- Added `isNightModeEnabled` and `shouldAutoEnableNightMode` utility functions
+- Updated theme context with `isNight` state
+- Added night mode option to theme settings screen
+- Night mode uses dark color scheme as base with warm red overlay
+- Added 9 new unit tests for night mode utilities
+- Updated component tests for night mode option
+- Configured Metro to exclude test files from bundling
+
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Night mode reduces eye strain
-- [ ] Easy to toggle
-- [ ] Works with dark mode
+- [x] All tests pass (910 unit + 301 component tests)
+- [x] Night mode reduces eye strain (red-tinted overlay at 50% opacity)
+- [x] Easy to toggle (available in Settings > Appearance)
+- [x] Works with dark mode (uses dark theme as base)
 
 ---
 
