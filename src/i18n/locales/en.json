@@ -321,7 +321,23 @@
     "averageSleepDuration": "Avg. Sleep Duration",
     "noDataToday": "No data recorded today. Start tracking to see your statistics!",
     "noDataThisWeek": "No data recorded this week. Start tracking to see your statistics!",
-    "weeklyOverview": "Weekly Overview"
+    "weeklyOverview": "Weekly Overview",
+    "vsLastWeek": "vs last week",
+    "comparedToLastWeek": "compared to last week",
+    "weeklyTrends": "Weekly Trends",
+    "weeklyInsights": "Weekly Insights"
+  },
+  "insights": {
+    "sleepIncrease": "Sleep is up {{percentage}}%",
+    "sleepDecrease": "Sleep is down {{percentage}}%",
+    "feedingIncrease": "Feedings are up {{percentage}}%",
+    "feedingDecrease": "Feedings are down {{percentage}}%",
+    "diaperIncrease": "Diapers are up {{percentage}}%",
+    "diaperDecrease": "Diapers are down {{percentage}}%",
+    "pumpingIncrease": "Pumping is up {{percentage}}%",
+    "pumpingDecrease": "Pumping is down {{percentage}}%",
+    "tummyTimeIncrease": "Tummy time is up {{percentage}}%",
+    "tummyTimeDecrease": "Tummy time is down {{percentage}}%"
   },
   "timeline": {
     "title": "Timeline",
