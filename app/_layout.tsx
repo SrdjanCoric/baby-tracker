@@ -1,14 +1,16 @@
 import "../global.css";
 import "../src/i18n";
+import { View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, useTheme } from "@/contexts";
+import { NightModeOverlay } from "@/components/NightModeOverlay";
 
 function AppContent() {
   const { isDark } = useTheme();
 
   return (
-    <>
+    <View className="flex-1">
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
@@ -77,8 +79,9 @@ function AppContent() {
           }}
         />
       </Stack>
+      <NightModeOverlay />
       <StatusBar style={isDark ? "light" : "dark"} />
-    </>
+    </View>
   );
 }
 
