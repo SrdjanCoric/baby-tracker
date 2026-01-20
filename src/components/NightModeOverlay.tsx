@@ -11,7 +11,7 @@ export function NightModeOverlay() {
   return (
     <View
       pointerEvents="none"
-      className="absolute inset-0 bg-night-bg/40"
+      className="absolute inset-0 bg-night-bg/50"
       accessibilityElementsHidden
     />
   );
