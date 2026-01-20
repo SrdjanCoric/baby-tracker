@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { useTheme } from "@/contexts";
 
 interface SettingsRowProps {
   icon: string;
@@ -67,8 +68,15 @@ function SettingsSection({ title, children }: { title: string; children: React.R
   );
 }
 
+const THEME_LABELS = {
+  system: "settings.systemDefault",
+  light: "settings.lightMode",
+  dark: "settings.darkMode",
+} as const;
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
+  const { preference } = useTheme();
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
@@ -94,8 +102,8 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="🎨"
             label={t("settings.theme")}
-            value={t("settings.systemDefault")}
-            onPress={() => {}}
+            value={t(THEME_LABELS[preference])}
+            onPress={() => router.push("/settings/theme")}
           />
           <SettingsDivider />
           <SettingsRow

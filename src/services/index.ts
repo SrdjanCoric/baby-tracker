@@ -32,3 +32,6 @@ export type {
   UpdateTummyTimeInput,
   ActiveTummyTimeTimerData,
 } from "./tummyTime-storage";
+
+export { ThemeStorageService } from "./theme-storage";
+export type { ThemePreference, ThemeMode } from "./theme-storage";
