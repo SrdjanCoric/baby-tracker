@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useMemo } from "react";
 import { useFeeding, useSleep, useDiaper, usePumping, useTummyTime } from "@/contexts";
-import { SimpleBarChart } from "@/components";
+import { SimpleBarChart, TrendIndicator, InsightCard } from "@/components";
 import { formatDuration } from "@/utils/time";
 import {
   getDateRangeForPeriod,
@@ -16,6 +16,13 @@ import {
   calculateWeeklyBreakdown,
   type StatisticsPeriod,
 } from "@/utils/statistics";
+import { calculateWeekOverWeekTrend, type TrendResult } from "@/utils/trends";
+import {
+  generateInsights,
+  prioritizeInsights,
+  type TrendData,
+  type Insight,
+} from "@/utils/insights";
 
 interface StatCardProps {
   icon: string;
@@ -24,9 +31,24 @@ interface StatCardProps {
   subvalue?: string;
   color: string;
   bgColor: string;
+  trend?: TrendResult | null;
+  trendFormatted?: string;
+  showTrend?: boolean;
 }
 
-function StatCard({ icon, label, value, subvalue, color, bgColor }: StatCardProps) {
+function StatCard({
+  icon,
+  label,
+  value,
+  subvalue,
+  color,
+  bgColor,
+  trend,
+  trendFormatted,
+  showTrend = false,
+}: StatCardProps) {
+  const hasTrend = showTrend && trend && trend.direction !== "stable";
+
   return (
     <View
       className="flex-1 rounded-card p-4"
@@ -48,6 +70,15 @@ function StatCard({ icon, label, value, subvalue, color, bgColor }: StatCardProp
         <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-1">
           {subvalue}
         </Text>
+      )}
+      {hasTrend && (
+        <View className="mt-2">
+          <TrendIndicator
+            direction={trend.direction}
+            percentageChange={trend.percentageChange}
+            absoluteChangeFormatted={trendFormatted}
+          />
+        </View>
       )}
     </View>
   );
@@ -102,6 +133,89 @@ export default function StatisticsScreen() {
     };
   }, [period, feedings, sleeps, diapers, pumpings, tummyTimes]);
 
+  const weeklyTrends = useMemo(() => {
+    if (period !== "weekly") return null;
+
+    const now = new Date();
+
+    const sleepTrend = calculateWeekOverWeekTrend(
+      sleeps,
+      (entry) => entry.startedAt,
+      (entries) => entries.reduce((sum, e) => sum + (e.durationSeconds || 0), 0),
+      now
+    );
+
+    const feedingTrend = calculateWeekOverWeekTrend(
+      feedings,
+      (entry) => entry.startedAt,
+      (entries) => entries.length,
+      now
+    );
+
+    const diaperTrend = calculateWeekOverWeekTrend(
+      diapers,
+      (entry) => entry.changedAt,
+      (entries) => entries.length,
+      now
+    );
+
+    const tummyTimeTrend = calculateWeekOverWeekTrend(
+      tummyTimes,
+      (entry) => entry.startedAt,
+      (entries) => entries.reduce((sum, e) => sum + (e.durationSeconds || 0), 0),
+      now
+    );
+
+    return {
+      sleep: sleepTrend,
+      feeding: feedingTrend,
+      diaper: diaperTrend,
+      tummyTime: tummyTimeTrend,
+    };
+  }, [period, sleeps, feedings, diapers, tummyTimes]);
+
+  const insights = useMemo((): Insight[] => {
+    if (period !== "weekly" || !weeklyTrends) return [];
+
+    const trendDataArray: TrendData[] = [
+      {
+        type: "sleep",
+        direction: weeklyTrends.sleep.direction,
+        absoluteChange: weeklyTrends.sleep.absoluteChange,
+        percentageChange: weeklyTrends.sleep.percentageChange,
+        currentValue: weeklyTrends.sleep.currentValue,
+        previousValue: weeklyTrends.sleep.previousValue,
+      },
+      {
+        type: "feeding",
+        direction: weeklyTrends.feeding.direction,
+        absoluteChange: weeklyTrends.feeding.absoluteChange,
+        percentageChange: weeklyTrends.feeding.percentageChange,
+        currentValue: weeklyTrends.feeding.currentValue,
+        previousValue: weeklyTrends.feeding.previousValue,
+      },
+      {
+        type: "diaper",
+        direction: weeklyTrends.diaper.direction,
+        absoluteChange: weeklyTrends.diaper.absoluteChange,
+        percentageChange: weeklyTrends.diaper.percentageChange,
+        currentValue: weeklyTrends.diaper.currentValue,
+        previousValue: weeklyTrends.diaper.previousValue,
+      },
+      {
+        type: "tummyTime",
+        direction: weeklyTrends.tummyTime.direction,
+        absoluteChange: weeklyTrends.tummyTime.absoluteChange,
+        percentageChange: weeklyTrends.tummyTime.percentageChange,
+        currentValue: weeklyTrends.tummyTime.currentValue,
+        previousValue: weeklyTrends.tummyTime.previousValue,
+      },
+    ];
+
+    const generatedInsights = generateInsights(trendDataArray);
+    return prioritizeInsights(generatedInsights, 3);
+  }, [period, weeklyTrends]);
+
   const formatSleepDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -112,6 +226,20 @@ export default function StatisticsScreen() {
       return `${hours}h`;
     }
     return `${hours}h ${minutes}m`;
+  };
+
+  const formatTrendDuration = (seconds: number): string => {
+    const absSeconds = Math.abs(seconds);
+    const hours = Math.floor(absSeconds / 3600);
+    const minutes = Math.floor((absSeconds % 3600) / 60);
+    const sign = seconds >= 0 ? "+" : "-";
+    if (hours === 0) {
+      return `${sign}${minutes}m`;
+    }
+    if (minutes === 0) {
+      return `${sign}${hours}h`;
+    }
+    return `${sign}${hours}h ${minutes}m`;
   };
 
   const feedingSubvalue = stats.feeding.totalDurationSeconds > 0
@@ -172,6 +300,8 @@ export default function StatisticsScreen() {
     return { feedingData, diaperData };
   }, [period, feedings, diapers]);
 
+  const showWeeklyTrends = period === "weekly" && weeklyTrends;
+
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
       <View className="flex-row mx-4 mt-2 mb-4 p-1 bg-surface-secondary dark:bg-surface-dark-secondary rounded-pill">
@@ -213,6 +343,19 @@ export default function StatisticsScreen() {
         className="flex-1 px-4"
         showsVerticalScrollIndicator={false}
       >
+        {showWeeklyTrends && insights.length > 0 && (
+          <View className="mb-4">
+            <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider mb-2">
+              {t("statistics.weeklyInsights")}
+            </Text>
+            <View className="gap-2">
+              {insights.map((insight, index) => (
+                <InsightCard key={`${insight.type}-${index}`} insight={insight} />
+              ))}
+            </View>
+          </View>
+        )}
+
         <View className="mb-4">
           <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider mb-2">
             {t("feeding.title")}
@@ -225,6 +368,8 @@ export default function StatisticsScreen() {
               subvalue={feedingSubvalue}
               color="#88B04B"
               bgColor="#E8F0E0"
+              trend={weeklyTrends?.feeding}
+              showTrend={!!showWeeklyTrends}
             />
           </View>
         </View>
@@ -241,6 +386,9 @@ export default function StatisticsScreen() {
               subvalue={sleepSubvalue}
               color="#6B5B95"
               bgColor="#E8E4F0"
+              trend={weeklyTrends?.sleep}
+              trendFormatted={weeklyTrends?.sleep ? formatTrendDuration(weeklyTrends.sleep.absoluteChange) : undefined}
+              showTrend={!!showWeeklyTrends}
             />
           </View>
         </View>
@@ -257,6 +405,8 @@ export default function StatisticsScreen() {
               subvalue={diaperSubvalue}
               color="#E8A5A3"
               bgColor="#FDF0EF"
+              trend={weeklyTrends?.diaper}
+              showTrend={!!showWeeklyTrends}
             />
           </View>
         </View>
@@ -315,7 +465,16 @@ export default function StatisticsScreen() {
                   </View>
                 </View>
               )}
-              {period === "weekly" && (
+              {showWeeklyTrends && weeklyTrends.tummyTime.direction !== "stable" && (
+                <View className="mt-2">
+                  <TrendIndicator
+                    direction={weeklyTrends.tummyTime.direction}
+                    percentageChange={weeklyTrends.tummyTime.percentageChange}
+                    absoluteChangeFormatted={formatTrendDuration(weeklyTrends.tummyTime.absoluteChange)}
+                  />
+                </View>
+              )}
+              {period === "weekly" && !showWeeklyTrends && (
                 <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-1">
                   {stats.tummyTime.sessionCount} {stats.tummyTime.sessionCount === 1 ? "session" : "sessions"}
                 </Text>
