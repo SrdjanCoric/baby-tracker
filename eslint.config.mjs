@@ -37,6 +37,24 @@ export default tseslint.config(
       "@typescript-eslint/no-require-imports": "off",
     },
   },
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.component.test.tsx", "**/*.integration.test.tsx"],
+    languageOptions: {
+      globals: {
+        jest: "readonly",
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
   prettierConfig,
   {
     ignores: [
@@ -49,6 +67,7 @@ export default tseslint.config(
       "babel.config.js",
       "metro.config.js",
       "tailwind.config.js",
+      "jest.setup.js",
     ],
   }
 );

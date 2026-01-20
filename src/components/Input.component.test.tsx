@@ -1,6 +1,6 @@
-import React, { createRef } from "react";
+import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
-import { Text, TextInput } from "react-native";
+import { Text } from "react-native";
 import { Input } from "./Input";
 
 describe("Input", () => {

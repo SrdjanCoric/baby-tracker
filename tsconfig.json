@@ -18,5 +18,14 @@
       "@i18n/*": ["src/i18n/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.component.test.tsx",
+    "**/*.integration.test.tsx",
+    "jest.config.js",
+    "jest.setup.js"
+  ]
 }
