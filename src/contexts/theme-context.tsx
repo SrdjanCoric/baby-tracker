@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useCallback, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { ThemeStorageService } from "@/services/theme-storage";
-import { resolveThemeMode, type ThemePreference, type ThemeMode } from "@/utils/theme";
+import { resolveThemeMode, isNightModeEnabled, type ThemePreference, type ThemeMode } from "@/utils/theme";
 
 export {
   type ThemePreference,
@@ -15,6 +15,7 @@ interface ThemeContextValue {
   preference: ThemePreference;
   resolvedMode: ThemeMode;
   isDark: boolean;
+  isNight: boolean;
   isLoading: boolean;
   setThemePreference: (preference: ThemePreference) => Promise<void>;
 }
@@ -33,8 +34,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setPreference(storedPreference);
 
       // Apply the theme
+      // Night mode uses dark color scheme as the base
       if (storedPreference === "system") {
         setColorScheme("system");
+      } else if (storedPreference === "night") {
+        setColorScheme("dark");
       } else {
         setColorScheme(storedPreference);
       }
@@ -49,8 +53,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setPreference(newPreference);
 
     // Apply the theme via NativeWind
+    // Night mode uses dark color scheme as the base
     if (newPreference === "system") {
       setColorScheme("system");
+    } else if (newPreference === "night") {
+      setColorScheme("dark");
     } else {
       setColorScheme(newPreference);
     }
@@ -62,7 +69,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const value: ThemeContextValue = {
     preference,
     resolvedMode,
-    isDark: resolvedMode === "dark",
+    isDark: resolvedMode === "dark" || resolvedMode === "night",
+    isNight: isNightModeEnabled(resolvedMode),
     isLoading,
     setThemePreference: handleSetThemePreference,
   };
