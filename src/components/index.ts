@@ -56,3 +56,5 @@ export { SleepMilestoneSuggestionModal } from "./SleepMilestoneSuggestionModal";
 
 // Statistics components
 export { SimpleBarChart } from "./SimpleBarChart";
+export { TrendIndicator } from "./TrendIndicator";
+export { InsightCard } from "./InsightCard";
