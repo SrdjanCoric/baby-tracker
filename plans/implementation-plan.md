@@ -9,6 +9,7 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - Write failing tests that define the expected behavior
   - Implement the minimum code to make tests pass
   - Refactor while keeping tests green
+  - **Never bend tests to make them pass** - tests validate correct behavior, not be modified to match broken code
 - **Testable First** - Prioritize getting working, testable features before completing all infrastructure
 - Feature Branch Workflow - Each feature on separate branch, merge to main when complete
 - CI/CD with GitHub Actions - Automated testing on every PR
@@ -20,10 +21,16 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
 1. Create feature branch
 2. Write unit tests for validators/utilities FIRST (these tests will fail)
 3. Implement validators/utilities to make tests pass
-4. Write integration tests if needed
-5. Implement UI components
-6. Manual testing
-7. Create PR
+4. Write component tests for UI components (using React Native Testing Library)
+5. Write integration tests for user flows spanning multiple components
+6. Implement UI components
+7. Manual testing
+8. Create PR
+
+**Test Types Required for Each Feature:**
+- **Unit tests** - for validators, utilities, and business logic
+- **Component tests** - for any new UI components (verify rendering and user interactions)
+- **Integration tests** - for user flows that span multiple components/contexts
 
 ---
 
@@ -198,7 +205,24 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
   - [x] Insights generated for significant changes (≥20% threshold)
   - [x] Translation keys added for trends and insights
 
-### Upcoming: Bug Fixes from Manual Testing (`bugfix/manual-testing-issues`)
+### Next Step: Test Suite Evaluation & Improvement
+
+**Status:** In Progress
+
+Based on analysis of the test suite (901 tests), we identified that all tests are unit tests with zero component/integration tests. This explains why the theme color bug was missed despite extensive test coverage.
+
+**Tasks:**
+- [ ] Evaluate existing tests for effectiveness (do they catch real bugs?)
+- [ ] Set up component testing infrastructure (Vitest + React Native Testing Library)
+- [ ] Add component tests for critical UI components
+- [ ] Add integration tests for key user flows
+- [ ] Fix missing Tailwind color definitions (`primary-dark`, `border-*`)
+
+**Reference:** See `~/.claude/plans/cheerful-purring-stearns.md` for detailed analysis and implementation plan.
+
+---
+
+### Completed: Bug Fixes from Manual Testing (`bugfix/manual-testing-issues`)
 
 Based on manual testing, the following issues were identified:
 
@@ -2143,6 +2167,84 @@ describe('ThemeProvider', () => {
 - [x] Manual override works (light/dark/system options in settings)
 - [x] All screens support both themes (existing `dark:` classes throughout app)
 - [x] Theme persists across restarts (AsyncStorage)
+
+---
+
+#### Branch: `feature/component-integration-tests`
+**Scope:** Comprehensive component and integration testing
+
+**Background:**
+After analyzing the test suite post-dark-mode implementation, we discovered that all 901 tests were unit tests with zero component/integration tests. This gap explained why UI bugs could slip through despite extensive unit test coverage.
+
+**TDD Approach:**
+```typescript
+// Component tests (Jest + React Testing Library)
+describe('Component', () => {
+  it('should render correctly', () => {});
+  it('should handle user interactions', () => {});
+  it('should display correct accessibility attributes', () => {});
+});
+
+// Integration tests
+describe('Feature flow', () => {
+  it('should complete full user workflow', () => {});
+  it('should handle context interactions', () => {});
+});
+```
+
+**Tasks:**
+1. Set up Jest for component testing
+2. Create component tests for all UI components
+3. Create integration tests for key user flows
+4. Add missing storage service tests
+5. Add missing context tests
+6. Add missing utility tests
+
+**Implementation:**
+- Created `jest.config.js` and `jest.setup.js` for Jest configuration
+- Created 14 component tests:
+  - `Button.component.test.tsx`, `Card.component.test.tsx`, `Input.component.test.tsx`
+  - `TimerDisplay.component.test.tsx`, `TimelineItem.component.test.tsx`
+  - `TodaySummary.component.test.tsx`, `DashboardCard.component.test.tsx`
+  - `QuickActionButton.component.test.tsx`, `FeedingTypeMenu.component.test.tsx`
+  - `InsightCard.component.test.tsx`, `TrendIndicator.component.test.tsx`
+  - `SimpleBarChart.component.test.tsx`, `BabySelector.component.test.tsx`
+  - `BabyHeader.component.test.tsx`
+- Created 6 integration tests:
+  - `diaper-flow.integration.test.tsx`, `theme-flow.integration.test.tsx`
+  - `timer-activities.integration.test.tsx`, `feeding-flow.integration.test.tsx`
+  - `sleep-flow.integration.test.tsx`, `baby-selection.integration.test.tsx`
+- Created 3 screen-level component tests:
+  - `app/(tabs)/index.component.test.tsx`, `app/feeding/index.component.test.tsx`
+  - `app/settings/theme.component.test.tsx`
+- Created storage tests for all services: sleep, diaper, pumping, growth, tummyTime, theme
+- Created context tests for all contexts: sleep, diaper, pumping, growth, tummyTime, theme
+- Created validator tests for all validators: diaper, pumping, growth, tummyTime
+- Created utility tests: sleepGoals, tummyTimeGoals, growth, theme
+
+**Test Summary:**
+- Unit tests (Vitest): 901 tests across 34 files
+- Component tests (Jest): 300 tests across 23 files
+- Total: 1,201 tests
+
+**Definition of Done:**
+- [x] All unit tests pass (901 tests)
+- [x] All component tests pass (300 tests)
+- [x] Storage services fully tested (7/7)
+- [x] Contexts fully tested (7/7)
+- [x] Validators fully tested (6/6)
+- [x] Utilities fully tested (9/9)
+- [x] Key integration flows tested
+
+---
+
+> **Note for Future Development:**
+> All new features should include both unit tests AND component/integration tests. The testing strategy should be:
+> - **Unit tests (Vitest):** Utilities, validators, storage services, reducers
+> - **Component tests (Jest):** UI components with rendering, interactions, accessibility
+> - **Integration tests (Jest):** Full user workflows spanning multiple components/contexts
+>
+> This ensures both logic correctness (unit tests) and user-facing behavior (component/integration tests) are verified.
 
 ---
 
