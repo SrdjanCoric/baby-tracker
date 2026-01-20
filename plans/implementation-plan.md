@@ -2126,12 +2126,23 @@ describe('ThemeProvider', () => {
 4. Apply dark/light styles throughout app
 5. Add manual theme toggle in settings
 
+**Implementation:**
+- Created `src/utils/theme.ts` with `isValidThemePreference`, `isValidThemeMode`, and `resolveThemeMode` utility functions (13 tests)
+- Created `src/services/theme-storage.ts` with `ThemeStorageService` for AsyncStorage persistence (9 tests)
+- Created `src/contexts/theme-reducer.ts` with `themeReducer` for state management (13 tests)
+- Created `src/contexts/theme-context.tsx` with `ThemeProvider` and `useTheme` hook
+- Created `app/settings/theme.tsx` for theme settings screen with light/dark/system options
+- Updated `app/(tabs)/settings.tsx` with dark mode support and link to theme settings
+- Updated `app/_layout.tsx` to wrap app with `ThemeProvider` and dynamic `StatusBar` style
+- Added translation keys: `settings.appearance`, `settings.lightModeDesc`, `settings.darkModeDesc`, `settings.systemDefaultDesc`, `settings.currentlyUsing`
+- Total new tests: 35 (901 tests total)
+
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Follows system theme
-- [ ] Manual override works
-- [ ] All screens support both themes
-- [ ] Theme persists across restarts
+- [x] All tests pass (901 tests)
+- [x] Follows system theme (via `useColorScheme` from react-native)
+- [x] Manual override works (light/dark/system options in settings)
+- [x] All screens support both themes (existing `dark:` classes throughout app)
+- [x] Theme persists across restarts (AsyncStorage)
 
 ---
 
