@@ -66,6 +66,7 @@ export function syncReducer(state: SyncState, action: SyncAction): SyncState {
 interface SyncContextValue extends SyncState {
   forceSync: () => Promise<void>;
   retryFailedSync: () => Promise<void>;
+  clearAllData: () => Promise<void>;
 }
 
 const SyncContext = createContext<SyncContextValue | null>(null);
@@ -124,10 +125,27 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     await forceSync();
   }, [forceSync]);
 
+  const clearAllData = useCallback(async () => {
+    if (!syncEngineInstance) return;
+
+    try {
+      await syncEngineInstance.clearAllData();
+      dispatch({ type: 'SET_STATUS', payload: 'offline' });
+      dispatch({ type: 'SET_PENDING_COUNT', payload: 0 });
+      dispatch({ type: 'SET_ONLINE', payload: false });
+    } catch (error) {
+      dispatch({
+        type: 'SYNC_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to clear data',
+      });
+    }
+  }, []);
+
   const value: SyncContextValue = {
     ...state,
     forceSync,
     retryFailedSync,
+    clearAllData,
   };
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
@@ -143,4 +161,10 @@ export function useSync(): SyncContextValue {
 
 export function getSyncEngine(): SyncEngine | null {
   return syncEngineInstance;
+}
+
+export async function clearSyncData(): Promise<void> {
+  if (syncEngineInstance) {
+    await syncEngineInstance.clearAllData();
+  }
 }

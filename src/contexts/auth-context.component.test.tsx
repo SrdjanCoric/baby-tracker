@@ -102,6 +102,11 @@ jest.mock("@/constants/auth", () => ({
   },
 }));
 
+const mockClearSyncData = jest.fn().mockResolvedValue(undefined);
+jest.mock("@/contexts/sync-context", () => ({
+  clearSyncData: () => mockClearSyncData(),
+}));
+
 import { AuthProvider, useAuth } from "./auth-context";
 
 function TestConsumer({ testID }: { testID: string }) {

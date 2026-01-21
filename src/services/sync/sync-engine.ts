@@ -230,6 +230,19 @@ export class SyncEngine {
     return this.state.lastSyncedAt;
   }
 
+  async clearAllData(): Promise<void> {
+    await this.queue.clear();
+    this.quarantined = [];
+    this.processedOperationIds.clear();
+    this.updateState({
+      status: 'offline',
+      pendingCount: 0,
+      lastSyncedAt: null,
+      error: null,
+      isConnected: false,
+    });
+  }
+
   destroy(): void {
     if (this.networkUnsubscribe) {
       this.networkUnsubscribe();
