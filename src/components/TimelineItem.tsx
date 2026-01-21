@@ -9,6 +9,7 @@ interface TimelineItemProps {
   title: string;
   subtitle?: string;
   details?: string;
+  loggedBy?: string;
   onPress?: () => void;
   testID?: string;
 }
@@ -57,6 +58,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
       title,
       subtitle,
       details,
+      loggedBy,
       onPress,
       testID,
     },
@@ -110,6 +112,13 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
           {details && (
             <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-1">
               {details}
+            </Text>
+          )}
+
+          {/* Logged by attribution */}
+          {loggedBy && (
+            <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary mt-1">
+              Logged by {loggedBy}
             </Text>
           )}
         </View>
