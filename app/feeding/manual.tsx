@@ -12,8 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useFeeding } from "@/contexts";
-import { useBaby } from "@/contexts";
+import { useFeeding, useBaby, useUnits } from "@/contexts";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import {
   validateManualBreastfeeding,
@@ -40,6 +39,7 @@ export default function ManualFeedingScreen() {
   const params = useLocalSearchParams<{ type?: FeedingTypeParam }>();
   const { selectedBaby } = useBaby();
   const { addFeeding, feedings } = useFeeding();
+  const { volumeUnit } = useUnits();
 
   // Map URL param to tab type
   const getInitialTab = (): FeedingTab => {
@@ -66,7 +66,7 @@ export default function ManualFeedingScreen() {
     null
   );
   const [amountMl, setAmountMl] = useState<number | null>(null);
-  const [unit, setUnit] = useState<VolumeUnit>("oz");
+  const [unit, setUnit] = useState<VolumeUnit>(volumeUnit);
   const [amountInput, setAmountInput] = useState("");
 
   // Solid food state

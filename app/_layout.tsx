@@ -3,7 +3,7 @@ import "../src/i18n";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, useTheme } from "@/contexts";
+import { BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, useTheme } from "@/contexts";
 import { NightModeOverlay } from "@/components/NightModeOverlay";
 
 function AppContent() {
@@ -88,21 +88,23 @@ function AppContent() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <BabyProvider>
-        <FeedingProvider>
-          <SleepProvider>
-            <DiaperProvider>
-              <PumpingProvider>
-                <GrowthProvider>
-                  <TummyTimeProvider>
-                    <AppContent />
-                  </TummyTimeProvider>
-                </GrowthProvider>
-              </PumpingProvider>
-            </DiaperProvider>
-          </SleepProvider>
-        </FeedingProvider>
-      </BabyProvider>
+      <UnitProvider>
+        <BabyProvider>
+          <FeedingProvider>
+            <SleepProvider>
+              <DiaperProvider>
+                <PumpingProvider>
+                  <GrowthProvider>
+                    <TummyTimeProvider>
+                      <AppContent />
+                    </TummyTimeProvider>
+                  </GrowthProvider>
+                </PumpingProvider>
+              </DiaperProvider>
+            </SleepProvider>
+          </FeedingProvider>
+        </BabyProvider>
+      </UnitProvider>
     </ThemeProvider>
   );
 }

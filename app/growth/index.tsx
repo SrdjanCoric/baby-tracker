@@ -4,9 +4,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useGrowth } from "@/contexts/growth-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useUnits } from "@/contexts";
 import { validateGrowthMeasurement } from "@/validators/growth";
 import { formatDate } from "@/utils/time";
+import { lbsToKg, inchesToCm } from "@/utils/growth";
 
 const GROWTH_TEAL = "#009B77";
 const GROWTH_TEAL_MUTED = "#E0F5EF";
@@ -17,10 +18,11 @@ export default function GrowthScreen() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { addMeasurement } = useGrowth();
+  const { weightUnit, heightUnit } = useUnits();
 
-  const [weightKg, setWeightKg] = useState("");
-  const [heightCm, setHeightCm] = useState("");
-  const [headCircumferenceCm, setHeadCircumferenceCm] = useState("");
+  const [weightValue, setWeightValue] = useState("");
+  const [heightValue, setHeightValue] = useState("");
+  const [headCircumferenceValue, setHeadCircumferenceValue] = useState("");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -40,16 +42,27 @@ export default function GrowthScreen() {
   const handleSave = useCallback(async () => {
     if (!selectedBaby) return;
 
-    const weight = parseDecimal(weightKg);
-    const height = parseDecimal(heightCm);
-    const head = parseDecimal(headCircumferenceCm);
+    const weightInput = parseDecimal(weightValue);
+    const heightInput = parseDecimal(heightValue);
+    const headInput = parseDecimal(headCircumferenceValue);
+
+    // Convert from user's unit to metric for storage
+    const weightKg = weightInput !== undefined
+      ? (weightUnit === "lbs" ? lbsToKg(weightInput) : weightInput)
+      : undefined;
+    const heightCm = heightInput !== undefined
+      ? (heightUnit === "in" ? inchesToCm(heightInput) : heightInput)
+      : undefined;
+    const headCircumferenceCm = headInput !== undefined
+      ? (heightUnit === "in" ? inchesToCm(headInput) : headInput)
+      : undefined;
 
     const validation = validateGrowthMeasurement({
       babyId: selectedBaby.id,
       measuredAt: new Date(),
-      weightKg: weight,
-      heightCm: height,
-      headCircumferenceCm: head,
+      weightKg,
+      heightCm,
+      headCircumferenceCm,
       notes: notes || undefined,
     });
 
@@ -63,18 +76,18 @@ export default function GrowthScreen() {
       await addMeasurement({
         babyId: selectedBaby.id,
         measuredAt: new Date(),
-        weightKg: weight,
-        heightCm: height,
-        headCircumferenceCm: head,
+        weightKg,
+        heightCm,
+        headCircumferenceCm,
         notes: notes || undefined,
       });
       router.back();
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, weightKg, heightCm, headCircumferenceCm, notes, addMeasurement, router]);
+  }, [selectedBaby, weightValue, heightValue, headCircumferenceValue, notes, weightUnit, heightUnit, addMeasurement, router]);
 
-  const hasAnyMeasurement = weightKg !== "" || heightCm !== "" || headCircumferenceCm !== "";
+  const hasAnyMeasurement = weightValue !== "" || heightValue !== "" || headCircumferenceValue !== "";
   const canSave = hasAnyMeasurement && !isSaving;
 
   if (!selectedBaby) {
@@ -140,13 +153,13 @@ export default function GrowthScreen() {
           {/* Weight Input */}
           <View>
             <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-              {t("growth.weight")} ({t("settings.kg")})
+              {t("growth.weight")} ({t(`settings.${weightUnit}`)})
             </Text>
             <View className="flex-row items-center">
               <TextInput
-                value={weightKg}
+                value={weightValue}
                 onChangeText={(text) => {
-                  setWeightKg(text);
+                  setWeightValue(text);
                   setErrors((prev) => ({ ...prev, weightKg: "", measurements: "" }));
                 }}
                 placeholder="0.0"
@@ -155,7 +168,7 @@ export default function GrowthScreen() {
                 placeholderTextColor="#999"
               />
               <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
-                kg
+                {weightUnit}
               </Text>
             </View>
             {errors.weightKg && (
@@ -166,13 +179,13 @@ export default function GrowthScreen() {
           {/* Height Input */}
           <View>
             <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-              {t("growth.height")} ({t("settings.cm")})
+              {t("growth.height")} ({t(`settings.${heightUnit}`)})
             </Text>
             <View className="flex-row items-center">
               <TextInput
-                value={heightCm}
+                value={heightValue}
                 onChangeText={(text) => {
-                  setHeightCm(text);
+                  setHeightValue(text);
                   setErrors((prev) => ({ ...prev, heightCm: "", measurements: "" }));
                 }}
                 placeholder="0.0"
@@ -181,7 +194,7 @@ export default function GrowthScreen() {
                 placeholderTextColor="#999"
               />
               <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
-                cm
+                {heightUnit}
               </Text>
             </View>
             {errors.heightCm && (
@@ -192,13 +205,13 @@ export default function GrowthScreen() {
           {/* Head Circumference Input */}
           <View>
             <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-              {t("growth.headCircumference")} ({t("settings.cm")})
+              {t("growth.headCircumference")} ({t(`settings.${heightUnit}`)})
             </Text>
             <View className="flex-row items-center">
               <TextInput
-                value={headCircumferenceCm}
+                value={headCircumferenceValue}
                 onChangeText={(text) => {
-                  setHeadCircumferenceCm(text);
+                  setHeadCircumferenceValue(text);
                   setErrors((prev) => ({ ...prev, headCircumferenceCm: "", measurements: "" }));
                 }}
                 placeholder="0.0"
@@ -207,7 +220,7 @@ export default function GrowthScreen() {
                 placeholderTextColor="#999"
               />
               <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
-                cm
+                {heightUnit}
               </Text>
             </View>
             {errors.headCircumferenceCm && (

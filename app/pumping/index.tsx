@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { usePumping } from "@/contexts/pumping-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useUnits } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import type { BreastSide } from "@/constants/activities";
@@ -23,6 +23,7 @@ export default function PumpingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { volumeUnit } = useUnits();
   const {
     activeTimer,
     startPumping,
@@ -34,7 +35,7 @@ export default function PumpingScreen() {
   const [tick, setTick] = useState(0);
   const [showVolumeInput, setShowVolumeInput] = useState(false);
   const [volumeMl, setVolumeMl] = useState<number | null>(null);
-  const [unit, setUnit] = useState<VolumeUnit>("oz");
+  const [unit, setUnit] = useState<VolumeUnit>(volumeUnit);
   const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
