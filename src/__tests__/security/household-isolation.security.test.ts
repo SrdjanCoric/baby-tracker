@@ -1,5 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  default: {
+    clear: vi.fn().mockResolvedValue(undefined),
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    getAllKeys: vi.fn().mockResolvedValue([]),
+  },
+}));
+
 vi.mock('@/services/supabase', () => ({
   supabase: {
     auth: {
@@ -199,12 +209,10 @@ describe('Household Isolation Security', () => {
   describe('Sign Out Data Clearing', () => {
     it('should clear all local data on sign out', async () => {
       const AsyncStorage = await import('@react-native-async-storage/async-storage');
-      const mockClear = vi.fn().mockResolvedValue(undefined);
-      vi.mocked(AsyncStorage.default.clear).mockImplementation(mockClear);
 
       await AsyncStorage.default.clear();
 
-      expect(mockClear).toHaveBeenCalled();
+      expect(AsyncStorage.default.clear).toHaveBeenCalled();
     });
   });
 

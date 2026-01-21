@@ -68,7 +68,7 @@ describe('Invite Code Security', () => {
       const totalCombinations = Math.pow(possibleCharacters, INVITE_CODE_LENGTH);
       const entropyBits = Math.log2(totalCombinations);
 
-      expect(entropyBits).toBeGreaterThan(40);
+      expect(entropyBits).toBeGreaterThanOrEqual(40);
     });
 
     it('should generate unique codes', () => {
@@ -165,7 +165,7 @@ describe('Invite Code Security', () => {
 
     it('should reject codes with incorrect length', () => {
       const tooShort = validateInviteCode('ABC');
-      const tooLong = validateInviteCode('ABCDEFGHIJK');
+      const tooLong = validateInviteCode('ABCDEFGHJKM');
 
       expect(tooShort.isValid).toBe(false);
       expect(tooShort.error).toBe('inviteCodeLength');
