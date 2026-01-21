@@ -2,9 +2,18 @@
  * Baby profile storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getUserScopedKey } from "./storage-prefix";
 
-const BABIES_KEY = "@babies";
-const SELECTED_BABY_KEY = "@selected_baby_id";
+const BABIES_KEY_BASE = "@babies";
+const SELECTED_BABY_KEY_BASE = "@selected_baby_id";
+
+function getBabiesKey(): string {
+  return getUserScopedKey(BABIES_KEY_BASE);
+}
+
+function getSelectedBabyKey(): string {
+  return getUserScopedKey(SELECTED_BABY_KEY_BASE);
+}
 
 export interface StoredBabyProfile {
   id: string;
@@ -39,7 +48,7 @@ export const BabyStorageService = {
    * Get all stored babies
    */
   async getAllBabies(): Promise<StoredBabyProfile[]> {
-    const data = await AsyncStorage.getItem(BABIES_KEY);
+    const data = await AsyncStorage.getItem(getBabiesKey());
     if (!data) return [];
     return JSON.parse(data) as StoredBabyProfile[];
   },
@@ -70,7 +79,7 @@ export const BabyStorageService = {
     };
 
     babies.push(newBaby);
-    await AsyncStorage.setItem(BABIES_KEY, JSON.stringify(babies));
+    await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
 
     return newBaby;
   },
@@ -94,7 +103,7 @@ export const BabyStorageService = {
     };
 
     babies[index] = updatedBaby;
-    await AsyncStorage.setItem(BABIES_KEY, JSON.stringify(babies));
+    await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
 
     return updatedBaby;
   },
@@ -109,7 +118,7 @@ export const BabyStorageService = {
     if (index === -1) return false;
 
     babies.splice(index, 1);
-    await AsyncStorage.setItem(BABIES_KEY, JSON.stringify(babies));
+    await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
 
     // Clear selected baby if we deleted it
     const selectedId = await this.getSelectedBabyId();
@@ -124,7 +133,7 @@ export const BabyStorageService = {
    * Get the selected baby ID
    */
   async getSelectedBabyId(): Promise<string | null> {
-    return AsyncStorage.getItem(SELECTED_BABY_KEY);
+    return AsyncStorage.getItem(getSelectedBabyKey());
   },
 
   /**
@@ -132,9 +141,9 @@ export const BabyStorageService = {
    */
   async setSelectedBabyId(id: string | null): Promise<void> {
     if (id === null) {
-      await AsyncStorage.removeItem(SELECTED_BABY_KEY);
+      await AsyncStorage.removeItem(getSelectedBabyKey());
     } else {
-      await AsyncStorage.setItem(SELECTED_BABY_KEY, id);
+      await AsyncStorage.setItem(getSelectedBabyKey(), id);
     }
   },
 

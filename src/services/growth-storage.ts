@@ -2,6 +2,7 @@
  * Growth storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getUserScopedKey } from "./storage-prefix";
 
 const GROWTH_KEY_PREFIX = "@growth:";
 
@@ -39,7 +40,7 @@ function generateId(): string {
 }
 
 function getGrowthKey(babyId: string): string {
-  return `${GROWTH_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${GROWTH_KEY_PREFIX}${babyId}`);
 }
 
 export const GrowthStorageService = {

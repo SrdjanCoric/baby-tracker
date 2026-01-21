@@ -3,6 +3,7 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { DiaperType, StoolColor } from "@/constants/activities";
+import { getUserScopedKey } from "./storage-prefix";
 
 const DIAPERS_KEY_PREFIX = "@diapers:";
 
@@ -44,7 +45,7 @@ function generateId(): string {
 }
 
 function getDiapersKey(babyId: string): string {
-  return `${DIAPERS_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${DIAPERS_KEY_PREFIX}${babyId}`);
 }
 
 function isToday(date: Date): boolean {
