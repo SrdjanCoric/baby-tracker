@@ -3,8 +3,8 @@ import path from "path";
 
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"],
-    exclude: ["**/__tests__/**", "e2e/**", "**/*.component.test.tsx"],
+    include: ["src/**/*.test.ts", "src/__tests__/security/**/*.test.ts"],
+    exclude: ["e2e/**", "**/*.component.test.tsx", "**/*.integration.test.tsx"],
     environment: "node",
     globals: true,
   },
