@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   GrowthStorageService,
   StoredGrowthEntry,
@@ -6,6 +6,8 @@ import {
   UpdateGrowthInput,
 } from "@/services/growth-storage";
 import { useBaby } from "./baby-context";
+import { useSync } from "./sync-context";
+import { useAuth } from "./auth-context";
 
 export interface GrowthState {
   measurements: StoredGrowthEntry[];
@@ -17,7 +19,10 @@ export type GrowthAction =
   | { type: "ADD_MEASUREMENT"; payload: StoredGrowthEntry }
   | { type: "UPDATE_MEASUREMENT"; payload: StoredGrowthEntry }
   | { type: "DELETE_MEASUREMENT"; payload: string }
-  | { type: "SET_LOADING"; payload: boolean };
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "REMOTE_INSERT"; payload: StoredGrowthEntry }
+  | { type: "REMOTE_UPDATE"; payload: StoredGrowthEntry }
+  | { type: "REMOTE_DELETE"; payload: string };
 
 export const initialGrowthState: GrowthState = {
   measurements: [],
@@ -47,6 +52,24 @@ export function growthReducer(state: GrowthState, action: GrowthAction): GrowthS
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
 
+    case "REMOTE_INSERT": {
+      const exists = state.measurements.some(m => m.id === action.payload.id);
+      if (exists) return state;
+      return { ...state, measurements: [...state.measurements, action.payload] };
+    }
+
+    case "REMOTE_UPDATE": {
+      const updatedMeasurements = state.measurements.map(m =>
+        m.id === action.payload.id ? action.payload : m
+      );
+      return { ...state, measurements: updatedMeasurements };
+    }
+
+    case "REMOTE_DELETE": {
+      const filteredMeasurements = state.measurements.filter(m => m.id !== action.payload);
+      return { ...state, measurements: filteredMeasurements };
+    }
+
     default:
       return state;
   }
@@ -70,6 +93,13 @@ const GrowthContext = createContext<GrowthContextValue | null>(null);
 export function GrowthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(growthReducer, initialGrowthState);
   const { selectedBaby } = useBaby();
+  const syncContext = useSync();
+  const { user } = useAuth();
+  const syncStatusRef = useRef(syncContext.status);
+
+  useEffect(() => {
+    syncStatusRef.current = syncContext.status;
+  }, [syncContext.status]);
 
   const loadMeasurements = useCallback(async () => {
     if (!selectedBaby) {

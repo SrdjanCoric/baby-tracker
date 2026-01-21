@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   FeedingStorageService,
   StoredFeedingEntry,
@@ -8,6 +8,8 @@ import {
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { useBaby } from "./baby-context";
+import { useSync } from "./sync-context";
+import { useAuth } from "./auth-context";
 
 export interface ActiveTimer {
   isRunning: boolean;
@@ -35,7 +37,10 @@ export type FeedingAction =
   | { type: "START_TIMER"; payload: { startTime: Date; side?: BreastSide } }
   | { type: "RESTORE_TIMER"; payload: ActiveTimer }
   | { type: "STOP_TIMER" }
-  | { type: "UPDATE_TIMER_SIDE"; payload: { side: BreastSide; accumulatedSeconds: number } };
+  | { type: "UPDATE_TIMER_SIDE"; payload: { side: BreastSide; accumulatedSeconds: number } }
+  | { type: "REMOTE_INSERT"; payload: StoredFeedingEntry }
+  | { type: "REMOTE_UPDATE"; payload: StoredFeedingEntry }
+  | { type: "REMOTE_DELETE"; payload: string };
 
 export const initialFeedingState: FeedingState = {
   feedings: [],
@@ -129,6 +134,24 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
       };
     }
 
+    case "REMOTE_INSERT": {
+      const exists = state.feedings.some(f => f.id === action.payload.id);
+      if (exists) return state;
+      return { ...state, feedings: [...state.feedings, action.payload] };
+    }
+
+    case "REMOTE_UPDATE": {
+      const updatedFeedings = state.feedings.map(f =>
+        f.id === action.payload.id ? action.payload : f
+      );
+      return { ...state, feedings: updatedFeedings };
+    }
+
+    case "REMOTE_DELETE": {
+      const filteredFeedings = state.feedings.filter(f => f.id !== action.payload);
+      return { ...state, feedings: filteredFeedings };
+    }
+
     default:
       return state;
   }
@@ -151,6 +174,13 @@ const FeedingContext = createContext<FeedingContextValue | null>(null);
 export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(feedingReducer, initialFeedingState);
   const { selectedBaby } = useBaby();
+  const syncContext = useSync();
+  const { user } = useAuth();
+  const syncStatusRef = useRef(syncContext.status);
+
+  useEffect(() => {
+    syncStatusRef.current = syncContext.status;
+  }, [syncContext.status]);
 
   const loadFeedings = useCallback(async () => {
     if (!selectedBaby) {

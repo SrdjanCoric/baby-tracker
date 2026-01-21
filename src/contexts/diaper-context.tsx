@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   DiaperStorageService,
   StoredDiaperEntry,
@@ -7,6 +7,8 @@ import {
   DiaperCounts,
 } from "@/services/diaper-storage";
 import { useBaby } from "./baby-context";
+import { useSync } from "./sync-context";
+import { useAuth } from "./auth-context";
 
 export interface DiaperState {
   diapers: StoredDiaperEntry[];
@@ -18,7 +20,10 @@ export type DiaperAction =
   | { type: "ADD_DIAPER"; payload: StoredDiaperEntry }
   | { type: "UPDATE_DIAPER"; payload: StoredDiaperEntry }
   | { type: "DELETE_DIAPER"; payload: string }
-  | { type: "SET_LOADING"; payload: boolean };
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "REMOTE_INSERT"; payload: StoredDiaperEntry }
+  | { type: "REMOTE_UPDATE"; payload: StoredDiaperEntry }
+  | { type: "REMOTE_DELETE"; payload: string };
 
 export const initialDiaperState: DiaperState = {
   diapers: [],
@@ -48,6 +53,24 @@ export function diaperReducer(state: DiaperState, action: DiaperAction): DiaperS
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
 
+    case "REMOTE_INSERT": {
+      const exists = state.diapers.some(d => d.id === action.payload.id);
+      if (exists) return state;
+      return { ...state, diapers: [...state.diapers, action.payload] };
+    }
+
+    case "REMOTE_UPDATE": {
+      const updatedDiapers = state.diapers.map(d =>
+        d.id === action.payload.id ? action.payload : d
+      );
+      return { ...state, diapers: updatedDiapers };
+    }
+
+    case "REMOTE_DELETE": {
+      const filteredDiapers = state.diapers.filter(d => d.id !== action.payload);
+      return { ...state, diapers: filteredDiapers };
+    }
+
     default:
       return state;
   }
@@ -67,6 +90,13 @@ const DiaperContext = createContext<DiaperContextValue | null>(null);
 export function DiaperProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(diaperReducer, initialDiaperState);
   const { selectedBaby } = useBaby();
+  const syncContext = useSync();
+  const { user } = useAuth();
+  const syncStatusRef = useRef(syncContext.status);
+
+  useEffect(() => {
+    syncStatusRef.current = syncContext.status;
+  }, [syncContext.status]);
 
   const loadDiapers = useCallback(async () => {
     if (!selectedBaby) {

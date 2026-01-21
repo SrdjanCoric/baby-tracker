@@ -2,6 +2,45 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
 
+jest.mock("@powersync/react-native", () => ({
+  PowerSyncDatabase: jest.fn(),
+  Schema: jest.fn(),
+  Table: jest.fn(),
+  column: {
+    text: "TEXT",
+    integer: "INTEGER",
+    real: "REAL",
+  },
+}));
+
+jest.mock("@/services/sync", () => ({
+  SyncEngine: jest.fn(),
+  SyncQueue: jest.fn(),
+  ConflictResolver: jest.fn(),
+}));
+
+jest.mock("@/contexts/sync-context", () => ({
+  useSync: () => ({
+    status: "online",
+    pendingCount: 0,
+    lastSyncedAt: null,
+    error: null,
+    isConnected: true,
+    forceSync: jest.fn(),
+    retryFailedSync: jest.fn(),
+  }),
+  SyncProvider: ({ children }) => children,
+}));
+
+jest.mock("@/contexts/auth-context", () => ({
+  useAuth: () => ({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+  }),
+  AuthProvider: ({ children }) => children,
+}));
+
 jest.mock("nativewind", () => ({
   useColorScheme: () => ({
     colorScheme: "light",

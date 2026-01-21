@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   PumpingStorageService,
   StoredPumpingEntry,
@@ -7,6 +7,8 @@ import {
 } from "@/services/pumping-storage";
 import type { BreastSide } from "@/constants/activities";
 import { useBaby } from "./baby-context";
+import { useSync } from "./sync-context";
+import { useAuth } from "./auth-context";
 
 export interface ActivePumpingTimer {
   isRunning: boolean;
@@ -28,7 +30,10 @@ export type PumpingAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "START_TIMER"; payload: { startTime: Date; side: BreastSide } }
   | { type: "STOP_TIMER" }
-  | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide };
+  | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide }
+  | { type: "REMOTE_INSERT"; payload: StoredPumpingEntry }
+  | { type: "REMOTE_UPDATE"; payload: StoredPumpingEntry }
+  | { type: "REMOTE_DELETE"; payload: string };
 
 export const initialPumpingState: PumpingState = {
   pumpings: [],
@@ -79,6 +84,24 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
         activeTimer: { ...state.activeTimer, side: action.payload },
       };
 
+    case "REMOTE_INSERT": {
+      const exists = state.pumpings.some(p => p.id === action.payload.id);
+      if (exists) return state;
+      return { ...state, pumpings: [...state.pumpings, action.payload] };
+    }
+
+    case "REMOTE_UPDATE": {
+      const updatedPumpings = state.pumpings.map(p =>
+        p.id === action.payload.id ? action.payload : p
+      );
+      return { ...state, pumpings: updatedPumpings };
+    }
+
+    case "REMOTE_DELETE": {
+      const filteredPumpings = state.pumpings.filter(p => p.id !== action.payload);
+      return { ...state, pumpings: filteredPumpings };
+    }
+
     default:
       return state;
   }
@@ -102,6 +125,13 @@ const PumpingContext = createContext<PumpingContextValue | null>(null);
 export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(pumpingReducer, initialPumpingState);
   const { selectedBaby } = useBaby();
+  const syncContext = useSync();
+  const { user } = useAuth();
+  const syncStatusRef = useRef(syncContext.status);
+
+  useEffect(() => {
+    syncStatusRef.current = syncContext.status;
+  }, [syncContext.status]);
 
   const loadPumpings = useCallback(async () => {
     if (!selectedBaby) {

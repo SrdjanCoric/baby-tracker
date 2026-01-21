@@ -23,6 +23,7 @@ export interface StoredSleepEntry {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  loggedBy?: string;
 }
 
 export interface CreateSleepInput {

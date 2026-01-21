@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   SleepStorageService,
   StoredSleepEntry,
@@ -7,6 +7,8 @@ import {
 } from "@/services/sleep-storage";
 import type { SleepType } from "@/constants/activities";
 import { useBaby } from "./baby-context";
+import { useSync } from "./sync-context";
+import { useAuth } from "./auth-context";
 import {
   SleepAgeGroup,
   GoalSource,
@@ -47,7 +49,10 @@ export type SleepAction =
   | { type: "SET_AGE_GROUP"; payload: SleepAgeGroup | null }
   | { type: "SET_WAKE_WINDOW"; payload: number }
   | { type: "SET_SHOW_MILESTONE_SUGGESTION"; payload: boolean }
-  | { type: "SET_SUGGESTED_GOAL"; payload: number | null };
+  | { type: "SET_SUGGESTED_GOAL"; payload: number | null }
+  | { type: "REMOTE_INSERT"; payload: StoredSleepEntry }
+  | { type: "REMOTE_UPDATE"; payload: StoredSleepEntry }
+  | { type: "REMOTE_DELETE"; payload: string };
 
 const DEFAULT_DAILY_GOAL_MINUTES = 14 * 60; // 14 hours
 const DEFAULT_WAKE_WINDOW_MINUTES = 150; // 2.5 hours
@@ -125,6 +130,24 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     case "SET_SUGGESTED_GOAL":
       return { ...state, suggestedGoalMinutes: action.payload };
 
+    case "REMOTE_INSERT": {
+      const exists = state.sleeps.some(s => s.id === action.payload.id);
+      if (exists) return state;
+      return { ...state, sleeps: [...state.sleeps, action.payload] };
+    }
+
+    case "REMOTE_UPDATE": {
+      const updatedSleeps = state.sleeps.map(s =>
+        s.id === action.payload.id ? action.payload : s
+      );
+      return { ...state, sleeps: updatedSleeps };
+    }
+
+    case "REMOTE_DELETE": {
+      const filteredSleeps = state.sleeps.filter(s => s.id !== action.payload);
+      return { ...state, sleeps: filteredSleeps };
+    }
+
     default:
       return state;
   }
@@ -153,6 +176,13 @@ const SleepContext = createContext<SleepContextValue | null>(null);
 export function SleepProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(sleepReducer, initialSleepState);
   const { selectedBaby } = useBaby();
+  const syncContext = useSync();
+  const { user } = useAuth();
+  const syncStatusRef = useRef(syncContext.status);
+
+  useEffect(() => {
+    syncStatusRef.current = syncContext.status;
+  }, [syncContext.status]);
 
   const loadSleeps = useCallback(async () => {
     if (!selectedBaby) {
