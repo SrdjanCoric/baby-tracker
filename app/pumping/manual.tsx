@@ -13,7 +13,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { usePumping } from "@/contexts/pumping-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useUnits } from "@/contexts";
 import { validateManualPumping } from "@/validators/pumping";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import type { BreastSide } from "@/constants/activities";
@@ -33,6 +33,7 @@ export default function ManualPumpingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { volumeUnit } = useUnits();
   const { addPumping, getLastSide } = usePumping();
 
   const suggestedSide = useMemo((): BreastSide => {
@@ -49,7 +50,7 @@ export default function ManualPumpingScreen() {
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
   const [durationInput, setDurationInput] = useState("");
   const [volumeMl, setVolumeMl] = useState<number | null>(null);
-  const [unit, setUnit] = useState<VolumeUnit>("oz");
+  const [unit, setUnit] = useState<VolumeUnit>(volumeUnit);
   const [volumeInput, setVolumeInput] = useState("");
 
   const [notes, setNotes] = useState("");

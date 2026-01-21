@@ -21,3 +21,6 @@ export type { TummyTimeState, TummyTimeAction, ActiveTummyTimeTimer } from "./tu
 
 export { ThemeProvider, useTheme, themeReducer, initialThemeState } from "./theme-context";
 export type { ThemeState, ThemeAction, ThemePreference, ThemeMode } from "./theme-context";
+
+export { UnitProvider, useUnits } from "./unit-context";
+export type { UnitSystem } from "./unit-context";
