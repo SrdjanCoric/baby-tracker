@@ -554,33 +554,33 @@ This plan implements 4 interconnected features as a single unit:
 
 ### 6.1 Network Edge Cases
 
-- [ ] Test: Network interruption mid-sync (no data corruption)
-- [ ] Test: Very slow network (>10 second response times)
-- [ ] Test: Intermittent connectivity (flapping)
-- [ ] Test: App backgrounding during sync
-- [ ] Test: Device sleep during sync
+- [x] Test: Network interruption mid-sync (no data corruption)
+- [x] Test: Very slow network (>10 second response times)
+- [x] Test: Intermittent connectivity (flapping)
+- [x] Test: App backgrounding during sync
+- [x] Test: Device sleep during sync
 
 ### 6.2 Data Edge Cases
 
-- [ ] Test: Empty sync response
-- [ ] Test: Null/undefined field values
-- [ ] Test: Unicode and emoji in text fields
-- [ ] Test: Dates in different timezones
-- [ ] Test: Maximum field lengths
+- [x] Test: Empty sync response
+- [x] Test: Null/undefined field values
+- [x] Test: Unicode and emoji in text fields
+- [x] Test: Dates in different timezones
+- [x] Test: Maximum field lengths
 
 ### 6.3 Queue Edge Cases
 
-- [ ] Test: 100+ items in queue syncs successfully
-- [ ] Test: Queue with items older than 24 hours
-- [ ] Test: App crash during queue processing (resume correctly)
-- [ ] Test: Duplicate operations are collapsed
+- [x] Test: 100+ items in queue syncs successfully
+- [x] Test: Queue with items older than 24 hours
+- [x] Test: App crash during queue processing (resume correctly)
+- [x] Test: Duplicate operations are collapsed
 
 ### 6.4 Caregiver Edge Cases
 
-- [ ] Test: 10+ caregivers display correctly (virtualized list)
-- [ ] Test: 50-character caregiver name (truncation)
-- [ ] Test: Caregiver with no display name (fallback to email)
-- [ ] Test: Remove caregiver while offline (queued)
+- [x] Test: 10+ caregivers display correctly (virtualized list)
+- [x] Test: 50-character caregiver name (truncation)
+- [x] Test: Caregiver with no display name (fallback to email)
+- [x] Test: Remove caregiver while offline (queued)
 
 ---
 

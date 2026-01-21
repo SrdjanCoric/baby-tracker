@@ -1,26 +1,25 @@
 import React from 'react';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react-native';
 import { View, Text, Pressable, Alert } from 'react-native';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-vi.mock('@/services/supabase', () => ({
+jest.mock('@/services/supabase', () => ({
   supabase: {
     auth: {
-      getUser: vi.fn().mockResolvedValue({
+      getUser: jest.fn().mockResolvedValue({
         data: { user: { id: 'current-user' } },
         error: null,
       }),
     },
-    from: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({ data: null, error: null }),
     }),
-    rpc: vi.fn(),
+    rpc: jest.fn(),
   },
 }));
 
-vi.mock('react-i18next', () => ({
+jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string>) => {
       if (params?.name) return key.replace('{{name}}', params.name);
@@ -197,20 +196,20 @@ describe('Caregiver Flow Integration', () => {
   let caregiverContext: ReturnType<typeof createMockCaregiverContext>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     caregiverContext = createMockCaregiverContext();
   });
 
   describe('Load and display caregiver list', () => {
     it('should load and display caregiver list', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       render(<TestCaregiverList caregiverContext={caregiverContext} />);
 
       expect(screen.getByTestId('loading')).toBeTruthy();
 
       await act(async () => {
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
 
       expect(screen.getByTestId('caregiver-count').props.children).toBe(3);
@@ -221,31 +220,31 @@ describe('Caregiver Flow Integration', () => {
         'Second Caregiver'
       );
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('should display entry counts for each caregiver', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       render(<TestCaregiverList caregiverContext={caregiverContext} />);
 
       await act(async () => {
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
 
       expect(screen.getByTestId('count-current-user').props.children).toBe(42);
       expect(screen.getByTestId('count-caregiver-2').props.children).toBe(15);
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('should show owner badge for household owner', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       render(<TestCaregiverList caregiverContext={caregiverContext} />);
 
       await act(async () => {
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
 
       expect(screen.getByTestId('owner-badge-current-user')).toBeTruthy();
@@ -253,34 +252,35 @@ describe('Caregiver Flow Integration', () => {
         screen.queryByTestId('owner-badge-caregiver-2')
       ).toBeNull();
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('should show You badge for current user', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       render(<TestCaregiverList caregiverContext={caregiverContext} />);
 
       await act(async () => {
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
 
       expect(screen.getByTestId('you-badge-current-user')).toBeTruthy();
       expect(screen.queryByTestId('you-badge-caregiver-2')).toBeNull();
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
   });
 
   describe('Remove caregiver flow', () => {
     it('should show confirmation when removing caregiver', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
-      const alertSpy = vi.spyOn(Alert, 'alert');
-      const handleRemove = vi.fn((id: string) => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
+      const handleRemove = jest.fn((id: string) => {
+        const caregiver = caregiverContext.getState().caregivers.find(c => c.id === id);
         Alert.alert(
           'household.removeCaregiver',
-          `household.removeCaregiverConfirm`.replace('{{name}}', 'Second Caregiver'),
+          `Remove ${caregiver?.displayName} from household?`,
           [
             { text: 'common.cancel', style: 'cancel' },
             {
@@ -300,7 +300,7 @@ describe('Caregiver Flow Integration', () => {
       );
 
       await act(async () => {
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
 
       await act(async () => {
@@ -313,18 +313,18 @@ describe('Caregiver Flow Integration', () => {
         expect.any(Array)
       );
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('should remove caregiver on confirmation', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       const { rerender } = render(
         <TestCaregiverList caregiverContext={caregiverContext} />
       );
 
       await act(async () => {
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
 
       expect(screen.getByTestId('caregiver-count').props.children).toBe(3);
@@ -337,18 +337,18 @@ describe('Caregiver Flow Integration', () => {
       expect(screen.getByTestId('caregiver-count').props.children).toBe(2);
       expect(screen.queryByTestId('caregiver-caregiver-2')).toBeNull();
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('should handle network error during removal', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       const { rerender } = render(
         <TestCaregiverList caregiverContext={caregiverContext} />
       );
 
       await act(async () => {
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
 
       caregiverContext.simulateNetworkError();
@@ -356,7 +356,7 @@ describe('Caregiver Flow Integration', () => {
 
       expect(screen.getByTestId('error').props.children).toBe('networkError');
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('should not allow removing self', async () => {
@@ -367,18 +367,18 @@ describe('Caregiver Flow Integration', () => {
     });
 
     it('should not show remove button for current user', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       render(<TestCaregiverList caregiverContext={caregiverContext} />);
 
       await act(async () => {
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
 
       expect(screen.queryByTestId('remove-current-user')).toBeNull();
       expect(screen.getByTestId('remove-caregiver-2')).toBeTruthy();
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
   });
 });
