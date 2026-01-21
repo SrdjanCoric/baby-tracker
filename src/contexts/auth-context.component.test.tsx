@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { render, screen, waitFor, act } from "@testing-library/react-native";
 import { Text, View } from "react-native";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
@@ -363,7 +363,9 @@ describe("AuthContext", () => {
 
       function SignOutTestConsumer() {
         const auth = useAuth();
-        signOutFn = auth.signOut;
+        useEffect(() => {
+          signOutFn = auth.signOut;
+        }, [auth.signOut]);
         return (
           <View>
             <Text testID="authenticated">
@@ -397,7 +399,9 @@ describe("AuthContext", () => {
 
       function SignOutTestConsumer() {
         const auth = useAuth();
-        signOutFn = auth.signOut;
+        useEffect(() => {
+          signOutFn = auth.signOut;
+        }, [auth.signOut]);
         return <View />;
       }
 
@@ -436,7 +440,9 @@ describe("AuthContext", () => {
 
       function SignInTestConsumer() {
         const auth = useAuth();
-        signInFn = auth.signIn;
+        useEffect(() => {
+          signInFn = auth.signIn;
+        }, [auth.signIn]);
         return <View />;
       }
 
@@ -472,7 +478,9 @@ describe("AuthContext", () => {
 
       function SignInTestConsumer() {
         const auth = useAuth();
-        signInFn = auth.signIn;
+        useEffect(() => {
+          signInFn = auth.signIn;
+        }, [auth.signIn]);
         return <View />;
       }
 
@@ -511,7 +519,9 @@ describe("AuthContext", () => {
 
       function SignUpTestConsumer() {
         const auth = useAuth();
-        signUpFn = auth.signUp;
+        useEffect(() => {
+          signUpFn = auth.signUp;
+        }, [auth.signUp]);
         return <View />;
       }
 
@@ -548,7 +558,9 @@ describe("AuthContext", () => {
 
       function SignUpTestConsumer() {
         const auth = useAuth();
-        signUpFn = auth.signUp;
+        useEffect(() => {
+          signUpFn = auth.signUp;
+        }, [auth.signUp]);
         return <View />;
       }
 
@@ -583,7 +595,9 @@ describe("AuthContext", () => {
 
       function MagicLinkTestConsumer() {
         const auth = useAuth();
-        magicLinkFn = auth.signInWithMagicLink;
+        useEffect(() => {
+          magicLinkFn = auth.signInWithMagicLink;
+        }, [auth.signInWithMagicLink]);
         return <View />;
       }
 
@@ -613,7 +627,9 @@ describe("AuthContext", () => {
 
       function AppleTestConsumer() {
         const auth = useAuth();
-        isAppleAvailable = auth.isAppleSignInAvailable;
+        useEffect(() => {
+          isAppleAvailable = auth.isAppleSignInAvailable;
+        }, [auth.isAppleSignInAvailable]);
         return <View />;
       }
 
@@ -643,15 +659,17 @@ describe("AuthContext", () => {
 
       function MethodsTestConsumer() {
         const auth = useAuth();
-        authMethods = {
-          signUp: auth.signUp,
-          signIn: auth.signIn,
-          signOut: auth.signOut,
-          signInWithMagicLink: auth.signInWithMagicLink,
-          signInWithGoogle: auth.signInWithGoogle,
-          signInWithApple: auth.signInWithApple,
-          updateDisplayName: auth.updateDisplayName,
-        };
+        useEffect(() => {
+          authMethods = {
+            signUp: auth.signUp,
+            signIn: auth.signIn,
+            signOut: auth.signOut,
+            signInWithMagicLink: auth.signInWithMagicLink,
+            signInWithGoogle: auth.signInWithGoogle,
+            signInWithApple: auth.signInWithApple,
+            updateDisplayName: auth.updateDisplayName,
+          };
+        }, [auth]);
         return <View />;
       }
 
