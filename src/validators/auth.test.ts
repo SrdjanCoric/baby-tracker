@@ -6,6 +6,7 @@ import {
   validateDisplayName,
   validateSignUp,
   validateSignIn,
+  sanitizeAuthError,
 } from "./auth";
 
 describe("validateEmail", () => {
@@ -446,5 +447,90 @@ describe("validateSignIn", () => {
       password: "password",
     });
     expect(result.normalizedEmail).toBe("test@example.com");
+  });
+});
+
+describe("sanitizeAuthError", () => {
+  it("should return fallback key for null error", () => {
+    const result = sanitizeAuthError(null, "auth.signInError");
+    expect(result).toBe("auth.signInError");
+  });
+
+  it("should detect invalid credentials error", () => {
+    const error = new Error("Invalid login credentials");
+    const result = sanitizeAuthError(error, "auth.signInError");
+    expect(result).toBe("auth.invalidCredentials");
+  });
+
+  it("should detect email not confirmed error", () => {
+    const error = new Error("Email not confirmed");
+    const result = sanitizeAuthError(error, "auth.signInError");
+    expect(result).toBe("auth.emailNotConfirmed");
+  });
+
+  it("should detect rate limit error", () => {
+    const error = new Error("Too many requests");
+    const result = sanitizeAuthError(error, "auth.signInError");
+    expect(result).toBe("auth.tooManyAttempts");
+  });
+
+  it("should detect email already exists error", () => {
+    const error = new Error("User already registered");
+    const result = sanitizeAuthError(error, "auth.signUpError");
+    expect(result).toBe("auth.emailAlreadyExists");
+  });
+
+  it("should detect provider not enabled error", () => {
+    const error = new Error("Provider is not enabled");
+    const result = sanitizeAuthError(error, "auth.googleSignInError");
+    expect(result).toBe("auth.providerNotEnabled");
+  });
+
+  it("should detect provider not supported error", () => {
+    const error = new Error("Provider is not supported");
+    const result = sanitizeAuthError(error, "auth.googleSignInError");
+    expect(result).toBe("auth.providerNotSupported");
+  });
+
+  it("should detect code 400 as provider not supported", () => {
+    const error = new Error("code 400 provider error");
+    const result = sanitizeAuthError(error, "auth.googleSignInError");
+    expect(result).toBe("auth.providerNotSupported");
+  });
+
+  it("should detect popup closed error", () => {
+    const error = new Error("Popup was closed by user");
+    const result = sanitizeAuthError(error, "auth.googleSignInError");
+    expect(result).toBe("auth.popupClosed");
+  });
+
+  it("should detect oauth error", () => {
+    const error = new Error("OAuth callback failed");
+    const result = sanitizeAuthError(error, "auth.googleSignInError");
+    expect(result).toBe("auth.oauthError");
+  });
+
+  it("should detect network error", () => {
+    const error = new Error("Network request failed");
+    const result = sanitizeAuthError(error, "auth.signInError");
+    expect(result).toBe("errors.network");
+  });
+
+  it("should detect fetch error as network error", () => {
+    const error = new Error("fetch failed");
+    const result = sanitizeAuthError(error, "auth.signInError");
+    expect(result).toBe("errors.network");
+  });
+
+  it("should detect timeout as network error", () => {
+    const error = new Error("Request timeout");
+    const result = sanitizeAuthError(error, "auth.signInError");
+    expect(result).toBe("errors.network");
+  });
+
+  it("should return fallback for unknown error", () => {
+    const error = new Error("Some unknown error");
+    const result = sanitizeAuthError(error, "auth.signInError");
+    expect(result).toBe("auth.signInError");
   });
 });
