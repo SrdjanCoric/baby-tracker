@@ -68,10 +68,31 @@ export class SyncQueue {
       }
 
       const persistence: SyncQueuePersistence = JSON.parse(data);
-      this.queue = persistence.operations || [];
+
+      if (persistence.version !== QUEUE_VERSION) {
+        console.warn(`[SyncQueue] Queue version mismatch. Expected ${QUEUE_VERSION}, got ${persistence.version}. Resetting queue.`);
+        this.queue = [];
+        await AsyncStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+
+      if (!Array.isArray(persistence.operations)) {
+        console.warn('[SyncQueue] Invalid queue data format. Resetting queue.');
+        this.queue = [];
+        await AsyncStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+
+      this.queue = persistence.operations;
       this.sortByTimestamp();
-    } catch {
+    } catch (error) {
+      console.error('[SyncQueue] Failed to restore queue:', error instanceof Error ? error.message : 'Unknown error');
       this.queue = [];
+      try {
+        await AsyncStorage.removeItem(STORAGE_KEY);
+      } catch (cleanupError) {
+        console.error('[SyncQueue] Failed to cleanup corrupted queue data:', cleanupError);
+      }
     }
   }
 

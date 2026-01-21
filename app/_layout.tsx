@@ -39,13 +39,16 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function OfflineBannerWrapper() {
   const { status, pendingCount } = useSync();
   const [isDismissed, setIsDismissed] = useState(false);
+  const [prevStatus, setPrevStatus] = useState(status);
   const isOffline = status === "offline";
 
-  useEffect(() => {
+  // Reset dismissed state when status changes (React recommended pattern)
+  if (status !== prevStatus) {
+    setPrevStatus(status);
     if (!isOffline) {
       setIsDismissed(false);
     }
-  }, [isOffline]);
+  }
 
   if (!isOffline || isDismissed) {
     return null;

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import { SyncEngine, SyncState as EngineSyncState, SyncStatus } from '@/services/sync';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+import { SyncEngine, SyncState as EngineSyncState, SyncStatus, RealTimeSync, RemoteChange, SyncableTable } from '@/services/sync';
 
 export interface SyncState {
   status: SyncStatus;
@@ -63,25 +63,44 @@ export function syncReducer(state: SyncState, action: SyncAction): SyncState {
   }
 }
 
+type RemoteChangeCallback = (change: RemoteChange) => void;
+
 interface SyncContextValue extends SyncState {
   forceSync: () => Promise<void>;
   retryFailedSync: () => Promise<void>;
   clearAllData: () => Promise<void>;
+  subscribeToRemoteChanges: (table: SyncableTable, callback: RemoteChangeCallback) => () => void;
+  setAuthContext: (householdId: string, userId: string) => void;
+  enqueueOperation: (operation: {
+    type: 'CREATE' | 'UPDATE' | 'DELETE';
+    table: SyncableTable;
+    entityId: string;
+    data: Record<string, unknown> | null;
+  }) => Promise<void>;
 }
 
 const SyncContext = createContext<SyncContextValue | null>(null);
 
 let syncEngineInstance: SyncEngine | null = null;
+let realTimeSyncInstance: RealTimeSync | null = null;
+let instanceRefCount = 0;
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(syncReducer, initialSyncState);
+  const remoteChangeListenersRef = useRef<Map<SyncableTable, Set<RemoteChangeCallback>>>(new Map());
 
   useEffect(() => {
+    instanceRefCount++;
+
     if (!syncEngineInstance) {
       syncEngineInstance = new SyncEngine();
     }
+    if (!realTimeSyncInstance) {
+      realTimeSyncInstance = new RealTimeSync();
+    }
 
     const engine = syncEngineInstance;
+    const realTimeSync = realTimeSyncInstance;
 
     const unsubscribe = engine.subscribe((engineState: EngineSyncState) => {
       dispatch({ type: 'SET_STATUS', payload: engineState.status });
@@ -97,12 +116,32 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    const unsubscribeRealTime = realTimeSync.onRemoteChange((change: RemoteChange) => {
+      const listeners = remoteChangeListenersRef.current.get(change.table as SyncableTable);
+      if (listeners) {
+        listeners.forEach(callback => callback(change));
+      }
+    });
+
     engine.initialize().catch((error) => {
       dispatch({ type: 'SYNC_ERROR', payload: error.message });
     });
 
     return () => {
       unsubscribe();
+      unsubscribeRealTime();
+      instanceRefCount--;
+
+      if (instanceRefCount === 0) {
+        if (syncEngineInstance) {
+          syncEngineInstance.destroy();
+          syncEngineInstance = null;
+        }
+        if (realTimeSyncInstance) {
+          realTimeSyncInstance.destroy();
+          realTimeSyncInstance = null;
+        }
+      }
     };
   }, []);
 
@@ -130,6 +169,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await syncEngineInstance.clearAllData();
+      if (realTimeSyncInstance) {
+        realTimeSyncInstance.unsubscribe();
+      }
       dispatch({ type: 'SET_STATUS', payload: 'offline' });
       dispatch({ type: 'SET_PENDING_COUNT', payload: 0 });
       dispatch({ type: 'SET_ONLINE', payload: false });
@@ -141,11 +183,59 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const subscribeToRemoteChanges = useCallback((table: SyncableTable, callback: RemoteChangeCallback): (() => void) => {
+    if (!remoteChangeListenersRef.current.has(table)) {
+      remoteChangeListenersRef.current.set(table, new Set());
+    }
+    remoteChangeListenersRef.current.get(table)!.add(callback);
+
+    return () => {
+      const listeners = remoteChangeListenersRef.current.get(table);
+      if (listeners) {
+        listeners.delete(callback);
+      }
+    };
+  }, []);
+
+  const setAuthContext = useCallback((householdId: string, userId: string) => {
+    if (syncEngineInstance) {
+      syncEngineInstance.setAuthContext({ householdId, userId });
+    }
+    if (realTimeSyncInstance) {
+      realTimeSyncInstance.setAuthContext({ householdId, userId });
+      realTimeSyncInstance.subscribeToHousehold(householdId).catch((error) => {
+        dispatch({ type: 'SYNC_ERROR', payload: error.message });
+      });
+    }
+  }, []);
+
+  const enqueueOperation = useCallback(async (operation: {
+    type: 'CREATE' | 'UPDATE' | 'DELETE';
+    table: SyncableTable;
+    entityId: string;
+    data: Record<string, unknown> | null;
+  }) => {
+    if (!syncEngineInstance) return;
+
+    await syncEngineInstance.enqueueOperation({
+      id: '',
+      type: operation.type,
+      table: operation.table,
+      entityId: operation.entityId,
+      data: operation.data,
+      timestamp: new Date().toISOString(),
+      retryCount: 0,
+    });
+  }, []);
+
   const value: SyncContextValue = {
     ...state,
     forceSync,
     retryFailedSync,
     clearAllData,
+    subscribeToRemoteChanges,
+    setAuthContext,
+    enqueueOperation,
   };
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;

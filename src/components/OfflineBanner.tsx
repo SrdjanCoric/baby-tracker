@@ -31,7 +31,7 @@ export function OfflineBanner({
     >
       <View className="flex-1">
         <Text className="text-white font-semibold text-base">
-          You're offline
+          You&apos;re offline
         </Text>
         {pendingCount > 0 && (
           <Text className="text-orange-100 text-sm mt-0.5">

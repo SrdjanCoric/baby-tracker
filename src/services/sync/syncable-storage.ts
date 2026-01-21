@@ -5,12 +5,29 @@ export interface WatchDisposable {
   dispose: () => void;
 }
 
+export interface SyncableStorageContext {
+  householdId: string;
+  userId: string;
+}
+
 export abstract class SyncableStorageService<T extends SyncableEntry> {
   protected db: AbstractPowerSyncDatabase | null = null;
   protected abstract tableName: SyncableTable;
+  protected context: SyncableStorageContext | null = null;
 
   setDatabase(db: AbstractPowerSyncDatabase): void {
     this.db = db;
+  }
+
+  setContext(context: SyncableStorageContext): void {
+    this.context = context;
+  }
+
+  protected ensureContext(): SyncableStorageContext {
+    if (!this.context) {
+      throw new Error('Storage context not initialized. Call setContext first.');
+    }
+    return this.context;
   }
 
   protected ensureDatabase(): AbstractPowerSyncDatabase {
@@ -22,34 +39,61 @@ export abstract class SyncableStorageService<T extends SyncableEntry> {
 
   async getAll(babyId: string): Promise<T[]> {
     const db = this.ensureDatabase();
+    const context = this.ensureContext();
+
     const results = await db.getAll<T>(
-      `SELECT * FROM ${this.tableName} WHERE baby_id = ? ORDER BY created_at DESC`,
-      [babyId]
+      `SELECT t.* FROM ${this.tableName} t
+       INNER JOIN babies b ON t.baby_id = b.id
+       WHERE t.baby_id = ? AND b.household_id = ?
+       ORDER BY t.created_at DESC`,
+      [babyId, context.householdId]
     );
     return results.map((row) => this.transformFromDb(row));
   }
 
-  async getById(id: string): Promise<T | null> {
+  async getById(id: string, _babyId?: string): Promise<T | null> {
     const db = this.ensureDatabase();
+    const context = this.ensureContext();
+
     const result = await db.get<T>(
-      `SELECT * FROM ${this.tableName} WHERE id = ?`,
-      [id]
+      `SELECT t.* FROM ${this.tableName} t
+       INNER JOIN babies b ON t.baby_id = b.id
+       WHERE t.id = ? AND b.household_id = ?`,
+      [id, context.householdId]
     );
     return result ? this.transformFromDb(result) : null;
   }
 
-  async create(data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>, loggedBy: string): Promise<T> {
+  async verifyBabyBelongsToHousehold(babyId: string): Promise<boolean> {
     const db = this.ensureDatabase();
+    const context = this.ensureContext();
+
+    const result = await db.get<{ id: string }>(
+      `SELECT id FROM babies WHERE id = ? AND household_id = ?`,
+      [babyId, context.householdId]
+    );
+    return result !== null;
+  }
+
+  async create(data: Omit<T, 'id' | 'createdAt' | 'updatedAt'> & { babyId: string }, loggedBy: string): Promise<T> {
+    const db = this.ensureDatabase();
+    this.ensureContext();
     const now = new Date().toISOString();
     const id = this.generateId();
 
-    const entry: T = {
+    const babyId = (data as { babyId: string }).babyId;
+    const isValidBaby = await this.verifyBabyBelongsToHousehold(babyId);
+    if (!isValidBaby) {
+      throw new Error('Cannot create entry: baby does not belong to current household');
+    }
+
+    const entry = {
       ...data,
       id,
       loggedBy,
       createdAt: now,
       updatedAt: now,
-    } as T;
+    } as unknown as T;
 
     const dbData = this.transformToDb(entry);
     const columns = Object.keys(dbData);
@@ -66,6 +110,8 @@ export abstract class SyncableStorageService<T extends SyncableEntry> {
 
   async update(id: string, data: Partial<T>): Promise<T | null> {
     const db = this.ensureDatabase();
+    const context = this.ensureContext();
+
     const existing = await this.getById(id);
     if (!existing) {
       return null;
@@ -87,10 +133,13 @@ export abstract class SyncableStorageService<T extends SyncableEntry> {
     const setClause = Object.keys(dbData)
       .map((col) => `${col} = ?`)
       .join(', ');
-    const values = [...Object.values(dbData), id];
+    const values = [...Object.values(dbData), id, context.householdId];
 
     await db.execute(
-      `UPDATE ${this.tableName} SET ${setClause} WHERE id = ?`,
+      `UPDATE ${this.tableName} t SET ${setClause}
+       WHERE t.id = ? AND EXISTS (
+         SELECT 1 FROM babies b WHERE b.id = t.baby_id AND b.household_id = ?
+       )`,
       values
     );
 
@@ -99,22 +148,34 @@ export abstract class SyncableStorageService<T extends SyncableEntry> {
 
   async delete(id: string): Promise<boolean> {
     const db = this.ensureDatabase();
+    const context = this.ensureContext();
+
     const existing = await this.getById(id);
     if (!existing) {
       return false;
     }
 
-    await db.execute(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
+    await db.execute(
+      `DELETE FROM ${this.tableName}
+       WHERE id = ? AND EXISTS (
+         SELECT 1 FROM babies b WHERE b.id = baby_id AND b.household_id = ?
+       )`,
+      [id, context.householdId]
+    );
     return true;
   }
 
   watch(babyId: string, callback: (entries: T[]) => void): WatchDisposable {
     const db = this.ensureDatabase();
+    const context = this.ensureContext();
     let isDisposed = false;
 
     db.watch(
-      `SELECT * FROM ${this.tableName} WHERE baby_id = ? ORDER BY created_at DESC`,
-      [babyId],
+      `SELECT t.* FROM ${this.tableName} t
+       INNER JOIN babies b ON t.baby_id = b.id
+       WHERE t.baby_id = ? AND b.household_id = ?
+       ORDER BY t.created_at DESC`,
+      [babyId, context.householdId],
       {
         onResult: (result: { rows?: { _array: T[] } }) => {
           if (isDisposed) return;

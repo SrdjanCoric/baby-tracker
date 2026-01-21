@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
 import {
   PumpingStorageService,
   StoredPumpingEntry,
@@ -9,6 +9,7 @@ import type { BreastSide } from "@/constants/activities";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
+import { RemoteChange } from "@/services/sync";
 
 export interface ActivePumpingTimer {
   isRunning: boolean;
@@ -125,13 +126,29 @@ const PumpingContext = createContext<PumpingContextValue | null>(null);
 export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(pumpingReducer, initialPumpingState);
   const { selectedBaby } = useBaby();
-  const syncContext = useSync();
-  const { user } = useAuth();
-  const syncStatusRef = useRef(syncContext.status);
+  const { subscribeToRemoteChanges, enqueueOperation } = useSync();
+  const { user: _user } = useAuth();
 
   useEffect(() => {
-    syncStatusRef.current = syncContext.status;
-  }, [syncContext.status]);
+    const unsubscribe = subscribeToRemoteChanges('pumping_sessions', (change: RemoteChange) => {
+      if (!selectedBaby) return;
+      const data = change.new || change.old;
+      if (data && data.baby_id !== selectedBaby.id) return;
+
+      switch (change.eventType) {
+        case 'INSERT':
+          if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformPumpingFromRemote(change.new) });
+          break;
+        case 'UPDATE':
+          if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformPumpingFromRemote(change.new) });
+          break;
+        case 'DELETE':
+          if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
+          break;
+      }
+    });
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadPumpings = useCallback(async () => {
     if (!selectedBaby) {
@@ -212,8 +229,9 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const addPumping = useCallback(async (input: CreatePumpingInput): Promise<StoredPumpingEntry> => {
     const pumping = await PumpingStorageService.addPumping(input);
     dispatch({ type: "ADD_PUMPING", payload: pumping });
+    await enqueueOperation({ type: 'CREATE', table: 'pumping_sessions', entityId: pumping.id, data: transformPumpingToSync(pumping) });
     return pumping;
-  }, []);
+  }, [enqueueOperation]);
 
   const updatePumping = useCallback(async (
     pumpingId: string,
@@ -228,9 +246,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     );
     if (updated) {
       dispatch({ type: "UPDATE_PUMPING", payload: updated });
+      await enqueueOperation({ type: 'UPDATE', table: 'pumping_sessions', entityId: pumpingId, data: transformPumpingToSync(updated) });
     }
     return updated;
-  }, [selectedBaby]);
+  }, [selectedBaby, enqueueOperation]);
 
   const deletePumping = useCallback(async (pumpingId: string): Promise<boolean> => {
     if (!selectedBaby) return false;
@@ -238,9 +257,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     const result = await PumpingStorageService.deletePumping(selectedBaby.id, pumpingId);
     if (result) {
       dispatch({ type: "DELETE_PUMPING", payload: pumpingId });
+      await enqueueOperation({ type: 'DELETE', table: 'pumping_sessions', entityId: pumpingId, data: null });
     }
     return result;
-  }, [selectedBaby]);
+  }, [selectedBaby, enqueueOperation]);
 
   const getLastPumping = useCallback((): StoredPumpingEntry | null => {
     if (state.pumpings.length === 0) return null;
@@ -292,4 +312,34 @@ export function usePumping(): PumpingContextValue {
     throw new Error("usePumping must be used within a PumpingProvider");
   }
   return context;
+}
+
+function transformPumpingFromRemote(data: Record<string, unknown>): StoredPumpingEntry {
+  return {
+    id: data.id as string,
+    babyId: data.baby_id as string,
+    side: data.side as BreastSide,
+    startedAt: data.started_at as string,
+    endedAt: data.ended_at as string | undefined,
+    durationSeconds: data.duration_seconds as number | undefined,
+    volumeMl: data.volume_ml as number | undefined,
+    notes: data.notes as string | undefined,
+    loggedBy: data.logged_by as string | undefined,
+    createdAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: (data.updated_at as string) || new Date().toISOString(),
+  };
+}
+
+function transformPumpingToSync(pumping: StoredPumpingEntry): Record<string, unknown> {
+  return {
+    id: pumping.id,
+    baby_id: pumping.babyId,
+    side: pumping.side,
+    started_at: pumping.startedAt,
+    ended_at: pumping.endedAt,
+    duration_seconds: pumping.durationSeconds,
+    amount_ml: pumping.volumeMl,
+    notes: pumping.notes,
+    logged_by: pumping.loggedBy,
+  };
 }

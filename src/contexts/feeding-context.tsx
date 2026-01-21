@@ -1,15 +1,16 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
 import {
   FeedingStorageService,
   StoredFeedingEntry,
   CreateFeedingInput,
   UpdateFeedingInput,
 } from "@/services/feeding-storage";
-import type { BreastSide } from "@/constants/activities";
+import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
+import { RemoteChange } from "@/services/sync";
 
 export interface ActiveTimer {
   isRunning: boolean;
@@ -174,13 +175,46 @@ const FeedingContext = createContext<FeedingContextValue | null>(null);
 export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(feedingReducer, initialFeedingState);
   const { selectedBaby } = useBaby();
-  const syncContext = useSync();
-  const { user } = useAuth();
-  const syncStatusRef = useRef(syncContext.status);
+  const { subscribeToRemoteChanges, enqueueOperation } = useSync();
+  const { user: _user } = useAuth();
 
   useEffect(() => {
-    syncStatusRef.current = syncContext.status;
-  }, [syncContext.status]);
+    const unsubscribe = subscribeToRemoteChanges('feedings', (change: RemoteChange) => {
+      if (!selectedBaby) return;
+
+      const data = change.new || change.old;
+      if (data && data.baby_id !== selectedBaby.id) return;
+
+      switch (change.eventType) {
+        case 'INSERT':
+          if (change.new) {
+            dispatch({
+              type: "REMOTE_INSERT",
+              payload: transformFeedingFromRemote(change.new),
+            });
+          }
+          break;
+        case 'UPDATE':
+          if (change.new) {
+            dispatch({
+              type: "REMOTE_UPDATE",
+              payload: transformFeedingFromRemote(change.new),
+            });
+          }
+          break;
+        case 'DELETE':
+          if (change.old && change.old.id) {
+            dispatch({
+              type: "REMOTE_DELETE",
+              payload: change.old.id as string,
+            });
+          }
+          break;
+      }
+    });
+
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadFeedings = useCallback(async () => {
     if (!selectedBaby) {
@@ -321,8 +355,16 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const addFeeding = useCallback(async (input: CreateFeedingInput): Promise<StoredFeedingEntry> => {
     const feeding = await FeedingStorageService.addFeeding(input);
     dispatch({ type: "ADD_FEEDING", payload: feeding });
+
+    await enqueueOperation({
+      type: 'CREATE',
+      table: 'feedings',
+      entityId: feeding.id,
+      data: transformFeedingToSync(feeding),
+    });
+
     return feeding;
-  }, []);
+  }, [enqueueOperation]);
 
   const updateFeeding = useCallback(async (
     feedingId: string,
@@ -337,9 +379,16 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     );
     if (updated) {
       dispatch({ type: "UPDATE_FEEDING", payload: updated });
+
+      await enqueueOperation({
+        type: 'UPDATE',
+        table: 'feedings',
+        entityId: feedingId,
+        data: transformFeedingToSync(updated),
+      });
     }
     return updated;
-  }, [selectedBaby]);
+  }, [selectedBaby, enqueueOperation]);
 
   const deleteFeeding = useCallback(async (feedingId: string): Promise<boolean> => {
     if (!selectedBaby) return false;
@@ -347,9 +396,16 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     const result = await FeedingStorageService.deleteFeeding(selectedBaby.id, feedingId);
     if (result) {
       dispatch({ type: "DELETE_FEEDING", payload: feedingId });
+
+      await enqueueOperation({
+        type: 'DELETE',
+        table: 'feedings',
+        entityId: feedingId,
+        data: null,
+      });
     }
     return result;
-  }, [selectedBaby]);
+  }, [selectedBaby, enqueueOperation]);
 
   const getLastFeeding = useCallback((): StoredFeedingEntry | null => {
     if (state.feedings.length === 0) return null;
@@ -386,4 +442,50 @@ export function useFeeding(): FeedingContextValue {
     throw new Error("useFeeding must be used within a FeedingProvider");
   }
   return context;
+}
+
+function transformFeedingFromRemote(data: Record<string, unknown>): StoredFeedingEntry {
+  return {
+    id: data.id as string,
+    babyId: data.baby_id as string,
+    type: data.type as FeedingType,
+    side: data.side as BreastSide | undefined,
+    lastFinishedSide: data.last_finished_side as BreastSide | undefined,
+    startedAt: data.started_at as string,
+    endedAt: data.ended_at as string | undefined,
+    durationSeconds: data.duration_seconds as number | undefined,
+    leftDurationSeconds: data.left_duration_seconds as number | undefined,
+    rightDurationSeconds: data.right_duration_seconds as number | undefined,
+    amountMl: data.amount_ml as number | undefined,
+    contentType: data.content_type as BottleContentType | undefined,
+    foodType: data.food_type as string | undefined,
+    amount: data.amount as SolidAmount | undefined,
+    reaction: data.reaction as SolidReaction | undefined,
+    notes: data.notes as string | undefined,
+    loggedBy: data.logged_by as string | undefined,
+    createdAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: (data.updated_at as string) || new Date().toISOString(),
+  };
+}
+
+function transformFeedingToSync(feeding: StoredFeedingEntry): Record<string, unknown> {
+  return {
+    id: feeding.id,
+    baby_id: feeding.babyId,
+    type: feeding.type,
+    side: feeding.side,
+    last_finished_side: feeding.lastFinishedSide,
+    started_at: feeding.startedAt,
+    ended_at: feeding.endedAt,
+    duration_seconds: feeding.durationSeconds,
+    left_duration_seconds: feeding.leftDurationSeconds,
+    right_duration_seconds: feeding.rightDurationSeconds,
+    amount_ml: feeding.amountMl,
+    content_type: feeding.contentType,
+    food_type: feeding.foodType,
+    amount: feeding.amount,
+    reaction: feeding.reaction,
+    notes: feeding.notes,
+    logged_by: feeding.loggedBy,
+  };
 }

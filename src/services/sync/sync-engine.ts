@@ -16,6 +16,11 @@ interface ValidationResult {
   errors: string[];
 }
 
+export interface SyncAuthContext {
+  householdId: string;
+  userId: string;
+}
+
 export class SyncEngine {
   private queue: SyncQueue;
   private conflictResolver: ConflictResolver;
@@ -26,6 +31,9 @@ export class SyncEngine {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private quarantined: QueuedOperation[] = [];
   private processedOperationIds: Set<string> = new Set();
+  private authContext: SyncAuthContext | null = null;
+  private isSyncing = false;
+  private pendingSync = false;
 
   constructor(config: Partial<SyncEngineConfig> = {}) {
     this.queue = new SyncQueue();
@@ -38,6 +46,21 @@ export class SyncEngine {
       error: null,
       isConnected: false,
     };
+  }
+
+  setAuthContext(context: SyncAuthContext): void {
+    this.authContext = context;
+  }
+
+  getAuthContext(): SyncAuthContext | null {
+    return this.authContext;
+  }
+
+  private ensureAuthContext(): SyncAuthContext {
+    if (!this.authContext) {
+      throw new Error('Sync auth context not set. Call setAuthContext first.');
+    }
+    return this.authContext;
   }
 
   async initialize(): Promise<void> {
@@ -63,12 +86,12 @@ export class SyncEngine {
       clearTimeout(this.debounceTimer);
     }
 
-    this.debounceTimer = setTimeout(async () => {
-      this.updateState({
-        isConnected: isOnline,
-        status: isOnline ? 'online' : 'offline',
-      });
+    this.updateState({
+      isConnected: isOnline,
+      status: isOnline && !this.isSyncing ? 'online' : (isOnline ? 'syncing' : 'offline'),
+    });
 
+    this.debounceTimer = setTimeout(async () => {
       if (isOnline && this.queue.getCount() > 0) {
         await this.sync();
       }
@@ -80,39 +103,71 @@ export class SyncEngine {
       return;
     }
 
+    if (this.isSyncing) {
+      this.pendingSync = true;
+      return;
+    }
+
+    this.isSyncing = true;
     this.updateState({ status: 'syncing', error: null });
 
     let retryCount = 0;
     const maxRetries = this.config.maxRetries;
 
-    while (retryCount < maxRetries) {
-      try {
-        await this.pullChanges();
-        await this.pushChanges();
+    try {
+      while (retryCount < maxRetries) {
+        try {
+          await this.pullChanges();
+          await this.pushChanges();
 
-        this.updateState({
-          status: 'online',
-          lastSyncedAt: new Date().toISOString(),
-          pendingCount: this.queue.getCount(),
-        });
-        return;
-      } catch (error) {
-        retryCount++;
-        if (retryCount >= maxRetries) {
           this.updateState({
-            status: 'error',
-            error: error instanceof Error ? error.message : 'Sync failed',
+            status: 'online',
+            lastSyncedAt: new Date().toISOString(),
+            pendingCount: this.queue.getCount(),
           });
-          throw error;
+
+          this.isSyncing = false;
+
+          if (this.pendingSync) {
+            this.pendingSync = false;
+            await this.sync();
+          }
+          return;
+        } catch (error) {
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            this.updateState({
+              status: 'error',
+              error: error instanceof Error ? error.message : 'Sync failed',
+            });
+            throw error;
+          }
+          await this.delay(this.queue.calculateBackoff(retryCount));
         }
-        await this.delay(this.queue.calculateBackoff(retryCount));
       }
+    } finally {
+      this.isSyncing = false;
     }
   }
 
   async enqueueOperation(operation: QueuedOperation): Promise<void> {
+    const authContext = this.ensureAuthContext();
+
+    if (!operation.id) {
+      operation.id = this.generateOperationId();
+    }
+
     if (this.processedOperationIds.has(operation.id)) {
       return;
+    }
+
+    const validation = this.validateOperation(operation);
+    if (!validation.valid) {
+      throw new Error(`Invalid operation: ${validation.errors.join(', ')}`);
+    }
+
+    if (operation.data?.householdId && operation.data.householdId !== authContext.householdId) {
+      throw new Error('Cannot enqueue operation for a different household');
     }
 
     this.processedOperationIds.add(operation.id);
@@ -123,6 +178,10 @@ export class SyncEngine {
     if (this.state.isConnected) {
       this.handleNetworkChange(true);
     }
+  }
+
+  private generateOperationId(): string {
+    return `op-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
   validateOperation(operation: QueuedOperation): ValidationResult {
@@ -136,12 +195,24 @@ export class SyncEngine {
       errors.push('Entity ID is required');
     }
 
+    if (!operation.table) {
+      errors.push('Table name is required');
+    }
+
+    if (!operation.type) {
+      errors.push('Operation type is required');
+    }
+
     if (operation.type === 'CREATE' && !operation.data) {
       errors.push('CREATE operations require data');
     }
 
     if (operation.type === 'CREATE' && operation.data && !operation.data.id) {
       errors.push('CREATE data must include id');
+    }
+
+    if (operation.type === 'UPDATE' && !operation.data) {
+      errors.push('UPDATE operations require data');
     }
 
     return {
@@ -234,6 +305,9 @@ export class SyncEngine {
     await this.queue.clear();
     this.quarantined = [];
     this.processedOperationIds.clear();
+    this.isSyncing = false;
+    this.pendingSync = false;
+    this.authContext = null;
     this.updateState({
       status: 'offline',
       pendingCount: 0,
@@ -246,10 +320,14 @@ export class SyncEngine {
   destroy(): void {
     if (this.networkUnsubscribe) {
       this.networkUnsubscribe();
+      this.networkUnsubscribe = null;
     }
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
     }
+    this.isSyncing = false;
+    this.pendingSync = false;
     this.listeners.clear();
   }
 }
