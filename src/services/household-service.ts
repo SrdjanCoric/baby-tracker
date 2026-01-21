@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { validateInviteCode, normalizeInviteCode } from "@/utils/inviteCode";
 
 export interface Household {
   id: string;
@@ -76,4 +77,44 @@ export async function regenerateInviteCode(
   }
 
   return { data: data as string, error: null };
+}
+
+export async function joinHouseholdViaInviteCode(
+  inviteCode: string
+): Promise<HouseholdResult<Household>> {
+  const validation = validateInviteCode(inviteCode);
+  if (!validation.isValid) {
+    return { data: null, error: validation.error ?? "inviteCodeInvalidChars" };
+  }
+
+  const normalizedCode = normalizeInviteCode(inviteCode);
+
+  const { data, error } = await supabase.rpc("join_household_by_invite_code", {
+    invite_code: normalizedCode,
+  });
+
+  if (error) {
+    if (error.message?.includes("not found")) {
+      return { data: null, error: "householdNotFound" };
+    }
+    if (error.message?.includes("already belongs")) {
+      return { data: null, error: "alreadyInHousehold" };
+    }
+    return { data: null, error: "joinFailed" };
+  }
+
+  const household = data as {
+    id: string;
+    invite_code: string;
+    created_at: string;
+  };
+
+  return {
+    data: {
+      id: household.id,
+      inviteCode: household.invite_code,
+      createdAt: household.created_at,
+    },
+    error: null,
+  };
 }
