@@ -175,7 +175,23 @@ export interface SignInValidationResult {
   normalizedEmail?: string;
 }
 
-export function sanitizeAuthError(error: Error | null, fallbackKey: string): string {
+type AuthErrorKey =
+  | "auth.invalidCredentials"
+  | "auth.emailNotConfirmed"
+  | "auth.tooManyAttempts"
+  | "auth.emailAlreadyExists"
+  | "auth.signInError"
+  | "auth.signUpError"
+  | "auth.googleSignInError"
+  | "auth.appleSignInError"
+  | "auth.magicLinkError"
+  | "errors.network"
+  | "errors.generic";
+
+export function sanitizeAuthError<T extends AuthErrorKey>(
+  error: Error | null,
+  fallbackKey: T
+): AuthErrorKey {
   if (!error) return fallbackKey;
 
   const message = error.message?.toLowerCase() ?? "";
