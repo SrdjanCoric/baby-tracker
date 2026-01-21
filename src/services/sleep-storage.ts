@@ -3,6 +3,7 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { SleepType } from "@/constants/activities";
+import { getUserScopedKey } from "./storage-prefix";
 
 const SLEEPS_KEY_PREFIX = "@sleeps:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_sleep_timer:";
@@ -50,27 +51,27 @@ function generateId(): string {
 }
 
 function getSleepsKey(babyId: string): string {
-  return `${SLEEPS_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${SLEEPS_KEY_PREFIX}${babyId}`);
 }
 
 function getActiveTimerKey(babyId: string): string {
-  return `${ACTIVE_TIMER_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${ACTIVE_TIMER_KEY_PREFIX}${babyId}`);
 }
 
 function getDailyGoalKey(babyId: string): string {
-  return `${DAILY_GOAL_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${DAILY_GOAL_KEY_PREFIX}${babyId}`);
 }
 
 function getCustomGoalKey(babyId: string): string {
-  return `${CUSTOM_GOAL_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${CUSTOM_GOAL_KEY_PREFIX}${babyId}`);
 }
 
 function getMilestoneCheckKey(babyId: string): string {
-  return `${MILESTONE_CHECK_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${MILESTONE_CHECK_KEY_PREFIX}${babyId}`);
 }
 
 function getDismissedMilestonesKey(babyId: string): string {
-  return `${DISMISSED_MILESTONES_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${DISMISSED_MILESTONES_KEY_PREFIX}${babyId}`);
 }
 
 function isToday(date: Date): boolean {

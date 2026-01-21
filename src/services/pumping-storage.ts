@@ -3,6 +3,7 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { BreastSide } from "@/constants/activities";
+import { getUserScopedKey } from "./storage-prefix";
 
 const PUMPINGS_KEY_PREFIX = "@pumpings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_pumping_timer:";
@@ -48,11 +49,11 @@ function generateId(): string {
 }
 
 function getPumpingsKey(babyId: string): string {
-  return `${PUMPINGS_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${PUMPINGS_KEY_PREFIX}${babyId}`);
 }
 
 function getActiveTimerKey(babyId: string): string {
-  return `${ACTIVE_TIMER_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${ACTIVE_TIMER_KEY_PREFIX}${babyId}`);
 }
 
 function isToday(date: Date): boolean {
