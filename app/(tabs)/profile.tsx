@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { useTheme } from "@/contexts";
+import { useTheme, useUnits } from "@/contexts";
 
 interface SettingsRowProps {
   icon: string;
@@ -78,6 +78,7 @@ const THEME_LABELS = {
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { preference } = useTheme();
+  const { unitSystem } = useUnits();
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
@@ -96,8 +97,8 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="📏"
             label={t("settings.units")}
-            value={t("settings.metric")}
-            onPress={() => {}}
+            value={unitSystem === "imperial" ? t("settings.imperial") : t("settings.metric")}
+            onPress={() => router.push("/settings/units")}
           />
           <SettingsDivider />
           <SettingsRow

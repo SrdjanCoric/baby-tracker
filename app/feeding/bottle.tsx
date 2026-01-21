@@ -3,8 +3,7 @@ import { Pressable, Text, TextInput, View, ScrollView, Keyboard } from "react-na
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useFeeding } from "@/contexts";
-import { useBaby } from "@/contexts";
+import { useFeeding, useBaby, useUnits } from "@/contexts";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import type { BottleContentType } from "@/constants/activities";
 
@@ -22,10 +21,11 @@ export default function BottleFeedingScreen() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { addFeeding } = useFeeding();
+  const { volumeUnit } = useUnits();
 
   const [contentType, setContentType] = useState<BottleContentType | null>(null);
   const [amountMl, setAmountMl] = useState<number | null>(null);
-  const [unit, setUnit] = useState<VolumeUnit>("oz");
+  const [unit, setUnit] = useState<VolumeUnit>(volumeUnit);
   const [inputValue, setInputValue] = useState("");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
