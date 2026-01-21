@@ -12,8 +12,9 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Clipboard from "expo-clipboard";
 import * as Sharing from "expo-sharing";
-import { useHousehold, useAuth } from "@/contexts";
+import { useHousehold, useAuth, useSync } from "@/contexts";
 import { formatInviteCodeForDisplay } from "@/utils/inviteCode";
+import { SyncStatusIndicator } from "@/components/SyncStatusIndicator";
 
 type HouseholdErrorKey =
   | "household.householdNotFound"
@@ -34,6 +35,7 @@ export default function HouseholdSettingsScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { household, members, isLoading, error, regenerateCode } = useHousehold();
+  const { status, pendingCount, retryFailedSync } = useSync();
   const [isCopied, setIsCopied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
@@ -97,6 +99,10 @@ export default function HouseholdSettingsScreen() {
     router.push("/settings/join-household");
   }, [router]);
 
+  const handleManageCaregivers = useCallback(() => {
+    router.push("/settings/caregivers");
+  }, [router]);
+
   const formattedCode = inviteCode
     ? formatInviteCodeForDisplay(inviteCode)
     : "----";
@@ -117,7 +123,15 @@ export default function HouseholdSettingsScreen() {
             {t("household.title")}
           </Text>
         </View>
-        <View className="w-touch" />
+        {isAuthenticated && (
+          <SyncStatusIndicator
+            status={status}
+            pendingCount={pendingCount}
+            onRetry={retryFailedSync}
+            testID="household-sync-status"
+          />
+        )}
+        {!isAuthenticated && <View className="w-touch" />}
       </View>
 
       {!isAuthenticated ? (
@@ -243,6 +257,21 @@ export default function HouseholdSettingsScreen() {
                   {t("common.noData")}
                 </Text>
               </View>
+            )}
+
+            {members.length > 0 && (
+              <Pressable
+                onPress={handleManageCaregivers}
+                className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle dark:border-border-dark-subtle active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+                accessibilityRole="button"
+              >
+                <Text className="text-base text-primary dark:text-primary-dark font-medium">
+                  {t("household.manageCaregivers")}
+                </Text>
+                <Text className="text-lg text-content-tertiary dark:text-content-dark-tertiary">
+                  ›
+                </Text>
+              </Pressable>
             )}
           </View>
 

@@ -1,11 +1,12 @@
 import "../global.css";
 import "../src/i18n";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, useTheme, useAuth } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, useTheme, useAuth, useSync } from "@/contexts";
 import { NightModeOverlay } from "@/components/NightModeOverlay";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -35,11 +36,36 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function OfflineBannerWrapper() {
+  const { status, pendingCount } = useSync();
+  const [isDismissed, setIsDismissed] = useState(false);
+  const isOffline = status === "offline";
+
+  useEffect(() => {
+    if (!isOffline) {
+      setIsDismissed(false);
+    }
+  }, [isOffline]);
+
+  if (!isOffline || isDismissed) {
+    return null;
+  }
+
+  return (
+    <OfflineBanner
+      pendingCount={pendingCount}
+      onDismiss={() => setIsDismissed(true)}
+      testID="offline-banner"
+    />
+  );
+}
+
 function AppContent() {
   const { isDark } = useTheme();
 
   return (
     <View className="flex-1">
+      <OfflineBannerWrapper />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
@@ -112,8 +138,6 @@ function AppContent() {
           options={{
             presentation: "modal",
             animation: "slide_from_bottom",
-            gestureEnabled: true,
-            gestureDirection: "vertical",
           }}
         />
       </Stack>
@@ -129,23 +153,25 @@ export default function RootLayout() {
       <AuthProvider>
         <AuthGuard>
           <HouseholdProvider>
-            <UnitProvider>
-              <BabyProvider>
-                <FeedingProvider>
-                  <SleepProvider>
-                    <DiaperProvider>
-                      <PumpingProvider>
-                        <GrowthProvider>
-                          <TummyTimeProvider>
-                            <AppContent />
-                          </TummyTimeProvider>
-                        </GrowthProvider>
-                      </PumpingProvider>
-                    </DiaperProvider>
-                  </SleepProvider>
-                </FeedingProvider>
-              </BabyProvider>
-            </UnitProvider>
+            <SyncProvider>
+              <UnitProvider>
+                <BabyProvider>
+                  <FeedingProvider>
+                    <SleepProvider>
+                      <DiaperProvider>
+                        <PumpingProvider>
+                          <GrowthProvider>
+                            <TummyTimeProvider>
+                              <AppContent />
+                            </TummyTimeProvider>
+                          </GrowthProvider>
+                        </PumpingProvider>
+                      </DiaperProvider>
+                    </SleepProvider>
+                  </FeedingProvider>
+                </BabyProvider>
+              </UnitProvider>
+            </SyncProvider>
           </HouseholdProvider>
         </AuthGuard>
       </AuthProvider>
