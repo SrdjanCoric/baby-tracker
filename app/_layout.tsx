@@ -17,9 +17,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const inAuthGroup = segments[0] === "auth";
 
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace("/auth/sign-in");
-    } else if (isAuthenticated && inAuthGroup) {
+    // Only redirect authenticated users away from auth screens
+    // Guest users can use the app without signing in
+    if (isAuthenticated && inAuthGroup) {
       router.replace("/(tabs)");
     }
   }, [isAuthenticated, isLoading, segments, router]);

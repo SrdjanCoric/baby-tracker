@@ -180,6 +180,10 @@ type AuthErrorKey =
   | "auth.emailNotConfirmed"
   | "auth.tooManyAttempts"
   | "auth.emailAlreadyExists"
+  | "auth.providerNotEnabled"
+  | "auth.providerNotSupported"
+  | "auth.oauthError"
+  | "auth.popupClosed"
   | "auth.signInError"
   | "auth.signUpError"
   | "auth.googleSignInError"
@@ -208,7 +212,19 @@ export function sanitizeAuthError<T extends AuthErrorKey>(
   if (message.includes("user already registered") || message.includes("already exists")) {
     return "auth.emailAlreadyExists";
   }
-  if (message.includes("network") || message.includes("fetch")) {
+  if (message.includes("provider is not enabled") || message.includes("provider not enabled")) {
+    return "auth.providerNotEnabled";
+  }
+  if (message.includes("provider is not supported") || message.includes("not supported") || message.includes("code 400")) {
+    return "auth.providerNotSupported";
+  }
+  if (message.includes("popup") && message.includes("closed")) {
+    return "auth.popupClosed";
+  }
+  if (message.includes("oauth") || message.includes("callback")) {
+    return "auth.oauthError";
+  }
+  if (message.includes("network") || message.includes("fetch") || message.includes("timeout")) {
     return "errors.network";
   }
 

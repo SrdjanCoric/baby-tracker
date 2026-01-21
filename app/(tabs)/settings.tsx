@@ -68,6 +68,10 @@ export default function SettingsScreen() {
     Linking.openURL("https://example.com/privacy");
   }, []);
 
+  const handleHouseholdPress = useCallback(() => {
+    router.push("/settings/household");
+  }, [router]);
+
   const getUnitDisplayValue = () => {
     return unitSystem === "imperial" ? t("settings.imperial") : t("settings.metric");
   };
@@ -94,6 +98,7 @@ export default function SettingsScreen() {
           <SettingsRow
             icon={"\u{1F3E0}"}
             label={t("household.title")}
+            onPress={handleHouseholdPress}
             isLast
           />
         </View>

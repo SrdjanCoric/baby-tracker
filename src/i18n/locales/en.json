@@ -26,7 +26,8 @@
     "stopTimer": "Stop Timer",
     "noBabySelected": "No baby selected",
     "notes": "Notes",
-    "optional": "Optional"
+    "optional": "Optional",
+    "ok": "OK"
   },
   "navigation": {
     "home": "Home",
@@ -396,7 +397,14 @@
     "regenerateFailed": "Could not generate new code",
     "inviteCodeRequired": "Please enter an invite code",
     "inviteCodeLength": "Invite code must be 8 characters",
-    "inviteCodeInvalidChars": "Invalid characters in code"
+    "inviteCodeInvalidChars": "Invalid characters in code",
+    "joinFailed": "Could not join household",
+    "alreadyInHousehold": "You already belong to a household with other members",
+    "joinSuccess": "Successfully joined household!",
+    "joining": "Joining household...",
+    "join": "Join",
+    "signInRequired": "Sign in to use Household",
+    "signInRequiredDescription": "Create an account to share baby tracking with other caregivers and sync across devices"
   },
   "auth": {
     "signIn": "Sign In",
@@ -437,6 +445,7 @@
     "passwordRequired": "Password is required",
     "invalidEmail": "Please enter a valid email",
     "passwordTooShort": "Password must be at least 8 characters",
+    "passwordRequirements": "At least 8 characters with uppercase, lowercase, and a number",
     "passwordsDoNotMatch": "Passwords do not match",
     "accountCreated": "Account created successfully!",
     "checkEmail": "Check your email to confirm your account",
@@ -448,6 +457,10 @@
     "emailNotConfirmed": "Please confirm your email address before signing in.",
     "tooManyAttempts": "Too many attempts. Please try again later.",
     "emailAlreadyExists": "An account with this email already exists.",
+    "providerNotEnabled": "This sign-in method is not available yet. Please use email or try another method.",
+    "providerNotSupported": "This sign-in method is not configured. Please use email or try another method.",
+    "oauthError": "Sign-in was interrupted. Please try again.",
+    "popupClosed": "Sign-in was cancelled. Please try again if you want to continue.",
     "googleSignInError": "Could not sign in with Google. Please try again.",
     "appleSignInError": "Could not sign in with Apple. Please try again.",
     "magicLinkError": "Could not send magic link. Please try again."

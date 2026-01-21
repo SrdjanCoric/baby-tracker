@@ -4,6 +4,7 @@ import {
   getHousehold,
   getHouseholdMembers,
   regenerateInviteCode,
+  joinHouseholdViaInviteCode,
   HouseholdMember,
 } from "./household-service";
 
@@ -171,6 +172,112 @@ describe("HouseholdService", () => {
 
       expect(result.data).toBeNull();
       expect(result.error).toBe("regenerateFailed");
+    });
+  });
+
+  describe("joinHouseholdViaInviteCode", () => {
+    it("should return household data on successful join", async () => {
+      const mockHousehold = {
+        id: "new-household-123",
+        invite_code: "ABCD2345",
+        created_at: "2024-01-01T00:00:00Z",
+      };
+
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: mockHousehold,
+        error: null,
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await joinHouseholdViaInviteCode("ABCD2345");
+
+      expect(result.data).toEqual({
+        id: "new-household-123",
+        inviteCode: "ABCD2345",
+        createdAt: "2024-01-01T00:00:00Z",
+      });
+      expect(result.error).toBeNull();
+      expect(supabase.rpc).toHaveBeenCalledWith("join_household_by_invite_code", {
+        invite_code: "ABCD2345",
+      });
+    });
+
+    it("should normalize invite code before calling RPC", async () => {
+      const mockHousehold = {
+        id: "household-123",
+        invite_code: "ABCD2345",
+        created_at: "2024-01-01T00:00:00Z",
+      };
+
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: mockHousehold,
+        error: null,
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      await joinHouseholdViaInviteCode("abcd-2345");
+
+      expect(supabase.rpc).toHaveBeenCalledWith("join_household_by_invite_code", {
+        invite_code: "ABCD2345",
+      });
+    });
+
+    it("should return validation error for empty code", async () => {
+      const result = await joinHouseholdViaInviteCode("");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("inviteCodeRequired");
+      expect(supabase.rpc).not.toHaveBeenCalled();
+    });
+
+    it("should return validation error for invalid code length", async () => {
+      const result = await joinHouseholdViaInviteCode("ABC");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("inviteCodeLength");
+      expect(supabase.rpc).not.toHaveBeenCalled();
+    });
+
+    it("should return validation error for invalid characters", async () => {
+      const result = await joinHouseholdViaInviteCode("ABCD0234");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("inviteCodeInvalidChars");
+      expect(supabase.rpc).not.toHaveBeenCalled();
+    });
+
+    it("should return error when household not found", async () => {
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: null,
+        error: { message: "Household not found", code: "P0001" },
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await joinHouseholdViaInviteCode("WXYZ9876");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("householdNotFound");
+    });
+
+    it("should return error when user already in household", async () => {
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: null,
+        error: { message: "User already belongs to a household", code: "P0002" },
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await joinHouseholdViaInviteCode("ABCD2345");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("alreadyInHousehold");
+    });
+
+    it("should return generic error on RPC failure", async () => {
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: null,
+        error: { message: "Network error" },
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await joinHouseholdViaInviteCode("ABCD2345");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("joinFailed");
     });
   });
 });

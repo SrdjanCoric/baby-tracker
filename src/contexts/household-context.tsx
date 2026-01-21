@@ -4,6 +4,7 @@ import {
   getHousehold,
   getHouseholdMembers,
   regenerateInviteCode,
+  joinHouseholdViaInviteCode,
   Household,
   HouseholdMember,
 } from "@/services/household-service";
@@ -22,12 +23,13 @@ export type HouseholdAction =
   | { type: "SET_ERROR"; payload: string }
   | { type: "CLEAR_ERROR" }
   | { type: "UPDATE_INVITE_CODE"; payload: string }
+  | { type: "JOIN_HOUSEHOLD"; payload: Household }
   | { type: "RESET" };
 
 export const initialHouseholdState: HouseholdState = {
   household: null,
   members: [],
-  isLoading: true,
+  isLoading: false,
   error: null,
 };
 
@@ -58,6 +60,13 @@ export function householdReducer(
         household: { ...state.household, inviteCode: action.payload },
       };
 
+    case "JOIN_HOUSEHOLD":
+      return {
+        ...state,
+        household: action.payload,
+        members: [],
+      };
+
     case "RESET":
       return initialHouseholdState;
 
@@ -69,6 +78,7 @@ export function householdReducer(
 interface HouseholdContextValue extends HouseholdState {
   refreshHousehold: () => Promise<void>;
   regenerateCode: () => Promise<boolean>;
+  joinHousehold: (inviteCode: string) => Promise<{ success: boolean; error: string | null }>;
 }
 
 const HouseholdContext = createContext<HouseholdContextValue | null>(null);
@@ -135,10 +145,35 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, [householdId]);
 
+  const joinHousehold = useCallback(async (inviteCode: string): Promise<{ success: boolean; error: string | null }> => {
+    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "CLEAR_ERROR" });
+
+    const result = await joinHouseholdViaInviteCode(inviteCode);
+
+    if (result.error) {
+      dispatch({ type: "SET_ERROR", payload: result.error });
+      dispatch({ type: "SET_LOADING", payload: false });
+      return { success: false, error: result.error };
+    }
+
+    if (result.data) {
+      dispatch({ type: "JOIN_HOUSEHOLD", payload: result.data });
+      const membersResult = await getHouseholdMembers(result.data.id);
+      if (membersResult.data) {
+        dispatch({ type: "SET_MEMBERS", payload: membersResult.data });
+      }
+    }
+
+    dispatch({ type: "SET_LOADING", payload: false });
+    return { success: true, error: null };
+  }, []);
+
   const value: HouseholdContextValue = {
     ...state,
     refreshHousehold,
     regenerateCode,
+    joinHousehold,
   };
 
   return (

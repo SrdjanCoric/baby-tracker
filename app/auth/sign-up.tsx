@@ -57,6 +57,7 @@ export default function SignUpScreen() {
       );
 
       if (error) {
+        console.error("Sign-up error:", error.message, error);
         const errorKey = sanitizeAuthError(error, "auth.signUpError");
         Alert.alert(t("common.error"), t(errorKey));
       } else {
@@ -78,8 +79,8 @@ export default function SignUpScreen() {
     router.back();
   }, [router]);
 
-  const handleGoBack = useCallback(() => {
-    router.back();
+  const handleContinueAsGuest = useCallback(() => {
+    router.replace("/(tabs)");
   }, [router]);
 
   return (
@@ -95,16 +96,9 @@ export default function SignUpScreen() {
         >
           <View className="flex-1 px-6 pt-4 pb-8">
             {/* Drag handle */}
-            <View className="items-center mb-4">
+            <View className="items-center mb-6">
               <View className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
             </View>
-
-            {/* Close button */}
-            <Pressable onPress={handleGoBack} className="mb-6 self-start">
-              <Text className="text-content-secondary dark:text-content-dark-secondary text-base">
-                {t("common.cancel")}
-              </Text>
-            </Pressable>
 
             <View className="mb-8">
               <Text className="text-3xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
@@ -120,9 +114,10 @@ export default function SignUpScreen() {
                 {t("auth.displayName")} ({t("common.optional")})
               </Text>
               <TextInput
-                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 py-4 text-base text-content-primary dark:text-content-dark-primary ${
+                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 text-base text-content-primary dark:text-content-dark-primary ${
                   errors.displayName ? "border-2 border-red-500" : ""
                 }`}
+                style={{ fontSize: 16, lineHeight: 20, paddingTop: 16, paddingBottom: 16 }}
                 placeholder={t("auth.displayNamePlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 value={displayName}
@@ -141,9 +136,10 @@ export default function SignUpScreen() {
                 {t("auth.email")}
               </Text>
               <TextInput
-                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 py-4 text-base text-content-primary dark:text-content-dark-primary ${
+                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 text-base text-content-primary dark:text-content-dark-primary ${
                   errors.email ? "border-2 border-red-500" : ""
                 }`}
+                style={{ fontSize: 16, lineHeight: 20, paddingTop: 16, paddingBottom: 16 }}
                 placeholder={t("auth.emailPlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 value={email}
@@ -163,9 +159,10 @@ export default function SignUpScreen() {
                 {t("auth.password")}
               </Text>
               <TextInput
-                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 py-4 text-base text-content-primary dark:text-content-dark-primary ${
+                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 text-base text-content-primary dark:text-content-dark-primary ${
                   errors.password ? "border-2 border-red-500" : ""
                 }`}
+                style={{ fontSize: 16, lineHeight: 20, paddingTop: 16, paddingBottom: 16 }}
                 placeholder={t("auth.passwordPlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 value={password}
@@ -174,6 +171,9 @@ export default function SignUpScreen() {
                 autoComplete="new-password"
                 textContentType="newPassword"
               />
+              <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary mt-1">
+                {t("auth.passwordRequirements")}
+              </Text>
               {errors.password && (
                 <Text className="text-red-500 text-sm mt-1">{errors.password}</Text>
               )}
@@ -184,9 +184,10 @@ export default function SignUpScreen() {
                 {t("auth.confirmPassword")}
               </Text>
               <TextInput
-                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 py-4 text-base text-content-primary dark:text-content-dark-primary ${
+                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 text-base text-content-primary dark:text-content-dark-primary ${
                   errors.confirmPassword ? "border-2 border-red-500" : ""
                 }`}
+                style={{ fontSize: 16, lineHeight: 20, paddingTop: 16, paddingBottom: 16 }}
                 placeholder={t("auth.confirmPasswordPlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 value={confirmPassword}
@@ -214,13 +215,30 @@ export default function SignUpScreen() {
               )}
             </Pressable>
 
-            <View className="flex-row justify-center">
+            <View className="flex-row justify-center mb-8">
               <Text className="text-content-secondary dark:text-content-dark-secondary">
                 {t("auth.hasAccount")}{" "}
               </Text>
               <Pressable onPress={handleGoToSignIn}>
                 <Text className="text-primary dark:text-primary-dark font-semibold">
                   {t("auth.signIn")}
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Continue as Guest - Prominent Section */}
+            <View className="mt-auto pt-4 border-t border-border-subtle dark:border-border-dark-subtle">
+              <View className="items-center mb-3">
+                <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary text-center">
+                  {t("auth.guestDescription")}
+                </Text>
+              </View>
+              <Pressable
+                onPress={handleContinueAsGuest}
+                className="bg-surface-card dark:bg-surface-dark-card border-2 border-primary dark:border-primary-dark rounded-xl py-4 items-center active:opacity-80"
+              >
+                <Text className="text-primary dark:text-primary-dark font-semibold text-base">
+                  {t("auth.continueAsGuest")}
                 </Text>
               </Pressable>
             </View>

@@ -26,6 +26,7 @@ type HouseholdAction =
   | { type: "SET_ERROR"; payload: string }
   | { type: "CLEAR_ERROR" }
   | { type: "UPDATE_INVITE_CODE"; payload: string }
+  | { type: "JOIN_HOUSEHOLD"; payload: Household }
   | { type: "RESET" };
 
 const initialHouseholdState: HouseholdState = {
@@ -60,6 +61,13 @@ function householdReducer(
       return {
         ...state,
         household: { ...state.household, inviteCode: action.payload },
+      };
+
+    case "JOIN_HOUSEHOLD":
+      return {
+        ...state,
+        household: action.payload,
+        members: [],
       };
 
     case "RESET":
@@ -198,6 +206,44 @@ describe("HouseholdContext", () => {
       const newState = householdReducer(state, action);
 
       expect(newState).toEqual(state);
+    });
+
+    describe("JOIN_HOUSEHOLD action", () => {
+      it("should set the new household on join", () => {
+        const newHousehold: Household = {
+          id: "new-household-456",
+          inviteCode: "WXYZ9876",
+          createdAt: "2024-02-01T00:00:00Z",
+        };
+        const action: HouseholdAction = {
+          type: "JOIN_HOUSEHOLD",
+          payload: newHousehold,
+        };
+        const newState = householdReducer(initialHouseholdState, action);
+
+        expect(newState.household).toEqual(newHousehold);
+      });
+
+      it("should replace existing household when joining new one", () => {
+        const state: HouseholdState = {
+          ...initialHouseholdState,
+          household: mockHousehold,
+          members: mockMembers,
+        };
+        const newHousehold: Household = {
+          id: "new-household-456",
+          inviteCode: "WXYZ9876",
+          createdAt: "2024-02-01T00:00:00Z",
+        };
+        const action: HouseholdAction = {
+          type: "JOIN_HOUSEHOLD",
+          payload: newHousehold,
+        };
+        const newState = householdReducer(state, action);
+
+        expect(newState.household).toEqual(newHousehold);
+        expect(newState.members).toEqual([]);
+      });
     });
   });
 });
