@@ -38,6 +38,16 @@ jest.mock("react-i18next", () => ({
         "settings.nightMode": "Night Mode",
         "settings.nightModeDesc": "Dim red light for nighttime",
         "settings.currentlyUsing": `Currently using: light`,
+        "settings.units": "Units",
+        "settings.metric": "Metric (kg, cm, ml)",
+        "settings.imperial": "Imperial (lbs, in, oz)",
+        "settings.about": "About",
+        "settings.version": "Version",
+        "settings.privacyPolicy": "Privacy Policy",
+        "settings.notifications": "Notifications",
+        "settings.export": "Export Data",
+        "baby.title": "Baby",
+        "household.title": "Household",
       };
       return translations[key] || key;
     },
@@ -58,6 +68,18 @@ jest.mock("react-native-reanimated", () => {
   Reanimated.default.call = () => {};
   return Reanimated;
 });
+
+jest.mock("@/contexts/unit-context", () => ({
+  useUnits: () => ({
+    unitSystem: "metric",
+    weightUnit: "kg",
+    heightUnit: "cm",
+    volumeUnit: "ml",
+    isLoading: false,
+    setUnitSystem: jest.fn(),
+  }),
+  UnitProvider: ({ children }) => children,
+}));
 
 global.console = {
   ...console,

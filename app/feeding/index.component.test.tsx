@@ -91,6 +91,14 @@ jest.mock("@/contexts", () => ({
   useBaby: () => ({
     selectedBaby: { id: "1", name: "Emma" },
   }),
+  useUnits: () => ({
+    unitSystem: "metric",
+    weightUnit: "kg",
+    heightUnit: "cm",
+    volumeUnit: "ml",
+    isLoading: false,
+    setUnitSystem: jest.fn(),
+  }),
 }));
 
 jest.mock("@/utils/time", () => ({
@@ -242,12 +250,12 @@ describe("FeedingScreen", () => {
       expect(screen.getAllByText("ml").length).toBeGreaterThan(0);
     });
 
-    it("renders quick amount buttons", () => {
+    it("renders quick amount buttons for ml", () => {
       render(<FeedingScreen />);
       fireEvent.press(screen.getByText("Bottle"));
-      expect(screen.getByText("1")).toBeTruthy();
-      expect(screen.getByText("2")).toBeTruthy();
-      expect(screen.getByText("3")).toBeTruthy();
+      expect(screen.getByText("30")).toBeTruthy();
+      expect(screen.getByText("60")).toBeTruthy();
+      expect(screen.getByText("90")).toBeTruthy();
     });
 
     it("shows validation when save without data", async () => {

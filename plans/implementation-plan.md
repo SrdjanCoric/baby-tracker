@@ -2317,10 +2317,10 @@ describe('SettingsScreen', () => {
 6. Add about/version info
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] All settings persist
-- [ ] Navigation to sub-screens works
-- [ ] Settings applied immediately
+- [x] All tests pass
+- [x] All settings persist
+- [x] Navigation to sub-screens works
+- [x] Settings applied immediately
 
 ---
 
