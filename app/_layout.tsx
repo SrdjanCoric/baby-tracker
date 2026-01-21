@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, useTheme, useAuth } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, useTheme, useAuth } from "@/contexts";
 import { NightModeOverlay } from "@/components/NightModeOverlay";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -128,23 +128,25 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <AuthGuard>
-          <UnitProvider>
-            <BabyProvider>
-              <FeedingProvider>
-                <SleepProvider>
-                  <DiaperProvider>
-                    <PumpingProvider>
-                      <GrowthProvider>
-                        <TummyTimeProvider>
-                          <AppContent />
-                        </TummyTimeProvider>
-                      </GrowthProvider>
-                    </PumpingProvider>
-                  </DiaperProvider>
-                </SleepProvider>
-              </FeedingProvider>
-            </BabyProvider>
-          </UnitProvider>
+          <HouseholdProvider>
+            <UnitProvider>
+              <BabyProvider>
+                <FeedingProvider>
+                  <SleepProvider>
+                    <DiaperProvider>
+                      <PumpingProvider>
+                        <GrowthProvider>
+                          <TummyTimeProvider>
+                            <AppContent />
+                          </TummyTimeProvider>
+                        </GrowthProvider>
+                      </PumpingProvider>
+                    </DiaperProvider>
+                  </SleepProvider>
+                </FeedingProvider>
+              </BabyProvider>
+            </UnitProvider>
+          </HouseholdProvider>
         </AuthGuard>
       </AuthProvider>
     </ThemeProvider>
