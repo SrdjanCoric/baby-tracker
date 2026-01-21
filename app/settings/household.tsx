@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Clipboard from "expo-clipboard";
 import * as Sharing from "expo-sharing";
-import { useHousehold } from "@/contexts";
+import { useHousehold, useAuth } from "@/contexts";
 import { formatInviteCodeForDisplay } from "@/utils/inviteCode";
 
 type HouseholdErrorKey =
@@ -32,11 +32,16 @@ const ERROR_TRANSLATIONS: Record<string, HouseholdErrorKey> = {
 export default function HouseholdSettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { household, members, isLoading, error, regenerateCode } = useHousehold();
   const [isCopied, setIsCopied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
   const inviteCode = household?.inviteCode ?? null;
+
+  const handleSignIn = useCallback(() => {
+    router.push("/auth/sign-in");
+  }, [router]);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -88,6 +93,10 @@ export default function HouseholdSettingsScreen() {
     );
   }, [regenerateCode, t]);
 
+  const handleJoinHousehold = useCallback(() => {
+    router.push("/settings/join-household");
+  }, [router]);
+
   const formattedCode = inviteCode
     ? formatInviteCodeForDisplay(inviteCode)
     : "----";
@@ -111,7 +120,25 @@ export default function HouseholdSettingsScreen() {
         <View className="w-touch" />
       </View>
 
-      {isLoading ? (
+      {!isAuthenticated ? (
+        <View className="flex-1 items-center justify-center px-8">
+          <Text className="text-6xl mb-4">🏠</Text>
+          <Text className="text-xl font-semibold text-content-primary dark:text-content-dark-primary mb-2 text-center">
+            {t("household.signInRequired")}
+          </Text>
+          <Text className="text-content-secondary dark:text-content-dark-secondary text-center mb-6">
+            {t("household.signInRequiredDescription")}
+          </Text>
+          <Pressable
+            onPress={handleSignIn}
+            className="bg-primary dark:bg-primary-dark px-8 py-4 rounded-xl active:opacity-80"
+          >
+            <Text className="text-white font-semibold text-base">
+              {t("auth.signIn")}
+            </Text>
+          </Pressable>
+        </View>
+      ) : isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
         </View>
@@ -217,6 +244,26 @@ export default function HouseholdSettingsScreen() {
                 </Text>
               </View>
             )}
+          </View>
+
+          {/* Join Another Household Section */}
+          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-6 mt-6">
+            <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
+              {t("household.joinHousehold")}
+            </Text>
+            <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mb-4">
+              {t("household.joinHouseholdDescription")}
+            </Text>
+            <Pressable
+              onPress={handleJoinHousehold}
+              className="bg-surface-secondary dark:bg-surface-dark-secondary py-3 rounded-lg items-center active:opacity-80"
+              accessibilityRole="button"
+              testID="join-household-button"
+            >
+              <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
+                {t("household.joinHousehold")}
+              </Text>
+            </Pressable>
           </View>
         </ScrollView>
       )}
