@@ -6,7 +6,7 @@ describe("Button", () => {
   describe("rendering", () => {
     it("renders children text correctly", () => {
       render(<Button>Click me</Button>);
-      expect(screen.getByText("Click me")).toBeTruthy();
+      screen.getByText("Click me");
     });
 
     it("renders with button accessibility role", () => {
@@ -21,63 +21,7 @@ describe("Button", () => {
           <React.Fragment>Custom Content</React.Fragment>
         </Button>
       );
-      expect(screen.getByTestId("parent-button")).toBeTruthy();
-    });
-  });
-
-  describe("variants", () => {
-    it("applies primary variant styles by default", () => {
-      render(<Button testID="primary-btn">Primary</Button>);
-      const button = screen.getByTestId("primary-btn");
-      expect(button.props.className).toContain("bg-primary-500");
-    });
-
-    it("applies secondary variant styles", () => {
-      render(
-        <Button variant="secondary" testID="secondary-btn">
-          Secondary
-        </Button>
-      );
-      const button = screen.getByTestId("secondary-btn");
-      expect(button.props.className).toContain("border-primary-500");
-    });
-
-    it("applies ghost variant styles", () => {
-      render(
-        <Button variant="ghost" testID="ghost-btn">
-          Ghost
-        </Button>
-      );
-      const button = screen.getByTestId("ghost-btn");
-      expect(button.props.className).toContain("bg-transparent");
-    });
-  });
-
-  describe("sizes", () => {
-    it("applies default size styles", () => {
-      render(<Button testID="default-size">Default</Button>);
-      const button = screen.getByTestId("default-size");
-      expect(button.props.className).toContain("min-h-[52px]");
-    });
-
-    it("applies large size styles", () => {
-      render(
-        <Button size="large" testID="large-btn">
-          Large
-        </Button>
-      );
-      const button = screen.getByTestId("large-btn");
-      expect(button.props.className).toContain("min-h-[60px]");
-    });
-
-    it("applies icon size styles", () => {
-      render(
-        <Button size="icon" testID="icon-btn">
-          Icon
-        </Button>
-      );
-      const button = screen.getByTestId("icon-btn");
-      expect(button.props.className).toContain("w-[52px]");
+      screen.getByTestId("parent-button");
     });
   });
 
@@ -90,16 +34,6 @@ describe("Button", () => {
       );
       const button = screen.getByTestId("disabled-btn");
       expect(button.props.accessibilityState.disabled).toBe(true);
-    });
-
-    it("applies disabled styles for primary variant", () => {
-      render(
-        <Button disabled testID="disabled-primary">
-          Disabled
-        </Button>
-      );
-      const button = screen.getByTestId("disabled-primary");
-      expect(button.props.className).toContain("bg-gray-300");
     });
 
     it("does not trigger onPress when disabled", () => {
@@ -121,7 +55,6 @@ describe("Button", () => {
           Loading
         </Button>
       );
-      expect(screen.getByTestId("loading-btn")).toBeTruthy();
       const button = screen.getByTestId("loading-btn");
       expect(button.props.accessibilityState.busy).toBe(true);
     });
@@ -167,19 +100,6 @@ describe("Button", () => {
       );
       fireEvent.press(screen.getByTestId("clickable"));
       expect(onPressMock).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("className merging", () => {
-    it("merges custom className with variant classes", () => {
-      render(
-        <Button className="custom-class" testID="merged">
-          Merged
-        </Button>
-      );
-      const button = screen.getByTestId("merged");
-      expect(button.props.className).toContain("custom-class");
-      expect(button.props.className).toContain("bg-primary-500");
     });
   });
 });

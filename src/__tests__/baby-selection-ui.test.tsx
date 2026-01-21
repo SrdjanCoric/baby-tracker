@@ -96,7 +96,7 @@ function TestBabySelection({ context, feedingsByBaby = {} }: TestComponentProps)
   );
 }
 
-describe("Baby Selection Integration", () => {
+describe("Baby Selection UI", () => {
   describe("Add first baby", () => {
     it("no babies → add → baby appears selected", async () => {
       const context = createMockBabyContext();
