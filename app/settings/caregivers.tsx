@@ -59,10 +59,33 @@ export default function CaregiversScreen() {
   }, [householdId]);
 
   useEffect(() => {
-    if (isAuthenticated && householdId) {
-      loadCaregivers();
+    if (!isAuthenticated || !householdId) return;
+
+    const currentHouseholdId = householdId;
+    let cancelled = false;
+
+    async function fetchCaregivers() {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await CaregiverService.getCaregiversWithStats(currentHouseholdId);
+
+      if (!cancelled) {
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setCaregivers(result.data ?? []);
+        }
+        setIsLoading(false);
+      }
     }
-  }, [isAuthenticated, householdId, loadCaregivers]);
+
+    fetchCaregivers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, householdId]);
 
   const handleBack = useCallback(() => {
     router.back();

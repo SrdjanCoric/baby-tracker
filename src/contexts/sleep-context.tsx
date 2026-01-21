@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
 import {
   SleepStorageService,
   StoredSleepEntry,
@@ -9,6 +9,7 @@ import type { SleepType } from "@/constants/activities";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
+import { RemoteChange } from "@/services/sync";
 import {
   SleepAgeGroup,
   GoalSource,
@@ -176,13 +177,29 @@ const SleepContext = createContext<SleepContextValue | null>(null);
 export function SleepProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(sleepReducer, initialSleepState);
   const { selectedBaby } = useBaby();
-  const syncContext = useSync();
-  const { user } = useAuth();
-  const syncStatusRef = useRef(syncContext.status);
+  const { subscribeToRemoteChanges, enqueueOperation } = useSync();
+  const { user: _user } = useAuth();
 
   useEffect(() => {
-    syncStatusRef.current = syncContext.status;
-  }, [syncContext.status]);
+    const unsubscribe = subscribeToRemoteChanges('sleep_sessions', (change: RemoteChange) => {
+      if (!selectedBaby) return;
+      const data = change.new || change.old;
+      if (data && data.baby_id !== selectedBaby.id) return;
+
+      switch (change.eventType) {
+        case 'INSERT':
+          if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformSleepFromRemote(change.new) });
+          break;
+        case 'UPDATE':
+          if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformSleepFromRemote(change.new) });
+          break;
+        case 'DELETE':
+          if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
+          break;
+      }
+    });
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadSleeps = useCallback(async () => {
     if (!selectedBaby) {
@@ -303,8 +320,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const addSleep = useCallback(async (input: CreateSleepInput): Promise<StoredSleepEntry> => {
     const sleep = await SleepStorageService.addSleep(input);
     dispatch({ type: "ADD_SLEEP", payload: sleep });
+    await enqueueOperation({ type: 'CREATE', table: 'sleep_sessions', entityId: sleep.id, data: transformSleepToSync(sleep) });
     return sleep;
-  }, []);
+  }, [enqueueOperation]);
 
   const updateSleep = useCallback(async (
     sleepId: string,
@@ -319,9 +337,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     );
     if (updated) {
       dispatch({ type: "UPDATE_SLEEP", payload: updated });
+      await enqueueOperation({ type: 'UPDATE', table: 'sleep_sessions', entityId: sleepId, data: transformSleepToSync(updated) });
     }
     return updated;
-  }, [selectedBaby]);
+  }, [selectedBaby, enqueueOperation]);
 
   const deleteSleep = useCallback(async (sleepId: string): Promise<boolean> => {
     if (!selectedBaby) return false;
@@ -329,9 +348,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const result = await SleepStorageService.deleteSleep(selectedBaby.id, sleepId);
     if (result) {
       dispatch({ type: "DELETE_SLEEP", payload: sleepId });
+      await enqueueOperation({ type: 'DELETE', table: 'sleep_sessions', entityId: sleepId, data: null });
     }
     return result;
-  }, [selectedBaby]);
+  }, [selectedBaby, enqueueOperation]);
 
   const getLastSleep = useCallback((): StoredSleepEntry | null => {
     if (state.sleeps.length === 0) return null;
@@ -445,4 +465,32 @@ export function useSleep(): SleepContextValue {
     throw new Error("useSleep must be used within a SleepProvider");
   }
   return context;
+}
+
+function transformSleepFromRemote(data: Record<string, unknown>): StoredSleepEntry {
+  return {
+    id: data.id as string,
+    babyId: data.baby_id as string,
+    type: data.type as SleepType,
+    startedAt: data.started_at as string,
+    endedAt: data.ended_at as string | undefined,
+    durationSeconds: data.duration_seconds as number | undefined,
+    notes: data.notes as string | undefined,
+    loggedBy: data.logged_by as string | undefined,
+    createdAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: (data.updated_at as string) || new Date().toISOString(),
+  };
+}
+
+function transformSleepToSync(sleep: StoredSleepEntry): Record<string, unknown> {
+  return {
+    id: sleep.id,
+    baby_id: sleep.babyId,
+    type: sleep.type,
+    started_at: sleep.startedAt,
+    ended_at: sleep.endedAt,
+    duration_seconds: sleep.durationSeconds,
+    notes: sleep.notes,
+    logged_by: sleep.loggedBy,
+  };
 }

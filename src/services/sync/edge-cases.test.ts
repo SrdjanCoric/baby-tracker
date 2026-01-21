@@ -27,6 +27,7 @@ describe('Edge Cases', () => {
       vi.clearAllMocks();
       vi.useFakeTimers();
       syncEngine = new SyncEngine();
+      syncEngine.setAuthContext({ householdId: 'test-household', userId: 'test-user' });
     });
 
     afterEach(() => {

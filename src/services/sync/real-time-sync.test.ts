@@ -16,10 +16,12 @@ vi.mock('@/services/supabase', () => ({
 describe('RealTimeSync', () => {
   let realTimeSync: RealTimeSync;
   const mockHouseholdId = 'household-123';
+  const mockUserId = 'user-123';
 
   beforeEach(() => {
     vi.clearAllMocks();
     realTimeSync = new RealTimeSync();
+    realTimeSync.setAuthContext({ householdId: mockHouseholdId, userId: mockUserId });
   });
 
   afterEach(() => {
@@ -48,6 +50,7 @@ describe('RealTimeSync', () => {
       } as never);
 
       await realTimeSync.subscribeToHousehold(mockHouseholdId);
+      realTimeSync.setAuthContext({ householdId: 'new-household-456', userId: mockUserId });
       await realTimeSync.subscribeToHousehold('new-household-456');
 
       expect(unsubscribeFn).toHaveBeenCalled();

@@ -78,7 +78,12 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
       if (this.isRetryableError(error)) {
         throw error;
       }
-      await transaction.complete();
+
+      console.error('[PowerSync] Non-retryable error during upload:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        operationCount: transaction.crud.length,
+      });
+
       throw error;
     }
   }
@@ -155,17 +160,69 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
   }
 
   private isRetryableError(error: unknown): boolean {
+    if (!error) return false;
+
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      return true;
+    }
+
     if (error instanceof Error) {
       const message = error.message.toLowerCase();
-      return (
-        message.includes('network') ||
-        message.includes('timeout') ||
-        message.includes('connection') ||
-        message.includes('502') ||
-        message.includes('503') ||
-        message.includes('504')
-      );
+
+      const networkPatterns = [
+        'network',
+        'timeout',
+        'connection',
+        'econnrefused',
+        'enotfound',
+        'socket',
+        'aborted',
+      ];
+
+      if (networkPatterns.some(pattern => message.includes(pattern))) {
+        return true;
+      }
+
+      const retryableStatusCodes = ['502', '503', '504', '429'];
+      if (retryableStatusCodes.some(code => message.includes(code))) {
+        return true;
+      }
+
+      const nonRetryablePatterns = [
+        'permission denied',
+        'unauthorized',
+        'forbidden',
+        'not found',
+        'invalid',
+        'constraint',
+        'duplicate',
+        '401',
+        '403',
+        '404',
+        '409',
+        '422',
+      ];
+
+      if (nonRetryablePatterns.some(pattern => message.includes(pattern))) {
+        return false;
+      }
     }
+
+    const errorWithCode = error as { code?: string | number; status?: number };
+    if (errorWithCode.status) {
+      const status = errorWithCode.status;
+      if (status >= 500 && status < 600 && status !== 501) {
+        return true;
+      }
+      if (status === 429) {
+        return true;
+      }
+    }
+
+    if (errorWithCode.code === 'ETIMEDOUT' || errorWithCode.code === 'ECONNRESET') {
+      return true;
+    }
+
     return false;
   }
 }

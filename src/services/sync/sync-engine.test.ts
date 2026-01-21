@@ -25,6 +25,7 @@ describe('SyncEngine', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     syncEngine = new SyncEngine();
+    syncEngine.setAuthContext({ householdId: 'test-household', userId: 'test-user' });
   });
 
   afterEach(() => {

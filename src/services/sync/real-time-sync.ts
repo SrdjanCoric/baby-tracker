@@ -8,6 +8,11 @@ export interface RemoteChange {
   old: Record<string, unknown> | null;
 }
 
+export interface RealTimeSyncContext {
+  householdId: string;
+  userId: string;
+}
+
 type RemoteChangeListener = (change: RemoteChange) => void;
 type ConnectionChangeListener = (connected: boolean) => void;
 type ErrorListener = (error: Error) => void;
@@ -30,9 +35,21 @@ export class RealTimeSync {
   private changeListeners: Set<RemoteChangeListener> = new Set();
   private connectionListeners: Set<ConnectionChangeListener> = new Set();
   private errorListeners: Set<ErrorListener> = new Set();
+  private authContext: RealTimeSyncContext | null = null;
 
   constructor() {
     this.deviceId = this.generateDeviceId();
+  }
+
+  setAuthContext(context: RealTimeSyncContext): void {
+    this.authContext = context;
+  }
+
+  private ensureAuthContext(): RealTimeSyncContext {
+    if (!this.authContext) {
+      throw new Error('RealTimeSync auth context not set. Call setAuthContext first.');
+    }
+    return this.authContext;
   }
 
   private generateDeviceId(): string {
@@ -48,6 +65,12 @@ export class RealTimeSync {
   }
 
   async subscribeToHousehold(householdId: string): Promise<void> {
+    const authContext = this.ensureAuthContext();
+
+    if (householdId !== authContext.householdId) {
+      throw new Error('Cannot subscribe to a household the user does not belong to');
+    }
+
     if (this.currentHouseholdId === householdId && this.subscription) {
       return;
     }
@@ -106,7 +129,29 @@ export class RealTimeSync {
       return;
     }
 
+    if (!this.verifyChangeOwnership(change)) {
+      console.warn(`Received change for different household, ignoring: ${table}`);
+      return;
+    }
+
     this.notifyChangeListeners(change);
+  }
+
+  private verifyChangeOwnership(change: RemoteChange): boolean {
+    if (!this.authContext || !this.currentHouseholdId) {
+      return false;
+    }
+
+    const data = change.new || change.old;
+    if (!data) {
+      return false;
+    }
+
+    if (change.table === 'babies') {
+      return data.household_id === this.authContext.householdId;
+    }
+
+    return true;
   }
 
   private isEchoFromSameDevice(change: RemoteChange): boolean {
@@ -172,6 +217,7 @@ export class RealTimeSync {
     this.changeListeners.clear();
     this.connectionListeners.clear();
     this.errorListeners.clear();
+    this.authContext = null;
   }
 
   __simulateRemoteChange(change: RemoteChange): void {

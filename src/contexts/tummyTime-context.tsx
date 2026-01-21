@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
 import {
   TummyTimeStorageService,
   StoredTummyTimeEntry,
@@ -8,6 +8,7 @@ import {
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
+import { RemoteChange } from "@/services/sync";
 import {
   AgeGroup,
   GoalSource,
@@ -163,13 +164,29 @@ const TummyTimeContext = createContext<TummyTimeContextValue | null>(null);
 export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(tummyTimeReducer, initialTummyTimeState);
   const { selectedBaby } = useBaby();
-  const syncContext = useSync();
-  const { user } = useAuth();
-  const syncStatusRef = useRef(syncContext.status);
+  const { subscribeToRemoteChanges, enqueueOperation } = useSync();
+  const { user: _user } = useAuth();
 
   useEffect(() => {
-    syncStatusRef.current = syncContext.status;
-  }, [syncContext.status]);
+    const unsubscribe = subscribeToRemoteChanges('tummy_time_sessions', (change: RemoteChange) => {
+      if (!selectedBaby) return;
+      const data = change.new || change.old;
+      if (data && data.baby_id !== selectedBaby.id) return;
+
+      switch (change.eventType) {
+        case 'INSERT':
+          if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformTummyTimeFromRemote(change.new) });
+          break;
+        case 'UPDATE':
+          if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformTummyTimeFromRemote(change.new) });
+          break;
+        case 'DELETE':
+          if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
+          break;
+      }
+    });
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadTummyTimes = useCallback(async () => {
     if (!selectedBaby) {
@@ -268,9 +285,10 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     async (input: CreateTummyTimeInput): Promise<StoredTummyTimeEntry> => {
       const tummyTime = await TummyTimeStorageService.addTummyTime(input);
       dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
+      await enqueueOperation({ type: 'CREATE', table: 'tummy_time_sessions', entityId: tummyTime.id, data: transformTummyTimeToSync(tummyTime) });
       return tummyTime;
     },
-    []
+    [enqueueOperation]
   );
 
   const updateTummyTime = useCallback(
@@ -287,10 +305,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       );
       if (updated) {
         dispatch({ type: "UPDATE_TUMMY_TIME", payload: updated });
+        await enqueueOperation({ type: 'UPDATE', table: 'tummy_time_sessions', entityId: tummyTimeId, data: transformTummyTimeToSync(updated) });
       }
       return updated;
     },
-    [selectedBaby]
+    [selectedBaby, enqueueOperation]
   );
 
   const deleteTummyTime = useCallback(
@@ -303,10 +322,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       );
       if (result) {
         dispatch({ type: "DELETE_TUMMY_TIME", payload: tummyTimeId });
+        await enqueueOperation({ type: 'DELETE', table: 'tummy_time_sessions', entityId: tummyTimeId, data: null });
       }
       return result;
     },
-    [selectedBaby]
+    [selectedBaby, enqueueOperation]
   );
 
   const getLastTummyTime = useCallback((): StoredTummyTimeEntry | null => {
@@ -429,4 +449,30 @@ export function useTummyTime(): TummyTimeContextValue {
     throw new Error("useTummyTime must be used within a TummyTimeProvider");
   }
   return context;
+}
+
+function transformTummyTimeFromRemote(data: Record<string, unknown>): StoredTummyTimeEntry {
+  return {
+    id: data.id as string,
+    babyId: data.baby_id as string,
+    startedAt: data.started_at as string,
+    endedAt: data.ended_at as string | undefined,
+    durationSeconds: data.duration_seconds as number | undefined,
+    notes: data.notes as string | undefined,
+    loggedBy: data.logged_by as string | undefined,
+    createdAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: (data.updated_at as string) || new Date().toISOString(),
+  };
+}
+
+function transformTummyTimeToSync(tummyTime: StoredTummyTimeEntry): Record<string, unknown> {
+  return {
+    id: tummyTime.id,
+    baby_id: tummyTime.babyId,
+    started_at: tummyTime.startedAt,
+    ended_at: tummyTime.endedAt,
+    duration_seconds: tummyTime.durationSeconds,
+    notes: tummyTime.notes,
+    logged_by: tummyTime.loggedBy,
+  };
 }
