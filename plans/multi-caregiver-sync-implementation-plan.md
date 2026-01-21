@@ -523,30 +523,30 @@ This plan implements 4 interconnected features as a single unit:
 
 ### 5.1 RLS Policy Audit
 
-- [ ] Verify all activity tables have household-scoped RLS
-- [ ] Test cross-household access is blocked (SELECT)
-- [ ] Test cross-household access is blocked (INSERT)
-- [ ] Test cross-household access is blocked (UPDATE)
-- [ ] Test cross-household access is blocked (DELETE)
-- [ ] Verify PowerSync sync rules mirror RLS policies
+- [x] Verify all activity tables have household-scoped RLS
+- [x] Test cross-household access is blocked (SELECT)
+- [x] Test cross-household access is blocked (INSERT)
+- [x] Test cross-household access is blocked (UPDATE)
+- [x] Test cross-household access is blocked (DELETE)
+- [x] Verify PowerSync sync rules mirror RLS policies
 
 ### 5.2 Auth Token Security
 
-- [ ] Verify tokens are not logged or exposed
-- [ ] Verify token refresh happens before expiration
-- [ ] Verify data cleared on auth failure
+- [x] Verify tokens are not logged or exposed
+- [x] Verify token refresh happens before expiration
+- [x] Verify data cleared on auth failure
 
 ### 5.3 Invite Code Security
 
-- [ ] Test rate limiting on invalid attempts
-- [ ] Verify old codes invalidated on regeneration
-- [ ] Test case-insensitive lookup works correctly
+- [x] Test rate limiting on invalid attempts
+- [x] Verify old codes invalidated on regeneration
+- [x] Test case-insensitive lookup works correctly
 
 ### 5.4 Caregiver Removal Security
 
-- [ ] Test only owner can remove caregivers
-- [ ] Test owner cannot remove self
-- [ ] Test removed caregiver loses access immediately
+- [x] Test only owner can remove caregivers
+- [x] Test owner cannot remove self
+- [x] Test removed caregiver loses access immediately
 
 ---
 
