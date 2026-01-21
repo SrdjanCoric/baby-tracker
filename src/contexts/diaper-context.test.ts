@@ -2,7 +2,18 @@
  * DiaperContext reducer tests
  * TDD: Write tests FIRST before implementation
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("./sync-context", () => ({
+  useSync: () => ({ status: "online", pendingCount: 0 }),
+}));
+
+vi.mock("./auth-context", () => ({
+  useAuth: () => ({ user: null }),
+}));
+
+vi.mock("@/services/sync", () => ({}));
+
 import { diaperReducer, initialDiaperState, DiaperState, DiaperAction } from "./diaper-context";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
 

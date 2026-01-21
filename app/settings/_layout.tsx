@@ -6,6 +6,9 @@ export default function SettingsLayout() {
       <Stack.Screen name="theme" />
       <Stack.Screen name="units" />
       <Stack.Screen name="about" />
+      <Stack.Screen name="household" />
+      <Stack.Screen name="caregivers" />
+      <Stack.Screen name="join-household" />
     </Stack>
   );
 }

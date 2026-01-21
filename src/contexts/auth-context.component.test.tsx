@@ -1,3 +1,5 @@
+jest.unmock("@/contexts/auth-context");
+
 import React, { useEffect } from "react";
 import { render, screen, waitFor, act } from "@testing-library/react-native";
 import { Text, View } from "react-native";
@@ -100,6 +102,11 @@ jest.mock("@/constants/auth", () => ({
   AUTH_CONFIG: {
     OAUTH_REDIRECT_URI: "babytracker://auth/callback",
   },
+}));
+
+const mockClearSyncData = jest.fn().mockResolvedValue(undefined);
+jest.mock("@/contexts/sync-context", () => ({
+  clearSyncData: () => mockClearSyncData(),
 }));
 
 import { AuthProvider, useAuth } from "./auth-context";

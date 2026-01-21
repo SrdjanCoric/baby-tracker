@@ -16,6 +16,7 @@ export interface StoredDiaperEntry {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  loggedBy?: string;
 }
 
 export interface CreateDiaperInput {
