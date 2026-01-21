@@ -27,6 +27,7 @@ interface TimelineEntry {
   title: string;
   subtitle: string;
   date: Date;
+  loggedBy?: string;
 }
 
 interface GroupedEntries {
@@ -143,6 +144,7 @@ export default function TimelineScreen() {
       title,
       subtitle,
       date,
+      loggedBy: feeding.loggedBy,
     };
   }, [t]);
 
@@ -163,6 +165,7 @@ export default function TimelineScreen() {
       title,
       subtitle,
       date,
+      loggedBy: sleep.loggedBy,
     };
   }, [t]);
 
@@ -190,6 +193,7 @@ export default function TimelineScreen() {
       title,
       subtitle,
       date,
+      loggedBy: diaper.loggedBy,
     };
   }, [t]);
 
@@ -220,6 +224,7 @@ export default function TimelineScreen() {
       title,
       subtitle,
       date,
+      loggedBy: pumping.loggedBy,
     };
   }, [t]);
 
@@ -241,6 +246,7 @@ export default function TimelineScreen() {
       title,
       subtitle,
       date,
+      loggedBy: growth.loggedBy,
     };
   }, [t]);
 
@@ -261,6 +267,7 @@ export default function TimelineScreen() {
       title,
       subtitle,
       date,
+      loggedBy: tummyTime.loggedBy,
     };
   }, [t]);
 
@@ -296,6 +303,7 @@ export default function TimelineScreen() {
                     time={item.time}
                     title={item.title}
                     subtitle={item.subtitle}
+                    loggedBy={item.loggedBy}
                     onPress={() => handleEditEntry(item.activity, item.id)}
                   />
                   {index < group.entries.length - 1 && <TimelineDivider />}

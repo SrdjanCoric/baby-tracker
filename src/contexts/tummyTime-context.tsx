@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   TummyTimeStorageService,
   StoredTummyTimeEntry,
@@ -6,6 +6,8 @@ import {
   UpdateTummyTimeInput,
 } from "@/services/tummyTime-storage";
 import { useBaby } from "./baby-context";
+import { useSync } from "./sync-context";
+import { useAuth } from "./auth-context";
 import {
   AgeGroup,
   GoalSource,
@@ -41,7 +43,10 @@ export type TummyTimeAction =
   | { type: "SET_SHOW_MILESTONE_SUGGESTION"; payload: boolean }
   | { type: "SET_SUGGESTED_GOAL"; payload: number | null }
   | { type: "START_TIMER"; payload: { startTime: Date } }
-  | { type: "STOP_TIMER" };
+  | { type: "STOP_TIMER" }
+  | { type: "REMOTE_INSERT"; payload: StoredTummyTimeEntry }
+  | { type: "REMOTE_UPDATE"; payload: StoredTummyTimeEntry }
+  | { type: "REMOTE_DELETE"; payload: string };
 
 const DEFAULT_DAILY_GOAL_SECONDS = 1800;
 
@@ -109,6 +114,24 @@ export function tummyTimeReducer(
     case "STOP_TIMER":
       return { ...state, activeTimer: null };
 
+    case "REMOTE_INSERT": {
+      const exists = state.tummyTimes.some(t => t.id === action.payload.id);
+      if (exists) return state;
+      return { ...state, tummyTimes: [...state.tummyTimes, action.payload] };
+    }
+
+    case "REMOTE_UPDATE": {
+      const updatedTummyTimes = state.tummyTimes.map(t =>
+        t.id === action.payload.id ? action.payload : t
+      );
+      return { ...state, tummyTimes: updatedTummyTimes };
+    }
+
+    case "REMOTE_DELETE": {
+      const filteredTummyTimes = state.tummyTimes.filter(t => t.id !== action.payload);
+      return { ...state, tummyTimes: filteredTummyTimes };
+    }
+
     default:
       return state;
   }
@@ -140,6 +163,13 @@ const TummyTimeContext = createContext<TummyTimeContextValue | null>(null);
 export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(tummyTimeReducer, initialTummyTimeState);
   const { selectedBaby } = useBaby();
+  const syncContext = useSync();
+  const { user } = useAuth();
+  const syncStatusRef = useRef(syncContext.status);
+
+  useEffect(() => {
+    syncStatusRef.current = syncContext.status;
+  }, [syncContext.status]);
 
   const loadTummyTimes = useCallback(async () => {
     if (!selectedBaby) {

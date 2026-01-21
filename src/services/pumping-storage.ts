@@ -19,6 +19,7 @@ export interface StoredPumpingEntry {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  loggedBy?: string;
 }
 
 export interface CreatePumpingInput {

@@ -21,6 +21,7 @@ export interface StoredTummyTimeEntry {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  loggedBy?: string;
 }
 
 export interface CreateTummyTimeInput {

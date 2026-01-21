@@ -13,6 +13,11 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/contexts", () => ({
   useBaby: jest.fn(),
+  useSync: () => ({
+    status: "online",
+    pendingCount: 0,
+    forceSync: jest.fn(),
+  }),
 }));
 
 jest.mock("./BabySelector", () => ({
