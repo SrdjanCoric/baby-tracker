@@ -6,6 +6,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as Crypto from "expo-crypto";
 import { supabase } from "@/services/supabase";
 import { setStorageUserId } from "@/services/storage-prefix";
+import { clearSyncData } from "@/contexts/sync-context";
 import { AUTH_CONFIG } from "@/constants/auth";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
 
@@ -30,6 +31,7 @@ const APP_STORAGE_PREFIXES = [
   "@tummyTime_custom_goal:",
   "@tummyTime_milestone_check:",
   "@tummyTime_dismissed_milestones:",
+  "@sync_queue",
 ];
 
 async function clearAppStorage(): Promise<void> {
@@ -147,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setSession(null);
           await clearAppStorage();
+          await clearSyncData();
         }
         return;
       }
@@ -320,6 +323,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     await clearAppStorage();
+    await clearSyncData();
     setStorageUserId(null);
     const { error } = await supabase.auth.signOut();
     return { error };

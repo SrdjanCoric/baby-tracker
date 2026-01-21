@@ -1,6 +1,8 @@
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
+import { SyncStatusIndicator } from "@/components/SyncStatusIndicator";
+import { useSync } from "@/contexts";
 
 type TabIconProps = {
   name: string;
@@ -27,6 +29,21 @@ function TabIcon({ name, focused }: TabIconProps) {
       >
         {iconSymbols[name] || "\u{2022}"}
       </Text>
+    </View>
+  );
+}
+
+function HeaderRight() {
+  const { status, pendingCount, forceSync } = useSync();
+
+  return (
+    <View className="mr-4">
+      <SyncStatusIndicator
+        status={status}
+        pendingCount={pendingCount}
+        onRetry={forceSync}
+        testID="header-sync-status"
+      />
     </View>
   );
 }
@@ -61,6 +78,7 @@ export default function TabLayout() {
           fontWeight: "600",
           fontSize: 18,
         },
+        headerRight: () => <HeaderRight />,
       }}
     >
       <Tabs.Screen

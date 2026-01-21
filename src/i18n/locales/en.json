@@ -362,14 +362,20 @@
     "discardChangesTitle": "Discard Changes?",
     "discardChangesMessage": "You have unsaved changes. Are you sure you want to discard them?",
     "discard": "Discard",
-    "keepEditing": "Keep Editing"
+    "keepEditing": "Keep Editing",
+    "loggedBy": "Logged by {{name}}"
   },
   "sync": {
     "synced": "Synced",
     "syncing": "Syncing...",
     "offline": "Offline",
+    "error": "Sync error",
+    "pending": "Pending",
     "pendingChanges": "{{count}} pending change",
-    "pendingChanges_plural": "{{count}} pending changes"
+    "pendingChanges_plural": "{{count}} pending changes",
+    "lastSynced": "Last synced {{time}}",
+    "tapToRetry": "Tap to retry",
+    "changesWillSync": "Changes will sync when connected"
   },
   "household": {
     "title": "Household",
@@ -404,7 +410,19 @@
     "joining": "Joining household...",
     "join": "Join",
     "signInRequired": "Sign in to use Household",
-    "signInRequiredDescription": "Create an account to share baby tracking with other caregivers and sync across devices"
+    "signInRequiredDescription": "Create an account to share baby tracking with other caregivers and sync across devices",
+    "owner": "Owner",
+    "you": "You",
+    "entriesLogged": "{{count}} entries logged",
+    "removeCaregiver": "Remove Caregiver",
+    "removeCaregiverConfirm": "Remove {{name}} from household?",
+    "removeCaregiverDescription": "They will lose access to this household's data and will be moved to their own household.",
+    "caregiverRemoved": "Caregiver removed",
+    "cannotRemoveSelf": "You cannot remove yourself from the household",
+    "manageCaregivers": "Manage Caregivers",
+    "caregiversFetchFailed": "Could not load caregivers",
+    "removeCaregiverFailed": "Could not remove caregiver",
+    "notAuthorized": "Only the household owner can remove caregivers"
   },
   "auth": {
     "signIn": "Sign In",
