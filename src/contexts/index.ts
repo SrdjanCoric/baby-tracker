@@ -27,3 +27,6 @@ export type { UnitSystem } from "./unit-context";
 
 export { AuthProvider, useAuth } from "./auth-context";
 export type { AuthUser } from "./auth-context";
+
+export { HouseholdProvider, useHousehold, householdReducer, initialHouseholdState } from "./household-context";
+export type { HouseholdState, HouseholdAction } from "./household-context";
