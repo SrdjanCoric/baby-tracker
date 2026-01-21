@@ -3,6 +3,7 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
+import { getUserScopedKey } from "./storage-prefix";
 
 const FEEDINGS_KEY_PREFIX = "@feedings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_feeding_timer:";
@@ -74,11 +75,11 @@ function generateId(): string {
 }
 
 function getFeedingsKey(babyId: string): string {
-  return `${FEEDINGS_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${FEEDINGS_KEY_PREFIX}${babyId}`);
 }
 
 function getActiveTimerKey(babyId: string): string {
-  return `${ACTIVE_TIMER_KEY_PREFIX}${babyId}`;
+  return getUserScopedKey(`${ACTIVE_TIMER_KEY_PREFIX}${babyId}`);
 }
 
 export const FeedingStorageService = {

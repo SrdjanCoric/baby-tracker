@@ -1,10 +1,39 @@
 import "../global.css";
 import "../src/i18n";
-import { View } from "react-native";
-import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, useTheme } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, useTheme, useAuth } from "@/contexts";
 import { NightModeOverlay } from "@/components/NightModeOverlay";
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inAuthGroup = segments[0] === "auth";
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/auth/sign-in");
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace("/(tabs)");
+    }
+  }, [isAuthenticated, isLoading, segments, router]);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-surface dark:bg-surface-dark">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 function AppContent() {
   const { isDark } = useTheme();
@@ -13,6 +42,15 @@ function AppContent() {
     <View className="flex-1">
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="auth"
+          options={{
+            presentation: "modal",
+            animation: "slide_from_bottom",
+            gestureEnabled: true,
+            gestureDirection: "vertical",
+          }}
+        />
         <Stack.Screen
           name="baby"
           options={{
@@ -88,23 +126,27 @@ function AppContent() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <UnitProvider>
-        <BabyProvider>
-          <FeedingProvider>
-            <SleepProvider>
-              <DiaperProvider>
-                <PumpingProvider>
-                  <GrowthProvider>
-                    <TummyTimeProvider>
-                      <AppContent />
-                    </TummyTimeProvider>
-                  </GrowthProvider>
-                </PumpingProvider>
-              </DiaperProvider>
-            </SleepProvider>
-          </FeedingProvider>
-        </BabyProvider>
-      </UnitProvider>
+      <AuthProvider>
+        <AuthGuard>
+          <UnitProvider>
+            <BabyProvider>
+              <FeedingProvider>
+                <SleepProvider>
+                  <DiaperProvider>
+                    <PumpingProvider>
+                      <GrowthProvider>
+                        <TummyTimeProvider>
+                          <AppContent />
+                        </TummyTimeProvider>
+                      </GrowthProvider>
+                    </PumpingProvider>
+                  </DiaperProvider>
+                </SleepProvider>
+              </FeedingProvider>
+            </BabyProvider>
+          </UnitProvider>
+        </AuthGuard>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

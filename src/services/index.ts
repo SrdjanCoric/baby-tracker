@@ -38,3 +38,7 @@ export type { ThemePreference, ThemeMode } from "./theme-storage";
 
 export { UnitStorageService } from "./unit-storage";
 export type { UnitSystem } from "./unit-storage";
+
+export { supabase } from "./supabase";
+
+export { setStorageUserId, getStorageUserId, getUserScopedKey } from "./storage-prefix";
