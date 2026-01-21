@@ -1,10 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ConflictResolutionModal } from './ConflictResolutionModal';
 import { ConflictScenario } from '@/services/sync/types';
 
-vi.mock('react-i18next', () => ({
+jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, defaultValue?: string) => defaultValue || key,
   }),
@@ -46,12 +45,12 @@ const mockConflicts: ConflictScenario[] = [
 ];
 
 describe('ConflictResolutionModal', () => {
-  const mockOnResolve = vi.fn();
-  const mockOnResolveAll = vi.fn();
-  const mockOnClose = vi.fn();
+  const mockOnResolve = jest.fn();
+  const mockOnResolveAll = jest.fn();
+  const mockOnClose = jest.fn();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Modal visibility and structure', () => {
@@ -267,10 +266,9 @@ describe('ConflictResolutionModal', () => {
 
       fireEvent.press(screen.getByText('Feeding Conflict'));
 
-      const keepMineButton = screen.getByText('Keep Mine');
-      expect(
-        keepMineButton.parent?.props.accessibilityLabel
-      ).toBe('Keep my version');
+      expect(screen.getByLabelText('Keep my version')).toBeTruthy();
+      expect(screen.getByLabelText('Keep their version')).toBeTruthy();
+      expect(screen.getByLabelText('Keep the newer version')).toBeTruthy();
     });
   });
 

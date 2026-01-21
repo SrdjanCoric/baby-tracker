@@ -1,3 +1,5 @@
+jest.unmock("@/contexts/auth-context");
+
 import React, { useEffect } from "react";
 import { render, screen, waitFor, act } from "@testing-library/react-native";
 import { Text, View } from "react-native";

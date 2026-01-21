@@ -1,48 +1,47 @@
 import React from 'react';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react-native';
 import { View, Text, Pressable } from 'react-native';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-vi.mock('@react-native-async-storage/async-storage', () => ({
+jest.mock('@react-native-async-storage/async-storage', () => ({
   default: {
-    getItem: vi.fn(() => Promise.resolve(null)),
-    setItem: vi.fn(() => Promise.resolve()),
-    removeItem: vi.fn(() => Promise.resolve()),
-    clear: vi.fn(() => Promise.resolve()),
-    multiGet: vi.fn(() => Promise.resolve([])),
-    multiSet: vi.fn(() => Promise.resolve()),
-    multiRemove: vi.fn(() => Promise.resolve()),
+    getItem: jest.fn(() => Promise.resolve(null)),
+    setItem: jest.fn(() => Promise.resolve()),
+    removeItem: jest.fn(() => Promise.resolve()),
+    clear: jest.fn(() => Promise.resolve()),
+    multiGet: jest.fn(() => Promise.resolve([])),
+    multiSet: jest.fn(() => Promise.resolve()),
+    multiRemove: jest.fn(() => Promise.resolve()),
   },
 }));
 
-vi.mock('@/services/supabase', () => ({
+jest.mock('@/services/supabase', () => ({
   supabase: {
     auth: {
-      getUser: vi.fn().mockResolvedValue({
+      getUser: jest.fn().mockResolvedValue({
         data: { user: { id: 'user-1' } },
         error: null,
       }),
     },
-    from: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({ data: null, error: null }),
     }),
-    channel: vi.fn().mockReturnValue({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn((callback) => {
+    channel: jest.fn().mockReturnValue({
+      on: jest.fn().mockReturnThis(),
+      subscribe: jest.fn((callback) => {
         callback('SUBSCRIBED');
-        return { unsubscribe: vi.fn() };
+        return { unsubscribe: jest.fn() };
       }),
-      unsubscribe: vi.fn(),
+      unsubscribe: jest.fn(),
     }),
   },
 }));
 
-vi.mock('react-i18next', () => ({
+jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
@@ -209,17 +208,17 @@ describe('Sync Flow Integration', () => {
   let syncContext: ReturnType<typeof createMockSyncContext>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     syncContext = createMockSyncContext();
   });
 
   afterEach(() => {
-    vi.clearAllTimers();
+    jest.clearAllTimers();
   });
 
   describe('Real-time sync', () => {
     it('should sync new entry within 5 seconds', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       render(<TestSyncComponent syncContext={syncContext} />);
 
@@ -231,11 +230,11 @@ describe('Sync Flow Integration', () => {
 
       expect(screen.getByTestId('entry-count').props.children).toBe(1);
 
-      vi.advanceTimersByTime(5000);
+      jest.advanceTimersByTime(5000);
 
       expect(screen.getByTestId('sync-status').props.children).toBe('online');
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('should sync edited entry within 5 seconds', async () => {
@@ -324,7 +323,7 @@ describe('Sync Flow Integration', () => {
     });
 
     it('should sync all queued changes when online', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       const { rerender } = render(
         <TestSyncComponent syncContext={syncContext} />
@@ -345,7 +344,7 @@ describe('Sync Flow Integration', () => {
 
       await act(async () => {
         fireEvent.press(screen.getByTestId('go-online'));
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
       rerender(<TestSyncComponent syncContext={syncContext} />);
 
@@ -353,11 +352,11 @@ describe('Sync Flow Integration', () => {
       expect(screen.getByTestId('queue-count').props.children).toBe(0);
       expect(screen.getByTestId('pending-count').props.children).toBe(0);
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('should handle offline for 7 days with 100+ changes', async () => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
 
       const { rerender } = render(
         <TestSyncComponent syncContext={syncContext} />
@@ -379,14 +378,14 @@ describe('Sync Flow Integration', () => {
 
       await act(async () => {
         fireEvent.press(screen.getByTestId('go-online'));
-        vi.advanceTimersByTime(200);
+        jest.advanceTimersByTime(200);
       });
       rerender(<TestSyncComponent syncContext={syncContext} />);
 
       expect(syncContext.getState().entries.length).toBe(100);
       expect(syncContext.getState().queue.length).toBe(0);
 
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
   });
 
