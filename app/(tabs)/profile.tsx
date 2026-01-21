@@ -151,13 +151,13 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="👨‍👩‍👧"
             label={t("household.caregivers")}
-            onPress={() => {}}
+            onPress={() => router.push("/settings/household")}
           />
           <SettingsDivider />
           <SettingsRow
             icon="🔗"
             label={t("household.inviteCode")}
-            onPress={() => {}}
+            onPress={() => router.push("/settings/household")}
           />
         </SettingsSection>
 
