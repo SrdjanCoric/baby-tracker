@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { useTheme, useUnits } from "@/contexts";
+import { useTheme, useUnits, useAuth } from "@/contexts";
 
 interface SettingsRowProps {
   icon: string;
@@ -79,6 +79,28 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const { preference } = useTheme();
   const { unitSystem } = useUnits();
+  const { isAuthenticated, user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      t("settings.signOut"),
+      t("auth.signOutConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("settings.signOut"),
+          style: "destructive",
+          onPress: async () => {
+            await signOut();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSignIn = () => {
+    router.push("/auth/sign-in");
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
@@ -157,20 +179,41 @@ export default function ProfileScreen() {
 
         {/* Account */}
         <SettingsSection title={t("settings.account")}>
-          <SettingsRow
-            icon="🚪"
-            label={t("settings.signOut")}
-            onPress={() => {}}
-            showChevron={false}
-          />
-          <SettingsDivider />
-          <SettingsRow
-            icon="🗑️"
-            label={t("settings.deleteAccount")}
-            onPress={() => {}}
-            showChevron={false}
-            danger
-          />
+          {isAuthenticated ? (
+            <>
+              <SettingsRow
+                icon="👤"
+                label={user?.email || user?.displayName || t("auth.signedIn")}
+                showChevron={false}
+              />
+              <SettingsDivider />
+              <SettingsRow
+                icon="🚪"
+                label={t("settings.signOut")}
+                onPress={handleSignOut}
+                showChevron={false}
+              />
+              <SettingsDivider />
+              <SettingsRow
+                icon="🗑️"
+                label={t("settings.deleteAccount")}
+                onPress={() => {}}
+                showChevron={false}
+                danger
+              />
+            </>
+          ) : (
+            <>
+              <SettingsRow
+                icon="☁️"
+                label={t("auth.signInToSync")}
+                onPress={handleSignIn}
+              />
+              <Text className="px-4 py-2 text-sm text-content-tertiary dark:text-content-dark-tertiary">
+                {t("auth.signInToSyncDescription")}
+              </Text>
+            </>
+          )}
         </SettingsSection>
 
         {/* Bottom spacing */}

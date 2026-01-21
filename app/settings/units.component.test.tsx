@@ -1,5 +1,17 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
+
+jest.mock("@/services/supabase", () => ({
+  supabase: {
+    auth: {
+      getSession: jest.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: jest.fn().mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      }),
+    },
+  },
+}));
+
 import UnitsSettingsScreen from "./units";
 
 const mockSetUnitSystem = jest.fn();
