@@ -69,6 +69,31 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function SyncAuthSetup({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const { setAuthContext } = useSync();
+  const hasSetAuthRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (user?.id && !hasSetAuthRef.current) {
+      // Use householdId if available, otherwise fall back to userId for single-user mode
+      const householdId = user.householdId || user.id;
+      setAuthContext(householdId, user.id);
+      hasSetAuthRef.current = true;
+      lastUserIdRef.current = user.id;
+    }
+
+    // Reset if user changes or logs out
+    if (!user?.id || (lastUserIdRef.current && lastUserIdRef.current !== user.id)) {
+      hasSetAuthRef.current = false;
+      lastUserIdRef.current = null;
+    }
+  }, [user?.id, user?.householdId, setAuthContext]);
+
+  return <>{children}</>;
+}
+
 function OfflineBannerWrapper() {
   const { status, pendingCount } = useSync();
   const [isDismissed, setIsDismissed] = useState(false);
@@ -196,6 +221,7 @@ export default function RootLayout() {
         <AuthGuard>
           <HouseholdProvider>
             <SyncProvider>
+              <SyncAuthSetup>
               <UnitProvider>
                 <BabyProvider>
                   <FeedingProvider>
@@ -215,6 +241,7 @@ export default function RootLayout() {
                   </FeedingProvider>
                 </BabyProvider>
               </UnitProvider>
+              </SyncAuthSetup>
             </SyncProvider>
           </HouseholdProvider>
         </AuthGuard>

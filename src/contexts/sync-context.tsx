@@ -217,6 +217,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }) => {
     if (!syncEngineInstance) return;
 
+    // Skip sync if auth context is not set (local-only mode)
+    if (!syncEngineInstance.getAuthContext()) {
+      return;
+    }
+
     await syncEngineInstance.enqueueOperation({
       id: '',
       type: operation.type,

@@ -1,5 +1,6 @@
 import { Text, View } from "react-native";
 import { forwardRef } from "react";
+import { ACTIVITY_CONFIG } from "@/constants/activities";
 
 interface TodaySummaryProps {
   feedingTotal?: string;
@@ -68,7 +69,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
           <SummaryStat
             value={feedingTotal}
             label={feedingTotal === "1" ? "Feeding" : "Feedings"}
-            color="#88B04B"
+            color={ACTIVITY_CONFIG.feeding.accentColor}
           />
 
           <SummaryDivider />
@@ -76,7 +77,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
           <SummaryStat
             value={napCount}
             label={napCount === 1 ? "Nap" : "Naps"}
-            color="#6B5B95"
+            color={ACTIVITY_CONFIG.sleep.accentColor}
           />
 
           <SummaryDivider />
@@ -84,7 +85,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
           <SummaryStat
             value={diaperCount}
             label={diaperCount === 1 ? "Diaper" : "Diapers"}
-            color="#E8A5A3"
+            color={ACTIVITY_CONFIG.diaper.accentColor}
           />
 
           {sleepTotal && (
@@ -93,7 +94,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
               <SummaryStat
                 value={sleepTotal}
                 label="Sleep"
-                color="#6B5B95"
+                color={ACTIVITY_CONFIG.sleep.accentColor}
               />
             </>
           )}

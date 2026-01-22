@@ -59,6 +59,10 @@ export { SimpleBarChart } from "./SimpleBarChart";
 export { TrendIndicator } from "./TrendIndicator";
 export { InsightCard } from "./InsightCard";
 
+// UI State components
+export { EmptyState } from "./EmptyState";
+export { LoadingState } from "./LoadingState";
+
 // Onboarding components
 export {
   OnboardingScreen,

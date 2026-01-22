@@ -107,23 +107,9 @@ describe("JoinHouseholdScreen", () => {
       expect(screen.getByText("Join")).toBeTruthy();
     });
 
-    it("renders the back button", () => {
-      render(<JoinHouseholdScreen />);
-
-      expect(screen.getByLabelText("Back")).toBeTruthy();
-    });
   });
 
   describe("interactions", () => {
-    it("calls router.back when back button is pressed", () => {
-      render(<JoinHouseholdScreen />);
-
-      const backButton = screen.getByLabelText("Back");
-      fireEvent.press(backButton);
-
-      expect(mockBack).toHaveBeenCalled();
-    });
-
     it("updates input value when typing", () => {
       render(<JoinHouseholdScreen />);
 

@@ -1,31 +1,47 @@
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
-import { SyncStatusIndicator } from "@/components/SyncStatusIndicator";
-import { useSync } from "@/contexts";
+import { Text, View, useColorScheme } from "react-native";
 
 type TabIconProps = {
   name: string;
   focused: boolean;
+  isDark: boolean;
 };
 
 // Activity colors from design system
-const ACTIVE_COLOR = "#2E7D32"; // Primary action green
-const INACTIVE_COLOR = "#6B6B6B"; // Secondary text
+const COLORS = {
+  light: {
+    active: "#2E7D32",
+    inactive: "#6B6B6B",
+    background: "#FFFFFF",
+    border: "#E5E7EB",
+    headerBg: "#FAFAFA",
+    headerText: "#1A1A1A",
+  },
+  dark: {
+    active: "#4CAF50",
+    inactive: "#9CA3AF",
+    background: "#1A1A1A",
+    border: "#2D2D2D",
+    headerBg: "#1A1A1A",
+    headerText: "#FFFFFF",
+  },
+};
 
-function TabIcon({ name, focused }: TabIconProps) {
+function TabIcon({ name, focused, isDark }: TabIconProps) {
   const iconSymbols: Record<string, string> = {
     home: "🏠",
     timeline: "📋",
     statistics: "📊",
-    profile: "👤",
   };
+
+  const colors = isDark ? COLORS.dark : COLORS.light;
 
   return (
     <View className="items-center justify-center">
       <Text
         className={`text-2xl ${focused ? "opacity-100" : "opacity-60"}`}
-        style={{ color: focused ? ACTIVE_COLOR : INACTIVE_COLOR }}
+        style={{ color: focused ? colors.active : colors.inactive }}
       >
         {iconSymbols[name] || "\u{2022}"}
       </Text>
@@ -33,32 +49,27 @@ function TabIcon({ name, focused }: TabIconProps) {
   );
 }
 
-function HeaderRight() {
-  const { status, pendingCount, forceSync } = useSync();
-
-  return (
-    <View className="mr-4">
-      <SyncStatusIndicator
-        status={status}
-        pendingCount={pendingCount}
-        onRetry={forceSync}
-        testID="header-sync-status"
-      />
-    </View>
-  );
-}
-
 export default function TabLayout() {
   const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  // Get colors based on current color scheme
+  const activeColor = isDark ? COLORS.dark.active : COLORS.light.active;
+  const inactiveColor = isDark ? COLORS.dark.inactive : COLORS.light.inactive;
+  const backgroundColor = isDark ? COLORS.dark.background : COLORS.light.background;
+  const borderColor = isDark ? COLORS.dark.border : COLORS.light.border;
+  const headerBgColor = isDark ? COLORS.dark.headerBg : COLORS.light.headerBg;
+  const headerTextColor = isDark ? COLORS.dark.headerText : COLORS.light.headerText;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: ACTIVE_COLOR,
-        tabBarInactiveTintColor: INACTIVE_COLOR,
+        tabBarActiveTintColor: activeColor,
+        tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#E5E7EB",
+          backgroundColor: backgroundColor,
+          borderTopColor: borderColor,
           borderTopWidth: 1,
           paddingTop: 8,
           paddingBottom: 8,
@@ -70,15 +81,14 @@ export default function TabLayout() {
           marginTop: 2,
         },
         headerStyle: {
-          backgroundColor: "#FAFAFA",
+          backgroundColor: headerBgColor,
         },
         headerShadowVisible: false,
-        headerTintColor: "#1A1A1A",
+        headerTintColor: headerTextColor,
         headerTitleStyle: {
           fontWeight: "600",
           fontSize: 18,
         },
-        headerRight: () => <HeaderRight />,
       }}
     >
       <Tabs.Screen
@@ -86,7 +96,7 @@ export default function TabLayout() {
         options={{
           title: t("navigation.home"),
           headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} isDark={isDark} />,
         }}
       />
       <Tabs.Screen
@@ -94,7 +104,7 @@ export default function TabLayout() {
         options={{
           title: t("navigation.timeline"),
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="timeline" focused={focused} />
+            <TabIcon name="timeline" focused={focused} isDark={isDark} />
           ),
         }}
       />
@@ -103,28 +113,19 @@ export default function TabLayout() {
         options={{
           title: t("navigation.statistics"),
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="statistics" focused={focused} />
+            <TabIcon name="statistics" focused={focused} isDark={isDark} />
           ),
         }}
       />
+      {/* Hide unused screens */}
       <Tabs.Screen
         name="profile"
-        options={{
-          title: t("navigation.profile"),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="profile" focused={focused} />
-          ),
-        }}
-      />
-      {/* Hide the old screens */}
-      <Tabs.Screen
-        name="log"
         options={{
           href: null,
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="log"
         options={{
           href: null,
         }}

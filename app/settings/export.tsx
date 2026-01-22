@@ -9,7 +9,6 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useBaby } from "@/contexts";
 import { ExportService } from "@/services/export-service";
@@ -38,7 +37,6 @@ function getInitialDateRange(): DateRange {
 
 export default function ExportScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
   const { selectedBaby } = useBaby();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -81,10 +79,6 @@ export default function ExportScreen() {
   useEffect(() => {
     loadRecordCounts();
   }, [loadRecordCounts]);
-
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
 
   const handleExport = useCallback(async () => {
     if (!selectedBaby || selectedTypes.length === 0) return;
@@ -146,24 +140,11 @@ export default function ExportScreen() {
       className="flex-1 bg-surface dark:bg-surface-dark"
       edges={["top", "bottom"]}
     >
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-border-subtle dark:border-border-dark-subtle">
-        <Pressable
-          onPress={handleBack}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-          testID="back-button"
-        >
-          <Text className="text-primary-500 dark:text-primary-400 text-base">
-            {t("common.back")}
-          </Text>
-        </Pressable>
-
+      <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
           {t("export.title")}
         </Text>
-
-        <View className="w-12" />
       </View>
 
       <ScrollView

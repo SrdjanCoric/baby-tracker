@@ -75,7 +75,7 @@ const THEME_LABELS = {
   night: "settings.nightMode",
 } as const;
 
-export default function ProfileScreen() {
+export default function SettingsScreen() {
   const { t } = useTranslation();
   const { preference } = useTheme();
   const { unitSystem } = useUnits();
@@ -103,7 +103,14 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
+      <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+          {t("navigation.settings")}
+        </Text>
+      </View>
+
       <ScrollView className="flex-1 px-4 pt-4">
         {/* Baby Management */}
         <SettingsSection title={t("baby.title")}>

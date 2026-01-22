@@ -42,10 +42,6 @@ export default function JoinHouseholdScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
   const handleSignIn = useCallback(() => {
     router.push("/auth/sign-in");
   }, [router]);
@@ -88,21 +84,11 @@ export default function JoinHouseholdScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      <View className="flex-row items-center px-4 py-3 border-b border-border-subtle dark:border-border-dark-subtle">
-        <Pressable
-          onPress={handleBack}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-        >
-          <Text className="text-2xl">{"\u{2190}"}</Text>
-        </Pressable>
-        <View className="flex-1 items-center">
-          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            {t("household.joinHousehold")}
-          </Text>
-        </View>
-        <View className="w-touch" />
+      <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+          {t("household.joinHousehold")}
+        </Text>
       </View>
 
       {!isAuthenticated ? (

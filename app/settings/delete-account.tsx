@@ -186,31 +186,11 @@ export default function DeleteAccountScreen() {
       className="flex-1 bg-surface dark:bg-surface-dark"
       edges={["top", "bottom"]}
     >
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-border-subtle dark:border-border-dark-subtle">
-        <Pressable
-          onPress={handleBack}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-          testID="back-button"
-          disabled={isDeleting}
-        >
-          <Text
-            className={`text-base ${
-              isDeleting
-                ? "text-gray-400"
-                : "text-primary-500 dark:text-primary-400"
-            }`}
-          >
-            {t("common.back")}
-          </Text>
-        </Pressable>
-
+      <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
           {t("accountDeletion.title")}
         </Text>
-
-        <View className="w-12" />
       </View>
 
       {isDeleting ? (

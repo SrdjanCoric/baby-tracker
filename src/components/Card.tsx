@@ -1,5 +1,6 @@
 import { View, Pressable, type ViewProps, type PressableProps } from "react-native";
-import { forwardRef } from "react";
+import { forwardRef, useCallback } from "react";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
 interface CardProps extends ViewProps {
   variant?: "default" | "elevated" | "outlined";
@@ -8,6 +9,8 @@ interface CardProps extends ViewProps {
 interface PressableCardProps extends PressableProps {
   variant?: "default" | "elevated" | "outlined";
 }
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const Card = forwardRef<View, CardProps>(
   ({ variant = "default", className, children, ...props }, ref) => {
@@ -33,9 +36,30 @@ const Card = forwardRef<View, CardProps>(
 
 Card.displayName = "Card";
 
+const SPRING_CONFIG = {
+  damping: 15,
+  stiffness: 400,
+};
+
 const PressableCard = forwardRef<View, PressableCardProps>(
-  ({ variant = "elevated", className, children, ...props }, ref) => {
-    const baseClasses = "rounded-2xl p-4 active:scale-[0.99] transition-transform";
+  ({ variant = "elevated", className, children, onPressIn, onPressOut, ...props }, ref) => {
+    const scale = useSharedValue(1);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+    }));
+
+    const handlePressIn = useCallback((e: Parameters<NonNullable<PressableProps["onPressIn"]>>[0]) => {
+      scale.value = withSpring(0.97, SPRING_CONFIG);
+      onPressIn?.(e);
+    }, [scale, onPressIn]);
+
+    const handlePressOut = useCallback((e: Parameters<NonNullable<PressableProps["onPressOut"]>>[0]) => {
+      scale.value = withSpring(1, SPRING_CONFIG);
+      onPressOut?.(e);
+    }, [scale, onPressOut]);
+
+    const baseClasses = "rounded-2xl p-4";
 
     const variantClasses: Record<string, string> = {
       default: "bg-white active:bg-gray-50",
@@ -44,14 +68,17 @@ const PressableCard = forwardRef<View, PressableCardProps>(
     };
 
     return (
-      <Pressable
+      <AnimatedPressable
         ref={ref}
         className={`${baseClasses} ${variantClasses[variant]} ${className ?? ""}`}
+        style={animatedStyle}
         accessibilityRole="button"
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         {...props}
       >
         {children}
-      </Pressable>
+      </AnimatedPressable>
     );
   }
 );
