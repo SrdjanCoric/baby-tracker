@@ -34,7 +34,7 @@ function SummaryStat({ value, label, color }: SummaryStatProps) {
 
 function SummaryDivider() {
   return (
-    <View className="w-px h-8 bg-gray-200 dark:bg-gray-700 mx-4" />
+    <View className="w-px h-8 bg-border-default dark:bg-border-dark-default mx-4" />
   );
 }
 
@@ -57,11 +57,11 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
       >
         {/* Header */}
         <View className="flex-row items-center mb-4">
-          <View className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+          <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />
           <Text className="px-3 text-xs text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider font-medium">
             Today
           </Text>
-          <View className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+          <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />
         </View>
 
         {/* Stats row */}

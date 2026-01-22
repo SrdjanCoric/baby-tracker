@@ -1,7 +1,8 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, useColorScheme } from "react-native";
 import { forwardRef } from "react";
+import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 
-type TimelineActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime";
+type TimelineActivityType = ActivityType;
 
 interface TimelineItemProps {
   activity: TimelineActivityType;
@@ -13,42 +14,6 @@ interface TimelineItemProps {
   onPress?: () => void;
   testID?: string;
 }
-
-const activityConfig: Record<
-  TimelineActivityType,
-  { icon: string; color: string; bgColor: string }
-> = {
-  feeding: {
-    icon: "🤱",
-    color: "#88B04B",
-    bgColor: "#E8F0E0",
-  },
-  sleep: {
-    icon: "😴",
-    color: "#6B5B95",
-    bgColor: "#E8E4F0",
-  },
-  diaper: {
-    icon: "🚼",
-    color: "#D4837D",
-    bgColor: "#FDF0EF",
-  },
-  pumping: {
-    icon: "🫙",
-    color: "#7B9BC9",
-    bgColor: "#E8EDF5",
-  },
-  growth: {
-    icon: "📏",
-    color: "#009B77",
-    bgColor: "#E0F5EF",
-  },
-  tummyTime: {
-    icon: "💪",
-    color: "#E67E22",
-    bgColor: "#FEF3E2",
-  },
-};
 
 const TimelineItem = forwardRef<View, TimelineItemProps>(
   (
@@ -64,7 +29,10 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     },
     ref
   ) => {
-    const config = activityConfig[activity];
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === "dark";
+    const config = ACTIVITY_CONFIG[activity];
+    const bgColor = isDark ? config.mutedBgDark : config.mutedBg;
 
     return (
       <Pressable
@@ -80,7 +48,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
           {/* Activity icon circle */}
           <View
             className="w-12 h-12 rounded-full items-center justify-center"
-            style={{ backgroundColor: config.bgColor }}
+            style={{ backgroundColor: bgColor }}
           >
             <Text className="text-xl">{config.icon}</Text>
           </View>
@@ -102,7 +70,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
           {subtitle && (
             <Text
               className="text-sm mt-0.5"
-              style={{ color: config.color }}
+              style={{ color: config.accentColor }}
             >
               {subtitle}
             </Text>
@@ -161,7 +129,7 @@ function TimelineDayHeader({ title, date }: TimelineDayHeaderProps) {
 function TimelineDivider() {
   return (
     <View className="ml-10 mr-4">
-      <View className="h-px bg-gray-200 dark:bg-gray-700" />
+      <View className="h-px bg-border-default dark:bg-border-dark-default" />
     </View>
   );
 }
