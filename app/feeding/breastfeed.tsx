@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useFeeding } from "@/contexts";
 import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
-import { useNotificationIntegration } from "@/hooks";
+import { useNotificationIntegration, useTimerAlertIntegration } from "@/hooks";
 import type { BreastSide } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
@@ -25,6 +25,7 @@ export default function BreastfeedingScreen() {
     changeSide,
   } = useFeeding();
   const { scheduleReminderAfterFeeding } = useNotificationIntegration();
+  const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("breastfeeding");
 
   const [tick, setTick] = useState(0);
 
@@ -35,10 +36,16 @@ export default function BreastfeedingScreen() {
 
     const interval = setInterval(() => {
       setTick(t => t + 1);
+
+      const now = new Date();
+      const elapsedMinutes = Math.floor(
+        (now.getTime() - activeTimer.startTime.getTime()) / 1000 / 60
+      );
+      checkAndSendAlert(elapsedMinutes);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning]);
+  }, [activeTimer?.isRunning, activeTimer?.startTime, checkAndSendAlert]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) {
@@ -80,10 +87,11 @@ export default function BreastfeedingScreen() {
   }, [startBreastfeeding]);
 
   const handleStopFeeding = useCallback(async () => {
+    resetAlert();
     await stopBreastfeeding();
     await scheduleReminderAfterFeeding();
     router.back();
-  }, [stopBreastfeeding, scheduleReminderAfterFeeding, router]);
+  }, [resetAlert, stopBreastfeeding, scheduleReminderAfterFeeding, router]);
 
   const handleSideChange = useCallback((side: BreastSide) => {
     changeSide(side);
