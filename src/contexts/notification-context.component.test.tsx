@@ -16,9 +16,9 @@ jest.mock("@/services/notification-storage", () => ({
   NotificationStorageService: {
     getSettings: () => mockGetSettings(),
     saveSettings: (settings: NotificationSettings) => mockSaveSettings(settings),
-    getFeedingReminderNotificationId: () => mockGetFeedingReminderNotificationId(),
-    saveFeedingReminderNotificationId: (id: string) => mockSaveFeedingReminderNotificationId(id),
-    clearFeedingReminderNotificationId: () => mockClearFeedingReminderNotificationId(),
+    getFeedingReminderNotificationId: (babyId: string) => mockGetFeedingReminderNotificationId(babyId),
+    saveFeedingReminderNotificationId: (babyId: string, id: string) => mockSaveFeedingReminderNotificationId(babyId, id),
+    clearFeedingReminderNotificationId: (babyId: string) => mockClearFeedingReminderNotificationId(babyId),
     clearSettings: jest.fn(),
   },
 }));
@@ -353,7 +353,7 @@ describe("NotificationContext", () => {
       mockGetSettings.mockResolvedValue(DEFAULT_NOTIFICATION_SETTINGS);
       mockGetPermissionStatus.mockResolvedValue("granted");
 
-      let scheduleFn: ((lastTime: Date) => Promise<void>) | undefined;
+      let scheduleFn: ((babyId: string, lastTime: Date) => Promise<void>) | undefined;
 
       function ScheduleTestConsumer() {
         const notifications = useNotifications();
@@ -379,7 +379,7 @@ describe("NotificationContext", () => {
 
       await act(async () => {
         if (scheduleFn) {
-          await scheduleFn(new Date());
+          await scheduleFn("test-baby-123", new Date());
         }
       });
 
@@ -393,7 +393,7 @@ describe("NotificationContext", () => {
       });
       mockGetPermissionStatus.mockResolvedValue("denied");
 
-      let scheduleFn: ((lastTime: Date) => Promise<void>) | undefined;
+      let scheduleFn: ((babyId: string, lastTime: Date) => Promise<void>) | undefined;
 
       function ScheduleTestConsumer() {
         const notifications = useNotifications();
@@ -419,7 +419,7 @@ describe("NotificationContext", () => {
 
       await act(async () => {
         if (scheduleFn) {
-          await scheduleFn(new Date());
+          await scheduleFn("test-baby-123", new Date());
         }
       });
 
@@ -433,7 +433,7 @@ describe("NotificationContext", () => {
       });
       mockGetPermissionStatus.mockResolvedValue("granted");
 
-      let scheduleFn: ((lastTime: Date) => Promise<void>) | undefined;
+      let scheduleFn: ((babyId: string, lastTime: Date) => Promise<void>) | undefined;
 
       function ScheduleTestConsumer() {
         const notifications = useNotifications();
@@ -458,21 +458,22 @@ describe("NotificationContext", () => {
       });
 
       const lastFeedingTime = new Date();
+      const testBabyId = "test-baby-123";
 
       await act(async () => {
         if (scheduleFn) {
-          await scheduleFn(lastFeedingTime);
+          await scheduleFn(testBabyId, lastFeedingTime);
         }
       });
 
       expect(mockScheduleNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "Feeding Reminder",
-          data: { type: "feeding_reminder" },
+          data: { type: "feeding_reminder", babyId: testBabyId },
         }),
         expect.any(Date)
       );
-      expect(mockSaveFeedingReminderNotificationId).toHaveBeenCalledWith("test-notification-id");
+      expect(mockSaveFeedingReminderNotificationId).toHaveBeenCalledWith(testBabyId, "test-notification-id");
     });
 
     it("should cancel existing reminder before scheduling new one", async () => {
@@ -483,7 +484,7 @@ describe("NotificationContext", () => {
       mockGetPermissionStatus.mockResolvedValue("granted");
       mockGetFeedingReminderNotificationId.mockResolvedValue("existing-notification-id");
 
-      let scheduleFn: ((lastTime: Date) => Promise<void>) | undefined;
+      let scheduleFn: ((babyId: string, lastTime: Date) => Promise<void>) | undefined;
 
       function ScheduleTestConsumer() {
         const notifications = useNotifications();
@@ -507,9 +508,11 @@ describe("NotificationContext", () => {
         expect(screen.getByTestId("loading").props.children).toBe("ready");
       });
 
+      const testBabyId = "test-baby-123";
+
       await act(async () => {
         if (scheduleFn) {
-          await scheduleFn(new Date());
+          await scheduleFn(testBabyId, new Date());
         }
       });
 
@@ -521,7 +524,7 @@ describe("NotificationContext", () => {
     it("should cancel notification if one exists", async () => {
       mockGetFeedingReminderNotificationId.mockResolvedValue("existing-id");
 
-      let cancelFn: (() => Promise<void>) | undefined;
+      let cancelFn: ((babyId: string) => Promise<void>) | undefined;
 
       function CancelTestConsumer() {
         const notifications = useNotifications();
@@ -545,20 +548,22 @@ describe("NotificationContext", () => {
         expect(screen.getByTestId("loading").props.children).toBe("ready");
       });
 
+      const testBabyId = "test-baby-123";
+
       await act(async () => {
         if (cancelFn) {
-          await cancelFn();
+          await cancelFn(testBabyId);
         }
       });
 
       expect(mockCancelNotification).toHaveBeenCalledWith("existing-id");
-      expect(mockClearFeedingReminderNotificationId).toHaveBeenCalled();
+      expect(mockClearFeedingReminderNotificationId).toHaveBeenCalledWith(testBabyId);
     });
 
     it("should not call cancel if no notification exists", async () => {
       mockGetFeedingReminderNotificationId.mockResolvedValue(null);
 
-      let cancelFn: (() => Promise<void>) | undefined;
+      let cancelFn: ((babyId: string) => Promise<void>) | undefined;
 
       function CancelTestConsumer() {
         const notifications = useNotifications();
@@ -584,7 +589,7 @@ describe("NotificationContext", () => {
 
       await act(async () => {
         if (cancelFn) {
-          await cancelFn();
+          await cancelFn("test-baby-123");
         }
       });
 

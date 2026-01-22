@@ -8,7 +8,11 @@ import type { NotificationSettings } from "@/types/notifications";
 import { DEFAULT_NOTIFICATION_SETTINGS } from "@/constants/notifications";
 
 const NOTIFICATION_SETTINGS_KEY = "@notification_settings";
-const FEEDING_REMINDER_ID_KEY = "@feeding_reminder_notification_id";
+const FEEDING_REMINDER_ID_PREFIX = "@feeding_reminder_notification_id_";
+
+function getFeedingReminderKey(babyId: string): string {
+  return `${FEEDING_REMINDER_ID_PREFIX}${babyId}`;
+}
 
 function isValidNotificationSettings(data: unknown): data is NotificationSettings {
   if (!data || typeof data !== "object") {
@@ -75,15 +79,28 @@ export const NotificationStorageService = {
     await AsyncStorage.removeItem(NOTIFICATION_SETTINGS_KEY);
   },
 
-  async getFeedingReminderNotificationId(): Promise<string | null> {
-    return await AsyncStorage.getItem(FEEDING_REMINDER_ID_KEY);
+  async getFeedingReminderNotificationId(babyId: string): Promise<string | null> {
+    if (!babyId) return null;
+    return await AsyncStorage.getItem(getFeedingReminderKey(babyId));
   },
 
-  async saveFeedingReminderNotificationId(notificationId: string): Promise<void> {
-    await AsyncStorage.setItem(FEEDING_REMINDER_ID_KEY, notificationId);
+  async saveFeedingReminderNotificationId(babyId: string, notificationId: string): Promise<void> {
+    if (!babyId) return;
+    await AsyncStorage.setItem(getFeedingReminderKey(babyId), notificationId);
   },
 
-  async clearFeedingReminderNotificationId(): Promise<void> {
-    await AsyncStorage.removeItem(FEEDING_REMINDER_ID_KEY);
+  async clearFeedingReminderNotificationId(babyId: string): Promise<void> {
+    if (!babyId) return;
+    await AsyncStorage.removeItem(getFeedingReminderKey(babyId));
+  },
+
+  async clearAllFeedingReminderNotificationIds(): Promise<void> {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const feedingReminderKeys = allKeys.filter((key) =>
+      key.startsWith(FEEDING_REMINDER_ID_PREFIX)
+    );
+    if (feedingReminderKeys.length > 0) {
+      await AsyncStorage.multiRemove(feedingReminderKeys);
+    }
   },
 };

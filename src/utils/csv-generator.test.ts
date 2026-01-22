@@ -71,6 +71,37 @@ describe("escapeCSVValue", () => {
   it("should handle boolean false", () => {
     expect(escapeCSVValue(false)).toBe("false");
   });
+
+  describe("formula injection prevention", () => {
+    it("should prefix values starting with = to prevent formula injection", () => {
+      expect(escapeCSVValue("=SUM(A1:A10)")).toBe("'=SUM(A1:A10)");
+    });
+
+    it("should prefix values starting with + to prevent formula injection", () => {
+      expect(escapeCSVValue("+1234567890")).toBe("'+1234567890");
+    });
+
+    it("should prefix values starting with - to prevent formula injection", () => {
+      expect(escapeCSVValue("-5+2")).toBe("'-5+2");
+    });
+
+    it("should prefix values starting with @ to prevent formula injection", () => {
+      expect(escapeCSVValue("@SUM(A1)")).toBe("'@SUM(A1)");
+    });
+
+    it("should prefix values starting with | to prevent formula injection", () => {
+      expect(escapeCSVValue("|cmd")).toBe("'|cmd");
+    });
+
+    it("should not prefix values with formula chars not at beginning", () => {
+      expect(escapeCSVValue("Value = 5")).toBe("Value = 5");
+      expect(escapeCSVValue("A+B")).toBe("A+B");
+    });
+
+    it("should handle formula char with comma requiring quotes", () => {
+      expect(escapeCSVValue("=SUM, hello")).toBe("\"'=SUM, hello\"");
+    });
+  });
 });
 
 describe("formatCSVDate", () => {

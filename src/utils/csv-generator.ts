@@ -11,12 +11,30 @@ import type { StoredGrowthEntry } from "@/services/growth-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import type { ExportDataType } from "@/types/export";
 
+/**
+ * Characters that could trigger formula execution in spreadsheet applications
+ */
+const FORMULA_TRIGGER_CHARS = /^[=+\-@|]/;
+
+/**
+ * Sanitizes a value to prevent CSV formula injection
+ * Prefixes values starting with dangerous characters with a single quote
+ */
+function sanitizeFormulaInjection(value: string): string {
+  if (FORMULA_TRIGGER_CHARS.test(value)) {
+    return `'${value}`;
+  }
+  return value;
+}
+
 export function escapeCSVValue(value: unknown): string {
   if (value === null || value === undefined) {
     return "";
   }
 
-  const stringValue = String(value);
+  let stringValue = String(value);
+
+  stringValue = sanitizeFormulaInjection(stringValue);
 
   if (
     stringValue.includes(",") ||

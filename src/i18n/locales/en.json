@@ -582,6 +582,10 @@
       "nameRequired": "Please enter baby's name",
       "dateRequired": "Please select birth date",
       "dateFuture": "Birth date cannot be in the future"
+    },
+    "errors": {
+      "createBabyFailed": "Failed to create baby profile. Please try again.",
+      "networkError": "Network error. Please check your connection and try again."
     }
   },
   "export": {
@@ -639,10 +643,17 @@
     "offlineError": "You must be online to delete your account. Please check your internet connection.",
     "loadError": "Failed to load account data. Please try again.",
     "error": "Error",
+    "verifyPassword": "Verify Your Password",
+    "verifyPasswordDescription": "For your security, please enter your password to confirm this action.",
+    "verifyButton": "Verify Password",
+    "passwordVerified": "Password verified successfully",
     "errors": {
       "deletionFailed": "Failed to delete account. Please try again.",
       "networkError": "Network error. Please check your connection and try again.",
-      "unknown": "An unexpected error occurred. Please try again."
+      "unknown": "An unexpected error occurred. Please try again.",
+      "passwordRequired": "Please enter your password.",
+      "invalidPassword": "Invalid password. Please try again.",
+      "verificationFailed": "Password verification failed. Please try again."
     }
   }
 }
