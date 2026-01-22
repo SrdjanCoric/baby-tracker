@@ -5,6 +5,7 @@ export default function SettingsLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="theme" />
       <Stack.Screen name="units" />
+      <Stack.Screen name="notifications" />
       <Stack.Screen name="about" />
       <Stack.Screen name="household" />
       <Stack.Screen name="caregivers" />

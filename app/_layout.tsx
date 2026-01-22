@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, useTheme, useAuth, useSync } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, useTheme, useAuth, useSync } from "@/contexts";
 import { NightModeOverlay } from "@/components/NightModeOverlay";
 import { OfflineBanner } from "@/components/OfflineBanner";
 
@@ -165,7 +165,9 @@ export default function RootLayout() {
                         <PumpingProvider>
                           <GrowthProvider>
                             <TummyTimeProvider>
-                              <AppContent />
+                              <NotificationProvider>
+                                <AppContent />
+                              </NotificationProvider>
                             </TummyTimeProvider>
                           </GrowthProvider>
                         </PumpingProvider>

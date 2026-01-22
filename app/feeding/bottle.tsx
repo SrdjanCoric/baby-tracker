@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useFeeding, useBaby, useUnits } from "@/contexts";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
+import { useNotificationIntegration } from "@/hooks";
 import type { BottleContentType } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
@@ -22,6 +23,7 @@ export default function BottleFeedingScreen() {
   const { selectedBaby } = useBaby();
   const { addFeeding } = useFeeding();
   const { volumeUnit } = useUnits();
+  const { scheduleReminderAfterFeeding } = useNotificationIntegration();
 
   const [contentType, setContentType] = useState<BottleContentType | null>(null);
   const [amountMl, setAmountMl] = useState<number | null>(null);
@@ -101,11 +103,12 @@ export default function BottleFeedingScreen() {
         startedAt: new Date(),
         notes: notes || undefined,
       });
+      await scheduleReminderAfterFeeding();
       router.back();
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, contentType, amountMl, notes, addFeeding, router]);
+  }, [selectedBaby, contentType, amountMl, notes, addFeeding, scheduleReminderAfterFeeding, router]);
 
   const validationMessage = useMemo(() => {
     if (!showValidation) return null;

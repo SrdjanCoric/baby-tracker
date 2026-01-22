@@ -72,6 +72,10 @@ export default function SettingsScreen() {
     router.push("/settings/household");
   }, [router]);
 
+  const handleNotificationsPress = useCallback(() => {
+    router.push("/settings/notifications");
+  }, [router]);
+
   const getUnitDisplayValue = () => {
     return unitSystem === "imperial" ? t("settings.imperial") : t("settings.metric");
   };
@@ -119,6 +123,7 @@ export default function SettingsScreen() {
           <SettingsRow
             icon={"\u{1F514}"}
             label={t("settings.notifications")}
+            onPress={handleNotificationsPress}
             isLast
           />
         </View>
