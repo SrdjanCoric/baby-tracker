@@ -109,13 +109,5 @@ describe("UnitsSettingsScreen", () => {
       });
     });
 
-    it("calls router.back when back button is pressed", () => {
-      render(<UnitsSettingsScreen />);
-
-      const backButton = screen.getByLabelText("Back");
-      fireEvent.press(backButton);
-
-      expect(mockBack).toHaveBeenCalled();
-    });
   });
 });

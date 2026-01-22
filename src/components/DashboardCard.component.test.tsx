@@ -94,7 +94,9 @@ describe("DashboardCard", () => {
         <DashboardCard {...defaultProps} isActive testID="card" />
       );
       const card = getByTestId("card");
-      expect(card.props.style.borderWidth).toBe(2);
+      const styles = Array.isArray(card.props.style) ? card.props.style : [card.props.style];
+      const flatStyle = styles.reduce((acc: Record<string, unknown>, s: Record<string, unknown>) => ({ ...acc, ...s }), {});
+      expect(flatStyle.borderWidth).toBe(2);
     });
   });
 

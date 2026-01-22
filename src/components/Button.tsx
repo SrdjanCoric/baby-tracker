@@ -5,7 +5,8 @@ import {
   type PressableProps,
   type ViewStyle,
 } from "react-native";
-import { forwardRef } from "react";
+import { forwardRef, useCallback } from "react";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
 type ButtonSize = "default" | "large" | "icon";
@@ -17,6 +18,13 @@ interface ButtonProps extends Omit<PressableProps, "children"> {
   children: React.ReactNode;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const SPRING_CONFIG = {
+  damping: 15,
+  stiffness: 400,
+};
+
 const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
   (
     {
@@ -27,14 +35,33 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
       children,
       className,
       style,
+      onPressIn,
+      onPressOut,
       ...props
     },
     ref
   ) => {
+    const scale = useSharedValue(1);
     const isDisabled = disabled || loading;
 
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+    }));
+
+    const handlePressIn = useCallback((e: Parameters<NonNullable<PressableProps["onPressIn"]>>[0]) => {
+      if (!isDisabled) {
+        scale.value = withSpring(0.96, SPRING_CONFIG);
+      }
+      onPressIn?.(e);
+    }, [scale, isDisabled, onPressIn]);
+
+    const handlePressOut = useCallback((e: Parameters<NonNullable<PressableProps["onPressOut"]>>[0]) => {
+      scale.value = withSpring(1, SPRING_CONFIG);
+      onPressOut?.(e);
+    }, [scale, onPressOut]);
+
     const baseClasses =
-      "flex-row items-center justify-center rounded-2xl active:scale-[0.98] transition-transform";
+      "flex-row items-center justify-center rounded-2xl";
 
     const sizeClasses: Record<ButtonSize, string> = {
       default: "min-h-[52px] px-6 py-3",
@@ -70,13 +97,15 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
       variant === "primary" ? "#ffffff" : isDisabled ? "#9ca3af" : "#0d9488";
 
     return (
-      <Pressable
+      <AnimatedPressable
         ref={ref}
         disabled={isDisabled}
         className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className ?? ""}`}
-        style={style as ViewStyle}
+        style={[animatedStyle, style as ViewStyle]}
         accessibilityRole="button"
         accessibilityState={{ disabled: isDisabled, busy: loading }}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         {...props}
       >
         {loading ? (
@@ -90,7 +119,7 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
         ) : (
           children
         )}
-      </Pressable>
+      </AnimatedPressable>
     );
   }
 );
