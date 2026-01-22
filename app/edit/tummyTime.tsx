@@ -97,6 +97,7 @@ export default function EditTummyTimeScreen() {
         durationSeconds,
         notes: notes || undefined,
       });
+      setIsInitialized(false);
       router.back();
     } finally {
       setIsSaving(false);

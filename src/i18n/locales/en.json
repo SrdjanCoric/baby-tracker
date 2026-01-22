@@ -218,7 +218,19 @@
     "saveMeasurement": "Save Measurement",
     "notesPlaceholder": "e.g., Doctor's visit",
     "quickEntryHint": "Enter at least one measurement. You don't need to fill in all fields.",
-    "lastMeasurement": "Last measurement"
+    "lastMeasurement": "Last measurement",
+    "charts": "Growth Charts",
+    "viewCharts": "View Charts",
+    "whoPercentiles": "WHO Growth Percentiles",
+    "monthsOld": "months old",
+    "months": "months",
+    "measurementHistory": "Measurement History",
+    "showingRecent": "Showing most recent {{count}} entries",
+    "noMeasurements": "No Measurements Yet",
+    "noMeasurementsDescription": "Add your first measurement to see growth charts and percentiles.",
+    "addMeasurement": "Add Measurement",
+    "birthDateRequired": "Birth Date Needed",
+    "birthDateRequiredDescription": "Please add your baby's birth date in profile settings to view growth charts."
   },
   "tummyTime": {
     "title": "Tummy Time",

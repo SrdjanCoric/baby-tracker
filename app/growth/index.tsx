@@ -115,7 +115,7 @@ export default function GrowthScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Illustration/Icon */}
-        <View className="items-center mb-6">
+        <View className="items-center mb-4">
           <View
             className="w-24 h-24 rounded-full items-center justify-center"
             style={{ backgroundColor: GROWTH_TEAL_MUTED }}
@@ -123,6 +123,19 @@ export default function GrowthScreen() {
             <Text className="text-5xl">📏</Text>
           </View>
         </View>
+
+        {/* View Charts Link - prominent position */}
+        <Pressable
+          onPress={() => router.replace("/growth/charts")}
+          className="flex-row items-center justify-center py-2.5 px-4 mb-4 rounded-full self-center"
+          style={{ backgroundColor: GROWTH_TEAL_MUTED }}
+          accessibilityRole="link"
+          accessibilityLabel={t("growth.viewCharts")}
+        >
+          <Text className="text-base font-medium" style={{ color: GROWTH_TEAL_DARK }}>
+            📊 {t("growth.viewCharts")}
+          </Text>
+        </Pressable>
 
         {/* Date display */}
         <View className="items-center mb-6">
