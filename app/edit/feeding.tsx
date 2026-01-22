@@ -125,6 +125,7 @@ export default function EditFeedingScreen() {
         reaction,
         notes: notes || undefined,
       });
+      setIsInitialized(false);
       router.back();
     } finally {
       setIsSaving(false);

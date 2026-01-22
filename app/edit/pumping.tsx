@@ -108,6 +108,7 @@ export default function EditPumpingScreen() {
         volumeMl: parsedVolume,
         notes: notes || undefined,
       });
+      setIsInitialized(false);
       router.back();
     } finally {
       setIsSaving(false);
