@@ -58,3 +58,11 @@ export { SleepMilestoneSuggestionModal } from "./SleepMilestoneSuggestionModal";
 export { SimpleBarChart } from "./SimpleBarChart";
 export { TrendIndicator } from "./TrendIndicator";
 export { InsightCard } from "./InsightCard";
+
+// Onboarding components
+export {
+  OnboardingScreen,
+  OnboardingPagination,
+  OnboardingIllustration,
+  type IllustrationType,
+} from "./onboarding";

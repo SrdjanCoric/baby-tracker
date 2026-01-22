@@ -33,3 +33,8 @@ export type { HouseholdState, HouseholdAction } from "./household-context";
 
 export { SyncProvider, useSync, syncReducer, initialSyncState, getSyncEngine } from "./sync-context";
 export type { SyncState, SyncAction } from "./sync-context";
+
+export { NotificationProvider, useNotifications } from "./notification-context";
+
+export { OnboardingProvider, useOnboarding, onboardingReducer, initialOnboardingState } from "./onboarding-context";
+export type { OnboardingState, OnboardingAction } from "./onboarding-reducer";

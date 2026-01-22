@@ -1,31 +1,64 @@
 import "../global.css";
 import "../src/i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, useTheme, useAuth, useSync } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, useTheme, useAuth, useSync } from "@/contexts";
 import { NightModeOverlay } from "@/components/NightModeOverlay";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { OnboardingStorageService } from "@/services/onboarding-storage";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const [isReady, setIsReady] = useState(false);
+  const isMountedRef = useRef(true);
+  const navigationInProgressRef = useRef(false);
+
+  const handleNavigation = useCallback(async () => {
+    if (navigationInProgressRef.current) return;
+    navigationInProgressRef.current = true;
+
+    try {
+      const hasCompletedOnboarding = await OnboardingStorageService.hasCompletedOnboarding();
+
+      if (!isMountedRef.current) return;
+
+      const currentSegment = segments[0];
+      const inAuthGroup = currentSegment === "auth";
+      const inOnboardingGroup = currentSegment === "onboarding";
+
+      if (!hasCompletedOnboarding && !inOnboardingGroup) {
+        router.replace("/onboarding");
+      } else if (hasCompletedOnboarding && inOnboardingGroup) {
+        router.replace("/(tabs)");
+      } else if (isAuthenticated && inAuthGroup) {
+        router.replace("/(tabs)");
+      }
+
+      if (isMountedRef.current) {
+        setIsReady(true);
+      }
+    } finally {
+      navigationInProgressRef.current = false;
+    }
+  }, [segments, isAuthenticated, router]);
 
   useEffect(() => {
-    if (isLoading) return;
+    isMountedRef.current = true;
 
-    const inAuthGroup = segments[0] === "auth";
-
-    // Only redirect authenticated users away from auth screens
-    // Guest users can use the app without signing in
-    if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)");
+    if (!authLoading) {
+      handleNavigation();
     }
-  }, [isAuthenticated, isLoading, segments, router]);
 
-  if (isLoading) {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [authLoading, handleNavigation]);
+
+  if (authLoading || !isReady) {
     return (
       <View className="flex-1 items-center justify-center bg-surface dark:bg-surface-dark">
         <ActivityIndicator size="large" />
@@ -71,6 +104,12 @@ function AppContent() {
       <OfflineBannerWrapper />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="onboarding"
+          options={{
+            animation: "fade",
+          }}
+        />
         <Stack.Screen
           name="auth"
           options={{
@@ -165,7 +204,9 @@ export default function RootLayout() {
                         <PumpingProvider>
                           <GrowthProvider>
                             <TummyTimeProvider>
-                              <AppContent />
+                              <NotificationProvider>
+                                <AppContent />
+                              </NotificationProvider>
                             </TummyTimeProvider>
                           </GrowthProvider>
                         </PumpingProvider>
