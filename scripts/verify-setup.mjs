@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /**
  * Setup Verification Script
  * Tests all configurations from Parts A-E of the setup guide
@@ -24,7 +25,6 @@ const colors = {
 
 const pass = (msg) => console.log(`${colors.green}✓${colors.reset} ${msg}`);
 const fail = (msg) => console.log(`${colors.red}✗${colors.reset} ${msg}`);
-const warn = (msg) => console.log(`${colors.yellow}⚠${colors.reset} ${msg}`);
 const header = (msg) => console.log(`\n${colors.bold}${colors.blue}═══ ${msg} ═══${colors.reset}\n`);
 
 let passCount = 0;
@@ -44,8 +44,8 @@ async function runCommand(cmd) {
   try {
     const { stdout, stderr } = await execAsync(cmd);
     return { success: true, output: stdout.trim(), error: stderr };
-  } catch (e) {
-    return { success: false, output: '', error: e.message };
+  } catch (err) {
+    return { success: false, output: '', error: err.message };
   }
 }
 
@@ -118,7 +118,7 @@ ${colors.bold}╔═════════════════════
         } else {
           pass(`RPC function "${rpc}" exists`);
         }
-      } catch (e) {
+      } catch {
         pass(`RPC function "${rpc}" exists (requires auth)`);
       }
     }
