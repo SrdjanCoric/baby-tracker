@@ -583,5 +583,30 @@
       "dateRequired": "Please select birth date",
       "dateFuture": "Birth date cannot be in the future"
     }
+  },
+  "export": {
+    "title": "Export Data",
+    "description": "Export {{babyName}}'s tracking data as a CSV file",
+    "dataTypes": "Data to Export",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "dateRange": "Date Range",
+    "last7Days": "Last 7 Days",
+    "last30Days": "Last 30 Days",
+    "last90Days": "Last 90 Days",
+    "allTime": "All Time",
+    "custom": "Custom",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "includeNotes": "Include Notes",
+    "includeNotesDescription": "Add notes column to exported data",
+    "recordsSummary": "{{count}} records will be exported",
+    "exportButton": "Export CSV",
+    "loadingCounts": "Loading data...",
+    "noBabySelected": "Please select a baby to export data",
+    "exportFailed": "Export Failed",
+    "unknownError": "An unexpected error occurred",
+    "sharingNotAvailable": "Sharing Not Available",
+    "sharingNotAvailableMessage": "Sharing is not available on this device"
   }
 }
