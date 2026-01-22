@@ -11,6 +11,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="household" />
       <Stack.Screen name="caregivers" />
       <Stack.Screen name="join-household" />
+      <Stack.Screen name="delete-account" />
     </Stack>
   );
 }
