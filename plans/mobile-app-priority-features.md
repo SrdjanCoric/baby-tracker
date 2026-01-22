@@ -1232,7 +1232,7 @@ describe('DeletionConfirmation', () => {
 **Branch:** `feature/ui-polish`
 **Priority:** HIGH
 **Estimated Complexity:** Medium
-**Status:** 🔄 In Progress (~85% complete)
+**Status:** 🔄 In Progress (~90% complete)
 
 ### Implementation Summary (Current Session)
 Completed work:
@@ -1250,12 +1250,15 @@ Completed work:
 - Added pull-to-refresh to Home, Timeline, and Statistics screens with themed spinner colors
 - Verified touch targets meet 44x44 minimum (DashboardCard action buttons are 48x48)
 - Confirmed EmptyState and LoadingState components are complete and in use
+- Fixed Statistics stat cards to use dark mode background colors (mutedBgDark)
+- Fixed TimelineItem icon backgrounds to use dark mode colors via ACTIVITY_CONFIG
+- Updated dividers in TimelineItem and TodaySummary to use design tokens (bg-border-default)
 
 Files modified:
 - `app/(tabs)/_layout.tsx` - Dark mode tab bar colors, hidden Profile tab
 - `app/(tabs)/index.tsx` - Navigation throttling with `useIsFocused` and `safeNavigate`, pull-to-refresh
 - `app/(tabs)/timeline.tsx` - Pull-to-refresh with RefreshControl
-- `app/(tabs)/statistics.tsx` - Pull-to-refresh with RefreshControl
+- `app/(tabs)/statistics.tsx` - Pull-to-refresh with RefreshControl, dark mode stat card backgrounds
 - `app/feeding/index.tsx` - Drag handle header, removed back button
 - `app/sleep/index.tsx` - Drag handle header with settings button
 - `app/diaper/index.tsx` - Drag handle header
@@ -1266,6 +1269,8 @@ Files modified:
 - `app/settings/*.tsx` - All settings screens now use drag handle pattern
 - `src/components/DashboardCard.tsx` - Spring animations on press
 - `src/components/BabyHeader.tsx` - Removed SyncStatusIndicator
+- `src/components/TimelineItem.tsx` - Dark mode icon backgrounds, design token dividers
+- `src/components/TodaySummary.tsx` - Design token dividers
 
 ### Overview
 Review and polish all screens for consistency, improve touch targets, add micro-animations, and ensure a cohesive visual experience.
