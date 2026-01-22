@@ -405,7 +405,7 @@ export default function StatisticsScreen() {
               value={String(stats.feeding.totalCount)}
               subvalue={feedingSubvalue}
               color={ACTIVITY_CONFIG.feeding.accentColor}
-              bgColor={ACTIVITY_CONFIG.feeding.mutedBg}
+              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.feeding.mutedBgDark : ACTIVITY_CONFIG.feeding.mutedBg}
               trend={weeklyTrends?.feeding}
               showTrend={!!showWeeklyTrends}
             />
@@ -423,7 +423,7 @@ export default function StatisticsScreen() {
               value={formatSleepDuration(stats.sleep.totalDurationSeconds)}
               subvalue={sleepSubvalue}
               color={ACTIVITY_CONFIG.sleep.accentColor}
-              bgColor={ACTIVITY_CONFIG.sleep.mutedBg}
+              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.sleep.mutedBgDark : ACTIVITY_CONFIG.sleep.mutedBg}
               trend={weeklyTrends?.sleep}
               trendFormatted={weeklyTrends?.sleep ? formatTrendDuration(weeklyTrends.sleep.absoluteChange) : undefined}
               showTrend={!!showWeeklyTrends}
@@ -442,7 +442,7 @@ export default function StatisticsScreen() {
               value={String(stats.diaper.totalCount)}
               subvalue={diaperSubvalue}
               color={ACTIVITY_CONFIG.diaper.accentColor}
-              bgColor={ACTIVITY_CONFIG.diaper.mutedBg}
+              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.diaper.mutedBgDark : ACTIVITY_CONFIG.diaper.mutedBg}
               trend={weeklyTrends?.diaper}
               showTrend={!!showWeeklyTrends}
             />
@@ -461,7 +461,7 @@ export default function StatisticsScreen() {
                 value={stats.pumping.totalVolumeMl > 0 ? `${stats.pumping.totalVolumeMl} ml` : String(stats.pumping.totalCount)}
                 subvalue={pumpingSubvalue}
                 color={ACTIVITY_CONFIG.pumping.accentColor}
-                bgColor={ACTIVITY_CONFIG.pumping.mutedBg}
+                bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.pumping.mutedBgDark : ACTIVITY_CONFIG.pumping.mutedBg}
               />
             </View>
           </View>
@@ -472,7 +472,7 @@ export default function StatisticsScreen() {
             {t("tummyTime.title")}
           </Text>
           <View className="flex-row gap-3">
-            <View className="flex-1 rounded-card p-4" style={{ backgroundColor: ACTIVITY_CONFIG.tummyTime.mutedBg }}>
+            <View className="flex-1 rounded-card p-4" style={{ backgroundColor: colorScheme === "dark" ? ACTIVITY_CONFIG.tummyTime.mutedBgDark : ACTIVITY_CONFIG.tummyTime.mutedBg }}>
               <View className="flex-row items-center mb-2">
                 <Text className="text-xl mr-2">{ACTIVITY_CONFIG.tummyTime.icon}</Text>
                 <Text className="text-xs font-semibold uppercase tracking-wider text-content-secondary dark:text-content-dark-secondary">
