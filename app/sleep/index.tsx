@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 import { useSleep } from "@/contexts";
 import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
+import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
+import type { TimerThresholds } from "@/types/notifications";
 import { determineSleepType } from "@/validators/sleep";
 import { SleepMilestoneSuggestionModal } from "@/components";
 
@@ -31,6 +33,13 @@ export default function SleepScreen() {
     dismissMilestoneSuggestion,
   } = useSleep();
 
+  const napAlert = useTimerAlertIntegration("nap");
+  const nightSleepAlert = useTimerAlertIntegration("nightSleep");
+
+  const getAlertForType = useCallback((sleepType: SleepType | undefined) => {
+    return sleepType === "night" ? nightSleepAlert : napAlert;
+  }, [napAlert, nightSleepAlert]);
+
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -40,10 +49,17 @@ export default function SleepScreen() {
 
     const interval = setInterval(() => {
       setTick(t => t + 1);
+
+      const now = new Date();
+      const elapsedMinutes = Math.floor(
+        (now.getTime() - activeTimer.startTime.getTime()) / 1000 / 60
+      );
+      const alert = getAlertForType(activeTimer.sleepType);
+      alert.checkAndSendAlert(elapsedMinutes);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning]);
+  }, [activeTimer?.isRunning, activeTimer?.startTime, activeTimer?.sleepType, getAlertForType]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) {
@@ -63,9 +79,11 @@ export default function SleepScreen() {
   }, [startSleep]);
 
   const handleStopSleep = useCallback(async () => {
+    napAlert.resetAlert();
+    nightSleepAlert.resetAlert();
     await stopSleep();
     router.back();
-  }, [stopSleep, router]);
+  }, [napAlert, nightSleepAlert, stopSleep, router]);
 
   const handleTypeChange = useCallback((sleepType: SleepType) => {
     changeSleepType(sleepType);

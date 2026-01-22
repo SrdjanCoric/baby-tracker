@@ -7,6 +7,7 @@ import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useUnits } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
+import { useTimerAlertIntegration } from "@/hooks";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 
@@ -32,6 +33,8 @@ export default function PumpingScreen() {
     getLastSide,
   } = usePumping();
 
+  const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("pumping");
+
   const [tick, setTick] = useState(0);
   const [showVolumeInput, setShowVolumeInput] = useState(false);
   const [volumeMl, setVolumeMl] = useState<number | null>(null);
@@ -45,10 +48,16 @@ export default function PumpingScreen() {
 
     const interval = setInterval(() => {
       setTick(t => t + 1);
+
+      const now = new Date();
+      const elapsedMinutes = Math.floor(
+        (now.getTime() - activeTimer.startTime.getTime()) / 1000 / 60
+      );
+      checkAndSendAlert(elapsedMinutes);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning]);
+  }, [activeTimer?.isRunning, activeTimer?.startTime, checkAndSendAlert]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) {
@@ -74,9 +83,10 @@ export default function PumpingScreen() {
 
   const handleConfirmStop = useCallback(async () => {
     if (volumeMl === null || volumeMl <= 0) return;
+    resetAlert();
     await stopPumping(volumeMl);
     router.back();
-  }, [stopPumping, volumeMl, router]);
+  }, [resetAlert, stopPumping, volumeMl, router]);
 
   const handleCancelStop = useCallback(() => {
     setShowVolumeInput(false);

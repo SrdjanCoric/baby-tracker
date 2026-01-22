@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTummyTime, useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
+import { useTimerAlertIntegration } from "@/hooks";
 import { MilestoneSuggestionModal } from "@/components/MilestoneSuggestionModal";
 import Svg, { Circle } from "react-native-svg";
 
@@ -31,6 +32,8 @@ export default function TummyTimeScreen() {
     dismissMilestoneSuggestion,
   } = useTummyTime();
 
+  const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("tummyTime");
+
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -40,10 +43,16 @@ export default function TummyTimeScreen() {
 
     const interval = setInterval(() => {
       setTick(t => t + 1);
+
+      const now = new Date();
+      const elapsedMinutes = Math.floor(
+        (now.getTime() - activeTimer.startTime.getTime()) / 1000 / 60
+      );
+      checkAndSendAlert(elapsedMinutes);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning]);
+  }, [activeTimer?.isRunning, activeTimer?.startTime, checkAndSendAlert]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) {
@@ -71,9 +80,10 @@ export default function TummyTimeScreen() {
   }, [startTummyTime]);
 
   const handleStopTummyTime = useCallback(async () => {
+    resetAlert();
     await stopTummyTime();
     router.back();
-  }, [stopTummyTime, router]);
+  }, [resetAlert, stopTummyTime, router]);
 
   const handleBack = useCallback(() => {
     router.back();
