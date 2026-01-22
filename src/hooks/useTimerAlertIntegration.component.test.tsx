@@ -65,7 +65,7 @@ jest.mock("@/utils/notification-scheduler", () => ({
   ) => mockCheckTimerAlert(activityType, duration, settings),
 }));
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { render, screen, act, waitFor, fireEvent } from "@testing-library/react-native";
 import { Text, View, Pressable } from "react-native";
 import type { TimerThresholds } from "@/types/notifications";
@@ -88,7 +88,10 @@ function TestConsumer({
   const { alertSent, timerAlertsEnabled, threshold, checkAndSendAlert, resetAlert } =
     useTimerAlertIntegration(activityType);
   const checkAndSendAlertRef = useRef(checkAndSendAlert);
-  checkAndSendAlertRef.current = checkAndSendAlert;
+
+  useEffect(() => {
+    checkAndSendAlertRef.current = checkAndSendAlert;
+  }, [checkAndSendAlert]);
 
   const handleCheck = async () => {
     if (durationToCheck !== undefined) {

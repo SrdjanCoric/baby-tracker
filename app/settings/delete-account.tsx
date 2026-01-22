@@ -6,6 +6,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  TextInput,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -31,16 +33,23 @@ const EMPTY_PREVIEW: DeletionPreview = {
 export default function DeleteAccountScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const { user, signOut, verifyPassword } = useAuth();
   const { selectedBaby } = useBaby();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [preview, setPreview] = useState<DeletionPreview>(EMPTY_PREVIEW);
   const [confirmationText, setConfirmationText] = useState("");
+  const [password, setPassword] = useState("");
+  const [isPasswordVerified, setIsPasswordVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isConfirmed = validateDeletionConfirmation(confirmationText);
+  const hasEmailAuth = !!user?.email;
+  const canProceed = isConfirmed && (isPasswordVerified || !hasEmailAuth);
 
   const loadPreview = useCallback(async () => {
     if (!selectedBaby || !user) {
@@ -79,8 +88,32 @@ export default function DeleteAccountScreen() {
     router.back();
   }, [router]);
 
+  const handleVerifyPassword = useCallback(async () => {
+    if (!password.trim()) {
+      setError(t("accountDeletion.errors.passwordRequired"));
+      return;
+    }
+
+    setIsVerifying(true);
+    setError(null);
+
+    try {
+      const { verified, error: verifyError } = await verifyPassword(password);
+
+      if (verified) {
+        setIsPasswordVerified(true);
+      } else {
+        setError(verifyError?.message || t("accountDeletion.errors.invalidPassword"));
+      }
+    } catch (err) {
+      setError(t("accountDeletion.errors.verificationFailed"));
+    } finally {
+      setIsVerifying(false);
+    }
+  }, [password, verifyPassword, t]);
+
   const handleDelete = useCallback(async () => {
-    if (!user || !isConfirmed) return;
+    if (!user || !canProceed) return;
 
     const isOnline = await AccountDeletionService.isOnline();
     if (!isOnline) {
@@ -131,7 +164,7 @@ export default function DeleteAccountScreen() {
         },
       ]
     );
-  }, [user, isConfirmed, signOut, t]);
+  }, [user, canProceed, signOut, t]);
 
   if (!user) {
     return (
@@ -214,25 +247,76 @@ export default function DeleteAccountScreen() {
               onChangeText={setConfirmationText}
               isValid={isConfirmed}
             />
+
+            {hasEmailAuth && isConfirmed && !isPasswordVerified && (
+              <View className="mt-6">
+                <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-2">
+                  {t("accountDeletion.verifyPassword")}
+                </Text>
+                <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-4">
+                  {t("accountDeletion.verifyPasswordDescription")}
+                </Text>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={t("auth.passwordPlaceholder")}
+                  placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  className={`px-4 py-4 rounded-lg border ${
+                    isDark
+                      ? "border-gray-700 bg-gray-800 text-white"
+                      : "border-gray-300 bg-gray-50 text-gray-900"
+                  }`}
+                />
+                <Pressable
+                  onPress={handleVerifyPassword}
+                  disabled={isVerifying || !password.trim()}
+                  accessibilityRole="button"
+                  className={`mt-3 py-3 rounded-lg items-center ${
+                    password.trim() && !isVerifying
+                      ? "bg-primary-500"
+                      : "bg-gray-300 dark:bg-gray-700"
+                  }`}
+                >
+                  {isVerifying ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="text-white font-medium">
+                      {t("accountDeletion.verifyButton")}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+            )}
+
+            {isPasswordVerified && (
+              <View className="mt-4 p-3 rounded-lg bg-green-100 dark:bg-green-900/30">
+                <Text className="text-green-700 dark:text-green-300 text-center">
+                  {t("accountDeletion.passwordVerified")}
+                </Text>
+              </View>
+            )}
           </ScrollView>
 
           <View className="px-4 pb-4 pt-2 border-t border-border-subtle dark:border-border-dark-subtle">
             <Pressable
               onPress={handleDelete}
-              disabled={!isConfirmed}
+              disabled={!canProceed}
               accessibilityRole="button"
-              accessibilityState={{ disabled: !isConfirmed }}
+              accessibilityState={{ disabled: !canProceed }}
               accessibilityLabel={t("accountDeletion.deleteButton")}
               testID="delete-account-button"
               className={`py-4 rounded-button-lg items-center ${
-                isConfirmed
+                canProceed
                   ? "bg-red-500 active:bg-red-600"
                   : "bg-gray-300 dark:bg-gray-700"
               }`}
             >
               <Text
                 className={`text-lg font-semibold ${
-                  isConfirmed ? "text-white" : "text-gray-500"
+                  canProceed ? "text-white" : "text-gray-500"
                 }`}
               >
                 {t("accountDeletion.deleteButton")}

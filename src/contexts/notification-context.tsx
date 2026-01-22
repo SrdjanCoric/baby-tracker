@@ -29,8 +29,8 @@ interface NotificationContextValue {
   isLoading: boolean;
   updateSettings: (partial: Partial<NotificationSettings>) => Promise<void>;
   requestPermissions: () => Promise<boolean>;
-  scheduleFeedingReminder: (lastFeedingTime: Date) => Promise<void>;
-  cancelFeedingReminder: () => Promise<void>;
+  scheduleFeedingReminder: (babyId: string, lastFeedingTime: Date) => Promise<void>;
+  cancelFeedingReminder: (babyId: string) => Promise<void>;
   checkTimerAlert: (
     activityType: keyof TimerThresholds,
     durationMinutes: number
@@ -111,8 +111,8 @@ export function NotificationProvider({
   }, []);
 
   const scheduleFeedingReminder = useCallback(
-    async (lastFeedingTime: Date) => {
-      if (!settings.feedingReminders.enabled) {
+    async (babyId: string, lastFeedingTime: Date) => {
+      if (!babyId || !settings.feedingReminders.enabled) {
         return;
       }
 
@@ -121,7 +121,7 @@ export function NotificationProvider({
       }
 
       const existingId =
-        await NotificationStorageService.getFeedingReminderNotificationId();
+        await NotificationStorageService.getFeedingReminderNotificationId(babyId);
       if (existingId) {
         await NotificationService.cancelNotification(existingId);
       }
@@ -142,24 +142,30 @@ export function NotificationProvider({
           body: `It's been ${settings.feedingReminders.intervalHours} hours since the last feeding`,
           data: {
             type: "feeding_reminder",
+            babyId,
           },
         },
         reminderTime
       );
 
-      await NotificationStorageService.saveFeedingReminderNotificationId(
-        notificationId
-      );
+      if (notificationId) {
+        await NotificationStorageService.saveFeedingReminderNotificationId(
+          babyId,
+          notificationId
+        );
+      }
     },
     [settings, permissionStatus]
   );
 
-  const cancelFeedingReminder = useCallback(async () => {
+  const cancelFeedingReminder = useCallback(async (babyId: string) => {
+    if (!babyId) return;
+
     const notificationId =
-      await NotificationStorageService.getFeedingReminderNotificationId();
+      await NotificationStorageService.getFeedingReminderNotificationId(babyId);
     if (notificationId) {
       await NotificationService.cancelNotification(notificationId);
-      await NotificationStorageService.clearFeedingReminderNotificationId();
+      await NotificationStorageService.clearFeedingReminderNotificationId(babyId);
     }
   }, []);
 

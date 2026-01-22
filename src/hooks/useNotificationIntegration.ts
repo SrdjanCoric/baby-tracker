@@ -6,14 +6,16 @@
 import { useCallback } from "react";
 import { useNotifications } from "@/contexts/notification-context";
 import { useFeeding } from "@/contexts/feeding-context";
+import { useBaby } from "@/contexts/baby-context";
 
 export function useNotificationIntegration() {
   const { settings, scheduleFeedingReminder, cancelFeedingReminder } =
     useNotifications();
   const { getLastFeeding } = useFeeding();
+  const { selectedBaby } = useBaby();
 
   const scheduleReminderAfterFeeding = useCallback(async () => {
-    if (!settings.feedingReminders.enabled) {
+    if (!settings.feedingReminders.enabled || !selectedBaby) {
       return;
     }
 
@@ -23,12 +25,13 @@ export function useNotificationIntegration() {
     }
 
     const feedingTime = new Date(lastFeeding.startedAt);
-    await scheduleFeedingReminder(feedingTime);
-  }, [settings.feedingReminders.enabled, getLastFeeding, scheduleFeedingReminder]);
+    await scheduleFeedingReminder(selectedBaby.id, feedingTime);
+  }, [settings.feedingReminders.enabled, selectedBaby, getLastFeeding, scheduleFeedingReminder]);
 
   const cancelReminder = useCallback(async () => {
-    await cancelFeedingReminder();
-  }, [cancelFeedingReminder]);
+    if (!selectedBaby) return;
+    await cancelFeedingReminder(selectedBaby.id);
+  }, [selectedBaby, cancelFeedingReminder]);
 
   return {
     scheduleReminderAfterFeeding,

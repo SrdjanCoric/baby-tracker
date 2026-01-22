@@ -12,6 +12,8 @@ import type {
 import { NOTIFICATION_CHANNELS } from "@/constants/notifications";
 import { getNavigationRoute } from "@/utils/notification-routes";
 
+const IOS_NOTIFICATION_LIMIT = 64;
+
 export const NotificationService = {
   /**
    * Sets up the notification handler for foreground notifications
@@ -77,13 +79,42 @@ export const NotificationService = {
   },
 
   /**
+   * Gets the count of currently scheduled notifications
+   */
+  async getScheduledNotificationCount(): Promise<number> {
+    const notifications = await Notifications.getAllScheduledNotificationsAsync();
+    return notifications.length;
+  },
+
+  /**
+   * Checks if we can schedule another notification
+   * iOS has a limit of 64 scheduled notifications
+   */
+  async canScheduleNotification(): Promise<boolean> {
+    if (Platform.OS !== "ios") {
+      return true;
+    }
+
+    const count = await this.getScheduledNotificationCount();
+    return count < IOS_NOTIFICATION_LIMIT;
+  },
+
+  /**
    * Schedules a local notification
-   * @returns The notification identifier
+   * @returns The notification identifier, or null if limit reached
    */
   async scheduleNotification(
     content: NotificationContent,
     triggerTime: Date
-  ): Promise<string> {
+  ): Promise<string | null> {
+    const canSchedule = await this.canScheduleNotification();
+    if (!canSchedule) {
+      console.warn(
+        `iOS notification limit (${IOS_NOTIFICATION_LIMIT}) reached, cannot schedule new notification`
+      );
+      return null;
+    }
+
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title: content.title,

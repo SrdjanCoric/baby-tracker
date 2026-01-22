@@ -1,6 +1,6 @@
 import "../global.css";
 import "../src/i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -14,41 +14,49 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
   const [isReady, setIsReady] = useState(false);
+  const isMountedRef = useRef(true);
+  const navigationInProgressRef = useRef(false);
 
-  useEffect(() => {
-    if (authLoading) return;
+  const handleNavigation = useCallback(async () => {
+    if (navigationInProgressRef.current) return;
+    navigationInProgressRef.current = true;
 
-    const handleNavigation = async () => {
+    try {
       const hasCompletedOnboarding = await OnboardingStorageService.hasCompletedOnboarding();
 
-      const inAuthGroup = segments[0] === "auth";
-      const inOnboardingGroup = segments[0] === "onboarding";
+      if (!isMountedRef.current) return;
 
-      // If onboarding not completed and not already in onboarding, redirect to onboarding
+      const currentSegment = segments[0];
+      const inAuthGroup = currentSegment === "auth";
+      const inOnboardingGroup = currentSegment === "onboarding";
+
       if (!hasCompletedOnboarding && !inOnboardingGroup) {
         router.replace("/onboarding");
-        setIsReady(true);
-        return;
-      }
-
-      // If onboarding completed and in onboarding group, redirect to tabs
-      if (hasCompletedOnboarding && inOnboardingGroup) {
+      } else if (hasCompletedOnboarding && inOnboardingGroup) {
         router.replace("/(tabs)");
-        setIsReady(true);
-        return;
-      }
-
-      // Only redirect authenticated users away from auth screens
-      // Guest users can use the app without signing in
-      if (isAuthenticated && inAuthGroup) {
+      } else if (isAuthenticated && inAuthGroup) {
         router.replace("/(tabs)");
       }
 
-      setIsReady(true);
+      if (isMountedRef.current) {
+        setIsReady(true);
+      }
+    } finally {
+      navigationInProgressRef.current = false;
+    }
+  }, [segments, isAuthenticated, router]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    if (!authLoading) {
+      handleNavigation();
+    }
+
+    return () => {
+      isMountedRef.current = false;
     };
-
-    handleNavigation();
-  }, [authLoading, isAuthenticated, segments, router]);
+  }, [authLoading, handleNavigation]);
 
   if (authLoading || !isReady) {
     return (

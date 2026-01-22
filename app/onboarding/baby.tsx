@@ -2,7 +2,7 @@
  * Baby Setup Screen - Final onboarding screen
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { View, Text, Pressable, Platform, useColorScheme, ScrollView, KeyboardAvoidingView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -12,6 +12,7 @@ import { Input } from "@/components";
 import { useOnboarding, useBaby } from "@/contexts";
 import { OnboardingPagination, OnboardingIllustration } from "@/components/onboarding";
 import { validateBabyName, validateBirthDate } from "@/validators/baby";
+import { sanitizeName } from "@/utils/sanitize";
 
 const PRIMARY_COLOR = "#7C3AED";
 
@@ -31,6 +32,7 @@ export default function BabySetupScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const handleSkip = useCallback(async () => {
     await skipOnboarding();
@@ -59,6 +61,10 @@ export default function BabySetupScreen() {
   };
 
   const handleContinue = useCallback(async () => {
+    if (isSubmittingRef.current) {
+      return;
+    }
+
     const newErrors: Record<string, string> = {};
 
     const nameError = validateBabyName(name);
@@ -73,20 +79,30 @@ export default function BabySetupScreen() {
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsLoading(true);
+    setErrors({});
+
     try {
+      const sanitizedName = sanitizeName(name);
       const newBaby = await addBaby({
-        name: name.trim(),
+        name: sanitizedName,
         birthDate,
         gender,
       });
       await selectBaby(newBaby.id);
       await completeOnboarding();
       router.replace("/(tabs)");
-    } catch {
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && error.message.includes("network")
+          ? t("onboarding.errors.networkError")
+          : t("onboarding.errors.createBabyFailed");
+      setErrors({ submit: errorMessage });
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
-  }, [name, birthDate, gender, addBaby, selectBaby, completeOnboarding, router]);
+  }, [name, birthDate, gender, addBaby, selectBaby, completeOnboarding, router, t]);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]}>
@@ -129,6 +145,26 @@ export default function BabySetupScreen() {
             {t("onboarding.baby.subtitle")}
           </Text>
 
+          {/* Submit Error */}
+          {errors.submit && (
+            <View className="bg-red-100 dark:bg-red-900/30 rounded-xl p-4 mb-4">
+              <Text className="text-red-700 dark:text-red-300 text-center">
+                {errors.submit}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setErrors((prev) => ({ ...prev, submit: "" }));
+                  isSubmittingRef.current = false;
+                }}
+                className="mt-2 py-2"
+              >
+                <Text className="text-red-700 dark:text-red-300 text-center font-medium underline">
+                  {t("common.retry")}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
           {/* Form */}
           <View className="mb-6">
             {/* Name Input */}
@@ -145,6 +181,7 @@ export default function BabySetupScreen() {
                 placeholder={t("onboarding.babyNamePlaceholder")}
                 error={errors.name}
                 autoCapitalize="words"
+                maxLength={100}
               />
             </View>
 

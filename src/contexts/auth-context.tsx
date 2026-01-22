@@ -69,6 +69,7 @@ interface AuthContextValue {
   signInWithApple: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   updateDisplayName: (displayName: string) => Promise<{ error: Error | null }>;
+  verifyPassword: (password: string) => Promise<{ verified: boolean; error: Error | null }>;
   isAppleSignInAvailable: boolean;
 }
 
@@ -346,6 +347,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   }, [user]);
 
+  const verifyPassword = useCallback(async (password: string): Promise<{ verified: boolean; error: Error | null }> => {
+    if (!user?.email) {
+      return { verified: false, error: new Error("No email associated with account") };
+    }
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password,
+      });
+
+      if (error) {
+        return { verified: false, error: new Error(error.message) };
+      }
+
+      return { verified: true, error: null };
+    } catch (err) {
+      return {
+        verified: false,
+        error: err instanceof Error ? err : new Error("Password verification failed"),
+      };
+    }
+  }, [user?.email]);
+
   const value: AuthContextValue = {
     user,
     session,
@@ -358,6 +383,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithApple,
     signOut,
     updateDisplayName,
+    verifyPassword,
     isAppleSignInAvailable,
   };
 

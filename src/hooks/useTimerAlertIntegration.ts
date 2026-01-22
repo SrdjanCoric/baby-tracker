@@ -57,7 +57,7 @@ export function useTimerAlertIntegration(activityType: keyof TimerThresholds) {
       const message = ALERT_MESSAGES[activityType];
 
       try {
-        await NotificationService.scheduleNotification(
+        const notificationId = await NotificationService.scheduleNotification(
           {
             title: message.title,
             body: message.body,
@@ -69,9 +69,13 @@ export function useTimerAlertIntegration(activityType: keyof TimerThresholds) {
           new Date()
         );
 
-        alertSentRef.current = true;
-        setAlertSent(true);
-        return true;
+        if (notificationId) {
+          alertSentRef.current = true;
+          setAlertSent(true);
+          return true;
+        }
+
+        return false;
       } catch (error) {
         console.error("Failed to send timer alert:", error);
         return false;
