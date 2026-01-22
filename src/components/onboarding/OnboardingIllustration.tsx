@@ -42,7 +42,7 @@ function WelcomeIllustration() {
 }
 
 function ActivityIconsIllustration() {
-  const icons = ["🍼", "😴", "🧷", "📏"];
+  const icons = ["🍼", "😴", "🚼", "📏"];
 
   return (
     <View className="flex-row flex-wrap justify-center" style={{ width: 160 }}>

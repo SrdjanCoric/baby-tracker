@@ -13,44 +13,44 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
-  const [onboardingChecked, setOnboardingChecked] = useState(false);
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const checkOnboarding = async () => {
-      const completed = await OnboardingStorageService.hasCompletedOnboarding();
-      setHasCompletedOnboarding(completed);
-      setOnboardingChecked(true);
+    if (authLoading) return;
+
+    const handleNavigation = async () => {
+      const hasCompletedOnboarding = await OnboardingStorageService.hasCompletedOnboarding();
+
+      const inAuthGroup = segments[0] === "auth";
+      const inOnboardingGroup = segments[0] === "onboarding";
+
+      // If onboarding not completed and not already in onboarding, redirect to onboarding
+      if (!hasCompletedOnboarding && !inOnboardingGroup) {
+        router.replace("/onboarding");
+        setIsReady(true);
+        return;
+      }
+
+      // If onboarding completed and in onboarding group, redirect to tabs
+      if (hasCompletedOnboarding && inOnboardingGroup) {
+        router.replace("/(tabs)");
+        setIsReady(true);
+        return;
+      }
+
+      // Only redirect authenticated users away from auth screens
+      // Guest users can use the app without signing in
+      if (isAuthenticated && inAuthGroup) {
+        router.replace("/(tabs)");
+      }
+
+      setIsReady(true);
     };
-    checkOnboarding();
-  }, []);
 
-  useEffect(() => {
-    if (authLoading || !onboardingChecked) return;
+    handleNavigation();
+  }, [authLoading, isAuthenticated, segments, router]);
 
-    const inAuthGroup = segments[0] === "auth";
-    const inOnboardingGroup = segments[0] === "onboarding";
-
-    // If onboarding not completed and not already in onboarding, redirect to onboarding
-    if (!hasCompletedOnboarding && !inOnboardingGroup) {
-      router.replace("/onboarding");
-      return;
-    }
-
-    // If onboarding completed and in onboarding group, redirect to tabs
-    if (hasCompletedOnboarding && inOnboardingGroup) {
-      router.replace("/(tabs)");
-      return;
-    }
-
-    // Only redirect authenticated users away from auth screens
-    // Guest users can use the app without signing in
-    if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)");
-    }
-  }, [isAuthenticated, authLoading, segments, router, onboardingChecked, hasCompletedOnboarding]);
-
-  if (authLoading || !onboardingChecked) {
+  if (authLoading || !isReady) {
     return (
       <View className="flex-1 items-center justify-center bg-surface dark:bg-surface-dark">
         <ActivityIndicator size="large" />
