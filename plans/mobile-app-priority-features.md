@@ -43,7 +43,14 @@ Files created:
 - `src/services/notification-storage.ts` - AsyncStorage persistence
 - `src/contexts/notification-context.tsx` - State management (21 component tests)
 - `src/hooks/useNotificationIntegration.ts` - Integration hook for feeding screens
+- `src/hooks/useTimerAlertIntegration.ts` - Timer alert integration hook (14 component tests)
 - `app/settings/notifications.tsx` - Notification settings UI
+
+Timer alert integration added to:
+- `app/feeding/breastfeed.tsx` - Breastfeeding timer screen
+- `app/sleep/index.tsx` - Sleep timer screen (nap and nightSleep)
+- `app/pumping/index.tsx` - Pumping timer screen
+- `app/tummyTime/index.tsx` - Tummy time timer screen
 
 ### Overview
 Implement push notifications for feeding reminders and timer duration alerts. Users should be able to configure notification preferences.
@@ -317,10 +324,10 @@ describe('NotificationSettings', () => {
   - [x] Call `scheduleFeedingReminder()` after logging feeding (via useNotificationIntegration hook)
   - [x] Cancel existing reminder before scheduling new one
 
-- [ ] Update timer contexts (Feeding, Sleep, Pumping, TummyTime):
-  - [ ] Check timer alert threshold periodically (every minute when timer running)
-  - [ ] Send alert notification when threshold exceeded
-  - [ ] Don't repeat alert for same timer session
+- [x] Update timer contexts (Feeding, Sleep, Pumping, TummyTime):
+  - [x] Check timer alert threshold periodically (every second when timer running)
+  - [x] Send alert notification when threshold exceeded
+  - [x] Don't repeat alert for same timer session
 
 #### Step 6: UI Components
 - [x] Create `NotificationSettings.tsx` using `/frontend-design`:
@@ -368,8 +375,8 @@ describe('NotificationSettings', () => {
 
 ### 1.8 Testing Checklist
 
-- [x] All unit tests pass (1,252 unit tests including 42 new notification tests)
-- [x] All component tests pass (433 component tests including 21 new notification context tests)
+- [x] All unit tests pass (1,412 unit tests including notification tests)
+- [x] All component tests pass (463 component tests including 21 notification context tests + 14 timer alert integration tests)
 - [ ] Manual test: Enable feeding reminder, log feeding, verify notification arrives
 - [ ] Manual test: Start timer, wait past threshold, verify alert
 - [ ] Manual test: Enable quiet hours, verify no notifications during quiet hours
@@ -383,7 +390,7 @@ describe('NotificationSettings', () => {
 
 - [x] All tests pass (unit + component)
 - [x] Feeding reminders work correctly (implementation complete, needs manual testing)
-- [ ] Timer duration alerts work for all timer types (checkTimerAlert implemented, periodic checking not yet integrated)
+- [x] Timer duration alerts work for all timer types (useTimerAlertIntegration hook integrated into all timer screens)
 - [x] Quiet hours respected
 - [x] Settings persist across app restarts
 - [x] Notification permissions handled gracefully
@@ -2060,10 +2067,20 @@ Based on priority and dependencies:
 ### Current Status (as of last update)
 
 **Completed Features:**
-- Feature 1: Notifications - Core implementation complete
+- Feature 1: Notifications - Core implementation complete, including timer alert integration
 - Feature 2: Onboarding - Core implementation complete (skip button fixed, diaper emoji fixed)
 - Feature 3: CSV Export - Complete
 - Feature 4: Account Deletion - Core implementation complete
+
+**Recent Implementation (Timer Alerts):**
+- Created `useTimerAlertIntegration` hook in `src/hooks/useTimerAlertIntegration.ts`
+- Added 14 component tests in `src/hooks/useTimerAlertIntegration.component.test.tsx`
+- Integrated timer alerts into all timer screens:
+  - `app/feeding/breastfeed.tsx` - checks every second, sends alert when breastfeeding threshold (60 min) exceeded
+  - `app/sleep/index.tsx` - handles both nap (180 min) and nightSleep (720 min) thresholds
+  - `app/pumping/index.tsx` - checks pumping threshold (45 min)
+  - `app/tummyTime/index.tsx` - checks tummy time threshold (30 min)
+- Alerts are sent only once per session and reset when timer stops
 
 **Pending Work:**
 
@@ -2076,7 +2093,7 @@ Based on priority and dependencies:
    - Onboarding flow (delete app, reinstall, verify onboarding shows)
    - CSV Export functionality
    - Account Deletion (after Supabase migration)
-   - Notifications (feeding reminders, timer alerts)
+   - Notifications (feeding reminders, timer alerts on all timer screens)
 
 3. **Next Feature to Implement: Feature 5 - UI Polish**
    - Review all screens for consistency
@@ -2089,10 +2106,12 @@ Based on priority and dependencies:
 ### Recent Fixes Applied
 - Fixed `AuthGuard` race condition in `app/_layout.tsx` - onboarding skip now works correctly
 - Updated diaper emoji in `src/components/onboarding/OnboardingIllustration.tsx` from 🧷 to 🚼 for consistency
+- Added `useTimerAlertIntegration` hook for timer duration alerts
+- Integrated timer alerts into breastfeeding, sleep, pumping, and tummy time screens
 
 ### Commands to Run Before Starting
 ```bash
-npm run test:all  # Should pass all 449+ tests
+npm run test:all  # Should pass all 1875 tests (1412 unit + 463 component)
 npx tsc --noEmit  # Should have no TypeScript errors
 ```
 
@@ -2101,3 +2120,4 @@ npx tsc --noEmit  # Should have no TypeScript errors
 - `src/contexts/` - All context providers
 - `src/services/` - Service layer for storage and APIs
 - `src/components/` - Reusable UI components
+- `src/hooks/useTimerAlertIntegration.ts` - Timer alert integration hook
