@@ -68,9 +68,7 @@ describe('Edge Cases', () => {
       vi.useRealTimers();
       syncEngine.setOnlineForTesting(true);
 
-      let pullCallCount = 0;
       vi.spyOn(syncEngine as any, 'pullChanges').mockImplementation(async () => {
-        pullCallCount++;
         await new Promise((resolve) => setTimeout(resolve, 50));
         return [];
       });
@@ -82,7 +80,8 @@ describe('Edge Cases', () => {
       const duration = Date.now() - startTime;
 
       expect(syncEngine.getStatus()).toBe('online');
-      expect(duration).toBeGreaterThanOrEqual(50);
+      // Allow 5ms tolerance for timer precision variations across systems
+      expect(duration).toBeGreaterThanOrEqual(45);
     });
 
     it('should handle intermittent connectivity (flapping) with debounce', async () => {
