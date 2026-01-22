@@ -36,6 +36,17 @@ A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch 
 
 ## Current Progress
 
+> **Next Steps:** See `plans/mobile-app-priority-features.md` for detailed implementation checklists for the next priority features:
+> 1. Notifications (feeding reminders, timer alerts)
+> 2. Onboarding (first-time user experience)
+> 3. CSV Export
+> 4. Account Deletion (in-app)
+> 5. UI Polish
+> 6. Accessibility
+> 7. Error Handling & Crash Reporting
+> 8. Growth Charts (WHO percentiles)
+> 9. PDF Reports
+
 ### Completed
 - [x] Expo + TypeScript project with NativeWind v4
 - [x] Path aliases and folder structure
@@ -2718,6 +2729,13 @@ describe('Offline functionality', () => {
 
 ## Phase 3: Native Extensions
 
+> **STATUS: DEFERRED**
+>
+> Phase 3 (Apple Watch, Widgets, Live Activities, Siri) is deferred until after the mobile app is fully polished.
+> Focus on mobile app features in Phase 4 and Phase 5 first.
+>
+> See `plans/mobile-app-priority-features.md` for the prioritized mobile app features to implement next.
+
 ### Objective
 Build Apple Watch app, iOS/Android widgets, Live Activities, and native background timers.
 
@@ -3401,7 +3419,7 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
 - [ ] All screenshots created
 - [ ] Descriptions written
 - [ ] Feature graphic created
-- [ ] Privacy policy published
+- [x] Privacy policy published (https://srdjancoric.github.io/sofibaby-privacy/)
 - [ ] All assets meet store requirements
 
 ---
@@ -3436,11 +3454,11 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
    - Complete data safety form
 
 **Definition of Done:**
-- [ ] Apple Developer account active
-- [ ] Google Play account active
-- [ ] App Store Connect app created
-- [ ] Play Console app created
-- [ ] Certificates configured
+- [x] Apple Developer account active
+- [x] Google Play account active
+- [x] App Store Connect app created (App ID: 6758142736)
+- [x] Play Console app created (Sofi Baby Tracker)
+- [x] Certificates configured (via EAS)
 
 ---
 
@@ -3492,11 +3510,11 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
 ```
 
 **Definition of Done:**
-- [ ] Development builds work
-- [ ] Preview builds work
-- [ ] Production build works
-- [ ] iOS build installs on device
-- [ ] Android build installs on device
+- [x] Development builds work
+- [x] Preview builds work
+- [x] Production build works
+- [x] iOS build installs on device (submitted to TestFlight)
+- [x] Android build installs on device (uploaded to Internal Testing)
 - [ ] OTA updates work
 
 ---
@@ -3560,11 +3578,11 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
   - [ ] Screenshots (all sizes)
   - [ ] Description
   - [ ] Feature graphic
-- [ ] Privacy policy published
-- [ ] Developer accounts set up:
-  - [ ] Apple Developer ($99)
-  - [ ] Google Play ($25)
-- [ ] EAS production builds work
+- [x] Privacy policy published (https://srdjancoric.github.io/sofibaby-privacy/)
+- [x] Developer accounts set up:
+  - [x] Apple Developer ($99)
+  - [x] Google Play ($25)
+- [x] EAS production builds work
 - [ ] Tested on real devices:
   - [ ] Multiple iPhones
   - [ ] Multiple Android devices
@@ -3580,8 +3598,8 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
 ## App Store Submission Checklist
 
 ### iOS Submission
-- [ ] Build production IPA via EAS
-- [ ] Upload to App Store Connect
+- [x] Build production IPA via EAS
+- [x] Upload to App Store Connect (via eas submit)
 - [ ] Fill out App Store listing:
   - [ ] App name
   - [ ] Subtitle
@@ -3589,8 +3607,8 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
   - [ ] Keywords
   - [ ] Screenshots
   - [ ] App icon
-- [ ] Complete App Privacy:
-  - [ ] Privacy policy URL
+- [x] Complete App Privacy:
+  - [x] Privacy policy URL (https://srdjancoric.github.io/sofibaby-privacy/)
   - [ ] Data collection types
   - [ ] Data usage purposes
 - [ ] Set content rating (likely 4+)
@@ -3600,8 +3618,8 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
 - [ ] Submit for review
 
 ### Android Submission
-- [ ] Build production AAB via EAS
-- [ ] Upload to Play Console
+- [x] Build production AAB via EAS
+- [x] Upload to Play Console (Internal Testing track)
 - [ ] Complete store listing:
   - [ ] App name
   - [ ] Short description
@@ -3609,7 +3627,7 @@ Perfect for new parents, caregivers, and anyone tracking baby's daily activities
   - [ ] Screenshots
   - [ ] Feature graphic
   - [ ] App icon
-- [ ] Complete Data Safety form
+- [x] Complete Data Safety form (in progress)
 - [ ] Complete content rating (IARC)
 - [ ] Set target audience (NOT children - this is for parents)
 - [ ] Submit for review

@@ -100,7 +100,7 @@ jest.mock("@/services/storage-prefix", () => ({
 
 jest.mock("@/constants/auth", () => ({
   AUTH_CONFIG: {
-    OAUTH_REDIRECT_URI: "babytracker://auth/callback",
+    OAUTH_REDIRECT_URI: "sofibaby://login-callback/",
   },
 }));
 
