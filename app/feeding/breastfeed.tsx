@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useFeeding } from "@/contexts";
 import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
+import { useNotificationIntegration } from "@/hooks";
 import type { BreastSide } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
@@ -23,6 +24,7 @@ export default function BreastfeedingScreen() {
     stopBreastfeeding,
     changeSide,
   } = useFeeding();
+  const { scheduleReminderAfterFeeding } = useNotificationIntegration();
 
   const [tick, setTick] = useState(0);
 
@@ -79,8 +81,9 @@ export default function BreastfeedingScreen() {
 
   const handleStopFeeding = useCallback(async () => {
     await stopBreastfeeding();
+    await scheduleReminderAfterFeeding();
     router.back();
-  }, [stopBreastfeeding, router]);
+  }, [stopBreastfeeding, scheduleReminderAfterFeeding, router]);
 
   const handleSideChange = useCallback((side: BreastSide) => {
     changeSide(side);
