@@ -197,8 +197,7 @@ export default function ProfileScreen() {
               <SettingsRow
                 icon="🗑️"
                 label={t("settings.deleteAccount")}
-                onPress={() => {}}
-                showChevron={false}
+                onPress={() => router.push("/settings/delete-account")}
                 danger
               />
             </>

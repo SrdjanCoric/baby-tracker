@@ -608,5 +608,41 @@
     "unknownError": "An unexpected error occurred",
     "sharingNotAvailable": "Sharing Not Available",
     "sharingNotAvailableMessage": "Sharing is not available on this device"
+  },
+  "accountDeletion": {
+    "title": "Delete Account",
+    "warningTitle": "This action cannot be undone",
+    "warningDescription": "Deleting your account will permanently remove all your data. This action is irreversible.",
+    "dataToDelete": "Data that will be deleted:",
+    "feedings": "Feedings",
+    "sleep": "Sleep sessions",
+    "diapers": "Diaper changes",
+    "pumping": "Pumping sessions",
+    "growth": "Growth measurements",
+    "tummyTime": "Tummy time sessions",
+    "totalRecords": "Total records",
+    "noRecords": "No records to delete",
+    "babiesToDelete": "Baby profiles ({{count}}):",
+    "householdWillBeDeleted": "Your household will also be deleted since you are the only member.",
+    "otherCaregiversExist": "Other caregivers in your household will retain access to the babies and data you've logged.",
+    "confirmationTitle": "Confirm Deletion",
+    "confirmationInstruction": "Type \"{{confirmText}}\" below to confirm account deletion:",
+    "confirmationInputLabel": "Type DELETE to confirm",
+    "confirmationMismatch": "Text does not match. Please type DELETE exactly.",
+    "confirmationMatch": "Confirmation accepted",
+    "deleteButton": "Delete My Account",
+    "finalConfirmTitle": "Are you absolutely sure?",
+    "finalConfirmMessage": "This will permanently delete your account and all associated data. You will be signed out immediately.",
+    "deletingAccount": "Deleting your account...",
+    "loading": "Loading...",
+    "notLoggedIn": "You must be logged in to delete your account.",
+    "offlineError": "You must be online to delete your account. Please check your internet connection.",
+    "loadError": "Failed to load account data. Please try again.",
+    "error": "Error",
+    "errors": {
+      "deletionFailed": "Failed to delete account. Please try again.",
+      "networkError": "Network error. Please check your connection and try again.",
+      "unknown": "An unexpected error occurred. Please try again."
+    }
   }
 }
