@@ -76,6 +76,10 @@ export default function SettingsScreen() {
     router.push("/settings/notifications");
   }, [router]);
 
+  const handleExportPress = useCallback(() => {
+    router.push("/settings/export");
+  }, [router]);
+
   const getUnitDisplayValue = () => {
     return unitSystem === "imperial" ? t("settings.imperial") : t("settings.metric");
   };
@@ -132,6 +136,7 @@ export default function SettingsScreen() {
           <SettingsRow
             icon={"\u{1F4E4}"}
             label={t("settings.export")}
+            onPress={handleExportPress}
             isLast
           />
         </View>
