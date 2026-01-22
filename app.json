@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "Baby Tracker",
-    "slug": "baby-tracker",
+    "name": "Sofi Baby Tracker",
+    "slug": "sofi-baby-tracker",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "scheme": "babytracker",
+    "scheme": "sofibaby",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -15,7 +15,24 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.babytracker.app"
+      "bundleIdentifier": "com.sofibaby.app",
+      "usesAppleSignIn": true,
+      "associatedDomains": [],
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "sofibaby"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "sofibaby"
+            ]
+          }
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,14 +40,52 @@
         "backgroundColor": "#14b8a6"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.babytracker.app"
+      "package": "com.sofibaby.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "sofibaby",
+              "host": "login-callback"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "sofibaby",
+              "host": "*"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      "expo-apple-authentication"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b4c35e5f-c130-4dfd-8245-ac4b7fe89628"
+      },
+      "router": {}
+    },
+    "owner": "srdjano1"
   }
 }
