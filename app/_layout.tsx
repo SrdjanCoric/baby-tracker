@@ -7,25 +7,50 @@ import { StatusBar } from "expo-status-bar";
 import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, useTheme, useAuth, useSync } from "@/contexts";
 import { NightModeOverlay } from "@/components/NightModeOverlay";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { OnboardingStorageService } from "@/services/onboarding-storage";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true);
 
   useEffect(() => {
-    if (isLoading) return;
+    const checkOnboarding = async () => {
+      const completed = await OnboardingStorageService.hasCompletedOnboarding();
+      setHasCompletedOnboarding(completed);
+      setOnboardingChecked(true);
+    };
+    checkOnboarding();
+  }, []);
+
+  useEffect(() => {
+    if (authLoading || !onboardingChecked) return;
 
     const inAuthGroup = segments[0] === "auth";
+    const inOnboardingGroup = segments[0] === "onboarding";
+
+    // If onboarding not completed and not already in onboarding, redirect to onboarding
+    if (!hasCompletedOnboarding && !inOnboardingGroup) {
+      router.replace("/onboarding");
+      return;
+    }
+
+    // If onboarding completed and in onboarding group, redirect to tabs
+    if (hasCompletedOnboarding && inOnboardingGroup) {
+      router.replace("/(tabs)");
+      return;
+    }
 
     // Only redirect authenticated users away from auth screens
     // Guest users can use the app without signing in
     if (isAuthenticated && inAuthGroup) {
       router.replace("/(tabs)");
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, authLoading, segments, router, onboardingChecked, hasCompletedOnboarding]);
 
-  if (isLoading) {
+  if (authLoading || !onboardingChecked) {
     return (
       <View className="flex-1 items-center justify-center bg-surface dark:bg-surface-dark">
         <ActivityIndicator size="large" />
@@ -71,6 +96,12 @@ function AppContent() {
       <OfflineBannerWrapper />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="onboarding"
+          options={{
+            animation: "fade",
+          }}
+        />
         <Stack.Screen
           name="auth"
           options={{

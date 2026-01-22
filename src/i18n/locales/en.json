@@ -545,5 +545,43 @@
     "cereal": "Cereal",
     "yogurt": "Yogurt",
     "cheese": "Cheese"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to Sofi Baby Tracker",
+      "subtitle": "The simple way to track your baby's day"
+    },
+    "features": {
+      "title": "Track Everything",
+      "subtitle": "Feeding, sleep, diapers, growth, and more - all in one place"
+    },
+    "sync": {
+      "title": "Sync with Family",
+      "subtitle": "Share tracking duties with your partner or caregivers in real-time"
+    },
+    "baby": {
+      "title": "Add Your Baby",
+      "subtitle": "Let's get started by adding your little one"
+    },
+    "getStarted": "Get Started",
+    "next": "Next",
+    "skip": "Skip",
+    "continue": "Continue",
+    "addBaby": "Add Baby",
+    "babyName": "Baby's Name",
+    "babyNamePlaceholder": "Enter baby's name",
+    "birthDate": "Birth Date",
+    "selectBirthDate": "Select birth date",
+    "addPhoto": "Add Photo (Optional)",
+    "changePhoto": "Change Photo",
+    "gender": "Gender (Optional)",
+    "male": "Boy",
+    "female": "Girl",
+    "genderUnspecified": "Prefer not to say",
+    "validation": {
+      "nameRequired": "Please enter baby's name",
+      "dateRequired": "Please select birth date",
+      "dateFuture": "Birth date cannot be in the future"
+    }
   }
 }
