@@ -201,7 +201,7 @@ export default function PreferencesScreen() {
       {/* Bottom Section */}
       <View className="px-8 pb-8">
         {/* Pagination dots */}
-        <OnboardingPagination currentStep={state.currentStep} totalSteps={5} />
+        <OnboardingPagination currentStep={state.currentStep} totalSteps={6} />
 
         {/* Primary button */}
         <Pressable

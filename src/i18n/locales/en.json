@@ -568,8 +568,13 @@
     "continueWithGoogle": "Continue with Google",
     "continueWithApple": "Continue with Apple",
     "magicLink": "Sign in with Magic Link",
+    "magicLinkTab": "Magic Link",
+    "passwordTab": "Password",
     "magicLinkSent": "Check your email for the magic link!",
+    "magicLinkSentTitle": "Check Your Email",
+    "magicLinkSentMessage": "We've sent a sign-in link to your email. Tap the link to sign in - no password needed!",
     "magicLinkDescription": "We'll send you a link to sign in without a password",
+    "magicLinkHint": "We'll email you a link to sign in instantly",
     "sendMagicLink": "Send Magic Link",
     "continueWithoutAccount": "Continue without account",
     "continueAsGuest": "Continue as Guest",
@@ -674,6 +679,11 @@
     "sync": {
       "title": "Sync with Family",
       "subtitle": "Share tracking duties with your partner or caregivers in real-time"
+    },
+    "authChoice": {
+      "title": "Join or Continue",
+      "subtitle": "Create an account to sync across devices and share with caregivers",
+      "guestHint": "You can create an account later in Settings"
     },
     "baby": {
       "title": "Add Your Baby",
