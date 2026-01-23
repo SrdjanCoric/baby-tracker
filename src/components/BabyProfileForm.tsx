@@ -7,6 +7,7 @@ import {
   Platform,
   useColorScheme,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Input } from "./Input";
 import { Button } from "./Button";
@@ -28,19 +29,20 @@ interface BabyProfileFormProps {
   isLoading?: boolean;
 }
 
-const GENDER_OPTIONS: { value: Gender; label: string; emoji: string }[] = [
-  { value: "male", label: "Boy", emoji: "👦" },
-  { value: "female", label: "Girl", emoji: "👧" },
-];
-
 function BabyProfileForm({
   initialData,
   onSave,
   onCancel,
   isLoading = false,
 }: BabyProfileFormProps) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  const GENDER_OPTIONS = [
+    { value: "male" as Gender, labelKey: "baby.boy" as const, emoji: "👦" },
+    { value: "female" as Gender, labelKey: "baby.girl" as const, emoji: "👧" },
+  ];
 
   const [name, setName] = useState(initialData?.name ?? "");
   const [birthDate, setBirthDate] = useState<Date | undefined>(initialData?.birthDate);
@@ -106,20 +108,19 @@ function BabyProfileForm({
             border-4 border-dashed
             ${isDark ? "border-gray-600 bg-surface-dark-card" : "border-gray-200 bg-gray-50"}
           `}
-          accessibilityLabel="Add baby photo"
-          accessibilityHint="Tap to select a photo for your baby"
+          accessibilityLabel={t("baby.addPhoto")}
         >
           <Text className="text-5xl mb-1">👶</Text>
           <Text className={`text-xs font-medium ${isDark ? "text-content-dark-secondary" : "text-content-secondary"}`}>
-            Add Photo
+            {t("baby.addPhoto")}
           </Text>
         </Pressable>
       </View>
 
       <View className="mb-6">
         <Input
-          label="Baby's Name"
-          placeholder="Enter your baby's name"
+          label={t("baby.babyName")}
+          placeholder={t("baby.babyNamePlaceholder")}
           value={name}
           onChangeText={(text) => {
             setName(text);
@@ -150,7 +151,7 @@ function BabyProfileForm({
                 : "text-gray-700"
           }`}
         >
-          Birth Date (Optional)
+          {t("baby.birthDateOptional")}
         </Text>
 
         <Pressable
@@ -165,8 +166,7 @@ function BabyProfileForm({
                   : "border-gray-200 bg-white"
             }
           `}
-          accessibilityLabel="Select birth date"
-          accessibilityHint={birthDate ? `Current date: ${formatDate(birthDate)}` : "Tap to select a birth date"}
+          accessibilityLabel={t("baby.selectBirthDate")}
         >
           <Text
             className={`text-base ${
@@ -179,7 +179,7 @@ function BabyProfileForm({
                   : "text-gray-400"
             }`}
           >
-            {birthDate ? formatDate(birthDate) : "Select birth date"}
+            {birthDate ? formatDate(birthDate) : t("baby.selectBirthDate")}
           </Text>
           <Text className="text-xl">📅</Text>
         </Pressable>
@@ -210,7 +210,7 @@ function BabyProfileForm({
                     setShowDatePicker(false);
                   }}
                 >
-                  Done
+                  {t("common.done")}
                 </Button>
               </View>
             )}
@@ -222,12 +222,13 @@ function BabyProfileForm({
         <Text
           className={`mb-3 text-sm font-medium ${isDark ? "text-content-dark-secondary" : "text-gray-700"}`}
         >
-          Gender (Optional)
+          {t("baby.genderOptional")}
         </Text>
 
         <View className="flex-row gap-3">
           {GENDER_OPTIONS.map((option) => {
             const isSelected = gender === option.value;
+            const label = t(option.labelKey);
             return (
               <Pressable
                 key={option.value}
@@ -245,7 +246,7 @@ function BabyProfileForm({
                         : "border-gray-200 bg-white"
                   }
                 `}
-                accessibilityLabel={option.label}
+                accessibilityLabel={label}
                 accessibilityState={{ selected: isSelected }}
               >
                 <Text className="text-2xl mb-1">{option.emoji}</Text>
@@ -260,7 +261,7 @@ function BabyProfileForm({
                         : "text-content-secondary"
                   }`}
                 >
-                  {option.label}
+                  {label}
                 </Text>
               </Pressable>
             );
@@ -276,7 +277,7 @@ function BabyProfileForm({
           loading={isLoading}
           disabled={isLoading}
         >
-          {initialData ? "Save Changes" : "Add Baby"}
+          {initialData ? t("baby.saveChanges") : t("baby.addBaby")}
         </Button>
 
         <Button
@@ -285,7 +286,7 @@ function BabyProfileForm({
           onPress={onCancel}
           disabled={isLoading}
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
       </View>
     </ScrollView>

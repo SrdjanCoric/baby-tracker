@@ -1,5 +1,6 @@
 import { Text, View } from "react-native";
 import { forwardRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ACTIVITY_CONFIG } from "@/constants/activities";
 
 interface TodaySummaryProps {
@@ -49,6 +50,11 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
     },
     ref
   ) => {
+    const { t } = useTranslation();
+
+    // Extract numeric value from feedingTotal for pluralization
+    const feedingCount = parseInt(feedingTotal) || 0;
+
     return (
       <View
         ref={ref}
@@ -59,7 +65,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
         <View className="flex-row items-center mb-4">
           <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />
           <Text className="px-3 text-xs text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider font-medium">
-            Today
+            {t("summary.today")}
           </Text>
           <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />
         </View>
@@ -68,7 +74,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
         <View className="flex-row items-center justify-center">
           <SummaryStat
             value={feedingTotal}
-            label={feedingTotal === "1" ? "Feeding" : "Feedings"}
+            label={t("summary.feeding", { count: feedingCount })}
             color={ACTIVITY_CONFIG.feeding.accentColor}
           />
 
@@ -76,7 +82,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
 
           <SummaryStat
             value={napCount}
-            label={napCount === 1 ? "Nap" : "Naps"}
+            label={t("summary.nap", { count: napCount })}
             color={ACTIVITY_CONFIG.sleep.accentColor}
           />
 
@@ -84,7 +90,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
 
           <SummaryStat
             value={diaperCount}
-            label={diaperCount === 1 ? "Diaper" : "Diapers"}
+            label={t("summary.diaper", { count: diaperCount })}
             color={ACTIVITY_CONFIG.diaper.accentColor}
           />
 
@@ -93,7 +99,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
               <SummaryDivider />
               <SummaryStat
                 value={sleepTotal}
-                label="Sleep"
+                label={t("summary.sleep")}
                 color={ACTIVITY_CONFIG.sleep.accentColor}
               />
             </>

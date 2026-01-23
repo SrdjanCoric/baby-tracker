@@ -2,10 +2,12 @@ import { useCallback, useState } from "react";
 import { View, Text, useColorScheme, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { BabyProfileForm, Button, type BabyProfileFormData } from "@/components";
 import { useBaby } from "@/contexts";
 
 export default function EditBabyScreen() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,12 +39,12 @@ export default function EditBabyScreen() {
     if (!id || !baby) return;
 
     Alert.alert(
-      "Delete Baby Profile",
-      `Are you sure you want to delete ${baby.name}'s profile? This action cannot be undone.`,
+      t("baby.deleteBabyProfile"),
+      t("baby.deleteBabyConfirm", { name: baby.name }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: async () => {
             setIsLoading(true);
@@ -52,7 +54,7 @@ export default function EditBabyScreen() {
         },
       ]
     );
-  }, [id, baby, deleteBaby]);
+  }, [id, baby, deleteBaby, t]);
 
   const handleCancel = useCallback(() => {
     router.back();
@@ -64,7 +66,7 @@ export default function EditBabyScreen() {
         className={`flex-1 items-center justify-center ${isDark ? "bg-surface-dark" : "bg-surface"}`}
       >
         <Text className={`text-lg ${isDark ? "text-content-dark-secondary" : "text-content-secondary"}`}>
-          Baby not found
+          {t("baby.babyNotFound")}
         </Text>
       </SafeAreaView>
     );
@@ -99,7 +101,7 @@ export default function EditBabyScreen() {
           onPress={handleDelete}
           disabled={isLoading}
         >
-          <Text className="text-red-500 font-semibold">Delete Baby Profile</Text>
+          <Text className="text-red-500 font-semibold">{t("baby.deleteBabyProfile")}</Text>
         </Button>
       </View>
     </SafeAreaView>
