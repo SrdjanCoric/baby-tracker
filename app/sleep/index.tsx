@@ -255,11 +255,13 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
       {!customStartTime ? (
         <Pressable
           onPress={handleStartedEarlierPress}
-          className="mb-6 py-2 px-4"
+          className="mb-6 py-3 px-5 rounded-full flex-row items-center border-2"
+          style={{ borderColor: SLEEP_PURPLE, backgroundColor: 'transparent' }}
           accessibilityRole="button"
           accessibilityLabel={t("sleep.startedEarlier")}
         >
-          <Text className="text-sm" style={{ color: SLEEP_PURPLE }}>
+          <Text className="text-lg mr-2">🕐</Text>
+          <Text className="text-base font-medium" style={{ color: SLEEP_PURPLE }}>
             {t("sleep.startedEarlier")}
           </Text>
         </Pressable>
