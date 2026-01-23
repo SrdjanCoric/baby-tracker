@@ -4,8 +4,10 @@ export default function SettingsLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="language" />
       <Stack.Screen name="theme" />
       <Stack.Screen name="units" />
+      <Stack.Screen name="dashboard" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="export" />
       <Stack.Screen name="reports" />
