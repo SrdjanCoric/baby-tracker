@@ -7,6 +7,11 @@ on:
     - cron: '0 6 * * *'  # Daily at 6am UTC
   workflow_dispatch:  # Allow manual trigger
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   e2e-ios:
     runs-on: macos-latest
@@ -28,6 +33,9 @@ jobs:
         with:
           xcode-version: latest-stable
 
+      - name: Run Expo prebuild
+        run: npx expo prebuild --platform ios --clean
+
       - name: Install CocoaPods
         run: |
           cd ios
@@ -35,9 +43,8 @@ jobs:
 
       - name: Build iOS app
         run: |
-          npx expo prebuild --platform ios --clean
-          xcodebuild -workspace ios/sofibabytacker.xcworkspace \
-            -scheme sofibabytacker \
+          xcodebuild -workspace ios/SofiBabyTracker.xcworkspace \
+            -scheme SofiBabyTracker \
             -sdk iphonesimulator \
             -configuration Release \
             -derivedDataPath build \
@@ -56,7 +63,7 @@ jobs:
 
       - name: Install app on simulator
         run: |
-          xcrun simctl install booted build/Build/Products/Release-iphonesimulator/sofibabytacker.app
+          xcrun simctl install booted build/Build/Products/Release-iphonesimulator/SofiBabyTracker.app
 
       - name: Run E2E tests
         run: |
