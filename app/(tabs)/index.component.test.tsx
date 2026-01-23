@@ -107,6 +107,17 @@ jest.mock("@/contexts", () => ({
   usePumping: () => mockUsePumping(),
   useGrowth: () => mockUseGrowth(),
   useTummyTime: () => mockUseTummyTime(),
+  useDashboardConfig: () => ({
+    visibleCards: [
+      { activity: "feeding", visible: true, order: 0 },
+      { activity: "sleep", visible: true, order: 1 },
+      { activity: "diaper", visible: true, order: 2 },
+      { activity: "pumping", visible: true, order: 3 },
+      { activity: "tummyTime", visible: true, order: 4 },
+      { activity: "growth", visible: true, order: 5 },
+    ],
+    isLoading: false,
+  }),
 }));
 
 jest.mock("@/utils/time", () => ({

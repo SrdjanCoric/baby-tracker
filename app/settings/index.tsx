@@ -72,7 +72,6 @@ const THEME_LABELS = {
   system: "settings.systemDefault",
   light: "settings.lightMode",
   dark: "settings.darkMode",
-  night: "settings.nightMode",
 } as const;
 
 export default function SettingsScreen() {
