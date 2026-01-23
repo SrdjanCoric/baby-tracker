@@ -230,6 +230,7 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
       wet: 0,
       dirty: 0,
       mixed: 0,
+      dry: 0,
       total: todaysDiapers.length,
     };
 

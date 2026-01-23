@@ -6,9 +6,11 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import * as Linking from "expo-linking";
 import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, useTheme, useAuth, useSync } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
+import { supabase } from "@/services/supabase";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -93,6 +95,30 @@ function SyncAuthSetup({ children }: { children: React.ReactNode }) {
       lastUserIdRef.current = null;
     }
   }, [user?.id, user?.householdId, setAuthContext]);
+
+  return <>{children}</>;
+}
+
+function DeepLinkHandler({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    const handleDeepLink = async (url: string) => {
+      if (url.includes("login-callback") || url.includes("auth/callback")) {
+        await supabase.auth.getSession();
+      }
+    };
+
+    const subscription = Linking.addEventListener("url", async ({ url }) => {
+      await handleDeepLink(url);
+    });
+
+    Linking.getInitialURL().then(async (url) => {
+      if (url) {
+        await handleDeepLink(url);
+      }
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   return <>{children}</>;
 }
@@ -238,6 +264,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <LanguageProvider>
       <AuthProvider>
+        <DeepLinkHandler>
         <AuthGuard>
           <HouseholdProvider>
             <SyncProvider>
@@ -267,6 +294,7 @@ export default function RootLayout() {
             </SyncProvider>
           </HouseholdProvider>
         </AuthGuard>
+        </DeepLinkHandler>
       </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>

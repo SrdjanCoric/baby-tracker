@@ -117,7 +117,7 @@ export default function SignInScreen() {
   }, [email, signInWithMagicLink, t]);
 
   const handleGoToSignUp = useCallback(() => {
-    router.push("/auth/sign-up");
+    router.replace("/auth/sign-up");
   }, [router]);
 
   const handleContinueAsGuest = useCallback(() => {

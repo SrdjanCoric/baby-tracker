@@ -8,25 +8,32 @@ import { useRouter } from "expo-router";
 import {
   TimelineItem,
   TimelineDayHeader,
-  TimelineDivider,
   EmptyState,
   LoadingState,
 } from "@/components";
+import { ActivityFilterTabs, FilteredSummaryBanner, type FilterType } from "@/components/timeline";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
 import { formatDualSideDuration } from "@/utils/feeding";
+import {
+  calculateDailySummary,
+  formatDailySummaryText,
+  type TimelineDataByDate,
+  type DailySummary,
+} from "@/utils/timeline";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredGrowthEntry } from "@/services/growth-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
+import type { ActivityType } from "@/constants/activities";
 
 interface TimelineEntry {
   id: string;
-  activity: "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime";
+  activity: ActivityType;
   time: string;
   title: string;
   subtitle: string;
@@ -37,31 +44,49 @@ interface TimelineEntry {
 interface GroupedEntries {
   header: string;
   dateLabel: string;
+  dateObj: Date;
   entries: TimelineEntry[];
+  summaryLines: string[];
+  summary: DailySummary;
 }
 
-function groupEntriesByDay(entries: TimelineEntry[]): GroupedEntries[] {
-  const grouped: Map<string, TimelineEntry[]> = new Map();
+function groupEntriesByDay(
+  entries: TimelineEntry[],
+  filter: FilterType,
+  allData: TimelineDataByDate,
+  t: (key: string, options?: Record<string, unknown>) => string
+): GroupedEntries[] {
+  const grouped: Map<string, { entries: TimelineEntry[]; date: Date }> = new Map();
 
   for (const entry of entries) {
     const dateKey = entry.date.toDateString();
     if (!grouped.has(dateKey)) {
-      grouped.set(dateKey, []);
+      grouped.set(dateKey, { entries: [], date: entry.date });
     }
-    grouped.get(dateKey)!.push(entry);
+    grouped.get(dateKey)!.entries.push(entry);
   }
 
   const result: GroupedEntries[] = [];
   const now = new Date();
 
-  for (const [dateKey, dayEntries] of grouped) {
-    const date = new Date(dateKey);
+  for (const [_dateKey, { entries: dayEntries, date }] of grouped) {
     const header = formatDayHeader(date, now);
     const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
     dayEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    result.push({ header, dateLabel, entries: dayEntries });
+    // Calculate daily summary
+    const summary = calculateDailySummary(date, allData);
+    const summaryLines = formatDailySummaryText(summary, filter, t);
+
+    result.push({
+      header,
+      dateLabel,
+      dateObj: date,
+      entries: dayEntries,
+      summaryLines,
+      summary,
+    });
   }
 
   result.sort((a, b) => {
@@ -85,6 +110,7 @@ export default function TimelineScreen() {
   const { colorScheme } = useColorScheme();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -107,6 +133,20 @@ export default function TimelineScreen() {
   const handleEditEntry = useCallback((activity: TimelineEntry["activity"], id: string) => {
     router.push(`/edit/${activity}?id=${id}`);
   }, [router]);
+
+  const handleFilterChange = useCallback((filter: FilterType) => {
+    setActiveFilter(filter);
+  }, []);
+
+  // Collect all data for summary calculations
+  const allData: TimelineDataByDate = useMemo(() => ({
+    feedings,
+    sleeps,
+    diapers,
+    pumpings,
+    growths: measurements,
+    tummyTimes,
+  }), [feedings, sleeps, diapers, pumpings, measurements, tummyTimes]);
 
   const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
     const date = new Date(feeding.startedAt);
@@ -202,6 +242,7 @@ export default function TimelineScreen() {
       wet: t("diaper.wet"),
       dirty: t("diaper.dirty"),
       mixed: t("diaper.mixed"),
+      dry: t("diaper.dry"),
     };
 
     const title = t("diaper.title");
@@ -297,19 +338,67 @@ export default function TimelineScreen() {
   }, [t]);
 
   const timelineEntries = useMemo(() => {
-    const feedingEntries = feedings.map(feedingToTimelineEntry);
-    const sleepEntries = sleeps.map(sleepToTimelineEntry);
-    const diaperEntries = diapers.map(diaperToTimelineEntry);
-    const pumpingEntries = pumpings.map(pumpingToTimelineEntry);
-    const growthEntries = measurements.map(growthToTimelineEntry);
-    const tummyTimeEntries = tummyTimes.map(tummyTimeToTimelineEntry);
-    const allEntries = [...feedingEntries, ...sleepEntries, ...diaperEntries, ...pumpingEntries, ...growthEntries, ...tummyTimeEntries];
+    // Filter entries based on active filter
+    const filterActivity = (activity: ActivityType) => {
+      if (activeFilter === "all") return true;
+      return activity === activeFilter;
+    };
+
+    const feedingEntries = filterActivity("feeding")
+      ? feedings.map(feedingToTimelineEntry)
+      : [];
+    const sleepEntries = filterActivity("sleep")
+      ? sleeps.map(sleepToTimelineEntry)
+      : [];
+    const diaperEntries = filterActivity("diaper")
+      ? diapers.map(diaperToTimelineEntry)
+      : [];
+    const pumpingEntries = filterActivity("pumping")
+      ? pumpings.map(pumpingToTimelineEntry)
+      : [];
+    const growthEntries = filterActivity("growth")
+      ? measurements.map(growthToTimelineEntry)
+      : [];
+    const tummyTimeEntries = filterActivity("tummyTime")
+      ? tummyTimes.map(tummyTimeToTimelineEntry)
+      : [];
+
+    const allEntries = [
+      ...feedingEntries,
+      ...sleepEntries,
+      ...diaperEntries,
+      ...pumpingEntries,
+      ...growthEntries,
+      ...tummyTimeEntries,
+    ];
     return allEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [feedings, sleeps, diapers, pumpings, measurements, tummyTimes, feedingToTimelineEntry, sleepToTimelineEntry, diaperToTimelineEntry, pumpingToTimelineEntry, growthToTimelineEntry, tummyTimeToTimelineEntry]);
+  }, [
+    feedings,
+    sleeps,
+    diapers,
+    pumpings,
+    measurements,
+    tummyTimes,
+    activeFilter,
+    feedingToTimelineEntry,
+    sleepToTimelineEntry,
+    diaperToTimelineEntry,
+    pumpingToTimelineEntry,
+    growthToTimelineEntry,
+    tummyTimeToTimelineEntry,
+  ]);
+
+  // Type cast for t function to match component interfaces
+  const translate = t as (key: string, options?: Record<string, unknown>) => string;
 
   const groupedEntries = useMemo(() => {
-    return groupEntriesByDay(timelineEntries);
-  }, [timelineEntries]);
+    return groupEntriesByDay(timelineEntries, activeFilter, allData, translate);
+  }, [timelineEntries, activeFilter, allData, translate]);
+
+  // Collect all summaries for the filtered summary banner
+  const allSummaries = useMemo(() => {
+    return groupedEntries.map((group) => group.summary);
+  }, [groupedEntries]);
 
   const hasEntries = timelineEntries.length > 0;
 
@@ -323,6 +412,20 @@ export default function TimelineScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
+      {/* Filter tabs */}
+      <ActivityFilterTabs
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+        t={translate}
+      />
+
+      {/* Summary banner for filtered views */}
+      <FilteredSummaryBanner
+        filter={activeFilter}
+        summaries={allSummaries}
+        t={translate}
+      />
+
       {hasEntries ? (
         <ScrollView
           className="flex-1"
@@ -337,20 +440,24 @@ export default function TimelineScreen() {
         >
           {groupedEntries.map((group) => (
             <View key={group.header + group.dateLabel}>
-              <TimelineDayHeader title={group.header} date={group.dateLabel} />
+              <TimelineDayHeader
+                title={group.header}
+                date={group.dateLabel}
+                dateObj={group.dateObj}
+                filter={activeFilter}
+              />
 
               {group.entries.map((item, index) => (
-                <View key={item.id}>
-                  <TimelineItem
-                    activity={item.activity}
-                    time={item.time}
-                    title={item.title}
-                    subtitle={item.subtitle}
-                    loggedBy={item.loggedBy}
-                    onPress={() => handleEditEntry(item.activity, item.id)}
-                  />
-                  {index < group.entries.length - 1 && <TimelineDivider />}
-                </View>
+                <TimelineItem
+                  key={item.id}
+                  activity={item.activity}
+                  time={item.time}
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  loggedBy={item.loggedBy}
+                  isLast={index === group.entries.length - 1}
+                  onPress={() => handleEditEntry(item.activity, item.id)}
+                />
               ))}
             </View>
           ))}
