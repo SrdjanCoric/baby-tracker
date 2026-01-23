@@ -72,7 +72,7 @@ export function renderDiaperSection(stats: DiaperReportStats): string {
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
           ${Object.entries(stats.stoolColors).map(([color, count]) => {
             const colorKey = `stoolColors.${color}`;
-            // @ts-ignore - dynamic key lookup
+            // @ts-expect-error - dynamic key lookup
             return `<span class="badge badge-secondary">${t(colorKey)}: ${count}</span>`;
           }).join("")}
         </div>
