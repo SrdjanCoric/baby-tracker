@@ -3811,6 +3811,330 @@ These features are planned for after the initial launch, based on user feedback 
 
 ---
 
+### Health Tracking
+
+#### Branch: `feature/health-tracking`
+**Scope:** Medication tracking, temperature logging, and vaccine records
+
+**Data Models:**
+- Medication: name, dosage (amount + unit), frequency, administered time, scheduled time, notes
+- Temperature: value, unit (fahrenheit/celsius), method (oral/ear/forehead/rectal/armpit), notes
+- Vaccine: name (predefined or custom), date, batch number, administrator, location, next due date, notes
+
+**Activity Colors:**
+- Medication: `#E91E63` (pink)
+- Temperature: `#FF5722` (deep orange)
+- Vaccine: `#4CAF50` (green)
+
+**Files to Create:**
+```
+src/
+├── constants/health.ts                 # Types and constants
+├── services/
+│   ├── medication-storage.ts           # CRUD operations
+│   ├── medication-storage-sync.ts      # Sync transforms
+│   ├── temperature-storage.ts
+│   ├── temperature-storage-sync.ts
+│   ├── vaccine-storage.ts
+│   └── vaccine-storage-sync.ts
+├── contexts/
+│   ├── medication-context.tsx          # State management
+│   ├── temperature-context.tsx
+│   └── vaccine-context.tsx
+├── utils/
+│   └── health-statistics.ts            # Stats calculations
+├── components/
+│   ├── HealthDashboardCard.tsx         # Expandable health card
+│   └── TemperatureChart.tsx            # Temp trend visualization
+app/
+├── medication/
+│   ├── _layout.tsx
+│   ├── index.tsx                       # Log medication
+│   └── manual.tsx                      # Past entry
+├── temperature/
+│   ├── _layout.tsx
+│   ├── index.tsx                       # Log temperature
+│   └── manual.tsx
+├── vaccine/
+│   ├── _layout.tsx
+│   ├── index.tsx                       # Log vaccine
+│   └── history.tsx                     # Vaccine schedule view
+└── edit/
+    ├── medication.tsx
+    ├── temperature.tsx
+    └── vaccine.tsx
+```
+
+**Files to Modify:**
+- `src/constants/activities.ts` - Add health activity types + colors
+- `src/services/sync/schema.ts` - Add health tables
+- `app/_layout.tsx` - Add providers
+- `app/(tabs)/index.tsx` - Add HealthDashboardCard
+- `app/(tabs)/timeline.tsx` - Transform health entries
+- `app/(tabs)/statistics.tsx` - Health statistics section
+- `src/constants/notifications.ts` - Add medication reminder channel
+
+**Common Vaccines List:**
+- Hepatitis B, DTaP, Hib, Polio (IPV), Pneumococcal (PCV), Rotavirus
+- MMR, Varicella, Hepatitis A, Influenza, COVID-19, Other
+
+**Implementation Order:**
+1. Create types and constants (`src/constants/health.ts`)
+2. Create storage services (follow `feeding-storage.ts` pattern)
+3. Create contexts (follow `feeding-context.tsx` pattern)
+4. Create entry screens
+5. Create edit screens
+6. Add to dashboard as expandable Health card
+7. Integrate with timeline
+8. Add medication reminders to notification system
+9. Add to statistics
+
+**Definition of Done:**
+- [ ] Log medication with reminder, verify notification fires
+- [ ] Log temperature, see in timeline
+- [ ] Log vaccine, see in vaccine history
+- [ ] Edit/delete health entries
+- [ ] Health card shows on dashboard
+- [ ] Health stats appear in statistics
+- [ ] Check sync between devices
+
+---
+
+### Quick-Log Improvements
+
+#### Branch: `feature/quick-log`
+**Scope:** Long-press quick-log modals, swipe gestures, and haptic feedback
+
+**Minimal Data Per Activity:**
+| Activity | Quick-Log Data | Full Form |
+|----------|---------------|-----------|
+| Feeding (Breast) | Side only | Duration, notes |
+| Feeding (Bottle) | Amount + type | Notes |
+| Diaper | Type (wet/dirty/mixed) | Stool color, notes |
+| Sleep | Start timer | Type, notes |
+| Pumping | Side only | Volume, notes |
+| Tummy Time | Start timer | Notes |
+
+**Swipe Actions:**
+| Activity | Swipe Left | Swipe Right |
+|----------|-----------|-------------|
+| Feeding | Quick bottle log | Start breastfeeding (suggested side) |
+| Diaper | Log wet diaper | Log dirty diaper |
+| Sleep | Log "woke up now" | Start sleep timer |
+| Pumping | Quick log (last side) | Start pumping timer |
+| Tummy Time | Log 5-min session | Start timer |
+
+**Files to Create:**
+```
+src/
+├── components/
+│   ├── QuickLogModal.tsx
+│   └── QuickLogContent/
+│       ├── QuickFeedingContent.tsx
+│       ├── QuickDiaperContent.tsx
+│       ├── QuickSleepContent.tsx
+│       ├── QuickPumpingContent.tsx
+│       └── QuickTummyTimeContent.tsx
+├── utils/haptics.ts
+```
+
+**Files to Modify:**
+- `src/components/DashboardCard.tsx` - Add gesture handlers
+- `app/(tabs)/index.tsx` - Wire up quick log modal
+- `package.json` - Add `expo-haptics` if not present
+
+**Gesture Implementation:**
+```typescript
+// In DashboardCard.tsx
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import * as Haptics from 'expo-haptics';
+
+const longPressGesture = Gesture.LongPress()
+  .minDuration(500)
+  .onStart(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    runOnJS(onLongPress)?.();
+  });
+
+const panGesture = Gesture.Pan()
+  .onEnd((e) => {
+    if (e.translationX < -50) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      runOnJS(onSwipeLeft)?.();
+    }
+    if (e.translationX > 50) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      runOnJS(onSwipeRight)?.();
+    }
+  });
+
+const composedGesture = Gesture.Race(panGesture, longPressGesture);
+```
+
+**Implementation Order:**
+1. Add haptics utility
+2. Create QuickLogModal component shell
+3. Create quick content components per activity
+4. Add long-press handler to DashboardCard
+5. Add swipe gestures
+6. Wire up in dashboard
+7. Test on devices
+
+**Definition of Done:**
+- [ ] Long-press card opens quick-log modal
+- [ ] Log diaper via quick modal (1 tap after long-press)
+- [ ] Log feeding via quick modal
+- [ ] Swipe left/right triggers correct action
+- [ ] Haptic feedback fires on gestures
+- [ ] Quick-logged entries appear in timeline
+
+---
+
+### Developmental Milestones
+
+#### Branch: `feature/milestones`
+**Scope:** Track milestones (first smile, first steps, etc.) with photo attachments
+
+**Data Models:**
+```typescript
+type MilestoneCategory = "motor" | "language" | "social" | "cognitive" | "custom";
+type AgeRange = "0-3m" | "3-6m" | "6-9m" | "9-12m" | "12-18m" | "18-24m" | "24m+";
+
+interface PredefinedMilestone {
+  id: string;
+  titleKey: string;           // i18n key
+  descriptionKey?: string;
+  category: MilestoneCategory;
+  ageRange: AgeRange;
+  icon: string;
+  sortOrder: number;
+}
+
+interface StoredMilestoneEntry {
+  id: string;
+  babyId: string;
+  predefinedMilestoneId?: string;
+  title: string;
+  category: MilestoneCategory;
+  achievedAt: string;
+  photoUri?: string;
+  notes?: string;
+  loggedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+**Activity Color:**
+- Milestone: `#F39C12` (golden yellow - achievement/celebration)
+
+**Predefined Milestones by Age:**
+- **0-3 months:** First smile, holds head, first coo, tracks objects
+- **3-6 months:** Rolls over, first laugh, reaches for objects
+- **6-9 months:** Sits independently, first babble, stranger anxiety
+- **9-12 months:** First crawl, first word, waves bye, pincer grasp
+- **12-18 months:** First steps, more words, follows directions
+- **18-24 months:** Runs, two-word phrases, pretend play
+- **24+ months:** Jumps, sentences
+
+**Files to Create:**
+```
+src/
+├── types/milestones.ts
+├── data/predefined-milestones.ts
+├── constants/milestones.ts             # Colors, category config
+├── services/
+│   ├── milestone-storage.ts
+│   └── milestone-storage-sync.ts
+├── contexts/milestone-context.tsx
+├── utils/milestone-age.ts              # Age calculation utilities
+├── components/
+│   ├── MilestoneCard.tsx
+│   ├── MilestoneGalleryItem.tsx
+│   ├── MilestoneProgress.tsx
+│   ├── MilestoneSelector.tsx
+│   └── MilestoneCategoryFilter.tsx
+app/
+├── milestone/
+│   ├── _layout.tsx
+│   ├── index.tsx                       # List view with categories
+│   ├── gallery.tsx                     # Photo gallery ("Baby Firsts")
+│   ├── add.tsx                         # Add milestone
+│   └── [id].tsx                        # Detail view
+└── edit/milestone.tsx
+```
+
+**Files to Modify:**
+- `src/constants/activities.ts` - Add "milestone" to ActivityType
+- `app/(tabs)/timeline.tsx` - Include milestones
+- `app/(tabs)/index.tsx` - Add milestone dashboard card
+- `app/_layout.tsx` - Add MilestoneProvider
+- `src/services/sync/schema.ts` - Add milestones table
+- `src/i18n/locales/en.json` - Add milestone translations
+
+**Photo Storage:**
+- Local: `${FileSystem.documentDirectory}milestones/${id}.jpg`
+- Sync: Upload to Supabase Storage, store URL in `photo_url` field
+
+**UI Flow - Main Milestone Screen:**
+```
+[Category Tabs: All | Motor | Language | Social | Cognitive | Custom]
+
+[Progress Summary Card]
+┌─────────────────────────────────┐
+│ 🎯 12 of 28 milestones achieved │
+│ [████████░░░░░░░░░] 43%         │
+└─────────────────────────────────┘
+
+[Milestone List]
+┌─────────────────────────────────┐
+│ [Photo] First Smile        ✓   │
+│         Achieved Jan 15, 2024   │
+├─────────────────────────────────┤
+│ [Photo] Holds Head Up      ✓   │
+│         Achieved Jan 22, 2024   │
+├─────────────────────────────────┤
+│ [   ]   Rolls Over         ○   │
+│         Expected: 3-6 months    │
+└─────────────────────────────────┘
+
+[+ Add Milestone] (FAB)
+```
+
+**UI Flow - Gallery View ("Baby Firsts"):**
+```
+┌─────┬─────┬─────┐
+│ 📷  │ 📷  │ 📷  │
+│Smile│Steps│Word │
+├─────┼─────┼─────┤
+│ 📷  │ 📷  │ 📷  │
+│Crawl│Wave │Laugh│
+└─────┴─────┴─────┘
+```
+
+**Implementation Order:**
+1. Create types and predefined milestones data
+2. Create storage service
+3. Create context
+4. Create list screen with category tabs
+5. Create add screen with milestone selector + photo capture
+6. Create gallery view
+7. Create detail/edit screens
+8. Add to timeline
+9. Add dashboard card
+
+**Definition of Done:**
+- [ ] Add predefined milestone with photo
+- [ ] Add custom milestone
+- [ ] View milestone list by category
+- [ ] View gallery ("Baby Firsts")
+- [ ] See milestones in timeline
+- [ ] Edit milestone
+- [ ] Delete milestone
+- [ ] Dashboard card shows recent/suggested milestone
+
+---
+
 ## Merge Requirements
 
 Every PR to main requires:
