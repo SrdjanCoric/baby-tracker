@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#6B9E6E"
+      "backgroundColor": "#F5A472"
     },
     "ios": {
       "supportsTablet": true,
@@ -37,7 +37,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#6B9E6E"
+        "backgroundColor": "#F5A472"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.sofibaby.app",
@@ -83,7 +83,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#6B9E6E"
+          "color": "#F5A472"
         }
       ]
     ],
