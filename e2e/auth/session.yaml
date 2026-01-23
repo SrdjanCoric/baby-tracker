@@ -1,0 +1,31 @@
+# Authentication - Session Management Tests
+# Test IDs: AUTH-040 through AUTH-042
+appId: com.sofibaby.app
+tags:
+  - auth
+  - session
+---
+
+# AUTH-040: Session persistence
+- launchApp:
+    clearState: true
+
+# Continue as guest (simulates logged in state)
+- tapOn: "Continue as Guest"
+
+# Verify home screen
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Stop and relaunch app
+- stopApp
+- launchApp
+
+# Should still be signed in (not showing sign in screen)
+- assertNotVisible:
+    text: "Welcome Back"
+    timeout: 3000
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000

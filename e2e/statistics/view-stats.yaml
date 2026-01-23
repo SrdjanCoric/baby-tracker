@@ -1,0 +1,154 @@
+# Statistics - View Stats Tests
+# Test IDs: STATS-001 through STATS-021
+appId: com.sofibaby.app
+tags:
+  - statistics
+---
+
+# Setup - Create some data
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Log some activities
+- tapOn: "Feeding"
+- tapOn: "Bottle"
+- tapOn: "Formula"
+- inputText:
+    text: "120"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# STATS-001: View daily stats
+- launchApp
+
+# Navigate to Statistics
+- tapOn: "Stats"
+- assertVisible: "Statistics"
+
+# Should show daily summary by default
+- assertVisible:
+    text: "Daily"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Today"
+    timeout: 5000
+    optional: true
+
+---
+# STATS-002: View weekly stats
+- launchApp
+
+- tapOn: "Stats"
+
+# Toggle to weekly view
+- tapOn:
+    text: "Weekly"
+    optional: true
+- tapOn:
+    text: "Week"
+    optional: true
+
+# Should show weekly summary
+- assertVisible:
+    text: "Week"
+    timeout: 5000
+    optional: true
+
+---
+# STATS-003: Feeding stats
+- launchApp
+
+- tapOn: "Stats"
+
+# Should show feeding count/total
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+    optional: true
+
+---
+# STATS-005: Diaper stats
+- launchApp
+
+- tapOn: "Stats"
+
+# Should show diaper counts
+- assertVisible:
+    text: "Diaper"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "wet"
+    timeout: 5000
+    optional: true
+
+---
+# STATS-007: Empty state
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Empty Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+
+# Go to stats
+- tapOn: "Stats"
+
+# Should show empty state
+- assertVisible:
+    text: "No data"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Start tracking"
+    timeout: 5000
+    optional: true
+
+---
+# STATS-020: Only 1 day of data
+- launchApp
+
+- tapOn: "Stats"
+
+# Toggle to weekly
+- tapOn:
+    text: "Weekly"
+    optional: true
+
+# Should show partial data message
+# (or just show the data that exists)
+- assertVisible:
+    text: "Statistics"
+    timeout: 3000

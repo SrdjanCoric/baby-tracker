@@ -1,0 +1,75 @@
+# iOS Platform-Specific Tests
+# Test IDs: IOS-001 through IOS-005
+# Note: Many iOS-specific features require manual testing
+appId: com.sofibaby.app
+tags:
+  - ios
+  - platform-specific
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# IOS-002: System appearance follows (when using System Default theme)
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Theme"
+    direction: DOWN
+- tapOn: "Theme"
+
+# Set to System Default
+- tapOn: "System Default"
+
+# Verify selection
+- assertVisible:
+    text: "System Default"
+    timeout: 3000
+
+---
+# IOS-003: Deep link handling
+# Note: Deep link testing requires specific test setup
+# Manual test steps:
+# 1. Send deep link to device (e.g., sofibaby://feeding)
+# 2. Tap link
+# 3. App should open to correct screen
+
+---
+# Manual iOS-specific tests documentation
+
+# IOS-001: Face ID/Touch ID
+# Steps:
+# 1. Enable biometrics in device settings
+# 2. Enable biometric lock in app (if supported)
+# 3. Lock app
+# 4. Reopen app
+# Expected: Prompts for Face ID/Touch ID
+
+# IOS-004: Share extension
+# Steps:
+# 1. Export data from app
+# 2. Use iOS Share sheet
+# Expected: Share sheet opens with correct options
+
+# IOS-005: iOS notification actions
+# Steps:
+# 1. Enable notifications
+# 2. Trigger a notification (e.g., feeding reminder)
+# 3. Long press notification
+# 4. Tap action button
+# Expected: Action handled correctly

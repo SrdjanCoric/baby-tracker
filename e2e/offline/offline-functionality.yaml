@@ -1,0 +1,223 @@
+# Offline & Edge Case Tests
+# Test IDs: OFFLINE-001 through EDGE-022
+appId: com.sofibaby.app
+tags:
+  - offline
+  - edge-cases
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Log some data to view offline
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# OFFLINE-001: View data offline (simulated)
+# Note: True offline testing requires disabling network which is platform-specific
+- launchApp
+
+- tapOn: "Timeline"
+
+# Data should be visible from cache
+- assertVisible: "Timeline"
+- assertVisible:
+    text: "Wet"
+    timeout: 5000
+    optional: true
+
+---
+# OFFLINE-002: Log activity (simulated offline)
+# Note: App should work offline and queue syncs
+- launchApp
+
+- tapOn: "Diaper"
+- tapOn: "Dirty"
+- tapOn: "Yellow"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Should be saved locally
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# EDGE-003: Device restart during timer simulation
+# Start timer, kill app, verify restore
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+- tapOn: "Left Side"
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Kill app completely
+- stopApp
+- launchApp
+
+# Timer should be restored or show recovery option
+- tapOn:
+    text: "Feeding"
+    optional: true
+- assertVisible:
+    text: "0:00"
+    timeout: 5000
+    optional: true
+
+# Clean up
+- tapOn:
+    text: "⏹"
+    optional: true
+
+---
+# EDGE-004: Multiple active timers
+# Try starting multiple timers
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+- tapOn: "Left Side"
+
+# Wait for timer to start
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Try to start sleep timer
+- tapOn: "←"
+- tapOn: "Sleep"
+
+# Should handle gracefully (allow both or prompt)
+- assertVisible:
+    text: "Sleep"
+    timeout: 5000
+
+# Clean up
+- tapOn:
+    text: "←"
+    optional: true
+- tapOn:
+    text: "Feeding"
+    optional: true
+- tapOn:
+    text: "⏹"
+    optional: true
+
+---
+# EDGE-013: Special characters in notes
+- launchApp
+
+- tapOn: "Diaper"
+- tapOn: "Wet"
+
+# Add note with special characters
+- inputText:
+    text: "Test note with emoji and unicode: äöü"
+    index: 1
+    optional: true
+
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Note should be preserved
+
+---
+# EDGE-015: Rapid activity logging
+- launchApp
+
+# Log multiple diapers quickly
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+- tapOn: "Diaper"
+- tapOn: "Dirty"
+- tapOn: "Yellow"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# All should be saved
+- tapOn: "Timeline"
+- assertVisible: "Timeline"
+
+---
+# EDGE-022: Background for extended time
+- launchApp
+
+# Use app normally
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Background (stop) for extended period
+- stopApp
+
+# Wait 2 seconds (simulating longer time)
+- extendedWaitUntil:
+    timeout: 2000
+    optional: true
+
+# Relaunch
+- launchApp
+
+# App should resume correctly
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000

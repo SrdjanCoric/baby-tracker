@@ -1,0 +1,111 @@
+# Settings - Theme Tests
+# Test IDs: SET-001 through SET-005
+appId: com.sofibaby.app
+tags:
+  - settings
+  - theme
+  - critical
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# SET-001: Switch to dark mode
+- launchApp
+
+# Navigate to settings
+- tapOn: "Profile"
+
+- scrollUntilVisible:
+    element: "Theme"
+    direction: DOWN
+    timeout: 5000
+
+- tapOn: "Theme"
+
+# Select dark mode
+- tapOn: "Dark Mode"
+
+# Verify theme changed (visual verification - check for dark background)
+- assertVisible:
+    text: "Dark Mode"
+    timeout: 3000
+
+---
+# SET-002: Switch to light mode
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Theme"
+    direction: DOWN
+- tapOn: "Theme"
+
+# Select light mode
+- tapOn: "Light Mode"
+
+# Verify theme changed
+- assertVisible:
+    text: "Light Mode"
+    timeout: 3000
+
+---
+# SET-003: System default
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Theme"
+    direction: DOWN
+- tapOn: "Theme"
+
+# Select system default
+- tapOn: "System Default"
+
+# Verify selection
+- assertVisible:
+    text: "System Default"
+    timeout: 3000
+
+---
+# SET-005: Theme persistence
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Theme"
+    direction: DOWN
+- tapOn: "Theme"
+
+# Set dark mode
+- tapOn: "Dark Mode"
+
+# Kill and relaunch
+- stopApp
+- launchApp
+
+# Navigate to theme settings
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Theme"
+    direction: DOWN
+- tapOn: "Theme"
+
+# Dark mode should still be selected
+- assertVisible:
+    text: "Dark Mode"
+    timeout: 3000

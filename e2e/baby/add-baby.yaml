@@ -1,0 +1,116 @@
+# Baby Management - Add Baby Tests
+# Test IDs: BABY-001 through BABY-004
+appId: com.sofibaby.app
+tags:
+  - baby
+  - critical
+---
+
+# Setup: Complete initial onboarding first
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "First Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+
+# Verify we're on home
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# BABY-001: Add baby from home
+- launchApp
+
+# Tap on baby selector (usually in header)
+- tapOn:
+    text: "First Baby"
+    optional: true
+- tapOn:
+    text: "Add Baby"
+    optional: true
+
+# If baby selector exists
+- tapOn:
+    id: "baby-selector"
+    optional: true
+
+# Navigate to add baby
+- tapOn:
+    text: "Add Baby"
+
+# Fill baby form
+- inputText:
+    text: "Second Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Add Baby"
+    optional: true
+
+# Verify baby was added (should now show in selector)
+- assertVisible:
+    text: "Second Baby"
+    timeout: 5000
+
+---
+# BABY-002: Add second baby
+- launchApp
+
+# Add another baby
+- tapOn:
+    text: "Second Baby"
+    optional: true
+- tapOn:
+    text: "Add Baby"
+
+- inputText:
+    text: "Third Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Add Baby"
+    optional: true
+
+# Both babies should be in selector
+- tapOn:
+    text: "Third Baby"
+    optional: true
+
+---
+# BABY-004: Add baby - cancel
+- launchApp
+
+- tapOn:
+    text: "Add Baby"
+    optional: true
+- tapOn:
+    id: "baby-selector"
+    optional: true
+- tapOn:
+    text: "Add Baby"
+
+- inputText:
+    text: "Cancelled Baby"
+
+# Cancel
+- tapOn: "←"
+
+# Baby should not be saved
+- assertNotVisible:
+    text: "Cancelled Baby"
+    timeout: 2000

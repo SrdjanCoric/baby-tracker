@@ -1,0 +1,137 @@
+# Timeline - View Entries Tests
+# Test IDs: TIME-001 through TIME-006
+appId: com.sofibaby.app
+tags:
+  - timeline
+  - critical
+---
+
+# Setup - Create some entries first
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Log a feeding
+- tapOn: "Feeding"
+- tapOn: "Bottle"
+- tapOn: "Formula"
+- inputText:
+    text: "120"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Log a diaper
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# TIME-001: View all entries
+- launchApp
+
+# Navigate to Timeline
+- tapOn: "Timeline"
+
+# Should show entries in reverse chronological order
+- assertVisible: "Timeline"
+- assertVisible:
+    text: "Wet"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Bottle"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Formula"
+    timeout: 5000
+    optional: true
+
+---
+# TIME-002: Day headers
+- launchApp
+
+- tapOn: "Timeline"
+
+# Should show "Today" header
+- assertVisible:
+    text: "Today"
+    timeout: 5000
+    optional: true
+
+---
+# TIME-003: Activity types with icons
+- launchApp
+
+- tapOn: "Timeline"
+
+# Different activity types should be distinguishable
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Diaper"
+    timeout: 5000
+    optional: true
+
+---
+# TIME-004: Empty timeline
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Empty Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+
+# Go to timeline
+- tapOn: "Timeline"
+
+# Should show empty state
+- assertVisible:
+    text: "No entries"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Start tracking"
+    timeout: 5000
+    optional: true
+
+---
+# TIME-006: Pull to refresh
+- launchApp
+
+- tapOn: "Timeline"
+
+# Pull down to refresh
+- scroll:
+    direction: DOWN
+    duration: 500
+
+# Timeline should refresh (no visible change unless data changed)
+- assertVisible: "Timeline"

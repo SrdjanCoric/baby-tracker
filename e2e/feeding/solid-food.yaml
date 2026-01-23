@@ -1,0 +1,173 @@
+# Feeding - Solid Food Tests
+# Test IDs: FEED-030 through FEED-035
+appId: com.sofibaby.app
+tags:
+  - feeding
+  - solid-food
+---
+
+# Setup: Complete onboarding
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# FEED-030: Log solids - common food with reaction
+- launchApp
+
+- tapOn: "Feeding"
+
+# Navigate to Solid Food tab
+- tapOn:
+    text: "Solid Food"
+    optional: true
+- tapOn:
+    text: "Solid"
+    optional: true
+
+# Select a common food
+- tapOn:
+    text: "Banana"
+    optional: true
+
+# Select reaction - Loved it
+- tapOn:
+    text: "Loved it"
+    optional: true
+- tapOn:
+    text: "Loved"
+    optional: true
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# FEED-031: Log solids - custom food
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Solid Food"
+    optional: true
+- tapOn:
+    text: "Solid"
+    optional: true
+
+# Enter custom food
+- tapOn:
+    text: "Other"
+    optional: true
+- inputText:
+    text: "Homemade Puree"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# FEED-032: Log solids - reaction "Meh"
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Solid Food"
+    optional: true
+- tapOn:
+    text: "Solid"
+    optional: true
+
+# Select food
+- tapOn:
+    text: "Avocado"
+    optional: true
+
+# Select Meh reaction
+- tapOn:
+    text: "Meh"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# FEED-033: Log solids - reaction "Refused"
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Solid Food"
+    optional: true
+- tapOn:
+    text: "Solid"
+    optional: true
+
+# Select food
+- tapOn:
+    text: "Spinach"
+    optional: true
+
+# Select Refused reaction
+- tapOn:
+    text: "Refused"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# FEED-035: Empty food validation
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Solid Food"
+    optional: true
+- tapOn:
+    text: "Solid"
+    optional: true
+
+# Try to save without selecting food
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Should show error
+- assertVisible:
+    text: "select"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "food"
+    timeout: 3000
+    optional: true

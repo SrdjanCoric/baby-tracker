@@ -1,0 +1,6 @@
+# Test user fixture for E2E tests
+# Usage: env variables can be set in Maestro test files
+
+email: "test-user-${timestamp}@example.com"
+password: "TestPassword123!"
+displayName: "Test User"

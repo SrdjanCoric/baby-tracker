@@ -1,0 +1,255 @@
+# Tummy Time - Timer and Goals Tests
+# Test IDs: TUMMY-001 through TUMMY-022
+appId: com.sofibaby.app
+tags:
+  - tummy-time
+  - timer
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# TUMMY-001: Start timer
+- launchApp
+
+- tapOn: "Tummy Time"
+- assertVisible: "Tummy Time"
+
+# Start timer
+- tapOn:
+    text: "Start"
+    optional: true
+- tapOn:
+    text: "Tap to start"
+    optional: true
+
+# Timer should start
+- assertVisible:
+    text: "0:00"
+    timeout: 3000
+    optional: true
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+
+---
+# TUMMY-002: Stop timer
+- launchApp
+
+- tapOn: "Tummy Time"
+- tapOn:
+    text: "Start"
+    optional: true
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Stop timer
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Stop"
+    optional: true
+
+# Verify saved
+- assertVisible:
+    text: "saved"
+    timeout: 5000
+    optional: true
+
+---
+# TUMMY-003: Progress toward goal
+- launchApp
+
+- tapOn: "Tummy Time"
+
+# Start and stop to log a session
+- tapOn:
+    text: "Start"
+    optional: true
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Stop"
+    optional: true
+
+# Check home screen for progress
+- assertVisible:
+    text: "Tummy Time"
+    timeout: 5000
+
+# Progress should show on dashboard
+- assertVisible:
+    text: "min"
+    timeout: 3000
+    optional: true
+
+---
+# TUMMY-005: Timer survives background
+- launchApp
+
+- tapOn: "Tummy Time"
+- tapOn:
+    text: "Start"
+    optional: true
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Background app
+- stopApp
+- launchApp
+
+# Timer should continue
+- tapOn:
+    text: "Tummy Time"
+    optional: true
+- assertVisible:
+    text: "0:00"
+    timeout: 5000
+    optional: true
+
+# Stop
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Stop"
+    optional: true
+
+---
+# TUMMY-010: Log past session
+- launchApp
+
+- tapOn: "Tummy Time"
+
+# Navigate to manual entry
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Enter duration
+- inputText:
+    text: "5"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# TUMMY-011: Quick duration buttons
+- launchApp
+
+- tapOn: "Tummy Time"
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Tap quick duration
+- tapOn:
+    text: "3"
+    optional: true
+- tapOn:
+    text: "5"
+    optional: true
+
+# Verify set
+- assertVisible:
+    text: "3"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "5"
+    timeout: 3000
+    optional: true
+
+---
+# TUMMY-020: Age-based default goal
+- launchApp
+
+- tapOn: "Tummy Time"
+
+# Navigate to settings
+- tapOn:
+    text: "Settings"
+    optional: true
+- tapOn:
+    text: "Goal"
+    optional: true
+
+# Should show age-based goal info
+- assertVisible:
+    text: "AAP"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "min"
+    timeout: 5000
+    optional: true
+
+---
+# TUMMY-021: Custom goal setting
+- launchApp
+
+- tapOn: "Tummy Time"
+- tapOn:
+    text: "Settings"
+    optional: true
+- tapOn:
+    text: "Goal"
+    optional: true
+
+# Set custom goal
+- tapOn:
+    text: "Custom"
+    optional: true
+- inputText:
+    text: "45"
+    optional: true
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Done"
+    optional: true

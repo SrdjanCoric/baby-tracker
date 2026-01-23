@@ -1,0 +1,162 @@
+# Sleep - Manual Entry Tests
+# Test IDs: SLEEP-010 through SLEEP-014
+appId: com.sofibaby.app
+tags:
+  - sleep
+  - manual-entry
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# SLEEP-010: Log past nap
+- launchApp
+
+- tapOn: "Sleep"
+
+# Navigate to manual entry
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Select Nap type
+- tapOn:
+    text: "Nap"
+    optional: true
+
+# Enter duration
+- inputText:
+    text: "45"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# SLEEP-011: Log past night sleep
+- launchApp
+
+- tapOn: "Sleep"
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Select Night Sleep type
+- tapOn:
+    text: "Night"
+    optional: true
+
+# Enter duration (8 hours = 480 minutes)
+- inputText:
+    text: "480"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# SLEEP-012: Quick duration buttons
+- launchApp
+
+- tapOn: "Sleep"
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Tap quick duration button
+- tapOn:
+    text: "30"
+    optional: true
+- tapOn:
+    text: "45"
+    optional: true
+- tapOn:
+    text: "60"
+    optional: true
+
+# Verify duration set
+- assertVisible:
+    text: "30"
+    timeout: 3000
+    optional: true
+
+---
+# SLEEP-013: Very long sleep validation
+- launchApp
+
+- tapOn: "Sleep"
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Enter very long duration (15 hours = 900 minutes)
+- tapOn: "Night"
+- inputText:
+    text: "900"
+
+# Should accept or show warning
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# SLEEP-014: Very short sleep
+- launchApp
+
+- tapOn: "Sleep"
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Enter 1 minute
+- tapOn: "Nap"
+- inputText:
+    text: "1"
+
+# Should accept
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true

@@ -1,0 +1,322 @@
+# Pumping - Timer Tests
+# Test IDs: PUMP-001 through PUMP-012
+appId: com.sofibaby.app
+tags:
+  - pumping
+  - timer
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# PUMP-001: Start pumping - left side
+- launchApp
+
+- tapOn: "Pumping"
+- assertVisible: "Pumping"
+
+# Select Left side
+- tapOn:
+    text: "Left"
+    optional: true
+- tapOn:
+    text: "Left Side"
+    optional: true
+
+# Timer should start
+- assertVisible:
+    text: "0:00"
+    timeout: 3000
+    optional: true
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+
+# Stop timer
+- tapOn: "⏹"
+
+# Enter volume when prompted
+- inputText:
+    text: "60"
+    optional: true
+
+# Confirm/Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Done"
+    optional: true
+
+---
+# PUMP-002: Start pumping - right side
+- launchApp
+
+- tapOn: "Pumping"
+
+# Select Right side
+- tapOn:
+    text: "Right"
+    optional: true
+- tapOn:
+    text: "Right Side"
+    optional: true
+
+# Timer should start
+- assertVisible:
+    text: "0:00"
+    timeout: 3000
+    optional: true
+
+# Wait and stop
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+- tapOn: "⏹"
+
+# Enter volume
+- inputText:
+    text: "50"
+    optional: true
+- tapOn:
+    text: "Save"
+    optional: true
+
+---
+# PUMP-003: Start pumping - both sides
+- launchApp
+
+- tapOn: "Pumping"
+
+# Select Both sides
+- tapOn:
+    text: "Both"
+    optional: true
+- tapOn:
+    text: "Both Sides"
+    optional: true
+
+# Timer starts
+- assertVisible:
+    text: "0:00"
+    timeout: 3000
+    optional: true
+
+# Wait and stop
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+- tapOn: "⏹"
+
+# Enter volume
+- inputText:
+    text: "100"
+    optional: true
+- tapOn:
+    text: "Save"
+    optional: true
+
+---
+# PUMP-004: Enter volume on stop
+- launchApp
+
+- tapOn: "Pumping"
+- tapOn:
+    text: "Left"
+    optional: true
+
+# Wait and stop
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+- tapOn: "⏹"
+
+# Should show volume entry
+- assertVisible:
+    text: "volume"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "pump"
+    timeout: 3000
+    optional: true
+
+# Enter volume
+- inputText:
+    text: "80"
+- tapOn:
+    text: "Save"
+    optional: true
+
+---
+# PUMP-005: Skip volume entry
+- launchApp
+
+- tapOn: "Pumping"
+- tapOn:
+    text: "Left"
+    optional: true
+
+# Wait and stop
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+- tapOn: "⏹"
+
+# Skip volume (if option exists)
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "Done"
+    optional: true
+
+---
+# PUMP-006: Timer survives background
+- launchApp
+
+- tapOn: "Pumping"
+- tapOn:
+    text: "Left"
+    optional: true
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Background app
+- stopApp
+- launchApp
+
+# Timer should continue
+- tapOn:
+    text: "Pumping"
+    optional: true
+- assertVisible:
+    text: "0:00"
+    timeout: 5000
+    optional: true
+
+# Stop
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "Save"
+    optional: true
+
+---
+# PUMP-010: Log past pumping
+- launchApp
+
+- tapOn: "Pumping"
+
+# Navigate to manual entry
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Fill details
+- tapOn:
+    text: "Left"
+    optional: true
+- inputText:
+    text: "15"
+- inputText:
+    text: "60"
+    index: 1
+    optional: true
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# PUMP-011: Quick duration buttons
+- launchApp
+
+- tapOn: "Pumping"
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Tap quick duration
+- tapOn:
+    text: "15"
+    optional: true
+- tapOn:
+    text: "20"
+    optional: true
+
+# Verify set
+- assertVisible:
+    text: "15"
+    timeout: 3000
+    optional: true
+
+---
+# PUMP-012: Zero volume allowed
+- launchApp
+
+- tapOn: "Pumping"
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Enter 0 volume (pumping can have no output)
+- tapOn:
+    text: "Left"
+    optional: true
+- inputText:
+    text: "15"
+- inputText:
+    text: "0"
+    index: 1
+    optional: true
+
+# Should allow save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true

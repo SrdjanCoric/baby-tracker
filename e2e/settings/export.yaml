@@ -1,0 +1,101 @@
+# Settings - Export Tests
+# Test IDs: SET-020 through SET-024
+appId: com.sofibaby.app
+tags:
+  - settings
+  - export
+---
+
+# Setup - Create some data first
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Log some data
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# SET-020: CSV export - navigate to export
+- launchApp
+
+- tapOn: "Profile"
+
+- scrollUntilVisible:
+    element: "Export"
+    direction: DOWN
+    timeout: 5000
+
+- tapOn: "Export Data"
+
+# Should see export options
+- assertVisible:
+    text: "Export"
+    timeout: 5000
+- assertVisible:
+    text: "CSV"
+    timeout: 5000
+    optional: true
+
+---
+# SET-021: CSV export - date range selection
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Export"
+    direction: DOWN
+- tapOn: "Export Data"
+
+# Select date range
+- tapOn:
+    text: "Last 7 Days"
+    optional: true
+- tapOn:
+    text: "Last 30 Days"
+    optional: true
+
+---
+# SET-023: PDF report
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Reports"
+    direction: DOWN
+    timeout: 5000
+    optional: true
+
+- tapOn:
+    text: "Generate Report"
+    optional: true
+- tapOn:
+    text: "Reports"
+    optional: true
+
+# Should see report options
+- assertVisible:
+    text: "Report"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "PDF"
+    timeout: 5000
+    optional: true

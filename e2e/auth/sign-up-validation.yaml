@@ -1,0 +1,73 @@
+# Authentication - Sign Up Validation Tests
+# Test IDs: AUTH-002 through AUTH-005
+appId: com.sofibaby.app
+tags:
+  - auth
+  - validation
+---
+
+# AUTH-002: Email sign up - invalid email
+- launchApp:
+    clearState: true
+- tapOn: "Sign Up"
+- assertVisible: "Create Account"
+
+- inputText:
+    text: "notanemail"
+    index: 0
+- inputText:
+    text: "TestPassword123!"
+    index: 1
+- inputText:
+    text: "TestPassword123!"
+    index: 2
+- inputText:
+    text: "Test User"
+    index: 3
+- tapOn: "Sign Up"
+
+# Should show email error
+- assertVisible:
+    text: "valid email"
+    timeout: 3000
+
+---
+# AUTH-003: Email sign up - weak password
+- launchApp:
+    clearState: true
+- tapOn: "Sign Up"
+- assertVisible: "Create Account"
+
+- inputText:
+    text: "test@example.com"
+    index: 0
+- inputText:
+    text: "123"
+    index: 1
+- inputText:
+    text: "123"
+    index: 2
+- inputText:
+    text: "Test User"
+    index: 3
+- tapOn: "Sign Up"
+
+# Should show password requirements error
+- assertVisible:
+    text: "8 characters"
+    timeout: 3000
+
+---
+# AUTH-005: Email sign up - empty fields
+- launchApp:
+    clearState: true
+- tapOn: "Sign Up"
+- assertVisible: "Create Account"
+
+# Try to submit without filling fields
+- tapOn: "Sign Up"
+
+# Should show required field errors
+- assertVisible:
+    text: "required"
+    timeout: 3000

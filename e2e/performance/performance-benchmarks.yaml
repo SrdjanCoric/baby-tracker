@@ -1,0 +1,150 @@
+# Performance Tests
+# Test IDs: PERF-001 through PERF-022
+appId: com.sofibaby.app
+tags:
+  - performance
+  - benchmark
+---
+
+# PERF-001: Cold start time
+# Verify app launches and is interactive quickly
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+
+# Stop app
+- stopApp
+
+# Cold start - should be < 2 seconds
+- launchApp
+- assertVisible:
+    text: "Feeding"
+    timeout: 3000
+
+---
+# PERF-002: Warm start time
+# App resumes from background quickly
+- launchApp
+
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Background
+- stopApp:
+    appId: com.sofibaby.app
+
+# Warm start - should be < 0.5 seconds
+- launchApp
+- assertVisible:
+    text: "Feeding"
+    timeout: 1500
+
+---
+# PERF-003: First load with data
+# Create some data and verify timeline loads quickly
+- launchApp
+
+# Log several entries
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+- tapOn: "Diaper"
+- tapOn: "Dirty"
+- tapOn: "Yellow"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+- tapOn: "Feeding"
+- tapOn: "Bottle"
+- tapOn: "Formula"
+- inputText:
+    text: "120"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Navigate to timeline - should load < 1 second
+- tapOn: "Timeline"
+- assertVisible:
+    text: "Timeline"
+    timeout: 2000
+
+---
+# PERF-010: Timeline scroll performance
+# Scroll through entries - should be smooth
+- launchApp
+
+- tapOn: "Timeline"
+
+# Scroll up and down
+- scroll:
+    direction: UP
+    duration: 500
+- scroll:
+    direction: DOWN
+    duration: 500
+- scroll:
+    direction: UP
+    duration: 300
+- scroll:
+    direction: DOWN
+    duration: 300
+
+# App should remain responsive
+- assertVisible: "Timeline"
+
+---
+# PERF-011: Statistics scroll performance
+- launchApp
+
+- tapOn: "Stats"
+
+# Scroll the stats screen
+- scroll:
+    direction: UP
+    duration: 500
+- scroll:
+    direction: DOWN
+    duration: 500
+
+# Should be smooth
+- assertVisible: "Statistics"
+
+---
+# PERF-020: Initial sync simulation
+# For users with existing data (simulated with fresh app)
+- launchApp
+
+# Navigate through various screens to trigger data loads
+- tapOn: "Timeline"
+- assertVisible: "Timeline"
+
+- tapOn: "Stats"
+- assertVisible: "Statistics"
+
+- tapOn: "Home"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000

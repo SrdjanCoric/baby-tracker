@@ -1,0 +1,36 @@
+# Authentication - OAuth Tests
+# Test IDs: AUTH-020 through AUTH-023
+# Note: OAuth tests require actual OAuth setup and may need manual interaction
+appId: com.sofibaby.app
+tags:
+  - auth
+  - oauth
+  - manual
+---
+
+# AUTH-020: Google OAuth - visible
+- launchApp:
+    clearState: true
+- assertVisible: "Welcome Back"
+
+# Verify Google sign in button is visible
+- assertVisible: "Continue with Google"
+
+---
+# AUTH-022: Apple Sign In - visible (iOS only)
+- launchApp:
+    clearState: true
+- assertVisible: "Welcome Back"
+
+# Verify Apple sign in button is visible (iOS only)
+- assertVisible:
+    text: "Continue with Apple"
+    optional: true
+
+---
+# AUTH-021 & AUTH-023: OAuth cancelled tests
+# These tests require manual interaction as OAuth flows open external browsers
+# Manual test steps:
+# 1. Tap "Continue with Google" or "Continue with Apple"
+# 2. Cancel the OAuth flow
+# 3. Verify app returns to sign in screen without error

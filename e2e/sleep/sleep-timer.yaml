@@ -1,0 +1,200 @@
+# Sleep - Timer Tests
+# Test IDs: SLEEP-001 through SLEEP-007
+appId: com.sofibaby.app
+tags:
+  - sleep
+  - timer
+  - critical
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# SLEEP-001: Start sleep timer
+- launchApp
+
+- tapOn: "Sleep"
+- assertVisible: "Sleep"
+
+# Start sleep - tap Nap or Night depending on time
+- tapOn:
+    text: "Nap"
+    optional: true
+- tapOn:
+    text: "Start"
+    optional: true
+- tapOn:
+    text: "Night"
+    optional: true
+
+# Timer should start
+- assertVisible:
+    text: "0:00"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "Timer"
+    timeout: 3000
+    optional: true
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+
+# Stop timer (Wake Up)
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Wake"
+    optional: true
+- tapOn:
+    text: "Stop"
+    optional: true
+
+---
+# SLEEP-004: Override sleep type
+- launchApp
+
+- tapOn: "Sleep"
+
+# Start as Nap
+- tapOn:
+    text: "Nap"
+    optional: true
+
+# Timer starts
+- assertVisible:
+    text: "0:00"
+    timeout: 3000
+    optional: true
+
+# Try to change to Night
+- tapOn:
+    text: "Night"
+    optional: true
+
+# Stop
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Wake"
+    optional: true
+
+---
+# SLEEP-005: Stop sleep timer saves correctly
+- launchApp
+
+- tapOn: "Sleep"
+- tapOn:
+    text: "Nap"
+    optional: true
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+
+# Stop
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Wake"
+    optional: true
+
+# Verify saved
+- assertVisible:
+    text: "saved"
+    timeout: 5000
+    optional: true
+
+---
+# SLEEP-006: Timer survives background
+- launchApp
+
+- tapOn: "Sleep"
+- tapOn:
+    text: "Nap"
+    optional: true
+
+# Wait for timer to start
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Background app
+- stopApp
+- launchApp
+
+# Timer should continue
+- tapOn:
+    text: "Sleep"
+    optional: true
+- assertVisible:
+    text: "0:00"
+    timeout: 5000
+    optional: true
+
+# Stop timer
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Wake"
+    optional: true
+
+---
+# SLEEP-007: Timer survives app kill
+- launchApp:
+    clearState: false
+
+- tapOn: "Sleep"
+- tapOn:
+    text: "Nap"
+    optional: true
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Kill and relaunch
+- stopApp
+- launchApp
+
+# Check timer is restored
+- assertVisible:
+    text: "Sleep"
+    timeout: 5000
+
+# Clean up
+- tapOn:
+    text: "Sleep"
+    optional: true
+- tapOn:
+    text: "⏹"
+    optional: true
+- tapOn:
+    text: "Wake"
+    optional: true

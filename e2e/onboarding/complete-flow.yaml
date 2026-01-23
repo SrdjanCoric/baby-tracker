@@ -1,0 +1,121 @@
+# Onboarding - Complete Flow Tests
+# Test IDs: ONB-001, ONB-003, ONB-004, ONB-010
+appId: com.sofibaby.app
+tags:
+  - onboarding
+  - critical
+---
+
+# ONB-001: Complete onboarding with baby
+- launchApp:
+    clearState: true
+
+# Skip sign in to trigger onboarding
+- tapOn: "Continue as Guest"
+
+# Screen 1: Welcome
+- assertVisible: "Welcome to Sofi Baby Tracker"
+- tapOn: "Get Started"
+
+# Screen 2: Features
+- assertVisible: "Track Everything"
+- tapOn: "Next"
+
+# Screen 3: Sync
+- assertVisible: "Sync with Family"
+- tapOn: "Next"
+
+# Screen 4: Add Baby
+- assertVisible: "Add Your Baby"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+# Select a date and confirm
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+
+# Should be redirected to home
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+- assertVisible: "Sleep"
+- assertVisible: "Diaper"
+
+---
+# ONB-003: Navigation between screens
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+
+# Screen 1 -> Screen 2
+- assertVisible: "Welcome to Sofi Baby Tracker"
+- tapOn: "Get Started"
+- assertVisible: "Track Everything"
+
+# Screen 2 -> Screen 3
+- tapOn: "Next"
+- assertVisible: "Sync with Family"
+
+# Screen 3 -> Screen 4
+- tapOn: "Next"
+- assertVisible: "Add Your Baby"
+
+---
+# ONB-004: Onboarding not shown again after completion
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+
+# Complete onboarding
+- assertVisible: "Welcome to Sofi Baby Tracker"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+
+# Verify home screen
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Stop and relaunch
+- stopApp
+- launchApp
+
+# Should go directly to home, not onboarding
+- assertNotVisible:
+    text: "Welcome to Sofi Baby Tracker"
+    timeout: 3000
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# ONB-010: Add baby with valid data during onboarding
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+
+# Navigate to add baby screen
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+
+# Fill in valid baby data
+- assertVisible: "Add Your Baby"
+- inputText:
+    text: "Emma"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+
+# Save baby
+- tapOn: "Add Baby"
+
+# Verify baby is created and we're on home
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000

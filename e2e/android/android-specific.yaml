@@ -1,0 +1,92 @@
+# Android Platform-Specific Tests
+# Test IDs: AND-001 through AND-005
+appId: com.sofibaby.app
+tags:
+  - android
+  - platform-specific
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# AND-001: Back button behavior
+- launchApp
+
+# Navigate deep into the app
+- tapOn: "Feeding"
+- assertVisible: "Breastfeeding"
+
+- tapOn: "Bottle"
+- assertVisible: "Bottle"
+
+# Press back (simulated with back navigation)
+- back
+- assertVisible:
+    text: "Feeding"
+    timeout: 3000
+
+- back
+- assertVisible:
+    text: "Home"
+    timeout: 3000
+    optional: true
+
+---
+# AND-002: Task switching
+- launchApp
+
+# Navigate to a screen
+- tapOn: "Timeline"
+- assertVisible: "Timeline"
+
+# Background and return
+- stopApp:
+    appId: com.sofibaby.app
+- launchApp
+
+# State should be preserved
+- assertVisible:
+    text: "Timeline"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+    optional: true
+
+---
+# Manual Android-specific tests documentation
+
+# AND-003: Split screen mode
+# Steps:
+# 1. Open app
+# 2. Enable split screen (recent apps → drag to top)
+# 3. Use app in split screen
+# Expected: App is usable, UI adapts to smaller size
+
+# AND-004: Notification channels
+# Steps:
+# 1. Go to device Settings → Apps → Baby Tracker → Notifications
+# 2. Check notification channels
+# Expected: Correct channels listed (Feeding Reminders, Timer Alerts, etc.)
+
+# AND-005: Battery optimization
+# Steps:
+# 1. Start a timer
+# 2. Leave app in background for extended period
+# 3. Return to app
+# Expected: Timer survives, not aggressively killed by battery optimization

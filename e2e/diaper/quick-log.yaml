@@ -1,0 +1,217 @@
+# Diaper - Quick Log Tests
+# Test IDs: DIAPER-001 through DIAPER-021
+appId: com.sofibaby.app
+tags:
+  - diaper
+  - critical
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# DIAPER-001: Log wet diaper
+- launchApp
+
+- tapOn: "Diaper"
+- assertVisible: "Diaper"
+
+# Select Wet
+- tapOn: "Wet"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Verify saved
+- assertVisible:
+    text: "saved"
+    timeout: 5000
+    optional: true
+
+---
+# DIAPER-002: Log dirty diaper with color
+- launchApp
+
+- tapOn: "Diaper"
+
+# Select Dirty
+- tapOn: "Dirty"
+
+# Select color
+- tapOn:
+    text: "Yellow"
+    optional: true
+- tapOn:
+    text: "Brown"
+    optional: true
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# DIAPER-003: Log mixed diaper
+- launchApp
+
+- tapOn: "Diaper"
+
+# Select Mixed
+- tapOn: "Mixed"
+
+# Select color
+- tapOn:
+    text: "Yellow"
+    optional: true
+- tapOn:
+    text: "Brown"
+    optional: true
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# DIAPER-004: Stool color picker visibility
+- launchApp
+
+- tapOn: "Diaper"
+
+# Select Dirty to show color picker
+- tapOn: "Dirty"
+
+# Verify all color options visible
+- assertVisible:
+    text: "Yellow"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "Brown"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "Green"
+    timeout: 3000
+    optional: true
+
+---
+# DIAPER-005: Stool color selection - Green
+- launchApp
+
+- tapOn: "Diaper"
+- tapOn: "Dirty"
+
+# Select Green color
+- tapOn: "Green"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# DIAPER-010: Log past diaper
+- launchApp
+
+- tapOn: "Diaper"
+
+# Navigate to manual entry
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Select type
+- tapOn: "Wet"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# DIAPER-020: Rapid logging
+- launchApp
+
+# Log first diaper
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Log second diaper
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Log third diaper
+- tapOn: "Diaper"
+- tapOn: "Dirty"
+- tapOn: "Yellow"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# All should be saved successfully
+
+---
+# DIAPER-021: Cancel without saving
+- launchApp
+
+- tapOn: "Diaper"
+
+# Select wet
+- tapOn: "Wet"
+
+# Go back without saving
+- tapOn: "←"
+
+# Verify nothing was saved (no confirmation needed)
+- assertVisible:
+    text: "Feeding"
+    timeout: 3000

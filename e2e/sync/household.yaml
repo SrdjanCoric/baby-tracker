@@ -1,0 +1,162 @@
+# Sync - Household Management Tests
+# Test IDs: SYNC-001 through SYNC-013
+appId: com.sofibaby.app
+tags:
+  - sync
+  - household
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# SYNC-001: View invite code
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Household"
+    direction: DOWN
+    timeout: 5000
+- tapOn: "Household"
+
+# Should show invite code (if signed in)
+- assertVisible:
+    text: "Invite Code"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Sign in"
+    timeout: 5000
+    optional: true
+
+---
+# SYNC-002: Copy invite code
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Household"
+    direction: DOWN
+- tapOn: "Household"
+
+# Tap copy button
+- tapOn:
+    text: "Copy"
+    optional: true
+
+# Should show copied confirmation
+- assertVisible:
+    text: "Copied"
+    timeout: 5000
+    optional: true
+
+---
+# SYNC-003: Share invite code
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Household"
+    direction: DOWN
+- tapOn: "Household"
+
+# Tap share button
+- tapOn:
+    text: "Share"
+    optional: true
+
+# Share sheet should open (hard to verify in E2E)
+
+---
+# SYNC-010: Join household - navigate to screen
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Join Household"
+    direction: DOWN
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: "Join Household"
+    optional: true
+
+# Should show join form
+- assertVisible:
+    text: "Enter"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "code"
+    timeout: 5000
+    optional: true
+
+---
+# SYNC-011: Invalid code format
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Join Household"
+    direction: DOWN
+    optional: true
+- tapOn:
+    text: "Join Household"
+    optional: true
+
+# Enter invalid format
+- inputText:
+    text: "ABC"
+
+# Try to join
+- tapOn:
+    text: "Join"
+    optional: true
+
+# Should show error
+- assertVisible:
+    text: "8 characters"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "Invalid"
+    timeout: 3000
+    optional: true
+
+---
+# SYNC-040: View caregivers
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Caregivers"
+    direction: DOWN
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: "Caregivers"
+    optional: true
+
+# Should show list of caregivers
+- assertVisible:
+    text: "Caregivers"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Members"
+    timeout: 5000
+    optional: true

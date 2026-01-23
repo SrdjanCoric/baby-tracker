@@ -1,0 +1,93 @@
+# Baby Management - Switch Baby Tests
+# Test IDs: BABY-020 through BABY-022
+appId: com.sofibaby.app
+tags:
+  - baby
+---
+
+# Setup: Create two babies first
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Baby One"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Add second baby
+- tapOn:
+    text: "Baby One"
+    optional: true
+- tapOn:
+    id: "baby-selector"
+    optional: true
+- tapOn: "Add Baby"
+- inputText:
+    text: "Baby Two"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Add Baby"
+    optional: true
+
+---
+# BABY-020: Switch active baby
+- launchApp
+
+# Current baby should be visible
+- assertVisible:
+    text: "Baby Two"
+    optional: true
+
+# Open baby selector
+- tapOn:
+    text: "Baby Two"
+    optional: true
+- tapOn:
+    id: "baby-selector"
+    optional: true
+
+# Select different baby
+- tapOn: "Baby One"
+
+# Verify switch happened
+- assertVisible:
+    text: "Baby One"
+    timeout: 3000
+
+---
+# BABY-022: Selected baby persistence
+- launchApp
+
+# Select Baby One
+- tapOn:
+    text: "Baby Two"
+    optional: true
+- tapOn:
+    id: "baby-selector"
+    optional: true
+- tapOn: "Baby One"
+
+# Verify selection
+- assertVisible:
+    text: "Baby One"
+    timeout: 3000
+
+# Kill and relaunch
+- stopApp
+- launchApp
+
+# Baby One should still be selected
+- assertVisible:
+    text: "Baby One"
+    timeout: 3000

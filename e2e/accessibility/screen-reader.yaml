@@ -1,0 +1,145 @@
+# Accessibility Tests
+# Test IDs: A11Y-001 through A11Y-020
+# Note: Full accessibility testing requires manual verification with VoiceOver/TalkBack
+appId: com.sofibaby.app
+tags:
+  - accessibility
+  - a11y
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# A11Y-003: All buttons have accessible labels
+# Verify key buttons have accessible labels
+- launchApp
+
+# Check main navigation items
+- assertVisible:
+    text: "Home"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "Timeline"
+    timeout: 3000
+- assertVisible:
+    text: "Stats"
+    timeout: 3000
+- assertVisible:
+    text: "Profile"
+    timeout: 3000
+
+# Check activity buttons
+- assertVisible:
+    text: "Feeding"
+    timeout: 3000
+- assertVisible:
+    text: "Sleep"
+    timeout: 3000
+- assertVisible:
+    text: "Diaper"
+    timeout: 3000
+
+---
+# A11Y-010: Large font size support
+# Note: This requires changing device settings
+# Test that app is usable with large fonts
+
+- launchApp
+
+# Navigate through key screens
+- tapOn: "Feeding"
+- assertVisible:
+    text: "Breastfeed"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Bottle"
+    timeout: 5000
+
+- tapOn: "←"
+- tapOn: "Sleep"
+- assertVisible: "Sleep"
+
+- tapOn: "←"
+- tapOn: "Diaper"
+- assertVisible: "Diaper"
+
+---
+# A11Y-013: Touch targets minimum size
+# Verify interactive elements are tappable
+# Note: Actual size measurement requires manual inspection
+
+- launchApp
+
+# Tap various buttons to verify they work
+- tapOn: "Feeding"
+- tapOn: "←"
+
+- tapOn: "Sleep"
+- tapOn: "←"
+
+- tapOn: "Diaper"
+- tapOn: "←"
+
+- tapOn: "Profile"
+- assertVisible: "Profile"
+
+---
+# Manual accessibility tests documentation
+
+# A11Y-001: Navigate with VoiceOver (iOS)
+# Steps:
+# 1. Enable VoiceOver in Settings > Accessibility
+# 2. Launch app
+# 3. Navigate through entire app using swipe gestures
+# 4. Verify all screens are navigable
+# Expected: All content is accessible, labels are descriptive
+
+# A11Y-002: Navigate with TalkBack (Android)
+# Steps:
+# 1. Enable TalkBack in Settings > Accessibility
+# 2. Launch app
+# 3. Navigate through entire app
+# Expected: All screens navigable, labels announced correctly
+
+# A11Y-004: Timer announced
+# Steps:
+# 1. Enable screen reader
+# 2. Start a timer (feeding, sleep, etc.)
+# Expected: "Timer started" or similar is announced
+
+# A11Y-005: Errors announced
+# Steps:
+# 1. Enable screen reader
+# 2. Trigger a validation error
+# Expected: Error message is announced
+
+# A11Y-011: High contrast mode
+# Steps:
+# 1. Enable high contrast in system settings
+# 2. Use app
+# Expected: App remains usable, text is readable
+
+# A11Y-012: Color contrast verification
+# Manual check that all text/backgrounds meet WCAG AA (4.5:1)
+
+# A11Y-020: Reduced motion
+# Steps:
+# 1. Enable "Reduce Motion" in system settings
+# 2. Use app
+# Expected: Animations are minimized/disabled

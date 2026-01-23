@@ -1,0 +1,106 @@
+# Settings - Notifications Tests
+# Test IDs: SET-010 through SET-014
+appId: com.sofibaby.app
+tags:
+  - settings
+  - notifications
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# SET-010: Enable feeding reminders
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Notifications"
+    direction: DOWN
+- tapOn: "Notifications"
+
+# Find feeding reminders toggle
+- assertVisible:
+    text: "Feeding Reminders"
+    timeout: 5000
+    optional: true
+
+# Enable if toggle exists
+- tapOn:
+    text: "Feeding Reminders"
+    optional: true
+
+---
+# SET-011: Disable feeding reminders
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Notifications"
+    direction: DOWN
+- tapOn: "Notifications"
+
+# Toggle off feeding reminders
+- tapOn:
+    text: "Feeding Reminders"
+    optional: true
+
+---
+# SET-012: Timer alerts toggle
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Notifications"
+    direction: DOWN
+- tapOn: "Notifications"
+
+# Find timer alerts setting
+- assertVisible:
+    text: "Timer Alerts"
+    timeout: 5000
+    optional: true
+
+# Toggle
+- tapOn:
+    text: "Timer Alerts"
+    optional: true
+
+---
+# SET-013: Quiet hours
+- launchApp
+
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Notifications"
+    direction: DOWN
+- tapOn: "Notifications"
+
+# Find quiet hours setting
+- scrollUntilVisible:
+    element: "Quiet Hours"
+    direction: DOWN
+    optional: true
+
+- assertVisible:
+    text: "Quiet Hours"
+    timeout: 5000
+    optional: true
+
+# Enable quiet hours
+- tapOn:
+    text: "Quiet Hours"
+    optional: true

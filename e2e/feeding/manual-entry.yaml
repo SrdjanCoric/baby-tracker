@@ -1,0 +1,160 @@
+# Feeding - Manual/Past Entry Tests
+# Test IDs: FEED-040 through FEED-044
+appId: com.sofibaby.app
+tags:
+  - feeding
+  - manual-entry
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# FEED-040: Log past breastfeeding
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+
+# Tap log past button
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Should show manual entry form
+- assertVisible:
+    text: "Start Time"
+    timeout: 3000
+    optional: true
+
+# Select side
+- tapOn:
+    text: "Left"
+    optional: true
+
+# Enter duration
+- inputText:
+    text: "15"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# FEED-041: Log past bottle
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn: "Bottle"
+
+# Tap log past button
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Fill form
+- tapOn: "Formula"
+- inputText:
+    text: "120"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# FEED-043: Quick duration buttons
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Tap quick duration button
+- tapOn:
+    text: "10"
+    optional: true
+- tapOn:
+    text: "15"
+    optional: true
+- tapOn:
+    text: "20"
+    optional: true
+
+# Verify duration set
+- assertVisible:
+    text: "10"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "15"
+    timeout: 3000
+    optional: true
+
+---
+# FEED-044: Manual entry - cancel
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+- tapOn:
+    text: "Log Past"
+    optional: true
+- tapOn:
+    text: "Past"
+    optional: true
+
+# Start filling form
+- tapOn:
+    text: "Left"
+    optional: true
+- inputText:
+    text: "10"
+
+# Cancel
+- tapOn: "←"
+- tapOn:
+    text: "Discard"
+    optional: true
+
+# Should return to feeding screen
+- assertVisible:
+    text: "Feeding"
+    timeout: 3000

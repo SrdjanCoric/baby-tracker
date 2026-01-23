@@ -1,0 +1,43 @@
+# Authentication - Sign Up Tests
+# Test IDs: AUTH-001 through AUTH-006
+appId: com.sofibaby.app
+tags:
+  - auth
+  - critical
+---
+
+# AUTH-001: Email sign up - happy path
+- launchApp:
+    clearState: true
+- assertVisible: "Welcome Back"
+
+# Navigate to sign up
+- tapOn: "Sign Up"
+- assertVisible: "Create Account"
+
+# Fill form with valid data
+- inputText:
+    text: "newuser-${TIMESTAMP}@example.com"
+    index: 0
+- inputText:
+    text: "TestPassword123!"
+    index: 1
+- inputText:
+    text: "TestPassword123!"
+    index: 2
+- inputText:
+    text: "Test User"
+    index: 3
+
+# Submit
+- tapOn: "Sign Up"
+
+# Should redirect to onboarding or home
+- assertVisible:
+    text: "Welcome to Sofi Baby Tracker"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Home"
+    timeout: 5000
+    optional: true

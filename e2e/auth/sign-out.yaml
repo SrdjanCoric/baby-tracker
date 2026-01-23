@@ -1,0 +1,75 @@
+# Authentication - Sign Out Tests
+# Test IDs: AUTH-030 through AUTH-032
+appId: com.sofibaby.app
+tags:
+  - auth
+---
+
+# AUTH-030: Sign out - confirm
+- launchApp:
+    clearState: true
+
+# First sign in or continue as guest
+- tapOn: "Continue as Guest"
+
+# Wait for home to load
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Go to Profile tab
+- tapOn: "Profile"
+
+# Scroll to find Sign Out
+- scrollUntilVisible:
+    element: "Sign Out"
+    direction: DOWN
+    timeout: 5000
+
+- tapOn: "Sign Out"
+
+# Confirm dialog should appear
+- assertVisible:
+    text: "Confirm"
+    optional: true
+
+- tapOn:
+    text: "Confirm"
+    optional: true
+- tapOn:
+    text: "Sign Out"
+    optional: true
+
+# Should redirect to sign in
+- assertVisible:
+    text: "Welcome Back"
+    timeout: 5000
+
+---
+# AUTH-031: Sign out - cancel
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+- tapOn: "Profile"
+
+- scrollUntilVisible:
+    element: "Sign Out"
+    direction: DOWN
+    timeout: 5000
+
+- tapOn: "Sign Out"
+
+# Cancel the sign out
+- tapOn:
+    text: "Cancel"
+    optional: true
+
+# Should still be signed in
+- assertVisible:
+    text: "Profile"
+    optional: true

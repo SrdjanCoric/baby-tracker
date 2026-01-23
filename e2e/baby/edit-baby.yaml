@@ -1,0 +1,84 @@
+# Baby Management - Edit Baby Tests
+# Test IDs: BABY-010 through BABY-013
+appId: com.sofibaby.app
+tags:
+  - baby
+---
+
+# Setup: Ensure we have a baby first
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Original Name"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# BABY-010: Edit baby name
+- launchApp
+
+# Navigate to Profile
+- tapOn: "Profile"
+
+# Find and tap on baby to edit
+- tapOn:
+    text: "Original Name"
+    optional: true
+- tapOn:
+    text: "Edit"
+    optional: true
+
+# Edit name
+- clearText
+- inputText:
+    text: "Updated Name"
+
+# Save changes
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Done"
+    optional: true
+
+# Verify name updated
+- assertVisible:
+    text: "Updated Name"
+    timeout: 3000
+
+---
+# BABY-013: Edit baby - cancel
+- launchApp
+
+# Navigate to edit
+- tapOn: "Profile"
+- tapOn:
+    text: "Updated Name"
+    optional: true
+- tapOn:
+    text: "Edit"
+    optional: true
+
+# Make changes
+- clearText
+- inputText:
+    text: "Should Not Save"
+
+# Cancel
+- tapOn: "←"
+- tapOn:
+    text: "Discard"
+    optional: true
+
+# Verify original name preserved
+- assertNotVisible:
+    text: "Should Not Save"
+    timeout: 2000

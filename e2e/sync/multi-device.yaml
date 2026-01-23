@@ -1,0 +1,75 @@
+# Sync - Multi-Device Tests
+# Test IDs: SYNC-020 through SYNC-032
+# Note: These tests require two devices or are documented for manual testing
+appId: com.sofibaby.app
+tags:
+  - sync
+  - multi-device
+  - manual
+---
+
+# NOTE: Multi-device sync tests require two physical devices or emulators
+# running simultaneously. These tests are documented for manual execution.
+
+# SYNC-020: Sync feeding between devices
+# Steps:
+# 1. Sign in on Device A
+# 2. Sign in on Device B with same account
+# 3. Device A: Log a feeding
+# 4. Device B: Check Timeline within 5 seconds
+# Expected: Feeding appears on Device B
+
+# SYNC-021: Sync sleep between devices
+# Steps:
+# 1. Sign in on both devices
+# 2. Device A: Start sleep timer
+# 3. Device B: Check sleep status
+# Expected: Sleep timer visible on Device B
+
+# SYNC-022: Sync edit
+# Steps:
+# 1. Both devices signed in
+# 2. Device A: Edit an entry
+# 3. Device B: Check the entry
+# Expected: Edit reflected on Device B
+
+# SYNC-023: Sync delete
+# Steps:
+# 1. Both devices signed in
+# 2. Device A: Delete an entry
+# 3. Device B: Check Timeline
+# Expected: Entry removed on Device B
+
+# SYNC-024: Timer sync
+# Steps:
+# 1. Both devices signed in
+# 2. Device A: Start timer (feeding, sleep, etc.)
+# 3. Device B: Check timer state
+# Expected: Both show same timer state
+
+---
+# Automated single-device sync indicator test
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Check for sync indicator
+- assertVisible:
+    text: "Synced"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Offline"
+    timeout: 5000
+    optional: true

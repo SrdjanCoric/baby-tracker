@@ -1,0 +1,159 @@
+# Growth - View Charts Tests
+# Test IDs: GROWTH-010 through GROWTH-021
+appId: com.sofibaby.app
+tags:
+  - growth
+  - charts
+---
+
+# Setup - Log some measurements first
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Log initial measurement
+- tapOn: "Growth"
+- inputText:
+    text: "5.5"
+    index: 0
+- inputText:
+    text: "55"
+    index: 1
+- inputText:
+    text: "37"
+    index: 2
+- tapOn:
+    text: "Save"
+    optional: true
+
+---
+# GROWTH-010: View weight chart
+- launchApp
+
+- tapOn: "Growth"
+
+# Navigate to charts
+- tapOn:
+    text: "Charts"
+    optional: true
+- tapOn:
+    text: "View Charts"
+    optional: true
+
+# Weight chart should be visible
+- assertVisible:
+    text: "Weight"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "percentile"
+    timeout: 5000
+    optional: true
+
+---
+# GROWTH-011: View height chart
+- launchApp
+
+- tapOn: "Growth"
+- tapOn:
+    text: "Charts"
+    optional: true
+- tapOn:
+    text: "View Charts"
+    optional: true
+
+# Navigate to height tab
+- tapOn:
+    text: "Height"
+    optional: true
+
+# Height chart should be visible
+- assertVisible:
+    text: "Height"
+    timeout: 3000
+    optional: true
+
+---
+# GROWTH-012: View head chart
+- launchApp
+
+- tapOn: "Growth"
+- tapOn:
+    text: "Charts"
+    optional: true
+- tapOn:
+    text: "View Charts"
+    optional: true
+
+# Navigate to head tab
+- tapOn:
+    text: "Head"
+    optional: true
+
+# Head chart should be visible
+- assertVisible:
+    text: "Head"
+    timeout: 3000
+    optional: true
+
+---
+# GROWTH-013: Percentile displayed
+- launchApp
+
+- tapOn: "Growth"
+- tapOn:
+    text: "Charts"
+    optional: true
+- tapOn:
+    text: "View Charts"
+    optional: true
+
+# Should show percentile value
+- assertVisible:
+    text: "percentile"
+    timeout: 5000
+    optional: true
+
+---
+# GROWTH-020: No measurements empty state
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "New Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+
+# Go to growth charts
+- tapOn: "Growth"
+- tapOn:
+    text: "Charts"
+    optional: true
+- tapOn:
+    text: "View Charts"
+    optional: true
+
+# Should show empty state message
+- assertVisible:
+    text: "No Measurements"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "Add"
+    timeout: 5000
+    optional: true

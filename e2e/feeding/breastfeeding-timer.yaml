@@ -1,0 +1,212 @@
+# Feeding - Breastfeeding Timer Tests
+# Test IDs: FEED-001 through FEED-009
+appId: com.sofibaby.app
+tags:
+  - feeding
+  - breastfeeding
+  - critical
+  - timer
+---
+
+# Setup: Complete onboarding first
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# FEED-001: Start breastfeeding - left side
+- launchApp
+
+# Navigate to feeding
+- tapOn: "Feeding"
+- assertVisible: "Breastfeeding"
+
+# Tap Breastfeed tab if needed
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+
+# Select Left side
+- tapOn: "Left Side"
+
+# Timer should start
+- assertVisible:
+    text: "0:00"
+    timeout: 3000
+    optional: true
+
+# Wait for timer to advance
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+
+# Stop timer
+- tapOn: "⏹"
+
+# Verify saved
+- assertVisible:
+    text: "saved"
+    timeout: 5000
+    optional: true
+
+---
+# FEED-002: Start breastfeeding - right side
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+
+# Select Right side
+- tapOn: "Right Side"
+
+# Timer should start
+- assertVisible:
+    text: "0:00"
+    timeout: 3000
+    optional: true
+
+# Wait and stop
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+- tapOn: "⏹"
+
+---
+# FEED-003: Switch sides during feeding
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+
+# Start on Left
+- tapOn: "Left Side"
+
+# Wait a bit
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Switch to Right
+- tapOn:
+    text: "R"
+    optional: true
+- tapOn:
+    text: "Right"
+    optional: true
+
+# Wait and stop
+- extendedWaitUntil:
+    visible: "0:00:04"
+    timeout: 6000
+    optional: true
+- tapOn: "⏹"
+
+---
+# FEED-005: Stop feeding saves correctly
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+- tapOn: "Left Side"
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:03"
+    timeout: 8000
+    optional: true
+
+# Stop
+- tapOn: "⏹"
+
+# Verify we're back on home or feeding saved message
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# FEED-008: Timer survives app background
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+- tapOn: "Left Side"
+
+# Wait for timer to start
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Background the app (simulate by stopping and relaunching)
+- stopApp:
+    appId: com.sofibaby.app
+- launchApp
+
+# Timer should still be running (check for timer display)
+# Note: Timer persistence depends on implementation
+- assertVisible:
+    text: "0:00"
+    timeout: 5000
+    optional: true
+
+# Stop timer
+- tapOn:
+    text: "⏹"
+    optional: true
+
+---
+# FEED-009: Timer survives app kill
+- launchApp:
+    clearState: false
+
+- tapOn: "Feeding"
+- tapOn:
+    text: "Breastfeed"
+    optional: true
+- tapOn: "Left Side"
+
+# Wait for timer
+- extendedWaitUntil:
+    visible: "0:00:02"
+    timeout: 6000
+    optional: true
+
+# Kill and relaunch
+- stopApp
+- launchApp
+
+# Check if timer is restored
+# The app may show the running timer or ask to restore
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Clean up - stop any running timer
+- tapOn:
+    text: "Feeding"
+    optional: true
+- tapOn:
+    text: "⏹"
+    optional: true

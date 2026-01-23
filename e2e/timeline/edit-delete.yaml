@@ -1,0 +1,169 @@
+# Timeline - Edit and Delete Tests
+# Test IDs: TIME-010 through TIME-022
+appId: com.sofibaby.app
+tags:
+  - timeline
+---
+
+# Setup - Create entries
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+# Log a diaper to edit/delete
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# TIME-012: Edit diaper entry
+- launchApp
+
+- tapOn: "Timeline"
+
+# Tap on the diaper entry to edit
+- tapOn:
+    text: "Wet"
+    optional: true
+- tapOn:
+    text: "Diaper"
+    optional: true
+
+# Should open edit screen
+- assertVisible:
+    text: "Edit"
+    timeout: 5000
+    optional: true
+
+# Change to Dirty
+- tapOn:
+    text: "Dirty"
+    optional: true
+- tapOn: "Yellow"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Done"
+    optional: true
+
+---
+# TIME-014: Cancel edit
+- launchApp
+
+- tapOn: "Timeline"
+
+# Tap entry to edit
+- tapOn:
+    text: "Wet"
+    optional: true
+- tapOn:
+    text: "Dirty"
+    optional: true
+- tapOn:
+    text: "Diaper"
+    optional: true
+
+# Make changes
+- tapOn:
+    text: "Mixed"
+    optional: true
+
+# Cancel
+- tapOn: "←"
+- tapOn:
+    text: "Discard"
+    optional: true
+
+# Entry should not be changed
+
+---
+# TIME-020: Delete entry - confirm
+- launchApp
+
+# First create an entry to delete
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+- tapOn: "Timeline"
+
+# Tap entry to open
+- tapOn:
+    text: "Wet"
+    optional: true
+
+# Delete
+- tapOn:
+    text: "Delete"
+    optional: true
+
+# Confirm deletion
+- tapOn:
+    text: "Confirm"
+    optional: true
+- tapOn:
+    text: "Delete"
+    optional: true
+
+# Entry should be removed
+- assertVisible:
+    text: "deleted"
+    timeout: 5000
+    optional: true
+
+---
+# TIME-021: Delete entry - cancel
+- launchApp
+
+# Create entry
+- tapOn: "Diaper"
+- tapOn: "Wet"
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+- tapOn: "Timeline"
+
+# Tap entry
+- tapOn:
+    text: "Wet"
+    optional: true
+
+# Start delete
+- tapOn:
+    text: "Delete"
+    optional: true
+
+# Cancel
+- tapOn:
+    text: "Cancel"
+    optional: true
+
+# Entry should still exist

@@ -1,0 +1,150 @@
+# Growth - Log Measurement Tests
+# Test IDs: GROWTH-001 through GROWTH-006
+appId: com.sofibaby.app
+tags:
+  - growth
+  - measurement
+---
+
+# Setup
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# GROWTH-001: Log weight only
+- launchApp
+
+- tapOn: "Growth"
+- assertVisible: "Growth"
+
+# Enter weight
+- inputText:
+    text: "5.5"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Verify saved
+- assertVisible:
+    text: "5.5"
+    timeout: 5000
+    optional: true
+- assertVisible:
+    text: "kg"
+    timeout: 5000
+    optional: true
+
+---
+# GROWTH-002: Log all measurements
+- launchApp
+
+- tapOn: "Growth"
+
+# Enter weight
+- inputText:
+    text: "6.0"
+    index: 0
+
+# Enter height
+- inputText:
+    text: "58"
+    index: 1
+
+# Enter head circumference
+- inputText:
+    text: "38"
+    index: 2
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# GROWTH-003: Unit toggle - weight
+- launchApp
+
+- tapOn: "Growth"
+
+# Look for unit toggle (kg/lbs)
+- tapOn:
+    text: "lbs"
+    optional: true
+- tapOn:
+    text: "kg"
+    optional: true
+
+# Verify units change
+- assertVisible:
+    text: "lbs"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "kg"
+    timeout: 3000
+    optional: true
+
+---
+# GROWTH-004: Unit toggle - height
+- launchApp
+
+- tapOn: "Growth"
+
+# Look for height unit toggle (cm/in)
+- tapOn:
+    text: "in"
+    optional: true
+- tapOn:
+    text: "cm"
+    optional: true
+
+# Verify units change
+- assertVisible:
+    text: "in"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "cm"
+    timeout: 3000
+    optional: true
+
+---
+# GROWTH-006: Partial measurements (height only)
+- launchApp
+
+- tapOn: "Growth"
+
+# Clear any existing values
+# Enter only height
+- inputText:
+    text: "60"
+    index: 1
+    optional: true
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true

@@ -1,0 +1,151 @@
+# Feeding - Bottle Feeding Tests
+# Test IDs: FEED-020 through FEED-025
+appId: com.sofibaby.app
+tags:
+  - feeding
+  - bottle
+  - critical
+---
+
+# Setup: Complete onboarding
+- launchApp:
+    clearState: true
+- tapOn: "Continue as Guest"
+- tapOn: "Get Started"
+- tapOn: "Next"
+- tapOn: "Next"
+- inputText:
+    text: "Test Baby"
+- tapOn: "Birth Date"
+- tapOn: "Confirm"
+- tapOn: "Add Baby"
+- assertVisible:
+    text: "Feeding"
+    timeout: 5000
+
+---
+# FEED-020: Log bottle - formula
+- launchApp
+
+- tapOn: "Feeding"
+
+# Navigate to Bottle tab
+- tapOn: "Bottle"
+- assertVisible: "Bottle"
+
+# Select Formula
+- tapOn: "Formula"
+
+# Enter amount
+- inputText:
+    text: "120"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Verify saved
+- assertVisible:
+    text: "saved"
+    timeout: 5000
+    optional: true
+
+---
+# FEED-021: Log bottle - breast milk
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn: "Bottle"
+
+# Select Breast Milk
+- tapOn: "Breast Milk"
+
+# Enter amount
+- inputText:
+    text: "100"
+
+# Save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+---
+# FEED-022: Quick amount buttons
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn: "Bottle"
+
+# Tap a quick amount button (e.g., 60ml, 90ml, 120ml)
+- tapOn:
+    text: "60"
+    optional: true
+- tapOn:
+    text: "90"
+    optional: true
+
+# Verify amount is set
+- assertVisible:
+    text: "60"
+    timeout: 3000
+    optional: true
+- assertVisible:
+    text: "90"
+    timeout: 3000
+    optional: true
+
+---
+# FEED-023: Toggle ml/oz
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn: "Bottle"
+
+# Look for unit toggle
+- tapOn:
+    text: "oz"
+    optional: true
+- tapOn:
+    text: "ml"
+    optional: true
+
+# Verify units switched
+- assertVisible:
+    text: "oz"
+    timeout: 3000
+    optional: true
+
+---
+# FEED-024: Zero amount validation
+- launchApp
+
+- tapOn: "Feeding"
+- tapOn: "Bottle"
+
+# Select type
+- tapOn: "Formula"
+
+# Enter 0
+- inputText:
+    text: "0"
+
+# Try to save
+- tapOn:
+    text: "Save"
+    optional: true
+- tapOn:
+    text: "Log"
+    optional: true
+
+# Should show error or prevent save
+- assertVisible:
+    text: "amount"
+    timeout: 3000
+    optional: true

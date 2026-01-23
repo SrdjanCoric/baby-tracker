@@ -1,0 +1,6 @@
+# Test baby fixture for E2E tests
+# Usage: env variables can be set in Maestro test files
+
+name: "Test Baby"
+birthDate: "2024-06-15"
+gender: "female"

@@ -1,0 +1,194 @@
+# Shared flows for Baby Tracker E2E tests
+# These reusable flows can be included in other test files
+
+appId: com.sofibaby.app
+
+---
+
+# ============================================================
+# SIGN UP FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#signUp"
+# ============================================================
+signUp:
+  - inputText:
+      id: "email-input"
+      text: "test-${timestamp}@example.com"
+  - inputText:
+      id: "password-input"
+      text: "TestPassword123!"
+  - inputText:
+      id: "confirm-password-input"
+      text: "TestPassword123!"
+  - inputText:
+      id: "display-name-input"
+      text: "Test User"
+  - tapOn: "Sign Up"
+  - assertVisible:
+      text: "Account created"
+      optional: true
+
+# ============================================================
+# SIGN IN FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#signIn"
+# ============================================================
+signIn:
+  - inputText:
+      id: "email-input"
+      text: "${EMAIL}"
+  - inputText:
+      id: "password-input"
+      text: "${PASSWORD}"
+  - tapOn: "Sign In"
+
+# ============================================================
+# CONTINUE AS GUEST FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#continueAsGuest"
+# ============================================================
+continueAsGuest:
+  - tapOn: "Continue as Guest"
+  - assertVisible:
+      text: "Home"
+      optional: true
+
+# ============================================================
+# SIGN OUT FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#signOut"
+# ============================================================
+signOut:
+  - tapOn: "Profile"
+  - scrollUntilVisible:
+      element: "Sign Out"
+  - tapOn: "Sign Out"
+  - tapOn: "Confirm"
+
+# ============================================================
+# SKIP ONBOARDING FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#skipOnboarding"
+# ============================================================
+skipOnboarding:
+  - tapOn: "Skip"
+
+# ============================================================
+# COMPLETE ONBOARDING WITH BABY FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#completeOnboardingWithBaby"
+# ============================================================
+completeOnboardingWithBaby:
+  - tapOn: "Get Started"
+  - assertVisible: "Track Everything"
+  - tapOn: "Next"
+  - assertVisible: "Sync with Family"
+  - tapOn: "Next"
+  - assertVisible: "Add Your Baby"
+  - inputText:
+      text: "Test Baby"
+  - tapOn: "Birth Date"
+  - tapOn: "Confirm"
+  - tapOn: "Add Baby"
+
+# ============================================================
+# ADD BABY FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#addBaby"
+# ============================================================
+addBaby:
+  - tapOn:
+      id: "baby-selector"
+  - tapOn: "Add Baby"
+  - inputText:
+      text: "${BABY_NAME:-Test Baby}"
+  - tapOn: "Birth Date"
+  - tapOn: "Confirm"
+  - tapOn:
+      text: "Save"
+      optional: true
+  - tapOn:
+      text: "Add Baby"
+      optional: true
+
+# ============================================================
+# SELECT BABY FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#selectBaby"
+# ============================================================
+selectBaby:
+  - tapOn:
+      id: "baby-selector"
+  - tapOn: "${BABY_NAME}"
+
+# ============================================================
+# NAVIGATE TO FEEDING FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToFeeding"
+# ============================================================
+navigateToFeeding:
+  - tapOn: "Feeding"
+
+# ============================================================
+# NAVIGATE TO SLEEP FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToSleep"
+# ============================================================
+navigateToSleep:
+  - tapOn: "Sleep"
+
+# ============================================================
+# NAVIGATE TO DIAPER FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToDiaper"
+# ============================================================
+navigateToDiaper:
+  - tapOn: "Diaper"
+
+# ============================================================
+# NAVIGATE TO PUMPING FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToPumping"
+# ============================================================
+navigateToPumping:
+  - tapOn: "Pumping"
+
+# ============================================================
+# NAVIGATE TO GROWTH FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToGrowth"
+# ============================================================
+navigateToGrowth:
+  - tapOn: "Growth"
+
+# ============================================================
+# NAVIGATE TO TUMMY TIME FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToTummyTime"
+# ============================================================
+navigateToTummyTime:
+  - tapOn: "Tummy Time"
+
+# ============================================================
+# NAVIGATE TO TIMELINE FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToTimeline"
+# ============================================================
+navigateToTimeline:
+  - tapOn: "Timeline"
+
+# ============================================================
+# NAVIGATE TO STATISTICS FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToStatistics"
+# ============================================================
+navigateToStatistics:
+  - tapOn: "Stats"
+
+# ============================================================
+# NAVIGATE TO SETTINGS FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#navigateToSettings"
+# ============================================================
+navigateToSettings:
+  - tapOn: "Profile"
+  - tapOn: "Settings"
+
+# ============================================================
+# WAIT FOR TIMER FLOW (5 seconds)
+# Usage: - runFlow: "flows/shared-flows.yaml#waitForTimer"
+# ============================================================
+waitForTimer:
+  - extendedWaitUntil:
+      visible: "0:00:05"
+      timeout: 10000
+
+# ============================================================
+# GO BACK FLOW
+# Usage: - runFlow: "flows/shared-flows.yaml#goBack"
+# ============================================================
+goBack:
+  - tapOn: "←"
