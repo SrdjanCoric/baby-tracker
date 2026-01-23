@@ -63,7 +63,7 @@ jest.mock("expo-router", () => ({
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key) => {
+    t: (key, options) => {
       const translations = {
         "common.back": "Back",
         "settings.appearance": "Appearance",
@@ -105,7 +105,19 @@ jest.mock("react-i18next", () => ({
         "errors.generic": "Something went wrong",
         "auth.signIn": "Sign In",
         "auth.passwordRequirements": "At least 8 characters with uppercase, lowercase, and a number",
+        "summary.today": "Today",
+        "summary.sleep": "Sleep",
       };
+      // Handle pluralization for summary keys
+      if (key === "summary.feeding") {
+        return options?.count === 1 ? "Feeding" : "Feedings";
+      }
+      if (key === "summary.nap") {
+        return options?.count === 1 ? "Nap" : "Naps";
+      }
+      if (key === "summary.diaper") {
+        return options?.count === 1 ? "Diaper" : "Diapers";
+      }
       return translations[key] || key;
     },
     i18n: {

@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { ReportSection } from "@/types/report";
-import { SECTION_LABELS, SECTION_ICONS, SECTION_DESCRIPTIONS } from "@/constants/report";
+import { SECTION_ICONS } from "@/constants/report";
 
 interface SectionSelectorProps {
   selectedSections: ReportSection[];
@@ -124,9 +124,9 @@ export function SectionSelector({
         <SectionItem
           key={section}
           section={section}
-          label={SECTION_LABELS[section]}
+          label={t(`reports.sectionLabels.${section}`)}
           icon={SECTION_ICONS[section]}
-          description={SECTION_DESCRIPTIONS[section]}
+          description={t(`reports.sectionDescriptions.${section}`)}
           isSelected={selectedSections.includes(section)}
           onToggle={() => handleToggle(section)}
         />

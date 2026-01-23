@@ -11,6 +11,7 @@ import {
 } from "@/utils/percentile-calculator";
 import { PERCENTILE_LINES } from "@/types/growth-chart";
 import { PERCENTILE_COLORS_HEX } from "@/constants/report";
+import i18n from "@/i18n";
 
 function renderPercentileBadge(percentile: number | undefined): string {
   if (percentile === undefined) return "-";
@@ -84,7 +85,8 @@ function generateGrowthChartSvg(
     return { x: scaleX(m.ageMonths), y: scaleY(value) };
   });
 
-  const title = measurementType === "weight" ? "Weight (kg)" : measurementType === "height" ? "Height (cm)" : "Head (cm)";
+  const t = i18n.t.bind(i18n);
+  const title = measurementType === "weight" ? `${t("reports.pdf.weight")} (kg)` : measurementType === "height" ? `${t("reports.pdf.height")} (cm)` : `${t("reports.pdf.headCircumference")} (cm)`;
 
   return `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
@@ -145,6 +147,7 @@ export function renderGrowthSection(
   babyGender?: Gender,
   includeCharts?: boolean
 ): string {
+  const t = i18n.t.bind(i18n);
   const hasWeight = stats.latestWeight !== undefined;
   const hasHeight = stats.latestHeight !== undefined;
   const hasHead = stats.latestHeadCircumference !== undefined;
@@ -156,25 +159,25 @@ export function renderGrowthSection(
     <div class="section">
       <h2 class="section-title">
         <span class="section-icon">📏</span>
-        Growth
+        ${t("reports.pdf.growthTitle")}
       </h2>
 
       ${hasWeight || hasHeight || hasHead ? `
       <div class="card">
-        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">Latest Measurements</h3>
+        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">${t("reports.pdf.latestMeasurements")}</h3>
         <table class="table">
           <thead>
             <tr>
-              <th>Measurement</th>
-              <th class="text-center">Value</th>
-              <th class="text-center">Percentile</th>
-              <th class="text-center">Date</th>
+              <th>${t("reports.pdf.measurements")}</th>
+              <th class="text-center">${t("reports.pdf.volume")}</th>
+              <th class="text-center">${t("reports.pdf.percentile")}</th>
+              <th class="text-center">${t("reports.pdf.date")}</th>
             </tr>
           </thead>
           <tbody>
             ${hasWeight ? `
             <tr>
-              <td>Weight</td>
+              <td>${t("reports.pdf.weight")}</td>
               <td class="text-center">${stats.latestWeight!.value.toFixed(2)} kg</td>
               <td class="text-center">${renderPercentileBadge(stats.latestWeight!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestWeight!.date)}</td>
@@ -182,7 +185,7 @@ export function renderGrowthSection(
             ` : ""}
             ${hasHeight ? `
             <tr>
-              <td>Height</td>
+              <td>${t("reports.pdf.height")}</td>
               <td class="text-center">${stats.latestHeight!.value.toFixed(1)} cm</td>
               <td class="text-center">${renderPercentileBadge(stats.latestHeight!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestHeight!.date)}</td>
@@ -190,7 +193,7 @@ export function renderGrowthSection(
             ` : ""}
             ${hasHead ? `
             <tr>
-              <td>Head Circumference</td>
+              <td>${t("reports.pdf.headCircumference")}</td>
               <td class="text-center">${stats.latestHeadCircumference!.value.toFixed(1)} cm</td>
               <td class="text-center">${renderPercentileBadge(stats.latestHeadCircumference!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestHeadCircumference!.date)}</td>
@@ -203,12 +206,12 @@ export function renderGrowthSection(
 
       ${stats.weightGain || stats.heightGain ? `
       <div class="card">
-        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">Growth Progress</h3>
+        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">${t("reports.pdf.growthHistory")}</h3>
         <div class="two-column">
           ${stats.weightGain ? `
           <div>
             <div class="info-row">
-              <span class="info-label">Weight Gain</span>
+              <span class="info-label">${t("reports.pdf.weight")}</span>
               <span class="info-value" style="color: ${stats.weightGain.change >= 0 ? "#22C55E" : "#EF4444"}">
                 ${stats.weightGain.change >= 0 ? "+" : ""}${stats.weightGain.change.toFixed(2)} kg
               </span>
@@ -221,7 +224,7 @@ export function renderGrowthSection(
           ${stats.heightGain ? `
           <div>
             <div class="info-row">
-              <span class="info-label">Height Gain</span>
+              <span class="info-label">${t("reports.pdf.height")}</span>
               <span class="info-value" style="color: ${stats.heightGain.change >= 0 ? "#22C55E" : "#EF4444"}">
                 ${stats.heightGain.change >= 0 ? "+" : ""}${stats.heightGain.change.toFixed(1)} cm
               </span>
@@ -237,7 +240,7 @@ export function renderGrowthSection(
 
       ${showCharts && hasWeight ? `
       <div class="card">
-        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">WHO Growth Chart - Weight</h3>
+        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">WHO ${t("reports.pdf.weight")}</h3>
         <div class="chart-container">
           ${generateGrowthChartSvg(stats, "weight", babyGender!)}
         </div>
@@ -246,7 +249,7 @@ export function renderGrowthSection(
 
       ${showCharts && hasHeight ? `
       <div class="card">
-        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">WHO Growth Chart - Height</h3>
+        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">WHO ${t("reports.pdf.height")}</h3>
         <div class="chart-container">
           ${generateGrowthChartSvg(stats, "height", babyGender!)}
         </div>
@@ -255,7 +258,7 @@ export function renderGrowthSection(
 
       ${showCharts && hasHead ? `
       <div class="card">
-        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">WHO Growth Chart - Head Circumference</h3>
+        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">WHO ${t("reports.pdf.headCircumference")}</h3>
         <div class="chart-container">
           ${generateGrowthChartSvg(stats, "head", babyGender!)}
         </div>
@@ -264,7 +267,7 @@ export function renderGrowthSection(
 
       ${!hasMeasurements ? `
       <div class="card" style="text-align: center; padding: 24px;">
-        <p style="color: #6B7280;">No growth measurements recorded in this period.</p>
+        <p style="color: #6B7280;">${t("growth.noMeasurements")}</p>
       </div>
       ` : ""}
     </div>
