@@ -26,7 +26,6 @@ const UNSAFE_PATTERNS = [
  */
 const MAX_TITLE_LENGTH = 100;
 const MAX_BODY_LENGTH = 256;
-const MAX_DATA_VALUE_LENGTH = 500;
 
 /**
  * Strips potentially dangerous content from a string
@@ -43,7 +42,15 @@ export function stripUnsafeContent(input: string): string {
   }
 
   // Remove null bytes and other control characters (except newlines and tabs)
-  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  // Filter out control characters by checking char codes directly
+  sanitized = sanitized
+    .split("")
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      // Allow printable ASCII (32-126), newline (10), carriage return (13), tab (9)
+      return code >= 32 || code === 10 || code === 13 || code === 9;
+    })
+    .join("");
 
   return sanitized.trim();
 }

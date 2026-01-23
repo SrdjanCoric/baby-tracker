@@ -8,7 +8,6 @@ import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
-import type { TimerThresholds } from "@/types/notifications";
 import { determineSleepType } from "@/validators/sleep";
 import { SleepMilestoneSuggestionModal } from "@/components";
 

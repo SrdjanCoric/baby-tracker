@@ -110,7 +110,7 @@ export function getSemanticColor(
  */
 export function getActivityColor(
   activity: ActivityType,
-  isDark: boolean = false
+  _isDark: boolean = false
 ): string {
   const config = ACTIVITY_CONFIG[activity];
   return config.accentColor;

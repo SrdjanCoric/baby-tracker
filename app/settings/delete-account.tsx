@@ -73,7 +73,7 @@ export default function DeleteAccountScreen() {
         user.householdId
       );
       setPreview(result);
-    } catch (err) {
+    } catch {
       setError(t("accountDeletion.loadError"));
     } finally {
       setIsLoading(false);
@@ -105,7 +105,7 @@ export default function DeleteAccountScreen() {
       } else {
         setError(verifyError?.message || t("accountDeletion.errors.invalidPassword"));
       }
-    } catch (err) {
+    } catch {
       setError(t("accountDeletion.errors.verificationFailed"));
     } finally {
       setIsVerifying(false);
@@ -156,7 +156,7 @@ export default function DeleteAccountScreen() {
                 setError(errorMessages[errorKey] || errorMessages.unknown);
                 setIsDeleting(false);
               }
-            } catch (err) {
+            } catch {
               setError(t("accountDeletion.errors.unknown"));
               setIsDeleting(false);
             }

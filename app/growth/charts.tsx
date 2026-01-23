@@ -29,7 +29,7 @@ export default function GrowthChartsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
-  const { measurements, getMeasurementHistory } = useGrowth();
+  const { getMeasurementHistory } = useGrowth();
   const { width: screenWidth } = useWindowDimensions();
 
   const [activeTab, setActiveTab] = useState<TabType>("weight");

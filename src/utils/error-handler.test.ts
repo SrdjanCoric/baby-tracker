@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   createAppError,
   getErrorMessage,
@@ -11,7 +11,6 @@ import {
   sanitizeErrorForReporting,
   formatErrorForUser,
 } from "./error-handler";
-import type { ErrorCategory, ErrorSeverity } from "@/types/error";
 
 describe("error-handler utilities", () => {
   describe("createAppError", () => {

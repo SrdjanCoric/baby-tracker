@@ -50,7 +50,7 @@ export async function getStorageKeyPrefix(userId: string): Promise<string> {
 export async function migrateAsyncStorageToSync(
   options: MigrationOptions
 ): Promise<MigrationResult> {
-  const { userId, householdId, onProgress } = options;
+  const { userId, householdId: _householdId, onProgress } = options;
   const result: MigrationResult = {
     success: false,
     version: CURRENT_MIGRATION_VERSION,

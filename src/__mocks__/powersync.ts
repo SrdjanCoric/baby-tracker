@@ -34,7 +34,7 @@ class MockPowerSyncDatabase {
   private connected = false;
   private lastSyncedAt: Date | null = null;
 
-  async execute(sql: string, params?: unknown[]): Promise<MockQueryResult> {
+  async execute(_sql: string, _params?: unknown[]): Promise<MockQueryResult> {
     return {
       rows: {
         _array: [],
@@ -44,11 +44,11 @@ class MockPowerSyncDatabase {
     };
   }
 
-  async getAll<T>(sql: string, params?: unknown[]): Promise<T[]> {
+  async getAll<T>(_sql: string, _params?: unknown[]): Promise<T[]> {
     return [];
   }
 
-  async get<T>(sql: string, params?: unknown[]): Promise<T | null> {
+  async get<T>(_sql: string, _params?: unknown[]): Promise<T | null> {
     return null;
   }
 
@@ -84,9 +84,9 @@ class MockPowerSyncDatabase {
   }
 
   watch(
-    sql: string,
-    params: unknown[],
-    options: { onResult: (result: { rows: { _array: unknown[] } }) => void }
+    _sql: string,
+    _params: unknown[],
+    _options: { onResult: (result: { rows: { _array: unknown[] } }) => void }
   ): { dispose: () => void } {
     return { dispose: vi.fn() };
   }

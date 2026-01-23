@@ -7,7 +7,7 @@ import React, { createContext, useContext, useEffect, useReducer, useCallback } 
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { onboardingReducer, initialOnboardingState, type OnboardingState, type OnboardingAction } from "./onboarding-reducer";
 import { TOTAL_ONBOARDING_STEPS } from "@/constants/onboarding";
-import type { OnboardingScreen, ONBOARDING_SCREENS } from "@/types/onboarding";
+import type { OnboardingScreen } from "@/types/onboarding";
 
 export {
   onboardingReducer,

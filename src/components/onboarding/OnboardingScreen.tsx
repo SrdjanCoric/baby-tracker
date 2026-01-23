@@ -3,13 +3,12 @@
  */
 
 import React from "react";
-import { View, Text, Pressable, useColorScheme } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { OnboardingPagination } from "./OnboardingPagination";
 import { OnboardingIllustration, type IllustrationType } from "./OnboardingIllustration";
 
 const PRIMARY_COLOR = "#7C3AED";
-const PRIMARY_COLOR_DARK = "#6D28D9";
 
 interface OnboardingScreenProps {
   title: string;
@@ -39,8 +38,6 @@ export function OnboardingScreen({
   children,
 }: OnboardingScreenProps) {
   const { t } = useTranslation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
 
   return (
     <View className="flex-1 bg-surface dark:bg-surface-dark">
