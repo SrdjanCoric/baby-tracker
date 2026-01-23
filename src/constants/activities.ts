@@ -43,44 +43,44 @@ export interface ActivityColorConfig {
 }
 
 /**
- * Activity configuration lookup
+ * Activity configuration lookup - soft warm pastel colors
  */
 export const ACTIVITY_CONFIG: Record<ActivityType, ActivityColorConfig> = {
   feeding: {
     icon: "🤱",
-    accentColor: "#88B04B",
-    mutedBg: "#E8F0E0",
-    mutedBgDark: "#2A3D1F",
+    accentColor: "#8CB369",
+    mutedBg: "#EEF4E9",
+    mutedBgDark: "#2A3325",
   },
   sleep: {
     icon: "😴",
-    accentColor: "#6B5B95",
-    mutedBg: "#E8E4F0",
-    mutedBgDark: "#2D2640",
+    accentColor: "#9E8DA9",
+    mutedBg: "#F2EFF4",
+    mutedBgDark: "#2A2630",
   },
   diaper: {
     icon: "🚼",
-    accentColor: "#D4837D",
-    mutedBg: "#FDF0EF",
-    mutedBgDark: "#3D2525",
+    accentColor: "#E0A099",
+    mutedBg: "#FBF0EE",
+    mutedBgDark: "#382926",
   },
   pumping: {
     icon: "🫙",
-    accentColor: "#7B9BC9",
-    mutedBg: "#E8EDF5",
-    mutedBgDark: "#252D3D",
+    accentColor: "#7BA3A8",
+    mutedBg: "#EDF3F4",
+    mutedBgDark: "#252E30",
   },
   growth: {
     icon: "📏",
-    accentColor: "#009B77",
-    mutedBg: "#E0F5EF",
-    mutedBgDark: "#1A332D",
+    accentColor: "#6AAB9C",
+    mutedBg: "#EBF4F2",
+    mutedBgDark: "#243330",
   },
   tummyTime: {
     icon: "💪",
-    accentColor: "#E67E22",
-    mutedBg: "#FEF3E2",
-    mutedBgDark: "#3D2E1A",
+    accentColor: "#D4A574",
+    mutedBg: "#F9F2EA",
+    mutedBgDark: "#332B22",
   },
 };
 

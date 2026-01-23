@@ -8,23 +8,23 @@ type TabIconProps = {
   isDark: boolean;
 };
 
-// Activity colors from design system
+// Design tokens - warm color palette
 const COLORS = {
   light: {
-    active: "#2E7D32",
-    inactive: "#6B6B6B",
+    active: "#6B9E6E",
+    inactive: "#6B665E",
     background: "#FFFFFF",
-    border: "#E5E7EB",
-    headerBg: "#FAFAFA",
-    headerText: "#1A1A1A",
+    border: "#E8E5E0",
+    headerBg: "#FAFAF8",
+    headerText: "#2D2A26",
   },
   dark: {
-    active: "#4CAF50",
-    inactive: "#9CA3AF",
-    background: "#1A1A1A",
-    border: "#2D2D2D",
-    headerBg: "#1A1A1A",
-    headerText: "#FFFFFF",
+    active: "#8FC091",
+    inactive: "#B5B0A8",
+    background: "#1A1918",
+    border: "#3D3935",
+    headerBg: "#1A1918",
+    headerText: "#FAF9F7",
   },
 };
 

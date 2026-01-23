@@ -4,9 +4,13 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, useTheme, useAuth, useSync } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -213,6 +217,23 @@ function AppContent() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    'Nunito-Regular': require('../assets/fonts/Nunito-Regular.ttf'),
+    'Nunito-Medium': require('../assets/fonts/Nunito-Medium.ttf'),
+    'Nunito-SemiBold': require('../assets/fonts/Nunito-SemiBold.ttf'),
+    'Nunito-Bold': require('../assets/fonts/Nunito-Bold.ttf'),
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <ThemeProvider>
       <LanguageProvider>

@@ -28,68 +28,68 @@ export const SEMANTIC_COLORS = {
 } as const;
 
 /**
- * Surface colors matching tailwind config
+ * Surface colors matching tailwind config - warm undertones
  */
 export const SURFACE_COLORS = {
   light: {
-    background: "#FAFAFA",
-    secondary: "#F5F5F5",
+    background: "#FAFAF8",
+    secondary: "#F5F3F0",
     card: "#FFFFFF",
     cardElevated: "#FFFFFF",
   },
   dark: {
-    background: "#121212",
-    secondary: "#1A1A1A",
-    card: "#1E1E1E",
-    cardElevated: "#252525",
+    background: "#1A1918",
+    secondary: "#1F1E1C",
+    card: "#242220",
+    cardElevated: "#2A2826",
   },
 } as const;
 
 /**
- * Content/text colors matching tailwind config
+ * Content/text colors matching tailwind config - warm grays
  */
 export const CONTENT_COLORS = {
   light: {
-    primary: "#1A1A1A",
-    secondary: "#6B6B6B",
-    tertiary: "#9CA3AF",
+    primary: "#2D2A26",
+    secondary: "#6B665E",
+    tertiary: "#8A857D",
     inverse: "#FFFFFF",
   },
   dark: {
-    primary: "#FFFFFF",
-    secondary: "#A0A0A0",
-    tertiary: "#6B6B6B",
-    inverse: "#1A1A1A",
+    primary: "#FAF9F7",
+    secondary: "#B5B0A8",
+    tertiary: "#7A756D",
+    inverse: "#2D2A26",
   },
 } as const;
 
 /**
- * Border colors matching tailwind config
+ * Border colors matching tailwind config - warm tones
  */
 export const BORDER_COLORS = {
   light: {
-    default: "#E5E7EB",
-    subtle: "#F3F4F6",
+    default: "#E8E5E0",
+    subtle: "#F0EDE8",
   },
   dark: {
-    default: "#374151",
-    subtle: "#4B5563",
+    default: "#3D3935",
+    subtle: "#4A463F",
   },
 } as const;
 
 /**
- * Action/primary colors matching tailwind config
+ * Action/primary colors matching tailwind config - warm sage green
  */
 export const ACTION_COLORS = {
   light: {
-    primary: "#2E7D32",
-    primaryHover: "#256029",
-    primaryPressed: "#1B4D1E",
+    primary: "#6B9E6E",
+    primaryHover: "#5A8A5D",
+    primaryPressed: "#4A754C",
   },
   dark: {
-    primary: "#81C784",
-    primaryHover: "#A5D6A7",
-    primaryPressed: "#66BB6A",
+    primary: "#8FC091",
+    primaryHover: "#A0CDA2",
+    primaryPressed: "#7EB080",
   },
 } as const;
 

@@ -1,10 +1,11 @@
 import { useCallback } from "react";
 import { Modal, Pressable, Text, View, useColorScheme } from "react-native";
 import { useTranslation } from "react-i18next";
+import { ACTIVITY_CONFIG } from "@/constants/activities";
 
-const FEEDING_GREEN = "#88B04B";
-const FEEDING_GREEN_MUTED = "#E8F0E0";
-const FEEDING_GREEN_DARK = "#6A9030";
+const FEEDING_GREEN = ACTIVITY_CONFIG.feeding.accentColor;
+const FEEDING_GREEN_MUTED = ACTIVITY_CONFIG.feeding.mutedBg;
+const FEEDING_GREEN_DARK = "#5A8A4D";
 
 export type FeedingMenuOption = "breastfeed" | "bottle" | "solids";
 
