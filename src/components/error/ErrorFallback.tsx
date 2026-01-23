@@ -21,7 +21,7 @@ export function ErrorFallback({
         Something went wrong
       </Text>
       <Text className="text-center text-content-secondary dark:text-content-dark-secondary mb-6 max-w-[300px]">
-        We're sorry for the inconvenience. Please try again.
+        {"We're sorry for the inconvenience. Please try again."}
       </Text>
 
       <View className="flex-row gap-3">

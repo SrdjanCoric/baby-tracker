@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo, useCallback, useState } from "react";
 import { useColorScheme } from "nativewind";

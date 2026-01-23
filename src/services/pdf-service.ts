@@ -44,15 +44,15 @@ function sanitizeFileName(name: string): string {
   return name.replace(/[/\\?%*:|"<>]/g, "-").replace(/\s+/g, "_");
 }
 
-function isInDateRange(date: Date, startDate: Date, endDate: Date): boolean {
+function _isInDateRange(date: Date, startDate: Date, endDate: Date): boolean {
   return date >= startDate && date <= endDate;
 }
 
 export const PDFService = {
   async fetchReportData(
     babyId: string,
-    startDate: Date,
-    endDate: Date
+    _startDate: Date,
+    _endDate: Date
   ): Promise<RawReportData> {
     const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
       await Promise.all([
@@ -239,7 +239,7 @@ export const PDFService = {
     }
   },
 
-  async shareReport(filePath: string, fileName: string): Promise<void> {
+  async shareReport(filePath: string, _fileName: string): Promise<void> {
     const isAvailable = await Sharing.isAvailableAsync();
     if (!isAvailable) {
       throw new Error("Sharing is not available on this device");

@@ -8,7 +8,6 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useHousehold, useAuth } from "@/contexts";
 import { CaregiverService, Caregiver } from "@/services/caregiver-service";
@@ -30,7 +29,6 @@ const ERROR_TRANSLATIONS: Record<string, ErrorKey> = {
 
 export default function CaregiversScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const { household } = useHousehold();
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);

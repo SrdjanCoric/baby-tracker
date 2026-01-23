@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react-native';
+import { render, screen, fireEvent, act } from '@testing-library/react-native';
 import { View, Text, Pressable } from 'react-native';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({

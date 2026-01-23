@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   CaregiverService,
-  Caregiver,
-  CaregiverStats,
 } from './caregiver-service';
 
 vi.mock('./supabase', () => ({

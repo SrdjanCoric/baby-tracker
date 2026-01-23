@@ -57,7 +57,7 @@ function getDaysBetween(startDate: Date, endDate: Date): number {
   return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 }
 
-function getUniqueDays(entries: { date: Date }[]): Set<string> {
+function _getUniqueDays(entries: { date: Date }[]): Set<string> {
   return new Set(
     entries.map((e) => e.date.toISOString().split("T")[0])
   );

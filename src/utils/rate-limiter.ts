@@ -28,7 +28,7 @@ export async function checkRateLimit(
 
   try {
     const stored = await AsyncStorage.getItem(storageKey);
-    let record: RateLimitRecord = stored ? JSON.parse(stored) : { attempts: [] };
+    const record: RateLimitRecord = stored ? JSON.parse(stored) : { attempts: [] };
 
     record.attempts = record.attempts.filter((timestamp) => timestamp > windowStart);
 
@@ -49,7 +49,7 @@ export async function checkRateLimit(
       remainingAttempts: config.maxAttempts - record.attempts.length,
       resetAt: null,
     };
-  } catch (error) {
+  } catch {
     return {
       allowed: true,
       remainingAttempts: config.maxAttempts,
@@ -65,13 +65,13 @@ export async function recordAttempt(key: string, config: RateLimitConfig): Promi
 
   try {
     const stored = await AsyncStorage.getItem(storageKey);
-    let record: RateLimitRecord = stored ? JSON.parse(stored) : { attempts: [] };
+    const record: RateLimitRecord = stored ? JSON.parse(stored) : { attempts: [] };
 
     record.attempts = record.attempts.filter((timestamp) => timestamp > windowStart);
     record.attempts.push(now);
 
     await AsyncStorage.setItem(storageKey, JSON.stringify(record));
-  } catch (error) {
+  } catch {
     // Best effort - don't fail the operation if rate limiting storage fails
   }
 }
@@ -80,7 +80,7 @@ export async function clearRateLimitRecord(key: string): Promise<void> {
   const storageKey = `${RATE_LIMIT_KEY_PREFIX}${key}`;
   try {
     await AsyncStorage.removeItem(storageKey);
-  } catch (error) {
+  } catch {
     // Ignore errors
   }
 }

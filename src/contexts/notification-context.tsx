@@ -15,7 +15,6 @@ import type {
   NotificationSettings,
   PermissionStatus,
   TimerThresholds,
-  NotificationPrivacySettings,
 } from "@/types/notifications";
 import { DEFAULT_NOTIFICATION_SETTINGS } from "@/constants/notifications";
 import { NotificationService } from "@/services/notification-service";
@@ -127,7 +126,7 @@ export function NotificationProvider({
       // Reschedule all feeding reminders if settings that affect timing changed
       if (needsReschedule && permissionStatus === "granted") {
         // Cancel and reschedule all tracked reminders
-        for (const [key, reminder] of scheduledRemindersRef.current.entries()) {
+        for (const [_key, reminder] of scheduledRemindersRef.current.entries()) {
           // Cancel existing
           const existingId = await NotificationStorageService.getFeedingReminderNotificationId(reminder.babyId);
           if (existingId) {

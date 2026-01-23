@@ -1,6 +1,6 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react-native";
-import { View, Text } from "react-native";
+import { render, screen } from "@testing-library/react-native";
+import { Text } from "react-native";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {

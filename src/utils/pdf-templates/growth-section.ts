@@ -9,7 +9,7 @@ import {
   generatePercentileLine,
   getPercentileValue,
 } from "@/utils/percentile-calculator";
-import { PERCENTILE_LINES, PERCENTILE_COLORS } from "@/types/growth-chart";
+import { PERCENTILE_LINES } from "@/types/growth-chart";
 import { PERCENTILE_COLORS_HEX } from "@/constants/report";
 
 function renderPercentileBadge(percentile: number | undefined): string {

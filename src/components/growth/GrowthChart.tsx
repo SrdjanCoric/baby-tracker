@@ -18,13 +18,11 @@ import {
 import type {
   Gender,
   GrowthMeasurementType,
-  PercentileLine,
   GrowthChartPoint,
 } from "@/types/growth-chart";
 import {
   PERCENTILE_LINES,
   PERCENTILE_COLORS,
-  MEASUREMENT_CONFIG,
   CHART_AGE_RANGE,
 } from "@/types/growth-chart";
 
@@ -83,8 +81,6 @@ export function GrowthChart({
     }),
     [width, height, showLabels]
   );
-
-  const config = MEASUREMENT_CONFIG[measurementType];
 
   // Calculate Y-axis range based on percentile data and measurements
   const { minY, maxY } = useMemo(() => {
@@ -311,7 +307,7 @@ export function GrowthChart({
         )}
 
         {/* User measurement points */}
-        {measurementPoints.map((point, index) => (
+        {measurementPoints.map((point) => (
           <G key={point.measurementId}>
             <Circle
               cx={toSvgX(point.ageMonths)}

@@ -110,7 +110,7 @@ export const CaregiverService = {
       return { data: null, error: 'notAuthenticated' };
     }
 
-    const { data, error } = await supabase.rpc('remove_caregiver', {
+    const { error } = await supabase.rpc('remove_caregiver', {
       caregiver_id: caregiverId,
       household_id: householdId,
     });

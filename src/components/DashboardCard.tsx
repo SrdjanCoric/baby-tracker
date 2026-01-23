@@ -1,4 +1,4 @@
-import { Pressable, Text, View, useColorScheme, type PressableProps } from "react-native";
+import { Pressable, Text, View, useColorScheme } from "react-native";
 import { forwardRef, useCallback } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
