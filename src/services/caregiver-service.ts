@@ -1,4 +1,10 @@
 import { supabase } from './supabase';
+import {
+  checkRateLimit,
+  recordAttempt,
+  CAREGIVER_REMOVAL_LIMIT,
+} from '@/utils/rate-limiter';
+import { logCaregiverRemoval } from '@/utils/audit-logger';
 
 export interface Caregiver {
   id: string;
@@ -90,6 +96,20 @@ export const CaregiverService = {
     caregiverId: string,
     householdId: string
   ): Promise<CaregiverResult<boolean>> {
+    const rateLimitKey = `caregiver_removal:${householdId}`;
+    const rateLimitResult = await checkRateLimit(rateLimitKey, CAREGIVER_REMOVAL_LIMIT);
+
+    if (!rateLimitResult.allowed) {
+      return { data: null, error: 'rateLimitExceeded' };
+    }
+
+    await recordAttempt(rateLimitKey, CAREGIVER_REMOVAL_LIMIT);
+
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return { data: null, error: 'notAuthenticated' };
+    }
+
     const { data, error } = await supabase.rpc('remove_caregiver', {
       caregiver_id: caregiverId,
       household_id: householdId,
@@ -104,6 +124,8 @@ export const CaregiverService = {
       }
       return { data: null, error: 'removeFailed' };
     }
+
+    logCaregiverRemoval(currentUserId, householdId, caregiverId);
 
     return { data: true, error: null };
   },

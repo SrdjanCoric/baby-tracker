@@ -22,6 +22,14 @@ vi.mock('./supabase', () => ({
   },
 }));
 
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  default: {
+    getItem: vi.fn().mockResolvedValue(null),
+    setItem: vi.fn().mockResolvedValue(undefined),
+    removeItem: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('CaregiverService', () => {
   let service: typeof CaregiverService;
   const mockHouseholdId = 'household-123';
@@ -130,6 +138,11 @@ describe('CaregiverService', () => {
     it('should allow owner to remove other caregivers', async () => {
       const { supabase } = await import('./supabase');
 
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: { id: 'user-1' } } as never,
+        error: null,
+      });
+
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: { success: true },
         error: null,
@@ -150,6 +163,11 @@ describe('CaregiverService', () => {
     it('should reject removal by non-owner', async () => {
       const { supabase } = await import('./supabase');
 
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: { id: 'user-1' } } as never,
+        error: null,
+      });
+
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: null,
         error: { message: 'Only household owner can remove members', code: '42501' },
@@ -165,6 +183,11 @@ describe('CaregiverService', () => {
 
     it('should prevent owner from removing themselves', async () => {
       const { supabase } = await import('./supabase');
+
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: { id: 'user-1' } } as never,
+        error: null,
+      });
 
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: null,
