@@ -592,8 +592,13 @@
     "continueWithGoogle": "Nastavite sa Google",
     "continueWithApple": "Nastavite sa Apple",
     "magicLink": "Prijava sa magičnim linkom",
+    "magicLinkTab": "Magični link",
+    "passwordTab": "Lozinka",
     "magicLinkSent": "Proverite email za magični link!",
+    "magicLinkSentTitle": "Proverite email",
+    "magicLinkSentMessage": "Poslali smo vam link za prijavu na email. Dodirnite link da se prijavite - bez lozinke!",
     "magicLinkDescription": "Poslaćemo vam link za prijavu bez lozinke",
+    "magicLinkHint": "Poslaćemo vam link za trenutnu prijavu",
     "sendMagicLink": "Pošalji magični link",
     "continueWithoutAccount": "Nastavite bez naloga",
     "continueAsGuest": "Nastavite kao gost",
@@ -698,6 +703,11 @@
     "sync": {
       "title": "Sinhronizujte sa porodicom",
       "subtitle": "Delite obaveze praćenja sa partnerom ili negovateljima u realnom vremenu"
+    },
+    "authChoice": {
+      "title": "Pridružite se ili nastavite",
+      "subtitle": "Napravite nalog za sinhronizaciju između uređaja i deljenje sa negovateljima",
+      "guestHint": "Možete napraviti nalog kasnije u Podešavanjima"
     },
     "baby": {
       "title": "Dodajte vašu bebu",

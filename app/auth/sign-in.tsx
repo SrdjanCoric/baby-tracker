@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Text,
@@ -10,24 +10,56 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { useAuth } from "@/contexts";
 import { validateSignIn, sanitizeAuthError } from "@/validators";
+
+type AuthMode = "magic" | "password";
+
+const PRIMARY_COLOR = "#7C3AED";
 
 export default function SignInScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { signIn, signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [authMode, setAuthMode] = useState<AuthMode>("magic");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const passwordInputRef = useRef<TextInput>(null);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    if (authMode === "password") {
+      setTimeout(() => passwordInputRef.current?.focus(), 300);
+    }
+  }, [authMode, fadeAnim]);
 
   const handleSignIn = useCallback(async () => {
     const validation = validateSignIn({ email, password });
@@ -107,7 +139,11 @@ export default function SignInScreen() {
         const errorKey = sanitizeAuthError(error, "auth.magicLinkError");
         Alert.alert(t("common.error"), t(errorKey));
       } else {
-        Alert.alert(t("common.success"), t("auth.magicLinkSent"));
+        Alert.alert(
+          t("auth.magicLinkSentTitle"),
+          t("auth.magicLinkSentMessage"),
+          [{ text: t("common.ok") }]
+        );
       }
     } catch {
       Alert.alert(t("common.error"), t("errors.generic"));
@@ -120,9 +156,10 @@ export default function SignInScreen() {
     router.replace("/auth/sign-up");
   }, [router]);
 
-  const handleContinueAsGuest = useCallback(() => {
-    router.replace("/(tabs)");
-  }, [router]);
+  const toggleAuthMode = useCallback((mode: AuthMode) => {
+    setAuthMode(mode);
+    setErrors({});
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -141,6 +178,7 @@ export default function SignInScreen() {
               <View className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
             </View>
 
+            {/* Header */}
             <View className="mb-8">
               <Text className="text-3xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
                 {t("auth.signInTitle")}
@@ -152,7 +190,6 @@ export default function SignInScreen() {
 
             {/* Social Sign-in Buttons */}
             <View className="mb-6">
-              {/* Google Sign-in */}
               <Pressable
                 onPress={handleGoogleSignIn}
                 disabled={isGoogleLoading}
@@ -170,7 +207,6 @@ export default function SignInScreen() {
                 )}
               </Pressable>
 
-              {/* Apple Sign-in (iOS only) */}
               {Platform.OS === "ios" && isAppleSignInAvailable && (
                 <Pressable
                   onPress={handleAppleSignIn}
@@ -200,7 +236,7 @@ export default function SignInScreen() {
               <View className="flex-1 h-px bg-border-subtle dark:bg-border-dark-subtle" />
             </View>
 
-            {/* Email/Password Form */}
+            {/* Email Field - Always Visible */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-content-primary dark:text-content-dark-primary mb-2">
                 {t("auth.email")}
@@ -213,91 +249,144 @@ export default function SignInScreen() {
                 placeholder={t("auth.emailPlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
                 autoCapitalize="none"
                 autoComplete="email"
                 keyboardType="email-address"
                 textContentType="emailAddress"
+                returnKeyType={authMode === "magic" ? "send" : "next"}
+                onSubmitEditing={() => {
+                  if (authMode === "magic") {
+                    handleMagicLink();
+                  } else {
+                    passwordInputRef.current?.focus();
+                  }
+                }}
               />
               {errors.email && (
                 <Text className="text-red-500 text-sm mt-1">{errors.email}</Text>
               )}
             </View>
 
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-content-primary dark:text-content-dark-primary mb-2">
-                {t("auth.password")}
-              </Text>
-              <TextInput
-                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 text-base text-content-primary dark:text-content-dark-primary ${
-                  errors.password ? "border-2 border-red-500" : ""
-                }`}
-                style={{ fontSize: 16, lineHeight: 20, paddingTop: 16, paddingBottom: 16 }}
-                placeholder={t("auth.passwordPlaceholder")}
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="password"
-                textContentType="password"
-              />
-              {errors.password && (
-                <Text className="text-red-500 text-sm mt-1">{errors.password}</Text>
-              )}
-            </View>
-
-            <Pressable
-              onPress={handleSignIn}
-              disabled={isLoading}
-              className="bg-primary dark:bg-primary-dark rounded-xl py-4 items-center mb-3 active:opacity-80"
-            >
-              {isLoading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white font-semibold text-base">
-                  {t("auth.signIn")}
+            {/* Password Field - Only in password mode, appears between email and toggle */}
+            {authMode === "password" && (
+              <Animated.View className="mb-4" style={{ opacity: fadeAnim }}>
+                <Text className="text-sm font-medium text-content-primary dark:text-content-dark-primary mb-2">
+                  {t("auth.password")}
                 </Text>
-              )}
-            </Pressable>
+                <TextInput
+                  ref={passwordInputRef}
+                  className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 text-base text-content-primary dark:text-content-dark-primary ${
+                    errors.password ? "border-2 border-red-500" : ""
+                  }`}
+                  style={{ fontSize: 16, lineHeight: 20, paddingTop: 16, paddingBottom: 16 }}
+                  placeholder={t("auth.passwordPlaceholder")}
+                  placeholderTextColor="#9CA3AF"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    setErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
+                  secureTextEntry
+                  autoComplete="password"
+                  textContentType="password"
+                  returnKeyType="go"
+                  onSubmitEditing={handleSignIn}
+                />
+                {errors.password && (
+                  <Text className="text-red-500 text-sm mt-1">{errors.password}</Text>
+                )}
+              </Animated.View>
+            )}
 
-            <Pressable
-              onPress={handleMagicLink}
-              disabled={isMagicLinkLoading}
-              className="bg-surface-card dark:bg-surface-dark-card border border-border-subtle dark:border-border-dark-subtle rounded-xl py-4 items-center mb-6 active:opacity-80"
-            >
-              {isMagicLinkLoading ? (
-                <ActivityIndicator color="#6B7280" />
-              ) : (
-                <Text className="text-content-primary dark:text-content-dark-primary font-medium text-base">
-                  {t("auth.magicLink")}
+            {/* Auth Mode Toggle */}
+            <View className="flex-row bg-surface-card dark:bg-surface-dark-card rounded-xl p-1 mb-5">
+              <Pressable
+                onPress={() => toggleAuthMode("magic")}
+                className="flex-1 py-3 rounded-lg items-center"
+                style={{
+                  backgroundColor: authMode === "magic" ? PRIMARY_COLOR : "transparent",
+                }}
+              >
+                <Text
+                  className="font-medium text-sm"
+                  style={{
+                    color: authMode === "magic" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280"),
+                  }}
+                >
+                  {t("auth.magicLinkTab")}
                 </Text>
-              )}
-            </Pressable>
-
-            <View className="flex-row justify-center mb-8">
-              <Text className="text-content-secondary dark:text-content-dark-secondary">
-                {t("auth.noAccount")}{" "}
-              </Text>
-              <Pressable onPress={handleGoToSignUp}>
-                <Text className="text-primary dark:text-primary-dark font-semibold">
-                  {t("auth.signUp")}
+              </Pressable>
+              <Pressable
+                onPress={() => toggleAuthMode("password")}
+                className="flex-1 py-3 rounded-lg items-center"
+                style={{
+                  backgroundColor: authMode === "password" ? PRIMARY_COLOR : "transparent",
+                }}
+              >
+                <Text
+                  className="font-medium text-sm"
+                  style={{
+                    color: authMode === "password" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280"),
+                  }}
+                >
+                  {t("auth.passwordTab")}
                 </Text>
               </Pressable>
             </View>
 
-            {/* Continue as Guest - Prominent Section */}
-            <View className="mt-auto pt-4 border-t border-border-subtle dark:border-border-dark-subtle">
-              <View className="items-center mb-3">
-                <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary text-center">
-                  {t("auth.guestDescription")}
+            {/* Action Button */}
+            {authMode === "magic" ? (
+              /* Magic Link Mode */
+              <View>
+                <Pressable
+                  onPress={handleMagicLink}
+                  disabled={isMagicLinkLoading}
+                  className="bg-primary dark:bg-primary-dark rounded-xl py-5 items-center active:opacity-80"
+                >
+                  {isMagicLinkLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <View className="flex-row items-center">
+                      <Text className="text-xl mr-2">✉️</Text>
+                      <Text className="text-white font-semibold text-lg">
+                        {t("auth.sendMagicLink")}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+                <Text className="text-center text-content-tertiary dark:text-content-dark-tertiary text-sm mt-3">
+                  {t("auth.magicLinkHint")}
                 </Text>
               </View>
+            ) : (
+              /* Password Mode */
               <Pressable
-                onPress={handleContinueAsGuest}
-                className="bg-surface-card dark:bg-surface-dark-card border-2 border-primary dark:border-primary-dark rounded-xl py-4 items-center active:opacity-80"
+                onPress={handleSignIn}
+                disabled={isLoading}
+                className="bg-primary dark:bg-primary-dark rounded-xl py-4 items-center active:opacity-80"
               >
-                <Text className="text-primary dark:text-primary-dark font-semibold text-base">
-                  {t("auth.continueAsGuest")}
+                {isLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white font-semibold text-base">
+                    {t("auth.signIn")}
+                  </Text>
+                )}
+              </Pressable>
+            )}
+
+            {/* Sign Up Link */}
+            <View className="flex-row justify-center mt-6">
+              <Text className="text-content-secondary dark:text-content-dark-secondary">
+                {t("auth.noAccount")}{" "}
+              </Text>
+              <Pressable onPress={handleGoToSignUp}>
+                <Text className="font-semibold" style={{ color: PRIMARY_COLOR }}>
+                  {t("auth.signUp")}
                 </Text>
               </Pressable>
             </View>
