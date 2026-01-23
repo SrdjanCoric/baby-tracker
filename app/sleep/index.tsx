@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useSleep } from "@/contexts";
 import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
@@ -73,8 +74,8 @@ export default function SleepScreen() {
     return determineSleepType(new Date());
   }, []);
 
-  const handleStartSleep = useCallback(async (sleepType: SleepType) => {
-    await startSleep(sleepType);
+  const handleStartSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date) => {
+    await startSleep(sleepType, customStartTime);
   }, [startSleep]);
 
   const handleStopSleep = useCallback(async () => {
@@ -178,12 +179,59 @@ export default function SleepScreen() {
 
 interface SleepTypeSelectionViewProps {
   suggestedType: SleepType;
-  onSelectType: (sleepType: SleepType) => void;
+  onSelectType: (sleepType: SleepType, customStartTime?: Date) => void;
   onLogPastSleep: () => void;
 }
 
 function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }: SleepTypeSelectionViewProps) {
   const { t } = useTranslation();
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+
+  const handleTypePress = useCallback((type: SleepType) => {
+    if (customStartTime) {
+      onSelectType(type, customStartTime);
+    } else {
+      onSelectType(type);
+    }
+  }, [customStartTime, onSelectType]);
+
+  const handleStartedEarlierPress = useCallback(() => {
+    setShowTimePicker(true);
+  }, []);
+
+  const handleTimeChange = useCallback(
+    (_event: DateTimePickerEvent, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
+      if (selectedTime) {
+        const now = new Date();
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        const clampedTime = selectedTime < oneHourAgo ? oneHourAgo : selectedTime > now ? now : selectedTime;
+        setCustomStartTime(clampedTime);
+      }
+    },
+    []
+  );
+
+  const handleTimeDone = useCallback(() => {
+    setShowTimePicker(false);
+  }, []);
+
+  const handleClearCustomTime = useCallback(() => {
+    setCustomStartTime(null);
+  }, []);
+
+  const formatCustomTime = (date: Date): string => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
   return (
     <View className="items-center w-full">
@@ -199,9 +247,40 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
       <Text className="text-2xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
         {t("sleep.startSleep")}
       </Text>
-      <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-12 text-center">
+      <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-6 text-center">
         {t("sleep.selectTypeToStart")}
       </Text>
+
+      {/* Started Earlier Button */}
+      {!customStartTime ? (
+        <Pressable
+          onPress={handleStartedEarlierPress}
+          className="mb-6 py-3 px-5 rounded-full flex-row items-center border-2"
+          style={{ borderColor: SLEEP_PURPLE, backgroundColor: 'transparent' }}
+          accessibilityRole="button"
+          accessibilityLabel={t("sleep.startedEarlier")}
+        >
+          <Text className="text-lg mr-2">🕐</Text>
+          <Text className="text-base font-medium" style={{ color: SLEEP_PURPLE }}>
+            {t("sleep.startedEarlier")}
+          </Text>
+        </Pressable>
+      ) : (
+        <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: SLEEP_PURPLE_MUTED }}>
+          <Text className="text-lg mr-2">🕐</Text>
+          <Text className="text-base font-medium mr-2" style={{ color: SLEEP_PURPLE_DARK }}>
+            {t("sleep.startTime")}: {formatCustomTime(customStartTime)}
+          </Text>
+          <Pressable
+            onPress={handleClearCustomTime}
+            className="ml-2"
+            accessibilityRole="button"
+            accessibilityLabel={t("common.reset")}
+          >
+            <Text style={{ color: SLEEP_PURPLE }}>✕</Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* Sleep Type Selection Buttons */}
       <View className="flex-row gap-4 mb-6 w-full">
@@ -210,14 +289,14 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
           label={t("sleep.nap")}
           icon="💤"
           isSuggested={suggestedType === "nap"}
-          onPress={() => onSelectType("nap")}
+          onPress={() => handleTypePress("nap")}
         />
         <SleepTypeButton
           type="night"
           label={t("sleep.night")}
           icon="🌙"
           isSuggested={suggestedType === "night"}
-          onPress={() => onSelectType("night")}
+          onPress={() => handleTypePress("night")}
         />
       </View>
 
@@ -244,6 +323,34 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
           {t("sleep.logPastSleep")}
         </Text>
       </Pressable>
+
+      {/* Time Picker */}
+      {showTimePicker && (
+        <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
+          {Platform.OS === "ios" && (
+            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+              <Pressable
+                onPress={handleTimeDone}
+                className="py-2 px-4"
+                accessibilityRole="button"
+                accessibilityLabel={t("common.done")}
+              >
+                <Text className="font-semibold" style={{ color: SLEEP_PURPLE }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+          <DateTimePicker
+            value={customStartTime ?? new Date()}
+            mode="time"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={handleTimeChange}
+            minimumDate={oneHourAgo}
+            maximumDate={new Date()}
+          />
+        </View>
+      )}
     </View>
   );
 }

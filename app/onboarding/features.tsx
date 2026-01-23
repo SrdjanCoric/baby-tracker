@@ -24,6 +24,12 @@ export default function FeaturesScreen() {
     router.replace("/(tabs)");
   }, [skipOnboarding, router]);
 
+  const handleBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    }
+  }, [router]);
+
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]}>
       <OnboardingScreen
@@ -34,6 +40,8 @@ export default function FeaturesScreen() {
         onPrimaryPress={handleNext}
         showSkip
         onSkipPress={handleSkip}
+        onSwipeLeft={handleNext}
+        onSwipeRight={handleBack}
         currentStep={state.currentStep}
         totalSteps={4}
       />

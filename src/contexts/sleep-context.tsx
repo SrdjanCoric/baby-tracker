@@ -155,7 +155,7 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
 }
 
 interface SleepContextValue extends SleepState {
-  startSleep: (sleepType: SleepType) => Promise<void>;
+  startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<void>;
   stopSleep: () => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
   addSleep: (input: CreateSleepInput) => Promise<StoredSleepEntry>;
@@ -272,10 +272,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     loadSleeps();
   }, [loadSleeps]);
 
-  const startSleep = useCallback(async (sleepType: SleepType) => {
+  const startSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date) => {
     if (!selectedBaby) return;
 
-    const startTime = new Date();
+    const startTime = customStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, sleepType } });
 
     await SleepStorageService.setActiveTimer(selectedBaby.id, {

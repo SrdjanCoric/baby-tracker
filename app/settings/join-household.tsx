@@ -43,6 +43,7 @@ export default function JoinHouseholdScreen() {
   const [isJoining, setIsJoining] = useState(false);
 
   const handleSignIn = useCallback(() => {
+    router.dismissAll();
     router.push("/auth/sign-in");
   }, [router]);
 

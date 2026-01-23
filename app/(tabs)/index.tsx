@@ -104,6 +104,7 @@ export default function HomeScreen() {
     return t("dashboard.nextSide", { side });
   }, [feedingActiveTimer?.isRunning, lastBreastFeeding, suggestedSide, t]);
 
+
   const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
 
   const sleepTimeSince = useMemo(() => {
