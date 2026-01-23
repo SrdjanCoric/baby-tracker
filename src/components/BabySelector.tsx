@@ -7,17 +7,55 @@ import {
   useColorScheme,
   ScrollView,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useBaby } from "@/contexts";
-import { calculateBabyAge } from "@/validators/baby";
+
+function useTranslatedBabyAge() {
+  const { t } = useTranslation();
+
+  return useCallback((birthDate: Date, now: Date = new Date()): string => {
+    const diffMs = now.getTime() - birthDate.getTime();
+    if (diffMs < 0) return t("baby.notBornYet");
+
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    // Less than 14 days: show in days
+    if (diffDays < 14) {
+      return t("baby.daysOld", { count: diffDays });
+    }
+
+    // Less than 8 weeks: show in weeks
+    const diffWeeks = Math.floor(diffDays / 7);
+    if (diffWeeks < 8) {
+      return t("baby.weeksOld", { count: diffWeeks });
+    }
+
+    // Less than 24 months: show in months
+    const diffMonths = Math.floor(diffDays / 30.44);
+    if (diffMonths < 24) {
+      return t("baby.monthsOld", { count: diffMonths });
+    }
+
+    // 2+ years: show in years and months
+    const years = Math.floor(diffMonths / 12);
+    const months = diffMonths % 12;
+    if (months === 0) {
+      return t("baby.yearsOld", { count: years });
+    }
+    return t("baby.yearsMonthsOld", { years, months });
+  }, [t]);
+}
 
 interface BabySelectorProps {
   onAddBaby?: () => void;
 }
 
 function BabySelector({ onAddBaby }: BabySelectorProps) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [isOpen, setIsOpen] = useState(false);
+  const calculateBabyAge = useTranslatedBabyAge();
 
   const { babies, selectedBaby, selectBaby, isLoading } = useBaby();
 
@@ -53,7 +91,7 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
           flex-row items-center px-4 py-3 rounded-2xl
           ${isDark ? "bg-surface-dark-card" : "bg-white"}
         `}
-        accessibilityLabel="Add your first baby"
+        accessibilityLabel={t("baby.addFirstBaby")}
       >
         <View
           className={`
@@ -68,7 +106,7 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
             isDark ? "text-action-dark-primary" : "text-action-primary"
           }`}
         >
-          Add Baby
+          {t("baby.addBaby")}
         </Text>
       </Pressable>
     );
@@ -85,8 +123,8 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
         className={`
           flex-row items-center min-h-[48px]
         `}
-        accessibilityLabel={`Selected baby: ${selectedBaby.name}. Tap to switch babies.`}
-        accessibilityHint="Opens baby selector"
+        accessibilityLabel={`${selectedBaby.name}. ${t("baby.tapToSwitch")}`}
+        accessibilityHint={t("baby.selectBaby")}
       >
         <View
           className={`
@@ -150,7 +188,7 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
                 isDark ? "text-content-dark-primary" : "text-content-primary"
               }`}
             >
-              Select Baby
+              {t("baby.selectBaby")}
             </Text>
 
             <ScrollView className="max-h-80">
@@ -219,7 +257,7 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
                 flex-row items-center justify-center p-4 mt-4 rounded-2xl border-2 border-dashed
                 ${isDark ? "border-gray-700" : "border-gray-200"}
               `}
-              accessibilityLabel="Add another baby"
+              accessibilityLabel={t("baby.addAnotherBaby")}
             >
               <Text className="text-xl mr-2">➕</Text>
               <Text
@@ -227,7 +265,7 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
                   isDark ? "text-content-dark-secondary" : "text-content-secondary"
                 }`}
               >
-                Add Another Baby
+                {t("baby.addAnotherBaby")}
               </Text>
             </Pressable>
           </Pressable>
