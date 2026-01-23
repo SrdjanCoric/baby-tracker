@@ -1,12 +1,16 @@
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
+import { useColorScheme } from "nativewind";
+import { getActionColor } from "@/constants/design-tokens";
 import { useRouter } from "expo-router";
 import {
   TimelineItem,
   TimelineDayHeader,
   TimelineDivider,
+  EmptyState,
+  LoadingState,
 } from "@/components";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
@@ -72,12 +76,33 @@ function groupEntriesByDay(entries: TimelineEntry[]): GroupedEntries[] {
 export default function TimelineScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { feedings } = useFeeding();
-  const { sleeps } = useSleep();
-  const { diapers } = useDiaper();
-  const { pumpings } = usePumping();
-  const { measurements } = useGrowth();
-  const { tummyTimes } = useTummyTime();
+  const { feedings, isLoading: feedingsLoading, refreshFeedings } = useFeeding();
+  const { sleeps, isLoading: sleepsLoading, refreshSleeps } = useSleep();
+  const { diapers, isLoading: diapersLoading, refreshDiapers } = useDiaper();
+  const { pumpings, isLoading: pumpingsLoading, refreshPumpings } = usePumping();
+  const { measurements, isLoading: growthLoading, refreshMeasurements } = useGrowth();
+  const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
+  const { colorScheme } = useColorScheme();
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refreshFeedings(),
+        refreshSleeps(),
+        refreshDiapers(),
+        refreshPumpings(),
+        refreshMeasurements(),
+        refreshTummyTimes(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshMeasurements, refreshTummyTimes]);
+
+  const isLoading = feedingsLoading || sleepsLoading || diapersLoading || pumpingsLoading || growthLoading || tummyTimesLoading;
 
   const handleEditEntry = useCallback((activity: TimelineEntry["activity"], id: string) => {
     router.push(`/edit/${activity}?id=${id}`);
@@ -288,10 +313,28 @@ export default function TimelineScreen() {
 
   const hasEntries = timelineEntries.length > 0;
 
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
+        <LoadingState fullScreen />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
       {hasEntries ? (
-        <ScrollView className="flex-1">
+        <ScrollView
+          className="flex-1"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={getActionColor("primary", colorScheme === "dark")}
+              colors={[getActionColor("primary", colorScheme === "dark")]}
+            />
+          }
+        >
           {groupedEntries.map((group) => (
             <View key={group.header + group.dateLabel}>
               <TimelineDayHeader title={group.header} date={group.dateLabel} />
@@ -313,15 +356,24 @@ export default function TimelineScreen() {
           ))}
         </ScrollView>
       ) : (
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-6xl mb-4">📋</Text>
-          <Text className="text-xl font-semibold text-content-primary dark:text-content-dark-primary mb-2">
-            {t("timeline.noEntries")}
-          </Text>
-          <Text className="text-center text-content-secondary dark:text-content-dark-secondary">
-            {t("timeline.startTracking")}
-          </Text>
-        </View>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={getActionColor("primary", colorScheme === "dark")}
+              colors={[getActionColor("primary", colorScheme === "dark")]}
+            />
+          }
+        >
+          <EmptyState
+            icon="📋"
+            title={t("timeline.noEntries")}
+            description={t("timeline.startTracking")}
+          />
+        </ScrollView>
       )}
     </SafeAreaView>
   );

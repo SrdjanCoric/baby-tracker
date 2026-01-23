@@ -7,7 +7,12 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: mockPush,
     back: jest.fn(),
+    dismissAll: jest.fn(),
   }),
+}));
+
+jest.mock("@react-navigation/native", () => ({
+  useIsFocused: () => true,
 }));
 
 jest.mock("react-i18next", () => ({
@@ -217,10 +222,10 @@ describe("HomeScreen", () => {
       expect(mockPush).toHaveBeenCalledWith("/growth");
     });
 
-    it("navigates to /(tabs)/profile when settings pressed", () => {
+    it("navigates to /settings when settings pressed", () => {
       render(<HomeScreen />);
       fireEvent.press(screen.getByTestId("baby-header"));
-      expect(mockPush).toHaveBeenCalledWith("/(tabs)/profile");
+      expect(mockPush).toHaveBeenCalledWith("/settings");
     });
   });
 

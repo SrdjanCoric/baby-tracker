@@ -85,10 +85,6 @@ export default function TummyTimeScreen() {
     router.back();
   }, [resetAlert, stopTummyTime, router]);
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
   const handleLogPastTummyTime = useCallback(() => {
     router.push("/tummyTime/manual");
   }, [router]);
@@ -123,32 +119,28 @@ export default function TummyTimeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3">
-        <Pressable
-          onPress={handleBack}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-        >
-          <Text className="text-2xl">←</Text>
-        </Pressable>
-        <View className="flex-1 items-center">
-          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            {t("tummyTime.title")}
-          </Text>
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-            {selectedBaby.name}
-          </Text>
+      {/* Header with drag handle */}
+      <View className="items-center pt-2 pb-3">
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <View className="flex-row items-center w-full px-4">
+          <View className="w-touch" />
+          <View className="flex-1 items-center">
+            <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+              {t("tummyTime.title")}
+            </Text>
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {selectedBaby.name}
+            </Text>
+          </View>
+          <Pressable
+            onPress={handleGoalSettings}
+            className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+            accessibilityRole="button"
+            accessibilityLabel={t("tummyTime.goalSettings")}
+          >
+            <Text className="text-xl">⚙️</Text>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={handleGoalSettings}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("tummyTime.goalSettings")}
-        >
-          <Text className="text-xl">⚙️</Text>
-        </Pressable>
       </View>
 
       <View className="flex-1 items-center justify-center px-6">

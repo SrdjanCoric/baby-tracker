@@ -116,6 +116,8 @@ export default function EditGrowthScreen() {
         headCircumferenceCm: head,
         notes: notes || undefined,
       });
+      // Reset initialized state so hasChanges returns false and navigation can proceed
+      setIsInitialized(false);
       router.back();
     } finally {
       setIsSaving(false);

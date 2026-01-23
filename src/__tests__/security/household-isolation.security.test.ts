@@ -33,7 +33,6 @@ vi.mock('@/services/supabase', () => ({
 }));
 
 describe('Household Isolation Security', () => {
-  const mockCurrentUserId = 'user-current';
   const mockCurrentHouseholdId = 'household-current';
   const mockForeignHouseholdId = 'household-foreign';
   const mockForeignBabyId = 'baby-foreign';
@@ -72,7 +71,7 @@ describe('Household Isolation Security', () => {
 
       const mockQuery = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockImplementation((field, value) => {
+        eq: vi.fn().mockImplementation((field, _value) => {
           if (field === 'baby_id') {
             return Promise.resolve({
               data: [],

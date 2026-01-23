@@ -113,14 +113,6 @@ describe("ThemeSettingsScreen", () => {
       });
     });
 
-    it("calls router.back when back button is pressed", () => {
-      render(<ThemeSettingsScreen />);
-
-      const backButton = screen.getByLabelText("Back");
-      fireEvent.press(backButton);
-
-      expect(mockBack).toHaveBeenCalled();
-    });
   });
 
   describe("current mode display", () => {

@@ -4,7 +4,10 @@ import { CaregiverService } from '@/services/caregiver-service';
 vi.mock('@/services/supabase', () => ({
   supabase: {
     auth: {
-      getUser: vi.fn(),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: 'owner-123' } },
+        error: null,
+      }),
     },
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
@@ -12,6 +15,14 @@ vi.mock('@/services/supabase', () => ({
       single: vi.fn(),
     }),
     rpc: vi.fn(),
+  },
+}));
+
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  default: {
+    getItem: vi.fn().mockResolvedValue(null),
+    setItem: vi.fn().mockResolvedValue(undefined),
+    removeItem: vi.fn().mockResolvedValue(undefined),
   },
 }));
 

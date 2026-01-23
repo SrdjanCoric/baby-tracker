@@ -19,8 +19,6 @@ vi.mock('@/services/supabase', () => ({
 
 describe('Invite Code Security', () => {
   const mockHouseholdId = 'household-123';
-  const mockOwnerId = 'owner-123';
-  const mockNonOwnerId = 'non-owner-456';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -136,7 +134,7 @@ describe('Invite Code Security', () => {
     it('should only allow household owner to regenerate code', async () => {
       const { supabase } = await import('@/services/supabase');
 
-      vi.mocked(supabase.rpc).mockImplementation(async (fn, params) => {
+      vi.mocked(supabase.rpc).mockImplementation(async (fn, _params) => {
         if (fn === 'regenerate_invite_code') {
           return {
             data: null,

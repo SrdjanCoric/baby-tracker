@@ -6,3 +6,4 @@ export * from './real-time-sync';
 export * from './schema';
 export * from './powersync-connector';
 export * from './syncable-storage';
+export * from './data-migration';

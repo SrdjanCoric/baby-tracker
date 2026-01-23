@@ -1,0 +1,236 @@
+import { useTranslation } from "react-i18next";
+import { Pressable, ScrollView, Text, View, Alert, Linking } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { useTheme, useUnits, useAuth } from "@/contexts";
+
+interface SettingsRowProps {
+  icon: string;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  showChevron?: boolean;
+  danger?: boolean;
+}
+
+function SettingsRow({
+  icon,
+  label,
+  value,
+  onPress,
+  showChevron = true,
+  danger = false,
+}: SettingsRowProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+      accessibilityRole="button"
+    >
+      <Text className="text-xl mr-3">{icon}</Text>
+      <Text
+        className={`flex-1 text-base ${
+          danger
+            ? "text-red-500"
+            : "text-content-primary dark:text-content-dark-primary"
+        }`}
+      >
+        {label}
+      </Text>
+      {value && (
+        <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mr-2">
+          {value}
+        </Text>
+      )}
+      {showChevron && (
+        <Text className="text-content-tertiary dark:text-content-dark-tertiary">
+          ›
+        </Text>
+      )}
+    </Pressable>
+  );
+}
+
+function SettingsDivider() {
+  return <View className="h-px bg-gray-200 dark:bg-gray-700 ml-14" />;
+}
+
+function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <View className="mb-6">
+      <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider px-4 mb-2">
+        {title}
+      </Text>
+      <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
+        {children}
+      </View>
+    </View>
+  );
+}
+
+const THEME_LABELS = {
+  system: "settings.systemDefault",
+  light: "settings.lightMode",
+  dark: "settings.darkMode",
+  night: "settings.nightMode",
+} as const;
+
+export default function SettingsScreen() {
+  const { t } = useTranslation();
+  const { preference } = useTheme();
+  const { unitSystem } = useUnits();
+  const { isAuthenticated, user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      t("settings.signOut"),
+      t("auth.signOutConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("settings.signOut"),
+          style: "destructive",
+          onPress: async () => {
+            await signOut();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSignIn = () => {
+    router.push("/auth/sign-in");
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
+      <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+          {t("navigation.settings")}
+        </Text>
+      </View>
+
+      <ScrollView className="flex-1 px-4 pt-4">
+        {/* Baby Management */}
+        <SettingsSection title={t("baby.title")}>
+          <SettingsRow
+            icon="👶"
+            label={t("baby.addBaby")}
+            onPress={() => router.push("/baby/add")}
+          />
+        </SettingsSection>
+
+        {/* Preferences */}
+        <SettingsSection title="Preferences">
+          <SettingsRow
+            icon="📏"
+            label={t("settings.units")}
+            value={unitSystem === "imperial" ? t("settings.imperial") : t("settings.metric")}
+            onPress={() => router.push("/settings/units")}
+          />
+          <SettingsDivider />
+          <SettingsRow
+            icon="🎨"
+            label={t("settings.theme")}
+            value={t(THEME_LABELS[preference])}
+            onPress={() => router.push("/settings/theme")}
+          />
+          <SettingsDivider />
+          <SettingsRow
+            icon="🔔"
+            label={t("settings.notifications")}
+            onPress={() => router.push("/settings/notifications")}
+          />
+        </SettingsSection>
+
+        {/* Data */}
+        <SettingsSection title="Data">
+          <SettingsRow
+            icon="📤"
+            label={t("settings.export")}
+            onPress={() => router.push("/settings/export")}
+          />
+          <SettingsDivider />
+          <SettingsRow
+            icon="📄"
+            label={t("settings.generateReport")}
+            onPress={() => router.push("/settings/reports")}
+          />
+        </SettingsSection>
+
+        {/* Household */}
+        <SettingsSection title={t("household.title")}>
+          <SettingsRow
+            icon="👨‍👩‍👧"
+            label={t("household.caregivers")}
+            onPress={() => router.push("/settings/household")}
+          />
+          <SettingsDivider />
+          <SettingsRow
+            icon="🔗"
+            label={t("household.inviteCode")}
+            onPress={() => router.push("/settings/household")}
+          />
+        </SettingsSection>
+
+        {/* About */}
+        <SettingsSection title={t("settings.about")}>
+          <SettingsRow
+            icon="ℹ️"
+            label={t("settings.version")}
+            value="1.0.0"
+            showChevron={false}
+          />
+          <SettingsDivider />
+          <SettingsRow
+            icon="🔒"
+            label={t("settings.privacyPolicy")}
+            onPress={() => Linking.openURL("https://srdjancoric.github.io/sofibaby-privacy/")}
+          />
+        </SettingsSection>
+
+        {/* Account */}
+        <SettingsSection title={t("settings.account")}>
+          {isAuthenticated ? (
+            <>
+              <SettingsRow
+                icon="👤"
+                label={user?.email || user?.displayName || t("auth.signedIn")}
+                showChevron={false}
+              />
+              <SettingsDivider />
+              <SettingsRow
+                icon="🚪"
+                label={t("settings.signOut")}
+                onPress={handleSignOut}
+                showChevron={false}
+              />
+              <SettingsDivider />
+              <SettingsRow
+                icon="🗑️"
+                label={t("settings.deleteAccount")}
+                onPress={() => router.push("/settings/delete-account")}
+                danger
+              />
+            </>
+          ) : (
+            <>
+              <SettingsRow
+                icon="☁️"
+                label={t("auth.signInToSync")}
+                onPress={handleSignIn}
+              />
+              <Text className="px-4 py-2 text-sm text-content-tertiary dark:text-content-dark-tertiary">
+                {t("auth.signInToSyncDescription")}
+              </Text>
+            </>
+          )}
+        </SettingsSection>
+
+        {/* Bottom spacing */}
+        <View className="h-8" />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

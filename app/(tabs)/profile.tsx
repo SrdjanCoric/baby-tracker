@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View, Alert } from "react-native";
+import { Pressable, ScrollView, Text, View, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useTheme, useUnits, useAuth } from "@/contexts";
@@ -133,7 +133,7 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="🔔"
             label={t("settings.notifications")}
-            onPress={() => {}}
+            onPress={() => router.push("/settings/notifications")}
           />
         </SettingsSection>
 
@@ -142,7 +142,7 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="📤"
             label={t("settings.export")}
-            onPress={() => {}}
+            onPress={() => router.push("/settings/export")}
           />
         </SettingsSection>
 
@@ -173,7 +173,7 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="🔒"
             label={t("settings.privacyPolicy")}
-            onPress={() => {}}
+            onPress={() => Linking.openURL("https://srdjancoric.github.io/sofibaby-privacy/")}
           />
         </SettingsSection>
 

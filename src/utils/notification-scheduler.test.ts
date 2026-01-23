@@ -128,6 +128,16 @@ describe("NotificationScheduler", () => {
   });
 
   describe("shouldSendTimerAlert", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      // Set time outside quiet hours (10am) to ensure tests aren't affected by quiet hours
+      vi.setSystemTime(new Date("2024-01-15T10:00:00"));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it("should return true when timer exceeds threshold", () => {
       const result = shouldSendTimerAlert("breastfeeding", 61, mockSettings);
 
@@ -200,14 +210,11 @@ describe("NotificationScheduler", () => {
     });
 
     it("should not alert during quiet hours", () => {
-      vi.useFakeTimers();
       vi.setSystemTime(new Date("2024-01-15T23:00:00")); // During quiet hours
 
       const result = shouldSendTimerAlert("breastfeeding", 120, mockSettings);
 
       expect(result).toBe(false);
-
-      vi.useRealTimers();
     });
   });
 

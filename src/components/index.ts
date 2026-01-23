@@ -59,6 +59,16 @@ export { SimpleBarChart } from "./SimpleBarChart";
 export { TrendIndicator } from "./TrendIndicator";
 export { InsightCard } from "./InsightCard";
 
+// UI State components
+export { EmptyState } from "./EmptyState";
+export { LoadingState } from "./LoadingState";
+
+// Sync components
+export { SyncStatusIndicator } from "./SyncStatusIndicator";
+export { OfflineBanner } from "./OfflineBanner";
+export { CaregiverListItem } from "./CaregiverListItem";
+export { ConflictResolutionModal } from "./ConflictResolutionModal";
+
 // Onboarding components
 export {
   OnboardingScreen,
