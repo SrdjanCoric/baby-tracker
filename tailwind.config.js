@@ -9,124 +9,130 @@ module.exports = {
   darkMode: "class",
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Nunito-Regular', 'System'],
+        'sans-medium': ['Nunito-Medium', 'System'],
+        'sans-semibold': ['Nunito-SemiBold', 'System'],
+        'sans-bold': ['Nunito-Bold', 'System'],
+      },
       colors: {
         // ============================================
-        // ACTIVITY COLORS - Each activity has personality
+        // ACTIVITY COLORS - Soft warm pastels
         // ============================================
         activity: {
-          // Sleep - Dreamy lavender purple
-          sleep: {
-            light: "#6B5B95",
-            DEFAULT: "#6B5B95",
-            dark: "#8B7BB5",
-            muted: "#E8E4F0",
-            "muted-dark": "#2D2640",
-          },
-          // Feeding - Fresh sage green
+          // Feeding - Warm sage (nurturing)
           feeding: {
-            light: "#88B04B",
-            DEFAULT: "#88B04B",
-            dark: "#A8D06B",
-            muted: "#E8F0E0",
-            "muted-dark": "#263320",
+            light: "#8CB369",
+            DEFAULT: "#8CB369",
+            dark: "#A5C88A",
+            muted: "#EEF4E9",
+            "muted-dark": "#2A3325",
           },
-          // Diaper - Soft peachy pink
+          // Sleep - Dusty mauve (calming)
+          sleep: {
+            light: "#9E8DA9",
+            DEFAULT: "#9E8DA9",
+            dark: "#B5A7BD",
+            muted: "#F2EFF4",
+            "muted-dark": "#2A2630",
+          },
+          // Diaper - Dusty rose (soft alert)
           diaper: {
-            light: "#F7CAC9",
-            DEFAULT: "#E8A5A3",
-            dark: "#FFD4D3",
-            muted: "#FDF0EF",
-            "muted-dark": "#3D2828",
+            light: "#E0A099",
+            DEFAULT: "#E0A099",
+            dark: "#EAB8B2",
+            muted: "#FBF0EE",
+            "muted-dark": "#382926",
           },
-          // Pumping - Calm sky blue
+          // Pumping - Warm teal (calm focus)
           pumping: {
-            light: "#92A8D1",
-            DEFAULT: "#92A8D1",
-            dark: "#B2C8F1",
-            muted: "#E8EDF5",
-            "muted-dark": "#252D3D",
+            light: "#7BA3A8",
+            DEFAULT: "#7BA3A8",
+            dark: "#96B8BC",
+            muted: "#EDF3F4",
+            "muted-dark": "#252E30",
           },
-          // Growth - Vibrant teal
+          // Growth - Sage teal (progress)
           growth: {
-            light: "#009B77",
-            DEFAULT: "#009B77",
-            dark: "#20BB97",
-            muted: "#E0F5EF",
-            "muted-dark": "#1A3330",
+            light: "#6AAB9C",
+            DEFAULT: "#6AAB9C",
+            dark: "#88BEB0",
+            muted: "#EBF4F2",
+            "muted-dark": "#243330",
           },
-          // Tummy Time - Warm orange/amber
+          // Tummy Time - Warm honey (active)
           tummyTime: {
-            light: "#E67E22",
-            DEFAULT: "#E67E22",
-            dark: "#F39C12",
-            muted: "#FEF3E2",
-            "muted-dark": "#3D2E1A",
+            light: "#D4A574",
+            DEFAULT: "#D4A574",
+            dark: "#E0B990",
+            muted: "#F9F2EA",
+            "muted-dark": "#332B22",
           },
         },
 
         // ============================================
-        // SEMANTIC COLORS - Light Mode
+        // SEMANTIC COLORS - Light Mode (Warm undertones)
         // ============================================
         surface: {
           // Main background - warm off-white
-          DEFAULT: "#FAFAFA",
-          secondary: "#F5F5F5",
+          DEFAULT: "#FAFAF8",
+          secondary: "#F5F3F0",
           // Card backgrounds
           card: "#FFFFFF",
           "card-elevated": "#FFFFFF",
         },
 
-        // Text colors
+        // Text colors - warm grays
         content: {
-          primary: "#1A1A1A",
-          secondary: "#6B6B6B",
-          tertiary: "#9CA3AF",
+          primary: "#2D2A26",
+          secondary: "#6B665E",
+          tertiary: "#8A857D",
           inverse: "#FFFFFF",
         },
 
-        // Primary action - calming forest green
+        // Primary action - warm sage green
         action: {
-          primary: "#2E7D32",
-          "primary-hover": "#256029",
-          "primary-pressed": "#1B4D1E",
+          primary: "#6B9E6E",
+          "primary-hover": "#5A8A5D",
+          "primary-pressed": "#4A754C",
         },
 
         // ============================================
-        // DARK MODE COLORS
+        // DARK MODE COLORS (Warm undertones)
         // ============================================
         "surface-dark": {
-          DEFAULT: "#121212",
-          secondary: "#1A1A1A",
-          card: "#1E1E1E",
-          "card-elevated": "#252525",
+          DEFAULT: "#1A1918",
+          secondary: "#1F1E1C",
+          card: "#242220",
+          "card-elevated": "#2A2826",
         },
 
         "content-dark": {
-          primary: "#FFFFFF",
-          secondary: "#A0A0A0",
-          tertiary: "#6B6B6B",
-          inverse: "#1A1A1A",
+          primary: "#FAF9F7",
+          secondary: "#B5B0A8",
+          tertiary: "#7A756D",
+          inverse: "#2D2A26",
         },
 
         "action-dark": {
-          primary: "#81C784",
-          "primary-hover": "#A5D6A7",
-          "primary-pressed": "#66BB6A",
+          primary: "#8FC091",
+          "primary-hover": "#A0CDA2",
+          "primary-pressed": "#7EB080",
         },
 
         // Primary dark mode color (matches action-dark.primary)
-        "primary-dark": "#81C784",
+        "primary-dark": "#8FC091",
 
-        // Border colors for light mode
+        // Border colors for light mode - warm tones
         border: {
-          DEFAULT: "#E5E7EB",
-          subtle: "#F3F4F6",
+          DEFAULT: "#E8E5E0",
+          subtle: "#F0EDE8",
         },
 
-        // Border colors for dark mode
+        // Border colors for dark mode - warm tones
         "border-dark": {
-          DEFAULT: "#374151",
-          subtle: "#4B5563",
+          DEFAULT: "#3D3935",
+          subtle: "#4A463F",
         },
 
         // ============================================
@@ -201,9 +207,12 @@ module.exports = {
         "card": "0 2px 8px rgba(0, 0, 0, 0.08)",
         "card-elevated": "0 4px 16px rgba(0, 0, 0, 0.12)",
         "card-pressed": "0 1px 4px rgba(0, 0, 0, 0.08)",
-        "glow-sleep": "0 0 20px rgba(107, 91, 149, 0.3)",
-        "glow-feeding": "0 0 20px rgba(136, 176, 75, 0.3)",
-        "glow-diaper": "0 0 20px rgba(232, 165, 163, 0.3)",
+        "glow-feeding": "0 0 20px rgba(140, 179, 105, 0.3)",
+        "glow-sleep": "0 0 20px rgba(158, 141, 169, 0.3)",
+        "glow-diaper": "0 0 20px rgba(224, 160, 153, 0.3)",
+        "glow-pumping": "0 0 20px rgba(123, 163, 168, 0.3)",
+        "glow-growth": "0 0 20px rgba(106, 171, 156, 0.3)",
+        "glow-tummyTime": "0 0 20px rgba(212, 165, 116, 0.3)",
       },
     },
   },

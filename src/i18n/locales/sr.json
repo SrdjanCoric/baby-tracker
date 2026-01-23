@@ -48,13 +48,13 @@
     "sleep": "Spavanje"
   },
   "dashboard": {
-    "last": "Poslednje: {{time}}",
-    "nextSide": "Sledeće: {{side}} strana",
+    "last": "{{time}}",
+    "nextSide": "Sledeće: {{side}}",
     "awake": "Budna: {{time}}",
     "wetToday": "{{count}} mokrih danas",
     "lastDirty": "Poslednja prljava: pre {{time}}",
     "todayVolume": "Danas: {{volume}}ml",
-    "goalProgress": "{{current}}h / {{goal}}h cilj",
+"goalProgress": "{{current}}h / {{goal}}h",
     "goalProgressWithMinutes": "{{hours}}h {{minutes}}m / {{goal}}h",
     "minuteProgress": "{{current}} / {{goal}} min",
     "session_one": "{{count}} sesija",

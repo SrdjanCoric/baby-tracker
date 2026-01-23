@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { forwardRef, useCallback } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import { ACTION_COLORS, CONTENT_COLORS } from "@/constants/design-tokens";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
 type ButtonSize = "default" | "large" | "icon";
@@ -94,7 +95,7 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
     };
 
     const spinnerColor =
-      variant === "primary" ? "#ffffff" : isDisabled ? "#9ca3af" : "#0d9488";
+      variant === "primary" ? "#ffffff" : isDisabled ? CONTENT_COLORS.light.tertiary : ACTION_COLORS.light.primary;
 
     return (
       <AnimatedPressable

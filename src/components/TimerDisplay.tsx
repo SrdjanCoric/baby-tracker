@@ -1,8 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { forwardRef } from "react";
-
-type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
-type BreastSide = "left" | "right" | "both";
+import { ACTIVITY_CONFIG, type TimerActivityType, type BreastSide } from "@/constants/activities";
 
 interface TimerDisplayProps {
   activity: TimerActivityType;
@@ -14,19 +12,14 @@ interface TimerDisplayProps {
   testID?: string;
 }
 
-const activityColors: Record<TimerActivityType, { primary: string; muted: string }> = {
-  feeding: { primary: "#88B04B", muted: "#E8F0E0" },
-  sleep: { primary: "#6B5B95", muted: "#E8E4F0" },
-  pumping: { primary: "#7B9BC9", muted: "#E8EDF5" },
-  tummyTime: { primary: "#E67E22", muted: "#FEF3E2" },
-};
+function getActivityColors(activity: TimerActivityType) {
+  const config = ACTIVITY_CONFIG[activity];
+  return { primary: config.accentColor, muted: config.mutedBg };
+}
 
-const activityIcons: Record<TimerActivityType, string> = {
-  feeding: "🤱",
-  sleep: "😴",
-  pumping: "🫙",
-  tummyTime: "💪",
-};
+function getActivityIcon(activity: TimerActivityType) {
+  return ACTIVITY_CONFIG[activity].icon;
+}
 
 const TimerDisplay = forwardRef<View, TimerDisplayProps>(
   (
@@ -41,8 +34,8 @@ const TimerDisplay = forwardRef<View, TimerDisplayProps>(
     },
     ref
   ) => {
-    const colors = activityColors[activity];
-    const icon = activityIcons[activity];
+    const colors = getActivityColors(activity);
+    const icon = getActivityIcon(activity);
     const showSideSelector = activity === "feeding" || activity === "pumping";
 
     return (
@@ -169,4 +162,5 @@ function SideButton({ label, fullLabel, isSelected, onPress, color }: SideButton
 
 TimerDisplay.displayName = "TimerDisplay";
 
-export { TimerDisplay, type TimerDisplayProps, type TimerActivityType, type BreastSide };
+export { TimerDisplay, type TimerDisplayProps };
+export type { TimerActivityType, BreastSide } from "@/constants/activities";

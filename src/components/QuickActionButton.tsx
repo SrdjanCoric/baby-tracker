@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { forwardRef } from "react";
+import { ACTIVITY_CONFIG } from "@/constants/activities";
 
 type QuickActionType =
   | "breastfeed-left"
@@ -28,53 +29,53 @@ const actionConfig: Record<
 > = {
   "breastfeed-left": {
     icon: "🤱",
-    color: "#88B04B",
-    bgColor: "#E8F0E0",
+    color: ACTIVITY_CONFIG.feeding.accentColor,
+    bgColor: ACTIVITY_CONFIG.feeding.mutedBg,
   },
   "breastfeed-right": {
     icon: "🤱",
-    color: "#88B04B",
-    bgColor: "#E8F0E0",
+    color: ACTIVITY_CONFIG.feeding.accentColor,
+    bgColor: ACTIVITY_CONFIG.feeding.mutedBg,
   },
   bottle: {
     icon: "🍼",
-    color: "#88B04B",
-    bgColor: "#E8F0E0",
+    color: ACTIVITY_CONFIG.feeding.accentColor,
+    bgColor: ACTIVITY_CONFIG.feeding.mutedBg,
   },
   "solid-food": {
     icon: "🍎",
-    color: "#88B04B",
-    bgColor: "#E8F0E0",
+    color: ACTIVITY_CONFIG.feeding.accentColor,
+    bgColor: ACTIVITY_CONFIG.feeding.mutedBg,
   },
   sleep: {
     icon: "😴",
-    color: "#6B5B95",
-    bgColor: "#E8E4F0",
+    color: ACTIVITY_CONFIG.sleep.accentColor,
+    bgColor: ACTIVITY_CONFIG.sleep.mutedBg,
   },
   "diaper-wet": {
     icon: "💧",
-    color: "#7B9BC9",
-    bgColor: "#E8EDF5",
+    color: ACTIVITY_CONFIG.pumping.accentColor,
+    bgColor: ACTIVITY_CONFIG.pumping.mutedBg,
   },
   "diaper-dirty": {
     icon: "💩",
-    color: "#D4837D",
-    bgColor: "#FDF0EF",
+    color: ACTIVITY_CONFIG.diaper.accentColor,
+    bgColor: ACTIVITY_CONFIG.diaper.mutedBg,
   },
   "diaper-both": {
     icon: "🚼",
-    color: "#D4837D",
-    bgColor: "#FDF0EF",
+    color: ACTIVITY_CONFIG.diaper.accentColor,
+    bgColor: ACTIVITY_CONFIG.diaper.mutedBg,
   },
   pumping: {
     icon: "🫙",
-    color: "#7B9BC9",
-    bgColor: "#E8EDF5",
+    color: ACTIVITY_CONFIG.pumping.accentColor,
+    bgColor: ACTIVITY_CONFIG.pumping.mutedBg,
   },
   "tummy-time": {
     icon: "💪",
-    color: "#E67E22",
-    bgColor: "#FEF3E2",
+    color: ACTIVITY_CONFIG.tummyTime.accentColor,
+    bgColor: ACTIVITY_CONFIG.tummyTime.mutedBg,
   },
 };
 

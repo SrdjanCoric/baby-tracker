@@ -6,6 +6,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { forwardRef, useState } from "react";
+import { CONTENT_COLORS } from "@/constants/design-tokens";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -82,7 +83,7 @@ const Input = forwardRef<TextInput, InputProps>(
               setIsFocused(false);
               props.onBlur?.(e);
             }}
-            placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
+            placeholderTextColor={isDark ? CONTENT_COLORS.dark.tertiary : CONTENT_COLORS.light.tertiary}
             accessibilityLabel={label}
             accessibilityState={{ disabled: isDisabled }}
             {...props}
