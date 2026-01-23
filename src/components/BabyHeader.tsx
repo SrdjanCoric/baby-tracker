@@ -13,7 +13,7 @@ interface BabyHeaderProps {
 const BabyHeader = forwardRef<View, BabyHeaderProps>(
   ({ onSettingsPress, testID }, ref) => {
     const { selectedBaby, isLoading } = useBaby();
-    const { status, pendingCount, forceSync } = useSync();
+    const { status, pendingCount, retryFailedSync } = useSync();
 
     const handleAddBaby = useCallback(() => {
       router.push("/baby/add");
@@ -64,25 +64,16 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
             </Text>
           </Pressable>
 
-          <View className="flex-row items-center gap-2">
-            <SyncStatusIndicator
-              status={status}
-              pendingCount={pendingCount}
-              onRetry={forceSync}
-              testID="sync-status-indicator"
-            />
-
-            {onSettingsPress && (
-              <Pressable
-                onPress={onSettingsPress}
-                className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
-                accessibilityRole="button"
-                accessibilityLabel="Settings"
-              >
-                <Text className="text-xl">⚙️</Text>
-              </Pressable>
-            )}
-          </View>
+          {onSettingsPress && (
+            <Pressable
+              onPress={onSettingsPress}
+              className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+            >
+              <Text className="text-xl">⚙️</Text>
+            </Pressable>
+          )}
         </View>
       );
     }
@@ -101,8 +92,8 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
           <SyncStatusIndicator
             status={status}
             pendingCount={pendingCount}
-            onRetry={forceSync}
-            testID="sync-status-indicator"
+            onPress={retryFailedSync}
+            testID="header-sync-status"
           />
 
           <Pressable

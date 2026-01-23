@@ -1,8 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useCallback, useMemo } from "react";
+import { useIsFocused } from "@react-navigation/native";
+import { useCallback, useMemo, useState } from "react";
+import { useColorScheme } from "nativewind";
+import { getActionColor } from "@/constants/design-tokens";
 import {
   BabyHeader,
   DashboardCard,
@@ -14,12 +17,47 @@ import { timeSince, formatDate, hoursSince } from "@/utils/time";
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { feedings, activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide } = useFeeding();
-  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress } = useSleep();
-  const { diapers, getTodaysCounts } = useDiaper();
-  const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide } = usePumping();
-  const { getLastMeasurement, getWeightChange } = useGrowth();
-  const { activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds } = useTummyTime();
+  const isFocused = useIsFocused();
+
+  // Navigate safely - if a modal is open, dismiss it first then navigate
+  const safeNavigate = useCallback((path: string) => {
+    if (isFocused) {
+      router.push(path as Parameters<typeof router.push>[0]);
+    } else {
+      // Modal is open - dismiss it and navigate to new destination
+      router.dismissAll();
+      // Small delay to let dismissal complete
+      setTimeout(() => {
+        router.push(path as Parameters<typeof router.push>[0]);
+      }, 50);
+    }
+  }, [isFocused, router]);
+
+  const { feedings, activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide, refreshFeedings } = useFeeding();
+  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps } = useSleep();
+  const { diapers, getTodaysCounts, refreshDiapers } = useDiaper();
+  const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide, refreshPumpings } = usePumping();
+  const { getLastMeasurement, getWeightChange, refreshMeasurements } = useGrowth();
+  const { activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes } = useTummyTime();
+  const { colorScheme } = useColorScheme();
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refreshFeedings(),
+        refreshSleeps(),
+        refreshDiapers(),
+        refreshPumpings(),
+        refreshMeasurements(),
+        refreshTummyTimes(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshMeasurements, refreshTummyTimes]);
 
   const feedingTimeSince = useMemo(() => {
     if (feedingActiveTimer?.isRunning) {
@@ -244,56 +282,56 @@ export default function HomeScreen() {
   };
 
   const handleAddFeeding = useCallback(() => {
-    router.push("/feeding");
-  }, [router]);
+    safeNavigate("/feeding");
+  }, [safeNavigate]);
 
   const handleFeedingCardPress = useCallback(() => {
-    router.push("/feeding");
-  }, [router]);
+    safeNavigate("/feeding");
+  }, [safeNavigate]);
 
   const handleAddSleep = useCallback(() => {
-    router.push("/sleep");
-  }, [router]);
+    safeNavigate("/sleep");
+  }, [safeNavigate]);
 
   const handleSleepCardPress = useCallback(() => {
-    router.push("/sleep");
-  }, [router]);
+    safeNavigate("/sleep");
+  }, [safeNavigate]);
 
   const handleAddDiaper = useCallback(() => {
-    router.push("/diaper");
-  }, [router]);
+    safeNavigate("/diaper");
+  }, [safeNavigate]);
 
   const handleDiaperCardPress = useCallback(() => {
-    router.push("/diaper");
-  }, [router]);
+    safeNavigate("/diaper");
+  }, [safeNavigate]);
 
   const handleAddGrowth = useCallback(() => {
-    router.push("/growth");
-  }, [router]);
+    safeNavigate("/growth");
+  }, [safeNavigate]);
 
   const handleGrowthCardPress = useCallback(() => {
-    router.push("/growth");
-  }, [router]);
+    safeNavigate("/growth");
+  }, [safeNavigate]);
 
   const handleAddPumping = useCallback(() => {
-    router.push("/pumping");
-  }, [router]);
+    safeNavigate("/pumping");
+  }, [safeNavigate]);
 
   const handlePumpingCardPress = useCallback(() => {
-    router.push("/pumping");
-  }, [router]);
+    safeNavigate("/pumping");
+  }, [safeNavigate]);
 
   const handleAddTummyTime = useCallback(() => {
-    router.push("/tummyTime");
-  }, [router]);
+    safeNavigate("/tummyTime");
+  }, [safeNavigate]);
 
   const handleTummyTimeCardPress = useCallback(() => {
-    router.push("/tummyTime");
-  }, [router]);
+    safeNavigate("/tummyTime");
+  }, [safeNavigate]);
 
-  const handleSettingsPress = () => {
-    router.push("/(tabs)/profile");
-  };
+  const handleSettingsPress = useCallback(() => {
+    safeNavigate("/settings");
+  }, [safeNavigate]);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]}>
@@ -303,6 +341,14 @@ export default function HomeScreen() {
         className="flex-1"
         contentContainerClassName="px-4 pb-6"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={getActionColor("primary", colorScheme === "dark")}
+            colors={[getActionColor("primary", colorScheme === "dark")]}
+          />
+        }
       >
         {/* Activity Cards Grid */}
         <View className="gap-3">

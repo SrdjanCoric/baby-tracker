@@ -2,7 +2,6 @@ import {
   SyncableEntry,
   ConflictScenario,
   ConflictResolution,
-  ResolutionStrategy,
 } from './types';
 
 const CLOCK_SKEW_TOLERANCE_MS = 5 * 60 * 1000;

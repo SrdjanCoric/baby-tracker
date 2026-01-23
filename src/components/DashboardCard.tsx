@@ -1,7 +1,15 @@
 import { Pressable, Text, View, useColorScheme } from "react-native";
-import { forwardRef } from "react";
+import { forwardRef, useCallback } from "react";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
 type ActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const SPRING_CONFIG = {
+  damping: 15,
+  stiffness: 400,
+};
 
 interface DashboardCardProps {
   activity: ActivityType;
@@ -90,18 +98,50 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
     const textColor = isDark ? "#FFFFFF" : "#1A1A1A";
     const secondaryTextColor = isDark ? "#A0A0A0" : "#6B6B6B";
 
+    const cardScale = useSharedValue(1);
+    const buttonScale = useSharedValue(1);
+
+    const cardAnimatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: cardScale.value }],
+    }));
+
+    const buttonAnimatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: buttonScale.value }],
+    }));
+
+    const handleCardPressIn = useCallback(() => {
+      cardScale.value = withSpring(0.97, SPRING_CONFIG);
+    }, [cardScale]);
+
+    const handleCardPressOut = useCallback(() => {
+      cardScale.value = withSpring(1, SPRING_CONFIG);
+    }, [cardScale]);
+
+    const handleButtonPressIn = useCallback(() => {
+      buttonScale.value = withSpring(0.9, SPRING_CONFIG);
+    }, [buttonScale]);
+
+    const handleButtonPressOut = useCallback(() => {
+      buttonScale.value = withSpring(1, SPRING_CONFIG);
+    }, [buttonScale]);
+
     return (
-      <Pressable
+      <AnimatedPressable
         ref={ref}
         onPress={onPress}
+        onPressIn={handleCardPressIn}
+        onPressOut={handleCardPressOut}
         testID={testID}
-        className="flex-1 rounded-[20px] p-4 active:scale-[0.98]"
-        style={{
-          backgroundColor: bgColor,
-          minHeight: 160,
-          borderWidth: isActive ? 2 : 0,
-          borderColor: isActive ? config.accentColor : "transparent",
-        }}
+        className="flex-1 rounded-[20px] p-4"
+        style={[
+          cardAnimatedStyle,
+          {
+            backgroundColor: bgColor,
+            minHeight: 160,
+            borderWidth: isActive ? 2 : 0,
+            borderColor: isActive ? config.accentColor : "transparent",
+          },
+        ]}
         accessibilityRole="button"
         accessibilityLabel={`${label} card. ${timeSince ? `Time since last: ${timeSince}` : ""}`}
       >
@@ -198,22 +238,24 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
 
         {/* Action button */}
         <View className="items-end mt-1">
-          <Pressable
+          <AnimatedPressable
             onPress={(e) => {
               e.stopPropagation?.();
               onActionPress?.();
             }}
-            className="min-w-[48px] min-h-[48px] rounded-2xl items-center justify-center active:scale-95 active:opacity-90"
-            style={{ backgroundColor: config.accentColor }}
+            onPressIn={handleButtonPressIn}
+            onPressOut={handleButtonPressOut}
+            className="min-w-[48px] min-h-[48px] rounded-2xl items-center justify-center"
+            style={[buttonAnimatedStyle, { backgroundColor: config.accentColor }]}
             accessibilityRole="button"
             accessibilityLabel={isActive ? "Stop" : `Add ${label}`}
           >
             <Text className="text-lg font-bold text-white">
               {isActive ? "⏹" : actionLabel}
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
-      </Pressable>
+      </AnimatedPressable>
     );
   }
 );

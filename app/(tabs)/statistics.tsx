@@ -1,9 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useColorScheme } from "nativewind";
+import { getActionColor } from "@/constants/design-tokens";
 import { useFeeding, useSleep, useDiaper, usePumping, useTummyTime } from "@/contexts";
-import { SimpleBarChart, TrendIndicator, InsightCard } from "@/components";
+import { SimpleBarChart, TrendIndicator, InsightCard, EmptyState, LoadingState } from "@/components";
+import { ACTIVITY_CONFIG } from "@/constants/activities";
 import { formatDuration } from "@/utils/time";
 import {
   getDateRangeForPeriod,
@@ -88,11 +91,30 @@ export default function StatisticsScreen() {
   const { t } = useTranslation();
   const [period, setPeriod] = useState<StatisticsPeriod>("daily");
 
-  const { feedings } = useFeeding();
-  const { sleeps } = useSleep();
-  const { diapers } = useDiaper();
-  const { pumpings } = usePumping();
-  const { tummyTimes, dailyGoalSeconds, getDailyProgress } = useTummyTime();
+  const { feedings, isLoading: feedingsLoading, refreshFeedings } = useFeeding();
+  const { sleeps, isLoading: sleepsLoading, refreshSleeps } = useSleep();
+  const { diapers, isLoading: diapersLoading, refreshDiapers } = useDiaper();
+  const { pumpings, isLoading: pumpingsLoading, refreshPumpings } = usePumping();
+  const { tummyTimes, dailyGoalSeconds, getDailyProgress, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
+  const { colorScheme } = useColorScheme();
+
+  const isLoading = feedingsLoading || sleepsLoading || diapersLoading || pumpingsLoading || tummyTimesLoading;
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refreshFeedings(),
+        refreshSleeps(),
+        refreshDiapers(),
+        refreshPumpings(),
+        refreshTummyTimes(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshTummyTimes]);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -302,6 +324,14 @@ export default function StatisticsScreen() {
 
   const showWeeklyTrends = period === "weekly" && weeklyTrends;
 
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
+        <LoadingState fullScreen />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
       <View className="flex-row mx-4 mt-2 mb-4 p-1 bg-surface-secondary dark:bg-surface-dark-secondary rounded-pill">
@@ -342,6 +372,14 @@ export default function StatisticsScreen() {
       <ScrollView
         className="flex-1 px-4"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={getActionColor("primary", colorScheme === "dark")}
+            colors={[getActionColor("primary", colorScheme === "dark")]}
+          />
+        }
       >
         {showWeeklyTrends && insights.length > 0 && (
           <View className="mb-4">
@@ -362,12 +400,12 @@ export default function StatisticsScreen() {
           </Text>
           <View className="flex-row gap-3">
             <StatCard
-              icon="🤱"
+              icon={ACTIVITY_CONFIG.feeding.icon}
               label={t("statistics.totalFeedings")}
               value={String(stats.feeding.totalCount)}
               subvalue={feedingSubvalue}
-              color="#88B04B"
-              bgColor="#E8F0E0"
+              color={ACTIVITY_CONFIG.feeding.accentColor}
+              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.feeding.mutedBgDark : ACTIVITY_CONFIG.feeding.mutedBg}
               trend={weeklyTrends?.feeding}
               showTrend={!!showWeeklyTrends}
             />
@@ -380,12 +418,12 @@ export default function StatisticsScreen() {
           </Text>
           <View className="flex-row gap-3">
             <StatCard
-              icon="😴"
+              icon={ACTIVITY_CONFIG.sleep.icon}
               label={t("statistics.totalSleep")}
               value={formatSleepDuration(stats.sleep.totalDurationSeconds)}
               subvalue={sleepSubvalue}
-              color="#6B5B95"
-              bgColor="#E8E4F0"
+              color={ACTIVITY_CONFIG.sleep.accentColor}
+              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.sleep.mutedBgDark : ACTIVITY_CONFIG.sleep.mutedBg}
               trend={weeklyTrends?.sleep}
               trendFormatted={weeklyTrends?.sleep ? formatTrendDuration(weeklyTrends.sleep.absoluteChange) : undefined}
               showTrend={!!showWeeklyTrends}
@@ -399,12 +437,12 @@ export default function StatisticsScreen() {
           </Text>
           <View className="flex-row gap-3">
             <StatCard
-              icon="👶"
+              icon={ACTIVITY_CONFIG.diaper.icon}
               label={t("statistics.totalDiapers")}
               value={String(stats.diaper.totalCount)}
               subvalue={diaperSubvalue}
-              color="#E8A5A3"
-              bgColor="#FDF0EF"
+              color={ACTIVITY_CONFIG.diaper.accentColor}
+              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.diaper.mutedBgDark : ACTIVITY_CONFIG.diaper.mutedBg}
               trend={weeklyTrends?.diaper}
               showTrend={!!showWeeklyTrends}
             />
@@ -418,12 +456,12 @@ export default function StatisticsScreen() {
             </Text>
             <View className="flex-row gap-3">
               <StatCard
-                icon="🫙"
+                icon={ACTIVITY_CONFIG.pumping.icon}
                 label={t("statistics.totalPumping")}
                 value={stats.pumping.totalVolumeMl > 0 ? `${stats.pumping.totalVolumeMl} ml` : String(stats.pumping.totalCount)}
                 subvalue={pumpingSubvalue}
-                color="#7B9BC9"
-                bgColor="#E8EDF5"
+                color={ACTIVITY_CONFIG.pumping.accentColor}
+                bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.pumping.mutedBgDark : ACTIVITY_CONFIG.pumping.mutedBg}
               />
             </View>
           </View>
@@ -434,14 +472,14 @@ export default function StatisticsScreen() {
             {t("tummyTime.title")}
           </Text>
           <View className="flex-row gap-3">
-            <View className="flex-1 rounded-card p-4" style={{ backgroundColor: "#FEF3E2" }}>
+            <View className="flex-1 rounded-card p-4" style={{ backgroundColor: colorScheme === "dark" ? ACTIVITY_CONFIG.tummyTime.mutedBgDark : ACTIVITY_CONFIG.tummyTime.mutedBg }}>
               <View className="flex-row items-center mb-2">
-                <Text className="text-xl mr-2">💪</Text>
+                <Text className="text-xl mr-2">{ACTIVITY_CONFIG.tummyTime.icon}</Text>
                 <Text className="text-xs font-semibold uppercase tracking-wider text-content-secondary dark:text-content-dark-secondary">
                   {t("statistics.tummyTime")}
                 </Text>
               </View>
-              <Text className="text-stat font-bold" style={{ color: "#E67E22" }}>
+              <Text className="text-stat font-bold" style={{ color: ACTIVITY_CONFIG.tummyTime.accentColor }}>
                 {formatDuration(stats.tummyTime.totalDurationSeconds, "short") || "0m"}
               </Text>
               {period === "daily" && dailyGoalSeconds > 0 && (
@@ -450,7 +488,7 @@ export default function StatisticsScreen() {
                     <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
                       {t("tummyTime.dailyGoal")}: {Math.round(dailyGoalSeconds / 60)}m
                     </Text>
-                    <Text className="text-xs font-semibold" style={{ color: "#E67E22" }}>
+                    <Text className="text-xs font-semibold" style={{ color: ACTIVITY_CONFIG.tummyTime.accentColor }}>
                       {tummyTimeGoalProgress}%
                     </Text>
                   </View>
@@ -459,7 +497,7 @@ export default function StatisticsScreen() {
                       className="h-full rounded-full"
                       style={{
                         width: `${Math.min(tummyTimeGoalProgress ?? 0, 100)}%`,
-                        backgroundColor: "#E67E22",
+                        backgroundColor: ACTIVITY_CONFIG.tummyTime.accentColor,
                       }}
                     />
                   </View>
@@ -496,7 +534,7 @@ export default function StatisticsScreen() {
                   </Text>
                   <SimpleBarChart
                     data={weeklyChartData.feedingData}
-                    color="#88B04B"
+                    color={ACTIVITY_CONFIG.feeding.accentColor}
                     height={100}
                   />
                 </View>
@@ -508,7 +546,7 @@ export default function StatisticsScreen() {
                   </Text>
                   <SimpleBarChart
                     data={weeklyChartData.diaperData}
-                    color="#E8A5A3"
+                    color={ACTIVITY_CONFIG.diaper.accentColor}
                     height={100}
                   />
                 </View>
@@ -518,13 +556,12 @@ export default function StatisticsScreen() {
         )}
 
         {(stats.feeding.totalCount === 0 && stats.sleep.totalDurationSeconds === 0 && stats.diaper.totalCount === 0 && stats.tummyTime.sessionCount === 0) && (
-          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-6 items-center justify-center min-h-[120px] mb-6">
-            <Text className="text-4xl mb-3">📊</Text>
-            <Text className="text-base text-content-secondary dark:text-content-dark-secondary text-center">
-              {period === "daily"
-                ? t("statistics.noDataToday")
-                : t("statistics.noDataThisWeek")}
-            </Text>
+          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card mb-6">
+            <EmptyState
+              icon="📊"
+              title={period === "daily" ? t("statistics.noDataToday") : t("statistics.noDataThisWeek")}
+              compact
+            />
           </View>
         )}
       </ScrollView>

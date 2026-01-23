@@ -306,11 +306,4 @@ describe("FeedingScreen", () => {
     });
   });
 
-  describe("navigation", () => {
-    it("navigates back when back pressed", () => {
-      render(<FeedingScreen />);
-      fireEvent.press(screen.getByLabelText("Back"));
-      expect(mockBack).toHaveBeenCalled();
-    });
-  });
 });

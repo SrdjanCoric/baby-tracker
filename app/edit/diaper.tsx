@@ -101,6 +101,7 @@ export default function EditDiaperScreen() {
         stoolColor: diaperType === "wet" ? undefined : stoolColor,
         notes: notes || undefined,
       });
+      setIsInitialized(false);
       router.back();
     } finally {
       setIsSaving(false);

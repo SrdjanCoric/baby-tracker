@@ -8,7 +8,6 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useHousehold, useAuth } from "@/contexts";
 import { CaregiverService, Caregiver } from "@/services/caregiver-service";
@@ -30,7 +29,6 @@ const ERROR_TRANSLATIONS: Record<string, ErrorKey> = {
 
 export default function CaregiversScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const { household } = useHousehold();
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
@@ -87,10 +85,6 @@ export default function CaregiversScreen() {
     };
   }, [isAuthenticated, householdId]);
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
   const handleRemoveCaregiver = useCallback(
     (caregiverId: string) => {
       const caregiver = caregivers.find((c) => c.id === caregiverId);
@@ -139,21 +133,11 @@ export default function CaregiversScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      <View className="flex-row items-center px-4 py-3 border-b border-border-subtle dark:border-border-dark-subtle">
-        <Pressable
-          onPress={handleBack}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-        >
-          <Text className="text-2xl">{"\u{2190}"}</Text>
-        </Pressable>
-        <View className="flex-1 items-center">
-          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            {t("household.caregivers")}
-          </Text>
-        </View>
-        <View className="w-touch" />
+      <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+          {t("household.caregivers")}
+        </Text>
       </View>
 
       {!isAuthenticated ? (

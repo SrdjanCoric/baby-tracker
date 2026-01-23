@@ -31,6 +31,10 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     startTime: "22:00",
     endTime: "07:00",
   },
+  privacy: {
+    showBabyName: false, // Default to not showing baby name for privacy
+    showActivityDetails: true,
+  },
 };
 
 /**

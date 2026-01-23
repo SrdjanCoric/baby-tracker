@@ -8,7 +8,6 @@ import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
-import type { TimerThresholds } from "@/types/notifications";
 import { determineSleepType } from "@/validators/sleep";
 import { SleepMilestoneSuggestionModal } from "@/components";
 
@@ -89,10 +88,6 @@ export default function SleepScreen() {
     changeSleepType(sleepType);
   }, [changeSleepType]);
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
   const handleLogPastSleep = useCallback(() => {
     router.push("/sleep/manual");
   }, [router]);
@@ -127,32 +122,28 @@ export default function SleepScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3">
-        <Pressable
-          onPress={handleBack}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-        >
-          <Text className="text-2xl">←</Text>
-        </Pressable>
-        <View className="flex-1 items-center">
-          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            {t("sleep.title")}
-          </Text>
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-            {selectedBaby.name}
-          </Text>
+      {/* Header with drag handle */}
+      <View className="items-center pt-2 pb-3">
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <View className="flex-row items-center w-full px-4">
+          <View className="w-touch" />
+          <View className="flex-1 items-center">
+            <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+              {t("sleep.title")}
+            </Text>
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {selectedBaby.name}
+            </Text>
+          </View>
+          <Pressable
+            onPress={handleSettings}
+            className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+            accessibilityRole="button"
+            accessibilityLabel={t("sleep.goalSettings")}
+          >
+            <Text className="text-xl">⚙️</Text>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={handleSettings}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("sleep.goalSettings")}
-        >
-          <Text className="text-xl">⚙️</Text>
-        </Pressable>
       </View>
 
       <View className="flex-1 items-center justify-center px-6">

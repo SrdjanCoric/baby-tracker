@@ -11,6 +11,12 @@ export interface NotificationSettings {
   feedingReminders: FeedingReminderSettings;
   timerAlerts: TimerAlertSettings;
   quietHours: QuietHoursSettings;
+  privacy: NotificationPrivacySettings;
+}
+
+export interface NotificationPrivacySettings {
+  showBabyName: boolean; // Whether to include baby name in notifications
+  showActivityDetails: boolean; // Whether to show detailed activity info
 }
 
 export interface FeedingReminderSettings {
@@ -60,3 +66,11 @@ export interface NotificationData {
 }
 
 export type PermissionStatus = "granted" | "denied" | "undetermined";
+
+/**
+ * In-app reminder settings (used when push notifications are denied)
+ */
+export interface InAppReminderSettings {
+  enabled: boolean;
+  lastReminderTime?: string; // ISO timestamp
+}

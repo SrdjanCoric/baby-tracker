@@ -28,6 +28,10 @@ const mockDefaultSettings = {
     startTime: "22:00",
     endTime: "07:00",
   },
+  privacy: {
+    showBabyName: false,
+    showActivityDetails: true,
+  },
 };
 
 jest.mock("@/services/notification-service", () => ({
@@ -53,7 +57,15 @@ jest.mock("@/services/notification-storage", () => ({
     saveFeedingReminderNotificationId: jest.fn().mockResolvedValue(undefined),
     clearFeedingReminderNotificationId: jest.fn().mockResolvedValue(undefined),
     clearSettings: jest.fn(),
+    getInAppReminderEnabled: jest.fn().mockResolvedValue(false),
+    setInAppReminderEnabled: jest.fn().mockResolvedValue(undefined),
+    getLastInAppReminderTime: jest.fn().mockResolvedValue(null),
+    setLastInAppReminderTime: jest.fn(),
   },
+}));
+
+jest.mock("@/utils/notification-sanitizer", () => ({
+  createSafeNotificationContent: jest.fn((content) => content),
 }));
 
 jest.mock("@/utils/notification-scheduler", () => ({

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react-native';
+import { render, screen, fireEvent, act } from '@testing-library/react-native';
 import { View, Text, Pressable, Alert } from 'react-native';
 
 jest.mock('@/services/supabase', () => ({
@@ -146,7 +146,7 @@ function TestCaregiverList({
 
   React.useEffect(() => {
     caregiverContext.loadCaregivers();
-  }, []);
+  }, [caregiverContext]);
 
   if (state.loading) {
     return (

@@ -1,6 +1,8 @@
 import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { TrendDirection } from "@/utils/trends";
+import { useTheme } from "@/contexts/theme-context";
+import { getSemanticColor } from "@/constants/design-tokens";
 
 interface TrendIndicatorProps {
   direction: TrendDirection;
@@ -16,6 +18,7 @@ export function TrendIndicator({
   compact = false,
 }: TrendIndicatorProps) {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
 
   const getArrow = () => {
     switch (direction) {
@@ -31,11 +34,11 @@ export function TrendIndicator({
   const getColor = () => {
     switch (direction) {
       case "increase":
-        return "#22c55e"; // green-500
+        return getSemanticColor("success", isDark);
       case "decrease":
-        return "#ef4444"; // red-500
+        return getSemanticColor("error", isDark);
       case "stable":
-        return "#6b7280"; // gray-500
+        return getSemanticColor("neutral", isDark);
     }
   };
 

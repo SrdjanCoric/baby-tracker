@@ -74,22 +74,13 @@ describe("AboutSettingsScreen", () => {
   });
 
   describe("interactions", () => {
-    it("calls router.back when back button is pressed", () => {
-      render(<AboutSettingsScreen />);
-
-      const backButton = screen.getByLabelText("Back");
-      fireEvent.press(backButton);
-
-      expect(mockBack).toHaveBeenCalled();
-    });
-
     it("opens privacy policy URL when privacy policy is pressed", () => {
       render(<AboutSettingsScreen />);
 
       const privacyOption = screen.getByText("Privacy Policy").parent?.parent;
       fireEvent.press(privacyOption!);
 
-      expect(Linking.openURL).toHaveBeenCalledWith("https://example.com/privacy");
+      expect(Linking.openURL).toHaveBeenCalledWith("https://srdjancoric.github.io/sofibaby-privacy/");
     });
   });
 });
