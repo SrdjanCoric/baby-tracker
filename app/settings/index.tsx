@@ -138,6 +138,12 @@ export default function SettingsScreen() {
           />
           <SettingsDivider />
           <SettingsRow
+            icon="📱"
+            label={t("settings.customizeDashboard")}
+            onPress={() => router.push("/settings/dashboard")}
+          />
+          <SettingsDivider />
+          <SettingsRow
             icon="🔔"
             label={t("settings.notifications")}
             onPress={() => router.push("/settings/notifications")}

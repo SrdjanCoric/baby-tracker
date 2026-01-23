@@ -38,3 +38,5 @@ export { NotificationProvider, useNotifications } from "./notification-context";
 
 export { OnboardingProvider, useOnboarding, onboardingReducer, initialOnboardingState } from "./onboarding-context";
 export type { OnboardingState, OnboardingAction } from "./onboarding-reducer";
+
+export { DashboardConfigProvider, useDashboardConfig } from "./dashboard-config-context";
