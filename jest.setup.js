@@ -74,8 +74,6 @@ jest.mock("react-i18next", () => ({
         "settings.lightModeDesc": "Always use light theme",
         "settings.darkMode": "Dark Mode",
         "settings.darkModeDesc": "Always use dark theme",
-        "settings.nightMode": "Night Mode",
-        "settings.nightModeDesc": "Dim red light for nighttime",
         "settings.currentlyUsing": `Currently using: light`,
         "settings.units": "Units",
         "settings.metric": "Metric (kg, cm, ml)",

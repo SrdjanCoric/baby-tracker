@@ -29,13 +29,12 @@ describe("ThemeSettingsScreen", () => {
   });
 
   describe("rendering", () => {
-    it("renders all theme options including night mode", () => {
+    it("renders all theme options", () => {
       render(<ThemeSettingsScreen />);
 
       expect(screen.getByText("System Default")).toBeTruthy();
       expect(screen.getByText("Light Mode")).toBeTruthy();
       expect(screen.getByText("Dark Mode")).toBeTruthy();
-      expect(screen.getByText("Night Mode")).toBeTruthy();
     });
 
     it("renders theme option descriptions", () => {
@@ -44,7 +43,6 @@ describe("ThemeSettingsScreen", () => {
       expect(screen.getByText("Follow system setting")).toBeTruthy();
       expect(screen.getByText("Always use light theme")).toBeTruthy();
       expect(screen.getByText("Always use dark theme")).toBeTruthy();
-      expect(screen.getByText("Dim red light for nighttime")).toBeTruthy();
     });
 
     it("renders the page title", () => {
@@ -59,7 +57,6 @@ describe("ThemeSettingsScreen", () => {
       expect(screen.getByText("📱")).toBeTruthy();
       expect(screen.getByText("☀️")).toBeTruthy();
       expect(screen.getByText("🌙")).toBeTruthy();
-      expect(screen.getByText("🌃")).toBeTruthy();
     });
 
     it("shows checkmark for selected theme option", () => {
@@ -101,18 +98,6 @@ describe("ThemeSettingsScreen", () => {
         expect(mockSetThemePreference).toHaveBeenCalledWith("dark");
       });
     });
-
-    it("calls setThemePreference when night mode is selected", async () => {
-      render(<ThemeSettingsScreen />);
-
-      const nightOption = screen.getByText("Night Mode").parent?.parent;
-      fireEvent.press(nightOption!);
-
-      await waitFor(() => {
-        expect(mockSetThemePreference).toHaveBeenCalledWith("night");
-      });
-    });
-
   });
 
   describe("current mode display", () => {
