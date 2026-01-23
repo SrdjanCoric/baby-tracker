@@ -652,7 +652,24 @@
     },
     "features": {
       "title": "Track Everything",
-      "subtitle": "Feeding, sleep, diapers, growth, and more - all in one place"
+      "subtitle": "Feeding, sleep, diapers, growth, and more - all in one place",
+      "interactiveSubtitle": "Tap each activity to learn more"
+    },
+    "activityDesc": {
+      "feeding": "Track breastfeeding, bottle feeds, and solid foods with timers and amounts",
+      "sleep": "Monitor naps and night sleep with automatic wake window tracking",
+      "diaper": "Log wet, dirty, and mixed diapers with optional notes",
+      "pumping": "Track pumping sessions with side selection and milk amounts",
+      "growth": "Record weight, height, and head measurements with growth charts",
+      "tummyTime": "Time tummy time sessions to support baby's development"
+    },
+    "preferences": {
+      "title": "Your Preferences",
+      "subtitle": "Customize your experience",
+      "language": "Language",
+      "units": "Measurements",
+      "theme": "Appearance",
+      "hint": "You can change these anytime in Settings"
     },
     "sync": {
       "title": "Sync with Family",

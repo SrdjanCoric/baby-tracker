@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
         onSkipPress={handleSkip}
         onSwipeLeft={handleGetStarted}
         currentStep={state.currentStep}
-        totalSteps={4}
+        totalSteps={5}
       />
     </SafeAreaView>
   );
