@@ -16,7 +16,7 @@ export interface DiaperValidationResult {
 }
 
 export function validateDiaperType(type: string): type is DiaperType {
-  return ["wet", "dirty", "mixed"].includes(type);
+  return ["wet", "dirty", "mixed", "dry"].includes(type);
 }
 
 export function validateStoolColor(color: StoolColor | undefined): string | null {
@@ -47,7 +47,7 @@ function validateStoolColorForType(
     return null;
   }
 
-  if (type === "wet") {
+  if (type === "wet" || type === "dry") {
     return "Stool color is only applicable for dirty or mixed diapers";
   }
 

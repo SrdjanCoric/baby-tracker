@@ -293,13 +293,29 @@ export default function BabySetupScreen() {
 
         {/* Date Picker */}
         {showDatePicker && (
-          <DateTimePicker
-            value={birthDate || new Date()}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={handleDateChange}
-            maximumDate={new Date()}
-          />
+          <View>
+            {Platform.OS === "ios" && (
+              <View className="flex-row justify-end px-4 py-2 bg-surface-secondary dark:bg-surface-dark-secondary border-t border-border dark:border-border-dark">
+                <Pressable
+                  onPress={() => setShowDatePicker(false)}
+                  className="py-2 px-4"
+                  accessibilityRole="button"
+                  accessibilityLabel={t("common.done")}
+                >
+                  <Text className="font-semibold" style={{ color: PRIMARY_COLOR }}>
+                    {t("common.done")}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+            <DateTimePicker
+              value={birthDate || new Date()}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+            />
+          </View>
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>

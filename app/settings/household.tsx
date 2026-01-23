@@ -40,6 +40,7 @@ export default function HouseholdSettingsScreen() {
   const inviteCode = household?.inviteCode ?? null;
 
   const handleSignIn = useCallback(() => {
+    router.dismissAll();
     router.push("/auth/sign-in");
   }, [router]);
 

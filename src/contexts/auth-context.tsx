@@ -4,6 +4,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as WebBrowser from "expo-web-browser";
 import * as Crypto from "expo-crypto";
+
+// Required for web browser auth session to work properly
+WebBrowser.maybeCompleteAuthSession();
 import { supabase } from "@/services/supabase";
 import { setStorageUserId } from "@/services/storage-prefix";
 import { clearSyncData } from "@/contexts/sync-context";
@@ -183,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
+        emailRedirectTo: AUTH_CONFIG.OAUTH_REDIRECT_URI,
         data: {
           display_name: displayName,
         },
@@ -211,6 +215,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithMagicLink = useCallback(async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
+      options: {
+        emailRedirectTo: AUTH_CONFIG.OAUTH_REDIRECT_URI,
+      },
     });
 
     return { error };
@@ -263,7 +270,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               access_token: accessToken,
               refresh_token: refreshToken,
             });
+          } else {
+            await supabase.auth.getSession();
           }
+        } else if (result.type === "dismiss" || result.type === "cancel") {
+          oauthStateRef.current = null;
+          return { error: null };
         } else {
           oauthStateRef.current = null;
         }
@@ -285,40 +297,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ],
       });
 
-      if (credential.identityToken) {
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: "apple",
-          token: credential.identityToken,
-        });
+      if (!credential.identityToken) {
+        return { error: new Error("Apple Sign-In: No identity token received") };
+      }
 
-        if (error) {
-          return { error: new Error(error.message) };
-        }
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken,
+      });
 
-        if (data?.user && credential.fullName?.givenName) {
-          const displayName = [credential.fullName.givenName, credential.fullName.familyName]
-            .filter(Boolean)
-            .join(" ");
+      if (error) {
+        console.error("Apple Sign-In Supabase error:", error);
+        return { error: new Error(`Apple Sign-In failed: ${error.message}`) };
+      }
 
-          if (displayName) {
-            try {
-              await supabase
-                .from("users")
-                .update({ display_name: displayName })
-                .eq("id", data.user.id);
-            } catch (updateError) {
-              console.error("Failed to update display name:", updateError);
-            }
+      if (data?.user && credential.fullName?.givenName) {
+        const displayName = [credential.fullName.givenName, credential.fullName.familyName]
+          .filter(Boolean)
+          .join(" ");
+
+        if (displayName) {
+          try {
+            await supabase
+              .from("users")
+              .update({ display_name: displayName })
+              .eq("id", data.user.id);
+          } catch (updateError) {
+            console.error("Failed to update display name:", updateError);
           }
         }
       }
 
       return { error: null };
     } catch (err) {
-      if ((err as { code?: string }).code === "ERR_REQUEST_CANCELED") {
+      const errorCode = (err as { code?: string }).code;
+      if (errorCode === "ERR_REQUEST_CANCELED") {
         return { error: null };
       }
-      return { error: err instanceof Error ? err : new Error("Apple sign-in failed") };
+      console.error("Apple Sign-In error:", err);
+      const message = err instanceof Error ? err.message : "Apple sign-in failed";
+      return { error: new Error(`Apple Sign-In: ${message}`) };
     }
   }, []);
 

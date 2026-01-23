@@ -29,7 +29,9 @@
     "notes": "Beleške",
     "optional": "Opciono",
     "ok": "U redu",
-    "reset": "Resetuj"
+    "reset": "Resetuj",
+    "share": "Podeli",
+    "total": "Ukupno"
   },
   "summary": {
     "today": "Danas",
@@ -190,13 +192,16 @@
     "updateGoal": "Ažuriraj cilj",
     "keepCurrentGoal": "Zadrži trenutni",
     "dismissSuggestion": "Ne prikazuj ponovo",
-    "goalUpdated": "Cilj ažuriran"
+    "goalUpdated": "Cilj ažuriran",
+    "startedEarlier": "Počelo ranije?",
+    "whenDidSleepStart": "Kada je počelo spavanje?"
   },
   "diaper": {
     "title": "Pelene",
     "wet": "Mokra",
     "dirty": "Prljava",
     "mixed": "Mešovita",
+    "dry": "Suva",
     "stoolColor": "Boja stolice",
     "logDiaper": "Evidentiraj pelenu",
     "logDiaperChange": "Evidentiraj promenu pelene",
@@ -205,6 +210,7 @@
     "wetOnly": "Samo mokra - bez stolice",
     "dirtyOnly": "Prljava - prisutna stolica",
     "mixedType": "I mokra i prljava",
+    "dryOnly": "Čista provera - bez promena",
     "diaperSaved": "Promena pelene sačuvana",
     "quickLog": "Brza evidencija",
     "optionalColor": "Boja (opciono)",
@@ -491,7 +497,17 @@
     "discardChangesMessage": "Imate nesačuvane izmene. Da li ste sigurni da želite da ih odbacite?",
     "discard": "Odbaci",
     "keepEditing": "Nastavi uređivanje",
-    "loggedBy": "Zabeležio/la {{name}}"
+    "loggedBy": "Zabeležio/la {{name}}",
+    "all": "Sve",
+    "selectDate": "Izaberi datum",
+    "tapToSelectDate": "Dodirnite za izbor datuma",
+    "filterFeeding": "Hranjenje",
+    "filterSleep": "Spavanje",
+    "filterDiaper": "Pelene",
+    "filterPumping": "Izmlazavanje",
+    "filterGrowth": "Rast",
+    "filterTummyTime": "Vreme na stomaku",
+    "summary": "Rezime"
   },
   "sync": {
     "synced": "Sinhronizovano",

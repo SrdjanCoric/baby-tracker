@@ -38,6 +38,7 @@ export interface DiaperCounts {
   wet: number;
   dirty: number;
   mixed: number;
+  dry: number;
   total: number;
 }
 
@@ -150,6 +151,7 @@ export const DiaperStorageService = {
       wet: 0,
       dirty: 0,
       mixed: 0,
+      dry: 0,
       total: todaysDiapers.length,
     };
 

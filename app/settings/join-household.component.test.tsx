@@ -5,12 +5,14 @@ import JoinHouseholdScreen from "./join-household";
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
+const mockDismissAll = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     back: mockBack,
     push: jest.fn(),
     replace: mockReplace,
+    dismissAll: mockDismissAll,
   }),
 }));
 
@@ -67,10 +69,12 @@ describe("JoinHouseholdScreen", () => {
 
     it("navigates to sign-in when sign-in button is pressed", () => {
       const mockPush = jest.fn();
+      const mockDismissAllLocal = jest.fn();
       jest.spyOn(require("expo-router"), "useRouter").mockReturnValue({
         back: mockBack,
         push: mockPush,
         replace: mockReplace,
+        dismissAll: mockDismissAllLocal,
       });
 
       render(<JoinHouseholdScreen />);
@@ -78,6 +82,7 @@ describe("JoinHouseholdScreen", () => {
       const signInButton = screen.getByText("Sign In");
       fireEvent.press(signInButton);
 
+      expect(mockDismissAllLocal).toHaveBeenCalled();
       expect(mockPush).toHaveBeenCalledWith("/auth/sign-in");
     });
   });
