@@ -40,3 +40,6 @@ export { OnboardingProvider, useOnboarding, onboardingReducer, initialOnboarding
 export type { OnboardingState, OnboardingAction } from "./onboarding-reducer";
 
 export { DashboardConfigProvider, useDashboardConfig } from "./dashboard-config-context";
+
+export { LanguageProvider, useLanguage } from "./language-context";
+export type { LanguageCode } from "./language-context";
