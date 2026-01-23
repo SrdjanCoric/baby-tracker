@@ -266,8 +266,9 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
           </Text>
         </Pressable>
       ) : (
-        <View className="flex-row items-center mb-6 py-2 px-4 rounded-lg" style={{ backgroundColor: SLEEP_PURPLE_MUTED }}>
-          <Text className="text-sm text-content-primary dark:text-content-dark-primary mr-2">
+        <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: SLEEP_PURPLE_MUTED }}>
+          <Text className="text-lg mr-2">🕐</Text>
+          <Text className="text-base font-medium mr-2" style={{ color: SLEEP_PURPLE_DARK }}>
             {t("sleep.startTime")}: {formatCustomTime(customStartTime)}
           </Text>
           <Pressable
