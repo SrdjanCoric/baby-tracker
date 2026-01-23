@@ -7,6 +7,7 @@ import {
   Switch,
   Linking,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -85,8 +86,10 @@ export default function NotificationSettingsScreen() {
     settings,
     permissionStatus,
     isLoading,
+    inAppRemindersEnabled,
     updateSettings,
     requestPermissions,
+    setInAppRemindersEnabled,
   } = useNotifications();
 
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
@@ -140,6 +143,50 @@ export default function NotificationSettingsScreen() {
     [settings.feedingReminders, updateSettings]
   );
 
+  const handleToggleInAppReminders = useCallback(
+    async (enabled: boolean) => {
+      await setInAppRemindersEnabled(enabled);
+    },
+    [setInAppRemindersEnabled]
+  );
+
+  const handleToggleShowBabyName = useCallback(
+    async (enabled: boolean) => {
+      if (enabled) {
+        // Show privacy warning when enabling
+        Alert.alert(
+          t("settings.privacySettings"),
+          t("settings.showBabyNameDesc"),
+          [
+            { text: t("common.cancel"), style: "cancel" },
+            {
+              text: t("common.enable"),
+              onPress: async () => {
+                await updateSettings({
+                  privacy: { ...settings.privacy, showBabyName: true },
+                });
+              },
+            },
+          ]
+        );
+      } else {
+        await updateSettings({
+          privacy: { ...settings.privacy, showBabyName: false },
+        });
+      }
+    },
+    [settings.privacy, updateSettings, t]
+  );
+
+  const handleToggleShowActivityDetails = useCallback(
+    async (enabled: boolean) => {
+      await updateSettings({
+        privacy: { ...settings.privacy, showActivityDetails: enabled },
+      });
+    },
+    [settings.privacy, updateSettings]
+  );
+
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
@@ -163,26 +210,44 @@ export default function NotificationSettingsScreen() {
 
       <ScrollView className="flex-1 px-4 py-4">
         {!hasPermission && (
-          <Pressable
-            onPress={handleRequestPermissions}
-            className="bg-amber-100 dark:bg-amber-900/30 rounded-card p-4 mb-6"
-          >
-            <Text className="text-base font-medium text-amber-700 dark:text-amber-400 mb-1">
-              {permissionStatus === "denied"
-                ? t("settings.permissionDenied")
-                : t("settings.permissionRequired")}
-            </Text>
-            <Text className="text-sm text-amber-600 dark:text-amber-300 mb-3">
-              {permissionStatus === "denied"
-                ? t("settings.permissionDeniedDesc")
-                : t("settings.permissionRequiredDesc")}
-            </Text>
-            <Text className="text-sm font-medium text-primary-600 dark:text-primary-400">
-              {permissionStatus === "denied"
-                ? t("settings.openSettings")
-                : t("settings.enableNotifications")}
-            </Text>
-          </Pressable>
+          <View className="mb-6">
+            <Pressable
+              onPress={handleRequestPermissions}
+              className="bg-amber-100 dark:bg-amber-900/30 rounded-card p-4 mb-4"
+            >
+              <Text className="text-base font-medium text-amber-700 dark:text-amber-400 mb-1">
+                {permissionStatus === "denied"
+                  ? t("settings.permissionDenied")
+                  : t("settings.permissionRequired")}
+              </Text>
+              <Text className="text-sm text-amber-600 dark:text-amber-300 mb-3">
+                {permissionStatus === "denied"
+                  ? t("settings.permissionDeniedDesc")
+                  : t("settings.permissionRequiredDesc")}
+              </Text>
+              <Text className="text-sm font-medium text-primary-600 dark:text-primary-400">
+                {permissionStatus === "denied"
+                  ? t("settings.openSettings")
+                  : t("settings.enableNotifications")}
+              </Text>
+            </Pressable>
+
+            {permissionStatus === "denied" && (
+              <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
+                <SettingsRow
+                  label={t("settings.inAppReminders")}
+                  description={t("settings.inAppRemindersDesc")}
+                  rightElement={
+                    <Switch
+                      value={inAppRemindersEnabled}
+                      onValueChange={handleToggleInAppReminders}
+                    />
+                  }
+                  isLast
+                />
+              </View>
+            )}
+          </View>
         )}
 
         <View className="mb-6">
@@ -285,6 +350,33 @@ export default function NotificationSettingsScreen() {
                 />
               </>
             )}
+          </View>
+        </View>
+
+        <View className="mb-6">
+          <SectionHeader title={t("settings.privacy")} />
+          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
+            <SettingsRow
+              label={t("settings.showBabyName")}
+              description={t("settings.showBabyNameDesc")}
+              rightElement={
+                <Switch
+                  value={settings.privacy.showBabyName}
+                  onValueChange={handleToggleShowBabyName}
+                />
+              }
+            />
+            <SettingsRow
+              label={t("settings.showActivityDetails")}
+              description={t("settings.showActivityDetailsDesc")}
+              rightElement={
+                <Switch
+                  value={settings.privacy.showActivityDetails}
+                  onValueChange={handleToggleShowActivityDetails}
+                />
+              }
+              isLast
+            />
           </View>
         </View>
       </ScrollView>

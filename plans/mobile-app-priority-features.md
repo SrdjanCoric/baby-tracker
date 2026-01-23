@@ -317,7 +317,7 @@ describe('NotificationSettings', () => {
   - [x] Provide `cancelFeedingReminder()` function
   - [x] Provide `checkTimerAlert(activityType, duration)` function
   - [x] Handle permission state
-  - [ ] Re-schedule notifications when settings change
+  - [x] Re-schedule notifications when settings change
 
 #### Step 5: Integration with Existing Contexts
 - [x] Update `FeedingContext`:
@@ -358,7 +358,7 @@ describe('NotificationSettings', () => {
 - [ ] Multiple babies - track reminders per baby
 - [ ] User changes timezone - recalculate scheduled notifications
 - [ ] Daylight saving time transition - handle correctly
-- [ ] Notification permission denied - show in-app reminder option
+- [x] Notification permission denied - show in-app reminder option
 - [ ] iOS notification limit (64 scheduled) - prioritize and manage
 - [ ] Android Doze mode - use exact alarms for critical notifications
 - [ ] User disables then re-enables notifications - restore schedule
@@ -367,11 +367,11 @@ describe('NotificationSettings', () => {
 
 ### 1.7 Security Considerations
 
-- [ ] Don't include sensitive baby data in notification content visible on lock screen
-- [ ] Use generic messages: "Time to feed" not "Time to feed Emma"
-- [ ] Allow user to control notification privacy level
+- [x] Don't include sensitive baby data in notification content visible on lock screen
+- [x] Use generic messages: "Time to feed" not "Time to feed Emma" (privacy settings)
+- [x] Allow user to control notification privacy level (showBabyName, showActivityDetails toggles)
 - [ ] Don't log notification content to analytics
-- [ ] Sanitize any data passed through notification payload
+- [x] Sanitize any data passed through notification payload (notification-sanitizer.ts)
 
 ### 1.8 Testing Checklist
 

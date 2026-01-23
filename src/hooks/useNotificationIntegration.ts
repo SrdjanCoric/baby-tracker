@@ -25,7 +25,7 @@ export function useNotificationIntegration() {
     }
 
     const feedingTime = new Date(lastFeeding.startedAt);
-    await scheduleFeedingReminder(selectedBaby.id, feedingTime);
+    await scheduleFeedingReminder(selectedBaby.id, feedingTime, selectedBaby.name);
   }, [settings.feedingReminders.enabled, selectedBaby, getLastFeeding, scheduleFeedingReminder]);
 
   const cancelReminder = useCallback(async () => {

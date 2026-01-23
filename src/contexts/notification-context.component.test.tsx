@@ -11,6 +11,8 @@ const mockSaveSettings = jest.fn();
 const mockGetFeedingReminderNotificationId = jest.fn();
 const mockSaveFeedingReminderNotificationId = jest.fn();
 const mockClearFeedingReminderNotificationId = jest.fn();
+const mockGetInAppReminderEnabled = jest.fn();
+const mockSetInAppReminderEnabled = jest.fn();
 
 jest.mock("@/services/notification-storage", () => ({
   NotificationStorageService: {
@@ -20,6 +22,10 @@ jest.mock("@/services/notification-storage", () => ({
     saveFeedingReminderNotificationId: (babyId: string, id: string) => mockSaveFeedingReminderNotificationId(babyId, id),
     clearFeedingReminderNotificationId: (babyId: string) => mockClearFeedingReminderNotificationId(babyId),
     clearSettings: jest.fn(),
+    getInAppReminderEnabled: () => mockGetInAppReminderEnabled(),
+    setInAppReminderEnabled: (enabled: boolean) => mockSetInAppReminderEnabled(enabled),
+    getLastInAppReminderTime: jest.fn().mockResolvedValue(null),
+    setLastInAppReminderTime: jest.fn(),
   },
 }));
 
@@ -54,6 +60,11 @@ jest.mock("@/utils/notification-scheduler", () => ({
     const threshold = settings.timerAlerts.thresholds[activityType as keyof typeof settings.timerAlerts.thresholds];
     return duration > threshold;
   }),
+}));
+
+// Mock the sanitizer to pass through content with sanitization applied
+jest.mock("@/utils/notification-sanitizer", () => ({
+  createSafeNotificationContent: jest.fn((content) => content),
 }));
 
 import { NotificationProvider, useNotifications } from "./notification-context";
@@ -93,6 +104,8 @@ describe("NotificationContext", () => {
     mockRequestPermissions.mockResolvedValue(true);
     mockScheduleNotification.mockResolvedValue("test-notification-id");
     mockCancelNotification.mockResolvedValue(undefined);
+    mockGetInAppReminderEnabled.mockResolvedValue(false);
+    mockSetInAppReminderEnabled.mockResolvedValue(undefined);
   });
 
   describe("useNotifications hook", () => {
@@ -469,7 +482,7 @@ describe("NotificationContext", () => {
       expect(mockScheduleNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "Feeding Reminder",
-          data: { type: "feeding_reminder", babyId: testBabyId },
+          data: expect.objectContaining({ type: "feeding_reminder", babyId: testBabyId }),
         }),
         expect.any(Date)
       );
