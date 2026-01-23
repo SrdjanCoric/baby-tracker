@@ -301,6 +301,12 @@
   },
   "settings": {
     "title": "Settings",
+    "preferences": "Preferences",
+    "data": "Data",
+    "language": "Language",
+    "languageDesc": "Choose your preferred language",
+    "english": "English",
+    "serbian": "Srpski",
     "units": "Units",
     "metric": "Metric (kg, cm, ml)",
     "imperial": "Imperial (lbs, in, oz)",
