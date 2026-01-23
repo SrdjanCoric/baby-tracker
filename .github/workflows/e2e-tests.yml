@@ -48,7 +48,7 @@ jobs:
             -sdk iphonesimulator \
             -configuration Release \
             -derivedDataPath build \
-            -destination 'platform=iOS Simulator,name=iPhone 15 Pro,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             build
 
       - name: Install Maestro
@@ -58,8 +58,8 @@ jobs:
 
       - name: Boot iOS Simulator
         run: |
-          xcrun simctl boot "iPhone 15 Pro" || true
-          xcrun simctl bootstatus "iPhone 15 Pro" -b
+          xcrun simctl boot "iPhone 16 Pro" || true
+          xcrun simctl bootstatus "iPhone 16 Pro" -b
 
       - name: Install app on simulator
         run: |
