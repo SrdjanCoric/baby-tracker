@@ -347,6 +347,7 @@
     "permissionDeniedDesc": "Enable notifications in your device settings",
     "openSettings": "Open Settings",
     "export": "Export Data",
+    "generateReport": "Generate Report",
     "account": "Account",
     "signOut": "Sign Out",
     "deleteAccount": "Delete Account",
@@ -624,6 +625,18 @@
     "unknownError": "An unexpected error occurred",
     "sharingNotAvailable": "Sharing Not Available",
     "sharingNotAvailableMessage": "Sharing is not available on this device"
+  },
+  "reports": {
+    "title": "Generate Report",
+    "description": "Generate a PDF health report for {{babyName}} to share with your pediatrician",
+    "sections": "Report Sections",
+    "includeCharts": "Include Growth Charts",
+    "includeChartsDescription": "Add WHO percentile charts to the report",
+    "generateButton": "Generate PDF Report",
+    "sectionsSummary": "{{count}} sections selected",
+    "noBabySelected": "Please select a baby to generate a report",
+    "generateFailed": "Report Generation Failed",
+    "unknownError": "An unexpected error occurred"
   },
   "accountDeletion": {
     "title": "Delete Account",

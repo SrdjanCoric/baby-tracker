@@ -151,6 +151,12 @@ export default function SettingsScreen() {
             label={t("settings.export")}
             onPress={() => router.push("/settings/export")}
           />
+          <SettingsDivider />
+          <SettingsRow
+            icon="📄"
+            label={t("settings.generateReport")}
+            onPress={() => router.push("/settings/reports")}
+          />
         </SettingsSection>
 
         {/* Household */}
