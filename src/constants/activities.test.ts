@@ -47,12 +47,12 @@ describe("ACTIVITY_CONFIG", () => {
     });
   });
 
-  it("feeding has green color", () => {
-    expect(ACTIVITY_CONFIG.feeding.accentColor).toBe("#88B04B");
+  it("feeding has warm sage color", () => {
+    expect(ACTIVITY_CONFIG.feeding.accentColor).toBe("#8CB369");
   });
 
-  it("sleep has purple color", () => {
-    expect(ACTIVITY_CONFIG.sleep.accentColor).toBe("#6B5B95");
+  it("sleep has dusty mauve color", () => {
+    expect(ACTIVITY_CONFIG.sleep.accentColor).toBe("#9E8DA9");
   });
 });
 

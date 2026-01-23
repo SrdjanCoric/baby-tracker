@@ -42,13 +42,13 @@
     "sleep": "Sleep"
   },
   "dashboard": {
-    "last": "Last: {{time}}",
+    "last": "{{time}}",
     "nextSide": "Next: {{side}} side",
     "awake": "Awake: {{time}}",
     "wetToday": "{{count}} wet today",
     "lastDirty": "Last dirty: {{time}} ago",
     "todayVolume": "Today: {{volume}}ml",
-    "goalProgress": "{{current}}h / {{goal}}h goal",
+"goalProgress": "{{current}}h / {{goal}}h",
     "goalProgressWithMinutes": "{{hours}}h {{minutes}}m / {{goal}}h",
     "minuteProgress": "{{current}} / {{goal}} min",
     "session_one": "{{count}} session",

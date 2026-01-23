@@ -16,6 +16,27 @@ jest.mock("@/validators/baby", () => ({
   }),
 }));
 
+jest.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "baby.addFirstBaby": "Add your first baby",
+        "baby.addBaby": "Add Baby",
+        "baby.tapToSwitch": "Tap to switch baby",
+        "baby.selectBaby": "Select Baby",
+        "baby.addAnotherBaby": "Add Another Baby",
+        "baby.monthsOld": `${params?.count || 0} months old`,
+        "baby.weeksOld": `${params?.count || 0} weeks old`,
+        "baby.daysOld": `${params?.count || 0} days old`,
+        "baby.yearsOld": `${params?.count || 0} years old`,
+        "baby.yearsMonthsOld": `${params?.years || 0} years ${params?.months || 0} months old`,
+        "baby.notBornYet": "Not born yet",
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 import { useBaby } from "@/contexts";
 
 const mockUseBaby = useBaby as jest.Mock;
@@ -121,7 +142,7 @@ describe("BabySelector", () => {
         isLoading: false,
       });
       render(<BabySelector />);
-      fireEvent.press(screen.getByLabelText(/Selected baby: Emma/));
+      fireEvent.press(screen.getByLabelText(/Emma.*Tap to switch/));
       expect(screen.getByText("Select Baby")).toBeTruthy();
     });
 
@@ -133,7 +154,7 @@ describe("BabySelector", () => {
         isLoading: false,
       });
       render(<BabySelector />);
-      fireEvent.press(screen.getByLabelText(/Selected baby: Emma/));
+      fireEvent.press(screen.getByLabelText(/Emma.*Tap to switch/));
       expect(screen.getAllByText("Emma").length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("Oliver")).toBeTruthy();
     });
@@ -146,7 +167,7 @@ describe("BabySelector", () => {
         isLoading: false,
       });
       render(<BabySelector />);
-      fireEvent.press(screen.getByLabelText(/Selected baby: Emma/));
+      fireEvent.press(screen.getByLabelText(/Emma.*Tap to switch/));
       expect(screen.getByText("✓")).toBeTruthy();
     });
 
@@ -158,7 +179,7 @@ describe("BabySelector", () => {
         isLoading: false,
       });
       render(<BabySelector />);
-      fireEvent.press(screen.getByLabelText(/Selected baby: Emma/));
+      fireEvent.press(screen.getByLabelText(/Emma.*Tap to switch/));
       fireEvent.press(screen.getByLabelText("Oliver"));
       await waitFor(() => {
         expect(mockSelectBaby).toHaveBeenCalledWith("2");
@@ -173,7 +194,7 @@ describe("BabySelector", () => {
         isLoading: false,
       });
       render(<BabySelector />);
-      fireEvent.press(screen.getByLabelText(/Selected baby: Emma/));
+      fireEvent.press(screen.getByLabelText(/Emma.*Tap to switch/));
       expect(screen.getByText("Add Another Baby")).toBeTruthy();
     });
 
@@ -186,8 +207,8 @@ describe("BabySelector", () => {
         isLoading: false,
       });
       render(<BabySelector onAddBaby={onAddBabyMock} />);
-      fireEvent.press(screen.getByLabelText(/Selected baby: Emma/));
-      fireEvent.press(screen.getByLabelText("Add another baby"));
+      fireEvent.press(screen.getByLabelText(/Emma.*Tap to switch/));
+      fireEvent.press(screen.getByLabelText("Add Another Baby"));
       expect(onAddBabyMock).toHaveBeenCalled();
     });
   });
@@ -195,7 +216,7 @@ describe("BabySelector", () => {
   describe("accessibility", () => {
     it("has correct accessibility label", () => {
       render(<BabySelector />);
-      expect(screen.getByLabelText(/Selected baby: Emma/)).toBeTruthy();
+      expect(screen.getByLabelText(/Emma.*Tap to switch/)).toBeTruthy();
     });
   });
 });

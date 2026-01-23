@@ -1,8 +1,8 @@
 import { Pressable, Text, View, useColorScheme } from "react-native";
 import { forwardRef, useCallback } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
-
-type ActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime";
+import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
+import { CONTENT_COLORS } from "@/constants/design-tokens";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -26,53 +26,6 @@ interface DashboardCardProps {
   secondaryInfo?: string;
 }
 
-const activityConfig: Record<
-  ActivityType,
-  {
-    icon: string;
-    accentColor: string;
-    mutedBg: string;
-    mutedBgDark: string;
-  }
-> = {
-  feeding: {
-    icon: "🤱",
-    accentColor: "#88B04B",
-    mutedBg: "#E8F0E0",
-    mutedBgDark: "#2A3D1F",
-  },
-  sleep: {
-    icon: "😴",
-    accentColor: "#6B5B95",
-    mutedBg: "#E8E4F0",
-    mutedBgDark: "#2D2640",
-  },
-  diaper: {
-    icon: "🚼",
-    accentColor: "#D4837D",
-    mutedBg: "#FDF0EF",
-    mutedBgDark: "#3D2525",
-  },
-  pumping: {
-    icon: "🫙",
-    accentColor: "#7B9BC9",
-    mutedBg: "#E8EDF5",
-    mutedBgDark: "#252D3D",
-  },
-  growth: {
-    icon: "📏",
-    accentColor: "#009B77",
-    mutedBg: "#E0F5EF",
-    mutedBgDark: "#1A332D",
-  },
-  tummyTime: {
-    icon: "💪",
-    accentColor: "#E67E22",
-    mutedBg: "#FEF3E2",
-    mutedBgDark: "#3D2E1A",
-  },
-};
-
 const DashboardCard = forwardRef<View, DashboardCardProps>(
   (
     {
@@ -93,10 +46,11 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
   ) => {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
-    const config = activityConfig[activity];
+    const config = ACTIVITY_CONFIG[activity];
     const bgColor = isDark ? config.mutedBgDark : config.mutedBg;
-    const textColor = isDark ? "#FFFFFF" : "#1A1A1A";
-    const secondaryTextColor = isDark ? "#A0A0A0" : "#6B6B6B";
+    const colors = isDark ? CONTENT_COLORS.dark : CONTENT_COLORS.light;
+    const textColor = colors.primary;
+    const secondaryTextColor = colors.secondary;
 
     const cardScale = useSharedValue(1);
     const buttonScale = useSharedValue(1);
@@ -171,14 +125,18 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
           {isActive ? (
             <View>
               <Text
-                className="text-2xl font-bold"
+                className="text-xl font-bold"
                 style={{ color: config.accentColor }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
               >
                 {activeLabel || "Active"}
               </Text>
               <Text
                 className="text-sm mt-1"
                 style={{ color: secondaryTextColor }}
+                numberOfLines={1}
               >
                 {timeSince}
               </Text>
@@ -186,8 +144,11 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
           ) : (
             <View>
               <Text
-                className="text-2xl font-bold"
+                className="text-xl font-bold"
                 style={{ color: textColor }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
               >
                 {timeSince || "--:--"}
               </Text>
@@ -195,6 +156,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
                 <Text
                   className="text-sm mt-1"
                   style={{ color: secondaryTextColor }}
+                  numberOfLines={1}
                 >
                   {subtitle}
                 </Text>
@@ -226,8 +188,9 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
               )}
               {secondaryInfo && (
                 <Text
-                  className="text-xs mt-1"
+                  className="text-sm mt-1"
                   style={{ color: secondaryTextColor }}
+                  numberOfLines={1}
                 >
                   {secondaryInfo}
                 </Text>
@@ -262,4 +225,5 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
 
 DashboardCard.displayName = "DashboardCard";
 
-export { DashboardCard, type DashboardCardProps, type ActivityType };
+export { DashboardCard, type DashboardCardProps };
+export type { ActivityType } from "@/constants/activities";
