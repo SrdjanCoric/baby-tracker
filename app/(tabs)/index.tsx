@@ -11,13 +11,29 @@ import {
   DashboardCard,
   TodaySummary,
 } from "@/components";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useDashboardConfig } from "@/contexts";
 import { timeSince, formatDate, hoursSince } from "@/utils/time";
+import { ActivityType } from "@/constants/activities";
+import { DashboardCardConfig } from "@/services/dashboard-config-storage";
+
+interface CardProps {
+  label: string;
+  timeSince: string;
+  subtitle?: string;
+  secondaryInfo?: string;
+  isActive: boolean;
+  activeLabel?: string;
+  onPress: () => void;
+  onActionPress: () => void;
+  actionLabel?: string;
+  progress?: number;
+}
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const isFocused = useIsFocused();
+  const { visibleCards } = useDashboardConfig();
 
   // Navigate safely - if a modal is open, dismiss it first then navigate
   const safeNavigate = useCallback((path: string) => {
@@ -333,6 +349,93 @@ export default function HomeScreen() {
     safeNavigate("/settings");
   }, [safeNavigate]);
 
+  const getCardProps = useCallback((activity: ActivityType): CardProps => {
+    switch (activity) {
+      case "feeding":
+        return {
+          label: t("feeding.title"),
+          timeSince: feedingTimeSince,
+          subtitle: feedingSubtitle,
+          isActive: isFeedingActive,
+          activeLabel: t("common.now"),
+          onPress: handleFeedingCardPress,
+          onActionPress: handleAddFeeding,
+          actionLabel: isFeedingActive ? undefined : "+",
+        };
+      case "sleep":
+        return {
+          label: t("sleep.title"),
+          timeSince: sleepTimeSince,
+          secondaryInfo: sleepSecondaryInfo,
+          isActive: isSleepActive,
+          activeLabel: t("sleep.sleeping"),
+          onPress: handleSleepCardPress,
+          onActionPress: handleAddSleep,
+          actionLabel: isSleepActive ? undefined : "+",
+          progress: sleepProgress,
+        };
+      case "diaper":
+        return {
+          label: t("diaper.title"),
+          timeSince: diaperTimeSince,
+          subtitle: diaperSubtitle,
+          isActive: false,
+          onPress: handleDiaperCardPress,
+          onActionPress: handleAddDiaper,
+          actionLabel: "+",
+        };
+      case "pumping":
+        return {
+          label: t("pumping.title"),
+          timeSince: pumpingTimeSince,
+          subtitle: pumpingSubtitle,
+          isActive: isPumpingActive,
+          activeLabel: t("pumping.pumping"),
+          onPress: handlePumpingCardPress,
+          onActionPress: handleAddPumping,
+          actionLabel: isPumpingActive ? undefined : "+",
+        };
+      case "tummyTime":
+        return {
+          label: t("tummyTime.title"),
+          timeSince: tummyTimeTimeSince,
+          secondaryInfo: tummyTimeSecondaryInfo,
+          isActive: isTummyTimeActive,
+          activeLabel: t("tummyTime.inProgress"),
+          onPress: handleTummyTimeCardPress,
+          onActionPress: handleAddTummyTime,
+          actionLabel: isTummyTimeActive ? undefined : "+",
+          progress: tummyTimeProgress,
+        };
+      case "growth":
+        return {
+          label: t("growth.title"),
+          timeSince: growthTimeSince,
+          subtitle: growthSubtitle,
+          isActive: false,
+          onPress: handleGrowthCardPress,
+          onActionPress: handleAddGrowth,
+          actionLabel: "+",
+        };
+    }
+  }, [
+    t,
+    feedingTimeSince, feedingSubtitle, isFeedingActive, handleFeedingCardPress, handleAddFeeding,
+    sleepTimeSince, sleepSecondaryInfo, isSleepActive, sleepProgress, handleSleepCardPress, handleAddSleep,
+    diaperTimeSince, diaperSubtitle, handleDiaperCardPress, handleAddDiaper,
+    pumpingTimeSince, pumpingSubtitle, isPumpingActive, handlePumpingCardPress, handleAddPumping,
+    tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime,
+    growthTimeSince, growthSubtitle, handleGrowthCardPress, handleAddGrowth,
+  ]);
+
+  const cardRows = useMemo(() => {
+    const rows: DashboardCardConfig[][] = [];
+    for (let i = 0; i < visibleCards.length; i += 2) {
+      rows.push(visibleCards.slice(i, i + 2));
+    }
+    return rows;
+  }, [visibleCards]);
+
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]}>
       <BabyHeader onSettingsPress={handleSettingsPress} />
@@ -352,81 +455,21 @@ export default function HomeScreen() {
       >
         {/* Activity Cards Grid */}
         <View className="gap-3">
-          {/* Row 1: Feeding & Sleep */}
-          <View className="flex-row gap-3">
-            <DashboardCard
-              activity="feeding"
-              label={t("feeding.title")}
-              timeSince={feedingTimeSince}
-              subtitle={feedingSubtitle}
-              isActive={isFeedingActive}
-              activeLabel={t("common.now")}
-              onPress={handleFeedingCardPress}
-              onActionPress={handleAddFeeding}
-              actionLabel={isFeedingActive ? undefined : "+"}
-            />
-            <DashboardCard
-              activity="sleep"
-              label={t("sleep.title")}
-              timeSince={sleepTimeSince}
-              secondaryInfo={sleepSecondaryInfo}
-              isActive={isSleepActive}
-              activeLabel={t("sleep.sleeping")}
-              onPress={handleSleepCardPress}
-              onActionPress={handleAddSleep}
-              actionLabel={isSleepActive ? undefined : "+"}
-              progress={sleepProgress}
-            />
-          </View>
-
-          {/* Row 2: Diaper & Pumping */}
-          <View className="flex-row gap-3">
-            <DashboardCard
-              activity="diaper"
-              label={t("diaper.title")}
-              timeSince={diaperTimeSince}
-              subtitle={diaperSubtitle}
-              onPress={handleDiaperCardPress}
-              onActionPress={handleAddDiaper}
-              actionLabel="+"
-            />
-            <DashboardCard
-              activity="pumping"
-              label={t("pumping.title")}
-              timeSince={pumpingTimeSince}
-              subtitle={pumpingSubtitle}
-              isActive={isPumpingActive}
-              activeLabel={t("pumping.pumping")}
-              onPress={handlePumpingCardPress}
-              onActionPress={handleAddPumping}
-              actionLabel={isPumpingActive ? undefined : "+"}
-            />
-          </View>
-
-          {/* Row 3: Tummy Time & Growth */}
-          <View className="flex-row gap-3">
-            <DashboardCard
-              activity="tummyTime"
-              label={t("tummyTime.title")}
-              timeSince={tummyTimeTimeSince}
-              secondaryInfo={tummyTimeSecondaryInfo}
-              isActive={isTummyTimeActive}
-              activeLabel={t("tummyTime.inProgress")}
-              onPress={handleTummyTimeCardPress}
-              onActionPress={handleAddTummyTime}
-              actionLabel={isTummyTimeActive ? undefined : "+"}
-              progress={tummyTimeProgress}
-            />
-            <DashboardCard
-              activity="growth"
-              label={t("growth.title")}
-              timeSince={growthTimeSince}
-              subtitle={growthSubtitle}
-              onPress={handleGrowthCardPress}
-              onActionPress={handleAddGrowth}
-              actionLabel="+"
-            />
-          </View>
+          {cardRows.map((row, rowIndex) => (
+            <View key={rowIndex} className="flex-row gap-3">
+              {row.map((cardConfig) => {
+                const props = getCardProps(cardConfig.activity);
+                return (
+                  <DashboardCard
+                    key={cardConfig.activity}
+                    activity={cardConfig.activity}
+                    {...props}
+                  />
+                );
+              })}
+              {row.length === 1 && <View className="flex-1" />}
+            </View>
+          ))}
         </View>
 
         {/* Today Summary */}

@@ -72,7 +72,6 @@ const THEME_LABELS = {
   system: "settings.systemDefault",
   light: "settings.lightMode",
   dark: "settings.darkMode",
-  night: "settings.nightMode",
 } as const;
 
 export default function SettingsScreen() {
@@ -135,6 +134,12 @@ export default function SettingsScreen() {
             label={t("settings.theme")}
             value={t(THEME_LABELS[preference])}
             onPress={() => router.push("/settings/theme")}
+          />
+          <SettingsDivider />
+          <SettingsRow
+            icon="📱"
+            label={t("settings.customizeDashboard")}
+            onPress={() => router.push("/settings/dashboard")}
           />
           <SettingsDivider />
           <SettingsRow
