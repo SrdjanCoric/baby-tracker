@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { useTheme, useUnits, useAuth } from "@/contexts";
+import { useTheme, useUnits, useAuth, useLanguage } from "@/contexts";
 
 interface SettingsRowProps {
   icon: string;
@@ -74,10 +74,17 @@ const THEME_LABELS = {
   dark: "settings.darkMode",
 } as const;
 
+const LANGUAGE_LABELS = {
+  system: "settings.systemDefault",
+  en: "settings.english",
+  sr: "settings.serbian",
+} as const;
+
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const { preference } = useTheme();
   const { unitSystem } = useUnits();
+  const { language } = useLanguage();
   const { isAuthenticated, user, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -121,7 +128,14 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         {/* Preferences */}
-        <SettingsSection title="Preferences">
+        <SettingsSection title={t("settings.preferences")}>
+          <SettingsRow
+            icon="🌐"
+            label={t("settings.language")}
+            value={t(LANGUAGE_LABELS[language])}
+            onPress={() => router.push("/settings/language")}
+          />
+          <SettingsDivider />
           <SettingsRow
             icon="📏"
             label={t("settings.units")}
@@ -150,7 +164,7 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         {/* Data */}
-        <SettingsSection title="Data">
+        <SettingsSection title={t("settings.data")}>
           <SettingsRow
             icon="📤"
             label={t("settings.export")}
