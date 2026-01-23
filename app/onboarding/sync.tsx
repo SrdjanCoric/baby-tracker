@@ -1,5 +1,5 @@
 /**
- * Sync Screen - Third onboarding screen
+ * Sync Screen - Fourth onboarding screen
  */
 
 import { useCallback } from "react";
@@ -43,7 +43,7 @@ export default function SyncScreen() {
         onSwipeLeft={handleNext}
         onSwipeRight={handleBack}
         currentStep={state.currentStep}
-        totalSteps={4}
+        totalSteps={6}
       />
     </SafeAreaView>
   );

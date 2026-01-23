@@ -592,8 +592,13 @@
     "continueWithGoogle": "Nastavite sa Google",
     "continueWithApple": "Nastavite sa Apple",
     "magicLink": "Prijava sa magičnim linkom",
+    "magicLinkTab": "Magični link",
+    "passwordTab": "Lozinka",
     "magicLinkSent": "Proverite email za magični link!",
+    "magicLinkSentTitle": "Proverite email",
+    "magicLinkSentMessage": "Poslali smo vam link za prijavu na email. Dodirnite link da se prijavite - bez lozinke!",
     "magicLinkDescription": "Poslaćemo vam link za prijavu bez lozinke",
+    "magicLinkHint": "Poslaćemo vam link za trenutnu prijavu",
     "sendMagicLink": "Pošalji magični link",
     "continueWithoutAccount": "Nastavite bez naloga",
     "continueAsGuest": "Nastavite kao gost",
@@ -676,11 +681,33 @@
     },
     "features": {
       "title": "Pratite sve",
-      "subtitle": "Hranjenje, spavanje, pelene, rast i još mnogo toga - sve na jednom mestu"
+      "subtitle": "Hranjenje, spavanje, pelene, rast i još mnogo toga - sve na jednom mestu",
+      "interactiveSubtitle": "Dodirnite svaku aktivnost za više informacija"
+    },
+    "activityDesc": {
+      "feeding": "Pratite dojenje, flašicu i čvrstu hranu sa tajmerima i količinama",
+      "sleep": "Pratite dremke i noćni san sa automatskim praćenjem vremena budnosti",
+      "diaper": "Beležite mokre, prljave i mešovite pelene sa opcionalnim beleškama",
+      "pumping": "Pratite sesije izdajanja sa izborom strane i količinom mleka",
+      "growth": "Beležite težinu, visinu i obim glave sa grafikonima rasta",
+      "tummyTime": "Merite vreme na stomaku za podršku razvoju bebe"
+    },
+    "preferences": {
+      "title": "Vaše postavke",
+      "subtitle": "Prilagodite vaše iskustvo",
+      "language": "Jezik",
+      "units": "Merenja",
+      "theme": "Izgled",
+      "hint": "Ovo možete promeniti bilo kada u Podešavanjima"
     },
     "sync": {
       "title": "Sinhronizujte sa porodicom",
       "subtitle": "Delite obaveze praćenja sa partnerom ili negovateljima u realnom vremenu"
+    },
+    "authChoice": {
+      "title": "Pridružite se ili nastavite",
+      "subtitle": "Napravite nalog za sinhronizaciju između uređaja i deljenje sa negovateljima",
+      "guestHint": "Možete napraviti nalog kasnije u Podešavanjima"
     },
     "baby": {
       "title": "Dodajte vašu bebu",

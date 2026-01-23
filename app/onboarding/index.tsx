@@ -16,7 +16,7 @@ export default function WelcomeScreen() {
 
   const handleGetStarted = useCallback(() => {
     nextStep();
-    router.push("/onboarding/features");
+    router.push("/onboarding/auth-choice");
   }, [nextStep, router]);
 
   const handleSkip = useCallback(async () => {
@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
         onSkipPress={handleSkip}
         onSwipeLeft={handleGetStarted}
         currentStep={state.currentStep}
-        totalSteps={4}
+        totalSteps={6}
       />
     </SafeAreaView>
   );

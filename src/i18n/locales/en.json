@@ -568,8 +568,13 @@
     "continueWithGoogle": "Continue with Google",
     "continueWithApple": "Continue with Apple",
     "magicLink": "Sign in with Magic Link",
+    "magicLinkTab": "Magic Link",
+    "passwordTab": "Password",
     "magicLinkSent": "Check your email for the magic link!",
+    "magicLinkSentTitle": "Check Your Email",
+    "magicLinkSentMessage": "We've sent a sign-in link to your email. Tap the link to sign in - no password needed!",
     "magicLinkDescription": "We'll send you a link to sign in without a password",
+    "magicLinkHint": "We'll email you a link to sign in instantly",
     "sendMagicLink": "Send Magic Link",
     "continueWithoutAccount": "Continue without account",
     "continueAsGuest": "Continue as Guest",
@@ -652,11 +657,33 @@
     },
     "features": {
       "title": "Track Everything",
-      "subtitle": "Feeding, sleep, diapers, growth, and more - all in one place"
+      "subtitle": "Feeding, sleep, diapers, growth, and more - all in one place",
+      "interactiveSubtitle": "Tap each activity to learn more"
+    },
+    "activityDesc": {
+      "feeding": "Track breastfeeding, bottle feeds, and solid foods with timers and amounts",
+      "sleep": "Monitor naps and night sleep with automatic wake window tracking",
+      "diaper": "Log wet, dirty, and mixed diapers with optional notes",
+      "pumping": "Track pumping sessions with side selection and milk amounts",
+      "growth": "Record weight, height, and head measurements with growth charts",
+      "tummyTime": "Time tummy time sessions to support baby's development"
+    },
+    "preferences": {
+      "title": "Your Preferences",
+      "subtitle": "Customize your experience",
+      "language": "Language",
+      "units": "Measurements",
+      "theme": "Appearance",
+      "hint": "You can change these anytime in Settings"
     },
     "sync": {
       "title": "Sync with Family",
       "subtitle": "Share tracking duties with your partner or caregivers in real-time"
+    },
+    "authChoice": {
+      "title": "Join or Continue",
+      "subtitle": "Create an account to sync across devices and share with caregivers",
+      "guestHint": "You can create an account later in Settings"
     },
     "baby": {
       "title": "Add Your Baby",
