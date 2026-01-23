@@ -1,8 +1,9 @@
 import { Pressable, Text, View } from "react-native";
 import { forwardRef, useCallback } from "react";
 import { router } from "expo-router";
-import { useBaby } from "@/contexts";
+import { useBaby, useSync } from "@/contexts";
 import { BabySelector } from "./BabySelector";
+import { SyncStatusIndicator } from "./SyncStatusIndicator";
 
 interface BabyHeaderProps {
   onSettingsPress?: () => void;
@@ -12,6 +13,7 @@ interface BabyHeaderProps {
 const BabyHeader = forwardRef<View, BabyHeaderProps>(
   ({ onSettingsPress, testID }, ref) => {
     const { selectedBaby, isLoading } = useBaby();
+    const { status, pendingCount, retryFailedSync } = useSync();
 
     const handleAddBaby = useCallback(() => {
       router.push("/baby/add");
@@ -87,6 +89,13 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
         </View>
 
         <View className="flex-row items-center gap-2">
+          <SyncStatusIndicator
+            status={status}
+            pendingCount={pendingCount}
+            onPress={retryFailedSync}
+            testID="header-sync-status"
+          />
+
           <Pressable
             onPress={handleEditBaby}
             className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
