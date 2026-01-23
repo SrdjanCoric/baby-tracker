@@ -34,7 +34,7 @@ export default function DiaperScreen() {
 
   const handleTypeSelect = useCallback((type: DiaperType) => {
     setSelectedType(type);
-    if (type === "wet") {
+    if (type === "wet" || type === "dry") {
       setSelectedColor(null);
     }
   }, []);
@@ -133,6 +133,14 @@ export default function DiaperScreen() {
             icon="💧💩"
             isSelected={selectedType === "mixed"}
             onPress={() => handleTypeSelect("mixed")}
+          />
+          <DiaperTypeButton
+            type="dry"
+            label={t("diaper.dry")}
+            description={t("diaper.dryOnly")}
+            icon="✨"
+            isSelected={selectedType === "dry"}
+            onPress={() => handleTypeSelect("dry")}
           />
         </View>
 

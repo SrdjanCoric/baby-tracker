@@ -6,7 +6,7 @@
 export type ActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime";
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
 export type BreastSide = "left" | "right" | "both";
-export type DiaperType = "wet" | "dirty" | "mixed";
+export type DiaperType = "wet" | "dirty" | "mixed" | "dry";
 export type FeedingType = "breast" | "bottle" | "solid";
 export type SleepType = "nap" | "night";
 export type BottleContentType = "formula" | "breastMilk";

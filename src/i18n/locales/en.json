@@ -29,7 +29,9 @@
     "notes": "Notes",
     "optional": "Optional",
     "ok": "OK",
-    "reset": "Reset"
+    "reset": "Reset",
+    "share": "Share",
+    "total": "Total"
   },
   "summary": {
     "today": "Today",
@@ -182,13 +184,16 @@
     "updateGoal": "Update Goal",
     "keepCurrentGoal": "Keep Current",
     "dismissSuggestion": "Don't show again",
-    "goalUpdated": "Goal updated"
+    "goalUpdated": "Goal updated",
+    "startedEarlier": "Started earlier?",
+    "whenDidSleepStart": "When did sleep start?"
   },
   "diaper": {
     "title": "Diaper",
     "wet": "Wet",
     "dirty": "Dirty",
     "mixed": "Mixed",
+    "dry": "Dry",
     "stoolColor": "Stool Color",
     "logDiaper": "Log Diaper",
     "logDiaperChange": "Log Diaper Change",
@@ -197,6 +202,7 @@
     "wetOnly": "Wet only - no solid waste",
     "dirtyOnly": "Dirty - solid waste present",
     "mixedType": "Both wet and dirty",
+    "dryOnly": "Clean check - no changes needed",
     "diaperSaved": "Diaper change saved",
     "quickLog": "Quick log",
     "optionalColor": "Color (optional)",
@@ -471,7 +477,17 @@
     "discardChangesMessage": "You have unsaved changes. Are you sure you want to discard them?",
     "discard": "Discard",
     "keepEditing": "Keep Editing",
-    "loggedBy": "Logged by {{name}}"
+    "loggedBy": "Logged by {{name}}",
+    "all": "All",
+    "selectDate": "Select date",
+    "tapToSelectDate": "Tap to open date picker",
+    "filterFeeding": "Feeding",
+    "filterSleep": "Sleep",
+    "filterDiaper": "Diaper",
+    "filterPumping": "Pumping",
+    "filterGrowth": "Growth",
+    "filterTummyTime": "Tummy Time",
+    "summary": "Summary"
   },
   "sync": {
     "synced": "Synced",

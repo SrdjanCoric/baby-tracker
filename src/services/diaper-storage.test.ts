@@ -362,7 +362,7 @@ describe("DiaperStorageService", () => {
 
       const result = await DiaperStorageService.getTodaysDiaperCounts("baby-123");
 
-      expect(result).toEqual({ wet: 0, dirty: 0, mixed: 0, total: 0 });
+      expect(result).toEqual({ wet: 0, dirty: 0, mixed: 0, dry: 0, total: 0 });
     });
 
     it("should count diapers by type correctly", async () => {
@@ -409,7 +409,7 @@ describe("DiaperStorageService", () => {
 
       const result = await DiaperStorageService.getTodaysDiaperCounts("baby-123");
 
-      expect(result).toEqual({ wet: 2, dirty: 1, mixed: 0, total: 3 });
+      expect(result).toEqual({ wet: 2, dirty: 1, mixed: 0, dry: 0, total: 3 });
     });
   });
 });

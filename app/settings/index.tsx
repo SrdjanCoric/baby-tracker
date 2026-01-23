@@ -105,6 +105,7 @@ export default function SettingsScreen() {
   };
 
   const handleSignIn = () => {
+    router.dismissAll();
     router.push("/auth/sign-in");
   };
 
