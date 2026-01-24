@@ -2,6 +2,12 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { OfflineBanner } from './OfflineBanner';
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
+  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 describe('OfflineBanner', () => {
   describe('rendering', () => {
     it('renders offline message', () => {

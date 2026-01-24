@@ -11,6 +11,20 @@ jest.mock("expo-router", () => ({
   },
 }));
 
+jest.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "baby.addFirstBaby": "Add your first baby",
+        "baby.addBaby": "Add Baby",
+        "baby.editBaby": "Edit baby profile",
+        "navigation.settings": "Settings",
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 jest.mock("@/contexts", () => ({
   useBaby: jest.fn(),
   useSync: () => ({
