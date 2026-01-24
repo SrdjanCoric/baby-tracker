@@ -12,7 +12,7 @@ import { useOnboarding } from "@/contexts";
 import { OnboardingPagination } from "@/components/onboarding";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 
-const PRIMARY_COLOR = "#7C3AED";
+const PRIMARY_COLOR = "#6B9E6E";
 
 interface ActivityCardProps {
   type: ActivityType;

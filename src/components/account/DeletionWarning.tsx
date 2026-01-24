@@ -104,8 +104,8 @@ function DeletionWarning({ preview }: DeletionWarningProps) {
       )}
 
       {preview.hasOtherCaregivers && !preview.householdWillBeDeleted && (
-        <View className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-          <Text className="text-sm text-blue-700 dark:text-blue-300">
+        <View className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
+          <Text className="text-sm text-amber-700 dark:text-amber-300">
             {t("accountDeletion.otherCaregiversExist")}
           </Text>
         </View>

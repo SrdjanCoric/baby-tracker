@@ -5,8 +5,8 @@
 import React from "react";
 import { View } from "react-native";
 
-const PRIMARY_COLOR = "#7C3AED";
-const INACTIVE_COLOR = "#D1D5DB";
+const PRIMARY_COLOR = "#6B9E6E";
+const INACTIVE_COLOR = "#E8E5E0";
 
 interface OnboardingPaginationProps {
   currentStep: number;
