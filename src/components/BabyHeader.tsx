@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { forwardRef, useCallback } from "react";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { useBaby } from "@/contexts";
 import { BabySelector } from "./BabySelector";
 
@@ -11,6 +12,7 @@ interface BabyHeaderProps {
 
 const BabyHeader = forwardRef<View, BabyHeaderProps>(
   ({ onSettingsPress, testID }, ref) => {
+    const { t } = useTranslation();
     const { selectedBaby, isLoading } = useBaby();
 
     const handleAddBaby = useCallback(() => {
@@ -52,13 +54,13 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
             onPress={handleAddBaby}
             className="flex-row items-center flex-1 active:opacity-70"
             accessibilityRole="button"
-            accessibilityLabel="Add your first baby"
+            accessibilityLabel={t("baby.addFirstBaby")}
           >
             <View className="w-12 h-12 rounded-full bg-action-primary/10 dark:bg-action-dark-primary/20 items-center justify-center mr-3">
               <Text className="text-2xl">➕</Text>
             </View>
             <Text className="text-lg font-semibold text-action-primary dark:text-action-dark-primary">
-              Add Baby
+              {t("baby.addBaby")}
             </Text>
           </Pressable>
 
@@ -67,7 +69,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
               onPress={onSettingsPress}
               className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
               accessibilityRole="button"
-              accessibilityLabel="Settings"
+              accessibilityLabel={t("navigation.settings")}
             >
               <Text className="text-xl">⚙️</Text>
             </Pressable>
@@ -91,7 +93,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
             onPress={handleEditBaby}
             className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
             accessibilityRole="button"
-            accessibilityLabel="Edit baby profile"
+            accessibilityLabel={t("baby.editBaby")}
           >
             <Text className="text-lg">✏️</Text>
           </Pressable>
@@ -101,7 +103,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
               onPress={onSettingsPress}
               className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
               accessibilityRole="button"
-              accessibilityLabel="Settings"
+              accessibilityLabel={t("navigation.settings")}
             >
               <Text className="text-xl">⚙️</Text>
             </Pressable>
