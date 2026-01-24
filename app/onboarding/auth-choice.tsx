@@ -1,10 +1,10 @@
 /**
- * Auth Choice Screen - Sign In, Sign Up, or Continue as Guest
- * Redesigned with warm, welcoming aesthetic for new parents
+ * Auth Choice Screen - Sign In or Continue as Guest
+ * Warm, welcoming design for new parents
  */
 
 import { useCallback } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -35,10 +35,6 @@ export default function AuthChoiceScreen() {
 
   const handleSignIn = useCallback(() => {
     router.push("/auth/sign-in");
-  }, [router]);
-
-  const handleSignUp = useCallback(() => {
-    router.push("/auth/sign-up");
   }, [router]);
 
   const handleContinueAsGuest = useCallback(() => {
@@ -76,13 +72,13 @@ export default function AuthChoiceScreen() {
 
       {/* Content */}
       <View className="flex-1 items-center justify-center px-6">
-        {/* Illustration - Welcoming hands/heart motif */}
+        {/* Illustration */}
         <View
           className="w-36 h-36 rounded-full items-center justify-center mb-8"
           style={{
             backgroundColor: isDark ? COLORS.darkCard : COLORS.primaryLight,
             borderWidth: 3,
-            borderColor: isDark ? COLORS.primary : COLORS.primary,
+            borderColor: COLORS.primary,
           }}
         >
           <Text className="text-6xl">🤝</Text>
@@ -112,54 +108,32 @@ export default function AuthChoiceScreen() {
 
         {/* Auth Options Container */}
         <View className="w-full">
-          {/* Sign In & Sign Up Row */}
-          <View className="flex-row mb-4">
-            {/* Sign In */}
-            <Pressable
-              onPress={handleSignIn}
-              className="flex-1 mr-2 rounded-2xl py-4 items-center active:scale-[0.98]"
-              style={{
-                backgroundColor: COLORS.primaryDark,
-              }}
-              accessibilityRole="button"
-            >
-              <Ionicons name="log-in-outline" size={22} color="#FFFFFF" style={{ marginBottom: 4 }} />
+          {/* Sign In Button - Primary Action */}
+          <Pressable
+            onPress={handleSignIn}
+            className="rounded-2xl py-5 mb-4 active:scale-[0.98]"
+            style={{ backgroundColor: COLORS.primaryDark }}
+            accessibilityRole="button"
+          >
+            <View className="flex-row items-center justify-center">
+              <Ionicons name="log-in-outline" size={22} color="#FFFFFF" style={{ marginRight: 10 }} />
               <Text
-                className="text-white text-base"
+                className="text-white text-lg"
                 style={{ fontFamily: "Nunito-SemiBold" }}
               >
                 {t("auth.signIn")}
               </Text>
-            </Pressable>
-
-            {/* Sign Up */}
-            <Pressable
-              onPress={handleSignUp}
-              className="flex-1 ml-2 rounded-2xl py-4 items-center active:scale-[0.98]"
+            </View>
+            <Text
+              className="text-center text-sm mt-1"
               style={{
-                backgroundColor: isDark ? COLORS.darkCard : "#FFFFFF",
-                borderWidth: 2,
-                borderColor: COLORS.primary,
+                color: "rgba(255,255,255,0.75)",
+                fontFamily: "Nunito-Regular",
               }}
-              accessibilityRole="button"
             >
-              <Ionicons
-                name="person-add-outline"
-                size={22}
-                color={COLORS.primary}
-                style={{ marginBottom: 4 }}
-              />
-              <Text
-                className="text-base"
-                style={{
-                  color: COLORS.primary,
-                  fontFamily: "Nunito-SemiBold",
-                }}
-              >
-                {t("auth.signUp")}
-              </Text>
-            </Pressable>
-          </View>
+              {t(Platform.OS === "ios" ? "onboarding.authChoice.signInMethodsIos" : "onboarding.authChoice.signInMethodsAndroid")}
+            </Text>
+          </Pressable>
 
           {/* Divider with "or" */}
           <View className="flex-row items-center my-4">
@@ -174,7 +148,7 @@ export default function AuthChoiceScreen() {
                 fontFamily: "Nunito-Medium",
               }}
             >
-              or
+              {t("common.or")}
             </Text>
             <View
               className="flex-1 h-[1px]"
@@ -182,7 +156,7 @@ export default function AuthChoiceScreen() {
             />
           </View>
 
-          {/* Continue as Guest - More Prominent */}
+          {/* Continue as Guest */}
           <Pressable
             onPress={handleContinueAsGuest}
             className="rounded-2xl py-5 px-5 active:scale-[0.98]"

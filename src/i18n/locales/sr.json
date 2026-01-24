@@ -31,7 +31,8 @@
     "ok": "U redu",
     "reset": "Resetuj",
     "share": "Podeli",
-    "total": "Ukupno"
+    "total": "Ukupno",
+    "or": "ili"
   },
   "summary": {
     "today": "Danas",
@@ -613,6 +614,7 @@
     "createAccount": "Kreiraj nalog",
     "welcomeTitle": "Dobrodošli u Baby Tracker",
     "welcomeSubtitle": "Pratite hranjenje, spavanje i još mnogo toga vaše bebe",
+    "welcomeBack": "Dobrodošli nazad",
     "signInTitle": "Dobrodošli nazad",
     "signInSubtitle": "Prijavite se na vaš nalog",
     "signUpTitle": "Kreiraj nalog",
@@ -717,7 +719,9 @@
     "authChoice": {
       "title": "Pridružite se ili nastavite",
       "subtitle": "Napravite nalog za sinhronizaciju između uređaja i deljenje sa negovateljima",
-      "guestHint": "Možete napraviti nalog kasnije u Podešavanjima"
+      "guestHint": "Možete napraviti nalog kasnije u Podešavanjima",
+      "signInMethodsIos": "Apple, Google i Email",
+      "signInMethodsAndroid": "Google i Email"
     },
     "baby": {
       "title": "Dodajte vašu bebu",
