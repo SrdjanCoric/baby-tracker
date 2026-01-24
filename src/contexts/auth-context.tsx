@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as WebBrowser from "expo-web-browser";
+import { GoogleSignin, isErrorWithCode, statusCodes } from "@react-native-google-signin/google-signin";
 
 // Required for web browser auth session to work properly
 WebBrowser.maybeCompleteAuthSession();
@@ -118,6 +119,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Configure Google Sign-In
+  useEffect(() => {
+    GoogleSignin.configure({
+      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: true,
+    });
+  }, []);
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -223,82 +233,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = useCallback(async (): Promise<{ error: Error | null }> => {
     try {
-      console.log("[Auth Debug] Google - starting OAuth flow");
-      console.log("[Auth Debug] Google - redirect URI:", AUTH_CONFIG.OAUTH_REDIRECT_URI);
+      console.log("[Auth Debug] Google - starting native sign-in");
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      // Check if Google Play Services are available (Android)
+      await GoogleSignin.hasPlayServices();
+
+      // Sign in with Google natively
+      const userInfo = await GoogleSignin.signIn();
+      console.log("[Auth Debug] Google - native sign-in success, user:", userInfo.data?.user?.email);
+
+      const idToken = userInfo.data?.idToken;
+      if (!idToken) {
+        console.error("[Auth Debug] Google - no ID token received");
+        return { error: new Error("Google Sign-In: No ID token received") };
+      }
+
+      console.log("[Auth Debug] Google - calling Supabase signInWithIdToken");
+      // Use signInWithIdToken - same pattern as Apple
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "google",
-        options: {
-          redirectTo: AUTH_CONFIG.OAUTH_REDIRECT_URI,
-          skipBrowserRedirect: true,
-        },
+        token: idToken,
       });
 
       if (error) {
-        console.error("[Auth Debug] Google - Supabase OAuth error:", error.message, error);
-        return { error: new Error(error.message) };
+        console.error("[Auth Debug] Google - Supabase error:", error.message);
+        return { error: new Error(`Google Sign-In failed: ${error.message}`) };
       }
 
-      console.log("[Auth Debug] Google - OAuth URL generated:", data?.url?.substring(0, 100) + "...");
-
-      if (data?.url) {
-        console.log("[Auth Debug] Google - opening browser session");
-        // Dismiss any existing browser sessions to avoid stale state issues
-        await WebBrowser.dismissBrowser();
-
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          AUTH_CONFIG.OAUTH_REDIRECT_URI
-        );
-
-        console.log("[Auth Debug] Google - browser result type:", result.type);
-        if (result.type === "success") {
-          console.log("[Auth Debug] Google - success URL:", (result as { url: string }).url?.substring(0, 150) + "...");
-        }
-
-        if (result.type === "success" && result.url) {
-          // Extract tokens from the redirect URL
-          let accessToken: string | null = null;
-          let refreshToken: string | null = null;
-
-          // Check hash fragment (Supabase typically uses this)
-          const hashIndex = result.url.indexOf('#');
-          if (hashIndex !== -1) {
-            const hashParams = new URLSearchParams(result.url.substring(hashIndex + 1));
-            accessToken = hashParams.get('access_token');
-            refreshToken = hashParams.get('refresh_token');
-          }
-
-          // Fallback to query params
-          if (!accessToken) {
-            const url = new URL(result.url);
-            accessToken = url.searchParams.get("access_token");
-            refreshToken = url.searchParams.get("refresh_token");
-          }
-
-          console.log("[Auth Debug] Google - tokens found:", { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
-
-          if (accessToken && refreshToken) {
-            await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            console.log("[Auth Debug] Google - session set successfully");
-          } else {
-            // PKCE flow - Supabase handles token exchange internally
-            await supabase.auth.getSession();
-            console.log("[Auth Debug] Google - called getSession (PKCE flow)");
-          }
-        } else if (result.type === "dismiss" || result.type === "cancel") {
-          console.log("[Auth Debug] Google - user dismissed/cancelled");
-          return { error: null };
-        } else {
-          console.log("[Auth Debug] Google - unexpected result type:", result.type);
-        }
-      }
-
+      console.log("[Auth Debug] Google - success, user:", data?.user?.id);
       return { error: null };
     } catch (err) {
+      // Handle specific Google Sign-In errors
+      if (isErrorWithCode(err)) {
+        if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+          console.log("[Auth Debug] Google - user cancelled");
+          return { error: null };
+        } else if (err.code === statusCodes.IN_PROGRESS) {
+          console.log("[Auth Debug] Google - sign-in already in progress");
+          return { error: null };
+        } else if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+          console.error("[Auth Debug] Google - Play Services not available");
+          return { error: new Error("Google Play Services not available") };
+        }
+      }
       console.error("[Auth Debug] Google - catch error:", err);
       return { error: err instanceof Error ? err : new Error("Google sign-in failed") };
     }
