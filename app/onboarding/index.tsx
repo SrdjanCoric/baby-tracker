@@ -34,7 +34,6 @@ export default function WelcomeScreen() {
         onPrimaryPress={handleGetStarted}
         showSkip
         onSkipPress={handleSkip}
-        onSwipeLeft={handleGetStarted}
         currentStep={state.currentStep}
         totalSteps={6}
       />

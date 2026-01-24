@@ -2,16 +2,13 @@
  * OnboardingScreen - Reusable screen template for onboarding
  */
 
-import React, { useCallback } from "react";
+import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, runOnJS } from "react-native-reanimated";
 import { OnboardingPagination } from "./OnboardingPagination";
 import { OnboardingIllustration, type IllustrationType } from "./OnboardingIllustration";
 
 const PRIMARY_COLOR = "#7C3AED";
-const SWIPE_THRESHOLD = 50;
 
 interface OnboardingScreenProps {
   title: string;
@@ -21,8 +18,6 @@ interface OnboardingScreenProps {
   onPrimaryPress: () => void;
   showSkip?: boolean;
   onSkipPress?: () => void;
-  onSwipeLeft?: () => void;
-  onSwipeRight?: () => void;
   currentStep: number;
   totalSteps: number;
   isLoading?: boolean;
@@ -37,48 +32,15 @@ export function OnboardingScreen({
   onPrimaryPress,
   showSkip = false,
   onSkipPress,
-  onSwipeLeft,
-  onSwipeRight,
   currentStep,
   totalSteps,
   isLoading = false,
   children,
 }: OnboardingScreenProps) {
   const { t } = useTranslation();
-  const translateX = useSharedValue(0);
-
-  const handleSwipeLeft = useCallback(() => {
-    if (onSwipeLeft) {
-      onSwipeLeft();
-    }
-  }, [onSwipeLeft]);
-
-  const handleSwipeRight = useCallback(() => {
-    if (onSwipeRight) {
-      onSwipeRight();
-    }
-  }, [onSwipeRight]);
-
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      translateX.value = event.translationX * 0.3;
-    })
-    .onEnd((event) => {
-      if (event.translationX < -SWIPE_THRESHOLD && onSwipeLeft) {
-        runOnJS(handleSwipeLeft)();
-      } else if (event.translationX > SWIPE_THRESHOLD && onSwipeRight) {
-        runOnJS(handleSwipeRight)();
-      }
-      translateX.value = withSpring(0);
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
 
   return (
-    <GestureDetector gesture={panGesture}>
-      <Animated.View className="flex-1 bg-surface dark:bg-surface-dark" style={animatedStyle}>
+    <View className="flex-1 bg-surface dark:bg-surface-dark">
         {/* Skip button */}
         {showSkip && (
           <View className="absolute top-4 right-4 z-10">
@@ -141,7 +103,6 @@ export function OnboardingScreen({
             </Text>
           </Pressable>
         </View>
-      </Animated.View>
-    </GestureDetector>
+      </View>
   );
 }
