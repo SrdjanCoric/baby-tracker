@@ -442,7 +442,7 @@
     "showBabyNameDesc": "Uključi ime bebe u obaveštenja (vidljivo na zaključanom ekranu)",
     "showActivityDetails": "Prikaži detalje aktivnosti",
     "showActivityDetailsDesc": "Uključi detaljne informacije o aktivnosti u obaveštenja",
-    "export": "Izvezi podatke",
+    "export": "Preuzmi podatke",
     "generateReport": "Generiši izveštaj",
     "account": "Nalog",
     "signOut": "Odjavi se",
@@ -749,8 +749,8 @@
     }
   },
   "export": {
-    "title": "Izvezi podatke",
-    "description": "Izvezite podatke praćenja za {{babyName}} kao CSV fajl",
+    "title": "Preuzmi podatke",
+    "description": "Preuzmite podatke praćenja za {{babyName}} kao CSV fajl",
     "dataTypes": "Podaci za izvoz",
     "selectAll": "Izaberi sve",
     "deselectAll": "Poništi izbor",
@@ -765,7 +765,7 @@
     "includeNotes": "Uključi beleške",
     "includeNotesDescription": "Dodaj kolonu sa beleškama u izvezene podatke",
     "recordsSummary": "{{count}} zapisa će biti izvezeno",
-    "exportButton": "Izvezi CSV",
+    "exportButton": "Preuzmi CSV",
     "loadingCounts": "Učitavanje podataka...",
     "noBabySelected": "Molimo izaberite bebu za izvoz podataka",
     "exportFailed": "Izvoz nije uspeo",
