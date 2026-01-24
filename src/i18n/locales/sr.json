@@ -365,6 +365,12 @@
     "deleteBabyProfile": "Obriši profil bebe",
     "deleteBabyConfirm": "Da li ste sigurni da želite da obrišete profil za {{name}}? Ova radnja se ne može poništiti.",
     "addPhoto": "Dodaj fotografiju",
+    "changePhoto": "Promeni fotografiju",
+    "changePhotoMessage": "Šta želite da uradite sa fotografijom?",
+    "chooseNewPhoto": "Izaberi novu fotografiju",
+    "removePhoto": "Ukloni fotografiju",
+    "tapToChange": "Dodirnite za promenu",
+    "photoPermissionDenied": "Molimo dozvolite pristup fotografijama da biste dodali fotografiju bebe",
     "babyName": "Ime bebe",
     "babyNamePlaceholder": "Unesite ime bebe",
     "birthDateOptional": "Datum rođenja (opciono)",
@@ -436,7 +442,7 @@
     "showBabyNameDesc": "Uključi ime bebe u obaveštenja (vidljivo na zaključanom ekranu)",
     "showActivityDetails": "Prikaži detalje aktivnosti",
     "showActivityDetailsDesc": "Uključi detaljne informacije o aktivnosti u obaveštenja",
-    "export": "Izvezi podatke",
+    "export": "Preuzmi podatke",
     "generateReport": "Generiši izveštaj",
     "account": "Nalog",
     "signOut": "Odjavi se",
@@ -525,6 +531,7 @@
   },
   "household": {
     "title": "Domaćinstvo",
+    "familySharing": "Porodica i deljenje",
     "inviteCode": "Kod za pozivnicu",
     "inviteCodeDescription": "Podelite ovaj kod sa drugim negovateljima da im omogućite da se pridruže vašem domaćinstvu",
     "shareInviteCode": "Podeli kod",
@@ -682,7 +689,10 @@
     "features": {
       "title": "Pratite sve",
       "subtitle": "Hranjenje, spavanje, pelene, rast i još mnogo toga - sve na jednom mestu",
-      "interactiveSubtitle": "Dodirnite svaku aktivnost za više informacija"
+      "interactiveSubtitle": "Dodirnite svaku aktivnost za više informacija",
+      "customizeTitle": "Prilagodite kontrolnu tablu",
+      "customizeSubtitle": "Izaberite koje aktivnosti želite da vidite",
+      "customizeHint": "Ovo možete promeniti u bilo kom trenutku u Podešavanjima"
     },
     "activityDesc": {
       "feeding": "Pratite dojenje, flašicu i čvrstu hranu sa tajmerima i količinama",
@@ -739,8 +749,8 @@
     }
   },
   "export": {
-    "title": "Izvezi podatke",
-    "description": "Izvezite podatke praćenja za {{babyName}} kao CSV fajl",
+    "title": "Preuzmi podatke",
+    "description": "Preuzmite podatke praćenja za {{babyName}} kao CSV fajl",
     "dataTypes": "Podaci za izvoz",
     "selectAll": "Izaberi sve",
     "deselectAll": "Poništi izbor",
@@ -755,7 +765,7 @@
     "includeNotes": "Uključi beleške",
     "includeNotesDescription": "Dodaj kolonu sa beleškama u izvezene podatke",
     "recordsSummary": "{{count}} zapisa će biti izvezeno",
-    "exportButton": "Izvezi CSV",
+    "exportButton": "Preuzmi CSV",
     "loadingCounts": "Učitavanje podataka...",
     "noBabySelected": "Molimo izaberite bebu za izvoz podataka",
     "exportFailed": "Izvoz nije uspeo",

@@ -27,7 +27,7 @@
           },
           {
             "CFBundleURLSchemes": [
-              "sofibaby"
+              "com.googleusercontent.apps.653434931400-nk9pihvpbid2g0sj0g7gqk85bcn9r9ua"
             ]
           }
         ],
@@ -86,7 +86,13 @@
           "color": "#F5A472"
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to add a baby photo."
+        }
+      ]
     ],
     "extra": {
       "eas": {

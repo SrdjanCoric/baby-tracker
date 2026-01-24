@@ -97,8 +97,8 @@ export const BabyStorageService = {
       ...babies[index],
       ...(input.name !== undefined && { name: input.name }),
       ...(input.birthDate !== undefined && { birthDate: input.birthDate.toISOString() }),
-      ...(input.gender !== undefined && { gender: input.gender }),
-      ...(input.photoUri !== undefined && { photoUri: input.photoUri }),
+      ...("gender" in input && { gender: input.gender }),
+      ...("photoUri" in input && { photoUri: input.photoUri }),
       updatedAt: new Date().toISOString(),
     };
 

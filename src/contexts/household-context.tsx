@@ -90,7 +90,9 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
   const householdId = user?.householdId ?? null;
 
   const loadHousehold = useCallback(async () => {
+    console.log("[Household Debug] loadHousehold called, householdId:", householdId);
     if (!householdId) {
+      console.log("[Household Debug] No householdId, skipping load");
       dispatch({ type: "SET_LOADING", payload: false });
       return;
     }
@@ -102,6 +104,9 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
       getHousehold(householdId),
       getHouseholdMembers(householdId),
     ]);
+
+    console.log("[Household Debug] getHousehold result:", JSON.stringify(householdResult, null, 2));
+    console.log("[Household Debug] invite_code value:", householdResult.data?.inviteCode);
 
     if (householdResult.error) {
       dispatch({ type: "SET_ERROR", payload: householdResult.error });
