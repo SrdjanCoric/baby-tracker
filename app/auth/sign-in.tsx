@@ -1,4 +1,9 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+/**
+ * Sign In Screen - Simplified auth with Social + Magic Link
+ * Warm, welcoming design matching the app's aesthetic
+ */
+
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Text,
@@ -10,101 +15,58 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useColorScheme } from "nativewind";
-import { useAuth } from "@/contexts";
-import { validateSignIn, sanitizeAuthError } from "@/validators";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth, useTheme } from "@/contexts";
+import { validateEmail } from "@/validators";
 
-type AuthMode = "magic" | "password";
-
-const TAB_ACTIVE_COLOR = "#8A857D";
-const BUTTON_COLOR = "#5A8A5D";
+const COLORS = {
+  primary: "#6B9E6E",
+  primaryDark: "#5A8A5D",
+  primaryLight: "#E8F5E9",
+  warmCream: "#FBF9F6",
+  warmGray: "#6B665E",
+  warmGrayLight: "#B5B0A8",
+  warmGrayLightest: "#E8E5E0",
+  darkBg: "#1A1918",
+  darkCard: "#242220",
+  darkBorder: "#3D3935",
+  darkText: "#FAF9F7",
+  darkTextSecondary: "#B5B0A8",
+  google: "#4285F4",
+  googleBg: "#FFFFFF",
+  appleBg: "#000000",
+};
 
 export default function SignInScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const { signIn, signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable } = useAuth();
+  const { isDark } = useTheme();
+  const { signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable } = useAuth();
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [authMode, setAuthMode] = useState<AuthMode>("magic");
-  const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-
-  const passwordInputRef = useRef<TextInput>(null);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    });
-
-    if (authMode === "password") {
-      setTimeout(() => passwordInputRef.current?.focus(), 300);
-    }
-  }, [authMode, fadeAnim]);
-
-  const handleSignIn = useCallback(async () => {
-    const validation = validateSignIn({ email, password });
-
-    if (!validation.isValid) {
-      setErrors(validation.errors);
-      return;
-    }
-
-    setErrors({});
-    setIsLoading(true);
-
-    try {
-      const { error } = await signIn(validation.normalizedEmail!, password);
-
-      if (error) {
-        Alert.alert(t("common.error"), t("auth.signInError"));
-      } else {
-        router.replace("/(tabs)");
-      }
-    } catch {
-      Alert.alert(t("common.error"), t("errors.generic"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [email, password, signIn, router, t]);
+  const [emailError, setEmailError] = useState<string | undefined>();
 
   const handleGoogleSignIn = useCallback(async () => {
     setIsGoogleLoading(true);
     try {
       const { error } = await signInWithGoogle();
       if (error) {
-        // DEBUG: Show actual error message
-        Alert.alert("Google Sign-In Error (Debug)", error.message || "Unknown error");
+        Alert.alert(t("common.error"), t("auth.googleSignInError"));
       } else {
         router.replace("/(tabs)");
       }
-    } catch (err) {
-      // DEBUG: Show actual catch error
-      Alert.alert("Google Sign-In Catch (Debug)", err instanceof Error ? err.message : "Unknown error");
+    } catch {
+      Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [signInWithGoogle, router]);
+  }, [signInWithGoogle, router, t]);
 
   const handleAppleSignIn = useCallback(async () => {
     setIsAppleLoading(true);
@@ -115,8 +77,7 @@ export default function SignInScreen() {
       } else {
         router.replace("/(tabs)");
       }
-    } catch (err) {
-      console.error("Apple sign-in catch:", err);
+    } catch {
       Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsAppleLoading(false);
@@ -124,20 +85,19 @@ export default function SignInScreen() {
   }, [signInWithApple, router, t]);
 
   const handleMagicLink = useCallback(async () => {
-    const validation = validateSignIn({ email, password: "placeholder" });
-
-    if (validation.errors.email) {
-      setErrors({ email: validation.errors.email });
+    const validation = validateEmail(email);
+    if (!validation.isValid) {
+      setEmailError(validation.error);
       return;
     }
 
-    setErrors({});
+    setEmailError(undefined);
     setIsMagicLinkLoading(true);
 
     try {
-      const { error } = await signInWithMagicLink(validation.normalizedEmail!);
+      const { error: magicLinkError } = await signInWithMagicLink(validation.normalizedEmail!);
 
-      if (error) {
+      if (magicLinkError) {
         Alert.alert(t("common.error"), t("auth.magicLinkError"));
       } else {
         Alert.alert(
@@ -146,25 +106,22 @@ export default function SignInScreen() {
           [{ text: t("common.ok") }]
         );
       }
-    } catch (err) {
-      console.error("Magic link catch:", err);
+    } catch {
       Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsMagicLinkLoading(false);
     }
   }, [email, signInWithMagicLink, t]);
 
-  const handleGoToSignUp = useCallback(() => {
-    router.replace("/auth/sign-up");
+  const handleClose = useCallback(() => {
+    router.back();
   }, [router]);
 
-  const toggleAuthMode = useCallback((mode: AuthMode) => {
-    setAuthMode(mode);
-    setErrors({});
-  }, []);
-
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: isDark ? COLORS.darkBg : COLORS.warmCream }}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -173,54 +130,103 @@ export default function SignInScreen() {
           className="flex-1"
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View className="flex-1 px-6 pt-4 pb-8">
-            {/* Drag handle */}
-            <View className="items-center mb-6">
-              <View className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+            {/* Header with drag handle */}
+            <View className="items-center mb-2">
+              <View
+                className="w-10 h-1 rounded-full"
+                style={{ backgroundColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest }}
+              />
             </View>
 
-            {/* Header */}
-            <View className="mb-8">
-              <Text className="text-3xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
-                {t("auth.signInTitle")}
+            {/* Close button */}
+            <Pressable
+              onPress={handleClose}
+              className="absolute top-4 right-6 w-10 h-10 rounded-full items-center justify-center active:opacity-70"
+              style={{ backgroundColor: isDark ? COLORS.darkCard : COLORS.warmGrayLightest }}
+              accessibilityLabel={t("common.close")}
+            >
+              <Ionicons
+                name="close"
+                size={22}
+                color={isDark ? COLORS.darkTextSecondary : COLORS.warmGray}
+              />
+            </Pressable>
+
+            {/* Title Section */}
+            <View className="mt-10 mb-8">
+              <Text
+                className="text-3xl mb-2"
+                style={{
+                  color: isDark ? COLORS.darkText : "#2D2A26",
+                  fontFamily: "Nunito-Bold",
+                }}
+              >
+                {t("auth.welcomeBack")}
               </Text>
-              <Text className="text-base text-content-secondary dark:text-content-dark-secondary">
+              <Text
+                className="text-base leading-6"
+                style={{
+                  color: isDark ? COLORS.darkTextSecondary : COLORS.warmGray,
+                  fontFamily: "Nunito-Regular",
+                }}
+              >
                 {t("auth.signInSubtitle")}
               </Text>
             </View>
 
             {/* Social Sign-in Buttons */}
             <View className="mb-6">
+              {/* Google Sign In */}
               <Pressable
                 onPress={handleGoogleSignIn}
                 disabled={isGoogleLoading}
-                className="flex-row items-center justify-center bg-white border border-gray-300 rounded-xl py-4 mb-3 active:opacity-80"
+                className="flex-row items-center justify-center rounded-2xl py-4 mb-3 active:scale-[0.98]"
+                style={{
+                  backgroundColor: COLORS.googleBg,
+                  borderWidth: 1,
+                  borderColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest,
+                }}
               >
                 {isGoogleLoading ? (
-                  <ActivityIndicator color="#4285F4" />
+                  <ActivityIndicator color={COLORS.google} />
                 ) : (
                   <>
-                    <Text className="text-xl mr-3">G</Text>
-                    <Text className="text-gray-800 font-medium text-base">
+                    <View className="w-6 h-6 mr-3 items-center justify-center">
+                      <Text className="text-lg font-bold" style={{ color: COLORS.google }}>G</Text>
+                    </View>
+                    <Text
+                      className="text-base"
+                      style={{
+                        color: "#3C4043",
+                        fontFamily: "Nunito-SemiBold",
+                      }}
+                    >
                       {t("auth.continueWithGoogle")}
                     </Text>
                   </>
                 )}
               </Pressable>
 
+              {/* Apple Sign In - iOS only */}
               {Platform.OS === "ios" && isAppleSignInAvailable && (
                 <Pressable
                   onPress={handleAppleSignIn}
                   disabled={isAppleLoading}
-                  className="flex-row items-center justify-center bg-black rounded-xl py-4 mb-3 active:opacity-80"
+                  className="flex-row items-center justify-center rounded-2xl py-4 mb-3 active:scale-[0.98]"
+                  style={{ backgroundColor: COLORS.appleBg }}
                 >
                   {isAppleLoading ? (
-                    <ActivityIndicator color="white" />
+                    <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <>
-                      <Text className="text-xl mr-3 text-white"></Text>
-                      <Text className="text-white font-medium text-base">
+                      <Ionicons name="logo-apple" size={22} color="#FFFFFF" style={{ marginRight: 10 }} />
+                      <Text
+                        className="text-base text-white"
+                        style={{ fontFamily: "Nunito-SemiBold" }}
+                      >
                         {t("auth.continueWithApple")}
                       </Text>
                     </>
@@ -231,166 +237,129 @@ export default function SignInScreen() {
 
             {/* Divider */}
             <View className="flex-row items-center mb-6">
-              <View className="flex-1 h-px bg-border-subtle dark:bg-border-dark-subtle" />
-              <Text className="mx-4 text-content-tertiary dark:text-content-dark-tertiary text-sm">
+              <View
+                className="flex-1 h-[1px]"
+                style={{ backgroundColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest }}
+              />
+              <Text
+                className="mx-4 text-sm"
+                style={{
+                  color: isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight,
+                  fontFamily: "Nunito-Medium",
+                }}
+              >
                 {t("auth.orContinueWithEmail")}
               </Text>
-              <View className="flex-1 h-px bg-border-subtle dark:bg-border-dark-subtle" />
-            </View>
-
-            {/* Email Field - Always Visible */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-content-primary dark:text-content-dark-primary mb-2">
-                {t("auth.email")}
-              </Text>
-              <TextInput
-                className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 text-base text-content-primary dark:text-content-dark-primary ${
-                  errors.email ? "border-2 border-red-500" : ""
-                }`}
-                style={{ fontSize: 16, lineHeight: 20, paddingTop: 16, paddingBottom: 16 }}
-                placeholder={t("auth.emailPlaceholder")}
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  setErrors((prev) => ({ ...prev, email: undefined }));
-                }}
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                returnKeyType={authMode === "magic" ? "send" : "next"}
-                onSubmitEditing={() => {
-                  if (authMode === "magic") {
-                    handleMagicLink();
-                  } else {
-                    passwordInputRef.current?.focus();
-                  }
-                }}
+              <View
+                className="flex-1 h-[1px]"
+                style={{ backgroundColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest }}
               />
-              {errors.email && (
-                <Text className="text-red-500 text-sm mt-1">{errors.email}</Text>
-              )}
             </View>
 
-            {/* Password Field - Only in password mode, appears between email and toggle */}
-            {authMode === "password" && (
-              <Animated.View className="mb-4" style={{ opacity: fadeAnim }}>
-                <Text className="text-sm font-medium text-content-primary dark:text-content-dark-primary mb-2">
-                  {t("auth.password")}
+            {/* Magic Link Section */}
+            <View
+              className="rounded-3xl p-5 mb-4"
+              style={{
+                backgroundColor: isDark ? COLORS.darkCard : "#FFFFFF",
+                borderWidth: 1,
+                borderColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest,
+              }}
+            >
+              {/* Email Field */}
+              <View className="mb-4">
+                <Text
+                  className="text-sm mb-2"
+                  style={{
+                    color: isDark ? COLORS.darkTextSecondary : COLORS.warmGray,
+                    fontFamily: "Nunito-Medium",
+                  }}
+                >
+                  {t("auth.email")}
                 </Text>
                 <TextInput
-                  ref={passwordInputRef}
-                  className={`bg-surface-card dark:bg-surface-dark-card rounded-xl px-4 text-base text-content-primary dark:text-content-dark-primary ${
-                    errors.password ? "border-2 border-red-500" : ""
-                  }`}
-                  style={{ fontSize: 16, lineHeight: 20, paddingTop: 16, paddingBottom: 16 }}
-                  placeholder={t("auth.passwordPlaceholder")}
-                  placeholderTextColor="#9CA3AF"
-                  value={password}
+                  className="rounded-xl px-4"
+                  style={{
+                    backgroundColor: isDark ? COLORS.darkBg : COLORS.warmCream,
+                    color: isDark ? COLORS.darkText : "#2D2A26",
+                    fontFamily: "Nunito-Regular",
+                    fontSize: 16,
+                    paddingTop: 14,
+                    paddingBottom: 14,
+                    borderWidth: emailError ? 2 : 0,
+                    borderColor: emailError ? "#EF4444" : "transparent",
+                  }}
+                  placeholder={t("auth.emailPlaceholder")}
+                  placeholderTextColor={isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight}
+                  value={email}
                   onChangeText={(text) => {
-                    setPassword(text);
-                    setErrors((prev) => ({ ...prev, password: undefined }));
+                    setEmail(text);
+                    setEmailError(undefined);
                   }}
-                  secureTextEntry
-                  autoComplete="password"
-                  textContentType="password"
-                  returnKeyType="go"
-                  onSubmitEditing={handleSignIn}
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  returnKeyType="send"
+                  onSubmitEditing={handleMagicLink}
                 />
-                {errors.password && (
-                  <Text className="text-red-500 text-sm mt-1">{errors.password}</Text>
-                )}
-              </Animated.View>
-            )}
-
-            {/* Auth Mode Toggle */}
-            <View className="flex-row bg-surface-card dark:bg-surface-dark-card rounded-xl p-1 mb-5">
-              <Pressable
-                onPress={() => toggleAuthMode("magic")}
-                className="flex-1 py-3 rounded-lg items-center"
-                style={{
-                  backgroundColor: authMode === "magic" ? TAB_ACTIVE_COLOR : "transparent",
-                }}
-              >
-                <Text
-                  className="font-medium text-sm"
-                  style={{
-                    color: authMode === "magic" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280"),
-                  }}
-                >
-                  {t("auth.magicLinkTab")}
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => toggleAuthMode("password")}
-                className="flex-1 py-3 rounded-lg items-center"
-                style={{
-                  backgroundColor: authMode === "password" ? TAB_ACTIVE_COLOR : "transparent",
-                }}
-              >
-                <Text
-                  className="font-medium text-sm"
-                  style={{
-                    color: authMode === "password" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280"),
-                  }}
-                >
-                  {t("auth.passwordTab")}
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Action Button */}
-            {authMode === "magic" ? (
-              /* Magic Link Mode */
-              <View>
-                <Pressable
-                  onPress={handleMagicLink}
-                  disabled={isMagicLinkLoading}
-                  className="rounded-xl py-5 items-center active:opacity-80"
-                  style={{ backgroundColor: BUTTON_COLOR }}
-                >
-                  {isMagicLinkLoading ? (
-                    <ActivityIndicator color="white" />
-                  ) : (
-                    <View className="flex-row items-center">
-                      <Text className="text-xl mr-2">✉️</Text>
-                      <Text className="text-white font-semibold text-lg">
-                        {t("auth.sendMagicLink")}
-                      </Text>
-                    </View>
-                  )}
-                </Pressable>
-                <Text className="text-center text-content-tertiary dark:text-content-dark-tertiary text-sm mt-3">
-                  {t("auth.magicLinkHint")}
-                </Text>
-              </View>
-            ) : (
-              /* Password Mode */
-              <Pressable
-                onPress={handleSignIn}
-                disabled={isLoading}
-                className="rounded-xl py-4 items-center active:opacity-80"
-                style={{ backgroundColor: BUTTON_COLOR }}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-white font-semibold text-base">
-                    {t("auth.signIn")}
+                {emailError && (
+                  <Text
+                    className="text-sm mt-1.5"
+                    style={{ color: "#EF4444", fontFamily: "Nunito-Regular" }}
+                  >
+                    {emailError}
                   </Text>
                 )}
-              </Pressable>
-            )}
+              </View>
 
-            {/* Sign Up Link */}
-            <View className="flex-row justify-center mt-6">
-              <Text className="text-content-secondary dark:text-content-dark-secondary">
-                {t("auth.noAccount")}{" "}
+              {/* Send Magic Link Button */}
+              <Pressable
+                onPress={handleMagicLink}
+                disabled={isMagicLinkLoading}
+                className="rounded-xl py-4 items-center active:scale-[0.98]"
+                style={{ backgroundColor: COLORS.primaryDark }}
+              >
+                {isMagicLinkLoading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <View className="flex-row items-center">
+                    <Ionicons name="mail-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                    <Text
+                      className="text-white text-base"
+                      style={{ fontFamily: "Nunito-SemiBold" }}
+                    >
+                      {t("auth.sendMagicLink")}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+
+              {/* Magic Link Hint */}
+              <Text
+                className="text-center text-sm mt-3"
+                style={{
+                  color: isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight,
+                  fontFamily: "Nunito-Regular",
+                }}
+              >
+                {t("auth.magicLinkHint")}
               </Text>
-              <Pressable onPress={handleGoToSignUp}>
-                <Text className="font-semibold" style={{ color: BUTTON_COLOR }}>
-                  {t("auth.signUp")}
+            </View>
+
+            {/* Guest option at bottom */}
+            <View className="mt-auto pt-6">
+              <Pressable
+                onPress={() => router.replace("/(tabs)")}
+                className="py-3 items-center active:opacity-70"
+              >
+                <Text
+                  className="text-base"
+                  style={{
+                    color: isDark ? COLORS.darkTextSecondary : COLORS.warmGray,
+                    fontFamily: "Nunito-Medium",
+                  }}
+                >
+                  {t("auth.continueAsGuest")}
                 </Text>
               </Pressable>
             </View>

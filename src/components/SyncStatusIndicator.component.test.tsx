@@ -7,7 +7,7 @@ describe('SyncStatusIndicator', () => {
     it('renders synced state with green indicator', () => {
       render(<SyncStatusIndicator status="online" testID="sync-status" />);
       const dot = screen.getByTestId('sync-status-dot');
-      expect(dot.props.className).toContain('bg-green-500');
+      expect(dot.props.className).toContain('bg-green-600');
     });
 
     it('renders syncing state with spinner animation', () => {

@@ -21,14 +21,11 @@ interface HouseholdResult<T> {
 export async function getHousehold(
   householdId: string
 ): Promise<HouseholdResult<Household>> {
-  console.log("[Household Service Debug] getHousehold called for:", householdId);
   const { data, error } = await supabase
     .from("households")
     .select("id, invite_code, created_at")
     .eq("id", householdId)
     .single();
-
-  console.log("[Household Service Debug] Raw Supabase response:", { data, error: error?.message });
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -36,8 +33,6 @@ export async function getHousehold(
     }
     return { data: null, error: "householdFetchFailed" };
   }
-
-  console.log("[Household Service Debug] invite_code from DB:", data.invite_code, "type:", typeof data.invite_code);
 
   return {
     data: {

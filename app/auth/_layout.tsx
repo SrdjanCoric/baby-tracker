@@ -16,12 +16,6 @@ export default function AuthLayout() {
           gestureDirection: "vertical",
         }}
       />
-      <Stack.Screen
-        name="sign-up"
-        options={{
-          gestureEnabled: true,
-        }}
-      />
     </Stack>
   );
 }
