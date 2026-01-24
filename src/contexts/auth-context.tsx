@@ -1,9 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as WebBrowser from "expo-web-browser";
-import * as Crypto from "expo-crypto";
 
 // Required for web browser auth session to work properly
 WebBrowser.maybeCompleteAuthSession();
@@ -111,7 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
-  const oauthStateRef = useRef<string | null>(null);
 
   // Check Apple Sign-in availability on iOS
   useEffect(() => {
@@ -237,24 +235,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("[Auth Debug] Google - starting OAuth flow");
       console.log("[Auth Debug] Google - redirect URI:", AUTH_CONFIG.OAUTH_REDIRECT_URI);
 
-      const stateBytes = await Crypto.getRandomBytesAsync(32);
-      const state = Array.from(stateBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-      oauthStateRef.current = state;
-
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: AUTH_CONFIG.OAUTH_REDIRECT_URI,
           skipBrowserRedirect: true,
-          queryParams: {
-            state,
-          },
         },
       });
 
       if (error) {
         console.error("[Auth Debug] Google - Supabase OAuth error:", error.message, error);
-        oauthStateRef.current = null;
         return { error: new Error(error.message) };
       }
 
@@ -273,21 +263,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (result.type === "success" && result.url) {
-          const url = new URL(result.url);
-          const returnedState = url.searchParams.get("state") || url.hash?.match(/state=([^&]+)/)?.[1];
+          // Extract tokens from the redirect URL
+          let accessToken: string | null = null;
+          let refreshToken: string | null = null;
 
-          console.log("[Auth Debug] Google - state validation:", { expected: oauthStateRef.current?.substring(0, 10), received: returnedState?.substring(0, 10) });
-
-          if (returnedState !== oauthStateRef.current) {
-            oauthStateRef.current = null;
-            console.error("[Auth Debug] Google - state mismatch!");
-            return { error: new Error("OAuth state validation failed") };
+          // Check hash fragment (Supabase typically uses this)
+          const hashIndex = result.url.indexOf('#');
+          if (hashIndex !== -1) {
+            const hashParams = new URLSearchParams(result.url.substring(hashIndex + 1));
+            accessToken = hashParams.get('access_token');
+            refreshToken = hashParams.get('refresh_token');
           }
 
-          oauthStateRef.current = null;
-
-          const accessToken = url.searchParams.get("access_token") || url.hash?.match(/access_token=([^&]+)/)?.[1];
-          const refreshToken = url.searchParams.get("refresh_token") || url.hash?.match(/refresh_token=([^&]+)/)?.[1];
+          // Fallback to query params
+          if (!accessToken) {
+            const url = new URL(result.url);
+            accessToken = url.searchParams.get("access_token");
+            refreshToken = url.searchParams.get("refresh_token");
+          }
 
           console.log("[Auth Debug] Google - tokens found:", { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
 
@@ -298,23 +291,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
             console.log("[Auth Debug] Google - session set successfully");
           } else {
+            // PKCE flow - Supabase handles token exchange internally
             await supabase.auth.getSession();
-            console.log("[Auth Debug] Google - called getSession (no tokens in URL)");
+            console.log("[Auth Debug] Google - called getSession (PKCE flow)");
           }
         } else if (result.type === "dismiss" || result.type === "cancel") {
           console.log("[Auth Debug] Google - user dismissed/cancelled");
-          oauthStateRef.current = null;
           return { error: null };
         } else {
           console.log("[Auth Debug] Google - unexpected result type:", result.type);
-          oauthStateRef.current = null;
         }
       }
 
       return { error: null };
     } catch (err) {
       console.error("[Auth Debug] Google - catch error:", err);
-      oauthStateRef.current = null;
       return { error: err instanceof Error ? err : new Error("Google sign-in failed") };
     }
   }, []);
