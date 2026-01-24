@@ -12,7 +12,7 @@ import {
   TodaySummary,
 } from "@/components";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useDashboardConfig } from "@/contexts";
-import { timeSince, formatDate, hoursSince } from "@/utils/time";
+import { timeSince, formatDate, hoursSince, formatDuration } from "@/utils/time";
 import { ActivityType } from "@/constants/activities";
 import { DashboardCardConfig } from "@/services/dashboard-config-storage";
 
@@ -83,26 +83,62 @@ export default function HomeScreen() {
     if (!lastFeeding) {
       return "--";
     }
-    return t("dashboard.last", { time: timeSince(new Date(lastFeeding.startedAt)) });
-  }, [feedingActiveTimer, getLastFeeding, t]);
 
-  const lastBreastFeeding = useMemo(() => {
-    const sortedFeedings = [...feedings].sort((a, b) =>
-      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-    );
-    return sortedFeedings.find(f => f.type === "breast") ?? null;
-  }, [feedings]);
+    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastFeeding.startedAt)) });
+    const typeIcon = lastFeeding.type === "breast" ? "🤱" : lastFeeding.type === "bottle" ? "🍼" : "🥣";
+
+    return `${typeIcon} ${timeAgo}`;
+  }, [feedingActiveTimer, getLastFeeding, t]);
 
   const feedingSubtitle = useMemo(() => {
     if (feedingActiveTimer?.isRunning) return undefined;
-    if (!lastBreastFeeding) return undefined;
 
-    // Only show suggested side if last breastfeeding was within 24 hours
-    if (hoursSince(new Date(lastBreastFeeding.startedAt)) > 24) return undefined;
+    const lastFeeding = getLastFeeding();
+    if (!lastFeeding) return undefined;
 
-    const side = suggestedSide === "left" ? t("feeding.left") : t("feeding.right");
-    return t("dashboard.nextSide", { side });
-  }, [feedingActiveTimer?.isRunning, lastBreastFeeding, suggestedSide, t]);
+    const parts: string[] = [];
+
+    // Add duration/quantity as first part
+    const L = t("feeding.leftShort");
+    const R = t("feeding.rightShort");
+
+    if (lastFeeding.type === "breast") {
+      // Show L/R breakdown if both sides were used
+      if (lastFeeding.leftDurationSeconds && lastFeeding.rightDurationSeconds) {
+        const leftTime = formatDuration(lastFeeding.leftDurationSeconds, "short");
+        const rightTime = formatDuration(lastFeeding.rightDurationSeconds, "short");
+        parts.push(`${L} ${leftTime} ${R} ${rightTime}`);
+      } else if (lastFeeding.leftDurationSeconds) {
+        parts.push(`${L} ${formatDuration(lastFeeding.leftDurationSeconds, "short")}`);
+      } else if (lastFeeding.rightDurationSeconds) {
+        parts.push(`${R} ${formatDuration(lastFeeding.rightDurationSeconds, "short")}`);
+      } else if (lastFeeding.durationSeconds) {
+        parts.push(formatDuration(lastFeeding.durationSeconds, "short"));
+      }
+    } else if (lastFeeding.type === "bottle" && lastFeeding.amountMl) {
+      parts.push(`${lastFeeding.amountMl}ml`);
+    }
+
+    // Add contextual info based on type
+    if (lastFeeding.type === "breast") {
+      if (hoursSince(new Date(lastFeeding.startedAt)) <= 24) {
+        const nextSide = suggestedSide === "left" ? L : R;
+        parts.push(`${t("feeding.nextBreast")}: ${nextSide}`);
+      }
+    } else if (lastFeeding.type === "bottle" && lastFeeding.contentType) {
+      parts.push(t(`feeding.${lastFeeding.contentType}`));
+    } else if (lastFeeding.type === "solid") {
+      if (lastFeeding.foodType) {
+        parts.push(lastFeeding.foodType);
+      }
+      if (lastFeeding.reaction) {
+        const reactionEmoji = lastFeeding.reaction === "loved" ? "😋" : lastFeeding.reaction === "meh" ? "😐" : "😣";
+        parts.push(reactionEmoji);
+      }
+    }
+
+    return parts.length > 0 ? parts.join(" · ") : undefined;
+  }, [feedingActiveTimer?.isRunning, getLastFeeding, suggestedSide, t]);
 
 
   const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
@@ -117,14 +153,16 @@ export default function HomeScreen() {
     const totalHours = Math.floor(totalMinutes / 60);
     const remainingMins = totalMinutes % 60;
 
+    let progress: string;
     if (totalMinutes === 0) {
-      return t("dashboard.goalProgress", { current: 0, goal: goalHours });
+      progress = t("dashboard.goalProgress", { current: 0, goal: goalHours });
+    } else if (remainingMins > 0) {
+      progress = t("dashboard.goalProgressWithMinutes", { hours: totalHours, minutes: remainingMins, goal: goalHours });
+    } else {
+      progress = t("dashboard.goalProgress", { current: totalHours, goal: goalHours });
     }
 
-    if (remainingMins > 0) {
-      return t("dashboard.goalProgressWithMinutes", { hours: totalHours, minutes: remainingMins, goal: goalHours });
-    }
-    return t("dashboard.goalProgress", { current: totalHours, goal: goalHours });
+    return progress;
   }, [sleepActiveTimer, getTodaysTotalSleepMinutes, dailyGoalMinutes, t]);
 
   const sleepSecondaryInfo = useMemo(() => {
@@ -141,28 +179,40 @@ export default function HomeScreen() {
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
   const diaperTimeSince = useMemo(() => {
-    // Show today's wet count (hydration tracking - target 6+ per day)
     const counts = getTodaysCounts();
     if (counts.total === 0) return "--";
-    return t("dashboard.wetToday", { count: counts.wet });
+
+    // Show both wet and dirty counts
+    const parts: string[] = [];
+    if (counts.wet > 0) {
+      parts.push(`${counts.wet} ${t("diaper.wet").toLowerCase()}`);
+    }
+    if (counts.dirty > 0) {
+      parts.push(`${counts.dirty} ${t("diaper.dirty").toLowerCase()}`);
+    }
+
+    return parts.join(" · ");
   }, [getTodaysCounts, t]);
 
   const diaperSubtitle = useMemo(() => {
-    // Show time since last dirty diaper (what pediatricians ask about)
     if (diapers.length === 0) return undefined;
 
-    // Find the last dirty or mixed diaper
+    // Find the last diaper
     const sortedDiapers = [...diapers].sort((a, b) =>
       new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
     );
 
-    const lastDirty = sortedDiapers.find(d => d.type === "dirty" || d.type === "mixed");
-    if (!lastDirty) return undefined;
+    const lastDiaper = sortedDiapers[0];
+    if (!lastDiaper) return undefined;
 
-    const colorInfo = lastDirty.stoolColor
-      ? ` (${t(`stoolColors.${lastDirty.stoolColor}`)})`
-      : "";
-    return t("dashboard.lastDirty", { time: timeSince(new Date(lastDirty.changedAt)) }) + colorInfo;
+    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastDiaper.changedAt)) });
+
+    // Add stool color info for dirty/mixed diapers
+    if ((lastDiaper.type === "dirty" || lastDiaper.type === "mixed") && lastDiaper.stoolColor) {
+      return `${timeAgo} (${t(`stoolColors.${lastDiaper.stoolColor}`)})`;
+    }
+
+    return timeAgo;
   }, [diapers, t]);
 
   const todayDiaperCounts = useMemo(() => {
@@ -177,7 +227,7 @@ export default function HomeScreen() {
     // Show daily total as primary (most important for supply tracking)
     const todayVolume = getTodaysTotalVolume();
     if (todayVolume > 0) {
-      return t("dashboard.todayVolume", { volume: todayVolume });
+      return `${todayVolume}ml ${t("common.today").toLowerCase()}`;
     }
     return "--";
   }, [pumpingActiveTimer, getTodaysTotalVolume, t]);
@@ -190,13 +240,14 @@ export default function HomeScreen() {
 
     if (!lastPumping) return undefined;
 
-    const parts: string[] = [];
-    parts.push(timeSince(new Date(lastPumping.startedAt)));
+    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastPumping.startedAt)) });
+    const parts: string[] = [timeAgo];
+
     if (lastSide) {
       parts.push(lastSide === "left" ? t("feeding.left") : lastSide === "right" ? t("feeding.right") : t("feeding.both"));
     }
 
-    return parts.join(" • ");
+    return parts.join(" · ");
   }, [pumpingActiveTimer, getLastPumping, getLastSide, t]);
 
   const isPumpingActive = pumpingActiveTimer?.isRunning ?? false;
@@ -208,14 +259,14 @@ export default function HomeScreen() {
     const parts: string[] = [];
     if (lastMeasurement.weightKg !== undefined) {
       const weight = Number(lastMeasurement.weightKg);
-      parts.push(`${weight.toFixed(1)} kg`);
+      parts.push(`${weight.toFixed(1)}kg`);
     }
     if (lastMeasurement.heightCm !== undefined) {
       const height = Number(lastMeasurement.heightCm);
-      parts.push(`${height.toFixed(1)} cm`);
+      parts.push(`${height.toFixed(1)}cm`);
     }
 
-    return parts.length > 0 ? parts.join(" | ") : formatDate(new Date(lastMeasurement.measuredAt));
+    return parts.length > 0 ? parts.join(" · ") : formatDate(new Date(lastMeasurement.measuredAt));
   }, [getLastMeasurement]);
 
   const growthSubtitle = useMemo(() => {
