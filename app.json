@@ -39,7 +39,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F5A472"
       },
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
       "package": "com.sofibaby.app",
       "intentFilters": [
         {

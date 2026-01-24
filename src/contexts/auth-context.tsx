@@ -125,7 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       GoogleSignin.configure({
         iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
         webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-        offlineAccess: true,
       });
     } catch (error) {
       console.error("Failed to configure Google Sign-In:", error);
@@ -237,27 +236,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = useCallback(async (): Promise<{ error: Error | null }> => {
     try {
+      console.log("[GoogleSignIn] Starting sign in...");
       await GoogleSignin.hasPlayServices();
+      console.log("[GoogleSignIn] Play services available");
 
       const userInfo = await GoogleSignin.signIn();
+      console.log("[GoogleSignIn] User info received:", JSON.stringify(userInfo, null, 2));
 
       const idToken = userInfo.data?.idToken;
       if (!idToken) {
+        console.log("[GoogleSignIn] No ID token in response");
         return { error: new Error("Google Sign-In: No ID token received") };
       }
 
+      console.log("[GoogleSignIn] ID token received, calling Supabase...");
       const { error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: idToken,
       });
 
       if (error) {
+        console.log("[GoogleSignIn] Supabase error:", error.message);
         return { error: new Error(`Google Sign-In failed: ${error.message}`) };
       }
 
+      console.log("[GoogleSignIn] Success!");
       return { error: null };
     } catch (err) {
+      console.log("[GoogleSignIn] Caught error:", err);
       if (isErrorWithCode(err)) {
+        console.log("[GoogleSignIn] Error code:", err.code);
         if (err.code === statusCodes.SIGN_IN_CANCELLED) {
           return { error: null };
         } else if (err.code === statusCodes.IN_PROGRESS) {
