@@ -183,13 +183,7 @@ export default function SettingsScreen() {
         <SettingsSection title={t("household.title")}>
           <SettingsRow
             icon="👨‍👩‍👧"
-            label={t("household.caregivers")}
-            onPress={() => router.push("/settings/household")}
-          />
-          <SettingsDivider />
-          <SettingsRow
-            icon="🔗"
-            label={t("household.inviteCode")}
+            label={t("household.familySharing")}
             onPress={() => router.push("/settings/household")}
           />
         </SettingsSection>

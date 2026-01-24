@@ -345,6 +345,12 @@
     "deleteBabyProfile": "Delete Baby Profile",
     "deleteBabyConfirm": "Are you sure you want to delete {{name}}'s profile? This action cannot be undone.",
     "addPhoto": "Add Photo",
+    "changePhoto": "Change Photo",
+    "changePhotoMessage": "What would you like to do with the photo?",
+    "chooseNewPhoto": "Choose New Photo",
+    "removePhoto": "Remove Photo",
+    "tapToChange": "Tap to change",
+    "photoPermissionDenied": "Please allow access to your photos to add a baby photo",
     "babyName": "Baby's Name",
     "babyNamePlaceholder": "Enter your baby's name",
     "birthDateOptional": "Birth Date (Optional)",
@@ -503,6 +509,7 @@
   },
   "household": {
     "title": "Household",
+    "familySharing": "Family & Sharing",
     "inviteCode": "Invite Code",
     "inviteCodeDescription": "Share this code with other caregivers to let them join your household",
     "shareInviteCode": "Share Code",
@@ -658,7 +665,10 @@
     "features": {
       "title": "Track Everything",
       "subtitle": "Feeding, sleep, diapers, growth, and more - all in one place",
-      "interactiveSubtitle": "Tap each activity to learn more"
+      "interactiveSubtitle": "Tap each activity to learn more",
+      "customizeTitle": "Customize Your Dashboard",
+      "customizeSubtitle": "Choose which activities to show on your dashboard",
+      "customizeHint": "You can change this anytime in Settings"
     },
     "activityDesc": {
       "feeding": "Track breastfeeding, bottle feeds, and solid foods with timers and amounts",
