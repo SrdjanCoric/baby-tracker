@@ -51,7 +51,7 @@
     "sleep": "Spavanje"
   },
   "dashboard": {
-    "last": "{{time}}",
+    "last": "pre {{time}}",
     "nextSide": "Sledeće: {{side}}",
     "awake": "Budna: {{time}}",
     "wetToday": "{{count}} mokrih danas",
@@ -475,7 +475,14 @@
     "vsLastWeek": "u odnosu na prošlu nedelju",
     "comparedToLastWeek": "u poređenju sa prošlom nedeljom",
     "weeklyTrends": "Nedeljni trendovi",
-    "weeklyInsights": "Nedeljni uvidi"
+    "weeklyInsights": "Nedeljni uvidi",
+    "dailyAverages": "Dnevni proseci",
+    "sleepPerDay": "{{hours}}h/dan",
+    "feedingsPerDay": "{{count}}/dan",
+    "wetDiapersPerDay": "{{count}} mokrih/dan",
+    "shareReport": "Podeli izveštaj",
+    "shareReportDescription": "Generiši PDF izveštaj za pedijatra",
+    "timeAgo": "pre {{time}}"
   },
   "insights": {
     "sleepIncrease": "Spavanje je poraslo {{percentage}}%",
@@ -487,7 +494,21 @@
     "pumpingIncrease": "Izmlazavanje je poraslo {{percentage}}%",
     "pumpingDecrease": "Izmlazavanje je opalo {{percentage}}%",
     "tummyTimeIncrease": "Vreme na stomaku je poraslo {{percentage}}%",
-    "tummyTimeDecrease": "Vreme na stomaku je opalo {{percentage}}%"
+    "tummyTimeDecrease": "Vreme na stomaku je opalo {{percentage}}%",
+    "summary": {
+      "great": "Odlična nedelja!",
+      "greatDescription": "{{activity}} bebe se lepo poboljšava",
+      "improving": "Izgleda dobro!",
+      "improvingDescription": "Beba spava konzistentnije nego prošle nedelje",
+      "stable": "Sve je u redu",
+      "stableDescription": "Hranjenje, spavanje i pelene izgledaju normalno za vašu bebu",
+      "attention": "Vredi primetiti",
+      "attentionDescription": "{{activity}} su smanjeni ove nedelje - pratite situaciju",
+      "feedingChange": "Promena u ishrani",
+      "feedingChangeDescription": "Beba se hrani {{direction}} često nego prošle nedelje",
+      "noData": "Još nema podataka",
+      "noDataDescription": "Počnite sa praćenjem da vidite nedeljne uvide"
+    }
   },
   "timeline": {
     "title": "Vremenska linija",

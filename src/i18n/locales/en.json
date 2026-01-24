@@ -45,7 +45,7 @@
     "sleep": "Sleep"
   },
   "dashboard": {
-    "last": "{{time}}",
+    "last": "{{time}} ago",
     "nextSide": "Next: {{side}} side",
     "awake": "Awake: {{time}}",
     "wetToday": "{{count}} wet today",
@@ -455,7 +455,14 @@
     "vsLastWeek": "vs last week",
     "comparedToLastWeek": "compared to last week",
     "weeklyTrends": "Weekly Trends",
-    "weeklyInsights": "Weekly Insights"
+    "weeklyInsights": "Weekly Insights",
+    "dailyAverages": "Daily Averages",
+    "sleepPerDay": "{{hours}}h/day",
+    "feedingsPerDay": "{{count}}/day",
+    "wetDiapersPerDay": "{{count}} wet/day",
+    "shareReport": "Share Report",
+    "shareReportDescription": "Generate a PDF for your pediatrician",
+    "timeAgo": "{{time}} ago"
   },
   "insights": {
     "sleepIncrease": "Sleep is up {{percentage}}%",
@@ -467,7 +474,21 @@
     "pumpingIncrease": "Pumping is up {{percentage}}%",
     "pumpingDecrease": "Pumping is down {{percentage}}%",
     "tummyTimeIncrease": "Tummy time is up {{percentage}}%",
-    "tummyTimeDecrease": "Tummy time is down {{percentage}}%"
+    "tummyTimeDecrease": "Tummy time is down {{percentage}}%",
+    "summary": {
+      "great": "Great week!",
+      "greatDescription": "Baby's {{activity}} is improving nicely",
+      "improving": "Looking good!",
+      "improvingDescription": "Baby is sleeping more consistently than last week",
+      "stable": "All on track",
+      "stableDescription": "Feeding, sleep, and diapers look normal for your baby",
+      "attention": "Worth noting",
+      "attentionDescription": "{{activity}} are down this week - keep an eye on it",
+      "feedingChange": "Feeding patterns shifted",
+      "feedingChangeDescription": "Baby is feeding {{direction}} often than last week",
+      "noData": "No data yet",
+      "noDataDescription": "Start tracking to see your weekly insights"
+    }
   },
   "timeline": {
     "title": "Timeline",

@@ -12,7 +12,7 @@ import {
   TodaySummary,
 } from "@/components";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useDashboardConfig } from "@/contexts";
-import { timeSince, formatDate, hoursSince } from "@/utils/time";
+import { timeSince, formatDate, hoursSince, formatDuration } from "@/utils/time";
 import { ActivityType } from "@/constants/activities";
 import { DashboardCardConfig } from "@/services/dashboard-config-storage";
 
@@ -83,26 +83,54 @@ export default function HomeScreen() {
     if (!lastFeeding) {
       return "--";
     }
-    return t("dashboard.last", { time: timeSince(new Date(lastFeeding.startedAt)) });
-  }, [feedingActiveTimer, getLastFeeding, t]);
 
-  const lastBreastFeeding = useMemo(() => {
-    const sortedFeedings = [...feedings].sort((a, b) =>
-      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-    );
-    return sortedFeedings.find(f => f.type === "breast") ?? null;
-  }, [feedings]);
+    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastFeeding.startedAt)) });
+    const typeIcon = lastFeeding.type === "breast" ? "🤱" : lastFeeding.type === "bottle" ? "🍼" : "🥣";
+
+    // Add quantity info based on type
+    let quantityInfo = "";
+    if (lastFeeding.type === "breast" && lastFeeding.durationSeconds) {
+      quantityInfo = ` · ${formatDuration(lastFeeding.durationSeconds, "short")}`;
+    } else if (lastFeeding.type === "bottle" && lastFeeding.amountMl) {
+      quantityInfo = ` · ${lastFeeding.amountMl}ml`;
+    }
+
+    return `${typeIcon} ${timeAgo}${quantityInfo}`;
+  }, [feedingActiveTimer, getLastFeeding, t]);
 
   const feedingSubtitle = useMemo(() => {
     if (feedingActiveTimer?.isRunning) return undefined;
-    if (!lastBreastFeeding) return undefined;
 
-    // Only show suggested side if last breastfeeding was within 24 hours
-    if (hoursSince(new Date(lastBreastFeeding.startedAt)) > 24) return undefined;
+    const lastFeeding = getLastFeeding();
+    if (!lastFeeding) return undefined;
 
-    const side = suggestedSide === "left" ? t("feeding.left") : t("feeding.right");
-    return t("dashboard.nextSide", { side });
-  }, [feedingActiveTimer?.isRunning, lastBreastFeeding, suggestedSide, t]);
+    // For breast feeding: show next side suggestion
+    if (lastFeeding.type === "breast") {
+      if (hoursSince(new Date(lastFeeding.startedAt)) > 24) return undefined;
+      const side = suggestedSide === "left" ? t("feeding.left") : t("feeding.right");
+      return t("dashboard.nextSide", { side });
+    }
+
+    // For bottle: show content type
+    if (lastFeeding.type === "bottle" && lastFeeding.contentType) {
+      return t(`feeding.${lastFeeding.contentType}`);
+    }
+
+    // For solids: show food name and reaction
+    if (lastFeeding.type === "solid") {
+      const parts: string[] = [];
+      if (lastFeeding.foodType) {
+        parts.push(lastFeeding.foodType);
+      }
+      if (lastFeeding.reaction) {
+        const reactionEmoji = lastFeeding.reaction === "loved" ? "😋" : lastFeeding.reaction === "meh" ? "😐" : "😣";
+        parts.push(reactionEmoji);
+      }
+      return parts.length > 0 ? parts.join(" ") : undefined;
+    }
+
+    return undefined;
+  }, [feedingActiveTimer?.isRunning, getLastFeeding, suggestedSide, t]);
 
 
   const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
