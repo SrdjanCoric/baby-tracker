@@ -205,7 +205,8 @@ function AppContent() {
 
   return (
     <View className="flex-1">
-      <OfflineBannerWrapper />
+      {/* Temporarily disabled for testing */}
+      {/* <OfflineBannerWrapper /> */}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
