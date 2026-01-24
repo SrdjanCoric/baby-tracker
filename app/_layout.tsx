@@ -35,7 +35,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       const inAuthGroup = currentSegment === "auth";
       const inOnboardingGroup = currentSegment === "onboarding";
 
-      if (!hasCompletedOnboarding && !inOnboardingGroup) {
+      if (!hasCompletedOnboarding && !inOnboardingGroup && !inAuthGroup) {
+        // Allow auth screens during onboarding (user can sign in/up from onboarding)
         router.replace("/onboarding");
       } else if (hasCompletedOnboarding && inOnboardingGroup) {
         router.replace("/(tabs)");
@@ -172,6 +173,7 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
 
 function OfflineBannerWrapper() {
   const { status, pendingCount } = useSync();
+  const { isAuthenticated } = useAuth();
   const [isDismissed, setIsDismissed] = useState(false);
   const [prevStatus, setPrevStatus] = useState(status);
   const isOffline = status === "offline";
@@ -184,7 +186,8 @@ function OfflineBannerWrapper() {
     }
   }
 
-  if (!isOffline || isDismissed) {
+  // Don't show offline banner if user is not logged in
+  if (!isAuthenticated || !isOffline || isDismissed) {
     return null;
   }
 

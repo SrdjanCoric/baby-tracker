@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   SlideInUp,
   SlideOutUp,
@@ -15,6 +16,7 @@ export function OfflineBanner({
   onDismiss,
   testID,
 }: OfflineBannerProps) {
+  const insets = useSafeAreaInsets();
   const changeText =
     pendingCount === 1
       ? '1 change pending'
@@ -27,7 +29,8 @@ export function OfflineBanner({
       testID={testID}
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
-      className="bg-orange-500 px-4 py-3 flex-row items-center justify-between"
+      className="bg-orange-500 px-4 pb-3 flex-row items-center justify-between"
+      style={{ paddingTop: insets.top + 12 }}
     >
       <View className="flex-1">
         <Text className="text-white font-semibold text-base">
