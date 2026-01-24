@@ -121,11 +121,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Configure Google Sign-In
   useEffect(() => {
-    GoogleSignin.configure({
-      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-      offlineAccess: true,
-    });
+    try {
+      GoogleSignin.configure({
+        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+        offlineAccess: true,
+      });
+    } catch (error) {
+      console.error("Failed to configure Google Sign-In:", error);
+    }
   }, []);
 
   useEffect(() => {
