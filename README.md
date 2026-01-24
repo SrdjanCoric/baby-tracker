@@ -33,6 +33,53 @@ npm install
 npx expo start
 ```
 
+## iOS Development Setup
+
+This app uses native modules that require building with Xcode. Before running on iOS:
+
+### 1. Install CocoaPods (if not installed)
+
+```bash
+gem install cocoapods
+```
+
+### 2. Fix PATH for rbenv users
+
+If you use rbenv and get `pod: command not found` errors after installing CocoaPods:
+
+```bash
+# Add rbenv Ruby bin to PATH (add to ~/.zshrc for persistence)
+export PATH="$HOME/.rbenv/versions/$(rbenv version-name)/bin:$PATH"
+
+# Or use rbenv rehash
+rbenv rehash
+```
+
+### 3. Build and run
+
+```bash
+# Prebuild native code and run
+npx expo prebuild --platform ios --clean
+npx expo run:ios
+
+# Or in one command
+npx expo prebuild --platform ios --clean && npx expo run:ios
+```
+
+If `pod install` fails, run it manually:
+
+```bash
+cd ios && pod install && cd ..
+npx expo run:ios
+```
+
+## Android Development Setup
+
+```bash
+# Prebuild and run on Android
+npx expo prebuild --platform android --clean && npx expo run:android
+```
+
 ## Running the App
 
 ```bash
