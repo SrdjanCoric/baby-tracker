@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { OnboardingPagination } from "./OnboardingPagination";
 import { OnboardingIllustration, type IllustrationType } from "./OnboardingIllustration";
 
-const PRIMARY_COLOR = "#7C3AED";
+const PRIMARY_COLOR = "#6B9E6E";
 
 interface OnboardingScreenProps {
   title: string;

@@ -14,7 +14,7 @@ import { OnboardingPagination, OnboardingIllustration } from "@/components/onboa
 import { validateBabyName, validateBirthDate } from "@/validators/baby";
 import { sanitizeName } from "@/utils/sanitize";
 
-const PRIMARY_COLOR = "#7C3AED";
+const PRIMARY_COLOR = "#6B9E6E";
 
 type Gender = "male" | "female";
 
@@ -225,7 +225,7 @@ export default function BabySetupScreen() {
                   onPress={() => setGender("male")}
                   className={`flex-1 py-3 rounded-lg items-center border ${
                     gender === "male"
-                      ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                      ? "border-green-600 bg-green-50 dark:bg-green-900/20"
                       : isDark
                       ? "border-gray-700 bg-gray-800"
                       : "border-gray-300 bg-gray-50"
@@ -235,7 +235,7 @@ export default function BabySetupScreen() {
                   <Text
                     className={
                       gender === "male"
-                        ? "text-purple-700 dark:text-purple-300 font-medium"
+                        ? "text-green-700 dark:text-green-300 font-medium"
                         : "text-content-secondary dark:text-content-dark-secondary"
                     }
                   >
@@ -246,7 +246,7 @@ export default function BabySetupScreen() {
                   onPress={() => setGender("female")}
                   className={`flex-1 py-3 rounded-lg items-center border ${
                     gender === "female"
-                      ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                      ? "border-green-600 bg-green-50 dark:bg-green-900/20"
                       : isDark
                       ? "border-gray-700 bg-gray-800"
                       : "border-gray-300 bg-gray-50"
@@ -256,7 +256,7 @@ export default function BabySetupScreen() {
                   <Text
                     className={
                       gender === "female"
-                        ? "text-purple-700 dark:text-purple-300 font-medium"
+                        ? "text-green-700 dark:text-green-300 font-medium"
                         : "text-content-secondary dark:text-content-dark-secondary"
                     }
                   >

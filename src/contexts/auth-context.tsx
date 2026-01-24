@@ -211,21 +211,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithMagicLink = useCallback(async (email: string) => {
-    console.log("[Auth Debug] Magic Link - sending to:", email);
-    console.log("[Auth Debug] Magic Link - redirect URI:", AUTH_CONFIG.OAUTH_REDIRECT_URI);
-
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: AUTH_CONFIG.OAUTH_REDIRECT_URI,
       },
     });
-
-    if (error) {
-      console.error("[Auth Debug] Magic Link error:", error.message, error);
-    } else {
-      console.log("[Auth Debug] Magic Link sent successfully");
-    }
 
     return { error };
   }, []);
@@ -312,8 +303,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithApple = useCallback(async (): Promise<{ error: Error | null }> => {
     try {
-      console.log("[Auth Debug] Apple - starting sign-in");
-
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -321,30 +310,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ],
       });
 
-      console.log("[Auth Debug] Apple - credential received:", {
-        hasIdentityToken: !!credential.identityToken,
-        hasAuthCode: !!credential.authorizationCode,
-        email: credential.email,
-        user: credential.user?.substring(0, 20),
-      });
-
       if (!credential.identityToken) {
-        console.error("[Auth Debug] Apple - no identity token");
         return { error: new Error("Apple Sign-In: No identity token received") };
       }
 
-      console.log("[Auth Debug] Apple - calling Supabase signInWithIdToken");
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: credential.identityToken,
       });
 
       if (error) {
-        console.error("[Auth Debug] Apple - Supabase error:", error.message, error);
         return { error: new Error(`Apple Sign-In failed: ${error.message}`) };
       }
-
-      console.log("[Auth Debug] Apple - success, user:", data?.user?.id);
 
       if (data?.user && credential.fullName?.givenName) {
         const displayName = [credential.fullName.givenName, credential.fullName.familyName]
