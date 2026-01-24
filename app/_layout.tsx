@@ -107,44 +107,64 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
 
       if (url.includes("login-callback") || url.includes("auth/callback")) {
         try {
-          // Extract tokens from URL hash fragment
+          // Parse all params from both hash and query string
           const hashIndex = url.indexOf('#');
+          const queryIndex = url.indexOf('?');
+
+          let params = new URLSearchParams();
+
           if (hashIndex !== -1) {
             const hashParams = url.substring(hashIndex + 1);
-            const params = new URLSearchParams(hashParams);
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
-
-            console.log("[DeepLink] Tokens found:", { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
-
-            if (accessToken && refreshToken) {
-              const { error } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
-              if (error) {
-                console.error("[DeepLink] setSession error:", error);
-              } else {
-                console.log("[DeepLink] Session set successfully");
-              }
-              return;
-            }
+            params = new URLSearchParams(hashParams);
           }
 
-          // Also check query params (some flows use ? instead of #)
-          const queryIndex = url.indexOf('?');
           if (queryIndex !== -1) {
-            const queryParams = new URLSearchParams(url.substring(queryIndex + 1));
-            const accessToken = queryParams.get('access_token');
-            const refreshToken = queryParams.get('refresh_token');
+            const endIndex = hashIndex !== -1 ? hashIndex : url.length;
+            const queryParams = new URLSearchParams(url.substring(queryIndex + 1, endIndex));
+            queryParams.forEach((value, key) => {
+              if (!params.has(key)) params.set(key, value);
+            });
+          }
 
-            if (accessToken && refreshToken) {
-              await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
-              return;
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          const tokenHash = params.get('token_hash');
+          const type = params.get('type');
+
+          console.log("[DeepLink] Params found:", {
+            hasAccess: !!accessToken,
+            hasRefresh: !!refreshToken,
+            hasTokenHash: !!tokenHash,
+            type
+          });
+
+          // Handle direct session tokens
+          if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (error) {
+              console.error("[DeepLink] setSession error:", error);
+            } else {
+              console.log("[DeepLink] Session set successfully");
             }
+            return;
+          }
+
+          // Handle magic link token_hash verification
+          if (tokenHash && type) {
+            console.log("[DeepLink] Verifying OTP with token_hash");
+            const { error } = await supabase.auth.verifyOtp({
+              token_hash: tokenHash,
+              type: type as 'email' | 'magiclink',
+            });
+            if (error) {
+              console.error("[DeepLink] verifyOtp error:", error);
+            } else {
+              console.log("[DeepLink] OTP verified successfully");
+            }
+            return;
           }
 
           // Fallback: try getSession
