@@ -243,6 +243,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data?.url) {
         console.log("[Auth Debug] Google - opening browser session");
+        // Dismiss any existing browser sessions to avoid stale state issues
+        await WebBrowser.dismissBrowser();
+
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
           AUTH_CONFIG.OAUTH_REDIRECT_URI
@@ -346,7 +349,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (errorCode === "ERR_REQUEST_CANCELED") {
         return { error: null };
       }
-      console.error("Apple Sign-In error:", err);
       const message = err instanceof Error ? err.message : "Apple sign-in failed";
       return { error: new Error(`Apple Sign-In: ${message}`) };
     }
