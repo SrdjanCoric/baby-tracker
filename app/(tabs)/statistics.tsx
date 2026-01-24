@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useMemo, useCallback } from "react";
 import { useColorScheme } from "nativewind";
-import { getActionColor } from "@/constants/design-tokens";
-import { useFeeding, useSleep, useDiaper, usePumping, useTummyTime } from "@/contexts";
-import { SimpleBarChart, TrendIndicator, InsightCard, EmptyState, LoadingState } from "@/components";
+import { getActionColor, ACTION_COLORS } from "@/constants/design-tokens";
+import { useFeeding, useSleep, useDiaper, usePumping, useTummyTime, useBaby } from "@/contexts";
+import { SimpleBarChart, TrendIndicator, EmptyState, LoadingState } from "@/components";
 import { ACTIVITY_CONFIG } from "@/constants/activities";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, timeSince } from "@/utils/time";
 import {
   getDateRangeForPeriod,
   filterEntriesByDateRange,
@@ -17,15 +17,15 @@ import {
   calculatePumpingStats,
   calculateTummyTimeStats,
   calculateWeeklyBreakdown,
-  type StatisticsPeriod,
+  calculateDailyAverages,
 } from "@/utils/statistics";
 import { calculateWeekOverWeekTrend, type TrendResult } from "@/utils/trends";
 import {
-  generateInsights,
-  prioritizeInsights,
+  generateWeeklySummary,
   type TrendData,
-  type Insight,
 } from "@/utils/insights";
+import { PDFService } from "@/services/pdf-service";
+import { REPORT_SECTIONS } from "@/types/report";
 
 interface StatCardProps {
   icon: string;
@@ -89,14 +89,15 @@ function StatCard({
 
 export default function StatisticsScreen() {
   const { t } = useTranslation();
-  const [period, setPeriod] = useState<StatisticsPeriod>("daily");
 
-  const { feedings, isLoading: feedingsLoading, refreshFeedings } = useFeeding();
+  const { selectedBaby } = useBaby();
+  const { feedings, isLoading: feedingsLoading, refreshFeedings, getLastFeeding } = useFeeding();
   const { sleeps, isLoading: sleepsLoading, refreshSleeps } = useSleep();
   const { diapers, isLoading: diapersLoading, refreshDiapers } = useDiaper();
   const { pumpings, isLoading: pumpingsLoading, refreshPumpings } = usePumping();
-  const { tummyTimes, dailyGoalSeconds, getDailyProgress, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
+  const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
   const { colorScheme } = useColorScheme();
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   const isLoading = feedingsLoading || sleepsLoading || diapersLoading || pumpingsLoading || tummyTimesLoading;
   const [refreshing, setRefreshing] = useState(false);
@@ -118,7 +119,7 @@ export default function StatisticsScreen() {
 
   const stats = useMemo(() => {
     const now = new Date();
-    const dateRange = getDateRangeForPeriod(period, now);
+    const dateRange = getDateRangeForPeriod("weekly", now);
 
     const filteredFeedings = filterEntriesByDateRange(
       feedings,
@@ -153,11 +154,9 @@ export default function StatisticsScreen() {
       pumping: calculatePumpingStats(filteredPumpings),
       tummyTime: calculateTummyTimeStats(filteredTummyTimes),
     };
-  }, [period, feedings, sleeps, diapers, pumpings, tummyTimes]);
+  }, [feedings, sleeps, diapers, pumpings, tummyTimes]);
 
   const weeklyTrends = useMemo(() => {
-    if (period !== "weekly") return null;
-
     const now = new Date();
 
     const sleepTrend = calculateWeekOverWeekTrend(
@@ -194,12 +193,12 @@ export default function StatisticsScreen() {
       diaper: diaperTrend,
       tummyTime: tummyTimeTrend,
     };
-  }, [period, sleeps, feedings, diapers, tummyTimes]);
+  }, [sleeps, feedings, diapers, tummyTimes]);
 
-  const insights = useMemo((): Insight[] => {
-    if (period !== "weekly" || !weeklyTrends) return [];
+  const trendDataArray = useMemo((): TrendData[] => {
+    if (!weeklyTrends) return [];
 
-    const trendDataArray: TrendData[] = [
+    return [
       {
         type: "sleep",
         direction: weeklyTrends.sleep.direction,
@@ -233,10 +232,22 @@ export default function StatisticsScreen() {
         previousValue: weeklyTrends.tummyTime.previousValue,
       },
     ];
+  }, [weeklyTrends]);
 
-    const generatedInsights = generateInsights(trendDataArray);
-    return prioritizeInsights(generatedInsights, 3);
-  }, [period, weeklyTrends]);
+  const weeklySummary = useMemo(() => {
+    return generateWeeklySummary(trendDataArray);
+  }, [trendDataArray]);
+
+  const dailyAverages = useMemo(() => {
+    return calculateDailyAverages(
+      stats.feeding,
+      stats.sleep,
+      stats.diaper,
+      stats.pumping,
+      stats.tummyTime,
+      7
+    );
+  }, [stats]);
 
   const formatSleepDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -264,11 +275,22 @@ export default function StatisticsScreen() {
     return `${sign}${hours}h ${minutes}m`;
   };
 
-  const feedingSubvalue = stats.feeding.totalDurationSeconds > 0
-    ? formatDuration(stats.feeding.totalDurationSeconds, "short")
-    : stats.feeding.totalBottleVolumeMl > 0
-      ? `${stats.feeding.totalBottleVolumeMl} ml`
-      : undefined;
+  const feedingSubvalue = useMemo(() => {
+    const parts: string[] = [];
+
+    const lastFeeding = getLastFeeding();
+    if (lastFeeding) {
+      const timeAgo = timeSince(new Date(lastFeeding.startedAt));
+      parts.push(t("statistics.timeAgo", { time: timeAgo }));
+    }
+
+    if (stats.feeding.totalDurationSeconds > 0) {
+      parts.push(formatDuration(stats.feeding.totalDurationSeconds, "short"));
+    } else if (stats.feeding.totalBottleVolumeMl > 0) {
+      parts.push(`${stats.feeding.totalBottleVolumeMl} ml`);
+    }
+    return parts.length > 0 ? parts.join(" · ") : undefined;
+  }, [getLastFeeding, feedings, stats.feeding, t]);
 
   const sleepSubvalue = stats.sleep.napCount > 0
     ? `${stats.sleep.napCount} ${stats.sleep.napCount === 1 ? "nap" : "naps"}`
@@ -282,11 +304,7 @@ export default function StatisticsScreen() {
     ? formatDuration(stats.pumping.totalDurationSeconds, "short")
     : undefined;
 
-  const tummyTimeGoalProgress = period === "daily" ? getDailyProgress() : null;
-
   const weeklyChartData = useMemo(() => {
-    if (period !== "weekly") return null;
-
     const now = new Date();
     const feedingBreakdown = calculateWeeklyBreakdown(
       feedings,
@@ -320,9 +338,42 @@ export default function StatisticsScreen() {
     });
 
     return { feedingData, diaperData };
-  }, [period, feedings, diapers]);
+  }, [feedings, diapers]);
 
-  const showWeeklyTrends = period === "weekly" && weeklyTrends;
+  const showWeeklyTrends = !!weeklyTrends;
+
+  const handleShareReport = useCallback(async () => {
+    if (!selectedBaby) return;
+
+    setIsGeneratingReport(true);
+    try {
+      const now = new Date();
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const result = await PDFService.generateReport({
+        babyId: selectedBaby.id,
+        babyName: selectedBaby.name,
+        babyBirthDate: selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined,
+        babyGender: selectedBaby.gender as "male" | "female" | undefined,
+        startDate: sevenDaysAgo,
+        endDate: now,
+        sections: REPORT_SECTIONS,
+        includeCharts: true,
+      });
+
+      if (result.success && result.filePath && result.fileName) {
+        await PDFService.shareReport(result.filePath, result.fileName);
+      } else {
+        Alert.alert(t("errors.generic"), result.error || t("reports.generateFailed"));
+      }
+    } catch (_error) {
+      Alert.alert(t("errors.generic"), t("reports.generateFailed"));
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  }, [selectedBaby, t]);
 
   if (isLoading) {
     return (
@@ -334,41 +385,6 @@ export default function StatisticsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
-      <View className="flex-row mx-4 mt-2 mb-4 p-1 bg-surface-secondary dark:bg-surface-dark-secondary rounded-pill">
-        <Pressable
-          onPress={() => setPeriod("daily")}
-          className={`flex-1 py-2 rounded-pill ${
-            period === "daily" ? "bg-surface-card dark:bg-surface-dark-card" : ""
-          }`}
-        >
-          <Text
-            className={`text-center font-semibold ${
-              period === "daily"
-                ? "text-content-primary dark:text-content-dark-primary"
-                : "text-content-secondary dark:text-content-dark-secondary"
-            }`}
-          >
-            {t("statistics.daily")}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setPeriod("weekly")}
-          className={`flex-1 py-2 rounded-pill ${
-            period === "weekly" ? "bg-surface-card dark:bg-surface-dark-card" : ""
-          }`}
-        >
-          <Text
-            className={`text-center font-semibold ${
-              period === "weekly"
-                ? "text-content-primary dark:text-content-dark-primary"
-                : "text-content-secondary dark:text-content-dark-secondary"
-            }`}
-          >
-            {t("statistics.weekly")}
-          </Text>
-        </Pressable>
-      </View>
-
       <ScrollView
         className="flex-1 px-4"
         showsVerticalScrollIndicator={false}
@@ -381,18 +397,113 @@ export default function StatisticsScreen() {
           />
         }
       >
-        {showWeeklyTrends && insights.length > 0 && (
-          <View className="mb-4">
-            <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider mb-2">
-              {t("statistics.weeklyInsights")}
-            </Text>
-            <View className="gap-2">
-              {insights.map((insight, index) => (
-                <InsightCard key={`${insight.type}-${index}`} insight={insight} />
-              ))}
+        {weeklySummary.type !== "noData" && (
+          <View className="mb-4 mt-2">
+            <View
+              className="rounded-card p-4"
+              style={{
+                backgroundColor: colorScheme === "dark"
+                  ? "#242220"
+                  : weeklySummary.type === "great" || weeklySummary.type === "improving"
+                    ? "#EBF4F2"
+                    : weeklySummary.type === "attention"
+                      ? "#FBF0EE"
+                      : "#F5F3F0"
+              }}
+            >
+              <View className="flex-row items-start">
+                <Text className="text-3xl mr-3">{weeklySummary.emoji}</Text>
+                <View className="flex-1">
+                  <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary mb-1">
+                    {t(weeklySummary.titleKey as never)}
+                  </Text>
+                  <Text className="text-sm text-content-secondary dark:text-content-dark-secondary leading-5">
+                    {t(weeklySummary.descriptionKey as never, weeklySummary.descriptionParams)}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         )}
+
+        <View className="mb-4">
+          <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider mb-2">
+            {t("statistics.dailyAverages")}
+          </Text>
+          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-4">
+            <View className="flex-row flex-wrap">
+              <View className="w-1/2 mb-3 pr-2">
+                <View className="flex-row items-center">
+                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.sleep.icon}</Text>
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: ACTIVITY_CONFIG.sleep.accentColor }}
+                  >
+                    {dailyAverages.sleepHoursPerDay}h
+                  </Text>
+                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                    /day
+                  </Text>
+                </View>
+              </View>
+
+              <View className="w-1/2 mb-3 pl-2">
+                <View className="flex-row items-center">
+                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.feeding.icon}</Text>
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: ACTIVITY_CONFIG.feeding.accentColor }}
+                  >
+                    {dailyAverages.feedingsPerDay}
+                  </Text>
+                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                    /day
+                  </Text>
+                </View>
+              </View>
+
+              <View className="w-1/2 pr-2">
+                <View className="flex-row items-center">
+                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.diaper.icon}</Text>
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: ACTIVITY_CONFIG.diaper.accentColor }}
+                  >
+                    {dailyAverages.wetDiapersPerDay}
+                  </Text>
+                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                    wet/day
+                  </Text>
+                  {dailyAverages.wetDiapersPerDay >= 6 && (
+                    <Text
+                      className="text-sm ml-1"
+                      style={{ color: colorScheme === "dark" ? "#4ade80" : "#22c55e" }}
+                    >
+                      ✓
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {dailyAverages.tummyTimeMinutesPerDay > 0 && (
+                <View className="w-1/2 pl-2">
+                  <View className="flex-row items-center">
+                    <Text className="text-base mr-2">{ACTIVITY_CONFIG.tummyTime.icon}</Text>
+                    <Text
+                      className="text-base font-semibold"
+                      style={{ color: ACTIVITY_CONFIG.tummyTime.accentColor }}
+                    >
+                      {dailyAverages.tummyTimeMinutesPerDay}m
+                    </Text>
+                    <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                      /day
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
 
         <View className="mb-4">
           <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider mb-2">
@@ -482,27 +593,6 @@ export default function StatisticsScreen() {
               <Text className="text-stat font-bold" style={{ color: ACTIVITY_CONFIG.tummyTime.accentColor }}>
                 {formatDuration(stats.tummyTime.totalDurationSeconds, "short") || "0m"}
               </Text>
-              {period === "daily" && dailyGoalSeconds > 0 && (
-                <View className="mt-2">
-                  <View className="flex-row justify-between mb-1">
-                    <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-                      {t("tummyTime.dailyGoal")}: {Math.round(dailyGoalSeconds / 60)}m
-                    </Text>
-                    <Text className="text-xs font-semibold" style={{ color: ACTIVITY_CONFIG.tummyTime.accentColor }}>
-                      {tummyTimeGoalProgress}%
-                    </Text>
-                  </View>
-                  <View className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                    <View
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${Math.min(tummyTimeGoalProgress ?? 0, 100)}%`,
-                        backgroundColor: ACTIVITY_CONFIG.tummyTime.accentColor,
-                      }}
-                    />
-                  </View>
-                </View>
-              )}
               {showWeeklyTrends && weeklyTrends.tummyTime.direction !== "stable" && (
                 <View className="mt-2">
                   <TrendIndicator
@@ -512,7 +602,7 @@ export default function StatisticsScreen() {
                   />
                 </View>
               )}
-              {period === "weekly" && !showWeeklyTrends && (
+              {!showWeeklyTrends && (
                 <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-1">
                   {stats.tummyTime.sessionCount} {stats.tummyTime.sessionCount === 1 ? "session" : "sessions"}
                 </Text>
@@ -521,7 +611,7 @@ export default function StatisticsScreen() {
           </View>
         </View>
 
-        {period === "weekly" && weeklyChartData && (stats.feeding.totalCount > 0 || stats.diaper.totalCount > 0) && (
+        {weeklyChartData && (stats.feeding.totalCount > 0 || stats.diaper.totalCount > 0) && (
           <View className="mb-4">
             <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider mb-2">
               {t("statistics.weeklyOverview")}
@@ -555,11 +645,58 @@ export default function StatisticsScreen() {
           </View>
         )}
 
+        {selectedBaby && (
+          <View className="mb-6">
+            <Pressable
+              onPress={handleShareReport}
+              disabled={isGeneratingReport}
+              className="bg-surface-card dark:bg-surface-dark-card rounded-card p-4 active:opacity-80"
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center flex-1">
+                  <View
+                    className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                    style={{
+                      backgroundColor: colorScheme === "dark"
+                        ? "rgba(143, 192, 145, 0.15)"
+                        : "rgba(107, 158, 110, 0.1)"
+                    }}
+                  >
+                    <Text className="text-lg">📄</Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary">
+                      {t("statistics.shareReport")}
+                    </Text>
+                    <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
+                      {t("statistics.shareReportDescription")}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  className="w-8 h-8 rounded-full items-center justify-center"
+                  style={{
+                    backgroundColor: colorScheme === "dark"
+                      ? ACTION_COLORS.dark.primary
+                      : ACTION_COLORS.light.primary
+                  }}
+                >
+                  {isGeneratingReport ? (
+                    <Text className="text-white text-xs">...</Text>
+                  ) : (
+                    <Text className="text-white text-sm">→</Text>
+                  )}
+                </View>
+              </View>
+            </Pressable>
+          </View>
+        )}
+
         {(stats.feeding.totalCount === 0 && stats.sleep.totalDurationSeconds === 0 && stats.diaper.totalCount === 0 && stats.tummyTime.sessionCount === 0) && (
           <View className="bg-surface-card dark:bg-surface-dark-card rounded-card mb-6">
             <EmptyState
               icon="📊"
-              title={period === "daily" ? t("statistics.noDataToday") : t("statistics.noDataThisWeek")}
+              title={t("statistics.noDataThisWeek")}
               compact
             />
           </View>
