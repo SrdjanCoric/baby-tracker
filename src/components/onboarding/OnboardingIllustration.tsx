@@ -8,8 +8,8 @@ import { View, Text } from "react-native";
 
 export type IllustrationType = "baby-welcome" | "activity-icons" | "phones-sync" | "baby-profile";
 
-const PRIMARY_COLOR = "#7C3AED";
-const PRIMARY_COLOR_MUTED = "#EDE9FE";
+const PRIMARY_COLOR = "#6B9E6E";
+const PRIMARY_COLOR_MUTED = "#E8F5E9";
 
 interface OnboardingIllustrationProps {
   type: IllustrationType;

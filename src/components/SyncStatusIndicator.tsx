@@ -19,10 +19,10 @@ interface SyncStatusIndicatorProps {
 }
 
 const statusConfig: Record<SyncStatus, { color: string; label: string; bgColor: string }> = {
-  online: { color: 'bg-green-500', label: 'Synced', bgColor: 'bg-green-100' },
-  syncing: { color: 'bg-blue-500', label: 'Syncing...', bgColor: 'bg-blue-100' },
+  online: { color: 'bg-green-600', label: 'Synced', bgColor: 'bg-green-100' },
+  syncing: { color: 'bg-green-500', label: 'Syncing...', bgColor: 'bg-green-50' },
   offline: { color: 'bg-orange-500', label: 'Offline', bgColor: 'bg-orange-100' },
-  pending: { color: 'bg-yellow-500', label: 'Pending', bgColor: 'bg-yellow-100' },
+  pending: { color: 'bg-amber-500', label: 'Pending', bgColor: 'bg-amber-100' },
   error: { color: 'bg-red-500', label: 'Sync error', bgColor: 'bg-red-100' },
 };
 
@@ -49,7 +49,7 @@ function SpinnerIcon({ testID }: { testID?: string }) {
     <Animated.View
       testID={testID}
       style={animatedStyle}
-      className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"
+      className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full"
     />
   );
 }
