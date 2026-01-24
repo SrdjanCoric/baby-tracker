@@ -90,3 +90,106 @@ export function prioritizeInsights(insights: Insight[], limit?: number): Insight
 
   return sorted;
 }
+
+export type WeeklySummaryType = "great" | "improving" | "stable" | "attention" | "noData";
+
+export interface WeeklySummary {
+  type: WeeklySummaryType;
+  emoji: string;
+  titleKey: string;
+  descriptionKey: string;
+  descriptionParams?: Record<string, string>;
+}
+
+export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
+  const significantTrends = trends.filter(
+    (t) => t.direction !== "stable" && isSignificantChange(t.percentageChange)
+  );
+
+  const hasData = trends.some((t) => t.currentValue > 0 || t.previousValue > 0);
+  if (!hasData) {
+    return {
+      type: "noData",
+      emoji: "📊",
+      titleKey: "insights.summary.noData",
+      descriptionKey: "insights.summary.noDataDescription",
+    };
+  }
+
+  if (significantTrends.length === 0) {
+    return {
+      type: "stable",
+      emoji: "✓",
+      titleKey: "insights.summary.stable",
+      descriptionKey: "insights.summary.stableDescription",
+    };
+  }
+
+  const sleepTrend = trends.find((t) => t.type === "sleep");
+  const feedingTrend = trends.find((t) => t.type === "feeding");
+
+  const positiveChanges = significantTrends.filter(
+    (t) =>
+      (t.type === "sleep" && t.direction === "increase") ||
+      (t.type === "tummyTime" && t.direction === "increase")
+  );
+
+  const concerningChanges = significantTrends.filter(
+    (t) =>
+      (t.type === "diaper" && t.direction === "decrease" && t.percentageChange < -30) ||
+      (t.type === "feeding" && t.direction === "decrease" && t.percentageChange < -30)
+  );
+
+  if (concerningChanges.length > 0) {
+    const concern = concerningChanges[0];
+    const activityName = concern.type === "feeding" ? "feedings" : "diapers";
+    return {
+      type: "attention",
+      emoji: "👀",
+      titleKey: "insights.summary.attention",
+      descriptionKey: "insights.summary.attentionDescription",
+      descriptionParams: { activity: activityName },
+    };
+  }
+
+  if (positiveChanges.length > 0) {
+    const bestImprovement = positiveChanges.reduce((best, current) =>
+      current.percentageChange > best.percentageChange ? current : best
+    );
+    const activityName = bestImprovement.type === "sleep" ? "sleep" : "tummy time";
+    return {
+      type: "great",
+      emoji: "🌟",
+      titleKey: "insights.summary.great",
+      descriptionKey: "insights.summary.greatDescription",
+      descriptionParams: { activity: activityName },
+    };
+  }
+
+  if (sleepTrend && sleepTrend.direction === "increase" && isSignificantChange(sleepTrend.percentageChange)) {
+    return {
+      type: "improving",
+      emoji: "😊",
+      titleKey: "insights.summary.improving",
+      descriptionKey: "insights.summary.improvingDescription",
+    };
+  }
+
+  if (feedingTrend && isSignificantChange(feedingTrend.percentageChange)) {
+    const direction = feedingTrend.direction === "increase" ? "more" : "less";
+    return {
+      type: "stable",
+      emoji: "📈",
+      titleKey: "insights.summary.feedingChange",
+      descriptionKey: "insights.summary.feedingChangeDescription",
+      descriptionParams: { direction },
+    };
+  }
+
+  return {
+    type: "stable",
+    emoji: "✓",
+    titleKey: "insights.summary.stable",
+    descriptionKey: "insights.summary.stableDescription",
+  };
+}

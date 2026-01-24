@@ -250,3 +250,34 @@ export function calculateWeeklyBreakdown<T>(
 
   return breakdown;
 }
+
+export interface DailyAverages {
+  sleepHoursPerDay: number;
+  feedingsPerDay: number;
+  wetDiapersPerDay: number;
+  dirtyDiapersPerDay: number;
+  pumpingMlPerDay: number;
+  tummyTimeMinutesPerDay: number;
+  daysInPeriod: number;
+}
+
+export function calculateDailyAverages(
+  feedingStats: FeedingStats,
+  sleepStats: SleepStats,
+  diaperStats: DiaperStats,
+  pumpingStats: PumpingStats,
+  tummyTimeStats: TummyTimeStats,
+  daysInPeriod: number = 7
+): DailyAverages {
+  const days = Math.max(daysInPeriod, 1);
+
+  return {
+    sleepHoursPerDay: Math.round((sleepStats.totalDurationSeconds / 3600 / days) * 10) / 10,
+    feedingsPerDay: Math.round((feedingStats.totalCount / days) * 10) / 10,
+    wetDiapersPerDay: Math.round(((diaperStats.wetCount + diaperStats.mixedCount) / days) * 10) / 10,
+    dirtyDiapersPerDay: Math.round(((diaperStats.dirtyCount + diaperStats.mixedCount) / days) * 10) / 10,
+    pumpingMlPerDay: Math.round(pumpingStats.totalVolumeMl / days),
+    tummyTimeMinutesPerDay: Math.round(tummyTimeStats.totalDurationSeconds / 60 / days),
+    daysInPeriod: days,
+  };
+}
