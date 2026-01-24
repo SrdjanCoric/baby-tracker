@@ -1,9 +1,11 @@
 import { useCallback, useState } from "react";
-import { View, useColorScheme } from "react-native";
+import { View, useColorScheme, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { BabyProfileForm, type BabyProfileFormData } from "@/components";
 import { useBaby } from "@/contexts";
+
+const isAndroid = Platform.OS === "android";
 
 export default function AddBabyScreen() {
   const colorScheme = useColorScheme();
@@ -37,9 +39,9 @@ export default function AddBabyScreen() {
   return (
     <SafeAreaView
       className={`flex-1 ${isDark ? "bg-surface-dark" : "bg-surface"}`}
-      edges={["top"]}
+      edges={isAndroid ? ["top", "left", "right"] : ["top"]}
     >
-      <View className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+      <View className={`${isAndroid ? "px-4 py-2" : "px-6 py-4"} border-b border-gray-200 dark:border-gray-800`}>
         <View className="items-center">
           <View className={`w-10 h-1 rounded-full mb-4 ${isDark ? "bg-gray-700" : "bg-gray-300"}`} />
         </View>

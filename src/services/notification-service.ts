@@ -3,7 +3,6 @@
  * Handles push notifications using expo-notifications
  */
 
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import type {
   NotificationContent,
@@ -12,13 +11,29 @@ import type {
 import { NOTIFICATION_CHANNELS } from "@/constants/notifications";
 import { getNavigationRoute } from "@/utils/notification-routes";
 
+// Dynamic import - expo-notifications not available in Expo Go (SDK 53+)
+let Notifications: typeof import("expo-notifications") | null = null;
+try {
+  Notifications = require("expo-notifications");
+} catch {
+  console.log("[Notifications] Module not available (Expo Go)");
+}
+
 const IOS_NOTIFICATION_LIMIT = 64;
 
+type NotificationRequest = {
+  identifier: string;
+  content: { title: string | null; body: string | null; data: Record<string, unknown> };
+  trigger: unknown;
+};
+
 export const NotificationService = {
-  /**
-   * Sets up the notification handler for foreground notifications
-   */
+  isAvailable(): boolean {
+    return Notifications !== null;
+  },
+
   setupNotificationHandler(): void {
+    if (!Notifications) return;
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -30,13 +45,8 @@ export const NotificationService = {
     });
   },
 
-  /**
-   * Sets up Android notification channels
-   */
   async setupAndroidChannels(): Promise<void> {
-    if (Platform.OS !== "android") {
-      return;
-    }
+    if (!Notifications || Platform.OS !== "android") return;
 
     await Notifications.setNotificationChannelAsync(
       NOTIFICATION_CHANNELS.FEEDING_REMINDERS,
@@ -61,57 +71,39 @@ export const NotificationService = {
     );
   },
 
-  /**
-   * Gets current notification permission status
-   */
   async getPermissionStatus(): Promise<PermissionStatus> {
+    if (!Notifications) return "undetermined";
     const { status } = await Notifications.getPermissionsAsync();
     return status as PermissionStatus;
   },
 
-  /**
-   * Requests notification permissions
-   * @returns true if granted, false otherwise
-   */
   async requestPermissions(): Promise<boolean> {
+    if (!Notifications) return false;
     const { status } = await Notifications.requestPermissionsAsync();
     return status === "granted";
   },
 
-  /**
-   * Gets the count of currently scheduled notifications
-   */
   async getScheduledNotificationCount(): Promise<number> {
+    if (!Notifications) return 0;
     const notifications = await Notifications.getAllScheduledNotificationsAsync();
     return notifications.length;
   },
 
-  /**
-   * Checks if we can schedule another notification
-   * iOS has a limit of 64 scheduled notifications
-   */
   async canScheduleNotification(): Promise<boolean> {
-    if (Platform.OS !== "ios") {
-      return true;
-    }
-
+    if (!Notifications) return false;
+    if (Platform.OS !== "ios") return true;
     const count = await this.getScheduledNotificationCount();
     return count < IOS_NOTIFICATION_LIMIT;
   },
 
-  /**
-   * Schedules a local notification
-   * @returns The notification identifier, or null if limit reached
-   */
   async scheduleNotification(
     content: NotificationContent,
     triggerTime: Date
   ): Promise<string | null> {
+    if (!Notifications) return null;
     const canSchedule = await this.canScheduleNotification();
     if (!canSchedule) {
-      console.warn(
-        `iOS notification limit (${IOS_NOTIFICATION_LIMIT}) reached, cannot schedule new notification`
-      );
+      console.warn(`iOS notification limit (${IOS_NOTIFICATION_LIMIT}) reached`);
       return null;
     }
 
@@ -131,29 +123,20 @@ export const NotificationService = {
     return notificationId;
   },
 
-  /**
-   * Cancels a scheduled notification by ID
-   */
   async cancelNotification(notificationId: string): Promise<void> {
+    if (!Notifications) return;
     await Notifications.cancelScheduledNotificationAsync(notificationId);
   },
 
-  /**
-   * Cancels all scheduled notifications
-   */
   async cancelAllNotifications(): Promise<void> {
+    if (!Notifications) return;
     await Notifications.cancelAllScheduledNotificationsAsync();
   },
 
-  /**
-   * Gets all currently scheduled notifications
-   */
-  async getAllScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
+  async getAllScheduledNotifications(): Promise<NotificationRequest[]> {
+    if (!Notifications) return [];
     return await Notifications.getAllScheduledNotificationsAsync();
   },
 
-  /**
-   * Gets the navigation route for a notification
-   */
   getNavigationRoute,
 };
