@@ -8,6 +8,7 @@ import {
   useColorScheme,
   Image,
   Alert,
+  Keyboard,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -80,6 +81,7 @@ function BabyProfileForm({
   }, [t]);
 
   const handlePhotoPress = useCallback(() => {
+    Keyboard.dismiss();
     if (photoUri) {
       Alert.alert(
         t("baby.changePhoto"),
@@ -217,7 +219,10 @@ function BabyProfileForm({
         </Text>
 
         <Pressable
-          onPress={() => setShowDatePicker(true)}
+          onPress={() => {
+            Keyboard.dismiss();
+            setShowDatePicker(true);
+          }}
           className={`
             min-h-[48px] px-4 rounded-2xl border-2 flex-row items-center justify-between
             ${
@@ -294,7 +299,10 @@ function BabyProfileForm({
             return (
               <Pressable
                 key={option.value}
-                onPress={() => setGender(isSelected ? undefined : option.value)}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setGender(isSelected ? undefined : option.value);
+                }}
                 className={`
                   flex-1 min-h-[72px] rounded-2xl items-center justify-center py-3
                   border-2
