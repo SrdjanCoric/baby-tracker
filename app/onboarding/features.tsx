@@ -1,64 +1,51 @@
 /**
- * Features Screen - Interactive activity showcase
+ * Features Screen - Dashboard customization during onboarding
  */
 
-import { useCallback, useState } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { useCallback } from "react";
+import { View, Text, Pressable, ScrollView, Switch } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
-import { useOnboarding } from "@/contexts";
+import { useOnboarding, useDashboardConfig } from "@/contexts";
 import { OnboardingPagination } from "@/components/onboarding";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 
 const PRIMARY_COLOR = "#6B9E6E";
 
-interface ActivityCardProps {
+interface ActivityToggleProps {
   type: ActivityType;
   title: string;
-  description: string;
-  isExpanded: boolean;
-  onPress: () => void;
+  isEnabled: boolean;
+  onToggle: (enabled: boolean) => void;
   isDark: boolean;
 }
 
-function ActivityCard({ type, title, description, isExpanded, onPress, isDark }: ActivityCardProps) {
+function ActivityToggle({ type, title, isEnabled, onToggle, isDark }: ActivityToggleProps) {
   const config = ACTIVITY_CONFIG[type];
 
   return (
-    <Pressable
-      onPress={onPress}
-      className="rounded-2xl p-4 mb-3 active:scale-[0.98]"
+    <View
+      className="flex-row items-center rounded-2xl p-4 mb-3"
       style={{
-        backgroundColor: isDark ? config.mutedBgDark : config.mutedBg,
-        borderWidth: isExpanded ? 2 : 0,
-        borderColor: config.accentColor,
+        backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
       }}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      accessibilityState={{ expanded: isExpanded }}
     >
-      <View className="flex-row items-center">
-        <Text className="text-3xl mr-3">{config.icon}</Text>
-        <View className="flex-1">
-          <Text
-            className="text-base font-semibold"
-            style={{ color: config.accentColor }}
-          >
-            {title}
-          </Text>
-          {isExpanded && (
-            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mt-1">
-              {description}
-            </Text>
-          )}
-        </View>
-        <Text className="text-content-tertiary dark:text-content-dark-tertiary">
-          {isExpanded ? "▲" : "▼"}
-        </Text>
-      </View>
-    </Pressable>
+      <Text className="text-3xl mr-3">{config.icon}</Text>
+      <Text
+        className="flex-1 text-base font-medium"
+        style={{ color: isDark ? "#E0E0E0" : "#333333" }}
+      >
+        {title}
+      </Text>
+      <Switch
+        value={isEnabled}
+        onValueChange={onToggle}
+        trackColor={{ false: isDark ? "#404040" : "#D1D5DB", true: PRIMARY_COLOR }}
+        thumbColor="#FFFFFF"
+      />
+    </View>
   );
 }
 
@@ -69,7 +56,7 @@ export default function FeaturesScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { state, nextStep, skipOnboarding } = useOnboarding();
-  const [expandedActivity, setExpandedActivity] = useState<ActivityType | null>(null);
+  const { config, setCardVisibility } = useDashboardConfig();
 
   const handleNext = useCallback(() => {
     nextStep();
@@ -81,17 +68,22 @@ export default function FeaturesScreen() {
     router.replace("/(tabs)");
   }, [skipOnboarding, router]);
 
-  const handleActivityPress = useCallback((type: ActivityType) => {
-    setExpandedActivity(prev => prev === type ? null : type);
-  }, []);
+  const handleToggle = useCallback(async (type: ActivityType, enabled: boolean) => {
+    await setCardVisibility(type, enabled);
+  }, [setCardVisibility]);
 
-  const activities: { type: ActivityType; titleKey: string; descKey: string }[] = [
-    { type: "feeding", titleKey: "feeding.title", descKey: "onboarding.activityDesc.feeding" },
-    { type: "sleep", titleKey: "sleep.title", descKey: "onboarding.activityDesc.sleep" },
-    { type: "diaper", titleKey: "diaper.title", descKey: "onboarding.activityDesc.diaper" },
-    { type: "pumping", titleKey: "pumping.title", descKey: "onboarding.activityDesc.pumping" },
-    { type: "growth", titleKey: "growth.title", descKey: "onboarding.activityDesc.growth" },
-    { type: "tummyTime", titleKey: "tummyTime.title", descKey: "onboarding.activityDesc.tummyTime" },
+  const getCardVisibility = (type: ActivityType): boolean => {
+    const card = config.cards.find(c => c.activity === type);
+    return card?.visible ?? true;
+  };
+
+  const activities: { type: ActivityType; titleKey: string }[] = [
+    { type: "feeding", titleKey: "feeding.title" },
+    { type: "sleep", titleKey: "sleep.title" },
+    { type: "diaper", titleKey: "diaper.title" },
+    { type: "pumping", titleKey: "pumping.title" },
+    { type: "growth", titleKey: "growth.title" },
+    { type: "tummyTime", titleKey: "tummyTime.title" },
   ];
 
   return (
@@ -118,28 +110,32 @@ export default function FeaturesScreen() {
       >
         {/* Title */}
         <Text className="text-2xl font-bold text-content-primary dark:text-content-dark-primary text-center mb-2">
-          {t("onboarding.features.title")}
+          {t("onboarding.features.customizeTitle")}
         </Text>
 
         {/* Subtitle */}
         <Text className="text-base text-content-secondary dark:text-content-dark-secondary text-center mb-6">
-          {t("onboarding.features.interactiveSubtitle")}
+          {t("onboarding.features.customizeSubtitle")}
         </Text>
 
-        {/* Activity Cards */}
+        {/* Activity Toggles */}
         <View className="mb-4">
           {activities.map((activity) => (
-            <ActivityCard
+            <ActivityToggle
               key={activity.type}
               type={activity.type}
               title={t(activity.titleKey)}
-              description={t(activity.descKey)}
-              isExpanded={expandedActivity === activity.type}
-              onPress={() => handleActivityPress(activity.type)}
+              isEnabled={getCardVisibility(activity.type)}
+              onToggle={(enabled) => handleToggle(activity.type, enabled)}
               isDark={isDark}
             />
           ))}
         </View>
+
+        {/* Hint */}
+        <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary text-center">
+          {t("onboarding.features.customizeHint")}
+        </Text>
       </ScrollView>
 
       {/* Bottom Section */}

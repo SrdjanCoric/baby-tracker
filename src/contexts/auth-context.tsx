@@ -79,16 +79,21 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 async function fetchUserProfile(userId: string): Promise<{ householdId: string | null; displayName: string | null }> {
+  console.log("[Auth Debug] fetchUserProfile called for userId:", userId);
   const { data, error } = await supabase
     .from("users")
     .select("household_id, display_name")
     .eq("id", userId)
     .single();
 
+  console.log("[Auth Debug] fetchUserProfile result:", { data, error: error?.message });
+
   if (error || !data) {
+    console.log("[Auth Debug] fetchUserProfile failed, returning nulls");
     return { householdId: null, displayName: null };
   }
 
+  console.log("[Auth Debug] fetchUserProfile success, householdId:", data.household_id);
   return {
     householdId: data.household_id,
     displayName: data.display_name,

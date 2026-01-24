@@ -6,9 +6,12 @@ import {
   ScrollView,
   Platform,
   useColorScheme,
+  Image,
+  Alert,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import * as ImagePicker from "expo-image-picker";
 import { Input } from "./Input";
 import { Button } from "./Button";
 import { validateBabyName, validateBirthDate } from "@/validators/baby";
@@ -47,11 +50,54 @@ function BabyProfileForm({
   const [name, setName] = useState(initialData?.name ?? "");
   const [birthDate, setBirthDate] = useState<Date | undefined>(initialData?.birthDate);
   const [gender, setGender] = useState<Gender | undefined>(initialData?.gender);
-  const [photoUri] = useState<string | undefined>(initialData?.photoUri);
+  const [photoUri, setPhotoUri] = useState<string | undefined>(initialData?.photoUri);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const pickImage = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert(
+        t("common.error"),
+        t("baby.photoPermissionDenied")
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  }, [t]);
+
+  const handlePhotoPress = useCallback(() => {
+    if (photoUri) {
+      Alert.alert(
+        t("baby.changePhoto"),
+        t("baby.changePhotoMessage"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("baby.chooseNewPhoto"), onPress: pickImage },
+          {
+            text: t("baby.removePhoto"),
+            style: "destructive",
+            onPress: () => setPhotoUri(undefined)
+          },
+        ]
+      );
+    } else {
+      pickImage();
+    }
+  }, [photoUri, pickImage, t]);
 
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
@@ -103,18 +149,34 @@ function BabyProfileForm({
     >
       <View className="mb-8">
         <Pressable
+          onPress={handlePhotoPress}
           className={`
-            self-center w-32 h-32 rounded-full items-center justify-center
-            border-4 border-dashed
+            self-center w-32 h-32 rounded-full items-center justify-center overflow-hidden
+            ${photoUri ? "" : "border-4 border-dashed"}
             ${isDark ? "border-gray-600 bg-surface-dark-card" : "border-gray-200 bg-gray-50"}
           `}
-          accessibilityLabel={t("baby.addPhoto")}
+          accessibilityLabel={photoUri ? t("baby.changePhoto") : t("baby.addPhoto")}
         >
-          <Text className="text-5xl mb-1">👶</Text>
-          <Text className={`text-xs font-medium ${isDark ? "text-content-dark-secondary" : "text-content-secondary"}`}>
-            {t("baby.addPhoto")}
-          </Text>
+          {photoUri ? (
+            <Image
+              source={{ uri: photoUri }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          ) : (
+            <>
+              <Text className="text-5xl mb-1">👶</Text>
+              <Text className={`text-xs font-medium ${isDark ? "text-content-dark-secondary" : "text-content-secondary"}`}>
+                {t("baby.addPhoto")}
+              </Text>
+            </>
+          )}
         </Pressable>
+        {photoUri && (
+          <Text className={`text-center text-xs mt-2 ${isDark ? "text-content-dark-tertiary" : "text-content-tertiary"}`}>
+            {t("baby.tapToChange")}
+          </Text>
+        )}
       </View>
 
       <View className="mb-6">
