@@ -92,34 +92,36 @@ export default function SignInScreen() {
     try {
       const { error } = await signInWithGoogle();
       if (error) {
-        const errorKey = sanitizeAuthError(error, "auth.googleSignInError");
-        Alert.alert(t("common.error"), t(errorKey));
+        // DEBUG: Show actual error message
+        Alert.alert("Google Sign-In Error (Debug)", error.message || "Unknown error");
       } else {
         router.replace("/(tabs)");
       }
-    } catch {
-      Alert.alert(t("common.error"), t("errors.generic"));
+    } catch (err) {
+      // DEBUG: Show actual catch error
+      Alert.alert("Google Sign-In Catch (Debug)", err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [signInWithGoogle, router, t]);
+  }, [signInWithGoogle, router]);
 
   const handleAppleSignIn = useCallback(async () => {
     setIsAppleLoading(true);
     try {
       const { error } = await signInWithApple();
       if (error) {
-        const errorKey = sanitizeAuthError(error, "auth.appleSignInError");
-        Alert.alert(t("common.error"), t(errorKey));
+        // DEBUG: Show actual error message
+        Alert.alert("Apple Sign-In Error (Debug)", error.message || "Unknown error");
       } else {
         router.replace("/(tabs)");
       }
-    } catch {
-      Alert.alert(t("common.error"), t("errors.generic"));
+    } catch (err) {
+      // DEBUG: Show actual catch error
+      Alert.alert("Apple Sign-In Catch (Debug)", err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsAppleLoading(false);
     }
-  }, [signInWithApple, router, t]);
+  }, [signInWithApple, router]);
 
   const handleMagicLink = useCallback(async () => {
     const validation = validateSignIn({ email, password: "placeholder" });
@@ -136,8 +138,8 @@ export default function SignInScreen() {
       const { error } = await signInWithMagicLink(validation.normalizedEmail!);
 
       if (error) {
-        const errorKey = sanitizeAuthError(error, "auth.magicLinkError");
-        Alert.alert(t("common.error"), t(errorKey));
+        // DEBUG: Show actual error message
+        Alert.alert("Magic Link Error (Debug)", error.message || "Unknown error");
       } else {
         Alert.alert(
           t("auth.magicLinkSentTitle"),
@@ -145,8 +147,9 @@ export default function SignInScreen() {
           [{ text: t("common.ok") }]
         );
       }
-    } catch {
-      Alert.alert(t("common.error"), t("errors.generic"));
+    } catch (err) {
+      // DEBUG: Show actual catch error
+      Alert.alert("Magic Link Catch (Debug)", err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsMagicLinkLoading(false);
     }

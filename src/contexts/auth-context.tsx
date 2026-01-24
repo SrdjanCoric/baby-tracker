@@ -213,6 +213,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithMagicLink = useCallback(async (email: string) => {
+    console.log("[Auth Debug] Magic Link - sending to:", email);
+    console.log("[Auth Debug] Magic Link - redirect URI:", AUTH_CONFIG.OAUTH_REDIRECT_URI);
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -220,11 +223,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     });
 
+    if (error) {
+      console.error("[Auth Debug] Magic Link error:", error.message, error);
+    } else {
+      console.log("[Auth Debug] Magic Link sent successfully");
+    }
+
     return { error };
   }, []);
 
   const signInWithGoogle = useCallback(async (): Promise<{ error: Error | null }> => {
     try {
+      console.log("[Auth Debug] Google - starting OAuth flow");
+      console.log("[Auth Debug] Google - redirect URI:", AUTH_CONFIG.OAUTH_REDIRECT_URI);
+
       const stateBytes = await Crypto.getRandomBytesAsync(32);
       const state = Array.from(stateBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
       oauthStateRef.current = state;
@@ -241,22 +253,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
+        console.error("[Auth Debug] Google - Supabase OAuth error:", error.message, error);
         oauthStateRef.current = null;
         return { error: new Error(error.message) };
       }
 
+      console.log("[Auth Debug] Google - OAuth URL generated:", data?.url?.substring(0, 100) + "...");
+
       if (data?.url) {
+        console.log("[Auth Debug] Google - opening browser session");
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
           AUTH_CONFIG.OAUTH_REDIRECT_URI
         );
 
+        console.log("[Auth Debug] Google - browser result type:", result.type);
+        if (result.type === "success") {
+          console.log("[Auth Debug] Google - success URL:", (result as { url: string }).url?.substring(0, 150) + "...");
+        }
+
         if (result.type === "success" && result.url) {
           const url = new URL(result.url);
           const returnedState = url.searchParams.get("state") || url.hash?.match(/state=([^&]+)/)?.[1];
 
+          console.log("[Auth Debug] Google - state validation:", { expected: oauthStateRef.current?.substring(0, 10), received: returnedState?.substring(0, 10) });
+
           if (returnedState !== oauthStateRef.current) {
             oauthStateRef.current = null;
+            console.error("[Auth Debug] Google - state mismatch!");
             return { error: new Error("OAuth state validation failed") };
           }
 
@@ -265,24 +289,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const accessToken = url.searchParams.get("access_token") || url.hash?.match(/access_token=([^&]+)/)?.[1];
           const refreshToken = url.searchParams.get("refresh_token") || url.hash?.match(/refresh_token=([^&]+)/)?.[1];
 
+          console.log("[Auth Debug] Google - tokens found:", { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
+
           if (accessToken && refreshToken) {
             await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
+            console.log("[Auth Debug] Google - session set successfully");
           } else {
             await supabase.auth.getSession();
+            console.log("[Auth Debug] Google - called getSession (no tokens in URL)");
           }
         } else if (result.type === "dismiss" || result.type === "cancel") {
+          console.log("[Auth Debug] Google - user dismissed/cancelled");
           oauthStateRef.current = null;
           return { error: null };
         } else {
+          console.log("[Auth Debug] Google - unexpected result type:", result.type);
           oauthStateRef.current = null;
         }
       }
 
       return { error: null };
     } catch (err) {
+      console.error("[Auth Debug] Google - catch error:", err);
       oauthStateRef.current = null;
       return { error: err instanceof Error ? err : new Error("Google sign-in failed") };
     }
@@ -290,6 +321,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithApple = useCallback(async (): Promise<{ error: Error | null }> => {
     try {
+      console.log("[Auth Debug] Apple - starting sign-in");
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -297,19 +330,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ],
       });
 
+      console.log("[Auth Debug] Apple - credential received:", {
+        hasIdentityToken: !!credential.identityToken,
+        hasAuthCode: !!credential.authorizationCode,
+        email: credential.email,
+        user: credential.user?.substring(0, 20),
+      });
+
       if (!credential.identityToken) {
+        console.error("[Auth Debug] Apple - no identity token");
         return { error: new Error("Apple Sign-In: No identity token received") };
       }
 
+      console.log("[Auth Debug] Apple - calling Supabase signInWithIdToken");
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: credential.identityToken,
       });
 
       if (error) {
-        console.error("Apple Sign-In Supabase error:", error);
+        console.error("[Auth Debug] Apple - Supabase error:", error.message, error);
         return { error: new Error(`Apple Sign-In failed: ${error.message}`) };
       }
+
+      console.log("[Auth Debug] Apple - success, user:", data?.user?.id);
 
       if (data?.user && credential.fullName?.givenName) {
         const displayName = [credential.fullName.givenName, credential.fullName.familyName]

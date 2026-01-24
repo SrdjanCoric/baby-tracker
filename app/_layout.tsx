@@ -102,8 +102,55 @@ function SyncAuthSetup({ children }: { children: React.ReactNode }) {
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
+      console.log("[DeepLink] Received URL:", url);
+
       if (url.includes("login-callback") || url.includes("auth/callback")) {
-        await supabase.auth.getSession();
+        try {
+          // Extract tokens from URL hash fragment
+          const hashIndex = url.indexOf('#');
+          if (hashIndex !== -1) {
+            const hashParams = url.substring(hashIndex + 1);
+            const params = new URLSearchParams(hashParams);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+
+            console.log("[DeepLink] Tokens found:", { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
+
+            if (accessToken && refreshToken) {
+              const { error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              if (error) {
+                console.error("[DeepLink] setSession error:", error);
+              } else {
+                console.log("[DeepLink] Session set successfully");
+              }
+              return;
+            }
+          }
+
+          // Also check query params (some flows use ? instead of #)
+          const queryIndex = url.indexOf('?');
+          if (queryIndex !== -1) {
+            const queryParams = new URLSearchParams(url.substring(queryIndex + 1));
+            const accessToken = queryParams.get('access_token');
+            const refreshToken = queryParams.get('refresh_token');
+
+            if (accessToken && refreshToken) {
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              return;
+            }
+          }
+
+          // Fallback: try getSession
+          await supabase.auth.getSession();
+        } catch (error) {
+          console.error("[DeepLink] Error handling deep link:", error);
+        }
       }
     };
 
