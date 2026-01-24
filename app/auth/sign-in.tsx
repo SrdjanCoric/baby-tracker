@@ -115,7 +115,8 @@ export default function SignInScreen() {
       } else {
         router.replace("/(tabs)");
       }
-    } catch {
+    } catch (err) {
+      console.error("Apple sign-in catch:", err);
       Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsAppleLoading(false);
@@ -145,7 +146,8 @@ export default function SignInScreen() {
           [{ text: t("common.ok") }]
         );
       }
-    } catch {
+    } catch (err) {
+      console.error("Magic link catch:", err);
       Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsMagicLinkLoading(false);
