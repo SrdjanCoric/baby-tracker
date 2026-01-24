@@ -82,6 +82,26 @@ jest.mock("expo-apple-authentication", () => ({
   },
 }));
 
+jest.mock("@react-native-google-signin/google-signin", () => ({
+  GoogleSignin: {
+    configure: jest.fn(),
+    hasPlayServices: jest.fn().mockResolvedValue(true),
+    signIn: jest.fn().mockResolvedValue({
+      data: {
+        idToken: "mock-id-token",
+        user: { email: "test@gmail.com" },
+      },
+    }),
+    signOut: jest.fn().mockResolvedValue(null),
+  },
+  isErrorWithCode: jest.fn().mockReturnValue(false),
+  statusCodes: {
+    SIGN_IN_CANCELLED: "SIGN_IN_CANCELLED",
+    IN_PROGRESS: "IN_PROGRESS",
+    PLAY_SERVICES_NOT_AVAILABLE: "PLAY_SERVICES_NOT_AVAILABLE",
+  },
+}));
+
 jest.mock("expo-auth-session/providers/google", () => ({}));
 
 jest.mock("expo-web-browser", () => ({

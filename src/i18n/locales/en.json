@@ -31,7 +31,8 @@
     "ok": "OK",
     "reset": "Reset",
     "share": "Share",
-    "total": "Total"
+    "total": "Total",
+    "or": "or"
   },
   "summary": {
     "today": "Today",
@@ -589,6 +590,7 @@
     "createAccount": "Create Account",
     "welcomeTitle": "Welcome to Baby Tracker",
     "welcomeSubtitle": "Track your baby's feeding, sleep, and more",
+    "welcomeBack": "Welcome Back",
     "signInTitle": "Welcome Back",
     "signInSubtitle": "Sign in to your account",
     "signUpTitle": "Create Account",
@@ -693,7 +695,9 @@
     "authChoice": {
       "title": "Join or Continue",
       "subtitle": "Create an account to sync across devices and share with caregivers",
-      "guestHint": "You can create an account later in Settings"
+      "guestHint": "You can create an account later in Settings",
+      "signInMethodsIos": "Apple, Google & Email",
+      "signInMethodsAndroid": "Google & Email"
     },
     "baby": {
       "title": "Add Your Baby",
