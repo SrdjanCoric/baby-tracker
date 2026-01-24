@@ -3,7 +3,20 @@ import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as WebBrowser from "expo-web-browser";
-import { GoogleSignin, isErrorWithCode, statusCodes } from "@react-native-google-signin/google-signin";
+
+// Dynamic import for Google Sign-In (native module not available in Expo Go)
+let GoogleSignin: typeof import("@react-native-google-signin/google-signin").GoogleSignin | null = null;
+let isErrorWithCode: typeof import("@react-native-google-signin/google-signin").isErrorWithCode | null = null;
+let statusCodes: typeof import("@react-native-google-signin/google-signin").statusCodes | null = null;
+
+try {
+  const googleSignIn = require("@react-native-google-signin/google-signin");
+  GoogleSignin = googleSignIn.GoogleSignin;
+  isErrorWithCode = googleSignIn.isErrorWithCode;
+  statusCodes = googleSignIn.statusCodes;
+} catch {
+  console.log("[Auth] Google Sign-In native module not available (Expo Go)");
+}
 
 // Required for web browser auth session to work properly
 WebBrowser.maybeCompleteAuthSession();
@@ -121,13 +134,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Configure Google Sign-In
   useEffect(() => {
+    if (!GoogleSignin) {
+      console.log("[Auth] Skipping Google Sign-In configuration (module not available)");
+      return;
+    }
     try {
-      GoogleSignin.configure({
+      const config = {
         iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
         webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      };
+      console.log("[GoogleSignIn] Configuring with:", {
+        iosClientId: config.iosClientId?.substring(0, 20) + "...",
+        webClientId: config.webClientId?.substring(0, 20) + "...",
+        hasIosClientId: !!config.iosClientId,
+        hasWebClientId: !!config.webClientId,
       });
+      GoogleSignin.configure(config);
+      console.log("[GoogleSignIn] Configuration complete");
     } catch (error) {
-      console.error("Failed to configure Google Sign-In:", error);
+      console.error("[GoogleSignIn] Failed to configure:", error);
     }
   }, []);
 
@@ -171,9 +196,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (newSession?.user) {
         setStorageUserId(newSession.user.id);
-        const profile = await fetchUserProfile(newSession.user.id);
-        setUser(mapSupabaseUser(newSession.user, profile));
         setSession(newSession);
+
+        // Set authenticated user immediately from session data
+        // Profile data (householdId, displayName) will be fetched separately
+        const authUser: AuthUser = {
+          id: newSession.user.id,
+          email: newSession.user.email ?? null,
+          displayName: newSession.user.user_metadata?.display_name ?? null,
+          householdId: null,
+        };
+        setUser(authUser);
+
+        // Fetch full profile in background (non-blocking)
+        fetchUserProfile(newSession.user.id)
+          .then(profile => {
+            setUser(prev => prev ? { ...prev, ...profile } : prev);
+          })
+          .catch(() => {
+            // Profile fetch failed - user is still authenticated, just missing profile data
+          });
       } else {
         setStorageUserId(null);
         setUser(null);
@@ -235,6 +277,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async (): Promise<{ error: Error | null }> => {
+    if (!GoogleSignin || !isErrorWithCode || !statusCodes) {
+      return { error: new Error("Google Sign-In not available (development build required)") };
+    }
+
     try {
       console.log("[GoogleSignIn] Starting sign in...");
       await GoogleSignin.hasPlayServices();

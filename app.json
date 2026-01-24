@@ -86,7 +86,13 @@
           "color": "#F5A472"
         }
       ],
-      "@react-native-google-signin/google-signin",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.653434931400-nk9pihvpbid2g0sj0g7gqk85bcn9r9ua",
+          "googleServicesFile": "./google-services.json"
+        }
+      ],
       [
         "expo-image-picker",
         {

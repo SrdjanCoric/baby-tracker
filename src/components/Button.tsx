@@ -62,7 +62,7 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
     }, [scale, onPressOut]);
 
     const baseClasses =
-      "flex-row items-center justify-center rounded-2xl";
+      "flex-row items-center justify-center rounded-2xl w-full";
 
     const sizeClasses: Record<ButtonSize, string> = {
       default: "min-h-[52px] px-6 py-3",
@@ -113,7 +113,9 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
           <ActivityIndicator size="small" color={spinnerColor} />
         ) : typeof children === "string" ? (
           <Text
-            className={`font-semibold ${textVariantClasses[variant]} ${textSizeClasses[size]}`}
+            className={`font-semibold ${textVariantClasses[variant]} ${textSizeClasses[size]} text-center`}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
           >
             {children}
           </Text>

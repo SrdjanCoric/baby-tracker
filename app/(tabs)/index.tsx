@@ -1,11 +1,13 @@
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
+
+const isAndroid = Platform.OS === "android";
 import {
   BabyHeader,
   DashboardCard,
@@ -495,21 +497,28 @@ export default function HomeScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pb-6"
+        contentContainerStyle={{
+          paddingHorizontal: isAndroid ? 12 : 16,
+          paddingTop: isAndroid ? 8 : 0,
+          paddingBottom: isAndroid ? 16 : 24,
+          flexGrow: 1,
+        }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={getActionColor("primary", colorScheme === "dark")}
-            colors={[getActionColor("primary", colorScheme === "dark")]}
-          />
+          isAndroid ? undefined : (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={getActionColor("primary", colorScheme === "dark")}
+              colors={[getActionColor("primary", colorScheme === "dark")]}
+            />
+          )
         }
       >
         {/* Activity Cards Grid */}
-        <View className="gap-3">
+        <View className={isAndroid ? "gap-2.5" : "gap-3"}>
           {cardRows.map((row, rowIndex) => (
-            <View key={rowIndex} className="flex-row gap-3">
+            <View key={rowIndex} className={`flex-row ${isAndroid ? "gap-2.5" : "gap-3"}`}>
               {row.map((cardConfig) => {
                 const props = getCardProps(cardConfig.activity);
                 return (
@@ -526,7 +535,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Today Summary */}
-        <View className="mt-6">
+        <View className={isAndroid ? "mt-3" : "mt-6"}>
           <TodaySummary
             feedingTotal={mockData.todayFeedingTotal}
             napCount={mockData.todayNapCount}

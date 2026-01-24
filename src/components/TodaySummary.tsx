@@ -1,7 +1,9 @@
-import { Text, View } from "react-native";
+import { Text, View, Platform } from "react-native";
 import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ACTIVITY_CONFIG } from "@/constants/activities";
+
+const isAndroid = Platform.OS === "android";
 
 interface TodaySummaryProps {
   feedingTotal?: string;
@@ -59,10 +61,10 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
       <View
         ref={ref}
         testID={testID}
-        className="bg-surface-card dark:bg-surface-dark-card rounded-card p-4"
+        className={`bg-surface-card dark:bg-surface-dark-card rounded-card ${isAndroid ? "p-3" : "p-4"}`}
       >
         {/* Header */}
-        <View className="flex-row items-center mb-4">
+        <View className={`flex-row items-center ${isAndroid ? "mb-2" : "mb-4"}`}>
           <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />
           <Text className="px-3 text-xs text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider font-medium">
             {t("summary.today")}
