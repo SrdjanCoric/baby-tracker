@@ -117,8 +117,8 @@ export default function TummyTimeSettingsScreen() {
 
         {/* Six Months Note */}
         {showSixMonthsNote && (
-          <View className="bg-blue-50 dark:bg-blue-900/20 rounded-card p-4 mb-6">
-            <Text className="text-sm text-blue-800 dark:text-blue-200">
+          <View className="bg-amber-50 dark:bg-amber-900/20 rounded-card p-4 mb-6">
+            <Text className="text-sm text-amber-800 dark:text-amber-200">
               {t("tummyTime.sixMonthsNote")}
             </Text>
           </View>

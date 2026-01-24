@@ -100,7 +100,7 @@ function ConflictItem({ conflict, index, onResolve }: ConflictItemProps) {
         <View className="border-t border-gray-100">
           <View className="flex-row">
             <View className="flex-1 p-3 border-r border-gray-100">
-              <Text className="text-xs font-semibold text-blue-600 uppercase mb-2">
+              <Text className="text-xs font-semibold text-green-700 uppercase mb-2">
                 {t('sync.yourVersion', 'Your Version')}
               </Text>
               <Text className="text-sm text-gray-700">
@@ -109,7 +109,7 @@ function ConflictItem({ conflict, index, onResolve }: ConflictItemProps) {
               <Text className="text-xs text-gray-400 mt-2">{localTime}</Text>
             </View>
             <View className="flex-1 p-3">
-              <Text className="text-xs font-semibold text-purple-600 uppercase mb-2">
+              <Text className="text-xs font-semibold text-amber-700 uppercase mb-2">
                 {t('sync.theirVersion', 'Their Version')}
               </Text>
               <Text className="text-sm text-gray-700">
@@ -122,7 +122,7 @@ function ConflictItem({ conflict, index, onResolve }: ConflictItemProps) {
           <View className="flex-row border-t border-gray-100 p-3 gap-2">
             <Pressable
               onPress={() => onResolve('KEEP_LOCAL')}
-              className="flex-1 bg-blue-500 py-2.5 rounded-lg"
+              className="flex-1 bg-green-600 py-2.5 rounded-lg"
               accessibilityRole="button"
               accessibilityLabel="Keep my version"
             >
@@ -132,7 +132,7 @@ function ConflictItem({ conflict, index, onResolve }: ConflictItemProps) {
             </Pressable>
             <Pressable
               onPress={() => onResolve('KEEP_REMOTE')}
-              className="flex-1 bg-purple-500 py-2.5 rounded-lg"
+              className="flex-1 bg-amber-600 py-2.5 rounded-lg"
               accessibilityRole="button"
               accessibilityLabel="Keep their version"
             >
@@ -205,7 +205,7 @@ export function ConflictResolutionModal({
             accessibilityRole="button"
             accessibilityLabel="Close"
           >
-            <Text className="text-blue-500 text-base">
+            <Text className="text-green-700 text-base">
               {t('common.cancel', 'Cancel')}
             </Text>
           </Pressable>
@@ -228,11 +228,11 @@ export function ConflictResolutionModal({
           <View className="flex-row gap-2 px-4 py-3 bg-white border-b border-gray-200">
             <Pressable
               onPress={handleResolveAllKeepMine}
-              className="flex-1 bg-blue-100 py-2.5 rounded-lg"
+              className="flex-1 bg-green-100 py-2.5 rounded-lg"
               accessibilityRole="button"
               accessibilityLabel="Keep all my versions"
             >
-              <Text className="text-blue-700 text-center font-medium text-sm">
+              <Text className="text-green-700 text-center font-medium text-sm">
                 {t('sync.keepAllMine', 'Keep All Mine')}
               </Text>
             </Pressable>

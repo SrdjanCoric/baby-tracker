@@ -20,7 +20,8 @@ import { validateSignIn, sanitizeAuthError } from "@/validators";
 
 type AuthMode = "magic" | "password";
 
-const PRIMARY_COLOR = "#7C3AED";
+const TAB_ACTIVE_COLOR = "#8A857D";
+const BUTTON_COLOR = "#5A8A5D";
 
 export default function SignInScreen() {
   const { t } = useTranslation();
@@ -110,18 +111,16 @@ export default function SignInScreen() {
     try {
       const { error } = await signInWithApple();
       if (error) {
-        // DEBUG: Show actual error message
-        Alert.alert("Apple Sign-In Error (Debug)", error.message || "Unknown error");
+        Alert.alert(t("common.error"), t("auth.appleSignInError"));
       } else {
         router.replace("/(tabs)");
       }
-    } catch (err) {
-      // DEBUG: Show actual catch error
-      Alert.alert("Apple Sign-In Catch (Debug)", err instanceof Error ? err.message : "Unknown error");
+    } catch {
+      Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsAppleLoading(false);
     }
-  }, [signInWithApple, router]);
+  }, [signInWithApple, router, t]);
 
   const handleMagicLink = useCallback(async () => {
     const validation = validateSignIn({ email, password: "placeholder" });
@@ -138,8 +137,7 @@ export default function SignInScreen() {
       const { error } = await signInWithMagicLink(validation.normalizedEmail!);
 
       if (error) {
-        // DEBUG: Show actual error message
-        Alert.alert("Magic Link Error (Debug)", error.message || "Unknown error");
+        Alert.alert(t("common.error"), t("auth.magicLinkError"));
       } else {
         Alert.alert(
           t("auth.magicLinkSentTitle"),
@@ -147,9 +145,8 @@ export default function SignInScreen() {
           [{ text: t("common.ok") }]
         );
       }
-    } catch (err) {
-      // DEBUG: Show actual catch error
-      Alert.alert("Magic Link Catch (Debug)", err instanceof Error ? err.message : "Unknown error");
+    } catch {
+      Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsMagicLinkLoading(false);
     }
@@ -311,7 +308,7 @@ export default function SignInScreen() {
                 onPress={() => toggleAuthMode("magic")}
                 className="flex-1 py-3 rounded-lg items-center"
                 style={{
-                  backgroundColor: authMode === "magic" ? PRIMARY_COLOR : "transparent",
+                  backgroundColor: authMode === "magic" ? TAB_ACTIVE_COLOR : "transparent",
                 }}
               >
                 <Text
@@ -327,7 +324,7 @@ export default function SignInScreen() {
                 onPress={() => toggleAuthMode("password")}
                 className="flex-1 py-3 rounded-lg items-center"
                 style={{
-                  backgroundColor: authMode === "password" ? PRIMARY_COLOR : "transparent",
+                  backgroundColor: authMode === "password" ? TAB_ACTIVE_COLOR : "transparent",
                 }}
               >
                 <Text
@@ -348,7 +345,8 @@ export default function SignInScreen() {
                 <Pressable
                   onPress={handleMagicLink}
                   disabled={isMagicLinkLoading}
-                  className="bg-primary dark:bg-primary-dark rounded-xl py-5 items-center active:opacity-80"
+                  className="rounded-xl py-5 items-center active:opacity-80"
+                  style={{ backgroundColor: BUTTON_COLOR }}
                 >
                   {isMagicLinkLoading ? (
                     <ActivityIndicator color="white" />
@@ -370,7 +368,8 @@ export default function SignInScreen() {
               <Pressable
                 onPress={handleSignIn}
                 disabled={isLoading}
-                className="bg-primary dark:bg-primary-dark rounded-xl py-4 items-center active:opacity-80"
+                className="rounded-xl py-4 items-center active:opacity-80"
+                style={{ backgroundColor: BUTTON_COLOR }}
               >
                 {isLoading ? (
                   <ActivityIndicator color="white" />
@@ -388,7 +387,7 @@ export default function SignInScreen() {
                 {t("auth.noAccount")}{" "}
               </Text>
               <Pressable onPress={handleGoToSignUp}>
-                <Text className="font-semibold" style={{ color: PRIMARY_COLOR }}>
+                <Text className="font-semibold" style={{ color: BUTTON_COLOR }}>
                   {t("auth.signUp")}
                 </Text>
               </Pressable>

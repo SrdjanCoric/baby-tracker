@@ -13,7 +13,7 @@ import { OnboardingPagination } from "@/components/onboarding";
 import type { ThemePreference } from "@/contexts/theme-context";
 import type { UnitSystem } from "@/contexts/unit-context";
 
-const PRIMARY_COLOR = "#7C3AED";
+const PRIMARY_COLOR = "#6B9E6E";
 
 type LanguageCode = "en" | "sr";
 
