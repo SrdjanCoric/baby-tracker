@@ -41,6 +41,8 @@ const tableLabels: Record<SyncableTable, string> = {
   growth_measurements: 'Growth',
   tummy_time_sessions: 'Tummy Time',
   babies: 'Baby',
+  users: 'User',
+  households: 'Household',
 };
 
 function formatTimestamp(timestamp: string): string {
