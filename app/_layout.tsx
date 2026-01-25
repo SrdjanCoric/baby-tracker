@@ -8,8 +8,9 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, useTheme, useAuth, useSync } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, useTheme, useAuth, useSync, useNotifications } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
@@ -84,26 +85,60 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function SyncAuthSetup({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { setAuthContext } = useSync();
-  const hasSetAuthRef = useRef(false);
+  const lastHouseholdIdRef = useRef<string | null>(null);
   const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (user?.id && !hasSetAuthRef.current) {
-      // Use householdId if available, otherwise fall back to userId for single-user mode
+    if (user?.id) {
       const householdId = user.householdId || user.id;
-      setAuthContext(householdId, user.id);
-      hasSetAuthRef.current = true;
-      lastUserIdRef.current = user.id;
-    }
 
-    // Reset if user changes or logs out
-    if (!user?.id || (lastUserIdRef.current && lastUserIdRef.current !== user.id)) {
-      hasSetAuthRef.current = false;
+      if (lastUserIdRef.current !== user.id || lastHouseholdIdRef.current !== householdId) {
+        setAuthContext(householdId, user.id);
+        lastUserIdRef.current = user.id;
+        lastHouseholdIdRef.current = householdId;
+      }
+    } else {
       lastUserIdRef.current = null;
+      lastHouseholdIdRef.current = null;
     }
   }, [user?.id, user?.householdId, setAuthContext]);
 
   return <>{children}</>;
+}
+
+function NotificationAuthSetup({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const { registerPushTokenForUser } = useNotifications();
+  const lastUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const userId = user?.id ?? null;
+    if (userId !== lastUserIdRef.current) {
+      lastUserIdRef.current = userId;
+      registerPushTokenForUser(userId);
+    }
+  }, [user?.id, registerPushTokenForUser]);
+
+  return <>{children}</>;
+}
+
+function DisplayNamePromptWrapper({ children }: { children: React.ReactNode }) {
+  const { user, isAuthenticated } = useAuth();
+
+  // Show prompt for authenticated users without a display name
+  const showPrompt = isAuthenticated && !!user?.id && !user?.displayName;
+
+  const handleComplete = useCallback(() => {
+    // The prompt will automatically hide when user.displayName is set
+    // No action needed here since we're using derived state
+  }, []);
+
+  return (
+    <>
+      {children}
+      <DisplayNamePrompt visible={showPrompt} onComplete={handleComplete} />
+    </>
+  );
 }
 
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
@@ -318,8 +353,8 @@ export default function RootLayout() {
         <AuthProvider>
           <DeepLinkHandler>
           <AuthGuard>
-            <HouseholdProvider>
-              <SyncProvider>
+            <SyncProvider>
+              <HouseholdProvider>
                 <SyncAuthSetup>
                 <UnitProvider>
                   <BabyProvider>
@@ -330,9 +365,13 @@ export default function RootLayout() {
                             <GrowthProvider>
                               <TummyTimeProvider>
                                 <NotificationProvider>
-                                  <DashboardConfigProvider>
-                                    <AppContent />
-                                  </DashboardConfigProvider>
+                                  <NotificationAuthSetup>
+                                    <DashboardConfigProvider>
+                                      <DisplayNamePromptWrapper>
+                                        <AppContent />
+                                      </DisplayNamePromptWrapper>
+                                    </DashboardConfigProvider>
+                                  </NotificationAuthSetup>
                                 </NotificationProvider>
                               </TummyTimeProvider>
                             </GrowthProvider>
@@ -343,8 +382,8 @@ export default function RootLayout() {
                   </BabyProvider>
                 </UnitProvider>
                 </SyncAuthSetup>
-              </SyncProvider>
-            </HouseholdProvider>
+              </HouseholdProvider>
+            </SyncProvider>
           </AuthGuard>
           </DeepLinkHandler>
         </AuthProvider>

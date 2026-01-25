@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Clipboard from "expo-clipboard";
 import * as Sharing from "expo-sharing";
-import { useHousehold, useAuth } from "@/contexts";
+import { useHousehold, useAuth, useBaby } from "@/contexts";
 import { formatInviteCodeForDisplay } from "@/utils/inviteCode";
 
 type HouseholdErrorKey =
@@ -32,12 +32,15 @@ const ERROR_TRANSLATIONS: Record<string, HouseholdErrorKey> = {
 export default function HouseholdSettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const { household, members, isLoading, error, regenerateCode } = useHousehold();
+  const { isAuthenticated, user } = useAuth();
+  const { household, members, isLoading, error, regenerateCode, leaveHousehold, isOwner } = useHousehold();
+  const { babies } = useBaby();
   const [isCopied, setIsCopied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   const inviteCode = household?.inviteCode ?? null;
+  const isInMultiPersonHousehold = members.length > 1;
 
   const handleSignIn = useCallback(() => {
     router.dismissAll();
@@ -93,6 +96,34 @@ export default function HouseholdSettingsScreen() {
   const handleJoinHousehold = useCallback(() => {
     router.push("/settings/join-household");
   }, [router]);
+
+  const handleLeaveHousehold = useCallback(() => {
+    Alert.alert(
+      t("household.leaveHousehold"),
+      t("household.leaveHouseholdConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("household.leave"),
+          style: "destructive",
+          onPress: async () => {
+            setIsLeaving(true);
+            const result = await leaveHousehold();
+            setIsLeaving(false);
+            if (result.success) {
+              Alert.alert(t("common.success"), t("household.leftHousehold"));
+              router.back();
+            } else {
+              const errorKey = result.error === "ownerCannotLeave"
+                ? "household.ownerCannotLeave"
+                : "household.leaveFailed";
+              Alert.alert(t("common.error"), t(errorKey));
+            }
+          },
+        },
+      ]
+    );
+  }, [leaveHousehold, router, t]);
 
   const handleManageCaregivers = useCallback(() => {
     router.push("/settings/caregivers");
@@ -181,20 +212,22 @@ export default function HouseholdSettingsScreen() {
               </Pressable>
             </View>
 
-            <Pressable
-              onPress={handleRegenerateCode}
-              disabled={isRegenerating}
-              className="mt-4 py-2 items-center active:opacity-60"
-              accessibilityRole="button"
-            >
-              {isRegenerating ? (
-                <ActivityIndicator size="small" />
-              ) : (
-                <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
-                  {t("household.regenerateCode")}
-                </Text>
-              )}
-            </Pressable>
+            {isOwner && (
+              <Pressable
+                onPress={handleRegenerateCode}
+                disabled={isRegenerating}
+                className="mt-4 py-2 items-center active:opacity-60"
+                accessibilityRole="button"
+              >
+                {isRegenerating ? (
+                  <ActivityIndicator size="small" />
+                ) : (
+                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
+                    {t("household.regenerateCode")}
+                  </Text>
+                )}
+              </Pressable>
+            )}
           </View>
 
           {/* Members Section */}
@@ -252,25 +285,54 @@ export default function HouseholdSettingsScreen() {
             )}
           </View>
 
-          {/* Join Another Household Section */}
-          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-6 mt-6">
-            <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
-              {t("household.joinHousehold")}
-            </Text>
-            <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mb-4">
-              {t("household.joinHouseholdDescription")}
-            </Text>
-            <Pressable
-              onPress={handleJoinHousehold}
-              className="bg-surface-secondary dark:bg-surface-dark-secondary py-3 rounded-lg items-center active:opacity-80"
-              accessibilityRole="button"
-              testID="join-household-button"
-            >
-              <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
+          {/* Leave Household Section - only show for non-owners in multi-person households */}
+          {isInMultiPersonHousehold && !isOwner && (
+            <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-6 mt-6">
+              <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
+                {t("household.leaveHousehold")}
+              </Text>
+              <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mb-4">
+                {t("household.leaveHouseholdDescription")}
+              </Text>
+              <Pressable
+                onPress={handleLeaveHousehold}
+                disabled={isLeaving}
+                className="bg-red-500 py-3 rounded-lg items-center active:opacity-80"
+                accessibilityRole="button"
+                testID="leave-household-button"
+              >
+                {isLeaving ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text className="text-base font-medium text-white">
+                    {t("household.leave")}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          )}
+
+          {/* Join Another Household Section - only show when alone in household */}
+          {!isInMultiPersonHousehold && (
+            <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-6 mt-6">
+              <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
                 {t("household.joinHousehold")}
               </Text>
-            </Pressable>
-          </View>
+              <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mb-4">
+                {t("household.joinHouseholdDescription")}
+              </Text>
+              <Pressable
+                onPress={handleJoinHousehold}
+                className="bg-surface-secondary dark:bg-surface-dark-secondary py-3 rounded-lg items-center active:opacity-80"
+                accessibilityRole="button"
+                testID="join-household-button"
+              >
+                <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
+                  {t("household.joinHousehold")}
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </ScrollView>
       )}
     </SafeAreaView>

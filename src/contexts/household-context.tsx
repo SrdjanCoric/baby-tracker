@@ -7,19 +7,11 @@ import {
   getHouseholdMembers,
   regenerateInviteCode,
   joinHouseholdViaInviteCode,
+  leaveHousehold as leaveHouseholdService,
   Household,
   HouseholdMember,
 } from "@/services/household-service";
-import type { ReconciliationDecision } from "@/services/baby-migration";
-import { applyReconciliationDecisions } from "@/services/baby-migration";
-import type { StoredBabyProfile } from "@/services/baby-storage";
-import { BabySyncStorage } from "@/services/baby-storage-sync";
-import { withRetry, withRetryResult } from "@/utils/retry";
-
-export interface JoinHouseholdOptions {
-  reconciliationDecisions?: ReconciliationDecision[];
-  nonDuplicatedLocalBabies?: StoredBabyProfile[];
-}
+import { withRetryResult } from "@/utils/retry";
 
 export interface PartialFailure {
   operation: string;
@@ -128,11 +120,18 @@ export function householdReducer(
   }
 }
 
+export interface LeaveHouseholdResult {
+  success: boolean;
+  error: string | null;
+}
+
 interface HouseholdContextValue extends HouseholdState {
   refreshHousehold: () => Promise<void>;
   regenerateCode: () => Promise<boolean>;
-  joinHousehold: (inviteCode: string, options?: JoinHouseholdOptions) => Promise<JoinHouseholdResult>;
+  joinHousehold: (inviteCode: string) => Promise<JoinHouseholdResult>;
+  leaveHousehold: () => Promise<LeaveHouseholdResult>;
   clearError: () => void;
+  isOwner: boolean;
 }
 
 const HouseholdContext = createContext<HouseholdContextValue | null>(null);
@@ -145,11 +144,28 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
   const householdId = user?.householdId ?? null;
 
   useEffect(() => {
-    if (!householdId) return;
+    if (!householdId || !user?.id) return;
 
     const unsubUsers = subscribeToRemoteChanges('users', (change: RemoteChange) => {
       const newData = change.new;
       const oldData = change.old;
+
+      // Check if THIS user was removed from the household
+      const isCurrentUserRemoved = oldData &&
+        oldData.id === user.id &&
+        oldData.household_id === householdId &&
+        newData &&
+        newData.household_id !== householdId;
+
+      if (isCurrentUserRemoved) {
+        // Current user was removed - reset state and refresh profile to get new household
+        dispatch({ type: "RESET" });
+        dispatch({ type: "SET_LOADING", payload: true });
+        refreshUserProfile().then(() => {
+          // Profile refreshed - the useEffect watching householdId will load the new household
+        });
+        return;
+      }
 
       const isJoining = newData && newData.household_id === householdId &&
         (!oldData || oldData.household_id !== householdId);
@@ -194,7 +210,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
       unsubUsers();
       unsubHouseholds();
     };
-  }, [householdId, subscribeToRemoteChanges, state.household?.inviteCode]);
+  }, [householdId, user?.id, subscribeToRemoteChanges, state.household?.inviteCode, refreshUserProfile]);
 
   const loadHousehold = useCallback(async () => {
     if (!householdId) {
@@ -253,8 +269,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
   }, [householdId]);
 
   const joinHousehold = useCallback(async (
-    inviteCode: string,
-    options?: JoinHouseholdOptions
+    inviteCode: string
   ): Promise<JoinHouseholdResult> => {
     dispatch({ type: "SET_LOADING", payload: true });
     dispatch({ type: "CLEAR_ERROR" });
@@ -294,42 +309,6 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    if (options?.reconciliationDecisions || options?.nonDuplicatedLocalBabies) {
-      const { babiesToAdd, babiesToUpdate } = applyReconciliationDecisions(
-        options.reconciliationDecisions || [],
-        options.nonDuplicatedLocalBabies || [],
-        householdData.id
-      );
-
-      for (const babyInput of babiesToAdd) {
-        const addResult = await withRetryResult(
-          () => BabySyncStorage.addBaby(babyInput, user?.id || ''),
-          retryConfig
-        );
-        if (!addResult.success) {
-          partialFailures.push({
-            operation: 'addBaby',
-            babyId: babyInput.name,
-            error: addResult.error?.message || 'Failed to add baby',
-          });
-        }
-      }
-
-      for (const babyUpdate of babiesToUpdate) {
-        const updateResult = await withRetryResult(
-          () => BabySyncStorage.updateBaby(babyUpdate.id, babyUpdate),
-          retryConfig
-        );
-        if (!updateResult.success) {
-          partialFailures.push({
-            operation: 'updateBaby',
-            babyId: babyUpdate.id,
-            error: updateResult.error?.message || 'Failed to update baby',
-          });
-        }
-      }
-    }
-
     const membersResult = await withRetryResult(
       () => getHouseholdMembers(householdData.id),
       retryConfig
@@ -350,18 +329,44 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
       error: null,
       partialFailures: partialFailures.length > 0 ? partialFailures : undefined,
     };
-  }, [refreshUserProfile, user?.id]);
+  }, [refreshUserProfile]);
+
+  const leaveHousehold = useCallback(async (): Promise<LeaveHouseholdResult> => {
+    dispatch({ type: "SET_LOADING", payload: true });
+
+    const result = await leaveHouseholdService();
+
+    if (result.error) {
+      dispatch({ type: "SET_ERROR", payload: result.error });
+      dispatch({ type: "SET_LOADING", payload: false });
+      return { success: false, error: result.error };
+    }
+
+    if (result.data) {
+      dispatch({ type: "SET_HOUSEHOLD", payload: result.data });
+      dispatch({ type: "SET_MEMBERS", payload: [] });
+    }
+
+    await refreshUserProfile();
+    dispatch({ type: "SET_LOADING", payload: false });
+
+    return { success: true, error: null };
+  }, [refreshUserProfile]);
 
   const clearError = useCallback(() => {
     dispatch({ type: "CLEAR_ERROR" });
   }, []);
+
+  const isOwner = user?.isOwner ?? false;
 
   const value: HouseholdContextValue = {
     ...state,
     refreshHousehold,
     regenerateCode,
     joinHousehold,
+    leaveHousehold,
     clearError,
+    isOwner,
   };
 
   return (

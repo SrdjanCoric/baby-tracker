@@ -11,6 +11,9 @@ export interface HouseholdMember {
   id: string;
   email: string | null;
   displayName: string | null;
+  avatarUrl?: string | null;
+  role?: 'owner' | 'member';
+  joinedAt?: string | null;
 }
 
 interface HouseholdResult<T> {
@@ -77,6 +80,45 @@ export async function regenerateInviteCode(
   }
 
   return { data: data as string, error: null };
+}
+
+export async function leaveHousehold(): Promise<HouseholdResult<Household>> {
+  const { data, error } = await supabase.rpc("leave_household");
+
+  if (error) {
+    console.error("[HouseholdService] Leave failed:", error.message);
+    if (error.message?.includes("Owner cannot leave")) {
+      return { data: null, error: "ownerCannotLeave" };
+    }
+    if (error.message?.includes("not in a household")) {
+      return { data: null, error: "notInHousehold" };
+    }
+    if (error.message?.includes("Not authenticated")) {
+      return { data: null, error: "notAuthenticated" };
+    }
+    return { data: null, error: "leaveFailed" };
+  }
+
+  const rows = data as Array<{
+    household_id: string;
+    household_invite_code: string;
+    household_created_at: string;
+  }>;
+
+  if (!rows || rows.length === 0) {
+    return { data: null, error: "leaveFailed" };
+  }
+
+  const household = rows[0];
+
+  return {
+    data: {
+      id: household.household_id,
+      inviteCode: household.household_invite_code,
+      createdAt: household.household_created_at,
+    },
+    error: null,
+  };
 }
 
 export async function joinHouseholdViaInviteCode(
