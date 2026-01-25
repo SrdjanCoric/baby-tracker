@@ -2,31 +2,12 @@ import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Text, View, useColorScheme, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SURFACE, TEXT, ACTION, BORDER } from "@/constants/colors";
 
 type TabIconProps = {
   name: string;
   focused: boolean;
   isDark: boolean;
-};
-
-// Design tokens - warm color palette
-const COLORS = {
-  light: {
-    active: "#6B9E6E",
-    inactive: "#6B665E",
-    background: "#FFFFFF",
-    border: "#E8E5E0",
-    headerBg: "#FAFAF8",
-    headerText: "#2D2A26",
-  },
-  dark: {
-    active: "#8FC091",
-    inactive: "#B5B0A8",
-    background: "#1A1918",
-    border: "#3D3935",
-    headerBg: "#1A1918",
-    headerText: "#FAF9F7",
-  },
 };
 
 function TabIcon({ name, focused, isDark }: TabIconProps) {
@@ -36,13 +17,14 @@ function TabIcon({ name, focused, isDark }: TabIconProps) {
     statistics: "📊",
   };
 
-  const colors = isDark ? COLORS.dark : COLORS.light;
+  const activeColor = isDark ? ACTION.dark.primary : ACTION.light.primary;
+  const inactiveColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
 
   return (
     <View className="items-center justify-center">
       <Text
         className={`text-2xl ${focused ? "opacity-100" : "opacity-60"}`}
-        style={{ color: focused ? colors.active : colors.inactive }}
+        style={{ color: focused ? activeColor : inactiveColor }}
       >
         {iconSymbols[name] || "\u{2022}"}
       </Text>
@@ -56,16 +38,15 @@ export default function TabLayout() {
   const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
 
-  // Get colors based on current color scheme
-  const activeColor = isDark ? COLORS.dark.active : COLORS.light.active;
-  const inactiveColor = isDark ? COLORS.dark.inactive : COLORS.light.inactive;
-  const backgroundColor = isDark ? COLORS.dark.background : COLORS.light.background;
-  const borderColor = isDark ? COLORS.dark.border : COLORS.light.border;
-  const headerBgColor = isDark ? COLORS.dark.headerBg : COLORS.light.headerBg;
-  const headerTextColor = isDark ? COLORS.dark.headerText : COLORS.light.headerText;
+  const activeColor = isDark ? ACTION.dark.primary : ACTION.light.primary;
+  const inactiveColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
+  const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.card;
+  const borderColor = isDark ? BORDER.dark.default : BORDER.light.default;
+  const headerBgColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
+  const headerTextColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
 
   // On Android in Expo Go, we need to account for the navigation bar
-  const bottomPadding = Platform.OS === "android" ? Math.max(8, insets.bottom) : 8;
+  const bottomPadding = Platform.OS === "android" ? Math.max(8, insets.bottom) : 14;
   const tabBarHeight = 54 + bottomPadding;
 
   return (
