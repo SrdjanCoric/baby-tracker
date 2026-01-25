@@ -73,7 +73,10 @@ export function babyReducer(state: BabyState, action: BabyAction): BabyState {
       if (exists) {
         return state;
       }
-      return { ...state, babies: [...state.babies, action.payload] };
+      const newBabies = [...state.babies, action.payload];
+      // If no baby is currently selected, select the new one
+      const newSelectedBaby = state.selectedBaby === null ? action.payload : state.selectedBaby;
+      return { ...state, babies: newBabies, selectedBaby: newSelectedBaby };
     }
 
     case "REMOTE_UPDATE": {
@@ -89,9 +92,12 @@ export function babyReducer(state: BabyState, action: BabyAction): BabyState {
 
     case "REMOTE_DELETE": {
       const filteredBabies = state.babies.filter(b => b.id !== action.payload);
-      const clearedSelectedBaby =
-        state.selectedBaby?.id === action.payload ? null : state.selectedBaby;
-      return { ...state, babies: filteredBabies, selectedBaby: clearedSelectedBaby };
+      let newSelectedBaby = state.selectedBaby;
+      // If deleted baby was selected, select another one or null
+      if (state.selectedBaby?.id === action.payload) {
+        newSelectedBaby = filteredBabies.length > 0 ? filteredBabies[0] : null;
+      }
+      return { ...state, babies: filteredBabies, selectedBaby: newSelectedBaby };
     }
 
     default:
@@ -166,9 +172,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   }, [user?.householdId]);
 
   useEffect(() => {
-    if (!user?.householdId) {
-      return;
-    }
+    if (!user?.householdId) return;
 
     const unsubscribe = subscribeToRemoteChanges('babies', handleRemoteChange);
 
@@ -176,6 +180,16 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       unsubscribe();
     };
   }, [subscribeToRemoteChanges, user?.householdId, handleRemoteChange]);
+
+  // Persist selected baby to AsyncStorage when it changes
+  const prevSelectedBabyIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const currentId = state.selectedBaby?.id ?? null;
+    if (currentId !== prevSelectedBabyIdRef.current) {
+      prevSelectedBabyIdRef.current = currentId;
+      BabyStorageService.setSelectedBabyId(currentId);
+    }
+  }, [state.selectedBaby?.id]);
 
   const loadBabies = useCallback(async () => {
     dispatch({ type: "SET_LOADING", payload: true });

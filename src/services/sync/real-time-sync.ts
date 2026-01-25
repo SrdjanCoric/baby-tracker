@@ -132,7 +132,6 @@ export class RealTimeSync {
     }
 
     if (!this.verifyChangeOwnership(change)) {
-      console.warn(`Received change for different household, ignoring: ${table}`);
       return;
     }
 
