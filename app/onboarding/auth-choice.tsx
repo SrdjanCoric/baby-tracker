@@ -11,21 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useOnboarding, useTheme } from "@/contexts";
 import { OnboardingPagination } from "@/components/onboarding";
 import { Ionicons } from "@expo/vector-icons";
-
-const COLORS = {
-  primary: "#6B9E6E",
-  primaryLight: "#E8F5E9",
-  primaryDark: "#5A8A5D",
-  warmCream: "#FBF9F6",
-  warmGray: "#6B665E",
-  warmGrayLight: "#B5B0A8",
-  warmGrayLightest: "#E8E5E0",
-  darkBg: "#1A1918",
-  darkCard: "#242220",
-  darkBorder: "#3D3935",
-  darkText: "#FAF9F7",
-  darkTextSecondary: "#B5B0A8",
-};
+import { SURFACE, TEXT, ACTION, BORDER } from "@/constants/colors";
 
 export default function AuthChoiceScreen() {
   const { t } = useTranslation();
@@ -50,7 +36,7 @@ export default function AuthChoiceScreen() {
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: isDark ? COLORS.darkBg : COLORS.warmCream }}
+      style={{ backgroundColor: isDark ? SURFACE.dark.background : SURFACE.light.background }}
       edges={["top", "bottom"]}
     >
       {/* Skip button */}
@@ -63,7 +49,7 @@ export default function AuthChoiceScreen() {
         >
           <Text
             className="text-base font-medium"
-            style={{ color: isDark ? COLORS.darkTextSecondary : COLORS.warmGray }}
+            style={{ color: isDark ? TEXT.dark.secondary : TEXT.light.secondary }}
           >
             {t("common.skip")}
           </Text>
@@ -76,9 +62,9 @@ export default function AuthChoiceScreen() {
         <View
           className="w-36 h-36 rounded-full items-center justify-center mb-8"
           style={{
-            backgroundColor: isDark ? COLORS.darkCard : COLORS.primaryLight,
+            backgroundColor: isDark ? SURFACE.dark.card : "#E8F5E9",
             borderWidth: 3,
-            borderColor: COLORS.primary,
+            borderColor: ACTION.light.primary,
           }}
         >
           <Text className="text-6xl">🤝</Text>
@@ -88,7 +74,7 @@ export default function AuthChoiceScreen() {
         <Text
           className="text-2xl text-center mb-2"
           style={{
-            color: isDark ? COLORS.darkText : "#2D2A26",
+            color: isDark ? TEXT.dark.primary : TEXT.light.primary,
             fontFamily: "Nunito-Bold",
           }}
         >
@@ -99,7 +85,7 @@ export default function AuthChoiceScreen() {
         <Text
           className="text-base text-center mb-10 leading-6 px-4"
           style={{
-            color: isDark ? COLORS.darkTextSecondary : COLORS.warmGray,
+            color: isDark ? TEXT.dark.secondary : TEXT.light.secondary,
             fontFamily: "Nunito-Regular",
           }}
         >
@@ -112,7 +98,7 @@ export default function AuthChoiceScreen() {
           <Pressable
             onPress={handleSignIn}
             className="rounded-2xl py-5 mb-4 active:scale-[0.98]"
-            style={{ backgroundColor: COLORS.primaryDark }}
+            style={{ backgroundColor: ACTION.light.primaryHover }}
             accessibilityRole="button"
           >
             <View className="flex-row items-center justify-center">
@@ -139,12 +125,12 @@ export default function AuthChoiceScreen() {
           <View className="flex-row items-center my-4">
             <View
               className="flex-1 h-[1px]"
-              style={{ backgroundColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest }}
+              style={{ backgroundColor: isDark ? BORDER.dark.default : BORDER.light.subtle }}
             />
             <Text
               className="mx-4 text-sm"
               style={{
-                color: isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight,
+                color: isDark ? TEXT.dark.secondary : TEXT.light.muted,
                 fontFamily: "Nunito-Medium",
               }}
             >
@@ -152,7 +138,7 @@ export default function AuthChoiceScreen() {
             </Text>
             <View
               className="flex-1 h-[1px]"
-              style={{ backgroundColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest }}
+              style={{ backgroundColor: isDark ? BORDER.dark.default : BORDER.light.subtle }}
             />
           </View>
 
@@ -161,9 +147,9 @@ export default function AuthChoiceScreen() {
             onPress={handleContinueAsGuest}
             className="rounded-2xl py-5 px-5 active:scale-[0.98]"
             style={{
-              backgroundColor: isDark ? COLORS.darkCard : "#FFFFFF",
+              backgroundColor: isDark ? SURFACE.dark.card : SURFACE.light.card,
               borderWidth: 1,
-              borderColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest,
+              borderColor: isDark ? BORDER.dark.default : BORDER.light.subtle,
             }}
             accessibilityRole="button"
           >
@@ -171,20 +157,20 @@ export default function AuthChoiceScreen() {
               <View
                 className="w-10 h-10 rounded-full items-center justify-center mr-3"
                 style={{
-                  backgroundColor: isDark ? "#2A2826" : COLORS.warmCream,
+                  backgroundColor: isDark ? SURFACE.dark.cardElevated : SURFACE.light.background,
                 }}
               >
                 <Ionicons
                   name="play-forward-outline"
                   size={20}
-                  color={isDark ? COLORS.darkTextSecondary : COLORS.warmGray}
+                  color={isDark ? TEXT.dark.secondary : TEXT.light.secondary}
                 />
               </View>
               <View className="flex-1">
                 <Text
                   className="text-base"
                   style={{
-                    color: isDark ? COLORS.darkText : "#2D2A26",
+                    color: isDark ? TEXT.dark.primary : TEXT.light.primary,
                     fontFamily: "Nunito-SemiBold",
                   }}
                 >
@@ -193,7 +179,7 @@ export default function AuthChoiceScreen() {
                 <Text
                   className="text-sm mt-0.5"
                   style={{
-                    color: isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight,
+                    color: isDark ? TEXT.dark.secondary : TEXT.light.muted,
                     fontFamily: "Nunito-Regular",
                   }}
                 >
@@ -203,7 +189,7 @@ export default function AuthChoiceScreen() {
               <Ionicons
                 name="chevron-forward"
                 size={20}
-                color={isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight}
+                color={isDark ? TEXT.dark.secondary : TEXT.light.muted}
               />
             </View>
           </Pressable>

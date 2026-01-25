@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baby Tracker - Accessibility & Contrast Audit</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --audit-bg: #0a0a0b;
+      --audit-surface: #141416;
+      --audit-border: #2a2a2e;
+      --audit-text: #e4e4e7;
+      --audit-muted: #71717a;
+      --pass: #22c55e;
+      --fail: #ef4444;
+      --warn: #f59e0b;
+      --info: #3b82f6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Instrument Sans', sans-serif;
+      background: var(--audit-bg);
+      color: var(--audit-text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Header */
+    .header {
+      border-bottom: 1px solid var(--audit-border);
+      padding: 2rem 3rem;
+      background: linear-gradient(180deg, #141416 0%, #0a0a0b 100%);
+    }
+
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--audit-muted);
+      font-size: 0.875rem;
+    }
+
+    .summary-stats {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--audit-border);
+    }
+
+    .stat-box {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--audit-muted);
+    }
+
+    .stat-box.pass .stat-number { color: var(--pass); }
+    .stat-box.fail .stat-number { color: var(--fail); }
+    .stat-box.warn .stat-number { color: var(--warn); }
+
+    /* Main Layout */
+    .main {
+      padding: 2rem 3rem;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--audit-border);
+    }
+
+    .section-header h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .section-header .badge {
+      font-size: 0.625rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .badge.critical { background: rgba(239, 68, 68, 0.15); color: var(--fail); }
+    .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warn); }
+    .badge.pass { background: rgba(34, 197, 94, 0.15); color: var(--pass); }
+
+    /* Mode Columns */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .mode-column {
+      background: var(--audit-surface);
+      border: 1px solid var(--audit-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .mode-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--audit-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mode-header h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .mode-header .icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+
+    .mode-header.light .icon { background: linear-gradient(135deg, #F5EDE8, #fff); }
+    .mode-header.dark .icon { background: linear-gradient(135deg, #1E1B19, #2D2A28); }
+
+    .mode-content {
+      padding: 1.5rem;
+    }
+
+    /* Contrast Grid */
+    .contrast-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .contrast-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 100px 80px;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      gap: 1rem;
+    }
+
+    .contrast-label {
+      font-size: 0.75rem;
+      color: var(--audit-muted);
+    }
+
+    .contrast-sample {
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .contrast-ratio {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .contrast-status {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .status-badge {
+      font-size: 0.625rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .status-badge.aa { background: rgba(34, 197, 94, 0.15); color: var(--pass); }
+    .status-badge.aaa { background: rgba(34, 197, 94, 0.25); color: var(--pass); }
+    .status-badge.fail { background: rgba(239, 68, 68, 0.15); color: var(--fail); }
+    .status-badge.large { background: rgba(245, 158, 11, 0.15); color: var(--warn); }
+
+    /* Preview Cards */
+    .preview-section {
+      margin-top: 2rem;
+    }
+
+    .preview-label {
+      font-size: 0.75rem;
+      color: var(--audit-muted);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Light Mode Preview */
+    .light-preview {
+      background: #F5EDE8;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .dark-preview {
+      background: #1E1B19;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    /* Activity Cards */
+    .activity-card {
+      border-radius: 16px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 3px solid;
+    }
+
+    .activity-card.light { background: #FFFFFF; }
+    .activity-card.dark { background: #2D2A28; }
+
+    .activity-card .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .activity-card .activity-icon { font-size: 1.25rem; }
+    .activity-card .activity-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .activity-card .activity-time {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .activity-card .activity-subtitle {
+      font-size: 0.875rem;
+    }
+
+    /* Typography Scale */
+    .type-scale {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .type-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 120px;
+      align-items: baseline;
+      gap: 1rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--audit-border);
+    }
+
+    .type-name {
+      font-size: 0.75rem;
+      color: var(--audit-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .type-size {
+      font-size: 0.75rem;
+      color: var(--audit-muted);
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Issue Cards */
+    .issues-list {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .issue-card {
+      background: var(--audit-surface);
+      border: 1px solid var(--audit-border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .issue-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .issue-icon.critical { background: rgba(239, 68, 68, 0.15); }
+    .issue-icon.warning { background: rgba(245, 158, 11, 0.15); }
+    .issue-icon.info { background: rgba(59, 130, 246, 0.15); }
+
+    .issue-content h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .issue-content p {
+      font-size: 0.8125rem;
+      color: var(--audit-muted);
+      line-height: 1.5;
+    }
+
+    .issue-meta {
+      text-align: right;
+    }
+
+    .issue-ratio {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .issue-ratio.fail { color: var(--fail); }
+    .issue-ratio.warn { color: var(--warn); }
+
+    .issue-required {
+      font-size: 0.625rem;
+      color: var(--audit-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Color Swatches */
+    .color-swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .swatch {
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--audit-surface);
+      border: 1px solid var(--audit-border);
+    }
+
+    .swatch-color {
+      height: 48px;
+    }
+
+    .swatch-info {
+      padding: 0.5rem 0.75rem;
+    }
+
+    .swatch-name {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .swatch-hex {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      color: var(--audit-muted);
+    }
+
+    /* Buttons Preview */
+    .buttons-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .btn-preview {
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Input Preview */
+    .input-preview {
+      padding: 0.875rem 1rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      border: none;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    /* Two Column Issues */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+      .mode-grid, .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Recommendation Box */
+    .recommendation {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+    }
+
+    .recommendation h4 {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--info);
+      margin-bottom: 0.5rem;
+    }
+
+    .recommendation p {
+      font-size: 0.8125rem;
+      color: var(--audit-muted);
+    }
+
+    .recommendation code {
+      background: rgba(0,0,0,0.3);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+    }
+
+    /* Table */
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    .audit-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.2);
+      font-weight: 600;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--audit-muted);
+    }
+
+    .audit-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--audit-border);
+    }
+
+    .audit-table .color-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Baby Tracker Accessibility Audit</h1>
+    <p>WCAG 2.1 Contrast Compliance Report - Color System & Typography Review</p>
+
+    <div class="summary-stats">
+      <div class="stat-box pass">
+        <div>
+          <div class="stat-number" id="pass-count">0</div>
+          <div class="stat-label">Pass AA</div>
+        </div>
+      </div>
+      <div class="stat-box warn">
+        <div>
+          <div class="stat-number" id="warn-count">0</div>
+          <div class="stat-label">Large Text Only</div>
+        </div>
+      </div>
+      <div class="stat-box fail">
+        <div>
+          <div class="stat-number" id="fail-count">0</div>
+          <div class="stat-label">Fail</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- Critical Issues Summary -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Critical Issues Found</h2>
+        <span class="badge critical">Requires Attention</span>
+      </div>
+
+      <div class="issues-list" id="critical-issues">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- Text Contrast Audit -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Text Contrast Analysis</h2>
+      </div>
+
+      <div class="mode-grid">
+        <!-- Light Mode -->
+        <div class="mode-column">
+          <div class="mode-header light">
+            <h3><span class="icon"></span> Light Mode</h3>
+          </div>
+          <div class="mode-content">
+            <div class="contrast-grid" id="light-text-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Dark Mode -->
+        <div class="mode-column">
+          <div class="mode-header dark">
+            <h3><span class="icon"></span> Dark Mode</h3>
+          </div>
+          <div class="mode-content">
+            <div class="contrast-grid" id="dark-text-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Activity Colors -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Activity Color Contrast</h2>
+        <span class="badge warning">Some Issues</span>
+      </div>
+
+      <div class="mode-grid">
+        <div class="mode-column">
+          <div class="mode-header light">
+            <h3><span class="icon"></span> Light Mode - Activity Labels on Card</h3>
+          </div>
+          <div class="mode-content">
+            <div class="contrast-grid" id="light-activity-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-column">
+          <div class="mode-header dark">
+            <h3><span class="icon"></span> Dark Mode - Activity Labels on Card</h3>
+          </div>
+          <div class="mode-content">
+            <div class="contrast-grid" id="dark-activity-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Button Contrast -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Button & Action Contrast</h2>
+      </div>
+
+      <div class="mode-grid">
+        <div class="mode-column">
+          <div class="mode-header light">
+            <h3><span class="icon"></span> Light Mode Buttons</h3>
+          </div>
+          <div class="mode-content">
+            <div class="contrast-grid" id="light-button-grid">
+              <!-- Populated by JS -->
+            </div>
+
+            <div class="preview-section">
+              <div class="preview-label">Live Preview</div>
+              <div class="light-preview">
+                <div class="buttons-row">
+                  <button class="btn-preview" style="background: #6B9E6E; color: #FFFFFF;">Primary Action</button>
+                  <button class="btn-preview" style="background: #5A8A5D; color: #FFFFFF;">Hover State</button>
+                </div>
+                <div class="buttons-row">
+                  <button class="btn-preview" style="background: #8CB369; color: #FFFFFF;">Feeding</button>
+                  <button class="btn-preview" style="background: #9E8DA9; color: #FFFFFF;">Sleep</button>
+                  <button class="btn-preview" style="background: #E0A099; color: #FFFFFF;">Diaper</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-column">
+          <div class="mode-header dark">
+            <h3><span class="icon"></span> Dark Mode Buttons</h3>
+          </div>
+          <div class="mode-content">
+            <div class="contrast-grid" id="dark-button-grid">
+              <!-- Populated by JS -->
+            </div>
+
+            <div class="preview-section">
+              <div class="preview-label">Live Preview</div>
+              <div class="dark-preview">
+                <div class="buttons-row">
+                  <button class="btn-preview" style="background: #8FC091; color: #FFFFFF;">Primary Action</button>
+                  <button class="btn-preview" style="background: #A0CDA2; color: #FFFFFF;">Hover State</button>
+                </div>
+                <div class="buttons-row">
+                  <button class="btn-preview" style="background: #A5C88A; color: #FFFFFF;">Feeding</button>
+                  <button class="btn-preview" style="background: #B5A7BD; color: #FFFFFF;">Sleep</button>
+                  <button class="btn-preview" style="background: #EAB8B2; color: #FFFFFF;">Diaper</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UI Component Previews -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Real UI Component Preview</h2>
+      </div>
+
+      <div class="mode-grid">
+        <div class="mode-column">
+          <div class="mode-header light">
+            <h3><span class="icon"></span> Light Mode Components</h3>
+          </div>
+          <div class="mode-content">
+            <div class="light-preview">
+              <!-- Dashboard Card - Feeding -->
+              <div class="activity-card light" style="border-left-color: #8CB369;">
+                <div class="activity-header">
+                  <span class="activity-icon">🍼</span>
+                  <span class="activity-label" style="color: #8CB369;">FEEDING</span>
+                </div>
+                <div class="activity-time" style="color: #2D2A26;">2h 30m</div>
+                <div class="activity-subtitle" style="color: #5C5752;">Last fed at 10:30 AM</div>
+              </div>
+
+              <!-- Dashboard Card - Sleep -->
+              <div class="activity-card light" style="border-left-color: #9E8DA9;">
+                <div class="activity-header">
+                  <span class="activity-icon">😴</span>
+                  <span class="activity-label" style="color: #9E8DA9;">SLEEP</span>
+                </div>
+                <div class="activity-time" style="color: #2D2A26;">1h 15m</div>
+                <div class="activity-subtitle" style="color: #5C5752;">Currently napping</div>
+              </div>
+
+              <!-- Input Field -->
+              <div style="margin-top: 1rem;">
+                <div style="font-size: 0.875rem; color: #5C5752; margin-bottom: 0.5rem;">Email Address</div>
+                <input class="input-preview" style="background: #FFFFFF; color: #2D2A26; border: 1px solid #E5E2DE;" placeholder="Enter your email..." value="example@email.com">
+              </div>
+
+              <!-- Muted/Tertiary Text Example -->
+              <div style="margin-top: 1rem; padding: 1rem; background: #FEF7F4; border-radius: 12px;">
+                <div style="font-size: 0.75rem; color: #7A756E; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Hint Text (Tertiary)</div>
+                <div style="font-size: 0.875rem; color: #9A958E;">This is muted helper text that appears below form fields or as secondary information.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-column">
+          <div class="mode-header dark">
+            <h3><span class="icon"></span> Dark Mode Components</h3>
+          </div>
+          <div class="mode-content">
+            <div class="dark-preview">
+              <!-- Dashboard Card - Feeding -->
+              <div class="activity-card dark" style="border-left-color: #A5C88A;">
+                <div class="activity-header">
+                  <span class="activity-icon">🍼</span>
+                  <span class="activity-label" style="color: #A5C88A;">FEEDING</span>
+                </div>
+                <div class="activity-time" style="color: #F5F2F0;">2h 30m</div>
+                <div class="activity-subtitle" style="color: #A8A3A0;">Last fed at 10:30 AM</div>
+              </div>
+
+              <!-- Dashboard Card - Sleep -->
+              <div class="activity-card dark" style="border-left-color: #B5A7BD;">
+                <div class="activity-header">
+                  <span class="activity-icon">😴</span>
+                  <span class="activity-label" style="color: #B5A7BD;">SLEEP</span>
+                </div>
+                <div class="activity-time" style="color: #F5F2F0;">1h 15m</div>
+                <div class="activity-subtitle" style="color: #A8A3A0;">Currently napping</div>
+              </div>
+
+              <!-- Input Field -->
+              <div style="margin-top: 1rem;">
+                <div style="font-size: 0.875rem; color: #A8A3A0; margin-bottom: 0.5rem;">Email Address</div>
+                <input class="input-preview" style="background: #282523; color: #F5F2F0; border: 1px solid #3A363D;" placeholder="Enter your email..." value="example@email.com">
+              </div>
+
+              <!-- Muted/Tertiary Text Example -->
+              <div style="margin-top: 1rem; padding: 1rem; background: #201D1B; border-radius: 12px;">
+                <div style="font-size: 0.75rem; color: #6B6668; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Hint Text (Tertiary)</div>
+                <div style="font-size: 0.875rem; color: #7A7577;">This is muted helper text that appears below form fields or as secondary information.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography Scale -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Typography Scale & Sizes</h2>
+      </div>
+
+      <div class="mode-grid">
+        <div class="mode-column">
+          <div class="mode-header light">
+            <h3><span class="icon"></span> Light Mode Typography</h3>
+          </div>
+          <div class="mode-content">
+            <div class="light-preview">
+              <div class="type-scale">
+                <div class="type-row">
+                  <span class="type-name">timer-xl</span>
+                  <span style="font-size: 3.5rem; font-weight: 700; color: #2D2A26;">02:34:56</span>
+                  <span class="type-size">56px / Bold</span>
+                </div>
+                <div class="type-row">
+                  <span class="type-name">timer</span>
+                  <span style="font-size: 3rem; font-weight: 600; color: #2D2A26;">02:34:56</span>
+                  <span class="type-size">48px / Semi</span>
+                </div>
+                <div class="type-row">
+                  <span class="type-name">stat</span>
+                  <span style="font-size: 2rem; font-weight: 600; color: #2D2A26;">12h 30m</span>
+                  <span class="type-size">32px / Semi</span>
+                </div>
+                <div class="type-row">
+                  <span class="type-name">time-since</span>
+                  <span style="font-size: 1.75rem; font-weight: 700; color: #2D2A26;">2h 15m ago</span>
+                  <span class="type-size">28px / Bold</span>
+                </div>
+                <div class="type-row">
+                  <span class="type-name">title</span>
+                  <span style="font-size: 1.5rem; font-weight: 600; color: #2D2A26;">Section Title</span>
+                  <span class="type-size">24px</span>
+                </div>
+                <div class="type-row">
+                  <span class="type-name">body-lg</span>
+                  <span style="font-size: 1.125rem; color: #2D2A26;">Large body text</span>
+                  <span class="type-size">18px</span>
+                </div>
+                <div class="type-row">
+                  <span class="type-name">body</span>
+                  <span style="font-size: 1rem; color: #5C5752;">Regular body text</span>
+                  <span class="type-size">16px</span>
+                </div>
+                <div class="type-row">
+                  <span class="type-name">small</span>
+                  <span style="font-size: 0.875rem; color: #7A756E;">Small helper text</span>
+                  <span class="type-size">14px</span>
+                </div>
+                <div class="type-row">
+                  <span class="type-name">xs-label</span>
+                  <span style="font-size: 0.75rem; color: #9A958E; text-transform: uppercase; letter-spacing: 0.05em;">LABEL TEXT</span>
+                  <span class="type-size">12px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-column">
+          <div class="mode-header dark">
+            <h3><span class="icon"></span> Dark Mode Typography</h3>
+          </div>
+          <div class="mode-content">
+            <div class="dark-preview">
+              <div class="type-scale">
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">timer-xl</span>
+                  <span style="font-size: 3.5rem; font-weight: 700; color: #F5F2F0;">02:34:56</span>
+                  <span class="type-size">56px / Bold</span>
+                </div>
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">timer</span>
+                  <span style="font-size: 3rem; font-weight: 600; color: #F5F2F0;">02:34:56</span>
+                  <span class="type-size">48px / Semi</span>
+                </div>
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">stat</span>
+                  <span style="font-size: 2rem; font-weight: 600; color: #F5F2F0;">12h 30m</span>
+                  <span class="type-size">32px / Semi</span>
+                </div>
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">time-since</span>
+                  <span style="font-size: 1.75rem; font-weight: 700; color: #F5F2F0;">2h 15m ago</span>
+                  <span class="type-size">28px / Bold</span>
+                </div>
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">title</span>
+                  <span style="font-size: 1.5rem; font-weight: 600; color: #F5F2F0;">Section Title</span>
+                  <span class="type-size">24px</span>
+                </div>
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">body-lg</span>
+                  <span style="font-size: 1.125rem; color: #F5F2F0;">Large body text</span>
+                  <span class="type-size">18px</span>
+                </div>
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">body</span>
+                  <span style="font-size: 1rem; color: #A8A3A0;">Regular body text</span>
+                  <span class="type-size">16px</span>
+                </div>
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">small</span>
+                  <span style="font-size: 0.875rem; color: #6B6668;">Small helper text</span>
+                  <span class="type-size">14px</span>
+                </div>
+                <div class="type-row" style="border-color: #3A363D;">
+                  <span class="type-name">xs-label</span>
+                  <span style="font-size: 0.75rem; color: #7A7577; text-transform: uppercase; letter-spacing: 0.05em;">LABEL TEXT</span>
+                  <span class="type-size">12px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full Contrast Matrix -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Complete Contrast Matrix</h2>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="audit-table" id="contrast-matrix">
+          <thead>
+            <tr>
+              <th>Combination</th>
+              <th>Foreground</th>
+              <th>Background</th>
+              <th>Ratio</th>
+              <th>Normal Text</th>
+              <th>Large Text</th>
+              <th>UI Components</th>
+            </tr>
+          </thead>
+          <tbody id="matrix-body">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Recommendations -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Recommendations</h2>
+      </div>
+
+      <div class="issues-list" id="recommendations">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // WCAG Contrast Calculation
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    function getLuminance(r, g, b) {
+      const [rs, gs, bs] = [r, g, b].map(c => {
+        c = c / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+    }
+
+    function getContrastRatio(hex1, hex2) {
+      const rgb1 = hexToRgb(hex1);
+      const rgb2 = hexToRgb(hex2);
+      const lum1 = getLuminance(rgb1.r, rgb1.g, rgb1.b);
+      const lum2 = getLuminance(rgb2.r, rgb2.g, rgb2.b);
+      const lighter = Math.max(lum1, lum2);
+      const darker = Math.min(lum1, lum2);
+      return ((lighter + 0.05) / (darker + 0.05)).toFixed(2);
+    }
+
+    function getWCAGStatus(ratio) {
+      if (ratio >= 7) return { level: 'AAA', class: 'aaa', pass: true };
+      if (ratio >= 4.5) return { level: 'AA', class: 'aa', pass: true };
+      if (ratio >= 3) return { level: 'Large Only', class: 'large', pass: false };
+      return { level: 'Fail', class: 'fail', pass: false };
+    }
+
+    // Color definitions
+    const colors = {
+      light: {
+        background: '#F5EDE8',
+        secondary: '#EFE7E2',
+        card: '#FFFFFF',
+        muted: '#FEF7F4',
+        input: '#FFFFFF',
+        textPrimary: '#2D2A26',
+        textSecondary: '#5C5752',
+        textTertiary: '#7A756E',
+        textMuted: '#9A958E',
+        actionPrimary: '#6B9E6E',
+        actionHover: '#5A8A5D',
+        borderDefault: '#E5E2DE',
+        borderSubtle: '#EDEAE6'
+      },
+      dark: {
+        background: '#1E1B19',
+        secondary: '#252220',
+        card: '#2D2A28',
+        cardElevated: '#363330',
+        muted: '#201D1B',
+        input: '#282523',
+        textPrimary: '#F5F2F0',
+        textSecondary: '#A8A3A0',
+        textTertiary: '#6B6668',
+        textMuted: '#7A7577',
+        actionPrimary: '#8FC091',
+        actionHover: '#A0CDA2',
+        borderDefault: '#3A363D',
+        borderSubtle: '#2F2C32'
+      },
+      activity: {
+        feeding: { light: '#8CB369', dark: '#A5C88A' },
+        sleep: { light: '#9E8DA9', dark: '#B5A7BD' },
+        diaper: { light: '#E0A099', dark: '#EAB8B2' },
+        pumping: { light: '#7BA3A8', dark: '#96B8BC' },
+        growth: { light: '#6AAB9C', dark: '#88BEB0' },
+        tummyTime: { light: '#D4A574', dark: '#E0B990' }
+      },
+      semantic: {
+        success: { light: '#22c55e', dark: '#4ade80' },
+        error: { light: '#ef4444', dark: '#f87171' },
+        warning: { light: '#f59e0b', dark: '#fbbf24' },
+        neutral: { light: '#6b7280', dark: '#9ca3af' }
+      }
+    };
+
+    // Track issues
+    let passCount = 0;
+    let warnCount = 0;
+    let failCount = 0;
+    const criticalIssues = [];
+
+    function createContrastRow(label, fg, bg, fgHex, bgHex) {
+      const ratio = getContrastRatio(fgHex, bgHex);
+      const status = getWCAGStatus(ratio);
+
+      if (status.pass) passCount++;
+      else if (status.level === 'Large Only') warnCount++;
+      else failCount++;
+
+      if (!status.pass && status.level === 'Fail') {
+        criticalIssues.push({ label, fg, bg, fgHex, bgHex, ratio, status });
+      }
+
+      return `
+        <div class="contrast-row">
+          <div class="contrast-label">${label}</div>
+          <div class="contrast-sample" style="background: ${bgHex}; color: ${fgHex}; border: 1px solid rgba(0,0,0,0.1);">
+            Sample Text
+          </div>
+          <div class="contrast-ratio">${ratio}:1</div>
+          <div class="contrast-status">
+            <span class="status-badge ${status.class}">${status.level}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Light mode text contrasts
+    const lightTextGrid = document.getElementById('light-text-grid');
+    lightTextGrid.innerHTML = `
+      ${createContrastRow('Primary on Background', 'Primary', 'Background', colors.light.textPrimary, colors.light.background)}
+      ${createContrastRow('Primary on Card', 'Primary', 'Card', colors.light.textPrimary, colors.light.card)}
+      ${createContrastRow('Secondary on Background', 'Secondary', 'Background', colors.light.textSecondary, colors.light.background)}
+      ${createContrastRow('Secondary on Card', 'Secondary', 'Card', colors.light.textSecondary, colors.light.card)}
+      ${createContrastRow('Tertiary on Background', 'Tertiary', 'Background', colors.light.textTertiary, colors.light.background)}
+      ${createContrastRow('Tertiary on Card', 'Tertiary', 'Card', colors.light.textTertiary, colors.light.card)}
+      ${createContrastRow('Muted on Background', 'Muted', 'Background', colors.light.textMuted, colors.light.background)}
+      ${createContrastRow('Muted on Card', 'Muted', 'Card', colors.light.textMuted, colors.light.card)}
+      ${createContrastRow('Muted on Muted BG', 'Muted', 'Muted', colors.light.textMuted, colors.light.muted)}
+    `;
+
+    // Dark mode text contrasts
+    const darkTextGrid = document.getElementById('dark-text-grid');
+    darkTextGrid.innerHTML = `
+      ${createContrastRow('Primary on Background', 'Primary', 'Background', colors.dark.textPrimary, colors.dark.background)}
+      ${createContrastRow('Primary on Card', 'Primary', 'Card', colors.dark.textPrimary, colors.dark.card)}
+      ${createContrastRow('Secondary on Background', 'Secondary', 'Background', colors.dark.textSecondary, colors.dark.background)}
+      ${createContrastRow('Secondary on Card', 'Secondary', 'Card', colors.dark.textSecondary, colors.dark.card)}
+      ${createContrastRow('Tertiary on Background', 'Tertiary', 'Background', colors.dark.textTertiary, colors.dark.background)}
+      ${createContrastRow('Tertiary on Card', 'Tertiary', 'Card', colors.dark.textTertiary, colors.dark.card)}
+      ${createContrastRow('Muted on Background', 'Muted', 'Background', colors.dark.textMuted, colors.dark.background)}
+      ${createContrastRow('Muted on Card', 'Muted', 'Card', colors.dark.textMuted, colors.dark.card)}
+      ${createContrastRow('Muted on Muted BG', 'Muted', 'Muted', colors.dark.textMuted, colors.dark.muted)}
+    `;
+
+    // Activity colors - Light
+    const lightActivityGrid = document.getElementById('light-activity-grid');
+    lightActivityGrid.innerHTML = Object.entries(colors.activity).map(([name, color]) =>
+      createContrastRow(`${name.charAt(0).toUpperCase() + name.slice(1)} on Card`, name, 'Card', color.light, colors.light.card)
+    ).join('');
+
+    // Activity colors - Dark
+    const darkActivityGrid = document.getElementById('dark-activity-grid');
+    darkActivityGrid.innerHTML = Object.entries(colors.activity).map(([name, color]) =>
+      createContrastRow(`${name.charAt(0).toUpperCase() + name.slice(1)} on Card`, name, 'Card', color.dark, colors.dark.card)
+    ).join('');
+
+    // Button contrasts - Light
+    const lightButtonGrid = document.getElementById('light-button-grid');
+    lightButtonGrid.innerHTML = `
+      ${createContrastRow('White on Primary', 'White', 'Primary', '#FFFFFF', colors.light.actionPrimary)}
+      ${createContrastRow('White on Hover', 'White', 'Hover', '#FFFFFF', colors.light.actionHover)}
+      ${createContrastRow('White on Feeding', 'White', 'Feeding', '#FFFFFF', colors.activity.feeding.light)}
+      ${createContrastRow('White on Sleep', 'White', 'Sleep', '#FFFFFF', colors.activity.sleep.light)}
+      ${createContrastRow('White on Diaper', 'White', 'Diaper', '#FFFFFF', colors.activity.diaper.light)}
+      ${createContrastRow('White on Pumping', 'White', 'Pumping', '#FFFFFF', colors.activity.pumping.light)}
+      ${createContrastRow('White on Growth', 'White', 'Growth', '#FFFFFF', colors.activity.growth.light)}
+      ${createContrastRow('White on TummyTime', 'White', 'TummyTime', '#FFFFFF', colors.activity.tummyTime.light)}
+    `;
+
+    // Button contrasts - Dark
+    const darkButtonGrid = document.getElementById('dark-button-grid');
+    darkButtonGrid.innerHTML = `
+      ${createContrastRow('White on Primary', 'White', 'Primary', '#FFFFFF', colors.dark.actionPrimary)}
+      ${createContrastRow('White on Hover', 'White', 'Hover', '#FFFFFF', colors.dark.actionHover)}
+      ${createContrastRow('White on Feeding', 'White', 'Feeding', '#FFFFFF', colors.activity.feeding.dark)}
+      ${createContrastRow('White on Sleep', 'White', 'Sleep', '#FFFFFF', colors.activity.sleep.dark)}
+      ${createContrastRow('White on Diaper', 'White', 'Diaper', '#FFFFFF', colors.activity.diaper.dark)}
+      ${createContrastRow('White on Pumping', 'White', 'Pumping', '#FFFFFF', colors.activity.pumping.dark)}
+      ${createContrastRow('White on Growth', 'White', 'Growth', '#FFFFFF', colors.activity.growth.dark)}
+      ${createContrastRow('White on TummyTime', 'White', 'TummyTime', '#FFFFFF', colors.activity.tummyTime.dark)}
+    `;
+
+    // Update summary counts
+    document.getElementById('pass-count').textContent = passCount;
+    document.getElementById('warn-count').textContent = warnCount;
+    document.getElementById('fail-count').textContent = failCount;
+
+    // Display critical issues
+    const criticalIssuesContainer = document.getElementById('critical-issues');
+    if (criticalIssues.length > 0) {
+      criticalIssuesContainer.innerHTML = criticalIssues.map(issue => `
+        <div class="issue-card">
+          <div class="issue-icon critical">⚠️</div>
+          <div class="issue-content">
+            <h4>${issue.label}</h4>
+            <p>
+              <span style="color: ${issue.fgHex}; background: ${issue.bgHex}; padding: 0.125rem 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">${issue.fgHex}</span>
+              on
+              <span style="display: inline-block; width: 14px; height: 14px; background: ${issue.bgHex}; border-radius: 3px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.2);"></span>
+              ${issue.bgHex} fails WCAG AA for normal text. Minimum required is 4.5:1.
+            </p>
+          </div>
+          <div class="issue-meta">
+            <div class="issue-ratio fail">${issue.ratio}:1</div>
+            <div class="issue-required">Required: 4.5:1</div>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      criticalIssuesContainer.innerHTML = `
+        <div class="issue-card">
+          <div class="issue-icon" style="background: rgba(34, 197, 94, 0.15);">✓</div>
+          <div class="issue-content">
+            <h4>No Critical Issues Found</h4>
+            <p>All text combinations meet WCAG AA requirements for their intended use.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Build contrast matrix
+    const matrixBody = document.getElementById('matrix-body');
+    const allCombinations = [
+      // Light mode combinations
+      { name: 'Light: Primary on Background', fg: colors.light.textPrimary, bg: colors.light.background },
+      { name: 'Light: Primary on Card', fg: colors.light.textPrimary, bg: colors.light.card },
+      { name: 'Light: Secondary on Card', fg: colors.light.textSecondary, bg: colors.light.card },
+      { name: 'Light: Tertiary on Card', fg: colors.light.textTertiary, bg: colors.light.card },
+      { name: 'Light: Muted on Card', fg: colors.light.textMuted, bg: colors.light.card },
+      { name: 'Light: Muted on Muted BG', fg: colors.light.textMuted, bg: colors.light.muted },
+      { name: 'Light: White on Action', fg: '#FFFFFF', bg: colors.light.actionPrimary },
+      { name: 'Light: Action on Background', fg: colors.light.actionPrimary, bg: colors.light.background },
+      // Dark mode combinations
+      { name: 'Dark: Primary on Background', fg: colors.dark.textPrimary, bg: colors.dark.background },
+      { name: 'Dark: Primary on Card', fg: colors.dark.textPrimary, bg: colors.dark.card },
+      { name: 'Dark: Secondary on Card', fg: colors.dark.textSecondary, bg: colors.dark.card },
+      { name: 'Dark: Tertiary on Card', fg: colors.dark.textTertiary, bg: colors.dark.card },
+      { name: 'Dark: Muted on Card', fg: colors.dark.textMuted, bg: colors.dark.card },
+      { name: 'Dark: Muted on Muted BG', fg: colors.dark.textMuted, bg: colors.dark.muted },
+      { name: 'Dark: White on Action', fg: '#FFFFFF', bg: colors.dark.actionPrimary },
+      { name: 'Dark: Action on Card', fg: colors.dark.actionPrimary, bg: colors.dark.card },
+    ];
+
+    matrixBody.innerHTML = allCombinations.map(combo => {
+      const ratio = getContrastRatio(combo.fg, combo.bg);
+      const normalPass = ratio >= 4.5;
+      const largePass = ratio >= 3;
+      const uiPass = ratio >= 3;
+
+      return `
+        <tr>
+          <td>${combo.name}</td>
+          <td>
+            <div class="color-cell">
+              <span class="color-dot" style="background: ${combo.fg}; border: 1px solid rgba(255,255,255,0.2);"></span>
+              <code class="mono" style="font-size: 0.75rem;">${combo.fg}</code>
+            </div>
+          </td>
+          <td>
+            <div class="color-cell">
+              <span class="color-dot" style="background: ${combo.bg}; border: 1px solid rgba(255,255,255,0.2);"></span>
+              <code class="mono" style="font-size: 0.75rem;">${combo.bg}</code>
+            </div>
+          </td>
+          <td><code class="mono" style="font-weight: 600;">${ratio}:1</code></td>
+          <td><span class="status-badge ${normalPass ? 'aa' : 'fail'}">${normalPass ? 'Pass' : 'Fail'}</span></td>
+          <td><span class="status-badge ${largePass ? 'aa' : 'fail'}">${largePass ? 'Pass' : 'Fail'}</span></td>
+          <td><span class="status-badge ${uiPass ? 'aa' : 'fail'}">${uiPass ? 'Pass' : 'Fail'}</span></td>
+        </tr>
+      `;
+    }).join('');
+
+    // Recommendations
+    const recommendationsContainer = document.getElementById('recommendations');
+    const recommendations = [];
+
+    // Check dark mode tertiary text
+    const darkTertiaryOnCard = getContrastRatio(colors.dark.textTertiary, colors.dark.card);
+    if (darkTertiaryOnCard < 4.5) {
+      recommendations.push({
+        severity: 'warning',
+        title: 'Dark Mode Tertiary Text Contrast',
+        description: `Current tertiary text color ${colors.dark.textTertiary} on card ${colors.dark.card} has ratio of ${darkTertiaryOnCard}:1. Consider lightening to #8A8588 for AA compliance.`,
+        current: colors.dark.textTertiary,
+        suggested: '#8A8588'
+      });
+    }
+
+    // Check dark mode muted text
+    const darkMutedOnCard = getContrastRatio(colors.dark.textMuted, colors.dark.card);
+    if (darkMutedOnCard < 4.5) {
+      recommendations.push({
+        severity: 'warning',
+        title: 'Dark Mode Muted Text Contrast',
+        description: `Current muted text color ${colors.dark.textMuted} on card ${colors.dark.card} has ratio of ${darkMutedOnCard}:1. Consider lightening to #9A9598 for AA compliance.`,
+        current: colors.dark.textMuted,
+        suggested: '#9A9598'
+      });
+    }
+
+    // Check button contrasts
+    const whiteOnDarkAction = getContrastRatio('#FFFFFF', colors.dark.actionPrimary);
+    if (whiteOnDarkAction < 4.5) {
+      recommendations.push({
+        severity: 'warning',
+        title: 'Dark Mode Button Text Contrast',
+        description: `White text on action button ${colors.dark.actionPrimary} has ratio of ${whiteOnDarkAction}:1. Consider darkening the button to #6BAF6E or using dark text.`,
+        current: colors.dark.actionPrimary,
+        suggested: '#6BAF6E'
+      });
+    }
+
+    // Check activity button colors
+    Object.entries(colors.activity).forEach(([name, color]) => {
+      const darkRatio = getContrastRatio('#FFFFFF', color.dark);
+      if (darkRatio < 3) {
+        recommendations.push({
+          severity: 'critical',
+          title: `${name.charAt(0).toUpperCase() + name.slice(1)} Button Contrast (Dark)`,
+          description: `White text on ${name} button ${color.dark} has ratio of ${darkRatio}:1. This fails even for large text. Consider using dark text or darkening the background color.`,
+          current: color.dark,
+          suggested: 'Use dark text (#1E1B19) instead'
+        });
+      } else if (darkRatio < 4.5) {
+        recommendations.push({
+          severity: 'info',
+          title: `${name.charAt(0).toUpperCase() + name.slice(1)} Button (Dark Mode)`,
+          description: `White text on ${name} button ${color.dark} has ratio of ${darkRatio}:1. Passes for large/bold text only (≥18px bold or ≥24px regular).`,
+          current: color.dark,
+          suggested: 'Ensure button text is at least 18px bold'
+        });
+      }
+    });
+
+    // Add typography recommendation
+    recommendations.push({
+      severity: 'info',
+      title: 'Typography Size Guidelines',
+      description: 'For elements with contrast ratios between 3:1 and 4.5:1, ensure text is at least 18px bold or 24px regular to meet WCAG AA for large text. Current timer sizes (48-56px) are compliant. Labels at 12px should use colors meeting 4.5:1 ratio.',
+      current: '12px labels',
+      suggested: 'Use secondary text color or larger for critical labels'
+    });
+
+    recommendationsContainer.innerHTML = recommendations.map(rec => `
+      <div class="issue-card">
+        <div class="issue-icon ${rec.severity}">
+          ${rec.severity === 'critical' ? '🚨' : rec.severity === 'warning' ? '⚠️' : 'ℹ️'}
+        </div>
+        <div class="issue-content">
+          <h4>${rec.title}</h4>
+          <p>${rec.description}</p>
+          ${rec.current && rec.suggested ? `
+            <div class="recommendation">
+              <h4>Suggested Fix</h4>
+              <p>Change from <code>${rec.current}</code> to <code>${rec.suggested}</code></p>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+  </script>
+</body>
+</html>

@@ -3,14 +3,17 @@ import { Pressable, Text, View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useColorScheme } from "nativewind";
 import { useDiaper } from "@/contexts/diaper-context";
 import { useBaby } from "@/contexts";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { STOOL_COLORS } from "@/constants/activities";
+import { ACTIVITY, TEXT, SURFACE } from "@/constants/colors";
 
-const DIAPER_PEACH = "#D4837D";
-const DIAPER_PEACH_MUTED = "#FDF0EF";
-const DIAPER_PEACH_DARK = "#A85E58";
+const DIAPER_ACCENT = ACTIVITY.diaper.accent;
+const DIAPER_ACCENT_DARK = ACTIVITY.diaper.accentDark;
+const DIAPER_BUTTON = ACTIVITY.diaper.button;
+const DIAPER_BUTTON_DARK = ACTIVITY.diaper.buttonDark;
 
 const STOOL_COLOR_MAP: Record<StoolColor, string> = {
   yellow: "#F4D03F",
@@ -27,6 +30,14 @@ export default function DiaperScreen() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { addDiaper } = useDiaper();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const accentColor = isDark ? DIAPER_ACCENT_DARK : DIAPER_ACCENT;
+  const buttonBgColor = isDark ? DIAPER_BUTTON_DARK : DIAPER_BUTTON;
+  const linkTextColor = isDark ? DIAPER_ACCENT_DARK : DIAPER_BUTTON;
+  const secondaryBg = isDark ? SURFACE.dark.cardElevated : SURFACE.light.secondary;
+  const textColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
 
   const [selectedType, setSelectedType] = useState<DiaperType | null>(null);
   const [selectedColor, setSelectedColor] = useState<StoolColor | null>(null);
@@ -98,7 +109,7 @@ export default function DiaperScreen() {
         <View className="items-center mb-6">
           <View
             className="w-24 h-24 rounded-full items-center justify-center"
-            style={{ backgroundColor: DIAPER_PEACH_MUTED }}
+            style={{ backgroundColor: secondaryBg }}
           >
             <Text className="text-5xl">🚼</Text>
           </View>
@@ -117,6 +128,10 @@ export default function DiaperScreen() {
             icon="💧"
             isSelected={selectedType === "wet"}
             onPress={() => handleTypeSelect("wet")}
+            accentColor={accentColor}
+            secondaryBg={secondaryBg}
+            textColor={textColor}
+            isDark={isDark}
           />
           <DiaperTypeButton
             type="dirty"
@@ -125,6 +140,10 @@ export default function DiaperScreen() {
             icon="💩"
             isSelected={selectedType === "dirty"}
             onPress={() => handleTypeSelect("dirty")}
+            accentColor={accentColor}
+            secondaryBg={secondaryBg}
+            textColor={textColor}
+            isDark={isDark}
           />
           <DiaperTypeButton
             type="mixed"
@@ -133,6 +152,10 @@ export default function DiaperScreen() {
             icon="💧💩"
             isSelected={selectedType === "mixed"}
             onPress={() => handleTypeSelect("mixed")}
+            accentColor={accentColor}
+            secondaryBg={secondaryBg}
+            textColor={textColor}
+            isDark={isDark}
           />
           <DiaperTypeButton
             type="dry"
@@ -141,6 +164,10 @@ export default function DiaperScreen() {
             icon="✨"
             isSelected={selectedType === "dry"}
             onPress={() => handleTypeSelect("dry")}
+            accentColor={accentColor}
+            secondaryBg={secondaryBg}
+            textColor={textColor}
+            isDark={isDark}
           />
         </View>
 
@@ -160,6 +187,8 @@ export default function DiaperScreen() {
                   hexColor={STOOL_COLOR_MAP[color]}
                   isSelected={selectedColor === color}
                   onPress={() => handleColorSelect(color)}
+                  accentColor={accentColor}
+                  textColor={textColor}
                 />
               ))}
             </View>
@@ -170,11 +199,11 @@ export default function DiaperScreen() {
         <Pressable
           onPress={handleLogPastDiaper}
           className="py-3 px-6 rounded-button-lg active:opacity-70 self-center mb-6"
-          style={{ backgroundColor: DIAPER_PEACH_MUTED }}
+          style={{ backgroundColor: secondaryBg }}
           accessibilityRole="button"
           accessibilityLabel={t("diaper.logPastDiaper")}
         >
-          <Text className="text-base font-medium" style={{ color: DIAPER_PEACH }}>
+          <Text className="text-lg font-semibold" style={{ color: linkTextColor }}>
             {t("diaper.logPastDiaper")}
           </Text>
         </Pressable>
@@ -188,11 +217,11 @@ export default function DiaperScreen() {
           className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
             !canSave ? "opacity-50" : ""
           }`}
-          style={{ backgroundColor: DIAPER_PEACH }}
+          style={{ backgroundColor: buttonBgColor }}
           accessibilityRole="button"
           accessibilityLabel={t("diaper.logDiaper")}
         >
-          <Text className="text-white text-lg font-semibold">
+          <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: "700", fontFamily: "System" }}>
             {isSaving ? t("common.loading") : t("diaper.logDiaper")}
           </Text>
         </Pressable>
@@ -208,6 +237,10 @@ interface DiaperTypeButtonProps {
   icon: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  secondaryBg: string;
+  textColor: string;
+  isDark: boolean;
 }
 
 function DiaperTypeButton({
@@ -217,14 +250,20 @@ function DiaperTypeButton({
   icon,
   isSelected,
   onPress,
+  accentColor,
+  secondaryBg,
+  textColor,
+  isDark,
 }: DiaperTypeButtonProps) {
+  const secondaryTextColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
+
   return (
     <Pressable
       onPress={onPress}
       className={`flex-row items-center p-4 rounded-card-lg active:scale-[0.98] ${
         isSelected ? "border-2" : "border border-border dark:border-border-dark"
       }`}
-      style={isSelected ? { borderColor: DIAPER_PEACH, backgroundColor: DIAPER_PEACH_MUTED } : undefined}
+      style={isSelected ? { borderColor: accentColor, backgroundColor: secondaryBg } : undefined}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected: isSelected }}
@@ -235,7 +274,7 @@ function DiaperTypeButton({
           className={`text-base font-medium ${
             isSelected ? "" : "text-content-primary dark:text-content-dark-primary"
           }`}
-          style={isSelected ? { color: DIAPER_PEACH_DARK } : undefined}
+          style={isSelected ? { color: textColor } : undefined}
         >
           {label}
         </Text>
@@ -245,7 +284,7 @@ function DiaperTypeButton({
               ? ""
               : "text-content-secondary dark:text-content-dark-secondary"
           }`}
-          style={isSelected ? { color: DIAPER_PEACH } : undefined}
+          style={isSelected ? { color: secondaryTextColor } : undefined}
         >
           {description}
         </Text>
@@ -253,7 +292,7 @@ function DiaperTypeButton({
       {isSelected && (
         <View
           className="w-6 h-6 rounded-full items-center justify-center"
-          style={{ backgroundColor: DIAPER_PEACH }}
+          style={{ backgroundColor: accentColor }}
         >
           <Text className="text-white text-sm">✓</Text>
         </View>
@@ -268,6 +307,8 @@ interface StoolColorButtonProps {
   hexColor: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  textColor: string;
 }
 
 function StoolColorButton({
@@ -276,6 +317,8 @@ function StoolColorButton({
   hexColor,
   isSelected,
   onPress,
+  accentColor,
+  textColor,
 }: StoolColorButtonProps) {
   return (
     <Pressable
@@ -283,7 +326,7 @@ function StoolColorButton({
       className={`items-center p-3 rounded-card active:scale-[0.95] ${
         isSelected ? "border-2" : "border border-border dark:border-border-dark"
       }`}
-      style={isSelected ? { borderColor: DIAPER_PEACH } : undefined}
+      style={isSelected ? { borderColor: accentColor } : undefined}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected: isSelected }}
@@ -298,7 +341,7 @@ function StoolColorButton({
             ? ""
             : "text-content-secondary dark:text-content-dark-secondary"
         }`}
-        style={isSelected ? { color: DIAPER_PEACH_DARK } : undefined}
+        style={isSelected ? { color: textColor } : undefined}
         numberOfLines={2}
       >
         {label}

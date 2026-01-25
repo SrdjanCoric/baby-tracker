@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useColorScheme } from "nativewind";
 import { useGrowth } from "@/contexts/growth-context";
 import { useBaby, useUnits } from "@/contexts";
 import { validateGrowthMeasurement } from "@/validators/growth";
@@ -19,6 +20,10 @@ export default function GrowthScreen() {
   const { selectedBaby } = useBaby();
   const { addMeasurement } = useGrowth();
   const { weightUnit, heightUnit } = useUnits();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const buttonTextColor = "#FFFFFF";
 
   const [weightValue, setWeightValue] = useState("");
   const [heightValue, setHeightValue] = useState("");
@@ -267,13 +272,13 @@ export default function GrowthScreen() {
           onPress={handleSave}
           disabled={!canSave}
           className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
-            !canSave ? "opacity-50" : ""
+            !canSave ? "opacity-70" : ""
           }`}
           style={{ backgroundColor: GROWTH_TEAL }}
           accessibilityRole="button"
           accessibilityLabel={t("growth.saveMeasurement")}
         >
-          <Text className="text-white text-lg font-semibold">
+          <Text className="text-xl font-semibold" style={{ color: buttonTextColor }}>
             {isSaving ? t("common.loading") : t("growth.saveMeasurement")}
           </Text>
         </Pressable>
