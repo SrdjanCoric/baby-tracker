@@ -2,7 +2,7 @@ import { Pressable, Text, View, useColorScheme, Platform } from "react-native";
 import { forwardRef, useCallback } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
-import { CONTENT_COLORS } from "@/constants/design-tokens";
+import { CONTENT_COLORS, SURFACE } from "@/constants/design-tokens";
 
 const CARD_MIN_HEIGHT = Platform.OS === "android" ? 140 : 160;
 
@@ -49,7 +49,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
     const config = ACTIVITY_CONFIG[activity];
-    const bgColor = isDark ? config.mutedBgDark : config.mutedBg;
+    const bgColor = isDark ? SURFACE.dark.card : SURFACE.light.card;
     const accentColor = isDark ? config.accentColorDark : config.accentColor;
     const colors = isDark ? CONTENT_COLORS.dark : CONTENT_COLORS.light;
     const textColor = colors.primary;
@@ -97,8 +97,8 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
             minHeight: CARD_MIN_HEIGHT,
             borderWidth: isActive ? 2 : 0,
             borderColor: isActive ? accentColor : "transparent",
-            borderLeftWidth: isDark && !isActive ? 3 : (isActive ? 2 : 0),
-            borderLeftColor: isDark || isActive ? accentColor : "transparent",
+            borderLeftWidth: !isActive ? 3 : 2,
+            borderLeftColor: accentColor,
           },
         ]}
         accessibilityRole="button"
@@ -110,7 +110,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
             <Text className="text-2xl mr-2">{config.icon}</Text>
             <Text
               className="text-sm font-semibold uppercase tracking-wider"
-              style={{ color: isActive || isDark ? accentColor : secondaryTextColor }}
+              style={{ color: accentColor }}
             >
               {label}
             </Text>

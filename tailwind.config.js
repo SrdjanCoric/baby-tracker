@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const { SURFACE, TEXT, ACTION, BORDER, ACTIVITY } = require("./src/constants/colors.js");
+
 module.exports = {
   content: [
     "./App.{js,jsx,ts,tsx}",
@@ -16,128 +18,111 @@ module.exports = {
         'sans-bold': ['Nunito-Bold', 'System'],
       },
       colors: {
-        // ============================================
-        // ACTIVITY COLORS - Soft warm pastels
-        // ============================================
         activity: {
-          // Feeding - Warm sage (nurturing)
           feeding: {
-            light: "#8CB369",
-            DEFAULT: "#8CB369",
-            dark: "#A5C88A",
-            muted: "#EEF4E9",
-            "muted-dark": "#2A3325",
+            light: ACTIVITY.feeding.accent,
+            DEFAULT: ACTIVITY.feeding.accent,
+            dark: ACTIVITY.feeding.accentDark,
+            muted: ACTIVITY.feeding.muted,
+            "muted-dark": ACTIVITY.feeding.mutedDark,
           },
-          // Sleep - Dusty mauve (calming)
           sleep: {
-            light: "#9E8DA9",
-            DEFAULT: "#9E8DA9",
-            dark: "#B5A7BD",
-            muted: "#F2EFF4",
-            "muted-dark": "#2A2630",
+            light: ACTIVITY.sleep.accent,
+            DEFAULT: ACTIVITY.sleep.accent,
+            dark: ACTIVITY.sleep.accentDark,
+            muted: ACTIVITY.sleep.muted,
+            "muted-dark": ACTIVITY.sleep.mutedDark,
           },
-          // Diaper - Dusty rose (soft alert)
           diaper: {
-            light: "#E0A099",
-            DEFAULT: "#E0A099",
-            dark: "#EAB8B2",
-            muted: "#FBF0EE",
-            "muted-dark": "#382926",
+            light: ACTIVITY.diaper.accent,
+            DEFAULT: ACTIVITY.diaper.accent,
+            dark: ACTIVITY.diaper.accentDark,
+            muted: ACTIVITY.diaper.muted,
+            "muted-dark": ACTIVITY.diaper.mutedDark,
           },
-          // Pumping - Warm teal (calm focus)
           pumping: {
-            light: "#7BA3A8",
-            DEFAULT: "#7BA3A8",
-            dark: "#96B8BC",
-            muted: "#EDF3F4",
-            "muted-dark": "#252E30",
+            light: ACTIVITY.pumping.accent,
+            DEFAULT: ACTIVITY.pumping.accent,
+            dark: ACTIVITY.pumping.accentDark,
+            muted: ACTIVITY.pumping.muted,
+            "muted-dark": ACTIVITY.pumping.mutedDark,
           },
-          // Growth - Sage teal (progress)
           growth: {
-            light: "#6AAB9C",
-            DEFAULT: "#6AAB9C",
-            dark: "#88BEB0",
-            muted: "#EBF4F2",
-            "muted-dark": "#243330",
+            light: ACTIVITY.growth.accent,
+            DEFAULT: ACTIVITY.growth.accent,
+            dark: ACTIVITY.growth.accentDark,
+            muted: ACTIVITY.growth.muted,
+            "muted-dark": ACTIVITY.growth.mutedDark,
           },
-          // Tummy Time - Warm honey (active)
           tummyTime: {
-            light: "#D4A574",
-            DEFAULT: "#D4A574",
-            dark: "#E0B990",
-            muted: "#F9F2EA",
-            "muted-dark": "#332B22",
+            light: ACTIVITY.tummyTime.accent,
+            DEFAULT: ACTIVITY.tummyTime.accent,
+            dark: ACTIVITY.tummyTime.accentDark,
+            muted: ACTIVITY.tummyTime.muted,
+            "muted-dark": ACTIVITY.tummyTime.mutedDark,
           },
         },
 
-        // ============================================
-        // SEMANTIC COLORS - Light Mode (Warm undertones)
-        // ============================================
         surface: {
-          // Main background - warm off-white
-          DEFAULT: "#FAFAF8",
-          secondary: "#F5F3F0",
-          // Card backgrounds
-          card: "#FFFFFF",
-          "card-elevated": "#FFFFFF",
+          DEFAULT: SURFACE.light.background,
+          secondary: SURFACE.light.secondary,
+          card: SURFACE.light.card,
+          "card-elevated": SURFACE.light.cardElevated,
+          muted: SURFACE.light.muted,
+          input: SURFACE.light.input,
         },
 
-        // Text colors - warm grays
         content: {
-          primary: "#2D2A26",
-          secondary: "#6B665E",
-          tertiary: "#8A857D",
-          inverse: "#FFFFFF",
+          primary: TEXT.light.primary,
+          secondary: TEXT.light.secondary,
+          tertiary: TEXT.light.tertiary,
+          inverse: TEXT.light.inverse,
+          muted: TEXT.light.muted,
         },
 
-        // Primary action - warm sage green
         action: {
-          primary: "#6B9E6E",
-          "primary-hover": "#5A8A5D",
-          "primary-pressed": "#4A754C",
+          primary: ACTION.light.primary,
+          "primary-hover": ACTION.light.primaryHover,
+          "primary-pressed": ACTION.light.primaryPressed,
         },
 
-        // ============================================
-        // DARK MODE COLORS (Warm undertones)
-        // ============================================
         "surface-dark": {
-          DEFAULT: "#1A1918",
-          secondary: "#1F1E1C",
-          card: "#242220",
-          "card-elevated": "#2A2826",
+          DEFAULT: SURFACE.dark.background,
+          secondary: SURFACE.dark.secondary,
+          card: SURFACE.dark.card,
+          "card-elevated": SURFACE.dark.cardElevated,
+          muted: SURFACE.dark.muted,
+          input: SURFACE.dark.input,
         },
 
         "content-dark": {
-          primary: "#FAF9F7",
-          secondary: "#B5B0A8",
-          tertiary: "#7A756D",
-          inverse: "#2D2A26",
+          primary: TEXT.dark.primary,
+          secondary: TEXT.dark.secondary,
+          tertiary: TEXT.dark.tertiary,
+          inverse: TEXT.dark.inverse,
+          muted: TEXT.dark.muted,
         },
 
         "action-dark": {
-          primary: "#8FC091",
-          "primary-hover": "#A0CDA2",
-          "primary-pressed": "#7EB080",
+          primary: ACTION.dark.primary,
+          "primary-hover": ACTION.dark.primaryHover,
+          "primary-pressed": ACTION.dark.primaryPressed,
         },
 
-        // Primary dark mode color (matches action-dark.primary)
-        "primary-dark": "#8FC091",
+        "primary-dark": ACTION.dark.primary,
 
-        // Border colors for light mode - warm tones
         border: {
-          DEFAULT: "#E8E5E0",
-          subtle: "#F0EDE8",
+          DEFAULT: BORDER.light.default,
+          subtle: BORDER.light.subtle,
+          strong: BORDER.light.strong,
         },
 
-        // Border colors for dark mode - warm tones
         "border-dark": {
-          DEFAULT: "#3D3935",
-          subtle: "#4A463F",
+          DEFAULT: BORDER.dark.default,
+          subtle: BORDER.dark.subtle,
+          strong: BORDER.dark.strong,
         },
 
-        // ============================================
-        // LEGACY COLORS (keeping for compatibility)
-        // ============================================
         primary: {
           50: "#f0fdfa",
           100: "#ccfbf1",
@@ -179,16 +164,12 @@ module.exports = {
         },
       },
       fontSize: {
-        // Timer - Extra large for at-a-glance reading
         "timer-xl": ["3.5rem", { lineHeight: "1", fontWeight: "700" }],
         timer: ["3rem", { lineHeight: "1", fontWeight: "600" }],
         "timer-sm": ["2rem", { lineHeight: "1", fontWeight: "600" }],
-        // Stats
         stat: ["2rem", { lineHeight: "1.2", fontWeight: "600" }],
         "stat-sm": ["1.5rem", { lineHeight: "1.2", fontWeight: "600" }],
-        // Time since display
         "time-since": ["1.75rem", { lineHeight: "1.2", fontWeight: "700" }],
-        // Activity labels
         "activity-label": ["0.75rem", { lineHeight: "1", fontWeight: "600", letterSpacing: "0.05em" }],
       },
       spacing: {
@@ -204,15 +185,27 @@ module.exports = {
         "pill": "9999px",
       },
       boxShadow: {
-        "card": "0 2px 8px rgba(0, 0, 0, 0.08)",
-        "card-elevated": "0 4px 16px rgba(0, 0, 0, 0.12)",
-        "card-pressed": "0 1px 4px rgba(0, 0, 0, 0.08)",
-        "glow-feeding": "0 0 20px rgba(140, 179, 105, 0.3)",
-        "glow-sleep": "0 0 20px rgba(158, 141, 169, 0.3)",
-        "glow-diaper": "0 0 20px rgba(224, 160, 153, 0.3)",
-        "glow-pumping": "0 0 20px rgba(123, 163, 168, 0.3)",
-        "glow-growth": "0 0 20px rgba(106, 171, 156, 0.3)",
-        "glow-tummyTime": "0 0 20px rgba(212, 165, 116, 0.3)",
+        "card": "0 2px 8px rgba(45, 35, 30, 0.06)",
+        "card-elevated": "0 4px 16px rgba(45, 35, 30, 0.10)",
+        "card-pressed": "0 1px 4px rgba(45, 35, 30, 0.06)",
+        "soft": "0 4px 20px rgba(45, 35, 30, 0.08)",
+        "card-dark": "0 2px 12px rgba(0, 0, 0, 0.35)",
+        "card-elevated-dark": "0 4px 20px rgba(0, 0, 0, 0.45)",
+        "card-pressed-dark": "0 1px 6px rgba(0, 0, 0, 0.30)",
+        "glow-brand": "0 0 24px rgba(249, 168, 117, 0.15)",
+        "glow-brand-strong": "0 0 32px rgba(249, 168, 117, 0.25)",
+        "glow-feeding": "0 0 20px rgba(140, 179, 105, 0.25)",
+        "glow-sleep": "0 0 20px rgba(158, 141, 169, 0.25)",
+        "glow-diaper": "0 0 20px rgba(224, 160, 153, 0.25)",
+        "glow-pumping": "0 0 20px rgba(123, 163, 168, 0.25)",
+        "glow-growth": "0 0 20px rgba(106, 171, 156, 0.25)",
+        "glow-tummyTime": "0 0 20px rgba(212, 165, 116, 0.25)",
+        "glow-feeding-dark": "0 0 24px rgba(165, 200, 138, 0.30)",
+        "glow-sleep-dark": "0 0 24px rgba(181, 167, 189, 0.30)",
+        "glow-diaper-dark": "0 0 24px rgba(234, 184, 178, 0.30)",
+        "glow-pumping-dark": "0 0 24px rgba(150, 184, 188, 0.30)",
+        "glow-growth-dark": "0 0 24px rgba(136, 190, 176, 0.30)",
+        "glow-tummyTime-dark": "0 0 24px rgba(224, 185, 144, 0.30)",
       },
     },
   },
