@@ -23,6 +23,20 @@ vi.mock('@/contexts/sync-context', () => ({
   clearSyncData: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('@/services/supabase', () => ({
+  supabase: {
+    from: vi.fn().mockReturnValue({
+      insert: vi.fn().mockResolvedValue({ error: null }),
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    }),
+  },
+}));
+
 describe('Auth Token Security (SR-3)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
