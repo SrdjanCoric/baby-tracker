@@ -177,11 +177,11 @@ describe("HouseholdService", () => {
 
   describe("joinHouseholdViaInviteCode", () => {
     it("should return household data on successful join", async () => {
-      const mockHousehold = {
-        id: "new-household-123",
-        invite_code: "ABCD2345",
-        created_at: "2024-01-01T00:00:00Z",
-      };
+      const mockHousehold = [{
+        household_id: "new-household-123",
+        household_invite_code: "ABCD2345",
+        household_created_at: "2024-01-01T00:00:00Z",
+      }];
 
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: mockHousehold,
@@ -197,16 +197,16 @@ describe("HouseholdService", () => {
       });
       expect(result.error).toBeNull();
       expect(supabase.rpc).toHaveBeenCalledWith("join_household_by_invite_code", {
-        invite_code: "ABCD2345",
+        p_invite_code: "ABCD2345",
       });
     });
 
     it("should normalize invite code before calling RPC", async () => {
-      const mockHousehold = {
-        id: "household-123",
-        invite_code: "ABCD2345",
-        created_at: "2024-01-01T00:00:00Z",
-      };
+      const mockHousehold = [{
+        household_id: "household-123",
+        household_invite_code: "ABCD2345",
+        household_created_at: "2024-01-01T00:00:00Z",
+      }];
 
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: mockHousehold,
@@ -216,7 +216,7 @@ describe("HouseholdService", () => {
       await joinHouseholdViaInviteCode("abcd-2345");
 
       expect(supabase.rpc).toHaveBeenCalledWith("join_household_by_invite_code", {
-        invite_code: "ABCD2345",
+        p_invite_code: "ABCD2345",
       });
     });
 

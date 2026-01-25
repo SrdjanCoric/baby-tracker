@@ -24,10 +24,17 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
   },
 }));
 
+// Mock expo-crypto
+let uuidCounter = 0;
+vi.mock("expo-crypto", () => ({
+  randomUUID: vi.fn(() => `test-uuid-${++uuidCounter}`),
+}));
+
 describe("BabyStorageService", () => {
   beforeEach(() => {
     // Clear mock storage before each test
     Object.keys(mockStorage).forEach(key => delete mockStorage[key]);
+    uuidCounter = 0;
     vi.clearAllMocks();
   });
 

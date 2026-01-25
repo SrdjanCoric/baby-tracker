@@ -69,6 +69,9 @@ export { OfflineBanner } from "./OfflineBanner";
 export { CaregiverListItem } from "./CaregiverListItem";
 export { ConflictResolutionModal } from "./ConflictResolutionModal";
 
+// Auth components
+export { DisplayNamePrompt } from "./DisplayNamePrompt";
+
 // Onboarding components
 export {
   OnboardingScreen,

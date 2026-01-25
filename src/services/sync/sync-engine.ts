@@ -7,7 +7,9 @@ import {
   QueuedOperation,
   DEFAULT_SYNC_CONFIG,
   SyncEngineConfig,
+  SyncableTable,
 } from './types';
+import { supabase } from '../supabase';
 
 type SyncStateListener = (state: SyncState) => void;
 
@@ -246,11 +248,60 @@ export class SyncEngine {
           continue;
         }
 
-        this.queue.remove(operation.id);
+        try {
+          await this.executeOperation(operation);
+          this.queue.remove(operation.id);
+        } catch (error) {
+          console.error(`[SyncEngine] Failed to execute operation ${operation.id}:`, error);
+          operation.retryCount++;
+          if (operation.retryCount >= this.config.maxRetries) {
+            console.warn(`[SyncEngine] Quarantining operation ${operation.id} after ${operation.retryCount} retries`);
+            await this.quarantineOperation(operation);
+          }
+        }
       }
     }
 
     await this.queue.persist();
+  }
+
+  private async executeOperation(operation: QueuedOperation): Promise<void> {
+    const { table, type, entityId, data } = operation;
+
+    switch (type) {
+      case 'CREATE': {
+        if (!data) throw new Error('CREATE operation requires data');
+        const { error } = await supabase.from(table).insert(data);
+        if (error) {
+          if (error.code === '23505') {
+            return; // Record already exists, treat as success
+          }
+          throw new Error(`Failed to create ${table}: ${error.message}`);
+        }
+        break;
+      }
+      case 'UPDATE': {
+        if (!data) throw new Error('UPDATE operation requires data');
+        const { error } = await supabase
+          .from(table)
+          .update(data)
+          .eq('id', entityId);
+        if (error) {
+          throw new Error(`Failed to update ${table}: ${error.message}`);
+        }
+        break;
+      }
+      case 'DELETE': {
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('id', entityId);
+        if (error) {
+          throw new Error(`Failed to delete from ${table}: ${error.message}`);
+        }
+        break;
+      }
+    }
   }
 
   delay(ms: number): Promise<void> {

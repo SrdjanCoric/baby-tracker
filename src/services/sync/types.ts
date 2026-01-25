@@ -22,7 +22,9 @@ export type SyncableTable =
   | 'pumping_sessions'
   | 'growth_measurements'
   | 'tummy_time_sessions'
-  | 'babies';
+  | 'babies'
+  | 'users'
+  | 'households';
 
 export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE';
 

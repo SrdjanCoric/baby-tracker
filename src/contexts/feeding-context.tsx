@@ -5,6 +5,12 @@ import {
   CreateFeedingInput,
   UpdateFeedingInput,
 } from "@/services/feeding-storage";
+import {
+  fetchFeedingsFromDatabase,
+  createFeedingInDatabase,
+  updateFeedingInDatabase,
+  deleteFeedingFromDatabase,
+} from "@/services/activity-sync-service";
 import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { useBaby } from "./baby-context";
@@ -175,8 +181,8 @@ const FeedingContext = createContext<FeedingContextValue | null>(null);
 export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(feedingReducer, initialFeedingState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, enqueueOperation } = useSync();
-  const { user: _user } = useAuth();
+  const { subscribeToRemoteChanges } = useSync();
+  const { user } = useAuth();
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('feedings', (change: RemoteChange) => {
@@ -225,7 +231,19 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    const feedings = await FeedingStorageService.getAllFeedings(selectedBaby.id);
+    let feedings: StoredFeedingEntry[];
+
+    if (user?.householdId) {
+      try {
+        feedings = await fetchFeedingsFromDatabase(selectedBaby.id);
+      } catch (error) {
+        console.error("[FeedingContext] Failed to fetch from database, using local:", error);
+        feedings = await FeedingStorageService.getAllFeedings(selectedBaby.id);
+      }
+    } else {
+      feedings = await FeedingStorageService.getAllFeedings(selectedBaby.id);
+    }
+
     dispatch({ type: "SET_FEEDINGS", payload: feedings });
 
     const lastSide = await FeedingStorageService.getLastBreastSide(selectedBaby.id);
@@ -249,7 +267,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     }
 
     dispatch({ type: "SET_LOADING", payload: false });
-  }, [selectedBaby]);
+  }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
     loadFeedings();
@@ -298,7 +316,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     const lastSide = leftDurationSeconds >= rightDurationSeconds ? "left" : "right";
     const effectiveSide = leftDurationSeconds > 0 && rightDurationSeconds > 0 ? "both" : lastSide;
 
-    const feeding = await FeedingStorageService.addFeeding({
+    const feedingInput: CreateFeedingInput = {
       babyId: selectedBaby.id,
       type: "breast",
       side: effectiveSide,
@@ -308,14 +326,22 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       durationSeconds,
       leftDurationSeconds: leftDurationSeconds > 0 ? leftDurationSeconds : undefined,
       rightDurationSeconds: rightDurationSeconds > 0 ? rightDurationSeconds : undefined,
-    });
+    };
+
+    let feeding: StoredFeedingEntry;
+
+    if (user?.householdId && user?.id) {
+      feeding = await createFeedingInDatabase(feedingInput, user.id);
+    } else {
+      feeding = await FeedingStorageService.addFeeding(feedingInput);
+    }
 
     dispatch({ type: "ADD_FEEDING", payload: feeding });
     dispatch({ type: "STOP_TIMER" });
     await FeedingStorageService.clearActiveTimer(selectedBaby.id);
 
     return feeding;
-  }, [selectedBaby, state.activeTimer]);
+  }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
   const changeSide = useCallback((side: BreastSide) => {
     if (!state.activeTimer) return;
@@ -353,18 +379,17 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   }, [selectedBaby, state.activeTimer]);
 
   const addFeeding = useCallback(async (input: CreateFeedingInput): Promise<StoredFeedingEntry> => {
-    const feeding = await FeedingStorageService.addFeeding(input);
+    let feeding: StoredFeedingEntry;
+
+    if (user?.householdId && user?.id) {
+      feeding = await createFeedingInDatabase(input, user.id);
+    } else {
+      feeding = await FeedingStorageService.addFeeding(input);
+    }
+
     dispatch({ type: "ADD_FEEDING", payload: feeding });
-
-    await enqueueOperation({
-      type: 'CREATE',
-      table: 'feedings',
-      entityId: feeding.id,
-      data: transformFeedingToSync(feeding),
-    });
-
     return feeding;
-  }, [enqueueOperation]);
+  }, [user?.householdId, user?.id]);
 
   const updateFeeding = useCallback(async (
     feedingId: string,
@@ -372,40 +397,36 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   ): Promise<StoredFeedingEntry | null> => {
     if (!selectedBaby) return null;
 
-    const updated = await FeedingStorageService.updateFeeding(
-      selectedBaby.id,
-      feedingId,
-      input
-    );
+    let updated: StoredFeedingEntry | null;
+
+    if (user?.householdId) {
+      updated = await updateFeedingInDatabase(selectedBaby.id, feedingId, input);
+    } else {
+      updated = await FeedingStorageService.updateFeeding(selectedBaby.id, feedingId, input);
+    }
+
     if (updated) {
       dispatch({ type: "UPDATE_FEEDING", payload: updated });
-
-      await enqueueOperation({
-        type: 'UPDATE',
-        table: 'feedings',
-        entityId: feedingId,
-        data: transformFeedingToSync(updated),
-      });
     }
     return updated;
-  }, [selectedBaby, enqueueOperation]);
+  }, [selectedBaby, user?.householdId]);
 
   const deleteFeeding = useCallback(async (feedingId: string): Promise<boolean> => {
     if (!selectedBaby) return false;
 
-    const result = await FeedingStorageService.deleteFeeding(selectedBaby.id, feedingId);
+    let result: boolean;
+
+    if (user?.householdId) {
+      result = await deleteFeedingFromDatabase(selectedBaby.id, feedingId);
+    } else {
+      result = await FeedingStorageService.deleteFeeding(selectedBaby.id, feedingId);
+    }
+
     if (result) {
       dispatch({ type: "DELETE_FEEDING", payload: feedingId });
-
-      await enqueueOperation({
-        type: 'DELETE',
-        table: 'feedings',
-        entityId: feedingId,
-        data: null,
-      });
     }
     return result;
-  }, [selectedBaby, enqueueOperation]);
+  }, [selectedBaby, user?.householdId]);
 
   const getLastFeeding = useCallback((): StoredFeedingEntry | null => {
     if (state.feedings.length === 0) return null;
@@ -468,24 +489,3 @@ function transformFeedingFromRemote(data: Record<string, unknown>): StoredFeedin
   };
 }
 
-function transformFeedingToSync(feeding: StoredFeedingEntry): Record<string, unknown> {
-  return {
-    id: feeding.id,
-    baby_id: feeding.babyId,
-    type: feeding.type,
-    side: feeding.side,
-    last_finished_side: feeding.lastFinishedSide,
-    started_at: feeding.startedAt,
-    ended_at: feeding.endedAt,
-    duration_seconds: feeding.durationSeconds,
-    left_duration_seconds: feeding.leftDurationSeconds,
-    right_duration_seconds: feeding.rightDurationSeconds,
-    amount_ml: feeding.amountMl,
-    content_type: feeding.contentType,
-    food_type: feeding.foodType,
-    amount: feeding.amount,
-    reaction: feeding.reaction,
-    notes: feeding.notes,
-    logged_by: feeding.loggedBy,
-  };
-}

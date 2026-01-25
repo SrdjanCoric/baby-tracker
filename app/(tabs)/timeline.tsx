@@ -12,7 +12,7 @@ import {
   LoadingState,
 } from "@/components";
 import { ActivityFilterTabs, FilteredSummaryBanner, type FilterType } from "@/components/timeline";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
@@ -107,10 +107,32 @@ export default function TimelineScreen() {
   const { pumpings, isLoading: pumpingsLoading, refreshPumpings } = usePumping();
   const { measurements, isLoading: growthLoading, refreshMeasurements } = useGrowth();
   const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
+  const { members } = useHousehold();
   const { colorScheme } = useColorScheme();
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+
+  const getMemberName = useCallback((userId: string | undefined): string | undefined => {
+    // Don't show "logged by" if there's only 1 person in the household
+    if (members.length <= 1) return undefined;
+    if (!userId) return undefined;
+
+    // Find the member who logged this entry
+    const member = members.find(m => m.id === userId);
+    if (!member) return undefined;
+
+    // Use display name if available
+    if (member.displayName) return member.displayName;
+
+    // Fall back to email username (capitalize first letter)
+    if (member.email) {
+      const emailName = member.email.split('@')[0];
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    }
+
+    return undefined;
+  }, [members]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -371,7 +393,12 @@ export default function TimelineScreen() {
       ...growthEntries,
       ...tummyTimeEntries,
     ];
-    return allEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return allEntries
+      .map(entry => ({
+        ...entry,
+        loggedBy: getMemberName(entry.loggedBy),
+      }))
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [
     feedings,
     sleeps,
@@ -386,6 +413,7 @@ export default function TimelineScreen() {
     pumpingToTimelineEntry,
     growthToTimelineEntry,
     tummyTimeToTimelineEntry,
+    getMemberName,
   ]);
 
   // Type cast for t function to match component interfaces

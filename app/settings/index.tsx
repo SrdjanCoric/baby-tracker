@@ -119,15 +119,6 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView className="flex-1 px-4 pt-4">
-        {/* Baby Management */}
-        <SettingsSection title={t("baby.title")}>
-          <SettingsRow
-            icon="👶"
-            label={t("baby.addBaby")}
-            onPress={() => router.push("/baby/add")}
-          />
-        </SettingsSection>
-
         {/* Preferences */}
         <SettingsSection title={t("settings.preferences")}>
           <SettingsRow

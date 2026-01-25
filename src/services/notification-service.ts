@@ -4,6 +4,7 @@
  */
 
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import type {
   NotificationContent,
   PermissionStatus,
@@ -69,6 +70,17 @@ export const NotificationService = {
         description: "Alerts when timers exceed thresholds",
       }
     );
+
+    await Notifications.setNotificationChannelAsync(
+      NOTIFICATION_CHANNELS.HOUSEHOLD_ACTIVITY,
+      {
+        name: "Household Activity",
+        importance: Notifications.AndroidImportance.DEFAULT,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#14b8a6",
+        description: "Notifications when household members log activities",
+      }
+    );
   },
 
   async getPermissionStatus(): Promise<PermissionStatus> {
@@ -81,6 +93,27 @@ export const NotificationService = {
     if (!Notifications) return false;
     const { status } = await Notifications.requestPermissionsAsync();
     return status === "granted";
+  },
+
+  async getExpoPushToken(): Promise<string | null> {
+    if (!Notifications) return null;
+
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== "granted") return null;
+
+    try {
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+      if (!projectId) {
+        console.warn("[Notifications] No EAS project ID configured");
+        return null;
+      }
+
+      const token = await Notifications.getExpoPushTokenAsync({ projectId });
+      return token.data;
+    } catch (error) {
+      console.error("[Notifications] Failed to get push token:", error);
+      return null;
+    }
   },
 
   async getScheduledNotificationCount(): Promise<number> {

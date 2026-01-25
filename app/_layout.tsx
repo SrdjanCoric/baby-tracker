@@ -8,8 +8,9 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, useTheme, useAuth, useSync } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, useTheme, useAuth, useSync, useNotifications } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
@@ -84,47 +85,86 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function SyncAuthSetup({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { setAuthContext } = useSync();
-  const hasSetAuthRef = useRef(false);
+  const lastHouseholdIdRef = useRef<string | null>(null);
   const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (user?.id && !hasSetAuthRef.current) {
-      // Use householdId if available, otherwise fall back to userId for single-user mode
+    if (user?.id) {
       const householdId = user.householdId || user.id;
-      setAuthContext(householdId, user.id);
-      hasSetAuthRef.current = true;
-      lastUserIdRef.current = user.id;
-    }
 
-    // Reset if user changes or logs out
-    if (!user?.id || (lastUserIdRef.current && lastUserIdRef.current !== user.id)) {
-      hasSetAuthRef.current = false;
+      if (lastUserIdRef.current !== user.id || lastHouseholdIdRef.current !== householdId) {
+        setAuthContext(householdId, user.id);
+        lastUserIdRef.current = user.id;
+        lastHouseholdIdRef.current = householdId;
+      }
+    } else {
       lastUserIdRef.current = null;
+      lastHouseholdIdRef.current = null;
     }
   }, [user?.id, user?.householdId, setAuthContext]);
 
   return <>{children}</>;
 }
 
+function NotificationAuthSetup({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const { registerPushTokenForUser } = useNotifications();
+  const lastUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const userId = user?.id ?? null;
+    if (userId !== lastUserIdRef.current) {
+      lastUserIdRef.current = userId;
+      registerPushTokenForUser(userId);
+    }
+  }, [user?.id, registerPushTokenForUser]);
+
+  return <>{children}</>;
+}
+
+function DisplayNamePromptWrapper({ children }: { children: React.ReactNode }) {
+  const { user, isAuthenticated } = useAuth();
+
+  // Show prompt for authenticated users without a display name
+  const showPrompt = isAuthenticated && !!user?.id && !user?.displayName;
+
+  const handleComplete = useCallback(() => {
+    // The prompt will automatically hide when user.displayName is set
+    // No action needed here since we're using derived state
+  }, []);
+
+  return (
+    <>
+      {children}
+      <DisplayNamePrompt visible={showPrompt} onComplete={handleComplete} />
+    </>
+  );
+}
+
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
+      console.log("[DeepLink] Received URL:", url);
+
       if (url.includes("login-callback") || url.includes("auth/callback")) {
         try {
-          // Parse all params from both hash and query string
           const hashIndex = url.indexOf('#');
           const queryIndex = url.indexOf('?');
+
+          console.log("[DeepLink] Hash index:", hashIndex, "Query index:", queryIndex);
 
           let params = new URLSearchParams();
 
           if (hashIndex !== -1) {
             const hashParams = url.substring(hashIndex + 1);
+            console.log("[DeepLink] Hash params:", hashParams);
             params = new URLSearchParams(hashParams);
           }
 
           if (queryIndex !== -1) {
             const endIndex = hashIndex !== -1 ? hashIndex : url.length;
             const queryParams = new URLSearchParams(url.substring(queryIndex + 1, endIndex));
+            console.log("[DeepLink] Query params:", url.substring(queryIndex + 1, endIndex));
             queryParams.forEach((value, key) => {
               if (!params.has(key)) params.set(key, value);
             });
@@ -134,26 +174,59 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
           const refreshToken = params.get('refresh_token');
           const tokenHash = params.get('token_hash');
           const type = params.get('type');
+          const code = params.get('code');
 
-          // Handle direct session tokens
+          console.log("[DeepLink] Params found:", {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken,
+            hasTokenHash: !!tokenHash,
+            hasCode: !!code,
+            type,
+          });
+
+          // PKCE flow: exchange code for session
+          if (code) {
+            console.log("[DeepLink] Exchanging PKCE code for session...");
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) {
+              console.error("[DeepLink] exchangeCodeForSession error:", error);
+            } else {
+              console.log("[DeepLink] PKCE code exchanged successfully");
+            }
+            return;
+          }
+
+          // Implicit flow: set session directly
           if (accessToken && refreshToken) {
-            await supabase.auth.setSession({
+            console.log("[DeepLink] Setting session with tokens...");
+            const { error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
+            if (error) {
+              console.error("[DeepLink] setSession error:", error);
+            } else {
+              console.log("[DeepLink] Session set successfully");
+            }
             return;
           }
 
-          // Handle magic link token_hash verification
+          // OTP verification
           if (tokenHash && type) {
-            await supabase.auth.verifyOtp({
+            console.log("[DeepLink] Verifying OTP...");
+            const { error } = await supabase.auth.verifyOtp({
               token_hash: tokenHash,
               type: type as 'email' | 'magiclink',
             });
+            if (error) {
+              console.error("[DeepLink] verifyOtp error:", error);
+            } else {
+              console.log("[DeepLink] OTP verified successfully");
+            }
             return;
           }
 
-          // Fallback: try getSession
+          console.log("[DeepLink] No auth params found, trying getSession...");
           await supabase.auth.getSession();
         } catch (error) {
           console.error("[DeepLink] Error:", error);
@@ -280,8 +353,8 @@ export default function RootLayout() {
         <AuthProvider>
           <DeepLinkHandler>
           <AuthGuard>
-            <HouseholdProvider>
-              <SyncProvider>
+            <SyncProvider>
+              <HouseholdProvider>
                 <SyncAuthSetup>
                 <UnitProvider>
                   <BabyProvider>
@@ -292,9 +365,13 @@ export default function RootLayout() {
                             <GrowthProvider>
                               <TummyTimeProvider>
                                 <NotificationProvider>
-                                  <DashboardConfigProvider>
-                                    <AppContent />
-                                  </DashboardConfigProvider>
+                                  <NotificationAuthSetup>
+                                    <DashboardConfigProvider>
+                                      <DisplayNamePromptWrapper>
+                                        <AppContent />
+                                      </DisplayNamePromptWrapper>
+                                    </DashboardConfigProvider>
+                                  </NotificationAuthSetup>
                                 </NotificationProvider>
                               </TummyTimeProvider>
                             </GrowthProvider>
@@ -305,8 +382,8 @@ export default function RootLayout() {
                   </BabyProvider>
                 </UnitProvider>
                 </SyncAuthSetup>
-              </SyncProvider>
-            </HouseholdProvider>
+              </HouseholdProvider>
+            </SyncProvider>
           </AuthGuard>
           </DeepLinkHandler>
         </AuthProvider>

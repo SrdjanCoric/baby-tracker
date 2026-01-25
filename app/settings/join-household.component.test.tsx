@@ -1,3 +1,13 @@
+jest.mock("@/services/supabase", () => ({
+  supabase: {
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({ data: null, error: null }),
+    }),
+  },
+}));
+
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
@@ -28,11 +38,18 @@ let mockIsAuthenticated = true;
 jest.mock("@/contexts", () => ({
   useHousehold: () => ({
     joinHousehold: mockJoinHousehold,
+    clearError: jest.fn(),
     isLoading: false,
     error: null,
   }),
   useAuth: () => ({
     isAuthenticated: mockIsAuthenticated,
+  }),
+  useBaby: () => ({
+    babies: [],
+    selectedBaby: null,
+    isLoading: false,
+    refreshBabies: jest.fn().mockResolvedValue(undefined),
   }),
 }));
 

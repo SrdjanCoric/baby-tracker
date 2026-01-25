@@ -5,6 +5,12 @@ import {
   CreateSleepInput,
   UpdateSleepInput,
 } from "@/services/sleep-storage";
+import {
+  fetchSleepFromDatabase,
+  createSleepInDatabase,
+  updateSleepInDatabase,
+  deleteSleepFromDatabase,
+} from "@/services/activity-sync-service";
 import type { SleepType } from "@/constants/activities";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
@@ -177,8 +183,8 @@ const SleepContext = createContext<SleepContextValue | null>(null);
 export function SleepProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(sleepReducer, initialSleepState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, enqueueOperation } = useSync();
-  const { user: _user } = useAuth();
+  const { subscribeToRemoteChanges } = useSync();
+  const { user } = useAuth();
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('sleep_sessions', (change: RemoteChange) => {
@@ -210,7 +216,19 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    const sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
+    let sleeps: StoredSleepEntry[];
+
+    if (user?.householdId) {
+      try {
+        sleeps = await fetchSleepFromDatabase(selectedBaby.id);
+      } catch (error) {
+        console.error("[SleepContext] Failed to fetch from database, using local:", error);
+        sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
+      }
+    } else {
+      sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
+    }
+
     dispatch({ type: "SET_SLEEPS", payload: sleeps });
 
     const hasCustomGoal = await SleepStorageService.hasCustomGoal(selectedBaby.id);
@@ -266,7 +284,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     }
 
     dispatch({ type: "SET_LOADING", payload: false });
-  }, [selectedBaby]);
+  }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
     loadSleeps();
@@ -292,20 +310,28 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       (endTime.getTime() - state.activeTimer.startTime.getTime()) / 1000
     );
 
-    const sleep = await SleepStorageService.addSleep({
+    const sleepInput: CreateSleepInput = {
       babyId: selectedBaby.id,
       type: state.activeTimer.sleepType,
       startedAt: state.activeTimer.startTime,
       endedAt: endTime,
       durationSeconds,
-    });
+    };
+
+    let sleep: StoredSleepEntry;
+
+    if (user?.householdId && user?.id) {
+      sleep = await createSleepInDatabase(sleepInput, user.id);
+    } else {
+      sleep = await SleepStorageService.addSleep(sleepInput);
+    }
 
     dispatch({ type: "ADD_SLEEP", payload: sleep });
     dispatch({ type: "STOP_TIMER" });
     await SleepStorageService.clearActiveTimer(selectedBaby.id);
 
     return sleep;
-  }, [selectedBaby, state.activeTimer]);
+  }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
   const changeSleepType = useCallback((sleepType: SleepType) => {
     dispatch({ type: "UPDATE_TIMER_TYPE", payload: sleepType });
@@ -318,11 +344,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   }, [selectedBaby, state.activeTimer]);
 
   const addSleep = useCallback(async (input: CreateSleepInput): Promise<StoredSleepEntry> => {
-    const sleep = await SleepStorageService.addSleep(input);
+    let sleep: StoredSleepEntry;
+
+    if (user?.householdId && user?.id) {
+      sleep = await createSleepInDatabase(input, user.id);
+    } else {
+      sleep = await SleepStorageService.addSleep(input);
+    }
+
     dispatch({ type: "ADD_SLEEP", payload: sleep });
-    await enqueueOperation({ type: 'CREATE', table: 'sleep_sessions', entityId: sleep.id, data: transformSleepToSync(sleep) });
     return sleep;
-  }, [enqueueOperation]);
+  }, [user?.householdId, user?.id]);
 
   const updateSleep = useCallback(async (
     sleepId: string,
@@ -330,28 +362,36 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   ): Promise<StoredSleepEntry | null> => {
     if (!selectedBaby) return null;
 
-    const updated = await SleepStorageService.updateSleep(
-      selectedBaby.id,
-      sleepId,
-      input
-    );
+    let updated: StoredSleepEntry | null;
+
+    if (user?.householdId) {
+      updated = await updateSleepInDatabase(selectedBaby.id, sleepId, input);
+    } else {
+      updated = await SleepStorageService.updateSleep(selectedBaby.id, sleepId, input);
+    }
+
     if (updated) {
       dispatch({ type: "UPDATE_SLEEP", payload: updated });
-      await enqueueOperation({ type: 'UPDATE', table: 'sleep_sessions', entityId: sleepId, data: transformSleepToSync(updated) });
     }
     return updated;
-  }, [selectedBaby, enqueueOperation]);
+  }, [selectedBaby, user?.householdId]);
 
   const deleteSleep = useCallback(async (sleepId: string): Promise<boolean> => {
     if (!selectedBaby) return false;
 
-    const result = await SleepStorageService.deleteSleep(selectedBaby.id, sleepId);
+    let result: boolean;
+
+    if (user?.householdId) {
+      result = await deleteSleepFromDatabase(selectedBaby.id, sleepId);
+    } else {
+      result = await SleepStorageService.deleteSleep(selectedBaby.id, sleepId);
+    }
+
     if (result) {
       dispatch({ type: "DELETE_SLEEP", payload: sleepId });
-      await enqueueOperation({ type: 'DELETE', table: 'sleep_sessions', entityId: sleepId, data: null });
     }
     return result;
-  }, [selectedBaby, enqueueOperation]);
+  }, [selectedBaby, user?.householdId]);
 
   const getLastSleep = useCallback((): StoredSleepEntry | null => {
     if (state.sleeps.length === 0) return null;
@@ -482,15 +522,3 @@ function transformSleepFromRemote(data: Record<string, unknown>): StoredSleepEnt
   };
 }
 
-function transformSleepToSync(sleep: StoredSleepEntry): Record<string, unknown> {
-  return {
-    id: sleep.id,
-    baby_id: sleep.babyId,
-    type: sleep.type,
-    started_at: sleep.startedAt,
-    ended_at: sleep.endedAt,
-    duration_seconds: sleep.durationSeconds,
-    notes: sleep.notes,
-    logged_by: sleep.loggedBy,
-  };
-}

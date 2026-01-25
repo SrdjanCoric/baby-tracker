@@ -11,6 +11,9 @@ export interface HouseholdMember {
   id: string;
   email: string | null;
   displayName: string | null;
+  avatarUrl?: string | null;
+  role?: 'owner' | 'member';
+  joinedAt?: string | null;
 }
 
 interface HouseholdResult<T> {
@@ -79,6 +82,44 @@ export async function regenerateInviteCode(
   return { data: data as string, error: null };
 }
 
+export async function leaveHousehold(): Promise<HouseholdResult<Household>> {
+  const { data, error } = await supabase.rpc("leave_household");
+
+  if (error) {
+    if (error.message?.includes("Owner cannot leave")) {
+      return { data: null, error: "ownerCannotLeave" };
+    }
+    if (error.message?.includes("not in a household")) {
+      return { data: null, error: "notInHousehold" };
+    }
+    if (error.message?.includes("Not authenticated")) {
+      return { data: null, error: "notAuthenticated" };
+    }
+    return { data: null, error: "leaveFailed" };
+  }
+
+  const rows = data as Array<{
+    household_id: string;
+    household_invite_code: string;
+    household_created_at: string;
+  }>;
+
+  if (!rows || rows.length === 0) {
+    return { data: null, error: "leaveFailed" };
+  }
+
+  const household = rows[0];
+
+  return {
+    data: {
+      id: household.household_id,
+      inviteCode: household.household_invite_code,
+      createdAt: household.household_created_at,
+    },
+    error: null,
+  };
+}
+
 export async function joinHouseholdViaInviteCode(
   inviteCode: string
 ): Promise<HouseholdResult<Household>> {
@@ -90,7 +131,7 @@ export async function joinHouseholdViaInviteCode(
   const normalizedCode = normalizeInviteCode(inviteCode);
 
   const { data, error } = await supabase.rpc("join_household_by_invite_code", {
-    invite_code: normalizedCode,
+    p_invite_code: normalizedCode,
   });
 
   if (error) {
@@ -103,17 +144,24 @@ export async function joinHouseholdViaInviteCode(
     return { data: null, error: "joinFailed" };
   }
 
-  const household = data as {
-    id: string;
-    invite_code: string;
-    created_at: string;
-  };
+  // RPC with RETURNS TABLE returns an array
+  const rows = data as Array<{
+    household_id: string;
+    household_invite_code: string;
+    household_created_at: string;
+  }>;
+
+  if (!rows || rows.length === 0) {
+    return { data: null, error: "joinFailed" };
+  }
+
+  const household = rows[0];
 
   return {
     data: {
-      id: household.id,
-      inviteCode: household.invite_code,
-      createdAt: household.created_at,
+      id: household.household_id,
+      inviteCode: household.household_invite_code,
+      createdAt: household.household_created_at,
     },
     error: null,
   };

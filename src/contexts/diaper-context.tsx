@@ -6,6 +6,12 @@ import {
   UpdateDiaperInput,
   DiaperCounts,
 } from "@/services/diaper-storage";
+import {
+  fetchDiapersFromDatabase,
+  createDiaperInDatabase,
+  updateDiaperInDatabase,
+  deleteDiaperFromDatabase,
+} from "@/services/activity-sync-service";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
@@ -92,8 +98,8 @@ const DiaperContext = createContext<DiaperContextValue | null>(null);
 export function DiaperProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(diaperReducer, initialDiaperState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, enqueueOperation } = useSync();
-  const { user: _user } = useAuth();
+  const { subscribeToRemoteChanges } = useSync();
+  const { user } = useAuth();
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('diapers', (change: RemoteChange) => {
@@ -142,29 +148,39 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    const diapers = await DiaperStorageService.getAllDiapers(selectedBaby.id);
-    dispatch({ type: "SET_DIAPERS", payload: diapers });
+    let diapers: StoredDiaperEntry[];
 
+    if (user?.householdId) {
+      try {
+        diapers = await fetchDiapersFromDatabase(selectedBaby.id);
+      } catch (error) {
+        console.error("[DiaperContext] Failed to fetch from database, using local:", error);
+        diapers = await DiaperStorageService.getAllDiapers(selectedBaby.id);
+      }
+    } else {
+      diapers = await DiaperStorageService.getAllDiapers(selectedBaby.id);
+    }
+
+    dispatch({ type: "SET_DIAPERS", payload: diapers });
     dispatch({ type: "SET_LOADING", payload: false });
-  }, [selectedBaby]);
+  }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
     loadDiapers();
   }, [loadDiapers]);
 
   const addDiaper = useCallback(async (input: CreateDiaperInput): Promise<StoredDiaperEntry> => {
-    const diaper = await DiaperStorageService.addDiaper(input);
+    let diaper: StoredDiaperEntry;
+
+    if (user?.householdId && user?.id) {
+      diaper = await createDiaperInDatabase(input, user.id);
+    } else {
+      diaper = await DiaperStorageService.addDiaper(input);
+    }
+
     dispatch({ type: "ADD_DIAPER", payload: diaper });
-
-    await enqueueOperation({
-      type: 'CREATE',
-      table: 'diapers',
-      entityId: diaper.id,
-      data: transformDiaperToSync(diaper),
-    });
-
     return diaper;
-  }, [enqueueOperation]);
+  }, [user?.householdId, user?.id]);
 
   const updateDiaper = useCallback(async (
     diaperId: string,
@@ -172,40 +188,36 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
   ): Promise<StoredDiaperEntry | null> => {
     if (!selectedBaby) return null;
 
-    const updated = await DiaperStorageService.updateDiaper(
-      selectedBaby.id,
-      diaperId,
-      input
-    );
+    let updated: StoredDiaperEntry | null;
+
+    if (user?.householdId) {
+      updated = await updateDiaperInDatabase(selectedBaby.id, diaperId, input);
+    } else {
+      updated = await DiaperStorageService.updateDiaper(selectedBaby.id, diaperId, input);
+    }
+
     if (updated) {
       dispatch({ type: "UPDATE_DIAPER", payload: updated });
-
-      await enqueueOperation({
-        type: 'UPDATE',
-        table: 'diapers',
-        entityId: diaperId,
-        data: transformDiaperToSync(updated),
-      });
     }
     return updated;
-  }, [selectedBaby, enqueueOperation]);
+  }, [selectedBaby, user?.householdId]);
 
   const deleteDiaper = useCallback(async (diaperId: string): Promise<boolean> => {
     if (!selectedBaby) return false;
 
-    const result = await DiaperStorageService.deleteDiaper(selectedBaby.id, diaperId);
+    let result: boolean;
+
+    if (user?.householdId) {
+      result = await deleteDiaperFromDatabase(selectedBaby.id, diaperId);
+    } else {
+      result = await DiaperStorageService.deleteDiaper(selectedBaby.id, diaperId);
+    }
+
     if (result) {
       dispatch({ type: "DELETE_DIAPER", payload: diaperId });
-
-      await enqueueOperation({
-        type: 'DELETE',
-        table: 'diapers',
-        entityId: diaperId,
-        data: null,
-      });
     }
     return result;
-  }, [selectedBaby, enqueueOperation]);
+  }, [selectedBaby, user?.householdId]);
 
   const getLastDiaper = useCallback((): StoredDiaperEntry | null => {
     if (state.diapers.length === 0) return null;
@@ -276,14 +288,3 @@ function transformDiaperFromRemote(data: Record<string, unknown>): StoredDiaperE
   };
 }
 
-function transformDiaperToSync(diaper: StoredDiaperEntry): Record<string, unknown> {
-  return {
-    id: diaper.id,
-    baby_id: diaper.babyId,
-    type: diaper.type,
-    stool_color: diaper.stoolColor,
-    changed_at: diaper.changedAt,
-    notes: diaper.notes,
-    logged_by: diaper.loggedBy,
-  };
-}

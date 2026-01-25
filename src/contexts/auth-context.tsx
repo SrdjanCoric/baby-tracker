@@ -71,6 +71,7 @@ export interface AuthUser {
   email: string | null;
   displayName: string | null;
   householdId: string | null;
+  isOwner: boolean;
 }
 
 interface AuthContextValue {
@@ -86,29 +87,31 @@ interface AuthContextValue {
   signOut: () => Promise<{ error: AuthError | null }>;
   updateDisplayName: (displayName: string) => Promise<{ error: Error | null }>;
   verifyPassword: (password: string) => Promise<{ verified: boolean; error: Error | null }>;
+  refreshUserProfile: () => Promise<void>;
   isAppleSignInAvailable: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function fetchUserProfile(userId: string): Promise<{ householdId: string | null; displayName: string | null }> {
+async function fetchUserProfile(userId: string): Promise<{ householdId: string | null; displayName: string | null; isOwner: boolean }> {
   const { data, error } = await supabase
     .from("users")
-    .select("household_id, display_name")
+    .select("household_id, display_name, is_owner")
     .eq("id", userId)
     .single();
 
   if (error || !data) {
-    return { householdId: null, displayName: null };
+    return { householdId: null, displayName: null, isOwner: false };
   }
 
   return {
     householdId: data.household_id,
     displayName: data.display_name,
+    isOwner: data.is_owner ?? false,
   };
 }
 
-function mapSupabaseUser(user: User | null, profile: { householdId: string | null; displayName: string | null }): AuthUser | null {
+function mapSupabaseUser(user: User | null, profile: { householdId: string | null; displayName: string | null; isOwner: boolean }): AuthUser | null {
   if (!user) return null;
 
   return {
@@ -116,6 +119,7 @@ function mapSupabaseUser(user: User | null, profile: { householdId: string | nul
     email: user.email ?? null,
     displayName: profile.displayName,
     householdId: profile.householdId,
+    isOwner: profile.isOwner,
   };
 }
 
@@ -139,18 +143,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const config = {
+      GoogleSignin.configure({
         iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
         webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-      };
-      console.log("[GoogleSignIn] Configuring with:", {
-        iosClientId: config.iosClientId?.substring(0, 20) + "...",
-        webClientId: config.webClientId?.substring(0, 20) + "...",
-        hasIosClientId: !!config.iosClientId,
-        hasWebClientId: !!config.webClientId,
       });
-      GoogleSignin.configure(config);
-      console.log("[GoogleSignIn] Configuration complete");
     } catch (error) {
       console.error("[GoogleSignIn] Failed to configure:", error);
     }
@@ -199,12 +195,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(newSession);
 
         // Set authenticated user immediately from session data
-        // Profile data (householdId, displayName) will be fetched separately
+        // Profile data (householdId, displayName, isOwner) will be fetched separately
         const authUser: AuthUser = {
           id: newSession.user.id,
           email: newSession.user.email ?? null,
           displayName: newSession.user.user_metadata?.display_name ?? null,
           householdId: null,
+          isOwner: false,
         };
         setUser(authUser);
 
@@ -282,36 +279,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      console.log("[GoogleSignIn] Starting sign in...");
       await GoogleSignin.hasPlayServices();
-      console.log("[GoogleSignIn] Play services available");
-
       const userInfo = await GoogleSignin.signIn();
-      console.log("[GoogleSignIn] User info received:", JSON.stringify(userInfo, null, 2));
 
       const idToken = userInfo.data?.idToken;
       if (!idToken) {
-        console.log("[GoogleSignIn] No ID token in response");
         return { error: new Error("Google Sign-In: No ID token received") };
       }
 
-      console.log("[GoogleSignIn] ID token received, calling Supabase...");
       const { error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: idToken,
       });
 
       if (error) {
-        console.log("[GoogleSignIn] Supabase error:", error.message);
         return { error: new Error(`Google Sign-In failed: ${error.message}`) };
       }
 
-      console.log("[GoogleSignIn] Success!");
       return { error: null };
     } catch (err) {
-      console.log("[GoogleSignIn] Caught error:", err);
       if (isErrorWithCode(err)) {
-        console.log("[GoogleSignIn] Error code:", err.code);
         if (err.code === statusCodes.SIGN_IN_CANCELLED) {
           return { error: null };
         } else if (err.code === statusCodes.IN_PROGRESS) {
@@ -346,23 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: new Error(`Apple Sign-In failed: ${error.message}`) };
       }
 
-      if (data?.user && credential.fullName?.givenName) {
-        const displayName = [credential.fullName.givenName, credential.fullName.familyName]
-          .filter(Boolean)
-          .join(" ");
-
-        if (displayName) {
-          try {
-            await supabase
-              .from("users")
-              .update({ display_name: displayName })
-              .eq("id", data.user.id);
-          } catch (updateError) {
-            console.error("Failed to update display name:", updateError);
-          }
-        }
-      }
-
+      // Don't auto-save Apple display name - always prompt user to set their own
       return { error: null };
     } catch (err) {
       const errorCode = (err as { code?: string }).code;
@@ -423,6 +394,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.email]);
 
+  const refreshUserProfile = useCallback(async () => {
+    if (!user?.id) return;
+
+    const profile = await fetchUserProfile(user.id);
+    setUser(prev => prev ? { ...prev, ...profile } : prev);
+  }, [user?.id]);
+
   const value: AuthContextValue = {
     user,
     session,
@@ -436,6 +414,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateDisplayName,
     verifyPassword,
+    refreshUserProfile,
     isAppleSignInAvailable,
   };
 
