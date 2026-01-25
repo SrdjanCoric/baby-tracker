@@ -8,11 +8,12 @@ import { useDiaper } from "@/contexts/diaper-context";
 import { useBaby } from "@/contexts";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { STOOL_COLORS } from "@/constants/activities";
-import { ACTIVITY, TEXT } from "@/constants/colors";
+import { ACTIVITY, TEXT, SURFACE } from "@/constants/colors";
 
 const DIAPER_ACCENT = ACTIVITY.diaper.accent;
 const DIAPER_ACCENT_DARK = ACTIVITY.diaper.accentDark;
-const DIAPER_BUTTON_BG = "#D4837D";
+const DIAPER_BUTTON = ACTIVITY.diaper.button;
+const DIAPER_BUTTON_DARK = ACTIVITY.diaper.buttonDark;
 
 const STOOL_COLOR_MAP: Record<StoolColor, string> = {
   yellow: "#F4D03F",
@@ -33,7 +34,9 @@ export default function DiaperScreen() {
   const isDark = colorScheme === "dark";
 
   const accentColor = isDark ? DIAPER_ACCENT_DARK : DIAPER_ACCENT;
-  const secondaryBg = isDark ? "#363330" : "#F5F2F0";
+  const buttonBgColor = isDark ? DIAPER_BUTTON_DARK : DIAPER_BUTTON;
+  const linkTextColor = isDark ? DIAPER_ACCENT_DARK : DIAPER_BUTTON;
+  const secondaryBg = isDark ? SURFACE.dark.cardElevated : SURFACE.light.secondary;
   const textColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
 
   const [selectedType, setSelectedType] = useState<DiaperType | null>(null);
@@ -200,7 +203,7 @@ export default function DiaperScreen() {
           accessibilityRole="button"
           accessibilityLabel={t("diaper.logPastDiaper")}
         >
-          <Text className="text-base font-medium" style={{ color: accentColor }}>
+          <Text className="text-lg font-semibold" style={{ color: linkTextColor }}>
             {t("diaper.logPastDiaper")}
           </Text>
         </Pressable>
@@ -214,11 +217,11 @@ export default function DiaperScreen() {
           className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
             !canSave ? "opacity-50" : ""
           }`}
-          style={{ backgroundColor: DIAPER_BUTTON_BG }}
+          style={{ backgroundColor: buttonBgColor }}
           accessibilityRole="button"
           accessibilityLabel={t("diaper.logDiaper")}
         >
-          <Text className="text-white text-xl font-semibold">
+          <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: "700", fontFamily: "System" }}>
             {isSaving ? t("common.loading") : t("diaper.logDiaper")}
           </Text>
         </Pressable>

@@ -15,6 +15,7 @@ import { useColorScheme } from "nativewind";
 
 const FEEDING_GREEN = ACTIVITY.feeding.accent;
 const FEEDING_GREEN_LIGHT = ACTIVITY.feeding.accentDark;
+const FEEDING_GREEN_BUTTON_DARK = ACTIVITY.feeding.buttonDark;
 const FEEDING_GREEN_MUTED = ACTIVITY.feeding.muted;
 
 type FeedingTab = "breast" | "bottle" | "solids";
@@ -41,6 +42,7 @@ export default function FeedingScreen() {
   } = useFeeding();
 
   const accentColor = isDark ? FEEDING_GREEN_LIGHT : FEEDING_GREEN;
+  const buttonBgColor = isDark ? FEEDING_GREEN_BUTTON_DARK : FEEDING_GREEN;
   const mutedBg = isDark ? "#2D2A28" : "#FFFFFF";
   const secondaryBg = isDark ? "#363330" : "#F5F2F0";
 
@@ -154,6 +156,7 @@ export default function FeedingScreen() {
             onSideChange={handleSideChange}
             onStop={handleStopBreastfeeding}
             accentColor={accentColor}
+            buttonBgColor={buttonBgColor}
             mutedBg={mutedBg}
             secondaryBg={secondaryBg}
           />
@@ -163,6 +166,7 @@ export default function FeedingScreen() {
             onSelectSide={handleStartBreastfeeding}
             onLogPast={handleLogPast}
             accentColor={accentColor}
+            buttonBgColor={buttonBgColor}
             mutedBg={mutedBg}
             secondaryBg={secondaryBg}
           />
@@ -176,6 +180,7 @@ export default function FeedingScreen() {
           onLogPast={handleLogPast}
           onComplete={() => router.back()}
           accentColor={accentColor}
+          buttonBgColor={buttonBgColor}
           mutedBg={mutedBg}
           secondaryBg={secondaryBg}
         />
@@ -189,6 +194,7 @@ export default function FeedingScreen() {
           onLogPast={handleLogPast}
           onComplete={() => router.back()}
           accentColor={accentColor}
+          buttonBgColor={buttonBgColor}
           mutedBg={mutedBg}
           secondaryBg={secondaryBg}
         />
@@ -233,11 +239,12 @@ interface BreastfeedingFormProps {
   onSelectSide: (side: BreastSide) => void;
   onLogPast: () => void;
   accentColor: string;
+  buttonBgColor: string;
   mutedBg: string;
   secondaryBg: string;
 }
 
-function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, mutedBg, secondaryBg }: BreastfeedingFormProps) {
+function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, buttonBgColor, mutedBg, secondaryBg }: BreastfeedingFormProps) {
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -270,6 +277,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
             isSuggested={suggestedSide === "left"}
             onPress={() => onSelectSide("left")}
             accentColor={accentColor}
+            buttonBgColor={buttonBgColor}
             secondaryBg={secondaryBg}
             isDark={isDark}
           />
@@ -280,6 +288,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
             isSuggested={suggestedSide === "right"}
             onPress={() => onSelectSide("right")}
             accentColor={accentColor}
+            buttonBgColor={buttonBgColor}
             secondaryBg={secondaryBg}
             isDark={isDark}
           />
@@ -330,11 +339,12 @@ interface SideButtonProps {
   isSuggested: boolean;
   onPress: () => void;
   accentColor: string;
+  buttonBgColor: string;
   secondaryBg: string;
   isDark: boolean;
 }
 
-function SideButton({ label, shortLabel, isSuggested, onPress, accentColor, secondaryBg, isDark }: SideButtonProps) {
+function SideButton({ label, shortLabel, isSuggested, onPress, accentColor, buttonBgColor, secondaryBg, isDark }: SideButtonProps) {
   const { t } = useTranslation();
   const textColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
 
@@ -342,7 +352,7 @@ function SideButton({ label, shortLabel, isSuggested, onPress, accentColor, seco
     <Pressable
       onPress={onPress}
       className="flex-1 items-center py-5 rounded-card-lg active:scale-[0.97]"
-      style={{ backgroundColor: isSuggested ? accentColor : secondaryBg }}
+      style={{ backgroundColor: isSuggested ? buttonBgColor : secondaryBg }}
       accessibilityRole="button"
       accessibilityLabel={`${label}${isSuggested ? `, ${t("feeding.suggested")}` : ""}`}
     >
@@ -373,11 +383,12 @@ interface BreastfeedingTimerViewProps {
   onSideChange: (side: BreastSide) => void;
   onStop: () => void;
   accentColor: string;
+  buttonBgColor: string;
   mutedBg: string;
   secondaryBg: string;
 }
 
-function BreastfeedingTimerView({ elapsedSeconds, side, onSideChange, onStop, accentColor, mutedBg, secondaryBg }: BreastfeedingTimerViewProps) {
+function BreastfeedingTimerView({ elapsedSeconds, side, onSideChange, onStop, accentColor, buttonBgColor, mutedBg, secondaryBg }: BreastfeedingTimerViewProps) {
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -396,9 +407,9 @@ function BreastfeedingTimerView({ elapsedSeconds, side, onSideChange, onStop, ac
 
         {/* Side selector */}
         <View className="flex-row rounded-pill p-1 mb-8" style={{ backgroundColor: secondaryBg }}>
-          <CompactSideButton label="L" fullLabel={t("feeding.left")} isSelected={side === "left"} onPress={() => onSideChange("left")} accentColor={accentColor} />
-          <CompactSideButton label="B" fullLabel={t("feeding.both")} isSelected={side === "both"} onPress={() => onSideChange("both")} accentColor={accentColor} />
-          <CompactSideButton label="R" fullLabel={t("feeding.right")} isSelected={side === "right"} onPress={() => onSideChange("right")} accentColor={accentColor} />
+          <CompactSideButton label="L" fullLabel={t("feeding.left")} isSelected={side === "left"} onPress={() => onSideChange("left")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
+          <CompactSideButton label="B" fullLabel={t("feeding.both")} isSelected={side === "both"} onPress={() => onSideChange("both")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
+          <CompactSideButton label="R" fullLabel={t("feeding.right")} isSelected={side === "right"} onPress={() => onSideChange("right")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
         </View>
 
         {/* Timer display */}
@@ -424,7 +435,7 @@ function BreastfeedingTimerView({ elapsedSeconds, side, onSideChange, onStop, ac
         <Pressable
           onPress={onStop}
           className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
-          style={{ backgroundColor: accentColor }}
+          style={{ backgroundColor: buttonBgColor }}
           accessibilityRole="button"
           accessibilityLabel={t("common.stopTimer")}
         >
@@ -445,14 +456,15 @@ interface CompactSideButtonProps {
   isSelected: boolean;
   onPress: () => void;
   accentColor: string;
+  buttonBgColor: string;
 }
 
-function CompactSideButton({ label, fullLabel, isSelected, onPress, accentColor }: CompactSideButtonProps) {
+function CompactSideButton({ label, fullLabel, isSelected, onPress, accentColor, buttonBgColor }: CompactSideButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="min-w-[64px] min-h-[48px] rounded-pill items-center justify-center px-4 active:scale-95"
-      style={isSelected ? { backgroundColor: accentColor } : undefined}
+      style={isSelected ? { backgroundColor: buttonBgColor } : undefined}
       accessibilityRole="button"
       accessibilityLabel={fullLabel}
       accessibilityState={{ selected: isSelected }}
@@ -475,11 +487,12 @@ interface BottleFormProps {
   onLogPast: () => void;
   onComplete: () => void;
   accentColor: string;
+  buttonBgColor: string;
   mutedBg: string;
   secondaryBg: string;
 }
 
-function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentColor, mutedBg, secondaryBg }: BottleFormProps) {
+function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentColor, buttonBgColor, mutedBg, secondaryBg }: BottleFormProps) {
   const { t } = useTranslation();
   const { volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
@@ -576,6 +589,7 @@ function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentCol
               isSelected={contentType === "breastMilk"}
               onPress={() => { setContentType("breastMilk"); setShowValidation(false); }}
               accentColor={accentColor}
+              buttonBgColor={buttonBgColor}
               secondaryBg={secondaryBg}
               textColor={textColor}
             />
@@ -585,6 +599,7 @@ function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentCol
               isSelected={contentType === "formula"}
               onPress={() => { setContentType("formula"); setShowValidation(false); }}
               accentColor={accentColor}
+              buttonBgColor={buttonBgColor}
               secondaryBg={secondaryBg}
               textColor={textColor}
             />
@@ -597,7 +612,7 @@ function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentCol
             <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary">
               {t("feeding.amount")}
             </Text>
-            <UnitToggle unit={unit} onToggle={handleUnitToggle} accentColor={accentColor} secondaryBg={secondaryBg} />
+            <UnitToggle unit={unit} onToggle={handleUnitToggle} accentColor={accentColor} buttonBgColor={buttonBgColor} secondaryBg={secondaryBg} />
           </View>
 
           <View className="flex-row items-center rounded-card-lg px-4 py-3 mb-3" style={{ backgroundColor: mutedBg }}>
@@ -625,6 +640,7 @@ function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentCol
                 isSelected={unit === "oz" ? amountMl !== null && Math.abs(ozToMl(amount) - amountMl) < 1 : amountMl === amount}
                 onPress={() => handleQuickAmountSelect(amount)}
                 accentColor={accentColor}
+                buttonBgColor={buttonBgColor}
                 secondaryBg={secondaryBg}
               />
             ))}
@@ -677,7 +693,7 @@ function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentCol
           onPress={handleSave}
           disabled={isSaving}
           className={`py-4 rounded-button-lg items-center active:scale-[0.98] ${isSaving ? "opacity-50" : ""}`}
-          style={{ backgroundColor: accentColor }}
+          style={{ backgroundColor: buttonBgColor }}
         >
           <Text className="text-lg font-semibold text-white">
             {isSaving ? t("common.loading") : t("feeding.logBottleFeeding")}
@@ -694,16 +710,17 @@ interface ContentTypeButtonProps {
   isSelected: boolean;
   onPress: () => void;
   accentColor: string;
+  buttonBgColor: string;
   secondaryBg: string;
   textColor: string;
 }
 
-function ContentTypeButton({ label, emoji, isSelected, onPress, accentColor, secondaryBg, textColor }: ContentTypeButtonProps) {
+function ContentTypeButton({ label, emoji, isSelected, onPress, accentColor, buttonBgColor, secondaryBg, textColor }: ContentTypeButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-1 items-center py-4 rounded-card-lg active:scale-[0.97]"
-      style={{ backgroundColor: isSelected ? accentColor : secondaryBg }}
+      style={{ backgroundColor: isSelected ? buttonBgColor : secondaryBg }}
     >
       <Text className="text-3xl mb-2">{emoji}</Text>
       <Text className="text-base font-medium" style={{ color: isSelected ? "#FFFFFF" : textColor }}>
@@ -717,18 +734,19 @@ interface UnitToggleProps {
   unit: VolumeUnit;
   onToggle: () => void;
   accentColor: string;
+  buttonBgColor: string;
   secondaryBg: string;
 }
 
-function UnitToggle({ unit, onToggle, accentColor, secondaryBg }: UnitToggleProps) {
+function UnitToggle({ unit, onToggle, accentColor, buttonBgColor, secondaryBg }: UnitToggleProps) {
   const { t } = useTranslation();
 
   return (
     <Pressable onPress={onToggle} className="flex-row rounded-pill p-1" style={{ backgroundColor: secondaryBg }}>
-      <View className="px-3 py-1 rounded-pill" style={unit === "oz" ? { backgroundColor: accentColor } : undefined}>
+      <View className="px-3 py-1 rounded-pill" style={unit === "oz" ? { backgroundColor: buttonBgColor } : undefined}>
         <Text className="text-sm font-semibold" style={{ color: unit === "oz" ? "#FFFFFF" : accentColor }}>{t("feeding.oz")}</Text>
       </View>
-      <View className="px-3 py-1 rounded-pill" style={unit === "ml" ? { backgroundColor: accentColor } : undefined}>
+      <View className="px-3 py-1 rounded-pill" style={unit === "ml" ? { backgroundColor: buttonBgColor } : undefined}>
         <Text className="text-sm font-semibold" style={{ color: unit === "ml" ? "#FFFFFF" : accentColor }}>{t("feeding.ml")}</Text>
       </View>
     </Pressable>
@@ -740,15 +758,16 @@ interface QuickAmountButtonProps {
   isSelected: boolean;
   onPress: () => void;
   accentColor: string;
+  buttonBgColor: string;
   secondaryBg: string;
 }
 
-function QuickAmountButton({ amount, isSelected, onPress, accentColor, secondaryBg }: QuickAmountButtonProps) {
+function QuickAmountButton({ amount, isSelected, onPress, accentColor, buttonBgColor, secondaryBg }: QuickAmountButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="min-w-[56px] py-2 px-3 rounded-button-lg items-center active:scale-95"
-      style={{ backgroundColor: isSelected ? accentColor : secondaryBg }}
+      style={{ backgroundColor: isSelected ? buttonBgColor : secondaryBg }}
     >
       <Text className="text-base font-semibold" style={{ color: isSelected ? "#FFFFFF" : accentColor }}>
         {amount}
@@ -766,11 +785,12 @@ interface SolidsFormProps {
   onLogPast: () => void;
   onComplete: () => void;
   accentColor: string;
+  buttonBgColor: string;
   mutedBg: string;
   secondaryBg: string;
 }
 
-function SolidsForm({ selectedBaby, addFeeding, feedings, onLogPast, onComplete, accentColor, mutedBg, secondaryBg }: SolidsFormProps) {
+function SolidsForm({ selectedBaby, addFeeding, feedings, onLogPast, onComplete, accentColor, buttonBgColor, mutedBg, secondaryBg }: SolidsFormProps) {
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -885,6 +905,7 @@ function SolidsForm({ selectedBaby, addFeeding, feedings, onLogPast, onComplete,
                 isSelected={foodType === food}
                 onPress={() => { setFoodType(food); setShowValidation(false); Keyboard.dismiss(); }}
                 accentColor={accentColor}
+                buttonBgColor={buttonBgColor}
                 secondaryBg={secondaryBg}
               />
             ))}
@@ -897,9 +918,9 @@ function SolidsForm({ selectedBaby, addFeeding, feedings, onLogPast, onComplete,
             {t("feeding.howDidBabyLikeIt")}
           </Text>
           <View className="flex-row gap-3">
-            <ReactionButton emoji="😍" label={t("feeding.loved")} isSelected={reaction === "loved"} onPress={() => setReaction("loved")} accentColor={accentColor} secondaryBg={secondaryBg} textColor={textColor} />
-            <ReactionButton emoji="😐" label={t("feeding.meh")} isSelected={reaction === "meh"} onPress={() => setReaction("meh")} accentColor={accentColor} secondaryBg={secondaryBg} textColor={textColor} />
-            <ReactionButton emoji="😣" label={t("feeding.refused")} isSelected={reaction === "refused"} onPress={() => setReaction("refused")} accentColor={accentColor} secondaryBg={secondaryBg} textColor={textColor} />
+            <ReactionButton emoji="😍" label={t("feeding.loved")} isSelected={reaction === "loved"} onPress={() => setReaction("loved")} accentColor={accentColor} buttonBgColor={buttonBgColor} secondaryBg={secondaryBg} textColor={textColor} />
+            <ReactionButton emoji="😐" label={t("feeding.meh")} isSelected={reaction === "meh"} onPress={() => setReaction("meh")} accentColor={accentColor} buttonBgColor={buttonBgColor} secondaryBg={secondaryBg} textColor={textColor} />
+            <ReactionButton emoji="😣" label={t("feeding.refused")} isSelected={reaction === "refused"} onPress={() => setReaction("refused")} accentColor={accentColor} buttonBgColor={buttonBgColor} secondaryBg={secondaryBg} textColor={textColor} />
           </View>
         </View>
 
@@ -940,7 +961,7 @@ function SolidsForm({ selectedBaby, addFeeding, feedings, onLogPast, onComplete,
           onPress={handleSave}
           disabled={isSaving}
           className={`py-4 rounded-button-lg items-center active:scale-[0.98] ${isSaving ? "opacity-50" : ""}`}
-          style={{ backgroundColor: accentColor }}
+          style={{ backgroundColor: buttonBgColor }}
         >
           <Text className="text-lg font-semibold text-white">
             {isSaving ? t("common.loading") : t("feeding.logSolidFeeding")}
@@ -956,15 +977,16 @@ interface FoodButtonProps {
   isSelected: boolean;
   onPress: () => void;
   accentColor: string;
+  buttonBgColor: string;
   secondaryBg: string;
 }
 
-function FoodButton({ label, isSelected, onPress, accentColor, secondaryBg }: FoodButtonProps) {
+function FoodButton({ label, isSelected, onPress, accentColor, buttonBgColor, secondaryBg }: FoodButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="py-2 px-4 rounded-button-lg active:scale-95"
-      style={{ backgroundColor: isSelected ? accentColor : secondaryBg }}
+      style={{ backgroundColor: isSelected ? buttonBgColor : secondaryBg }}
     >
       <Text className="text-base font-medium" style={{ color: isSelected ? "#FFFFFF" : accentColor }}>
         {label}
@@ -979,16 +1001,17 @@ interface ReactionButtonProps {
   isSelected: boolean;
   onPress: () => void;
   accentColor: string;
+  buttonBgColor: string;
   secondaryBg: string;
   textColor: string;
 }
 
-function ReactionButton({ emoji, label, isSelected, onPress, accentColor, secondaryBg, textColor }: ReactionButtonProps) {
+function ReactionButton({ emoji, label, isSelected, onPress, accentColor, buttonBgColor, secondaryBg, textColor }: ReactionButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-1 items-center py-4 rounded-card-lg active:scale-[0.97]"
-      style={{ backgroundColor: isSelected ? accentColor : secondaryBg }}
+      style={{ backgroundColor: isSelected ? buttonBgColor : secondaryBg }}
     >
       <Text className="text-2xl mb-1">{emoji}</Text>
       <Text className="text-sm font-semibold" style={{ color: isSelected ? "#FFFFFF" : textColor }}>

@@ -2,7 +2,7 @@ import { Pressable, Text, View, useColorScheme, Platform } from "react-native";
 import { forwardRef, useCallback } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
-import { CONTENT_COLORS, SURFACE } from "@/constants/design-tokens";
+import { CONTENT_COLORS, SURFACE, ACTIVITY } from "@/constants/design-tokens";
 
 const CARD_MIN_HEIGHT = Platform.OS === "android" ? 140 : 160;
 
@@ -49,8 +49,10 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
     const config = ACTIVITY_CONFIG[activity];
+    const activityColors = ACTIVITY[activity as keyof typeof ACTIVITY];
     const bgColor = isDark ? SURFACE.dark.card : SURFACE.light.card;
     const accentColor = isDark ? config.accentColorDark : config.accentColor;
+    const buttonBgColor = isDark ? activityColors.buttonDark : config.accentColor;
     const colors = isDark ? CONTENT_COLORS.dark : CONTENT_COLORS.light;
     const textColor = colors.primary;
     const secondaryTextColor = isDark ? colors.primary : colors.secondary;
@@ -214,7 +216,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
             onPressIn={handleButtonPressIn}
             onPressOut={handleButtonPressOut}
             className={`${Platform.OS === "android" ? "min-w-[40px] min-h-[40px] rounded-xl" : "min-w-[48px] min-h-[48px] rounded-2xl"} items-center justify-center`}
-            style={[buttonAnimatedStyle, { backgroundColor: accentColor }]}
+            style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor }]}
             accessibilityRole="button"
             accessibilityLabel={isActive ? "Stop" : `Add ${label}`}
           >
