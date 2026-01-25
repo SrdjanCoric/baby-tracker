@@ -45,9 +45,11 @@ export default function TabLayout() {
   const headerBgColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
   const headerTextColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
 
-  // On Android in Expo Go, we need to account for the navigation bar
-  const bottomPadding = Platform.OS === "android" ? Math.max(8, insets.bottom) : 14;
+  // Calculate bottom padding based on safe area insets
+  const bottomPadding = Platform.OS === "android" ? insets.bottom : 14;
   const tabBarHeight = 54 + bottomPadding;
+  // On Android, add margin to lift the tab bar above the gesture indicator area
+  const androidBottomMargin = Platform.OS === "android" ? 6 : 0;
 
   return (
     <Tabs
@@ -61,6 +63,7 @@ export default function TabLayout() {
           paddingTop: 8,
           paddingBottom: bottomPadding,
           height: tabBarHeight,
+          marginBottom: androidBottomMargin,
         },
         tabBarLabelStyle: {
           fontSize: 11,
