@@ -86,6 +86,7 @@ interface AuthContextValue {
   signOut: () => Promise<{ error: AuthError | null }>;
   updateDisplayName: (displayName: string) => Promise<{ error: Error | null }>;
   verifyPassword: (password: string) => Promise<{ verified: boolean; error: Error | null }>;
+  refreshUserProfile: () => Promise<void>;
   isAppleSignInAvailable: boolean;
 }
 
@@ -423,6 +424,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.email]);
 
+  const refreshUserProfile = useCallback(async () => {
+    if (!user?.id) return;
+
+    const profile = await fetchUserProfile(user.id);
+    setUser(prev => prev ? { ...prev, ...profile } : prev);
+  }, [user?.id]);
+
   const value: AuthContextValue = {
     user,
     session,
@@ -436,6 +444,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateDisplayName,
     verifyPassword,
+    refreshUserProfile,
     isAppleSignInAvailable,
   };
 

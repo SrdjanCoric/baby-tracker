@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   Pressable,
   Text,
@@ -37,10 +37,17 @@ export default function JoinHouseholdScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const { joinHousehold } = useHousehold();
+  const { joinHousehold, clearError } = useHousehold();
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+
+  // Clear any context error when leaving this screen
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
 
   const handleSignIn = useCallback(() => {
     router.dismissAll();

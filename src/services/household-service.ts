@@ -84,16 +84,24 @@ export async function joinHouseholdViaInviteCode(
 ): Promise<HouseholdResult<Household>> {
   const validation = validateInviteCode(inviteCode);
   if (!validation.isValid) {
+    console.log("[HouseholdService] Invalid invite code:", validation.error);
     return { data: null, error: validation.error ?? "inviteCodeInvalidChars" };
   }
 
   const normalizedCode = normalizeInviteCode(inviteCode);
+  console.log("[HouseholdService] Joining with code:", normalizedCode);
 
   const { data, error } = await supabase.rpc("join_household_by_invite_code", {
-    invite_code: normalizedCode,
+    p_invite_code: normalizedCode,
+  });
+
+  console.log("[HouseholdService] RPC result:", {
+    data,
+    error: error ? { message: error.message, code: error.code, details: error.details, hint: error.hint } : null
   });
 
   if (error) {
+    console.error("[HouseholdService] Join failed:", error.message);
     if (error.message?.includes("not found")) {
       return { data: null, error: "householdNotFound" };
     }
@@ -103,17 +111,25 @@ export async function joinHouseholdViaInviteCode(
     return { data: null, error: "joinFailed" };
   }
 
-  const household = data as {
-    id: string;
-    invite_code: string;
-    created_at: string;
-  };
+  // RPC with RETURNS TABLE returns an array
+  const rows = data as Array<{
+    household_id: string;
+    household_invite_code: string;
+    household_created_at: string;
+  }>;
+
+  if (!rows || rows.length === 0) {
+    console.log("[HouseholdService] No household data returned");
+    return { data: null, error: "joinFailed" };
+  }
+
+  const household = rows[0];
 
   return {
     data: {
-      id: household.id,
-      inviteCode: household.invite_code,
-      createdAt: household.created_at,
+      id: household.household_id,
+      inviteCode: household.household_invite_code,
+      createdAt: household.household_created_at,
     },
     error: null,
   };
