@@ -79,12 +79,13 @@ interface HouseholdContextValue extends HouseholdState {
   refreshHousehold: () => Promise<void>;
   regenerateCode: () => Promise<boolean>;
   joinHousehold: (inviteCode: string) => Promise<{ success: boolean; error: string | null }>;
+  clearError: () => void;
 }
 
 const HouseholdContext = createContext<HouseholdContextValue | null>(null);
 
 export function HouseholdProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const [state, dispatch] = useReducer(householdReducer, initialHouseholdState);
 
   const householdId = user?.householdId ?? null;
@@ -159,6 +160,10 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
 
     if (result.data) {
       dispatch({ type: "JOIN_HOUSEHOLD", payload: result.data });
+
+      // Refresh user profile to update householdId in auth context
+      await refreshUserProfile();
+
       const membersResult = await getHouseholdMembers(result.data.id);
       if (membersResult.data) {
         dispatch({ type: "SET_MEMBERS", payload: membersResult.data });
@@ -167,6 +172,10 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: false });
     return { success: true, error: null };
+  }, [refreshUserProfile]);
+
+  const clearError = useCallback(() => {
+    dispatch({ type: "CLEAR_ERROR" });
   }, []);
 
   const value: HouseholdContextValue = {
@@ -174,6 +183,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     refreshHousehold,
     regenerateCode,
     joinHousehold,
+    clearError,
   };
 
   return (
