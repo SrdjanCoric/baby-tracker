@@ -3,12 +3,12 @@
  * Warm, welcoming design for new parents
  */
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { View, Text, Pressable, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useOnboarding, useTheme } from "@/contexts";
+import { useOnboarding, useTheme, useAuth } from "@/contexts";
 import { OnboardingPagination } from "@/components/onboarding";
 import { Ionicons } from "@expo/vector-icons";
 import { SURFACE, TEXT, ACTION, BORDER } from "@/constants/colors";
@@ -18,6 +18,17 @@ export default function AuthChoiceScreen() {
   const router = useRouter();
   const { state, nextStep, skipOnboarding } = useOnboarding();
   const { isDark } = useTheme();
+  const { isAuthenticated } = useAuth();
+  const hasAdvancedRef = useRef(false);
+
+  // Auto-advance when user becomes authenticated (after signing in)
+  useEffect(() => {
+    if (isAuthenticated && !hasAdvancedRef.current) {
+      hasAdvancedRef.current = true;
+      nextStep();
+      router.push("/onboarding/features");
+    }
+  }, [isAuthenticated, nextStep, router]);
 
   const handleSignIn = useCallback(() => {
     router.push("/auth/sign-in");

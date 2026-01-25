@@ -48,7 +48,9 @@ export default function SignInScreen() {
       if (error) {
         Alert.alert(t("common.error"), t("auth.googleSignInError"));
       } else {
-        router.replace("/(tabs)");
+        // Go back to previous screen (works for both onboarding and normal flow)
+        // AuthGuard will handle navigation appropriately
+        router.back();
       }
     } catch {
       Alert.alert(t("common.error"), t("errors.generic"));
@@ -64,7 +66,8 @@ export default function SignInScreen() {
       if (error) {
         Alert.alert(t("common.error"), t("auth.appleSignInError"));
       } else {
-        router.replace("/(tabs)");
+        // Go back to previous screen (works for both onboarding and normal flow)
+        router.back();
       }
     } catch {
       Alert.alert(t("common.error"), t("errors.generic"));

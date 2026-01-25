@@ -86,7 +86,6 @@ export async function leaveHousehold(): Promise<HouseholdResult<Household>> {
   const { data, error } = await supabase.rpc("leave_household");
 
   if (error) {
-    console.error("[HouseholdService] Leave failed:", error.message);
     if (error.message?.includes("Owner cannot leave")) {
       return { data: null, error: "ownerCannotLeave" };
     }
@@ -126,24 +125,16 @@ export async function joinHouseholdViaInviteCode(
 ): Promise<HouseholdResult<Household>> {
   const validation = validateInviteCode(inviteCode);
   if (!validation.isValid) {
-    console.log("[HouseholdService] Invalid invite code:", validation.error);
     return { data: null, error: validation.error ?? "inviteCodeInvalidChars" };
   }
 
   const normalizedCode = normalizeInviteCode(inviteCode);
-  console.log("[HouseholdService] Joining with code:", normalizedCode);
 
   const { data, error } = await supabase.rpc("join_household_by_invite_code", {
     p_invite_code: normalizedCode,
   });
 
-  console.log("[HouseholdService] RPC result:", {
-    data,
-    error: error ? { message: error.message, code: error.code, details: error.details, hint: error.hint } : null
-  });
-
   if (error) {
-    console.error("[HouseholdService] Join failed:", error.message);
     if (error.message?.includes("not found")) {
       return { data: null, error: "householdNotFound" };
     }
@@ -161,7 +152,6 @@ export async function joinHouseholdViaInviteCode(
   }>;
 
   if (!rows || rows.length === 0) {
-    console.log("[HouseholdService] No household data returned");
     return { data: null, error: "joinFailed" };
   }
 

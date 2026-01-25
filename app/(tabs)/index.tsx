@@ -6,6 +6,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
+import { useTimeRefresh } from "@/hooks";
 
 const isAndroid = Platform.OS === "android";
 import {
@@ -36,6 +37,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const { visibleCards } = useDashboardConfig();
+  const timeTick = useTimeRefresh(60000);
 
   // Navigate safely - if a modal is open, dismiss it first then navigate
   const safeNavigate = useCallback((path: string) => {
@@ -90,7 +92,7 @@ export default function HomeScreen() {
     const typeIcon = lastFeeding.type === "breast" ? "🤱" : lastFeeding.type === "bottle" ? "🍼" : "🥣";
 
     return `${typeIcon} ${timeAgo}`;
-  }, [feedingActiveTimer, getLastFeeding, t]);
+  }, [feedingActiveTimer, getLastFeeding, t, timeTick]);
 
   const feedingSubtitle = useMemo(() => {
     if (feedingActiveTimer?.isRunning) return undefined;
@@ -140,7 +142,7 @@ export default function HomeScreen() {
     }
 
     return parts.length > 0 ? parts.join(" · ") : undefined;
-  }, [feedingActiveTimer?.isRunning, getLastFeeding, suggestedSide, t]);
+  }, [feedingActiveTimer?.isRunning, getLastFeeding, suggestedSide, t, timeTick]);
 
 
   const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
@@ -176,7 +178,7 @@ export default function HomeScreen() {
     }
 
     return undefined;
-  }, [sleepActiveTimer, getLastSleep, t]);
+  }, [sleepActiveTimer, getLastSleep, t, timeTick]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
@@ -215,7 +217,7 @@ export default function HomeScreen() {
     }
 
     return timeAgo;
-  }, [diapers, t]);
+  }, [diapers, t, timeTick]);
 
   const todayDiaperCounts = useMemo(() => {
     return getTodaysCounts();
@@ -250,7 +252,7 @@ export default function HomeScreen() {
     }
 
     return parts.join(" · ");
-  }, [pumpingActiveTimer, getLastPumping, getLastSide, t]);
+  }, [pumpingActiveTimer, getLastPumping, getLastSide, t, timeTick]);
 
   const isPumpingActive = pumpingActiveTimer?.isRunning ?? false;
 
@@ -299,7 +301,7 @@ export default function HomeScreen() {
     }
 
     return parts.join(" • ");
-  }, [getLastMeasurement, getWeightChange, t]);
+  }, [getLastMeasurement, getWeightChange, t, timeTick]);
 
   const tummyTimeTimeSince = useMemo(() => {
     if (tummyTimeActiveTimer?.isRunning) {
