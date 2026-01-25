@@ -25,6 +25,8 @@ const SYNCABLE_TABLES: SyncableTable[] = [
   'growth_measurements',
   'tummy_time_sessions',
   'babies',
+  'users',
+  'households',
 ];
 
 export class RealTimeSync {
@@ -138,7 +140,7 @@ export class RealTimeSync {
   }
 
   private verifyChangeOwnership(change: RemoteChange): boolean {
-    if (!this.authContext || !this.currentHouseholdId) {
+    if (!this.authContext) {
       return false;
     }
 
@@ -149,6 +151,19 @@ export class RealTimeSync {
 
     if (change.table === 'babies') {
       return data.household_id === this.authContext.householdId;
+    }
+
+    if (change.table === 'users') {
+      const newData = change.new;
+      const oldData = change.old;
+      return Boolean(
+        (newData && newData.household_id === this.authContext.householdId) ||
+        (oldData && oldData.household_id === this.authContext.householdId)
+      );
+    }
+
+    if (change.table === 'households') {
+      return data.id === this.authContext.householdId;
     }
 
     return true;
@@ -224,6 +239,17 @@ export class RealTimeSync {
     if (this.isEchoFromSameDevice(change)) {
       return;
     }
+    if (!this.verifyChangeOwnership(change)) {
+      return;
+    }
     this.notifyChangeListeners(change);
+  }
+
+  __testVerifyChangeOwnership(change: RemoteChange): boolean {
+    return this.verifyChangeOwnership(change);
+  }
+
+  __testIsEchoFromSameDevice(change: RemoteChange): boolean {
+    return this.isEchoFromSameDevice(change);
   }
 }
