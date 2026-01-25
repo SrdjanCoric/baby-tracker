@@ -12,6 +12,7 @@ import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvi
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { supabase } from "@/services/supabase";
+import { SURFACE } from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -213,8 +214,7 @@ function AppContent() {
     ? { animation: "slide_from_right" as const }
     : { presentation: "modal" as const, animation: "slide_from_bottom" as const };
 
-  // Background color to prevent white flash during transitions
-  const bgColor = isDark ? "#1A1918" : "#FAFAF8";
+  const bgColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
 
   return (
     <View className="flex-1" style={{ backgroundColor: bgColor }}>

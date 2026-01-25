@@ -3,7 +3,7 @@ import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from "react-
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useMemo, useCallback } from "react";
 import { useColorScheme } from "nativewind";
-import { getActionColor, ACTION_COLORS } from "@/constants/design-tokens";
+import { getActionColor, ACTION_COLORS, SURFACE } from "@/constants/design-tokens";
 import { useFeeding, useSleep, useDiaper, usePumping, useTummyTime, useBaby } from "@/contexts";
 import { SimpleBarChart, TrendIndicator, EmptyState, LoadingState } from "@/components";
 import { ACTIVITY_CONFIG } from "@/constants/activities";
@@ -33,10 +33,10 @@ interface StatCardProps {
   value: string;
   subvalue?: string;
   color: string;
-  bgColor: string;
   trend?: TrendResult | null;
   trendFormatted?: string;
   showTrend?: boolean;
+  isDark?: boolean;
 }
 
 function StatCard({
@@ -45,32 +45,39 @@ function StatCard({
   value,
   subvalue,
   color,
-  bgColor,
   trend,
   trendFormatted,
   showTrend = false,
+  isDark = false,
 }: StatCardProps) {
   const hasTrend = showTrend && trend && trend.direction !== "stable";
+  const bgColor = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
   return (
     <View
       className="flex-1 rounded-card p-4"
-      style={{ backgroundColor: bgColor }}
+      style={{
+        backgroundColor: bgColor,
+        borderLeftWidth: 3,
+        borderLeftColor: color,
+      }}
     >
       <View className="flex-row items-center mb-2">
         <Text className="text-xl mr-2">{icon}</Text>
-        <Text className="text-xs font-semibold uppercase tracking-wider text-content-secondary dark:text-content-dark-secondary">
+        <Text
+          className="text-sm font-semibold uppercase tracking-wider"
+          style={{ color }}
+        >
           {label}
         </Text>
       </View>
       <Text
-        className="text-stat font-bold"
-        style={{ color }}
+        className="text-2xl font-bold text-content-primary dark:text-content-dark-primary"
       >
         {value}
       </Text>
       {subvalue && (
-        <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-1">
+        <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mt-1">
           {subvalue}
         </Text>
       )}
@@ -403,12 +410,12 @@ export default function StatisticsScreen() {
               className="rounded-card p-4"
               style={{
                 backgroundColor: colorScheme === "dark"
-                  ? "#242220"
+                  ? "#2A2730"
                   : weeklySummary.type === "great" || weeklySummary.type === "improving"
                     ? "#EBF4F2"
                     : weeklySummary.type === "attention"
                       ? "#FBF0EE"
-                      : "#F5F3F0"
+                      : "#F5F2F0"
               }}
             >
               <View className="flex-row items-start">
@@ -434,14 +441,14 @@ export default function StatisticsScreen() {
             <View className="flex-row flex-wrap">
               <View className="w-1/2 mb-3 pr-2">
                 <View className="flex-row items-center">
-                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.sleep.icon}</Text>
+                  <Text className="text-lg mr-2">{ACTIVITY_CONFIG.sleep.icon}</Text>
                   <Text
-                    className="text-base font-semibold"
+                    className="text-lg font-semibold"
                     style={{ color: ACTIVITY_CONFIG.sleep.accentColor }}
                   >
                     {dailyAverages.sleepHoursPerDay}h
                   </Text>
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                  <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
                     /day
                   </Text>
                 </View>
@@ -449,14 +456,14 @@ export default function StatisticsScreen() {
 
               <View className="w-1/2 mb-3 pl-2">
                 <View className="flex-row items-center">
-                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.feeding.icon}</Text>
+                  <Text className="text-lg mr-2">{ACTIVITY_CONFIG.feeding.icon}</Text>
                   <Text
-                    className="text-base font-semibold"
+                    className="text-lg font-semibold"
                     style={{ color: ACTIVITY_CONFIG.feeding.accentColor }}
                   >
                     {dailyAverages.feedingsPerDay}
                   </Text>
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                  <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
                     /day
                   </Text>
                 </View>
@@ -464,19 +471,19 @@ export default function StatisticsScreen() {
 
               <View className="w-1/2 pr-2">
                 <View className="flex-row items-center">
-                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.diaper.icon}</Text>
+                  <Text className="text-lg mr-2">{ACTIVITY_CONFIG.diaper.icon}</Text>
                   <Text
-                    className="text-base font-semibold"
+                    className="text-lg font-semibold"
                     style={{ color: ACTIVITY_CONFIG.diaper.accentColor }}
                   >
                     {dailyAverages.wetDiapersPerDay}
                   </Text>
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                  <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
                     wet/day
                   </Text>
                   {dailyAverages.wetDiapersPerDay >= 6 && (
                     <Text
-                      className="text-sm ml-1"
+                      className="text-base ml-1"
                       style={{ color: colorScheme === "dark" ? "#4ade80" : "#22c55e" }}
                     >
                       ✓
@@ -488,14 +495,14 @@ export default function StatisticsScreen() {
               {dailyAverages.tummyTimeMinutesPerDay > 0 && (
                 <View className="w-1/2 pl-2">
                   <View className="flex-row items-center">
-                    <Text className="text-base mr-2">{ACTIVITY_CONFIG.tummyTime.icon}</Text>
+                    <Text className="text-lg mr-2">{ACTIVITY_CONFIG.tummyTime.icon}</Text>
                     <Text
-                      className="text-base font-semibold"
+                      className="text-lg font-semibold"
                       style={{ color: ACTIVITY_CONFIG.tummyTime.accentColor }}
                     >
                       {dailyAverages.tummyTimeMinutesPerDay}m
                     </Text>
-                    <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                    <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
                       /day
                     </Text>
                   </View>
@@ -515,10 +522,10 @@ export default function StatisticsScreen() {
               label={t("statistics.totalFeedings")}
               value={String(stats.feeding.totalCount)}
               subvalue={feedingSubvalue}
-              color={ACTIVITY_CONFIG.feeding.accentColor}
-              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.feeding.mutedBgDark : ACTIVITY_CONFIG.feeding.mutedBg}
+              color={colorScheme === "dark" ? ACTIVITY_CONFIG.feeding.accentColorDark : ACTIVITY_CONFIG.feeding.accentColor}
               trend={weeklyTrends?.feeding}
               showTrend={!!showWeeklyTrends}
+              isDark={colorScheme === "dark"}
             />
           </View>
         </View>
@@ -533,11 +540,11 @@ export default function StatisticsScreen() {
               label={t("statistics.totalSleep")}
               value={formatSleepDuration(stats.sleep.totalDurationSeconds)}
               subvalue={sleepSubvalue}
-              color={ACTIVITY_CONFIG.sleep.accentColor}
-              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.sleep.mutedBgDark : ACTIVITY_CONFIG.sleep.mutedBg}
+              color={colorScheme === "dark" ? ACTIVITY_CONFIG.sleep.accentColorDark : ACTIVITY_CONFIG.sleep.accentColor}
               trend={weeklyTrends?.sleep}
               trendFormatted={weeklyTrends?.sleep ? formatTrendDuration(weeklyTrends.sleep.absoluteChange) : undefined}
               showTrend={!!showWeeklyTrends}
+              isDark={colorScheme === "dark"}
             />
           </View>
         </View>
@@ -552,10 +559,10 @@ export default function StatisticsScreen() {
               label={t("statistics.totalDiapers")}
               value={String(stats.diaper.totalCount)}
               subvalue={diaperSubvalue}
-              color={ACTIVITY_CONFIG.diaper.accentColor}
-              bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.diaper.mutedBgDark : ACTIVITY_CONFIG.diaper.mutedBg}
+              color={colorScheme === "dark" ? ACTIVITY_CONFIG.diaper.accentColorDark : ACTIVITY_CONFIG.diaper.accentColor}
               trend={weeklyTrends?.diaper}
               showTrend={!!showWeeklyTrends}
+              isDark={colorScheme === "dark"}
             />
           </View>
         </View>
@@ -571,8 +578,8 @@ export default function StatisticsScreen() {
                 label={t("statistics.totalPumping")}
                 value={stats.pumping.totalVolumeMl > 0 ? `${stats.pumping.totalVolumeMl} ml` : String(stats.pumping.totalCount)}
                 subvalue={pumpingSubvalue}
-                color={ACTIVITY_CONFIG.pumping.accentColor}
-                bgColor={colorScheme === "dark" ? ACTIVITY_CONFIG.pumping.mutedBgDark : ACTIVITY_CONFIG.pumping.mutedBg}
+                color={colorScheme === "dark" ? ACTIVITY_CONFIG.pumping.accentColorDark : ACTIVITY_CONFIG.pumping.accentColor}
+                isDark={colorScheme === "dark"}
               />
             </View>
           </View>
@@ -583,14 +590,24 @@ export default function StatisticsScreen() {
             {t("tummyTime.title")}
           </Text>
           <View className="flex-row gap-3">
-            <View className="flex-1 rounded-card p-4" style={{ backgroundColor: colorScheme === "dark" ? ACTIVITY_CONFIG.tummyTime.mutedBgDark : ACTIVITY_CONFIG.tummyTime.mutedBg }}>
+            <View
+              className="flex-1 rounded-card p-4"
+              style={{
+                backgroundColor: colorScheme === "dark" ? SURFACE.dark.card : SURFACE.light.card,
+                borderLeftWidth: 3,
+                borderLeftColor: colorScheme === "dark" ? ACTIVITY_CONFIG.tummyTime.accentColorDark : ACTIVITY_CONFIG.tummyTime.accentColor,
+              }}
+            >
               <View className="flex-row items-center mb-2">
                 <Text className="text-xl mr-2">{ACTIVITY_CONFIG.tummyTime.icon}</Text>
-                <Text className="text-xs font-semibold uppercase tracking-wider text-content-secondary dark:text-content-dark-secondary">
+                <Text
+                  className="text-sm font-semibold uppercase tracking-wider"
+                  style={{ color: colorScheme === "dark" ? ACTIVITY_CONFIG.tummyTime.accentColorDark : ACTIVITY_CONFIG.tummyTime.accentColor }}
+                >
                   {t("statistics.tummyTime")}
                 </Text>
               </View>
-              <Text className="text-stat font-bold" style={{ color: ACTIVITY_CONFIG.tummyTime.accentColor }}>
+              <Text className="text-2xl font-bold text-content-primary dark:text-content-dark-primary">
                 {formatDuration(stats.tummyTime.totalDurationSeconds, "short") || "0m"}
               </Text>
               {showWeeklyTrends && weeklyTrends.tummyTime.direction !== "stable" && (
@@ -603,7 +620,7 @@ export default function StatisticsScreen() {
                 </View>
               )}
               {!showWeeklyTrends && (
-                <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-1">
+                <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mt-1">
                   {stats.tummyTime.sessionCount} {stats.tummyTime.sessionCount === 1 ? "session" : "sessions"}
                 </Text>
               )}

@@ -21,20 +21,9 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth, useTheme } from "@/contexts";
 import { validateEmail } from "@/validators";
+import { SURFACE, TEXT, ACTION, BORDER, SEMANTIC } from "@/constants/colors";
 
-const COLORS = {
-  primary: "#6B9E6E",
-  primaryDark: "#5A8A5D",
-  primaryLight: "#E8F5E9",
-  warmCream: "#FBF9F6",
-  warmGray: "#6B665E",
-  warmGrayLight: "#B5B0A8",
-  warmGrayLightest: "#E8E5E0",
-  darkBg: "#1A1918",
-  darkCard: "#242220",
-  darkBorder: "#3D3935",
-  darkText: "#FAF9F7",
-  darkTextSecondary: "#B5B0A8",
+const BRAND_COLORS = {
   google: "#4285F4",
   googleBg: "#FFFFFF",
   appleBg: "#000000",
@@ -120,7 +109,7 @@ export default function SignInScreen() {
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: isDark ? COLORS.darkBg : COLORS.warmCream }}
+      style={{ backgroundColor: isDark ? SURFACE.dark.background : SURFACE.light.background }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -137,7 +126,7 @@ export default function SignInScreen() {
             <View className="items-center mb-2">
               <View
                 className="w-10 h-1 rounded-full"
-                style={{ backgroundColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest }}
+                style={{ backgroundColor: isDark ? BORDER.dark.default : BORDER.light.subtle }}
               />
             </View>
 
@@ -145,13 +134,13 @@ export default function SignInScreen() {
             <Pressable
               onPress={handleClose}
               className="absolute top-4 right-6 w-10 h-10 rounded-full items-center justify-center active:opacity-70"
-              style={{ backgroundColor: isDark ? COLORS.darkCard : COLORS.warmGrayLightest }}
+              style={{ backgroundColor: isDark ? SURFACE.dark.card : BORDER.light.subtle }}
               accessibilityLabel={t("common.close")}
             >
               <Ionicons
                 name="close"
                 size={22}
-                color={isDark ? COLORS.darkTextSecondary : COLORS.warmGray}
+                color={isDark ? TEXT.dark.secondary : TEXT.light.secondary}
               />
             </Pressable>
 
@@ -160,7 +149,7 @@ export default function SignInScreen() {
               <Text
                 className="text-3xl mb-2"
                 style={{
-                  color: isDark ? COLORS.darkText : "#2D2A26",
+                  color: isDark ? TEXT.dark.primary : TEXT.light.primary,
                   fontFamily: "Nunito-Bold",
                 }}
               >
@@ -169,7 +158,7 @@ export default function SignInScreen() {
               <Text
                 className="text-base leading-6"
                 style={{
-                  color: isDark ? COLORS.darkTextSecondary : COLORS.warmGray,
+                  color: isDark ? TEXT.dark.secondary : TEXT.light.secondary,
                   fontFamily: "Nunito-Regular",
                 }}
               >
@@ -185,17 +174,17 @@ export default function SignInScreen() {
                 disabled={isGoogleLoading}
                 className="flex-row items-center justify-center rounded-2xl py-4 mb-3 active:scale-[0.98]"
                 style={{
-                  backgroundColor: COLORS.googleBg,
+                  backgroundColor: BRAND_COLORS.googleBg,
                   borderWidth: 1,
-                  borderColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest,
+                  borderColor: isDark ? BORDER.dark.default : BORDER.light.subtle,
                 }}
               >
                 {isGoogleLoading ? (
-                  <ActivityIndicator color={COLORS.google} />
+                  <ActivityIndicator color={BRAND_COLORS.google} />
                 ) : (
                   <>
                     <View className="w-6 h-6 mr-3 items-center justify-center">
-                      <Text className="text-lg font-bold" style={{ color: COLORS.google }}>G</Text>
+                      <Text className="text-lg font-bold" style={{ color: BRAND_COLORS.google }}>G</Text>
                     </View>
                     <Text
                       className="text-base"
@@ -216,7 +205,7 @@ export default function SignInScreen() {
                   onPress={handleAppleSignIn}
                   disabled={isAppleLoading}
                   className="flex-row items-center justify-center rounded-2xl py-4 mb-3 active:scale-[0.98]"
-                  style={{ backgroundColor: COLORS.appleBg }}
+                  style={{ backgroundColor: BRAND_COLORS.appleBg }}
                 >
                   {isAppleLoading ? (
                     <ActivityIndicator color="#FFFFFF" />
@@ -239,12 +228,12 @@ export default function SignInScreen() {
             <View className="flex-row items-center mb-6">
               <View
                 className="flex-1 h-[1px]"
-                style={{ backgroundColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest }}
+                style={{ backgroundColor: isDark ? BORDER.dark.default : BORDER.light.subtle }}
               />
               <Text
                 className="mx-4 text-sm"
                 style={{
-                  color: isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight,
+                  color: isDark ? TEXT.dark.secondary : TEXT.light.muted,
                   fontFamily: "Nunito-Medium",
                 }}
               >
@@ -252,7 +241,7 @@ export default function SignInScreen() {
               </Text>
               <View
                 className="flex-1 h-[1px]"
-                style={{ backgroundColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest }}
+                style={{ backgroundColor: isDark ? BORDER.dark.default : BORDER.light.subtle }}
               />
             </View>
 
@@ -260,9 +249,9 @@ export default function SignInScreen() {
             <View
               className="rounded-3xl p-5 mb-4"
               style={{
-                backgroundColor: isDark ? COLORS.darkCard : "#FFFFFF",
+                backgroundColor: isDark ? SURFACE.dark.card : SURFACE.light.card,
                 borderWidth: 1,
-                borderColor: isDark ? COLORS.darkBorder : COLORS.warmGrayLightest,
+                borderColor: isDark ? BORDER.dark.default : BORDER.light.subtle,
               }}
             >
               {/* Email Field */}
@@ -270,7 +259,7 @@ export default function SignInScreen() {
                 <Text
                   className="text-sm mb-2"
                   style={{
-                    color: isDark ? COLORS.darkTextSecondary : COLORS.warmGray,
+                    color: isDark ? TEXT.dark.secondary : TEXT.light.secondary,
                     fontFamily: "Nunito-Medium",
                   }}
                 >
@@ -279,17 +268,17 @@ export default function SignInScreen() {
                 <TextInput
                   className="rounded-xl px-4"
                   style={{
-                    backgroundColor: isDark ? COLORS.darkBg : COLORS.warmCream,
-                    color: isDark ? COLORS.darkText : "#2D2A26",
+                    backgroundColor: isDark ? SURFACE.dark.background : SURFACE.light.background,
+                    color: isDark ? TEXT.dark.primary : TEXT.light.primary,
                     fontFamily: "Nunito-Regular",
                     fontSize: 16,
                     paddingTop: 14,
                     paddingBottom: 14,
                     borderWidth: emailError ? 2 : 0,
-                    borderColor: emailError ? "#EF4444" : "transparent",
+                    borderColor: emailError ? SEMANTIC.error.light : "transparent",
                   }}
                   placeholder={t("auth.emailPlaceholder")}
-                  placeholderTextColor={isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight}
+                  placeholderTextColor={isDark ? TEXT.dark.secondary : TEXT.light.muted}
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
@@ -305,7 +294,7 @@ export default function SignInScreen() {
                 {emailError && (
                   <Text
                     className="text-sm mt-1.5"
-                    style={{ color: "#EF4444", fontFamily: "Nunito-Regular" }}
+                    style={{ color: SEMANTIC.error.light, fontFamily: "Nunito-Regular" }}
                   >
                     {emailError}
                   </Text>
@@ -317,7 +306,7 @@ export default function SignInScreen() {
                 onPress={handleMagicLink}
                 disabled={isMagicLinkLoading}
                 className="rounded-xl py-4 items-center active:scale-[0.98]"
-                style={{ backgroundColor: COLORS.primaryDark }}
+                style={{ backgroundColor: ACTION.light.primaryHover }}
               >
                 {isMagicLinkLoading ? (
                   <ActivityIndicator color="#FFFFFF" />
@@ -338,7 +327,7 @@ export default function SignInScreen() {
               <Text
                 className="text-center text-sm mt-3"
                 style={{
-                  color: isDark ? COLORS.darkTextSecondary : COLORS.warmGrayLight,
+                  color: isDark ? TEXT.dark.secondary : TEXT.light.muted,
                   fontFamily: "Nunito-Regular",
                 }}
               >
@@ -355,7 +344,7 @@ export default function SignInScreen() {
                 <Text
                   className="text-base"
                   style={{
-                    color: isDark ? COLORS.darkTextSecondary : COLORS.warmGray,
+                    color: isDark ? TEXT.dark.secondary : TEXT.light.secondary,
                     fontFamily: "Nunito-Medium",
                   }}
                 >

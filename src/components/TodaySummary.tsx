@@ -28,7 +28,7 @@ function SummaryStat({ value, label, color }: SummaryStatProps) {
       >
         {value}
       </Text>
-      <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary mt-0.5 uppercase tracking-wider">
+      <Text className="text-xs text-content-secondary dark:text-content-dark-primary mt-0.5 uppercase tracking-wider">
         {label}
       </Text>
     </View>
@@ -66,7 +66,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
         {/* Header */}
         <View className={`flex-row items-center ${isAndroid ? "mb-2" : "mb-4"}`}>
           <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />
-          <Text className="px-3 text-xs text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider font-medium">
+          <Text className="px-3 text-sm text-content-secondary dark:text-content-dark-primary uppercase tracking-wider font-semibold">
             {t("summary.today")}
           </Text>
           <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />

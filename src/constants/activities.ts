@@ -3,6 +3,8 @@
  * Central source of truth for activity-related constants
  */
 
+import { ACTIVITY } from "./colors";
+
 export type ActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime";
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
 export type BreastSide = "left" | "right" | "both";
@@ -38,49 +40,56 @@ export type StoolColor = typeof STOOL_COLORS[number];
 export interface ActivityColorConfig {
   icon: string;
   accentColor: string;
+  accentColorDark: string;
   mutedBg: string;
   mutedBgDark: string;
 }
 
 /**
- * Activity configuration lookup - soft warm pastel colors
+ * Activity configuration lookup - imports from colors.ts (single source of truth)
  */
 export const ACTIVITY_CONFIG: Record<ActivityType, ActivityColorConfig> = {
   feeding: {
     icon: "🤱",
-    accentColor: "#8CB369",
-    mutedBg: "#EEF4E9",
-    mutedBgDark: "#2A3325",
+    accentColor: ACTIVITY.feeding.accent,
+    accentColorDark: ACTIVITY.feeding.accentDark,
+    mutedBg: ACTIVITY.feeding.muted,
+    mutedBgDark: ACTIVITY.feeding.mutedDark,
   },
   sleep: {
     icon: "😴",
-    accentColor: "#9E8DA9",
-    mutedBg: "#F2EFF4",
-    mutedBgDark: "#2A2630",
+    accentColor: ACTIVITY.sleep.accent,
+    accentColorDark: ACTIVITY.sleep.accentDark,
+    mutedBg: ACTIVITY.sleep.muted,
+    mutedBgDark: ACTIVITY.sleep.mutedDark,
   },
   diaper: {
     icon: "🚼",
-    accentColor: "#E0A099",
-    mutedBg: "#FBF0EE",
-    mutedBgDark: "#382926",
+    accentColor: ACTIVITY.diaper.accent,
+    accentColorDark: ACTIVITY.diaper.accentDark,
+    mutedBg: ACTIVITY.diaper.muted,
+    mutedBgDark: ACTIVITY.diaper.mutedDark,
   },
   pumping: {
     icon: "🫙",
-    accentColor: "#7BA3A8",
-    mutedBg: "#EDF3F4",
-    mutedBgDark: "#252E30",
+    accentColor: ACTIVITY.pumping.accent,
+    accentColorDark: ACTIVITY.pumping.accentDark,
+    mutedBg: ACTIVITY.pumping.muted,
+    mutedBgDark: ACTIVITY.pumping.mutedDark,
   },
   growth: {
     icon: "📏",
-    accentColor: "#6AAB9C",
-    mutedBg: "#EBF4F2",
-    mutedBgDark: "#243330",
+    accentColor: ACTIVITY.growth.accent,
+    accentColorDark: ACTIVITY.growth.accentDark,
+    mutedBg: ACTIVITY.growth.muted,
+    mutedBgDark: ACTIVITY.growth.mutedDark,
   },
   tummyTime: {
     icon: "💪",
-    accentColor: "#D4A574",
-    mutedBg: "#F9F2EA",
-    mutedBgDark: "#332B22",
+    accentColor: ACTIVITY.tummyTime.accent,
+    accentColorDark: ACTIVITY.tummyTime.accentDark,
+    mutedBg: ACTIVITY.tummyTime.muted,
+    mutedBgDark: ACTIVITY.tummyTime.mutedDark,
   },
 };
 
