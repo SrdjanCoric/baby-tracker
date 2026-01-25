@@ -269,7 +269,7 @@ export default function HouseholdSettingsScreen() {
               </View>
             )}
 
-            {members.length > 0 && (
+            {members.length > 1 && isOwner && (
               <Pressable
                 onPress={handleManageCaregivers}
                 className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle dark:border-border-dark-subtle active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
@@ -285,7 +285,7 @@ export default function HouseholdSettingsScreen() {
             )}
           </View>
 
-          {/* Leave Household Section - only show for non-owners in multi-person households */}
+          {/* Leave Household Section - only for non-owners (invited members) */}
           {isInMultiPersonHousehold && !isOwner && (
             <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-6 mt-6">
               <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">

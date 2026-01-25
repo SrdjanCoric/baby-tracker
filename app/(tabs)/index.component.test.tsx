@@ -124,6 +124,11 @@ jest.mock("@/utils/time", () => ({
   timeSince: (_date: Date) => "2h ago",
   formatDate: (_date: Date) => "Jan 20",
   hoursSince: (_date: Date) => 2,
+  formatDuration: (_seconds: number, _format?: string) => "5m",
+}));
+
+jest.mock("@/hooks", () => ({
+  useTimeRefresh: () => 0,
 }));
 
 import HomeScreen from "./index";

@@ -274,8 +274,7 @@ export class SyncEngine {
         const { error } = await supabase.from(table).insert(data);
         if (error) {
           if (error.code === '23505') {
-            console.log(`[SyncEngine] Record ${entityId} already exists, treating as success`);
-            return;
+            return; // Record already exists, treat as success
           }
           throw new Error(`Failed to create ${table}: ${error.message}`);
         }

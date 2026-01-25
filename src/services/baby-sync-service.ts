@@ -227,7 +227,6 @@ export async function syncLocalBabiesToDatabase(
 
     if (!isValidUUID(baby.id)) {
       babyId = generateUUID();
-      console.log("[BabySyncService] Remapping baby ID:", baby.id, "->", babyId);
       await remapActivityBabyIds(baby.id, babyId);
       idMap.set(baby.id, babyId);
     }
