@@ -44,3 +44,4 @@ yarn-error.*
 # research notes (not part of app)
 /research
 google-play-service-account.json
+google-services.json

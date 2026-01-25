@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text, View, useColorScheme } from "react-native";
+import { Text, View, useColorScheme, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type TabIconProps = {
   name: string;
@@ -53,6 +54,7 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const insets = useSafeAreaInsets();
 
   // Get colors based on current color scheme
   const activeColor = isDark ? COLORS.dark.active : COLORS.light.active;
@@ -61,6 +63,10 @@ export default function TabLayout() {
   const borderColor = isDark ? COLORS.dark.border : COLORS.light.border;
   const headerBgColor = isDark ? COLORS.dark.headerBg : COLORS.light.headerBg;
   const headerTextColor = isDark ? COLORS.dark.headerText : COLORS.light.headerText;
+
+  // On Android in Expo Go, we need to account for the navigation bar
+  const bottomPadding = Platform.OS === "android" ? Math.max(8, insets.bottom) : 8;
+  const tabBarHeight = 54 + bottomPadding;
 
   return (
     <Tabs
@@ -72,8 +78,8 @@ export default function TabLayout() {
           borderTopColor: borderColor,
           borderTopWidth: 1,
           paddingTop: 8,
-          paddingBottom: 8,
-          height: 70,
+          paddingBottom: bottomPadding,
+          height: tabBarHeight,
         },
         tabBarLabelStyle: {
           fontSize: 11,

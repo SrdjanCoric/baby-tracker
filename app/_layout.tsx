@@ -1,7 +1,8 @@
 import "../global.css";
 import "../src/i18n";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
@@ -20,13 +21,19 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const [isReady, setIsReady] = useState(false);
   const isMountedRef = useRef(true);
-  const navigationInProgressRef = useRef(false);
+  const lastAuthStateRef = useRef<boolean | null>(null);
 
-  const handleNavigation = useCallback(async () => {
-    if (navigationInProgressRef.current) return;
-    navigationInProgressRef.current = true;
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-    try {
+  useEffect(() => {
+    if (authLoading) return;
+
+    const handleNavigation = async () => {
       const hasCompletedOnboarding = await OnboardingStorageService.hasCompletedOnboarding();
 
       if (!isMountedRef.current) return;
@@ -34,9 +41,17 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       const currentSegment = segments[0];
       const inAuthGroup = currentSegment === "auth";
       const inOnboardingGroup = currentSegment === "onboarding";
+      const isAuthCallback = currentSegment === "login-callback";
+
+      // Skip navigation logic for login-callback route - it handles its own navigation
+      if (isAuthCallback) {
+        if (isMountedRef.current) {
+          setIsReady(true);
+        }
+        return;
+      }
 
       if (!hasCompletedOnboarding && !inOnboardingGroup && !inAuthGroup) {
-        // Allow auth screens during onboarding (user can sign in/up from onboarding)
         router.replace("/onboarding");
       } else if (hasCompletedOnboarding && inOnboardingGroup) {
         router.replace("/(tabs)");
@@ -44,25 +59,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         router.replace("/(tabs)");
       }
 
+      lastAuthStateRef.current = isAuthenticated;
+
       if (isMountedRef.current) {
         setIsReady(true);
       }
-    } finally {
-      navigationInProgressRef.current = false;
-    }
-  }, [segments, isAuthenticated, router]);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    if (!authLoading) {
-      handleNavigation();
-    }
-
-    return () => {
-      isMountedRef.current = false;
     };
-  }, [authLoading, handleNavigation]);
+
+    handleNavigation();
+  }, [authLoading, isAuthenticated, segments, router]);
 
   if (authLoading || !isReady) {
     return (
@@ -103,8 +108,6 @@ function SyncAuthSetup({ children }: { children: React.ReactNode }) {
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
-      console.log("[DeepLink] Received URL:", url);
-
       if (url.includes("login-callback") || url.includes("auth/callback")) {
         try {
           // Parse all params from both hash and query string
@@ -131,46 +134,28 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
           const tokenHash = params.get('token_hash');
           const type = params.get('type');
 
-          console.log("[DeepLink] Params found:", {
-            hasAccess: !!accessToken,
-            hasRefresh: !!refreshToken,
-            hasTokenHash: !!tokenHash,
-            type
-          });
-
           // Handle direct session tokens
           if (accessToken && refreshToken) {
-            const { error } = await supabase.auth.setSession({
+            await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
-            if (error) {
-              console.error("[DeepLink] setSession error:", error);
-            } else {
-              console.log("[DeepLink] Session set successfully");
-            }
             return;
           }
 
           // Handle magic link token_hash verification
           if (tokenHash && type) {
-            console.log("[DeepLink] Verifying OTP with token_hash");
-            const { error } = await supabase.auth.verifyOtp({
+            await supabase.auth.verifyOtp({
               token_hash: tokenHash,
               type: type as 'email' | 'magiclink',
             });
-            if (error) {
-              console.error("[DeepLink] verifyOtp error:", error);
-            } else {
-              console.log("[DeepLink] OTP verified successfully");
-            }
             return;
           }
 
           // Fallback: try getSession
           await supabase.auth.getSession();
         } catch (error) {
-          console.error("[DeepLink] Error handling deep link:", error);
+          console.error("[DeepLink] Error:", error);
         }
       }
     };
@@ -223,11 +208,23 @@ function OfflineBannerWrapper() {
 function AppContent() {
   const { isDark } = useTheme();
 
+  // Android uses simpler animations to avoid glitches
+  const modalOptions = Platform.OS === "android"
+    ? { animation: "slide_from_right" as const }
+    : { presentation: "modal" as const, animation: "slide_from_bottom" as const };
+
+  // Background color to prevent white flash during transitions
+  const bgColor = isDark ? "#1A1918" : "#FAFAF8";
+
   return (
-    <View className="flex-1">
-      {/* Temporarily disabled for testing */}
-      {/* <OfflineBannerWrapper /> */}
-      <Stack screenOptions={{ headerShown: false }}>
+    <View className="flex-1" style={{ backgroundColor: bgColor }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: bgColor },
+          animation: Platform.OS === "android" ? "slide_from_right" : "default",
+        }}
+      >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="onboarding"
@@ -238,75 +235,20 @@ function AppContent() {
         <Stack.Screen
           name="auth"
           options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-            gestureEnabled: true,
+            ...modalOptions,
+            gestureEnabled: Platform.OS === "ios",
             gestureDirection: "vertical",
           }}
         />
-        <Stack.Screen
-          name="baby"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="feeding"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="sleep"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="diaper"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="pumping"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="growth"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="tummyTime"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="settings"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="edit"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
+        <Stack.Screen name="baby" options={modalOptions} />
+        <Stack.Screen name="feeding" options={modalOptions} />
+        <Stack.Screen name="sleep" options={modalOptions} />
+        <Stack.Screen name="diaper" options={modalOptions} />
+        <Stack.Screen name="pumping" options={modalOptions} />
+        <Stack.Screen name="growth" options={modalOptions} />
+        <Stack.Screen name="tummyTime" options={modalOptions} />
+        <Stack.Screen name="settings" options={modalOptions} />
+        <Stack.Screen name="edit" options={modalOptions} />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
     </View>
@@ -332,42 +274,44 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-      <AuthProvider>
-        <DeepLinkHandler>
-        <AuthGuard>
-          <HouseholdProvider>
-            <SyncProvider>
-              <SyncAuthSetup>
-              <UnitProvider>
-                <BabyProvider>
-                  <FeedingProvider>
-                    <SleepProvider>
-                      <DiaperProvider>
-                        <PumpingProvider>
-                          <GrowthProvider>
-                            <TummyTimeProvider>
-                              <NotificationProvider>
-                                <DashboardConfigProvider>
-                                  <AppContent />
-                                </DashboardConfigProvider>
-                              </NotificationProvider>
-                            </TummyTimeProvider>
-                          </GrowthProvider>
-                        </PumpingProvider>
-                      </DiaperProvider>
-                    </SleepProvider>
-                  </FeedingProvider>
-                </BabyProvider>
-              </UnitProvider>
-              </SyncAuthSetup>
-            </SyncProvider>
-          </HouseholdProvider>
-        </AuthGuard>
-        </DeepLinkHandler>
-      </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+        <AuthProvider>
+          <DeepLinkHandler>
+          <AuthGuard>
+            <HouseholdProvider>
+              <SyncProvider>
+                <SyncAuthSetup>
+                <UnitProvider>
+                  <BabyProvider>
+                    <FeedingProvider>
+                      <SleepProvider>
+                        <DiaperProvider>
+                          <PumpingProvider>
+                            <GrowthProvider>
+                              <TummyTimeProvider>
+                                <NotificationProvider>
+                                  <DashboardConfigProvider>
+                                    <AppContent />
+                                  </DashboardConfigProvider>
+                                </NotificationProvider>
+                              </TummyTimeProvider>
+                            </GrowthProvider>
+                          </PumpingProvider>
+                        </DiaperProvider>
+                      </SleepProvider>
+                    </FeedingProvider>
+                  </BabyProvider>
+                </UnitProvider>
+                </SyncAuthSetup>
+              </SyncProvider>
+            </HouseholdProvider>
+          </AuthGuard>
+          </DeepLinkHandler>
+        </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

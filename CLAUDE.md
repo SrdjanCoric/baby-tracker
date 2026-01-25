@@ -80,3 +80,48 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=
 EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
 ```
+
+## Android-Specific Setup
+
+### Google Sign-In Configuration
+
+Android requires proper SHA-1 fingerprint configuration for Google Sign-In to work:
+
+1. **Get your keystore SHA-1:**
+   ```bash
+   # For local Expo development builds:
+   keytool -list -v -keystore android/app/debug.keystore -alias androiddebugkey -storepass android | grep SHA1
+
+   # For EAS production builds:
+   eas credentials --platform android
+   ```
+
+2. **Configure Firebase:**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Add/select your project
+   - Add Android app with package name `com.sofibaby.app`
+   - Add ALL SHA-1 fingerprints (dev + production)
+   - Download `google-services.json` to project root
+
+3. **Configure Google Cloud Console:**
+   - Each SHA-1 needs a corresponding Android OAuth client
+   - Firebase auto-creates these when you add fingerprints
+
+4. **Required SHA-1 fingerprints:**
+   - Local dev (Expo): from `android/app/debug.keystore`
+   - Production (EAS): from `eas credentials --platform android` (Default keystore)
+
+### Common Android Issues
+
+**DEVELOPER_ERROR (code 10) on Google Sign-In:**
+- SHA-1 fingerprint mismatch between app signing key and Google Cloud Console
+- Solution: Verify the EXACT SHA-1 from `android/app/debug.keystore` (not `~/.android/debug.keystore`) matches Firebase/Google Cloud
+
+**Magic Link not redirecting after authentication:**
+- Deep link received but auth state not updating UI
+- Root cause: `fetchUserProfile()` database query blocking auth state
+- Solution: Set user as authenticated immediately from session data, fetch profile in background (non-blocking)
+
+**Expo Go limitations:**
+- Native modules (`expo-notifications`, `@react-native-google-signin`) don't work in Expo Go
+- Solution: Use development builds (`npx expo run:android`) for testing native features

@@ -17,6 +17,8 @@ import { Input } from "./Input";
 import { Button } from "./Button";
 import { validateBabyName, validateBirthDate } from "@/validators/baby";
 
+const isAndroid = Platform.OS === "android";
+
 type Gender = "male" | "female";
 
 interface BabyProfileFormData {
@@ -145,7 +147,7 @@ function BabyProfileForm({
   return (
     <ScrollView
       className={`flex-1 ${isDark ? "bg-surface-dark" : "bg-surface"}`}
-      contentContainerClassName="p-6 pb-12"
+      contentContainerClassName={isAndroid ? "p-4 pb-8" : "p-6 pb-12"}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
@@ -339,7 +341,7 @@ function BabyProfileForm({
         </View>
       </View>
 
-      <View className="gap-3 mt-4">
+      <View className="gap-3 mt-4 w-full">
         <Button
           variant="primary"
           size="large"
