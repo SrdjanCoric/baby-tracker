@@ -8,20 +8,20 @@
 
 const SURFACE = {
   light: {
-    background: "#FBF8F6",
-    secondary: "#F5F2F0",
+    background: "#F5EDE8",
+    secondary: "#EFE7E2",
     card: "#FFFFFF",
     cardElevated: "#FFFFFF",
     muted: "#FEF7F4",
     input: "#FFFFFF",
   },
   dark: {
-    background: "#1C1A1D",
-    secondary: "#232125",
-    card: "#2A2730",
-    cardElevated: "#343039",
-    muted: "#1E1C1F",
-    input: "#252329",
+    background: "#1E1B19",
+    secondary: "#252220",
+    card: "#2D2A28",
+    cardElevated: "#363330",
+    muted: "#201D1B",
+    input: "#282523",
   },
 };
 
