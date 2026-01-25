@@ -5,6 +5,7 @@
     "delete": "Delete",
     "edit": "Edit",
     "done": "Done",
+    "continue": "Continue",
     "start": "Start",
     "stop": "Stop",
     "add": "Add",
@@ -426,6 +427,10 @@
     "showBabyNameDesc": "Include baby's name in notifications (visible on lock screen)",
     "showActivityDetails": "Show Activity Details",
     "showActivityDetailsDesc": "Include detailed activity information in notifications",
+    "householdActivity": "Household Activity",
+    "householdActivityLabel": "Activity notifications",
+    "householdActivityDesc": "Get notified when another caregiver logs an activity",
+    "householdActivitySignInRequired": "Sign in to enable household activity notifications",
     "export": "Export Data",
     "generateReport": "Generate Report",
     "account": "Account",
@@ -578,7 +583,18 @@
     "manageCaregivers": "Manage Caregivers",
     "caregiversFetchFailed": "Could not load caregivers",
     "removeCaregiverFailed": "Could not remove caregiver",
-    "notAuthorized": "Only the household owner can remove caregivers"
+    "notAuthorized": "Only the household owner can remove caregivers",
+    "leaveHousehold": "Leave Household",
+    "leaveHouseholdDescription": "Leave this household and return to your own household",
+    "leaveHouseholdConfirm": "Are you sure you want to leave this household? You will lose access to shared data.",
+    "leave": "Leave",
+    "leftHousehold": "You have left the household",
+    "leaveFailed": "Could not leave household",
+    "ownerCannotLeave": "As the household owner, you cannot leave. Transfer ownership first or delete the household.",
+    "dataLossWarningTitle": "Your baby data will be replaced",
+    "dataLossWarningMessage": "You have {{count}} baby profiles stored locally. When you join this household, you'll use the household's baby data instead. Your local baby data will be lost.",
+    "dataLossWarningMessage_one": "You have 1 baby profile stored locally. When you join this household, you'll use the household's baby data instead. Your local baby data will be lost.",
+    "joinAnyway": "Join Anyway"
   },
   "auth": {
     "signIn": "Sign In",
@@ -927,5 +943,25 @@
       "invalidPassword": "Invalid password. Please try again.",
       "verificationFailed": "Password verification failed. Please try again."
     }
+  },
+  "duplicateDetection": {
+    "title": "Similar Entry Detected",
+    "message": "A {{activity}} was logged {{time}}. Do you want to log another?",
+    "messageWithUser": "A {{activity}} was logged {{time}} by {{user}}. Do you want to log another?",
+    "cancel": "Cancel",
+    "logAnyway": "Log Anyway",
+    "justNow": "just now",
+    "minuteAgo": "{{count}} minute ago",
+    "minutesAgo": "{{count}} minutes ago",
+    "hourAgo": "{{count}} hour ago",
+    "hoursAgo": "{{count}} hours ago"
+  },
+  "activities": {
+    "feeding": "feeding",
+    "sleep": "sleep session",
+    "diaper": "diaper change",
+    "pumping": "pumping session",
+    "growth": "growth measurement",
+    "tummyTime": "tummy time session"
   }
 }
