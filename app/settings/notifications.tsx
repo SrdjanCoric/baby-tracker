@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useNotifications } from "@/contexts/notification-context";
+import { useAuth } from "@/contexts/auth-context";
 import { FEEDING_REMINDER_INTERVALS } from "@/constants/notifications";
 
 type SectionHeaderProps = {
@@ -82,14 +83,17 @@ type IntervalOption = (typeof FEEDING_REMINDER_INTERVALS)[number];
 
 export default function NotificationSettingsScreen() {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
   const {
     settings,
     permissionStatus,
     isLoading,
     inAppRemindersEnabled,
+    activityNotificationsEnabled,
     updateSettings,
     requestPermissions,
     setInAppRemindersEnabled,
+    setActivityNotificationsEnabled,
   } = useNotifications();
 
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
@@ -185,6 +189,13 @@ export default function NotificationSettingsScreen() {
       });
     },
     [settings.privacy, updateSettings]
+  );
+
+  const handleToggleActivityNotifications = useCallback(
+    async (enabled: boolean) => {
+      await setActivityNotificationsEnabled(enabled);
+    },
+    [setActivityNotificationsEnabled]
   );
 
   if (isLoading) {
@@ -316,6 +327,28 @@ export default function NotificationSettingsScreen() {
                   value={settings.timerAlerts.enabled}
                   onValueChange={handleToggleTimerAlerts}
                   disabled={!hasPermission}
+                />
+              }
+              isLast
+            />
+          </View>
+        </View>
+
+        <View className="mb-6">
+          <SectionHeader title={t("settings.householdActivity")} />
+          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
+            <SettingsRow
+              label={t("settings.householdActivityLabel")}
+              description={
+                isAuthenticated
+                  ? t("settings.householdActivityDesc")
+                  : t("settings.householdActivitySignInRequired")
+              }
+              rightElement={
+                <Switch
+                  value={activityNotificationsEnabled}
+                  onValueChange={handleToggleActivityNotifications}
+                  disabled={!hasPermission || !isAuthenticated}
                 />
               }
               isLast

@@ -11,6 +11,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { AppState, AppStateStatus } from "react-native";
 import type {
   NotificationSettings,
   PermissionStatus,
@@ -20,16 +21,24 @@ import { DEFAULT_NOTIFICATION_SETTINGS } from "@/constants/notifications";
 import { NotificationService } from "@/services/notification-service";
 import { NotificationStorageService } from "@/services/notification-storage";
 import {
+  savePushToken,
+  removePushToken,
+  getActivityNotificationsEnabled,
+  setActivityNotificationsEnabled as setActivityNotificationsEnabledService,
+} from "@/services/push-token-service";
+import {
   calculateNextFeedingReminder,
   shouldSendTimerAlert,
 } from "@/utils/notification-scheduler";
 import { createSafeNotificationContent } from "@/utils/notification-sanitizer";
+import { withRetryResult } from "@/utils/retry";
 
 interface NotificationContextValue {
   settings: NotificationSettings;
   permissionStatus: PermissionStatus;
   isLoading: boolean;
   inAppRemindersEnabled: boolean;
+  activityNotificationsEnabled: boolean;
   updateSettings: (partial: Partial<NotificationSettings>) => Promise<void>;
   requestPermissions: () => Promise<boolean>;
   scheduleFeedingReminder: (babyId: string, lastFeedingTime: Date, babyName?: string) => Promise<void>;
@@ -40,6 +49,8 @@ interface NotificationContextValue {
   ) => boolean;
   setInAppRemindersEnabled: (enabled: boolean) => Promise<void>;
   checkInAppReminder: (babyId: string, lastFeedingTime: Date) => boolean;
+  setActivityNotificationsEnabled: (enabled: boolean) => Promise<void>;
+  registerPushTokenForUser: (userId: string | null) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -56,9 +67,12 @@ export function NotificationProvider({
     useState<PermissionStatus>("undetermined");
   const [isLoading, setIsLoading] = useState(true);
   const [inAppRemindersEnabled, setInAppRemindersEnabledState] = useState(false);
+  const [activityNotificationsEnabled, setActivityNotificationsEnabledState] = useState(false);
 
   // Track scheduled reminders for rescheduling
   const scheduledRemindersRef = useRef<Map<string, { babyId: string; lastFeedingTime: Date; babyName?: string }>>(new Map());
+  const currentPushTokenRef = useRef<string | null>(null);
+  const currentUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const initialize = async () => {
@@ -84,6 +98,28 @@ export function NotificationProvider({
 
     initialize();
   }, []);
+
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        const status = await NotificationService.getPermissionStatus();
+        if (status !== permissionStatus) {
+          setPermissionStatus(status);
+
+          if (status === "granted" && currentUserIdRef.current) {
+            const token = await NotificationService.getExpoPushToken();
+            if (token && token !== currentPushTokenRef.current) {
+              currentPushTokenRef.current = token;
+              await savePushToken(token);
+            }
+          }
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
+    return () => subscription.remove();
+  }, [permissionStatus]);
 
   const updateSettings = useCallback(
     async (partial: Partial<NotificationSettings>) => {
@@ -300,11 +336,68 @@ export function NotificationProvider({
     [inAppRemindersEnabled, settings]
   );
 
+  const setActivityNotificationsEnabled = useCallback(async (enabled: boolean) => {
+    setActivityNotificationsEnabledState(enabled);
+    const { error } = await setActivityNotificationsEnabledService(enabled);
+    if (error) {
+      console.error("Failed to update activity notifications setting:", error);
+      setActivityNotificationsEnabledState(!enabled);
+    }
+  }, []);
+
+  const registerPushTokenForUser = useCallback(async (userId: string | null) => {
+    if (!userId) {
+      if (currentPushTokenRef.current) {
+        const tokenToRemove = currentPushTokenRef.current;
+        currentPushTokenRef.current = null;
+
+        const { error } = await withRetryResult(
+          async () => {
+            const result = await removePushToken(tokenToRemove);
+            if (result.error) throw result.error;
+            return result;
+          },
+          { maxRetries: 2, baseDelayMs: 500, maxDelayMs: 2000 }
+        );
+
+        if (error) {
+          console.warn("Failed to remove push token on logout:", error);
+        }
+      }
+      currentUserIdRef.current = null;
+      setActivityNotificationsEnabledState(false);
+      return;
+    }
+
+    if (userId === currentUserIdRef.current) {
+      return;
+    }
+
+    currentUserIdRef.current = userId;
+
+    const activityEnabled = await getActivityNotificationsEnabled();
+    setActivityNotificationsEnabledState(activityEnabled);
+
+    if (permissionStatus !== "granted") {
+      return;
+    }
+
+    const token = await NotificationService.getExpoPushToken();
+    if (token) {
+      currentPushTokenRef.current = token;
+      const { error } = await savePushToken(token);
+      if (error) {
+        console.error("Failed to save push token:", error);
+      }
+    }
+  }, [permissionStatus]);
+
   const value: NotificationContextValue = {
     settings,
     permissionStatus,
     isLoading,
     inAppRemindersEnabled,
+    activityNotificationsEnabled,
     updateSettings,
     requestPermissions,
     scheduleFeedingReminder,
@@ -312,6 +405,8 @@ export function NotificationProvider({
     checkTimerAlert,
     setInAppRemindersEnabled,
     checkInAppReminder,
+    setActivityNotificationsEnabled,
+    registerPushTokenForUser,
   };
 
   return (
