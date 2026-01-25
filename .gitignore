@@ -45,3 +45,4 @@ yarn-error.*
 /research
 google-play-service-account.json
 google-services.json
+supabase/.temp/
