@@ -1,5 +1,17 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BabyStorageService, StoredBabyProfile, CreateBabyInput, UpdateBabyInput } from "@/services/baby-storage";
+import {
+  fetchAndSyncHouseholdBabies,
+  createBabyInDatabase,
+  updateBabyInDatabase,
+  deleteBabyFromDatabase,
+  syncLocalBabiesToDatabase,
+} from "@/services/baby-sync-service";
+import { syncGuestActivitiesToDatabase } from "@/services/activity-sync-service";
+import { useSync } from "./sync-context";
+import { useAuth } from "./auth-context";
+import { RemoteChange } from "@/services/sync";
 
 export interface BabyState {
   babies: StoredBabyProfile[];
@@ -13,7 +25,10 @@ export type BabyAction =
   | { type: "ADD_BABY"; payload: StoredBabyProfile }
   | { type: "UPDATE_BABY"; payload: StoredBabyProfile }
   | { type: "DELETE_BABY"; payload: string }
-  | { type: "SET_LOADING"; payload: boolean };
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "REMOTE_INSERT"; payload: StoredBabyProfile }
+  | { type: "REMOTE_UPDATE"; payload: StoredBabyProfile }
+  | { type: "REMOTE_DELETE"; payload: string };
 
 export const initialBabyState: BabyState = {
   babies: [],
@@ -53,6 +68,32 @@ export function babyReducer(state: BabyState, action: BabyAction): BabyState {
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
 
+    case "REMOTE_INSERT": {
+      const exists = state.babies.some(b => b.id === action.payload.id);
+      if (exists) {
+        return state;
+      }
+      return { ...state, babies: [...state.babies, action.payload] };
+    }
+
+    case "REMOTE_UPDATE": {
+      const updatedBabies = state.babies.map(b =>
+        b.id === action.payload.id ? action.payload : b
+      );
+      const updatedSelectedBaby =
+        state.selectedBaby?.id === action.payload.id
+          ? action.payload
+          : state.selectedBaby;
+      return { ...state, babies: updatedBabies, selectedBaby: updatedSelectedBaby };
+    }
+
+    case "REMOTE_DELETE": {
+      const filteredBabies = state.babies.filter(b => b.id !== action.payload);
+      const clearedSelectedBaby =
+        state.selectedBaby?.id === action.payload ? null : state.selectedBaby;
+      return { ...state, babies: filteredBabies, selectedBaby: clearedSelectedBaby };
+    }
+
     default:
       return state;
   }
@@ -69,26 +110,141 @@ interface BabyContextValue extends BabyState {
 
 const BabyContext = createContext<BabyContextValue | null>(null);
 
+const GUEST_BABIES_KEY = "@babies";
+
+async function getGuestBabies(): Promise<StoredBabyProfile[]> {
+  const data = await AsyncStorage.getItem(GUEST_BABIES_KEY);
+  if (!data) return [];
+  return JSON.parse(data) as StoredBabyProfile[];
+}
+
+async function clearGuestBabies(): Promise<void> {
+  await AsyncStorage.removeItem(GUEST_BABIES_KEY);
+  await AsyncStorage.removeItem("@selected_baby_id");
+}
+
 export function BabyProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(babyReducer, initialBabyState);
+  const { subscribeToRemoteChanges } = useSync();
+  const { user } = useAuth();
+  const hasMigratedRef = useRef(false);
+
+  const handleRemoteChange = useCallback((change: RemoteChange) => {
+    if (!user?.householdId) return;
+
+    const data = change.new || change.old;
+    if (data && data.household_id && data.household_id !== user.householdId) {
+      return;
+    }
+
+    switch (change.eventType) {
+      case 'INSERT':
+        if (change.new) {
+          dispatch({
+            type: "REMOTE_INSERT",
+            payload: transformBabyFromRemote(change.new),
+          });
+        }
+        break;
+      case 'UPDATE':
+        if (change.new) {
+          dispatch({
+            type: "REMOTE_UPDATE",
+            payload: transformBabyFromRemote(change.new),
+          });
+        }
+        break;
+      case 'DELETE':
+        if (change.old && change.old.id) {
+          dispatch({
+            type: "REMOTE_DELETE",
+            payload: change.old.id as string,
+          });
+        }
+        break;
+    }
+  }, [user?.householdId]);
+
+  useEffect(() => {
+    if (!user?.householdId) {
+      return;
+    }
+
+    const unsubscribe = subscribeToRemoteChanges('babies', handleRemoteChange);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [subscribeToRemoteChanges, user?.householdId, handleRemoteChange]);
 
   const loadBabies = useCallback(async () => {
     dispatch({ type: "SET_LOADING", payload: true });
-    const babies = await BabyStorageService.getAllBabies();
+
+    let babies: StoredBabyProfile[];
+
+    if (user?.householdId) {
+      if (!hasMigratedRef.current) {
+        hasMigratedRef.current = true;
+        const guestBabies = await getGuestBabies();
+        if (guestBabies.length > 0) {
+          try {
+            const { idMap } = await syncLocalBabiesToDatabase(user.householdId, guestBabies);
+            await clearGuestBabies();
+
+            const babyIdMap = new Map<string, string>();
+            for (const baby of guestBabies) {
+              const newId = idMap.get(baby.id) || baby.id;
+              babyIdMap.set(baby.id, newId);
+            }
+
+            await syncGuestActivitiesToDatabase(user.id, babyIdMap);
+          } catch (error) {
+            console.error("[BabyContext] Failed to migrate guest data:", error);
+          }
+        }
+      }
+
+      try {
+        babies = await fetchAndSyncHouseholdBabies(user.householdId);
+      } catch (error) {
+        console.error("[BabyContext] Failed to fetch from database, using local:", error);
+        babies = await BabyStorageService.getAllBabies();
+      }
+    } else {
+      hasMigratedRef.current = false;
+      babies = await BabyStorageService.getAllBabies();
+    }
+
     dispatch({ type: "SET_BABIES", payload: babies });
 
-    const selectedBaby = await BabyStorageService.getSelectedBaby();
-    dispatch({ type: "SET_SELECTED_BABY", payload: selectedBaby });
+    const selectedBabyId = await BabyStorageService.getSelectedBabyId();
+    const selectedBaby = selectedBabyId
+      ? babies.find(b => b.id === selectedBabyId) ?? null
+      : null;
+
+    if (!selectedBaby && babies.length > 0) {
+      await BabyStorageService.setSelectedBabyId(babies[0].id);
+      dispatch({ type: "SET_SELECTED_BABY", payload: babies[0] });
+    } else {
+      dispatch({ type: "SET_SELECTED_BABY", payload: selectedBaby });
+    }
 
     dispatch({ type: "SET_LOADING", payload: false });
-  }, []);
+  }, [user?.householdId]);
 
   useEffect(() => {
     loadBabies();
   }, [loadBabies]);
 
   const addBaby = useCallback(async (input: CreateBabyInput) => {
-    const newBaby = await BabyStorageService.addBaby(input);
+    let newBaby: StoredBabyProfile;
+
+    if (user?.householdId) {
+      newBaby = await createBabyInDatabase(input, user.householdId);
+    } else {
+      newBaby = await BabyStorageService.addBaby(input);
+    }
+
     dispatch({ type: "ADD_BABY", payload: newBaby });
 
     if (state.babies.length === 0) {
@@ -97,31 +253,49 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     }
 
     return newBaby;
-  }, [state.babies.length]);
+  }, [state.babies.length, user?.householdId]);
 
   const updateBaby = useCallback(async (id: string, input: UpdateBabyInput) => {
-    const updated = await BabyStorageService.updateBaby(id, input);
+    let updated: StoredBabyProfile | null;
+
+    if (user?.householdId) {
+      updated = await updateBabyInDatabase(id, input, user.householdId);
+    } else {
+      updated = await BabyStorageService.updateBaby(id, input);
+    }
+
     if (updated) {
       dispatch({ type: "UPDATE_BABY", payload: updated });
     }
     return updated;
-  }, []);
+  }, [user?.householdId]);
 
   const deleteBaby = useCallback(async (id: string) => {
-    const result = await BabyStorageService.deleteBaby(id);
+    let result: boolean;
+
+    if (user?.householdId) {
+      result = await deleteBabyFromDatabase(id, user.householdId);
+    } else {
+      result = await BabyStorageService.deleteBaby(id);
+    }
+
     if (result) {
       dispatch({ type: "DELETE_BABY", payload: id });
 
-      if (state.selectedBaby?.id === id) {
-        const remainingBabies = state.babies.filter(b => b.id !== id);
-        if (remainingBabies.length > 0) {
-          await BabyStorageService.setSelectedBabyId(remainingBabies[0].id);
-          dispatch({ type: "SET_SELECTED_BABY", payload: remainingBabies[0] });
-        }
+      const remainingBabies = state.babies.filter(b => b.id !== id);
+      const wasSelectedBaby = state.selectedBaby?.id === id;
+      const noSelectedBaby = !state.selectedBaby;
+
+      if ((wasSelectedBaby || noSelectedBaby) && remainingBabies.length > 0) {
+        await BabyStorageService.setSelectedBabyId(remainingBabies[0].id);
+        dispatch({ type: "SET_SELECTED_BABY", payload: remainingBabies[0] });
+      } else if (remainingBabies.length === 0) {
+        await BabyStorageService.setSelectedBabyId(null);
+        dispatch({ type: "SET_SELECTED_BABY", payload: null });
       }
     }
     return result;
-  }, [state.selectedBaby?.id, state.babies]);
+  }, [state.selectedBaby?.id, state.babies, user?.householdId]);
 
   const selectBaby = useCallback(async (id: string | null) => {
     await BabyStorageService.setSelectedBabyId(id);
@@ -152,4 +326,16 @@ export function useBaby(): BabyContextValue {
     throw new Error("useBaby must be used within a BabyProvider");
   }
   return context;
+}
+
+function transformBabyFromRemote(data: Record<string, unknown>): StoredBabyProfile {
+  return {
+    id: data.id as string,
+    name: data.name as string,
+    birthDate: data.birth_date as string | undefined,
+    gender: data.gender as 'male' | 'female' | undefined,
+    photoUri: data.photo_url as string | undefined,
+    createdAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: (data.updated_at as string) || new Date().toISOString(),
+  };
 }
