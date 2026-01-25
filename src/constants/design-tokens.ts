@@ -10,10 +10,14 @@ import {
   ACTION,
   BORDER,
   SEMANTIC,
+  ACTIVITY,
+  getButtonTextColor,
+  getActivityButtonColor,
   type ThemeMode,
+  type ActivityColorKey,
 } from "./colors";
 
-export { SURFACE, TEXT, ACTION, BORDER, SEMANTIC };
+export { SURFACE, TEXT, ACTION, BORDER, SEMANTIC, ACTIVITY, getButtonTextColor, getActivityButtonColor };
 
 export const SURFACE_COLORS = SURFACE;
 export const CONTENT_COLORS = TEXT;

@@ -72,7 +72,7 @@ function StatCard({
         </Text>
       </View>
       <Text
-        className="text-stat font-bold text-content-primary dark:text-content-dark-primary"
+        className="text-2xl font-bold text-content-primary dark:text-content-dark-primary"
       >
         {value}
       </Text>
@@ -441,14 +441,14 @@ export default function StatisticsScreen() {
             <View className="flex-row flex-wrap">
               <View className="w-1/2 mb-3 pr-2">
                 <View className="flex-row items-center">
-                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.sleep.icon}</Text>
+                  <Text className="text-lg mr-2">{ACTIVITY_CONFIG.sleep.icon}</Text>
                   <Text
-                    className="text-base font-semibold"
+                    className="text-lg font-semibold"
                     style={{ color: ACTIVITY_CONFIG.sleep.accentColor }}
                   >
                     {dailyAverages.sleepHoursPerDay}h
                   </Text>
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                  <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
                     /day
                   </Text>
                 </View>
@@ -456,14 +456,14 @@ export default function StatisticsScreen() {
 
               <View className="w-1/2 mb-3 pl-2">
                 <View className="flex-row items-center">
-                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.feeding.icon}</Text>
+                  <Text className="text-lg mr-2">{ACTIVITY_CONFIG.feeding.icon}</Text>
                   <Text
-                    className="text-base font-semibold"
+                    className="text-lg font-semibold"
                     style={{ color: ACTIVITY_CONFIG.feeding.accentColor }}
                   >
                     {dailyAverages.feedingsPerDay}
                   </Text>
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                  <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
                     /day
                   </Text>
                 </View>
@@ -471,19 +471,19 @@ export default function StatisticsScreen() {
 
               <View className="w-1/2 pr-2">
                 <View className="flex-row items-center">
-                  <Text className="text-base mr-2">{ACTIVITY_CONFIG.diaper.icon}</Text>
+                  <Text className="text-lg mr-2">{ACTIVITY_CONFIG.diaper.icon}</Text>
                   <Text
-                    className="text-base font-semibold"
+                    className="text-lg font-semibold"
                     style={{ color: ACTIVITY_CONFIG.diaper.accentColor }}
                   >
                     {dailyAverages.wetDiapersPerDay}
                   </Text>
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                  <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
                     wet/day
                   </Text>
                   {dailyAverages.wetDiapersPerDay >= 6 && (
                     <Text
-                      className="text-sm ml-1"
+                      className="text-base ml-1"
                       style={{ color: colorScheme === "dark" ? "#4ade80" : "#22c55e" }}
                     >
                       ✓
@@ -495,14 +495,14 @@ export default function StatisticsScreen() {
               {dailyAverages.tummyTimeMinutesPerDay > 0 && (
                 <View className="w-1/2 pl-2">
                   <View className="flex-row items-center">
-                    <Text className="text-base mr-2">{ACTIVITY_CONFIG.tummyTime.icon}</Text>
+                    <Text className="text-lg mr-2">{ACTIVITY_CONFIG.tummyTime.icon}</Text>
                     <Text
-                      className="text-base font-semibold"
+                      className="text-lg font-semibold"
                       style={{ color: ACTIVITY_CONFIG.tummyTime.accentColor }}
                     >
                       {dailyAverages.tummyTimeMinutesPerDay}m
                     </Text>
-                    <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary ml-1">
+                    <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
                       /day
                     </Text>
                   </View>
@@ -607,7 +607,7 @@ export default function StatisticsScreen() {
                   {t("statistics.tummyTime")}
                 </Text>
               </View>
-              <Text className="text-stat font-bold text-content-primary dark:text-content-dark-primary">
+              <Text className="text-2xl font-bold text-content-primary dark:text-content-dark-primary">
                 {formatDuration(stats.tummyTime.totalDurationSeconds, "short") || "0m"}
               </Text>
               {showWeeklyTrends && weeklyTrends.tummyTime.direction !== "stable" && (
