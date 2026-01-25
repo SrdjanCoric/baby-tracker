@@ -5,6 +5,7 @@
     "delete": "Obriši",
     "edit": "Izmeni",
     "done": "Gotovo",
+    "continue": "Nastavi",
     "start": "Započni",
     "stop": "Zaustavi",
     "add": "Dodaj",
@@ -446,6 +447,10 @@
     "showBabyNameDesc": "Uključi ime bebe u obaveštenja (vidljivo na zaključanom ekranu)",
     "showActivityDetails": "Prikaži detalje aktivnosti",
     "showActivityDetailsDesc": "Uključi detaljne informacije o aktivnosti u obaveštenja",
+    "householdActivity": "Aktivnost domaćinstva",
+    "householdActivityLabel": "Obaveštenja o aktivnostima",
+    "householdActivityDesc": "Dobijte obaveštenje kada drugi negovatelj zabeleži aktivnost",
+    "householdActivitySignInRequired": "Prijavite se da omogućite obaveštenja o aktivnostima domaćinstva",
     "export": "Preuzmi podatke",
     "generateReport": "Generiši izveštaj",
     "account": "Nalog",
@@ -602,7 +607,18 @@
     "manageCaregivers": "Upravljaj negovateljima",
     "caregiversFetchFailed": "Nije moguće učitati negovatelje",
     "removeCaregiverFailed": "Nije moguće ukloniti negovatelja",
-    "notAuthorized": "Samo vlasnik domaćinstva može ukloniti negovatelje"
+    "notAuthorized": "Samo vlasnik domaćinstva može ukloniti negovatelje",
+    "leaveHousehold": "Napusti domaćinstvo",
+    "leaveHouseholdDescription": "Napustite ovo domaćinstvo i vratite se u sopstveno",
+    "leaveHouseholdConfirm": "Da li ste sigurni da želite da napustite ovo domaćinstvo? Izgubićete pristup deljenim podacima.",
+    "leave": "Napusti",
+    "leftHousehold": "Napustili ste domaćinstvo",
+    "leaveFailed": "Nije moguće napustiti domaćinstvo",
+    "ownerCannotLeave": "Kao vlasnik domaćinstva, ne možete ga napustiti. Prvo prenesite vlasništvo ili obrišite domaćinstvo.",
+    "dataLossWarningTitle": "Podaci o bebi će biti zamenjeni",
+    "dataLossWarningMessage": "Imate {{count}} profila beba sačuvanih lokalno. Kada se pridružite ovom domaćinstvu, koristićete podatke o bebama tog domaćinstva. Vaši lokalni podaci o bebama će biti izgubljeni.",
+    "dataLossWarningMessage_one": "Imate 1 profil bebe sačuvan lokalno. Kada se pridružite ovom domaćinstvu, koristićete podatke o bebama tog domaćinstva. Vaši lokalni podaci o bebi će biti izgubljeni.",
+    "joinAnyway": "Ipak se pridruži"
   },
   "auth": {
     "signIn": "Prijava",
@@ -953,5 +969,25 @@
       "invalidPassword": "Nevažeća lozinka. Molimo pokušajte ponovo.",
       "verificationFailed": "Potvrda lozinke nije uspela. Molimo pokušajte ponovo."
     }
+  },
+  "duplicateDetection": {
+    "title": "Otkriven sličan unos",
+    "message": "{{activity}} je zabeležen/a {{time}}. Da li želite da zabeležite još jedan/jednu?",
+    "messageWithUser": "{{activity}} je zabeležen/a {{time}} od strane {{user}}. Da li želite da zabeležite još jedan/jednu?",
+    "cancel": "Otkaži",
+    "logAnyway": "Ipak zabeleži",
+    "justNow": "upravo sada",
+    "minuteAgo": "pre {{count}} minut",
+    "minutesAgo": "pre {{count}} minuta",
+    "hourAgo": "pre {{count}} sat",
+    "hoursAgo": "pre {{count}} sati"
+  },
+  "activities": {
+    "feeding": "hranjenje",
+    "sleep": "sesija spavanja",
+    "diaper": "promena pelene",
+    "pumping": "sesija izmlazavanja",
+    "growth": "merenje rasta",
+    "tummyTime": "sesija vremena na stomaku"
   }
 }
