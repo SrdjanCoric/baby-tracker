@@ -1,9 +1,11 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, Platform } from "react-native";
 import { forwardRef, useCallback } from "react";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useBaby } from "@/contexts";
 import { BabySelector } from "./BabySelector";
+
+const isAndroid = Platform.OS === "android";
 
 interface BabyHeaderProps {
   onSettingsPress?: () => void;
@@ -48,18 +50,20 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
         <View
           ref={ref}
           testID={testID}
-          className="flex-row items-center justify-between px-4 py-3"
+          className={`flex-row items-center justify-between ${isAndroid ? "px-3 py-2" : "px-4 py-3"}`}
         >
           <Pressable
             onPress={handleAddBaby}
-            className="flex-row items-center flex-1 active:opacity-70"
+            className="flex-row items-center active:opacity-70"
             accessibilityRole="button"
             accessibilityLabel={t("baby.addFirstBaby")}
           >
-            <View className="w-12 h-12 rounded-full bg-action-primary/10 dark:bg-action-dark-primary/20 items-center justify-center mr-3">
-              <Text className="text-2xl">➕</Text>
+            <View className={`${isAndroid ? "w-10 h-10 mr-2" : "w-12 h-12 mr-3"} rounded-full bg-action-primary/10 dark:bg-action-dark-primary/20 items-center justify-center`}>
+              <Text className={isAndroid ? "text-xl" : "text-2xl"}>➕</Text>
             </View>
-            <Text className="text-lg font-semibold text-action-primary dark:text-action-dark-primary">
+            <Text
+              className={`${isAndroid ? "text-sm" : "text-lg"} font-semibold text-action-primary dark:text-action-dark-primary`}
+            >
               {t("baby.addBaby")}
             </Text>
           </Pressable>

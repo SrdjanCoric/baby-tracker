@@ -1,8 +1,10 @@
-import { Pressable, Text, View, useColorScheme } from "react-native";
+import { Pressable, Text, View, useColorScheme, Platform } from "react-native";
 import { forwardRef, useCallback } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { CONTENT_COLORS } from "@/constants/design-tokens";
+
+const CARD_MIN_HEIGHT = Platform.OS === "android" ? 140 : 160;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -86,12 +88,12 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
         onPressIn={handleCardPressIn}
         onPressOut={handleCardPressOut}
         testID={testID}
-        className="flex-1 rounded-[20px] p-4"
+        className={`flex-1 rounded-[20px] ${Platform.OS === "android" ? "p-3" : "p-4"}`}
         style={[
           cardAnimatedStyle,
           {
             backgroundColor: bgColor,
-            minHeight: 160,
+            minHeight: CARD_MIN_HEIGHT,
             borderWidth: isActive ? 2 : 0,
             borderColor: isActive ? config.accentColor : "transparent",
           },
@@ -208,12 +210,12 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
             }}
             onPressIn={handleButtonPressIn}
             onPressOut={handleButtonPressOut}
-            className="min-w-[48px] min-h-[48px] rounded-2xl items-center justify-center"
+            className={`${Platform.OS === "android" ? "min-w-[40px] min-h-[40px] rounded-xl" : "min-w-[48px] min-h-[48px] rounded-2xl"} items-center justify-center`}
             style={[buttonAnimatedStyle, { backgroundColor: config.accentColor }]}
             accessibilityRole="button"
             accessibilityLabel={isActive ? "Stop" : `Add ${label}`}
           >
-            <Text className="text-lg font-bold text-white">
+            <Text className={`${Platform.OS === "android" ? "text-base" : "text-lg"} font-bold text-white`}>
               {isActive ? "⏹" : actionLabel}
             </Text>
           </AnimatedPressable>
