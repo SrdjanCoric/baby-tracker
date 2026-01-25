@@ -71,6 +71,7 @@ export interface AuthUser {
   email: string | null;
   displayName: string | null;
   householdId: string | null;
+  isOwner: boolean;
 }
 
 interface AuthContextValue {
@@ -92,24 +93,25 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function fetchUserProfile(userId: string): Promise<{ householdId: string | null; displayName: string | null }> {
+async function fetchUserProfile(userId: string): Promise<{ householdId: string | null; displayName: string | null; isOwner: boolean }> {
   const { data, error } = await supabase
     .from("users")
-    .select("household_id, display_name")
+    .select("household_id, display_name, is_owner")
     .eq("id", userId)
     .single();
 
   if (error || !data) {
-    return { householdId: null, displayName: null };
+    return { householdId: null, displayName: null, isOwner: false };
   }
 
   return {
     householdId: data.household_id,
     displayName: data.display_name,
+    isOwner: data.is_owner ?? false,
   };
 }
 
-function mapSupabaseUser(user: User | null, profile: { householdId: string | null; displayName: string | null }): AuthUser | null {
+function mapSupabaseUser(user: User | null, profile: { householdId: string | null; displayName: string | null; isOwner: boolean }): AuthUser | null {
   if (!user) return null;
 
   return {
@@ -117,6 +119,7 @@ function mapSupabaseUser(user: User | null, profile: { householdId: string | nul
     email: user.email ?? null,
     displayName: profile.displayName,
     householdId: profile.householdId,
+    isOwner: profile.isOwner,
   };
 }
 
@@ -200,12 +203,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(newSession);
 
         // Set authenticated user immediately from session data
-        // Profile data (householdId, displayName) will be fetched separately
+        // Profile data (householdId, displayName, isOwner) will be fetched separately
         const authUser: AuthUser = {
           id: newSession.user.id,
           email: newSession.user.email ?? null,
           displayName: newSession.user.user_metadata?.display_name ?? null,
           householdId: null,
+          isOwner: false,
         };
         setUser(authUser);
 
@@ -297,7 +301,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log("[GoogleSignIn] ID token received, calling Supabase...");
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: idToken,
       });
@@ -305,6 +309,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.log("[GoogleSignIn] Supabase error:", error.message);
         return { error: new Error(`Google Sign-In failed: ${error.message}`) };
+      }
+
+      // Save Google user's display name if available
+      if (data?.user && userInfo.data?.user) {
+        const googleUser = userInfo.data.user;
+        const displayName = googleUser.name ||
+          [googleUser.givenName, googleUser.familyName].filter(Boolean).join(" ");
+
+        if (displayName) {
+          try {
+            await supabase
+              .from("users")
+              .update({ display_name: displayName })
+              .eq("id", data.user.id);
+          } catch (updateError) {
+            console.error("[GoogleSignIn] Failed to update display name:", updateError);
+          }
+        }
       }
 
       console.log("[GoogleSignIn] Success!");
