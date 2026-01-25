@@ -150,7 +150,16 @@ export class RealTimeSync {
     }
 
     if (change.table === 'babies') {
-      return data.household_id === this.authContext.householdId;
+      const dataHouseholdId = data.household_id;
+      const myHouseholdId = this.authContext.householdId;
+
+      // For DELETE events without household_id (REPLICA IDENTITY not FULL),
+      // trust that RLS already filtered the change to our household
+      if (change.eventType === 'DELETE' && !dataHouseholdId) {
+        return true;
+      }
+
+      return dataHouseholdId === myHouseholdId;
     }
 
     if (change.table === 'users') {
