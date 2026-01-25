@@ -109,22 +109,27 @@ function SyncAuthSetup({ children }: { children: React.ReactNode }) {
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
+      console.log("[DeepLink] Received URL:", url);
+
       if (url.includes("login-callback") || url.includes("auth/callback")) {
         try {
-          // Parse all params from both hash and query string
           const hashIndex = url.indexOf('#');
           const queryIndex = url.indexOf('?');
+
+          console.log("[DeepLink] Hash index:", hashIndex, "Query index:", queryIndex);
 
           let params = new URLSearchParams();
 
           if (hashIndex !== -1) {
             const hashParams = url.substring(hashIndex + 1);
+            console.log("[DeepLink] Hash params:", hashParams);
             params = new URLSearchParams(hashParams);
           }
 
           if (queryIndex !== -1) {
             const endIndex = hashIndex !== -1 ? hashIndex : url.length;
             const queryParams = new URLSearchParams(url.substring(queryIndex + 1, endIndex));
+            console.log("[DeepLink] Query params:", url.substring(queryIndex + 1, endIndex));
             queryParams.forEach((value, key) => {
               if (!params.has(key)) params.set(key, value);
             });
@@ -134,26 +139,59 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
           const refreshToken = params.get('refresh_token');
           const tokenHash = params.get('token_hash');
           const type = params.get('type');
+          const code = params.get('code');
 
-          // Handle direct session tokens
+          console.log("[DeepLink] Params found:", {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken,
+            hasTokenHash: !!tokenHash,
+            hasCode: !!code,
+            type,
+          });
+
+          // PKCE flow: exchange code for session
+          if (code) {
+            console.log("[DeepLink] Exchanging PKCE code for session...");
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) {
+              console.error("[DeepLink] exchangeCodeForSession error:", error);
+            } else {
+              console.log("[DeepLink] PKCE code exchanged successfully");
+            }
+            return;
+          }
+
+          // Implicit flow: set session directly
           if (accessToken && refreshToken) {
-            await supabase.auth.setSession({
+            console.log("[DeepLink] Setting session with tokens...");
+            const { error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
+            if (error) {
+              console.error("[DeepLink] setSession error:", error);
+            } else {
+              console.log("[DeepLink] Session set successfully");
+            }
             return;
           }
 
-          // Handle magic link token_hash verification
+          // OTP verification
           if (tokenHash && type) {
-            await supabase.auth.verifyOtp({
+            console.log("[DeepLink] Verifying OTP...");
+            const { error } = await supabase.auth.verifyOtp({
               token_hash: tokenHash,
               type: type as 'email' | 'magiclink',
             });
+            if (error) {
+              console.error("[DeepLink] verifyOtp error:", error);
+            } else {
+              console.log("[DeepLink] OTP verified successfully");
+            }
             return;
           }
 
-          // Fallback: try getSession
+          console.log("[DeepLink] No auth params found, trying getSession...");
           await supabase.auth.getSession();
         } catch (error) {
           console.error("[DeepLink] Error:", error);
