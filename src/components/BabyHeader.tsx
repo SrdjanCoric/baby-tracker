@@ -54,15 +54,16 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
         >
           <Pressable
             onPress={handleAddBaby}
-            className="flex-row items-center active:opacity-70"
+            className="flex-row items-center active:opacity-70 flex-1"
             accessibilityRole="button"
             accessibilityLabel={t("baby.addFirstBaby")}
           >
-            <View className={`${isAndroid ? "w-10 h-10 mr-2" : "w-12 h-12 mr-3"} rounded-full bg-action-primary/20 dark:bg-action-dark-primary/30 items-center justify-center`}>
+            <View className={`${isAndroid ? "w-10 h-10 mr-2" : "w-12 h-12 mr-3"} rounded-full bg-action-primary/20 dark:bg-action-dark-primary/30 items-center justify-center flex-shrink-0`}>
               <Text className={`${isAndroid ? "text-xl" : "text-2xl"} text-action-primary dark:text-action-dark-primary font-bold`}>+</Text>
             </View>
             <Text
-              className={`${isAndroid ? "text-sm" : "text-lg"} font-semibold text-action-primary dark:text-action-dark-primary`}
+              className={`${isAndroid ? "text-base" : "text-lg"} font-semibold text-action-primary dark:text-action-dark-primary`}
+              numberOfLines={1}
             >
               {t("baby.addBaby")}
             </Text>

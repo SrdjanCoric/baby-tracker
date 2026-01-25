@@ -48,8 +48,16 @@ export default function EditBabyScreen() {
           style: "destructive",
           onPress: async () => {
             setIsLoading(true);
-            await deleteBaby(id);
-            router.back();
+            const success = await deleteBaby(id);
+            if (success) {
+              router.back();
+            } else {
+              setIsLoading(false);
+              Alert.alert(
+                t("common.error"),
+                t("errors.generic")
+              );
+            }
           },
         },
       ]
