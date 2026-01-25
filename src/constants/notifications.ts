@@ -50,6 +50,7 @@ export type FeedingReminderInterval = (typeof FEEDING_REMINDER_INTERVALS)[number
 export const NOTIFICATION_CHANNELS = {
   FEEDING_REMINDERS: "feeding-reminders",
   TIMER_ALERTS: "timer-alerts",
+  HOUSEHOLD_ACTIVITY: "household-activity",
 } as const;
 
 /**
