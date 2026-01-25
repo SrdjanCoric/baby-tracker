@@ -17,6 +17,20 @@ vi.mock('@react-native-community/netinfo', () => ({
   },
 }));
 
+vi.mock('@/services/supabase', () => ({
+  supabase: {
+    from: vi.fn().mockReturnValue({
+      insert: vi.fn().mockResolvedValue({ error: null }),
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    }),
+  },
+}));
+
 describe('PowerSync Service Unavailability (EC-4)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
