@@ -1,10 +1,11 @@
 import { View, Text, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface CaregiverListItemProps {
   id: string;
   name: string;
   email?: string;
-  entryCount: number;
+  entryCount?: number;
   isOwner: boolean;
   isCurrentUser: boolean;
   canRemove: boolean;
@@ -44,11 +45,11 @@ export function CaregiverListItem({
   return (
     <View
       testID={testID}
-      accessibilityLabel={`${displayName}${isCurrentUser ? ', you' : ''}${isOwner ? ', household owner' : ''}, ${entryCount} entries logged`}
-      className="flex-row items-center py-3 px-4 bg-white border-b border-gray-100"
+      accessibilityLabel={`${displayName}${isCurrentUser ? ', you' : ''}${isOwner ? ', household owner' : ''}`}
+      className="flex-row items-center py-3 px-4 bg-surface-card dark:bg-surface-dark-card"
     >
-      <View className="w-10 h-10 rounded-full bg-primary-100 items-center justify-center mr-3">
-        <Text className="text-primary-600 font-semibold text-sm">{initials}</Text>
+      <View className="w-10 h-10 rounded-full bg-primary/15 dark:bg-primary-dark/15 items-center justify-center mr-3">
+        <Text className="text-primary dark:text-primary-dark font-semibold text-sm">{initials}</Text>
       </View>
 
       <View className="flex-1 mr-3">
@@ -57,21 +58,21 @@ export function CaregiverListItem({
             testID={`${testID}-name`}
             numberOfLines={1}
             ellipsizeMode="tail"
-            className="text-base font-medium text-gray-900 flex-shrink"
-            style={{ maxWidth: 150 }}
+            className="text-base font-medium text-content-primary dark:text-content-dark-primary flex-shrink"
+            style={{ maxWidth: 180 }}
           >
             {displayName}
           </Text>
 
           {isCurrentUser && (
-            <View className="bg-primary-100 px-2 py-0.5 rounded">
-              <Text className="text-primary-700 text-xs font-medium">You</Text>
+            <View className="bg-primary/15 dark:bg-primary-dark/15 px-2 py-0.5 rounded">
+              <Text className="text-primary dark:text-primary-dark text-xs font-medium">You</Text>
             </View>
           )}
 
           {isOwner && (
-            <View className="bg-yellow-100 px-2 py-0.5 rounded">
-              <Text className="text-yellow-700 text-xs font-medium">Owner</Text>
+            <View className="bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">
+              <Text className="text-amber-700 dark:text-amber-400 text-xs font-medium">Owner</Text>
             </View>
           )}
         </View>
@@ -79,31 +80,25 @@ export function CaregiverListItem({
         {email && name && (
           <Text
             numberOfLines={1}
-            className="text-sm text-gray-500 mt-0.5"
+            className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-0.5"
           >
             {email}
           </Text>
         )}
       </View>
 
-      <View className="flex-row items-center gap-3">
-        <View className="bg-gray-100 rounded-full px-2.5 py-1 min-w-[32px] items-center">
-          <Text className="text-gray-600 text-sm font-medium">{entryCount}</Text>
-        </View>
-
-        {canRemove && (
-          <Pressable
-            testID={`${testID}-remove`}
-            onPress={handleRemove}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            accessibilityRole="button"
-            accessibilityLabel={`Remove ${displayName} from household`}
-            className="p-2"
-          >
-            <Text className="text-red-500 text-lg">×</Text>
-          </Pressable>
-        )}
-      </View>
+      {canRemove && (
+        <Pressable
+          testID={`${testID}-remove`}
+          onPress={handleRemove}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel={`Remove ${displayName} from household`}
+          className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 items-center justify-center active:bg-red-100 dark:active:bg-red-900/40"
+        >
+          <Ionicons name="close" size={18} color="#ef4444" />
+        </Pressable>
+      )}
     </View>
   );
 }

@@ -19,6 +19,20 @@ vi.mock('@react-native-community/netinfo', () => ({
   },
 }));
 
+vi.mock('../supabase', () => ({
+  supabase: {
+    from: vi.fn().mockReturnValue({
+      insert: vi.fn().mockResolvedValue({ error: null }),
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    }),
+  },
+}));
+
 describe('Edge Cases', () => {
   describe('6.1 Network Edge Cases', () => {
     let syncEngine: SyncEngine;

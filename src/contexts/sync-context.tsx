@@ -81,8 +81,10 @@ interface SyncContextValue extends SyncState {
 
 const SyncContext = createContext<SyncContextValue | null>(null);
 
-let syncEngineInstance: SyncEngine | null = null;
-let realTimeSyncInstance: RealTimeSync | null = null;
+// Create instances immediately at module load to avoid timing issues
+// with child components calling setAuthContext before parent effect runs
+let syncEngineInstance: SyncEngine | null = new SyncEngine();
+let realTimeSyncInstance: RealTimeSync | null = new RealTimeSync();
 let instanceRefCount = 0;
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
@@ -92,15 +94,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     instanceRefCount++;
 
-    if (!syncEngineInstance) {
-      syncEngineInstance = new SyncEngine();
-    }
-    if (!realTimeSyncInstance) {
-      realTimeSyncInstance = new RealTimeSync();
-    }
-
-    const engine = syncEngineInstance;
-    const realTimeSync = realTimeSyncInstance;
+    // Instances are created at module load, just get references
+    const engine = syncEngineInstance!;
+    const realTimeSync = realTimeSyncInstance!;
 
     const unsubscribe = engine.subscribe((engineState: EngineSyncState) => {
       dispatch({ type: 'SET_STATUS', payload: engineState.status });
@@ -135,11 +131,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       if (instanceRefCount === 0) {
         if (syncEngineInstance) {
           syncEngineInstance.destroy();
-          syncEngineInstance = null;
+          // Recreate for potential future mounts
+          syncEngineInstance = new SyncEngine();
         }
         if (realTimeSyncInstance) {
           realTimeSyncInstance.destroy();
-          realTimeSyncInstance = null;
+          // Recreate for potential future mounts
+          realTimeSyncInstance = new RealTimeSync();
         }
       }
     };
@@ -204,6 +202,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     if (realTimeSyncInstance) {
       realTimeSyncInstance.setAuthContext({ householdId, userId });
       realTimeSyncInstance.subscribeToHousehold(householdId).catch((error) => {
+        console.error('[SyncContext] Failed to subscribe to household:', error);
         dispatch({ type: 'SYNC_ERROR', payload: error.message });
       });
     }

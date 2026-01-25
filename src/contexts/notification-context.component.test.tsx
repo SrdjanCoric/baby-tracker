@@ -1,5 +1,23 @@
 jest.unmock("@/contexts/notification-context");
 
+jest.mock("@/services/push-token-service", () => ({
+  savePushToken: jest.fn().mockResolvedValue({ error: null }),
+  removePushToken: jest.fn().mockResolvedValue({ error: null }),
+  getActivityNotificationsEnabled: jest.fn().mockResolvedValue(false),
+  setActivityNotificationsEnabled: jest.fn().mockResolvedValue({ error: null }),
+}));
+
+jest.mock("@/utils/retry", () => ({
+  withRetryResult: jest.fn().mockImplementation(async (fn) => {
+    try {
+      const data = await fn();
+      return { success: true, data, attempts: 1 };
+    } catch (error) {
+      return { success: false, error, attempts: 1 };
+    }
+  }),
+}));
+
 import React, { useEffect } from "react";
 import { render, screen, waitFor, act } from "@testing-library/react-native";
 import { Text, View } from "react-native";

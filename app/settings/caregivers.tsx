@@ -30,7 +30,7 @@ const ERROR_TRANSLATIONS: Record<string, ErrorKey> = {
 export default function CaregiversScreen() {
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
-  const { household } = useHousehold();
+  const { household, refreshHousehold } = useHousehold();
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,15 +116,18 @@ export default function CaregiversScreen() {
                   t(ERROR_TRANSLATIONS[result.error] || "errors.generic")
                 );
               } else {
+                // Optimistically update UI immediately
+                setCaregivers((prev) => prev.filter((c) => c.id !== caregiverId));
                 Alert.alert(t("common.success"), t("household.caregiverRemoved"));
-                loadCaregivers();
+                // Refresh both local caregivers list and household context members
+                await Promise.all([loadCaregivers(), refreshHousehold()]);
               }
             },
           },
         ]
       );
     },
-    [caregivers, householdId, t, loadCaregivers]
+    [caregivers, householdId, t, loadCaregivers, refreshHousehold]
   );
 
   const isCurrentUserOwner = caregivers.find(

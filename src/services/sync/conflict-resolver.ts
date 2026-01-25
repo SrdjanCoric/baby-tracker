@@ -191,15 +191,8 @@ export class ConflictResolver {
     return changed;
   }
 
-  private logConflict<T extends SyncableEntry>(scenario: ConflictScenario<T>): void {
-    console.log('[ConflictResolver] Conflict detected:', {
-      type: scenario.type,
-      table: scenario.table,
-      localId: scenario.local.id,
-      remoteId: scenario.remote.id,
-      localUpdatedAt: scenario.local.updatedAt,
-      remoteUpdatedAt: scenario.remote.updatedAt,
-    });
+  private logConflict<T extends SyncableEntry>(_scenario: ConflictScenario<T>): void {
+    // Conflict logging disabled in production
   }
 
   isWithinClockSkewTolerance(time1: string, time2: string): boolean {

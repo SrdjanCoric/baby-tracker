@@ -2,6 +2,7 @@
  * Baby profile storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 import { getUserScopedKey } from "./storage-prefix";
 
 const BABIES_KEY_BASE = "@babies";
@@ -40,7 +41,7 @@ export interface UpdateBabyInput {
 }
 
 function generateId(): string {
-  return `baby-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  return Crypto.randomUUID();
 }
 
 export const BabyStorageService = {
@@ -154,5 +155,13 @@ export const BabyStorageService = {
     const selectedId = await this.getSelectedBabyId();
     if (!selectedId) return null;
     return this.getBabyById(selectedId);
+  },
+
+  /**
+   * Clear all local baby data (used when joining a household)
+   */
+  async clearAllBabies(): Promise<void> {
+    await AsyncStorage.removeItem(getBabiesKey());
+    await AsyncStorage.removeItem(getSelectedBabyKey());
   },
 };

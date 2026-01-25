@@ -31,10 +31,6 @@ describe('CaregiverListItem', () => {
       expect(nameElement.props.numberOfLines).toBe(1);
     });
 
-    it('shows entry count badge', () => {
-      render(<CaregiverListItem {...defaultProps} entryCount={42} />);
-      expect(screen.getByText('42')).toBeTruthy();
-    });
   });
 
   describe('current user indicator', () => {

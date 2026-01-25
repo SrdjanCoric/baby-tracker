@@ -18,6 +18,20 @@ vi.mock('@react-native-community/netinfo', () => ({
   },
 }));
 
+vi.mock('../supabase', () => ({
+  supabase: {
+    from: vi.fn().mockReturnValue({
+      insert: vi.fn().mockResolvedValue({ error: null }),
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    }),
+  },
+}));
+
 describe('SyncEngine', () => {
   let syncEngine: SyncEngine;
 

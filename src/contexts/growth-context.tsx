@@ -5,6 +5,12 @@ import {
   CreateGrowthInput,
   UpdateGrowthInput,
 } from "@/services/growth-storage";
+import {
+  fetchGrowthFromDatabase,
+  createGrowthInDatabase,
+  updateGrowthInDatabase,
+  deleteGrowthFromDatabase,
+} from "@/services/activity-sync-service";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
@@ -94,8 +100,8 @@ const GrowthContext = createContext<GrowthContextValue | null>(null);
 export function GrowthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(growthReducer, initialGrowthState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, enqueueOperation } = useSync();
-  const { user: _user } = useAuth();
+  const { subscribeToRemoteChanges } = useSync();
+  const { user } = useAuth();
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('growth_measurements', (change: RemoteChange) => {
@@ -127,11 +133,22 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    const measurements = await GrowthStorageService.getAllMeasurements(selectedBaby.id);
-    dispatch({ type: "SET_MEASUREMENTS", payload: measurements });
+    let measurements: StoredGrowthEntry[];
 
+    if (user?.householdId) {
+      try {
+        measurements = await fetchGrowthFromDatabase(selectedBaby.id);
+      } catch (error) {
+        console.error("[GrowthContext] Failed to fetch from database, using local:", error);
+        measurements = await GrowthStorageService.getAllMeasurements(selectedBaby.id);
+      }
+    } else {
+      measurements = await GrowthStorageService.getAllMeasurements(selectedBaby.id);
+    }
+
+    dispatch({ type: "SET_MEASUREMENTS", payload: measurements });
     dispatch({ type: "SET_LOADING", payload: false });
-  }, [selectedBaby]);
+  }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
     loadMeasurements();
@@ -139,12 +156,18 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
 
   const addMeasurement = useCallback(
     async (input: CreateGrowthInput): Promise<StoredGrowthEntry> => {
-      const measurement = await GrowthStorageService.addMeasurement(input);
+      let measurement: StoredGrowthEntry;
+
+      if (user?.householdId && user?.id) {
+        measurement = await createGrowthInDatabase(input, user.id);
+      } else {
+        measurement = await GrowthStorageService.addMeasurement(input);
+      }
+
       dispatch({ type: "ADD_MEASUREMENT", payload: measurement });
-      await enqueueOperation({ type: 'CREATE', table: 'growth_measurements', entityId: measurement.id, data: transformGrowthToSync(measurement) });
       return measurement;
     },
-    [enqueueOperation]
+    [user?.householdId, user?.id]
   );
 
   const updateMeasurement = useCallback(
@@ -154,32 +177,40 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
     ): Promise<StoredGrowthEntry | null> => {
       if (!selectedBaby) return null;
 
-      const updated = await GrowthStorageService.updateMeasurement(
-        selectedBaby.id,
-        measurementId,
-        input
-      );
+      let updated: StoredGrowthEntry | null;
+
+      if (user?.householdId) {
+        updated = await updateGrowthInDatabase(selectedBaby.id, measurementId, input);
+      } else {
+        updated = await GrowthStorageService.updateMeasurement(selectedBaby.id, measurementId, input);
+      }
+
       if (updated) {
         dispatch({ type: "UPDATE_MEASUREMENT", payload: updated });
-        await enqueueOperation({ type: 'UPDATE', table: 'growth_measurements', entityId: measurementId, data: transformGrowthToSync(updated) });
       }
       return updated;
     },
-    [selectedBaby, enqueueOperation]
+    [selectedBaby, user?.householdId]
   );
 
   const deleteMeasurement = useCallback(
     async (measurementId: string): Promise<boolean> => {
       if (!selectedBaby) return false;
 
-      const result = await GrowthStorageService.deleteMeasurement(selectedBaby.id, measurementId);
+      let result: boolean;
+
+      if (user?.householdId) {
+        result = await deleteGrowthFromDatabase(selectedBaby.id, measurementId);
+      } else {
+        result = await GrowthStorageService.deleteMeasurement(selectedBaby.id, measurementId);
+      }
+
       if (result) {
         dispatch({ type: "DELETE_MEASUREMENT", payload: measurementId });
-        await enqueueOperation({ type: 'DELETE', table: 'growth_measurements', entityId: measurementId, data: null });
       }
       return result;
     },
-    [selectedBaby, enqueueOperation]
+    [selectedBaby, user?.householdId]
   );
 
   const getLastMeasurement = useCallback((): StoredGrowthEntry | null => {
@@ -260,15 +291,3 @@ function transformGrowthFromRemote(data: Record<string, unknown>): StoredGrowthE
   };
 }
 
-function transformGrowthToSync(growth: StoredGrowthEntry): Record<string, unknown> {
-  return {
-    id: growth.id,
-    baby_id: growth.babyId,
-    measured_at: growth.measuredAt,
-    weight_kg: growth.weightKg,
-    height_cm: growth.heightCm,
-    head_circumference_cm: growth.headCircumferenceCm,
-    notes: growth.notes,
-    logged_by: growth.loggedBy,
-  };
-}

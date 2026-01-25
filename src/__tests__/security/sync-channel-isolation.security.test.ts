@@ -105,7 +105,7 @@ describe('Sync Channel Isolation Security (SR-4)', () => {
 
       realTimeSync.__simulateRemoteChange(foreignChange);
 
-      expect(changeListener).toHaveBeenCalledWith(foreignChange);
+      expect(changeListener).not.toHaveBeenCalled();
     });
 
     it('should allow changes from own household', () => {
