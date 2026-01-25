@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
 import { useAuth } from "./auth-context";
+import { useSync } from "./sync-context";
+import { RemoteChange } from "@/services/sync";
 import {
   getHousehold,
   getHouseholdMembers,
@@ -8,6 +10,28 @@ import {
   Household,
   HouseholdMember,
 } from "@/services/household-service";
+import type { ReconciliationDecision } from "@/services/baby-migration";
+import { applyReconciliationDecisions } from "@/services/baby-migration";
+import type { StoredBabyProfile } from "@/services/baby-storage";
+import { BabySyncStorage } from "@/services/baby-storage-sync";
+import { withRetry, withRetryResult } from "@/utils/retry";
+
+export interface JoinHouseholdOptions {
+  reconciliationDecisions?: ReconciliationDecision[];
+  nonDuplicatedLocalBabies?: StoredBabyProfile[];
+}
+
+export interface PartialFailure {
+  operation: string;
+  babyId?: string;
+  error: string;
+}
+
+export interface JoinHouseholdResult {
+  success: boolean;
+  error: string | null;
+  partialFailures?: PartialFailure[];
+}
 
 export interface HouseholdState {
   household: Household | null;
@@ -24,7 +48,11 @@ export type HouseholdAction =
   | { type: "CLEAR_ERROR" }
   | { type: "UPDATE_INVITE_CODE"; payload: string }
   | { type: "JOIN_HOUSEHOLD"; payload: Household }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "MEMBER_JOINED"; payload: HouseholdMember }
+  | { type: "MEMBER_LEFT"; payload: string }
+  | { type: "MEMBER_UPDATED"; payload: HouseholdMember }
+  | { type: "INVITE_CODE_CHANGED"; payload: string };
 
 export const initialHouseholdState: HouseholdState = {
   household: null,
@@ -70,6 +98,31 @@ export function householdReducer(
     case "RESET":
       return initialHouseholdState;
 
+    case "MEMBER_JOINED": {
+      const exists = state.members.some(m => m.id === action.payload.id);
+      if (exists) return state;
+      return { ...state, members: [...state.members, action.payload] };
+    }
+
+    case "MEMBER_LEFT": {
+      const filteredMembers = state.members.filter(m => m.id !== action.payload);
+      return { ...state, members: filteredMembers };
+    }
+
+    case "MEMBER_UPDATED": {
+      const updatedMembers = state.members.map(m =>
+        m.id === action.payload.id ? action.payload : m
+      );
+      return { ...state, members: updatedMembers };
+    }
+
+    case "INVITE_CODE_CHANGED":
+      if (!state.household) return state;
+      return {
+        ...state,
+        household: { ...state.household, inviteCode: action.payload },
+      };
+
     default:
       return state;
   }
@@ -78,7 +131,7 @@ export function householdReducer(
 interface HouseholdContextValue extends HouseholdState {
   refreshHousehold: () => Promise<void>;
   regenerateCode: () => Promise<boolean>;
-  joinHousehold: (inviteCode: string) => Promise<{ success: boolean; error: string | null }>;
+  joinHousehold: (inviteCode: string, options?: JoinHouseholdOptions) => Promise<JoinHouseholdResult>;
   clearError: () => void;
 }
 
@@ -86,9 +139,62 @@ const HouseholdContext = createContext<HouseholdContextValue | null>(null);
 
 export function HouseholdProvider({ children }: { children: React.ReactNode }) {
   const { user, refreshUserProfile } = useAuth();
+  const { subscribeToRemoteChanges } = useSync();
   const [state, dispatch] = useReducer(householdReducer, initialHouseholdState);
 
   const householdId = user?.householdId ?? null;
+
+  useEffect(() => {
+    if (!householdId) return;
+
+    const unsubUsers = subscribeToRemoteChanges('users', (change: RemoteChange) => {
+      const newData = change.new;
+      const oldData = change.old;
+
+      const isJoining = newData && newData.household_id === householdId &&
+        (!oldData || oldData.household_id !== householdId);
+      const isLeaving = oldData && oldData.household_id === householdId &&
+        (!newData || newData.household_id !== householdId);
+      const isUpdating = newData && oldData &&
+        newData.household_id === householdId &&
+        oldData.household_id === householdId;
+
+      if (isJoining && newData) {
+        dispatch({
+          type: "MEMBER_JOINED",
+          payload: transformUserToMember(newData),
+        });
+      } else if (isLeaving && oldData) {
+        dispatch({
+          type: "MEMBER_LEFT",
+          payload: oldData.id as string,
+        });
+      } else if (isUpdating && newData) {
+        dispatch({
+          type: "MEMBER_UPDATED",
+          payload: transformUserToMember(newData),
+        });
+      }
+    });
+
+    const unsubHouseholds = subscribeToRemoteChanges('households', (change: RemoteChange) => {
+      if (change.eventType !== 'UPDATE') return;
+      if (!change.new || change.new.id !== householdId) return;
+
+      const newInviteCode = change.new.invite_code as string;
+      if (newInviteCode && newInviteCode !== state.household?.inviteCode) {
+        dispatch({
+          type: "INVITE_CODE_CHANGED",
+          payload: newInviteCode,
+        });
+      }
+    });
+
+    return () => {
+      unsubUsers();
+      unsubHouseholds();
+    };
+  }, [householdId, subscribeToRemoteChanges, state.household?.inviteCode]);
 
   const loadHousehold = useCallback(async () => {
     if (!householdId) {
@@ -146,33 +252,105 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, [householdId]);
 
-  const joinHousehold = useCallback(async (inviteCode: string): Promise<{ success: boolean; error: string | null }> => {
+  const joinHousehold = useCallback(async (
+    inviteCode: string,
+    options?: JoinHouseholdOptions
+  ): Promise<JoinHouseholdResult> => {
     dispatch({ type: "SET_LOADING", payload: true });
     dispatch({ type: "CLEAR_ERROR" });
 
-    const result = await joinHouseholdViaInviteCode(inviteCode);
+    const retryConfig = { maxRetries: 2, baseDelayMs: 1000, maxDelayMs: 5000 };
+    const partialFailures: PartialFailure[] = [];
 
-    if (result.error) {
-      dispatch({ type: "SET_ERROR", payload: result.error });
+    const joinResult = await withRetryResult(
+      () => joinHouseholdViaInviteCode(inviteCode),
+      retryConfig
+    );
+
+    if (!joinResult.success || joinResult.data?.error) {
+      const errorMessage = joinResult.data?.error || joinResult.error?.message || 'Failed to join household';
+      dispatch({ type: "SET_ERROR", payload: errorMessage });
       dispatch({ type: "SET_LOADING", payload: false });
-      return { success: false, error: result.error };
+      return { success: false, error: errorMessage };
     }
 
-    if (result.data) {
-      dispatch({ type: "JOIN_HOUSEHOLD", payload: result.data });
+    const householdData = joinResult.data?.data;
+    if (!householdData) {
+      dispatch({ type: "SET_ERROR", payload: 'No household data returned' });
+      dispatch({ type: "SET_LOADING", payload: false });
+      return { success: false, error: 'No household data returned' };
+    }
 
-      // Refresh user profile to update householdId in auth context
-      await refreshUserProfile();
+    dispatch({ type: "JOIN_HOUSEHOLD", payload: householdData });
 
-      const membersResult = await getHouseholdMembers(result.data.id);
-      if (membersResult.data) {
-        dispatch({ type: "SET_MEMBERS", payload: membersResult.data });
+    const profileResult = await withRetryResult(
+      () => refreshUserProfile(),
+      retryConfig
+    );
+    if (!profileResult.success) {
+      partialFailures.push({
+        operation: 'refreshUserProfile',
+        error: profileResult.error?.message || 'Failed to refresh profile',
+      });
+    }
+
+    if (options?.reconciliationDecisions || options?.nonDuplicatedLocalBabies) {
+      const { babiesToAdd, babiesToUpdate } = applyReconciliationDecisions(
+        options.reconciliationDecisions || [],
+        options.nonDuplicatedLocalBabies || [],
+        householdData.id
+      );
+
+      for (const babyInput of babiesToAdd) {
+        const addResult = await withRetryResult(
+          () => BabySyncStorage.addBaby(babyInput, user?.id || ''),
+          retryConfig
+        );
+        if (!addResult.success) {
+          partialFailures.push({
+            operation: 'addBaby',
+            babyId: babyInput.name,
+            error: addResult.error?.message || 'Failed to add baby',
+          });
+        }
+      }
+
+      for (const babyUpdate of babiesToUpdate) {
+        const updateResult = await withRetryResult(
+          () => BabySyncStorage.updateBaby(babyUpdate.id, babyUpdate),
+          retryConfig
+        );
+        if (!updateResult.success) {
+          partialFailures.push({
+            operation: 'updateBaby',
+            babyId: babyUpdate.id,
+            error: updateResult.error?.message || 'Failed to update baby',
+          });
+        }
       }
     }
 
+    const membersResult = await withRetryResult(
+      () => getHouseholdMembers(householdData.id),
+      retryConfig
+    );
+    if (membersResult.success && membersResult.data?.data) {
+      dispatch({ type: "SET_MEMBERS", payload: membersResult.data.data });
+    } else {
+      partialFailures.push({
+        operation: 'getHouseholdMembers',
+        error: membersResult.error?.message || 'Failed to fetch members',
+      });
+    }
+
     dispatch({ type: "SET_LOADING", payload: false });
-    return { success: true, error: null };
-  }, [refreshUserProfile]);
+
+    return {
+      success: true,
+      error: null,
+      partialFailures: partialFailures.length > 0 ? partialFailures : undefined,
+    };
+  }, [refreshUserProfile, user?.id]);
 
   const clearError = useCallback(() => {
     dispatch({ type: "CLEAR_ERROR" });
@@ -199,4 +377,15 @@ export function useHousehold(): HouseholdContextValue {
     throw new Error("useHousehold must be used within a HouseholdProvider");
   }
   return context;
+}
+
+function transformUserToMember(data: Record<string, unknown>): HouseholdMember {
+  return {
+    id: data.id as string,
+    email: (data.email as string | null) ?? null,
+    displayName: (data.display_name as string | null) ?? null,
+    avatarUrl: (data.avatar_url as string | null) ?? null,
+    role: (data.role as 'owner' | 'member') || 'member',
+    joinedAt: (data.joined_at as string | null) ?? null,
+  };
 }
