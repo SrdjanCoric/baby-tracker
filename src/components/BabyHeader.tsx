@@ -58,8 +58,8 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
             accessibilityRole="button"
             accessibilityLabel={t("baby.addFirstBaby")}
           >
-            <View className={`${isAndroid ? "w-10 h-10 mr-2" : "w-12 h-12 mr-3"} rounded-full bg-action-primary/10 dark:bg-action-dark-primary/20 items-center justify-center`}>
-              <Text className={isAndroid ? "text-xl" : "text-2xl"}>➕</Text>
+            <View className={`${isAndroid ? "w-10 h-10 mr-2" : "w-12 h-12 mr-3"} rounded-full bg-action-primary/20 dark:bg-action-dark-primary/30 items-center justify-center`}>
+              <Text className={`${isAndroid ? "text-xl" : "text-2xl"} text-action-primary dark:text-action-dark-primary font-bold`}>+</Text>
             </View>
             <Text
               className={`${isAndroid ? "text-sm" : "text-lg"} font-semibold text-action-primary dark:text-action-dark-primary`}
@@ -75,7 +75,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
               accessibilityRole="button"
               accessibilityLabel={t("navigation.settings")}
             >
-              <Text className="text-xl">⚙️</Text>
+              <Text className="text-2xl">⚙️</Text>
             </Pressable>
           )}
         </View>
@@ -109,7 +109,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
               accessibilityRole="button"
               accessibilityLabel={t("navigation.settings")}
             >
-              <Text className="text-xl">⚙️</Text>
+              <Text className="text-2xl">⚙️</Text>
             </Pressable>
           )}
         </View>
