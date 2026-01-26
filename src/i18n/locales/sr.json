@@ -660,6 +660,7 @@
     "welcomeBack": "Dobrodošli nazad",
     "signInTitle": "Dobrodošli nazad",
     "signInSubtitle": "Prijavite se na vaš nalog",
+    "signInDescription": "Prijavite se za sinhronizaciju između uređaja i deljenje sa negovateljima",
     "signUpTitle": "Kreiraj nalog",
     "signUpSubtitle": "Počnite sa praćenjem putovanja vaše bebe",
     "signInError": "Nevažeći email ili lozinka",
