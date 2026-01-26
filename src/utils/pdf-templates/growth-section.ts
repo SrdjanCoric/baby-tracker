@@ -25,9 +25,9 @@ function generateGrowthChartSvg(
   gender: Gender
 ): string {
   const measurements = stats.measurements.filter((m) => {
-    if (measurementType === "weight") return m.weight !== undefined;
-    if (measurementType === "height") return m.height !== undefined;
-    return m.headCircumference !== undefined;
+    if (measurementType === "weight") return m.weight != null;
+    if (measurementType === "height") return m.height != null;
+    return m.headCircumference != null;
   });
 
   if (measurements.length === 0) return "";

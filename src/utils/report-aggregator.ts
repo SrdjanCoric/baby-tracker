@@ -403,7 +403,7 @@ export function aggregateGrowth(
       ageMonths,
     };
 
-    if (g.weightKg !== undefined) {
+    if (g.weightKg != null) {
       point.weight = g.weightKg;
       if (babyGender && ageMonths >= 0 && ageMonths <= 24) {
         const result = calculatePercentileFromMeasurement(
@@ -416,7 +416,7 @@ export function aggregateGrowth(
       }
     }
 
-    if (g.heightCm !== undefined) {
+    if (g.heightCm != null) {
       point.height = g.heightCm;
       if (babyGender && ageMonths >= 0 && ageMonths <= 24) {
         const result = calculatePercentileFromMeasurement(
@@ -429,7 +429,7 @@ export function aggregateGrowth(
       }
     }
 
-    if (g.headCircumferenceCm !== undefined) {
+    if (g.headCircumferenceCm != null) {
       point.headCircumference = g.headCircumferenceCm;
       if (babyGender && ageMonths >= 0 && ageMonths <= 24) {
         const result = calculatePercentileFromMeasurement(
@@ -447,9 +447,9 @@ export function aggregateGrowth(
 
   const result: GrowthReportStats = { measurements };
 
-  const withWeight = measurements.filter((m) => m.weight !== undefined);
-  const withHeight = measurements.filter((m) => m.height !== undefined);
-  const withHead = measurements.filter((m) => m.headCircumference !== undefined);
+  const withWeight = measurements.filter((m) => m.weight != null);
+  const withHeight = measurements.filter((m) => m.height != null);
+  const withHead = measurements.filter((m) => m.headCircumference != null);
 
   if (withWeight.length > 0) {
     const latest = withWeight[withWeight.length - 1];

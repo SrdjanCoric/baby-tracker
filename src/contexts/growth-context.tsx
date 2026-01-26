@@ -238,18 +238,20 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const getWeightChange = useCallback((): { change: number; hasPrevious: boolean } | null => {
-    const history = getMeasurementHistory(2);
-    if (history.length < 1) return null;
+    const history = getMeasurementHistory();
+    const withWeight = history.filter((m) => m.weightKg != null);
 
-    const latest = history[0];
-    if (latest.weightKg === undefined) return null;
+    if (withWeight.length < 1) return null;
 
-    if (history.length < 2 || history[1].weightKg === undefined) {
+    const latest = withWeight[0];
+
+    if (withWeight.length < 2) {
       return { change: 0, hasPrevious: false };
     }
 
+    const previous = withWeight[1];
     return {
-      change: Math.round((latest.weightKg - history[1].weightKg) * 1000),
+      change: Math.round((latest.weightKg! - previous.weightKg!) * 1000),
       hasPrevious: true
     };
   }, [getMeasurementHistory]);
@@ -281,10 +283,10 @@ function transformGrowthFromRemote(data: Record<string, unknown>): StoredGrowthE
     id: data.id as string,
     babyId: data.baby_id as string,
     measuredAt: data.measured_at as string,
-    weightKg: data.weight_kg as number | undefined,
-    heightCm: data.height_cm as number | undefined,
-    headCircumferenceCm: data.head_circumference_cm as number | undefined,
-    notes: data.notes as string | undefined,
+    weightKg: data.weight_kg != null ? (data.weight_kg as number) : undefined,
+    heightCm: data.height_cm != null ? (data.height_cm as number) : undefined,
+    headCircumferenceCm: data.head_circumference_cm != null ? (data.head_circumference_cm as number) : undefined,
+    notes: data.notes != null ? (data.notes as string) : undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
     updatedAt: (data.updated_at as string) || new Date().toISOString(),

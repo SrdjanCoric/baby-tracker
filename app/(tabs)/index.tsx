@@ -16,6 +16,7 @@ import {
 } from "@/components";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useDashboardConfig, useActiveTimers, useBaby } from "@/contexts";
 import { timeSince, formatDate, hoursSince, formatDuration } from "@/utils/time";
+import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { ActivityType } from "@/constants/activities";
 import { DashboardCardConfig } from "@/services/dashboard-config-storage";
 
@@ -61,7 +62,7 @@ export default function HomeScreen() {
   const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps } = useSleep();
   const { diapers, getTodaysCounts, refreshDiapers } = useDiaper();
   const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide, refreshPumpings } = usePumping();
-  const { getLastMeasurement, getWeightChange, refreshMeasurements } = useGrowth();
+  const { getMeasurementHistory, getWeightChange, refreshMeasurements } = useGrowth();
   const { activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes } = useTummyTime();
   const { colorScheme } = useColorScheme();
   const { selectedBaby } = useBaby();
@@ -261,51 +262,49 @@ export default function HomeScreen() {
   const isPumpingActive = pumpingActiveTimer?.isRunning ?? false;
 
   const growthTimeSince = useMemo(() => {
-    const lastMeasurement = getLastMeasurement();
-    if (!lastMeasurement) return "--";
+    const history = getMeasurementHistory();
+    const withWeight = history.filter((m) => m.weightKg != null);
 
-    const parts: string[] = [];
-    if (lastMeasurement.weightKg !== undefined) {
-      const weight = Number(lastMeasurement.weightKg);
-      parts.push(`${weight.toFixed(1)}kg`);
-    }
-    if (lastMeasurement.heightCm !== undefined) {
-      const height = Number(lastMeasurement.heightCm);
-      parts.push(`${height.toFixed(1)}cm`);
-    }
+    if (withWeight.length === 0) return "--";
 
-    return parts.length > 0 ? parts.join(" · ") : formatDate(new Date(lastMeasurement.measuredAt));
-  }, [getLastMeasurement]);
+    const latest = withWeight[0];
+    const weight = Number(latest.weightKg);
+    return `${weight.toFixed(1)}kg`;
+  }, [getMeasurementHistory]);
 
   const growthSubtitle = useMemo(() => {
-    const lastMeasurement = getLastMeasurement();
+    const history = getMeasurementHistory();
+    const withWeight = history.filter((m) => m.weightKg != null);
     const weightChange = getWeightChange();
 
-    if (!lastMeasurement) return undefined;
+    if (withWeight.length === 0) return undefined;
 
-    const parts: string[] = [];
-
-    if (weightChange?.hasPrevious && weightChange.change !== 0) {
-      const sign = weightChange.change > 0 ? "+" : "";
-      parts.push(`${sign}${weightChange.change}g`);
-    }
-
-    // For growth, show days ago instead of minutes/hours
-    const measuredDate = new Date(lastMeasurement.measuredAt);
+    const latestWeight = withWeight[0];
+    const measuredDate = new Date(latestWeight.measuredAt);
     const now = new Date();
     const diffMs = now.getTime() - measuredDate.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
+    let timeAgo: string;
     if (diffDays === 0) {
-      parts.push(t("common.today").toLowerCase());
+      timeAgo = t("common.today").toLowerCase();
     } else if (diffDays === 1) {
-      parts.push(t("common.yesterday").toLowerCase());
+      timeAgo = t("common.yesterday").toLowerCase();
     } else {
-      parts.push(t("dashboard.daysAgo", { days: diffDays }));
+      timeAgo = t("dashboard.daysAgo", { days: diffDays });
     }
 
-    return parts.join(" • ");
-  }, [getLastMeasurement, getWeightChange, t, timeTick]);
+    if (weightChange?.hasPrevious) {
+      const arrow = getGrowthTrendArrow(weightChange.change);
+      if (weightChange.change === 0) {
+        return `${arrow} ${t("growth.stable")} · ${timeAgo}`;
+      }
+      const sign = weightChange.change > 0 ? "+" : "";
+      return `${arrow} ${sign}${weightChange.change}g · ${timeAgo}`;
+    }
+
+    return timeAgo;
+  }, [getMeasurementHistory, getWeightChange, t, timeTick]);
 
   const tummyTimeTimeSince = useMemo(() => {
     if (tummyTimeActiveTimer?.isRunning) {
