@@ -207,13 +207,20 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
       }
       if (selectedTime) {
         const now = new Date();
-        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-        const clampedTime = selectedTime < oneHourAgo ? oneHourAgo : selectedTime > now ? now : selectedTime;
+        const clampedTime = selectedTime > now ? now : selectedTime;
         setCustomStartTime(clampedTime);
       }
     },
     []
   );
+
+  // Start of yesterday (midnight)
+  const yesterdayStart = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
 
   const handleTimeDone = useCallback(() => {
     setShowTimePicker(false);
@@ -230,8 +237,6 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
       hour12: true,
     });
   };
-
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
   return (
     <View className="items-center w-full">
@@ -343,10 +348,10 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
           )}
           <DateTimePicker
             value={customStartTime ?? new Date()}
-            mode="time"
+            mode="datetime"
             display={Platform.OS === "ios" ? "spinner" : "default"}
             onChange={handleTimeChange}
-            minimumDate={oneHourAgo}
+            minimumDate={yesterdayStart}
             maximumDate={new Date()}
           />
         </View>
