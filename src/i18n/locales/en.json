@@ -43,7 +43,8 @@
     "nap_other": "Naps",
     "diaper_one": "Diaper",
     "diaper_other": "Diapers",
-    "sleep": "Sleep"
+    "sleep": "Sleep",
+    "wet": "Wet"
   },
   "dashboard": {
     "last": "{{time}} ago",
