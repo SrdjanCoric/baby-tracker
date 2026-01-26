@@ -15,6 +15,7 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
+import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
 import {
   AgeGroup,
   GoalSource,
@@ -144,8 +145,13 @@ export function tummyTimeReducer(
   }
 }
 
+export interface TimerLockResult {
+  success: boolean;
+  lockedByName?: string;
+}
+
 interface TummyTimeContextValue extends TummyTimeState {
-  startTummyTime: () => Promise<void>;
+  startTummyTime: () => Promise<TimerLockResult>;
   stopTummyTime: () => Promise<StoredTummyTimeEntry | null>;
   addTummyTime: (input: CreateTummyTimeInput) => Promise<StoredTummyTimeEntry>;
   updateTummyTime: (
@@ -266,8 +272,19 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     loadTummyTimes();
   }, [loadTummyTimes]);
 
-  const startTummyTime = useCallback(async () => {
-    if (!selectedBaby) return;
+  const startTummyTime = useCallback(async (): Promise<{ success: boolean; lockedByName?: string }> => {
+    if (!selectedBaby) return { success: false };
+
+    if (user?.id) {
+      try {
+        const lockResult = await acquireTimerLock(selectedBaby.id, "tummy_time", user.id);
+        if (!lockResult.success) {
+          return { success: false, lockedByName: lockResult.lockHolderName };
+        }
+      } catch (error) {
+        console.error("[TummyTimeContext] Failed to acquire timer lock:", error);
+      }
+    }
 
     const startTime = new Date();
     dispatch({ type: "START_TIMER", payload: { startTime } });
@@ -275,7 +292,9 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     await TummyTimeStorageService.setActiveTimer(selectedBaby.id, {
       startedAt: startTime.toISOString(),
     });
-  }, [selectedBaby]);
+
+    return { success: true };
+  }, [selectedBaby, user?.id]);
 
   const stopTummyTime = useCallback(async (): Promise<StoredTummyTimeEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
@@ -303,6 +322,14 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
     dispatch({ type: "STOP_TIMER" });
     await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+
+    if (user?.id) {
+      try {
+        await releaseTimerLock(selectedBaby.id, "tummy_time", user.id);
+      } catch (error) {
+        console.error("[TummyTimeContext] Failed to release timer lock:", error);
+      }
+    }
 
     return tummyTime;
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);

@@ -98,7 +98,7 @@ export default function EditDiaperScreen() {
     try {
       await updateDiaper(diaper.id, {
         type: diaperType,
-        stoolColor: diaperType === "wet" ? undefined : stoolColor,
+        stoolColor: diaperType === "wet" || diaperType === "dry" ? undefined : stoolColor,
         notes: notes || undefined,
       });
       setIsInitialized(false);
@@ -201,7 +201,7 @@ export default function EditDiaperScreen() {
             {t("diaper.selectType")}
           </Text>
           <View className="flex-row gap-2">
-            {(["wet", "dirty", "mixed"] as const).map((type) => (
+            {(["wet", "dirty", "mixed", "dry"] as const).map((type) => (
               <Pressable
                 key={type}
                 onPress={() => setDiaperType(type)}
