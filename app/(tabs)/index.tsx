@@ -3,7 +3,7 @@ import { RefreshControl, ScrollView, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
 import { useTimeRefresh } from "@/hooks";
@@ -14,7 +14,7 @@ import {
   DashboardCard,
   TodaySummary,
 } from "@/components";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useDashboardConfig } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useDashboardConfig, useActiveTimers, useBaby } from "@/contexts";
 import { timeSince, formatDate, hoursSince, formatDuration } from "@/utils/time";
 import { ActivityType } from "@/constants/activities";
 import { DashboardCardConfig } from "@/services/dashboard-config-storage";
@@ -30,6 +30,10 @@ interface CardProps {
   onActionPress: () => void;
   actionLabel?: string;
   progress?: number;
+  isLockedByOther?: boolean;
+  lockedByName?: string;
+  lockedElapsedTime?: string;
+  babyName?: string;
 }
 
 export default function HomeScreen() {
@@ -60,8 +64,16 @@ export default function HomeScreen() {
   const { getLastMeasurement, getWeightChange, refreshMeasurements } = useGrowth();
   const { activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes } = useTummyTime();
   const { colorScheme } = useColorScheme();
+  const { selectedBaby } = useBaby();
+  const { isLockedByOther, getLockedByName, getLockForActivity, refreshLocks } = useActiveTimers();
 
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (isFocused) {
+      refreshLocks();
+    }
+  }, [isFocused, refreshLocks]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -73,11 +85,12 @@ export default function HomeScreen() {
         refreshPumpings(),
         refreshMeasurements(),
         refreshTummyTimes(),
+        refreshLocks(),
       ]);
     } finally {
       setRefreshing(false);
     }
-  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshMeasurements, refreshTummyTimes]);
+  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshMeasurements, refreshTummyTimes, refreshLocks]);
 
   const feedingTimeSince = useMemo(() => {
     if (feedingActiveTimer?.isRunning) {
@@ -183,40 +196,31 @@ export default function HomeScreen() {
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
   const diaperTimeSince = useMemo(() => {
-    const counts = getTodaysCounts();
-    if (counts.total === 0) return "--";
+    if (diapers.length === 0) return "--";
 
-    // Show both wet and dirty counts
-    const parts: string[] = [];
-    if (counts.wet > 0) {
-      parts.push(`${counts.wet} ${t("diaper.wet").toLowerCase()}`);
-    }
-    if (counts.dirty > 0) {
-      parts.push(`${counts.dirty} ${t("diaper.dirty").toLowerCase()}`);
-    }
-
-    return parts.join(" · ");
-  }, [getTodaysCounts, t]);
-
-  const diaperSubtitle = useMemo(() => {
-    if (diapers.length === 0) return undefined;
-
-    // Find the last diaper
+    // Find the last diaper - primary display is just the type
     const sortedDiapers = [...diapers].sort((a, b) =>
       new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
     );
 
     const lastDiaper = sortedDiapers[0];
+    if (!lastDiaper) return "--";
+
+    return t(`diaper.${lastDiaper.type}`);
+  }, [diapers, t]);
+
+  const diaperSubtitle = useMemo(() => {
+    if (diapers.length === 0) return undefined;
+
+    // Find last diaper for time since
+    const sortedDiapers = [...diapers].sort((a, b) =>
+      new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
+    );
+    const lastDiaper = sortedDiapers[0];
     if (!lastDiaper) return undefined;
 
-    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastDiaper.changedAt)) });
-
-    // Add stool color info for dirty/mixed diapers
-    if ((lastDiaper.type === "dirty" || lastDiaper.type === "mixed") && lastDiaper.stoolColor) {
-      return `${timeAgo} (${t(`stoolColors.${lastDiaper.stoolColor}`)})`;
-    }
-
-    return timeAgo;
+    // Show time since last change
+    return t("dashboard.last", { time: timeSince(new Date(lastDiaper.changedAt)) });
   }, [diapers, t, timeTick]);
 
   const todayDiaperCounts = useMemo(() => {
@@ -349,10 +353,13 @@ export default function HomeScreen() {
     return sleeps.filter(s => new Date(s.startedAt) >= today);
   }, [sleeps]);
 
-  const mockData = {
-    todayFeedingTotal: todayFeedings.length.toString(),
-    todayNapCount: todaySleeps.length,
-  };
+  const todaySleepTotal = useMemo(() => {
+    const totalMinutes = getTodaysTotalSleepMinutes();
+    if (totalMinutes === 0) return undefined;
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  }, [getTodaysTotalSleepMinutes]);
 
   const handleAddFeeding = useCallback(() => {
     safeNavigate("/feeding");
@@ -406,9 +413,31 @@ export default function HomeScreen() {
     safeNavigate("/settings");
   }, [safeNavigate]);
 
+  const getTimerLockInfo = useCallback((activityType: "feeding" | "sleep" | "pumping" | "tummy_time") => {
+    if (!selectedBaby?.id) return { isLocked: false };
+
+    const locked = isLockedByOther(selectedBaby.id, activityType);
+    if (!locked) return { isLocked: false };
+
+    const lockedByName = getLockedByName(selectedBaby.id, activityType);
+    const lock = getLockForActivity(selectedBaby.id, activityType);
+
+    let elapsedTime: string | undefined;
+    if (lock?.startedAt) {
+      elapsedTime = timeSince(new Date(lock.startedAt));
+    }
+
+    return {
+      isLocked: true,
+      lockedByName: lockedByName || undefined,
+      elapsedTime,
+    };
+  }, [selectedBaby?.id, isLockedByOther, getLockedByName, getLockForActivity]);
+
   const getCardProps = useCallback((activity: ActivityType): CardProps => {
     switch (activity) {
-      case "feeding":
+      case "feeding": {
+        const feedingLock = getTimerLockInfo("feeding");
         return {
           label: t("feeding.title"),
           timeSince: feedingTimeSince,
@@ -418,8 +447,14 @@ export default function HomeScreen() {
           onPress: handleFeedingCardPress,
           onActionPress: handleAddFeeding,
           actionLabel: isFeedingActive ? undefined : "+",
+          isLockedByOther: feedingLock.isLocked,
+          lockedByName: feedingLock.lockedByName,
+          lockedElapsedTime: feedingLock.elapsedTime,
+          babyName: selectedBaby?.name,
         };
-      case "sleep":
+      }
+      case "sleep": {
+        const sleepLock = getTimerLockInfo("sleep");
         return {
           label: t("sleep.title"),
           timeSince: sleepTimeSince,
@@ -430,7 +465,12 @@ export default function HomeScreen() {
           onActionPress: handleAddSleep,
           actionLabel: isSleepActive ? undefined : "+",
           progress: sleepProgress,
+          isLockedByOther: sleepLock.isLocked,
+          lockedByName: sleepLock.lockedByName,
+          lockedElapsedTime: sleepLock.elapsedTime,
+          babyName: selectedBaby?.name,
         };
+      }
       case "diaper":
         return {
           label: t("diaper.title"),
@@ -441,7 +481,8 @@ export default function HomeScreen() {
           onActionPress: handleAddDiaper,
           actionLabel: "+",
         };
-      case "pumping":
+      case "pumping": {
+        const pumpingLock = getTimerLockInfo("pumping");
         return {
           label: t("pumping.title"),
           timeSince: pumpingTimeSince,
@@ -451,8 +492,14 @@ export default function HomeScreen() {
           onPress: handlePumpingCardPress,
           onActionPress: handleAddPumping,
           actionLabel: isPumpingActive ? undefined : "+",
+          isLockedByOther: pumpingLock.isLocked,
+          lockedByName: pumpingLock.lockedByName,
+          lockedElapsedTime: pumpingLock.elapsedTime,
+          babyName: selectedBaby?.name,
         };
-      case "tummyTime":
+      }
+      case "tummyTime": {
+        const tummyTimeLock = getTimerLockInfo("tummy_time");
         return {
           label: t("tummyTime.title"),
           timeSince: tummyTimeTimeSince,
@@ -463,7 +510,12 @@ export default function HomeScreen() {
           onActionPress: handleAddTummyTime,
           actionLabel: isTummyTimeActive ? undefined : "+",
           progress: tummyTimeProgress,
+          isLockedByOther: tummyTimeLock.isLocked,
+          babyName: selectedBaby?.name,
+          lockedByName: tummyTimeLock.lockedByName,
+          lockedElapsedTime: tummyTimeLock.elapsedTime,
         };
+      }
       case "growth":
         return {
           label: t("growth.title"),
@@ -483,6 +535,7 @@ export default function HomeScreen() {
     pumpingTimeSince, pumpingSubtitle, isPumpingActive, handlePumpingCardPress, handleAddPumping,
     tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime,
     growthTimeSince, growthSubtitle, handleGrowthCardPress, handleAddGrowth,
+    getTimerLockInfo,
   ]);
 
   const cardRows = useMemo(() => {
@@ -539,9 +592,9 @@ export default function HomeScreen() {
         {/* Today Summary */}
         <View className={isAndroid ? "mt-3" : "mt-6"}>
           <TodaySummary
-            feedingTotal={mockData.todayFeedingTotal}
-            napCount={mockData.todayNapCount}
-            diaperCount={todayDiaperCounts.total}
+            feedingCount={todayFeedings.length}
+            sleepTotal={todaySleepTotal}
+            wetDiaperCount={todayDiaperCounts.wet}
           />
         </View>
       </ScrollView>

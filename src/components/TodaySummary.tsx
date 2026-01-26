@@ -6,10 +6,9 @@ import { ACTIVITY_CONFIG } from "@/constants/activities";
 const isAndroid = Platform.OS === "android";
 
 interface TodaySummaryProps {
-  feedingTotal?: string;
-  napCount?: number;
-  diaperCount?: number;
+  feedingCount?: number;
   sleepTotal?: string;
+  wetDiaperCount?: number;
   testID?: string;
 }
 
@@ -23,11 +22,30 @@ function SummaryStat({ value, label, color }: SummaryStatProps) {
   return (
     <View className="items-center">
       <Text
-        className="text-stat-sm font-semibold"
+        className="text-xl font-semibold"
         style={{ color }}
       >
         {value}
       </Text>
+      <Text className="text-xs text-content-secondary dark:text-content-dark-primary mt-0.5 uppercase tracking-wider">
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+function DiaperStat({ count, label, color }: { count: number; label: string; color: string }) {
+  return (
+    <View className="items-center">
+      <View className="flex-row items-center">
+        <Text
+          className="text-xl font-semibold"
+          style={{ color }}
+        >
+          {count}
+        </Text>
+        <Text className="text-xs ml-0.5">💧</Text>
+      </View>
       <Text className="text-xs text-content-secondary dark:text-content-dark-primary mt-0.5 uppercase tracking-wider">
         {label}
       </Text>
@@ -44,18 +62,14 @@ function SummaryDivider() {
 const TodaySummary = forwardRef<View, TodaySummaryProps>(
   (
     {
-      feedingTotal = "0 oz",
-      napCount = 0,
-      diaperCount = 0,
+      feedingCount = 0,
       sleepTotal,
+      wetDiaperCount = 0,
       testID,
     },
     ref
   ) => {
     const { t } = useTranslation();
-
-    // Extract numeric value from feedingTotal for pluralization
-    const feedingCount = parseInt(feedingTotal) || 0;
 
     return (
       <View
@@ -75,7 +89,7 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
         {/* Stats row */}
         <View className="flex-row items-center justify-center">
           <SummaryStat
-            value={feedingTotal}
+            value={feedingCount}
             label={t("summary.feeding", { count: feedingCount })}
             color={ACTIVITY_CONFIG.feeding.accentColor}
           />
@@ -83,29 +97,18 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
           <SummaryDivider />
 
           <SummaryStat
-            value={napCount}
-            label={t("summary.nap", { count: napCount })}
+            value={sleepTotal || "--"}
+            label={t("summary.sleep")}
             color={ACTIVITY_CONFIG.sleep.accentColor}
           />
 
           <SummaryDivider />
 
-          <SummaryStat
-            value={diaperCount}
-            label={t("summary.diaper", { count: diaperCount })}
+          <DiaperStat
+            count={wetDiaperCount}
+            label={t("summary.diaper", { count: wetDiaperCount })}
             color={ACTIVITY_CONFIG.diaper.accentColor}
           />
-
-          {sleepTotal && (
-            <>
-              <SummaryDivider />
-              <SummaryStat
-                value={sleepTotal}
-                label={t("summary.sleep")}
-                color={ACTIVITY_CONFIG.sleep.accentColor}
-              />
-            </>
-          )}
         </View>
       </View>
     );
