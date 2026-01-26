@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useGrowth } from "@/contexts/growth-context";
 import { useBaby } from "@/contexts/baby-context";
 import { GrowthChart, PercentileDisplay } from "@/components/growth";
@@ -20,7 +21,7 @@ const GROWTH_TEAL = "#009B77";
 
 type TabType = "weight" | "height" | "head";
 
-const getTabLabel = (key: TabType, babyBirthDate: string | undefined, t: (key: string) => string): string => {
+const getTabLabel = (key: TabType, babyBirthDate: string | undefined, t: TFunction): string => {
   if (key === "height") {
     return isUnderTwoYears(babyBirthDate) ? t("growth.length") : t("growth.height");
   }
