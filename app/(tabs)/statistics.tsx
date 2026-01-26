@@ -5,7 +5,8 @@ import { useState, useMemo, useCallback } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor, ACTION_COLORS, SURFACE } from "@/constants/design-tokens";
 import { useFeeding, useSleep, useDiaper, usePumping, useTummyTime, useBaby } from "@/contexts";
-import { SimpleBarChart, TrendIndicator, EmptyState, LoadingState } from "@/components";
+import { SimpleBarChart, StackedBarChart, TrendIndicator, EmptyState, LoadingState } from "@/components";
+import { GrowthStatsCard } from "@/components/stats";
 import { ACTIVITY_CONFIG } from "@/constants/activities";
 import { formatDuration, timeSince } from "@/utils/time";
 import {
@@ -323,10 +324,16 @@ export default function StatisticsScreen() {
       (entry) => entry.changedAt,
       now
     );
+    const sleepBreakdown = calculateWeeklyBreakdown(
+      sleeps,
+      (entry) => entry.startedAt,
+      now
+    );
 
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const feedingData: { label: string; value: number }[] = [];
     const diaperData: { label: string; value: number }[] = [];
+    const sleepData: { label: string; primary: number; secondary: number }[] = [];
 
     feedingBreakdown.forEach((entries, dateKey) => {
       const date = new Date(dateKey);
@@ -344,8 +351,23 @@ export default function StatisticsScreen() {
       });
     });
 
-    return { feedingData, diaperData };
-  }, [feedings, diapers]);
+    sleepBreakdown.forEach((entries, dateKey) => {
+      const date = new Date(dateKey);
+      const nightSleepHours = entries
+        .filter((s) => s.type === "night")
+        .reduce((sum, s) => sum + (s.durationSeconds || 0), 0) / 3600;
+      const napHours = entries
+        .filter((s) => s.type === "nap")
+        .reduce((sum, s) => sum + (s.durationSeconds || 0), 0) / 3600;
+      sleepData.push({
+        label: dayNames[date.getDay()],
+        primary: nightSleepHours,
+        secondary: napHours,
+      });
+    });
+
+    return { feedingData, diaperData, sleepData };
+  }, [feedings, diapers, sleeps]);
 
   const showWeeklyTrends = !!weeklyTrends;
 
@@ -628,7 +650,9 @@ export default function StatisticsScreen() {
           </View>
         </View>
 
-        {weeklyChartData && (stats.feeding.totalCount > 0 || stats.diaper.totalCount > 0) && (
+        <GrowthStatsCard />
+
+        {weeklyChartData && (stats.feeding.totalCount > 0 || stats.diaper.totalCount > 0 || (stats.sleep.napCount + stats.sleep.nightCount) > 0) && (
           <View className="mb-4">
             <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider mb-2">
               {t("statistics.weeklyOverview")}
@@ -647,7 +671,7 @@ export default function StatisticsScreen() {
                 </View>
               )}
               {stats.diaper.totalCount > 0 && (
-                <View>
+                <View className={(stats.sleep.napCount + stats.sleep.nightCount) > 0 ? "mb-4" : ""}>
                   <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
                     {t("diaper.title")}
                   </Text>
@@ -655,6 +679,22 @@ export default function StatisticsScreen() {
                     data={weeklyChartData.diaperData}
                     color={ACTIVITY_CONFIG.diaper.accentColor}
                     height={100}
+                  />
+                </View>
+              )}
+              {(stats.sleep.napCount + stats.sleep.nightCount) > 0 && (
+                <View>
+                  <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
+                    {t("sleep.title")}
+                  </Text>
+                  <StackedBarChart
+                    data={weeklyChartData.sleepData}
+                    primaryColor={colorScheme === "dark" ? "#6B7FD7" : "#5B6BC0"}
+                    secondaryColor={colorScheme === "dark" ? "#9FA8DA" : "#7986CB"}
+                    primaryLabel={t("sleep.night")}
+                    secondaryLabel={t("sleep.nap")}
+                    height={100}
+                    formatValue={(v) => `${v.toFixed(1)}h`}
                   />
                 </View>
               )}

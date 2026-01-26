@@ -156,22 +156,24 @@ export function GrowthChart({
 
   // Calculate user measurement points with percentiles
   const measurementPoints: GrowthChartPoint[] = useMemo(() => {
-    return measurements.map((m) => {
-      const result = calculatePercentileFromMeasurement(
-        gender,
-        m.ageMonths,
-        m.value,
-        measurementType
-      );
-      return {
-        ageMonths: m.ageMonths,
-        value: m.value,
-        percentile: result.percentile,
-        zScore: result.zScore,
-        date: m.date,
-        measurementId: m.id,
-      };
-    });
+    return measurements
+      .filter((m) => m.value != null && Number.isFinite(m.value))
+      .map((m) => {
+        const result = calculatePercentileFromMeasurement(
+          gender,
+          m.ageMonths,
+          m.value,
+          measurementType
+        );
+        return {
+          ageMonths: m.ageMonths,
+          value: m.value,
+          percentile: result.percentile,
+          zScore: result.zScore,
+          date: m.date,
+          measurementId: m.id,
+        };
+      });
   }, [measurements, gender, measurementType]);
 
   // Colors based on theme
