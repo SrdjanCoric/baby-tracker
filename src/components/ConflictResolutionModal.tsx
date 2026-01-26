@@ -43,6 +43,7 @@ const tableLabels: Record<SyncableTable, string> = {
   babies: 'Baby',
   users: 'User',
   households: 'Household',
+  active_timers: 'Active Timer',
 };
 
 function formatTimestamp(timestamp: string): string {
