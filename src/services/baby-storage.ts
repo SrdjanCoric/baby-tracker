@@ -27,6 +27,7 @@ export interface StoredBabyProfile {
 }
 
 export interface CreateBabyInput {
+  id?: string;
   name: string;
   birthDate?: Date;
   gender?: "male" | "female";

@@ -108,6 +108,24 @@ Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Su
 - Display name prompt for new OAuth users (Google/Apple don't auto-save names)
 - Non-blocking profile fetch: auth state updates immediately, profile loads in background
 
+## Growth & Statistics
+
+### Growth Measurements
+- `src/contexts/growth-context.tsx` - Growth state management with weight change calculations
+- `src/utils/growth-helpers.ts` - Helper functions for age-based labels (Length vs Height)
+- `src/components/stats/GrowthStatsCard.tsx` - Dashboard card showing weight, height, head with percentiles
+- `app/growth/charts.tsx` - WHO percentile growth charts
+
+**Key Patterns:**
+- Use "Length" for babies under 24 months, "Height" for 2+ years (clinical standard)
+- Database field remains `height_cm` - label is UI-only based on baby's age
+- `isUnderTwoYears(birthDate)` helper determines which label to show
+
+### Statistics Components
+- `src/components/SimpleBarChart.tsx` - Basic bar chart for weekly data
+- `src/components/StackedBarChart.tsx` - Stacked bars (e.g., night sleep vs naps)
+- `src/components/stats/GrowthStatsCard.tsx` - Growth metrics with WHO percentiles
+
 ## Custom Hooks
 
 - `useTimeRefresh(intervalMs)` - Triggers re-renders at intervals for relative time displays
@@ -127,6 +145,19 @@ Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Su
 - Never use `any` to fix TypeScript issues - properly type everything
 - Never bend tests to make them pass - tests validate correct behavior
 - Follow TDD: write failing tests first, then implement
+
+### TypeScript Patterns
+
+**i18next Translation Function:**
+When passing the `t` function as a parameter, use the `TFunction` type from i18next:
+```typescript
+import type { TFunction } from "i18next";
+
+const getLabel = (key: string, t: TFunction): string => {
+  return t(`some.key.${key}`);
+};
+```
+Do NOT use `(key: string) => string` - this causes TypeScript compiler crashes due to i18next's complex overloaded signatures.
 
 ## Environment Variables
 
@@ -152,6 +183,11 @@ Migrations are in `supabase/migrations/`. Key migrations:
 | 015-016 | Join household fixes (owner flag, baby deletion) |
 | 017 | Enable Realtime for all tables |
 | 018 | Fix owner flag on user creation |
+| 019 | Add 'dry' diaper type |
+| 020-021 | Active timers for household-wide timer exclusivity |
+| 022 | Add last_finished_side to feedings |
+| 023 | Enable Realtime for active_timers table |
+| 024 | Fix trigger schema path for magic link auth |
 
 ## Android-Specific Setup
 
@@ -201,3 +237,18 @@ Android requires proper SHA-1 fingerprint configuration for Google Sign-In to wo
 **Tab bar overlapping gesture indicator:**
 - Android gesture navigation area needs clearance
 - Solution: Add `marginBottom` to tab bar style (not just padding)
+
+## Database Trigger Patterns
+
+**Schema-qualified function calls in triggers:**
+Triggers on `auth.users` run in auth schema context and may not find `public` schema functions. Always use explicit schema prefixes:
+```sql
+-- Correct: explicit schema
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Inside function, also use explicit schema
+new_household_id := public.create_household_with_code();
+```
+This prevents "function does not exist" errors when magic link auth creates new users.

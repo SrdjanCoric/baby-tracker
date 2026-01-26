@@ -134,6 +134,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   const { subscribeToRemoteChanges } = useSync();
   const { user } = useAuth();
   const hasMigratedRef = useRef(false);
+  const pendingBabyIdsRef = useRef<Set<string>>(new Set());
 
   const handleRemoteChange = useCallback((change: RemoteChange) => {
     if (!user?.householdId) return;
@@ -146,6 +147,11 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     switch (change.eventType) {
       case 'INSERT':
         if (change.new) {
+          const babyId = change.new.id as string;
+          // Skip if this is a baby we're currently creating locally
+          if (pendingBabyIdsRef.current.has(babyId)) {
+            return;
+          }
           dispatch({
             type: "REMOTE_INSERT",
             payload: transformBabyFromRemote(change.new),
@@ -254,7 +260,18 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     let newBaby: StoredBabyProfile;
 
     if (user?.householdId) {
-      newBaby = await createBabyInDatabase(input, user.householdId);
+      // Generate ID upfront so we can track it as pending
+      const pendingId = crypto.randomUUID();
+      pendingBabyIdsRef.current.add(pendingId);
+
+      try {
+        newBaby = await createBabyInDatabase({ ...input, id: pendingId }, user.householdId);
+      } finally {
+        // Remove from pending after a short delay to ensure real-time event has passed
+        setTimeout(() => {
+          pendingBabyIdsRef.current.delete(pendingId);
+        }, 1000);
+      }
     } else {
       newBaby = await BabyStorageService.addBaby(input);
     }

@@ -50,7 +50,7 @@ export async function createBabyInDatabase(
   householdId: string
 ): Promise<StoredBabyProfile> {
   const now = new Date().toISOString();
-  const id = generateUUID();
+  const id = input.id || generateUUID();
 
   const { data, error } = await supabase
     .from("babies")
