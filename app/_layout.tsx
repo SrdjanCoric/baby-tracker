@@ -8,7 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, useTheme, useAuth, useSync, useNotifications } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, useTheme, useAuth, useSync, useNotifications } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
@@ -57,7 +57,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         router.replace("/onboarding");
       } else if (hasCompletedOnboarding && inOnboardingGroup) {
         router.replace("/(tabs)");
-      } else if (isAuthenticated && inAuthGroup) {
+      } else if (isAuthenticated && inAuthGroup && hasCompletedOnboarding) {
+        // Only redirect to tabs if onboarding is complete
+        // Otherwise let them go back to continue onboarding
         router.replace("/(tabs)");
       }
 
@@ -364,6 +366,7 @@ export default function RootLayout() {
                           <PumpingProvider>
                             <GrowthProvider>
                               <TummyTimeProvider>
+                                <ActiveTimersProvider>
                                 <NotificationProvider>
                                   <NotificationAuthSetup>
                                     <DashboardConfigProvider>
@@ -373,6 +376,7 @@ export default function RootLayout() {
                                     </DashboardConfigProvider>
                                   </NotificationAuthSetup>
                                 </NotificationProvider>
+                                </ActiveTimersProvider>
                               </TummyTimeProvider>
                             </GrowthProvider>
                           </PumpingProvider>
