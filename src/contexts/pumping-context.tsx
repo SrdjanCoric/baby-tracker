@@ -16,6 +16,7 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
+import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
 
 export interface ActivePumpingTimer {
   isRunning: boolean;
@@ -114,8 +115,13 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
   }
 }
 
+export interface TimerLockResult {
+  success: boolean;
+  lockedByName?: string;
+}
+
 interface PumpingContextValue extends PumpingState {
-  startPumping: (side: BreastSide) => Promise<void>;
+  startPumping: (side: BreastSide) => Promise<TimerLockResult>;
   stopPumping: (volumeMl: number) => Promise<StoredPumpingEntry | null>;
   changePumpingSide: (side: BreastSide) => void;
   addPumping: (input: CreatePumpingInput) => Promise<StoredPumpingEntry>;
@@ -198,8 +204,19 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     loadPumpings();
   }, [loadPumpings]);
 
-  const startPumping = useCallback(async (side: BreastSide) => {
-    if (!selectedBaby) return;
+  const startPumping = useCallback(async (side: BreastSide): Promise<{ success: boolean; lockedByName?: string }> => {
+    if (!selectedBaby) return { success: false };
+
+    if (user?.id) {
+      try {
+        const lockResult = await acquireTimerLock(selectedBaby.id, "pumping", user.id);
+        if (!lockResult.success) {
+          return { success: false, lockedByName: lockResult.lockHolderName };
+        }
+      } catch (error) {
+        console.error("[PumpingContext] Failed to acquire timer lock:", error);
+      }
+    }
 
     const startTime = new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, side } });
@@ -208,7 +225,9 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       startedAt: startTime.toISOString(),
       side,
     });
-  }, [selectedBaby]);
+
+    return { success: true };
+  }, [selectedBaby, user?.id]);
 
   const stopPumping = useCallback(async (volumeMl: number): Promise<StoredPumpingEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
@@ -238,6 +257,14 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "ADD_PUMPING", payload: pumping });
     dispatch({ type: "STOP_TIMER" });
     await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+
+    if (user?.id) {
+      try {
+        await releaseTimerLock(selectedBaby.id, "pumping", user.id);
+      } catch (error) {
+        console.error("[PumpingContext] Failed to release timer lock:", error);
+      }
+    }
 
     return pumping;
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
@@ -362,7 +389,7 @@ function transformPumpingFromRemote(data: Record<string, unknown>): StoredPumpin
     startedAt: data.started_at as string,
     endedAt: data.ended_at as string | undefined,
     durationSeconds: data.duration_seconds as number | undefined,
-    volumeMl: data.volume_ml as number | undefined,
+    volumeMl: data.amount_ml as number | undefined,
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
