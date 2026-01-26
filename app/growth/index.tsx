@@ -9,6 +9,7 @@ import { useBaby, useUnits } from "@/contexts";
 import { validateGrowthMeasurement } from "@/validators/growth";
 import { formatDate } from "@/utils/time";
 import { lbsToKg, inchesToCm } from "@/utils/growth";
+import { isUnderTwoYears } from "@/utils/growth-helpers";
 
 const GROWTH_TEAL = "#009B77";
 const GROWTH_TEAL_MUTED = "#E0F5EF";
@@ -180,10 +181,10 @@ export default function GrowthScreen() {
             )}
           </View>
 
-          {/* Height Input */}
+          {/* Height/Length Input */}
           <View>
             <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-              {t("growth.height")} ({t(`settings.${heightUnit}`)})
+              {isUnderTwoYears(selectedBaby.birthDate) ? t("growth.length") : t("growth.height")} ({t(`settings.${heightUnit}`)})
             </Text>
             <View className="flex-row items-center">
               <TextInput

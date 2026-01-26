@@ -9,20 +9,30 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useGrowth } from "@/contexts/growth-context";
 import { useBaby } from "@/contexts/baby-context";
 import { GrowthChart, PercentileDisplay } from "@/components/growth";
 import { calculateAgeInMonths } from "@/utils/percentile-calculator";
+import { isUnderTwoYears } from "@/utils/growth-helpers";
 import type { GrowthMeasurementType } from "@/types/growth-chart";
 
 const GROWTH_TEAL = "#009B77";
 
 type TabType = "weight" | "height" | "head";
 
-const TABS: Array<{ key: TabType; label: string; icon: string }> = [
-  { key: "weight", label: "Weight", icon: "⚖️" },
-  { key: "height", label: "Height", icon: "📏" },
-  { key: "head", label: "Head", icon: "👶" },
+const getTabLabel = (key: TabType, babyBirthDate: string | undefined, t: TFunction): string => {
+  if (key === "height") {
+    return isUnderTwoYears(babyBirthDate) ? t("growth.length") : t("growth.height");
+  }
+  if (key === "weight") return t("growth.weight");
+  return t("growth.headCircumference");
+};
+
+const TABS: Array<{ key: TabType; icon: string }> = [
+  { key: "weight", icon: "⚖️" },
+  { key: "height", icon: "📏" },
+  { key: "head", icon: "👶" },
 ];
 
 export default function GrowthChartsScreen() {
@@ -74,7 +84,7 @@ export default function GrowthChartsScreen() {
       const measuredDate = new Date(m.measuredAt);
       const ageMonths = calculateAgeInMonths(babyBirthDate, measuredDate);
 
-      if (m.weightKg !== undefined) {
+      if (m.weightKg != null) {
         weight.push({
           date: measuredDate,
           value: m.weightKg,
@@ -83,7 +93,7 @@ export default function GrowthChartsScreen() {
         });
       }
 
-      if (m.heightCm !== undefined) {
+      if (m.heightCm != null) {
         height.push({
           date: measuredDate,
           value: m.heightCm,
@@ -92,7 +102,7 @@ export default function GrowthChartsScreen() {
         });
       }
 
-      if (m.headCircumferenceCm !== undefined) {
+      if (m.headCircumferenceCm != null) {
         head.push({
           date: measuredDate,
           value: m.headCircumferenceCm,
@@ -168,31 +178,34 @@ export default function GrowthChartsScreen() {
 
       {/* Tab Selector */}
       <View className="flex-row mx-4 mb-4 p-1 bg-surface-secondary dark:bg-surface-dark-secondary rounded-full">
-        {TABS.map((tab) => (
-          <Pressable
-            key={tab.key}
-            onPress={() => setActiveTab(tab.key)}
-            className={`flex-1 py-2.5 px-3 rounded-full items-center justify-center ${
-              activeTab === tab.key
-                ? "bg-surface-card dark:bg-surface-dark-card"
-                : ""
-            }`}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: activeTab === tab.key }}
-            accessibilityLabel={tab.label}
-          >
-            <Text className="text-sm mb-0.5">{tab.icon}</Text>
-            <Text
-              className={`text-sm font-medium ${
+        {TABS.map((tab) => {
+          const label = getTabLabel(tab.key, selectedBaby?.birthDate, t);
+          return (
+            <Pressable
+              key={tab.key}
+              onPress={() => setActiveTab(tab.key)}
+              className={`flex-1 py-2.5 px-3 rounded-full items-center justify-center ${
                 activeTab === tab.key
-                  ? "text-content-primary dark:text-content-dark-primary"
-                  : "text-content-tertiary dark:text-content-dark-tertiary"
+                  ? "bg-surface-card dark:bg-surface-dark-card"
+                  : ""
               }`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeTab === tab.key }}
+              accessibilityLabel={label}
             >
-              {tab.label}
-            </Text>
-          </Pressable>
-        ))}
+              <Text className="text-sm mb-0.5">{tab.icon}</Text>
+              <Text
+                className={`text-sm font-medium ${
+                  activeTab === tab.key
+                    ? "text-content-primary dark:text-content-dark-primary"
+                    : "text-content-tertiary dark:text-content-dark-tertiary"
+                }`}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <ScrollView
@@ -246,6 +259,7 @@ export default function GrowthChartsScreen() {
                   measurementType={activeTab}
                   value={latestMeasurement.value}
                   unit={activeTab === "weight" ? "kg" : "cm"}
+                  label={getTabLabel(activeTab, selectedBaby?.birthDate, t)}
                 />
               </View>
             )}
@@ -274,6 +288,7 @@ export default function GrowthChartsScreen() {
                 .slice()
                 .reverse()
                 .slice(0, 5)
+                .filter((m) => m.value != null && Number.isFinite(m.value))
                 .map((m, index) => (
                   <View
                     key={m.id}

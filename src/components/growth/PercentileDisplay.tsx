@@ -12,6 +12,7 @@ interface PercentileDisplayProps {
   value: number;
   unit: string;
   compact?: boolean;
+  label?: string;
 }
 
 const CLASSIFICATION_COLORS: Record<
@@ -56,17 +57,23 @@ export function PercentileDisplay({
   value,
   unit,
   compact = false,
+  label: customLabel,
 }: PercentileDisplayProps) {
+  if (value == null || !Number.isFinite(value)) {
+    return null;
+  }
+
   const classification = classifyPercentile(percentile);
   const colors = CLASSIFICATION_COLORS[classification];
-  const label = getPercentileClassificationLabel(classification);
+  const classificationLabel = getPercentileClassificationLabel(classification);
 
-  const measurementLabel =
+  const measurementLabel = customLabel ?? (
     measurementType === "weight"
       ? "Weight"
       : measurementType === "height"
         ? "Height"
-        : "Head";
+        : "Head"
+  );
 
   if (compact) {
     return (
@@ -109,7 +116,7 @@ export function PercentileDisplay({
         </View>
 
         <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-          {label}
+          {classificationLabel}
         </Text>
       </View>
 

@@ -156,7 +156,7 @@ export default function SignInScreen() {
                   fontFamily: "Nunito-Bold",
                 }}
               >
-                {t("auth.welcomeBack")}
+                {t("auth.signIn")}
               </Text>
               <Text
                 className="text-base leading-6"
@@ -165,7 +165,7 @@ export default function SignInScreen() {
                   fontFamily: "Nunito-Regular",
                 }}
               >
-                {t("auth.signInSubtitle")}
+                {t("auth.signInDescription")}
               </Text>
             </View>
 
