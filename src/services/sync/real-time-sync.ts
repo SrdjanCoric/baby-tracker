@@ -27,6 +27,7 @@ const SYNCABLE_TABLES: SyncableTable[] = [
   'babies',
   'users',
   'households',
+  'active_timers',
 ];
 
 export class RealTimeSync {
@@ -120,6 +121,12 @@ export class RealTimeSync {
     table: SyncableTable,
     payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> }
   ): void {
+    console.log("[RealTimeSync] handleRemoteChange received:", { table, eventType: payload.eventType, hasNew: !!payload.new, hasOld: !!payload.old });
+
+    if (table === 'active_timers') {
+      console.log("[RealTimeSync] active_timers event details:", JSON.stringify(payload, null, 2));
+    }
+
     const change: RemoteChange = {
       table,
       eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
@@ -128,23 +135,28 @@ export class RealTimeSync {
     };
 
     if (this.isEchoFromSameDevice(change)) {
+      console.log("[RealTimeSync] Filtered out - echo from same device");
       return;
     }
 
     if (!this.verifyChangeOwnership(change)) {
+      console.log("[RealTimeSync] Filtered out - failed ownership verification");
       return;
     }
 
+    console.log("[RealTimeSync] Notifying listeners for:", { table, eventType: change.eventType });
     this.notifyChangeListeners(change);
   }
 
   private verifyChangeOwnership(change: RemoteChange): boolean {
     if (!this.authContext) {
+      console.log("[RealTimeSync] verifyChangeOwnership: no authContext");
       return false;
     }
 
     const data = change.new || change.old;
     if (!data) {
+      console.log("[RealTimeSync] verifyChangeOwnership: no data (both new and old are null/empty)", { table: change.table, eventType: change.eventType });
       return false;
     }
 
