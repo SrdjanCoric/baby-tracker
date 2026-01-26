@@ -16,6 +16,7 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
+import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
 import {
   SleepAgeGroup,
   GoalSource,
@@ -160,8 +161,13 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
   }
 }
 
+export interface TimerLockResult {
+  success: boolean;
+  lockedByName?: string;
+}
+
 interface SleepContextValue extends SleepState {
-  startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<void>;
+  startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<TimerLockResult>;
   stopSleep: () => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
   addSleep: (input: CreateSleepInput) => Promise<StoredSleepEntry>;
@@ -290,8 +296,19 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     loadSleeps();
   }, [loadSleeps]);
 
-  const startSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date) => {
-    if (!selectedBaby) return;
+  const startSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
+    if (!selectedBaby) return { success: false };
+
+    if (user?.id) {
+      try {
+        const lockResult = await acquireTimerLock(selectedBaby.id, "sleep", user.id);
+        if (!lockResult.success) {
+          return { success: false, lockedByName: lockResult.lockHolderName };
+        }
+      } catch (error) {
+        console.error("[SleepContext] Failed to acquire timer lock:", error);
+      }
+    }
 
     const startTime = customStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, sleepType } });
@@ -300,7 +317,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       startedAt: startTime.toISOString(),
       type: sleepType,
     });
-  }, [selectedBaby]);
+
+    return { success: true };
+  }, [selectedBaby, user?.id]);
 
   const stopSleep = useCallback(async (): Promise<StoredSleepEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
@@ -329,6 +348,14 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "ADD_SLEEP", payload: sleep });
     dispatch({ type: "STOP_TIMER" });
     await SleepStorageService.clearActiveTimer(selectedBaby.id);
+
+    if (user?.id) {
+      try {
+        await releaseTimerLock(selectedBaby.id, "sleep", user.id);
+      } catch (error) {
+        console.error("[SleepContext] Failed to release timer lock:", error);
+      }
+    }
 
     return sleep;
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);

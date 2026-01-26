@@ -17,6 +17,7 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
+import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
 
 export interface ActiveTimer {
   isRunning: boolean;
@@ -164,8 +165,13 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
   }
 }
 
+export interface TimerLockResult {
+  success: boolean;
+  lockedByName?: string;
+}
+
 interface FeedingContextValue extends FeedingState {
-  startBreastfeeding: (side: BreastSide) => Promise<void>;
+  startBreastfeeding: (side: BreastSide) => Promise<TimerLockResult>;
   stopBreastfeeding: () => Promise<StoredFeedingEntry | null>;
   changeSide: (side: BreastSide) => void;
   suggestedSide: BreastSide;
@@ -273,8 +279,19 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     loadFeedings();
   }, [loadFeedings]);
 
-  const startBreastfeeding = useCallback(async (side: BreastSide) => {
-    if (!selectedBaby) return;
+  const startBreastfeeding = useCallback(async (side: BreastSide): Promise<{ success: boolean; lockedByName?: string }> => {
+    if (!selectedBaby) return { success: false };
+
+    if (user?.id) {
+      try {
+        const lockResult = await acquireTimerLock(selectedBaby.id, "feeding", user.id);
+        if (!lockResult.success) {
+          return { success: false, lockedByName: lockResult.lockHolderName };
+        }
+      } catch (error) {
+        console.error("[FeedingContext] Failed to acquire timer lock:", error);
+      }
+    }
 
     const startTime = new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, side } });
@@ -287,7 +304,9 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       rightAccumulatedSeconds: 0,
       currentSideStartedAt: startTime.toISOString(),
     });
-  }, [selectedBaby]);
+
+    return { success: true };
+  }, [selectedBaby, user?.id]);
 
   const stopBreastfeeding = useCallback(async (): Promise<StoredFeedingEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
@@ -339,6 +358,14 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "ADD_FEEDING", payload: feeding });
     dispatch({ type: "STOP_TIMER" });
     await FeedingStorageService.clearActiveTimer(selectedBaby.id);
+
+    if (user?.id) {
+      try {
+        await releaseTimerLock(selectedBaby.id, "feeding", user.id);
+      } catch (error) {
+        console.error("[FeedingContext] Failed to release timer lock:", error);
+      }
+    }
 
     return feeding;
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
