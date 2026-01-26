@@ -49,7 +49,8 @@
     "diaper_few": "Pelene",
     "diaper_many": "Pelena",
     "diaper_other": "Pelena",
-    "sleep": "Spavanje"
+    "sleep": "Spavanje",
+    "wet": "Mokre"
   },
   "dashboard": {
     "last": "pre {{time}}",

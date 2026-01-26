@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useNotifications } from "@/contexts/notification-context";
@@ -97,6 +98,47 @@ export default function NotificationSettingsScreen() {
   } = useNotifications();
 
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+
+  const parseTimeToDate = useCallback((timeString: string): Date => {
+    const [hours, minutes] = timeString.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  }, []);
+
+  const handleStartTimeChange = useCallback(
+    async (_event: unknown, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowStartTimePicker(false);
+      }
+      if (selectedTime) {
+        const hours = selectedTime.getHours().toString().padStart(2, "0");
+        const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
+        await updateSettings({
+          quietHours: { ...settings.quietHours, startTime: `${hours}:${minutes}` },
+        });
+      }
+    },
+    [settings.quietHours, updateSettings]
+  );
+
+  const handleEndTimeChange = useCallback(
+    async (_event: unknown, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowEndTimePicker(false);
+      }
+      if (selectedTime) {
+        const hours = selectedTime.getHours().toString().padStart(2, "0");
+        const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
+        await updateSettings({
+          quietHours: { ...settings.quietHours, endTime: `${hours}:${minutes}` },
+        });
+      }
+    },
+    [settings.quietHours, updateSettings]
+  );
 
   const handleRequestPermissions = useCallback(async () => {
     if (permissionStatus === "denied") {
@@ -375,12 +417,60 @@ export default function NotificationSettingsScreen() {
                 <SettingsRow
                   label={t("settings.quietHoursStartTime")}
                   value={settings.quietHours.startTime}
+                  onPress={() => setShowStartTimePicker(true)}
                 />
+                {showStartTimePicker && (
+                  <View className="px-4 py-2 bg-surface-secondary dark:bg-surface-dark-secondary">
+                    {Platform.OS === "ios" && (
+                      <View className="flex-row justify-end mb-2">
+                        <Pressable
+                          onPress={() => setShowStartTimePicker(false)}
+                          className="py-1 px-2"
+                        >
+                          <Text className="text-primary dark:text-primary-dark font-medium">
+                            {t("common.done")}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
+                    <DateTimePicker
+                      value={parseTimeToDate(settings.quietHours.startTime)}
+                      mode="time"
+                      is24Hour={true}
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleStartTimeChange}
+                    />
+                  </View>
+                )}
                 <SettingsRow
                   label={t("settings.quietHoursEndTime")}
                   value={settings.quietHours.endTime}
-                  isLast
+                  onPress={() => setShowEndTimePicker(true)}
+                  isLast={!showEndTimePicker}
                 />
+                {showEndTimePicker && (
+                  <View className="px-4 py-2 bg-surface-secondary dark:bg-surface-dark-secondary">
+                    {Platform.OS === "ios" && (
+                      <View className="flex-row justify-end mb-2">
+                        <Pressable
+                          onPress={() => setShowEndTimePicker(false)}
+                          className="py-1 px-2"
+                        >
+                          <Text className="text-primary dark:text-primary-dark font-medium">
+                            {t("common.done")}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
+                    <DateTimePicker
+                      value={parseTimeToDate(settings.quietHours.endTime)}
+                      mode="time"
+                      is24Hour={true}
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleEndTimeChange}
+                    />
+                  </View>
+                )}
               </>
             )}
           </View>
