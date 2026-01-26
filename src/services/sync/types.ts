@@ -24,7 +24,8 @@ export type SyncableTable =
   | 'tummy_time_sessions'
   | 'babies'
   | 'users'
-  | 'households';
+  | 'households'
+  | 'active_timers';
 
 export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE';
 
