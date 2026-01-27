@@ -1,0 +1,57 @@
+appId: com.sofibaby.app
+name: Baby Form Validation
+tags:
+  - regression
+  - onboarding
+
+---
+- launchApp:
+    clearState: true
+
+# Welcome screen
+- assertVisible:
+    id: "welcome-screen"
+- tapOn:
+    text: "Get Started"
+
+# Auth choice - continue as guest
+- tapOn:
+    id: "continue-as-guest-button"
+
+# Features screen - next
+- tapOn:
+    id: "next-button"
+
+# Preferences screen - next
+- tapOn:
+    id: "next-button"
+
+# Sync screen - next
+- assertVisible:
+    id: "sync-screen"
+- tapOn:
+    id: "continue-button"
+
+# Baby setup - try to continue without name
+- assertVisible:
+    id: "baby-setup-screen"
+- tapOn:
+    id: "continue-button"
+
+# Should show validation error (name is required)
+- assertVisible:
+    text: "required"
+    optional: true
+
+# Enter valid name
+- tapOn:
+    id: "baby-name-input"
+- inputText: "Valid Baby Name"
+
+# Continue should now work
+- tapOn:
+    id: "continue-button"
+
+# Should reach home screen
+- assertVisible:
+    id: "home-screen"

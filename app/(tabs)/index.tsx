@@ -546,7 +546,7 @@ export default function HomeScreen() {
   }, [visibleCards]);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]} testID="home-screen">
       <BabyHeader onSettingsPress={handleSettingsPress} />
 
       <ScrollView
@@ -579,6 +579,7 @@ export default function HomeScreen() {
                   <DashboardCard
                     key={cardConfig.activity}
                     activity={cardConfig.activity}
+                    testID={`${cardConfig.activity}-card`}
                     {...props}
                   />
                 );

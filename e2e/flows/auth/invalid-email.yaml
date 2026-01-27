@@ -1,0 +1,42 @@
+appId: com.sofibaby.app
+name: Invalid Email Validation
+tags:
+  - regression
+  - auth
+
+---
+- launchApp:
+    clearState: true
+
+# Welcome screen
+- assertVisible:
+    id: "welcome-screen"
+- tapOn:
+    text: "Get Started"
+
+# Auth choice - tap sign in
+- tapOn:
+    id: "sign-in-button"
+
+# Enter invalid email
+- tapOn:
+    id: "email-input"
+- inputText: "notanemail"
+
+- tapOn:
+    id: "send-magic-link-button"
+
+# Should show validation error
+- assertVisible:
+    text: "valid email"
+    optional: true
+
+# Clear and enter valid email
+- tapOn:
+    id: "email-input"
+- eraseText
+- inputText: "valid@email.com"
+
+# Should allow submission now
+- tapOn:
+    id: "send-magic-link-button"

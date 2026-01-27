@@ -1,0 +1,27 @@
+appId: com.sofibaby.app
+name: Smoke Tests
+tags:
+  - smoke
+
+---
+# Critical path tests - run before every deploy
+# Target: ~5 minutes
+
+# Onboarding
+- runFlow: ../flows/onboarding/welcome.yaml
+- runFlow: ../flows/onboarding/guest-flow.yaml
+
+# Core activities (most used features)
+- runFlow: ../flows/activities/feeding/breastfeeding-timer.yaml
+- runFlow: ../flows/activities/feeding/bottle-feeding.yaml
+- runFlow: ../flows/activities/sleep/nap-timer.yaml
+- runFlow: ../flows/activities/diaper/quick-log.yaml
+- runFlow: ../flows/activities/tummy-time/tummy-timer.yaml
+- runFlow: ../flows/activities/growth/add-measurement.yaml
+- runFlow: ../flows/activities/pumping/pumping-timer.yaml
+
+# Timeline
+- runFlow: ../flows/timeline/view-activities.yaml
+
+# Household (requires pre-seeded data)
+- runFlow: ../flows/household/view-invite-code.yaml

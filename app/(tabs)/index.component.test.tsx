@@ -118,6 +118,15 @@ jest.mock("@/contexts", () => ({
     ],
     isLoading: false,
   }),
+  useBaby: () => ({
+    selectedBaby: { id: "baby-1", name: "Test Baby" },
+  }),
+  useActiveTimers: () => ({
+    isLockedByOther: () => false,
+    getLockedByName: () => null,
+    getLockForActivity: () => null,
+    refreshLocks: jest.fn(),
+  }),
 }));
 
 jest.mock("@/utils/time", () => ({
@@ -168,6 +177,8 @@ describe("HomeScreen", () => {
     mockUseGrowth.mockReturnValue({
       getLastMeasurement: () => null,
       getWeightChange: () => null,
+      getMeasurementHistory: () => [],
+      refreshMeasurements: jest.fn(),
     });
 
     mockUseTummyTime.mockReturnValue({

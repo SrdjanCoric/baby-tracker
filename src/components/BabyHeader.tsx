@@ -75,6 +75,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
               className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
               accessibilityRole="button"
               accessibilityLabel={t("navigation.settings")}
+              testID="settings-button"
             >
               <Text className="text-2xl">⚙️</Text>
             </Pressable>
@@ -99,6 +100,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
             className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
             accessibilityRole="button"
             accessibilityLabel={t("baby.editBaby")}
+            testID="edit-baby-button"
           >
             <Text className="text-lg">✏️</Text>
           </Pressable>
@@ -109,6 +111,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
               className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
               accessibilityRole="button"
               accessibilityLabel={t("navigation.settings")}
+              testID="settings-button"
             >
               <Text className="text-2xl">⚙️</Text>
             </Pressable>

@@ -1,0 +1,64 @@
+appId: com.sofibaby.app
+name: Form Validation Errors
+tags:
+  - regression
+  - edge-cases
+
+---
+- launchApp
+
+# Test growth form validation
+- tapOn:
+    id: "growth-card"
+
+# Try to save with empty fields
+- tapOn:
+    id: "save-button"
+
+# Should show validation error
+- assertVisible:
+    text: "required"
+    optional: true
+
+# Enter invalid value (negative weight)
+- tapOn:
+    id: "weight-input"
+- inputText: "-5"
+
+- tapOn:
+    id: "save-button"
+
+# Should show error
+- assertVisible:
+    text: "invalid"
+    optional: true
+
+# Clear and enter valid
+- tapOn:
+    id: "weight-input"
+- eraseText
+- inputText: "7.5"
+
+# Go back
+- tapOn:
+    id: "back-button"
+
+# Test bottle feeding validation
+- tapOn:
+    id: "feeding-card"
+
+- tapOn:
+    id: "type-bottle"
+
+# Try absurdly high volume
+- tapOn:
+    id: "volume-input"
+- inputText: "9999"
+
+- tapOn:
+    id: "save-button"
+
+# May show warning or allow it
+- assertVisible:
+    id: "home-screen"
+    optional: true

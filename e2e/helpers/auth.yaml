@@ -1,0 +1,41 @@
+appId: com.sofibaby.app
+
+---
+# Sign in with email (magic link simulation for local testing)
+# Usage: runFlow with env EMAIL
+- runFlow:
+    when:
+      visible: "Sign in"
+    commands:
+      - tapOn: "Sign in"
+      - assertVisible: "Enter your email"
+
+---
+# Skip to guest mode
+- runFlow:
+    when:
+      visible: "Continue as guest"
+    commands:
+      - tapOn: "Continue as guest"
+      - assertVisible:
+          text: "Let's get started"
+          optional: true
+
+---
+# Sign out helper
+- runFlow:
+    when:
+      visible:
+        id: "settings-tab"
+    commands:
+      - tapOn:
+          id: "settings-tab"
+      - scrollUntilVisible:
+          element:
+            id: "sign-out-button"
+          direction: DOWN
+      - tapOn:
+          id: "sign-out-button"
+      - tapOn:
+          text: "Sign out"
+          optional: true

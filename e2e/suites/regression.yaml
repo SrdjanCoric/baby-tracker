@@ -1,0 +1,81 @@
+appId: com.sofibaby.app
+name: Regression Tests
+tags:
+  - regression
+
+---
+# Full regression suite - run nightly or before major releases
+# Target: ~30 minutes
+
+# === ONBOARDING ===
+- runFlow: ../flows/onboarding/welcome.yaml
+- runFlow: ../flows/onboarding/guest-flow.yaml
+- runFlow: ../flows/onboarding/complete-onboarding.yaml
+- runFlow: ../flows/onboarding/skip-onboarding.yaml
+- runFlow: ../flows/onboarding/baby-validation.yaml
+
+# === AUTHENTICATION ===
+- runFlow: ../flows/auth/magic-link.yaml
+- runFlow: ../flows/auth/sign-out.yaml
+- runFlow: ../flows/auth/session-persistence.yaml
+- runFlow: ../flows/auth/invalid-email.yaml
+
+# === FEEDING ===
+- runFlow: ../flows/activities/feeding/breastfeeding-timer.yaml
+- runFlow: ../flows/activities/feeding/bottle-feeding.yaml
+- runFlow: ../flows/activities/feeding/solids.yaml
+- runFlow: ../flows/activities/feeding/suggested-side.yaml
+
+# === SLEEP ===
+- runFlow: ../flows/activities/sleep/nap-timer.yaml
+- runFlow: ../flows/activities/sleep/night-sleep.yaml
+
+# === DIAPER ===
+- runFlow: ../flows/activities/diaper/quick-log.yaml
+- runFlow: ../flows/activities/diaper/dry-diaper.yaml
+
+# === PUMPING ===
+- runFlow: ../flows/activities/pumping/pumping-timer.yaml
+- runFlow: ../flows/activities/pumping/pumping-manual.yaml
+
+# === GROWTH ===
+- runFlow: ../flows/activities/growth/add-measurement.yaml
+- runFlow: ../flows/activities/growth/view-charts.yaml
+
+# === TUMMY TIME ===
+- runFlow: ../flows/activities/tummy-time/tummy-timer.yaml
+
+# === TIMELINE ===
+- runFlow: ../flows/timeline/view-activities.yaml
+- runFlow: ../flows/timeline/filter.yaml
+- runFlow: ../flows/timeline/edit-activity.yaml
+- runFlow: ../flows/timeline/delete-activity.yaml
+
+# === BABY MANAGEMENT ===
+- runFlow: ../flows/baby/add-second-baby.yaml
+- runFlow: ../flows/baby/baby-switcher.yaml
+- runFlow: ../flows/baby/edit-baby.yaml
+
+# === HOUSEHOLD (Requires sign-in) ===
+- runFlow: ../flows/household/view-household.yaml
+- runFlow: ../flows/household/view-invite-code.yaml
+
+# === MULTI-USER (Pre-seeded) ===
+- runFlow: ../flows/multi-user/timer-lock-visibility.yaml
+- runFlow: ../flows/multi-user/activity-attribution.yaml
+
+# === SETTINGS ===
+- runFlow: ../flows/settings/theme.yaml
+- runFlow: ../flows/settings/language.yaml
+- runFlow: ../flows/settings/units.yaml
+- runFlow: ../flows/settings/dashboard-config.yaml
+
+# === OFFLINE ===
+- runFlow: ../flows/offline/offline-create.yaml
+- runFlow: ../flows/offline/sync-queue.yaml
+
+# === EDGE CASES ===
+- runFlow: ../flows/edge-cases/empty-states.yaml
+- runFlow: ../flows/edge-cases/validation-errors.yaml
+- runFlow: ../flows/edge-cases/concurrent-timers.yaml
+- runFlow: ../flows/edge-cases/rapid-navigation.yaml

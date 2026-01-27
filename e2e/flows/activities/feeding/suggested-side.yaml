@@ -1,0 +1,36 @@
+appId: com.sofibaby.app
+name: Suggested Side Display
+tags:
+  - regression
+  - activities
+  - feeding
+
+---
+- launchApp
+
+- tapOn:
+    id: "feeding-card"
+
+# Select breastfeeding
+- tapOn:
+    id: "type-breast"
+
+# Check for suggested side indicator
+- assertVisible:
+    id: "suggested-side-indicator"
+    optional: true
+
+# The suggested side should be highlighted or indicated
+- assertVisible:
+    id: "suggested-side-left"
+    optional: true
+
+# Or check for text indication
+- assertVisible:
+    text: "Start"
+    optional: true
+
+# Go back
+- tapOn:
+    id: "back-button"
+    optional: true

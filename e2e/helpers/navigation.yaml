@@ -1,0 +1,59 @@
+appId: com.sofibaby.app
+
+---
+# Navigate to Home tab
+- runFlow:
+    when:
+      visible:
+        id: "home-tab"
+    commands:
+      - tapOn:
+          id: "home-tab"
+      - assertVisible:
+          id: "home-screen"
+
+---
+# Navigate to Timeline tab
+- runFlow:
+    when:
+      visible:
+        id: "timeline-tab"
+    commands:
+      - tapOn:
+          id: "timeline-tab"
+      - assertVisible:
+          id: "timeline-screen"
+
+---
+# Navigate to Stats tab
+- runFlow:
+    when:
+      visible:
+        id: "stats-tab"
+    commands:
+      - tapOn:
+          id: "stats-tab"
+      - assertVisible:
+          id: "stats-screen"
+
+---
+# Navigate to Settings
+- runFlow:
+    when:
+      visible:
+        id: "settings-button"
+    commands:
+      - tapOn:
+          id: "settings-button"
+      - assertVisible:
+          id: "settings-screen"
+
+---
+# Go back (generic)
+- runFlow:
+    when:
+      visible:
+        id: "back-button"
+    commands:
+      - tapOn:
+          id: "back-button"

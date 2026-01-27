@@ -1,0 +1,36 @@
+appId: com.sofibaby.app
+name: Toggle Theme Setting
+tags:
+  - regression
+  - settings
+
+---
+- launchApp
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Find theme option
+- scrollUntilVisible:
+    element:
+      id: "theme-setting"
+    direction: DOWN
+
+- tapOn:
+    id: "theme-setting"
+
+# Select dark mode
+- tapOn:
+    id: "theme-dark"
+    optional: true
+
+# Or toggle theme
+- tapOn:
+    id: "theme-toggle"
+    optional: true
+
+# Go back
+- tapOn:
+    id: "back-button"
+    optional: true

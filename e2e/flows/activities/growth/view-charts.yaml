@@ -1,0 +1,45 @@
+appId: com.sofibaby.app
+name: View Growth Charts
+tags:
+  - regression
+  - activities
+  - growth
+
+---
+- launchApp
+
+# Navigate to stats tab
+- tapOn:
+    id: "stats-tab"
+
+# Find and tap growth card
+- scrollUntilVisible:
+    element:
+      id: "growth-stats-card"
+    direction: DOWN
+
+- tapOn:
+    id: "growth-stats-card"
+
+# Verify charts screen
+- assertVisible:
+    id: "growth-charts-screen"
+
+# Check weight chart
+- assertVisible:
+    id: "weight-chart"
+    optional: true
+
+# Check height chart
+- tapOn:
+    id: "height-chart-tab"
+    optional: true
+
+# Check head chart
+- tapOn:
+    id: "head-chart-tab"
+    optional: true
+
+# Go back
+- tapOn:
+    id: "back-button"

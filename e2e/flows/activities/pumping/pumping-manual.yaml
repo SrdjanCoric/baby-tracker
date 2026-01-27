@@ -1,0 +1,35 @@
+appId: com.sofibaby.app
+name: Pumping Manual Entry
+tags:
+  - regression
+  - activities
+  - pumping
+
+---
+- launchApp
+
+- tapOn:
+    id: "pumping-card"
+
+# Select side
+- tapOn:
+    id: "side-left"
+    optional: true
+
+# Enter volume without timer
+- tapOn:
+    id: "volume-input"
+- inputText: "120"
+
+# Set duration manually if available
+- tapOn:
+    id: "duration-input"
+    optional: true
+- inputText: "15"
+
+# Save
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "home-screen"

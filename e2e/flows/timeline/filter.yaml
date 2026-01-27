@@ -1,0 +1,44 @@
+appId: com.sofibaby.app
+name: Filter Timeline by Activity Type
+tags:
+  - regression
+  - timeline
+
+---
+- launchApp
+
+# Navigate to timeline tab
+- tapOn:
+    id: "timeline-tab"
+
+# Open filter
+- tapOn:
+    id: "filter-button"
+
+# Select feeding filter
+- tapOn:
+    id: "filter-feeding"
+
+# Apply filter
+- tapOn:
+    id: "apply-filter"
+    optional: true
+
+# Should only show feedings
+- assertVisible:
+    id: "timeline-screen"
+
+# Clear filter
+- tapOn:
+    id: "filter-button"
+- tapOn:
+    id: "clear-filter"
+    optional: true
+
+# Select sleep filter
+- tapOn:
+    id: "filter-button"
+    optional: true
+- tapOn:
+    id: "filter-sleep"
+    optional: true

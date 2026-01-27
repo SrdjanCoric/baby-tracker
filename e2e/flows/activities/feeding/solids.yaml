@@ -1,0 +1,37 @@
+appId: com.sofibaby.app
+name: Solids Feeding Entry
+tags:
+  - regression
+  - activities
+  - feeding
+
+---
+- launchApp
+
+- tapOn:
+    id: "feeding-card"
+
+# Select solids type
+- tapOn:
+    id: "type-solids"
+
+# Select food items
+- tapOn:
+    id: "food-fruits"
+    optional: true
+
+- tapOn:
+    id: "food-vegetables"
+    optional: true
+
+# Add reaction/notes if available
+- tapOn:
+    id: "reaction-liked"
+    optional: true
+
+# Save solids feeding
+- tapOn:
+    id: "save-solids-button"
+
+- assertVisible:
+    id: "home-screen"

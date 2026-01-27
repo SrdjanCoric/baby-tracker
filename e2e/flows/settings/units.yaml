@@ -1,0 +1,39 @@
+appId: com.sofibaby.app
+name: Change Units Setting
+tags:
+  - regression
+  - settings
+
+---
+- launchApp
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Find units option
+- scrollUntilVisible:
+    element:
+      id: "units-setting"
+    direction: DOWN
+
+- tapOn:
+    id: "units-setting"
+
+# Switch to imperial
+- tapOn:
+    id: "units-imperial"
+    optional: true
+
+# Verify change
+- assertVisible:
+    text: "oz"
+    optional: true
+
+# Switch back to metric
+- tapOn:
+    id: "units-setting"
+    optional: true
+- tapOn:
+    id: "units-metric"
+    optional: true

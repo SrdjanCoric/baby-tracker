@@ -1,0 +1,50 @@
+appId: com.sofibaby.app
+name: Pumping Timer Flow
+tags:
+  - smoke
+  - activities
+  - pumping
+
+---
+- launchApp
+
+- assertVisible:
+    id: "home-screen"
+
+# Tap pumping card
+- tapOn:
+    id: "pumping-card"
+
+# Verify pumping screen
+- assertVisible:
+    id: "pumping-screen"
+
+# Select side - this automatically starts the timer
+- tapOn:
+    id: "side-both"
+
+# Wait for timer to be running (timer starts automatically after side selection)
+- extendedWaitUntil:
+    visible:
+      text: "Pumping"
+    timeout: 3000
+
+# Stop timer
+- tapOn:
+    id: "stop-timer-button"
+
+# Enter volume (volume input appears after stopping)
+- tapOn:
+    id: "volume-input"
+- inputText: "90"
+
+# Dismiss keyboard before save
+- tapOn:
+    id: "dismiss-keyboard"
+
+# Save
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "home-screen"

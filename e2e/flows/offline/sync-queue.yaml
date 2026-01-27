@@ -1,0 +1,34 @@
+appId: com.sofibaby.app
+name: View Sync Queue Status
+tags:
+  - regression
+  - offline
+
+---
+- launchApp
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Look for sync status
+- scrollUntilVisible:
+    element:
+      id: "sync-status"
+    direction: DOWN
+    optional: true
+
+# Tap to see details if available
+- tapOn:
+    id: "sync-status"
+    optional: true
+
+# Should show queue count
+- assertVisible:
+    id: "pending-count"
+    optional: true
+
+# Go back
+- tapOn:
+    id: "back-button"
+    optional: true

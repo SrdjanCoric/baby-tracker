@@ -1,14 +1,28 @@
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Text, View, useColorScheme, Platform } from "react-native";
+import { Text, View, useColorScheme, Platform, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SURFACE, TEXT, ACTION, BORDER } from "@/constants/colors";
+import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 
 type TabIconProps = {
   name: string;
   focused: boolean;
   isDark: boolean;
 };
+
+function TabButton({ testID, onPress, onLongPress, style, children }: BottomTabBarButtonProps & { testID?: string }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={style}
+      testID={testID}
+    >
+      {children}
+    </Pressable>
+  );
+}
 
 function TabIcon({ name, focused, isDark }: TabIconProps) {
   const iconSymbols: Record<string, string> = {
@@ -87,6 +101,7 @@ export default function TabLayout() {
           title: t("navigation.home"),
           headerShown: false,
           tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} isDark={isDark} />,
+          tabBarButton: (props) => <TabButton {...props} testID="home-tab" />,
         }}
       />
       <Tabs.Screen
@@ -96,6 +111,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon name="timeline" focused={focused} isDark={isDark} />
           ),
+          tabBarButton: (props) => <TabButton {...props} testID="timeline-tab" />,
         }}
       />
       <Tabs.Screen
@@ -105,6 +121,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon name="statistics" focused={focused} isDark={isDark} />
           ),
+          tabBarButton: (props) => <TabButton {...props} testID="stats-tab" />,
         }}
       />
       {/* Hide unused screens */}

@@ -1,0 +1,54 @@
+appId: com.sofibaby.app
+name: Rapid Navigation Stability
+tags:
+  - regression
+  - edge-cases
+
+---
+- launchApp
+
+# Rapidly switch between tabs
+- tapOn:
+    id: "home-tab"
+- tapOn:
+    id: "timeline-tab"
+- tapOn:
+    id: "stats-tab"
+- tapOn:
+    id: "home-tab"
+- tapOn:
+    id: "timeline-tab"
+- tapOn:
+    id: "home-tab"
+
+# App should still be stable
+- assertVisible:
+    id: "home-screen"
+
+# Rapidly navigate into and out of activities
+- tapOn:
+    id: "feeding-card"
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "sleep-card"
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "diaper-card"
+- tapOn:
+    id: "back-button"
+
+# Still stable
+- assertVisible:
+    id: "home-screen"
+
+# Navigate to settings and back
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "back-button"
+    optional: true
+
+- assertVisible:
+    id: "home-screen"

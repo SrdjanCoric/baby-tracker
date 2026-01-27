@@ -1,0 +1,44 @@
+appId: com.sofibaby.app
+name: Night Sleep Manual Entry
+tags:
+  - regression
+  - activities
+  - sleep
+
+---
+- launchApp
+
+- tapOn:
+    id: "sleep-card"
+
+# Select night sleep type
+- tapOn:
+    id: "type-night"
+
+# Use manual entry instead of timer
+- tapOn:
+    id: "manual-entry-toggle"
+    optional: true
+
+# Set start time (if date picker available)
+- tapOn:
+    id: "start-time-picker"
+    optional: true
+- tapOn:
+    text: "Confirm"
+    optional: true
+
+# Set end time
+- tapOn:
+    id: "end-time-picker"
+    optional: true
+- tapOn:
+    text: "Confirm"
+    optional: true
+
+# Save
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "home-screen"
