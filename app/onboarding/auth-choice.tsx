@@ -49,6 +49,7 @@ export default function AuthChoiceScreen() {
       className="flex-1"
       style={{ backgroundColor: isDark ? SURFACE.dark.background : SURFACE.light.background }}
       edges={["top", "bottom"]}
+      testID="auth-choice-screen"
     >
       {/* Skip button */}
       <View className="absolute top-4 right-4 z-10">
@@ -57,6 +58,7 @@ export default function AuthChoiceScreen() {
           className="py-2 px-4 active:opacity-70"
           accessibilityRole="button"
           accessibilityLabel={t("common.skip")}
+          testID="skip-button"
         >
           <Text
             className="text-base font-medium"
@@ -111,6 +113,7 @@ export default function AuthChoiceScreen() {
             className="rounded-2xl py-5 mb-4 active:scale-[0.98]"
             style={{ backgroundColor: ACTION.light.primaryHover }}
             accessibilityRole="button"
+            testID="sign-in-button"
           >
             <View className="flex-row items-center justify-center">
               <Ionicons name="log-in-outline" size={22} color="#FFFFFF" style={{ marginRight: 10 }} />
@@ -163,6 +166,7 @@ export default function AuthChoiceScreen() {
               borderColor: isDark ? BORDER.dark.default : BORDER.light.subtle,
             }}
             accessibilityRole="button"
+            testID="continue-as-guest-button"
           >
             <View className="flex-row items-center justify-center">
               <View

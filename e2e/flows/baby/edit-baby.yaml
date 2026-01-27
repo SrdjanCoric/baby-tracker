@@ -1,0 +1,35 @@
+appId: com.sofibaby.app
+name: Edit Baby Details
+tags:
+  - regression
+  - baby
+
+---
+- launchApp
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Tap on baby to edit
+- tapOn:
+    id: "edit-baby-button"
+    optional: true
+
+# Or tap baby name
+- tapOn:
+    id: "baby-settings"
+    optional: true
+
+# Change name
+- tapOn:
+    id: "baby-name-input"
+- eraseText
+- inputText: "Updated Baby Name"
+
+# Save
+- tapOn:
+    id: "save-button"
+
+# Verify change
+- assertVisible: "Updated Baby Name"

@@ -1,0 +1,39 @@
+appId: com.sofibaby.app
+name: Add Second Baby
+tags:
+  - regression
+  - baby
+
+---
+- launchApp
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Find add baby option
+- scrollUntilVisible:
+    element:
+      id: "add-baby-button"
+    direction: DOWN
+
+- tapOn:
+    id: "add-baby-button"
+
+# Fill in baby details
+- tapOn:
+    id: "baby-name-input"
+- inputText: "Second E2E Baby"
+
+# Select gender if available
+- tapOn:
+    id: "gender-male"
+    optional: true
+
+# Save
+- tapOn:
+    id: "save-button"
+
+# Should return to settings
+- assertVisible:
+    id: "settings-screen"

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Pressable, Text, TextInput, View, ScrollView } from "react-native";
+import { Pressable, Text, TextInput, View, ScrollView, Keyboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -103,9 +103,13 @@ export default function GrowthScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header with drag handle */}
-      <View className="items-center pt-2 pb-3">
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="growth-screen">
+      {/* Header with drag handle - tappable to dismiss keyboard */}
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="items-center pt-2 pb-3"
+        testID="dismiss-keyboard"
+      >
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
           {t("growth.logMeasurement")}
@@ -113,12 +117,14 @@ export default function GrowthScreen() {
         <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
           {selectedBaby.name}
         </Text>
-      </View>
+      </Pressable>
 
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
         showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
       >
         {/* Illustration/Icon */}
         <View className="items-center mb-4">
@@ -171,6 +177,7 @@ export default function GrowthScreen() {
                 keyboardType="decimal-pad"
                 className="flex-1 h-14 px-4 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-lg text-content-primary dark:text-content-dark-primary"
                 placeholderTextColor="#999"
+                testID="weight-input"
               />
               <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
                 {weightUnit}
@@ -197,6 +204,7 @@ export default function GrowthScreen() {
                 keyboardType="decimal-pad"
                 className="flex-1 h-14 px-4 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-lg text-content-primary dark:text-content-dark-primary"
                 placeholderTextColor="#999"
+                testID="height-input"
               />
               <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
                 {heightUnit}
@@ -223,6 +231,7 @@ export default function GrowthScreen() {
                 keyboardType="decimal-pad"
                 className="flex-1 h-14 px-4 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-lg text-content-primary dark:text-content-dark-primary"
                 placeholderTextColor="#999"
+                testID="head-input"
               />
               <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
                 {heightUnit}
@@ -278,6 +287,7 @@ export default function GrowthScreen() {
           style={{ backgroundColor: GROWTH_TEAL }}
           accessibilityRole="button"
           accessibilityLabel={t("growth.saveMeasurement")}
+          testID="save-button"
         >
           <Text className="text-xl font-semibold" style={{ color: buttonTextColor }}>
             {isSaving ? t("common.loading") : t("growth.saveMeasurement")}

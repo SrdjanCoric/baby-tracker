@@ -1,0 +1,28 @@
+appId: com.sofibaby.app
+name: Switch Between Babies
+tags:
+  - regression
+  - baby
+
+---
+# Assumes multiple babies exist
+- launchApp
+
+- assertVisible:
+    id: "home-screen"
+
+# Tap baby switcher (usually in header)
+- tapOn:
+    id: "baby-switcher"
+
+# Should show baby list
+- assertVisible:
+    id: "baby-list"
+
+# Select different baby
+- tapOn:
+    id: "baby-item"
+
+# Home screen should update with new baby
+- assertVisible:
+    id: "home-screen"

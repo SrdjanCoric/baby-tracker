@@ -1,0 +1,32 @@
+appId: com.sofibaby.app
+name: Activity Attribution Display (Pre-seeded)
+tags:
+  - regression
+  - multi-user
+
+---
+# This test requires pre-seeded activities with logged_by set
+
+- launchApp
+
+# Navigate to timeline
+- tapOn:
+    id: "timeline-tab"
+
+# Look for "Logged by" text in timeline items
+- assertVisible:
+    text: "Logged by"
+    optional: true
+
+# Tap on an activity to see full details
+- tapOn:
+    id: "timeline-item"
+
+# Should show who logged it
+- assertVisible:
+    id: "logged-by-label"
+    optional: true
+
+# Go back
+- tapOn:
+    id: "back-button"

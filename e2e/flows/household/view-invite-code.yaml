@@ -1,0 +1,21 @@
+appId: com.sofibaby.app
+name: View Invite Code
+tags:
+  - household
+  - requires-signin
+
+---
+# Note: This test requires the user to be signed in
+# Skip in CI until E2E authentication is implemented
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Open household settings
+- tapOn:
+    id: "household-settings"
+
+# Verify invite code is visible
+- assertVisible:
+    id: "invite-code"

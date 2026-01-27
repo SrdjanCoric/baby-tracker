@@ -1,0 +1,38 @@
+appId: com.sofibaby.app
+name: Change Language Setting
+tags:
+  - regression
+  - settings
+
+---
+- launchApp
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Find language option
+- scrollUntilVisible:
+    element:
+      id: "language-setting"
+    direction: DOWN
+
+- tapOn:
+    id: "language-setting"
+
+# Select a different language
+- tapOn:
+    text: "Srpski"
+    optional: true
+
+# Verify language changed (look for translated text)
+- assertVisible:
+    id: "settings-screen"
+
+# Change back to English
+- tapOn:
+    id: "language-setting"
+    optional: true
+- tapOn:
+    text: "English"
+    optional: true

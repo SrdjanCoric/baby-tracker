@@ -1,0 +1,35 @@
+appId: com.sofibaby.app
+name: Edit Activity from Timeline
+tags:
+  - regression
+  - timeline
+
+---
+- launchApp
+
+# Navigate to timeline
+- tapOn:
+    id: "timeline-tab"
+
+# Tap on first activity item
+- tapOn:
+    id: "timeline-item"
+
+# Should open edit screen
+- assertVisible:
+    id: "edit-activity-screen"
+    optional: true
+
+# Make a change (if possible)
+- tapOn:
+    id: "notes-input"
+    optional: true
+- inputText: "E2E test note"
+
+# Save changes
+- tapOn:
+    id: "save-button"
+
+# Return to timeline
+- assertVisible:
+    id: "timeline-screen"

@@ -1,0 +1,37 @@
+appId: com.sofibaby.app
+name: Tummy Time Timer Flow
+tags:
+  - smoke
+  - activities
+  - tummy-time
+
+---
+- launchApp
+
+- assertVisible:
+    id: "home-screen"
+
+# Tap tummy time card
+- tapOn:
+    id: "tummyTime-card"
+
+# Verify tummy time screen
+- assertVisible:
+    id: "tummy-time-screen"
+
+# Start timer
+- tapOn:
+    id: "start-timer-button"
+
+# Verify timer is running by checking for stop button
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+# Stop timer (this automatically saves and goes back)
+- tapOn:
+    id: "stop-timer-button"
+
+- assertVisible:
+    id: "home-screen"

@@ -11,6 +11,7 @@ interface SettingsRowProps {
   onPress?: () => void;
   showChevron?: boolean;
   danger?: boolean;
+  testID?: string;
 }
 
 function SettingsRow({
@@ -20,12 +21,14 @@ function SettingsRow({
   onPress,
   showChevron = true,
   danger = false,
+  testID,
 }: SettingsRowProps) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
       accessibilityRole="button"
+      testID={testID}
     >
       <Text className="text-xl mr-3">{icon}</Text>
       <Text
@@ -176,6 +179,7 @@ export default function SettingsScreen() {
             icon="👨‍👩‍👧"
             label={t("household.familySharing")}
             onPress={() => router.push("/settings/household")}
+            testID="household-settings"
           />
         </SettingsSection>
 

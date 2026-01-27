@@ -439,7 +439,7 @@ export default function TimelineScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]} testID="timeline-screen">
       {/* Filter tabs */}
       <ActivityFilterTabs
         activeFilter={activeFilter}
@@ -485,6 +485,7 @@ export default function TimelineScreen() {
                   loggedBy={item.loggedBy}
                   isLast={index === group.entries.length - 1}
                   onPress={() => handleEditEntry(item.activity, item.id)}
+                  testID="timeline-item"
                 />
               ))}
             </View>
@@ -507,6 +508,7 @@ export default function TimelineScreen() {
             icon="📋"
             title={t("timeline.noEntries")}
             description={t("timeline.startTracking")}
+            testID="empty-timeline"
           />
         </ScrollView>
       )}

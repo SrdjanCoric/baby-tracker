@@ -1,0 +1,16 @@
+appId: com.sofibaby.app
+name: SofiBaby E2E Tests
+
+env:
+  E2E_TEST_EMAIL: "e2e-test@test.local"
+  E2E_TEST_PASSWORD: "testpassword123"
+  E2E_OWNER_EMAIL: "e2e-owner@test.local"
+  E2E_MEMBER_EMAIL: "e2e-member@test.local"
+  E2E_INVITE_CODE: "E2E1TEST"
+
+onFlowStart:
+  - clearState
+
+tags:
+  - e2e
+  - baby-tracker

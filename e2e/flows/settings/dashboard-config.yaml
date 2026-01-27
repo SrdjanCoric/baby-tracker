@@ -1,0 +1,46 @@
+appId: com.sofibaby.app
+name: Configure Dashboard Cards
+tags:
+  - regression
+  - settings
+
+---
+- launchApp
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Find dashboard config
+- scrollUntilVisible:
+    element:
+      id: "dashboard-config"
+    direction: DOWN
+
+- tapOn:
+    id: "dashboard-config"
+
+# Toggle a feature off
+- tapOn:
+    id: "toggle-pumping"
+    optional: true
+
+# Go back to home
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "home-tab"
+
+# Verify pumping card is hidden
+- assertNotVisible:
+    id: "pumping-card"
+    optional: true
+
+# Re-enable the feature
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "dashboard-config"
+- tapOn:
+    id: "toggle-pumping"
+    optional: true

@@ -1,0 +1,35 @@
+appId: com.sofibaby.app
+name: Breastfeeding Timer Flow
+tags:
+  - smoke
+  - activities
+  - feeding
+
+---
+- launchApp
+
+- assertVisible:
+    id: "home-screen"
+
+- tapOn:
+    id: "feeding-card"
+
+- assertVisible:
+    id: "feeding-screen"
+
+- tapOn:
+    id: "type-breast"
+
+- tapOn:
+    id: "start-left-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+- tapOn:
+    id: "stop-timer-button"
+
+- assertVisible:
+    id: "home-screen"

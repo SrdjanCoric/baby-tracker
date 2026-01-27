@@ -140,6 +140,7 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
               isDark ? "text-content-dark-primary" : "text-content-primary"
             }`}
             numberOfLines={1}
+            testID="selected-baby-name"
           >
             {selectedBaby.name}
           </Text>

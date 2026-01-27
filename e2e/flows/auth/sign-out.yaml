@@ -1,0 +1,31 @@
+appId: com.sofibaby.app
+name: Sign Out Flow
+tags:
+  - regression
+  - auth
+
+---
+# Assumes app is already authenticated with a baby set up
+- launchApp
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Scroll to sign out
+- scrollUntilVisible:
+    element:
+      id: "sign-out-button"
+    direction: DOWN
+
+- tapOn:
+    id: "sign-out-button"
+
+# Confirm sign out if dialog appears
+- tapOn:
+    text: "Sign out"
+    optional: true
+
+# Should return to welcome screen
+- assertVisible:
+    id: "welcome-screen"

@@ -1,0 +1,26 @@
+appId: com.sofibaby.app
+name: Debug Bottle Form
+---
+- launchApp
+
+- assertVisible:
+    id: "home-screen"
+
+- tapOn:
+    id: "feeding-card"
+
+- tapOn:
+    id: "type-bottle"
+
+- tapOn:
+    id: "content-formula"
+
+- tapOn:
+    id: "quick-amount-120"
+
+- hideKeyboard
+
+# Pause here - run "maestro hierarchy" in another terminal
+- inputText: "PAUSED - check hierarchy"
+  id: "nonexistent-field"
+  optional: true
