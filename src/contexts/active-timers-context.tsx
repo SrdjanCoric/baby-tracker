@@ -138,6 +138,12 @@ export function ActiveTimersProvider({
       return;
     }
 
+    // Skip API call for guest users (no valid auth)
+    if (!user?.id) {
+      dispatch({ type: "SET_LOCKS", locks: [] });
+      return;
+    }
+
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const locks = await getActiveTimersForBaby(selectedBaby.id);
@@ -146,7 +152,7 @@ export function ActiveTimersProvider({
       console.error("[ActiveTimersContext] Failed to load locks:", error);
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [selectedBaby?.id]);
+  }, [selectedBaby?.id, user?.id]);
 
   useEffect(() => {
     refreshLocks();

@@ -755,6 +755,7 @@ export default function StatisticsScreen() {
               icon="📊"
               title={t("statistics.noDataThisWeek")}
               compact
+              testID="empty-stats"
             />
           </View>
         )}
