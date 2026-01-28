@@ -6,7 +6,7 @@ tags:
   - feeding
 
 ---
-- launchApp
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
 - tapOn:
     id: "feeding-card"
@@ -15,19 +15,9 @@ tags:
 - tapOn:
     id: "type-solids"
 
-# Select food items
+# Select a common food
 - tapOn:
-    id: "food-fruits"
-    optional: true
-
-- tapOn:
-    id: "food-vegetables"
-    optional: true
-
-# Add reaction/notes if available
-- tapOn:
-    id: "reaction-liked"
-    optional: true
+    text: "Banana"
 
 # Save solids feeding
 - tapOn:

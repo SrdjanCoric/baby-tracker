@@ -5,24 +5,22 @@ tags:
   - timeline
 
 ---
-- launchApp
+- runFlow: ../../helpers/setup-with-activity.yaml
 
-# Navigate to timeline
 - tapOn:
     id: "timeline-tab"
 
-# Tap on activity item
+- assertVisible:
+    id: "timeline-screen"
+
 - tapOn:
     id: "timeline-item"
 
-# Tap delete button
 - tapOn:
     id: "delete-button"
 
-# Confirm deletion
 - tapOn:
-    text: "Delete"
+    text: "Confirm"
 
-# Return to timeline
 - assertVisible:
     id: "timeline-screen"

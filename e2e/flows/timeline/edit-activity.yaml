@@ -5,31 +5,30 @@ tags:
   - timeline
 
 ---
-- launchApp
+- runFlow: ../../helpers/setup-with-activity.yaml
 
-# Navigate to timeline
 - tapOn:
     id: "timeline-tab"
 
-# Tap on first activity item
+- assertVisible:
+    id: "timeline-screen"
+
 - tapOn:
     id: "timeline-item"
 
-# Should open edit screen
 - assertVisible:
     id: "edit-activity-screen"
     optional: true
 
-# Make a change (if possible)
 - tapOn:
     id: "notes-input"
     optional: true
 - inputText: "E2E test note"
+- tapOn:
+    id: "dismiss-keyboard"
 
-# Save changes
 - tapOn:
     id: "save-button"
 
-# Return to timeline
 - assertVisible:
     id: "timeline-screen"

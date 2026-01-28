@@ -6,7 +6,7 @@ tags:
   - diaper
 
 ---
-- launchApp
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
 - tapOn:
     id: "diaper-card"

@@ -5,8 +5,8 @@ tags:
   - requires-signin
 
 ---
-# Note: This test requires the user to be signed in
-# Skip in CI until E2E authentication is implemented
+# Sign in with E2E test user
+- runFlow: ../../helpers/login-e2e.yaml
 
 # Navigate to settings
 - tapOn:
@@ -18,4 +18,4 @@ tags:
 
 # Verify invite code is visible
 - assertVisible:
-    id: "invite-code"
+    id: "invite-code-display"

@@ -1,44 +1,29 @@
 appId: com.sofibaby.app
-name: Night Sleep Manual Entry
+name: Night Sleep Timer Flow
 tags:
   - regression
   - activities
   - sleep
 
 ---
-- launchApp
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
 - tapOn:
     id: "sleep-card"
 
-# Select night sleep type
+- assertVisible:
+    id: "sleep-screen"
+
 - tapOn:
     id: "type-night"
 
-# Use manual entry instead of timer
-- tapOn:
-    id: "manual-entry-toggle"
-    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
 
-# Set start time (if date picker available)
 - tapOn:
-    id: "start-time-picker"
-    optional: true
-- tapOn:
-    text: "Confirm"
-    optional: true
-
-# Set end time
-- tapOn:
-    id: "end-time-picker"
-    optional: true
-- tapOn:
-    text: "Confirm"
-    optional: true
-
-# Save
-- tapOn:
-    id: "save-button"
+    id: "stop-timer-button"
 
 - assertVisible:
     id: "home-screen"

@@ -6,10 +6,7 @@ tags:
   - pumping
 
 ---
-- launchApp
-
-- assertVisible:
-    id: "home-screen"
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
 # Tap pumping card
 - tapOn:

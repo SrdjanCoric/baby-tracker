@@ -6,10 +6,7 @@ tags:
   - feeding
 
 ---
-- launchApp
-
-- assertVisible:
-    id: "home-screen"
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
 # Tap feeding card
 - tapOn:

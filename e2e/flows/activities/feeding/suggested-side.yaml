@@ -6,31 +6,54 @@ tags:
   - feeding
 
 ---
-- launchApp
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
+# First do a feeding to establish a suggested side
 - tapOn:
     id: "feeding-card"
 
-# Select breastfeeding
 - tapOn:
     id: "type-breast"
 
-# Check for suggested side indicator
-- assertVisible:
-    id: "suggested-side-indicator"
-    optional: true
-
-# The suggested side should be highlighted or indicated
-- assertVisible:
-    id: "suggested-side-left"
-    optional: true
-
-# Or check for text indication
-- assertVisible:
-    text: "Start"
-    optional: true
-
-# Go back
 - tapOn:
-    id: "back-button"
-    optional: true
+    id: "start-left-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+- tapOn:
+    id: "stop-timer-button"
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 5000
+
+# Now go back to feeding to verify suggested side shows
+- tapOn:
+    id: "feeding-card"
+
+- tapOn:
+    id: "type-breast"
+
+# Verify suggested badge is visible
+- assertVisible:
+    id: "suggested-side-badge"
+
+# Complete by starting and stopping on suggested side
+- tapOn:
+    id: "start-right-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+- tapOn:
+    id: "stop-timer-button"
+
+- assertVisible:
+    id: "home-screen"
