@@ -1,0 +1,31 @@
+appId: com.sofibaby.app
+
+---
+# Launch app with E2E auto-login
+- launchApp:
+    clearState: true
+    arguments:
+      e2eMode: "true"
+      e2eEmail: "e2e-test@test.local"
+      e2ePassword: "testpassword123"
+
+# Handle Display Name prompt if it appears (for new users)
+- runFlow:
+    when:
+      visible: "What should we call you?"
+    commands:
+      - tapOn:
+          text: "What should we call you?"
+      - inputText: "E2E Tester"
+      - tapOn: "Continue"
+
+# Skip onboarding if it appears
+- tapOn:
+    text: "Skip"
+    optional: true
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
