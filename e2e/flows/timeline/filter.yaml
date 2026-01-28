@@ -5,40 +5,28 @@ tags:
   - timeline
 
 ---
-- launchApp
+- runFlow: ../../helpers/setup-with-activity.yaml
 
-# Navigate to timeline tab
 - tapOn:
     id: "timeline-tab"
 
-# Open filter
-- tapOn:
-    id: "filter-button"
-
-# Select feeding filter
-- tapOn:
-    id: "filter-feeding"
-
-# Apply filter
-- tapOn:
-    id: "apply-filter"
-    optional: true
-
-# Should only show feedings
 - assertVisible:
     id: "timeline-screen"
 
-# Clear filter
-- tapOn:
-    id: "filter-button"
-- tapOn:
-    id: "clear-filter"
-    optional: true
+- swipe:
+    start: 90%, 15%
+    end: 10%, 15%
 
-# Select sleep filter
+- extendedWaitUntil:
+    visible:
+      id: "filter-tummyTime"
+    timeout: 3000
+
 - tapOn:
-    id: "filter-button"
-    optional: true
-- tapOn:
-    id: "filter-sleep"
-    optional: true
+    id: "filter-tummyTime"
+
+- assertVisible:
+    id: "timeline-screen"
+
+- assertVisible:
+    id: "timeline-item"

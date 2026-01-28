@@ -5,25 +5,35 @@ tags:
   - baby
 
 ---
-- launchApp
 
-# Navigate to settings
-- tapOn:
-    id: "settings-button"
-
-# Find add baby option
-- scrollUntilVisible:
-    element:
-      id: "add-baby-button"
-    direction: DOWN
+- runFlow: ../../helpers/setup-with-baby.yaml
 
 - tapOn:
-    id: "add-baby-button"
+    id: "selected-baby-name"
 
-# Fill in baby details
+
+- assertVisible:
+    text: "Add Another Baby"
+
+# If the button is below the fold, try scrolling                                                                                                                                     
+  
+- swipe: 
+    start: 50%, 80%
+    end: 50%, 40% 
+
+- tapOn:
+    text: "Add Another Baby"
+
+# Enter baby name
 - tapOn:
     id: "baby-name-input"
 - inputText: "Second E2E Baby"
+
+# Dismiss keyboard
+- hideKeyboard
+
+# Fill in baby details
+
 
 # Select gender if available
 - tapOn:
@@ -32,8 +42,8 @@ tags:
 
 # Save
 - tapOn:
-    id: "save-button"
+    id: "save-baby-button"
 
-# Should return to settings
+# Should return to home screen
 - assertVisible:
-    id: "settings-screen"
+    id: "home-screen"

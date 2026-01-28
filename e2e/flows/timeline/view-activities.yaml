@@ -5,27 +5,24 @@ tags:
   - timeline
 
 ---
-- launchApp
+- runFlow: ../../helpers/setup-with-activity.yaml
 
-# Navigate to timeline tab
+- assertVisible:
+    id: "timeline-tab"
+
 - tapOn:
     id: "timeline-tab"
 
-# Verify timeline screen
 - assertVisible:
     id: "timeline-screen"
 
-# Should see activity items (if data is seeded)
 - assertVisible:
     id: "timeline-item"
-    optional: true
 
-# Scroll down to see more
 - swipe:
     direction: UP
     duration: 500
 
-# Scroll back up
 - swipe:
     direction: DOWN
     duration: 500

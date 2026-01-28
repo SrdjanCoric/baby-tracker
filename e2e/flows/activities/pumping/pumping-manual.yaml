@@ -6,28 +6,26 @@ tags:
   - pumping
 
 ---
-- launchApp
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
 - tapOn:
     id: "pumping-card"
 
-# Select side
 - tapOn:
-    id: "side-left"
-    optional: true
+    id: "log-past-pumping-button"
 
-# Enter volume without timer
+- tapOn:
+    id: "duration-input"
+- inputText: "15"
+- tapOn:
+    id: "dismiss-keyboard"
+
 - tapOn:
     id: "volume-input"
 - inputText: "120"
-
-# Set duration manually if available
 - tapOn:
-    id: "duration-input"
-    optional: true
-- inputText: "15"
+    id: "dismiss-keyboard"
 
-# Save
 - tapOn:
     id: "save-button"
 

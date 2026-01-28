@@ -5,8 +5,8 @@ tags:
   - auth
 
 ---
-# Assumes app is already authenticated with a baby set up
-- launchApp
+# Sign in with E2E test user
+- runFlow: ../../helpers/login-e2e.yaml
 
 # Navigate to settings
 - tapOn:
@@ -21,11 +21,12 @@ tags:
 - tapOn:
     id: "sign-out-button"
 
-# Confirm sign out if dialog appears
-- tapOn:
-    text: "Sign out"
-    optional: true
+# Confirm sign out in alert dialog
+- tapOn: "Confirm"
 
-# Should return to welcome screen
+# Wait for UI to update after sign out
+- waitForAnimationToEnd
+
+# Verify signed out - the sign-in-to-sync button should appear
 - assertVisible:
-    id: "welcome-screen"
+    id: "sign-in-to-sync"

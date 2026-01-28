@@ -6,40 +6,23 @@ tags:
   - growth
 
 ---
-- launchApp
-
-# Navigate to stats tab
-- tapOn:
-    id: "stats-tab"
-
-# Find and tap growth card
-- scrollUntilVisible:
-    element:
-      id: "growth-stats-card"
-    direction: DOWN
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
 - tapOn:
-    id: "growth-stats-card"
+    id: "growth-card"
 
-# Verify charts screen
+- assertVisible:
+    id: "growth-screen"
+
+- tapOn:
+    id: "view-charts-button"
+
 - assertVisible:
     id: "growth-charts-screen"
 
-# Check weight chart
+- swipe:
+    direction: DOWN
+    duration: 500
+
 - assertVisible:
-    id: "weight-chart"
-    optional: true
-
-# Check height chart
-- tapOn:
-    id: "height-chart-tab"
-    optional: true
-
-# Check head chart
-- tapOn:
-    id: "head-chart-tab"
-    optional: true
-
-# Go back
-- tapOn:
-    id: "back-button"
+    id: "home-screen"

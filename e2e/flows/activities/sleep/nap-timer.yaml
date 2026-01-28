@@ -6,10 +6,7 @@ tags:
   - sleep
 
 ---
-- launchApp
-
-- assertVisible:
-    id: "home-screen"
+- runFlow: ../../../helpers/setup-with-baby.yaml
 
 - tapOn:
     id: "sleep-card"
