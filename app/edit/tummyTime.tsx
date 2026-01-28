@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, Keyboard, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
@@ -113,7 +113,7 @@ export default function EditTummyTimeScreen() {
       [
         { text: t("common.cancel"), style: "cancel" },
         {
-          text: t("common.delete"),
+          text: t("common.confirm"),
           style: "destructive",
           onPress: async () => {
             await deleteTummyTime(tummyTime.id);
@@ -135,9 +135,13 @@ export default function EditTummyTimeScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3">
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="edit-activity-screen">
+      {/* Header - tappable to dismiss keyboard */}
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="flex-row items-center px-4 py-3"
+        testID="dismiss-keyboard"
+      >
         <Pressable
           onPress={handleBack}
           className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
@@ -159,10 +163,11 @@ export default function EditTummyTimeScreen() {
           className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
           accessibilityRole="button"
           accessibilityLabel={t("common.delete")}
+          testID="delete-button"
         >
           <Text className="text-2xl">🗑️</Text>
         </Pressable>
-      </View>
+      </Pressable>
 
       <ScrollView
         className="flex-1"
@@ -218,6 +223,7 @@ export default function EditTummyTimeScreen() {
             className="h-24 px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
             placeholderTextColor="#999"
             textAlignVertical="top"
+            testID="notes-input"
           />
         </View>
       </ScrollView>
@@ -233,6 +239,7 @@ export default function EditTummyTimeScreen() {
           style={{ backgroundColor: TUMMY_TIME_ORANGE }}
           accessibilityRole="button"
           accessibilityLabel={t("common.save")}
+          testID="save-button"
         >
           <Text className="text-white text-lg font-semibold">
             {isSaving ? t("common.loading") : t("common.save")}

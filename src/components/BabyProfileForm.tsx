@@ -188,6 +188,7 @@ function BabyProfileForm({
           label={t("baby.babyName")}
           placeholder={t("baby.babyNamePlaceholder")}
           value={name}
+          testID="baby-name-input"
           onChangeText={(text) => {
             setName(text);
             if (touched.name) {
@@ -236,6 +237,7 @@ function BabyProfileForm({
             }
           `}
           accessibilityLabel={t("baby.selectBirthDate")}
+          testID="birth-date-picker"
         >
           <Text
             className={`text-base ${
@@ -278,6 +280,7 @@ function BabyProfileForm({
                     }
                     setShowDatePicker(false);
                   }}
+                  testID="birth-date-done-button"
                 >
                   {t("common.done")}
                 </Button>
@@ -320,6 +323,7 @@ function BabyProfileForm({
                 `}
                 accessibilityLabel={label}
                 accessibilityState={{ selected: isSelected }}
+                testID={`gender-${option.value}`}
               >
                 <Text className="text-2xl mb-1">{option.emoji}</Text>
                 <Text
@@ -348,6 +352,7 @@ function BabyProfileForm({
           onPress={handleSave}
           loading={isLoading}
           disabled={isLoading}
+          testID="save-baby-button"
         >
           {initialData ? t("baby.saveChanges") : t("baby.addBaby")}
         </Button>

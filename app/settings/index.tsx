@@ -97,7 +97,7 @@ export default function SettingsScreen() {
       [
         { text: t("common.cancel"), style: "cancel" },
         {
-          text: t("settings.signOut"),
+          text: t("common.confirm"),
           style: "destructive",
           onPress: async () => {
             await signOut();
@@ -214,6 +214,7 @@ export default function SettingsScreen() {
                 label={t("settings.signOut")}
                 onPress={handleSignOut}
                 showChevron={false}
+                testID="sign-out-button"
               />
               <SettingsDivider />
               <SettingsRow
@@ -229,6 +230,7 @@ export default function SettingsScreen() {
                 icon="☁️"
                 label={t("auth.signInToSync")}
                 onPress={handleSignIn}
+                testID="sign-in-to-sync"
               />
               <Text className="px-4 py-2 text-sm text-content-tertiary dark:text-content-dark-tertiary">
                 {t("auth.signInToSyncDescription")}

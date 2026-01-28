@@ -138,7 +138,7 @@ export default function ManualSleepScreen() {
         durationSeconds,
         notes: notes || undefined,
       });
-      router.back();
+      router.replace("/(tabs)");
     } finally {
       setIsSaving(false);
     }

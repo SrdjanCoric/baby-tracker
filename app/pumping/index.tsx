@@ -281,6 +281,7 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
         style={{ backgroundColor: PUMPING_BLUE_MUTED }}
         accessibilityRole="button"
         accessibilityLabel={t("pumping.logPastPumping")}
+        testID="log-past-pumping-button"
       >
         <Text className="text-base font-medium" style={{ color: PUMPING_BLUE }}>
           {t("pumping.logPastPumping")}
