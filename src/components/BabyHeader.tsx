@@ -57,6 +57,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
             className="flex-row items-center active:opacity-70 flex-1"
             accessibilityRole="button"
             accessibilityLabel={t("baby.addFirstBaby")}
+            testID="add-baby-button"
           >
             <View className={`${isAndroid ? "w-10 h-10 mr-2" : "w-12 h-12 mr-3"} rounded-full bg-action-primary/20 dark:bg-action-dark-primary/30 items-center justify-center flex-shrink-0`}>
               <Text className={`${isAndroid ? "text-xl" : "text-2xl"} text-action-primary dark:text-action-dark-primary font-bold`}>+</Text>

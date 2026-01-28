@@ -288,7 +288,7 @@ export default function ManualFeedingScreen() {
           durationSeconds,
           notes: notes || undefined,
         });
-        router.back();
+        router.replace("/(tabs)");
       } finally {
         setIsSaving(false);
       }
@@ -315,7 +315,7 @@ export default function ManualFeedingScreen() {
           startedAt: startTime,
           notes: notes || undefined,
         });
-        router.back();
+        router.replace("/(tabs)");
       } finally {
         setIsSaving(false);
       }
@@ -336,7 +336,7 @@ export default function ManualFeedingScreen() {
           startedAt: startTime,
           notes: notes || undefined,
         });
-        router.back();
+        router.replace("/(tabs)");
       } finally {
         setIsSaving(false);
       }

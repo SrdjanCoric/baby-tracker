@@ -376,7 +376,7 @@ function SideButton({ side, label, shortLabel, isSuggested, onPress, accentColor
         {label}
       </Text>
       {isSuggested && (
-        <View className="bg-white/20 px-2 py-0.5 rounded-pill mt-1">
+        <View className="bg-white/20 px-2 py-0.5 rounded-pill mt-1" testID="suggested-side-badge">
           <Text className="text-xs font-semibold text-white">{t("feeding.suggested")}</Text>
         </View>
       )}

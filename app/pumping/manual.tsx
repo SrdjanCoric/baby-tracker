@@ -187,7 +187,7 @@ export default function ManualPumpingScreen() {
         volumeMl: volumeMl ?? undefined,
         notes: notes || undefined,
       });
-      router.back();
+      router.replace("/(tabs)");
     } finally {
       setIsSaving(false);
     }
@@ -232,8 +232,12 @@ export default function ManualPumpingScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3">
+      {/* Header - tappable to dismiss keyboard */}
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="flex-row items-center px-4 py-3"
+        testID="dismiss-keyboard"
+      >
         <Pressable
           onPress={handleBack}
           className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
@@ -251,7 +255,7 @@ export default function ManualPumpingScreen() {
           </Text>
         </View>
         <View className="w-touch" />
-      </View>
+      </Pressable>
 
       <ScrollView
         className="flex-1"
@@ -393,6 +397,7 @@ export default function ManualPumpingScreen() {
               keyboardType="number-pad"
               returnKeyType="done"
               accessibilityLabel={t("feeding.durationPlaceholder")}
+              testID="duration-input"
             />
             <Text
               className="text-lg font-medium ml-2"
@@ -446,6 +451,7 @@ export default function ManualPumpingScreen() {
               keyboardType="decimal-pad"
               returnKeyType="done"
               accessibilityLabel={t("pumping.enterVolume")}
+              testID="volume-input"
             />
             <Text className="text-lg font-medium ml-2" style={{ color: PUMPING_BLUE }}>
               {unit}
@@ -515,6 +521,7 @@ export default function ManualPumpingScreen() {
           accessibilityRole="button"
           accessibilityLabel={t("pumping.logManualPumping")}
           accessibilityState={{ disabled: !canSave || isSaving }}
+          testID="save-button"
         >
           <Text className="text-lg font-semibold text-white">
             {isSaving ? t("common.loading") : t("pumping.logManualPumping")}

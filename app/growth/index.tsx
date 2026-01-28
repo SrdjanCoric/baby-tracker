@@ -143,6 +143,7 @@ export default function GrowthScreen() {
           style={{ backgroundColor: GROWTH_TEAL_MUTED }}
           accessibilityRole="link"
           accessibilityLabel={t("growth.viewCharts")}
+          testID="view-charts-button"
         >
           <Text className="text-base font-medium" style={{ color: GROWTH_TEAL_DARK }}>
             📊 {t("growth.viewCharts")}

@@ -172,6 +172,7 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
         <Pressable
           className="flex-1 bg-black/50 justify-end"
           onPress={() => setIsOpen(false)}
+          accessible={false}
         >
           <Pressable
             className={`
@@ -179,6 +180,7 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
               ${isDark ? "bg-surface-dark" : "bg-surface"}
             `}
             onPress={(e) => e.stopPropagation()}
+            accessible={false}
           >
             <View className="items-center mb-4">
               <View className={`w-10 h-1 rounded-full ${isDark ? "bg-gray-700" : "bg-gray-300"}`} />
@@ -259,6 +261,8 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
                 ${isDark ? "border-gray-700" : "border-gray-200"}
               `}
               accessibilityLabel={t("baby.addAnotherBaby")}
+              testID="add-another-baby-button"
+              accessible={true}
             >
               <Text className="text-xl mr-2">➕</Text>
               <Text
