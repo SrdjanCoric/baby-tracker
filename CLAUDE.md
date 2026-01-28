@@ -136,8 +136,34 @@ Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Su
 
 - **Vitest**: Unit tests (`*.test.ts`) - runs in Node environment
 - **Jest**: Component tests (`*.component.test.tsx`) - uses jest-expo preset
+- **Maestro**: E2E tests in `e2e/` directory
 - Security tests in `src/__tests__/security/`
 - Integration tests in `src/__tests__/`
+
+### Maestro E2E Testing Patterns
+
+**Keyboard Dismissal:**
+To dismiss the keyboard in Maestro tests, tap on an element with `testID="dismiss-keyboard"` rather than using Maestro's `hideKeyboard` command. Screens that have text inputs should wrap their header in a Pressable that calls `Keyboard.dismiss()`:
+```tsx
+<Pressable
+  onPress={() => Keyboard.dismiss()}
+  className="flex-row items-center px-4 py-3"
+  testID="dismiss-keyboard"
+>
+  {/* Header content */}
+</Pressable>
+```
+
+**Horizontal ScrollView Swiping:**
+To reveal items in a horizontal ScrollView (e.g., filter tabs), use swipe with specific coordinates:
+```yaml
+- swipe:
+    start: 90%, 15%    # Start from right side, at vertical position of scroll
+    end: 10%, 15%      # End at left side
+```
+
+**Loading States:**
+Ensure screens have consistent `testID` on both loading and loaded states, otherwise assertions may fail during loading.
 
 ## Code Style
 
