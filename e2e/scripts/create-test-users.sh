@@ -33,10 +33,24 @@ create_user() {
   if echo "$response" | jq -e '.id' > /dev/null 2>&1; then
     user_id=$(echo "$response" | jq -r '.id')
     echo "  Created: $user_id"
+
+    # Update display_name in public.users table
+    echo "  Setting display name..."
+    docker exec supabase_db_baby-tracker psql -U postgres -c \
+      "UPDATE public.users SET display_name = '$display_name' WHERE id = '$user_id';" > /dev/null 2>&1
+    echo "  Done"
   else
     error=$(echo "$response" | jq -r '.msg // .message // "Unknown error"')
     if [[ "$error" == *"already been registered"* ]]; then
       echo "  User already exists"
+      # Still try to update display name for existing user
+      existing_id=$(docker exec supabase_db_baby-tracker psql -U postgres -t -c \
+        "SELECT id FROM auth.users WHERE email = '$email';" 2>/dev/null | tr -d ' \n')
+      if [ -n "$existing_id" ]; then
+        docker exec supabase_db_baby-tracker psql -U postgres -c \
+          "UPDATE public.users SET display_name = '$display_name' WHERE id = '$existing_id';" > /dev/null 2>&1
+        echo "  Updated display name"
+      fi
     else
       echo "  Error: $error"
     fi
