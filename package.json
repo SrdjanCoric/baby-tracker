@@ -62,6 +62,7 @@
     "react-native": "0.81.5",
     "react-native-draggable-flatlist": "^4.0.3",
     "react-native-gesture-handler": "^2.30.0",
+    "react-native-launch-arguments": "^4.1.1",
     "react-native-quick-sqlite": "^8.2.7",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
