@@ -38,16 +38,7 @@ supabase start
 supabase db push
 ```
 
-After `supabase start`, note the **anon key** from the output. It may be labeled as:
-- `anon key` or
-- `service_role key` (use the `anon` one, not service_role)
-
-You can also get it by running:
-```bash
-supabase status
-```
-
-Look for the line showing `anon key: eyJ...` (a long JWT token).
+After `supabase start`, note the **anon key** from the output.
 
 ### 4. Configure Environment
 
@@ -63,30 +54,11 @@ cp .env.e2e.android .env
 
 Edit `.env` and replace `YOUR_LOCAL_ANON_KEY_HERE` with the anon key from step 3.
 
-**Quick setup (alternative):**
-```bash
-# Extract anon key and create .env automatically (iOS)
-ANON_KEY=$(supabase status | grep "anon key" | awk '{print $3}')
-sed "s/YOUR_LOCAL_ANON_KEY_HERE/$ANON_KEY/" .env.e2e > .env
-```
-
 ### 5. Build the App
 
-**iOS Prerequisites:**
-```bash
-# Install CocoaPods if not already installed
-sudo gem install cocoapods
-
-# If you get "pod: command not found" after install, add to PATH:
-export PATH="$PATH:$(gem environment gemdir)/bin"
-# Or restart your terminal
-```
-
-**Build:**
 ```bash
 # iOS
 npx expo prebuild --platform ios --clean
-cd ios && pod install && cd ..
 npx expo run:ios
 
 # Android
