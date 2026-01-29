@@ -66,6 +66,7 @@ export default function UnitsSettingsScreen() {
                 } active:opacity-80`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
+                testID={`units-${option.value}`}
               >
                 <Text className="text-2xl mr-4">{option.icon}</Text>
                 <View className="flex-1">
