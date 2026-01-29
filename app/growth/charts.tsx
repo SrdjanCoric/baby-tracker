@@ -161,7 +161,7 @@ export default function GrowthChartsScreen() {
   const hasNoData = activeMeasurements.length === 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="growth-charts-screen">
       {/* Header with drag handle */}
       <View className="items-center pt-2 pb-3">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />

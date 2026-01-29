@@ -1,0 +1,12 @@
+appId: com.sofibaby.app
+name: Multi-User Scenario Tests
+tags:
+  - multi-user
+
+---
+# Tests that require pre-seeded multi-user data
+# Run after seeding active_timers and activities with different users
+
+- runFlow: ../flows/multi-user/timer-lock-visibility.yaml
+- runFlow: ../flows/multi-user/activity-attribution.yaml
+- runFlow: ../flows/household/caregiver-management.yaml

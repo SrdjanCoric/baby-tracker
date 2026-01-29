@@ -46,3 +46,7 @@ yarn-error.*
 google-play-service-account.json
 google-services.json
 supabase/.temp/
+
+# E2E testing
+e2e-results.xml
+.maestro/

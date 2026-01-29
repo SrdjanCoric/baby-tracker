@@ -1,0 +1,39 @@
+appId: com.sofibaby.app
+name: Bottle Feeding Entry
+tags:
+  - smoke
+  - activities
+  - feeding
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+# Tap feeding card
+- tapOn:
+    id: "feeding-card"
+
+# Select bottle type
+- tapOn:
+    id: "type-bottle"
+
+# Select content type - Formula
+- tapOn:
+    id: "content-formula"
+
+# Use quick amount button instead of typing
+- tapOn:
+    id: "quick-amount-120"
+
+# Dismiss keyboard if open
+- hideKeyboard
+
+# Verify we can see the save button before tapping
+- assertVisible:
+    id: "save-bottle-button"
+
+# Save bottle feeding
+- tapOn:
+    id: "save-bottle-button"
+
+- assertVisible:
+    id: "home-screen"

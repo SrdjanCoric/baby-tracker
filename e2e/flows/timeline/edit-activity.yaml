@@ -1,0 +1,34 @@
+appId: com.sofibaby.app
+name: Edit Activity from Timeline
+tags:
+  - regression
+  - timeline
+
+---
+- runFlow: ../../helpers/setup-with-activity.yaml
+
+- tapOn:
+    id: "timeline-tab"
+
+- assertVisible:
+    id: "timeline-screen"
+
+- tapOn:
+    id: "timeline-item"
+
+- assertVisible:
+    id: "edit-activity-screen"
+    optional: true
+
+- tapOn:
+    id: "notes-input"
+    optional: true
+- inputText: "E2E test note"
+- tapOn:
+    id: "dismiss-keyboard"
+
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "timeline-screen"

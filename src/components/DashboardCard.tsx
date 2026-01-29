@@ -337,6 +337,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
               style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor }]}
               accessibilityRole="button"
               accessibilityLabel={isActive ? "Stop" : `Add ${label}`}
+              testID={testID ? `${testID}-action` : undefined}
             >
               <Text className={`${Platform.OS === "android" ? "text-base" : "text-lg"} font-bold text-white`}>
                 {isActive ? "⏹" : actionLabel}

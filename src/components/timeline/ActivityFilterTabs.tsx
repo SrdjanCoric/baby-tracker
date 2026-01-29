@@ -135,6 +135,7 @@ function FilterChip({ option, isActive, onPress, isDark, t }: FilterChipProps) {
         accessibilityRole="button"
         accessibilityState={{ selected: isActive }}
         accessibilityLabel={t(option.labelKey)}
+        testID={`filter-${option.key}`}
       >
         <Text className="text-base mr-1.5">{option.icon}</Text>
         <Text

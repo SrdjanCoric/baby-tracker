@@ -1,0 +1,27 @@
+appId: com.sofibaby.app
+name: Change Units Setting
+tags:
+  - regression
+  - settings
+
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "skip-button"
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+- tapOn:
+    id: "units-setting"
+
+# Switch to imperial
+- tapOn:
+    id: "units-imperial"
+
+# Verify back on settings screen
+- assertVisible:
+    id: "units-setting"

@@ -1,0 +1,72 @@
+appId: com.sofibaby.app
+name: Empty State Displays
+tags:
+  - regression
+  - edge-cases
+
+---
+# Start fresh to see empty states
+- launchApp:
+    clearState: true
+
+# Go through onboarding
+- assertVisible:
+    id: "welcome-screen"
+- tapOn:
+    text: "Get Started"
+
+# Auth choice - continue as guest
+- tapOn:
+    id: "continue-as-guest-button"
+
+# Features - next
+- tapOn:
+    id: "next-button"
+
+# Preferences - next
+- tapOn:
+    id: "next-button"
+
+# Sync screen - next
+- assertVisible:
+    id: "sync-screen"
+- tapOn:
+    id: "continue-button"
+
+# Baby setup
+- assertVisible:
+    id: "baby-setup-screen"
+- tapOn:
+    id: "baby-name-input"
+- inputText: "Empty State Baby"
+- tapOn:
+    id: "continue-button"
+
+# Home should show cards with zero/empty values
+- assertVisible:
+    id: "home-screen"
+
+# Navigate to timeline - should show empty state
+- tapOn:
+    id: "timeline-tab"
+
+- assertVisible:
+    id: "empty-timeline"
+    optional: true
+
+- assertVisible:
+    text: "No entries yet"
+    optional: true
+
+# Navigate to stats - should show empty state
+- tapOn:
+    id: "stats-tab"
+
+- scrollUntilVisible:
+    element:
+      id: "empty-stats"
+    direction: DOWN
+
+- assertVisible:
+    id: "empty-stats"
+    optional: true

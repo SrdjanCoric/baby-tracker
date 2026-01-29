@@ -1,0 +1,33 @@
+appId: com.sofibaby.app
+name: Pumping Manual Entry
+tags:
+  - regression
+  - activities
+  - pumping
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "pumping-card"
+
+- tapOn:
+    id: "log-past-pumping-button"
+
+- tapOn:
+    id: "duration-input"
+- inputText: "15"
+- tapOn:
+    id: "dismiss-keyboard"
+
+- tapOn:
+    id: "volume-input"
+- inputText: "120"
+- tapOn:
+    id: "dismiss-keyboard"
+
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "home-screen"

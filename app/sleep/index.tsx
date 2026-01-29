@@ -122,7 +122,7 @@ export default function SleepScreen() {
   const isTimerRunning = activeTimer?.isRunning ?? false;
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="sleep-screen">
       {/* Header with drag handle */}
       <View className="items-center pt-2 pb-3">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
@@ -141,6 +141,7 @@ export default function SleepScreen() {
             className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
             accessibilityRole="button"
             accessibilityLabel={t("sleep.goalSettings")}
+            testID="settings-button"
           >
             <Text className="text-xl">⚙️</Text>
           </Pressable>
@@ -368,7 +369,7 @@ interface SleepTypeButtonProps {
   onPress: () => void;
 }
 
-function SleepTypeButton({ type: _type, label, icon, isSuggested, onPress }: SleepTypeButtonProps) {
+function SleepTypeButton({ type, label, icon, isSuggested, onPress }: SleepTypeButtonProps) {
   const { t } = useTranslation();
 
   return (
@@ -380,6 +381,7 @@ function SleepTypeButton({ type: _type, label, icon, isSuggested, onPress }: Sle
       }}
       accessibilityRole="button"
       accessibilityLabel={`${label}${isSuggested ? `, ${t("feeding.suggested")}` : ""}`}
+      testID={`type-${type}`}
     >
       {/* Icon */}
       <Text className="text-4xl mb-2">
@@ -483,6 +485,7 @@ function RunningTimerView({
         style={{ backgroundColor: SLEEP_PURPLE }}
         accessibilityRole="button"
         accessibilityLabel={t("sleep.wakeUp")}
+        testID="stop-timer-button"
       >
         <Text className="text-3xl text-white">⏹</Text>
       </Pressable>

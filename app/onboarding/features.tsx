@@ -87,7 +87,7 @@ export default function FeaturesScreen() {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]} testID="features-screen">
       {/* Skip button */}
       <View className="absolute top-4 right-4 z-10">
         <Pressable
@@ -150,6 +150,7 @@ export default function FeaturesScreen() {
           style={{ backgroundColor: PRIMARY_COLOR }}
           accessibilityRole="button"
           accessibilityLabel={t("onboarding.next")}
+          testID="next-button"
         >
           <Text className="text-lg font-semibold text-white">
             {t("onboarding.next")}

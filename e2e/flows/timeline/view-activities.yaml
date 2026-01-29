@@ -1,0 +1,28 @@
+appId: com.sofibaby.app
+name: View Timeline Activities
+tags:
+  - smoke
+  - timeline
+
+---
+- runFlow: ../../helpers/setup-with-activity.yaml
+
+- assertVisible:
+    id: "timeline-tab"
+
+- tapOn:
+    id: "timeline-tab"
+
+- assertVisible:
+    id: "timeline-screen"
+
+- assertVisible:
+    id: "timeline-item"
+
+- swipe:
+    direction: UP
+    duration: 500
+
+- swipe:
+    direction: DOWN
+    duration: 500

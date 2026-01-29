@@ -1,0 +1,21 @@
+appId: com.sofibaby.app
+name: View Household Settings
+tags:
+  - household
+  - requires-signin
+
+---
+# Sign in with E2E test user
+- runFlow: ../../helpers/login-e2e.yaml
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Open household settings
+- tapOn:
+    id: "household-settings"
+
+# Verify household screen is displayed
+- assertVisible:
+    id: "invite-code-display"

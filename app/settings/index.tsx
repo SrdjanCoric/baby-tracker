@@ -11,6 +11,7 @@ interface SettingsRowProps {
   onPress?: () => void;
   showChevron?: boolean;
   danger?: boolean;
+  testID?: string;
 }
 
 function SettingsRow({
@@ -20,12 +21,14 @@ function SettingsRow({
   onPress,
   showChevron = true,
   danger = false,
+  testID,
 }: SettingsRowProps) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
       accessibilityRole="button"
+      testID={testID}
     >
       <Text className="text-xl mr-3">{icon}</Text>
       <Text
@@ -94,7 +97,7 @@ export default function SettingsScreen() {
       [
         { text: t("common.cancel"), style: "cancel" },
         {
-          text: t("settings.signOut"),
+          text: t("common.confirm"),
           style: "destructive",
           onPress: async () => {
             await signOut();
@@ -126,6 +129,7 @@ export default function SettingsScreen() {
             label={t("settings.language")}
             value={t(LANGUAGE_LABELS[language])}
             onPress={() => router.push("/settings/language")}
+            testID="language-setting"
           />
           <SettingsDivider />
           <SettingsRow
@@ -133,6 +137,7 @@ export default function SettingsScreen() {
             label={t("settings.units")}
             value={unitSystem === "imperial" ? t("settings.imperial") : t("settings.metric")}
             onPress={() => router.push("/settings/units")}
+            testID="units-setting"
           />
           <SettingsDivider />
           <SettingsRow
@@ -140,12 +145,14 @@ export default function SettingsScreen() {
             label={t("settings.theme")}
             value={t(THEME_LABELS[preference])}
             onPress={() => router.push("/settings/theme")}
+            testID="theme-setting"
           />
           <SettingsDivider />
           <SettingsRow
             icon="📱"
             label={t("settings.customizeDashboard")}
             onPress={() => router.push("/settings/dashboard")}
+            testID="dashboard-config"
           />
           <SettingsDivider />
           <SettingsRow
@@ -176,6 +183,7 @@ export default function SettingsScreen() {
             icon="👨‍👩‍👧"
             label={t("household.familySharing")}
             onPress={() => router.push("/settings/household")}
+            testID="household-settings"
           />
         </SettingsSection>
 
@@ -210,6 +218,7 @@ export default function SettingsScreen() {
                 label={t("settings.signOut")}
                 onPress={handleSignOut}
                 showChevron={false}
+                testID="sign-out-button"
               />
               <SettingsDivider />
               <SettingsRow
@@ -225,6 +234,7 @@ export default function SettingsScreen() {
                 icon="☁️"
                 label={t("auth.signInToSync")}
                 onPress={handleSignIn}
+                testID="sign-in-to-sync"
               />
               <Text className="px-4 py-2 text-sm text-content-tertiary dark:text-content-dark-tertiary">
                 {t("auth.signInToSyncDescription")}

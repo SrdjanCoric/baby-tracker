@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as WebBrowser from "expo-web-browser";
+import { isE2EMode, getE2ECredentials } from "@/utils/e2e-mode";
 
 // Dynamic import for Google Sign-In (native module not available in Expo Go)
 let GoogleSignin: typeof import("@react-native-google-signin/google-signin").GoogleSignin | null = null;
@@ -155,6 +156,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        if (isE2EMode()) {
+          const credentials = getE2ECredentials();
+          if (credentials) {
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: credentials.email,
+              password: credentials.password,
+            });
+            if (!error && data.session) {
+              setStorageUserId(data.session.user.id);
+              const profile = await fetchUserProfile(data.session.user.id);
+              setUser(mapSupabaseUser(data.session.user, profile));
+              setSession(data.session);
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+
         const { data: { session: currentSession } } = await supabase.auth.getSession();
 
         if (currentSession?.user) {

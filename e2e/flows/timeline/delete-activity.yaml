@@ -1,0 +1,26 @@
+appId: com.sofibaby.app
+name: Delete Activity from Timeline
+tags:
+  - regression
+  - timeline
+
+---
+- runFlow: ../../helpers/setup-with-activity.yaml
+
+- tapOn:
+    id: "timeline-tab"
+
+- assertVisible:
+    id: "timeline-screen"
+
+- tapOn:
+    id: "timeline-item"
+
+- tapOn:
+    id: "delete-button"
+
+- tapOn:
+    text: "Confirm"
+
+- assertVisible:
+    id: "timeline-screen"

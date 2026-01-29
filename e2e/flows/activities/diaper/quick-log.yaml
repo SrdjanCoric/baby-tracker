@@ -1,0 +1,36 @@
+appId: com.sofibaby.app
+name: Quick Diaper Log
+tags:
+  - smoke
+  - activities
+  - diaper
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "diaper-card"
+
+- assertVisible:
+    id: "diaper-screen"
+
+- tapOn:
+    id: "type-wet"
+
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "home-screen"
+
+- tapOn:
+    id: "diaper-card"
+
+- tapOn:
+    id: "type-dirty"
+
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "home-screen"

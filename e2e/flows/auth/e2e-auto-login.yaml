@@ -1,0 +1,19 @@
+appId: com.sofibaby.app
+name: E2E Auto Login Test
+tags:
+  - smoke
+  - auth
+
+---
+- runFlow: ../../helpers/login-e2e.yaml
+
+# Verify we're authenticated and on home screen
+- assertVisible:
+    id: "home-screen"
+
+# Verify user can access authenticated features
+- tapOn:
+    id: "settings-tab"
+
+- assertVisible:
+    id: "sign-out-button"

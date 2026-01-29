@@ -118,7 +118,7 @@ export default function TummyTimeScreen() {
   const isTimerRunning = activeTimer?.isRunning ?? false;
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="tummy-time-screen">
       {/* Header with drag handle */}
       <View className="items-center pt-2 pb-3">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
@@ -303,6 +303,7 @@ function StartView({
         style={{ backgroundColor: TUMMY_ORANGE }}
         accessibilityRole="button"
         accessibilityLabel={t("tummyTime.startTummyTime")}
+        testID="start-timer-button"
       >
         <Text className="text-3xl text-white">▶</Text>
       </Pressable>
@@ -406,6 +407,7 @@ function RunningTimerView({
         style={{ backgroundColor: TUMMY_ORANGE }}
         accessibilityRole="button"
         accessibilityLabel={t("tummyTime.stopTummyTime")}
+        testID="stop-timer-button"
       >
         <Text className="text-3xl text-white">⏹</Text>
       </Pressable>

@@ -88,7 +88,7 @@ export default function DiaperScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="diaper-screen">
       {/* Header with drag handle */}
       <View className="items-center pt-2 pb-3">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
@@ -220,6 +220,7 @@ export default function DiaperScreen() {
           style={{ backgroundColor: buttonBgColor }}
           accessibilityRole="button"
           accessibilityLabel={t("diaper.logDiaper")}
+          testID="save-button"
         >
           <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: "700", fontFamily: "System" }}>
             {isSaving ? t("common.loading") : t("diaper.logDiaper")}
@@ -244,7 +245,7 @@ interface DiaperTypeButtonProps {
 }
 
 function DiaperTypeButton({
-  type: _type,
+  type,
   label,
   description,
   icon,
@@ -267,6 +268,7 @@ function DiaperTypeButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected: isSelected }}
+      testID={`type-${type}`}
     >
       <Text className="text-3xl mr-4">{icon}</Text>
       <View className="flex-1">

@@ -137,7 +137,11 @@ export default function BottleFeedingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3">
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="flex-row items-center px-4 py-3"
+        testID="dismiss-keyboard"
+      >
         <Pressable
           onPress={handleBack}
           className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
@@ -155,7 +159,7 @@ export default function BottleFeedingScreen() {
           </Text>
         </View>
         <View className="w-touch" />
-      </View>
+      </Pressable>
 
       <ScrollView
         className="flex-1"
@@ -219,6 +223,7 @@ export default function BottleFeedingScreen() {
               keyboardType="decimal-pad"
               returnKeyType="done"
               accessibilityLabel={t("feeding.enterAmount")}
+              testID="volume-input"
             />
             <Text className="text-lg font-medium ml-2" style={{ color: FEEDING_GREEN }}>
               {unit}
@@ -310,6 +315,7 @@ export default function BottleFeedingScreen() {
           accessibilityRole="button"
           accessibilityLabel={t("common.save")}
           accessibilityState={{ disabled: isSaving }}
+          testID="save-bottle-button"
         >
           <Text className="text-lg font-semibold text-white">
             {isSaving ? t("common.loading") : t("feeding.logBottleFeeding")}

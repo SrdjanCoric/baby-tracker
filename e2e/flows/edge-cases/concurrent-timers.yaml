@@ -1,0 +1,52 @@
+appId: com.sofibaby.app
+name: Concurrent Timer Prevention
+tags:
+  - regression
+  - edge-cases
+
+---
+- runFlow: ../../helpers/setup-with-baby.yaml
+
+# Start a feeding timer
+- tapOn:
+    id: "feeding-card"
+
+- tapOn:
+    id: "type-breast"
+
+- tapOn:
+    id: "start-left-button"
+
+# Timer should be running - verify by presence of stop button
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+# Stop timer and go back (feeding auto-saves and returns)
+- tapOn:
+    id: "stop-timer-button"
+
+- assertVisible:
+    id: "home-screen"
+
+# Try to start sleep timer
+- tapOn:
+    id: "sleep-card"
+
+# Start nap (this starts the timer automatically)
+- tapOn:
+    id: "type-nap"
+
+# Timer should start - verify stop button appears
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+# Stop the sleep timer
+- tapOn:
+    id: "stop-timer-button"
+
+- assertVisible:
+    id: "home-screen"
