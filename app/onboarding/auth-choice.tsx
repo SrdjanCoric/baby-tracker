@@ -18,17 +18,18 @@ export default function AuthChoiceScreen() {
   const router = useRouter();
   const { state, nextStep, skipOnboarding } = useOnboarding();
   const { isDark } = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const hasAdvancedRef = useRef(false);
 
   // Auto-advance when user becomes authenticated (after signing in)
+  // Only advance if user has a display name - otherwise wait for them to set it
   useEffect(() => {
-    if (isAuthenticated && !hasAdvancedRef.current) {
+    if (isAuthenticated && user?.displayName && !hasAdvancedRef.current) {
       hasAdvancedRef.current = true;
       nextStep();
       router.push("/onboarding/features");
     }
-  }, [isAuthenticated, nextStep, router]);
+  }, [isAuthenticated, user?.displayName, nextStep, router]);
 
   const handleSignIn = useCallback(() => {
     router.push("/auth/sign-in");

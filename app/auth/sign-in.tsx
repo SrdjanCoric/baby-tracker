@@ -3,7 +3,7 @@
  * Warm, welcoming design matching the app's aesthetic
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Text,
@@ -20,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth, useTheme } from "@/contexts";
+import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { validateEmail } from "@/validators";
 import { SURFACE, TEXT, ACTION, BORDER, SEMANTIC } from "@/constants/colors";
 
@@ -33,13 +34,42 @@ export default function SignInScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { isDark } = useTheme();
-  const { signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable } = useAuth();
+  const { signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, user } = useAuth();
 
   const [email, setEmail] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | undefined>();
+
+  // Display name prompt state
+  const [showDisplayNamePrompt, setShowDisplayNamePrompt] = useState(false);
+
+  // Use ref to always get latest user value
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  // Helper to handle post-auth flow
+  const handlePostAuth = useCallback(() => {
+    // Check if user needs to set display name after auth completes
+    // The user object updates asynchronously, so we check after a delay
+    setTimeout(() => {
+      const currentUser = userRef.current;
+      if (!currentUser?.displayName) {
+        setShowDisplayNamePrompt(true);
+      } else {
+        router.back();
+      }
+    }, 500);
+  }, [router]);
+
+  // Handle display name prompt completion
+  const handleDisplayNameComplete = useCallback(() => {
+    setShowDisplayNamePrompt(false);
+    router.back();
+  }, [router]);
 
   const handleGoogleSignIn = useCallback(async () => {
     setIsGoogleLoading(true);
@@ -48,16 +78,15 @@ export default function SignInScreen() {
       if (error) {
         Alert.alert(t("common.error"), t("auth.googleSignInError"));
       } else {
-        // Go back to previous screen (works for both onboarding and normal flow)
-        // AuthGuard will handle navigation appropriately
-        router.back();
+        // Show display name step (will check if needed)
+        handlePostAuth();
       }
     } catch {
       Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [signInWithGoogle, router, t]);
+  }, [signInWithGoogle, handlePostAuth, t]);
 
   const handleAppleSignIn = useCallback(async () => {
     setIsAppleLoading(true);
@@ -66,15 +95,15 @@ export default function SignInScreen() {
       if (error) {
         Alert.alert(t("common.error"), t("auth.appleSignInError"));
       } else {
-        // Go back to previous screen (works for both onboarding and normal flow)
-        router.back();
+        // Show display name step (will check if needed)
+        handlePostAuth();
       }
     } catch {
       Alert.alert(t("common.error"), t("errors.generic"));
     } finally {
       setIsAppleLoading(false);
     }
-  }, [signInWithApple, router, t]);
+  }, [signInWithApple, handlePostAuth, t]);
 
   const handleMagicLink = useCallback(async () => {
     const validation = validateEmail(email);
@@ -364,6 +393,12 @@ export default function SignInScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Display Name Prompt - shown after auth if no display name */}
+      <DisplayNamePrompt
+        visible={showDisplayNamePrompt}
+        onComplete={handleDisplayNameComplete}
+      />
     </SafeAreaView>
   );
 }
