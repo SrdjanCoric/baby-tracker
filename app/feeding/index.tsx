@@ -105,7 +105,11 @@ export default function FeedingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="feeding-screen">
       {/* Header with drag handle */}
-      <View className="items-center pt-2 pb-3">
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="items-center pt-2 pb-3"
+        testID="dismiss-keyboard"
+      >
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
           {t("feeding.title")}
@@ -113,7 +117,7 @@ export default function FeedingScreen() {
         <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
           {selectedBaby.name}
         </Text>
-      </View>
+      </Pressable>
 
       {/* Tab Bar */}
       {!isTimerRunning && (
