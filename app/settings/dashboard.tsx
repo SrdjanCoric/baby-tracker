@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { Text, View, Switch, Alert, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, View, Switch, Alert, StyleSheet, TouchableOpacity, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import DraggableFlatList, {
@@ -79,10 +79,16 @@ export default function DashboardSettingsScreen() {
             <Text style={styles.activityLabel}>
               {activityLabels[item.activity]}
             </Text>
-            <Switch
-              value={item.visible}
-              onValueChange={(value) => handleToggleVisibility(item.activity, value)}
-            />
+            <Pressable
+              onPress={() => handleToggleVisibility(item.activity, !item.visible)}
+              testID={`toggle-${item.activity}`}
+            >
+              <Switch
+                value={item.visible}
+                onValueChange={(value) => handleToggleVisibility(item.activity, value)}
+                pointerEvents="none"
+              />
+            </Pressable>
           </TouchableOpacity>
         </ScaleDecorator>
       );

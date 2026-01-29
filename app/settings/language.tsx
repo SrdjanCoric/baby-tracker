@@ -76,6 +76,7 @@ export default function LanguageSettingsScreen() {
                 } active:opacity-80`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
+                testID={`language-${option.value}`}
               >
                 <Text className="text-2xl mr-4">{option.icon}</Text>
                 <View className="flex-1">
@@ -87,9 +88,6 @@ export default function LanguageSettingsScreen() {
                     }`}
                   >
                     {t(labels.label)}
-                  </Text>
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-0.5">
-                    {labels.description}
                   </Text>
                 </View>
                 {isSelected && (

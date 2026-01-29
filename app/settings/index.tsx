@@ -129,6 +129,7 @@ export default function SettingsScreen() {
             label={t("settings.language")}
             value={t(LANGUAGE_LABELS[language])}
             onPress={() => router.push("/settings/language")}
+            testID="language-setting"
           />
           <SettingsDivider />
           <SettingsRow
@@ -136,6 +137,7 @@ export default function SettingsScreen() {
             label={t("settings.units")}
             value={unitSystem === "imperial" ? t("settings.imperial") : t("settings.metric")}
             onPress={() => router.push("/settings/units")}
+            testID="units-setting"
           />
           <SettingsDivider />
           <SettingsRow
@@ -143,12 +145,14 @@ export default function SettingsScreen() {
             label={t("settings.theme")}
             value={t(THEME_LABELS[preference])}
             onPress={() => router.push("/settings/theme")}
+            testID="theme-setting"
           />
           <SettingsDivider />
           <SettingsRow
             icon="📱"
             label={t("settings.customizeDashboard")}
             onPress={() => router.push("/settings/dashboard")}
+            testID="dashboard-config"
           />
           <SettingsDivider />
           <SettingsRow
