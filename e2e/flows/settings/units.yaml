@@ -5,17 +5,15 @@ tags:
   - settings
 
 ---
-- launchApp
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "skip-button"
 
 # Navigate to settings
 - tapOn:
     id: "settings-button"
-
-# Find units option
-- scrollUntilVisible:
-    element:
-      id: "units-setting"
-    direction: DOWN
 
 - tapOn:
     id: "units-setting"
@@ -23,17 +21,7 @@ tags:
 # Switch to imperial
 - tapOn:
     id: "units-imperial"
-    optional: true
 
-# Verify change
+# Verify back on settings screen
 - assertVisible:
-    text: "oz"
-    optional: true
-
-# Switch back to metric
-- tapOn:
     id: "units-setting"
-    optional: true
-- tapOn:
-    id: "units-metric"
-    optional: true
