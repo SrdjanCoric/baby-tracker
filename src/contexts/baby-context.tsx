@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 import { BabyStorageService, StoredBabyProfile, CreateBabyInput, UpdateBabyInput } from "@/services/baby-storage";
 import {
   fetchAndSyncHouseholdBabies,
@@ -261,7 +262,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.householdId) {
       // Generate ID upfront so we can track it as pending
-      const pendingId = crypto.randomUUID();
+      const pendingId = Crypto.randomUUID();
       pendingBabyIdsRef.current.add(pendingId);
 
       try {
