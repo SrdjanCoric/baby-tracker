@@ -5,24 +5,54 @@ tags:
   - baby
 
 ---
-# Assumes multiple babies exist
-- launchApp
 
+- runFlow: ../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "selected-baby-name"
+
+
+- assertVisible:
+    text: "Add Another Baby"
+
+# If the button is below the fold, try scrolling                                                                                                                                     
+  
+- swipe: 
+    start: 50%, 80%
+    end: 50%, 40% 
+
+- tapOn:
+    text: "Add Another Baby"
+
+# Enter baby name
+- tapOn:
+    id: "baby-name-input"
+- inputText: "Second E2E Baby"
+
+# Dismiss keyboard
+- hideKeyboard
+
+# Fill in baby details
+
+
+# Select gender if available
+- tapOn:
+    id: "gender-male"
+    optional: true
+
+# Save
+- tapOn:
+    id: "save-baby-button"
+
+# Should return to home screen
 - assertVisible:
     id: "home-screen"
 
-# Tap baby switcher (usually in header)
 - tapOn:
-    id: "baby-switcher"
+    id: "selected-baby-name"
 
-# Should show baby list
-- assertVisible:
-    id: "baby-list"
-
-# Select different baby
 - tapOn:
-    id: "baby-item"
+    text: "Test Baby"
 
-# Home screen should update with new baby
 - assertVisible:
-    id: "home-screen"
+    text: "Test Baby"
