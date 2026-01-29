@@ -251,7 +251,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     }
 
     dispatch({ type: "SET_LOADING", payload: false });
-  }, [user?.householdId]);
+  }, [user?.householdId, user?.id]);
 
   useEffect(() => {
     loadBabies();
