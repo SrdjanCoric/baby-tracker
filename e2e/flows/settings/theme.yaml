@@ -5,7 +5,11 @@ tags:
   - settings
 
 ---
-- launchApp
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "skip-button"
 
 # Navigate to settings
 - tapOn:
@@ -23,14 +27,6 @@ tags:
 # Select dark mode
 - tapOn:
     id: "theme-dark"
-    optional: true
 
-# Or toggle theme
-- tapOn:
-    id: "theme-toggle"
-    optional: true
-
-# Go back
-- tapOn:
-    id: "back-button"
-    optional: true
+- assertVisible:
+    text: "Currently using dark mode"

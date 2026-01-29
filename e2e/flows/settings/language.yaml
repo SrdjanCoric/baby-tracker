@@ -5,34 +5,27 @@ tags:
   - settings
 
 ---
-- launchApp
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "skip-button"
 
 # Navigate to settings
 - tapOn:
     id: "settings-button"
 
-# Find language option
-- scrollUntilVisible:
-    element:
-      id: "language-setting"
-    direction: DOWN
-
 - tapOn:
     id: "language-setting"
 
-# Select a different language
+# Select Serbian language
 - tapOn:
-    text: "Srpski"
-    optional: true
+    id: "language-sr"
 
 # Verify language changed (look for translated text)
 - assertVisible:
-    id: "settings-screen"
+    text: "Srpski"
 
 # Change back to English
 - tapOn:
-    id: "language-setting"
-    optional: true
-- tapOn:
-    text: "English"
-    optional: true
+    id: "language-en"
