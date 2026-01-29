@@ -5,21 +5,51 @@ tags:
   - baby
 
 ---
-- launchApp
 
-# Navigate to settings
+- runFlow: ../../helpers/setup-with-baby.yaml
+
 - tapOn:
-    id: "settings-button"
+    id: "selected-baby-name"
+
+
+- assertVisible:
+    text: "Add Another Baby"
+
+# If the button is below the fold, try scrolling                                                                                                                                      
+- swipe: 
+    start: 50%, 80%
+    end: 50%, 40% 
+
+- tapOn:
+    text: "Add Another Baby"
+
+# Enter baby name
+- tapOn:
+    id: "baby-name-input"
+- inputText: "Second E2E Baby"
+
+# Dismiss keyboard
+- hideKeyboard
+
+# Fill in baby details
+
+
+# Select gender if available
+- tapOn:
+    id: "gender-male"
+    optional: true
+
+# Save
+- tapOn:
+    id: "save-baby-button"
+
+# Should return to home screen
+- assertVisible:
+    id: "home-screen"
 
 # Tap on baby to edit
 - tapOn:
     id: "edit-baby-button"
-    optional: true
-
-# Or tap baby name
-- tapOn:
-    id: "baby-settings"
-    optional: true
 
 # Change name
 - tapOn:
@@ -27,9 +57,11 @@ tags:
 - eraseText
 - inputText: "Updated Baby Name"
 
+# Dismiss keyboard
+- hideKeyboard
 # Save
 - tapOn:
-    id: "save-button"
+    id: "save-baby-button"
 
 # Verify change
 - assertVisible: "Updated Baby Name"
