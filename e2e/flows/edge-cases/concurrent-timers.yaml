@@ -5,7 +5,7 @@ tags:
   - edge-cases
 
 ---
-- launchApp
+- runFlow: ../../helpers/setup-with-baby.yaml
 
 # Start a feeding timer
 - tapOn:

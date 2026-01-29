@@ -5,7 +5,7 @@ tags:
   - edge-cases
 
 ---
-- launchApp
+- runFlow: ../../helpers/setup-with-baby.yaml
 
 # Rapidly switch between tabs
 - tapOn:
@@ -28,16 +28,19 @@ tags:
 # Rapidly navigate into and out of activities
 - tapOn:
     id: "feeding-card"
-- tapOn:
-    id: "back-button"
+- swipe:
+    start: 50%, 15%
+    end: 50%, 60%
 - tapOn:
     id: "sleep-card"
-- tapOn:
-    id: "back-button"
+- swipe:
+    start: 50%, 15%
+    end: 50%, 60%
 - tapOn:
     id: "diaper-card"
-- tapOn:
-    id: "back-button"
+- swipe:
+    start: 50%, 15%
+    end: 50%, 60%
 
 # Still stable
 - assertVisible:
@@ -46,9 +49,9 @@ tags:
 # Navigate to settings and back
 - tapOn:
     id: "settings-button"
-- tapOn:
-    id: "back-button"
-    optional: true
+- swipe:
+    start: 50%, 15%
+    end: 50%, 60%
 
 - assertVisible:
     id: "home-screen"

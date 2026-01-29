@@ -55,12 +55,17 @@ tags:
     optional: true
 
 - assertVisible:
-    text: "No activities"
+    text: "No entries yet"
     optional: true
 
 # Navigate to stats - should show empty state
 - tapOn:
     id: "stats-tab"
+
+- scrollUntilVisible:
+    element:
+      id: "empty-stats"
+    direction: DOWN
 
 - assertVisible:
     id: "empty-stats"
