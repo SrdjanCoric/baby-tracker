@@ -18,7 +18,7 @@ import { SURFACE } from "@/constants/colors";
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const router = useRouter();
   const segments = useSegments();
   const [isReady, setIsReady] = useState(false);
@@ -58,9 +58,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       } else if (hasCompletedOnboarding && inOnboardingGroup) {
         router.replace("/(tabs)");
       } else if (isAuthenticated && inAuthGroup && hasCompletedOnboarding) {
-        // Only redirect to tabs if onboarding is complete
-        // Otherwise let them go back to continue onboarding
-        router.replace("/(tabs)");
+        // Only redirect to tabs if onboarding is complete AND user has a display name
+        // If no display name, stay on auth screen to show the display name prompt
+        if (user?.displayName) {
+          router.replace("/(tabs)");
+        }
+        // If no displayName, stay on auth screen - sign-in.tsx will show DisplayNamePrompt
       }
 
       lastAuthStateRef.current = isAuthenticated;
@@ -125,22 +128,9 @@ function NotificationAuthSetup({ children }: { children: React.ReactNode }) {
 }
 
 function DisplayNamePromptWrapper({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated } = useAuth();
-
-  // Show prompt for authenticated users without a display name
-  const showPrompt = isAuthenticated && !!user?.id && !user?.displayName;
-
-  const handleComplete = useCallback(() => {
-    // The prompt will automatically hide when user.displayName is set
-    // No action needed here since we're using derived state
-  }, []);
-
-  return (
-    <>
-      {children}
-      <DisplayNamePrompt visible={showPrompt} onComplete={handleComplete} />
-    </>
-  );
+  // DisplayNamePrompt is now handled in sign-in.tsx after authentication
+  // This wrapper is disabled to avoid modal rendering issues during navigation
+  return <>{children}</>;
 }
 
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
