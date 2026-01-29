@@ -1,0 +1,27 @@
+appId: com.sofibaby.app
+name: Solids Feeding Entry
+tags:
+  - regression
+  - activities
+  - feeding
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "feeding-card"
+
+# Select solids type
+- tapOn:
+    id: "type-solids"
+
+# Select a common food
+- tapOn:
+    text: "Banana"
+
+# Save solids feeding
+- tapOn:
+    id: "save-solids-button"
+
+- assertVisible:
+    id: "home-screen"

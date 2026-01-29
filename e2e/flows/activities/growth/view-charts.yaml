@@ -1,0 +1,28 @@
+appId: com.sofibaby.app
+name: View Growth Charts
+tags:
+  - regression
+  - activities
+  - growth
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "growth-card"
+
+- assertVisible:
+    id: "growth-screen"
+
+- tapOn:
+    id: "view-charts-button"
+
+- assertVisible:
+    id: "growth-charts-screen"
+
+- swipe:
+    direction: DOWN
+    duration: 500
+
+- assertVisible:
+    id: "home-screen"

@@ -139,6 +139,7 @@ export default function SignInScreen() {
               className="absolute top-4 right-6 w-10 h-10 rounded-full items-center justify-center active:opacity-70"
               style={{ backgroundColor: isDark ? SURFACE.dark.card : BORDER.light.subtle }}
               accessibilityLabel={t("common.close")}
+              testID="close-button"
             >
               <Ionicons
                 name="close"
@@ -181,6 +182,7 @@ export default function SignInScreen() {
                   borderWidth: 1,
                   borderColor: isDark ? BORDER.dark.default : BORDER.light.subtle,
                 }}
+                testID="google-signin-button"
               >
                 {isGoogleLoading ? (
                   <ActivityIndicator color={BRAND_COLORS.google} />
@@ -209,6 +211,7 @@ export default function SignInScreen() {
                   disabled={isAppleLoading}
                   className="flex-row items-center justify-center rounded-2xl py-4 mb-3 active:scale-[0.98]"
                   style={{ backgroundColor: BRAND_COLORS.appleBg }}
+                  testID="apple-signin-button"
                 >
                   {isAppleLoading ? (
                     <ActivityIndicator color="#FFFFFF" />
@@ -293,6 +296,7 @@ export default function SignInScreen() {
                   textContentType="emailAddress"
                   returnKeyType="send"
                   onSubmitEditing={handleMagicLink}
+                  testID="email-input"
                 />
                 {emailError && (
                   <Text
@@ -310,6 +314,7 @@ export default function SignInScreen() {
                 disabled={isMagicLinkLoading}
                 className="rounded-xl py-4 items-center active:scale-[0.98]"
                 style={{ backgroundColor: ACTION.light.primaryHover }}
+                testID="send-magic-link-button"
               >
                 {isMagicLinkLoading ? (
                   <ActivityIndicator color="#FFFFFF" />
@@ -343,6 +348,7 @@ export default function SignInScreen() {
               <Pressable
                 onPress={() => router.replace("/(tabs)")}
                 className="py-3 items-center active:opacity-70"
+                testID="continue-as-guest-button"
               >
                 <Text
                   className="text-base"

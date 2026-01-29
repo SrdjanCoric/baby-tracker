@@ -127,7 +127,7 @@ export default function ManualTummyTimeScreen() {
         durationSeconds,
         notes: notes || undefined,
       });
-      router.back();
+      router.replace("/(tabs)");
     } finally {
       setIsSaving(false);
     }

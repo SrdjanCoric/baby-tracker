@@ -1,0 +1,47 @@
+appId: com.sofibaby.app
+name: Add Growth Measurement
+tags:
+  - smoke
+  - activities
+  - growth
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+# Tap growth card
+- tapOn:
+    id: "growth-card"
+
+# Verify growth screen
+- assertVisible:
+    id: "growth-screen"
+
+# Enter weight
+- tapOn:
+    id: "weight-input"
+- inputText: "7.5"
+
+# Enter height/length
+- tapOn:
+    id: "height-input"
+- inputText: "68"
+
+# Dismiss keyboard to reveal head input
+- tapOn:
+    id: "dismiss-keyboard"
+
+# Enter head circumference
+- tapOn:
+    id: "head-input"
+- inputText: "43"
+
+# Dismiss keyboard before save
+- tapOn:
+    id: "dismiss-keyboard"
+
+# Save
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "home-screen"

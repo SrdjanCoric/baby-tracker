@@ -105,7 +105,7 @@ export default function BabySetupScreen() {
   }, [name, birthDate, gender, addBaby, selectBaby, completeOnboarding, router, t]);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]} testID="baby-setup-screen">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -117,6 +117,7 @@ export default function BabySetupScreen() {
             className="py-2 px-4 active:opacity-70"
             accessibilityRole="button"
             accessibilityLabel={t("common.skip")}
+            testID="skip-button"
           >
             <Text className="text-base text-content-secondary dark:text-content-dark-secondary font-medium">
               {t("common.skip")}
@@ -182,6 +183,7 @@ export default function BabySetupScreen() {
                 error={errors.name}
                 autoCapitalize="words"
                 maxLength={100}
+                testID="baby-name-input"
               />
             </View>
 
@@ -230,6 +232,7 @@ export default function BabySetupScreen() {
                       ? "border-gray-700 bg-gray-800"
                       : "border-gray-300 bg-gray-50"
                   }`}
+                  testID="gender-male"
                 >
                   <Text className="text-xl mb-1">👦</Text>
                   <Text
@@ -251,6 +254,7 @@ export default function BabySetupScreen() {
                       ? "border-gray-700 bg-gray-800"
                       : "border-gray-300 bg-gray-50"
                   }`}
+                  testID="gender-female"
                 >
                   <Text className="text-xl mb-1">👧</Text>
                   <Text
@@ -284,6 +288,7 @@ export default function BabySetupScreen() {
             accessibilityRole="button"
             accessibilityLabel={t("onboarding.continue")}
             accessibilityState={{ disabled: isLoading }}
+            testID="continue-button"
           >
             <Text className="text-lg font-semibold text-white">
               {isLoading ? t("common.loading") : t("onboarding.continue")}

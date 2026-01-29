@@ -25,7 +25,7 @@ export default function WelcomeScreen() {
   }, [skipOnboarding, router]);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]} testID="welcome-screen">
       <OnboardingScreen
         title={t("onboarding.welcome.title")}
         subtitle={t("onboarding.welcome.subtitle")}

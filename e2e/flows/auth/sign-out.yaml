@@ -1,0 +1,32 @@
+appId: com.sofibaby.app
+name: Sign Out Flow
+tags:
+  - regression
+  - auth
+
+---
+# Sign in with E2E test user
+- runFlow: ../../helpers/login-e2e.yaml
+
+# Navigate to settings
+- tapOn:
+    id: "settings-button"
+
+# Scroll to sign out
+- scrollUntilVisible:
+    element:
+      id: "sign-out-button"
+    direction: DOWN
+
+- tapOn:
+    id: "sign-out-button"
+
+# Confirm sign out in alert dialog
+- tapOn: "Confirm"
+
+# Wait for UI to update after sign out
+- waitForAnimationToEnd
+
+# Verify signed out - the sign-in-to-sync button should appear
+- assertVisible:
+    id: "sign-in-to-sync"

@@ -1,0 +1,32 @@
+appId: com.sofibaby.app
+name: Filter Timeline by Activity Type
+tags:
+  - regression
+  - timeline
+
+---
+- runFlow: ../../helpers/setup-with-activity.yaml
+
+- tapOn:
+    id: "timeline-tab"
+
+- assertVisible:
+    id: "timeline-screen"
+
+- swipe:
+    start: 90%, 15%
+    end: 10%, 15%
+
+- extendedWaitUntil:
+    visible:
+      id: "filter-tummyTime"
+    timeout: 3000
+
+- tapOn:
+    id: "filter-tummyTime"
+
+- assertVisible:
+    id: "timeline-screen"
+
+- assertVisible:
+    id: "timeline-item"

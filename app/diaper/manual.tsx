@@ -91,7 +91,7 @@ export default function ManualDiaperScreen() {
         stoolColor: selectedType !== "wet" ? selectedColor ?? undefined : undefined,
         changedAt: changeTime,
       });
-      router.dismiss(2);
+      router.replace("/(tabs)");
     } finally {
       setIsSaving(false);
     }

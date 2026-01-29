@@ -1,0 +1,57 @@
+appId: com.sofibaby.app
+name: Rapid Navigation Stability
+tags:
+  - regression
+  - edge-cases
+
+---
+- runFlow: ../../helpers/setup-with-baby.yaml
+
+# Rapidly switch between tabs
+- tapOn:
+    id: "home-tab"
+- tapOn:
+    id: "timeline-tab"
+- tapOn:
+    id: "stats-tab"
+- tapOn:
+    id: "home-tab"
+- tapOn:
+    id: "timeline-tab"
+- tapOn:
+    id: "home-tab"
+
+# App should still be stable
+- assertVisible:
+    id: "home-screen"
+
+# Rapidly navigate into and out of activities
+- tapOn:
+    id: "feeding-card"
+- swipe:
+    start: 50%, 15%
+    end: 50%, 60%
+- tapOn:
+    id: "sleep-card"
+- swipe:
+    start: 50%, 15%
+    end: 50%, 60%
+- tapOn:
+    id: "diaper-card"
+- swipe:
+    start: 50%, 15%
+    end: 50%, 60%
+
+# Still stable
+- assertVisible:
+    id: "home-screen"
+
+# Navigate to settings and back
+- tapOn:
+    id: "settings-button"
+- swipe:
+    start: 50%, 15%
+    end: 50%, 60%
+
+- assertVisible:
+    id: "home-screen"

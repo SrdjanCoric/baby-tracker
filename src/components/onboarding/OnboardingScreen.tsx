@@ -22,6 +22,7 @@ interface OnboardingScreenProps {
   totalSteps: number;
   isLoading?: boolean;
   children?: React.ReactNode;
+  testID?: string;
 }
 
 export function OnboardingScreen({
@@ -36,11 +37,12 @@ export function OnboardingScreen({
   totalSteps,
   isLoading = false,
   children,
+  testID,
 }: OnboardingScreenProps) {
   const { t } = useTranslation();
 
   return (
-    <View className="flex-1 bg-surface dark:bg-surface-dark">
+    <View className="flex-1 bg-surface dark:bg-surface-dark" testID={testID}>
         {/* Skip button */}
         {showSkip && (
           <View className="absolute top-4 right-4 z-10">
@@ -49,6 +51,7 @@ export function OnboardingScreen({
               className="py-2 px-4 active:opacity-70"
               accessibilityRole="button"
               accessibilityLabel={t("common.skip")}
+              testID="skip-button"
             >
               <Text className="text-base text-content-secondary dark:text-content-dark-secondary font-medium">
                 {t("common.skip")}
@@ -97,6 +100,7 @@ export function OnboardingScreen({
             accessibilityRole="button"
             accessibilityLabel={primaryButtonText}
             accessibilityState={{ disabled: isLoading }}
+            testID="continue-button"
           >
             <Text className="text-lg font-semibold text-white">
               {isLoading ? t("common.loading") : primaryButtonText}

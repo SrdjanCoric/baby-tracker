@@ -18,7 +18,14 @@
     "test:security": "vitest run src/__tests__/security/",
     "test:sync": "vitest run src/services/sync/",
     "test:all": "npm run test:unit && npm run test:component",
-    "analyze:bundle": "npx react-native-bundle-visualizer"
+    "analyze:bundle": "npx react-native-bundle-visualizer",
+    "e2e:setup": "supabase start && supabase db push",
+    "e2e:seed": "bash e2e/scripts/seed-data.sh",
+    "e2e:cleanup": "bash e2e/scripts/cleanup.sh",
+    "e2e:create-users": "bash e2e/scripts/create-test-users.sh",
+    "e2e:smoke": "maestro test e2e/suites/smoke.yaml",
+    "e2e:regression": "maestro test e2e/suites/regression.yaml",
+    "e2e:flow": "maestro test"
   },
   "dependencies": {
     "@powersync/common": "^1.45.0",
@@ -55,6 +62,7 @@
     "react-native": "0.81.5",
     "react-native-draggable-flatlist": "^4.0.3",
     "react-native-gesture-handler": "^2.30.0",
+    "react-native-launch-arguments": "^4.1.1",
     "react-native-quick-sqlite": "^8.2.7",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",

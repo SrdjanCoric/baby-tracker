@@ -1,0 +1,44 @@
+appId: com.sofibaby.app
+
+---
+# Skip onboarding and add a baby from home screen
+- launchApp:
+    clearState: true
+
+# Skip onboarding
+- tapOn:
+    id: "skip-button"
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 5000
+
+# Tap Add Baby button (shown when no baby exists)
+- tapOn:
+    id: "add-baby-button"
+
+# Enter baby name
+- tapOn:
+    id: "baby-name-input"
+- inputText: "Test Baby"
+
+# Dismiss keyboard
+- hideKeyboard
+
+# Set birth date (defaults to today)
+- tapOn:
+    id: "birth-date-picker"
+- tapOn:
+    id: "birth-date-done-button"
+
+# Save baby
+- tapOn:
+    id: "save-baby-button"
+
+# Wait for home screen with baby
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 5000

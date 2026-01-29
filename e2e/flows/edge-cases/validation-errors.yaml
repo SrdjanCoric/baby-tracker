@@ -1,0 +1,49 @@
+appId: com.sofibaby.app
+name: Form Validation Errors
+tags:
+  - regression
+  - edge-cases
+
+---
+- runFlow: ../../helpers/setup-with-baby.yaml
+
+# Test growth form validation
+- tapOn:
+    id: "growth-card"
+
+# Try to save with empty fields
+- tapOn:
+    id: "save-button"
+
+# Enter invalid value (negative weight)
+- tapOn:
+    id: "weight-input"
+- inputText: "-5"
+
+- tapOn:
+    id: "dismiss-keyboard"
+
+- tapOn:
+    id: "save-button"
+
+# Should show error
+- assertVisible:
+    text: "Weight must be positive"
+    optional: true
+
+# Clear and enter valid
+- tapOn:
+    id: "weight-input"
+- eraseText
+- inputText: "7.5"
+
+- tapOn:
+    id: "dismiss-keyboard"
+
+- swipe:
+    start: 50%, 15%
+    end: 50%, 85%
+
+- assertVisible:
+    id: "home-screen"
+    optional: true

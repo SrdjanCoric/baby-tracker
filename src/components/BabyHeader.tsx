@@ -57,6 +57,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
             className="flex-row items-center active:opacity-70 flex-1"
             accessibilityRole="button"
             accessibilityLabel={t("baby.addFirstBaby")}
+            testID="add-baby-button"
           >
             <View className={`${isAndroid ? "w-10 h-10 mr-2" : "w-12 h-12 mr-3"} rounded-full bg-action-primary/20 dark:bg-action-dark-primary/30 items-center justify-center flex-shrink-0`}>
               <Text className={`${isAndroid ? "text-xl" : "text-2xl"} text-action-primary dark:text-action-dark-primary font-bold`}>+</Text>
@@ -75,6 +76,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
               className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
               accessibilityRole="button"
               accessibilityLabel={t("navigation.settings")}
+              testID="settings-button"
             >
               <Text className="text-2xl">⚙️</Text>
             </Pressable>
@@ -99,6 +101,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
             className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
             accessibilityRole="button"
             accessibilityLabel={t("baby.editBaby")}
+            testID="edit-baby-button"
           >
             <Text className="text-lg">✏️</Text>
           </Pressable>
@@ -109,6 +112,7 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
               className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"
               accessibilityRole="button"
               accessibilityLabel={t("navigation.settings")}
+              testID="settings-button"
             >
               <Text className="text-2xl">⚙️</Text>
             </Pressable>

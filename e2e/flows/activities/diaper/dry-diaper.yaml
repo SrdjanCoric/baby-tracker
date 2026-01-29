@@ -1,0 +1,23 @@
+appId: com.sofibaby.app
+name: Dry Diaper Log
+tags:
+  - regression
+  - activities
+  - diaper
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "diaper-card"
+
+# Select dry diaper type
+- tapOn:
+    id: "type-dry"
+
+# Save
+- tapOn:
+    id: "save-button"
+
+- assertVisible:
+    id: "home-screen"

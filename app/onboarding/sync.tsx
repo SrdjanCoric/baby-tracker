@@ -25,7 +25,7 @@ export default function SyncScreen() {
   }, [skipOnboarding, router]);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top", "bottom"]} testID="sync-screen">
       <OnboardingScreen
         title={t("onboarding.sync.title")}
         subtitle={t("onboarding.sync.subtitle")}

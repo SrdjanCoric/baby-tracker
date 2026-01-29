@@ -152,9 +152,13 @@ export default function PumpingScreen() {
   const isTimerRunning = activeTimer?.isRunning ?? false;
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header with drag handle */}
-      <View className="items-center pt-2 pb-3">
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="pumping-screen">
+      {/* Header with drag handle - tappable to dismiss keyboard */}
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="items-center pt-2 pb-3"
+        testID="dismiss-keyboard"
+      >
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
           {t("pumping.title")}
@@ -162,7 +166,7 @@ export default function PumpingScreen() {
         <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
           {selectedBaby.name}
         </Text>
-      </View>
+      </Pressable>
 
       <View className="flex-1 items-center justify-center px-6">
         {showVolumeInput ? (
@@ -247,6 +251,7 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
         style={{ backgroundColor: suggestedSide === "both" ? PUMPING_BLUE : PUMPING_BLUE_MUTED }}
         accessibilityRole="button"
         accessibilityLabel={t("feeding.bothSides")}
+        testID="side-both"
       >
         <Text
           className="text-base font-semibold"
@@ -276,6 +281,7 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
         style={{ backgroundColor: PUMPING_BLUE_MUTED }}
         accessibilityRole="button"
         accessibilityLabel={t("pumping.logPastPumping")}
+        testID="log-past-pumping-button"
       >
         <Text className="text-base font-medium" style={{ color: PUMPING_BLUE }}>
           {t("pumping.logPastPumping")}
@@ -293,7 +299,7 @@ interface SideStartButtonProps {
   onPress: () => void;
 }
 
-function SideStartButton({ side: _side, label, shortLabel, isSuggested, onPress }: SideStartButtonProps) {
+function SideStartButton({ side, label, shortLabel, isSuggested, onPress }: SideStartButtonProps) {
   const { t } = useTranslation();
 
   return (
@@ -305,6 +311,7 @@ function SideStartButton({ side: _side, label, shortLabel, isSuggested, onPress 
       }}
       accessibilityRole="button"
       accessibilityLabel={`${label}${isSuggested ? `, ${t("feeding.suggested")}` : ""}`}
+      testID={`side-${side}`}
     >
       {/* Large letter indicator */}
       <Text
@@ -417,6 +424,7 @@ function RunningTimerView({
         style={{ backgroundColor: PUMPING_BLUE }}
         accessibilityRole="button"
         accessibilityLabel={t("common.stopTimer")}
+        testID="stop-timer-button"
       >
         <Text className="text-3xl text-white">⏹</Text>
       </Pressable>
@@ -517,6 +525,7 @@ function VolumeInputView({
           returnKeyType="done"
           autoFocus
           accessibilityLabel={t("pumping.enterVolume")}
+          testID="volume-input"
         />
         <Text className="text-lg font-medium ml-2" style={{ color: PUMPING_BLUE }}>
           {unit}
@@ -575,6 +584,7 @@ function VolumeInputView({
           accessibilityRole="button"
           accessibilityLabel={t("common.save")}
           accessibilityState={{ disabled: !canSave }}
+          testID="save-button"
         >
           <Text className="text-base font-semibold text-white">
             {t("common.save")}

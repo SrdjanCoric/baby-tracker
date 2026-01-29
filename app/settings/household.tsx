@@ -180,7 +180,10 @@ export default function HouseholdSettingsScreen() {
             </Text>
 
             <View className="items-center py-4">
-              <Text className="text-4xl font-bold tracking-widest text-content-primary dark:text-content-dark-primary mb-2">
+              <Text
+                className="text-4xl font-bold tracking-widest text-content-primary dark:text-content-dark-primary mb-2"
+                testID="invite-code-display"
+              >
                 {formattedCode}
               </Text>
               <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary text-center">
@@ -194,6 +197,7 @@ export default function HouseholdSettingsScreen() {
                 className="flex-1 bg-surface-secondary dark:bg-surface-dark-secondary py-3 rounded-lg items-center active:opacity-80"
                 accessibilityRole="button"
                 accessibilityLabel={t("household.copyInviteCode")}
+                testID="copy-invite-code"
               >
                 <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
                   {isCopied ? "✓ " + t("household.copied") : "📋 " + t("household.copyInviteCode")}
