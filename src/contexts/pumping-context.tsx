@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   PumpingStorageService,
   StoredPumpingEntry,
@@ -17,6 +17,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
+import { startTimerLiveActivity, endTimerLiveActivity, updateTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActivePumpingTimer {
   isRunning: boolean;
@@ -140,6 +141,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges } = useSync();
   const { user } = useAuth();
+  const liveActivityIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('pumping_sessions', (change: RemoteChange) => {
@@ -226,6 +228,11 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       side,
     });
 
+    const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side);
+    if (activityId) {
+      liveActivityIdRef.current = activityId;
+    }
+
     return { success: true };
   }, [selectedBaby, user?.id]);
 
@@ -258,6 +265,11 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "STOP_TIMER" });
     await PumpingStorageService.clearActiveTimer(selectedBaby.id);
 
+    if (liveActivityIdRef.current) {
+      await endTimerLiveActivity(liveActivityIdRef.current);
+      liveActivityIdRef.current = null;
+    }
+
     if (user?.id) {
       try {
         await releaseTimerLock(selectedBaby.id, "pumping", user.id);
@@ -276,6 +288,9 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         startedAt: state.activeTimer.startTime.toISOString(),
         side,
       });
+      if (liveActivityIdRef.current) {
+        updateTimerLiveActivity(liveActivityIdRef.current, side);
+      }
     }
   }, [selectedBaby, state.activeTimer]);
 

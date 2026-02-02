@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   TummyTimeStorageService,
   StoredTummyTimeEntry,
@@ -22,6 +22,7 @@ import {
   getGoalInfo,
   checkMilestoneCrossing,
 } from "@/utils/tummyTimeGoals";
+import { startTimerLiveActivity, endTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActiveTummyTimeTimer {
   isRunning: boolean;
@@ -178,6 +179,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges } = useSync();
   const { user } = useAuth();
+  const liveActivityIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('tummy_time_sessions', (change: RemoteChange) => {
@@ -293,6 +295,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       startedAt: startTime.toISOString(),
     });
 
+    const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name);
+    if (activityId) {
+      liveActivityIdRef.current = activityId;
+    }
+
     return { success: true };
   }, [selectedBaby, user?.id]);
 
@@ -322,6 +329,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
     dispatch({ type: "STOP_TIMER" });
     await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+
+    if (liveActivityIdRef.current) {
+      await endTimerLiveActivity(liveActivityIdRef.current);
+      liveActivityIdRef.current = null;
+    }
 
     if (user?.id) {
       try {
