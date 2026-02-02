@@ -451,7 +451,9 @@
     "dragToReorder": "Hold and drag to reorder",
     "resetDashboard": "Reset Dashboard",
     "resetDashboardConfirm": "This will reset all cards to their default order and visibility. Continue?",
-    "resetToDefault": "Reset to Default"
+    "resetToDefault": "Reset to Default",
+    "widgets": "Widgets",
+    "widgetsDescription": "Configure iOS widgets and Apple Watch"
   },
   "statistics": {
     "title": "Statistics",

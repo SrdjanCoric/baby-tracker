@@ -471,7 +471,9 @@
     "dragToReorder": "Držite i prevucite za promenu redosleda",
     "resetDashboard": "Resetuj kontrolnu tablu",
     "resetDashboardConfirm": "Ovo će resetovati sve kartice na podrazumevani redosled i vidljivost. Nastaviti?",
-    "resetToDefault": "Resetuj na podrazumevano"
+    "resetToDefault": "Resetuj na podrazumevano",
+    "widgets": "Vidžeti",
+    "widgetsDescription": "Podesi iOS vidžete i Apple Watch"
   },
   "statistics": {
     "title": "Statistika",
