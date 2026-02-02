@@ -343,6 +343,31 @@ struct QuickLogIntent: AppIntent {
     }
 }
 
+struct StopActivityIntent: AppIntent {
+    static var title: LocalizedStringResource = "Stop Activity"
+    static var description = IntentDescription("Stop the current timer")
+    static var openAppWhenRun: Bool = true
+
+    @Parameter(title: "Activity")
+    var activity: ActivityType
+
+    init() {
+        self.activity = .feeding
+    }
+
+    init(activity: ActivityType) {
+        self.activity = activity
+    }
+
+    var stopURL: URL {
+        URL(string: "sofibaby://\(activity.rawValue)?action=stop")!
+    }
+
+    func perform() async throws -> some IntentResult {
+        return .result()
+    }
+}
+
 // MARK: - Configuration Intents
 
 struct SelectActivityIntent: WidgetConfigurationIntent {
@@ -536,6 +561,31 @@ struct TwoActivityProvider: AppIntentTimelineProvider {
     }
 }
 
+// MARK: - Widget Stop Button
+
+struct WidgetStopButton: View {
+    let activity: ActivityType
+
+    var body: some View {
+        Button(intent: StopActivityIntent(activity: activity)) {
+            HStack(spacing: 8) {
+                Image(systemName: "stop.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                Text("Stop")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(Color(hex: "DC3545"))
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(.white)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Small Widget View
 // Informational display: shows activity status and context
 
@@ -549,91 +599,100 @@ struct SmallWidgetView: View {
     }
 
     var body: some View {
-        Link(destination: activity.deepLinkURL) {
-            VStack(spacing: 0) {
-                // Top: Baby name + activity emoji
-                HStack {
-                    if let babyName = entry.widgetData?.babyName {
-                        Text(babyName)
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.9))
-                    }
-                    Spacer()
-                    Text(activity.emoji)
-                        .font(.system(size: 20))
+        VStack(spacing: 0) {
+            // Top: Baby name + activity emoji
+            HStack {
+                if let babyName = entry.widgetData?.babyName {
+                    Text(babyName)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.9))
                 }
-                .padding(.horizontal, 14)
-                .padding(.top, 12)
-
                 Spacer()
+                Text(activity.emoji)
+                    .font(.system(size: 20))
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
 
-                // Center: Contextual info
-                VStack(spacing: 4) {
-                    if let data = entry.widgetData {
-                        if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
-                            // Active timer display
-                            Text(startDate, style: .timer)
-                                .font(.system(size: 32, weight: .light, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundStyle(.white)
+            Spacer()
 
-                            if let context = getTimerContext(for: activity, data: data) {
-                                Text(formatTimerContext(context, for: activity))
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.8))
-                            } else {
-                                Text("In progress")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.8))
-                            }
-                        } else {
-                            // Show contextual info based on activity type
-                            Text(getSmallWidgetMainText(for: activity, data: data))
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white)
-                                .multilineTextAlignment(.center)
-                                .minimumScaleFactor(0.8)
-                                .lineLimit(1)
+            // Center: Contextual info
+            VStack(spacing: 4) {
+                if let data = entry.widgetData {
+                    if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                        // Active timer display
+                        Text(startDate, style: .timer)
+                            .font(.system(size: 32, weight: .light, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .multilineTextAlignment(.center)
 
-                            Text(getSmallWidgetSubtext(for: activity, data: data))
-                                .font(.system(size: 11, weight: .medium))
+                        if let context = getTimerContext(for: activity, data: data) {
+                            Text(formatTimerContext(context, for: activity))
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.8))
+                                .frame(maxWidth: .infinity)
                                 .multilineTextAlignment(.center)
-                                .minimumScaleFactor(0.8)
-                                .lineLimit(1)
+                        } else {
+                            Text("In progress")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.8))
+                                .frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
                         }
                     } else {
-                        Text(activity.label)
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        // Show contextual info based on activity type
+                        Text(getSmallWidgetMainText(for: activity, data: data))
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
-                        Text("Open app to sync")
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.8)
+                            .lineLimit(1)
+
+                        Text(getSmallWidgetSubtext(for: activity, data: data))
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.8)
+                            .lineLimit(1)
                     }
+                } else {
+                    Text(activity.label)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text("Open app to sync")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.7))
                 }
-                .padding(.horizontal, 12)
-
-                Spacer()
-
-                // Bottom: Time since last activity
-                if let data = entry.widgetData, !isActive {
-                    if let lastTime = getLastActivityTime(for: activity, data: data) {
-                        Text(formatTimeAgoLong(lastTime))
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(activity.accentColor)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(
-                                Capsule()
-                                    .fill(.white)
-                            )
-                    }
-                }
-
-                Spacer().frame(height: 12)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 12)
+
+            Spacer()
+
+            Spacer().frame(height: 8)
+
+            // Bottom: Stop button when active, time since last activity when inactive
+            if isActive {
+                WidgetStopButton(activity: activity)
+            } else if let data = entry.widgetData {
+                if let lastTime = getLastActivityTime(for: activity, data: data) {
+                    Text(formatTimeAgoLong(lastTime))
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundStyle(activity.accentColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(.white)
+                        )
+                }
+            }
+
+            Spacer().frame(height: 14)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .widgetURL(activity.deepLinkURL)
         .containerBackground(activity.accentColor, for: .widget)
     }
 }
