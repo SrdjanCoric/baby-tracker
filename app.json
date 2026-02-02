@@ -82,6 +82,7 @@
       "bundler": "metro"
     },
     "plugins": [
+      "./plugins/with-live-activity-controller",
       "expo-router",
       "expo-apple-authentication",
       [
