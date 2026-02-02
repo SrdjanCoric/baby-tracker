@@ -157,6 +157,13 @@ export default function SettingsScreen() {
           />
           <SettingsDivider />
           <SettingsRow
+            icon="⌚"
+            label={t("settings.widgets")}
+            onPress={() => router.push("/settings/widget-config")}
+            testID="widget-config"
+          />
+          <SettingsDivider />
+          <SettingsRow
             icon="🔔"
             label={t("settings.notifications")}
             onPress={() => router.push("/settings/notifications")}
