@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   SleepStorageService,
   StoredSleepEntry,
@@ -24,6 +24,7 @@ import {
   getWakeWindowForAge,
   checkSleepMilestoneCrossing,
 } from "@/utils/sleepGoals";
+import { startTimerLiveActivity, endTimerLiveActivity, updateTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActiveSleepTimer {
   isRunning: boolean;
@@ -191,6 +192,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges } = useSync();
   const { user } = useAuth();
+  const liveActivityIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('sleep_sessions', (change: RemoteChange) => {
@@ -318,6 +320,11 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       type: sleepType,
     });
 
+    const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType);
+    if (activityId) {
+      liveActivityIdRef.current = activityId;
+    }
+
     return { success: true };
   }, [selectedBaby, user?.id]);
 
@@ -349,6 +356,11 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "STOP_TIMER" });
     await SleepStorageService.clearActiveTimer(selectedBaby.id);
 
+    if (liveActivityIdRef.current) {
+      await endTimerLiveActivity(liveActivityIdRef.current);
+      liveActivityIdRef.current = null;
+    }
+
     if (user?.id) {
       try {
         await releaseTimerLock(selectedBaby.id, "sleep", user.id);
@@ -367,6 +379,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         startedAt: state.activeTimer.startTime.toISOString(),
         type: sleepType,
       });
+      if (liveActivityIdRef.current) {
+        updateTimerLiveActivity(liveActivityIdRef.current, sleepType);
+      }
     }
   }, [selectedBaby, state.activeTimer]);
 

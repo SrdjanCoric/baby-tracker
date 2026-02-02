@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   FeedingStorageService,
   StoredFeedingEntry,
@@ -18,6 +18,8 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
+import { startTimerLiveActivity, endTimerLiveActivity, updateTimerLiveActivity } from "@/services/live-activity-service";
+import type { BreastSide as LiveActivityBreastSide } from "@/services/live-activity-service";
 
 export interface ActiveTimer {
   isRunning: boolean;
@@ -189,6 +191,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges } = useSync();
   const { user } = useAuth();
+  const liveActivityIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('feedings', (change: RemoteChange) => {
@@ -305,6 +308,12 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       currentSideStartedAt: startTime.toISOString(),
     });
 
+    // Start Live Activity
+    const activityId = await startTimerLiveActivity("feeding", selectedBaby.name, side as LiveActivityBreastSide);
+    if (activityId) {
+      liveActivityIdRef.current = activityId;
+    }
+
     return { success: true };
   }, [selectedBaby, user?.id]);
 
@@ -359,6 +368,12 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "STOP_TIMER" });
     await FeedingStorageService.clearActiveTimer(selectedBaby.id);
 
+    // End Live Activity
+    if (liveActivityIdRef.current) {
+      await endTimerLiveActivity(liveActivityIdRef.current);
+      liveActivityIdRef.current = null;
+    }
+
     if (user?.id) {
       try {
         await releaseTimerLock(selectedBaby.id, "feeding", user.id);
@@ -402,6 +417,11 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         rightAccumulatedSeconds: rightAccumulated,
         currentSideStartedAt: now.toISOString(),
       });
+
+      // Update Live Activity with new side
+      if (liveActivityIdRef.current) {
+        updateTimerLiveActivity(liveActivityIdRef.current, side as LiveActivityBreastSide);
+      }
     }
   }, [selectedBaby, state.activeTimer]);
 
