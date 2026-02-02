@@ -17,25 +17,18 @@ struct TimerActivityAttributes: ActivityAttributes {
 
 // MARK: - Activity Colors
 
-extension Color {
-    static func activityPrimaryColor(for type: String) -> Color {
-        switch type {
-        case "feeding": return Color("feedingPrimary")
-        case "sleep": return Color("sleepPrimary")
-        case "pumping": return Color("pumpingPrimary")
-        case "tummyTime": return Color("tummyTimePrimary")
-        default: return Color("feedingPrimary")
-        }
-    }
+private let feedingColor = Color(red: 140/255, green: 179/255, blue: 105/255)  // #8CB369
+private let sleepColor = Color(red: 158/255, green: 141/255, blue: 169/255)    // #9E8DA9
+private let pumpingColor = Color(red: 123/255, green: 163/255, blue: 168/255)  // #7BA3A8
+private let tummyTimeColor = Color(red: 212/255, green: 165/255, blue: 116/255) // #D4A574
 
-    static func activityBackgroundColor(for type: String) -> Color {
-        switch type {
-        case "feeding": return Color("feedingBackground")
-        case "sleep": return Color("sleepBackground")
-        case "pumping": return Color("pumpingBackground")
-        case "tummyTime": return Color("tummyTimeBackground")
-        default: return Color("feedingBackground")
-        }
+func activityAccentColor(for type: String) -> Color {
+    switch type {
+    case "feeding": return feedingColor
+    case "sleep": return sleepColor
+    case "pumping": return pumpingColor
+    case "tummyTime": return tummyTimeColor
+    default: return feedingColor
     }
 }
 
@@ -99,8 +92,8 @@ struct TimerLiveActivity: Widget {
                             Text(context.attributes.babyName)
                                 .font(.caption)
                                 .fontWeight(.semibold)
-                            if let contextLabel = context.state.context {
-                                Text(contextLabel)
+                            if let ctx = context.state.context {
+                                Text(contextLabel(for: ctx, activityType: context.attributes.activityType))
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
@@ -112,7 +105,7 @@ struct TimerLiveActivity: Widget {
                     Text(context.attributes.startTime, style: .timer)
                         .font(.system(.title, design: .monospaced))
                         .fontWeight(.medium)
-                        .foregroundStyle(Color.activityPrimaryColor(for: context.attributes.activityType))
+                        .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
                         .monospacedDigit()
                 }
 
@@ -124,30 +117,28 @@ struct TimerLiveActivity: Widget {
 
                         Spacer()
 
-                        Link(destination: URL(string: "sofibaby://\(context.attributes.activityType)/stop")!) {
-                            Text("Stop")
+                        Link(destination: URL(string: "sofibaby://\(context.attributes.activityType)")!) {
+                            Text("Open")
                                 .font(.caption)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 6)
-                                .background(Color.red)
+                                .background(activityAccentColor(for: context.attributes.activityType))
                                 .clipShape(Capsule())
                         }
                     }
                 }
             } compactLeading: {
                 // Compact leading (left of camera notch)
-                HStack(spacing: 4) {
-                    Text(activityEmoji(for: context.attributes.activityType))
-                        .font(.caption)
-                }
+                Text(activityEmoji(for: context.attributes.activityType))
+                    .font(.caption)
             } compactTrailing: {
                 // Compact trailing (right of camera notch)
                 Text(context.attributes.startTime, style: .timer)
                     .font(.system(.caption, design: .monospaced))
                     .monospacedDigit()
-                    .foregroundStyle(Color.activityPrimaryColor(for: context.attributes.activityType))
+                    .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
             } minimal: {
                 // Minimal view (when multiple activities are running)
                 Text(activityEmoji(for: context.attributes.activityType))
@@ -192,7 +183,7 @@ struct LockScreenLiveActivityView: View {
                 Text(context.attributes.startTime, style: .timer)
                     .font(.system(size: 36, weight: .light, design: .monospaced))
                     .monospacedDigit()
-                    .foregroundStyle(Color.activityPrimaryColor(for: context.attributes.activityType))
+                    .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
 
                 Text("Started \(context.attributes.startTime, style: .time)")
                     .font(.caption2)
@@ -200,38 +191,6 @@ struct LockScreenLiveActivityView: View {
             }
         }
         .padding()
-        .activityBackgroundTint(Color.activityBackgroundColor(for: context.attributes.activityType).opacity(0.3))
+        .activityBackgroundTint(activityAccentColor(for: context.attributes.activityType).opacity(0.2))
     }
-}
-
-// MARK: - Previews
-
-#Preview("Lock Screen", as: .content, using: TimerActivityAttributes(
-    activityType: "feeding",
-    babyName: "Sofia",
-    startTime: Date()
-)) {
-    TimerLiveActivity()
-} contentStates: {
-    TimerActivityAttributes.ContentState(elapsedSeconds: 0, context: "left")
-}
-
-#Preview("Dynamic Island Compact", as: .dynamicIsland(.compact), using: TimerActivityAttributes(
-    activityType: "sleep",
-    babyName: "Sofia",
-    startTime: Date()
-)) {
-    TimerLiveActivity()
-} contentStates: {
-    TimerActivityAttributes.ContentState(elapsedSeconds: 300, context: "nap")
-}
-
-#Preview("Dynamic Island Expanded", as: .dynamicIsland(.expanded), using: TimerActivityAttributes(
-    activityType: "pumping",
-    babyName: "Sofia",
-    startTime: Date()
-)) {
-    TimerLiveActivity()
-} contentStates: {
-    TimerActivityAttributes.ContentState(elapsedSeconds: 600, context: "both")
 }
