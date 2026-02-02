@@ -18,6 +18,9 @@
       "bundleIdentifier": "com.sofibaby.app",
       "usesAppleSignIn": true,
       "associatedDomains": [],
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.sofibaby.app"]
+      },
       "infoPlist": {
         "CFBundleURLTypes": [
           {
@@ -32,7 +35,8 @@
           }
         ],
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleLocalizations": ["en", "sr", "es"]
+        "CFBundleLocalizations": ["en", "sr", "es"],
+        "NSSupportsLiveActivities": true
       }
     },
     "android": {
@@ -98,6 +102,12 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to add a baby photo."
+        }
+      ],
+      [
+        "@bacons/apple-targets",
+        {
+          "appleTeamId": "743WPPWD3W"
         }
       ]
     ],
