@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View, Keyboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useUnits } from "@/contexts";
@@ -23,6 +23,7 @@ type VolumeUnit = "ml" | "oz";
 export default function PumpingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { showVolumeInput: showVolumeInputParam } = useLocalSearchParams<{ showVolumeInput?: string }>();
   const { selectedBaby } = useBaby();
   const { volumeUnit } = useUnits();
   const {
@@ -36,7 +37,7 @@ export default function PumpingScreen() {
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("pumping");
 
   const [tick, setTick] = useState(0);
-  const [showVolumeInput, setShowVolumeInput] = useState(false);
+  const [showVolumeInput, setShowVolumeInput] = useState(showVolumeInputParam === "true" && activeTimer?.isRunning);
   const [volumeMl, setVolumeMl] = useState<number | null>(null);
   const [unit, setUnit] = useState<VolumeUnit>(volumeUnit);
   const [inputValue, setInputValue] = useState("");
