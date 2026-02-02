@@ -8,7 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, useTheme, useAuth, useSync, useNotifications } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, useTheme, useAuth, useSync, useNotifications } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
@@ -134,9 +134,21 @@ function DisplayNamePromptWrapper({ children }: { children: React.ReactNode }) {
 }
 
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
       console.log("[DeepLink] Received URL:", url);
+
+      // Widget deep links (sofibaby://feeding, etc.) are handled automatically by Expo Router
+      // No manual navigation needed - just return early
+      const widgetActivities = ["feeding", "sleep", "diaper", "pumping", "growth", "tummyTime"];
+      for (const activity of widgetActivities) {
+        if (url.includes(`sofibaby://${activity}`)) {
+          console.log("[DeepLink] Widget link detected, Expo Router will handle:", activity);
+          return;
+        }
+      }
 
       if (url.includes("login-callback") || url.includes("auth/callback")) {
         try {
@@ -357,6 +369,7 @@ export default function RootLayout() {
                             <GrowthProvider>
                               <TummyTimeProvider>
                                 <ActiveTimersProvider>
+                                <WidgetProvider>
                                 <NotificationProvider>
                                   <NotificationAuthSetup>
                                     <DashboardConfigProvider>
@@ -366,6 +379,7 @@ export default function RootLayout() {
                                     </DashboardConfigProvider>
                                   </NotificationAuthSetup>
                                 </NotificationProvider>
+                                </WidgetProvider>
                                 </ActiveTimersProvider>
                               </TummyTimeProvider>
                             </GrowthProvider>
