@@ -1,42 +1,38 @@
 import { Platform, NativeModules } from "react-native";
-import type { TimerActivityType, BreastSide, SleepType } from "@/constants/activities";
 
-interface LiveActivityController {
-  startTimerActivity: (
+export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
+export type BreastSide = "left" | "right" | "both";
+export type SleepType = "nap" | "night";
+
+interface LiveActivityControllerModule {
+  startTimerActivity(
     activityType: string,
     babyName: string,
-    context?: string
-  ) => Promise<string | null>;
-  updateTimerActivity: (
+    context: string | null
+  ): Promise<string | null>;
+  updateTimerActivity(
     activityId: string,
-    context?: string
-  ) => Promise<boolean>;
-  endTimerActivity: (activityId: string) => Promise<boolean>;
-  endAllActivities: () => Promise<void>;
+    context: string | null
+  ): Promise<boolean>;
+  endTimerActivity(activityId: string): Promise<boolean>;
+  endAllActivities(): Promise<void>;
 }
 
-let liveActivityModule: LiveActivityController | null = null;
-
-async function getLiveActivityModule(): Promise<LiveActivityController | null> {
+function getLiveActivityModule(): LiveActivityControllerModule | null {
   if (Platform.OS !== "ios") {
     return null;
   }
 
-  if (liveActivityModule) {
-    return liveActivityModule;
+  const module = NativeModules.LiveActivityController as
+    | LiveActivityControllerModule
+    | undefined;
+
+  if (!module) {
+    console.log("[LiveActivity] Native module not available");
+    return null;
   }
 
-  try {
-    const module = NativeModules.LiveActivityController as LiveActivityController | undefined;
-    if (module) {
-      liveActivityModule = module;
-      return liveActivityModule;
-    }
-  } catch (error) {
-    console.log("[LiveActivityService] Native module not available:", error);
-  }
-
-  return null;
+  return module;
 }
 
 export async function startTimerLiveActivity(
@@ -44,17 +40,21 @@ export async function startTimerLiveActivity(
   babyName: string,
   context?: BreastSide | SleepType
 ): Promise<string | null> {
-  const module = await getLiveActivityModule();
+  const module = getLiveActivityModule();
   if (!module) {
     return null;
   }
 
   try {
-    const activityId = await module.startTimerActivity(activityType, babyName, context);
-    console.log("[LiveActivityService] Started activity:", activityId);
+    const activityId = await module.startTimerActivity(
+      activityType,
+      babyName,
+      context ?? null
+    );
+    console.log("[LiveActivity] Started:", activityId);
     return activityId;
   } catch (error) {
-    console.error("[LiveActivityService] Failed to start activity:", error);
+    console.error("[LiveActivity] Failed to start:", error);
     return null;
   }
 }
@@ -63,48 +63,48 @@ export async function updateTimerLiveActivity(
   activityId: string,
   context?: BreastSide | SleepType
 ): Promise<boolean> {
-  const module = await getLiveActivityModule();
+  const module = getLiveActivityModule();
   if (!module) {
     return false;
   }
 
   try {
-    const success = await module.updateTimerActivity(activityId, context);
-    console.log("[LiveActivityService] Updated activity:", activityId, success);
+    const success = await module.updateTimerActivity(activityId, context ?? null);
+    console.log("[LiveActivity] Updated:", activityId, success);
     return success;
   } catch (error) {
-    console.error("[LiveActivityService] Failed to update activity:", error);
+    console.error("[LiveActivity] Failed to update:", error);
     return false;
   }
 }
 
 export async function endTimerLiveActivity(activityId: string): Promise<boolean> {
-  const module = await getLiveActivityModule();
+  const module = getLiveActivityModule();
   if (!module) {
     return false;
   }
 
   try {
     const success = await module.endTimerActivity(activityId);
-    console.log("[LiveActivityService] Ended activity:", activityId, success);
+    console.log("[LiveActivity] Ended:", activityId, success);
     return success;
   } catch (error) {
-    console.error("[LiveActivityService] Failed to end activity:", error);
+    console.error("[LiveActivity] Failed to end:", error);
     return false;
   }
 }
 
 export async function endAllLiveActivities(): Promise<void> {
-  const module = await getLiveActivityModule();
+  const module = getLiveActivityModule();
   if (!module) {
     return;
   }
 
   try {
     await module.endAllActivities();
-    console.log("[LiveActivityService] Ended all activities");
+    console.log("[LiveActivity] Ended all activities");
   } catch (error) {
-    console.error("[LiveActivityService] Failed to end all activities:", error);
+    console.error("[LiveActivity] Failed to end all:", error);
   }
 }
 
