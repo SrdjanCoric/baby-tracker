@@ -150,7 +150,8 @@
     "logPastSolid": "Evidentiraj prethodnu čvrstu hranu",
     "selectContentAndAmount": "Molimo izaberite šta je u flašici i unesite količinu",
     "enterAmountValidation": "Molimo unesite količinu",
-    "enterFoodValidation": "Molimo unesite ili izaberite hranu"
+    "enterFoodValidation": "Molimo unesite ili izaberite hranu",
+    "stopError": "Nije uspelo zaustavljanje hranjenja. Molimo pokušajte ponovo."
   },
   "sleep": {
     "title": "Spavanje",
@@ -200,7 +201,8 @@
     "dismissSuggestion": "Ne prikazuj ponovo",
     "goalUpdated": "Cilj ažuriran",
     "startedEarlier": "Počelo ranije?",
-    "whenDidSleepStart": "Kada je počelo spavanje?"
+    "whenDidSleepStart": "Kada je počelo spavanje?",
+    "stopError": "Nije uspelo zaustavljanje spavanja. Molimo pokušajte ponovo."
   },
   "diaper": {
     "title": "Pelene",
@@ -326,7 +328,8 @@
     "dismissSuggestion": "Ne prikazuj ponovo",
     "goalUpdated": "Cilj ažuriran",
     "quickGoals": "Brzi izbor",
-    "customMinutes": "Prilagođeno (minuti)"
+    "customMinutes": "Prilagođeno (minuti)",
+    "stopError": "Nije uspelo zaustavljanje vremena na stomaku. Molimo pokušajte ponovo."
   },
   "baby": {
     "title": "Beba",
