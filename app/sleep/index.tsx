@@ -10,7 +10,7 @@ import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
 import { determineSleepType } from "@/validators/sleep";
-import { SleepMilestoneSuggestionModal } from "@/components";
+import { SleepMilestoneSuggestionModal, NoBabyScreen } from "@/components";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_MUTED = "#E8E4F0";
@@ -110,13 +110,7 @@ export default function SleepScreen() {
   }, [dismissMilestoneSuggestion]);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   const isTimerRunning = activeTimer?.isRunning ?? false;

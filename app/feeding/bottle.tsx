@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useFeeding, useBaby, useUnits } from "@/contexts";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useNotificationIntegration } from "@/hooks";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { BottleContentType } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
@@ -125,13 +126,7 @@ export default function BottleFeedingScreen() {
   }, [showValidation, contentType, amountMl, t]);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   return (

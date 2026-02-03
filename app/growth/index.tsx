@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
 import { useGrowth } from "@/contexts/growth-context";
 import { useBaby, useUnits } from "@/contexts";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { validateGrowthMeasurement } from "@/validators/growth";
 import { formatDate } from "@/utils/time";
 import { lbsToKg, inchesToCm } from "@/utils/growth";
@@ -93,13 +94,7 @@ export default function GrowthScreen() {
   const canSave = hasAnyMeasurement && !isSaving;
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   return (

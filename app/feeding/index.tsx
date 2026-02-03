@@ -12,6 +12,7 @@ import { COMMON_FOODS } from "@/constants/foods";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 import { ACTIVITY, SURFACE, TEXT } from "@/constants/colors";
 import { useColorScheme } from "nativewind";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 
 const FEEDING_GREEN = ACTIVITY.feeding.accent;
 const FEEDING_GREEN_LIGHT = ACTIVITY.feeding.accentDark;
@@ -90,13 +91,7 @@ export default function FeedingScreen() {
   }, [changeSide]);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
 

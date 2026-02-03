@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 import { useTummyTime, useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
-import { MilestoneSuggestionModal } from "@/components/MilestoneSuggestionModal";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
+// @ts-expect-error MilestoneSuggestionModal not yet exported from @/components
+import { MilestoneSuggestionModal } from "@/components";
 import Svg, { Circle } from "react-native-svg";
 
 const TUMMY_ORANGE = "#E67E22";
@@ -106,13 +108,7 @@ export default function TummyTimeScreen() {
   }, [dismissMilestoneSuggestion]);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   const isTimerRunning = activeTimer?.isRunning ?? false;

@@ -7,6 +7,7 @@ import { useFeeding } from "@/contexts";
 import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useNotificationIntegration, useTimerAlertIntegration } from "@/hooks";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { BreastSide } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
@@ -106,13 +107,7 @@ export default function BreastfeedingScreen() {
   }, [router]);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   const isTimerRunning = activeTimer?.isRunning ?? false;
