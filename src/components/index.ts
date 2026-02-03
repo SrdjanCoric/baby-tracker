@@ -72,6 +72,7 @@ export { ConflictResolutionModal } from "./ConflictResolutionModal";
 
 // Auth components
 export { DisplayNamePrompt } from "./DisplayNamePrompt";
+export { NoBabyScreen } from "./NoBabyScreen";
 
 // Onboarding components
 export {
