@@ -43,6 +43,7 @@ export interface UpdatePumpingInput {
 export interface ActivePumpingTimerData {
   startedAt: string;
   side: BreastSide;
+  liveActivityId?: string;
 }
 
 function generateId(): string {

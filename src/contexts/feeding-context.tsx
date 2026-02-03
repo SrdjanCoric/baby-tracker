@@ -260,6 +260,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
     const activeTimer = await FeedingStorageService.getActiveTimer(selectedBaby.id);
     if (activeTimer) {
+      liveActivityIdRef.current = activeTimer.liveActivityId ?? null;
       dispatch({
         type: "RESTORE_TIMER",
         payload: {
@@ -299,6 +300,11 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     const startTime = new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, side } });
 
+    const activityId = await startTimerLiveActivity("feeding", selectedBaby.name, side as LiveActivityBreastSide);
+    if (activityId) {
+      liveActivityIdRef.current = activityId;
+    }
+
     await FeedingStorageService.setActiveTimer(selectedBaby.id, {
       startedAt: startTime.toISOString(),
       side,
@@ -306,13 +312,8 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       leftAccumulatedSeconds: 0,
       rightAccumulatedSeconds: 0,
       currentSideStartedAt: startTime.toISOString(),
+      liveActivityId: activityId ?? undefined,
     });
-
-    // Start Live Activity
-    const activityId = await startTimerLiveActivity("feeding", selectedBaby.name, side as LiveActivityBreastSide);
-    if (activityId) {
-      liveActivityIdRef.current = activityId;
-    }
 
     return { success: true };
   }, [selectedBaby, user?.id]);
@@ -416,6 +417,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         leftAccumulatedSeconds: leftAccumulated,
         rightAccumulatedSeconds: rightAccumulated,
         currentSideStartedAt: now.toISOString(),
+        liveActivityId: liveActivityIdRef.current ?? undefined,
       });
 
       // Update Live Activity with new side
