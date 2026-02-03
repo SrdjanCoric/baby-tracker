@@ -477,7 +477,21 @@
     "wetDiapersPerDay": "{{count}} wet/day",
     "shareReport": "Share Report",
     "shareReportDescription": "Generate a PDF for your pediatrician",
-    "timeAgo": "{{time}} ago"
+    "timeAgo": "{{time}} ago",
+    "perDay": "/day",
+    "wetPerDay": "wet/day",
+    "session_one": "{{count}} session",
+    "session_other": "{{count}} sessions",
+    "nap_one": "{{count}} nap",
+    "nap_other": "{{count}} naps",
+    "wetAndDirty": "{{wet}} wet · {{dirty}} dirty",
+    "daySun": "Sun",
+    "dayMon": "Mon",
+    "dayTue": "Tue",
+    "dayWed": "Wed",
+    "dayThu": "Thu",
+    "dayFri": "Fri",
+    "daySat": "Sat"
   },
   "insights": {
     "sleepIncrease": "Sleep is up {{percentage}}%",
