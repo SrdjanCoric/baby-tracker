@@ -27,16 +27,14 @@ const ALL_ACTIVITIES: ActivityType[] = [
   "sleep",
   "diaper",
   "pumping",
-  "growth",
   "tummyTime",
 ];
 
-const ACTIVITY_LABELS: Record<ActivityType, string> = {
+const ACTIVITY_LABELS: Partial<Record<ActivityType, string>> = {
   feeding: "Feeding",
   sleep: "Sleep",
   diaper: "Diaper",
   pumping: "Pumping",
-  growth: "Growth",
   tummyTime: "Tummy Time",
 };
 

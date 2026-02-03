@@ -85,7 +85,7 @@ struct WidgetColors {
 // MARK: - Activity Type Definition
 
 enum ActivityType: String, CaseIterable, AppEnum {
-    case feeding, sleep, diaper, pumping, growth, tummyTime
+    case feeding, sleep, diaper, pumping, tummyTime
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Activity Type"
     static var caseDisplayRepresentations: [ActivityType: DisplayRepresentation] = [
@@ -93,7 +93,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         .sleep: DisplayRepresentation(title: "Sleep", image: .init(systemName: "moon.fill")),
         .diaper: DisplayRepresentation(title: "Diaper", image: .init(systemName: "leaf.fill")),
         .pumping: DisplayRepresentation(title: "Pumping", image: .init(systemName: "flask.fill")),
-        .growth: DisplayRepresentation(title: "Growth", image: .init(systemName: "ruler.fill")),
         .tummyTime: DisplayRepresentation(title: "Tummy Time", image: .init(systemName: "figure.play"))
     ]
 
@@ -103,7 +102,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         case .sleep: return "moon.fill"
         case .diaper: return "leaf.fill"
         case .pumping: return "flask.fill"
-        case .growth: return "ruler.fill"
         case .tummyTime: return "figure.play"
         }
     }
@@ -114,7 +112,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         case .sleep: return "😴"
         case .diaper: return "🚼"
         case .pumping: return "🫙"
-        case .growth: return "📏"
         case .tummyTime: return "💪"
         }
     }
@@ -125,7 +122,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         case .sleep: return "Sleep"
         case .diaper: return "Diaper"
         case .pumping: return "Pumping"
-        case .growth: return "Growth"
         case .tummyTime: return "Tummy Time"
         }
     }
@@ -136,7 +132,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         case .sleep: return Color("sleepPrimary")
         case .diaper: return Color("diaperPrimary")
         case .pumping: return Color("pumpingPrimary")
-        case .growth: return Color("growthPrimary")
         case .tummyTime: return Color("tummyTimePrimary")
         }
     }
@@ -147,7 +142,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         case .sleep: return Color("sleepBackground")
         case .diaper: return Color("diaperBackground")
         case .pumping: return Color("pumpingBackground")
-        case .growth: return Color("growthBackground")
         case .tummyTime: return Color("tummyTimeBackground")
         }
     }
@@ -159,7 +153,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         case .sleep: return Color(hex: WidgetColors.Accent.sleep)
         case .diaper: return Color(hex: WidgetColors.Accent.diaper)
         case .pumping: return Color(hex: WidgetColors.Accent.pumping)
-        case .growth: return Color(hex: WidgetColors.Accent.growth)
         case .tummyTime: return Color(hex: WidgetColors.Accent.tummyTime)
         }
     }
@@ -171,7 +164,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         case .sleep: return Color(hex: WidgetColors.MutedLight.sleep)
         case .diaper: return Color(hex: WidgetColors.MutedLight.diaper)
         case .pumping: return Color(hex: WidgetColors.MutedLight.pumping)
-        case .growth: return Color(hex: WidgetColors.MutedLight.growth)
         case .tummyTime: return Color(hex: WidgetColors.MutedLight.tummyTime)
         }
     }
@@ -183,7 +175,6 @@ enum ActivityType: String, CaseIterable, AppEnum {
         case .sleep: return Color(hex: WidgetColors.MutedDark.sleep)
         case .diaper: return Color(hex: WidgetColors.MutedDark.diaper)
         case .pumping: return Color(hex: WidgetColors.MutedDark.pumping)
-        case .growth: return Color(hex: WidgetColors.MutedDark.growth)
         case .tummyTime: return Color(hex: WidgetColors.MutedDark.tummyTime)
         }
     }
@@ -435,7 +426,6 @@ func getLastActivityTime(for activity: ActivityType, data: WidgetDataModel?) -> 
     case .sleep: isoString = data.activities.sleep.lastTime
     case .diaper: isoString = data.activities.diaper.lastTime
     case .pumping: isoString = data.activities.pumping.lastTime
-    case .growth: isoString = data.activities.growth.lastMeasurement?.date
     case .tummyTime: isoString = data.activities.tummyTime.lastTime
     }
 
@@ -750,12 +740,6 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
         }
         return "Pumping"
 
-    case .growth:
-        if let weight = data.activities.growth.lastMeasurement?.weightKg {
-            return String(format: "%.1f kg", weight)
-        }
-        return "Growth"
-
     case .tummyTime:
         let mins = data.activities.tummyTime.todayMinutes
         let goal = data.activities.tummyTime.goalMinutes
@@ -790,12 +774,6 @@ func getSmallWidgetSubtext(for activity: ActivityType, data: WidgetDataModel) ->
     case .pumping:
         let sessions = data.activities.pumping.sessionCount
         return sessions > 0 ? "\(sessions) sessions" : "Tap to log"
-
-    case .growth:
-        if let height = data.activities.growth.lastMeasurement?.heightCm {
-            return String(format: "%.1f cm", height)
-        }
-        return "Tap to measure"
 
     case .tummyTime:
         if let lastDuration = data.activities.tummyTime.lastDurationMinutes, lastDuration > 0 {
@@ -861,11 +839,6 @@ func getLastActivityDetailText(for activity: ActivityType, data: WidgetDataModel
             return "\(volume) ml today"
         }
         return "Last pump"
-    case .growth:
-        if let weight = data.activities.growth.lastMeasurement?.weightKg {
-            return String(format: "%.1f kg", weight)
-        }
-        return "Last measurement"
     case .tummyTime:
         let mins = data.activities.tummyTime.todayMinutes
         if mins > 0 {
@@ -1134,12 +1107,6 @@ struct ActivityRowView: View {
                 return "\(data.activities.pumping.todayVolumeMl)ml today"
             }
             return "\(data.activities.pumping.sessionCount) sessions"
-
-        case .growth:
-            if let weight = data.activities.growth.lastMeasurement?.weightKg {
-                return String(format: "%.1f kg", weight)
-            }
-            return "No measurement"
 
         case .tummyTime:
             let mins = data.activities.tummyTime.todayMinutes
