@@ -7,7 +7,6 @@ import { useTummyTime, useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
-// @ts-expect-error MilestoneSuggestionModal not yet exported from @/components
 import { MilestoneSuggestionModal } from "@/components";
 import Svg, { Circle } from "react-native-svg";
 
