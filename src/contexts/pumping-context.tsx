@@ -190,6 +190,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
     const activeTimer = await PumpingStorageService.getActiveTimer(selectedBaby.id);
     if (activeTimer) {
+      liveActivityIdRef.current = activeTimer.liveActivityId ?? null;
       dispatch({
         type: "START_TIMER",
         payload: {
@@ -223,15 +224,16 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     const startTime = new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, side } });
 
-    await PumpingStorageService.setActiveTimer(selectedBaby.id, {
-      startedAt: startTime.toISOString(),
-      side,
-    });
-
     const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side);
     if (activityId) {
       liveActivityIdRef.current = activityId;
     }
+
+    await PumpingStorageService.setActiveTimer(selectedBaby.id, {
+      startedAt: startTime.toISOString(),
+      side,
+      liveActivityId: activityId ?? undefined,
+    });
 
     return { success: true };
   }, [selectedBaby, user?.id]);
@@ -287,6 +289,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       PumpingStorageService.setActiveTimer(selectedBaby.id, {
         startedAt: state.activeTimer.startTime.toISOString(),
         side,
+        liveActivityId: liveActivityIdRef.current ?? undefined,
       });
       if (liveActivityIdRef.current) {
         updateTimerLiveActivity(liveActivityIdRef.current, side);

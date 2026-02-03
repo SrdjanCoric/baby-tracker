@@ -282,6 +282,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
     if (activeTimer) {
+      liveActivityIdRef.current = activeTimer.liveActivityId ?? null;
       dispatch({
         type: "START_TIMER",
         payload: {
@@ -315,15 +316,16 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const startTime = customStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, sleepType } });
 
-    await SleepStorageService.setActiveTimer(selectedBaby.id, {
-      startedAt: startTime.toISOString(),
-      type: sleepType,
-    });
-
     const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType);
     if (activityId) {
       liveActivityIdRef.current = activityId;
     }
+
+    await SleepStorageService.setActiveTimer(selectedBaby.id, {
+      startedAt: startTime.toISOString(),
+      type: sleepType,
+      liveActivityId: activityId ?? undefined,
+    });
 
     return { success: true };
   }, [selectedBaby, user?.id]);
@@ -378,6 +380,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       SleepStorageService.setActiveTimer(selectedBaby.id, {
         startedAt: state.activeTimer.startTime.toISOString(),
         type: sleepType,
+        liveActivityId: liveActivityIdRef.current ?? undefined,
       });
       if (liveActivityIdRef.current) {
         updateTimerLiveActivity(liveActivityIdRef.current, sleepType);

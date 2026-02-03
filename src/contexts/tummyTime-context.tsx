@@ -259,6 +259,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     const activeTimer = await TummyTimeStorageService.getActiveTimer(selectedBaby.id);
     if (activeTimer) {
+      liveActivityIdRef.current = activeTimer.liveActivityId ?? null;
       dispatch({
         type: "START_TIMER",
         payload: {
@@ -291,14 +292,15 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     const startTime = new Date();
     dispatch({ type: "START_TIMER", payload: { startTime } });
 
-    await TummyTimeStorageService.setActiveTimer(selectedBaby.id, {
-      startedAt: startTime.toISOString(),
-    });
-
     const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name);
     if (activityId) {
       liveActivityIdRef.current = activityId;
     }
+
+    await TummyTimeStorageService.setActiveTimer(selectedBaby.id, {
+      startedAt: startTime.toISOString(),
+      liveActivityId: activityId ?? undefined,
+    });
 
     return { success: true };
   }, [selectedBaby, user?.id]);
