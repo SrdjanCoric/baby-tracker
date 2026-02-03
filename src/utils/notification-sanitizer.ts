@@ -4,6 +4,7 @@
  * to ensure privacy and security
  */
 
+import i18n from "@/i18n";
 import type {
   NotificationContent,
   NotificationData,
@@ -147,17 +148,18 @@ export function applyPrivacySettings(
   // If baby name should be hidden and we have a baby name to replace
   if (!privacySettings.showBabyName && babyName) {
     const babyNamePattern = new RegExp(escapeRegExp(babyName), "gi");
-    title = title.replace(babyNamePattern, "your baby");
-    body = body.replace(babyNamePattern, "your baby");
+    const yourBaby = i18n.t("notificationMessages.yourBaby");
+    title = title.replace(babyNamePattern, yourBaby);
+    body = body.replace(babyNamePattern, yourBaby);
   }
 
   // If activity details should be hidden, use generic messages
   if (!privacySettings.showActivityDetails) {
     // Keep the title but make body generic
     if (content.data?.type === "feeding_reminder") {
-      body = "Tap for details";
+      body = i18n.t("notificationMessages.tapForDetails");
     } else if (content.data?.type === "timer_alert") {
-      body = "Tap to check timer";
+      body = i18n.t("notificationMessages.tapToCheckTimer");
     }
   }
 
@@ -203,34 +205,34 @@ export function generateInAppReminderContent(
   }
 ): { title: string; body: string } {
   if (type === "feeding") {
-    const title = "Feeding Reminder";
-    let body = "Time to feed";
+    const title = i18n.t("notificationMessages.feedingReminderTitle");
+    let body = i18n.t("notificationMessages.feedingReminderBody");
 
     if (privacySettings.showBabyName && details?.babyName) {
-      body = `Time to feed ${details.babyName}`;
+      body = i18n.t("notificationMessages.feedingReminderBodyWithName", { babyName: details.babyName });
     }
 
     if (privacySettings.showActivityDetails && details?.intervalHours) {
-      body += ` (${details.intervalHours}h since last feeding)`;
+      body = i18n.t("notificationMessages.feedingReminderSinceLast", { body, hours: details.intervalHours });
     }
 
     return { title, body };
   }
 
-  // Timer reminder
-  const title = "Timer Alert";
-  let body = "Check your active timer";
+  const title = i18n.t("notificationMessages.timerAlertTitle");
+  let body = i18n.t("notificationMessages.timerAlertBody");
 
   if (privacySettings.showActivityDetails && details?.activityType) {
-    const activityLabels: Record<string, string> = {
-      breastfeeding: "breastfeeding",
-      pumping: "pumping",
-      tummyTime: "tummy time",
-      nap: "nap",
-      nightSleep: "sleep",
+    const activityKeyMap: Record<string, string> = {
+      breastfeeding: "notificationMessages.activityBreastfeeding",
+      pumping: "notificationMessages.activityPumping",
+      tummyTime: "notificationMessages.activityTummyTime",
+      nap: "notificationMessages.activityNap",
+      nightSleep: "notificationMessages.activitySleep",
     };
-    const label = activityLabels[details.activityType] || details.activityType;
-    body = `Still doing ${label}? Tap to check`;
+    const activityKey = activityKeyMap[details.activityType];
+    const label = activityKey ? i18n.t(activityKey as never) : details.activityType;
+    body = i18n.t("notificationMessages.timerAlertBodyWithActivity", { activity: label });
   }
 
   return { title, body };

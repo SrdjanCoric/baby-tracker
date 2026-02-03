@@ -22,12 +22,17 @@ const LANGUAGE_OPTIONS: LanguageOptionConfig[] = [
     value: "sr",
     icon: "\u{1F1F7}\u{1F1F8}",
   },
+  {
+    value: "es",
+    icon: "\u{1F1EA}\u{1F1F8}",
+  },
 ];
 
 const LANGUAGE_LABELS = {
   system: { label: "settings.systemDefault", description: "settings.systemDefaultDesc" },
   en: { label: "settings.english", description: "English" },
   sr: { label: "settings.serbian", description: "Srpski" },
+  es: { label: "settings.spanish", description: "Español" },
 } as const;
 
 export default function LanguageSettingsScreen() {
@@ -53,7 +58,7 @@ export default function LanguageSettingsScreen() {
       <ScrollView className="flex-1 px-4 py-4">
         <View className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-card p-4 mb-6">
           <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-1">
-            {resolvedLanguage === "sr" ? "Srpski" : "English"}
+            {resolvedLanguage === "sr" ? "Srpski" : resolvedLanguage === "es" ? "Español" : "English"}
           </Text>
         </View>
 

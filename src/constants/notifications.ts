@@ -3,6 +3,7 @@
  * Central source of truth for notification-related configuration
  */
 
+import i18n from "@/i18n";
 import type {
   NotificationSettings,
   TimerThresholds,
@@ -62,39 +63,43 @@ export const NOTIFICATION_STORAGE_KEYS = {
   LAST_FEEDING_REMINDER: "@last_feeding_reminder",
 } as const;
 
-/**
- * Timer alert messages by activity type
- */
-export const TIMER_ALERT_MESSAGES: Record<keyof TimerThresholds, { title: string; body: string }> = {
+const TIMER_ALERT_KEYS: Record<keyof TimerThresholds, { titleKey: string; bodyKey: string }> = {
   breastfeeding: {
-    title: "Feeding Timer",
-    body: "Still breastfeeding? Tap to stop timer",
+    titleKey: "notificationMessages.feedingTimerTitle",
+    bodyKey: "notificationMessages.feedingTimerBody",
   },
   pumping: {
-    title: "Pumping Timer",
-    body: "Still pumping? Tap to stop timer",
+    titleKey: "notificationMessages.pumpingTimerTitle",
+    bodyKey: "notificationMessages.pumpingTimerBody",
   },
   tummyTime: {
-    title: "Tummy Time",
-    body: "Still doing tummy time? Tap to stop timer",
+    titleKey: "notificationMessages.tummyTimeTimerTitle",
+    bodyKey: "notificationMessages.tummyTimeTimerBody",
   },
   nap: {
-    title: "Nap Timer",
-    body: "Baby still napping? Tap to stop timer",
+    titleKey: "notificationMessages.napTimerTitle",
+    bodyKey: "notificationMessages.napTimerBody",
   },
   nightSleep: {
-    title: "Sleep Timer",
-    body: "Baby still sleeping? Tap to check",
+    titleKey: "notificationMessages.nightSleepTimerTitle",
+    bodyKey: "notificationMessages.nightSleepTimerBody",
   },
 };
 
-/**
- * Default feeding reminder message
- */
-export const FEEDING_REMINDER_MESSAGE = {
-  title: "Feeding Reminder",
-  body: "Time to feed your baby",
-};
+export function getTimerAlertMessage(activityType: keyof TimerThresholds): { title: string; body: string } {
+  const keys = TIMER_ALERT_KEYS[activityType];
+  return {
+    title: i18n.t(keys.titleKey as never),
+    body: i18n.t(keys.bodyKey as never),
+  };
+}
+
+export function getFeedingReminderMessage(): { title: string; body: string } {
+  return {
+    title: i18n.t("notificationMessages.feedingReminderTitle"),
+    body: i18n.t("notificationMessages.feedingReminderBody"),
+  };
+}
 
 /**
  * Validates that a value is a valid feeding reminder interval

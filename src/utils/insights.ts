@@ -142,7 +142,7 @@ export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
 
   if (concerningChanges.length > 0) {
     const concern = concerningChanges[0];
-    const activityName = concern.type === "feeding" ? "feedings" : "diapers";
+    const activityName = concern.type === "feeding" ? "insights.summary.activityFeedings" : "insights.summary.activityDiapers";
     return {
       type: "attention",
       emoji: "👀",
@@ -156,7 +156,7 @@ export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
     const bestImprovement = positiveChanges.reduce((best, current) =>
       current.percentageChange > best.percentageChange ? current : best
     );
-    const activityName = bestImprovement.type === "sleep" ? "sleep" : "tummy time";
+    const activityName = bestImprovement.type === "sleep" ? "insights.summary.activitySleep" : "insights.summary.activityTummyTime";
     return {
       type: "great",
       emoji: "🌟",
@@ -176,7 +176,7 @@ export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
   }
 
   if (feedingTrend && isSignificantChange(feedingTrend.percentageChange)) {
-    const direction = feedingTrend.direction === "increase" ? "more" : "less";
+    const direction = feedingTrend.direction === "increase" ? "insights.summary.directionMore" : "insights.summary.directionLess";
     return {
       type: "stable",
       emoji: "📈",

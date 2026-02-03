@@ -224,11 +224,11 @@ export default function HomeScreen() {
     const lastSleep = getLastSleep();
 
     if (lastSleep?.endedAt) {
-      return t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt)) });
+      return t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt)), context: selectedBaby?.gender });
     }
 
     return undefined;
-  }, [sleepActiveTimer, getLastSleep, t, timeTick]);
+  }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
