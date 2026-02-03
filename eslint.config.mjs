@@ -65,6 +65,7 @@ export default tseslint.config(
       "dist/",
       "build/",
       "targets/",
+      "plugins/",
       "*.config.js",
       "*.config.mjs",
       "babel.config.js",
