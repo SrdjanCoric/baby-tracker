@@ -447,7 +447,11 @@ export default function StatisticsScreen() {
                     {t(weeklySummary.titleKey as never)}
                   </Text>
                   <Text className="text-sm text-content-secondary dark:text-content-dark-secondary leading-5">
-                    {t(weeklySummary.descriptionKey as never, weeklySummary.descriptionParams)}
+                    {t(weeklySummary.descriptionKey as never, weeklySummary.descriptionParams
+                      ? Object.fromEntries(
+                          Object.entries(weeklySummary.descriptionParams).map(([key, value]) => [key, t(value as never)])
+                        )
+                      : undefined)}
                   </Text>
                 </View>
               </View>

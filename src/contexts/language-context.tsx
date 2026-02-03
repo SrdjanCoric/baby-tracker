@@ -7,16 +7,18 @@ export type { LanguageCode };
 
 interface LanguageContextValue {
   language: LanguageCode;
-  resolvedLanguage: "en" | "sr";
+  resolvedLanguage: "en" | "sr" | "es";
   isLoading: boolean;
   setLanguage: (language: LanguageCode) => Promise<void>;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-function getDeviceLanguage(): "en" | "sr" {
+function getDeviceLanguage(): "en" | "sr" | "es" {
   const deviceLocale = Localization.getLocales()[0]?.languageCode ?? "en";
-  return deviceLocale === "sr" ? "sr" : "en";
+  if (deviceLocale === "sr") return "sr";
+  if (deviceLocale === "es") return "es";
+  return "en";
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
