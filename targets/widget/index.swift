@@ -672,12 +672,25 @@ struct SmallWidgetView: View {
 
             Spacer().frame(height: 8)
 
-            // Bottom: Stop button when active, time since last activity when inactive
+            // Bottom: Stop pill when active, time ago when inactive
+            // Both are non-interactive; tapping anywhere goes through widgetURL
             if isActive {
-                WidgetStopButton(activity: activity)
+                HStack(spacing: 8) {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Stop")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                }
+                .foregroundStyle(Color(hex: "DC3545"))
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(.white)
+                )
             } else if let data = entry.widgetData {
                 if let lastTime = getLastActivityTime(for: activity, data: data) {
-                    Text(formatTimeAgoLong(lastTime))
+                    Text(formatTimeAgoLong(lastTime, now: entry.date))
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .foregroundStyle(activity.accentColor)
                         .padding(.horizontal, 10)
@@ -894,7 +907,7 @@ struct MediumWidgetView: View {
             HStack(spacing: 16) {
                 ForEach(activities.prefix(4), id: \.self) { activity in
                     Link(destination: activity.deepLinkURL) {
-                        ColorfulCircleButton(activity: activity, data: entry.widgetData)
+                        ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date)
                     }
                 }
             }
@@ -908,6 +921,7 @@ struct MediumWidgetView: View {
 struct ColorfulCircleButton: View {
     let activity: ActivityType
     let data: WidgetDataModel?
+    let currentDate: Date
 
     var isActive: Bool {
         data?.hasActiveTimer(for: activity) ?? false
@@ -941,7 +955,7 @@ struct ColorfulCircleButton: View {
                     .monospacedDigit()
                     .foregroundStyle(.green)
             } else if let lastTime = getLastActivityTime(for: activity, data: data) {
-                Text(formatTimeAgoShort(lastTime))
+                Text(formatTimeAgoShort(lastTime, now: currentDate))
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
             } else {
@@ -990,7 +1004,7 @@ struct LargeWidgetView: View {
             // Activity rows - Huckleberry style
             VStack(spacing: 8) {
                 ForEach(activities.prefix(4), id: \.self) { activity in
-                    ActivityRowView(activity: activity, data: entry.widgetData)
+                    ActivityRowView(activity: activity, data: entry.widgetData, currentDate: entry.date)
                 }
             }
             .padding(.horizontal, 12)
@@ -1005,6 +1019,7 @@ struct LargeWidgetView: View {
 struct ActivityRowView: View {
     let activity: ActivityType
     let data: WidgetDataModel?
+    let currentDate: Date
 
     var isActive: Bool {
         data?.hasActiveTimer(for: activity) ?? false
@@ -1037,7 +1052,7 @@ struct ActivityRowView: View {
                                 .foregroundStyle(.white.opacity(0.8))
                         } else if let lastTime = getLastActivityTime(for: activity, data: data) {
                             // Time since
-                            Text(formatTimeAgoLong(lastTime))
+                            Text(formatTimeAgoLong(lastTime, now: currentDate))
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
                             Text(getRowDetail(for: activity, data: data))
@@ -1132,22 +1147,19 @@ struct ActivityRowView: View {
     }
 }
 
-func formatTimeAgoLong(_ date: Date) -> String {
-    let interval = Date().timeIntervalSince(date)
-    let totalSeconds = Int(interval)
-    let hours = totalSeconds / 3600
-    let minutes = (totalSeconds % 3600) / 60
-    let seconds = totalSeconds % 60
+func formatTimeAgoLong(_ date: Date, now: Date = Date()) -> String {
+    let interval = now.timeIntervalSince(date)
+    let totalMinutes = Int(interval) / 60
+    let hours = totalMinutes / 60
+    let minutes = totalMinutes % 60
 
     if hours >= 24 {
         let days = hours / 24
         return "\(days) day\(days == 1 ? "" : "s") ago"
     } else if hours > 0 {
         return "\(hours) hr, \(minutes) min ago"
-    } else if minutes > 0 {
-        return "\(minutes) min, \(seconds) sec ago"
     } else {
-        return "\(seconds) sec ago"
+        return "\(totalMinutes) min ago"
     }
 }
 
@@ -1162,19 +1174,21 @@ func formatDuration(minutes: Int) -> String {
     return "\(mins)m"
 }
 
-func formatRelative(_ date: Date) -> String {
-    let interval = Date().timeIntervalSince(date)
-    let hours = Int(interval) / 3600
-    let minutes = (Int(interval) % 3600) / 60
+func formatRelative(_ date: Date, now: Date = Date()) -> String {
+    let interval = now.timeIntervalSince(date)
+    let totalMinutes = Int(interval) / 60
+    let hours = totalMinutes / 60
+    let minutes = totalMinutes % 60
 
     if hours > 0 {
         return "\(hours)h \(minutes)m ago"
+    } else {
+        return "\(totalMinutes)m ago"
     }
-    return "\(minutes)m ago"
 }
 
-func formatTimeAgo(_ date: Date) -> String {
-    let interval = Date().timeIntervalSince(date)
+func formatTimeAgo(_ date: Date, now: Date = Date()) -> String {
+    let interval = now.timeIntervalSince(date)
     let totalMinutes = Int(interval) / 60
     let hours = totalMinutes / 60
     let minutes = totalMinutes % 60
@@ -1184,15 +1198,13 @@ func formatTimeAgo(_ date: Date) -> String {
         return "\(days)d ago"
     } else if hours > 0 {
         return "\(hours)h \(minutes)m ago"
-    } else if minutes > 0 {
-        return "\(minutes) min ago"
     } else {
-        return "Just now"
+        return "\(totalMinutes) min ago"
     }
 }
 
-func formatTimeAgoShort(_ date: Date) -> String {
-    let interval = Date().timeIntervalSince(date)
+func formatTimeAgoShort(_ date: Date, now: Date = Date()) -> String {
+    let interval = now.timeIntervalSince(date)
     let totalMinutes = Int(interval) / 60
     let hours = totalMinutes / 60
     let minutes = totalMinutes % 60
@@ -1202,10 +1214,8 @@ func formatTimeAgoShort(_ date: Date) -> String {
         return "\(days)d"
     } else if hours > 0 {
         return "\(hours)h \(minutes)m"
-    } else if minutes > 0 {
-        return "\(minutes)m"
     } else {
-        return "now"
+        return "\(totalMinutes)m"
     }
 }
 
@@ -1236,7 +1246,7 @@ struct LockScreenCircularView: View {
                 VStack(spacing: 2) {
                     Text(activity.emoji)
                         .font(.system(size: 14))
-                    Text(formatTimeAgoShort(lastTime))
+                    Text(formatTimeAgoShort(lastTime, now: entry.date))
                         .font(.system(size: 10, weight: .medium))
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
@@ -1288,8 +1298,7 @@ struct LockScreenRectangularView: View {
                                 .foregroundStyle(.green)
                         }
                     } else if let lastTime = getLastActivityTime(for: activity, data: entry.widgetData) {
-                        // Relative time (static, updates every minute via timeline)
-                        Text(formatTimeAgoShort(lastTime))
+                        Text(formatTimeAgoShort(lastTime, now: entry.date))
                             .font(.system(size: 11))
                     } else {
                         Text("--")
