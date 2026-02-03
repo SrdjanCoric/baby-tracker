@@ -943,9 +943,14 @@ struct ColorfulCircleButton: View {
                         .frame(width: 52, height: 52)
                 }
 
-                // Emoji
-                Text(activity.emoji)
-                    .font(.system(size: 22))
+                if isActive {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(.white)
+                } else {
+                    Text(activity.emoji)
+                        .font(.system(size: 22))
+                }
             }
 
             // Time label below
