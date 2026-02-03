@@ -301,11 +301,11 @@ export default function StatisticsScreen() {
   }, [getLastFeeding, feedings, stats.feeding, t]);
 
   const sleepSubvalue = stats.sleep.napCount > 0
-    ? `${stats.sleep.napCount} ${stats.sleep.napCount === 1 ? "nap" : "naps"}`
+    ? t("statistics.nap", { count: stats.sleep.napCount })
     : undefined;
 
   const diaperSubvalue = (stats.diaper.wetCount > 0 || stats.diaper.dirtyCount > 0)
-    ? `${stats.diaper.wetCount} wet · ${stats.diaper.dirtyCount + stats.diaper.mixedCount} dirty`
+    ? t("statistics.wetAndDirty", { wet: stats.diaper.wetCount, dirty: stats.diaper.dirtyCount + stats.diaper.mixedCount })
     : undefined;
 
   const pumpingSubvalue = stats.pumping.totalDurationSeconds > 0
@@ -330,7 +330,11 @@ export default function StatisticsScreen() {
       now
     );
 
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dayNames = [
+      t("statistics.daySun"), t("statistics.dayMon"), t("statistics.dayTue"),
+      t("statistics.dayWed"), t("statistics.dayThu"), t("statistics.dayFri"),
+      t("statistics.daySat"),
+    ];
     const feedingData: { label: string; value: number }[] = [];
     const diaperData: { label: string; value: number }[] = [];
     const sleepData: { label: string; primary: number; secondary: number }[] = [];
@@ -367,7 +371,7 @@ export default function StatisticsScreen() {
     });
 
     return { feedingData, diaperData, sleepData };
-  }, [feedings, diapers, sleeps]);
+  }, [feedings, diapers, sleeps, t]);
 
   const showWeeklyTrends = !!weeklyTrends;
 
@@ -475,7 +479,7 @@ export default function StatisticsScreen() {
                     {dailyAverages.sleepHoursPerDay}h
                   </Text>
                   <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
-                    /day
+                    {t("statistics.perDay")}
                   </Text>
                 </View>
               </View>
@@ -490,7 +494,7 @@ export default function StatisticsScreen() {
                     {dailyAverages.feedingsPerDay}
                   </Text>
                   <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
-                    /day
+                    {t("statistics.perDay")}
                   </Text>
                 </View>
               </View>
@@ -505,7 +509,7 @@ export default function StatisticsScreen() {
                     {dailyAverages.wetDiapersPerDay}
                   </Text>
                   <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
-                    wet/day
+                    {t("statistics.wetPerDay")}
                   </Text>
                   {dailyAverages.wetDiapersPerDay >= 6 && (
                     <Text
@@ -529,7 +533,7 @@ export default function StatisticsScreen() {
                       {dailyAverages.tummyTimeMinutesPerDay}m
                     </Text>
                     <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
-                      /day
+                      {t("statistics.perDay")}
                     </Text>
                   </View>
                 </View>
@@ -647,7 +651,7 @@ export default function StatisticsScreen() {
               )}
               {!showWeeklyTrends && (
                 <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mt-1">
-                  {stats.tummyTime.sessionCount} {stats.tummyTime.sessionCount === 1 ? "session" : "sessions"}
+                  {t("statistics.session", { count: stats.tummyTime.sessionCount })}
                 </Text>
               )}
             </View>
