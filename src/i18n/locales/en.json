@@ -142,7 +142,8 @@
     "logPastSolid": "Log Past Solid Food",
     "selectContentAndAmount": "Please select what's in the bottle and enter an amount",
     "enterAmountValidation": "Please enter the amount",
-    "enterFoodValidation": "Please enter or select a food"
+    "enterFoodValidation": "Please enter or select a food",
+    "stopError": "Failed to stop feeding. Please try again."
   },
   "sleep": {
     "title": "Sleep",
@@ -192,7 +193,8 @@
     "dismissSuggestion": "Don't show again",
     "goalUpdated": "Goal updated",
     "startedEarlier": "Started earlier?",
-    "whenDidSleepStart": "When did sleep start?"
+    "whenDidSleepStart": "When did sleep start?",
+    "stopError": "Failed to stop sleep. Please try again."
   },
   "diaper": {
     "title": "Diaper",
@@ -318,7 +320,8 @@
     "dismissSuggestion": "Don't show again",
     "goalUpdated": "Goal updated",
     "quickGoals": "Quick Select",
-    "customMinutes": "Custom (minutes)"
+    "customMinutes": "Custom (minutes)",
+    "stopError": "Failed to stop tummy time. Please try again."
   },
   "baby": {
     "title": "Baby",
