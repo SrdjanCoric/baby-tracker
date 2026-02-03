@@ -5,31 +5,9 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useNotifications } from "@/contexts/notification-context";
+import { getTimerAlertMessage } from "@/constants/notifications";
 import { NotificationService } from "@/services/notification-service";
 import type { TimerThresholds } from "@/types/notifications";
-
-const ALERT_MESSAGES: Record<keyof TimerThresholds, { title: string; body: string }> = {
-  breastfeeding: {
-    title: "Breastfeeding Timer",
-    body: "Still breastfeeding? Tap to stop the timer.",
-  },
-  pumping: {
-    title: "Pumping Timer",
-    body: "Still pumping? Tap to stop the timer.",
-  },
-  tummyTime: {
-    title: "Tummy Time Timer",
-    body: "Still doing tummy time? Tap to stop the timer.",
-  },
-  nap: {
-    title: "Nap Timer",
-    body: "Baby still napping? Tap to check.",
-  },
-  nightSleep: {
-    title: "Sleep Timer",
-    body: "Baby still sleeping? Tap to check.",
-  },
-};
 
 export function useTimerAlertIntegration(activityType: keyof TimerThresholds) {
   const { settings, permissionStatus, checkTimerAlert } = useNotifications();
@@ -54,7 +32,7 @@ export function useTimerAlertIntegration(activityType: keyof TimerThresholds) {
         return false;
       }
 
-      const message = ALERT_MESSAGES[activityType];
+      const message = getTimerAlertMessage(activityType);
 
       try {
         const notificationId = await NotificationService.scheduleNotification(
