@@ -13,7 +13,6 @@ import {
   type WidgetData,
   type WidgetActivityData,
 } from "@/services/widget-data-service";
-import { syncToWatch } from "@/services/watch-service";
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 
 interface WidgetContextValue {
@@ -206,7 +205,6 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await updateWidgetData(widgetData);
-      await syncToWatch(widgetData);
     } catch (error) {
       console.error("[WidgetContext] Failed to update widget data:", error);
     }
