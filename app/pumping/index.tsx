@@ -8,6 +8,7 @@ import { useBaby, useUnits } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useTimerAlertIntegration } from "@/hooks";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 
@@ -141,13 +142,7 @@ export default function PumpingScreen() {
   }, [unit, volumeMl]);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   const isTimerRunning = activeTimer?.isRunning ?? false;

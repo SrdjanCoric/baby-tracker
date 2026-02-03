@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useFeeding } from "@/contexts";
 import { useBaby } from "@/contexts";
 import { COMMON_FOODS } from "@/constants/foods";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { SolidReaction } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
@@ -146,13 +147,7 @@ export default function SolidFeedingScreen() {
   };
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   return (

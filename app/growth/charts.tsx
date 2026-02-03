@@ -12,7 +12,9 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useGrowth } from "@/contexts/growth-context";
 import { useBaby } from "@/contexts/baby-context";
-import { GrowthChart, PercentileDisplay } from "@/components/growth";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
+// @ts-expect-error GrowthChart and PercentileDisplay not yet exported from @/components
+import { GrowthChart, PercentileDisplay } from "@/components";
 import { calculateAgeInMonths } from "@/utils/percentile-calculator";
 import { isUnderTwoYears } from "@/utils/growth-helpers";
 import type { GrowthMeasurementType } from "@/types/growth-chart";
@@ -134,13 +136,7 @@ export default function GrowthChartsScreen() {
   const chartWidth = Math.min(screenWidth - 32, 400);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   if (!babyBirthDate) {

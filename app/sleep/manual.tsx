@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSleep } from "@/contexts";
 import { useBaby } from "@/contexts";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { validateManualSleep, determineSleepType } from "@/validators/sleep";
 import type { SleepType } from "@/constants/activities";
 
@@ -155,13 +156,7 @@ export default function ManualSleepScreen() {
   const canSave = sleepType !== null && durationMinutes !== null && durationMinutes > 0;
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   const formatDate = (date: Date) => {
