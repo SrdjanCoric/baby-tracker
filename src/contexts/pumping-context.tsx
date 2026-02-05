@@ -17,7 +17,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
-import { startTimerLiveActivity, endTimerLiveActivity, updateTimerLiveActivity } from "@/services/live-activity-service";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActivePumpingTimer {
   isRunning: boolean;
@@ -122,8 +122,8 @@ export interface TimerLockResult {
 }
 
 interface PumpingContextValue extends PumpingState {
-  startPumping: (side: BreastSide) => Promise<TimerLockResult>;
-  stopPumping: (volumeMl: number) => Promise<StoredPumpingEntry | null>;
+  startPumping: (side: BreastSide, requestedStartTime?: Date) => Promise<TimerLockResult>;
+  stopPumping: (volumeMl: number, requestedEndTime?: Date) => Promise<StoredPumpingEntry | null>;
   changePumpingSide: (side: BreastSide) => void;
   addPumping: (input: CreatePumpingInput) => Promise<StoredPumpingEntry>;
   updatePumping: (pumpingId: string, input: UpdatePumpingInput) => Promise<StoredPumpingEntry | null>;
@@ -173,41 +173,50 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    let pumpings: StoredPumpingEntry[];
+    try {
+      let pumpings: StoredPumpingEntry[];
 
-    if (user?.householdId) {
-      try {
-        pumpings = await fetchPumpingFromDatabase(selectedBaby.id);
-      } catch (error) {
-        console.error("[PumpingContext] Failed to fetch from database, using local:", error);
+      if (user?.householdId) {
+        try {
+          pumpings = await fetchPumpingFromDatabase(selectedBaby.id);
+        } catch (error) {
+          console.error("[PumpingContext] Failed to fetch from database, using local:", error);
+          pumpings = await PumpingStorageService.getAllPumpings(selectedBaby.id);
+        }
+      } else {
         pumpings = await PumpingStorageService.getAllPumpings(selectedBaby.id);
       }
-    } else {
-      pumpings = await PumpingStorageService.getAllPumpings(selectedBaby.id);
+
+      dispatch({ type: "SET_PUMPINGS", payload: pumpings });
+
+      const activeTimer = await PumpingStorageService.getActiveTimer(selectedBaby.id);
+      if (activeTimer) {
+        dispatch({
+          type: "START_TIMER",
+          payload: {
+            startTime: new Date(activeTimer.startedAt),
+            side: activeTimer.side,
+          },
+        });
+
+        // Just store the existing Live Activity ID if we have one
+        // Don't try to check/restore Live Activities on startup - it can hang after phone restart
+        if (activeTimer.liveActivityId) {
+          liveActivityIdRef.current = activeTimer.liveActivityId;
+        }
+      }
+    } catch (error) {
+      console.error("[PumpingContext] Failed to load pumpings:", error);
+    } finally {
+      dispatch({ type: "SET_LOADING", payload: false });
     }
-
-    dispatch({ type: "SET_PUMPINGS", payload: pumpings });
-
-    const activeTimer = await PumpingStorageService.getActiveTimer(selectedBaby.id);
-    if (activeTimer) {
-      liveActivityIdRef.current = activeTimer.liveActivityId ?? null;
-      dispatch({
-        type: "START_TIMER",
-        payload: {
-          startTime: new Date(activeTimer.startedAt),
-          side: activeTimer.side,
-        },
-      });
-    }
-
-    dispatch({ type: "SET_LOADING", payload: false });
   }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
     loadPumpings();
   }, [loadPumpings]);
 
-  const startPumping = useCallback(async (side: BreastSide): Promise<{ success: boolean; lockedByName?: string }> => {
+  const startPumping = useCallback(async (side: BreastSide, requestedStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };
 
     if (user?.id) {
@@ -221,7 +230,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const startTime = new Date();
+    const startTime = requestedStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, side } });
 
     const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side);
@@ -238,10 +247,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   }, [selectedBaby, user?.id]);
 
-  const stopPumping = useCallback(async (volumeMl: number): Promise<StoredPumpingEntry | null> => {
+  const stopPumping = useCallback(async (volumeMl: number, requestedEndTime?: Date): Promise<StoredPumpingEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
 
-    const endTime = new Date();
+    const endTime = requestedEndTime ?? new Date();
     const durationSeconds = Math.floor(
       (endTime.getTime() - state.activeTimer.startTime.getTime()) / 1000
     );
@@ -270,6 +279,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     if (liveActivityIdRef.current) {
       await endTimerLiveActivity(liveActivityIdRef.current);
       liveActivityIdRef.current = null;
+    } else {
+      await endLiveActivityByType("pumping");
     }
 
     if (user?.id) {
