@@ -24,7 +24,7 @@ import {
   getWakeWindowForAge,
   checkSleepMilestoneCrossing,
 } from "@/utils/sleepGoals";
-import { startTimerLiveActivity, endTimerLiveActivity, updateTimerLiveActivity } from "@/services/live-activity-service";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActiveSleepTimer {
   isRunning: boolean;
@@ -169,7 +169,7 @@ export interface TimerLockResult {
 
 interface SleepContextValue extends SleepState {
   startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<TimerLockResult>;
-  stopSleep: () => Promise<StoredSleepEntry | null>;
+  stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
   addSleep: (input: CreateSleepInput) => Promise<StoredSleepEntry>;
   updateSleep: (sleepId: string, input: UpdateSleepInput) => Promise<StoredSleepEntry | null>;
@@ -224,75 +224,84 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    let sleeps: StoredSleepEntry[];
+    try {
+      let sleeps: StoredSleepEntry[];
 
-    if (user?.householdId) {
-      try {
-        sleeps = await fetchSleepFromDatabase(selectedBaby.id);
-      } catch (error) {
-        console.error("[SleepContext] Failed to fetch from database, using local:", error);
+      if (user?.householdId) {
+        try {
+          sleeps = await fetchSleepFromDatabase(selectedBaby.id);
+        } catch (error) {
+          console.error("[SleepContext] Failed to fetch from database, using local:", error);
+          sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
+        }
+      } else {
         sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
       }
-    } else {
-      sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
-    }
 
-    dispatch({ type: "SET_SLEEPS", payload: sleeps });
+      dispatch({ type: "SET_SLEEPS", payload: sleeps });
 
-    const hasCustomGoal = await SleepStorageService.hasCustomGoal(selectedBaby.id);
-    const storedGoal = await SleepStorageService.getDailyGoal(selectedBaby.id);
+      const hasCustomGoal = await SleepStorageService.hasCustomGoal(selectedBaby.id);
+      const storedGoal = await SleepStorageService.getDailyGoal(selectedBaby.id);
 
-    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
-    const goalInfo = getSleepGoalInfo(
-      birthDate,
-      hasCustomGoal ? storedGoal : null
-    );
+      const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+      const goalInfo = getSleepGoalInfo(
+        birthDate,
+        hasCustomGoal ? storedGoal : null
+      );
 
-    dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.targetMinutes });
-    dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
-    dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
+      dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.targetMinutes });
+      dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
+      dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
 
-    if (birthDate) {
-      const wakeWindowInfo = getWakeWindowForAge(birthDate);
-      dispatch({ type: "SET_WAKE_WINDOW", payload: wakeWindowInfo.targetMinutes });
-    }
-
-    if (birthDate && !hasCustomGoal) {
-      const lastCheckDate = await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
-      const dismissedMilestones = await SleepStorageService.getDismissedMilestones(selectedBaby.id);
-
-      if (lastCheckDate) {
-        const milestoneCrossing = checkSleepMilestoneCrossing(birthDate, lastCheckDate);
-        if (
-          milestoneCrossing?.shouldSuggestGoalUpdate &&
-          !dismissedMilestones.includes(milestoneCrossing.newGroup.label)
-        ) {
-          const newGoalMinutes =
-            ((milestoneCrossing.newGroup.totalSleepHoursMin +
-              milestoneCrossing.newGroup.totalSleepHoursMax) /
-              2) *
-            60;
-          dispatch({ type: "SET_SUGGESTED_GOAL", payload: newGoalMinutes });
-          dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: true });
-        }
+      if (birthDate) {
+        const wakeWindowInfo = getWakeWindowForAge(birthDate);
+        dispatch({ type: "SET_WAKE_WINDOW", payload: wakeWindowInfo.targetMinutes });
       }
 
-      await SleepStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
-    }
+      if (birthDate && !hasCustomGoal) {
+        const lastCheckDate = await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
+        const dismissedMilestones = await SleepStorageService.getDismissedMilestones(selectedBaby.id);
 
-    const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
-    if (activeTimer) {
-      liveActivityIdRef.current = activeTimer.liveActivityId ?? null;
-      dispatch({
-        type: "START_TIMER",
-        payload: {
-          startTime: new Date(activeTimer.startedAt),
-          sleepType: activeTimer.type,
-        },
-      });
-    }
+        if (lastCheckDate) {
+          const milestoneCrossing = checkSleepMilestoneCrossing(birthDate, lastCheckDate);
+          if (
+            milestoneCrossing?.shouldSuggestGoalUpdate &&
+            !dismissedMilestones.includes(milestoneCrossing.newGroup.label)
+          ) {
+            const newGoalMinutes =
+              ((milestoneCrossing.newGroup.totalSleepHoursMin +
+                milestoneCrossing.newGroup.totalSleepHoursMax) /
+                2) *
+              60;
+            dispatch({ type: "SET_SUGGESTED_GOAL", payload: newGoalMinutes });
+            dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: true });
+          }
+        }
 
-    dispatch({ type: "SET_LOADING", payload: false });
+        await SleepStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
+      }
+
+      const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
+      if (activeTimer) {
+        dispatch({
+          type: "START_TIMER",
+          payload: {
+            startTime: new Date(activeTimer.startedAt),
+            sleepType: activeTimer.type,
+          },
+        });
+
+        // Just store the existing Live Activity ID if we have one
+        // Don't try to check/restore Live Activities on startup - it can hang after phone restart
+        if (activeTimer.liveActivityId) {
+          liveActivityIdRef.current = activeTimer.liveActivityId;
+        }
+      }
+    } catch (error) {
+      console.error("[SleepContext] Failed to load sleeps:", error);
+    } finally {
+      dispatch({ type: "SET_LOADING", payload: false });
+    }
   }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
@@ -330,10 +339,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   }, [selectedBaby, user?.id]);
 
-  const stopSleep = useCallback(async (): Promise<StoredSleepEntry | null> => {
+  const stopSleep = useCallback(async (requestedEndTime?: Date): Promise<StoredSleepEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
 
-    const endTime = new Date();
+    const endTime = requestedEndTime ?? new Date();
     const durationSeconds = Math.floor(
       (endTime.getTime() - state.activeTimer.startTime.getTime()) / 1000
     );
@@ -361,6 +370,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     if (liveActivityIdRef.current) {
       await endTimerLiveActivity(liveActivityIdRef.current);
       liveActivityIdRef.current = null;
+    } else {
+      await endLiveActivityByType("sleep");
     }
 
     if (user?.id) {
