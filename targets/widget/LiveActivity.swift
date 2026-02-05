@@ -4,6 +4,9 @@ import WidgetKit
 
 // MARK: - Activity Attributes
 
+// IMPORTANT: This struct is duplicated in plugins/with-live-activity-controller/ios/TimerActivityAttributes.swift
+// Both definitions MUST stay in sync. The widget extension is a separate compilation unit
+// and cannot share code with the main app target.
 struct TimerActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         var elapsedSeconds: Int
@@ -145,6 +148,7 @@ struct TimerLiveActivity: Widget {
                     .font(.caption2)
             }
         }
+        .supplementalActivityFamilies([])
     }
 }
 

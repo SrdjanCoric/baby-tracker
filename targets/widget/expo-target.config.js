@@ -3,7 +3,7 @@ module.exports = {
   type: "widget",
   name: "SofiBabyWidget",
   displayName: "SofiBaby",
-  deploymentTarget: "17.0",
+  deploymentTarget: "18.0",
   frameworks: ["SwiftUI", "WidgetKit", "ActivityKit"],
   colors: {
     $accent: "#8CB369",
