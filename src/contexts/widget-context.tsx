@@ -9,7 +9,6 @@ import { useGrowth } from "./growth-context";
 import { useTummyTime } from "./tummyTime-context";
 import {
   updateWidgetData,
-  createEmptyWidgetData,
   type WidgetData,
   type WidgetActivityData,
 } from "@/services/widget-data-service";
@@ -17,6 +16,7 @@ import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 
 interface WidgetContextValue {
   refreshWidgetData: () => Promise<void>;
+  getWidgetDataJson: () => string | null;
 }
 
 const WidgetContext = createContext<WidgetContextValue | null>(null);
@@ -242,8 +242,15 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     refreshWidgetData,
   ]);
 
+  const getWidgetDataJson = useCallback((): string | null => {
+    const data = buildWidgetData();
+    if (!data) return null;
+    return JSON.stringify(data);
+  }, [buildWidgetData]);
+
   const value: WidgetContextValue = {
     refreshWidgetData,
+    getWidgetDataJson,
   };
 
   return (
