@@ -62,6 +62,19 @@ export interface WidgetData {
   updatedAt: string;
 }
 
+export interface BabyWatchData {
+  id: string;
+  name: string;
+  activities: WidgetActivityData;
+  activeTimers: ActiveTimerData[];
+}
+
+export interface WatchData {
+  babies: BabyWatchData[];
+  selectedBabyId: string;
+  updatedAt: string;
+}
+
 export interface WidgetConfiguration {
   smallWidgetActivity: ActivityType;
   quickLogActivities: [ActivityType, ActivityType, ActivityType, ActivityType];
@@ -343,3 +356,20 @@ export async function reloadWidgets(): Promise<void> {
     console.error("[WidgetDataService] Failed to reload widgets:", error);
   }
 }
+
+export async function clearWidgetData(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(WIDGET_DATA_KEY);
+
+    if (Platform.OS === "ios") {
+      const extensionStorage = await loadExtensionStorage();
+      if (extensionStorage) {
+        await extensionStorage.set("widgetData", "", APP_GROUP);
+        await extensionStorage.reloadWidget();
+      }
+    }
+  } catch (error) {
+    console.error("[WidgetDataService] Failed to clear widget data:", error);
+  }
+}
+

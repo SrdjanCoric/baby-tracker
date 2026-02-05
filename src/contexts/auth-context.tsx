@@ -24,6 +24,7 @@ WebBrowser.maybeCompleteAuthSession();
 import { supabase } from "@/services/supabase";
 import { setStorageUserId } from "@/services/storage-prefix";
 import { clearSyncData } from "@/contexts/sync-context";
+import { clearWidgetData } from "@/services/widget-data-service";
 import { AUTH_CONFIG } from "@/constants/auth";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
 
@@ -205,6 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(null);
           await clearAppStorage();
           await clearSyncData();
+          await clearWidgetData();
         }
         return;
       }
@@ -367,6 +369,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     await clearAppStorage();
     await clearSyncData();
+    await clearWidgetData();
     setStorageUserId(null);
     const { error } = await supabase.auth.signOut();
     return { error };
