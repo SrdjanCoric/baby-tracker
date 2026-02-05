@@ -20,4 +20,12 @@ RCT_EXTERN_METHOD(endTimerActivity:(NSString *)activityId
 RCT_EXTERN_METHOD(endAllActivities:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(endActivityByType:(NSString *)activityType
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(isActivityRunning:(NSString *)activityId
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 @end
