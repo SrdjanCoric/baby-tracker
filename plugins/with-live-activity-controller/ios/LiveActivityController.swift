@@ -154,4 +154,57 @@ class LiveActivityController: NSObject {
             resolve(nil)
         }
     }
+
+    @objc func endActivityByType(
+        _ activityType: String,
+        resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        guard #available(iOS 16.2, *) else {
+            resolve(false)
+            return
+        }
+
+        Task {
+            var endedAny = false
+            for activity in Activity<TimerActivityAttributes>.activities {
+                if activity.attributes.activityType == activityType {
+                    let finalState = TimerActivityAttributes.ContentState(
+                        elapsedSeconds: Int(Date().timeIntervalSince(activity.attributes.startTime)),
+                        context: activity.content.state.context
+                    )
+
+                    await activity.end(
+                        ActivityContent(state: finalState, staleDate: nil),
+                        dismissalPolicy: .immediate
+                    )
+
+                    if currentActivityId == activity.id {
+                        currentActivityId = nil
+                    }
+                    endedAny = true
+                    print("[LiveActivityController] Ended activity by type: \(activityType)")
+                }
+            }
+            resolve(endedAny)
+        }
+    }
+
+    @objc func isActivityRunning(
+        _ activityId: String,
+        resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        guard #available(iOS 16.2, *) else {
+            resolve(false)
+            return
+        }
+
+        Task {
+            let activities = Activity<TimerActivityAttributes>.activities
+            let isRunning = activities.contains { $0.id == activityId }
+            print("[LiveActivityController] Activity \(activityId) running: \(isRunning)")
+            resolve(isRunning)
+        }
+    }
 }
