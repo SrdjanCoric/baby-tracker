@@ -18,7 +18,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
-import { startTimerLiveActivity, endTimerLiveActivity, updateTimerLiveActivity } from "@/services/live-activity-service";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity } from "@/services/live-activity-service";
 import type { BreastSide as LiveActivityBreastSide } from "@/services/live-activity-service";
 
 export interface ActiveTimer {
@@ -173,8 +173,8 @@ export interface TimerLockResult {
 }
 
 interface FeedingContextValue extends FeedingState {
-  startBreastfeeding: (side: BreastSide) => Promise<TimerLockResult>;
-  stopBreastfeeding: () => Promise<StoredFeedingEntry | null>;
+  startBreastfeeding: (side: BreastSide, requestedStartTime?: Date) => Promise<TimerLockResult>;
+  stopBreastfeeding: (requestedEndTime?: Date) => Promise<StoredFeedingEntry | null>;
   changeSide: (side: BreastSide) => void;
   suggestedSide: BreastSide;
   addFeeding: (input: CreateFeedingInput) => Promise<StoredFeedingEntry>;
@@ -240,50 +240,59 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    let feedings: StoredFeedingEntry[];
+    try {
+      let feedings: StoredFeedingEntry[];
 
-    if (user?.householdId) {
-      try {
-        feedings = await fetchFeedingsFromDatabase(selectedBaby.id);
-      } catch (error) {
-        console.error("[FeedingContext] Failed to fetch from database, using local:", error);
+      if (user?.householdId) {
+        try {
+          feedings = await fetchFeedingsFromDatabase(selectedBaby.id);
+        } catch (error) {
+          console.error("[FeedingContext] Failed to fetch from database, using local:", error);
+          feedings = await FeedingStorageService.getAllFeedings(selectedBaby.id);
+        }
+      } else {
         feedings = await FeedingStorageService.getAllFeedings(selectedBaby.id);
       }
-    } else {
-      feedings = await FeedingStorageService.getAllFeedings(selectedBaby.id);
+
+      dispatch({ type: "SET_FEEDINGS", payload: feedings });
+
+      const lastSide = await FeedingStorageService.getLastBreastSide(selectedBaby.id);
+      dispatch({ type: "SET_LAST_BREAST_SIDE", payload: lastSide });
+
+      const activeTimer = await FeedingStorageService.getActiveTimer(selectedBaby.id);
+      if (activeTimer) {
+        dispatch({
+          type: "RESTORE_TIMER",
+          payload: {
+            isRunning: true,
+            startTime: new Date(activeTimer.startedAt),
+            side: activeTimer.side,
+            leftAccumulatedSeconds: activeTimer.leftAccumulatedSeconds ?? 0,
+            rightAccumulatedSeconds: activeTimer.rightAccumulatedSeconds ?? 0,
+            currentSideStartedAt: activeTimer.currentSideStartedAt
+              ? new Date(activeTimer.currentSideStartedAt)
+              : new Date(activeTimer.startedAt),
+          },
+        });
+
+        // Just store the existing Live Activity ID if we have one
+        // Don't try to check/restore Live Activities on startup - it can hang after phone restart
+        if (activeTimer.liveActivityId) {
+          liveActivityIdRef.current = activeTimer.liveActivityId;
+        }
+      }
+    } catch (error) {
+      console.error("[FeedingContext] Failed to load feedings:", error);
+    } finally {
+      dispatch({ type: "SET_LOADING", payload: false });
     }
-
-    dispatch({ type: "SET_FEEDINGS", payload: feedings });
-
-    const lastSide = await FeedingStorageService.getLastBreastSide(selectedBaby.id);
-    dispatch({ type: "SET_LAST_BREAST_SIDE", payload: lastSide });
-
-    const activeTimer = await FeedingStorageService.getActiveTimer(selectedBaby.id);
-    if (activeTimer) {
-      liveActivityIdRef.current = activeTimer.liveActivityId ?? null;
-      dispatch({
-        type: "RESTORE_TIMER",
-        payload: {
-          isRunning: true,
-          startTime: new Date(activeTimer.startedAt),
-          side: activeTimer.side,
-          leftAccumulatedSeconds: activeTimer.leftAccumulatedSeconds ?? 0,
-          rightAccumulatedSeconds: activeTimer.rightAccumulatedSeconds ?? 0,
-          currentSideStartedAt: activeTimer.currentSideStartedAt
-            ? new Date(activeTimer.currentSideStartedAt)
-            : new Date(activeTimer.startedAt),
-        },
-      });
-    }
-
-    dispatch({ type: "SET_LOADING", payload: false });
   }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
     loadFeedings();
   }, [loadFeedings]);
 
-  const startBreastfeeding = useCallback(async (side: BreastSide): Promise<{ success: boolean; lockedByName?: string }> => {
+  const startBreastfeeding = useCallback(async (side: BreastSide, requestedStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };
 
     if (user?.id) {
@@ -297,7 +306,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const startTime = new Date();
+    const startTime = requestedStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, side } });
 
     const activityId = await startTimerLiveActivity("feeding", selectedBaby.name, side as LiveActivityBreastSide);
@@ -318,10 +327,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   }, [selectedBaby, user?.id]);
 
-  const stopBreastfeeding = useCallback(async (): Promise<StoredFeedingEntry | null> => {
+  const stopBreastfeeding = useCallback(async (requestedEndTime?: Date): Promise<StoredFeedingEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
 
-    const endTime = new Date();
+    const endTime = requestedEndTime ?? new Date();
     const durationSeconds = Math.floor(
       (endTime.getTime() - state.activeTimer.startTime.getTime()) / 1000
     );
@@ -369,10 +378,11 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "STOP_TIMER" });
     await FeedingStorageService.clearActiveTimer(selectedBaby.id);
 
-    // End Live Activity
     if (liveActivityIdRef.current) {
       await endTimerLiveActivity(liveActivityIdRef.current);
       liveActivityIdRef.current = null;
+    } else {
+      await endLiveActivityByType("feeding");
     }
 
     if (user?.id) {
