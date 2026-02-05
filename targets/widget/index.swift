@@ -463,15 +463,102 @@ func getTimerContext(for type: ActivityType, data: WidgetDataModel?) -> String? 
     return data?.getActiveTimer(for: type)?.context
 }
 
+func getUpdatedAtDate(data: WidgetDataModel?) -> Date? {
+    guard let data = data else { return nil }
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    if let date = formatter.date(from: data.updatedAt) { return date }
+    formatter.formatOptions = [.withInternetDateTime]
+    return formatter.date(from: data.updatedAt)
+}
+
+func isDataStale(data: WidgetDataModel?, now: Date = Date()) -> Bool {
+    guard let updatedAt = getUpdatedAtDate(data: data) else { return true }
+    let staleThresholdSeconds: TimeInterval = 60 * 60 // 1 hour
+    return now.timeIntervalSince(updatedAt) > staleThresholdSeconds
+}
+
+func formatStalenessIndicator(data: WidgetDataModel?, now: Date = Date()) -> String? {
+    guard let updatedAt = getUpdatedAtDate(data: data) else { return nil }
+    let interval = now.timeIntervalSince(updatedAt)
+    let staleThresholdSeconds: TimeInterval = 60 * 60 // 1 hour
+
+    if interval <= staleThresholdSeconds {
+        return nil // Data is fresh
+    }
+
+    let hours = Int(interval) / 3600
+    if hours >= 24 {
+        let days = hours / 24
+        return "Synced \(days)d ago"
+    } else {
+        return "Synced \(hours)h ago"
+    }
+}
+
+// MARK: - Sample Data for Widget Previews
+
+func createSampleWidgetData() -> WidgetDataModel {
+    let now = Date()
+    let oneHourAgo = now.addingTimeInterval(-3600)
+    let twoHoursAgo = now.addingTimeInterval(-7200)
+    let threeHoursAgo = now.addingTimeInterval(-10800)
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+    return WidgetDataModel(
+        babyId: "sample",
+        babyName: "Sofi",
+        activities: WidgetActivityData(
+            feeding: WidgetActivityData.FeedingData(
+                lastTime: formatter.string(from: oneHourAgo),
+                todayCount: 6,
+                lastType: "breast",
+                lastSide: "left"
+            ),
+            sleep: WidgetActivityData.SleepData(
+                lastTime: formatter.string(from: twoHoursAgo),
+                todayMinutes: 180,
+                lastDurationMinutes: 45,
+                isActive: false,
+                sleepType: "nap"
+            ),
+            diaper: WidgetActivityData.DiaperData(
+                lastTime: formatter.string(from: threeHoursAgo),
+                todayCounts: WidgetActivityData.DiaperData.DiaperCounts(wet: 4, dirty: 2, mixed: 1, dry: 0),
+                lastType: "wet"
+            ),
+            pumping: WidgetActivityData.PumpingData(
+                lastTime: formatter.string(from: twoHoursAgo),
+                todayVolumeMl: 120,
+                sessionCount: 3,
+                lastSide: "both"
+            ),
+            growth: WidgetActivityData.GrowthData(lastMeasurement: nil),
+            tummyTime: WidgetActivityData.TummyTimeData(
+                lastTime: formatter.string(from: oneHourAgo),
+                todayMinutes: 15,
+                goalMinutes: 30,
+                lastDurationMinutes: 8
+            )
+        ),
+        activeTimer: nil,
+        activeTimers: nil,
+        updatedAt: formatter.string(from: now)
+    )
+}
+
 // MARK: - Timeline Providers
 
 struct SingleActivityProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> BabyWidgetEntry {
-        BabyWidgetEntry(date: Date(), widgetData: nil, selectedActivity: .feeding, selectedActivities: [])
+        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [])
     }
 
     func snapshot(for configuration: SelectActivityIntent, in context: Context) async -> BabyWidgetEntry {
-        let data = loadWidgetData()
+        // Use sample data for widget gallery preview, real data for home screen
+        let data = context.isPreview ? createSampleWidgetData() : loadWidgetData()
         return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: configuration.activity, selectedActivities: [])
     }
 
@@ -495,11 +582,11 @@ struct SingleActivityProvider: AppIntentTimelineProvider {
 
 struct FourActivityProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> BabyWidgetEntry {
-        BabyWidgetEntry(date: Date(), widgetData: nil, selectedActivity: .feeding, selectedActivities: [.feeding, .sleep, .diaper, .tummyTime])
+        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [.feeding, .sleep, .diaper, .tummyTime])
     }
 
     func snapshot(for configuration: SelectFourActivitiesIntent, in context: Context) async -> BabyWidgetEntry {
-        let data = loadWidgetData()
+        let data = context.isPreview ? createSampleWidgetData() : loadWidgetData()
         let activities = [configuration.activity1, configuration.activity2, configuration.activity3, configuration.activity4]
         return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: .feeding, selectedActivities: activities)
     }
@@ -524,11 +611,11 @@ struct FourActivityProvider: AppIntentTimelineProvider {
 
 struct TwoActivityProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> BabyWidgetEntry {
-        BabyWidgetEntry(date: Date(), widgetData: nil, selectedActivity: .feeding, selectedActivities: [.feeding, .sleep])
+        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [.feeding, .sleep])
     }
 
     func snapshot(for configuration: SelectTwoActivitiesIntent, in context: Context) async -> BabyWidgetEntry {
-        let data = loadWidgetData()
+        let data = context.isPreview ? createSampleWidgetData() : loadWidgetData()
         let activities = [configuration.activity1, configuration.activity2]
         return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: .feeding, selectedActivities: activities)
     }
@@ -588,14 +675,25 @@ struct SmallWidgetView: View {
         entry.widgetData?.hasActiveTimer(for: activity) ?? false
     }
 
+    var isStale: Bool {
+        isDataStale(data: entry.widgetData, now: entry.date)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            // Top: Baby name + activity emoji
+            // Top: Baby name + activity emoji (with stale indicator)
             HStack {
-                if let babyName = entry.widgetData?.babyName {
-                    Text(babyName)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9))
+                VStack(alignment: .leading, spacing: 1) {
+                    if let babyName = entry.widgetData?.babyName {
+                        Text(babyName)
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.9))
+                    }
+                    if isStale, let stalenessText = formatStalenessIndicator(data: entry.widgetData, now: entry.date) {
+                        Text(stalenessText)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
                 }
                 Spacer()
                 Text(activity.emoji)
@@ -862,14 +960,25 @@ struct MediumWidgetView: View {
         colorScheme == .dark ? Color(hex: WidgetColors.Background.dark) : Color(hex: WidgetColors.Background.light)
     }
 
+    var isStale: Bool {
+        isDataStale(data: entry.widgetData, now: entry.date)
+    }
+
     var body: some View {
         VStack(spacing: 10) {
-            // Top section: Baby name
+            // Top section: Baby name with stale indicator
             HStack {
-                if let babyName = entry.widgetData?.babyName {
-                    Text("\(babyName)'s activity")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 1) {
+                    if let babyName = entry.widgetData?.babyName {
+                        Text("\(babyName)'s activity")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.primary)
+                    }
+                    if isStale, let stalenessText = formatStalenessIndicator(data: entry.widgetData, now: entry.date) {
+                        Text(stalenessText)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
             }
@@ -960,18 +1069,29 @@ struct LargeWidgetView: View {
         colorScheme == .dark ? Color(hex: WidgetColors.Background.dark) : Color(hex: WidgetColors.Background.light)
     }
 
+    var isStale: Bool {
+        isDataStale(data: entry.widgetData, now: entry.date)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            // Header
+            // Header with stale indicator
             HStack(alignment: .center) {
-                if let babyName = entry.widgetData?.babyName {
-                    Text("\(babyName)'s recent activity")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
-                } else {
-                    Text("Recent activity")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 1) {
+                    if let babyName = entry.widgetData?.babyName {
+                        Text("\(babyName)'s recent activity")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.primary)
+                    } else {
+                        Text("Recent activity")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.primary)
+                    }
+                    if isStale, let stalenessText = formatStalenessIndicator(data: entry.widgetData, now: entry.date) {
+                        Text(stalenessText)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
             }
