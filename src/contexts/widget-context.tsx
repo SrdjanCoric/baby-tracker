@@ -7,12 +7,16 @@ import { useDiaper } from "./diaper-context";
 import { usePumping } from "./pumping-context";
 import { useGrowth } from "./growth-context";
 import { useTummyTime } from "./tummyTime-context";
+import { useActiveTimers } from "./active-timers-context";
+import { useAuth } from "./auth-context";
 import {
   updateWidgetData,
   type WidgetData,
   type WidgetActivityData,
+  type ActiveTimerData,
 } from "@/services/widget-data-service";
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
+import type { TimerActivityType } from "@/services/active-timer-service";
 
 interface WidgetContextValue {
   refreshWidgetData: () => Promise<void>;
@@ -27,6 +31,13 @@ function getStartOfDay(): Date {
   return now;
 }
 
+const ACTIVITY_TYPE_MAP: Record<TimerActivityType, ActiveTimerData["type"]> = {
+  feeding: "feeding",
+  sleep: "sleep",
+  pumping: "pumping",
+  tummy_time: "tummyTime",
+};
+
 export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { feedings, activeTimer: feedingTimer, getLastFeeding } = useFeeding();
@@ -35,6 +46,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { pumpings, activeTimer: pumpingTimer } = usePumping();
   const { measurements } = useGrowth();
   const { tummyTimes, activeTimer: tummyTimeTimer, dailyGoalSeconds: tummyTimeGoalSeconds } = useTummyTime();
+  const { locks } = useActiveTimers();
+  const { user } = useAuth();
 
   const lastUpdateRef = useRef<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -156,6 +169,20 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
+    const remoteLocks = locks.filter(
+      (lock) => lock.startedBy !== user?.id && lock.babyId === selectedBaby.id
+    );
+    for (const lock of remoteLocks) {
+      const widgetType = ACTIVITY_TYPE_MAP[lock.activityType];
+      if (widgetType) {
+        activeTimers.push({
+          type: widgetType,
+          startTime: lock.startedAt,
+          context: lock.startedByName,
+        });
+      }
+    }
+
     const activeTimer = activeTimers.length > 0 ? activeTimers[0] : null;
 
     return {
@@ -182,6 +209,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     tummyTimes,
     tummyTimeTimer,
     tummyTimeGoalSeconds,
+    locks,
+    user,
   ]);
 
   const refreshWidgetData = useCallback(async () => {
@@ -239,6 +268,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     measurements,
     tummyTimes,
     tummyTimeTimer,
+    locks,
     refreshWidgetData,
   ]);
 
