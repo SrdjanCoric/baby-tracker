@@ -9,8 +9,6 @@ class LiveActivityController: NSObject {
         return false
     }
 
-    private var currentActivityId: String?
-
     @objc func startTimerActivity(
         _ activityType: String,
         babyName: String,
@@ -47,7 +45,6 @@ class LiveActivityController: NSObject {
                 pushType: nil
             )
 
-            currentActivityId = activity.id
             print("[LiveActivityController] Started activity: \(activity.id)")
             resolve(activity.id)
         } catch {
@@ -118,10 +115,6 @@ class LiveActivityController: NSObject {
                 dismissalPolicy: .immediate
             )
 
-            if currentActivityId == activityId {
-                currentActivityId = nil
-            }
-
             print("[LiveActivityController] Ended activity: \(activityId)")
             resolve(true)
         }
@@ -149,7 +142,6 @@ class LiveActivityController: NSObject {
                 )
             }
 
-            currentActivityId = nil
             print("[LiveActivityController] Ended all activities")
             resolve(nil)
         }
@@ -179,9 +171,6 @@ class LiveActivityController: NSObject {
                         dismissalPolicy: .immediate
                     )
 
-                    if currentActivityId == activity.id {
-                        currentActivityId = nil
-                    }
                     endedAny = true
                     print("[LiveActivityController] Ended activity by type: \(activityType)")
                 }

@@ -233,7 +233,7 @@ struct WidgetActivityData: Codable {
 
     struct PumpingData: Codable {
         var lastTime: String?
-        var todayVolumeMl: Int
+        var todayVolumeMl: Double
         var sessionCount: Int
         var lastSide: String?
     }
@@ -531,7 +531,7 @@ func createSampleWidgetData() -> WidgetDataModel {
             ),
             pumping: WidgetActivityData.PumpingData(
                 lastTime: formatter.string(from: twoHoursAgo),
-                todayVolumeMl: 120,
+                todayVolumeMl: 120.0,
                 sessionCount: 3,
                 lastSide: "both"
             ),
@@ -635,31 +635,6 @@ struct TwoActivityProvider: AppIntentTimelineProvider {
 
         let nextUpdate = now.addingTimeInterval(30 * 60)
         return Timeline(entries: entries, policy: .after(nextUpdate))
-    }
-}
-
-// MARK: - Widget Stop Button
-
-struct WidgetStopButton: View {
-    let activity: ActivityType
-
-    var body: some View {
-        Button(intent: StopActivityIntent(activity: activity)) {
-            HStack(spacing: 8) {
-                Image(systemName: "stop.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                Text("Stop")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-            }
-            .foregroundStyle(Color(hex: "DC3545"))
-            .padding(.horizontal, 20)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(.white)
-            )
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -834,7 +809,7 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
     case .pumping:
         let volume = data.activities.pumping.todayVolumeMl
         if volume > 0 {
-            return "\(volume) ml today"
+            return "\(Int(volume)) ml today"
         }
         return "Pumping"
 
@@ -934,7 +909,7 @@ func getLastActivityDetailText(for activity: ActivityType, data: WidgetDataModel
     case .pumping:
         let volume = data.activities.pumping.todayVolumeMl
         if volume > 0 {
-            return "\(volume) ml today"
+            return "\(Int(volume)) ml today"
         }
         return "Last pump"
     case .tummyTime:
@@ -1224,7 +1199,7 @@ struct ActivityRowView: View {
 
         case .pumping:
             if data.activities.pumping.todayVolumeMl > 0 {
-                return "\(data.activities.pumping.todayVolumeMl)ml today"
+                return "\(Int(data.activities.pumping.todayVolumeMl))ml today"
             }
             return "\(data.activities.pumping.sessionCount) sessions"
 
