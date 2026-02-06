@@ -389,7 +389,10 @@
     "genderOptional": "Pol (opciono)",
     "boy": "Dečak",
     "girl": "Devojčica",
-    "saveChanges": "Sačuvaj izmene"
+    "saveChanges": "Sačuvaj izmene",
+    "timerRunningTitle": "Tajmer je aktivan",
+    "timerRunningMessage": "Molimo zaustavi trenutni tajmer pre promene bebe. Aktivni tajmer će biti sačuvan za trenutnu bebu.",
+    "stopAndSwitch": "Zaustavi i promeni"
   },
   "settings": {
     "title": "Podešavanja",

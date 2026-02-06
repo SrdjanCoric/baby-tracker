@@ -369,7 +369,10 @@
     "genderOptional": "Gender (Optional)",
     "boy": "Boy",
     "girl": "Girl",
-    "saveChanges": "Save Changes"
+    "saveChanges": "Save Changes",
+    "timerRunningTitle": "Timer is running",
+    "timerRunningMessage": "Please stop the current timer before switching babies. The active timer will be saved for the current baby.",
+    "stopAndSwitch": "Stop & Switch"
   },
   "settings": {
     "title": "Settings",

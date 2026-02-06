@@ -6,9 +6,10 @@ import {
   Modal,
   useColorScheme,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { useBaby } from "@/contexts";
+import { useBaby, useFeeding, useSleep, usePumping, useTummyTime } from "@/contexts";
 
 function useTranslatedBabyAge() {
   const { t } = useTranslation();
@@ -58,13 +59,58 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
   const calculateBabyAge = useTranslatedBabyAge();
 
   const { babies, selectedBaby, selectBaby, isLoading } = useBaby();
+  const { activeTimer: feedingTimer, stopBreastfeeding } = useFeeding();
+  const { activeTimer: sleepTimer, stopSleep } = useSleep();
+  const { activeTimer: pumpingTimer, stopPumping } = usePumping();
+  const { activeTimer: tummyTimeTimer, stopTummyTime } = useTummyTime();
+
+  const hasAnyActiveTimer = useCallback(() => {
+    return (
+      feedingTimer?.isRunning ||
+      sleepTimer?.isRunning ||
+      pumpingTimer?.isRunning ||
+      tummyTimeTimer?.isRunning
+    );
+  }, [feedingTimer, sleepTimer, pumpingTimer, tummyTimeTimer]);
+
+  const stopAllTimers = useCallback(async () => {
+    if (feedingTimer?.isRunning) await stopBreastfeeding();
+    if (sleepTimer?.isRunning) await stopSleep();
+    if (pumpingTimer?.isRunning) await stopPumping(0);
+    if (tummyTimeTimer?.isRunning) await stopTummyTime();
+  }, [feedingTimer, sleepTimer, pumpingTimer, tummyTimeTimer, stopBreastfeeding, stopSleep, stopPumping, stopTummyTime]);
 
   const handleSelect = useCallback(
     async (babyId: string) => {
+      if (babyId === selectedBaby?.id) {
+        setIsOpen(false);
+        return;
+      }
+
+      if (hasAnyActiveTimer()) {
+        Alert.alert(
+          t("baby.timerRunningTitle"),
+          t("baby.timerRunningMessage"),
+          [
+            { text: t("common.cancel"), style: "cancel" },
+            {
+              text: t("baby.stopAndSwitch"),
+              style: "destructive",
+              onPress: async () => {
+                await stopAllTimers();
+                await selectBaby(babyId);
+                setIsOpen(false);
+              },
+            },
+          ]
+        );
+        return;
+      }
+
       await selectBaby(babyId);
       setIsOpen(false);
     },
-    [selectBaby]
+    [selectBaby, selectedBaby?.id, hasAnyActiveTimer, stopAllTimers, t]
   );
 
   const handleAddBaby = useCallback(() => {
