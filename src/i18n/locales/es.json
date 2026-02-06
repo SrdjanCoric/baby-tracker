@@ -373,7 +373,10 @@
     "genderOptional": "Género (opcional)",
     "boy": "Niño",
     "girl": "Niña",
-    "saveChanges": "Guardar cambios"
+    "saveChanges": "Guardar cambios",
+    "timerRunningTitle": "El temporizador está activo",
+    "timerRunningMessage": "Por favor detén el temporizador actual antes de cambiar de bebé. El temporizador activo se guardará para el bebé actual.",
+    "stopAndSwitch": "Detener y cambiar"
   },
   "settings": {
     "title": "Ajustes",
