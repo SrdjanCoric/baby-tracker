@@ -5,6 +5,7 @@
 RCT_EXTERN_METHOD(startTimerActivity:(NSString *)activityType
                   babyName:(NSString *)babyName
                   context:(NSString *)context
+                  startTimeISO:(NSString *)startTimeISO
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 

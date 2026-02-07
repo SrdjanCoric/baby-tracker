@@ -309,7 +309,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     const startTime = requestedStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, side } });
 
-    const activityId = await startTimerLiveActivity("feeding", selectedBaby.name, side as LiveActivityBreastSide);
+    const activityId = await startTimerLiveActivity("feeding", selectedBaby.name, side as LiveActivityBreastSide, startTime);
     if (activityId) {
       liveActivityIdRef.current = activityId;
     }

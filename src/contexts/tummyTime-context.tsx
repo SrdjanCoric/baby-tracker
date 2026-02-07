@@ -301,7 +301,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     const startTime = requestedStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime } });
 
-    const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name);
+    const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name, undefined, startTime);
     if (activityId) {
       liveActivityIdRef.current = activityId;
     }

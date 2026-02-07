@@ -13,6 +13,7 @@ class LiveActivityController: NSObject {
         _ activityType: String,
         babyName: String,
         context: String?,
+        startTimeISO: String?,
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) {
@@ -27,10 +28,19 @@ class LiveActivityController: NSObject {
             return
         }
 
+        var activityStartTime = Date()
+        if let iso = startTimeISO {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let parsed = formatter.date(from: iso) {
+                activityStartTime = parsed
+            }
+        }
+
         let attributes = TimerActivityAttributes(
             activityType: activityType,
             babyName: babyName,
-            startTime: Date()
+            startTime: activityStartTime
         )
 
         let initialState = TimerActivityAttributes.ContentState(

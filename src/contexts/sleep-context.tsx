@@ -325,7 +325,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const startTime = customStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, sleepType } });
 
-    const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType);
+    const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType, startTime);
     if (activityId) {
       liveActivityIdRef.current = activityId;
     }
