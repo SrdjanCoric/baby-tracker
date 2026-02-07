@@ -104,7 +104,7 @@ export default function BottleFeedingScreen() {
         startedAt: new Date(),
         notes: notes || undefined,
       });
-      await scheduleReminderAfterFeeding();
+      await scheduleReminderAfterFeeding(new Date());
       router.back();
     } finally {
       setIsSaving(false);

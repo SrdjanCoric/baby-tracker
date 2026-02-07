@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useFeeding } from "@/contexts";
 import { useBaby } from "@/contexts";
+import { useNotificationIntegration } from "@/hooks";
 import { COMMON_FOODS } from "@/constants/foods";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { SolidReaction } from "@/constants/activities";
@@ -18,6 +19,7 @@ export default function SolidFeedingScreen() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { addFeeding, feedings } = useFeeding();
+  const { scheduleReminderAfterFeeding } = useNotificationIntegration();
 
   const [foodType, setFoodType] = useState("");
   const [reaction, setReaction] = useState<SolidReaction | null>(null);
@@ -86,11 +88,12 @@ export default function SolidFeedingScreen() {
         startedAt: new Date(),
         notes: notes || undefined,
       });
+      await scheduleReminderAfterFeeding(new Date());
       router.back();
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, foodType, reaction, notes, addFeeding, router]);
+  }, [selectedBaby, foodType, reaction, notes, addFeeding, scheduleReminderAfterFeeding, router]);
 
   const validationMessage = useMemo(() => {
     if (!showValidation) return null;

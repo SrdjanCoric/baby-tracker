@@ -445,6 +445,7 @@
     "householdActivityLabel": "Activity notifications",
     "householdActivityDesc": "Get notified when another caregiver logs an activity",
     "householdActivitySignInRequired": "Sign in to enable household activity notifications",
+    "householdActivitySoloDesc": "Invite another caregiver to your household to use this feature",
     "export": "Export Data",
     "generateReport": "Generate Report",
     "account": "Account",
