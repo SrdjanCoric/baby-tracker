@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useCallback, useRef } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import { useBaby } from "./baby-context";
 import { useFeeding } from "./feeding-context";
 import { useSleep } from "./sleep-context";
@@ -11,10 +11,12 @@ import { useActiveTimers } from "./active-timers-context";
 import { useAuth } from "./auth-context";
 import {
   updateWidgetData,
+  writeAuthToAppGroup,
   type WidgetData,
   type WidgetActivityData,
   type ActiveTimerData,
 } from "@/services/widget-data-service";
+import { syncWidgetPushToken } from "@/services/widget-push-token-service";
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import type { TimerActivityType } from "@/services/active-timer-service";
 
@@ -47,7 +49,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { measurements } = useGrowth();
   const { tummyTimes, activeTimer: tummyTimeTimer, dailyGoalSeconds: tummyTimeGoalSeconds } = useTummyTime();
   const { locks } = useActiveTimers();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
 
   const lastUpdateRef = useRef<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -96,14 +98,15 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
 
     const activities: WidgetActivityData = {
       feeding: {
-        lastTime: lastFeeding?.startedAt || null,
+        lastTime: lastFeeding?.endedAt || lastFeeding?.startedAt || null,
         todayCount: todayFeedings.length,
         lastType: lastFeeding?.type || null,
         lastSide: (lastFeeding?.side as BreastSide) || null,
       },
       sleep: {
-        lastTime: lastSleep?.startedAt || null,
+        lastTime: lastSleep?.endedAt || lastSleep?.startedAt || null,
         todayMinutes: todaySleepMinutes,
+        goalMinutes: sleepGoal,
         lastDurationMinutes: lastSleep ? Math.floor((lastSleep.durationSeconds || 0) / 60) : null,
         isActive: sleepTimer?.isRunning || false,
         sleepType: (lastSleep?.type as SleepType) || null,
@@ -114,7 +117,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         lastType: (lastDiaperEntry?.type as DiaperType) || null,
       },
       pumping: {
-        lastTime: lastPumping?.startedAt || null,
+        lastTime: lastPumping?.endedAt || lastPumping?.startedAt || null,
         todayVolumeMl: todayPumpingVolume,
         sessionCount: todayPumpings.length,
         lastSide: (lastPumping?.side as BreastSide) || null,
@@ -130,7 +133,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
           : null,
       },
       tummyTime: {
-        lastTime: lastTummyTime?.startedAt || null,
+        lastTime: lastTummyTime?.endedAt || lastTummyTime?.startedAt || null,
         todayMinutes: todayTummyTimeMinutes,
         goalMinutes: Math.floor(tummyTimeGoalSeconds / 60),
         lastDurationMinutes: lastTummyTime
@@ -179,6 +182,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
           type: widgetType,
           startTime: lock.startedAt,
           context: lock.startedByName,
+          isRemote: true,
         });
       }
     }
@@ -200,6 +204,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     getLastFeeding,
     sleeps,
     sleepTimer,
+    sleepGoal,
     diapers,
     getTodaysCounts,
     getLastDiaper,
@@ -271,6 +276,38 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     locks,
     refreshWidgetData,
   ]);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    if (!session?.access_token || !user?.id || !selectedBaby?.id) return;
+
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) return;
+
+    writeAuthToAppGroup({
+      supabaseUrl,
+      supabaseAnonKey,
+      accessToken: session.access_token,
+      userId: user.id,
+      selectedBabyId: selectedBaby.id,
+    });
+  }, [session?.access_token, user?.id, selectedBaby?.id]);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    if (!user?.id) return;
+
+    syncWidgetPushToken();
+
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        syncWidgetPushToken();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [user?.id]);
 
   const getWidgetDataJson = useCallback((): string | null => {
     const data = buildWidgetData();

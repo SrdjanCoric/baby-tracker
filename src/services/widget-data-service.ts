@@ -16,6 +16,7 @@ export interface WidgetActivityData {
   sleep: {
     lastTime: string | null;
     todayMinutes: number;
+    goalMinutes: number;
     lastDurationMinutes: number | null;
     isActive: boolean;
     sleepType: SleepType | null;
@@ -51,6 +52,7 @@ export interface ActiveTimerData {
   type: "feeding" | "pumping" | "sleep" | "tummyTime";
   startTime: string;
   context?: string;
+  isRemote?: boolean;
 }
 
 export interface WidgetData {
@@ -101,6 +103,7 @@ const DEFAULT_WIDGET_ACTIVITY_DATA: WidgetActivityData = {
   sleep: {
     lastTime: null,
     todayMinutes: 0,
+    goalMinutes: 0,
     lastDurationMinutes: null,
     isActive: false,
     sleepType: null,
@@ -264,6 +267,7 @@ export function updateSleepWidgetData(
   current: WidgetActivityData,
   lastTime: string | null,
   todayMinutes: number,
+  goalMinutes: number,
   lastDurationMinutes: number | null,
   isActive: boolean,
   sleepType: SleepType | null
@@ -273,6 +277,7 @@ export function updateSleepWidgetData(
     sleep: {
       lastTime,
       todayMinutes,
+      goalMinutes,
       lastDurationMinutes,
       isActive,
       sleepType,
@@ -355,6 +360,43 @@ export async function reloadWidgets(): Promise<void> {
   } catch (error) {
     console.error("[WidgetDataService] Failed to reload widgets:", error);
   }
+}
+
+export async function writeAuthToAppGroup(params: {
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+  accessToken: string;
+  userId: string;
+  selectedBabyId: string;
+}): Promise<void> {
+  if (Platform.OS !== "ios") return;
+
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      await extensionStorage.set("supabaseUrl", params.supabaseUrl, APP_GROUP);
+      await extensionStorage.set("supabaseAnonKey", params.supabaseAnonKey, APP_GROUP);
+      await extensionStorage.set("supabaseAccessToken", params.accessToken, APP_GROUP);
+      await extensionStorage.set("userId", params.userId, APP_GROUP);
+      await extensionStorage.set("selectedBabyId", params.selectedBabyId, APP_GROUP);
+    }
+  } catch (error) {
+    console.error("[WidgetDataService] Failed to write auth to App Group:", error);
+  }
+}
+
+export async function readWidgetPushToken(): Promise<string | null> {
+  if (Platform.OS !== "ios") return null;
+
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      return await extensionStorage.get("widgetPushToken", APP_GROUP);
+    }
+  } catch (error) {
+    console.error("[WidgetDataService] Failed to read widget push token:", error);
+  }
+  return null;
 }
 
 export async function clearWidgetData(): Promise<void> {

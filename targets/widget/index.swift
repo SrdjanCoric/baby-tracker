@@ -213,6 +213,7 @@ struct WidgetActivityData: Codable {
     struct SleepData: Codable {
         var lastTime: String?
         var todayMinutes: Int
+        var goalMinutes: Int
         var lastDurationMinutes: Int?
         var isActive: Bool
         var sleepType: String?
@@ -261,6 +262,7 @@ struct ActiveTimerData: Codable {
     var type: String
     var startTime: String
     var context: String?
+    var isRemote: Bool?
 }
 
 struct WidgetDataModel: Codable {
@@ -285,6 +287,10 @@ struct WidgetDataModel: Codable {
 
     func hasActiveTimer(for type: ActivityType) -> Bool {
         return getActiveTimer(for: type) != nil
+    }
+
+    func isRemoteTimer(for type: ActivityType) -> Bool {
+        return getActiveTimer(for: type)?.isRemote == true
     }
 }
 
@@ -520,6 +526,7 @@ func createSampleWidgetData() -> WidgetDataModel {
             sleep: WidgetActivityData.SleepData(
                 lastTime: formatter.string(from: twoHoursAgo),
                 todayMinutes: 180,
+                goalMinutes: 840,
                 lastDurationMinutes: 45,
                 isActive: false,
                 sleepType: "nap"
@@ -557,15 +564,15 @@ struct SingleActivityProvider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: SelectActivityIntent, in context: Context) async -> BabyWidgetEntry {
-        // Use sample data for widget gallery preview, real data for home screen
         let data = context.isPreview ? createSampleWidgetData() : loadWidgetData()
         return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: configuration.activity, selectedActivities: [])
     }
 
     func timeline(for configuration: SelectActivityIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
-        let data = loadWidgetData()
+        let cached = loadWidgetData()
+        let networkTimers = await fetchActiveTimersFromNetwork()
+        let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
 
-        // Create entries for the next 30 minutes, one per minute for accurate "X min ago" display
         var entries: [BabyWidgetEntry] = []
         let now = Date()
         for minuteOffset in 0..<30 {
@@ -574,7 +581,6 @@ struct SingleActivityProvider: AppIntentTimelineProvider {
             entries.append(entry)
         }
 
-        // Refresh after 30 minutes
         let nextUpdate = now.addingTimeInterval(30 * 60)
         return Timeline(entries: entries, policy: .after(nextUpdate))
     }
@@ -592,10 +598,11 @@ struct FourActivityProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: SelectFourActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
-        let data = loadWidgetData()
+        let cached = loadWidgetData()
+        let networkTimers = await fetchActiveTimersFromNetwork()
+        let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
         let activities = [configuration.activity1, configuration.activity2, configuration.activity3, configuration.activity4]
 
-        // Create entries for the next 30 minutes, one per minute
         var entries: [BabyWidgetEntry] = []
         let now = Date()
         for minuteOffset in 0..<30 {
@@ -621,10 +628,11 @@ struct TwoActivityProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: SelectTwoActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
-        let data = loadWidgetData()
+        let cached = loadWidgetData()
+        let networkTimers = await fetchActiveTimersFromNetwork()
+        let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
         let activities = [configuration.activity1, configuration.activity2]
 
-        // Create entries for the next 30 minutes, one per minute
         var entries: [BabyWidgetEntry] = []
         let now = Date()
         for minuteOffset in 0..<30 {
@@ -650,13 +658,16 @@ struct SmallWidgetView: View {
         entry.widgetData?.hasActiveTimer(for: activity) ?? false
     }
 
+    var isRemote: Bool {
+        entry.widgetData?.isRemoteTimer(for: activity) ?? false
+    }
+
     var isStale: Bool {
         isDataStale(data: entry.widgetData, now: entry.date)
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Top: Baby name + activity emoji (with stale indicator)
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     if let babyName = entry.widgetData?.babyName {
@@ -679,33 +690,47 @@ struct SmallWidgetView: View {
 
             Spacer()
 
-            // Center: Contextual info
             VStack(spacing: 4) {
                 if let data = entry.widgetData {
                     if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
-                        // Active timer display
-                        Text(startDate, style: .timer)
-                            .font(.system(size: 32, weight: .light, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .multilineTextAlignment(.center)
+                        if isRemote {
+                            if let context = getTimerContext(for: activity, data: data) {
+                                Text(context)
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.6))
+                                    .frame(maxWidth: .infinity)
+                                    .multilineTextAlignment(.center)
+                            }
 
-                        if let context = getTimerContext(for: activity, data: data) {
-                            Text(formatTimerContext(context, for: activity))
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.8))
+                            Text(startDate, style: .timer)
+                                .font(.system(size: 32, weight: .light, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(.white.opacity(0.5))
                                 .frame(maxWidth: .infinity)
                                 .multilineTextAlignment(.center)
                         } else {
-                            Text("In progress")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.8))
+                            Text(startDate, style: .timer)
+                                .font(.system(size: 32, weight: .light, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .multilineTextAlignment(.center)
+
+                            if let context = getTimerContext(for: activity, data: data) {
+                                Text(formatTimerContext(context, for: activity))
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.8))
+                                    .frame(maxWidth: .infinity)
+                                    .multilineTextAlignment(.center)
+                            } else {
+                                Text("In progress")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.8))
+                                    .frame(maxWidth: .infinity)
+                                    .multilineTextAlignment(.center)
+                            }
                         }
                     } else {
-                        // Show contextual info based on activity type
                         Text(getSmallWidgetMainText(for: activity, data: data))
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
@@ -735,9 +760,21 @@ struct SmallWidgetView: View {
 
             Spacer().frame(height: 8)
 
-            // Bottom: Stop pill when active, time ago when inactive
-            // Both are non-interactive; tapping anywhere goes through widgetURL
-            if isActive {
+            if isActive && isRemote {
+                HStack(spacing: 6) {
+                    Text("⏳")
+                        .font(.system(size: 14))
+                    Text("In use")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                }
+                .foregroundStyle(.white.opacity(0.9))
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(.white.opacity(0.25))
+                )
+            } else if isActive {
                 HStack(spacing: 8) {
                     Image(systemName: "stop.fill")
                         .font(.system(size: 14, weight: .semibold))
@@ -768,7 +805,7 @@ struct SmallWidgetView: View {
             Spacer().frame(height: 14)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .widgetURL(activity.deepLinkURL)
+        .widgetURL(isRemote ? nil : activity.deepLinkURL)
         .containerBackground(activity.accentColor, for: .widget)
     }
 }
@@ -789,11 +826,11 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
         return "Feeding"
 
     case .sleep:
-        if let lastDuration = data.activities.sleep.lastDurationMinutes, lastDuration > 0 {
-            return "Slept \(formatDuration(minutes: lastDuration))"
-        }
         let todayMins = data.activities.sleep.todayMinutes
-        if todayMins > 0 {
+        let goal = data.activities.sleep.goalMinutes
+        if goal > 0 && todayMins > 0 {
+            return "\(formatDuration(minutes: todayMins)) of \(formatDuration(minutes: goal))"
+        } else if todayMins > 0 {
             return "\(formatDuration(minutes: todayMins)) today"
         }
         return "Sleep"
@@ -960,11 +997,15 @@ struct MediumWidgetView: View {
 
             Spacer()
 
-            // Bottom: Colorful circular activity buttons
             HStack(spacing: 16) {
                 ForEach(activities.prefix(4), id: \.self) { activity in
-                    Link(destination: activity.deepLinkURL) {
-                        ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date)
+                    let isRemoteLock = entry.widgetData?.isRemoteTimer(for: activity) ?? false
+                    if isRemoteLock {
+                        ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date, isRemoteLock: true)
+                    } else {
+                        Link(destination: activity.deepLinkURL) {
+                            ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date)
+                        }
                     }
                 }
             }
@@ -979,6 +1020,7 @@ struct ColorfulCircleButton: View {
     let activity: ActivityType
     let data: WidgetDataModel?
     let currentDate: Date
+    var isRemoteLock: Bool = false
 
     var isActive: Bool {
         data?.hasActiveTimer(for: activity) ?? false
@@ -987,20 +1029,22 @@ struct ColorfulCircleButton: View {
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
-                // Colorful circle background
                 Circle()
                     .fill(activity.accentColor)
                     .frame(width: 52, height: 52)
+                    .opacity(isActive && isRemoteLock ? 0.6 : 1.0)
                     .shadow(color: activity.accentColor.opacity(0.3), radius: 4, x: 0, y: 2)
 
-                // Active timer ring
                 if isActive {
                     Circle()
                         .strokeBorder(.white, lineWidth: 3)
                         .frame(width: 52, height: 52)
                 }
 
-                if isActive {
+                if isActive && isRemoteLock {
+                    Text(activity.emoji)
+                        .font(.system(size: 22))
+                } else if isActive {
                     Image(systemName: "stop.fill")
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundStyle(.white)
@@ -1010,8 +1054,18 @@ struct ColorfulCircleButton: View {
                 }
             }
 
-            // Time label below
-            if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
+            if isActive && isRemoteLock {
+                if let context = getTimerContext(for: activity, data: data) {
+                    Text(String(context.prefix(1)))
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 16, height: 16)
+                        .background(Circle().fill(activity.accentColor))
+                } else {
+                    Text("⏳")
+                        .font(.system(size: 9))
+                }
+            } else if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
                 Text(startDate, style: .timer)
                     .font(.system(size: 9, weight: .semibold, design: .monospaced))
                     .monospacedDigit()
@@ -1074,10 +1128,14 @@ struct LargeWidgetView: View {
             .padding(.top, 12)
             .padding(.bottom, 8)
 
-            // Activity rows - Huckleberry style
             VStack(spacing: 8) {
                 ForEach(activities.prefix(4), id: \.self) { activity in
-                    ActivityRowView(activity: activity, data: entry.widgetData, currentDate: entry.date)
+                    ActivityRowView(
+                        activity: activity,
+                        data: entry.widgetData,
+                        currentDate: entry.date,
+                        isRemoteLock: entry.widgetData?.isRemoteTimer(for: activity) ?? false
+                    )
                 }
             }
             .padding(.horizontal, 12)
@@ -1093,80 +1151,107 @@ struct ActivityRowView: View {
     let activity: ActivityType
     let data: WidgetDataModel?
     let currentDate: Date
+    var isRemoteLock: Bool = false
 
     var isActive: Bool {
         data?.hasActiveTimer(for: activity) ?? false
     }
 
-    var body: some View {
-        Link(destination: activity.deepLinkURL) {
-            HStack(spacing: 10) {
-                // Left: Emoji icon
-                Text(activity.emoji)
-                    .font(.system(size: 22))
-                    .frame(width: 32)
+    @ViewBuilder
+    var rowContent: some View {
+        HStack(spacing: 10) {
+            Text(activity.emoji)
+                .font(.system(size: 22))
+                .frame(width: 32)
 
-                // Middle: Time info
-                VStack(alignment: .leading, spacing: 1) {
-                    if let data = data {
-                        if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
-                            // Active timer
-                            HStack(spacing: 4) {
-                                Text(startDate, style: .timer)
-                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                    .monospacedDigit()
-                                    .foregroundStyle(.white)
-                                Circle()
-                                    .fill(Color.white)
-                                    .frame(width: 6, height: 6)
-                            }
-                            Text("In progress")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.8))
-                        } else if let lastTime = getLastActivityTime(for: activity, data: data) {
-                            // Time since
-                            Text(formatTimeAgoLong(lastTime, now: currentDate))
+            VStack(alignment: .leading, spacing: 1) {
+                if let data = data {
+                    if isActive && isRemoteLock {
+                        if let context = getTimerContext(for: activity, data: data) {
+                            Text("\(context) is \(activity.label.lowercased())ing")
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
-                            Text(getRowDetail(for: activity, data: data))
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.8))
                                 .lineLimit(1)
                         } else {
-                            Text("No data yet")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.8))
-                            Text("Tap to log")
-                                .font(.system(size: 11))
+                            Text("In use")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                        }
+                        if let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                            Text(startDate, style: .timer)
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .monospacedDigit()
                                 .foregroundStyle(.white.opacity(0.7))
                         }
-                    } else {
-                        Text("--")
-                            .font(.system(size: 14, weight: .semibold))
+                    } else if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                        HStack(spacing: 4) {
+                            Text(startDate, style: .timer)
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(.white)
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 6, height: 6)
+                        }
+                        Text("In progress")
+                            .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.white.opacity(0.8))
+                    } else if let lastTime = getLastActivityTime(for: activity, data: data) {
+                        Text(formatTimeAgoLong(lastTime, now: currentDate))
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text(getRowDetail(for: activity, data: data))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .lineLimit(1)
+                    } else {
+                        Text("No data yet")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.8))
+                        Text("Tap to log")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.white.opacity(0.7))
                     }
+                } else {
+                    Text("--")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.8))
                 }
+            }
 
-                Spacer()
+            Spacer()
 
-                // Right: + button indicator
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: WidgetColors.Button.light))
-                        .frame(width: 34, height: 34)
-                        .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
+            ZStack {
+                Circle()
+                    .fill(Color(hex: WidgetColors.Button.light))
+                    .frame(width: 34, height: 34)
+                    .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
 
+                if isActive && isRemoteLock {
+                    Text("⏳")
+                        .font(.system(size: 16))
+                } else {
                     Image(systemName: isActive ? "stop.fill" : "plus")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(isActive ? Color.red : activity.accentColor)
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(activity.accentColor)
-            )
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(activity.accentColor.opacity(isRemoteLock && isActive ? 0.8 : 1.0))
+        )
+    }
+
+    var body: some View {
+        if isRemoteLock && isActive {
+            rowContent
+        } else {
+            Link(destination: activity.deepLinkURL) {
+                rowContent
+            }
         }
     }
 
@@ -1188,10 +1273,15 @@ struct ActivityRowView: View {
             return "\(data.activities.feeding.todayCount) today"
 
         case .sleep:
+            let mins = data.activities.sleep.todayMinutes
+            let goal = data.activities.sleep.goalMinutes
+            if goal > 0 {
+                return "\(mins)m of \(goal)m"
+            }
             if let lastDuration = data.activities.sleep.lastDurationMinutes, lastDuration > 0 {
                 return formatDuration(minutes: lastDuration)
             }
-            return "\(formatDuration(minutes: data.activities.sleep.todayMinutes)) today"
+            return "\(formatDuration(minutes: mins)) today"
 
         case .diaper:
             let c = data.activities.diaper.todayCounts
@@ -1294,22 +1384,32 @@ struct LockScreenCircularView: View {
 
     var activity: ActivityType { entry.selectedActivity }
 
+    var isRemote: Bool {
+        entry.widgetData?.isRemoteTimer(for: activity) ?? false
+    }
+
     var body: some View {
         ZStack {
             if let data = entry.widgetData,
-               data.hasActiveTimer(for: activity),
-               let startDate = getActiveTimerStartDate(for: activity, data: data) {
-                // Active timer
-                VStack(spacing: 2) {
-                    Text(activity.emoji)
-                        .font(.system(size: 14))
-                    Text(startDate, style: .timer)
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.7)
+               data.hasActiveTimer(for: activity) {
+                if isRemote {
+                    VStack(spacing: 2) {
+                        Text(activity.emoji)
+                            .font(.system(size: 14))
+                        Text("⏳")
+                            .font(.system(size: 12))
+                    }
+                } else if let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                    VStack(spacing: 2) {
+                        Text(activity.emoji)
+                            .font(.system(size: 14))
+                        Text(startDate, style: .timer)
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .monospacedDigit()
+                            .minimumScaleFactor(0.7)
+                    }
                 }
             } else if let lastTime = getLastActivityTime(for: activity, data: entry.widgetData) {
-                // Time since last
                 VStack(spacing: 2) {
                     Text(activity.emoji)
                         .font(.system(size: 14))
@@ -1319,7 +1419,6 @@ struct LockScreenCircularView: View {
                         .lineLimit(1)
                 }
             } else {
-                // No data
                 VStack(spacing: 2) {
                     Text(activity.emoji)
                         .font(.system(size: 16))
@@ -1353,16 +1452,23 @@ struct LockScreenRectangularView: View {
                     Spacer()
 
                     if let data = entry.widgetData,
-                       data.hasActiveTimer(for: activity),
-                       let startDate = getActiveTimerStartDate(for: activity, data: data) {
-                        // Active timer
-                        HStack(spacing: 2) {
-                            Text(startDate, style: .timer)
-                                .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                                .monospacedDigit()
-                            Image(systemName: "circle.fill")
-                                .font(.system(size: 4))
-                                .foregroundStyle(.green)
+                       data.hasActiveTimer(for: activity) {
+                        if data.isRemoteTimer(for: activity) {
+                            HStack(spacing: 2) {
+                                Text("⏳")
+                                    .font(.system(size: 10))
+                                Text("In use")
+                                    .font(.system(size: 11, weight: .medium))
+                            }
+                        } else if let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                            HStack(spacing: 2) {
+                                Text(startDate, style: .timer)
+                                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                                    .monospacedDigit()
+                                Image(systemName: "circle.fill")
+                                    .font(.system(size: 4))
+                                    .foregroundStyle(.green)
+                            }
                         }
                     } else if let lastTime = getLastActivityTime(for: activity, data: entry.widgetData) {
                         Text(formatTimeAgoShort(lastTime, now: entry.date))
@@ -1385,7 +1491,7 @@ struct SmallBabyWidget: Widget {
     let kind: String = "SmallBabyWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(
+        let config = AppIntentConfiguration(
             kind: kind,
             intent: SelectActivityIntent.self,
             provider: SingleActivityProvider()
@@ -1395,6 +1501,12 @@ struct SmallBabyWidget: Widget {
         .configurationDisplayName("Activity Status")
         .description("Track a single activity")
         .supportedFamilies([.systemSmall])
+
+        if #available(iOS 26.0, *) {
+            return config.pushHandler(SofiBabyWidgetPushHandler.self)
+        } else {
+            return config
+        }
     }
 }
 
@@ -1402,7 +1514,7 @@ struct MediumBabyWidget: Widget {
     let kind: String = "MediumBabyWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(
+        let config = AppIntentConfiguration(
             kind: kind,
             intent: SelectFourActivitiesIntent.self,
             provider: FourActivityProvider()
@@ -1412,6 +1524,12 @@ struct MediumBabyWidget: Widget {
         .configurationDisplayName("Quick Log")
         .description("Quick access to activities")
         .supportedFamilies([.systemMedium])
+
+        if #available(iOS 26.0, *) {
+            return config.pushHandler(SofiBabyWidgetPushHandler.self)
+        } else {
+            return config
+        }
     }
 }
 
@@ -1419,7 +1537,7 @@ struct LargeBabyWidget: Widget {
     let kind: String = "LargeBabyWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(
+        let config = AppIntentConfiguration(
             kind: kind,
             intent: SelectFourActivitiesIntent.self,
             provider: FourActivityProvider()
@@ -1429,6 +1547,12 @@ struct LargeBabyWidget: Widget {
         .configurationDisplayName("Daily Summary")
         .description("Overview of your baby's day")
         .supportedFamilies([.systemLarge])
+
+        if #available(iOS 26.0, *) {
+            return config.pushHandler(SofiBabyWidgetPushHandler.self)
+        } else {
+            return config
+        }
     }
 }
 
@@ -1436,7 +1560,7 @@ struct LockScreenCircularWidget: Widget {
     let kind: String = "LockScreenCircularWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(
+        let config = AppIntentConfiguration(
             kind: kind,
             intent: SelectActivityIntent.self,
             provider: SingleActivityProvider()
@@ -1446,6 +1570,12 @@ struct LockScreenCircularWidget: Widget {
         .configurationDisplayName("Activity Timer")
         .description("Time since last activity")
         .supportedFamilies([.accessoryCircular])
+
+        if #available(iOS 26.0, *) {
+            return config.pushHandler(SofiBabyWidgetPushHandler.self)
+        } else {
+            return config
+        }
     }
 }
 
@@ -1453,7 +1583,7 @@ struct LockScreenRectangularWidget: Widget {
     let kind: String = "LockScreenRectangularWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(
+        let config = AppIntentConfiguration(
             kind: kind,
             intent: SelectTwoActivitiesIntent.self,
             provider: TwoActivityProvider()
@@ -1463,7 +1593,106 @@ struct LockScreenRectangularWidget: Widget {
         .configurationDisplayName("Activity Summary")
         .description("Overview of two activities")
         .supportedFamilies([.accessoryRectangular])
+
+        if #available(iOS 26.0, *) {
+            return config.pushHandler(SofiBabyWidgetPushHandler.self)
+        } else {
+            return config
+        }
     }
+}
+
+// MARK: - WidgetKit Push Handler (iOS 26+)
+
+@available(iOS 26.0, *)
+struct SofiBabyWidgetPushHandler: WidgetPushHandler {
+    init() {}
+
+    func pushTokenDidChange(_ pushInfo: WidgetPushInfo, widgets: [WidgetInfo]) {
+        let tokenString = pushInfo.token.map { String(format: "%02x", $0) }.joined()
+        if let userDefaults = UserDefaults(suiteName: appGroupId) {
+            userDefaults.set(tokenString, forKey: "widgetPushToken")
+        }
+    }
+}
+
+// MARK: - Network Fetch for Active Timers
+
+struct RemoteActiveTimer: Decodable {
+    let id: String
+    let activity_type: String
+    let started_by: String
+    let started_at: String
+}
+
+func fetchActiveTimersFromNetwork() async -> [ActiveTimerData]? {
+    guard let userDefaults = UserDefaults(suiteName: appGroupId),
+          let supabaseUrl = userDefaults.string(forKey: "supabaseUrl"),
+          let anonKey = userDefaults.string(forKey: "supabaseAnonKey"),
+          let accessToken = userDefaults.string(forKey: "supabaseAccessToken"),
+          let babyId = userDefaults.string(forKey: "selectedBabyId"),
+          let userId = userDefaults.string(forKey: "userId") else {
+        return nil
+    }
+
+    let urlString = "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&select=id,activity_type,started_by,started_at"
+    guard let url = URL(string: urlString) else { return nil }
+
+    var request = URLRequest(url: url)
+    request.setValue(anonKey, forHTTPHeaderField: "apikey")
+    request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+    request.timeoutInterval = 10
+
+    guard let (data, response) = try? await URLSession.shared.data(for: request),
+          let httpResponse = response as? HTTPURLResponse,
+          httpResponse.statusCode == 200 else {
+        return nil
+    }
+
+    guard let remoteTimers = try? JSONDecoder().decode([RemoteActiveTimer].self, from: data) else {
+        return nil
+    }
+
+    let activityTypeMap: [String: String] = [
+        "feeding": "feeding",
+        "sleep": "sleep",
+        "pumping": "pumping",
+        "tummy_time": "tummyTime"
+    ]
+
+    return remoteTimers.compactMap { timer in
+        guard let widgetType = activityTypeMap[timer.activity_type] else { return nil }
+        return ActiveTimerData(
+            type: widgetType,
+            startTime: timer.started_at,
+            context: nil,
+            isRemote: timer.started_by != userId
+        )
+    }
+}
+
+func mergeNetworkTimers(cached: WidgetDataModel?, networkTimers: [ActiveTimerData]?) -> WidgetDataModel? {
+    guard var model = cached else { return nil }
+    guard let networkTimers = networkTimers else { return model }
+
+    var mergedTimers: [ActiveTimerData] = []
+
+    for timer in networkTimers {
+        if timer.isRemote == true {
+            mergedTimers.append(timer)
+        } else {
+            if let cachedTimer = model.activeTimers?.first(where: { $0.type == timer.type }) {
+                mergedTimers.append(cachedTimer)
+            } else {
+                mergedTimers.append(timer)
+            }
+        }
+    }
+
+    model.activeTimers = mergedTimers
+    model.activeTimer = mergedTimers.first
+
+    return model
 }
 
 // MARK: - Widget Bundle (includes Live Activity)
