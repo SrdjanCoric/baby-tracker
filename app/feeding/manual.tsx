@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFeeding, useBaby, useUnits } from "@/contexts";
+import { useNotificationIntegration } from "@/hooks";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import {
   validateManualBreastfeeding,
@@ -41,6 +42,7 @@ export default function ManualFeedingScreen() {
   const { selectedBaby } = useBaby();
   const { addFeeding, feedings } = useFeeding();
   const { volumeUnit } = useUnits();
+  const { scheduleReminderAfterFeeding } = useNotificationIntegration();
 
   // Map URL param to tab type
   const getInitialTab = (): FeedingTab => {
@@ -289,6 +291,7 @@ export default function ManualFeedingScreen() {
           durationSeconds,
           notes: notes || undefined,
         });
+        await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
         setIsSaving(false);
@@ -316,6 +319,7 @@ export default function ManualFeedingScreen() {
           startedAt: startTime,
           notes: notes || undefined,
         });
+        await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
         setIsSaving(false);
@@ -337,6 +341,7 @@ export default function ManualFeedingScreen() {
           startedAt: startTime,
           notes: notes || undefined,
         });
+        await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
         setIsSaving(false);
@@ -354,6 +359,7 @@ export default function ManualFeedingScreen() {
     reaction,
     notes,
     addFeeding,
+    scheduleReminderAfterFeeding,
     router,
     t,
   ]);
