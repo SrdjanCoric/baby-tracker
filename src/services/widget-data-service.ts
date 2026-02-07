@@ -362,6 +362,22 @@ export async function reloadWidgets(): Promise<void> {
   }
 }
 
+export async function writeSupabaseConfigToAppGroup(
+  supabaseUrl: string,
+  supabaseAnonKey: string
+): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      await extensionStorage.set("supabaseUrl", supabaseUrl, APP_GROUP);
+      await extensionStorage.set("supabaseAnonKey", supabaseAnonKey, APP_GROUP);
+    }
+  } catch (error) {
+    console.error("[WidgetDataService] Failed to write Supabase config to App Group:", error);
+  }
+}
+
 export async function writeAuthToAppGroup(params: {
   supabaseUrl: string;
   supabaseAnonKey: string;
@@ -397,6 +413,33 @@ export async function readWidgetPushToken(): Promise<string | null> {
     console.error("[WidgetDataService] Failed to read widget push token:", error);
   }
   return null;
+}
+
+export async function readPendingWidgetStop(): Promise<{
+  activityType: string;
+  stoppedAt: string;
+} | null> {
+  if (Platform.OS !== "ios") return null;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (!extensionStorage) return null;
+    const raw = await extensionStorage.get("pendingWidgetStop", APP_GROUP);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+
+export async function clearPendingWidgetStop(): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      await extensionStorage.set("pendingWidgetStop", "", APP_GROUP);
+    }
+  } catch {}
 }
 
 export async function clearWidgetData(): Promise<void> {

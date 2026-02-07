@@ -12,6 +12,7 @@ import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvi
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
+import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -129,6 +130,11 @@ function NotificationAuthSetup({ children }: { children: React.ReactNode }) {
 function DisplayNamePromptWrapper({ children }: { children: React.ReactNode }) {
   // DisplayNamePrompt is now handled in sign-in.tsx after authentication
   // This wrapper is disabled to avoid modal rendering issues during navigation
+  return <>{children}</>;
+}
+
+function WidgetStopHandler({ children }: { children: React.ReactNode }) {
+  useWidgetStopHandler();
   return <>{children}</>;
 }
 
@@ -389,7 +395,9 @@ export default function RootLayout() {
                                   <NotificationAuthSetup>
                                     <DashboardConfigProvider>
                                       <DisplayNamePromptWrapper>
-                                        <AppContent />
+                                        <WidgetStopHandler>
+                                          <AppContent />
+                                        </WidgetStopHandler>
                                       </DisplayNamePromptWrapper>
                                     </DashboardConfigProvider>
                                   </NotificationAuthSetup>

@@ -343,7 +343,7 @@ struct QuickLogIntent: AppIntent {
 struct StopActivityIntent: AppIntent {
     static var title: LocalizedStringResource = "Stop Activity"
     static var description = IntentDescription("Stop the current timer")
-    static var openAppWhenRun: Bool = true
+    static var openAppWhenRun: Bool = false
 
     @Parameter(title: "Activity")
     var activity: ActivityType
@@ -356,11 +356,73 @@ struct StopActivityIntent: AppIntent {
         self.activity = activity
     }
 
-    var stopURL: URL {
-        URL(string: "sofibaby://\(activity.rawValue)?action=stop")!
-    }
-
     func perform() async throws -> some IntentResult {
+        guard let userDefaults = UserDefaults(suiteName: appGroupId) else {
+            return .result()
+        }
+
+        let dbType = activity == .tummyTime ? "tummy_time" : activity.rawValue
+
+        let supabaseUrl = userDefaults.string(forKey: "supabaseUrl")
+        let anonKey = userDefaults.string(forKey: "supabaseAnonKey")
+        let accessToken = userDefaults.string(forKey: "supabaseAccessToken")
+        let babyId = userDefaults.string(forKey: "selectedBabyId")
+        let userId = userDefaults.string(forKey: "userId")
+
+        if let supabaseUrl, let anonKey, let accessToken, let babyId, let userId {
+            let urlString = "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(userId)"
+            if let url = URL(string: urlString) {
+                var request = URLRequest(url: url)
+                request.httpMethod = "DELETE"
+                request.setValue(anonKey, forHTTPHeaderField: "apikey")
+                request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+                request.timeoutInterval = 10
+                _ = try? await URLSession.shared.data(for: request)
+            }
+        }
+
+        let stop: [String: String] = [
+            "activityType": dbType,
+            "stoppedAt": ISO8601DateFormatter().string(from: Date())
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: stop),
+           let jsonString = String(data: json, encoding: .utf8) {
+            userDefaults.set(jsonString, forKey: "pendingWidgetStop")
+        }
+
+        if let pushToken = userDefaults.string(forKey: "liveActivityPushToken"),
+           !pushToken.isEmpty,
+           let supabaseUrl = supabaseUrl {
+            let edgeUrl = "\(supabaseUrl)/functions/v1/end-live-activity"
+            if let url = URL(string: edgeUrl) {
+                var laRequest = URLRequest(url: url)
+                laRequest.httpMethod = "POST"
+                laRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                laRequest.setValue(anonKey ?? "", forHTTPHeaderField: "apikey")
+                laRequest.setValue("Bearer \(anonKey ?? "")", forHTTPHeaderField: "Authorization")
+                laRequest.timeoutInterval = 10
+                laRequest.httpBody = try? JSONSerialization.data(withJSONObject: ["pushToken": pushToken])
+                _ = try? await URLSession.shared.data(for: laRequest)
+            }
+            userDefaults.removeObject(forKey: "liveActivityPushToken")
+        }
+
+        if let dataString = userDefaults.string(forKey: "widgetData"),
+           let data = dataString.data(using: .utf8),
+           var widgetData = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            widgetData["activeTimer"] = nil
+            if var timers = widgetData["activeTimers"] as? [[String: Any]] {
+                let widgetType = activity.rawValue
+                timers.removeAll { ($0["type"] as? String) == widgetType }
+                widgetData["activeTimers"] = timers
+            }
+            if let updatedData = try? JSONSerialization.data(withJSONObject: widgetData),
+               let updatedString = String(data: updatedData, encoding: .utf8) {
+                userDefaults.set(updatedString, forKey: "widgetData")
+            }
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
         return .result()
     }
 }
@@ -775,19 +837,22 @@ struct SmallWidgetView: View {
                         .fill(.white.opacity(0.25))
                 )
             } else if isActive {
-                HStack(spacing: 8) {
-                    Image(systemName: "stop.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("Stop")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                Button(intent: StopActivityIntent(activity: activity)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("Stop")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundStyle(Color(hex: "DC3545"))
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule()
+                            .fill(.white)
+                    )
                 }
-                .foregroundStyle(Color(hex: "DC3545"))
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .background(
-                    Capsule()
-                        .fill(.white)
-                )
+                .buttonStyle(.plain)
             } else if let data = entry.widgetData {
                 if let lastTime = getLastActivityTime(for: activity, data: data) {
                     Text(formatTimeAgoLong(lastTime, now: entry.date))
@@ -805,7 +870,7 @@ struct SmallWidgetView: View {
             Spacer().frame(height: 14)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .widgetURL(isRemote ? nil : activity.deepLinkURL)
+        .widgetURL(isActive ? nil : activity.deepLinkURL)
         .containerBackground(activity.accentColor, for: .widget)
     }
 }
@@ -1000,8 +1065,14 @@ struct MediumWidgetView: View {
             HStack(spacing: 16) {
                 ForEach(activities.prefix(4), id: \.self) { activity in
                     let isRemoteLock = entry.widgetData?.isRemoteTimer(for: activity) ?? false
+                    let isActiveOwn = (entry.widgetData?.hasActiveTimer(for: activity) ?? false) && !isRemoteLock
                     if isRemoteLock {
                         ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date, isRemoteLock: true)
+                    } else if isActiveOwn {
+                        Button(intent: StopActivityIntent(activity: activity)) {
+                            ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date)
+                        }
+                        .buttonStyle(.plain)
                     } else {
                         Link(destination: activity.deepLinkURL) {
                             ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date)
@@ -1248,6 +1319,11 @@ struct ActivityRowView: View {
     var body: some View {
         if isRemoteLock && isActive {
             rowContent
+        } else if isActive {
+            Button(intent: StopActivityIntent(activity: activity)) {
+                rowContent
+            }
+            .buttonStyle(.plain)
         } else {
             Link(destination: activity.deepLinkURL) {
                 rowContent

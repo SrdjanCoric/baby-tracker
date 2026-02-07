@@ -12,6 +12,7 @@ import { useAuth } from "./auth-context";
 import {
   updateWidgetData,
   writeAuthToAppGroup,
+  writeSupabaseConfigToAppGroup,
   type WidgetData,
   type WidgetActivityData,
   type ActiveTimerData,
@@ -276,6 +277,14 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     locks,
     refreshWidgetData,
   ]);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) return;
+    writeSupabaseConfigToAppGroup(supabaseUrl, supabaseAnonKey);
+  }, []);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;

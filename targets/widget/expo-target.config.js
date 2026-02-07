@@ -4,7 +4,7 @@ module.exports = {
   name: "SofiBabyWidget",
   displayName: "SofiBaby",
   deploymentTarget: "18.0",
-  frameworks: ["SwiftUI", "WidgetKit", "ActivityKit"],
+  frameworks: ["SwiftUI", "WidgetKit", "ActivityKit", "AppIntents"],
   colors: {
     $accent: "#8CB369",
     $widgetBackground: { light: "#F5EDE8", dark: "#1E1B19" },
