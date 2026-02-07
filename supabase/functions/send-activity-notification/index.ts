@@ -88,6 +88,7 @@ serve(async (req) => {
     }
 
     if (!record?.baby_id || !record?.logged_by) {
+      console.log("Missing baby_id or logged_by in record:", { baby_id: record?.baby_id, logged_by: record?.logged_by });
       return new Response(
         JSON.stringify({ error: "Missing baby_id or logged_by" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -140,6 +141,7 @@ serve(async (req) => {
     }
 
     if (!tokens || tokens.length === 0) {
+      console.log("No recipients with notifications enabled for household:", baby.household_id);
       return new Response(
         JSON.stringify({ message: "No recipients with notifications enabled" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

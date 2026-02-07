@@ -378,7 +378,8 @@ export function NotificationProvider({
     const activityEnabled = await getActivityNotificationsEnabled();
     setActivityNotificationsEnabledState(activityEnabled);
 
-    if (permissionStatus !== "granted") {
+    const currentStatus = await NotificationService.getPermissionStatus();
+    if (currentStatus !== "granted") {
       return;
     }
 
@@ -390,7 +391,7 @@ export function NotificationProvider({
         console.error("Failed to save push token:", error);
       }
     }
-  }, [permissionStatus]);
+  }, []);
 
   const value: NotificationContextValue = {
     settings,

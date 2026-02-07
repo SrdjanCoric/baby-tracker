@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
+  Animated,
   Pressable,
   Text,
   View,
@@ -14,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useNotifications } from "@/contexts/notification-context";
 import { useAuth } from "@/contexts/auth-context";
+import { useHousehold } from "@/contexts/household-context";
 import { FEEDING_REMINDER_INTERVALS } from "@/constants/notifications";
 
 type SectionHeaderProps = {
@@ -85,6 +87,8 @@ type IntervalOption = (typeof FEEDING_REMINDER_INTERVALS)[number];
 export default function NotificationSettingsScreen() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
+  const { members } = useHousehold();
+  const isMultiPersonHousehold = members.length > 1;
   const {
     settings,
     permissionStatus,
@@ -100,6 +104,8 @@ export default function NotificationSettingsScreen() {
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [showSoloHint, setShowSoloHint] = useState(false);
+  const soloHintAnim = useRef(new Animated.Value(0)).current;
 
   const parseTimeToDate = useCallback((timeString: string): Date => {
     const [hours, minutes] = timeString.split(":").map(Number);
@@ -240,6 +246,16 @@ export default function NotificationSettingsScreen() {
     [setActivityNotificationsEnabled]
   );
 
+  const handleSoloRowPress = useCallback(() => {
+    const toValue = showSoloHint ? 0 : 1;
+    setShowSoloHint(!showSoloHint);
+    Animated.timing(soloHintAnim, {
+      toValue,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [showSoloHint, soloHintAnim]);
+
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
@@ -379,22 +395,55 @@ export default function NotificationSettingsScreen() {
         <View className="mb-6">
           <SectionHeader title={t("settings.householdActivity")} />
           <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
-            <SettingsRow
-              label={t("settings.householdActivityLabel")}
-              description={
-                isAuthenticated
-                  ? t("settings.householdActivityDesc")
-                  : t("settings.householdActivitySignInRequired")
-              }
-              rightElement={
-                <Switch
-                  value={activityNotificationsEnabled}
-                  onValueChange={handleToggleActivityNotifications}
-                  disabled={!hasPermission || !isAuthenticated}
-                />
-              }
-              isLast
-            />
+            {isAuthenticated && isMultiPersonHousehold ? (
+              <SettingsRow
+                label={t("settings.householdActivityLabel")}
+                description={t("settings.householdActivityDesc")}
+                rightElement={
+                  <Switch
+                    value={activityNotificationsEnabled}
+                    onValueChange={handleToggleActivityNotifications}
+                    disabled={!hasPermission}
+                  />
+                }
+                isLast
+              />
+            ) : (
+              <View>
+                <Pressable
+                  onPress={handleSoloRowPress}
+                  className="flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+                >
+                  <View className="flex-1">
+                    <Text className="text-base text-content-primary dark:text-content-dark-primary">
+                      {t("settings.householdActivityLabel")}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={false}
+                    disabled
+                  />
+                </Pressable>
+                <Animated.View
+                  style={{
+                    maxHeight: soloHintAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 60],
+                    }),
+                    opacity: soloHintAnim,
+                    overflow: "hidden",
+                  }}
+                >
+                  <View className="px-4 pb-3">
+                    <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
+                      {!isAuthenticated
+                        ? t("settings.householdActivitySignInRequired")
+                        : t("settings.householdActivitySoloDesc")}
+                    </Text>
+                  </View>
+                </Animated.View>
+              </View>
+            )}
           </View>
         </View>
 
