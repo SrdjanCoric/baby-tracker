@@ -410,12 +410,87 @@ struct StopActivityIntent: AppIntent {
         if let dataString = userDefaults.string(forKey: "widgetData"),
            let data = dataString.data(using: .utf8),
            var widgetData = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            widgetData["activeTimer"] = nil
+            let widgetType = activity.rawValue
+            var stoppedTimerStart: String? = nil
+            var stoppedTimerContext: String? = nil
             if var timers = widgetData["activeTimers"] as? [[String: Any]] {
-                let widgetType = activity.rawValue
+                if let stoppedTimer = timers.first(where: { ($0["type"] as? String) == widgetType }) {
+                    stoppedTimerStart = stoppedTimer["startTime"] as? String
+                    stoppedTimerContext = stoppedTimer["context"] as? String
+                }
                 timers.removeAll { ($0["type"] as? String) == widgetType }
                 widgetData["activeTimers"] = timers
+                widgetData["activeTimer"] = timers.first
+            } else {
+                if let single = widgetData["activeTimer"] as? [String: Any],
+                   (single["type"] as? String) == widgetType {
+                    stoppedTimerStart = single["startTime"] as? String
+                    stoppedTimerContext = single["context"] as? String
+                }
+                widgetData["activeTimer"] = nil
             }
+
+            let now = ISO8601DateFormatter().string(from: Date())
+            if var activities = widgetData["activities"] as? [String: Any] {
+                switch activity {
+                case .feeding:
+                    if var feeding = activities["feeding"] as? [String: Any] {
+                        feeding["lastTime"] = now
+                        let count = (feeding["todayCount"] as? Int) ?? 0
+                        feeding["todayCount"] = count + 1
+                        if let side = stoppedTimerContext {
+                            feeding["lastSide"] = side
+                            feeding["lastType"] = "breast"
+                        }
+                        activities["feeding"] = feeding
+                    }
+                case .sleep:
+                    if var sleep = activities["sleep"] as? [String: Any] {
+                        sleep["lastTime"] = now
+                        sleep["isActive"] = false
+                        if let sleepType = stoppedTimerContext {
+                            sleep["sleepType"] = sleepType
+                        }
+                        if let startStr = stoppedTimerStart {
+                            let durationMin = durationMinutes(from: startStr, to: Date())
+                            if let durationMin {
+                                sleep["lastDurationMinutes"] = durationMin
+                                let todayMin = (sleep["todayMinutes"] as? Int) ?? 0
+                                sleep["todayMinutes"] = todayMin + durationMin
+                            }
+                        }
+                        activities["sleep"] = sleep
+                    }
+                case .pumping:
+                    if var pumping = activities["pumping"] as? [String: Any] {
+                        pumping["lastTime"] = now
+                        let sessions = (pumping["sessionCount"] as? Int) ?? 0
+                        pumping["sessionCount"] = sessions + 1
+                        if let side = stoppedTimerContext {
+                            pumping["lastSide"] = side
+                        }
+                        activities["pumping"] = pumping
+                    }
+                case .tummyTime:
+                    if var tummyTime = activities["tummyTime"] as? [String: Any] {
+                        tummyTime["lastTime"] = now
+                        if let startStr = stoppedTimerStart {
+                            let durationMin = durationMinutes(from: startStr, to: Date())
+                            if let durationMin {
+                                tummyTime["lastDurationMinutes"] = durationMin
+                                let todayMin = (tummyTime["todayMinutes"] as? Int) ?? 0
+                                tummyTime["todayMinutes"] = todayMin + durationMin
+                            }
+                        }
+                        activities["tummyTime"] = tummyTime
+                    }
+                case .diaper:
+                    break
+                }
+                widgetData["activities"] = activities
+            }
+
+            widgetData["updatedAt"] = now
             if let updatedData = try? JSONSerialization.data(withJSONObject: widgetData),
                let updatedString = String(data: updatedData, encoding: .utf8) {
                 userDefaults.set(updatedString, forKey: "widgetData")
@@ -540,6 +615,11 @@ func getUpdatedAtDate(data: WidgetDataModel?) -> Date? {
     return formatter.date(from: data.updatedAt)
 }
 
+func isCachedDataFresh(_ data: WidgetDataModel?, threshold: TimeInterval = 30) -> Bool {
+    guard let updatedAt = getUpdatedAtDate(data: data) else { return false }
+    return Date().timeIntervalSince(updatedAt) < threshold
+}
+
 func isDataStale(data: WidgetDataModel?, now: Date = Date()) -> Bool {
     guard let updatedAt = getUpdatedAtDate(data: data) else { return true }
     let staleThresholdSeconds: TimeInterval = 60 * 60 // 1 hour
@@ -632,7 +712,7 @@ struct SingleActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectActivityIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = await fetchActiveTimersFromNetwork()
+        let networkTimers = isCachedDataFresh(cached) ? nil : filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
 
         var entries: [BabyWidgetEntry] = []
@@ -661,7 +741,7 @@ struct FourActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectFourActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = await fetchActiveTimersFromNetwork()
+        let networkTimers = isCachedDataFresh(cached) ? nil : filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
         let activities = [configuration.activity1, configuration.activity2, configuration.activity3, configuration.activity4]
 
@@ -691,7 +771,7 @@ struct TwoActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectTwoActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = await fetchActiveTimersFromNetwork()
+        let networkTimers = isCachedDataFresh(cached) ? nil : filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
         let activities = [configuration.activity1, configuration.activity2]
 
@@ -1745,6 +1825,33 @@ func fetchActiveTimersFromNetwork() async -> [ActiveTimerData]? {
             isRemote: timer.started_by != userId
         )
     }
+}
+
+func durationMinutes(from isoString: String, to end: Date) -> Int? {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    var start = formatter.date(from: isoString)
+    if start == nil {
+        formatter.formatOptions = [.withInternetDateTime]
+        start = formatter.date(from: isoString)
+    }
+    guard let start else { return nil }
+    return max(0, Int(end.timeIntervalSince(start)) / 60)
+}
+
+func filterStoppedTimers(_ timers: [ActiveTimerData]?) -> [ActiveTimerData]? {
+    guard var timers = timers else { return nil }
+    guard let userDefaults = UserDefaults(suiteName: appGroupId),
+          let stopJson = userDefaults.string(forKey: "pendingWidgetStop"),
+          !stopJson.isEmpty,
+          let stopData = stopJson.data(using: .utf8),
+          let stop = try? JSONSerialization.jsonObject(with: stopData) as? [String: String],
+          let stoppedType = stop["activityType"] else {
+        return timers
+    }
+    let widgetType = stoppedType == "tummy_time" ? "tummyTime" : stoppedType
+    timers.removeAll { $0.type == widgetType }
+    return timers
 }
 
 func mergeNetworkTimers(cached: WidgetDataModel?, networkTimers: [ActiveTimerData]?) -> WidgetDataModel? {
