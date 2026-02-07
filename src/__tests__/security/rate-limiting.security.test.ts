@@ -146,10 +146,10 @@ describe('Rate Limiting Security (SR-5)', () => {
       expect(result.error).toBe('rateLimitExceeded');
     });
 
-    it('should reset invite code limit after 1 minute', async () => {
+    it('should reset invite code limit after 1 hour', async () => {
       const AsyncStorage = await import('@react-native-async-storage/async-storage');
       const now = Date.now();
-      const expiredAttempt = now - 2 * 60 * 1000;
+      const expiredAttempt = now - 2 * 60 * 60 * 1000;
 
       vi.mocked(AsyncStorage.default.getItem).mockResolvedValue(
         JSON.stringify({

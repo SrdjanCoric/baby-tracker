@@ -658,7 +658,12 @@
     "dataLossWarningTitle": "Podaci o bebi će biti zamenjeni",
     "dataLossWarningMessage": "Imate {{count}} profila beba sačuvanih lokalno. Kada se pridružite ovom domaćinstvu, koristićete podatke o bebama tog domaćinstva. Vaši lokalni podaci o bebama će biti izgubljeni.",
     "dataLossWarningMessage_one": "Imate 1 profil bebe sačuvan lokalno. Kada se pridružite ovom domaćinstvu, koristićete podatke o bebama tog domaćinstva. Vaši lokalni podaci o bebi će biti izgubljeni.",
-    "joinAnyway": "Ipak se pridruži"
+    "joinAnyway": "Ipak se pridruži",
+    "rateLimitExceeded": "Previše pokušaja. Sačekajte i pokušajte ponovo.",
+    "rateLimitCooldown": "Pokušajte ponovo za {{time}}",
+    "attemptsRemaining_one": "{{count}} pokušaj preostao",
+    "attemptsRemaining_few": "{{count}} pokušaja preostalo",
+    "attemptsRemaining_other": "{{count}} pokušaja preostalo"
   },
   "auth": {
     "signIn": "Prijava",

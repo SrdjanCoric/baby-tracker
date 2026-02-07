@@ -632,7 +632,11 @@
     "dataLossWarningTitle": "Tus datos del bebé serán reemplazados",
     "dataLossWarningMessage": "Tienes {{count}} perfiles de bebé almacenados localmente. Al unirte a este hogar, usarás los datos del bebé del hogar. Tus datos locales del bebé se perderán.",
     "dataLossWarningMessage_one": "Tienes 1 perfil de bebé almacenado localmente. Al unirte a este hogar, usarás los datos del bebé del hogar. Tus datos locales del bebé se perderán.",
-    "joinAnyway": "Unirse de todas formas"
+    "joinAnyway": "Unirse de todas formas",
+    "rateLimitExceeded": "Demasiados intentos. Espera e inténtalo de nuevo.",
+    "rateLimitCooldown": "Inténtalo de nuevo en {{time}}",
+    "attemptsRemaining_one": "{{count}} intento restante",
+    "attemptsRemaining_other": "{{count}} intentos restantes"
   },
   "auth": {
     "signIn": "Iniciar sesión",

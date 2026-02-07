@@ -10,6 +10,7 @@ import {
   leaveHousehold as leaveHouseholdService,
   Household,
   HouseholdMember,
+  RateLimitInfo,
 } from "@/services/household-service";
 import { withRetryResult } from "@/utils/retry";
 
@@ -23,6 +24,7 @@ export interface JoinHouseholdResult {
   success: boolean;
   error: string | null;
   partialFailures?: PartialFailure[];
+  rateLimitInfo?: RateLimitInfo;
 }
 
 export interface HouseholdState {
@@ -277,19 +279,15 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     const retryConfig = { maxRetries: 2, baseDelayMs: 1000, maxDelayMs: 5000 };
     const partialFailures: PartialFailure[] = [];
 
-    const joinResult = await withRetryResult(
-      () => joinHouseholdViaInviteCode(inviteCode),
-      retryConfig
-    );
+    const directResult = await joinHouseholdViaInviteCode(inviteCode);
 
-    if (!joinResult.success || joinResult.data?.error) {
-      const errorMessage = joinResult.data?.error || joinResult.error?.message || 'Failed to join household';
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
+    if (directResult.error) {
+      dispatch({ type: "SET_ERROR", payload: directResult.error });
       dispatch({ type: "SET_LOADING", payload: false });
-      return { success: false, error: errorMessage };
+      return { success: false, error: directResult.error, rateLimitInfo: directResult.rateLimitInfo };
     }
 
-    const householdData = joinResult.data?.data;
+    const householdData = directResult.data;
     if (!householdData) {
       dispatch({ type: "SET_ERROR", payload: 'No household data returned' });
       dispatch({ type: "SET_LOADING", payload: false });

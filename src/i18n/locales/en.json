@@ -630,7 +630,11 @@
     "dataLossWarningTitle": "Your baby data will be replaced",
     "dataLossWarningMessage": "You have {{count}} baby profiles stored locally. When you join this household, you'll use the household's baby data instead. Your local baby data will be lost.",
     "dataLossWarningMessage_one": "You have 1 baby profile stored locally. When you join this household, you'll use the household's baby data instead. Your local baby data will be lost.",
-    "joinAnyway": "Join Anyway"
+    "joinAnyway": "Join Anyway",
+    "rateLimitExceeded": "Too many attempts. Please wait and try again.",
+    "rateLimitCooldown": "Try again in {{time}}",
+    "attemptsRemaining_one": "{{count}} attempt remaining",
+    "attemptsRemaining_other": "{{count}} attempts remaining"
   },
   "auth": {
     "signIn": "Sign In",
