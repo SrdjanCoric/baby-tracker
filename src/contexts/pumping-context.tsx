@@ -233,7 +233,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     const startTime = requestedStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime, side } });
 
-    const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side);
+    const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side, startTime);
     if (activityId) {
       liveActivityIdRef.current = activityId;
     }

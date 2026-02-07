@@ -20,7 +20,8 @@ interface LiveActivityControllerModule {
   startTimerActivity(
     activityType: string,
     babyName: string,
-    context: string | null
+    context: string | null,
+    startTimeISO: string | null
   ): Promise<string | null>;
   updateTimerActivity(
     activityId: string,
@@ -51,7 +52,8 @@ function getLiveActivityModule(): LiveActivityControllerModule | null {
 export async function startTimerLiveActivity(
   activityType: TimerActivityType,
   babyName: string,
-  context?: BreastSide | SleepType
+  context?: BreastSide | SleepType,
+  startTime?: Date
 ): Promise<string | null> {
   const module = getLiveActivityModule();
   if (!module) {
@@ -62,7 +64,8 @@ export async function startTimerLiveActivity(
     const activityId = await module.startTimerActivity(
       activityType,
       babyName,
-      context ?? null
+      context ?? null,
+      startTime?.toISOString() ?? null
     );
     return activityId;
   } catch (error) {
@@ -162,10 +165,11 @@ export async function isLiveActivityRunningWithTimeout(activityId: string): Prom
 export async function startTimerLiveActivityWithTimeout(
   activityType: TimerActivityType,
   babyName: string,
-  context?: BreastSide | SleepType
+  context?: BreastSide | SleepType,
+  startTime?: Date
 ): Promise<string | null> {
   return withTimeout(
-    startTimerLiveActivity(activityType, babyName, context),
+    startTimerLiveActivity(activityType, babyName, context, startTime),
     LIVE_ACTIVITY_START_TIMEOUT_MS,
     null
   );
