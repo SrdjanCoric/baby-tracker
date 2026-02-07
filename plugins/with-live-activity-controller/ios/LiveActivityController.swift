@@ -52,10 +52,20 @@ class LiveActivityController: NSObject {
             let activity = try Activity<TimerActivityAttributes>.request(
                 attributes: attributes,
                 content: .init(state: initialState, staleDate: nil),
-                pushType: nil
+                pushType: .token
             )
 
             print("[LiveActivityController] Started activity: \(activity.id)")
+
+            Task {
+                for await tokenData in activity.pushTokenUpdates {
+                    let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
+                    if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
+                        userDefaults.set(tokenString, forKey: "liveActivityPushToken")
+                    }
+                }
+            }
+
             resolve(activity.id)
         } catch {
             print("[LiveActivityController] Failed to start: \(error.localizedDescription)")
