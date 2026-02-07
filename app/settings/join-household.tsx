@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import {
   Pressable,
   Text,
@@ -22,6 +22,7 @@ type JoinErrorKey =
   | "household.householdNotFound"
   | "household.alreadyInHousehold"
   | "household.joinFailed"
+  | "household.rateLimitExceeded"
   | "errors.generic";
 
 const ERROR_TRANSLATIONS: Record<string, JoinErrorKey> = {
@@ -31,6 +32,7 @@ const ERROR_TRANSLATIONS: Record<string, JoinErrorKey> = {
   householdNotFound: "household.householdNotFound",
   alreadyInHousehold: "household.alreadyInHousehold",
   joinFailed: "household.joinFailed",
+  rateLimitExceeded: "household.rateLimitExceeded",
 };
 
 export default function JoinHouseholdScreen() {
@@ -42,13 +44,45 @@ export default function JoinHouseholdScreen() {
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
+  const [cooldownEndTime, setCooldownEndTime] = useState<number | null>(null);
+  const [cooldownText, setCooldownText] = useState<string | null>(null);
+  const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Clear any context error when leaving this screen
   useEffect(() => {
     return () => {
       clearError();
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
     };
   }, [clearError]);
+
+  useEffect(() => {
+    if (!cooldownEndTime) {
+      setCooldownText(null);
+      return;
+    }
+
+    const tick = () => {
+      const remaining = cooldownEndTime - Date.now();
+      if (remaining <= 0) {
+        setCooldownEndTime(null);
+        setCooldownText(null);
+        setRemainingAttempts(null);
+        setError(null);
+        if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+        return;
+      }
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      setCooldownText(`${minutes}:${seconds.toString().padStart(2, "0")}`);
+    };
+
+    tick();
+    cooldownTimerRef.current = setInterval(tick, 1000);
+    return () => {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    };
+  }, [cooldownEndTime]);
 
   const handleSignIn = useCallback(() => {
     router.dismissAll();
@@ -100,6 +134,13 @@ export default function JoinHouseholdScreen() {
 
     setIsJoining(false);
 
+    if (result.rateLimitInfo) {
+      setRemainingAttempts(result.rateLimitInfo.remainingAttempts);
+      if (result.rateLimitInfo.resetAt) {
+        setCooldownEndTime(result.rateLimitInfo.resetAt);
+      }
+    }
+
     if (result.success) {
       Alert.alert(
         t("common.success"),
@@ -133,7 +174,7 @@ export default function JoinHouseholdScreen() {
           </Text>
           <Pressable
             onPress={handleSignIn}
-            className="bg-primary dark:bg-primary-dark px-8 py-4 rounded-xl active:opacity-80"
+            className="bg-action-primary dark:bg-action-dark-primary px-8 py-4 rounded-xl active:opacity-80"
           >
             <Text className="text-white font-semibold text-base">
               {t("auth.signIn")}
@@ -170,17 +211,33 @@ export default function JoinHouseholdScreen() {
               </View>
 
               {displayedError && (
-                <View className="mb-4 p-3 bg-error/10 rounded-lg">
-                  <Text className="text-sm text-error text-center">
+                <View className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <Text className="text-sm text-red-600 dark:text-red-400 text-center">
                     {displayedError}
+                  </Text>
+                </View>
+              )}
+
+              {cooldownText && (
+                <View className="mb-4 p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                  <Text className="text-sm text-amber-700 dark:text-amber-300 text-center font-medium">
+                    {t("household.rateLimitCooldown", { time: cooldownText })}
+                  </Text>
+                </View>
+              )}
+
+              {remainingAttempts !== null && remainingAttempts > 0 && !cooldownText && (
+                <View className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                  <Text className="text-xs text-amber-700 dark:text-amber-300 text-center font-medium">
+                    {t("household.attemptsRemaining", { count: remainingAttempts })}
                   </Text>
                 </View>
               )}
 
               <Pressable
                 onPress={handleJoin}
-                disabled={isJoining}
-                className="bg-primary dark:bg-primary-dark py-4 rounded-lg items-center active:opacity-80 disabled:opacity-50"
+                disabled={isJoining || !!cooldownText}
+                className="bg-action-primary dark:bg-action-dark-primary py-4 rounded-lg items-center active:opacity-80 disabled:opacity-50"
                 accessibilityRole="button"
               >
                 {isJoining ? (

@@ -1,5 +1,11 @@
 import { supabase } from "./supabase";
 import { validateInviteCode, normalizeInviteCode } from "@/utils/inviteCode";
+import {
+  checkRateLimit,
+  recordAttempt,
+  clearRateLimitRecord,
+  INVITE_CODE_ATTEMPT_LIMIT,
+} from "@/utils/rate-limiter";
 
 export interface Household {
   id: string;
@@ -19,6 +25,15 @@ export interface HouseholdMember {
 interface HouseholdResult<T> {
   data: T | null;
   error: string | null;
+}
+
+export interface RateLimitInfo {
+  remainingAttempts: number;
+  resetAt: number | null;
+}
+
+export interface JoinHouseholdServiceResult<T> extends HouseholdResult<T> {
+  rateLimitInfo?: RateLimitInfo;
 }
 
 export async function getHousehold(
@@ -120,12 +135,35 @@ export async function leaveHousehold(): Promise<HouseholdResult<Household>> {
   };
 }
 
+const RATE_LIMIT_KEY = 'invite_code_join';
+
 export async function joinHouseholdViaInviteCode(
   inviteCode: string
-): Promise<HouseholdResult<Household>> {
+): Promise<JoinHouseholdServiceResult<Household>> {
+  const rateLimitCheck = await checkRateLimit(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
+  if (!rateLimitCheck.allowed) {
+    return {
+      data: null,
+      error: "rateLimitExceeded",
+      rateLimitInfo: {
+        remainingAttempts: 0,
+        resetAt: rateLimitCheck.resetAt,
+      },
+    };
+  }
+
   const validation = validateInviteCode(inviteCode);
   if (!validation.isValid) {
-    return { data: null, error: validation.error ?? "inviteCodeInvalidChars" };
+    await recordAttempt(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
+    const updated = await checkRateLimit(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
+    return {
+      data: null,
+      error: validation.error ?? "inviteCodeInvalidChars",
+      rateLimitInfo: {
+        remainingAttempts: updated.remainingAttempts,
+        resetAt: updated.resetAt,
+      },
+    };
   }
 
   const normalizedCode = normalizeInviteCode(inviteCode);
@@ -135,16 +173,31 @@ export async function joinHouseholdViaInviteCode(
   });
 
   if (error) {
-    if (error.message?.includes("not found")) {
-      return { data: null, error: "householdNotFound" };
+    if (error.message?.includes("Rate limit")) {
+      return {
+        data: null,
+        error: "rateLimitExceeded",
+        rateLimitInfo: { remainingAttempts: 0, resetAt: null },
+      };
     }
+
     if (error.message?.includes("already belongs")) {
       return { data: null, error: "alreadyInHousehold" };
     }
-    return { data: null, error: "joinFailed" };
+
+    await recordAttempt(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
+    const updated = await checkRateLimit(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
+
+    return {
+      data: null,
+      error: error.message?.includes("not found") ? "householdNotFound" : "joinFailed",
+      rateLimitInfo: {
+        remainingAttempts: updated.remainingAttempts,
+        resetAt: updated.resetAt,
+      },
+    };
   }
 
-  // RPC with RETURNS TABLE returns an array
   const rows = data as Array<{
     household_id: string;
     household_invite_code: string;
@@ -155,6 +208,8 @@ export async function joinHouseholdViaInviteCode(
     return { data: null, error: "joinFailed" };
   }
 
+  await clearRateLimitRecord(RATE_LIMIT_KEY);
+
   const household = rows[0];
 
   return {
@@ -164,5 +219,9 @@ export async function joinHouseholdViaInviteCode(
       createdAt: household.household_created_at,
     },
     error: null,
+    rateLimitInfo: {
+      remainingAttempts: INVITE_CODE_ATTEMPT_LIMIT.maxAttempts,
+      resetAt: null,
+    },
   };
 }

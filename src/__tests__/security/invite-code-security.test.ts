@@ -5,6 +5,7 @@ import {
   INVITE_CODE_LENGTH,
   VALID_CHARACTERS,
 } from '@/utils/inviteCode';
+import { INVITE_CODE_ATTEMPT_LIMIT, clearRateLimitRecord } from '@/utils/rate-limiter';
 
 vi.mock('@/services/supabase', () => ({
   supabase: {
@@ -17,41 +18,140 @@ vi.mock('@/services/supabase', () => ({
   },
 }));
 
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  default: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+  },
+}));
+
 describe('Invite Code Security', () => {
   const mockHouseholdId = 'household-123';
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+    const store = AsyncStorage as unknown as {
+      getItem: ReturnType<typeof vi.fn>;
+      setItem: ReturnType<typeof vi.fn>;
+      removeItem: ReturnType<typeof vi.fn>;
+    };
+    const internalStore: Record<string, string> = {};
+    store.getItem.mockImplementation((key: string) => Promise.resolve(internalStore[key] ?? null));
+    store.setItem.mockImplementation((key: string, value: string) => {
+      internalStore[key] = value;
+      return Promise.resolve();
+    });
+    store.removeItem.mockImplementation((key: string) => {
+      delete internalStore[key];
+      return Promise.resolve();
+    });
+    await clearRateLimitRecord('invite_code_join');
   });
 
   describe('Rate Limiting', () => {
-    it('should rate limit invite code attempts (max 5 per minute)', async () => {
+    it('should have a 1 hour window for invite code rate limiting', () => {
+      expect(INVITE_CODE_ATTEMPT_LIMIT.windowMs).toBe(60 * 60 * 1000);
+      expect(INVITE_CODE_ATTEMPT_LIMIT.maxAttempts).toBe(5);
+    });
+
+    it('should rate limit after 5 failed attempts via joinHouseholdViaInviteCode', async () => {
       const { supabase } = await import('@/services/supabase');
-      const attempts: { timestamp: number; success: boolean }[] = [];
-      let attemptCount = 0;
+      const { joinHouseholdViaInviteCode } = await import('@/services/household-service');
 
-      vi.mocked(supabase.rpc).mockImplementation(async () => {
-        attemptCount++;
-        const now = Date.now();
-        attempts.push({ timestamp: now, success: attemptCount <= 5 });
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: null,
+        error: { message: 'Household not found', code: '', details: '', hint: '' },
+        count: null,
+        status: 400,
+        statusText: 'Bad Request',
+      });
 
-        if (attemptCount > 5) {
-          return {
-            data: null,
-            error: { code: '429', message: 'Too many attempts. Please try again later.' },
-          };
-        }
-        return { data: null, error: { message: 'Invalid code' } };
+      for (let i = 0; i < 5; i++) {
+        const result = await joinHouseholdViaInviteCode('ABCDEFGH');
+        expect(result.error).toBe('householdNotFound');
+        expect(result.rateLimitInfo).toBeDefined();
+        expect(result.rateLimitInfo!.remainingAttempts).toBe(4 - i);
+      }
+
+      const blockedResult = await joinHouseholdViaInviteCode('ABCDEFGH');
+      expect(blockedResult.error).toBe('rateLimitExceeded');
+      expect(blockedResult.rateLimitInfo?.remainingAttempts).toBe(0);
+      expect(blockedResult.rateLimitInfo?.resetAt).not.toBeNull();
+
+      expect(supabase.rpc).toHaveBeenCalledTimes(5);
+    });
+
+    it('should clear rate limit record on successful join', async () => {
+      const { supabase } = await import('@/services/supabase');
+      const { joinHouseholdViaInviteCode } = await import('@/services/household-service');
+
+      vi.mocked(supabase.rpc)
+        .mockResolvedValueOnce({
+          data: null,
+          error: { message: 'Household not found', code: '', details: '', hint: '' },
+          count: null,
+          status: 400,
+          statusText: 'Bad Request',
+        })
+        .mockResolvedValueOnce({
+          data: [{
+            household_id: mockHouseholdId,
+            household_invite_code: 'ABCDEFGH',
+            household_created_at: new Date().toISOString(),
+          }],
+          error: null,
+          count: null,
+          status: 200,
+          statusText: 'OK',
+        });
+
+      const failResult = await joinHouseholdViaInviteCode('BADCDEFG');
+      expect(failResult.error).toBe('householdNotFound');
+      expect(failResult.rateLimitInfo?.remainingAttempts).toBe(4);
+
+      const successResult = await joinHouseholdViaInviteCode('ABCDEFGH');
+      expect(successResult.error).toBeNull();
+      expect(successResult.data).toBeDefined();
+      expect(successResult.rateLimitInfo?.remainingAttempts).toBe(5);
+    });
+
+    it('should not count "already belongs" errors as rate limit attempts', async () => {
+      const { supabase } = await import('@/services/supabase');
+      const { joinHouseholdViaInviteCode } = await import('@/services/household-service');
+
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: null,
+        error: { message: 'User already belongs to a household', code: '', details: '', hint: '' },
+        count: null,
+        status: 400,
+        statusText: 'Bad Request',
       });
 
       for (let i = 0; i < 7; i++) {
-        await supabase.rpc('join_household_by_invite_code', {
-          invite_code: 'INVALID1',
-        });
+        const result = await joinHouseholdViaInviteCode('ABCDEFGH');
+        expect(result.error).toBe('alreadyInHousehold');
       }
 
-      expect(attemptCount).toBe(7);
-      expect(attempts.filter((a) => !a.success).length).toBe(2);
+      expect(supabase.rpc).toHaveBeenCalledTimes(7);
+    });
+
+    it('should detect server-side rate limit errors', async () => {
+      const { supabase } = await import('@/services/supabase');
+      const { joinHouseholdViaInviteCode } = await import('@/services/household-service');
+
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: null,
+        error: { message: 'Rate limit exceeded. Please try again later.', code: '', details: '', hint: '' },
+        count: null,
+        status: 429,
+        statusText: 'Too Many Requests',
+      });
+
+      const result = await joinHouseholdViaInviteCode('ABCDEFGH');
+      expect(result.error).toBe('rateLimitExceeded');
+      expect(result.rateLimitInfo?.remainingAttempts).toBe(0);
     });
   });
 
@@ -101,15 +201,15 @@ describe('Invite Code Security', () => {
         if (fn === 'regenerate_invite_code') {
           const newCode = generateInviteCode();
           currentCode = newCode;
-          return { data: newCode, error: null };
+          return { data: newCode, error: null, count: null, status: 200, statusText: 'OK' };
         }
         if (fn === 'join_household_by_invite_code') {
           if (params?.invite_code === currentCode) {
-            return { data: { id: mockHouseholdId }, error: null };
+            return { data: { id: mockHouseholdId }, error: null, count: null, status: 200, statusText: 'OK' };
           }
-          return { data: null, error: { message: 'Invite code not found' } };
+          return { data: null, error: { message: 'Invite code not found' }, count: null, status: 400, statusText: 'Bad Request' };
         }
-        return { data: null, error: null };
+        return { data: null, error: null, count: null, status: 200, statusText: 'OK' };
       });
 
       const oldCode = currentCode;
@@ -139,9 +239,12 @@ describe('Invite Code Security', () => {
           return {
             data: null,
             error: { code: '42501', message: 'Only household owner can regenerate invite code' },
+            count: null,
+            status: 403,
+            statusText: 'Forbidden',
           };
         }
-        return { data: null, error: null };
+        return { data: null, error: null, count: null, status: 200, statusText: 'OK' };
       });
 
       const result = await supabase.rpc('regenerate_invite_code', {
