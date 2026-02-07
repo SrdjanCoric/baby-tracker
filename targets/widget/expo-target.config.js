@@ -23,5 +23,6 @@ module.exports = {
   },
   entitlements: {
     "com.apple.security.application-groups": ["group.com.sofibaby.app"],
+    "aps-environment": "production",
   },
 };
