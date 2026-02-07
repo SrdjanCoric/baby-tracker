@@ -89,7 +89,7 @@ interface AuthContextValue {
   signOut: () => Promise<{ error: AuthError | null }>;
   updateDisplayName: (displayName: string) => Promise<{ error: Error | null }>;
   verifyPassword: (password: string) => Promise<{ verified: boolean; error: Error | null }>;
-  refreshUserProfile: () => Promise<void>;
+  refreshUserProfile: () => Promise<{ displayName: string | null; householdId: string | null; isOwner: boolean }>;
   isAppleSignInAvailable: boolean;
 }
 
@@ -417,10 +417,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user?.email]);
 
   const refreshUserProfile = useCallback(async () => {
-    if (!user?.id) return;
+    let userId = user?.id;
+    if (!userId) {
+      const { data } = await supabase.auth.getSession();
+      userId = data.session?.user?.id;
+    }
+    if (!userId) return { displayName: null, householdId: null, isOwner: false };
 
-    const profile = await fetchUserProfile(user.id);
+    const profile = await fetchUserProfile(userId);
     setUser(prev => prev ? { ...prev, ...profile } : prev);
+    return profile;
   }, [user?.id]);
 
   const value: AuthContextValue = {
