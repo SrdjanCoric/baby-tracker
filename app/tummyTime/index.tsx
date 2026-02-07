@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useTummyTime, useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
@@ -76,8 +77,8 @@ export default function TummyTimeScreen() {
     return Math.min(100, Math.round(currentProgress));
   }, [getDailyProgress, activeTimer?.isRunning, todaysTotal, dailyGoalSeconds]);
 
-  const handleStartTummyTime = useCallback(async () => {
-    await startTummyTime();
+  const handleStartTummyTime = useCallback(async (customStartTime?: Date) => {
+    await startTummyTime(customStartTime);
   }, [startTummyTime]);
 
   const handleStopTummyTime = useCallback(async () => {
@@ -220,7 +221,7 @@ interface StartViewProps {
   dailyGoalSeconds: number;
   goalSource: "age_based" | "custom";
   currentAgeGroup: { label: string; rationale: string } | null;
-  onStart: () => void;
+  onStart: (customStartTime?: Date) => void;
   onLogPast: () => void;
   onGoalSettings: () => void;
 }
@@ -237,6 +238,57 @@ function StartView({
 }: StartViewProps) {
   const { t } = useTranslation();
   const isGoalComplete = progress >= 100;
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+
+  const handleStartPress = useCallback(() => {
+    if (customStartTime) {
+      onStart(customStartTime);
+    } else {
+      onStart();
+    }
+  }, [customStartTime, onStart]);
+
+  const handleStartedEarlierPress = useCallback(() => {
+    setShowTimePicker(true);
+  }, []);
+
+  const handleTimeChange = useCallback(
+    (_event: DateTimePickerEvent, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
+      if (selectedTime) {
+        const now = new Date();
+        const clampedTime = selectedTime > now ? now : selectedTime;
+        setCustomStartTime(clampedTime);
+      }
+    },
+    []
+  );
+
+  const yesterdayStart = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
+  const handleTimeDone = useCallback(() => {
+    setShowTimePicker(false);
+  }, []);
+
+  const handleClearCustomTime = useCallback(() => {
+    setCustomStartTime(null);
+  }, []);
+
+  const formatCustomTime = (date: Date): string => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   return (
     <View className="items-center w-full">
@@ -286,14 +338,40 @@ function StartView({
         </View>
       )}
 
-      {/* Tap to start instruction */}
-      <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-8 text-center">
-        {t("tummyTime.tapToStart")}
-      </Text>
+      {/* Started Earlier Button */}
+      {!customStartTime ? (
+        <Pressable
+          onPress={handleStartedEarlierPress}
+          className="mb-6 py-3 px-5 rounded-full flex-row items-center border-2"
+          style={{ borderColor: TUMMY_ORANGE, backgroundColor: 'transparent' }}
+          accessibilityRole="button"
+          accessibilityLabel={t("tummyTime.startedEarlier")}
+        >
+          <Text className="text-lg mr-2">🕐</Text>
+          <Text className="text-base font-medium" style={{ color: TUMMY_ORANGE }}>
+            {t("tummyTime.startedEarlier")}
+          </Text>
+        </Pressable>
+      ) : (
+        <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: TUMMY_ORANGE_MUTED }}>
+          <Text className="text-lg mr-2">🕐</Text>
+          <Text className="text-base font-medium mr-2" style={{ color: TUMMY_ORANGE_DARK }}>
+            {t("tummyTime.startTime")}: {formatCustomTime(customStartTime)}
+          </Text>
+          <Pressable
+            onPress={handleClearCustomTime}
+            className="ml-2"
+            accessibilityRole="button"
+            accessibilityLabel={t("common.reset")}
+          >
+            <Text style={{ color: TUMMY_ORANGE }}>✕</Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* Start Button */}
       <Pressable
-        onPress={onStart}
+        onPress={handleStartPress}
         className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
         style={{ backgroundColor: TUMMY_ORANGE }}
         accessibilityRole="button"
@@ -315,6 +393,34 @@ function StartView({
           {t("tummyTime.logPastTummyTime")}
         </Text>
       </Pressable>
+
+      {/* Time Picker */}
+      {showTimePicker && (
+        <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
+          {Platform.OS === "ios" && (
+            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+              <Pressable
+                onPress={handleTimeDone}
+                className="py-2 px-4"
+                accessibilityRole="button"
+                accessibilityLabel={t("common.done")}
+              >
+                <Text className="font-semibold" style={{ color: TUMMY_ORANGE }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+          <DateTimePicker
+            value={customStartTime ?? new Date()}
+            mode="datetime"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={handleTimeChange}
+            minimumDate={yesterdayStart}
+            maximumDate={new Date()}
+          />
+        </View>
+      )}
     </View>
   );
 }
