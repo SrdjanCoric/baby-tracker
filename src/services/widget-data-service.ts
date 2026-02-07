@@ -439,7 +439,7 @@ export async function clearPendingWidgetStop(): Promise<void> {
     if (extensionStorage) {
       await extensionStorage.set("pendingWidgetStop", "", APP_GROUP);
     }
-  } catch {}
+  } catch (_) { /* best-effort cleanup */ }
 }
 
 export async function clearWidgetData(): Promise<void> {
