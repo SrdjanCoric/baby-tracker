@@ -465,6 +465,7 @@
     "householdActivityLabel": "Obaveštenja o aktivnostima",
     "householdActivityDesc": "Dobijte obaveštenje kada drugi negovatelj zabeleži aktivnost",
     "householdActivitySignInRequired": "Prijavite se da omogućite obaveštenja o aktivnostima domaćinstva",
+    "householdActivitySoloDesc": "Pozovite drugog negovatelja u vaše domaćinstvo da koristite ovu funkciju",
     "export": "Preuzmi podatke",
     "generateReport": "Generiši izveštaj",
     "account": "Nalog",

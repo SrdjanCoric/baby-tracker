@@ -449,6 +449,7 @@
     "householdActivityLabel": "Notificaciones de actividad",
     "householdActivityDesc": "Recibe notificación cuando otro cuidador registra una actividad",
     "householdActivitySignInRequired": "Inicia sesión para activar las notificaciones de actividad del hogar",
+    "householdActivitySoloDesc": "Invita a otro cuidador a tu hogar para usar esta función",
     "export": "Exportar datos",
     "generateReport": "Generar informe",
     "account": "Cuenta",

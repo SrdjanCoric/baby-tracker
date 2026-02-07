@@ -90,9 +90,12 @@ export default function BreastfeedingScreen() {
 
   const handleStopFeeding = useCallback(async () => {
     resetAlert();
-    await stopBreastfeeding();
-    await scheduleReminderAfterFeeding();
-    router.back();
+    try {
+      await stopBreastfeeding();
+      await scheduleReminderAfterFeeding(new Date());
+    } finally {
+      router.back();
+    }
   }, [resetAlert, stopBreastfeeding, scheduleReminderAfterFeeding, router]);
 
   const handleSideChange = useCallback((side: BreastSide) => {
