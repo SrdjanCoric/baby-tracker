@@ -54,6 +54,9 @@ export {
 // Sleep components
 export { SleepMilestoneSuggestionModal } from "./SleepMilestoneSuggestionModal";
 
+// Tummy Time components
+export { MilestoneSuggestionModal } from "./MilestoneSuggestionModal";
+
 // Statistics components
 export { SimpleBarChart } from "./SimpleBarChart";
 export { StackedBarChart } from "./StackedBarChart";
@@ -72,6 +75,7 @@ export { ConflictResolutionModal } from "./ConflictResolutionModal";
 
 // Auth components
 export { DisplayNamePrompt } from "./DisplayNamePrompt";
+export { NoBabyScreen } from "./NoBabyScreen";
 
 // Onboarding components
 export {

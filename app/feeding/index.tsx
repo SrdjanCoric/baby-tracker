@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View, ScrollView, Keyboard } from "react-native";
+import { Pressable, Text, TextInput, View, ScrollView, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useFeeding, useBaby, useUnits } from "@/contexts";
 import type { CreateFeedingInput, StoredFeedingEntry } from "@/services/feeding-storage";
 import { formatDuration } from "@/utils/time";
@@ -12,6 +13,7 @@ import { COMMON_FOODS } from "@/constants/foods";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 import { ACTIVITY, SURFACE, TEXT } from "@/constants/colors";
 import { useColorScheme } from "nativewind";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 
 const FEEDING_GREEN = ACTIVITY.feeding.accent;
 const FEEDING_GREEN_LIGHT = ACTIVITY.feeding.accentDark;
@@ -76,8 +78,8 @@ export default function FeedingScreen() {
   }, [router, activeTab]);
 
   // Breastfeeding handlers
-  const handleStartBreastfeeding = useCallback(async (side: BreastSide) => {
-    await startBreastfeeding(side);
+  const handleStartBreastfeeding = useCallback(async (side: BreastSide, customStartTime?: Date) => {
+    await startBreastfeeding(side, customStartTime);
   }, [startBreastfeeding]);
 
   const handleStopBreastfeeding = useCallback(async () => {
@@ -90,13 +92,7 @@ export default function FeedingScreen() {
   }, [changeSide]);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
 
@@ -245,7 +241,7 @@ function TabButton({ label, emoji, isActive, onPress, accentColor, testID }: Tab
 
 interface BreastfeedingFormProps {
   suggestedSide: BreastSide;
-  onSelectSide: (side: BreastSide) => void;
+  onSelectSide: (side: BreastSide, customStartTime?: Date) => void;
   onLogPast: () => void;
   accentColor: string;
   buttonBgColor: string;
@@ -257,6 +253,57 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+
+  const handleSidePress = useCallback((side: BreastSide) => {
+    if (customStartTime) {
+      onSelectSide(side, customStartTime);
+    } else {
+      onSelectSide(side);
+    }
+  }, [customStartTime, onSelectSide]);
+
+  const handleStartedEarlierPress = useCallback(() => {
+    setShowTimePicker(true);
+  }, []);
+
+  const handleTimeChange = useCallback(
+    (_event: DateTimePickerEvent, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
+      if (selectedTime) {
+        const now = new Date();
+        const clampedTime = selectedTime > now ? now : selectedTime;
+        setCustomStartTime(clampedTime);
+      }
+    },
+    []
+  );
+
+  const yesterdayStart = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
+  const handleTimeDone = useCallback(() => {
+    setShowTimePicker(false);
+  }, []);
+
+  const handleClearCustomTime = useCallback(() => {
+    setCustomStartTime(null);
+  }, []);
+
+  const formatCustomTime = (date: Date): string => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   return (
     <View className="flex-1 items-center justify-center px-6">
@@ -273,9 +320,40 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
         <Text className="text-xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
           {t("feeding.startBreastfeeding")}
         </Text>
-        <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-8 text-center">
+        <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-6 text-center">
           {t("feeding.selectSideToStart")}
         </Text>
+
+        {/* Started Earlier Button */}
+        {!customStartTime ? (
+          <Pressable
+            onPress={handleStartedEarlierPress}
+            className="mb-6 py-3 px-5 rounded-full flex-row items-center border-2"
+            style={{ borderColor: accentColor, backgroundColor: 'transparent' }}
+            accessibilityRole="button"
+            accessibilityLabel={t("feeding.startedEarlier")}
+          >
+            <Text className="text-lg mr-2">🕐</Text>
+            <Text className="text-base font-medium" style={{ color: accentColor }}>
+              {t("feeding.startedEarlier")}
+            </Text>
+          </Pressable>
+        ) : (
+          <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: secondaryBg }}>
+            <Text className="text-lg mr-2">🕐</Text>
+            <Text className="text-base font-medium mr-2" style={{ color: accentColor }}>
+              {t("feeding.startTime")}: {formatCustomTime(customStartTime)}
+            </Text>
+            <Pressable
+              onPress={handleClearCustomTime}
+              className="ml-2"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.reset")}
+            >
+              <Text style={{ color: accentColor }}>✕</Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Side Selection Buttons */}
         <View className="flex-row gap-4 mb-4 w-full">
@@ -284,7 +362,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
             label={t("feeding.leftSide")}
             shortLabel="L"
             isSuggested={suggestedSide === "left"}
-            onPress={() => onSelectSide("left")}
+            onPress={() => handleSidePress("left")}
             accentColor={accentColor}
             buttonBgColor={buttonBgColor}
             secondaryBg={secondaryBg}
@@ -295,7 +373,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
             label={t("feeding.rightSide")}
             shortLabel="R"
             isSuggested={suggestedSide === "right"}
-            onPress={() => onSelectSide("right")}
+            onPress={() => handleSidePress("right")}
             accentColor={accentColor}
             buttonBgColor={buttonBgColor}
             secondaryBg={secondaryBg}
@@ -305,7 +383,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
 
         {/* Both Sides Option */}
         <Pressable
-          onPress={() => onSelectSide("both")}
+          onPress={() => handleSidePress("both")}
           className="py-3 px-6 rounded-button-lg active:scale-[0.98]"
           style={{ backgroundColor: secondaryBg }}
           accessibilityRole="button"
@@ -336,6 +414,34 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
             {t("feeding.logPastBreastfeeding")}
           </Text>
         </Pressable>
+
+        {/* Time Picker */}
+        {showTimePicker && (
+          <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
+            {Platform.OS === "ios" && (
+              <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+                <Pressable
+                  onPress={handleTimeDone}
+                  className="py-2 px-4"
+                  accessibilityRole="button"
+                  accessibilityLabel={t("common.done")}
+                >
+                  <Text className="font-semibold" style={{ color: accentColor }}>
+                    {t("common.done")}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+            <DateTimePicker
+              value={customStartTime ?? new Date()}
+              mode="datetime"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleTimeChange}
+              minimumDate={yesterdayStart}
+              maximumDate={new Date()}
+            />
+          </View>
+        )}
       </View>
     </View>
   );

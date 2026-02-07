@@ -69,6 +69,7 @@ export interface ActiveTimerData {
   leftAccumulatedSeconds?: number;
   rightAccumulatedSeconds?: number;
   currentSideStartedAt?: string;
+  liveActivityId?: string;
 }
 
 function generateId(): string {

@@ -33,8 +33,8 @@ export async function checkRateLimit(
     record.attempts = record.attempts.filter((timestamp) => timestamp > windowStart);
 
     if (record.attempts.length >= config.maxAttempts) {
-      const oldestAttempt = Math.min(...record.attempts);
-      const resetAt = oldestAttempt + config.windowMs;
+      const latestAttempt = Math.max(...record.attempts);
+      const resetAt = latestAttempt + config.windowMs;
 
       return {
         allowed: false,
@@ -92,7 +92,7 @@ export const CAREGIVER_REMOVAL_LIMIT: RateLimitConfig = {
 
 export const INVITE_CODE_ATTEMPT_LIMIT: RateLimitConfig = {
   maxAttempts: 5,
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 60 * 1000, // 1 hour
 };
 
 export const SYNC_RETRY_LIMIT: RateLimitConfig = {

@@ -40,6 +40,7 @@ export interface UpdateTummyTimeInput {
 
 export interface ActiveTummyTimeTimerData {
   startedAt: string;
+  liveActivityId?: string;
 }
 
 function generateId(): string {

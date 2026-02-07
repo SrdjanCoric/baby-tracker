@@ -3,7 +3,7 @@ import { View, useColorScheme, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { BabyProfileForm, type BabyProfileFormData } from "@/components";
-import { useBaby } from "@/contexts";
+import { useBaby, useFeeding, useSleep, usePumping, useTummyTime } from "@/contexts";
 
 const isAndroid = Platform.OS === "android";
 
@@ -12,6 +12,16 @@ export default function AddBabyScreen() {
   const isDark = colorScheme === "dark";
   const { addBaby, selectBaby } = useBaby();
   const [isLoading, setIsLoading] = useState(false);
+  const { activeTimer: feedingTimer } = useFeeding();
+  const { activeTimer: sleepTimer } = useSleep();
+  const { activeTimer: pumpingTimer } = usePumping();
+  const { activeTimer: tummyTimeTimer } = useTummyTime();
+
+  const hasAnyActiveTimer =
+    feedingTimer?.isRunning ||
+    sleepTimer?.isRunning ||
+    pumpingTimer?.isRunning ||
+    tummyTimeTimer?.isRunning;
 
   const handleSave = useCallback(
     async (data: BabyProfileFormData) => {
@@ -23,13 +33,15 @@ export default function AddBabyScreen() {
           gender: data.gender,
           photoUri: data.photoUri,
         });
-        await selectBaby(newBaby.id);
+        if (!hasAnyActiveTimer) {
+          await selectBaby(newBaby.id);
+        }
         router.back();
       } catch {
         setIsLoading(false);
       }
     },
-    [addBaby, selectBaby]
+    [addBaby, selectBaby, hasAnyActiveTimer]
   );
 
   const handleCancel = useCallback(() => {

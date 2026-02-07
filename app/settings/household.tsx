@@ -153,7 +153,7 @@ export default function HouseholdSettingsScreen() {
           </Text>
           <Pressable
             onPress={handleSignIn}
-            className="bg-primary dark:bg-primary-dark px-8 py-4 rounded-xl active:opacity-80"
+            className="bg-action-primary dark:bg-action-dark-primary px-8 py-4 rounded-xl active:opacity-80"
           >
             <Text className="text-white font-semibold text-base">
               {t("auth.signIn")}
@@ -206,7 +206,7 @@ export default function HouseholdSettingsScreen() {
 
               <Pressable
                 onPress={handleShareCode}
-                className="flex-1 bg-primary dark:bg-primary-dark py-3 rounded-lg items-center active:opacity-80"
+                className="flex-1 bg-action-primary dark:bg-action-dark-primary py-3 rounded-lg items-center active:opacity-80"
                 accessibilityRole="button"
                 accessibilityLabel={t("household.shareInviteCode")}
               >

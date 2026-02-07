@@ -105,6 +105,7 @@
     "stopFeeding": "Završi hranjenje",
     "startBreastfeeding": "Započni dojenje",
     "selectSideToStart": "Izaberite stranu da pokrenete tajmer",
+    "startedEarlier": "Počelo ranije?",
     "suggested": "Preporučeno",
     "suggestedSideHint": "{{side}} je preporučena na osnovu poslednjeg hranjenja",
     "timerRunning": "Tajmer radi",
@@ -245,6 +246,8 @@
     "amount": "Količina",
     "side": "Strana",
     "selectSideToStart": "Izaberite stranu za pokretanje tajmera",
+    "startedEarlier": "Počelo ranije?",
+    "startTime": "Vreme početka",
     "suggestedSideHint": "{{side}} je preporučena na osnovu poslednje sesije",
     "timerRunning": "Tajmer radi",
     "tapToStop": "Dodirnite za zaustavljanje",
@@ -298,6 +301,7 @@
     "today": "danas",
     "logPastTummyTime": "Evidentiraj prethodno vreme na stomaku",
     "pastTummyTimeTitle": "Evidentiraj prethodno vreme na stomaku",
+    "startedEarlier": "Počelo ranije?",
     "startTime": "Vreme početka",
     "durationMinutes": "Trajanje (minuti)",
     "durationPlaceholder": "Unesite trajanje",
@@ -389,7 +393,10 @@
     "genderOptional": "Pol (opciono)",
     "boy": "Dečak",
     "girl": "Devojčica",
-    "saveChanges": "Sačuvaj izmene"
+    "saveChanges": "Sačuvaj izmene",
+    "timerRunningTitle": "Tajmer je aktivan",
+    "timerRunningMessage": "Molimo zaustavi trenutni tajmer pre promene bebe. Aktivni tajmer će biti sačuvan za trenutnu bebu.",
+    "stopAndSwitch": "Zaustavi i promeni"
   },
   "settings": {
     "title": "Podešavanja",
@@ -471,7 +478,9 @@
     "dragToReorder": "Držite i prevucite za promenu redosleda",
     "resetDashboard": "Resetuj kontrolnu tablu",
     "resetDashboardConfirm": "Ovo će resetovati sve kartice na podrazumevani redosled i vidljivost. Nastaviti?",
-    "resetToDefault": "Resetuj na podrazumevano"
+    "resetToDefault": "Resetuj na podrazumevano",
+    "widgets": "Vidžeti",
+    "widgetsDescription": "Podesi iOS vidžete i Apple Watch"
   },
   "statistics": {
     "title": "Statistika",
@@ -649,7 +658,12 @@
     "dataLossWarningTitle": "Podaci o bebi će biti zamenjeni",
     "dataLossWarningMessage": "Imate {{count}} profila beba sačuvanih lokalno. Kada se pridružite ovom domaćinstvu, koristićete podatke o bebama tog domaćinstva. Vaši lokalni podaci o bebama će biti izgubljeni.",
     "dataLossWarningMessage_one": "Imate 1 profil bebe sačuvan lokalno. Kada se pridružite ovom domaćinstvu, koristićete podatke o bebama tog domaćinstva. Vaši lokalni podaci o bebi će biti izgubljeni.",
-    "joinAnyway": "Ipak se pridruži"
+    "joinAnyway": "Ipak se pridruži",
+    "rateLimitExceeded": "Previše pokušaja. Sačekajte i pokušajte ponovo.",
+    "rateLimitCooldown": "Pokušajte ponovo za {{time}}",
+    "attemptsRemaining_one": "{{count}} pokušaj preostao",
+    "attemptsRemaining_few": "{{count}} pokušaja preostalo",
+    "attemptsRemaining_other": "{{count}} pokušaja preostalo"
   },
   "auth": {
     "signIn": "Prijava",
