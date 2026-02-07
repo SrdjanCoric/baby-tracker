@@ -165,7 +165,7 @@ export default function CaregiversScreen() {
           </Text>
           <Pressable
             onPress={loadCaregivers}
-            className="mt-4 px-6 py-3 bg-primary dark:bg-primary-dark rounded-lg active:opacity-80"
+            className="mt-4 px-6 py-3 bg-action-primary dark:bg-action-dark-primary rounded-lg active:opacity-80"
           >
             <Text className="text-white font-semibold">{t("common.retry")}</Text>
           </Pressable>

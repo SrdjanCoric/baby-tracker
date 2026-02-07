@@ -337,7 +337,7 @@ export default function NotificationSettingsScreen() {
                       onPress={() => handleSelectInterval(interval)}
                       className={`px-4 py-2 rounded-full ${
                         settings.feedingReminders.intervalHours === interval
-                          ? "bg-primary dark:bg-primary-dark"
+                          ? "bg-action-primary dark:bg-action-dark-primary"
                           : "bg-surface-card dark:bg-surface-dark-card"
                       }`}
                     >
