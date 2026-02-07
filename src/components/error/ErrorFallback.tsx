@@ -11,7 +11,7 @@ export function ErrorFallback({
   return (
     <View
       testID="error-fallback"
-      className="flex-1 bg-bg-primary dark:bg-bg-dark-primary items-center justify-center px-6"
+      className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center px-6"
     >
       <Text className="text-6xl mb-4">😔</Text>
       <Text
@@ -44,7 +44,7 @@ export function ErrorFallback({
           className="mt-6 max-h-[200px] w-full"
           testID="error-details"
         >
-          <View className="bg-bg-secondary dark:bg-bg-dark-secondary rounded-lg p-4">
+          <View className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-lg p-4">
             <Text className="text-sm font-mono text-content-secondary dark:text-content-dark-secondary mb-2">
               {error.name}: {error.message}
             </Text>
