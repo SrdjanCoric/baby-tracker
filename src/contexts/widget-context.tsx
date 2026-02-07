@@ -13,6 +13,7 @@ import {
   updateWidgetData,
   writeAuthToAppGroup,
   writeSupabaseConfigToAppGroup,
+  readPendingWidgetStop,
   type WidgetData,
   type WidgetActivityData,
   type ActiveTimerData,
@@ -225,6 +226,16 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     const widgetData = buildWidgetData();
     if (!widgetData) return;
 
+    const pendingStop = await readPendingWidgetStop();
+    if (pendingStop) {
+      const stopType = pendingStop.activityType === "tummy_time"
+        ? "tummyTime" : pendingStop.activityType;
+      widgetData.activeTimers = widgetData.activeTimers.filter(
+        t => t.type !== stopType
+      );
+      widgetData.activeTimer = widgetData.activeTimers[0] ?? null;
+    }
+
     const dataHash = JSON.stringify({
       babyId: widgetData.babyId,
       activities: widgetData.activities,
@@ -277,6 +288,19 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     locks,
     refreshWidgetData,
   ]);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        lastUpdateRef.current = "";
+        refreshWidgetData();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [refreshWidgetData]);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
