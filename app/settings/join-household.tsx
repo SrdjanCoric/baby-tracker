@@ -14,7 +14,6 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useHousehold, useAuth, useBaby } from "@/contexts";
 import { validateInviteCode, normalizeInviteCode, formatInviteCodeForDisplay } from "@/utils/inviteCode";
-import { BabyStorageService } from "@/services/baby-storage";
 
 type JoinErrorKey =
   | "household.inviteCodeRequired"
@@ -39,7 +38,7 @@ export default function JoinHouseholdScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { joinHousehold, clearError } = useHousehold();
-  const { babies, refreshBabies } = useBaby();
+  const { babies } = useBaby();
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
@@ -102,11 +101,6 @@ export default function JoinHouseholdScreen() {
     setIsJoining(false);
 
     if (result.success) {
-      if (babies.length > 0) {
-        await BabyStorageService.clearAllBabies();
-      }
-      await refreshBabies();
-
       Alert.alert(
         t("common.success"),
         t("household.joinSuccess"),
@@ -115,7 +109,7 @@ export default function JoinHouseholdScreen() {
     } else if (result.error) {
       setError(result.error);
     }
-  }, [inviteCode, joinHousehold, router, t, babies, showDataLossWarning, refreshBabies]);
+  }, [inviteCode, joinHousehold, router, t, babies, showDataLossWarning]);
 
   const displayedError = error ? t(ERROR_TRANSLATIONS[error] || "errors.generic") : null;
 
