@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
+import { AppState, type AppStateStatus } from "react-native";
 import { useBaby } from "./baby-context";
 import { useAuth } from "./auth-context";
 import { useSync } from "./sync-context";
@@ -156,6 +157,16 @@ export function ActiveTimersProvider({
 
   useEffect(() => {
     refreshLocks();
+  }, [refreshLocks]);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        refreshLocks();
+      }
+    };
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
+    return () => subscription.remove();
   }, [refreshLocks]);
 
   useEffect(() => {
