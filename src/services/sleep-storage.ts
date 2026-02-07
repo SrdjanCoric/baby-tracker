@@ -45,6 +45,7 @@ export interface UpdateSleepInput {
 export interface ActiveSleepTimerData {
   startedAt: string;
   type: SleepType;
+  liveActivityId?: string;
 }
 
 function generateId(): string {

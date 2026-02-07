@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import {
   TummyTimeStorageService,
   StoredTummyTimeEntry,
@@ -22,6 +22,7 @@ import {
   getGoalInfo,
   checkMilestoneCrossing,
 } from "@/utils/tummyTimeGoals";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType } from "@/services/live-activity-service";
 
 export interface ActiveTummyTimeTimer {
   isRunning: boolean;
@@ -151,8 +152,8 @@ export interface TimerLockResult {
 }
 
 interface TummyTimeContextValue extends TummyTimeState {
-  startTummyTime: () => Promise<TimerLockResult>;
-  stopTummyTime: () => Promise<StoredTummyTimeEntry | null>;
+  startTummyTime: (requestedStartTime?: Date) => Promise<TimerLockResult>;
+  stopTummyTime: (requestedEndTime?: Date) => Promise<StoredTummyTimeEntry | null>;
   addTummyTime: (input: CreateTummyTimeInput) => Promise<StoredTummyTimeEntry>;
   updateTummyTime: (
     tummyTimeId: string,
@@ -178,6 +179,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges } = useSync();
   const { user } = useAuth();
+  const liveActivityIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('tummy_time_sessions', (change: RemoteChange) => {
@@ -209,70 +211,80 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    let tummyTimes: StoredTummyTimeEntry[];
+    try {
+      let tummyTimes: StoredTummyTimeEntry[];
 
-    if (user?.householdId) {
-      try {
-        tummyTimes = await fetchTummyTimeFromDatabase(selectedBaby.id);
-      } catch (error) {
-        console.error("[TummyTimeContext] Failed to fetch from database, using local:", error);
+      if (user?.householdId) {
+        try {
+          tummyTimes = await fetchTummyTimeFromDatabase(selectedBaby.id);
+        } catch (error) {
+          console.error("[TummyTimeContext] Failed to fetch from database, using local:", error);
+          tummyTimes = await TummyTimeStorageService.getAllTummyTimes(selectedBaby.id);
+        }
+      } else {
         tummyTimes = await TummyTimeStorageService.getAllTummyTimes(selectedBaby.id);
       }
-    } else {
-      tummyTimes = await TummyTimeStorageService.getAllTummyTimes(selectedBaby.id);
-    }
 
-    dispatch({ type: "SET_TUMMY_TIMES", payload: tummyTimes });
+      dispatch({ type: "SET_TUMMY_TIMES", payload: tummyTimes });
 
-    const hasCustomGoal = await TummyTimeStorageService.hasCustomGoal(selectedBaby.id);
-    const storedGoal = await TummyTimeStorageService.getDailyGoal(selectedBaby.id);
+      const hasCustomGoal = await TummyTimeStorageService.hasCustomGoal(selectedBaby.id);
+      const storedGoal = await TummyTimeStorageService.getDailyGoal(selectedBaby.id);
 
-    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
-    const goalInfo = getGoalInfo(
-      birthDate,
-      hasCustomGoal ? storedGoal : null
-    );
+      const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+      const goalInfo = getGoalInfo(
+        birthDate,
+        hasCustomGoal ? storedGoal : null
+      );
 
-    dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.goalSeconds });
-    dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
-    dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
+      dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.goalSeconds });
+      dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
+      dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
 
-    if (birthDate && !hasCustomGoal) {
-      const lastCheckDate = await TummyTimeStorageService.getLastMilestoneCheckDate(selectedBaby.id);
-      const dismissedMilestones = await TummyTimeStorageService.getDismissedMilestones(selectedBaby.id);
+      if (birthDate && !hasCustomGoal) {
+        const lastCheckDate = await TummyTimeStorageService.getLastMilestoneCheckDate(selectedBaby.id);
+        const dismissedMilestones = await TummyTimeStorageService.getDismissedMilestones(selectedBaby.id);
 
-      if (lastCheckDate) {
-        const milestoneCrossing = checkMilestoneCrossing(birthDate, lastCheckDate);
-        if (
-          milestoneCrossing?.shouldSuggestGoalUpdate &&
-          !dismissedMilestones.includes(milestoneCrossing.newGroup.label)
-        ) {
-          dispatch({ type: "SET_SUGGESTED_GOAL", payload: milestoneCrossing.newGroup.defaultGoalSeconds });
-          dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: true });
+        if (lastCheckDate) {
+          const milestoneCrossing = checkMilestoneCrossing(birthDate, lastCheckDate);
+          if (
+            milestoneCrossing?.shouldSuggestGoalUpdate &&
+            !dismissedMilestones.includes(milestoneCrossing.newGroup.label)
+          ) {
+            dispatch({ type: "SET_SUGGESTED_GOAL", payload: milestoneCrossing.newGroup.defaultGoalSeconds });
+            dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: true });
+          }
         }
+
+        await TummyTimeStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
       }
 
-      await TummyTimeStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
-    }
+      const activeTimer = await TummyTimeStorageService.getActiveTimer(selectedBaby.id);
+      if (activeTimer) {
+        dispatch({
+          type: "START_TIMER",
+          payload: {
+            startTime: new Date(activeTimer.startedAt),
+          },
+        });
 
-    const activeTimer = await TummyTimeStorageService.getActiveTimer(selectedBaby.id);
-    if (activeTimer) {
-      dispatch({
-        type: "START_TIMER",
-        payload: {
-          startTime: new Date(activeTimer.startedAt),
-        },
-      });
+        // Just store the existing Live Activity ID if we have one
+        // Don't try to check/restore Live Activities on startup - it can hang after phone restart
+        if (activeTimer.liveActivityId) {
+          liveActivityIdRef.current = activeTimer.liveActivityId;
+        }
+      }
+    } catch (error) {
+      console.error("[TummyTimeContext] Failed to load tummy times:", error);
+    } finally {
+      dispatch({ type: "SET_LOADING", payload: false });
     }
-
-    dispatch({ type: "SET_LOADING", payload: false });
   }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
     loadTummyTimes();
   }, [loadTummyTimes]);
 
-  const startTummyTime = useCallback(async (): Promise<{ success: boolean; lockedByName?: string }> => {
+  const startTummyTime = useCallback(async (requestedStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };
 
     if (user?.id) {
@@ -286,20 +298,26 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const startTime = new Date();
+    const startTime = requestedStartTime ?? new Date();
     dispatch({ type: "START_TIMER", payload: { startTime } });
+
+    const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name, undefined, startTime);
+    if (activityId) {
+      liveActivityIdRef.current = activityId;
+    }
 
     await TummyTimeStorageService.setActiveTimer(selectedBaby.id, {
       startedAt: startTime.toISOString(),
+      liveActivityId: activityId ?? undefined,
     });
 
     return { success: true };
   }, [selectedBaby, user?.id]);
 
-  const stopTummyTime = useCallback(async (): Promise<StoredTummyTimeEntry | null> => {
+  const stopTummyTime = useCallback(async (requestedEndTime?: Date): Promise<StoredTummyTimeEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
 
-    const endTime = new Date();
+    const endTime = requestedEndTime ?? new Date();
     const durationSeconds = Math.floor(
       (endTime.getTime() - state.activeTimer.startTime.getTime()) / 1000
     );
@@ -322,6 +340,13 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
     dispatch({ type: "STOP_TIMER" });
     await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+
+    if (liveActivityIdRef.current) {
+      await endTimerLiveActivity(liveActivityIdRef.current);
+      liveActivityIdRef.current = null;
+    } else {
+      await endLiveActivityByType("tummyTime");
+    }
 
     if (user?.id) {
       try {

@@ -24,6 +24,7 @@ WebBrowser.maybeCompleteAuthSession();
 import { supabase } from "@/services/supabase";
 import { setStorageUserId } from "@/services/storage-prefix";
 import { clearSyncData } from "@/contexts/sync-context";
+import { clearWidgetData } from "@/services/widget-data-service";
 import { AUTH_CONFIG } from "@/constants/auth";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
 
@@ -88,7 +89,7 @@ interface AuthContextValue {
   signOut: () => Promise<{ error: AuthError | null }>;
   updateDisplayName: (displayName: string) => Promise<{ error: Error | null }>;
   verifyPassword: (password: string) => Promise<{ verified: boolean; error: Error | null }>;
-  refreshUserProfile: () => Promise<void>;
+  refreshUserProfile: () => Promise<{ displayName: string | null; householdId: string | null; isOwner: boolean }>;
   isAppleSignInAvailable: boolean;
 }
 
@@ -205,6 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(null);
           await clearAppStorage();
           await clearSyncData();
+          await clearWidgetData();
         }
         return;
       }
@@ -367,6 +369,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     await clearAppStorage();
     await clearSyncData();
+    await clearWidgetData();
     setStorageUserId(null);
     const { error } = await supabase.auth.signOut();
     return { error };
@@ -414,10 +417,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user?.email]);
 
   const refreshUserProfile = useCallback(async () => {
-    if (!user?.id) return;
+    let userId = user?.id;
+    if (!userId) {
+      const { data } = await supabase.auth.getSession();
+      userId = data.session?.user?.id;
+    }
+    if (!userId) return { displayName: null, householdId: null, isOwner: false };
 
-    const profile = await fetchUserProfile(user.id);
+    const profile = await fetchUserProfile(userId);
     setUser(prev => prev ? { ...prev, ...profile } : prev);
+    return profile;
   }, [user?.id]);
 
   const value: AuthContextValue = {

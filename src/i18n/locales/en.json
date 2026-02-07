@@ -97,6 +97,7 @@
     "stopFeeding": "Stop Feeding",
     "startBreastfeeding": "Start Breastfeeding",
     "selectSideToStart": "Select a side to start the timer",
+    "startedEarlier": "Started earlier?",
     "suggested": "Suggested",
     "suggestedSideHint": "{{side}} is suggested based on your last feeding",
     "timerRunning": "Timer running",
@@ -237,6 +238,8 @@
     "amount": "Amount",
     "side": "Side",
     "selectSideToStart": "Select a side to start the timer",
+    "startedEarlier": "Started earlier?",
+    "startTime": "Start Time",
     "suggestedSideHint": "{{side}} is suggested based on your last session",
     "timerRunning": "Timer running",
     "tapToStop": "Tap to stop",
@@ -290,6 +293,7 @@
     "today": "today",
     "logPastTummyTime": "Log Past Tummy Time",
     "pastTummyTimeTitle": "Log Past Tummy Time",
+    "startedEarlier": "Started earlier?",
     "startTime": "Start Time",
     "durationMinutes": "Duration (minutes)",
     "durationPlaceholder": "Enter duration",
@@ -369,7 +373,10 @@
     "genderOptional": "Gender (Optional)",
     "boy": "Boy",
     "girl": "Girl",
-    "saveChanges": "Save Changes"
+    "saveChanges": "Save Changes",
+    "timerRunningTitle": "Timer is running",
+    "timerRunningMessage": "Please stop the current timer before switching babies. The active timer will be saved for the current baby.",
+    "stopAndSwitch": "Stop & Switch"
   },
   "settings": {
     "title": "Settings",
@@ -451,7 +458,9 @@
     "dragToReorder": "Hold and drag to reorder",
     "resetDashboard": "Reset Dashboard",
     "resetDashboardConfirm": "This will reset all cards to their default order and visibility. Continue?",
-    "resetToDefault": "Reset to Default"
+    "resetToDefault": "Reset to Default",
+    "widgets": "Widgets",
+    "widgetsDescription": "Configure iOS widgets and Apple Watch"
   },
   "statistics": {
     "title": "Statistics",
@@ -621,7 +630,11 @@
     "dataLossWarningTitle": "Your baby data will be replaced",
     "dataLossWarningMessage": "You have {{count}} baby profiles stored locally. When you join this household, you'll use the household's baby data instead. Your local baby data will be lost.",
     "dataLossWarningMessage_one": "You have 1 baby profile stored locally. When you join this household, you'll use the household's baby data instead. Your local baby data will be lost.",
-    "joinAnyway": "Join Anyway"
+    "joinAnyway": "Join Anyway",
+    "rateLimitExceeded": "Too many attempts. Please wait and try again.",
+    "rateLimitCooldown": "Try again in {{time}}",
+    "attemptsRemaining_one": "{{count}} attempt remaining",
+    "attemptsRemaining_other": "{{count}} attempts remaining"
   },
   "auth": {
     "signIn": "Sign In",

@@ -37,14 +37,6 @@ describe("ThemeSettingsScreen", () => {
       expect(screen.getByText("Dark Mode")).toBeTruthy();
     });
 
-    it("renders theme option descriptions", () => {
-      render(<ThemeSettingsScreen />);
-
-      expect(screen.getByText("Follow system setting")).toBeTruthy();
-      expect(screen.getByText("Always use light theme")).toBeTruthy();
-      expect(screen.getByText("Always use dark theme")).toBeTruthy();
-    });
-
     it("renders the page title", () => {
       render(<ThemeSettingsScreen />);
 

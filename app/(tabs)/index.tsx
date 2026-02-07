@@ -675,7 +675,7 @@ export default function HomeScreen() {
           <TodaySummary
             feedingCount={todayFeedings.length}
             sleepTotal={todaySleepTotal}
-            wetDiaperCount={todayDiaperCounts.wet}
+            wetDiaperCount={todayDiaperCounts.wet + todayDiaperCounts.mixed}
           />
         </View>
       </ScrollView>

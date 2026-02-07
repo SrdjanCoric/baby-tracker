@@ -45,3 +45,5 @@ export { LanguageProvider, useLanguage } from "./language-context";
 export type { LanguageCode } from "./language-context";
 
 export { ActiveTimersProvider, useActiveTimers } from "./active-timers-context";
+
+export { WidgetProvider, useWidget } from "./widget-context";

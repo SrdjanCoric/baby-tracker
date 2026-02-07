@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View, Keyboard } from "react-native";
+import { Pressable, Text, TextInput, View, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useUnits } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useTimerAlertIntegration } from "@/hooks";
+import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 
@@ -74,8 +76,8 @@ export default function PumpingScreen() {
     return lastSide ? getOppositeSide(lastSide) : "both";
   }, [getLastSide]);
 
-  const handleStartPumping = useCallback(async (side: BreastSide) => {
-    await startPumping(side);
+  const handleStartPumping = useCallback(async (side: BreastSide, customStartTime?: Date) => {
+    await startPumping(side, customStartTime);
   }, [startPumping]);
 
   const handleRequestStop = useCallback(() => {
@@ -141,13 +143,7 @@ export default function PumpingScreen() {
   }, [unit, volumeMl]);
 
   if (!selectedBaby) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
-        <Text className="text-content-secondary dark:text-content-dark-secondary">
-          {t("common.noBabySelected")}
-        </Text>
-      </SafeAreaView>
-    );
+    return <NoBabyScreen />;
   }
 
   const isTimerRunning = activeTimer?.isRunning ?? false;
@@ -202,12 +198,63 @@ export default function PumpingScreen() {
 
 interface SideSelectionViewProps {
   suggestedSide: BreastSide;
-  onSelectSide: (side: BreastSide) => void;
+  onSelectSide: (side: BreastSide, customStartTime?: Date) => void;
   onLogPastPumping: () => void;
 }
 
 function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: SideSelectionViewProps) {
   const { t } = useTranslation();
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+
+  const handleSidePress = useCallback((side: BreastSide) => {
+    if (customStartTime) {
+      onSelectSide(side, customStartTime);
+    } else {
+      onSelectSide(side);
+    }
+  }, [customStartTime, onSelectSide]);
+
+  const handleStartedEarlierPress = useCallback(() => {
+    setShowTimePicker(true);
+  }, []);
+
+  const handleTimeChange = useCallback(
+    (_event: DateTimePickerEvent, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
+      if (selectedTime) {
+        const now = new Date();
+        const clampedTime = selectedTime > now ? now : selectedTime;
+        setCustomStartTime(clampedTime);
+      }
+    },
+    []
+  );
+
+  const yesterdayStart = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
+  const handleTimeDone = useCallback(() => {
+    setShowTimePicker(false);
+  }, []);
+
+  const handleClearCustomTime = useCallback(() => {
+    setCustomStartTime(null);
+  }, []);
+
+  const formatCustomTime = (date: Date): string => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   return (
     <View className="items-center w-full">
@@ -223,9 +270,40 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
       <Text className="text-2xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
         {t("pumping.startPumping")}
       </Text>
-      <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-12 text-center">
+      <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-6 text-center">
         {t("pumping.selectSideToStart")}
       </Text>
+
+      {/* Started Earlier Button */}
+      {!customStartTime ? (
+        <Pressable
+          onPress={handleStartedEarlierPress}
+          className="mb-6 py-3 px-5 rounded-full flex-row items-center border-2"
+          style={{ borderColor: PUMPING_BLUE, backgroundColor: 'transparent' }}
+          accessibilityRole="button"
+          accessibilityLabel={t("pumping.startedEarlier")}
+        >
+          <Text className="text-lg mr-2">🕐</Text>
+          <Text className="text-base font-medium" style={{ color: PUMPING_BLUE }}>
+            {t("pumping.startedEarlier")}
+          </Text>
+        </Pressable>
+      ) : (
+        <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: PUMPING_BLUE_MUTED }}>
+          <Text className="text-lg mr-2">🕐</Text>
+          <Text className="text-base font-medium mr-2" style={{ color: PUMPING_BLUE_DARK }}>
+            {t("pumping.startTime")}: {formatCustomTime(customStartTime)}
+          </Text>
+          <Pressable
+            onPress={handleClearCustomTime}
+            className="ml-2"
+            accessibilityRole="button"
+            accessibilityLabel={t("common.reset")}
+          >
+            <Text style={{ color: PUMPING_BLUE }}>✕</Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* Side Selection Buttons */}
       <View className="flex-row gap-4 mb-6 w-full">
@@ -234,20 +312,20 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
           label={t("feeding.leftSide")}
           shortLabel="L"
           isSuggested={suggestedSide === "left"}
-          onPress={() => onSelectSide("left")}
+          onPress={() => handleSidePress("left")}
         />
         <SideStartButton
           side="right"
           label={t("feeding.rightSide")}
           shortLabel="R"
           isSuggested={suggestedSide === "right"}
-          onPress={() => onSelectSide("right")}
+          onPress={() => handleSidePress("right")}
         />
       </View>
 
       {/* Both Sides Option */}
       <Pressable
-        onPress={() => onSelectSide("both")}
+        onPress={() => handleSidePress("both")}
         className="py-4 px-8 rounded-button-lg active:scale-[0.98]"
         style={{ backgroundColor: suggestedSide === "both" ? PUMPING_BLUE : PUMPING_BLUE_MUTED }}
         accessibilityRole="button"
@@ -288,6 +366,34 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
           {t("pumping.logPastPumping")}
         </Text>
       </Pressable>
+
+      {/* Time Picker */}
+      {showTimePicker && (
+        <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
+          {Platform.OS === "ios" && (
+            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+              <Pressable
+                onPress={handleTimeDone}
+                className="py-2 px-4"
+                accessibilityRole="button"
+                accessibilityLabel={t("common.done")}
+              >
+                <Text className="font-semibold" style={{ color: PUMPING_BLUE }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+          <DateTimePicker
+            value={customStartTime ?? new Date()}
+            mode="datetime"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={handleTimeChange}
+            minimumDate={yesterdayStart}
+            maximumDate={new Date()}
+          />
+        </View>
+      )}
     </View>
   );
 }

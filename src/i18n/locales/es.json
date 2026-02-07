@@ -101,6 +101,7 @@
     "stopFeeding": "Detener alimentación",
     "startBreastfeeding": "Iniciar lactancia",
     "selectSideToStart": "Selecciona un lado para iniciar el temporizador",
+    "startedEarlier": "¿Empezó antes?",
     "suggested": "Sugerido",
     "suggestedSideHint": "{{side}} es sugerido según tu última alimentación",
     "timerRunning": "Temporizador activo",
@@ -241,6 +242,8 @@
     "amount": "Cantidad",
     "side": "Lado",
     "selectSideToStart": "Selecciona un lado para iniciar el temporizador",
+    "startedEarlier": "¿Empezó antes?",
+    "startTime": "Hora de inicio",
     "suggestedSideHint": "{{side}} es sugerido según tu última sesión",
     "timerRunning": "Temporizador activo",
     "tapToStop": "Toca para detener",
@@ -294,6 +297,7 @@
     "today": "hoy",
     "logPastTummyTime": "Registrar tiempo boca abajo anterior",
     "pastTummyTimeTitle": "Registrar tiempo boca abajo anterior",
+    "startedEarlier": "¿Empezó antes?",
     "startTime": "Hora de inicio",
     "durationMinutes": "Duración (minutos)",
     "durationPlaceholder": "Ingresa la duración",
@@ -373,7 +377,10 @@
     "genderOptional": "Género (opcional)",
     "boy": "Niño",
     "girl": "Niña",
-    "saveChanges": "Guardar cambios"
+    "saveChanges": "Guardar cambios",
+    "timerRunningTitle": "El temporizador está activo",
+    "timerRunningMessage": "Por favor detén el temporizador actual antes de cambiar de bebé. El temporizador activo se guardará para el bebé actual.",
+    "stopAndSwitch": "Detener y cambiar"
   },
   "settings": {
     "title": "Ajustes",
@@ -625,7 +632,11 @@
     "dataLossWarningTitle": "Tus datos del bebé serán reemplazados",
     "dataLossWarningMessage": "Tienes {{count}} perfiles de bebé almacenados localmente. Al unirte a este hogar, usarás los datos del bebé del hogar. Tus datos locales del bebé se perderán.",
     "dataLossWarningMessage_one": "Tienes 1 perfil de bebé almacenado localmente. Al unirte a este hogar, usarás los datos del bebé del hogar. Tus datos locales del bebé se perderán.",
-    "joinAnyway": "Unirse de todas formas"
+    "joinAnyway": "Unirse de todas formas",
+    "rateLimitExceeded": "Demasiados intentos. Espera e inténtalo de nuevo.",
+    "rateLimitCooldown": "Inténtalo de nuevo en {{time}}",
+    "attemptsRemaining_one": "{{count}} intento restante",
+    "attemptsRemaining_other": "{{count}} intentos restantes"
   },
   "auth": {
     "signIn": "Iniciar sesión",

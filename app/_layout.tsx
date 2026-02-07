@@ -1,20 +1,20 @@
 import "../global.css";
 import "../src/i18n";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { View, ActivityIndicator, Platform } from "react-native";
+import { View, ActivityIndicator, Platform, AppState, AppStateStatus } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, useTheme, useAuth, useSync, useNotifications } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
+import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
-
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -133,10 +133,40 @@ function DisplayNamePromptWrapper({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function WidgetStopHandler({ children }: { children: React.ReactNode }) {
+  useWidgetStopHandler();
+  return <>{children}</>;
+}
+
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const hasHandledInitialUrl = useRef(false);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background') {
+        if (router.canDismiss()) {
+          router.dismissAll();
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [router]);
+
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
       console.log("[DeepLink] Received URL:", url);
+
+      // Widget deep links (sofibaby://feeding, etc.) - Expo Router handles automatically
+      const widgetActivities = ["feeding", "sleep", "diaper", "pumping", "growth", "tummyTime"];
+      for (const activity of widgetActivities) {
+        if (url.includes(`sofibaby://${activity}`)) {
+          console.log("[DeepLink] Widget link detected:", activity);
+          return;
+        }
+      }
 
       if (url.includes("login-callback") || url.includes("auth/callback")) {
         try {
@@ -230,11 +260,14 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
       await handleDeepLink(url);
     });
 
-    Linking.getInitialURL().then(async (url) => {
-      if (url) {
-        await handleDeepLink(url);
-      }
-    });
+    if (!hasHandledInitialUrl.current) {
+      hasHandledInitialUrl.current = true;
+      Linking.getInitialURL().then(async (url) => {
+        if (url) {
+          await handleDeepLink(url);
+        }
+      });
+    }
 
     return () => subscription?.remove();
   }, []);
@@ -357,15 +390,19 @@ export default function RootLayout() {
                             <GrowthProvider>
                               <TummyTimeProvider>
                                 <ActiveTimersProvider>
+                                <WidgetProvider>
                                 <NotificationProvider>
                                   <NotificationAuthSetup>
                                     <DashboardConfigProvider>
                                       <DisplayNamePromptWrapper>
-                                        <AppContent />
+                                        <WidgetStopHandler>
+                                          <AppContent />
+                                        </WidgetStopHandler>
                                       </DisplayNamePromptWrapper>
                                     </DashboardConfigProvider>
                                   </NotificationAuthSetup>
                                 </NotificationProvider>
+                                </WidgetProvider>
                                 </ActiveTimersProvider>
                               </TummyTimeProvider>
                             </GrowthProvider>
