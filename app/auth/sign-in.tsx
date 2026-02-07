@@ -3,7 +3,7 @@
  * Warm, welcoming design matching the app's aesthetic
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Text,
@@ -34,7 +34,7 @@ export default function SignInScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { isDark } = useTheme();
-  const { signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, user } = useAuth();
+  const { signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, user, refreshUserProfile } = useAuth();
 
   const [email, setEmail] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -45,25 +45,15 @@ export default function SignInScreen() {
   // Display name prompt state
   const [showDisplayNamePrompt, setShowDisplayNamePrompt] = useState(false);
 
-  // Use ref to always get latest user value
-  const userRef = useRef(user);
-  useEffect(() => {
-    userRef.current = user;
-  }, [user]);
-
   // Helper to handle post-auth flow
-  const handlePostAuth = useCallback(() => {
-    // Check if user needs to set display name after auth completes
-    // The user object updates asynchronously, so we check after a delay
-    setTimeout(() => {
-      const currentUser = userRef.current;
-      if (!currentUser?.displayName) {
-        setShowDisplayNamePrompt(true);
-      } else {
-        router.back();
-      }
-    }, 500);
-  }, [router]);
+  const handlePostAuth = useCallback(async () => {
+    const profile = await refreshUserProfile();
+    if (!profile?.displayName) {
+      setShowDisplayNamePrompt(true);
+    } else {
+      router.back();
+    }
+  }, [router, refreshUserProfile]);
 
   // Handle display name prompt completion
   const handleDisplayNameComplete = useCallback(() => {
