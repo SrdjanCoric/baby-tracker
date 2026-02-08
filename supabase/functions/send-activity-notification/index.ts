@@ -87,9 +87,13 @@ async function sendApnsAlert(
   topic: string,
   title: string,
   body: string,
+  isSandbox: boolean,
   data?: Record<string, unknown>
 ): Promise<{ success: boolean; status: number }> {
-  const url = `https://api.push.apple.com/3/device/${deviceToken}`;
+  const apnsHost = isSandbox
+    ? "api.sandbox.push.apple.com"
+    : "api.push.apple.com";
+  const url = `https://${apnsHost}/3/device/${deviceToken}`;
 
   const payload: Record<string, unknown> = {
     aps: {
@@ -197,7 +201,7 @@ serve(async (req) => {
 
     const { data: tokens, error: tokensError } = await supabase
       .from("user_push_tokens")
-      .select("device_token, user_id")
+      .select("device_token, user_id, is_sandbox")
       .in("user_id", userIds)
       .not("device_token", "is", null);
 
@@ -228,13 +232,14 @@ serve(async (req) => {
     const tokensToRemove: string[] = [];
     let sentCount = 0;
 
-    for (const { device_token } of tokens) {
+    for (const { device_token, is_sandbox } of tokens) {
       const result = await sendApnsAlert(
         device_token,
         jwt,
         apnsTopic,
         baby.name,
         `${loggerName} logged a ${activityName}`,
+        is_sandbox ?? false,
         { type: "activity_logged", table, babyId: record.baby_id }
       );
 

@@ -80,7 +80,10 @@ async function sendApnsPush(
   jwt: string,
   topic: string
 ): Promise<{ success: boolean; status: number }> {
-  const url = `https://api.push.apple.com/3/device/${deviceToken}`;
+  const apnsHost = Deno.env.get("APNS_SANDBOX") === "true"
+    ? "api.sandbox.push.apple.com"
+    : "api.push.apple.com";
+  const url = `https://${apnsHost}/3/device/${deviceToken}`;
 
   const body = JSON.stringify({
     aps: {
