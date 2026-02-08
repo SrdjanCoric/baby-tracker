@@ -615,11 +615,6 @@ func getUpdatedAtDate(data: WidgetDataModel?) -> Date? {
     return formatter.date(from: data.updatedAt)
 }
 
-func isCachedDataFresh(_ data: WidgetDataModel?, threshold: TimeInterval = 30) -> Bool {
-    guard let updatedAt = getUpdatedAtDate(data: data) else { return false }
-    return Date().timeIntervalSince(updatedAt) < threshold
-}
-
 func isDataStale(data: WidgetDataModel?, now: Date = Date()) -> Bool {
     guard let updatedAt = getUpdatedAtDate(data: data) else { return true }
     let staleThresholdSeconds: TimeInterval = 60 * 60 // 1 hour
@@ -712,7 +707,7 @@ struct SingleActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectActivityIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = isCachedDataFresh(cached) ? nil : filterStoppedTimers(await fetchActiveTimersFromNetwork())
+        let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
 
         var entries: [BabyWidgetEntry] = []
@@ -741,7 +736,7 @@ struct FourActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectFourActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = isCachedDataFresh(cached) ? nil : filterStoppedTimers(await fetchActiveTimersFromNetwork())
+        let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
         let activities = [configuration.activity1, configuration.activity2, configuration.activity3, configuration.activity4]
 
@@ -771,7 +766,7 @@ struct TwoActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectTwoActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = isCachedDataFresh(cached) ? nil : filterStoppedTimers(await fetchActiveTimersFromNetwork())
+        let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
         let activities = [configuration.activity1, configuration.activity2]
 
@@ -1866,8 +1861,16 @@ func mergeNetworkTimers(cached: WidgetDataModel?, networkTimers: [ActiveTimerDat
         } else {
             if let cachedTimer = model.activeTimers?.first(where: { $0.type == timer.type }) {
                 mergedTimers.append(cachedTimer)
-            } else {
+            } else if model.activeTimers == nil {
                 mergedTimers.append(timer)
+            }
+        }
+    }
+
+    if let cachedTimers = model.activeTimers {
+        for cachedTimer in cachedTimers where cachedTimer.isRemote != true {
+            if !mergedTimers.contains(where: { $0.type == cachedTimer.type }) {
+                mergedTimers.append(cachedTimer)
             }
         }
     }
