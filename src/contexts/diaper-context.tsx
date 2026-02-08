@@ -98,7 +98,7 @@ const DiaperContext = createContext<DiaperContextValue | null>(null);
 export function DiaperProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(diaperReducer, initialDiaperState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges } = useSync();
+  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -167,7 +167,7 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadDiapers();
-  }, [loadDiapers]);
+  }, [loadDiapers, foregroundRefreshKey]);
 
   const addDiaper = useCallback(async (input: CreateDiaperInput): Promise<StoredDiaperEntry> => {
     let diaper: StoredDiaperEntry;

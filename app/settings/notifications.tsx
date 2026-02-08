@@ -105,7 +105,16 @@ export default function NotificationSettingsScreen() {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showSoloHint, setShowSoloHint] = useState(false);
+  const [showFeedingHint, setShowFeedingHint] = useState(false);
   const soloHintAnim = useRef(new Animated.Value(0)).current;
+  const feedingHintAnim = useRef(new Animated.Value(0)).current;
+
+  const formatInterval = useCallback(
+    (interval: number) => {
+      return t("settings.hoursInterval", { hours: interval });
+    },
+    [t]
+  );
 
   const parseTimeToDate = useCallback((timeString: string): Date => {
     const [hours, minutes] = timeString.split(":").map(Number);
@@ -256,6 +265,16 @@ export default function NotificationSettingsScreen() {
     }).start();
   }, [showSoloHint, soloHintAnim]);
 
+  const handleFeedingHintPress = useCallback(() => {
+    const toValue = showFeedingHint ? 0 : 1;
+    setShowFeedingHint(!showFeedingHint);
+    Animated.timing(feedingHintAnim, {
+      toValue,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [showFeedingHint, feedingHintAnim]);
+
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
@@ -322,53 +341,88 @@ export default function NotificationSettingsScreen() {
         <View className="mb-6">
           <SectionHeader title={t("settings.feedingReminders")} />
           <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
-            <SettingsRow
-              label={t("settings.feedingReminders")}
-              description={t("settings.feedingRemindersDesc")}
-              rightElement={
-                <Switch
-                  value={settings.feedingReminders.enabled}
-                  onValueChange={handleToggleFeedingReminders}
-                  disabled={!hasPermission}
+            {isAuthenticated ? (
+              <>
+                <SettingsRow
+                  label={t("settings.feedingReminders")}
+                  description={t("settings.feedingRemindersDesc")}
+                  rightElement={
+                    <Switch
+                      value={settings.feedingReminders.enabled}
+                      onValueChange={handleToggleFeedingReminders}
+                      disabled={!hasPermission}
+                    />
+                  }
                 />
-              }
-            />
-            {settings.feedingReminders.enabled && (
-              <SettingsRow
-                label={t("settings.feedingReminderInterval")}
-                description={t("settings.feedingReminderIntervalDesc")}
-                value={t("settings.hoursInterval", {
-                  hours: settings.feedingReminders.intervalHours,
-                })}
-                onPress={() => setShowIntervalPicker(!showIntervalPicker)}
-                isLast={!showIntervalPicker}
-              />
-            )}
-            {settings.feedingReminders.enabled && showIntervalPicker && (
-              <View className="px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary">
-                <View className="flex-row flex-wrap gap-2">
-                  {FEEDING_REMINDER_INTERVALS.map((interval) => (
-                    <Pressable
-                      key={interval}
-                      onPress={() => handleSelectInterval(interval)}
-                      className={`px-4 py-2 rounded-full ${
-                        settings.feedingReminders.intervalHours === interval
-                          ? "bg-action-primary dark:bg-action-dark-primary"
-                          : "bg-surface-card dark:bg-surface-dark-card"
-                      }`}
-                    >
-                      <Text
-                        className={`text-sm ${
-                          settings.feedingReminders.intervalHours === interval
-                            ? "text-white font-medium"
-                            : "text-content-primary dark:text-content-dark-primary"
-                        }`}
-                      >
-                        {t("settings.hoursInterval", { hours: interval })}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
+                {settings.feedingReminders.enabled && (
+                  <SettingsRow
+                    label={t("settings.feedingReminderInterval")}
+                    description={t("settings.feedingReminderIntervalDesc")}
+                    value={formatInterval(settings.feedingReminders.intervalHours)}
+                    onPress={() => setShowIntervalPicker(!showIntervalPicker)}
+                    isLast={!showIntervalPicker}
+                  />
+                )}
+                {settings.feedingReminders.enabled && showIntervalPicker && (
+                  <View className="px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary">
+                    <View className="flex-row flex-wrap gap-2">
+                      {FEEDING_REMINDER_INTERVALS.map((interval) => (
+                        <Pressable
+                          key={interval}
+                          onPress={() => handleSelectInterval(interval)}
+                          className={`px-4 py-2 rounded-full ${
+                            settings.feedingReminders.intervalHours === interval
+                              ? "bg-action-primary dark:bg-action-dark-primary"
+                              : "bg-surface-card dark:bg-surface-dark-card"
+                          }`}
+                        >
+                          <Text
+                            className={`text-sm ${
+                              settings.feedingReminders.intervalHours === interval
+                                ? "text-white font-medium"
+                                : "text-content-primary dark:text-content-dark-primary"
+                            }`}
+                          >
+                            {formatInterval(interval)}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </>
+            ) : (
+              <View>
+                <Pressable
+                  onPress={handleFeedingHintPress}
+                  className="flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+                >
+                  <View className="flex-1">
+                    <Text className="text-base text-content-primary dark:text-content-dark-primary">
+                      {t("settings.feedingReminders")}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={false}
+                    disabled
+                  />
+                </Pressable>
+                <Animated.View
+                  style={{
+                    maxHeight: feedingHintAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 60],
+                    }),
+                    opacity: feedingHintAnim,
+                    overflow: "hidden",
+                  }}
+                >
+                  <View className="px-4 pb-3">
+                    <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
+                      {t("settings.feedingRemindersSignInRequired")}
+                    </Text>
+                  </View>
+                </Animated.View>
               </View>
             )}
           </View>

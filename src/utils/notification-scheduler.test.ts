@@ -150,10 +150,10 @@ describe("NotificationScheduler", () => {
       expect(result).toBe(false);
     });
 
-    it("should return false when timer equals threshold exactly", () => {
+    it("should return true when timer equals threshold exactly", () => {
       const result = shouldSendTimerAlert("breastfeeding", 60, mockSettings);
 
-      expect(result).toBe(false);
+      expect(result).toBe(true);
     });
 
     it("should use activity-specific thresholds", () => {

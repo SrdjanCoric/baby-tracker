@@ -175,17 +175,14 @@ export function shouldSendTimerAlert(
   durationMinutes: number,
   settings: NotificationSettings
 ): boolean {
-  // Check if timer alerts are enabled
   if (!settings.timerAlerts.enabled) {
     return false;
   }
 
-  // Check if we're in quiet hours
   if (isInQuietHours(new Date(), settings.quietHours)) {
     return false;
   }
 
-  // Check if duration exceeds threshold (strictly greater than)
   const threshold = settings.timerAlerts.thresholds[activityType];
-  return durationMinutes > threshold;
+  return durationMinutes >= threshold;
 }

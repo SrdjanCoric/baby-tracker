@@ -190,7 +190,7 @@ const SleepContext = createContext<SleepContextValue | null>(null);
 export function SleepProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(sleepReducer, initialSleepState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges } = useSync();
+  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
 
@@ -306,7 +306,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadSleeps();
-  }, [loadSleeps]);
+  }, [loadSleeps, foregroundRefreshKey]);
 
   const startSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };

@@ -100,7 +100,7 @@ const GrowthContext = createContext<GrowthContextValue | null>(null);
 export function GrowthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(growthReducer, initialGrowthState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges } = useSync();
+  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadMeasurements();
-  }, [loadMeasurements]);
+  }, [loadMeasurements, foregroundRefreshKey]);
 
   const addMeasurement = useCallback(
     async (input: CreateGrowthInput): Promise<StoredGrowthEntry> => {

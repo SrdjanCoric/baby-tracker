@@ -20,6 +20,13 @@ try {
   console.log("[Notifications] Module not available (Expo Go)");
 }
 
+let capturedDeviceToken: string | null = null;
+if (Notifications) {
+  Notifications.addPushTokenListener((token) => {
+    capturedDeviceToken = token.data;
+  });
+}
+
 const IOS_NOTIFICATION_LIMIT = 64;
 
 type NotificationRequest = {
@@ -114,6 +121,25 @@ export const NotificationService = {
       console.error("[Notifications] Failed to get push token:", error);
       return null;
     }
+  },
+
+  async getDevicePushToken(): Promise<string | null> {
+    if (capturedDeviceToken) return capturedDeviceToken;
+    if (!Notifications) return null;
+
+    try {
+      const result = await Promise.race([
+        Notifications.getDevicePushTokenAsync(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+      ]);
+      if (result) {
+        capturedDeviceToken = result.data;
+        return result.data;
+      }
+    } catch (error) {
+      console.error("[Notifications] getDevicePushToken fallback failed:", error);
+    }
+    return null;
   },
 
   async getScheduledNotificationCount(): Promise<number> {
