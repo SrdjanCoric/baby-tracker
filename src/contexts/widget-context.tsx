@@ -318,13 +318,25 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseAnonKey) return;
 
-    writeAuthToAppGroup({
-      supabaseUrl,
-      supabaseAnonKey,
-      accessToken: session.access_token,
-      userId: user.id,
-      selectedBabyId: selectedBaby.id,
+    const writeAuth = () => {
+      writeAuthToAppGroup({
+        supabaseUrl,
+        supabaseAnonKey,
+        accessToken: session.access_token,
+        userId: user.id,
+        selectedBabyId: selectedBaby.id,
+      });
+    };
+
+    writeAuth();
+
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "background") {
+        writeAuth();
+      }
     });
+
+    return () => subscription.remove();
   }, [session?.access_token, user?.id, selectedBaby?.id]);
 
   useEffect(() => {
