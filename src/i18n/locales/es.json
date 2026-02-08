@@ -416,6 +416,7 @@
     "feedingReminderInterval": "Intervalo de recordatorio",
     "feedingReminderIntervalDesc": "Tiempo entre alimentaciones antes del recordatorio",
     "hoursInterval": "{{hours}} horas",
+    "feedingRemindersSignInRequired": "Inicia sesión para habilitar recordatorios de alimentación",
     "timerAlerts": "Alertas de temporizador",
     "timerAlertsDesc": "Recibe notificación cuando las actividades duran mucho",
     "timerThresholds": "Umbrales del temporizador",

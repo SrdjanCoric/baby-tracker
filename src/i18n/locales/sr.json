@@ -432,6 +432,7 @@
     "feedingReminderInterval": "Interval podsetnika",
     "feedingReminderIntervalDesc": "Vreme između hranjenja pre podsetnika",
     "hoursInterval": "{{hours}} sata",
+    "feedingRemindersSignInRequired": "Prijavite se da biste omogućili podsetnike za hranjenje",
     "timerAlerts": "Upozorenja tajmera",
     "timerAlertsDesc": "Dobijte obaveštenje kada aktivnosti traju dugo",
     "timerThresholds": "Pragovi tajmera",

@@ -22,9 +22,11 @@ import { NotificationService } from "@/services/notification-service";
 import { NotificationStorageService } from "@/services/notification-storage";
 import {
   savePushToken,
+  saveDeviceToken,
   removePushToken,
   getActivityNotificationsEnabled,
   setActivityNotificationsEnabled as setActivityNotificationsEnabledService,
+  upsertFeedingReminderPreference,
 } from "@/services/push-token-service";
 import {
   calculateNextFeedingReminder,
@@ -51,6 +53,8 @@ interface NotificationContextValue {
   checkInAppReminder: (babyId: string, lastFeedingTime: Date) => boolean;
   setActivityNotificationsEnabled: (enabled: boolean) => Promise<void>;
   registerPushTokenForUser: (userId: string | null) => Promise<void>;
+  syncFeedingPreferenceForBaby: (babyId: string) => Promise<void>;
+  isUserAuthenticated: () => boolean;
 }
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -111,6 +115,11 @@ export function NotificationProvider({
             if (token && token !== currentPushTokenRef.current) {
               currentPushTokenRef.current = token;
               await savePushToken(token);
+
+              const deviceToken = await NotificationService.getDevicePushToken();
+              if (deviceToken) {
+                await saveDeviceToken(deviceToken);
+              }
             }
           }
         }
@@ -390,7 +399,32 @@ export function NotificationProvider({
       if (error) {
         console.error("Failed to save push token:", error);
       }
+
+      const deviceToken = await NotificationService.getDevicePushToken();
+      if (deviceToken) {
+        const { error: dtError } = await saveDeviceToken(deviceToken);
+        if (dtError) {
+          console.error("Failed to save device token:", dtError);
+        }
+      }
     }
+  }, []);
+
+  const syncFeedingPreferenceForBaby = useCallback(async (babyId: string) => {
+    if (!currentUserIdRef.current || !babyId) return;
+
+    const { error } = await upsertFeedingReminderPreference(
+      babyId,
+      settings.feedingReminders.enabled,
+      settings.feedingReminders.intervalHours
+    );
+    if (error) {
+      console.error("Failed to sync feeding reminder preference:", error);
+    }
+  }, [settings.feedingReminders]);
+
+  const isUserAuthenticated = useCallback(() => {
+    return currentUserIdRef.current !== null;
   }, []);
 
   const value: NotificationContextValue = {
@@ -408,6 +442,8 @@ export function NotificationProvider({
     checkInAppReminder,
     setActivityNotificationsEnabled,
     registerPushTokenForUser,
+    syncFeedingPreferenceForBaby,
+    isUserAuthenticated,
   };
 
   return (
