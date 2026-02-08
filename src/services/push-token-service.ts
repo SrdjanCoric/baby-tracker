@@ -42,7 +42,7 @@ export async function saveDeviceToken(deviceToken: string): Promise<{ error: Err
 
   const { error } = await supabase
     .from("user_push_tokens")
-    .update({ device_token: deviceToken })
+    .update({ device_token: deviceToken, is_sandbox: __DEV__ })
     .eq("user_id", user.id);
 
   if (error) {
@@ -130,6 +130,41 @@ export async function upsertFeedingReminderPreference(
         baby_id: babyId,
         enabled,
         interval_hours: intervalHours,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,baby_id" }
+    );
+
+  if (error) {
+    return { error: new Error(error.message) };
+  }
+
+  return { error: null };
+}
+
+export async function upsertWakeWindowPreference(
+  babyId: string,
+  enabled: boolean,
+  napCount: number,
+  slots: { slotIndex: number; label: string; durationMinutes: number }[],
+  source: string
+): Promise<{ error: Error | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: new Error("No authenticated user") };
+  }
+
+  const { error } = await supabase
+    .from("wake_window_preferences")
+    .upsert(
+      {
+        user_id: user.id,
+        baby_id: babyId,
+        enabled,
+        nap_count: napCount,
+        wake_window_slots: slots,
+        source,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id,baby_id" }

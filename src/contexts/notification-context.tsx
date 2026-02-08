@@ -27,6 +27,7 @@ import {
   getActivityNotificationsEnabled,
   setActivityNotificationsEnabled as setActivityNotificationsEnabledService,
   upsertFeedingReminderPreference,
+  upsertWakeWindowPreference,
 } from "@/services/push-token-service";
 import {
   calculateNextFeedingReminder,
@@ -54,6 +55,13 @@ interface NotificationContextValue {
   setActivityNotificationsEnabled: (enabled: boolean) => Promise<void>;
   registerPushTokenForUser: (userId: string | null) => Promise<void>;
   syncFeedingPreferenceForBaby: (babyId: string) => Promise<void>;
+  syncWakeWindowPreferenceForBaby: (
+    babyId: string,
+    napCount: number,
+    slots: { slotIndex: number; label: string; durationMinutes: number }[],
+    source: string,
+    enabled: boolean
+  ) => Promise<void>;
   isUserAuthenticated: () => boolean;
 }
 
@@ -155,6 +163,10 @@ export function NotificationProvider({
           ...settings.privacy,
           ...(partial.privacy || {}),
         },
+        wakeWindowReminders: {
+          ...settings.wakeWindowReminders,
+          ...(partial.wakeWindowReminders || {}),
+        },
       };
 
       // Check if we need to reschedule notifications
@@ -223,6 +235,20 @@ export function NotificationProvider({
     const granted = await NotificationService.requestPermissions();
     const status = await NotificationService.getPermissionStatus();
     setPermissionStatus(status);
+
+    if (granted && currentUserIdRef.current) {
+      const token = await NotificationService.getExpoPushToken();
+      if (token) {
+        currentPushTokenRef.current = token;
+        await savePushToken(token);
+
+        const deviceToken = await NotificationService.getDevicePushToken();
+        if (deviceToken) {
+          await saveDeviceToken(deviceToken);
+        }
+      }
+    }
+
     return granted;
   }, []);
 
@@ -423,6 +449,27 @@ export function NotificationProvider({
     }
   }, [settings.feedingReminders]);
 
+  const syncWakeWindowPreferenceForBaby = useCallback(async (
+    babyId: string,
+    napCount: number,
+    slots: { slotIndex: number; label: string; durationMinutes: number }[],
+    source: string,
+    enabled: boolean
+  ) => {
+    if (!currentUserIdRef.current || !babyId) return;
+
+    const { error } = await upsertWakeWindowPreference(
+      babyId,
+      enabled,
+      napCount,
+      slots,
+      source
+    );
+    if (error) {
+      console.error("Failed to sync wake window preference:", error);
+    }
+  }, []);
+
   const isUserAuthenticated = useCallback(() => {
     return currentUserIdRef.current !== null;
   }, []);
@@ -443,6 +490,7 @@ export function NotificationProvider({
     setActivityNotificationsEnabled,
     registerPushTokenForUser,
     syncFeedingPreferenceForBaby,
+    syncWakeWindowPreferenceForBaby,
     isUserAuthenticated,
   };
 

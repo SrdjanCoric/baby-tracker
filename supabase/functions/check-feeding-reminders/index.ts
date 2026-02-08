@@ -8,6 +8,7 @@ interface ReminderRow {
   baby_name: string;
   last_fed_at: string;
   device_token: string;
+  is_sandbox: boolean;
 }
 
 function base64UrlEncode(data: Uint8Array): string {
@@ -65,9 +66,13 @@ async function sendApnsAlert(
   topic: string,
   title: string,
   body: string,
+  isSandbox: boolean,
   data?: Record<string, unknown>
 ): Promise<{ success: boolean; status: number }> {
-  const url = `https://api.push.apple.com/3/device/${deviceToken}`;
+  const apnsHost = isSandbox
+    ? "api.sandbox.push.apple.com"
+    : "api.push.apple.com";
+  const url = `https://${apnsHost}/3/device/${deviceToken}`;
 
   const payload: Record<string, unknown> = {
     aps: {
@@ -170,6 +175,7 @@ serve(async (req) => {
         apnsTopic,
         title,
         body,
+        reminder.is_sandbox,
         { type: "feeding_reminder", babyId: reminder.baby_id }
       );
 
