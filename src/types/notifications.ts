@@ -4,14 +4,16 @@
  */
 
 import type { TimerActivityType } from "@/constants/activities";
+import type { WakeWindowReminderSettings } from "./wake-windows";
 
-export type NotificationType = "feeding_reminder" | "timer_alert";
+export type NotificationType = "feeding_reminder" | "timer_alert" | "wake_window_reminder";
 
 export interface NotificationSettings {
   feedingReminders: FeedingReminderSettings;
   timerAlerts: TimerAlertSettings;
   quietHours: QuietHoursSettings;
   privacy: NotificationPrivacySettings;
+  wakeWindowReminders: WakeWindowReminderSettings;
 }
 
 export interface NotificationPrivacySettings {

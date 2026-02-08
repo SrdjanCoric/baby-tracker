@@ -1,7 +1,4 @@
-/**
- * Sleep smart goals utilities
- * Age-based default goals with user customization based on AAP/Sleep Foundation research
- */
+import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 
 export interface SleepAgeGroup {
   label: string;
@@ -254,4 +251,115 @@ export function getSleepGoalInfo(
     source: "age_based",
     ageGroup,
   };
+}
+
+interface WakeWindowProgression {
+  napCount: number;
+  windows: number[];
+}
+
+const WAKE_WINDOW_PROGRESSIONS: Record<string, WakeWindowProgression> = {
+  "0-2 months": { napCount: 5, windows: [30, 36, 42, 48, 54, 60] },
+  "3-5 months": { napCount: 4, windows: [60, 75, 90, 105, 120] },
+  "6-8 months": { napCount: 3, windows: [120, 140, 160, 180] },
+  "9-12 months": { napCount: 2, windows: [150, 180, 210] },
+  "13-18 months": { napCount: 2, windows: [180, 210, 240] },
+  "19+ months": { napCount: 1, windows: [240, 360] },
+};
+
+function generateProgressiveSlots(napCount: number, minMinutes: number, maxMinutes: number): NapSlotWindow[] {
+  const slotCount = napCount + 1;
+  const slots: NapSlotWindow[] = [];
+
+  for (let i = 0; i < slotCount; i++) {
+    const t = slotCount === 1 ? 0 : i / (slotCount - 1);
+    const duration = Math.round(minMinutes + t * (maxMinutes - minMinutes));
+    const isLast = i === slotCount - 1;
+    slots.push({
+      slotIndex: i,
+      label: isLast ? "bedtime" : `nap${i + 1}`,
+      durationMinutes: duration,
+    });
+  }
+
+  return slots;
+}
+
+export function getDefaultWakeWindowConfig(
+  birthDate: Date,
+  now: Date = new Date()
+): WakeWindowConfig {
+  const ageGroup = getSleepAgeGroupForBaby(birthDate, now);
+
+  if (!ageGroup) {
+    return {
+      napCount: 2,
+      slots: generateProgressiveSlots(2, 120, 180),
+      source: "age_based",
+    };
+  }
+
+  const progression = WAKE_WINDOW_PROGRESSIONS[ageGroup.label];
+
+  if (progression) {
+    const slots: NapSlotWindow[] = progression.windows.map((duration, i) => ({
+      slotIndex: i,
+      label: i === progression.windows.length - 1 ? "bedtime" : `nap${i + 1}`,
+      durationMinutes: duration,
+    }));
+
+    return {
+      napCount: progression.napCount,
+      slots,
+      source: "age_based",
+    };
+  }
+
+  return {
+    napCount: ageGroup.napsMax,
+    slots: generateProgressiveSlots(
+      ageGroup.napsMax,
+      ageGroup.wakeWindowMinMinutes,
+      ageGroup.wakeWindowMaxMinutes
+    ),
+    source: "age_based",
+  };
+}
+
+export function generateSlotsForNapCount(
+  napCount: number,
+  birthDate: Date,
+  now: Date = new Date()
+): NapSlotWindow[] {
+  const ageGroup = getSleepAgeGroupForBaby(birthDate, now);
+  const minMinutes = ageGroup?.wakeWindowMinMinutes ?? 120;
+  const maxMinutes = ageGroup?.wakeWindowMaxMinutes ?? 180;
+  return generateProgressiveSlots(napCount, minMinutes, maxMinutes);
+}
+
+export function getPresetPillsForAge(
+  birthDate: Date,
+  now: Date = new Date()
+): number[] {
+  const ageGroup = getSleepAgeGroupForBaby(birthDate, now);
+  if (!ageGroup) return [60, 90, 120, 150, 180];
+
+  const min = ageGroup.wakeWindowMinMinutes;
+  const max = ageGroup.wakeWindowMaxMinutes;
+  const range = max - min;
+
+  if (range <= 30) {
+    return [min, Math.round((min + max) / 2), max];
+  }
+
+  const step = Math.round(range / 4);
+  const presets: number[] = [];
+  for (let v = min; v <= max; v += step) {
+    presets.push(v);
+  }
+  if (presets[presets.length - 1] !== max) {
+    presets.push(max);
+  }
+
+  return presets;
 }
