@@ -32,43 +32,96 @@ const ALLOWED_TABLES = new Set([
   "pumping_sessions", "growth_measurements", "tummy_time_sessions",
 ]);
 
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function base64UrlEncode(data: Uint8Array): string {
+  const base64 = btoa(String.fromCharCode(...data));
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function sendWithRetry(
-  messages: Array<{ to: string; title: string; body: string; data: object; channelId: string }>,
-  maxRetries = 3
-): Promise<Response> {
-  let lastError: Error | null = null;
+function base64UrlEncodeString(str: string): string {
+  return base64UrlEncode(new TextEncoder().encode(str));
+}
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await fetch("https://exp.host/--/api/v2/push/send", {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Accept-encoding": "gzip, deflate",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(messages),
-      });
+async function createApnsJwt(
+  teamId: string,
+  keyId: string,
+  privateKeyPem: string
+): Promise<string> {
+  const header = base64UrlEncodeString(
+    JSON.stringify({ alg: "ES256", kid: keyId })
+  );
+  const now = Math.floor(Date.now() / 1000);
+  const payload = base64UrlEncodeString(
+    JSON.stringify({ iss: teamId, iat: now })
+  );
 
-      if (response.status >= 500 && attempt < maxRetries - 1) {
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-        await sleep(delay);
-        continue;
-      }
-      return response;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt < maxRetries - 1) {
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-        await sleep(delay);
-      }
-    }
+  const signingInput = `${header}.${payload}`;
+
+  const pemContents = privateKeyPem
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\s/g, "");
+  const keyData = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    keyData,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    cryptoKey,
+    new TextEncoder().encode(signingInput)
+  );
+
+  const encodedSig = base64UrlEncode(new Uint8Array(signature));
+
+  return `${signingInput}.${encodedSig}`;
+}
+
+async function sendApnsAlert(
+  deviceToken: string,
+  jwt: string,
+  topic: string,
+  title: string,
+  body: string,
+  data?: Record<string, unknown>
+): Promise<{ success: boolean; status: number }> {
+  const url = `https://api.push.apple.com/3/device/${deviceToken}`;
+
+  const payload: Record<string, unknown> = {
+    aps: {
+      alert: { title, body },
+      sound: "default",
+    },
+  };
+
+  if (data) {
+    Object.assign(payload, data);
   }
-  throw lastError || new Error("Max retries exceeded");
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      authorization: `bearer ${jwt}`,
+      "apns-push-type": "alert",
+      "apns-priority": "10",
+      "apns-topic": topic,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status !== 200) {
+    const responseBody = await response.text();
+    console.error(
+      `APNs response: status=${response.status} body=${responseBody} token=${deviceToken.slice(0, 12)}...`
+    );
+  }
+
+  return { success: response.status === 200, status: response.status };
 }
 
 serve(async (req) => {
@@ -97,8 +150,11 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const apnsAuthKey = Deno.env.get("APNS_AUTH_KEY");
+    const apnsKeyId = Deno.env.get("APNS_KEY_ID");
+    const apnsTeamId = Deno.env.get("APNS_TEAM_ID");
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!supabaseUrl || !serviceRoleKey || !apnsAuthKey || !apnsKeyId || !apnsTeamId) {
       console.error("Missing environment variables");
       return new Response(
         JSON.stringify({ error: "Server configuration error" }),
@@ -122,28 +178,33 @@ serve(async (req) => {
       );
     }
 
-    const { data: tokens, error: tokensError } = await supabase
-      .from("user_push_tokens")
-      .select(`
-        push_token,
-        users!inner(id, activity_notifications_enabled)
-      `)
-      .eq("users.household_id", baby.household_id)
-      .eq("users.activity_notifications_enabled", true)
-      .neq("user_id", record.logged_by);
+    const { data: householdUsers, error: usersError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("household_id", baby.household_id)
+      .eq("activity_notifications_enabled", true)
+      .neq("id", record.logged_by);
 
-    if (tokensError) {
-      console.error("Failed to fetch tokens:", tokensError);
+    if (usersError || !householdUsers || householdUsers.length === 0) {
+      console.log("No recipients for household:", baby.household_id);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch notification recipients" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ message: "No recipients with notifications enabled" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!tokens || tokens.length === 0) {
-      console.log("No recipients with notifications enabled for household:", baby.household_id);
+    const userIds = householdUsers.map((u) => u.id);
+
+    const { data: tokens, error: tokensError } = await supabase
+      .from("user_push_tokens")
+      .select("device_token, user_id")
+      .in("user_id", userIds)
+      .not("device_token", "is", null);
+
+    if (tokensError || !tokens || tokens.length === 0) {
+      console.log("No device tokens found for recipients");
       return new Response(
-        JSON.stringify({ message: "No recipients with notifications enabled" }),
+        JSON.stringify({ message: "No device tokens found" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -161,65 +222,43 @@ serve(async (req) => {
     const loggerName = logger?.display_name || logger?.email?.split("@")[0] || "Someone";
     const activityName = ACTIVITY_NAMES[table] || "activity";
 
-    const messages = tokens.map((t) => ({
-      to: t.push_token,
-      title: baby.name,
-      body: `${loggerName} logged a ${activityName}`,
-      data: {
-        type: "activity_logged",
-        table,
-        babyId: record.baby_id,
-      },
-      channelId: "household-activity",
-    }));
+    const apnsTopic = "com.sofibaby.app";
+    const jwt = await createApnsJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
 
-    const expoPushResponse = await sendWithRetry(messages);
+    const tokensToRemove: string[] = [];
+    let sentCount = 0;
 
-    if (!expoPushResponse.ok) {
-      const errorText = await expoPushResponse.text();
-      console.error("Expo Push API error:", errorText);
-      return new Response(
-        JSON.stringify({ error: "Failed to send push notifications" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    for (const { device_token } of tokens) {
+      const result = await sendApnsAlert(
+        device_token,
+        jwt,
+        apnsTopic,
+        baby.name,
+        `${loggerName} logged a ${activityName}`,
+        { type: "activity_logged", table, babyId: record.baby_id }
       );
-    }
 
-    const result = await expoPushResponse.json();
-
-    if (result.data && Array.isArray(result.data)) {
-      const tokensToRemove: string[] = [];
-
-      result.data.forEach((receipt: { status: string; details?: { error?: string } }, index: number) => {
-        if (receipt.status === "error") {
-          const errorType = receipt.details?.error;
-          if (errorType === "DeviceNotRegistered" || errorType === "InvalidCredentials") {
-            const invalidToken = messages[index]?.to;
-            if (invalidToken) {
-              tokensToRemove.push(invalidToken);
-            }
-          }
-        }
-      });
-
-      if (tokensToRemove.length > 0) {
-        await supabase
-          .from("user_push_tokens")
-          .delete()
-          .in("push_token", tokensToRemove);
-        console.log(`Removed ${tokensToRemove.length} invalid push tokens`);
+      if (result.success) {
+        sentCount++;
+      } else if (result.status === 410 || result.status === 400) {
+        tokensToRemove.push(device_token);
       }
     }
 
-    const usedTokens = messages.map(m => m.to);
-    await supabase
-      .from("user_push_tokens")
-      .update({ last_used_at: new Date().toISOString() })
-      .in("push_token", usedTokens);
+    if (tokensToRemove.length > 0) {
+      for (const badToken of tokensToRemove) {
+        await supabase
+          .from("user_push_tokens")
+          .update({ device_token: null })
+          .eq("device_token", badToken);
+      }
+      console.log(`Cleared ${tokensToRemove.length} invalid device tokens`);
+    }
 
-    console.log("Push notifications sent:", result);
+    console.log(`Activity notifications sent: ${sentCount}/${tokens.length}`);
 
     return new Response(
-      JSON.stringify({ success: true, sent: messages.length }),
+      JSON.stringify({ success: true, sent: sentCount, total: tokens.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

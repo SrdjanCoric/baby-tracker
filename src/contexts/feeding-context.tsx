@@ -189,7 +189,7 @@ const FeedingContext = createContext<FeedingContextValue | null>(null);
 export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(feedingReducer, initialFeedingState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges } = useSync();
+  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
 
@@ -290,7 +290,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadFeedings();
-  }, [loadFeedings]);
+  }, [loadFeedings, foregroundRefreshKey]);
 
   const startBreastfeeding = useCallback(async (side: BreastSide, requestedStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };

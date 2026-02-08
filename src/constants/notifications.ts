@@ -20,7 +20,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   timerAlerts: {
     enabled: true,
     thresholds: {
-      breastfeeding: 60, // minutes
+      breastfeeding: 60,
       pumping: 45,
       tummyTime: 30,
       nap: 180, // 3 hours

@@ -412,6 +412,7 @@
     "feedingReminderInterval": "Reminder Interval",
     "feedingReminderIntervalDesc": "Time between feedings before reminder",
     "hoursInterval": "{{hours}} hours",
+    "feedingRemindersSignInRequired": "Sign in to enable feeding reminders",
     "timerAlerts": "Timer Alerts",
     "timerAlertsDesc": "Get notified when activities run long",
     "timerThresholds": "Timer Thresholds",

@@ -33,6 +33,25 @@ export async function savePushToken(token: string): Promise<{ error: Error | nul
   return { error: null };
 }
 
+export async function saveDeviceToken(deviceToken: string): Promise<{ error: Error | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: new Error("No authenticated user") };
+  }
+
+  const { error } = await supabase
+    .from("user_push_tokens")
+    .update({ device_token: deviceToken })
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: new Error(error.message) };
+  }
+
+  return { error: null };
+}
+
 export async function removePushToken(token: string): Promise<{ error: Error | null }> {
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -90,6 +109,37 @@ export async function getActivityNotificationsEnabled(): Promise<boolean> {
   }
 
   return data.activity_notifications_enabled ?? false;
+}
+
+export async function upsertFeedingReminderPreference(
+  babyId: string,
+  enabled: boolean,
+  intervalHours: number
+): Promise<{ error: Error | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: new Error("No authenticated user") };
+  }
+
+  const { error } = await supabase
+    .from("feeding_reminder_preferences")
+    .upsert(
+      {
+        user_id: user.id,
+        baby_id: babyId,
+        enabled,
+        interval_hours: intervalHours,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,baby_id" }
+    );
+
+  if (error) {
+    return { error: new Error(error.message) };
+  }
+
+  return { error: null };
 }
 
 export async function setActivityNotificationsEnabled(
