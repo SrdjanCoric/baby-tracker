@@ -62,7 +62,11 @@
     "minuteProgress": "{{current}} / {{goal}} min",
     "session_one": "{{count}} sesión",
     "session_other": "{{count}} sesiones",
-    "daysAgo": "hace {{days}}d"
+    "daysAgo": "hace {{days}}d",
+    "napIn": "Siesta en {{time}}",
+    "bedtimeIn": "Dormir en {{time}}",
+    "napTimeNow": "¡Hora de siesta!",
+    "bedtimeNow": "¡Hora de dormir!"
   },
   "navigation": {
     "home": "Inicio",
@@ -178,6 +182,7 @@
     "notesPlaceholder": "Agregar notas (opcional)",
     "goalSettings": "Configuración de meta",
     "goalSettingsTitle": "Meta de sueño",
+    "settingsTitle": "Configuración de sueño",
     "currentGoal": "Meta diaria",
     "goalHours": "{{hours}}h",
     "ageGroup": "Edad del bebé",
@@ -199,7 +204,25 @@
     "goalUpdated": "Meta actualizada",
     "startedEarlier": "¿Empezó antes?",
     "whenDidSleepStart": "¿Cuándo empezó a dormir?",
-    "stopError": "No se pudo detener el sueño. Por favor intenta de nuevo."
+    "stopError": "No se pudo detener el sueño. Por favor intenta de nuevo.",
+    "wakeWindowReminders": "Recordatorios de ventanas de vigilia",
+    "wakeWindowConfigureInSleep": "Configurar en ajustes de sueño",
+    "napReminders": "Recordatorios de siesta",
+    "napRemindersDesc": "Recibe una notificación antes de que termine cada ventana de vigilia",
+    "napRemindersSignInRequired": "Inicia sesión para activar recordatorios de siesta",
+    "napCount": "Número de siestas",
+    "napCountRecommendation": "Recomendado {{min}}-{{max}} siestas para {{ageGroup}}",
+    "wakeWindows": "Ventanas de vigilia",
+    "slotNap": "Antes de siesta {{number}}",
+    "slotBedtime": "Antes de dormir",
+    "customMinutes": "Personalizado (min)",
+    "customMinutesError": "Ingrese un valor entre {{min}} y 480 minutos",
+    "resetWakeWindows": "Restablecer valores predeterminados",
+    "resetWakeWindowsDesc": "Restaurar ventanas de vigilia basadas en la edad del bebé",
+    "wakeWindowExplainer": "Las ventanas de vigilia son el tiempo recomendado de estar despierto entre siestas. Suelen ser más cortas por la mañana y más largas antes de dormir.",
+    "wakeWindowGuidelines": "Según las guías de sueño para {{ageGroup}}, las ventanas de vigilia recomendadas son de {{min}}\u2013{{max}} minutos",
+    "setBirthDatePrompt": "Establece la fecha de nacimiento de tu bebé para obtener recomendaciones personalizadas de ventanas de vigilia",
+    "setBirthDate": "Establecer fecha de nacimiento"
   },
   "diaper": {
     "title": "Pañal",
@@ -731,7 +754,11 @@
     "activitySleep": "durmiendo",
     "yourBaby": "tu bebé",
     "tapForDetails": "Toca para ver detalles",
-    "tapToCheckTimer": "Toca para verificar el temporizador"
+    "tapToCheckTimer": "Toca para verificar el temporizador",
+    "wakeWindowNapTitle": "Hora de siesta",
+    "wakeWindowNapBody": "Ventana de vigilia terminó \u2014 hora de la siesta",
+    "wakeWindowBedtimeTitle": "Hora de dormir",
+    "wakeWindowBedtimeBody": "Ventana de vigilia terminó \u2014 hora de dormir"
   },
   "errors": {
     "generic": "Algo salió mal. Por favor intenta de nuevo.",

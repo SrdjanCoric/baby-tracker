@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -86,6 +87,7 @@ type IntervalOption = (typeof FEEDING_REMINDER_INTERVALS)[number];
 
 export default function NotificationSettingsScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { members } = useHousehold();
   const isMultiPersonHousehold = members.length > 1;
@@ -441,6 +443,18 @@ export default function NotificationSettingsScreen() {
                   disabled={!hasPermission}
                 />
               }
+              isLast
+            />
+          </View>
+        </View>
+
+        <View className="mb-6">
+          <SectionHeader title={t("sleep.wakeWindowReminders")} />
+          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
+            <SettingsRow
+              label={t("sleep.wakeWindowReminders")}
+              description={t("sleep.wakeWindowConfigureInSleep")}
+              onPress={() => router.push("/sleep/settings")}
               isLast
             />
           </View>

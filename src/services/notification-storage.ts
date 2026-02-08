@@ -70,6 +70,10 @@ export const NotificationStorageService = {
               ...DEFAULT_NOTIFICATION_SETTINGS.privacy,
               ...(parsed.privacy || {}),
             },
+            wakeWindowReminders: {
+              ...DEFAULT_NOTIFICATION_SETTINGS.wakeWindowReminders,
+              ...(parsed.wakeWindowReminders || {}),
+            },
           };
         }
       } catch {

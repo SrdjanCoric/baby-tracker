@@ -33,8 +33,11 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     endTime: "07:00",
   },
   privacy: {
-    showBabyName: false, // Default to not showing baby name for privacy
+    showBabyName: false,
     showActivityDetails: true,
+  },
+  wakeWindowReminders: {
+    enabled: false,
   },
 };
 
@@ -98,6 +101,24 @@ export function getFeedingReminderMessage(): { title: string; body: string } {
   return {
     title: i18n.t("notificationMessages.feedingReminderTitle"),
     body: i18n.t("notificationMessages.feedingReminderBody"),
+  };
+}
+
+export function getWakeWindowReminderMessage(
+  slotLabel: string
+): { title: string; body: string } {
+  const isBedtime = slotLabel === "bedtime";
+  return {
+    title: i18n.t(
+      isBedtime
+        ? "notificationMessages.wakeWindowBedtimeTitle"
+        : "notificationMessages.wakeWindowNapTitle"
+    ),
+    body: i18n.t(
+      isBedtime
+        ? "notificationMessages.wakeWindowBedtimeBody"
+        : "notificationMessages.wakeWindowNapBody"
+    ),
   };
 }
 

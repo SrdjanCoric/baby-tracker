@@ -58,7 +58,11 @@
     "minuteProgress": "{{current}} / {{goal}} min",
     "session_one": "{{count}} session",
     "session_other": "{{count}} sessions",
-    "daysAgo": "{{days}}d ago"
+    "daysAgo": "{{days}}d ago",
+    "napIn": "Nap in {{time}}",
+    "bedtimeIn": "Bedtime in {{time}}",
+    "napTimeNow": "Nap time!",
+    "bedtimeNow": "Bedtime!"
   },
   "navigation": {
     "home": "Home",
@@ -174,6 +178,7 @@
     "notesPlaceholder": "Add notes (optional)",
     "goalSettings": "Goal Settings",
     "goalSettingsTitle": "Sleep Goal",
+    "settingsTitle": "Sleep Settings",
     "currentGoal": "Daily Goal",
     "goalHours": "{{hours}}h",
     "ageGroup": "Baby's Age",
@@ -195,7 +200,25 @@
     "goalUpdated": "Goal updated",
     "startedEarlier": "Started earlier?",
     "whenDidSleepStart": "When did sleep start?",
-    "stopError": "Failed to stop sleep. Please try again."
+    "stopError": "Failed to stop sleep. Please try again.",
+    "wakeWindowReminders": "Wake Window Reminders",
+    "wakeWindowConfigureInSleep": "Configure in Sleep Settings",
+    "napReminders": "Nap Reminders",
+    "napRemindersDesc": "Get notified before each wake window ends",
+    "napRemindersSignInRequired": "Sign in to enable nap reminders",
+    "napCount": "Number of Naps",
+    "napCountRecommendation": "Recommended {{min}}-{{max}} naps for {{ageGroup}}",
+    "wakeWindows": "Wake Windows",
+    "slotNap": "Before Nap {{number}}",
+    "slotBedtime": "Before Bedtime",
+    "customMinutes": "Custom (min)",
+    "customMinutesError": "Enter a value between {{min}} and 480 minutes",
+    "resetWakeWindows": "Reset to Age-Based Defaults",
+    "resetWakeWindowsDesc": "Restore wake windows based on your baby's age",
+    "wakeWindowExplainer": "Wake windows are the recommended awake time between naps. They're typically shorter in the morning and longer before bedtime.",
+    "wakeWindowGuidelines": "Based on sleep guidelines for {{ageGroup}}, recommended wake windows are {{min}}\u2013{{max}} minutes",
+    "setBirthDatePrompt": "Set your baby's birth date to get personalized wake window recommendations",
+    "setBirthDate": "Set Birth Date"
   },
   "diaper": {
     "title": "Diaper",
@@ -729,7 +752,11 @@
     "activitySleep": "sleep",
     "yourBaby": "your baby",
     "tapForDetails": "Tap for details",
-    "tapToCheckTimer": "Tap to check timer"
+    "tapToCheckTimer": "Tap to check timer",
+    "wakeWindowNapTitle": "Nap Time",
+    "wakeWindowNapBody": "Wake window ended \u2014 time for a nap",
+    "wakeWindowBedtimeTitle": "Bedtime",
+    "wakeWindowBedtimeBody": "Wake window ended \u2014 time for bed"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

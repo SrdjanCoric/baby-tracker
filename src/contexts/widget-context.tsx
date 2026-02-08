@@ -45,7 +45,7 @@ const ACTIVITY_TYPE_MAP: Record<TimerActivityType, ActiveTimerData["type"]> = {
 export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { feedings, activeTimer: feedingTimer, getLastFeeding } = useFeeding();
-  const { sleeps, activeTimer: sleepTimer, dailyGoalMinutes: sleepGoal } = useSleep();
+  const { sleeps, activeTimer: sleepTimer, dailyGoalMinutes: sleepGoal, wakeWindowConfig, getCurrentNapSlot, getCompletedNapsSinceNightSleep } = useSleep();
   const { diapers, getTodaysCounts, getLastDiaper } = useDiaper();
   const { pumpings, activeTimer: pumpingTimer } = usePumping();
   const { measurements } = useGrowth();
@@ -105,14 +105,24 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         lastType: lastFeeding?.type || null,
         lastSide: (lastFeeding?.side as BreastSide) || null,
       },
-      sleep: {
-        lastTime: lastSleep?.endedAt || lastSleep?.startedAt || null,
-        todayMinutes: todaySleepMinutes,
-        goalMinutes: sleepGoal,
-        lastDurationMinutes: lastSleep ? Math.floor((lastSleep.durationSeconds || 0) / 60) : null,
-        isActive: sleepTimer?.isRunning || false,
-        sleepType: (lastSleep?.type as SleepType) || null,
-      },
+      sleep: (() => {
+        const currentSlot = getCurrentNapSlot();
+        const lastEndedSleep = [...sleeps]
+          .filter(s => s.endedAt)
+          .sort((a, b) => new Date(b.endedAt!).getTime() - new Date(a.endedAt!).getTime())[0];
+        return {
+          lastTime: lastSleep?.endedAt || lastSleep?.startedAt || null,
+          todayMinutes: todaySleepMinutes,
+          goalMinutes: sleepGoal,
+          lastDurationMinutes: lastSleep ? Math.floor((lastSleep.durationSeconds || 0) / 60) : null,
+          isActive: sleepTimer?.isRunning || false,
+          sleepType: (lastSleep?.type as SleepType) || null,
+          wakeWindowMinutes: currentSlot?.durationMinutes ?? null,
+          wakeWindowSlotLabel: currentSlot?.label ?? null,
+          lastSleepEndedAt: lastEndedSleep?.endedAt ?? null,
+          napCountToday: getCompletedNapsSinceNightSleep(),
+        };
+      })(),
       diaper: {
         lastTime: lastDiaperEntry?.changedAt || null,
         todayCounts: diaperCounts,
@@ -207,6 +217,9 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     sleeps,
     sleepTimer,
     sleepGoal,
+    wakeWindowConfig,
+    getCurrentNapSlot,
+    getCompletedNapsSinceNightSleep,
     diapers,
     getTodaysCounts,
     getLastDiaper,
