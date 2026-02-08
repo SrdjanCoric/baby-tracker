@@ -13,6 +13,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
+import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -135,6 +136,11 @@ function DisplayNamePromptWrapper({ children }: { children: React.ReactNode }) {
 
 function WidgetStopHandler({ children }: { children: React.ReactNode }) {
   useWidgetStopHandler();
+  return <>{children}</>;
+}
+
+function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
+  useGlobalTimerAlerts();
   return <>{children}</>;
 }
 
@@ -396,7 +402,9 @@ export default function RootLayout() {
                                     <DashboardConfigProvider>
                                       <DisplayNamePromptWrapper>
                                         <WidgetStopHandler>
+                                        <GlobalTimerAlertWatcher>
                                           <AppContent />
+                                        </GlobalTimerAlertWatcher>
                                         </WidgetStopHandler>
                                       </DisplayNamePromptWrapper>
                                     </DashboardConfigProvider>

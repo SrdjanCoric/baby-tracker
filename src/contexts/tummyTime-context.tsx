@@ -177,7 +177,7 @@ const TummyTimeContext = createContext<TummyTimeContextValue | null>(null);
 export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(tummyTimeReducer, initialTummyTimeState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges } = useSync();
+  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
 
@@ -282,7 +282,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadTummyTimes();
-  }, [loadTummyTimes]);
+  }, [loadTummyTimes, foregroundRefreshKey]);
 
   const startTummyTime = useCallback(async (requestedStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };

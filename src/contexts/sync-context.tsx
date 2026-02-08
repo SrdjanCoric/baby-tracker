@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef, useState } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { SyncEngine, SyncState as EngineSyncState, SyncStatus, RealTimeSync, RemoteChange, SyncableTable } from '@/services/sync';
 
 export interface SyncState {
@@ -66,6 +67,7 @@ export function syncReducer(state: SyncState, action: SyncAction): SyncState {
 type RemoteChangeCallback = (change: RemoteChange) => void;
 
 interface SyncContextValue extends SyncState {
+  foregroundRefreshKey: number;
   forceSync: () => Promise<void>;
   retryFailedSync: () => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -89,7 +91,21 @@ let instanceRefCount = 0;
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(syncReducer, initialSyncState);
+  const [foregroundRefreshKey, setForegroundRefreshKey] = useState(0);
   const remoteChangeListenersRef = useRef<Map<SyncableTable, Set<RemoteChangeCallback>>>(new Map());
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+        setForegroundRefreshKey(k => k + 1);
+      }
+      appStateRef.current = nextState;
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     instanceRefCount++;
@@ -234,6 +250,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   const value: SyncContextValue = {
     ...state,
+    foregroundRefreshKey,
     forceSync,
     retryFailedSync,
     clearAllData,

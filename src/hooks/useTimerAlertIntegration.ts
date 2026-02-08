@@ -27,11 +27,14 @@ export function useTimerAlertIntegration(activityType: keyof TimerThresholds) {
         return false;
       }
 
+      if (!timerAlertsEnabled) {
+        return false;
+      }
+
       const shouldSend = checkTimerAlert(activityType, durationMinutes);
       if (!shouldSend) {
         return false;
       }
-
       const message = getTimerAlertMessage(activityType);
 
       try {
@@ -44,7 +47,7 @@ export function useTimerAlertIntegration(activityType: keyof TimerThresholds) {
               activityType,
             },
           },
-          new Date()
+          new Date(Date.now() + 1000)
         );
 
         if (notificationId) {
