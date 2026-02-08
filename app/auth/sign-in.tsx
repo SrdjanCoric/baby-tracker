@@ -34,13 +34,15 @@ export default function SignInScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { isDark } = useTheme();
-  const { signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, user, refreshUserProfile } = useAuth();
+  const { signIn, signUp, signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, user, refreshUserProfile } = useAuth();
 
   const [email, setEmail] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | undefined>();
+  const [password, setPassword] = useState("");
+  const [isDevLoading, setIsDevLoading] = useState(false);
 
   // Display name prompt state
   const [showDisplayNamePrompt, setShowDisplayNamePrompt] = useState(false);
@@ -123,6 +125,38 @@ export default function SignInScreen() {
       setIsMagicLinkLoading(false);
     }
   }, [email, signInWithMagicLink, t]);
+
+  const handleDevSignIn = useCallback(async () => {
+    setIsDevLoading(true);
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        Alert.alert("Dev Sign In Error", error.message);
+      } else {
+        handlePostAuth();
+      }
+    } catch (e: unknown) {
+      Alert.alert("Dev Sign In Error", e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setIsDevLoading(false);
+    }
+  }, [email, password, signIn, handlePostAuth]);
+
+  const handleDevSignUp = useCallback(async () => {
+    setIsDevLoading(true);
+    try {
+      const { error } = await signUp(email, password, "Dev User");
+      if (error) {
+        Alert.alert("Dev Sign Up Error", error.message);
+      } else {
+        handlePostAuth();
+      }
+    } catch (e: unknown) {
+      Alert.alert("Dev Sign Up Error", e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setIsDevLoading(false);
+    }
+  }, [email, password, signUp, handlePostAuth]);
 
   const handleClose = useCallback(() => {
     router.back();
@@ -361,6 +395,86 @@ export default function SignInScreen() {
                 {t("auth.magicLinkHint")}
               </Text>
             </View>
+
+            {__DEV__ && (
+              <View
+                className="rounded-3xl p-5 mb-4"
+                style={{
+                  backgroundColor: isDark ? SURFACE.dark.card : SURFACE.light.card,
+                  borderWidth: 2,
+                  borderColor: "#F59E0B",
+                }}
+              >
+                <Text
+                  className="text-sm mb-3 text-center"
+                  style={{
+                    color: "#F59E0B",
+                    fontFamily: "Nunito-Bold",
+                  }}
+                >
+                  Dev Login (Debug Only)
+                </Text>
+
+                <TextInput
+                  className="rounded-xl px-4 mb-3"
+                  style={{
+                    backgroundColor: isDark ? SURFACE.dark.background : SURFACE.light.background,
+                    color: isDark ? TEXT.dark.primary : TEXT.light.primary,
+                    fontFamily: "Nunito-Regular",
+                    fontSize: 16,
+                    paddingTop: 14,
+                    paddingBottom: 14,
+                  }}
+                  placeholder="Password"
+                  placeholderTextColor={isDark ? TEXT.dark.secondary : TEXT.light.muted}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  testID="dev-password-input"
+                />
+
+                <View className="flex-row gap-3">
+                  <Pressable
+                    onPress={handleDevSignIn}
+                    disabled={isDevLoading}
+                    className="flex-1 rounded-xl py-3 items-center active:scale-[0.98]"
+                    style={{ backgroundColor: "#F59E0B" }}
+                    testID="dev-signin-button"
+                  >
+                    {isDevLoading ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text
+                        className="text-white text-sm"
+                        style={{ fontFamily: "Nunito-SemiBold" }}
+                      >
+                        Dev Sign In
+                      </Text>
+                    )}
+                  </Pressable>
+
+                  <Pressable
+                    onPress={handleDevSignUp}
+                    disabled={isDevLoading}
+                    className="flex-1 rounded-xl py-3 items-center active:scale-[0.98]"
+                    style={{ backgroundColor: "#D97706" }}
+                    testID="dev-signup-button"
+                  >
+                    {isDevLoading ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text
+                        className="text-white text-sm"
+                        style={{ fontFamily: "Nunito-SemiBold" }}
+                      >
+                        Dev Sign Up
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            )}
 
             {/* Guest option at bottom */}
             <View className="mt-auto pt-6">
