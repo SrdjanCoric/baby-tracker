@@ -94,10 +94,18 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [foregroundRefreshKey, setForegroundRefreshKey] = useState(0);
   const remoteChangeListenersRef = useRef<Map<SyncableTable, Set<RemoteChangeCallback>>>(new Map());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const wasOfflineRef = useRef(false);
 
   useEffect(() => {
-    const handleAppStateChange = (nextState: AppStateStatus) => {
+    const handleAppStateChange = async (nextState: AppStateStatus) => {
       if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+        if (syncEngineInstance && syncEngineInstance.getPendingCount() > 0) {
+          try {
+            await syncEngineInstance.sync();
+          } catch {
+            // Sync failed — still refresh to show best available data
+          }
+        }
         setForegroundRefreshKey(k => k + 1);
       }
       appStateRef.current = nextState;
@@ -118,6 +126,15 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_STATUS', payload: engineState.status });
       dispatch({ type: 'SET_PENDING_COUNT', payload: engineState.pendingCount });
       dispatch({ type: 'SET_ONLINE', payload: engineState.isConnected });
+
+      if (!engineState.isConnected) {
+        wasOfflineRef.current = true;
+      }
+
+      if (wasOfflineRef.current && engineState.isConnected && engineState.status === 'online') {
+        wasOfflineRef.current = false;
+        setForegroundRefreshKey(k => k + 1);
+      }
 
       if (engineState.lastSyncedAt) {
         dispatch({ type: 'SYNC_COMPLETE', payload: engineState.lastSyncedAt });
