@@ -25,7 +25,8 @@ export type SyncableTable =
   | 'babies'
   | 'users'
   | 'households'
-  | 'active_timers';
+  | 'active_timers'
+  | 'wake_window_preferences';
 
 export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE';
 

@@ -8,7 +8,6 @@ interface NapSlot {
 }
 
 interface ReminderRow {
-  user_id: string;
   baby_id: string;
   baby_name: string;
   nap_count: number;
@@ -170,8 +169,10 @@ serve(async (req) => {
 
     const tokensToRemove: string[] = [];
     let sentCount = 0;
-    const notifiedPairs = new Set<string>();
 
+    const MAX_AGE_MS = 15 * 60 * 1000;
+
+    const babyReminders = new Map<string, ReminderRow[]>();
     for (const reminder of dueReminders as ReminderRow[]) {
       const slots = reminder.wake_window_slots as NapSlot[];
       if (!slots || slots.length === 0) {
@@ -188,35 +189,63 @@ serve(async (req) => {
       const slot = slots[slotIndex];
 
       const wakeTime = new Date(reminder.last_sleep_ended_at);
-      const reminderTimeMs = wakeTime.getTime() +
-        slot.durationMinutes * 60000;
+      const reminderTimeMs = wakeTime.getTime() + slot.durationMinutes * 60000;
       const reminderTime = new Date(reminderTimeMs);
 
       if (reminderTime > now) {
         continue;
       }
 
+      const timeSinceExpiry = now.getTime() - reminderTimeMs;
+      if (timeSinceExpiry > MAX_AGE_MS) {
+        console.log(`Skipping baby ${reminder.baby_id}: wake window expired ${Math.round(timeSinceExpiry / 60000)}m ago`);
+        continue;
+      }
+
+      const existing = babyReminders.get(reminder.baby_id) || [];
+      existing.push(reminder);
+      babyReminders.set(reminder.baby_id, existing);
+    }
+
+    for (const [babyId, reminders] of babyReminders) {
+      const { error: updateError } = await supabase
+        .from("wake_window_preferences")
+        .update({ last_notified_at: new Date().toISOString() })
+        .eq("baby_id", babyId);
+
+      if (updateError) {
+        console.error(`Failed to update last_notified_at for baby ${babyId}:`, updateError);
+        continue;
+      }
+
+      const slot = reminders[0].wake_window_slots[
+        Math.min(
+          Number(reminders[0].naps_since_night_sleep),
+          reminders[0].wake_window_slots.length - 1
+        )
+      ];
       const isBedtime = slot.label === "bedtime";
       const title = isBedtime ? "Bedtime" : "Nap Time";
       const body = isBedtime
         ? "Wake window ended — time for bed"
         : "Wake window ended — time for a nap";
 
-      const result = await sendApnsAlert(
-        reminder.device_token,
-        jwt,
-        apnsTopic,
-        title,
-        body,
-        reminder.is_sandbox,
-        { type: "wake_window_reminder", babyId: reminder.baby_id }
-      );
+      for (const reminder of reminders) {
+        const result = await sendApnsAlert(
+          reminder.device_token,
+          jwt,
+          apnsTopic,
+          title,
+          body,
+          reminder.is_sandbox,
+          { type: "wake_window_reminder", babyId }
+        );
 
-      if (result.success) {
-        sentCount++;
-        notifiedPairs.add(`${reminder.user_id}:${reminder.baby_id}`);
-      } else if (result.status === 410 || result.status === 400) {
-        tokensToRemove.push(reminder.device_token);
+        if (result.success) {
+          sentCount++;
+        } else if (result.status === 410 || result.status === 400) {
+          tokensToRemove.push(reminder.device_token);
+        }
       }
     }
 
@@ -228,15 +257,6 @@ serve(async (req) => {
           .eq("device_token", badToken);
       }
       console.log(`Cleared ${tokensToRemove.length} invalid device tokens`);
-    }
-
-    for (const pairKey of notifiedPairs) {
-      const [userId, babyId] = pairKey.split(":");
-      await supabase
-        .from("wake_window_preferences")
-        .update({ last_notified_at: new Date().toISOString() })
-        .eq("user_id", userId)
-        .eq("baby_id", babyId);
     }
 
     console.log(`Sent ${sentCount} wake window reminder(s)`);

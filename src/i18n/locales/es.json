@@ -222,7 +222,10 @@
     "wakeWindowExplainer": "Las ventanas de vigilia son el tiempo recomendado de estar despierto entre siestas. Suelen ser más cortas por la mañana y más largas antes de dormir.",
     "wakeWindowGuidelines": "Según las guías de sueño para {{ageGroup}}, las ventanas de vigilia recomendadas son de {{min}}\u2013{{max}} minutos",
     "setBirthDatePrompt": "Establece la fecha de nacimiento de tu bebé para obtener recomendaciones personalizadas de ventanas de vigilia",
-    "setBirthDate": "Establecer fecha de nacimiento"
+    "setBirthDate": "Establecer fecha de nacimiento",
+    "wakeWindowHouseholdWarning": "La configuración de ventanas de vigilia se comparte con todos los cuidadores de tu hogar.",
+    "householdSettingsTitle": "Configuración compartida",
+    "householdSettingsConfirm": "Esto cambiará la configuración de ventanas de vigilia para todos los cuidadores de tu hogar. ¿Continuar?"
   },
   "diaper": {
     "title": "Pañal",
