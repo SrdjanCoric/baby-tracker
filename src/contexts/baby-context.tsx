@@ -207,7 +207,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       if (!hasMigratedRef.current) {
         hasMigratedRef.current = true;
         const isNewUser = user.createdAt &&
-          (Date.now() - new Date(user.createdAt).getTime()) < 2 * 60 * 1000;
+          (Date.now() - new Date(user.createdAt).getTime()) < 60 * 60 * 1000;
         if (isNewUser) {
           const guestBabies = await getGuestBabies();
           if (guestBabies.length > 0) {
