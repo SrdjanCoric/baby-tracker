@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   Keyboard,
   Pressable,
@@ -13,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useSleep, useBaby, useTheme } from "@/contexts";
+import { useSleep, useBaby, useTheme, useHousehold } from "@/contexts";
 import { useAuth } from "@/contexts/auth-context";
 import { useNotifications } from "@/contexts/notification-context";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
@@ -33,6 +34,8 @@ export default function SleepSettingsScreen() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { isAuthenticated } = useAuth();
+  const { members } = useHousehold();
+  const isMultiCaregiver = members.length > 1;
   const {
     settings,
     permissionStatus,
@@ -60,6 +63,24 @@ export default function SleepSettingsScreen() {
   const [durationError, setDurationError] = useState("");
   const [showReminderHint, setShowReminderHint] = useState(false);
   const reminderHintAnim = useRef(new Animated.Value(0)).current;
+
+  const confirmHouseholdChange = useCallback(
+    (onConfirm: () => void) => {
+      if (!isMultiCaregiver) {
+        onConfirm();
+        return;
+      }
+      Alert.alert(
+        t("sleep.householdSettingsTitle"),
+        t("sleep.householdSettingsConfirm"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("common.confirm"), onPress: onConfirm },
+        ]
+      );
+    },
+    [isMultiCaregiver, t]
+  );
 
   const hasPermission = permissionStatus === "granted";
   const hasBirthDate = !!selectedBaby?.birthDate;
@@ -117,41 +138,45 @@ export default function SleepSettingsScreen() {
   );
 
   const handleSelectNapCount = useCallback(
-    async (count: number) => {
-      await setContextNapCount(count);
-      if (selectedBaby?.id && selectedBaby?.birthDate) {
-        const newSlots = generateSlotsForNapCount(count, new Date(selectedBaby.birthDate));
-        await syncWakeWindowPreferenceForBaby(
-          selectedBaby.id,
-          count,
-          newSlots,
-          "age_based",
-          settings.wakeWindowReminders.enabled
-        );
-      }
+    (count: number) => {
+      confirmHouseholdChange(async () => {
+        await setContextNapCount(count);
+        if (selectedBaby?.id && selectedBaby?.birthDate) {
+          const newSlots = generateSlotsForNapCount(count, new Date(selectedBaby.birthDate));
+          await syncWakeWindowPreferenceForBaby(
+            selectedBaby.id,
+            count,
+            newSlots,
+            "age_based",
+            settings.wakeWindowReminders.enabled
+          );
+        }
+      });
     },
-    [setContextNapCount, selectedBaby?.id, selectedBaby?.birthDate, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]
+    [confirmHouseholdChange, setContextNapCount, selectedBaby?.id, selectedBaby?.birthDate, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]
   );
 
   const handleSlotDurationChange = useCallback(
-    async (slotIndex: number, durationMinutes: number) => {
+    (slotIndex: number, durationMinutes: number) => {
       if (!wakeWindowConfig || !selectedBaby?.id) return;
-      const updatedSlots = wakeWindowConfig.slots.map(slot =>
-        slot.slotIndex === slotIndex
-          ? { ...slot, durationMinutes }
-          : slot
-      );
-      await setCustomWakeWindows(updatedSlots);
-      setExpandedSlotIndex(null);
-      await syncWakeWindowPreferenceForBaby(
-        selectedBaby.id,
-        wakeWindowConfig.napCount,
-        updatedSlots,
-        "custom",
-        settings.wakeWindowReminders.enabled
-      );
+      confirmHouseholdChange(async () => {
+        const updatedSlots = wakeWindowConfig.slots.map(slot =>
+          slot.slotIndex === slotIndex
+            ? { ...slot, durationMinutes }
+            : slot
+        );
+        await setCustomWakeWindows(updatedSlots);
+        setExpandedSlotIndex(null);
+        await syncWakeWindowPreferenceForBaby(
+          selectedBaby.id,
+          wakeWindowConfig.napCount,
+          updatedSlots,
+          "custom",
+          settings.wakeWindowReminders.enabled
+        );
+      });
     },
-    [wakeWindowConfig, setCustomWakeWindows, selectedBaby?.id, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]
+    [confirmHouseholdChange, wakeWindowConfig, setCustomWakeWindows, selectedBaby?.id, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]
   );
 
   const handleCustomDuration = useCallback(
@@ -170,19 +195,21 @@ export default function SleepSettingsScreen() {
     [customDurationInput, handleSlotDurationChange, t]
   );
 
-  const handleResetWakeWindows = useCallback(async () => {
-    await resetToAgeBasedWakeWindows();
-    if (selectedBaby?.id && selectedBaby?.birthDate) {
-      const defaultConfig = getDefaultWakeWindowConfig(new Date(selectedBaby.birthDate));
-      await syncWakeWindowPreferenceForBaby(
-        selectedBaby.id,
-        defaultConfig.napCount,
-        defaultConfig.slots,
-        defaultConfig.source,
-        settings.wakeWindowReminders.enabled
-      );
-    }
-  }, [resetToAgeBasedWakeWindows, selectedBaby?.id, selectedBaby?.birthDate, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
+  const handleResetWakeWindows = useCallback(() => {
+    confirmHouseholdChange(async () => {
+      await resetToAgeBasedWakeWindows();
+      if (selectedBaby?.id && selectedBaby?.birthDate) {
+        const defaultConfig = getDefaultWakeWindowConfig(new Date(selectedBaby.birthDate));
+        await syncWakeWindowPreferenceForBaby(
+          selectedBaby.id,
+          defaultConfig.napCount,
+          defaultConfig.slots,
+          defaultConfig.source,
+          settings.wakeWindowReminders.enabled
+        );
+      }
+    });
+  }, [confirmHouseholdChange, resetToAgeBasedWakeWindows, selectedBaby?.id, selectedBaby?.birthDate, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
 
   const handleReminderHintPress = useCallback(() => {
     const toValue = showReminderHint ? 0 : 1;
@@ -441,6 +468,14 @@ export default function SleepSettingsScreen() {
             )}
           </View>
         </View>
+
+        {settings.wakeWindowReminders.enabled && isMultiCaregiver && (
+          <View className="bg-blue-50 dark:bg-blue-900/20 rounded-card p-4 mb-6">
+            <Text className="text-sm text-blue-700 dark:text-blue-300">
+              {t("sleep.wakeWindowHouseholdWarning")}
+            </Text>
+          </View>
+        )}
 
         {/* Birthdate prompt (when no birthdate) */}
         {!hasBirthDate && (

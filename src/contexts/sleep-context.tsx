@@ -17,6 +17,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
+import { fetchWakeWindowPreference } from "@/services/push-token-service";
 import {
   SleepAgeGroup,
   GoalSource,
@@ -230,6 +231,25 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeToRemoteChanges('wake_window_preferences', (change: RemoteChange) => {
+      if (!selectedBaby) return;
+      const data = change.new;
+      if (!data || data.baby_id !== selectedBaby.id) return;
+
+      if (change.eventType === 'INSERT' || change.eventType === 'UPDATE') {
+        const config: WakeWindowConfig = {
+          napCount: data.nap_count as number,
+          slots: data.wake_window_slots as NapSlotWindow[],
+          source: data.source as "age_based" | "custom",
+        };
+        dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+        SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+      }
+    });
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
+
   const loadSleeps = useCallback(async () => {
     if (!selectedBaby) {
       dispatch({ type: "SET_SLEEPS", payload: [] });
@@ -273,9 +293,30 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_WAKE_WINDOW", payload: wakeWindowInfo.targetMinutes });
       }
 
-      const storedWakeConfig = await SleepStorageService.getWakeWindowConfig(selectedBaby.id);
-      if (storedWakeConfig) {
-        dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: storedWakeConfig });
+      let wakeConfig: WakeWindowConfig | null = null;
+
+      if (user?.householdId) {
+        try {
+          const { data: dbPref } = await fetchWakeWindowPreference(selectedBaby.id);
+          if (dbPref) {
+            wakeConfig = {
+              napCount: dbPref.nap_count,
+              slots: dbPref.wake_window_slots,
+              source: dbPref.source as "age_based" | "custom",
+            };
+            await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
+          }
+        } catch (error) {
+          console.error("[SleepContext] Failed to fetch wake window prefs from DB:", error);
+        }
+      }
+
+      if (!wakeConfig) {
+        wakeConfig = await SleepStorageService.getWakeWindowConfig(selectedBaby.id);
+      }
+
+      if (wakeConfig) {
+        dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: wakeConfig });
       } else if (birthDate) {
         const defaultConfig = getDefaultWakeWindowConfig(birthDate);
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: defaultConfig });

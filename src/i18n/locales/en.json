@@ -218,7 +218,10 @@
     "wakeWindowExplainer": "Wake windows are the recommended awake time between naps. They're typically shorter in the morning and longer before bedtime.",
     "wakeWindowGuidelines": "Based on sleep guidelines for {{ageGroup}}, recommended wake windows are {{min}}\u2013{{max}} minutes",
     "setBirthDatePrompt": "Set your baby's birth date to get personalized wake window recommendations",
-    "setBirthDate": "Set Birth Date"
+    "setBirthDate": "Set Birth Date",
+    "wakeWindowHouseholdWarning": "Wake window settings are shared with all caregivers in your household.",
+    "householdSettingsTitle": "Shared Setting",
+    "householdSettingsConfirm": "This will change wake window settings for all caregivers in your household. Continue?"
   },
   "diaper": {
     "title": "Diaper",

@@ -226,7 +226,10 @@
     "wakeWindowExplainer": "Budni periodi su preporučeno vreme budnosti između dremki. Obično su kraći ujutru, a duži pred spavanje.",
     "wakeWindowGuidelines": "Na osnovu smernica za spavanje za {{ageGroup}}, preporučeni budni periodi su {{min}}\u2013{{max}} minuta",
     "setBirthDatePrompt": "Postavite datum rođenja bebe da biste dobili personalizovane preporuke za budne periode",
-    "setBirthDate": "Postavi datum rođenja"
+    "setBirthDate": "Postavi datum rođenja",
+    "wakeWindowHouseholdWarning": "Podešavanja budnih perioda se dele sa svim negovateljima u vašem domaćinstvu.",
+    "householdSettingsTitle": "Deljeno podešavanje",
+    "householdSettingsConfirm": "Ovo će promeniti podešavanja budnih perioda za sve negovatelje u vašem domaćinstvu. Nastaviti?"
   },
   "diaper": {
     "title": "Pelene",
