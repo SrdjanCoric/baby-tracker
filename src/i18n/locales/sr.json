@@ -66,7 +66,11 @@
     "session_few": "{{count}} sesije",
     "session_many": "{{count}} sesija",
     "session_other": "{{count}} sesija",
-    "daysAgo": "pre {{days}}d"
+    "daysAgo": "pre {{days}}d",
+    "napIn": "Dremka za {{time}}",
+    "bedtimeIn": "Spavanje za {{time}}",
+    "napTimeNow": "Vreme za dremku!",
+    "bedtimeNow": "Vreme za spavanje!"
   },
   "navigation": {
     "home": "Početna",
@@ -182,6 +186,7 @@
     "notesPlaceholder": "Dodajte beleške (opciono)",
     "goalSettings": "Podešavanja cilja",
     "goalSettingsTitle": "Cilj spavanja",
+    "settingsTitle": "Podešavanja spavanja",
     "currentGoal": "Dnevni cilj",
     "goalHours": "{{hours}}h",
     "ageGroup": "Uzrast bebe",
@@ -203,7 +208,28 @@
     "goalUpdated": "Cilj ažuriran",
     "startedEarlier": "Počelo ranije?",
     "whenDidSleepStart": "Kada je počelo spavanje?",
-    "stopError": "Nije uspelo zaustavljanje spavanja. Molimo pokušajte ponovo."
+    "stopError": "Nije uspelo zaustavljanje spavanja. Molimo pokušajte ponovo.",
+    "wakeWindowReminders": "Podsetnici za budne periode",
+    "wakeWindowConfigureInSleep": "Podesite u podešavanjima spavanja",
+    "napReminders": "Podsetnici za dremku",
+    "napRemindersDesc": "Dobijte obaveštenje pre nego što se budni period završi",
+    "napRemindersSignInRequired": "Prijavite se da omogućite podsetnike za dremku",
+    "napCount": "Broj dremki",
+    "napCountRecommendation": "Preporučeno {{min}}-{{max}} dremki za {{ageGroup}}",
+    "wakeWindows": "Budni periodi",
+    "slotNap": "Pre dremke {{number}}",
+    "slotBedtime": "Pre spavanja",
+    "customMinutes": "Prilagođeno (min)",
+    "customMinutesError": "Unesite vrednost između {{min}} i 480 minuta",
+    "resetWakeWindows": "Vrati na podrazumevano",
+    "resetWakeWindowsDesc": "Vrati budne periode na osnovu uzrasta bebe",
+    "wakeWindowExplainer": "Budni periodi su preporučeno vreme budnosti između dremki. Obično su kraći ujutru, a duži pred spavanje.",
+    "wakeWindowGuidelines": "Na osnovu smernica za spavanje za {{ageGroup}}, preporučeni budni periodi su {{min}}\u2013{{max}} minuta",
+    "setBirthDatePrompt": "Postavite datum rođenja bebe da biste dobili personalizovane preporuke za budne periode",
+    "setBirthDate": "Postavi datum rođenja",
+    "wakeWindowHouseholdWarning": "Podešavanja budnih perioda se dele sa svim negovateljima u vašem domaćinstvu.",
+    "householdSettingsTitle": "Deljeno podešavanje",
+    "householdSettingsConfirm": "Ovo će promeniti podešavanja budnih perioda za sve negovatelje u vašem domaćinstvu. Nastaviti?"
   },
   "diaper": {
     "title": "Pelene",
@@ -758,7 +784,11 @@
     "activitySleep": "spava",
     "yourBaby": "vaša beba",
     "tapForDetails": "Dodirnite za detalje",
-    "tapToCheckTimer": "Dodirnite da proverite tajmer"
+    "tapToCheckTimer": "Dodirnite da proverite tajmer",
+    "wakeWindowNapTitle": "Vreme za dremku",
+    "wakeWindowNapBody": "Budni period se završio \u2014 vreme za dremku",
+    "wakeWindowBedtimeTitle": "Vreme za spavanje",
+    "wakeWindowBedtimeBody": "Budni period se završio \u2014 vreme za spavanje"
   },
   "errors": {
     "generic": "Nešto je pošlo naopako. Molimo pokušajte ponovo.",

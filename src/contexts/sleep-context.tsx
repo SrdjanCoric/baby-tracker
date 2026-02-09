@@ -17,13 +17,17 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
+import { fetchWakeWindowPreference } from "@/services/push-token-service";
 import {
   SleepAgeGroup,
   GoalSource,
   getSleepGoalInfo,
   getWakeWindowForAge,
   checkSleepMilestoneCrossing,
+  getDefaultWakeWindowConfig,
+  generateSlotsForNapCount,
 } from "@/utils/sleepGoals";
+import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActiveSleepTimer {
@@ -40,6 +44,7 @@ export interface SleepState {
   goalSource: GoalSource;
   currentAgeGroup: SleepAgeGroup | null;
   wakeWindowMinutes: number;
+  wakeWindowConfig: WakeWindowConfig | null;
   showMilestoneSuggestion: boolean;
   suggestedGoalMinutes: number | null;
 }
@@ -59,6 +64,7 @@ export type SleepAction =
   | { type: "SET_WAKE_WINDOW"; payload: number }
   | { type: "SET_SHOW_MILESTONE_SUGGESTION"; payload: boolean }
   | { type: "SET_SUGGESTED_GOAL"; payload: number | null }
+  | { type: "SET_WAKE_WINDOW_CONFIG"; payload: WakeWindowConfig | null }
   | { type: "REMOTE_INSERT"; payload: StoredSleepEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredSleepEntry }
   | { type: "REMOTE_DELETE"; payload: string };
@@ -74,6 +80,7 @@ export const initialSleepState: SleepState = {
   goalSource: "age_based",
   currentAgeGroup: null,
   wakeWindowMinutes: DEFAULT_WAKE_WINDOW_MINUTES,
+  wakeWindowConfig: null,
   showMilestoneSuggestion: false,
   suggestedGoalMinutes: null,
 };
@@ -139,6 +146,9 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     case "SET_SUGGESTED_GOAL":
       return { ...state, suggestedGoalMinutes: action.payload };
 
+    case "SET_WAKE_WINDOW_CONFIG":
+      return { ...state, wakeWindowConfig: action.payload };
+
     case "REMOTE_INSERT": {
       const exists = state.sleeps.some(s => s.id === action.payload.id);
       if (exists) return state;
@@ -183,6 +193,12 @@ interface SleepContextValue extends SleepState {
   resetToAgeBasedGoal: () => Promise<void>;
   dismissMilestoneSuggestion: (permanent?: boolean) => Promise<void>;
   acceptMilestoneSuggestion: () => Promise<void>;
+  getCompletedNapsSinceNightSleep: () => number;
+  getCurrentNapSlot: () => NapSlotWindow | null;
+  setWakeWindowConfig: (config: WakeWindowConfig) => Promise<void>;
+  setCustomWakeWindows: (slots: NapSlotWindow[]) => Promise<void>;
+  resetToAgeBasedWakeWindows: () => Promise<void>;
+  setNapCount: (count: number) => Promise<void>;
 }
 
 const SleepContext = createContext<SleepContextValue | null>(null);
@@ -210,6 +226,25 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         case 'DELETE':
           if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
           break;
+      }
+    });
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToRemoteChanges('wake_window_preferences', (change: RemoteChange) => {
+      if (!selectedBaby) return;
+      const data = change.new;
+      if (!data || data.baby_id !== selectedBaby.id) return;
+
+      if (change.eventType === 'INSERT' || change.eventType === 'UPDATE') {
+        const config: WakeWindowConfig = {
+          napCount: data.nap_count as number,
+          slots: data.wake_window_slots as NapSlotWindow[],
+          source: data.source as "age_based" | "custom",
+        };
+        dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+        SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
       }
     });
     return unsubscribe;
@@ -256,6 +291,36 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       if (birthDate) {
         const wakeWindowInfo = getWakeWindowForAge(birthDate);
         dispatch({ type: "SET_WAKE_WINDOW", payload: wakeWindowInfo.targetMinutes });
+      }
+
+      let wakeConfig: WakeWindowConfig | null = null;
+
+      if (user?.householdId) {
+        try {
+          const { data: dbPref } = await fetchWakeWindowPreference(selectedBaby.id);
+          if (dbPref) {
+            wakeConfig = {
+              napCount: dbPref.nap_count,
+              slots: dbPref.wake_window_slots,
+              source: dbPref.source as "age_based" | "custom",
+            };
+            await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
+          }
+        } catch (error) {
+          console.error("[SleepContext] Failed to fetch wake window prefs from DB:", error);
+        }
+      }
+
+      if (!wakeConfig) {
+        wakeConfig = await SleepStorageService.getWakeWindowConfig(selectedBaby.id);
+      }
+
+      if (wakeConfig) {
+        dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: wakeConfig });
+      } else if (birthDate) {
+        const defaultConfig = getDefaultWakeWindowConfig(birthDate);
+        dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: defaultConfig });
+        await SleepStorageService.setWakeWindowConfig(selectedBaby.id, defaultConfig);
       }
 
       if (birthDate && !hasCustomGoal) {
@@ -533,6 +598,71 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
   }, [selectedBaby, state.suggestedGoalMinutes]);
 
+  const getCompletedNapsSinceNightSleep = useCallback((): number => {
+    const nightSleeps = state.sleeps
+      .filter(s => s.type === "night" && s.endedAt)
+      .sort((a, b) => new Date(b.endedAt!).getTime() - new Date(a.endedAt!).getTime());
+
+    const lastNightEnd = nightSleeps.length > 0
+      ? new Date(nightSleeps[0].endedAt!)
+      : new Date(new Date().setHours(0, 0, 0, 0));
+
+    return state.sleeps.filter(
+      s => s.type === "nap" && s.endedAt && new Date(s.startedAt) >= lastNightEnd
+    ).length;
+  }, [state.sleeps]);
+
+  const getCurrentNapSlot = useCallback((): NapSlotWindow | null => {
+    if (!state.wakeWindowConfig) return null;
+    const { slots } = state.wakeWindowConfig;
+    if (slots.length === 0) return null;
+
+    const napsDone = getCompletedNapsSinceNightSleep();
+    const slotIndex = Math.min(napsDone, slots.length - 1);
+    return slots[slotIndex];
+  }, [state.wakeWindowConfig, getCompletedNapsSinceNightSleep]);
+
+  const setWakeWindowConfigMethod = useCallback(async (config: WakeWindowConfig): Promise<void> => {
+    if (!selectedBaby) return;
+    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+  }, [selectedBaby]);
+
+  const setCustomWakeWindows = useCallback(async (slots: NapSlotWindow[]): Promise<void> => {
+    if (!selectedBaby || !state.wakeWindowConfig) return;
+    const config: WakeWindowConfig = {
+      ...state.wakeWindowConfig,
+      slots,
+      source: "custom",
+    };
+    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+  }, [selectedBaby, state.wakeWindowConfig]);
+
+  const resetToAgeBasedWakeWindows = useCallback(async (): Promise<void> => {
+    if (!selectedBaby) return;
+    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    if (!birthDate) return;
+    const config = getDefaultWakeWindowConfig(birthDate);
+    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+  }, [selectedBaby]);
+
+  const setNapCount = useCallback(async (count: number): Promise<void> => {
+    if (!selectedBaby) return;
+    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    if (!birthDate) return;
+
+    const slots = generateSlotsForNapCount(count, birthDate);
+    const config: WakeWindowConfig = {
+      napCount: count,
+      slots,
+      source: "age_based",
+    };
+    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+  }, [selectedBaby]);
+
   const value: SleepContextValue = {
     ...state,
     startSleep,
@@ -550,6 +680,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     resetToAgeBasedGoal,
     dismissMilestoneSuggestion,
     acceptMilestoneSuggestion,
+    getCompletedNapsSinceNightSleep,
+    getCurrentNapSlot,
+    setWakeWindowConfig: setWakeWindowConfigMethod,
+    setCustomWakeWindows,
+    resetToAgeBasedWakeWindows,
+    setNapCount,
   };
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;

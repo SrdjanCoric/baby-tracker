@@ -1,13 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+interface NapSlot {
+  slotIndex: number;
+  label: string;
+  durationMinutes: number;
+}
+
 interface ReminderRow {
-  user_id: string;
   baby_id: string;
-  interval_hours: number;
   baby_name: string;
-  last_fed_at: string;
+  nap_count: number;
+  wake_window_slots: NapSlot[];
+  last_sleep_ended_at: string;
   device_token: string;
+  naps_since_night_sleep: number;
+  has_recent_night_sleep: boolean;
   is_sandbox: boolean;
 }
 
@@ -135,10 +143,10 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: dueReminders, error: queryError } = await supabase
-      .rpc("get_due_feeding_reminders");
+      .rpc("get_due_wake_window_reminders");
 
     if (queryError) {
-      console.error("Failed to query due reminders:", queryError);
+      console.error("Failed to query due wake window reminders:", queryError);
       return new Response(
         JSON.stringify({ error: "Failed to query reminders" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -146,44 +154,98 @@ serve(async (req) => {
     }
 
     if (!dueReminders || dueReminders.length === 0) {
-      console.log("No feeding reminders due");
+      console.log("No wake window reminders due");
       return new Response(
         JSON.stringify({ message: "No reminders due", sent: 0 }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Found ${dueReminders.length} due feeding reminder(s)`);
+    console.log(`Found ${dueReminders.length} potential wake window reminder(s)`);
 
     const apnsTopic = "com.sofibaby.app";
     const jwt = await createApnsJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
+    const now = new Date();
 
     const tokensToRemove: string[] = [];
     let sentCount = 0;
 
-    const notifiedPairs = new Set<string>();
+    const MAX_AGE_MS = 15 * 60 * 1000;
 
+    const babyReminders = new Map<string, ReminderRow[]>();
     for (const reminder of dueReminders as ReminderRow[]) {
-      const title = "Feeding Reminder";
-      const body = reminder.baby_name
-        ? `Time to feed ${reminder.baby_name}`
-        : "Time to feed";
+      const slots = reminder.wake_window_slots as NapSlot[];
+      if (!slots || slots.length === 0) {
+        console.log(`Skipping reminder for baby ${reminder.baby_id}: no slots configured`);
+        continue;
+      }
 
-      const result = await sendApnsAlert(
-        reminder.device_token,
-        jwt,
-        apnsTopic,
-        title,
-        body,
-        reminder.is_sandbox,
-        { type: "feeding_reminder", babyId: reminder.baby_id }
-      );
+      const napsDone = Number(reminder.naps_since_night_sleep);
+      if (!reminder.has_recent_night_sleep && napsDone === 0) {
+        console.log(`Skipping baby ${reminder.baby_id}: no night sleep and no naps — no reference time`);
+        continue;
+      }
+      const slotIndex = Math.min(napsDone, slots.length - 1);
+      const slot = slots[slotIndex];
 
-      if (result.success) {
-        sentCount++;
-        notifiedPairs.add(`${reminder.user_id}:${reminder.baby_id}`);
-      } else if (result.status === 410 || result.status === 400) {
-        tokensToRemove.push(reminder.device_token);
+      const wakeTime = new Date(reminder.last_sleep_ended_at);
+      const reminderTimeMs = wakeTime.getTime() + slot.durationMinutes * 60000;
+      const reminderTime = new Date(reminderTimeMs);
+
+      if (reminderTime > now) {
+        continue;
+      }
+
+      const timeSinceExpiry = now.getTime() - reminderTimeMs;
+      if (timeSinceExpiry > MAX_AGE_MS) {
+        console.log(`Skipping baby ${reminder.baby_id}: wake window expired ${Math.round(timeSinceExpiry / 60000)}m ago`);
+        continue;
+      }
+
+      const existing = babyReminders.get(reminder.baby_id) || [];
+      existing.push(reminder);
+      babyReminders.set(reminder.baby_id, existing);
+    }
+
+    for (const [babyId, reminders] of babyReminders) {
+      const { error: updateError } = await supabase
+        .from("wake_window_preferences")
+        .update({ last_notified_at: new Date().toISOString() })
+        .eq("baby_id", babyId);
+
+      if (updateError) {
+        console.error(`Failed to update last_notified_at for baby ${babyId}:`, updateError);
+        continue;
+      }
+
+      const slot = reminders[0].wake_window_slots[
+        Math.min(
+          Number(reminders[0].naps_since_night_sleep),
+          reminders[0].wake_window_slots.length - 1
+        )
+      ];
+      const isBedtime = slot.label === "bedtime";
+      const title = isBedtime ? "Bedtime" : "Nap Time";
+      const body = isBedtime
+        ? "Wake window ended — time for bed"
+        : "Wake window ended — time for a nap";
+
+      for (const reminder of reminders) {
+        const result = await sendApnsAlert(
+          reminder.device_token,
+          jwt,
+          apnsTopic,
+          title,
+          body,
+          reminder.is_sandbox,
+          { type: "wake_window_reminder", babyId }
+        );
+
+        if (result.success) {
+          sentCount++;
+        } else if (result.status === 410 || result.status === 400) {
+          tokensToRemove.push(reminder.device_token);
+        }
       }
     }
 
@@ -197,16 +259,7 @@ serve(async (req) => {
       console.log(`Cleared ${tokensToRemove.length} invalid device tokens`);
     }
 
-    for (const pairKey of notifiedPairs) {
-      const [userId, babyId] = pairKey.split(":");
-      await supabase
-        .from("feeding_reminder_preferences")
-        .update({ last_notified_at: new Date().toISOString() })
-        .eq("user_id", userId)
-        .eq("baby_id", babyId);
-    }
-
-    console.log(`Sent ${sentCount} feeding reminder(s)`);
+    console.log(`Sent ${sentCount} wake window reminder(s)`);
 
     return new Response(
       JSON.stringify({ success: true, sent: sentCount }),

@@ -74,6 +74,7 @@ export interface AuthUser {
   displayName: string | null;
   householdId: string | null;
   isOwner: boolean;
+  createdAt: string | null;
 }
 
 interface AuthContextValue {
@@ -113,15 +114,16 @@ async function fetchUserProfile(userId: string): Promise<{ householdId: string |
   };
 }
 
-function mapSupabaseUser(user: User | null, profile: { householdId: string | null; displayName: string | null; isOwner: boolean }): AuthUser | null {
-  if (!user) return null;
+function mapSupabaseUser(supabaseUser: User | null, profile: { householdId: string | null; displayName: string | null; isOwner: boolean }): AuthUser | null {
+  if (!supabaseUser) return null;
 
   return {
-    id: user.id,
-    email: user.email ?? null,
+    id: supabaseUser.id,
+    email: supabaseUser.email ?? null,
     displayName: profile.displayName,
     householdId: profile.householdId,
     isOwner: profile.isOwner,
+    createdAt: supabaseUser.created_at,
   };
 }
 
@@ -223,6 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           displayName: newSession.user.user_metadata?.display_name ?? null,
           householdId: null,
           isOwner: false,
+          createdAt: newSession.user.created_at,
         };
         setUser(authUser);
 
