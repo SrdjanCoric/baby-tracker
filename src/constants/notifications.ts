@@ -44,9 +44,12 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
 /**
  * Available feeding reminder intervals in hours
  */
-export const FEEDING_REMINDER_INTERVALS = [2, 2.5, 3, 3.5, 4] as const;
+const PROD_INTERVALS = [2, 2.5, 3, 3.5, 4] as const;
+const DEV_INTERVALS = [1 / 60, ...PROD_INTERVALS] as const;
 
-export type FeedingReminderInterval = (typeof FEEDING_REMINDER_INTERVALS)[number];
+export const FEEDING_REMINDER_INTERVALS = __DEV__ ? DEV_INTERVALS : PROD_INTERVALS;
+
+export type FeedingReminderInterval = (typeof PROD_INTERVALS)[number] | (typeof DEV_INTERVALS)[number];
 
 /**
  * Android notification channel IDs
@@ -126,7 +129,7 @@ export function getWakeWindowReminderMessage(
  * Validates that a value is a valid feeding reminder interval
  */
 export function isValidFeedingInterval(value: number): value is FeedingReminderInterval {
-  return FEEDING_REMINDER_INTERVALS.includes(value as FeedingReminderInterval);
+  return (FEEDING_REMINDER_INTERVALS as readonly number[]).includes(value);
 }
 
 /**
