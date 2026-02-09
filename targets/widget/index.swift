@@ -217,6 +217,10 @@ struct WidgetActivityData: Codable {
         var lastDurationMinutes: Int?
         var isActive: Bool
         var sleepType: String?
+        var wakeWindowMinutes: Int?
+        var wakeWindowSlotLabel: String?
+        var lastSleepEndedAt: String?
+        var napCountToday: Int?
     }
 
     struct DiaperData: Codable {
@@ -1009,6 +1013,9 @@ func getSmallWidgetSubtext(for activity: ActivityType, data: WidgetDataModel) ->
         return count > 0 ? "\(count) feeds today" : "No feeds yet"
 
     case .sleep:
+        if let wakeWindowText = getWakeWindowCountdown(data: data) {
+            return wakeWindowText
+        }
         if let type = data.activities.sleep.sleepType {
             return type == "nap" ? "Last: Nap" : "Last: Night"
         }
@@ -1480,6 +1487,44 @@ func formatDuration(minutes: Int) -> String {
         return "\(hours)h \(mins)m"
     }
     return "\(mins)m"
+}
+
+func getWakeWindowCountdown(data: WidgetDataModel) -> String? {
+    guard let windowMinutes = data.activities.sleep.wakeWindowMinutes,
+          let lastEndedStr = data.activities.sleep.lastSleepEndedAt,
+          !data.activities.sleep.isActive else {
+        return nil
+    }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let lastEnded = formatter.date(from: lastEndedStr) else {
+        let basicFormatter = ISO8601DateFormatter()
+        guard let lastEndedBasic = basicFormatter.date(from: lastEndedStr) else { return nil }
+        return computeWakeWindowText(lastEnded: lastEndedBasic, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel)
+    }
+    return computeWakeWindowText(lastEnded: lastEnded, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel)
+}
+
+func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?) -> String? {
+    let now = Date()
+    let awakeSeconds = now.timeIntervalSince(lastEnded)
+    let windowSeconds = Double(windowMinutes) * 60.0
+    let remainingSeconds = windowSeconds - awakeSeconds
+    let remainingMinutes = Int(remainingSeconds / 60.0)
+
+    let isBedtime = label == "bedtime"
+    let prefix = isBedtime ? "Bedtime" : "Nap"
+
+    if remainingMinutes <= 0 {
+        return "\(prefix) time!"
+    } else if remainingMinutes >= 60 {
+        let h = remainingMinutes / 60
+        let m = remainingMinutes % 60
+        return m > 0 ? "\(prefix) in \(h)h \(m)m" : "\(prefix) in \(h)h"
+    } else {
+        return "\(prefix) in \(remainingMinutes)m"
+    }
 }
 
 func formatRelative(_ date: Date, now: Date = Date()) -> String {

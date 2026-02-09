@@ -10,12 +10,14 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useNotifications } from "@/contexts/notification-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useHousehold } from "@/contexts/household-context";
+import { useBaby } from "@/contexts/baby-context";
 import { FEEDING_REMINDER_INTERVALS } from "@/constants/notifications";
 
 type SectionHeaderProps = {
@@ -86,6 +88,7 @@ type IntervalOption = (typeof FEEDING_REMINDER_INTERVALS)[number];
 
 export default function NotificationSettingsScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { members } = useHousehold();
   const isMultiPersonHousehold = members.length > 1;
@@ -99,7 +102,9 @@ export default function NotificationSettingsScreen() {
     requestPermissions,
     setInAppRemindersEnabled,
     setActivityNotificationsEnabled,
+    syncFeedingPreferenceForBaby,
   } = useNotifications();
+  const { selectedBaby } = useBaby();
 
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
@@ -111,6 +116,9 @@ export default function NotificationSettingsScreen() {
 
   const formatInterval = useCallback(
     (interval: number) => {
+      if (interval < 1) {
+        return `${Math.round(interval * 60)} min`;
+      }
       return t("settings.hoursInterval", { hours: interval });
     },
     [t]
@@ -172,8 +180,11 @@ export default function NotificationSettingsScreen() {
       await updateSettings({
         feedingReminders: { ...settings.feedingReminders, enabled },
       });
+      if (selectedBaby?.id) {
+        syncFeedingPreferenceForBaby(selectedBaby.id);
+      }
     },
-    [settings.feedingReminders, updateSettings]
+    [settings.feedingReminders, updateSettings, selectedBaby?.id, syncFeedingPreferenceForBaby]
   );
 
   const handleToggleTimerAlerts = useCallback(
@@ -200,8 +211,11 @@ export default function NotificationSettingsScreen() {
         feedingReminders: { ...settings.feedingReminders, intervalHours: interval },
       });
       setShowIntervalPicker(false);
+      if (selectedBaby?.id) {
+        syncFeedingPreferenceForBaby(selectedBaby.id);
+      }
     },
-    [settings.feedingReminders, updateSettings]
+    [settings.feedingReminders, updateSettings, selectedBaby?.id, syncFeedingPreferenceForBaby]
   );
 
   const handleToggleInAppReminders = useCallback(
@@ -441,6 +455,18 @@ export default function NotificationSettingsScreen() {
                   disabled={!hasPermission}
                 />
               }
+              isLast
+            />
+          </View>
+        </View>
+
+        <View className="mb-6">
+          <SectionHeader title={t("sleep.wakeWindowReminders")} />
+          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
+            <SettingsRow
+              label={t("sleep.wakeWindowReminders")}
+              description={t("sleep.wakeWindowConfigureInSleep")}
+              onPress={() => router.push("/sleep/settings")}
               isLast
             />
           </View>

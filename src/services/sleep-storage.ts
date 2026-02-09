@@ -3,6 +3,7 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { SleepType } from "@/constants/activities";
+import type { WakeWindowConfig } from "@/types/wake-windows";
 import { getUserScopedKey } from "./storage-prefix";
 
 const SLEEPS_KEY_PREFIX = "@sleeps:";
@@ -11,6 +12,7 @@ const DAILY_GOAL_KEY_PREFIX = "@sleep_goal:";
 const CUSTOM_GOAL_KEY_PREFIX = "@sleep_custom_goal:";
 const MILESTONE_CHECK_KEY_PREFIX = "@sleep_milestone_check:";
 const DISMISSED_MILESTONES_KEY_PREFIX = "@sleep_dismissed_milestones:";
+const WAKE_WINDOW_CONFIG_KEY_PREFIX = "@wake_window_config:";
 const DEFAULT_DAILY_GOAL_MINUTES = 14 * 60; // 14 hours in minutes
 
 export interface StoredSleepEntry {
@@ -74,6 +76,10 @@ function getMilestoneCheckKey(babyId: string): string {
 
 function getDismissedMilestonesKey(babyId: string): string {
   return getUserScopedKey(`${DISMISSED_MILESTONES_KEY_PREFIX}${babyId}`);
+}
+
+function getWakeWindowConfigKey(babyId: string): string {
+  return getUserScopedKey(`${WAKE_WINDOW_CONFIG_KEY_PREFIX}${babyId}`);
 }
 
 function isToday(date: Date): boolean {
@@ -231,5 +237,19 @@ export const SleepStorageService = {
       dismissed.push(milestoneLabel);
     }
     await AsyncStorage.setItem(getDismissedMilestonesKey(babyId), JSON.stringify(dismissed));
+  },
+
+  async getWakeWindowConfig(babyId: string): Promise<WakeWindowConfig | null> {
+    const data = await AsyncStorage.getItem(getWakeWindowConfigKey(babyId));
+    if (!data) return null;
+    return JSON.parse(data) as WakeWindowConfig;
+  },
+
+  async setWakeWindowConfig(babyId: string, config: WakeWindowConfig): Promise<void> {
+    await AsyncStorage.setItem(getWakeWindowConfigKey(babyId), JSON.stringify(config));
+  },
+
+  async clearWakeWindowConfig(babyId: string): Promise<void> {
+    await AsyncStorage.removeItem(getWakeWindowConfigKey(babyId));
   },
 };

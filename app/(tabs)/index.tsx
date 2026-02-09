@@ -60,7 +60,7 @@ export default function HomeScreen() {
   }, [isFocused, router]);
 
   const { feedings, activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide, refreshFeedings, stopBreastfeeding } = useFeeding();
-  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps, stopSleep } = useSleep();
+  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps, stopSleep, wakeWindowConfig, getCurrentNapSlot, getCompletedNapsSinceNightSleep } = useSleep();
   const { diapers, getTodaysCounts, refreshDiapers } = useDiaper();
   const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide, refreshPumpings } = usePumping();
   const { getMeasurementHistory, getWeightChange, refreshMeasurements } = useGrowth();
@@ -223,12 +223,38 @@ export default function HomeScreen() {
     if (sleepActiveTimer?.isRunning) return undefined;
     const lastSleep = getLastSleep();
 
-    if (lastSleep?.endedAt) {
-      return t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt)), context: selectedBaby?.gender });
+    if (!lastSleep?.endedAt) return undefined;
+
+    const awakeText = t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt)), context: selectedBaby?.gender });
+
+    if (!wakeWindowConfig || wakeWindowConfig.slots.length === 0) {
+      return awakeText;
     }
 
-    return undefined;
-  }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender]);
+    const currentSlot = getCurrentNapSlot();
+    if (!currentSlot) return awakeText;
+
+    const endedAt = new Date(lastSleep.endedAt);
+    const awakeMs = Date.now() - endedAt.getTime();
+    const windowMs = currentSlot.durationMinutes * 60000;
+    const remainingMs = windowMs - awakeMs;
+    const remainingMinutes = Math.floor(remainingMs / 60000);
+
+    if (remainingMinutes <= 0) {
+      const isBedtime = currentSlot.label === "bedtime";
+      return `${awakeText} \u00B7 ${isBedtime ? t("dashboard.bedtimeNow") : t("dashboard.napTimeNow")}`;
+    }
+
+    const isBedtime = currentSlot.label === "bedtime";
+    if (remainingMinutes >= 60) {
+      const h = Math.floor(remainingMinutes / 60);
+      const m = remainingMinutes % 60;
+      const timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+      return `${awakeText} \u00B7 ${isBedtime ? t("dashboard.bedtimeIn", { time: timeStr }) : t("dashboard.napIn", { time: timeStr })}`;
+    }
+
+    return `${awakeText} \u00B7 ${isBedtime ? t("dashboard.bedtimeIn", { time: `${remainingMinutes}m` }) : t("dashboard.napIn", { time: `${remainingMinutes}m` })}`;
+  }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender, wakeWindowConfig, getCurrentNapSlot]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 

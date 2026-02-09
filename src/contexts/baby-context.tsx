@@ -206,21 +206,25 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     if (user?.householdId) {
       if (!hasMigratedRef.current) {
         hasMigratedRef.current = true;
-        const guestBabies = await getGuestBabies();
-        if (guestBabies.length > 0) {
-          try {
-            const { idMap } = await syncLocalBabiesToDatabase(user.householdId, guestBabies);
-            await clearGuestBabies();
+        const isNewUser = user.createdAt &&
+          (Date.now() - new Date(user.createdAt).getTime()) < 60 * 60 * 1000;
+        if (isNewUser) {
+          const guestBabies = await getGuestBabies();
+          if (guestBabies.length > 0) {
+            try {
+              const { idMap } = await syncLocalBabiesToDatabase(user.householdId, guestBabies);
+              await clearGuestBabies();
 
-            const babyIdMap = new Map<string, string>();
-            for (const baby of guestBabies) {
-              const newId = idMap.get(baby.id) || baby.id;
-              babyIdMap.set(baby.id, newId);
+              const babyIdMap = new Map<string, string>();
+              for (const baby of guestBabies) {
+                const newId = idMap.get(baby.id) || baby.id;
+                babyIdMap.set(baby.id, newId);
+              }
+
+              await syncGuestActivitiesToDatabase(user.id, babyIdMap);
+            } catch (error) {
+              console.error("[BabyContext] Failed to migrate guest data:", error);
             }
-
-            await syncGuestActivitiesToDatabase(user.id, babyIdMap);
-          } catch (error) {
-            console.error("[BabyContext] Failed to migrate guest data:", error);
           }
         }
       }
