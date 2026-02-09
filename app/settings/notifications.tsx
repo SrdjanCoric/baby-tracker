@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useNotifications } from "@/contexts/notification-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useHousehold } from "@/contexts/household-context";
+import { useBaby } from "@/contexts/baby-context";
 import { FEEDING_REMINDER_INTERVALS } from "@/constants/notifications";
 
 type SectionHeaderProps = {
@@ -101,7 +102,9 @@ export default function NotificationSettingsScreen() {
     requestPermissions,
     setInAppRemindersEnabled,
     setActivityNotificationsEnabled,
+    syncFeedingPreferenceForBaby,
   } = useNotifications();
+  const { selectedBaby } = useBaby();
 
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
@@ -113,6 +116,9 @@ export default function NotificationSettingsScreen() {
 
   const formatInterval = useCallback(
     (interval: number) => {
+      if (interval < 1) {
+        return `${Math.round(interval * 60)} min`;
+      }
       return t("settings.hoursInterval", { hours: interval });
     },
     [t]
@@ -174,8 +180,11 @@ export default function NotificationSettingsScreen() {
       await updateSettings({
         feedingReminders: { ...settings.feedingReminders, enabled },
       });
+      if (selectedBaby?.id) {
+        syncFeedingPreferenceForBaby(selectedBaby.id);
+      }
     },
-    [settings.feedingReminders, updateSettings]
+    [settings.feedingReminders, updateSettings, selectedBaby?.id, syncFeedingPreferenceForBaby]
   );
 
   const handleToggleTimerAlerts = useCallback(
@@ -202,8 +211,11 @@ export default function NotificationSettingsScreen() {
         feedingReminders: { ...settings.feedingReminders, intervalHours: interval },
       });
       setShowIntervalPicker(false);
+      if (selectedBaby?.id) {
+        syncFeedingPreferenceForBaby(selectedBaby.id);
+      }
     },
-    [settings.feedingReminders, updateSettings]
+    [settings.feedingReminders, updateSettings, selectedBaby?.id, syncFeedingPreferenceForBaby]
   );
 
   const handleToggleInAppReminders = useCallback(
