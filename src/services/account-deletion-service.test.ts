@@ -264,7 +264,7 @@ describe("AccountDeletionService", () => {
       const result = await AccountDeletionService.deleteAccount(mockUserId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("deletionFailed");
+      expect(result.error).toBe("Database error");
     });
 
     it("should handle network errors", async () => {

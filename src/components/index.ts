@@ -63,6 +63,10 @@ export { StackedBarChart } from "./StackedBarChart";
 export { TrendIndicator } from "./TrendIndicator";
 export { InsightCard } from "./InsightCard";
 
+// Growth components
+export { GrowthChart } from "./growth/GrowthChart";
+export { PercentileDisplay } from "./growth/PercentileDisplay";
+
 // UI State components
 export { EmptyState } from "./EmptyState";
 export { LoadingState } from "./LoadingState";

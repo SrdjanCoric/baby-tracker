@@ -71,17 +71,18 @@ export const AccountDeletionService = {
       });
 
       if (error) {
-        return { success: false, error: "deletionFailed" };
+        return { success: false, error: error.message };
       }
 
       await this.clearLocalStorage();
 
       return { success: true };
     } catch (err) {
+      console.error("[AccountDeletion] Unexpected error:", err);
       if (err instanceof Error && err.message.includes("Network")) {
         return { success: false, error: "networkError" };
       }
-      return { success: false, error: "networkError" };
+      return { success: false, error: "unknown" };
     }
   },
 
