@@ -13,7 +13,6 @@ import type { TFunction } from "i18next";
 import { useGrowth } from "@/contexts/growth-context";
 import { useBaby } from "@/contexts/baby-context";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
-// @ts-expect-error GrowthChart and PercentileDisplay not yet exported from @/components
 import { GrowthChart, PercentileDisplay } from "@/components";
 import { calculateAgeInMonths } from "@/utils/percentile-calculator";
 import { isUnderTwoYears } from "@/utils/growth-helpers";
