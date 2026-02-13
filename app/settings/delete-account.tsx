@@ -115,13 +115,7 @@ export default function DeleteAccountScreen() {
               if (result.success) {
                 await signOut();
               } else {
-                const errorKey = result.error as "deletionFailed" | "networkError" | "unknown";
-                const errorMessages = {
-                  deletionFailed: t("accountDeletion.errors.deletionFailed"),
-                  networkError: t("accountDeletion.errors.networkError"),
-                  unknown: t("accountDeletion.errors.unknown"),
-                };
-                setError(errorMessages[errorKey] || errorMessages.unknown);
+                setError(result.error || t("accountDeletion.errors.unknown"));
                 setIsDeleting(false);
               }
             } catch {
