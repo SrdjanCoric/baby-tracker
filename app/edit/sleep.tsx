@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useSleep } from "@/contexts/sleep-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import type { SleepType } from "@/constants/activities";
 
@@ -18,6 +18,7 @@ export default function EditSleepScreen() {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { sleeps, updateSleep, deleteSleep } = useSleep();
 
   const sleep = useMemo(() => {
@@ -190,7 +191,7 @@ export default function EditSleepScreen() {
             {formatDate(new Date(sleep.startedAt))}
           </Text>
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatTime(new Date(sleep.startedAt))}
+            {formatTime(new Date(sleep.startedAt), timeFormat)}
           </Text>
         </View>
 

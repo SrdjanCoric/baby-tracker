@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTummyTime } from "@/contexts/tummyTime-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 
 const TUMMY_TIME_ORANGE = "#E67E22";
@@ -17,6 +17,7 @@ export default function EditTummyTimeScreen() {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { tummyTimes, updateTummyTime, deleteTummyTime } = useTummyTime();
 
   const tummyTime = useMemo(() => {
@@ -190,7 +191,7 @@ export default function EditTummyTimeScreen() {
             {formatDate(new Date(tummyTime.startedAt))}
           </Text>
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatTime(new Date(tummyTime.startedAt))}
+            {formatTime(new Date(tummyTime.startedAt), timeFormat)}
           </Text>
         </View>
 

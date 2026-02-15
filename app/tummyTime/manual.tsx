@@ -12,8 +12,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useTummyTime, useBaby } from "@/contexts";
+import { useTummyTime, useBaby, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import { validateManualTummyTime } from "@/validators/tummyTime";
 
 const TUMMY_ORANGE = "#E67E22";
@@ -26,6 +27,7 @@ export default function ManualTummyTimeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { addTummyTime } = useTummyTime();
 
   const [startTime, setStartTime] = useState(new Date());
@@ -149,12 +151,7 @@ export default function ManualTummyTimeScreen() {
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">

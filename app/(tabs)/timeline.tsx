@@ -12,7 +12,7 @@ import {
   LoadingState,
 } from "@/components";
 import { ActivityFilterTabs, FilteredSummaryBanner, type FilterType } from "@/components/timeline";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold, useTimeFormat } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
@@ -108,6 +108,7 @@ export default function TimelineScreen() {
   const { measurements, isLoading: growthLoading, refreshMeasurements } = useGrowth();
   const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
   const { members } = useHousehold();
+  const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -172,7 +173,7 @@ export default function TimelineScreen() {
 
   const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
     const date = new Date(feeding.startedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     let title = "";
     let subtitle = "";
@@ -233,11 +234,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: feeding.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const sleepToTimelineEntry = useCallback((sleep: StoredSleepEntry): TimelineEntry => {
     const date = new Date(sleep.startedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const title = sleep.type === "nap" ? t("sleep.nap") : t("sleep.night");
     const durationLabel = sleep.durationSeconds
@@ -254,11 +255,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: sleep.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const diaperToTimelineEntry = useCallback((diaper: StoredDiaperEntry): TimelineEntry => {
     const date = new Date(diaper.changedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const typeLabels: Record<string, string> = {
       wet: t("diaper.wet"),
@@ -283,11 +284,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: diaper.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const pumpingToTimelineEntry = useCallback((pumping: StoredPumpingEntry): TimelineEntry => {
     const date = new Date(pumping.startedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const title = t("pumping.title");
     const sideLabel = pumping.side === "left"
@@ -314,11 +315,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: pumping.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const growthToTimelineEntry = useCallback((growth: StoredGrowthEntry): TimelineEntry => {
     const date = new Date(growth.measuredAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const title = t("growth.title");
     const parts: string[] = [];
@@ -336,11 +337,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: growth.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const tummyTimeToTimelineEntry = useCallback((tummyTime: StoredTummyTimeEntry): TimelineEntry => {
     const date = new Date(tummyTime.startedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const title = t("tummyTime.title");
     const durationLabel = tummyTime.durationSeconds
@@ -357,7 +358,7 @@ export default function TimelineScreen() {
       date,
       loggedBy: tummyTime.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const timelineEntries = useMemo(() => {
     // Filter entries based on active filter

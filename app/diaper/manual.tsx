@@ -5,7 +5,8 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useDiaper } from "@/contexts/diaper-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useTimeFormat } from "@/contexts";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { STOOL_COLORS } from "@/constants/activities";
@@ -28,6 +29,7 @@ export default function ManualDiaperScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { addDiaper } = useDiaper();
 
   const [selectedType, setSelectedType] = useState<DiaperType | null>(null);
@@ -107,12 +109,7 @@ export default function ManualDiaperScreen() {
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   const canSave = selectedType !== null && !isSaving;
 
