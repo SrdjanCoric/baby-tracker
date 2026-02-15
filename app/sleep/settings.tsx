@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -69,10 +69,6 @@ export default function SleepSettingsScreen() {
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [durationError, setDurationError] = useState("");
   const [showReminderHint, setShowReminderHint] = useState(false);
-  const [pendingDayStart, setPendingDayStart] = useState<number | null>(null);
-  const [pendingNightStart, setPendingNightStart] = useState<number | null>(null);
-  const dayStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const nightStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reminderHintAnim = useRef(new Animated.Value(0)).current;
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
@@ -258,86 +254,43 @@ export default function SleepSettingsScreen() {
 
   const formatHour = (hour: number) => formatHourValue(hour, timeFormat);
 
-  const saveDayStart = useCallback((hour: number) => {
-    if (hour >= dayEndHour) { setPendingDayStart(null); return; }
-    const doSave = async () => {
-      await setDayNightBoundary(hour, dayEndHour);
-      setPendingDayStart(null);
-      if (selectedBaby?.id && wakeWindowConfig) {
-        await syncWakeWindowPreferenceForBaby(
-          selectedBaby.id,
-          wakeWindowConfig.napCount,
-          wakeWindowConfig.slots,
-          wakeWindowConfig.source,
-          settings.wakeWindowReminders.enabled,
-          hour,
-          dayEndHour,
-          napContinuationMinutes
-        );
-      }
-    };
-    if (!isMultiCaregiver) { doSave(); return; }
-    Alert.alert(
-      t("sleep.householdSettingsTitle"),
-      t("sleep.householdSettingsConfirm"),
-      [
-        { text: t("common.cancel"), style: "cancel", onPress: () => setPendingDayStart(null) },
-        { text: t("common.confirm"), onPress: doSave },
-      ]
-    );
-  }, [dayEndHour, isMultiCaregiver, t, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
-
-  const saveNightStart = useCallback((hour: number) => {
-    if (hour <= dayStartHour) { setPendingNightStart(null); return; }
-    const doSave = async () => {
-      await setDayNightBoundary(dayStartHour, hour);
-      setPendingNightStart(null);
-      if (selectedBaby?.id && wakeWindowConfig) {
-        await syncWakeWindowPreferenceForBaby(
-          selectedBaby.id,
-          wakeWindowConfig.napCount,
-          wakeWindowConfig.slots,
-          wakeWindowConfig.source,
-          settings.wakeWindowReminders.enabled,
-          dayStartHour,
-          hour,
-          napContinuationMinutes
-        );
-      }
-    };
-    if (!isMultiCaregiver) { doSave(); return; }
-    Alert.alert(
-      t("sleep.householdSettingsTitle"),
-      t("sleep.householdSettingsConfirm"),
-      [
-        { text: t("common.cancel"), style: "cancel", onPress: () => setPendingNightStart(null) },
-        { text: t("common.confirm"), onPress: doSave },
-      ]
-    );
-  }, [dayStartHour, isMultiCaregiver, t, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
-
-  const handleDayStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleDayStartPickerChange = useCallback(async (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (!selectedDate) return;
     const hour = selectedDate.getHours();
-    setPendingDayStart(hour);
-    if (dayStartTimerRef.current) clearTimeout(dayStartTimerRef.current);
-    dayStartTimerRef.current = setTimeout(() => saveDayStart(hour), 800);
-  }, [saveDayStart]);
+    if (hour >= dayEndHour) return;
+    await setDayNightBoundary(hour, dayEndHour);
+    if (selectedBaby?.id && wakeWindowConfig) {
+      await syncWakeWindowPreferenceForBaby(
+        selectedBaby.id,
+        wakeWindowConfig.napCount,
+        wakeWindowConfig.slots,
+        wakeWindowConfig.source,
+        settings.wakeWindowReminders.enabled,
+        hour,
+        dayEndHour,
+        napContinuationMinutes
+      );
+    }
+  }, [setDayNightBoundary, dayEndHour, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
 
-  const handleNightStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleNightStartPickerChange = useCallback(async (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (!selectedDate) return;
     const hour = selectedDate.getHours();
-    setPendingNightStart(hour);
-    if (nightStartTimerRef.current) clearTimeout(nightStartTimerRef.current);
-    nightStartTimerRef.current = setTimeout(() => saveNightStart(hour), 800);
-  }, [saveNightStart]);
-
-  useEffect(() => {
-    return () => {
-      if (dayStartTimerRef.current) clearTimeout(dayStartTimerRef.current);
-      if (nightStartTimerRef.current) clearTimeout(nightStartTimerRef.current);
-    };
-  }, []);
+    if (hour <= dayStartHour) return;
+    await setDayNightBoundary(dayStartHour, hour);
+    if (selectedBaby?.id && wakeWindowConfig) {
+      await syncWakeWindowPreferenceForBaby(
+        selectedBaby.id,
+        wakeWindowConfig.napCount,
+        wakeWindowConfig.slots,
+        wakeWindowConfig.source,
+        settings.wakeWindowReminders.enabled,
+        dayStartHour,
+        hour,
+        napContinuationMinutes
+      );
+    }
+  }, [setDayNightBoundary, dayStartHour, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
 
   const handleNapContinuationChange = useCallback((minutes: number) => {
     confirmHouseholdChange(async () => {
@@ -559,7 +512,7 @@ export default function SleepSettingsScreen() {
                   </Text>
                 </View>
                 <DateTimePicker
-                  value={(() => { const d = new Date(); d.setHours(pendingDayStart ?? dayStartHour, 0, 0, 0); return d; })()}
+                  value={(() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })()}
                   mode="time"
                   display="compact"
                   onChange={handleDayStartPickerChange}
@@ -575,7 +528,7 @@ export default function SleepSettingsScreen() {
                   </Text>
                 </View>
                 <DateTimePicker
-                  value={(() => { const d = new Date(); d.setHours(pendingNightStart ?? dayEndHour, 0, 0, 0); return d; })()}
+                  value={(() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })()}
                   mode="time"
                   display="compact"
                   onChange={handleNightStartPickerChange}
