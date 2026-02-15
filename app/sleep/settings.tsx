@@ -72,6 +72,8 @@ export default function SleepSettingsScreen() {
   const [showReminderHint, setShowReminderHint] = useState(false);
   const [showDayStartPicker, setShowDayStartPicker] = useState(false);
   const [showNightStartPicker, setShowNightStartPicker] = useState(false);
+  const [pendingDayStart, setPendingDayStart] = useState<number | null>(null);
+  const [pendingNightStart, setPendingNightStart] = useState<number | null>(null);
   const reminderHintAnim = useRef(new Animated.Value(0)).current;
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
@@ -296,18 +298,42 @@ export default function SleepSettingsScreen() {
   }, [confirmHouseholdChange, setDayNightBoundary, dayStartHour, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
 
   const handleDayStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === "android") setShowDayStartPicker(false);
-    if (selectedDate) {
+    if (!selectedDate) return;
+    if (Platform.OS === "ios") {
+      setPendingDayStart(selectedDate.getHours());
+    } else {
+      setShowDayStartPicker(false);
       handleDayStartChange(selectedDate.getHours());
     }
   }, [handleDayStartChange]);
 
   const handleNightStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === "android") setShowNightStartPicker(false);
-    if (selectedDate) {
+    if (!selectedDate) return;
+    if (Platform.OS === "ios") {
+      setPendingNightStart(selectedDate.getHours());
+    } else {
+      setShowNightStartPicker(false);
       handleNightStartChange(selectedDate.getHours());
     }
   }, [handleNightStartChange]);
+
+  const handleDayStartDone = useCallback(() => {
+    setShowDayStartPicker(false);
+    const hour = pendingDayStart;
+    setPendingDayStart(null);
+    if (hour !== null && hour !== dayStartHour) {
+      handleDayStartChange(hour);
+    }
+  }, [pendingDayStart, dayStartHour, handleDayStartChange]);
+
+  const handleNightStartDone = useCallback(() => {
+    setShowNightStartPicker(false);
+    const hour = pendingNightStart;
+    setPendingNightStart(null);
+    if (hour !== null && hour !== dayEndHour) {
+      handleNightStartChange(hour);
+    }
+  }, [pendingNightStart, dayEndHour, handleNightStartChange]);
 
   const handleNapContinuationChange = useCallback((minutes: number) => {
     confirmHouseholdChange(async () => {
@@ -528,40 +554,54 @@ export default function SleepSettingsScreen() {
                     {t("sleep.dayStartsAt")}
                   </Text>
                 </View>
-                {Platform.OS === "ios" ? (
+                <Pressable
+                  onPress={() => {
+                    if (Platform.OS === "ios") {
+                      setPendingDayStart(dayStartHour);
+                    }
+                    setShowDayStartPicker(true);
+                  }}
+                  className="flex-row items-center justify-between bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg px-4 py-3 active:opacity-80"
+                  accessibilityRole="button"
+                >
+                  <Text
+                    className="text-base font-medium"
+                    style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}
+                  >
+                    {formatHour(dayStartHour)}
+                  </Text>
+                  <Text className="text-content-tertiary dark:text-content-dark-tertiary">
+                    {"\u270F\uFE0F"}
+                  </Text>
+                </Pressable>
+                {showDayStartPicker && Platform.OS === "ios" && (
+                  <View className="mt-2">
+                    <View className="flex-row justify-end mb-1">
+                      <Pressable
+                        onPress={handleDayStartDone}
+                        className="py-2 px-4"
+                        accessibilityRole="button"
+                      >
+                        <Text className="font-semibold" style={{ color: SLEEP_PURPLE }}>
+                          {t("common.done")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                    <DateTimePicker
+                      value={(() => { const d = new Date(); d.setHours(pendingDayStart ?? dayStartHour, 0, 0, 0); return d; })()}
+                      mode="time"
+                      display="compact"
+                      onChange={handleDayStartPickerChange}
+                    />
+                  </View>
+                )}
+                {showDayStartPicker && Platform.OS === "android" && (
                   <DateTimePicker
                     value={(() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })()}
                     mode="time"
-                    display="compact"
+                    display="default"
                     onChange={handleDayStartPickerChange}
-                    style={{ alignSelf: "flex-start" }}
                   />
-                ) : (
-                  <>
-                    <Pressable
-                      onPress={() => setShowDayStartPicker(true)}
-                      className="flex-row items-center justify-between bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg px-4 py-3 active:opacity-80"
-                      accessibilityRole="button"
-                    >
-                      <Text
-                        className="text-base font-medium"
-                        style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}
-                      >
-                        {formatHour(dayStartHour)}
-                      </Text>
-                      <Text className="text-content-tertiary dark:text-content-dark-tertiary">
-                        {"\u270F\uFE0F"}
-                      </Text>
-                    </Pressable>
-                    {showDayStartPicker && (
-                      <DateTimePicker
-                        value={(() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })()}
-                        mode="time"
-                        display="default"
-                        onChange={handleDayStartPickerChange}
-                      />
-                    )}
-                  </>
                 )}
               </View>
 
@@ -572,40 +612,54 @@ export default function SleepSettingsScreen() {
                     {t("sleep.nightStartsAt")}
                   </Text>
                 </View>
-                {Platform.OS === "ios" ? (
+                <Pressable
+                  onPress={() => {
+                    if (Platform.OS === "ios") {
+                      setPendingNightStart(dayEndHour);
+                    }
+                    setShowNightStartPicker(true);
+                  }}
+                  className="flex-row items-center justify-between bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg px-4 py-3 active:opacity-80"
+                  accessibilityRole="button"
+                >
+                  <Text
+                    className="text-base font-medium"
+                    style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}
+                  >
+                    {formatHour(dayEndHour)}
+                  </Text>
+                  <Text className="text-content-tertiary dark:text-content-dark-tertiary">
+                    {"\u270F\uFE0F"}
+                  </Text>
+                </Pressable>
+                {showNightStartPicker && Platform.OS === "ios" && (
+                  <View className="mt-2">
+                    <View className="flex-row justify-end mb-1">
+                      <Pressable
+                        onPress={handleNightStartDone}
+                        className="py-2 px-4"
+                        accessibilityRole="button"
+                      >
+                        <Text className="font-semibold" style={{ color: SLEEP_PURPLE }}>
+                          {t("common.done")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                    <DateTimePicker
+                      value={(() => { const d = new Date(); d.setHours(pendingNightStart ?? dayEndHour, 0, 0, 0); return d; })()}
+                      mode="time"
+                      display="compact"
+                      onChange={handleNightStartPickerChange}
+                    />
+                  </View>
+                )}
+                {showNightStartPicker && Platform.OS === "android" && (
                   <DateTimePicker
                     value={(() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })()}
                     mode="time"
-                    display="compact"
+                    display="default"
                     onChange={handleNightStartPickerChange}
-                    style={{ alignSelf: "flex-start" }}
                   />
-                ) : (
-                  <>
-                    <Pressable
-                      onPress={() => setShowNightStartPicker(true)}
-                      className="flex-row items-center justify-between bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg px-4 py-3 active:opacity-80"
-                      accessibilityRole="button"
-                    >
-                      <Text
-                        className="text-base font-medium"
-                        style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}
-                      >
-                        {formatHour(dayEndHour)}
-                      </Text>
-                      <Text className="text-content-tertiary dark:text-content-dark-tertiary">
-                        {"\u270F\uFE0F"}
-                      </Text>
-                    </Pressable>
-                    {showNightStartPicker && (
-                      <DateTimePicker
-                        value={(() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })()}
-                        mode="time"
-                        display="default"
-                        onChange={handleNightStartPickerChange}
-                      />
-                    )}
-                  </>
                 )}
               </View>
 
