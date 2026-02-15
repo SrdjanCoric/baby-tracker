@@ -4,6 +4,7 @@ import {
   formatTrendPercentage,
   getTrendDirection,
   calculateWeekOverWeekTrend,
+  calculatePeriodOverPeriodTrend,
   isSignificantChange,
 } from "./trends";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
@@ -339,5 +340,98 @@ describe("calculateWeekOverWeekTrend", () => {
     expect(trend.previousValue).toBe(0);
     expect(trend.direction).toBe("stable");
     expect(trend.percentageChange).toBe(0);
+  });
+});
+
+describe("calculatePeriodOverPeriodTrend", () => {
+  const createMockFeedingEntries = (dates: string[]): StoredFeedingEntry[] => {
+    return dates.map((date, index) => ({
+      id: `feeding-${index}`,
+      babyId: "baby1",
+      type: "breast" as const,
+      side: "left" as const,
+      startedAt: date,
+      durationSeconds: 600,
+      createdAt: date,
+      updatedAt: date,
+    }));
+  };
+
+  it("compares today vs yesterday", () => {
+    const referenceDate = new Date("2024-01-15T12:00:00Z");
+    const todayEntries = createMockFeedingEntries([
+      "2024-01-15T08:00:00Z",
+      "2024-01-15T10:00:00Z",
+    ]);
+    const yesterdayEntries = createMockFeedingEntries([
+      "2024-01-14T08:00:00Z",
+      "2024-01-14T10:00:00Z",
+      "2024-01-14T12:00:00Z",
+    ]);
+
+    const trend = calculatePeriodOverPeriodTrend(
+      [...todayEntries, ...yesterdayEntries],
+      (e) => e.startedAt,
+      (entries) => entries.length,
+      "today",
+      referenceDate
+    );
+
+    expect(trend.currentValue).toBe(2);
+    expect(trend.previousValue).toBe(3);
+    expect(trend.direction).toBe("decrease");
+  });
+
+  it("compares 30 days vs prior 30 days", () => {
+    const referenceDate = new Date("2024-01-30T12:00:00Z");
+    const currentEntries = createMockFeedingEntries([
+      "2024-01-15T08:00:00Z",
+      "2024-01-20T08:00:00Z",
+    ]);
+    const previousEntries = createMockFeedingEntries([
+      "2023-12-15T08:00:00Z",
+      "2023-12-20T08:00:00Z",
+      "2023-12-25T08:00:00Z",
+    ]);
+
+    const trend = calculatePeriodOverPeriodTrend(
+      [...currentEntries, ...previousEntries],
+      (e) => e.startedAt,
+      (entries) => entries.length,
+      "30days",
+      referenceDate
+    );
+
+    expect(trend.currentValue).toBe(2);
+    expect(trend.previousValue).toBe(3);
+    expect(trend.direction).toBe("decrease");
+  });
+
+  it("7days matches calculateWeekOverWeekTrend", () => {
+    const referenceDate = new Date("2024-01-15T12:00:00Z");
+    const entries = createMockFeedingEntries([
+      "2024-01-15T08:00:00Z",
+      "2024-01-14T08:00:00Z",
+      "2024-01-08T08:00:00Z",
+    ]);
+
+    const periodTrend = calculatePeriodOverPeriodTrend(
+      entries,
+      (e) => e.startedAt,
+      (e) => e.length,
+      "7days",
+      referenceDate
+    );
+
+    const weekTrend = calculateWeekOverWeekTrend(
+      entries,
+      (e) => e.startedAt,
+      (e) => e.length,
+      referenceDate
+    );
+
+    expect(periodTrend.currentValue).toBe(weekTrend.currentValue);
+    expect(periodTrend.previousValue).toBe(weekTrend.previousValue);
+    expect(periodTrend.direction).toBe(weekTrend.direction);
   });
 });

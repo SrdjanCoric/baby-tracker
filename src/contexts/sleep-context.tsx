@@ -456,6 +456,21 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
     );
 
+    if (durationSeconds < 60) {
+      dispatch({ type: "STOP_TIMER" });
+      await SleepStorageService.clearActiveTimer(selectedBaby.id);
+      if (liveActivityIdRef.current) {
+        await endTimerLiveActivity(liveActivityIdRef.current);
+        liveActivityIdRef.current = null;
+      } else {
+        await endLiveActivityByType("sleep");
+      }
+      if (user?.id) {
+        try { await releaseTimerLock(selectedBaby.id, "sleep", user.id); } catch {}
+      }
+      return null;
+    }
+
     const sleepInput: CreateSleepInput = {
       babyId: selectedBaby.id,
       type: state.activeTimer.sleepType,

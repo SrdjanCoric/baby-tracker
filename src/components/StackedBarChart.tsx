@@ -15,6 +15,8 @@ interface StackedBarChartProps {
   maxValue?: number;
   height?: number;
   formatValue?: (value: number) => string;
+  compact?: boolean;
+  labelInterval?: number;
 }
 
 export function StackedBarChart({
@@ -26,9 +28,13 @@ export function StackedBarChart({
   maxValue,
   height = 120,
   formatValue = (v) => v.toFixed(1),
+  compact = false,
+  labelInterval = 1,
 }: StackedBarChartProps) {
   const max = maxValue ?? Math.max(...data.map((d) => d.primary + d.secondary), 1);
-  const barWidth = Math.floor(100 / data.length) - 2;
+  const barWidth = data.length > 14
+    ? Math.floor(100 / data.length) - 1
+    : Math.floor(100 / data.length) - 2;
 
   return (
     <View className="w-full">
@@ -68,7 +74,7 @@ export function StackedBarChart({
               className="items-center"
               style={{ width: `${barWidth}%` }}
             >
-              {hasValue && (
+              {!compact && hasValue && (
                 <Text
                   className="text-xs font-medium text-content-secondary dark:text-content-dark-secondary mb-1"
                   numberOfLines={1}
@@ -122,7 +128,7 @@ export function StackedBarChart({
             style={{ width: `${barWidth}%` }}
           >
             <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-              {item.label}
+              {index % labelInterval === 0 ? item.label : ""}
             </Text>
           </View>
         ))}

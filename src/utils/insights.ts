@@ -3,6 +3,7 @@
  */
 
 import { isSignificantChange, type TrendDirection } from "./trends";
+import type { StatisticsPeriod } from "./statistics";
 
 export type InsightType = "sleep" | "feeding" | "diaper" | "pumping" | "tummyTime";
 
@@ -97,11 +98,20 @@ export interface WeeklySummary {
   type: WeeklySummaryType;
   emoji: string;
   titleKey: string;
+  titleParams?: Record<string, string>;
   descriptionKey: string;
   descriptionParams?: Record<string, string>;
 }
 
-export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
+const PERIOD_NAME_KEY: Record<StatisticsPeriod, string> = {
+  today: "insights.summary.periodDay",
+  "7days": "insights.summary.periodWeek",
+  "30days": "insights.summary.periodMonth",
+};
+
+export function generateWeeklySummary(trends: TrendData[], period: StatisticsPeriod = "7days"): WeeklySummary {
+  const periodKey = PERIOD_NAME_KEY[period];
+
   const significantTrends = trends.filter(
     (t) => t.direction !== "stable" && isSignificantChange(t.percentageChange)
   );
@@ -148,7 +158,7 @@ export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
       emoji: "👀",
       titleKey: "insights.summary.attention",
       descriptionKey: "insights.summary.attentionDescription",
-      descriptionParams: { activity: activityName },
+      descriptionParams: { activity: activityName, period: periodKey },
     };
   }
 
@@ -161,6 +171,7 @@ export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
       type: "great",
       emoji: "🌟",
       titleKey: "insights.summary.great",
+      titleParams: { period: periodKey },
       descriptionKey: "insights.summary.greatDescription",
       descriptionParams: { activity: activityName },
     };
@@ -172,6 +183,7 @@ export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
       emoji: "😊",
       titleKey: "insights.summary.improving",
       descriptionKey: "insights.summary.improvingDescription",
+      descriptionParams: { period: periodKey },
     };
   }
 
@@ -182,7 +194,7 @@ export function generateWeeklySummary(trends: TrendData[]): WeeklySummary {
       emoji: "📈",
       titleKey: "insights.summary.feedingChange",
       descriptionKey: "insights.summary.feedingChangeDescription",
-      descriptionParams: { direction },
+      descriptionParams: { direction, period: periodKey },
     };
   }
 
