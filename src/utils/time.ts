@@ -31,12 +31,29 @@ export function formatDuration(seconds: number, format: "short" | "long" = "long
 /**
  * Formats a timestamp to display time (e.g., "2:30 PM")
  */
-export function formatTime(date: Date): string {
+export type TimeFormat = "12h" | "24h";
+
+export function formatTime(date: Date, format: TimeFormat = "12h"): string {
   const hours = date.getHours();
   const minutes = date.getMinutes();
+
+  if (format === "24h") {
+    return `${hours}:${minutes.toString().padStart(2, "0")}`;
+  }
+
   const period = hours >= 12 ? "PM" : "AM";
   const displayHours = hours % 12 || 12;
   return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
+export function formatHourValue(hour: number, format: TimeFormat = "12h"): string {
+  if (format === "24h") {
+    return `${hour}:00`;
+  }
+
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour} ${period}`;
 }
 
 /**
