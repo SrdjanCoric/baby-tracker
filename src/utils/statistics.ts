@@ -3,6 +3,7 @@
  */
 
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
+import { countFeedingSessions } from "@/utils/feeding-sessions";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
@@ -109,7 +110,7 @@ export function calculateFeedingStats(feedings: StoredFeedingEntry[]): FeedingSt
   }
 
   return {
-    totalCount: feedings.length,
+    totalCount: countFeedingSessions(feedings),
     totalDurationSeconds,
     breastCount,
     bottleCount,

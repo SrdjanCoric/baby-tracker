@@ -16,6 +16,7 @@ import { getOppositeSide } from "@/constants/activities";
 const PUMPING_BLUE = "#7B9BC9";
 const PUMPING_BLUE_MUTED = "#E8EDF5";
 const PUMPING_BLUE_DARK = "#5A7AA8";
+const PAUSED_AMBER = "#D4A017";
 
 const QUICK_AMOUNTS_OZ = [1, 2, 3, 4, 5, 6];
 const QUICK_AMOUNTS_ML = [30, 60, 90, 120, 150, 180];
@@ -33,6 +34,8 @@ export default function PumpingScreen() {
     startPumping,
     stopPumping,
     changePumpingSide,
+    pausePumping,
+    resumePumping,
     getLastSide,
   } = usePumping();
 
@@ -45,7 +48,7 @@ export default function PumpingScreen() {
   const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
-    if (!activeTimer?.isRunning) {
+    if (!activeTimer?.isRunning || activeTimer?.isPaused) {
       return;
     }
 
@@ -54,21 +57,26 @@ export default function PumpingScreen() {
 
       const now = new Date();
       const elapsedMinutes = Math.floor(
-        (now.getTime() - activeTimer.startTime.getTime()) / 1000 / 60
+        (now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000 / 60
       );
       checkAndSendAlert(elapsedMinutes);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning, activeTimer?.startTime, checkAndSendAlert]);
+  }, [activeTimer?.isRunning, activeTimer?.isPaused, activeTimer?.startTime, activeTimer?.totalPausedMs, checkAndSendAlert]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) {
       return 0;
     }
     void tick;
+    if (activeTimer.isPaused && activeTimer.pausedAt) {
+      return Math.floor(
+        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000
+      );
+    }
     const now = new Date();
-    return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
+    return Math.floor((now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000);
   }, [activeTimer, tick]);
 
   const suggestedSide = useMemo((): BreastSide => {
@@ -100,6 +108,14 @@ export default function PumpingScreen() {
   const handleSideChange = useCallback((side: BreastSide) => {
     changePumpingSide(side);
   }, [changePumpingSide]);
+
+  const handlePause = useCallback(async () => {
+    await pausePumping();
+  }, [pausePumping]);
+
+  const handleResume = useCallback(async () => {
+    await resumePumping();
+  }, [resumePumping]);
 
   const handleLogPastPumping = useCallback(() => {
     router.push("/pumping/manual");
@@ -181,8 +197,11 @@ export default function PumpingScreen() {
           <RunningTimerView
             elapsedSeconds={elapsedSeconds}
             side={activeTimer?.side}
+            isPaused={activeTimer?.isPaused ?? false}
             onSideChange={handleSideChange}
             onStop={handleRequestStop}
+            onPause={handlePause}
+            onResume={handleResume}
           />
         ) : (
           <SideSelectionView
@@ -451,22 +470,27 @@ function SideStartButton({ side, label, shortLabel, isSuggested, onPress }: Side
 interface RunningTimerViewProps {
   elapsedSeconds: number;
   side?: BreastSide;
+  isPaused: boolean;
   onSideChange: (side: BreastSide) => void;
   onStop: () => void;
+  onPause: () => void;
+  onResume: () => void;
 }
 
 function RunningTimerView({
   elapsedSeconds,
   side,
+  isPaused,
   onSideChange,
-  onStop
+  onStop,
+  onPause,
+  onResume,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
   const formattedTime = formatDuration(elapsedSeconds);
 
   return (
     <View className="items-center w-full">
-      {/* Activity indicator */}
       <View className="flex-row items-center mb-4">
         <Text className="text-4xl mr-3">🫙</Text>
         <Text style={{ color: PUMPING_BLUE }} className="text-lg font-semibold">
@@ -474,10 +498,10 @@ function RunningTimerView({
         </Text>
       </View>
 
-      {/* Side selector (compact for running state) */}
       <View
         className="flex-row rounded-pill p-1 mb-8"
-        style={{ backgroundColor: PUMPING_BLUE_MUTED }}
+        style={{ backgroundColor: PUMPING_BLUE_MUTED, opacity: isPaused ? 0.4 : 1 }}
+        pointerEvents={isPaused ? "none" : "auto"}
       >
         <CompactSideButton
           label="L"
@@ -499,45 +523,56 @@ function RunningTimerView({
         />
       </View>
 
-      {/* Timer display - Hero element */}
       <View
         className="px-12 py-8 rounded-card-lg mb-8"
         style={{ backgroundColor: PUMPING_BLUE_MUTED }}
       >
         <Text
           className="text-timer-xl text-center font-bold tracking-tight"
-          style={{ color: PUMPING_BLUE }}
+          style={{ color: isPaused ? PAUSED_AMBER : PUMPING_BLUE, opacity: isPaused ? 0.5 : 1 }}
           accessibilityLabel={`${t("common.timer")}: ${formattedTime}`}
         >
           {formattedTime}
         </Text>
       </View>
 
-      {/* Pulsing status indicator */}
       <View className="flex-row items-center mb-10">
         <View
           className="w-3 h-3 rounded-full mr-2"
-          style={{ backgroundColor: PUMPING_BLUE }}
+          style={{ backgroundColor: isPaused ? PAUSED_AMBER : PUMPING_BLUE }}
         />
         <Text className="text-base text-content-secondary dark:text-content-dark-secondary">
-          {t("pumping.timerRunning")}
+          {isPaused ? t("common.timerPaused") : t("pumping.timerRunning")}
         </Text>
       </View>
 
-      {/* Stop button - Large and prominent */}
-      <Pressable
-        onPress={onStop}
-        className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
-        style={{ backgroundColor: PUMPING_BLUE }}
-        accessibilityRole="button"
-        accessibilityLabel={t("common.stopTimer")}
-        testID="stop-timer-button"
-      >
-        <Text className="text-3xl text-white">⏹</Text>
-      </Pressable>
+      <View className="flex-row items-center gap-6">
+        <Pressable
+          onPress={isPaused ? onResume : onPause}
+          className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+          style={{ borderColor: PUMPING_BLUE, backgroundColor: isPaused ? PUMPING_BLUE : "transparent" }}
+          accessibilityRole="button"
+          accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+        >
+          <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : PUMPING_BLUE }}>
+            {isPaused ? "▶" : "⏸"}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={onStop}
+          className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
+          style={{ backgroundColor: PUMPING_BLUE }}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.stopTimer")}
+          testID="stop-timer-button"
+        >
+          <Text className="text-3xl text-white">⏹</Text>
+        </Pressable>
+      </View>
 
       <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-3">
-        {t("pumping.tapToStop")}
+        {isPaused ? t("common.tapToResume") : t("pumping.tapToStop")}
       </Text>
     </View>
   );

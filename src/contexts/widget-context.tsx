@@ -9,6 +9,7 @@ import { useGrowth } from "./growth-context";
 import { useTummyTime } from "./tummyTime-context";
 import { useActiveTimers } from "./active-timers-context";
 import { useAuth } from "./auth-context";
+import { countFeedingSessions } from "@/utils/feeding-sessions";
 import {
   updateWidgetData,
   writeAuthToAppGroup,
@@ -101,7 +102,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     const activities: WidgetActivityData = {
       feeding: {
         lastTime: lastFeeding?.endedAt || lastFeeding?.startedAt || null,
-        todayCount: todayFeedings.length,
+        todayCount: countFeedingSessions(todayFeedings),
         lastType: lastFeeding?.type || null,
         lastSide: (lastFeeding?.side as BreastSide) || null,
       },
@@ -157,31 +158,63 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     const activeTimers: WidgetData["activeTimers"] = [];
 
     if (feedingTimer?.isRunning) {
-      activeTimers.push({
+      const feedingEntry: WidgetData["activeTimers"][number] = {
         type: "feeding",
         startTime: feedingTimer.startTime.toISOString(),
         context: feedingTimer.side,
-      });
+        isPaused: feedingTimer.isPaused || undefined,
+      };
+      if (feedingTimer.isPaused) {
+        const elapsed = feedingTimer.pausedAt
+          ? Math.floor((feedingTimer.pausedAt.getTime() - feedingTimer.startTime.getTime() - feedingTimer.totalPausedMs) / 1000)
+          : 0;
+        feedingEntry.accumulatedSeconds = elapsed;
+      }
+      activeTimers.push(feedingEntry);
     }
     if (sleepTimer?.isRunning) {
-      activeTimers.push({
+      const sleepEntry: WidgetData["activeTimers"][number] = {
         type: "sleep",
         startTime: sleepTimer.startTime.toISOString(),
         context: sleepTimer.sleepType,
-      });
+        isPaused: sleepTimer.isPaused || undefined,
+      };
+      if (sleepTimer.isPaused) {
+        const elapsed = sleepTimer.pausedAt
+          ? Math.floor((sleepTimer.pausedAt.getTime() - sleepTimer.startTime.getTime() - sleepTimer.totalPausedMs) / 1000)
+          : 0;
+        sleepEntry.accumulatedSeconds = elapsed;
+      }
+      activeTimers.push(sleepEntry);
     }
     if (pumpingTimer?.isRunning) {
-      activeTimers.push({
+      const pumpingEntry: WidgetData["activeTimers"][number] = {
         type: "pumping",
         startTime: pumpingTimer.startTime.toISOString(),
         context: pumpingTimer.side,
-      });
+        isPaused: pumpingTimer.isPaused || undefined,
+      };
+      if (pumpingTimer.isPaused) {
+        const elapsed = pumpingTimer.pausedAt
+          ? Math.floor((pumpingTimer.pausedAt.getTime() - pumpingTimer.startTime.getTime() - pumpingTimer.totalPausedMs) / 1000)
+          : 0;
+        pumpingEntry.accumulatedSeconds = elapsed;
+      }
+      activeTimers.push(pumpingEntry);
     }
     if (tummyTimeTimer?.isRunning) {
-      activeTimers.push({
+      const tummyEntry: WidgetData["activeTimers"][number] = {
         type: "tummyTime",
         startTime: tummyTimeTimer.startTime.toISOString(),
-      });
+        isPaused: tummyTimeTimer.isPaused || undefined,
+      };
+      if (tummyTimeTimer.isPaused) {
+        const elapsed = tummyTimeTimer.pausedAt
+          ? Math.floor((tummyTimeTimer.pausedAt.getTime() - tummyTimeTimer.startTime.getTime() - tummyTimeTimer.totalPausedMs) / 1000)
+          : 0;
+        tummyEntry.accumulatedSeconds = elapsed;
+      }
+      activeTimers.push(tummyEntry);
     }
 
     const remoteLocks = locks.filter(
@@ -195,6 +228,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
           startTime: lock.startedAt,
           context: lock.startedByName,
           isRemote: true,
+          isPaused: lock.timerData?.isPaused === true || undefined,
         });
       }
     }
