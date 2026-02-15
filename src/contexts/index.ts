@@ -25,6 +25,9 @@ export type { ThemeState, ThemeAction, ThemePreference, ThemeMode } from "./them
 export { UnitProvider, useUnits } from "./unit-context";
 export type { UnitSystem } from "./unit-context";
 
+export { TimeFormatProvider, useTimeFormat } from "./time-format-context";
+export type { TimeFormat } from "./time-format-context";
+
 export { AuthProvider, useAuth } from "./auth-context";
 export type { AuthUser } from "./auth-context";
 
