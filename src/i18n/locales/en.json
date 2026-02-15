@@ -227,7 +227,13 @@
     "setBirthDate": "Set Birth Date",
     "wakeWindowHouseholdWarning": "Wake window settings are shared with all caregivers in your household.",
     "householdSettingsTitle": "Shared Setting",
-    "householdSettingsConfirm": "This will change wake window settings for all caregivers in your household. Continue?"
+    "householdSettingsConfirm": "This will change wake window settings for all caregivers in your household. Continue?",
+    "dayNightBoundary": "Day & Night Hours",
+    "dayStartsAt": "Day starts at",
+    "nightStartsAt": "Night starts at",
+    "dayNightExplainer": "Night wakings won't show nap suggestions",
+    "napContinuation": "Nap Continuation",
+    "napContinuationDesc": "If baby goes back to sleep within this time, it counts as the same nap"
   },
   "diaper": {
     "title": "Diaper",
@@ -422,6 +428,12 @@
     "units": "Units",
     "metric": "Metric (kg, cm, ml)",
     "imperial": "Imperial (lbs, in, oz)",
+    "timeFormat": "Time Format",
+    "timeFormatDesc": "Choose how times are displayed",
+    "12hour": "12-hour",
+    "24hour": "24-hour",
+    "12hourDesc": "1:30 PM",
+    "24hourDesc": "13:30",
     "kg": "kg",
     "lbs": "lbs",
     "cm": "cm",
@@ -857,6 +869,7 @@
       "theme": "Appearance",
       "hint": "You can change these anytime in Settings"
     },
+    "timeFormat": "Time Format",
     "sync": {
       "title": "Sync with Family",
       "subtitle": "Share tracking duties with your partner or caregivers in real-time"

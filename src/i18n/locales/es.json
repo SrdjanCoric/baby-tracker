@@ -222,7 +222,7 @@
     "slotNap": "Antes de siesta {{number}}",
     "slotBedtime": "Antes de dormir",
     "customMinutes": "Personalizado (min)",
-    "customMinutesError": "Ingrese un valor entre {{min}} y 480 minutos",
+    "customMinutesError": "Ingresa un valor entre {{min}} y 480 minutos",
     "resetWakeWindows": "Restablecer valores predeterminados",
     "resetWakeWindowsDesc": "Restaurar ventanas de vigilia basadas en la edad del bebé",
     "wakeWindowExplainer": "Las ventanas de vigilia son el tiempo recomendado de estar despierto entre siestas. Suelen ser más cortas por la mañana y más largas antes de dormir.",
@@ -231,7 +231,13 @@
     "setBirthDate": "Establecer fecha de nacimiento",
     "wakeWindowHouseholdWarning": "La configuración de ventanas de vigilia se comparte con todos los cuidadores de tu hogar.",
     "householdSettingsTitle": "Configuración compartida",
-    "householdSettingsConfirm": "Esto cambiará la configuración de ventanas de vigilia para todos los cuidadores de tu hogar. ¿Continuar?"
+    "householdSettingsConfirm": "Esto cambiará la configuración de ventanas de vigilia para todos los cuidadores de tu hogar. ¿Continuar?",
+    "dayNightBoundary": "Horas de día y noche",
+    "dayStartsAt": "El día comienza a las",
+    "nightStartsAt": "La noche comienza a las",
+    "dayNightExplainer": "Los despertares nocturnos no mostrarán sugerencias de siesta",
+    "napContinuation": "Continuación de siesta",
+    "napContinuationDesc": "Si el bebé vuelve a dormirse dentro de este tiempo, cuenta como la misma siesta"
   },
   "diaper": {
     "title": "Pañal",
@@ -426,6 +432,12 @@
     "units": "Unidades",
     "metric": "Métrico (kg, cm, ml)",
     "imperial": "Imperial (lbs, in, oz)",
+    "timeFormat": "Formato de hora",
+    "timeFormatDesc": "Elige cómo se muestran las horas",
+    "12hour": "12 horas",
+    "24hour": "24 horas",
+    "12hourDesc": "1:30 PM",
+    "24hourDesc": "13:30",
     "kg": "kg",
     "lbs": "lbs",
     "cm": "cm",
@@ -496,7 +508,9 @@
     "dragToReorder": "Mantén presionado y arrastra para reordenar",
     "resetDashboard": "Restablecer panel",
     "resetDashboardConfirm": "Esto restablecerá todas las tarjetas a su orden y visibilidad predeterminados. ¿Continuar?",
-    "resetToDefault": "Restablecer a predeterminado"
+    "resetToDefault": "Restablecer a predeterminado",
+    "widgets": "Widgets",
+    "widgetsDescription": "Configura widgets de iOS y Apple Watch"
   },
   "statistics": {
     "title": "Estadísticas",
@@ -555,7 +569,7 @@
     "wet": "Mojado",
     "dirty": "Sucio",
     "chartOverview": "Gráficos",
-    "noDataThisPeriod": "No hay datos. ¡Comience a rastrear para ver sus estadísticas!",
+    "noDataThisPeriod": "No hay datos. ¡Comienza a registrar para ver tus estadísticas!",
     "vsLastPeriod": "vs período anterior"
   },
   "insights": {
@@ -573,13 +587,13 @@
       "great": "¡Gran {{period}}!",
       "greatDescription": "{{activity}} del bebé está mejorando bien",
       "improving": "¡Se ve bien!",
-      "improvingDescription": "El bebé está durmiendo más consistentemente que el {{period}} anterior",
+      "improvingDescription": "El bebé está durmiendo más consistentemente que en el período anterior",
       "stable": "Todo en orden",
       "stableDescription": "La alimentación, sueño y pañales se ven normales para tu bebé",
       "attention": "Vale la pena notar",
-      "attentionDescription": "{{activity}} bajaron este {{period}} - presta atención",
+      "attentionDescription": "{{activity}} bajaron en este período - presta atención",
       "feedingChange": "Cambio en los patrones de alimentación",
-      "feedingChangeDescription": "El bebé se está alimentando {{direction}} frecuentemente que el {{period}} anterior",
+      "feedingChangeDescription": "El bebé se está alimentando {{direction}} frecuentemente que en el período anterior",
       "noData": "Sin datos aún",
       "noDataDescription": "Comienza a registrar para ver tus observaciones",
       "activitySleep": "El sueño",
@@ -630,7 +644,7 @@
     "pendingChanges_other": "{{count}} cambios pendientes",
     "lastSynced": "Última sincronización {{time}}",
     "tapToRetry": "Toca para reintentar",
-    "changesWillSync": "Los cambios se sincronizarán cuando se conecte"
+    "changesWillSync": "Los cambios se sincronizarán cuando te conectes"
   },
   "household": {
     "title": "Hogar",
@@ -859,6 +873,7 @@
       "theme": "Apariencia",
       "hint": "Puedes cambiar esto en cualquier momento en Ajustes"
     },
+    "timeFormat": "Formato de hora",
     "sync": {
       "title": "Sincroniza con la familia",
       "subtitle": "Comparte las tareas de seguimiento con tu pareja o cuidadores en tiempo real"

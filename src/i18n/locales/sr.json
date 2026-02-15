@@ -235,7 +235,13 @@
     "setBirthDate": "Postavi datum rođenja",
     "wakeWindowHouseholdWarning": "Podešavanja budnih perioda se dele sa svim negovateljima u vašem domaćinstvu.",
     "householdSettingsTitle": "Deljeno podešavanje",
-    "householdSettingsConfirm": "Ovo će promeniti podešavanja budnih perioda za sve negovatelje u vašem domaćinstvu. Nastaviti?"
+    "householdSettingsConfirm": "Ovo će promeniti podešavanja budnih perioda za sve negovatelje u vašem domaćinstvu. Nastaviti?",
+    "dayNightBoundary": "Dnevni i noćni sati",
+    "dayStartsAt": "Dan počinje u",
+    "nightStartsAt": "Noć počinje u",
+    "dayNightExplainer": "Noćna buđenja neće prikazivati predloge za dremku",
+    "napContinuation": "Nastavak dremke",
+    "napContinuationDesc": "Ako beba ponovo zaspi u okviru ovog vremena, računa se kao ista dremka"
   },
   "diaper": {
     "title": "Pelene",
@@ -427,7 +433,7 @@
     "girl": "Devojčica",
     "saveChanges": "Sačuvaj izmene",
     "timerRunningTitle": "Tajmer je aktivan",
-    "timerRunningMessage": "Molimo zaustavi trenutni tajmer pre promene bebe. Aktivni tajmer će biti sačuvan za trenutnu bebu.",
+    "timerRunningMessage": "Molimo zaustavite trenutni tajmer pre promene bebe. Aktivni tajmer će biti sačuvan za trenutnu bebu.",
     "stopAndSwitch": "Zaustavi i promeni"
   },
   "settings": {
@@ -442,6 +448,12 @@
     "units": "Jedinice",
     "metric": "Metrički (kg, cm, ml)",
     "imperial": "Imperijalni (lbs, in, oz)",
+    "timeFormat": "Format vremena",
+    "timeFormatDesc": "Izaberite kako se prikazuje vreme",
+    "12hour": "12-časovni",
+    "24hour": "24-časovni",
+    "12hourDesc": "1:30 PM",
+    "24hourDesc": "13:30",
     "kg": "kg",
     "lbs": "lbs",
     "cm": "cm",
@@ -592,16 +604,16 @@
     "tummyTimeIncrease": "Vreme na stomaku je poraslo {{percentage}}%",
     "tummyTimeDecrease": "Vreme na stomaku je opalo {{percentage}}%",
     "summary": {
-      "great": "Odličan {{period}}!",
+      "great": "Super {{period}}!",
       "greatDescription": "{{activity}} se lepo poboljšava kod bebe",
       "improving": "Izgleda dobro!",
-      "improvingDescription": "Beba spava konzistentnije nego prethodnog {{period}}",
+      "improvingDescription": "Beba spava konzistentnije nego u prethodnom periodu",
       "stable": "Sve je u redu",
       "stableDescription": "Hranjenje, spavanje i pelene izgledaju normalno za vašu bebu",
       "attention": "Vredi primetiti",
-      "attentionDescription": "{{activity}} su u padu ovog {{period}} - pratite situaciju",
+      "attentionDescription": "{{activity}} su u padu u ovom periodu - pratite situaciju",
       "feedingChange": "Promena u ishrani",
-      "feedingChangeDescription": "Beba se hrani {{direction}} nego prethodnog {{period}}",
+      "feedingChangeDescription": "Beba se hrani {{direction}} nego u prethodnom periodu",
       "noData": "Još nema podataka",
       "noDataDescription": "Počnite sa praćenjem da vidite uvide",
       "activitySleep": "spavanje",
@@ -874,7 +886,7 @@
       "feeding": "Pratite dojenje, flašicu i čvrstu hranu sa tajmerima i količinama",
       "sleep": "Pratite dremke i noćni san sa automatskim praćenjem vremena budnosti",
       "diaper": "Beležite mokre, prljave i mešovite pelene sa opcionalnim beleškama",
-      "pumping": "Pratite sesije izdajanja sa izborom strane i količinom mleka",
+      "pumping": "Pratite sesije izmlazavanja sa izborom strane i količinom mleka",
       "growth": "Beležite težinu, visinu i obim glave sa grafikonima rasta",
       "tummyTime": "Merite vreme na stomaku za podršku razvoju bebe"
     },
@@ -886,6 +898,7 @@
       "theme": "Izgled",
       "hint": "Ovo možete promeniti bilo kada u Podešavanjima"
     },
+    "timeFormat": "Format vremena",
     "sync": {
       "title": "Sinhronizujte sa porodicom",
       "subtitle": "Delite obaveze praćenja sa partnerom ili negovateljima u realnom vremenu"
