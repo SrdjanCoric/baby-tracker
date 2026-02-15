@@ -8,7 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, TimeFormatProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
@@ -388,6 +388,7 @@ export default function RootLayout() {
               <HouseholdProvider>
                 <SyncAuthSetup>
                 <UnitProvider>
+                <TimeFormatProvider>
                   <BabyProvider>
                     <FeedingProvider>
                       <SleepProvider>
@@ -419,6 +420,7 @@ export default function RootLayout() {
                       </SleepProvider>
                     </FeedingProvider>
                   </BabyProvider>
+                </TimeFormatProvider>
                 </UnitProvider>
                 </SyncAuthSetup>
               </HouseholdProvider>

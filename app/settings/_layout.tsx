@@ -7,6 +7,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="language" />
       <Stack.Screen name="theme" />
       <Stack.Screen name="units" />
+      <Stack.Screen name="time-format" />
       <Stack.Screen name="dashboard" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="export" />
