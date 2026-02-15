@@ -17,6 +17,25 @@ interface ReminderRow {
   naps_since_night_sleep: number;
   has_recent_night_sleep: boolean;
   is_sandbox: boolean;
+  day_start_hour: number;
+  day_end_hour: number;
+  nap_continuation_minutes: number;
+  timezone: string | null;
+}
+
+function isNightTimeForTimezone(
+  timezone: string | null,
+  dayStartHour: number,
+  dayEndHour: number
+): boolean {
+  if (!timezone) return false;
+  try {
+    const nowStr = new Date().toLocaleString("en-US", { timeZone: timezone, hour12: false });
+    const hour = parseInt(nowStr.split(", ")[1].split(":")[0], 10);
+    return hour >= dayEndHour || hour < dayStartHour;
+  } catch {
+    return false;
+  }
 }
 
 function base64UrlEncode(data: Uint8Array): string {
@@ -174,6 +193,11 @@ serve(async (req) => {
 
     const babyReminders = new Map<string, ReminderRow[]>();
     for (const reminder of dueReminders as ReminderRow[]) {
+      if (isNightTimeForTimezone(reminder.timezone, reminder.day_start_hour, reminder.day_end_hour)) {
+        console.log(`Skipping baby ${reminder.baby_id}: nighttime in ${reminder.timezone}`);
+        continue;
+      }
+
       const slots = reminder.wake_window_slots as NapSlot[];
       if (!slots || slots.length === 0) {
         console.log(`Skipping reminder for baby ${reminder.baby_id}: no slots configured`);
