@@ -70,6 +70,9 @@ export interface ActiveTimerData {
   rightAccumulatedSeconds?: number;
   currentSideStartedAt?: string;
   liveActivityId?: string;
+  isPaused?: boolean;
+  pausedAt?: string;
+  totalPausedMs?: number;
 }
 
 function generateId(): string {

@@ -44,6 +44,9 @@ export interface ActivePumpingTimerData {
   startedAt: string;
   side: BreastSide;
   liveActivityId?: string;
+  isPaused?: boolean;
+  pausedAt?: string;
+  totalPausedMs?: number;
 }
 
 function generateId(): string {

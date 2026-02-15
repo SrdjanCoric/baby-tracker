@@ -199,6 +199,80 @@ class LiveActivityController: NSObject {
         }
     }
 
+    @objc func pauseTimerActivity(
+        _ activityId: String,
+        resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        guard #available(iOS 16.2, *) else {
+            resolve(false)
+            return
+        }
+
+        Task {
+            let activities = Activity<TimerActivityAttributes>.activities
+            guard let activity = activities.first(where: { $0.id == activityId }) else {
+                print("[LiveActivityController] Activity not found: \(activityId)")
+                resolve(false)
+                return
+            }
+
+            let elapsedSeconds = Int(Date().timeIntervalSince(activity.attributes.startTime))
+            let pausedState = TimerActivityAttributes.ContentState(
+                elapsedSeconds: elapsedSeconds,
+                context: activity.content.state.context,
+                isPaused: true
+            )
+
+            await activity.update(
+                ActivityContent(state: pausedState, staleDate: nil)
+            )
+
+            print("[LiveActivityController] Paused activity: \(activityId)")
+            resolve(true)
+        }
+    }
+
+    @objc func resumeTimerActivity(
+        _ activityId: String,
+        activeElapsedSeconds: NSNumber,
+        resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        guard #available(iOS 16.2, *) else {
+            resolve(false)
+            return
+        }
+
+        Task {
+            let activities = Activity<TimerActivityAttributes>.activities
+            guard let activity = activities.first(where: { $0.id == activityId }) else {
+                print("[LiveActivityController] Activity not found: \(activityId)")
+                resolve(false)
+                return
+            }
+
+            let elapsed = activeElapsedSeconds.doubleValue
+            let effectiveStart = Date().addingTimeInterval(-elapsed)
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+            let resumedState = TimerActivityAttributes.ContentState(
+                elapsedSeconds: Int(elapsed),
+                context: activity.content.state.context,
+                isPaused: false,
+                effectiveStartTimeISO: formatter.string(from: effectiveStart)
+            )
+
+            await activity.update(
+                ActivityContent(state: resumedState, staleDate: nil)
+            )
+
+            print("[LiveActivityController] Resumed activity: \(activityId)")
+            resolve(true)
+        }
+    }
+
     @objc func isActivityRunning(
         _ activityId: String,
         resolver resolve: @escaping RCTPromiseResolveBlock,

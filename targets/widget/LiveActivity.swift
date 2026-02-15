@@ -11,6 +11,8 @@ struct TimerActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         var elapsedSeconds: Int
         var context: String?
+        var isPaused: Bool = false
+        var effectiveStartTimeISO: String? = nil
     }
 
     var activityType: String
@@ -24,6 +26,28 @@ private let feedingColor = Color(red: 140/255, green: 179/255, blue: 105/255)  /
 private let sleepColor = Color(red: 158/255, green: 141/255, blue: 169/255)    // #9E8DA9
 private let pumpingColor = Color(red: 123/255, green: 163/255, blue: 168/255)  // #7BA3A8
 private let tummyTimeColor = Color(red: 212/255, green: 165/255, blue: 116/255) // #D4A574
+private let pausedAmberColor = Color(red: 212/255, green: 160/255, blue: 23/255) // #D4A017
+
+func formatElapsedSeconds(_ seconds: Int) -> String {
+    let h = seconds / 3600
+    let m = (seconds % 3600) / 60
+    let s = seconds % 60
+    if h > 0 {
+        return String(format: "%d:%02d:%02d", h, m, s)
+    }
+    return String(format: "%d:%02d", m, s)
+}
+
+func effectiveTimerStart(for state: TimerActivityAttributes.ContentState, fallback: Date) -> Date {
+    if let iso = state.effectiveStartTimeISO {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: iso) {
+            return date
+        }
+    }
+    return fallback
+}
 
 func activityAccentColor(for type: String) -> Color {
     switch type {
@@ -95,7 +119,12 @@ struct TimerLiveActivity: Widget {
                             Text(context.attributes.babyName)
                                 .font(.caption)
                                 .fontWeight(.semibold)
-                            if let ctx = context.state.context {
+                            if context.state.isPaused {
+                                Text("Paused")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(pausedAmberColor)
+                            } else if let ctx = context.state.context {
                                 Text(contextLabel(for: ctx, activityType: context.attributes.activityType))
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
@@ -105,11 +134,23 @@ struct TimerLiveActivity: Widget {
                 }
 
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.attributes.startTime, style: .timer)
-                        .font(.system(.title, design: .monospaced))
-                        .fontWeight(.medium)
-                        .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
-                        .monospacedDigit()
+                    if context.state.isPaused {
+                        HStack(spacing: 4) {
+                            Text("⏸")
+                                .font(.caption)
+                            Text(formatElapsedSeconds(context.state.elapsedSeconds))
+                                .font(.system(.title, design: .monospaced))
+                                .fontWeight(.medium)
+                                .monospacedDigit()
+                        }
+                        .foregroundStyle(pausedAmberColor)
+                    } else {
+                        Text(effectiveTimerStart(for: context.state, fallback: context.attributes.startTime), style: .timer)
+                            .font(.system(.title, design: .monospaced))
+                            .fontWeight(.medium)
+                            .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
+                            .monospacedDigit()
+                    }
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
@@ -137,11 +178,17 @@ struct TimerLiveActivity: Widget {
                 Text(activityEmoji(for: context.attributes.activityType))
                     .font(.caption)
             } compactTrailing: {
-                // Compact trailing (right of camera notch)
-                Text(context.attributes.startTime, style: .timer)
-                    .font(.system(.caption, design: .monospaced))
-                    .monospacedDigit()
-                    .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
+                if context.state.isPaused {
+                    Text("⏸ \(formatElapsedSeconds(context.state.elapsedSeconds))")
+                        .font(.system(.caption, design: .monospaced))
+                        .monospacedDigit()
+                        .foregroundStyle(pausedAmberColor)
+                } else {
+                    Text(effectiveTimerStart(for: context.state, fallback: context.attributes.startTime), style: .timer)
+                        .font(.system(.caption, design: .monospaced))
+                        .monospacedDigit()
+                        .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
+                }
             } minimal: {
                 // Minimal view (when multiple activities are running)
                 Text(activityEmoji(for: context.attributes.activityType))
@@ -173,7 +220,12 @@ struct LockScreenLiveActivityView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                if let contextText = context.state.context {
+                if context.state.isPaused {
+                    Text("Paused")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(pausedAmberColor)
+                } else if let contextText = context.state.context {
                     Text(contextLabel(for: contextText, activityType: context.attributes.activityType))
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -182,12 +234,22 @@ struct LockScreenLiveActivityView: View {
 
             Spacer()
 
-            // Timer
             VStack(alignment: .trailing, spacing: 4) {
-                Text(context.attributes.startTime, style: .timer)
-                    .font(.system(size: 36, weight: .light, design: .monospaced))
-                    .monospacedDigit()
-                    .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
+                if context.state.isPaused {
+                    HStack(spacing: 6) {
+                        Text("⏸")
+                            .font(.caption)
+                        Text(formatElapsedSeconds(context.state.elapsedSeconds))
+                            .font(.system(size: 36, weight: .light, design: .monospaced))
+                            .monospacedDigit()
+                    }
+                    .foregroundStyle(pausedAmberColor)
+                } else {
+                    Text(effectiveTimerStart(for: context.state, fallback: context.attributes.startTime), style: .timer)
+                        .font(.system(size: 36, weight: .light, design: .monospaced))
+                        .monospacedDigit()
+                        .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
+                }
 
                 Text("Started \(context.attributes.startTime, style: .time)")
                     .font(.caption2)

@@ -14,6 +14,7 @@ import Svg, { Circle } from "react-native-svg";
 const TUMMY_ORANGE = "#E67E22";
 const TUMMY_ORANGE_MUTED = "#FEF3E2";
 const TUMMY_ORANGE_DARK = "#D35400";
+const PAUSED_AMBER = "#D4A017";
 
 export default function TummyTimeScreen() {
   const { t } = useTranslation();
@@ -23,6 +24,8 @@ export default function TummyTimeScreen() {
     activeTimer,
     startTummyTime,
     stopTummyTime,
+    pauseTummyTime,
+    resumeTummyTime,
     getTodaysTotalSeconds,
     getDailyProgress,
     dailyGoalSeconds,
@@ -39,7 +42,7 @@ export default function TummyTimeScreen() {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (!activeTimer?.isRunning) {
+    if (!activeTimer?.isRunning || activeTimer?.isPaused) {
       return;
     }
 
@@ -48,21 +51,26 @@ export default function TummyTimeScreen() {
 
       const now = new Date();
       const elapsedMinutes = Math.floor(
-        (now.getTime() - activeTimer.startTime.getTime()) / 1000 / 60
+        (now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000 / 60
       );
       checkAndSendAlert(elapsedMinutes);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning, activeTimer?.startTime, checkAndSendAlert]);
+  }, [activeTimer?.isRunning, activeTimer?.isPaused, activeTimer?.startTime, activeTimer?.totalPausedMs, checkAndSendAlert]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) {
       return 0;
     }
     void tick;
+    if (activeTimer.isPaused && activeTimer.pausedAt) {
+      return Math.floor(
+        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000
+      );
+    }
     const now = new Date();
-    return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
+    return Math.floor((now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000);
   }, [activeTimer, tick]);
 
   const todaysTotal = useMemo(() => {
@@ -80,6 +88,14 @@ export default function TummyTimeScreen() {
   const handleStartTummyTime = useCallback(async (customStartTime?: Date) => {
     await startTummyTime(customStartTime);
   }, [startTummyTime]);
+
+  const handlePause = useCallback(async () => {
+    await pauseTummyTime();
+  }, [pauseTummyTime]);
+
+  const handleResume = useCallback(async () => {
+    await resumeTummyTime();
+  }, [resumeTummyTime]);
 
   const handleStopTummyTime = useCallback(async () => {
     resetAlert();
@@ -146,7 +162,10 @@ export default function TummyTimeScreen() {
             todaysTotal={todaysTotal}
             progress={progress}
             dailyGoalSeconds={dailyGoalSeconds}
+            isPaused={activeTimer?.isPaused ?? false}
             onStop={handleStopTummyTime}
+            onPause={handlePause}
+            onResume={handleResume}
           />
         ) : (
           <StartView
@@ -430,7 +449,10 @@ interface RunningTimerViewProps {
   todaysTotal: number;
   progress: number;
   dailyGoalSeconds: number;
+  isPaused: boolean;
   onStop: () => void;
+  onPause: () => void;
+  onResume: () => void;
 }
 
 function RunningTimerView({
@@ -438,7 +460,10 @@ function RunningTimerView({
   todaysTotal,
   progress,
   dailyGoalSeconds,
+  isPaused,
   onStop,
+  onPause,
+  onResume,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
   const formattedTime = formatDuration(elapsedSeconds);
@@ -446,7 +471,6 @@ function RunningTimerView({
 
   return (
     <View className="items-center w-full">
-      {/* Activity indicator */}
       <View className="flex-row items-center mb-4">
         <Text className="text-4xl mr-3">💪</Text>
         <Text style={{ color: TUMMY_ORANGE }} className="text-lg font-semibold">
@@ -454,13 +478,12 @@ function RunningTimerView({
         </Text>
       </View>
 
-      {/* Progress Ring with Timer */}
       <View className="relative items-center justify-center mb-4">
         <ProgressRing progress={progress} size={200} strokeWidth={14} />
         <View className="absolute items-center justify-center">
           <Text
             className="text-4xl font-bold tracking-tight"
-            style={{ color: TUMMY_ORANGE }}
+            style={{ color: isPaused ? PAUSED_AMBER : TUMMY_ORANGE, opacity: isPaused ? 0.5 : 1 }}
             accessibilityLabel={`${t("common.timer")}: ${formattedTime}`}
           >
             {formattedTime}
@@ -471,7 +494,6 @@ function RunningTimerView({
         </View>
       </View>
 
-      {/* Today's Progress */}
       <View
         className="px-6 py-3 rounded-card mb-6"
         style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
@@ -490,31 +512,43 @@ function RunningTimerView({
         )}
       </View>
 
-      {/* Pulsing status indicator */}
       <View className="flex-row items-center mb-10">
         <View
           className="w-3 h-3 rounded-full mr-2"
-          style={{ backgroundColor: TUMMY_ORANGE }}
+          style={{ backgroundColor: isPaused ? PAUSED_AMBER : TUMMY_ORANGE }}
         />
         <Text className="text-base text-content-secondary dark:text-content-dark-secondary">
-          {t("tummyTime.timerRunning")}
+          {isPaused ? t("common.timerPaused") : t("tummyTime.timerRunning")}
         </Text>
       </View>
 
-      {/* Stop button - Large and prominent */}
-      <Pressable
-        onPress={onStop}
-        className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
-        style={{ backgroundColor: TUMMY_ORANGE }}
-        accessibilityRole="button"
-        accessibilityLabel={t("tummyTime.stopTummyTime")}
-        testID="stop-timer-button"
-      >
-        <Text className="text-3xl text-white">⏹</Text>
-      </Pressable>
+      <View className="flex-row items-center gap-6">
+        <Pressable
+          onPress={isPaused ? onResume : onPause}
+          className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+          style={{ borderColor: TUMMY_ORANGE, backgroundColor: isPaused ? TUMMY_ORANGE : "transparent" }}
+          accessibilityRole="button"
+          accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+        >
+          <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : TUMMY_ORANGE }}>
+            {isPaused ? "▶" : "⏸"}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={onStop}
+          className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
+          style={{ backgroundColor: TUMMY_ORANGE }}
+          accessibilityRole="button"
+          accessibilityLabel={t("tummyTime.stopTummyTime")}
+          testID="stop-timer-button"
+        >
+          <Text className="text-3xl text-white">⏹</Text>
+        </Pressable>
+      </View>
 
       <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-3">
-        {t("tummyTime.tapToStop")}
+        {isPaused ? t("common.tapToResume") : t("tummyTime.tapToStop")}
       </Text>
     </View>
   );
