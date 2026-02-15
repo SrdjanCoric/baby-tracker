@@ -57,6 +57,8 @@ export interface ActiveTimerData {
   startTime: string;
   context?: string;
   isRemote?: boolean;
+  isPaused?: boolean;
+  accumulatedSeconds?: number;
 }
 
 export interface WidgetData {

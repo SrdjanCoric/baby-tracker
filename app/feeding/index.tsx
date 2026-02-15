@@ -39,6 +39,8 @@ export default function FeedingScreen() {
     startBreastfeeding,
     stopBreastfeeding,
     changeSide,
+    pauseBreastfeeding,
+    resumeBreastfeeding,
     addFeeding,
     feedings,
   } = useFeeding();
@@ -55,18 +57,23 @@ export default function FeedingScreen() {
     return lastType ? feedingTypeToTab(lastType) : "breast";
   });
 
-  // Timer tick for breastfeeding
+  // Timer tick for breastfeeding (stops ticking when paused)
   useEffect(() => {
-    if (!activeTimer?.isRunning) return;
+    if (!activeTimer?.isRunning || activeTimer?.isPaused) return;
     const interval = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning]);
+  }, [activeTimer?.isRunning, activeTimer?.isPaused]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) return 0;
     void tick;
+    if (activeTimer.isPaused && activeTimer.pausedAt) {
+      return Math.floor(
+        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000
+      );
+    }
     const now = new Date();
-    return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
+    return Math.floor((now.getTime() - activeTimer.startTime.getTime() - (activeTimer.totalPausedMs ?? 0)) / 1000);
   }, [activeTimer, tick]);
 
   const handleTabChange = useCallback((tab: FeedingTab) => {
@@ -90,6 +97,14 @@ export default function FeedingScreen() {
   const handleSideChange = useCallback((side: BreastSide) => {
     changeSide(side);
   }, [changeSide]);
+
+  const handlePause = useCallback(async () => {
+    await pauseBreastfeeding();
+  }, [pauseBreastfeeding]);
+
+  const handleResume = useCallback(async () => {
+    await resumeBreastfeeding();
+  }, [resumeBreastfeeding]);
 
   if (!selectedBaby) {
     return <NoBabyScreen />;
@@ -156,8 +171,11 @@ export default function FeedingScreen() {
           <BreastfeedingTimerView
             elapsedSeconds={elapsedSeconds}
             side={activeTimer?.side}
+            isPaused={activeTimer?.isPaused ?? false}
             onSideChange={handleSideChange}
             onStop={handleStopBreastfeeding}
+            onPause={handlePause}
+            onResume={handleResume}
             accentColor={accentColor}
             buttonBgColor={buttonBgColor}
             mutedBg={mutedBg}
@@ -497,18 +515,21 @@ function SideButton({ side, label, shortLabel, isSuggested, onPress, accentColor
 interface BreastfeedingTimerViewProps {
   elapsedSeconds: number;
   side?: BreastSide;
+  isPaused: boolean;
   onSideChange: (side: BreastSide) => void;
   onStop: () => void;
+  onPause: () => void;
+  onResume: () => void;
   accentColor: string;
   buttonBgColor: string;
   mutedBg: string;
   secondaryBg: string;
 }
 
-function BreastfeedingTimerView({ elapsedSeconds, side, onSideChange, onStop, accentColor, buttonBgColor, mutedBg, secondaryBg }: BreastfeedingTimerViewProps) {
+const PAUSED_AMBER = "#D4A017";
+
+function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg }: BreastfeedingTimerViewProps) {
   const { t } = useTranslation();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
   const formattedTime = formatDuration(elapsedSeconds);
 
   return (
@@ -523,7 +544,11 @@ function BreastfeedingTimerView({ elapsedSeconds, side, onSideChange, onStop, ac
         </View>
 
         {/* Side selector */}
-        <View className="flex-row rounded-pill p-1 mb-8" style={{ backgroundColor: secondaryBg }}>
+        <View
+          className="flex-row rounded-pill p-1 mb-8"
+          style={{ backgroundColor: secondaryBg, opacity: isPaused ? 0.4 : 1 }}
+          pointerEvents={isPaused ? "none" : "auto"}
+        >
           <CompactSideButton label="L" fullLabel={t("feeding.left")} isSelected={side === "left"} onPress={() => onSideChange("left")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
           <CompactSideButton label="B" fullLabel={t("feeding.both")} isSelected={side === "both"} onPress={() => onSideChange("both")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
           <CompactSideButton label="R" fullLabel={t("feeding.right")} isSelected={side === "right"} onPress={() => onSideChange("right")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
@@ -533,7 +558,7 @@ function BreastfeedingTimerView({ elapsedSeconds, side, onSideChange, onStop, ac
         <View className="px-12 py-8 rounded-card-lg mb-8" style={{ backgroundColor: mutedBg }}>
           <Text
             className="text-timer-xl text-center font-bold tracking-tight"
-            style={{ color: accentColor }}
+            style={{ color: isPaused ? PAUSED_AMBER : accentColor, opacity: isPaused ? 0.5 : 1 }}
             accessibilityLabel={`${t("common.timer")}: ${formattedTime}`}
           >
             {formattedTime}
@@ -542,26 +567,40 @@ function BreastfeedingTimerView({ elapsedSeconds, side, onSideChange, onStop, ac
 
         {/* Status indicator */}
         <View className="flex-row items-center mb-10">
-          <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: accentColor }} />
+          <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: isPaused ? PAUSED_AMBER : accentColor }} />
           <Text className="text-base text-content-secondary dark:text-content-dark-secondary">
-            {t("feeding.timerRunning")}
+            {isPaused ? t("common.timerPaused") : t("feeding.timerRunning")}
           </Text>
         </View>
 
-        {/* Stop button */}
-        <Pressable
-          onPress={onStop}
-          className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
-          style={{ backgroundColor: buttonBgColor }}
-          accessibilityRole="button"
-          accessibilityLabel={t("common.stopTimer")}
-          testID="stop-timer-button"
-        >
-          <Text className="text-3xl text-white">⏹</Text>
-        </Pressable>
+        {/* Pause + Stop buttons */}
+        <View className="flex-row items-center gap-6">
+          <Pressable
+            onPress={isPaused ? onResume : onPause}
+            className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+            style={{ borderColor: accentColor, backgroundColor: isPaused ? accentColor : "transparent" }}
+            accessibilityRole="button"
+            accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+          >
+            <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : accentColor }}>
+              {isPaused ? "▶" : "⏸"}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={onStop}
+            className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
+            style={{ backgroundColor: buttonBgColor }}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.stopTimer")}
+            testID="stop-timer-button"
+          >
+            <Text className="text-3xl text-white">⏹</Text>
+          </Pressable>
+        </View>
 
         <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-3">
-          {t("feeding.tapToStop")}
+          {isPaused ? t("common.tapToResume") : t("feeding.tapToStop")}
         </Text>
       </View>
     </View>

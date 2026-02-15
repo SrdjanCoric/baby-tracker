@@ -48,6 +48,9 @@ export interface ActiveSleepTimerData {
   startedAt: string;
   type: SleepType;
   liveActivityId?: string;
+  isPaused?: boolean;
+  pausedAt?: string;
+  totalPausedMs?: number;
 }
 
 function generateId(): string {

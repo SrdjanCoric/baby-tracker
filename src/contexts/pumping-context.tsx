@@ -16,13 +16,16 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
-import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
-import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity } from "@/services/live-activity-service";
+import { acquireTimerLock, releaseTimerLock, updateTimerData } from "@/services/active-timer-service";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActivePumpingTimer {
   isRunning: boolean;
+  isPaused: boolean;
   startTime: Date;
   side: BreastSide;
+  totalPausedMs: number;
+  pausedAt?: Date;
 }
 
 export interface PumpingState {
@@ -40,6 +43,9 @@ export type PumpingAction =
   | { type: "START_TIMER"; payload: { startTime: Date; side: BreastSide } }
   | { type: "STOP_TIMER" }
   | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide }
+  | { type: "PAUSE_TIMER" }
+  | { type: "RESUME_TIMER" }
+  | { type: "RESTORE_TIMER"; payload: ActivePumpingTimer }
   | { type: "REMOTE_INSERT"; payload: StoredPumpingEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredPumpingEntry }
   | { type: "REMOTE_DELETE"; payload: string };
@@ -78,8 +84,10 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
         ...state,
         activeTimer: {
           isRunning: true,
+          isPaused: false,
           startTime: action.payload.startTime,
           side: action.payload.side,
+          totalPausedMs: 0,
         },
       };
 
@@ -91,6 +99,38 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
       return {
         ...state,
         activeTimer: { ...state.activeTimer, side: action.payload },
+      };
+
+    case "PAUSE_TIMER": {
+      if (!state.activeTimer) return state;
+      return {
+        ...state,
+        activeTimer: {
+          ...state.activeTimer,
+          isPaused: true,
+          pausedAt: new Date(),
+        },
+      };
+    }
+
+    case "RESUME_TIMER": {
+      if (!state.activeTimer || !state.activeTimer.pausedAt) return state;
+      const pauseDuration = Date.now() - state.activeTimer.pausedAt.getTime();
+      return {
+        ...state,
+        activeTimer: {
+          ...state.activeTimer,
+          isPaused: false,
+          pausedAt: undefined,
+          totalPausedMs: state.activeTimer.totalPausedMs + pauseDuration,
+        },
+      };
+    }
+
+    case "RESTORE_TIMER":
+      return {
+        ...state,
+        activeTimer: action.payload,
       };
 
     case "REMOTE_INSERT": {
@@ -125,6 +165,8 @@ interface PumpingContextValue extends PumpingState {
   startPumping: (side: BreastSide, requestedStartTime?: Date) => Promise<TimerLockResult>;
   stopPumping: (volumeMl: number, requestedEndTime?: Date) => Promise<StoredPumpingEntry | null>;
   changePumpingSide: (side: BreastSide) => void;
+  pausePumping: () => Promise<void>;
+  resumePumping: () => Promise<void>;
   addPumping: (input: CreatePumpingInput) => Promise<StoredPumpingEntry>;
   updatePumping: (pumpingId: string, input: UpdatePumpingInput) => Promise<StoredPumpingEntry | null>;
   deletePumping: (pumpingId: string) => Promise<boolean>;
@@ -192,15 +234,17 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       const activeTimer = await PumpingStorageService.getActiveTimer(selectedBaby.id);
       if (activeTimer) {
         dispatch({
-          type: "START_TIMER",
+          type: "RESTORE_TIMER",
           payload: {
+            isRunning: true,
+            isPaused: activeTimer.isPaused ?? false,
             startTime: new Date(activeTimer.startedAt),
             side: activeTimer.side,
+            totalPausedMs: activeTimer.totalPausedMs ?? 0,
+            pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
           },
         });
 
-        // Just store the existing Live Activity ID if we have one
-        // Don't try to check/restore Live Activities on startup - it can hang after phone restart
         if (activeTimer.liveActivityId) {
           liveActivityIdRef.current = activeTimer.liveActivityId;
         }
@@ -252,7 +296,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
     const endTime = requestedEndTime ?? new Date();
     const durationSeconds = Math.floor(
-      (endTime.getTime() - state.activeTimer.startTime.getTime()) / 1000
+      (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
     );
 
     const pumpingInput: CreatePumpingInput = {
@@ -295,18 +339,84 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
   const changePumpingSide = useCallback((side: BreastSide) => {
+    if (state.activeTimer?.isPaused) return;
     dispatch({ type: "UPDATE_TIMER_SIDE", payload: side });
     if (selectedBaby && state.activeTimer) {
       PumpingStorageService.setActiveTimer(selectedBaby.id, {
         startedAt: state.activeTimer.startTime.toISOString(),
         side,
         liveActivityId: liveActivityIdRef.current ?? undefined,
+        isPaused: state.activeTimer.isPaused,
+        totalPausedMs: state.activeTimer.totalPausedMs,
+        pausedAt: state.activeTimer.pausedAt?.toISOString(),
       });
       if (liveActivityIdRef.current) {
         updateTimerLiveActivity(liveActivityIdRef.current, side);
       }
     }
   }, [selectedBaby, state.activeTimer]);
+
+  const pausePumping = useCallback(async () => {
+    if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
+
+    dispatch({ type: "PAUSE_TIMER" });
+
+    if (liveActivityIdRef.current) {
+      await pauseTimerLiveActivity(liveActivityIdRef.current);
+    }
+
+    await PumpingStorageService.setActiveTimer(selectedBaby.id, {
+      startedAt: state.activeTimer.startTime.toISOString(),
+      side: state.activeTimer.side,
+      liveActivityId: liveActivityIdRef.current ?? undefined,
+      isPaused: true,
+      pausedAt: new Date().toISOString(),
+      totalPausedMs: state.activeTimer.totalPausedMs,
+    });
+
+    if (user?.id) {
+      try {
+        await updateTimerData(selectedBaby.id, "pumping", user.id, { isPaused: true });
+      } catch (error) {
+        console.error("[PumpingContext] Failed to update timer data:", error);
+      }
+    }
+  }, [selectedBaby, state.activeTimer, user?.id]);
+
+  const resumePumping = useCallback(async () => {
+    if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused) return;
+
+    const now = new Date();
+    const pauseDuration = state.activeTimer.pausedAt
+      ? now.getTime() - state.activeTimer.pausedAt.getTime()
+      : 0;
+    const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
+
+    dispatch({ type: "RESUME_TIMER" });
+
+    if (liveActivityIdRef.current) {
+      const activeElapsedSeconds = Math.floor(
+        (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
+      );
+      await resumeTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
+    }
+
+    await PumpingStorageService.setActiveTimer(selectedBaby.id, {
+      startedAt: state.activeTimer.startTime.toISOString(),
+      side: state.activeTimer.side,
+      liveActivityId: liveActivityIdRef.current ?? undefined,
+      isPaused: false,
+      totalPausedMs: newTotalPausedMs,
+    });
+
+    if (user?.id) {
+      try {
+        await updateTimerData(selectedBaby.id, "pumping", user.id, { isPaused: false });
+      } catch (error) {
+        console.error("[PumpingContext] Failed to update timer data:", error);
+      }
+    }
+  }, [selectedBaby, state.activeTimer, user?.id]);
 
   const addPumping = useCallback(async (input: CreatePumpingInput): Promise<StoredPumpingEntry> => {
     let pumping: StoredPumpingEntry;
@@ -390,6 +500,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     startPumping,
     stopPumping,
     changePumpingSide,
+    pausePumping,
+    resumePumping,
     addPumping,
     updatePumping,
     deletePumping,

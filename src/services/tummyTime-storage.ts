@@ -41,6 +41,9 @@ export interface UpdateTummyTimeInput {
 export interface ActiveTummyTimeTimerData {
   startedAt: string;
   liveActivityId?: string;
+  isPaused?: boolean;
+  pausedAt?: string;
+  totalPausedMs?: number;
 }
 
 function generateId(): string {

@@ -3,6 +3,7 @@
  */
 
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
+import { countFeedingSessions } from "@/utils/feeding-sessions";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
@@ -125,7 +126,7 @@ export function calculateDailySummary(
 
   return {
     date: targetDate,
-    feedingCount: dayFeedings.length,
+    feedingCount: countFeedingSessions(dayFeedings),
     feedingTotalMl,
     nursingMinutes,
     nursingCount: nursingFeedings.length,

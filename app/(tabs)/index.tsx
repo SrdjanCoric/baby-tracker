@@ -17,6 +17,7 @@ import {
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useDashboardConfig, useActiveTimers, useBaby } from "@/contexts";
 import { Alert } from "react-native";
 import { timeSince, formatDate, hoursSince, formatDuration } from "@/utils/time";
+import { countFeedingSessions } from "@/utils/feeding-sessions";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { ActivityType } from "@/constants/activities";
 import { DashboardCardConfig } from "@/services/dashboard-config-storage";
@@ -36,6 +37,7 @@ interface CardProps {
   lockedByName?: string;
   lockedElapsedTime?: string;
   babyName?: string;
+  isPausedByOther?: boolean;
 }
 
 export default function HomeScreen() {
@@ -110,7 +112,16 @@ export default function HomeScreen() {
   const feedingElapsedTime = useMemo(() => {
     if (!feedingActiveTimer?.isRunning) return null;
     void timerTick;
-    const elapsed = Math.floor((Date.now() - feedingActiveTimer.startTime.getTime()) / 1000);
+    let elapsed: number;
+    if (feedingActiveTimer.isPaused && feedingActiveTimer.pausedAt) {
+      elapsed = Math.floor(
+        (feedingActiveTimer.pausedAt.getTime() - feedingActiveTimer.startTime.getTime() - feedingActiveTimer.totalPausedMs) / 1000
+      );
+    } else {
+      elapsed = Math.floor(
+        (Date.now() - feedingActiveTimer.startTime.getTime() - (feedingActiveTimer.totalPausedMs ?? 0)) / 1000
+      );
+    }
     return formatDuration(elapsed, "long");
   }, [feedingActiveTimer, timerTick]);
 
@@ -193,7 +204,16 @@ export default function HomeScreen() {
   const sleepElapsedTime = useMemo(() => {
     if (!sleepActiveTimer?.isRunning) return null;
     void timerTick;
-    const elapsed = Math.floor((Date.now() - sleepActiveTimer.startTime.getTime()) / 1000);
+    let elapsed: number;
+    if (sleepActiveTimer.isPaused && sleepActiveTimer.pausedAt) {
+      elapsed = Math.floor(
+        (sleepActiveTimer.pausedAt.getTime() - sleepActiveTimer.startTime.getTime() - sleepActiveTimer.totalPausedMs) / 1000
+      );
+    } else {
+      elapsed = Math.floor(
+        (Date.now() - sleepActiveTimer.startTime.getTime() - (sleepActiveTimer.totalPausedMs ?? 0)) / 1000
+      );
+    }
     return formatDuration(elapsed, "long");
   }, [sleepActiveTimer, timerTick]);
 
@@ -293,7 +313,16 @@ export default function HomeScreen() {
   const pumpingElapsedTime = useMemo(() => {
     if (!pumpingActiveTimer?.isRunning) return null;
     void timerTick;
-    const elapsed = Math.floor((Date.now() - pumpingActiveTimer.startTime.getTime()) / 1000);
+    let elapsed: number;
+    if (pumpingActiveTimer.isPaused && pumpingActiveTimer.pausedAt) {
+      elapsed = Math.floor(
+        (pumpingActiveTimer.pausedAt.getTime() - pumpingActiveTimer.startTime.getTime() - pumpingActiveTimer.totalPausedMs) / 1000
+      );
+    } else {
+      elapsed = Math.floor(
+        (Date.now() - pumpingActiveTimer.startTime.getTime() - (pumpingActiveTimer.totalPausedMs ?? 0)) / 1000
+      );
+    }
     return formatDuration(elapsed, "long");
   }, [pumpingActiveTimer, timerTick]);
 
@@ -378,7 +407,16 @@ export default function HomeScreen() {
   const tummyTimeElapsedTime = useMemo(() => {
     if (!tummyTimeActiveTimer?.isRunning) return null;
     void timerTick;
-    const elapsed = Math.floor((Date.now() - tummyTimeActiveTimer.startTime.getTime()) / 1000);
+    let elapsed: number;
+    if (tummyTimeActiveTimer.isPaused && tummyTimeActiveTimer.pausedAt) {
+      elapsed = Math.floor(
+        (tummyTimeActiveTimer.pausedAt.getTime() - tummyTimeActiveTimer.startTime.getTime() - tummyTimeActiveTimer.totalPausedMs) / 1000
+      );
+    } else {
+      elapsed = Math.floor(
+        (Date.now() - tummyTimeActiveTimer.startTime.getTime() - (tummyTimeActiveTimer.totalPausedMs ?? 0)) / 1000
+      );
+    }
     return formatDuration(elapsed, "long");
   }, [tummyTimeActiveTimer, timerTick]);
 
@@ -533,10 +571,13 @@ export default function HomeScreen() {
       elapsedTime = timeSince(new Date(lock.startedAt));
     }
 
+    const isPausedByOther = lock?.timerData?.isPaused === true;
+
     return {
       isLocked: true,
       lockedByName: lockedByName || undefined,
       elapsedTime,
+      isPausedByOther,
     };
   }, [selectedBaby?.id, isLockedByOther, getLockedByName, getLockForActivity]);
 
@@ -557,6 +598,7 @@ export default function HomeScreen() {
           lockedByName: feedingLock.lockedByName,
           lockedElapsedTime: feedingLock.elapsedTime,
           babyName: selectedBaby?.name,
+          isPausedByOther: feedingLock.isPausedByOther,
         };
       }
       case "sleep": {
@@ -575,6 +617,7 @@ export default function HomeScreen() {
           lockedByName: sleepLock.lockedByName,
           lockedElapsedTime: sleepLock.elapsedTime,
           babyName: selectedBaby?.name,
+          isPausedByOther: sleepLock.isPausedByOther,
         };
       }
       case "diaper":
@@ -602,6 +645,7 @@ export default function HomeScreen() {
           lockedByName: pumpingLock.lockedByName,
           lockedElapsedTime: pumpingLock.elapsedTime,
           babyName: selectedBaby?.name,
+          isPausedByOther: pumpingLock.isPausedByOther,
         };
       }
       case "tummyTime": {
@@ -620,6 +664,7 @@ export default function HomeScreen() {
           babyName: selectedBaby?.name,
           lockedByName: tummyTimeLock.lockedByName,
           lockedElapsedTime: tummyTimeLock.elapsedTime,
+          isPausedByOther: tummyTimeLock.isPausedByOther,
         };
       }
       case "growth":
@@ -699,7 +744,7 @@ export default function HomeScreen() {
         {/* Today Summary */}
         <View className={isAndroid ? "mt-3" : "mt-6"}>
           <TodaySummary
-            feedingCount={todayFeedings.length}
+            feedingCount={countFeedingSessions(todayFeedings)}
             sleepTotal={todaySleepTotal}
             wetDiaperCount={todayDiaperCounts.wet + todayDiaperCounts.mixed}
           />
