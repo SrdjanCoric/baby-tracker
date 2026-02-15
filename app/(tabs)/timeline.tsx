@@ -11,8 +11,8 @@ import {
   EmptyState,
   LoadingState,
 } from "@/components";
-import { ActivityFilterTabs, FilteredSummaryBanner, type FilterType } from "@/components/timeline";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold, useTimeFormat } from "@/contexts";
+import { ActivityFilterTabs, DailySummaryCard, type FilterType } from "@/components/timeline";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold, useTimeFormat, useBaby } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
@@ -109,6 +109,7 @@ export default function TimelineScreen() {
   const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
   const { members } = useHousehold();
   const { timeFormat } = useTimeFormat();
+  const { selectedBaby } = useBaby();
   const { colorScheme } = useColorScheme();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -424,11 +425,6 @@ export default function TimelineScreen() {
     return groupEntriesByDay(timelineEntries, activeFilter, allData, translate);
   }, [timelineEntries, activeFilter, allData, translate]);
 
-  // Collect all summaries for the filtered summary banner
-  const allSummaries = useMemo(() => {
-    return groupedEntries.map((group) => group.summary);
-  }, [groupedEntries]);
-
   const hasEntries = timelineEntries.length > 0;
 
   if (isLoading) {
@@ -448,10 +444,11 @@ export default function TimelineScreen() {
         t={translate}
       />
 
-      {/* Summary banner for filtered views */}
-      <FilteredSummaryBanner
+      {/* Daily summary card for filtered views */}
+      <DailySummaryCard
         filter={activeFilter}
-        summaries={allSummaries}
+        allData={allData}
+        birthDate={selectedBaby?.birthDate}
         t={translate}
       />
 
