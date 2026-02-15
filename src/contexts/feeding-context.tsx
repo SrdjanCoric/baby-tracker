@@ -12,8 +12,8 @@ import {
   deleteFeedingFromDatabase,
 } from "@/services/activity-sync-service";
 import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
-import { getOppositeSide } from "@/constants/activities";
 import { useBaby } from "./baby-context";
+import { computeSuggestedSide } from "@/utils/feeding-sessions";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
@@ -70,11 +70,12 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
       return { ...state, feedings: action.payload };
 
     case "ADD_FEEDING": {
-      const newState = { ...state, feedings: [...state.feedings, action.payload] };
+      const newFeedings = [...state.feedings, action.payload];
+      const newState: FeedingState = { ...state, feedings: newFeedings };
       if (action.payload.type === "breast") {
-        const sideForSuggestion = action.payload.lastFinishedSide ?? action.payload.side;
-        if (sideForSuggestion) {
-          newState.lastBreastSide = sideForSuggestion;
+        const suggested = computeSuggestedSide(newFeedings);
+        if (suggested !== null) {
+          newState.lastBreastSide = suggested;
         }
       }
       return newState;
@@ -197,7 +198,15 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
     case "REMOTE_INSERT": {
       const exists = state.feedings.some(f => f.id === action.payload.id);
       if (exists) return state;
-      return { ...state, feedings: [...state.feedings, action.payload] };
+      const newFeedings = [...state.feedings, action.payload];
+      const newState: FeedingState = { ...state, feedings: newFeedings };
+      if (action.payload.type === "breast") {
+        const suggested = computeSuggestedSide(newFeedings);
+        if (suggested !== null) {
+          newState.lastBreastSide = suggested;
+        }
+      }
+      return newState;
     }
 
     case "REMOTE_UPDATE": {
@@ -308,8 +317,8 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
       dispatch({ type: "SET_FEEDINGS", payload: feedings });
 
-      const lastSide = await FeedingStorageService.getLastBreastSide(selectedBaby.id);
-      dispatch({ type: "SET_LAST_BREAST_SIDE", payload: lastSide });
+      const suggestedSide = computeSuggestedSide(feedings);
+      dispatch({ type: "SET_LAST_BREAST_SIDE", payload: suggestedSide });
 
       const activeTimer = await FeedingStorageService.getActiveTimer(selectedBaby.id);
       if (activeTimer) {
@@ -407,6 +416,21 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     const durationSeconds = Math.floor(
       (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
     );
+
+    if (durationSeconds < 60) {
+      dispatch({ type: "STOP_TIMER" });
+      await FeedingStorageService.clearActiveTimer(selectedBaby.id);
+      if (liveActivityIdRef.current) {
+        await endTimerLiveActivity(liveActivityIdRef.current);
+        liveActivityIdRef.current = null;
+      } else {
+        await endLiveActivityByType("feeding");
+      }
+      if (user?.id) {
+        try { await releaseTimerLock(selectedBaby.id, "feeding", user.id); } catch {}
+      }
+      return null;
+    }
 
     const lastSide = leftDurationSeconds >= rightDurationSeconds ? "left" : "right";
     const effectiveSide = leftDurationSeconds > 0 && rightDurationSeconds > 0 ? "both" : lastSide;
@@ -639,9 +663,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     return sorted[0];
   }, [state.feedings]);
 
-  const suggestedSide: BreastSide = state.lastBreastSide
-    ? getOppositeSide(state.lastBreastSide)
-    : "left";
+  const suggestedSide: BreastSide = state.lastBreastSide ?? "left";
 
   const value: FeedingContextValue = {
     ...state,

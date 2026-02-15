@@ -299,6 +299,21 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
     );
 
+    if (durationSeconds < 60) {
+      dispatch({ type: "STOP_TIMER" });
+      await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+      if (liveActivityIdRef.current) {
+        await endTimerLiveActivity(liveActivityIdRef.current);
+        liveActivityIdRef.current = null;
+      } else {
+        await endLiveActivityByType("pumping");
+      }
+      if (user?.id) {
+        try { await releaseTimerLock(selectedBaby.id, "pumping", user.id); } catch {}
+      }
+      return null;
+    }
+
     const pumpingInput: CreatePumpingInput = {
       babyId: selectedBaby.id,
       side: state.activeTimer.side,
