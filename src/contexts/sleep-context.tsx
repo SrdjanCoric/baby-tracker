@@ -28,6 +28,7 @@ import {
   generateSlotsForNapCount,
 } from "@/utils/sleepGoals";
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
+import { isNightTime, countNapsWithContinuation } from "@/utils/day-night-boundary";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActiveSleepTimer {
@@ -241,6 +242,9 @@ interface SleepContextValue extends SleepState {
   setCustomWakeWindows: (slots: NapSlotWindow[]) => Promise<void>;
   resetToAgeBasedWakeWindows: () => Promise<void>;
   setNapCount: (count: number) => Promise<void>;
+  isCurrentlyNightTime: () => boolean;
+  setDayNightBoundary: (dayStartHour: number, dayEndHour: number) => Promise<void>;
+  setNapContinuationMinutes: (minutes: number) => Promise<void>;
 }
 
 const SleepContext = createContext<SleepContextValue | null>(null);
@@ -284,6 +288,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           napCount: data.nap_count as number,
           slots: data.wake_window_slots as NapSlotWindow[],
           source: data.source as "age_based" | "custom",
+          dayStartHour: (data.day_start_hour as number | undefined) ?? 6,
+          dayEndHour: (data.day_end_hour as number | undefined) ?? 19,
+          napContinuationMinutes: (data.nap_continuation_minutes as number | undefined) ?? 15,
         };
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
         SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
@@ -345,6 +352,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               napCount: dbPref.nap_count,
               slots: dbPref.wake_window_slots,
               source: dbPref.source as "age_based" | "custom",
+              dayStartHour: dbPref.day_start_hour ?? 6,
+              dayEndHour: dbPref.day_end_hour ?? 19,
+              napContinuationMinutes: dbPref.nap_continuation_minutes ?? 15,
             };
             await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
           }
@@ -732,15 +742,22 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       ? new Date(nightSleeps[0].endedAt!)
       : new Date(new Date().setHours(0, 0, 0, 0));
 
-    return state.sleeps.filter(
+    const napsSinceNight = state.sleeps.filter(
       s => s.type === "nap" && s.endedAt && new Date(s.startedAt) >= lastNightEnd
-    ).length;
-  }, [state.sleeps]);
+    );
+
+    const threshold = state.wakeWindowConfig?.napContinuationMinutes ?? 15;
+    return countNapsWithContinuation(napsSinceNight, threshold);
+  }, [state.sleeps, state.wakeWindowConfig?.napContinuationMinutes]);
 
   const getCurrentNapSlot = useCallback((): NapSlotWindow | null => {
     if (!state.wakeWindowConfig) return null;
     const { slots } = state.wakeWindowConfig;
     if (slots.length === 0) return null;
+
+    const dayStart = state.wakeWindowConfig.dayStartHour ?? 6;
+    const dayEnd = state.wakeWindowConfig.dayEndHour ?? 19;
+    if (isNightTime(new Date(), dayStart, dayEnd)) return null;
 
     const napsDone = getCompletedNapsSinceNightSleep();
     const slotIndex = Math.min(napsDone, slots.length - 1);
@@ -773,6 +790,33 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
   }, [selectedBaby]);
 
+  const isCurrentlyNightTime = useCallback((): boolean => {
+    const dayStart = state.wakeWindowConfig?.dayStartHour ?? 6;
+    const dayEnd = state.wakeWindowConfig?.dayEndHour ?? 19;
+    return isNightTime(new Date(), dayStart, dayEnd);
+  }, [state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour]);
+
+  const setDayNightBoundary = useCallback(async (dayStartHour: number, dayEndHour: number): Promise<void> => {
+    if (!selectedBaby) return;
+    const config: WakeWindowConfig = {
+      ...(state.wakeWindowConfig ?? { napCount: 2, slots: [], source: "age_based" }),
+      dayStartHour,
+      dayEndHour,
+    };
+    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+  }, [selectedBaby, state.wakeWindowConfig]);
+
+  const setNapContinuationMinutes = useCallback(async (minutes: number): Promise<void> => {
+    if (!selectedBaby) return;
+    const config: WakeWindowConfig = {
+      ...(state.wakeWindowConfig ?? { napCount: 2, slots: [], source: "age_based" }),
+      napContinuationMinutes: minutes,
+    };
+    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+  }, [selectedBaby, state.wakeWindowConfig]);
+
   const setNapCount = useCallback(async (count: number): Promise<void> => {
     if (!selectedBaby) return;
     const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
@@ -780,13 +824,14 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     const slots = generateSlotsForNapCount(count, birthDate);
     const config: WakeWindowConfig = {
+      ...state.wakeWindowConfig,
       napCount: count,
       slots,
       source: "age_based",
     };
     dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-  }, [selectedBaby]);
+  }, [selectedBaby, state.wakeWindowConfig]);
 
   const value: SleepContextValue = {
     ...state,
@@ -813,6 +858,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     setCustomWakeWindows,
     resetToAgeBasedWakeWindows,
     setNapCount,
+    isCurrentlyNightTime,
+    setDayNightBoundary,
+    setNapContinuationMinutes,
   };
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
