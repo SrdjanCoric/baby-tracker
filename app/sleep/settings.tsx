@@ -1,9 +1,8 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
   Keyboard,
-  Platform,
   Pressable,
   Text,
   View,
@@ -70,10 +69,10 @@ export default function SleepSettingsScreen() {
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [durationError, setDurationError] = useState("");
   const [showReminderHint, setShowReminderHint] = useState(false);
-  const [showDayStartPicker, setShowDayStartPicker] = useState(false);
-  const [showNightStartPicker, setShowNightStartPicker] = useState(false);
   const [pendingDayStart, setPendingDayStart] = useState<number | null>(null);
   const [pendingNightStart, setPendingNightStart] = useState<number | null>(null);
+  const dayStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nightStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reminderHintAnim = useRef(new Animated.Value(0)).current;
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
@@ -259,10 +258,11 @@ export default function SleepSettingsScreen() {
 
   const formatHour = (hour: number) => formatHourValue(hour, timeFormat);
 
-  const handleDayStartChange = useCallback((hour: number) => {
-    if (hour >= dayEndHour) return;
-    confirmHouseholdChange(async () => {
+  const saveDayStart = useCallback((hour: number) => {
+    if (hour >= dayEndHour) { setPendingDayStart(null); return; }
+    const doSave = async () => {
       await setDayNightBoundary(hour, dayEndHour);
+      setPendingDayStart(null);
       if (selectedBaby?.id && wakeWindowConfig) {
         await syncWakeWindowPreferenceForBaby(
           selectedBaby.id,
@@ -275,13 +275,23 @@ export default function SleepSettingsScreen() {
           napContinuationMinutes
         );
       }
-    });
-  }, [confirmHouseholdChange, setDayNightBoundary, dayEndHour, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+    };
+    if (!isMultiCaregiver) { doSave(); return; }
+    Alert.alert(
+      t("sleep.householdSettingsTitle"),
+      t("sleep.householdSettingsConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel", onPress: () => setPendingDayStart(null) },
+        { text: t("common.confirm"), onPress: doSave },
+      ]
+    );
+  }, [dayEndHour, isMultiCaregiver, t, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
 
-  const handleNightStartChange = useCallback((hour: number) => {
-    if (hour <= dayStartHour) return;
-    confirmHouseholdChange(async () => {
+  const saveNightStart = useCallback((hour: number) => {
+    if (hour <= dayStartHour) { setPendingNightStart(null); return; }
+    const doSave = async () => {
       await setDayNightBoundary(dayStartHour, hour);
+      setPendingNightStart(null);
       if (selectedBaby?.id && wakeWindowConfig) {
         await syncWakeWindowPreferenceForBaby(
           selectedBaby.id,
@@ -294,46 +304,40 @@ export default function SleepSettingsScreen() {
           napContinuationMinutes
         );
       }
-    });
-  }, [confirmHouseholdChange, setDayNightBoundary, dayStartHour, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+    };
+    if (!isMultiCaregiver) { doSave(); return; }
+    Alert.alert(
+      t("sleep.householdSettingsTitle"),
+      t("sleep.householdSettingsConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel", onPress: () => setPendingNightStart(null) },
+        { text: t("common.confirm"), onPress: doSave },
+      ]
+    );
+  }, [dayStartHour, isMultiCaregiver, t, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
 
   const handleDayStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (!selectedDate) return;
-    if (Platform.OS === "ios") {
-      setPendingDayStart(selectedDate.getHours());
-    } else {
-      setShowDayStartPicker(false);
-      handleDayStartChange(selectedDate.getHours());
-    }
-  }, [handleDayStartChange]);
+    const hour = selectedDate.getHours();
+    setPendingDayStart(hour);
+    if (dayStartTimerRef.current) clearTimeout(dayStartTimerRef.current);
+    dayStartTimerRef.current = setTimeout(() => saveDayStart(hour), 800);
+  }, [saveDayStart]);
 
   const handleNightStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (!selectedDate) return;
-    if (Platform.OS === "ios") {
-      setPendingNightStart(selectedDate.getHours());
-    } else {
-      setShowNightStartPicker(false);
-      handleNightStartChange(selectedDate.getHours());
-    }
-  }, [handleNightStartChange]);
+    const hour = selectedDate.getHours();
+    setPendingNightStart(hour);
+    if (nightStartTimerRef.current) clearTimeout(nightStartTimerRef.current);
+    nightStartTimerRef.current = setTimeout(() => saveNightStart(hour), 800);
+  }, [saveNightStart]);
 
-  const handleDayStartDone = useCallback(() => {
-    setShowDayStartPicker(false);
-    const hour = pendingDayStart;
-    setPendingDayStart(null);
-    if (hour !== null && hour !== dayStartHour) {
-      handleDayStartChange(hour);
-    }
-  }, [pendingDayStart, dayStartHour, handleDayStartChange]);
-
-  const handleNightStartDone = useCallback(() => {
-    setShowNightStartPicker(false);
-    const hour = pendingNightStart;
-    setPendingNightStart(null);
-    if (hour !== null && hour !== dayEndHour) {
-      handleNightStartChange(hour);
-    }
-  }, [pendingNightStart, dayEndHour, handleNightStartChange]);
+  useEffect(() => {
+    return () => {
+      if (dayStartTimerRef.current) clearTimeout(dayStartTimerRef.current);
+      if (nightStartTimerRef.current) clearTimeout(nightStartTimerRef.current);
+    };
+  }, []);
 
   const handleNapContinuationChange = useCallback((minutes: number) => {
     confirmHouseholdChange(async () => {
@@ -554,55 +558,13 @@ export default function SleepSettingsScreen() {
                     {t("sleep.dayStartsAt")}
                   </Text>
                 </View>
-                <Pressable
-                  onPress={() => {
-                    if (Platform.OS === "ios") {
-                      setPendingDayStart(dayStartHour);
-                    }
-                    setShowDayStartPicker(true);
-                  }}
-                  className="flex-row items-center justify-between bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg px-4 py-3 active:opacity-80"
-                  accessibilityRole="button"
-                >
-                  <Text
-                    className="text-base font-medium"
-                    style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}
-                  >
-                    {formatHour(dayStartHour)}
-                  </Text>
-                  <Text className="text-content-tertiary dark:text-content-dark-tertiary">
-                    {"\u270F\uFE0F"}
-                  </Text>
-                </Pressable>
-                {showDayStartPicker && Platform.OS === "ios" && (
-                  <View className="mt-2">
-                    <View className="flex-row justify-end mb-1">
-                      <Pressable
-                        onPress={handleDayStartDone}
-                        className="py-2 px-4"
-                        accessibilityRole="button"
-                      >
-                        <Text className="font-semibold" style={{ color: SLEEP_PURPLE }}>
-                          {t("common.done")}
-                        </Text>
-                      </Pressable>
-                    </View>
-                    <DateTimePicker
-                      value={(() => { const d = new Date(); d.setHours(pendingDayStart ?? dayStartHour, 0, 0, 0); return d; })()}
-                      mode="time"
-                      display="compact"
-                      onChange={handleDayStartPickerChange}
-                    />
-                  </View>
-                )}
-                {showDayStartPicker && Platform.OS === "android" && (
-                  <DateTimePicker
-                    value={(() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })()}
-                    mode="time"
-                    display="default"
-                    onChange={handleDayStartPickerChange}
-                  />
-                )}
+                <DateTimePicker
+                  value={(() => { const d = new Date(); d.setHours(pendingDayStart ?? dayStartHour, 0, 0, 0); return d; })()}
+                  mode="time"
+                  display="compact"
+                  onChange={handleDayStartPickerChange}
+                  style={{ alignSelf: "flex-start" }}
+                />
               </View>
 
               <View className="mb-3">
@@ -612,55 +574,13 @@ export default function SleepSettingsScreen() {
                     {t("sleep.nightStartsAt")}
                   </Text>
                 </View>
-                <Pressable
-                  onPress={() => {
-                    if (Platform.OS === "ios") {
-                      setPendingNightStart(dayEndHour);
-                    }
-                    setShowNightStartPicker(true);
-                  }}
-                  className="flex-row items-center justify-between bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg px-4 py-3 active:opacity-80"
-                  accessibilityRole="button"
-                >
-                  <Text
-                    className="text-base font-medium"
-                    style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}
-                  >
-                    {formatHour(dayEndHour)}
-                  </Text>
-                  <Text className="text-content-tertiary dark:text-content-dark-tertiary">
-                    {"\u270F\uFE0F"}
-                  </Text>
-                </Pressable>
-                {showNightStartPicker && Platform.OS === "ios" && (
-                  <View className="mt-2">
-                    <View className="flex-row justify-end mb-1">
-                      <Pressable
-                        onPress={handleNightStartDone}
-                        className="py-2 px-4"
-                        accessibilityRole="button"
-                      >
-                        <Text className="font-semibold" style={{ color: SLEEP_PURPLE }}>
-                          {t("common.done")}
-                        </Text>
-                      </Pressable>
-                    </View>
-                    <DateTimePicker
-                      value={(() => { const d = new Date(); d.setHours(pendingNightStart ?? dayEndHour, 0, 0, 0); return d; })()}
-                      mode="time"
-                      display="compact"
-                      onChange={handleNightStartPickerChange}
-                    />
-                  </View>
-                )}
-                {showNightStartPicker && Platform.OS === "android" && (
-                  <DateTimePicker
-                    value={(() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })()}
-                    mode="time"
-                    display="default"
-                    onChange={handleNightStartPickerChange}
-                  />
-                )}
+                <DateTimePicker
+                  value={(() => { const d = new Date(); d.setHours(pendingNightStart ?? dayEndHour, 0, 0, 0); return d; })()}
+                  mode="time"
+                  display="compact"
+                  onChange={handleNightStartPickerChange}
+                  style={{ alignSelf: "flex-start" }}
+                />
               </View>
 
               <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
