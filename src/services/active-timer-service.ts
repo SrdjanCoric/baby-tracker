@@ -173,6 +173,27 @@ export async function getActiveTimersForBaby(
   });
 }
 
+export async function updateTimerData(
+  babyId: string,
+  activityType: TimerActivityType,
+  userId: string,
+  timerData: Record<string, unknown>
+): Promise<boolean> {
+  const { error } = await supabase
+    .from("active_timers")
+    .update({ timer_data: timerData })
+    .eq("baby_id", babyId)
+    .eq("activity_type", activityType)
+    .eq("started_by", userId);
+
+  if (error) {
+    console.error("[ActiveTimerService] Failed to update timer data:", error);
+    throw error;
+  }
+
+  return true;
+}
+
 export function transformActiveTimerFromRemote(
   data: Record<string, unknown>
 ): Omit<ActiveTimerLock, "startedByName"> {

@@ -39,6 +39,7 @@ interface DashboardCardProps {
   lockedByName?: string;
   lockedElapsedTime?: string;
   babyName?: string;
+  isPausedByOther?: boolean;
 }
 
 const DashboardCard = forwardRef<View, DashboardCardProps>(
@@ -60,6 +61,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
       lockedByName,
       lockedElapsedTime,
       babyName,
+      isPausedByOther = false,
     },
     ref
   ) => {
@@ -80,7 +82,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
     const lockedIndicatorScale = useSharedValue(1);
 
     useEffect(() => {
-      if (isLockedByOther) {
+      if (isLockedByOther && !isPausedByOther) {
         pulseOpacity.value = withRepeat(
           withSequence(
             withTiming(0.6, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
@@ -103,7 +105,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
         pulseOpacity.value = 1;
         lockedIndicatorScale.value = 1;
       }
-    }, [isLockedByOther, pulseOpacity, lockedIndicatorScale]);
+    }, [isLockedByOther, isPausedByOther, pulseOpacity, lockedIndicatorScale]);
 
     const cardAnimatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: cardScale.value }],
@@ -221,11 +223,13 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
                 adjustsFontSizeToFit
                 minimumFontScale={0.7}
               >
-                {activity === "feeding" ? `${lockedByName} is feeding` :
-                 activity === "sleep" ? `${babyName || "Baby"} is sleeping` :
-                 activity === "pumping" ? "Pumping..." :
-                 activity === "tummyTime" ? `${babyName || "Baby"} is on tummy` :
-                 `${lockedByName} is busy`}
+                {isPausedByOther
+                  ? `${lockedByName} paused`
+                  : activity === "feeding" ? `${lockedByName} is feeding` :
+                    activity === "sleep" ? `${babyName || "Baby"} is sleeping` :
+                    activity === "pumping" ? "Pumping..." :
+                    activity === "tummyTime" ? `${babyName || "Baby"} is on tummy` :
+                    `${lockedByName} is busy`}
               </Text>
               {lockedElapsedTime && (
                 <Text

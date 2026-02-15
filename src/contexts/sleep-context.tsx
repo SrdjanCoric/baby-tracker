@@ -16,7 +16,7 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
-import { acquireTimerLock, releaseTimerLock } from "@/services/active-timer-service";
+import { acquireTimerLock, releaseTimerLock, updateTimerData } from "@/services/active-timer-service";
 import { fetchWakeWindowPreference } from "@/services/push-token-service";
 import {
   SleepAgeGroup,
@@ -28,12 +28,15 @@ import {
   generateSlotsForNapCount,
 } from "@/utils/sleepGoals";
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
-import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity } from "@/services/live-activity-service";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActiveSleepTimer {
   isRunning: boolean;
+  isPaused: boolean;
   startTime: Date;
   sleepType: SleepType;
+  totalPausedMs: number;
+  pausedAt?: Date;
 }
 
 export interface SleepState {
@@ -65,6 +68,9 @@ export type SleepAction =
   | { type: "SET_SHOW_MILESTONE_SUGGESTION"; payload: boolean }
   | { type: "SET_SUGGESTED_GOAL"; payload: number | null }
   | { type: "SET_WAKE_WINDOW_CONFIG"; payload: WakeWindowConfig | null }
+  | { type: "PAUSE_TIMER" }
+  | { type: "RESUME_TIMER" }
+  | { type: "RESTORE_TIMER"; payload: ActiveSleepTimer }
   | { type: "REMOTE_INSERT"; payload: StoredSleepEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredSleepEntry }
   | { type: "REMOTE_DELETE"; payload: string };
@@ -113,8 +119,10 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
         ...state,
         activeTimer: {
           isRunning: true,
+          isPaused: false,
           startTime: action.payload.startTime,
           sleepType: action.payload.sleepType,
+          totalPausedMs: 0,
         },
       };
 
@@ -149,6 +157,38 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     case "SET_WAKE_WINDOW_CONFIG":
       return { ...state, wakeWindowConfig: action.payload };
 
+    case "PAUSE_TIMER": {
+      if (!state.activeTimer) return state;
+      return {
+        ...state,
+        activeTimer: {
+          ...state.activeTimer,
+          isPaused: true,
+          pausedAt: new Date(),
+        },
+      };
+    }
+
+    case "RESUME_TIMER": {
+      if (!state.activeTimer || !state.activeTimer.pausedAt) return state;
+      const pauseDuration = Date.now() - state.activeTimer.pausedAt.getTime();
+      return {
+        ...state,
+        activeTimer: {
+          ...state.activeTimer,
+          isPaused: false,
+          pausedAt: undefined,
+          totalPausedMs: state.activeTimer.totalPausedMs + pauseDuration,
+        },
+      };
+    }
+
+    case "RESTORE_TIMER":
+      return {
+        ...state,
+        activeTimer: action.payload,
+      };
+
     case "REMOTE_INSERT": {
       const exists = state.sleeps.some(s => s.id === action.payload.id);
       if (exists) return state;
@@ -181,6 +221,8 @@ interface SleepContextValue extends SleepState {
   startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<TimerLockResult>;
   stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
+  pauseSleep: () => Promise<void>;
+  resumeSleep: () => Promise<void>;
   addSleep: (input: CreateSleepInput) => Promise<StoredSleepEntry>;
   updateSleep: (sleepId: string, input: UpdateSleepInput) => Promise<StoredSleepEntry | null>;
   deleteSleep: (sleepId: string) => Promise<boolean>;
@@ -349,15 +391,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
       if (activeTimer) {
         dispatch({
-          type: "START_TIMER",
+          type: "RESTORE_TIMER",
           payload: {
+            isRunning: true,
+            isPaused: activeTimer.isPaused ?? false,
             startTime: new Date(activeTimer.startedAt),
             sleepType: activeTimer.type,
+            totalPausedMs: activeTimer.totalPausedMs ?? 0,
+            pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
           },
         });
 
-        // Just store the existing Live Activity ID if we have one
-        // Don't try to check/restore Live Activities on startup - it can hang after phone restart
         if (activeTimer.liveActivityId) {
           liveActivityIdRef.current = activeTimer.liveActivityId;
         }
@@ -409,7 +453,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     const endTime = requestedEndTime ?? new Date();
     const durationSeconds = Math.floor(
-      (endTime.getTime() - state.activeTimer.startTime.getTime()) / 1000
+      (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
     );
 
     const sleepInput: CreateSleepInput = {
@@ -451,18 +495,84 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
   const changeSleepType = useCallback((sleepType: SleepType) => {
+    if (state.activeTimer?.isPaused) return;
     dispatch({ type: "UPDATE_TIMER_TYPE", payload: sleepType });
     if (selectedBaby && state.activeTimer) {
       SleepStorageService.setActiveTimer(selectedBaby.id, {
         startedAt: state.activeTimer.startTime.toISOString(),
         type: sleepType,
         liveActivityId: liveActivityIdRef.current ?? undefined,
+        isPaused: state.activeTimer.isPaused,
+        totalPausedMs: state.activeTimer.totalPausedMs,
+        pausedAt: state.activeTimer.pausedAt?.toISOString(),
       });
       if (liveActivityIdRef.current) {
         updateTimerLiveActivity(liveActivityIdRef.current, sleepType);
       }
     }
   }, [selectedBaby, state.activeTimer]);
+
+  const pauseSleep = useCallback(async () => {
+    if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
+
+    dispatch({ type: "PAUSE_TIMER" });
+
+    if (liveActivityIdRef.current) {
+      await pauseTimerLiveActivity(liveActivityIdRef.current);
+    }
+
+    await SleepStorageService.setActiveTimer(selectedBaby.id, {
+      startedAt: state.activeTimer.startTime.toISOString(),
+      type: state.activeTimer.sleepType,
+      liveActivityId: liveActivityIdRef.current ?? undefined,
+      isPaused: true,
+      pausedAt: new Date().toISOString(),
+      totalPausedMs: state.activeTimer.totalPausedMs,
+    });
+
+    if (user?.id) {
+      try {
+        await updateTimerData(selectedBaby.id, "sleep", user.id, { isPaused: true });
+      } catch (error) {
+        console.error("[SleepContext] Failed to update timer data:", error);
+      }
+    }
+  }, [selectedBaby, state.activeTimer, user?.id]);
+
+  const resumeSleep = useCallback(async () => {
+    if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused) return;
+
+    const now = new Date();
+    const pauseDuration = state.activeTimer.pausedAt
+      ? now.getTime() - state.activeTimer.pausedAt.getTime()
+      : 0;
+    const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
+
+    dispatch({ type: "RESUME_TIMER" });
+
+    if (liveActivityIdRef.current) {
+      const activeElapsedSeconds = Math.floor(
+        (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
+      );
+      await resumeTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
+    }
+
+    await SleepStorageService.setActiveTimer(selectedBaby.id, {
+      startedAt: state.activeTimer.startTime.toISOString(),
+      type: state.activeTimer.sleepType,
+      liveActivityId: liveActivityIdRef.current ?? undefined,
+      isPaused: false,
+      totalPausedMs: newTotalPausedMs,
+    });
+
+    if (user?.id) {
+      try {
+        await updateTimerData(selectedBaby.id, "sleep", user.id, { isPaused: false });
+      } catch (error) {
+        console.error("[SleepContext] Failed to update timer data:", error);
+      }
+    }
+  }, [selectedBaby, state.activeTimer, user?.id]);
 
   const addSleep = useCallback(async (input: CreateSleepInput): Promise<StoredSleepEntry> => {
     let sleep: StoredSleepEntry;
@@ -668,6 +778,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     startSleep,
     stopSleep,
     changeSleepType,
+    pauseSleep,
+    resumeSleep,
     addSleep,
     updateSleep,
     deleteSleep,
