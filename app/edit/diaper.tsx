@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useDiaper } from "@/contexts/diaper-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 
@@ -20,6 +20,7 @@ export default function EditDiaperScreen() {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { diapers, updateDiaper, deleteDiaper } = useDiaper();
 
   const diaper = useMemo(() => {
@@ -191,7 +192,7 @@ export default function EditDiaperScreen() {
             {formatDate(new Date(diaper.changedAt))}
           </Text>
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatTime(new Date(diaper.changedAt))}
+            {formatTime(new Date(diaper.changedAt), timeFormat)}
           </Text>
         </View>
 

@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useFeeding, useBaby, useUnits } from "@/contexts";
+import { useFeeding, useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { useNotificationIntegration } from "@/hooks";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import {
@@ -21,6 +21,7 @@ import {
 } from "@/validators/feeding";
 import { COMMON_FOODS } from "@/constants/foods";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
@@ -42,6 +43,7 @@ export default function ManualFeedingScreen() {
   const { selectedBaby } = useBaby();
   const { addFeeding, feedings } = useFeeding();
   const { volumeUnit } = useUnits();
+  const { timeFormat } = useTimeFormat();
   const { scheduleReminderAfterFeeding } = useNotificationIntegration();
 
   // Map URL param to tab type
@@ -401,12 +403,7 @@ export default function ManualFeedingScreen() {
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">

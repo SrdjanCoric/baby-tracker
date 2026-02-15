@@ -13,7 +13,8 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { usePumping } from "@/contexts/pumping-context";
-import { useBaby, useUnits } from "@/contexts";
+import { useBaby, useUnits, useTimeFormat } from "@/contexts";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { validateManualPumping } from "@/validators/pumping";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
@@ -35,6 +36,7 @@ export default function ManualPumpingScreen() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { volumeUnit } = useUnits();
+  const { timeFormat } = useTimeFormat();
   const { addPumping, getLastSide } = usePumping();
 
   const suggestedSide = useMemo((): BreastSide => {
@@ -218,12 +220,7 @@ export default function ManualPumpingScreen() {
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">

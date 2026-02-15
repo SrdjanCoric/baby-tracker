@@ -34,6 +34,7 @@ export default function SleepScreen() {
     suggestedGoalMinutes,
     acceptMilestoneSuggestion,
     dismissMilestoneSuggestion,
+    wakeWindowConfig,
   } = useSleep();
 
   const napAlert = useTimerAlertIntegration("nap");
@@ -79,8 +80,8 @@ export default function SleepScreen() {
   }, [activeTimer, tick]);
 
   const suggestedType = useMemo(() => {
-    return determineSleepType(new Date());
-  }, []);
+    return determineSleepType(new Date(), wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour);
+  }, [wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
 
   const handleStartSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date) => {
     await startSleep(sleepType, customStartTime);

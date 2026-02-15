@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useFeeding } from "@/contexts/feeding-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 
@@ -18,6 +18,7 @@ export default function EditFeedingScreen() {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { feedings, updateFeeding, deleteFeeding } = useFeeding();
 
   const feeding = useMemo(() => {
@@ -421,7 +422,7 @@ export default function EditFeedingScreen() {
             {formatDate(new Date(feeding.startedAt))}
           </Text>
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatTime(new Date(feeding.startedAt))}
+            {formatTime(new Date(feeding.startedAt), timeFormat)}
           </Text>
         </View>
 
