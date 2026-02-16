@@ -12,6 +12,7 @@ interface DailySummaryCardProps {
   allData: TimelineDataByDate;
   birthDate?: string;
   t: (key: string, options?: Record<string, unknown>) => string;
+  onDateChange?: (date: Date) => void;
 }
 
 export function DailySummaryCard({
@@ -19,6 +20,7 @@ export function DailySummaryCard({
   allData,
   birthDate,
   t,
+  onDateChange,
 }: DailySummaryCardProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -47,9 +49,10 @@ export function DailySummaryCard({
         const normalized = new Date(date);
         normalized.setHours(0, 0, 0, 0);
         setSelectedDate(normalized);
+        onDateChange?.(normalized);
       }
     },
-    []
+    [onDateChange]
   );
 
   const handleDone = useCallback(() => {

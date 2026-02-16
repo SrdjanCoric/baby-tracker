@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, useRef } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
 import { useRouter } from "expo-router";
@@ -114,6 +114,8 @@ export default function TimelineScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const scrollViewRef = useRef<ScrollView>(null);
+  const dayPositionsRef = useRef<Map<string, number>>(new Map());
 
   const getMemberName = useCallback((userId: string | undefined): string | undefined => {
     // Don't show "logged by" if there's only 1 person in the household
@@ -422,8 +424,17 @@ export default function TimelineScreen() {
   const translate = t as (key: string, options?: Record<string, unknown>) => string;
 
   const groupedEntries = useMemo(() => {
+    dayPositionsRef.current.clear();
     return groupEntriesByDay(timelineEntries, activeFilter, allData, translate);
   }, [timelineEntries, activeFilter, allData, translate]);
+
+  const handleSummaryDateChange = useCallback((date: Date) => {
+    const dateKey = date.toDateString();
+    const y = dayPositionsRef.current.get(dateKey);
+    if (y !== undefined) {
+      scrollViewRef.current?.scrollTo({ y, animated: true });
+    }
+  }, []);
 
   const hasEntries = timelineEntries.length > 0;
 
@@ -450,10 +461,12 @@ export default function TimelineScreen() {
         allData={allData}
         birthDate={selectedBaby?.birthDate}
         t={translate}
+        onDateChange={handleSummaryDateChange}
       />
 
       {hasEntries ? (
         <ScrollView
+          ref={scrollViewRef}
           className="flex-1"
           refreshControl={
             <RefreshControl
@@ -465,7 +478,15 @@ export default function TimelineScreen() {
           }
         >
           {groupedEntries.map((group) => (
-            <View key={group.header + group.dateLabel}>
+            <View
+              key={group.header + group.dateLabel}
+              onLayout={(e) => {
+                dayPositionsRef.current.set(
+                  group.dateObj.toDateString(),
+                  e.nativeEvent.layout.y
+                );
+              }}
+            >
               <TimelineDayHeader
                 title={group.header}
                 date={group.dateLabel}
