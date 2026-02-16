@@ -556,6 +556,7 @@
     "timeAgo": "pre {{time}}",
     "perDay": "/dan",
     "wetPerDay": "mokrih/dan",
+    "diapersPerDay": "/dan",
     "session_one": "{{count}} sesija",
     "session_few": "{{count}} sesije",
     "session_many": "{{count}} sesija",

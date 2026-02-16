@@ -540,6 +540,7 @@
     "timeAgo": "hace {{time}}",
     "perDay": "/día",
     "wetPerDay": "mojados/día",
+    "diapersPerDay": "/día",
     "session_one": "{{count}} sesión",
     "session_other": "{{count}} sesiones",
     "nap_one": "{{count}} siesta",
