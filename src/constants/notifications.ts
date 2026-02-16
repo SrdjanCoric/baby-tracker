@@ -58,6 +58,7 @@ export const NOTIFICATION_CHANNELS = {
   FEEDING_REMINDERS: "feeding-reminders",
   TIMER_ALERTS: "timer-alerts",
   HOUSEHOLD_ACTIVITY: "household-activity",
+  ACTIVE_TIMERS: "active-timers",
 } as const;
 
 /**

@@ -88,6 +88,18 @@ export const NotificationService = {
         description: "Notifications when household members log activities",
       }
     );
+
+    await Notifications.setNotificationChannelAsync(
+      NOTIFICATION_CHANNELS.ACTIVE_TIMERS,
+      {
+        name: "Active Timers",
+        importance: Notifications.AndroidImportance.LOW,
+        enableVibrate: false,
+        sound: undefined,
+        showBadge: false,
+        description: "Ongoing notifications for active timer activities",
+      }
+    );
   },
 
   async getPermissionStatus(): Promise<PermissionStatus> {
