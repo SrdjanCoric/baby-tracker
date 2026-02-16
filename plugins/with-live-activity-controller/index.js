@@ -2,6 +2,72 @@ const { withDangerousMod, withXcodeProject } = require("@expo/config-plugins");
 const fs = require("fs");
 const path = require("path");
 
+function withLiveActivityControllerAndroid(config) {
+  return withDangerousMod(config, [
+    "android",
+    async (config) => {
+      const projectRoot = config.modRequest.projectRoot;
+      const platformProjectRoot = config.modRequest.platformProjectRoot;
+
+      const sourceDir = path.join(
+        projectRoot,
+        "plugins",
+        "with-live-activity-controller",
+        "android"
+      );
+
+      const targetDir = path.join(
+        platformProjectRoot,
+        "app",
+        "src",
+        "main",
+        "java",
+        "com",
+        "sofibaby",
+        "app"
+      );
+
+      const filesToCopy = [
+        "LiveActivityControllerModule.kt",
+        "LiveActivityControllerPackage.kt",
+      ];
+
+      for (const file of filesToCopy) {
+        const sourcePath = path.join(sourceDir, file);
+        const targetPath = path.join(targetDir, file);
+
+        if (fs.existsSync(sourcePath)) {
+          fs.copyFileSync(sourcePath, targetPath);
+          console.log(`[LiveActivityController:android] Copied ${file}`);
+        } else {
+          console.warn(
+            `[LiveActivityController:android] Source file not found: ${sourcePath}`
+          );
+        }
+      }
+
+      const mainAppPath = path.join(targetDir, "MainApplication.kt");
+      if (fs.existsSync(mainAppPath)) {
+        let content = fs.readFileSync(mainAppPath, "utf8");
+        const registration = "add(LiveActivityControllerPackage())";
+
+        if (!content.includes(registration)) {
+          content = content.replace(
+            /PackageList\(this\)\.packages\.apply\s*\{[^}]*\}/,
+            `PackageList(this).packages.apply {\n              ${registration}\n            }`
+          );
+          fs.writeFileSync(mainAppPath, content);
+          console.log(
+            "[LiveActivityController:android] Registered package in MainApplication.kt"
+          );
+        }
+      }
+
+      return config;
+    },
+  ]);
+}
+
 function withLiveActivityController(config) {
   config = withDangerousMod(config, [
     "ios",
@@ -181,6 +247,8 @@ function withLiveActivityController(config) {
 
     return config;
   });
+
+  config = withLiveActivityControllerAndroid(config);
 
   return config;
 }
