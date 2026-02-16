@@ -147,14 +147,16 @@ function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const hasHandledInitialUrl = useRef(false);
+  const previousAppState = useRef(AppState.currentState);
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'background') {
+      if (previousAppState.current === 'background' && nextAppState === 'active') {
         if (router.canDismiss()) {
           router.dismissAll();
         }
       }
+      previousAppState.current = nextAppState;
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
