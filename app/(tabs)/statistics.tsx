@@ -344,12 +344,14 @@ export default function StatisticsScreen() {
     ? t("statistics.nap", { count: stats.sleep.napCount })
     : undefined;
 
-  const diaperSubvalue = (stats.diaper.wetCount > 0 || stats.diaper.dirtyCount > 0 || stats.diaper.mixedCount > 0)
-    ? t("statistics.wetAndDirty", {
-        wet: stats.diaper.wetCount,
-        dirty: stats.diaper.dirtyCount + stats.diaper.mixedCount,
-      })
-    : undefined;
+  const diaperSubvalue = useMemo(() => {
+    if (stats.diaper.wetCount === 0 && stats.diaper.dirtyCount === 0 && stats.diaper.mixedCount === 0) return undefined;
+    const parts: string[] = [];
+    if (stats.diaper.wetCount > 0) parts.push(`${stats.diaper.wetCount} ${t("statistics.wet" as never)}`);
+    if (stats.diaper.dirtyCount > 0) parts.push(`${stats.diaper.dirtyCount} ${t("statistics.dirty" as never)}`);
+    if (stats.diaper.mixedCount > 0) parts.push(`${stats.diaper.mixedCount} ${t("diaper.mixed")}`);
+    return parts.join(" · ");
+  }, [stats.diaper, t]);
 
   const pumpingSubvalue = stats.pumping.totalDurationSeconds > 0
     ? formatDuration(stats.pumping.totalDurationSeconds, "short")
@@ -377,7 +379,7 @@ export default function StatisticsScreen() {
     ];
 
     const feedingData: { label: string; value: number }[] = [];
-    const diaperStackedData: { label: string; primary: number; secondary: number }[] = [];
+    const diaperStackedData: { label: string; primary: number; secondary: number; tertiary: number }[] = [];
     const sleepData: { label: string; primary: number; secondary: number }[] = [];
 
     feedingBreakdown.forEach((entries, dateKey) => {
@@ -396,9 +398,10 @@ export default function StatisticsScreen() {
       const label = isCompact
         ? `${date.getMonth() + 1}/${date.getDate()}`
         : dayNames[date.getDay()];
-      const wet = entries.filter((d) => d.type === "wet" || d.type === "mixed").length;
-      const dirty = entries.filter((d) => d.type === "dirty" || d.type === "mixed").length;
-      diaperStackedData.push({ label, primary: wet, secondary: dirty });
+      const wet = entries.filter((d) => d.type === "wet").length;
+      const dirty = entries.filter((d) => d.type === "dirty").length;
+      const mixed = entries.filter((d) => d.type === "mixed").length;
+      diaperStackedData.push({ label, primary: wet, secondary: dirty, tertiary: mixed });
     });
 
     sleepBreakdown.forEach((entries, dateKey) => {
@@ -467,7 +470,7 @@ export default function StatisticsScreen() {
   const renderTodayView = () => {
     const todaySleepSeconds = stats.sleep.totalDurationSeconds;
     const todayFeedingCount = stats.feeding.totalCount;
-    const todayWetCount = stats.diaper.wetCount + stats.diaper.mixedCount;
+    const todayDiaperCount = stats.diaper.totalCount;
     const todayTummySeconds = stats.tummyTime.totalDurationSeconds;
 
     const feedingColor = isDark ? ACTIVITY_CONFIG.feeding.accentColorDark : ACTIVITY_CONFIG.feeding.accentColor;
@@ -584,12 +587,10 @@ export default function StatisticsScreen() {
           <View className="flex-row gap-3">
             <TodayComparisonCard
               icon={ACTIVITY_CONFIG.diaper.icon}
-              label={t("statistics.wet" as never)}
-              todayValue={String(todayWetCount)}
-              averageValue={String(rolling7DayAvg.wetDiapersPerDay)}
+              label={t("diaper.title")}
+              todayValue={String(todayDiaperCount)}
+              averageValue={String(rolling7DayAvg.totalDiapersPerDay)}
               color={diaperColor}
-              suffix={todayWetCount >= 6 ? "✓" : undefined}
-              suffixColor={isDark ? "#4ade80" : "#22c55e"}
             />
             <TodayComparisonCard
               icon={ACTIVITY_CONFIG.tummyTime.icon}
@@ -667,7 +668,7 @@ export default function StatisticsScreen() {
                 </Text>
               </View>
               <Text className="text-sm text-content-secondary dark:text-content-dark-secondary ml-7">
-                {stats.diaper.wetCount} {t("statistics.wet" as never)} · {stats.diaper.dirtyCount + stats.diaper.mixedCount} {t("statistics.dirty" as never)}
+                {diaperSubvalue}
               </Text>
               {Object.keys(stats.extendedDiaper.stoolColorDistribution).length > 0 && (
                 <View className="ml-5">
@@ -814,16 +815,11 @@ export default function StatisticsScreen() {
                 <View className="flex-row items-center">
                   <Text className="text-lg mr-2">{ACTIVITY_CONFIG.diaper.icon}</Text>
                   <Text className="text-lg font-semibold" style={{ color: ACTIVITY_CONFIG.diaper.accentColor }}>
-                    {dailyAverages.wetDiapersPerDay}
+                    {dailyAverages.totalDiapersPerDay}
                   </Text>
                   <Text className="text-base text-content-secondary dark:text-content-dark-secondary ml-1">
-                    {t("statistics.wetPerDay")}
+                    {t("statistics.diapersPerDay" as never)}
                   </Text>
-                  {dailyAverages.wetDiapersPerDay >= 6 && (
-                    <Text className="text-base ml-1" style={{ color: isDark ? "#4ade80" : "#22c55e" }}>
-                      ✓
-                    </Text>
-                  )}
                 </View>
               </View>
               {dailyAverages.tummyTimeMinutesPerDay > 0 && (
@@ -1016,8 +1012,10 @@ export default function StatisticsScreen() {
                     data={chartData.diaperStackedData}
                     primaryColor={isDark ? "#EAB8B2" : "#E0A099"}
                     secondaryColor={isDark ? "#C47A74" : "#B87070"}
+                    tertiaryColor={isDark ? "#D49E98" : "#CC8C85"}
                     primaryLabel={t("statistics.wet" as never)}
                     secondaryLabel={t("statistics.dirty" as never)}
+                    tertiaryLabel={t("diaper.mixed")}
                     height={100}
                     formatValue={(v) => String(Math.round(v))}
                     compact={isCompact}

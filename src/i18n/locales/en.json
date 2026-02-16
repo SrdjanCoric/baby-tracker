@@ -536,6 +536,7 @@
     "timeAgo": "{{time}} ago",
     "perDay": "/day",
     "wetPerDay": "wet/day",
+    "diapersPerDay": "/day",
     "session_one": "{{count}} session",
     "session_other": "{{count}} sessions",
     "nap_one": "{{count}} nap",

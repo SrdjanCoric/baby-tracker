@@ -263,6 +263,7 @@ export interface DailyAverages {
   feedingsPerDay: number;
   wetDiapersPerDay: number;
   dirtyDiapersPerDay: number;
+  totalDiapersPerDay: number;
   pumpingMlPerDay: number;
   tummyTimeMinutesPerDay: number;
   daysInPeriod: number;
@@ -281,8 +282,9 @@ export function calculateDailyAverages(
   return {
     sleepHoursPerDay: Math.round((sleepStats.totalDurationSeconds / 3600 / days) * 10) / 10,
     feedingsPerDay: Math.round((feedingStats.totalCount / days) * 10) / 10,
-    wetDiapersPerDay: Math.round(((diaperStats.wetCount + diaperStats.mixedCount) / days) * 10) / 10,
-    dirtyDiapersPerDay: Math.round(((diaperStats.dirtyCount + diaperStats.mixedCount) / days) * 10) / 10,
+    wetDiapersPerDay: Math.round((diaperStats.wetCount / days) * 10) / 10,
+    dirtyDiapersPerDay: Math.round((diaperStats.dirtyCount / days) * 10) / 10,
+    totalDiapersPerDay: Math.round((diaperStats.totalCount / days) * 10) / 10,
     pumpingMlPerDay: Math.round(pumpingStats.totalVolumeMl / days),
     tummyTimeMinutesPerDay: Math.round(tummyTimeStats.totalDurationSeconds / 60 / days),
     daysInPeriod: days,
@@ -452,6 +454,7 @@ export interface Rolling7DayAverage {
   sleepSecondsPerDay: number;
   wetDiapersPerDay: number;
   dirtyDiapersPerDay: number;
+  totalDiapersPerDay: number;
   tummyTimeSecondsPerDay: number;
 }
 
@@ -490,8 +493,9 @@ export function calculateRolling7DayAverage(
   return {
     feedingsPerDay: Math.round((feedingStats.totalCount / 7) * 10) / 10,
     sleepSecondsPerDay: Math.round(totalSleepSeconds / 7),
-    wetDiapersPerDay: Math.round(((diaperStats.wetCount + diaperStats.mixedCount) / 7) * 10) / 10,
-    dirtyDiapersPerDay: Math.round(((diaperStats.dirtyCount + diaperStats.mixedCount) / 7) * 10) / 10,
+    wetDiapersPerDay: Math.round((diaperStats.wetCount / 7) * 10) / 10,
+    dirtyDiapersPerDay: Math.round((diaperStats.dirtyCount / 7) * 10) / 10,
+    totalDiapersPerDay: Math.round((diaperStats.totalCount / 7) * 10) / 10,
     tummyTimeSecondsPerDay: Math.round(totalTummySeconds / 7),
   };
 }
