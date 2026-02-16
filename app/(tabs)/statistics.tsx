@@ -1073,7 +1073,7 @@ export default function StatisticsScreen() {
           <View className="bg-surface-card dark:bg-surface-dark-card rounded-card mb-6">
             <EmptyState
               icon="📊"
-              title={t("statistics.noDataThisWeek")}
+              title={t(selectedPeriod === "today" ? "statistics.noDataToday" : selectedPeriod === "30days" ? "statistics.noDataThisMonth" : "statistics.noDataThisWeek")}
               compact
               testID="empty-stats"
             />
