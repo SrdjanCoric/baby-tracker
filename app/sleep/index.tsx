@@ -215,20 +215,6 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
     setShowTimePicker(true);
   }, []);
 
-  const handleTimeChange = useCallback(
-    (_event: DateTimePickerEvent, selectedTime?: Date) => {
-      if (Platform.OS === "android") {
-        setShowTimePicker(false);
-      }
-      if (selectedTime) {
-        const now = new Date();
-        const clampedTime = selectedTime > now ? now : selectedTime;
-        setCustomStartTime(clampedTime);
-      }
-    },
-    []
-  );
-
   // Start of yesterday (midnight)
   const yesterdayStart = useMemo(() => {
     const date = new Date();
@@ -236,6 +222,32 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
     date.setHours(0, 0, 0, 0);
     return date;
   }, []);
+
+  const handleTimeChange = useCallback(
+    (_event: DateTimePickerEvent, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
+      if (selectedTime) {
+        const now = new Date();
+        let finalTime: Date;
+        if (Platform.OS === "android") {
+          finalTime = new Date();
+          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
+          if (finalTime > now) {
+            finalTime.setDate(finalTime.getDate() - 1);
+          }
+          if (finalTime < yesterdayStart) {
+            finalTime = new Date(yesterdayStart);
+          }
+        } else {
+          finalTime = selectedTime > now ? now : selectedTime;
+        }
+        setCustomStartTime(finalTime);
+      }
+    },
+    [yesterdayStart]
+  );
 
   const handleTimeDone = useCallback(() => {
     setShowTimePicker(false);
@@ -363,11 +375,11 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
           )}
           <DateTimePicker
             value={customStartTime ?? new Date()}
-            mode="datetime"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            mode={Platform.OS === "ios" ? "datetime" : "time"}
+            display="spinner"
             onChange={handleTimeChange}
-            minimumDate={yesterdayStart}
-            maximumDate={new Date()}
+            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
+            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
           />
         </View>
       )}
