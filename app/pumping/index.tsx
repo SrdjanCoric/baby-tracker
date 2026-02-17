@@ -238,6 +238,13 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
     setShowTimePicker(true);
   }, []);
 
+  const yesterdayStart = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
       if (Platform.OS === "android") {
@@ -245,19 +252,24 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
       }
       if (selectedTime) {
         const now = new Date();
-        const clampedTime = selectedTime > now ? now : selectedTime;
-        setCustomStartTime(clampedTime);
+        let finalTime: Date;
+        if (Platform.OS === "android") {
+          finalTime = new Date();
+          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
+          if (finalTime > now) {
+            finalTime.setDate(finalTime.getDate() - 1);
+          }
+          if (finalTime < yesterdayStart) {
+            finalTime = new Date(yesterdayStart);
+          }
+        } else {
+          finalTime = selectedTime > now ? now : selectedTime;
+        }
+        setCustomStartTime(finalTime);
       }
     },
-    []
+    [yesterdayStart]
   );
-
-  const yesterdayStart = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
 
   const handleTimeDone = useCallback(() => {
     setShowTimePicker(false);
@@ -405,11 +417,11 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
           )}
           <DateTimePicker
             value={customStartTime ?? new Date()}
-            mode="datetime"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            mode={Platform.OS === "ios" ? "datetime" : "time"}
+            display="spinner"
             onChange={handleTimeChange}
-            minimumDate={yesterdayStart}
-            maximumDate={new Date()}
+            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
+            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
           />
         </View>
       )}
