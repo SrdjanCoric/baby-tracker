@@ -78,9 +78,10 @@ async function createApnsJwt(
 async function sendApnsPush(
   deviceToken: string,
   jwt: string,
-  topic: string
+  topic: string,
+  isSandbox: boolean
 ): Promise<{ success: boolean; status: number }> {
-  const apnsHost = Deno.env.get("APNS_SANDBOX") === "true"
+  const apnsHost = isSandbox
     ? "api.sandbox.push.apple.com"
     : "api.push.apple.com";
   const url = `https://${apnsHost}/3/device/${deviceToken}`;
@@ -204,7 +205,7 @@ serve(async (req) => {
 
     const { data: tokens, error: tokensError } = await supabase
       .from("widget_push_tokens")
-      .select("device_token, user_id")
+      .select("device_token, user_id, is_sandbox")
       .in("user_id", userIds);
 
     if (tokensError || !tokens || tokens.length === 0) {
@@ -224,8 +225,8 @@ serve(async (req) => {
     const tokensToRemove: string[] = [];
     let sentCount = 0;
 
-    for (const { device_token } of tokens) {
-      const result = await sendApnsPush(device_token, jwt, apnsTopic);
+    for (const { device_token, is_sandbox } of tokens) {
+      const result = await sendApnsPush(device_token, jwt, apnsTopic, is_sandbox ?? false);
       if (result.success) {
         sentCount++;
       } else {

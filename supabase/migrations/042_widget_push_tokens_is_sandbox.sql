@@ -1,0 +1,1 @@
+ALTER TABLE widget_push_tokens ADD COLUMN IF NOT EXISTS is_sandbox BOOLEAN NOT NULL DEFAULT false;

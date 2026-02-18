@@ -70,7 +70,7 @@ function StatCard({
 
   return (
     <View
-      className="flex-1 rounded-card p-4"
+      className="rounded-card p-4"
       style={{
         backgroundColor: bgColor,
         borderLeftWidth: 3,
@@ -927,16 +927,14 @@ export default function StatisticsScreen() {
             <Text className="text-xs font-semibold text-content-tertiary dark:text-content-dark-tertiary uppercase tracking-wider mb-2">
               {t("pumping.title")}
             </Text>
-            <View className="flex-row gap-3">
-              <StatCard
-                icon={ACTIVITY_CONFIG.pumping.icon}
-                label={t("statistics.totalPumping")}
-                value={stats.pumping.totalVolumeMl > 0 ? `${stats.pumping.totalVolumeMl} ml` : String(stats.pumping.totalCount)}
-                subvalue={pumpingSubvalue}
-                color={isDark ? ACTIVITY_CONFIG.pumping.accentColorDark : ACTIVITY_CONFIG.pumping.accentColor}
-                isDark={isDark}
-              />
-            </View>
+            <StatCard
+              icon={ACTIVITY_CONFIG.pumping.icon}
+              label={t("statistics.totalPumping")}
+              value={stats.pumping.totalVolumeMl > 0 ? `${stats.pumping.totalVolumeMl} ml` : String(stats.pumping.totalCount)}
+              subvalue={pumpingSubvalue}
+              color={isDark ? ACTIVITY_CONFIG.pumping.accentColorDark : ACTIVITY_CONFIG.pumping.accentColor}
+              isDark={isDark}
+            />
           </View>
         )}
 

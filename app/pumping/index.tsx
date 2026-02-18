@@ -5,7 +5,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { usePumping } from "@/contexts/pumping-context";
-import { useBaby, useUnits } from "@/contexts";
+import { useBaby, useUnits, useAuth } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useTimerAlertIntegration } from "@/hooks";
@@ -28,6 +28,8 @@ export default function PumpingScreen() {
   const router = useRouter();
   const { showVolumeInput: showVolumeInputParam } = useLocalSearchParams<{ showVolumeInput?: string }>();
   const { selectedBaby } = useBaby();
+  const { session } = useAuth();
+  const isAuthenticated = !!session?.access_token;
   const { volumeUnit } = useUnits();
   const {
     activeTimer,
@@ -200,8 +202,8 @@ export default function PumpingScreen() {
             isPaused={activeTimer?.isPaused ?? false}
             onSideChange={handleSideChange}
             onStop={handleRequestStop}
-            onPause={handlePause}
-            onResume={handleResume}
+            onPause={isAuthenticated ? handlePause : undefined}
+            onResume={isAuthenticated ? handleResume : undefined}
           />
         ) : (
           <SideSelectionView
@@ -485,8 +487,8 @@ interface RunningTimerViewProps {
   isPaused: boolean;
   onSideChange: (side: BreastSide) => void;
   onStop: () => void;
-  onPause: () => void;
-  onResume: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
 }
 
 function RunningTimerView({
@@ -559,17 +561,19 @@ function RunningTimerView({
       </View>
 
       <View className="flex-row items-center gap-6">
-        <Pressable
-          onPress={isPaused ? onResume : onPause}
-          className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
-          style={{ borderColor: PUMPING_BLUE, backgroundColor: isPaused ? PUMPING_BLUE : "transparent" }}
-          accessibilityRole="button"
-          accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
-        >
-          <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : PUMPING_BLUE }}>
-            {isPaused ? "▶" : "⏸"}
-          </Text>
-        </Pressable>
+        {onPause && onResume && (
+          <Pressable
+            onPress={isPaused ? onResume : onPause}
+            className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+            style={{ borderColor: PUMPING_BLUE, backgroundColor: isPaused ? PUMPING_BLUE : "transparent" }}
+            accessibilityRole="button"
+            accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+          >
+            <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : PUMPING_BLUE }}>
+              {isPaused ? "▶" : "⏸"}
+            </Text>
+          </Pressable>
+        )}
 
         <Pressable
           onPress={onStop}

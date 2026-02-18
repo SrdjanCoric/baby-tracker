@@ -17,7 +17,7 @@ import { computeSuggestedSide } from "@/utils/feeding-sessions";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
-import { acquireTimerLock, releaseTimerLock, updateTimerData } from "@/services/active-timer-service";
+import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity } from "@/services/live-activity-service";
 import type { BreastSide as LiveActivityBreastSide } from "@/services/live-activity-service";
 
@@ -339,10 +339,60 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           },
         });
 
-        // Just store the existing Live Activity ID if we have one
-        // Don't try to check/restore Live Activities on startup - it can hang after phone restart
         if (activeTimer.liveActivityId) {
           liveActivityIdRef.current = activeTimer.liveActivityId;
+        }
+      } else if (user?.id && user?.householdId) {
+        try {
+          const lock = await getActiveTimerLock(selectedBaby.id, "feeding");
+          if (lock && lock.startedBy === user.id) {
+            const td = lock.timerData || {};
+            const side = (typeof td.side === "string" ? td.side : undefined) as BreastSide | undefined;
+            const isPaused = td.isPaused === true;
+            const totalPausedMs = typeof td.totalPausedMs === "number" ? td.totalPausedMs : 0;
+            const pausedAt = typeof td.pausedAt === "string" ? td.pausedAt : undefined;
+            const leftAccumulatedSeconds = typeof td.leftAccumulatedSeconds === "number" ? td.leftAccumulatedSeconds : 0;
+            const rightAccumulatedSeconds = typeof td.rightAccumulatedSeconds === "number" ? td.rightAccumulatedSeconds : 0;
+            const currentSideStartedAt = typeof td.currentSideStartedAt === "string"
+              ? td.currentSideStartedAt
+              : lock.startedAt;
+
+            dispatch({
+              type: "RESTORE_TIMER",
+              payload: {
+                isRunning: true,
+                isPaused,
+                startTime: new Date(lock.startedAt),
+                side,
+                leftAccumulatedSeconds,
+                rightAccumulatedSeconds,
+                currentSideStartedAt: new Date(currentSideStartedAt),
+                totalPausedMs,
+                pausedAt: pausedAt ? new Date(pausedAt) : undefined,
+              },
+            });
+
+            await FeedingStorageService.setActiveTimer(selectedBaby.id, {
+              startedAt: lock.startedAt,
+              side,
+              type: "breast",
+              leftAccumulatedSeconds,
+              rightAccumulatedSeconds,
+              currentSideStartedAt,
+              isPaused,
+              totalPausedMs,
+              pausedAt,
+            });
+
+            if (!isPaused) {
+              const activityId = await startTimerLiveActivity(
+                "feeding", selectedBaby.name, side as LiveActivityBreastSide, new Date(lock.startedAt)
+              );
+              if (activityId) liveActivityIdRef.current = activityId;
+            }
+          }
+        } catch (error) {
+          console.error("[FeedingContext] Failed to restore from server:", error);
         }
       }
     } catch (error) {
@@ -350,7 +400,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [selectedBaby, user?.householdId]);
+  }, [selectedBaby, user?.householdId, user?.id]);
 
   useEffect(() => {
     loadFeedings();
@@ -361,7 +411,12 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        const lockResult = await acquireTimerLock(selectedBaby.id, "feeding", user.id);
+        const lockResult = await acquireTimerLock(selectedBaby.id, "feeding", user.id, {
+          side,
+          type: "breast",
+          leftAccumulatedSeconds: 0,
+          rightAccumulatedSeconds: 0,
+        });
         if (!lockResult.success) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }
@@ -515,12 +570,22 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         pausedAt: state.activeTimer.pausedAt?.toISOString(),
       });
 
-      // Update Live Activity with new side
       if (liveActivityIdRef.current) {
         updateTimerLiveActivity(liveActivityIdRef.current, side as LiveActivityBreastSide);
       }
+      if (user?.id) {
+        updateTimerData(selectedBaby.id, "feeding", user.id, {
+          side,
+          type: "breast",
+          leftAccumulatedSeconds: leftAccumulated,
+          rightAccumulatedSeconds: rightAccumulated,
+          currentSideStartedAt: now.toISOString(),
+        }).catch(
+          (error) => console.error("[FeedingContext] Failed to update timer data:", error)
+        );
+      }
     }
-  }, [selectedBaby, state.activeTimer]);
+  }, [selectedBaby, state.activeTimer, user?.id]);
 
   const pauseBreastfeeding = useCallback(async () => {
     if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
@@ -558,7 +623,16 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        await updateTimerData(selectedBaby.id, "feeding", user.id, { isPaused: true });
+        await updateTimerData(selectedBaby.id, "feeding", user.id, {
+          isPaused: true,
+          pausedAt: now.toISOString(),
+          totalPausedMs: state.activeTimer.totalPausedMs,
+          side: state.activeTimer.side,
+          type: "breast",
+          leftAccumulatedSeconds: leftAccumulated,
+          rightAccumulatedSeconds: rightAccumulated,
+          currentSideStartedAt: state.activeTimer.currentSideStartedAt.toISOString(),
+        });
       } catch (error) {
         console.error("[FeedingContext] Failed to update timer data:", error);
       }
@@ -597,7 +671,15 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        await updateTimerData(selectedBaby.id, "feeding", user.id, { isPaused: false });
+        await updateTimerData(selectedBaby.id, "feeding", user.id, {
+          isPaused: false,
+          totalPausedMs: newTotalPausedMs,
+          side: state.activeTimer.side,
+          type: "breast",
+          leftAccumulatedSeconds: state.activeTimer.leftAccumulatedSeconds,
+          rightAccumulatedSeconds: state.activeTimer.rightAccumulatedSeconds,
+          currentSideStartedAt: now.toISOString(),
+        });
       } catch (error) {
         console.error("[FeedingContext] Failed to update timer data:", error);
       }

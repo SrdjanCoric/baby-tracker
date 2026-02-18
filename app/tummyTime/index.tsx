@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useTummyTime, useBaby } from "@/contexts";
+import { useTummyTime, useBaby, useAuth } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
@@ -20,6 +20,8 @@ export default function TummyTimeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { session } = useAuth();
+  const isAuthenticated = !!session?.access_token;
   const {
     activeTimer,
     startTummyTime,
@@ -164,8 +166,8 @@ export default function TummyTimeScreen() {
             dailyGoalSeconds={dailyGoalSeconds}
             isPaused={activeTimer?.isPaused ?? false}
             onStop={handleStopTummyTime}
-            onPause={handlePause}
-            onResume={handleResume}
+            onPause={isAuthenticated ? handlePause : undefined}
+            onResume={isAuthenticated ? handleResume : undefined}
           />
         ) : (
           <StartView
@@ -463,8 +465,8 @@ interface RunningTimerViewProps {
   dailyGoalSeconds: number;
   isPaused: boolean;
   onStop: () => void;
-  onPause: () => void;
-  onResume: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
 }
 
 function RunningTimerView({
@@ -535,17 +537,19 @@ function RunningTimerView({
       </View>
 
       <View className="flex-row items-center gap-6">
-        <Pressable
-          onPress={isPaused ? onResume : onPause}
-          className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
-          style={{ borderColor: TUMMY_ORANGE, backgroundColor: isPaused ? TUMMY_ORANGE : "transparent" }}
-          accessibilityRole="button"
-          accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
-        >
-          <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : TUMMY_ORANGE }}>
-            {isPaused ? "▶" : "⏸"}
-          </Text>
-        </Pressable>
+        {onPause && onResume && (
+          <Pressable
+            onPress={isPaused ? onResume : onPause}
+            className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+            style={{ borderColor: TUMMY_ORANGE, backgroundColor: isPaused ? TUMMY_ORANGE : "transparent" }}
+            accessibilityRole="button"
+            accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+          >
+            <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : TUMMY_ORANGE }}>
+              {isPaused ? "▶" : "⏸"}
+            </Text>
+          </Pressable>
+        )}
 
         <Pressable
           onPress={onStop}
