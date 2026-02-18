@@ -450,6 +450,36 @@ export async function readPendingWidgetStop(): Promise<{
 }
 
 
+export async function readPendingWidgetPauseToggle(): Promise<{
+  activityType: string;
+  action: "pause" | "resume";
+  pausedAt?: string;
+  accumulatedSeconds?: number;
+  resumedAt?: string;
+  pauseDurationMs?: number;
+} | null> {
+  if (Platform.OS !== "ios") return null;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (!extensionStorage) return null;
+    const raw = await extensionStorage.get("pendingWidgetPauseToggle", APP_GROUP);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export async function clearPendingWidgetPauseToggle(): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      await extensionStorage.set("pendingWidgetPauseToggle", "", APP_GROUP);
+    }
+  } catch (_) { /* best-effort cleanup */ }
+}
+
 export async function clearPendingWidgetStop(): Promise<void> {
   if (Platform.OS !== "ios") return;
   try {

@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useFeeding, useBaby, useUnits } from "@/contexts";
+import { useFeeding, useBaby, useUnits, useAuth } from "@/contexts";
 import type { CreateFeedingInput, StoredFeedingEntry } from "@/services/feeding-storage";
 import { formatDuration } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
@@ -31,6 +31,8 @@ export default function FeedingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { session } = useAuth();
+  const isAuthenticated = !!session?.access_token;
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const {
@@ -174,8 +176,8 @@ export default function FeedingScreen() {
             isPaused={activeTimer?.isPaused ?? false}
             onSideChange={handleSideChange}
             onStop={handleStopBreastfeeding}
-            onPause={handlePause}
-            onResume={handleResume}
+            onPause={isAuthenticated ? handlePause : undefined}
+            onResume={isAuthenticated ? handleResume : undefined}
             accentColor={accentColor}
             buttonBgColor={buttonBgColor}
             mutedBg={mutedBg}
@@ -530,8 +532,8 @@ interface BreastfeedingTimerViewProps {
   isPaused: boolean;
   onSideChange: (side: BreastSide) => void;
   onStop: () => void;
-  onPause: () => void;
-  onResume: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
   accentColor: string;
   buttonBgColor: string;
   mutedBg: string;
@@ -587,17 +589,19 @@ function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, 
 
         {/* Pause + Stop buttons */}
         <View className="flex-row items-center gap-6">
-          <Pressable
-            onPress={isPaused ? onResume : onPause}
-            className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
-            style={{ borderColor: accentColor, backgroundColor: isPaused ? accentColor : "transparent" }}
-            accessibilityRole="button"
-            accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
-          >
-            <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : accentColor }}>
-              {isPaused ? "▶" : "⏸"}
-            </Text>
-          </Pressable>
+          {onPause && onResume && (
+            <Pressable
+              onPress={isPaused ? onResume : onPause}
+              className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+              style={{ borderColor: accentColor, backgroundColor: isPaused ? accentColor : "transparent" }}
+              accessibilityRole="button"
+              accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+            >
+              <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : accentColor }}>
+                {isPaused ? "▶" : "⏸"}
+              </Text>
+            </Pressable>
+          )}
 
           <Pressable
             onPress={onStop}

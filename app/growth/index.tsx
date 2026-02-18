@@ -1,14 +1,14 @@
 import { useCallback, useState } from "react";
-import { Pressable, Text, TextInput, View, ScrollView, Keyboard } from "react-native";
+import { Pressable, Text, TextInput, View, ScrollView, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useColorScheme } from "nativewind";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useGrowth } from "@/contexts/growth-context";
-import { useBaby, useUnits } from "@/contexts";
+import { useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { validateGrowthMeasurement } from "@/validators/growth";
-import { formatDate } from "@/utils/time";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import { lbsToKg, inchesToCm } from "@/utils/growth";
 import { isUnderTwoYears } from "@/utils/growth-helpers";
 
@@ -22,8 +22,7 @@ export default function GrowthScreen() {
   const { selectedBaby } = useBaby();
   const { addMeasurement } = useGrowth();
   const { weightUnit, heightUnit } = useUnits();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { timeFormat } = useTimeFormat();
 
   const buttonTextColor = "#FFFFFF";
 
@@ -34,9 +33,53 @@ export default function GrowthScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const [measuredAt, setMeasuredAt] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const handleDateChange = useCallback(
+    (_event: unknown, selectedDate?: Date) => {
+      if (Platform.OS === "android") {
+        setShowDatePicker(false);
+      }
+      if (selectedDate) {
+        const newDateTime = new Date(measuredAt);
+        newDateTime.setFullYear(selectedDate.getFullYear());
+        newDateTime.setMonth(selectedDate.getMonth());
+        newDateTime.setDate(selectedDate.getDate());
+        setMeasuredAt(newDateTime);
+      }
+    },
+    [measuredAt]
+  );
+
+  const handleTimeChange = useCallback(
+    (_event: unknown, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
+      if (selectedTime) {
+        const newDateTime = new Date(measuredAt);
+        newDateTime.setHours(selectedTime.getHours());
+        newDateTime.setMinutes(selectedTime.getMinutes());
+        setMeasuredAt(newDateTime);
+      }
+    },
+    [measuredAt]
+  );
+
+  const handleDateTimeChange = useCallback(
+    (_event: unknown, selectedDateTime?: Date) => {
+      if (selectedDateTime) {
+        setMeasuredAt(selectedDateTime);
+      }
+    },
+    []
+  );
+
   const parseDecimal = (value: string): number | undefined => {
     if (!value) return undefined;
-    // Handle both comma and period as decimal separators
     const normalized = value.replace(",", ".");
     const parsed = parseFloat(normalized);
     return isNaN(parsed) ? undefined : parsed;
@@ -49,7 +92,6 @@ export default function GrowthScreen() {
     const heightInput = parseDecimal(heightValue);
     const headInput = parseDecimal(headCircumferenceValue);
 
-    // Convert from user's unit to metric for storage
     const weightKg = weightInput !== undefined
       ? (weightUnit === "lbs" ? lbsToKg(weightInput) : weightInput)
       : undefined;
@@ -62,7 +104,7 @@ export default function GrowthScreen() {
 
     const validation = validateGrowthMeasurement({
       babyId: selectedBaby.id,
-      measuredAt: new Date(),
+      measuredAt,
       weightKg,
       heightCm,
       headCircumferenceCm,
@@ -78,7 +120,7 @@ export default function GrowthScreen() {
     try {
       await addMeasurement({
         babyId: selectedBaby.id,
-        measuredAt: new Date(),
+        measuredAt,
         weightKg,
         heightCm,
         headCircumferenceCm,
@@ -88,10 +130,21 @@ export default function GrowthScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, weightValue, heightValue, headCircumferenceValue, notes, weightUnit, heightUnit, addMeasurement, router]);
+  }, [selectedBaby, weightValue, heightValue, headCircumferenceValue, notes, weightUnit, heightUnit, measuredAt, addMeasurement, router]);
 
   const hasAnyMeasurement = weightValue !== "" || heightValue !== "" || headCircumferenceValue !== "";
   const canSave = hasAnyMeasurement && !isSaving;
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "2-digit",
+    });
+  };
+
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   if (!selectedBaby) {
     return <NoBabyScreen />;
@@ -145,15 +198,82 @@ export default function GrowthScreen() {
           </Text>
         </Pressable>
 
-        {/* Date display */}
-        <View className="items-center mb-6">
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+        {/* Date/Time Selection */}
+        <View className="mb-6">
+          <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
             {t("growth.measurementDate")}
           </Text>
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatDate(new Date())}
-          </Text>
+          <View className="flex-row gap-3">
+            <Pressable
+              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
+              className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
+              style={{ backgroundColor: GROWTH_TEAL_MUTED }}
+              accessibilityRole="button"
+              accessibilityLabel={t("feeding.selectDate")}
+            >
+              <Text className="text-base" style={{ color: GROWTH_TEAL_DARK }}>
+                {formatDate(measuredAt)}
+              </Text>
+              <Text style={{ color: GROWTH_TEAL }}>📅</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
+              className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
+              style={{ backgroundColor: GROWTH_TEAL_MUTED }}
+              accessibilityRole="button"
+              accessibilityLabel={t("feeding.selectTime")}
+            >
+              <Text className="text-base" style={{ color: GROWTH_TEAL_DARK }}>
+                {formatTime(measuredAt)}
+              </Text>
+              <Text style={{ color: GROWTH_TEAL }}>🕐</Text>
+            </Pressable>
+          </View>
         </View>
+
+        {/* iOS: Combined datetime picker */}
+        {showDateTimePicker && Platform.OS === "ios" && (
+          <View>
+            <View className="flex-row justify-end px-2">
+              <Pressable
+                onPress={() => setShowDateTimePicker(false)}
+                className="py-1 px-3"
+              >
+                <Text className="text-sm font-semibold" style={{ color: GROWTH_TEAL }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+            <DateTimePicker
+              value={measuredAt}
+              mode="datetime"
+              display="spinner"
+              onChange={handleDateTimeChange}
+              maximumDate={new Date()}
+            />
+          </View>
+        )}
+
+        {/* Android: Separate date picker */}
+        {showDatePicker && Platform.OS === "android" && (
+          <DateTimePicker
+            value={measuredAt}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+            maximumDate={new Date()}
+          />
+        )}
+
+        {/* Android: Separate time picker */}
+        {showTimePicker && Platform.OS === "android" && (
+          <DateTimePicker
+            value={measuredAt}
+            mode="time"
+            display="default"
+            onChange={handleTimeChange}
+          />
+        )}
 
         {/* Measurement Inputs */}
         <View className="gap-4 mb-6">

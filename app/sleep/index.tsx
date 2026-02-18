@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useSleep } from "@/contexts";
+import { useSleep, useAuth } from "@/contexts";
 import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
@@ -21,6 +21,8 @@ export default function SleepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { session } = useAuth();
+  const isAuthenticated = !!session?.access_token;
   const {
     activeTimer,
     startSleep,
@@ -167,8 +169,8 @@ export default function SleepScreen() {
             isPaused={activeTimer?.isPaused ?? false}
             onTypeChange={handleTypeChange}
             onStop={handleStopSleep}
-            onPause={handlePause}
-            onResume={handleResume}
+            onPause={isAuthenticated ? handlePause : undefined}
+            onResume={isAuthenticated ? handleResume : undefined}
           />
         ) : (
           <SleepTypeSelectionView
@@ -440,8 +442,8 @@ interface RunningTimerViewProps {
   isPaused: boolean;
   onTypeChange: (sleepType: SleepType) => void;
   onStop: () => void;
-  onPause: () => void;
-  onResume: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
 }
 
 function RunningTimerView({
@@ -508,17 +510,19 @@ function RunningTimerView({
       </View>
 
       <View className="flex-row items-center gap-6">
-        <Pressable
-          onPress={isPaused ? onResume : onPause}
-          className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
-          style={{ borderColor: SLEEP_PURPLE, backgroundColor: isPaused ? SLEEP_PURPLE : "transparent" }}
-          accessibilityRole="button"
-          accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
-        >
-          <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : SLEEP_PURPLE }}>
-            {isPaused ? "▶" : "⏸"}
-          </Text>
-        </Pressable>
+        {onPause && onResume && (
+          <Pressable
+            onPress={isPaused ? onResume : onPause}
+            className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+            style={{ borderColor: SLEEP_PURPLE, backgroundColor: isPaused ? SLEEP_PURPLE : "transparent" }}
+            accessibilityRole="button"
+            accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+          >
+            <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : SLEEP_PURPLE }}>
+              {isPaused ? "▶" : "⏸"}
+            </Text>
+          </Pressable>
+        )}
 
         <Pressable
           onPress={onStop}

@@ -30,6 +30,8 @@ interface DashboardCardProps {
   activeLabel?: string;
   onPress?: () => void;
   onActionPress?: () => void;
+  onPausePress?: () => void;
+  isPaused?: boolean;
   actionLabel?: string;
   testID?: string;
   progress?: number;
@@ -52,6 +54,8 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
       activeLabel,
       onPress,
       onActionPress,
+      onPausePress,
+      isPaused = false,
       actionLabel = "+",
       testID,
       progress,
@@ -78,6 +82,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
 
     const cardScale = useSharedValue(1);
     const buttonScale = useSharedValue(1);
+    const pauseButtonScale = useSharedValue(1);
     const pulseOpacity = useSharedValue(1);
     const lockedIndicatorScale = useSharedValue(1);
 
@@ -116,6 +121,10 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
       transform: [{ scale: buttonScale.value }],
     }));
 
+    const pauseButtonAnimatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: pauseButtonScale.value }],
+    }));
+
     const lockedIndicatorStyle = useAnimatedStyle(() => ({
       transform: [{ scale: lockedIndicatorScale.value }],
     }));
@@ -139,6 +148,14 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
     const handleButtonPressOut = useCallback(() => {
       buttonScale.value = withSpring(1, SPRING_CONFIG);
     }, [buttonScale]);
+
+    const handlePauseButtonPressIn = useCallback(() => {
+      pauseButtonScale.value = withSpring(0.9, SPRING_CONFIG);
+    }, [pauseButtonScale]);
+
+    const handlePauseButtonPressOut = useCallback(() => {
+      pauseButtonScale.value = withSpring(1, SPRING_CONFIG);
+    }, [pauseButtonScale]);
 
     const lockedBgColor = isDark ? `${accentColor}15` : `${accentColor}08`;
     const lockedBorderColor = isDark ? `${accentColor}40` : `${accentColor}30`;
@@ -328,6 +345,53 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
               <Text className={`${Platform.OS === "android" ? "text-base" : "text-lg"}`}>
                 ⏳
               </Text>
+            </View>
+          ) : isActive && onPausePress ? (
+            <View className="flex-row items-center gap-2">
+              <AnimatedPressable
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  onPausePress();
+                }}
+                onPressIn={handlePauseButtonPressIn}
+                onPressOut={handlePauseButtonPressOut}
+                className={`${Platform.OS === "android" ? "min-w-[36px] min-h-[36px] rounded-xl" : "min-w-[40px] min-h-[40px] rounded-2xl"} items-center justify-center`}
+                style={[
+                  pauseButtonAnimatedStyle,
+                  {
+                    backgroundColor: isPaused ? buttonBgColor : "transparent",
+                    borderWidth: isPaused ? 0 : 2,
+                    borderColor: buttonBgColor,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={isPaused ? "Resume" : "Pause"}
+                testID={testID ? `${testID}-pause` : undefined}
+              >
+                <Text
+                  className={`${Platform.OS === "android" ? "text-sm" : "text-base"} font-bold`}
+                  style={{ color: isPaused ? "#FFFFFF" : buttonBgColor }}
+                >
+                  {isPaused ? "▶" : "⏸"}
+                </Text>
+              </AnimatedPressable>
+              <AnimatedPressable
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  onActionPress?.();
+                }}
+                onPressIn={handleButtonPressIn}
+                onPressOut={handleButtonPressOut}
+                className={`${Platform.OS === "android" ? "min-w-[36px] min-h-[36px] rounded-xl" : "min-w-[40px] min-h-[40px] rounded-2xl"} items-center justify-center`}
+                style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor }]}
+                accessibilityRole="button"
+                accessibilityLabel="Stop"
+                testID={testID ? `${testID}-action` : undefined}
+              >
+                <Text className={`${Platform.OS === "android" ? "text-sm" : "text-base"} font-bold text-white`}>
+                  ⏹
+                </Text>
+              </AnimatedPressable>
             </View>
           ) : (
             <AnimatedPressable

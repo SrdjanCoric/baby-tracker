@@ -1,7 +1,7 @@
 import "../global.css";
 import "../src/i18n";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { View, ActivityIndicator, Platform, AppState, AppStateStatus } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -13,6 +13,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
+import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
@@ -139,6 +140,11 @@ function WidgetStopHandler({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function WidgetPauseHandler({ children }: { children: React.ReactNode }) {
+  useWidgetPauseHandler();
+  return <>{children}</>;
+}
+
 function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
   useGlobalTimerAlerts();
   return <>{children}</>;
@@ -147,21 +153,6 @@ function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const hasHandledInitialUrl = useRef(false);
-  const previousAppState = useRef(AppState.currentState);
-
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (previousAppState.current === 'background' && nextAppState === 'active') {
-        if (router.canDismiss()) {
-          router.dismissAll();
-        }
-      }
-      previousAppState.current = nextAppState;
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
-  }, [router]);
 
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
@@ -405,9 +396,11 @@ export default function RootLayout() {
                                     <DashboardConfigProvider>
                                       <DisplayNamePromptWrapper>
                                         <WidgetStopHandler>
+                                        <WidgetPauseHandler>
                                         <GlobalTimerAlertWatcher>
                                           <AppContent />
                                         </GlobalTimerAlertWatcher>
+                                        </WidgetPauseHandler>
                                         </WidgetStopHandler>
                                       </DisplayNamePromptWrapper>
                                     </DashboardConfigProvider>
