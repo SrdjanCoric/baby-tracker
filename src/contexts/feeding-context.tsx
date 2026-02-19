@@ -482,7 +482,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         await endLiveActivityByType("feeding");
       }
       if (user?.id) {
-        try { await releaseTimerLock(selectedBaby.id, "feeding", user.id); } catch {}
+        try { await releaseTimerLock(selectedBaby.id, "feeding", user.id); } catch { /* ignore */ }
       }
       return null;
     }

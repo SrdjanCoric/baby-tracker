@@ -514,7 +514,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         await endLiveActivityByType("sleep");
       }
       if (user?.id) {
-        try { await releaseTimerLock(selectedBaby.id, "sleep", user.id); } catch {}
+        try { await releaseTimerLock(selectedBaby.id, "sleep", user.id); } catch { /* ignore */ }
       }
       return null;
     }
