@@ -36,7 +36,7 @@ interface LiveActivityControllerModule {
 }
 
 function getLiveActivityModule(): LiveActivityControllerModule | null {
-  if (Platform.OS !== "ios") {
+  if (Platform.OS !== "ios" && Platform.OS !== "android") {
     return null;
   }
 
@@ -171,7 +171,13 @@ export async function resumeTimerLiveActivity(
 }
 
 export function isLiveActivitySupported(): boolean {
-  return Platform.OS === "ios" && parseInt(Platform.Version as string, 10) >= 16;
+  if (Platform.OS === "ios") {
+    return parseInt(Platform.Version as string, 10) >= 16;
+  }
+  if (Platform.OS === "android") {
+    return typeof Platform.Version === "number" && Platform.Version >= 26;
+  }
+  return false;
 }
 
 export async function isLiveActivityRunning(activityId: string): Promise<boolean> {

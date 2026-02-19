@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -7,14 +7,15 @@ import {
   ScrollView,
   Keyboard,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useSleep } from "@/contexts";
-import { useBaby } from "@/contexts";
+import { useSleep, useBaby, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import { validateManualSleep, determineSleepType } from "@/validators/sleep";
 import type { SleepType } from "@/constants/activities";
 
@@ -28,7 +29,8 @@ export default function ManualSleepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
-  const { addSleep } = useSleep();
+  const { timeFormat } = useTimeFormat();
+  const { addSleep, wakeWindowConfig } = useSleep();
 
   const [startTime, setStartTime] = useState(new Date());
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
@@ -36,18 +38,19 @@ export default function ManualSleepScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [sleepType, setSleepType] = useState<SleepType>(() =>
-    determineSleepType(new Date())
+    determineSleepType(new Date(), wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour)
   );
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
   const [durationInput, setDurationInput] = useState("");
 
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const suggestedType = useMemo(() => {
-    return determineSleepType(startTime);
-  }, [startTime]);
+    return determineSleepType(startTime, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour);
+  }, [startTime, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -110,6 +113,7 @@ export default function ManualSleepScreen() {
   }, []);
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby) return;
 
     setErrors({});
@@ -126,6 +130,7 @@ export default function ManualSleepScreen() {
       return;
     }
 
+    isSavingRef.current = true;
     setIsSaving(true);
     try {
       const endedAt = new Date(
@@ -141,6 +146,7 @@ export default function ManualSleepScreen() {
       });
       router.replace("/(tabs)");
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }, [
@@ -168,12 +174,7 @@ export default function ManualSleepScreen() {
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -198,6 +199,10 @@ export default function ManualSleepScreen() {
         <View className="w-touch" />
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -397,6 +402,7 @@ export default function ManualSleepScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

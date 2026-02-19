@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { useTheme, useUnits, useAuth, useLanguage } from "@/contexts";
+import { useTheme, useUnits, useTimeFormat, useAuth, useLanguage } from "@/contexts";
 
 interface SettingsRowProps {
   icon: string;
@@ -88,6 +88,7 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const { preference } = useTheme();
   const { unitSystem } = useUnits();
+  const { timeFormat } = useTimeFormat();
   const { language } = useLanguage();
   const { isAuthenticated, user, signOut } = useAuth();
 
@@ -139,6 +140,14 @@ export default function SettingsScreen() {
             value={unitSystem === "imperial" ? t("settings.imperial") : t("settings.metric")}
             onPress={() => router.push("/settings/units")}
             testID="units-setting"
+          />
+          <SettingsDivider />
+          <SettingsRow
+            icon="🕐"
+            label={t("settings.timeFormat")}
+            value={timeFormat === "24h" ? t("settings.24hour") : t("settings.12hour")}
+            onPress={() => router.push("/settings/time-format")}
+            testID="time-format-setting"
           />
           <SettingsDivider />
           <SettingsRow

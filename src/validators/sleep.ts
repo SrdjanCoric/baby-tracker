@@ -1,4 +1,5 @@
 import type { SleepType } from "@constants/activities";
+import { determineSleepTypeFromBoundary } from "@/utils/day-night-boundary";
 
 export interface SleepEntry {
   id?: string;
@@ -77,12 +78,12 @@ export function calculateSleepDuration(startedAt: Date, endedAt: Date): number {
   return Math.max(0, Math.floor(diffMs / 1000));
 }
 
-export function determineSleepType(startedAt: Date): SleepType {
-  const hour = startedAt.getHours();
-  if (hour >= 19 || hour < 6) {
-    return "night";
-  }
-  return "nap";
+export function determineSleepType(
+  startedAt: Date,
+  dayStartHour?: number,
+  dayEndHour?: number
+): SleepType {
+  return determineSleepTypeFromBoundary(startedAt, dayStartHour, dayEndHour);
 }
 
 export function validateSleep(entry: Partial<SleepEntry>): SleepValidationResult {

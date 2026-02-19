@@ -8,10 +8,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
-import { useOnboarding, useTheme, useUnits } from "@/contexts";
+import { useOnboarding, useTheme, useUnits, useTimeFormat } from "@/contexts";
 import { OnboardingPagination } from "@/components/onboarding";
 import type { ThemePreference } from "@/contexts/theme-context";
 import type { UnitSystem } from "@/contexts/unit-context";
+import type { TimeFormat } from "@/contexts/time-format-context";
 
 const PRIMARY_COLOR = "#6B9E6E";
 
@@ -77,22 +78,24 @@ export default function PreferencesScreen() {
   const { state, nextStep, skipOnboarding } = useOnboarding();
   const { setThemePreference, preference: currentTheme } = useTheme();
   const { setUnitSystem, unitSystem: currentUnits } = useUnits();
+  const { setTimeFormat, timeFormat: currentTimeFormat } = useTimeFormat();
 
   const [language, setLanguage] = useState<LanguageCode>(
     (i18n.language?.startsWith("sr") ? "sr" : "en") as LanguageCode
   );
   const [units, setUnits] = useState<UnitSystem>(currentUnits);
+  const [selectedTimeFormat, setSelectedTimeFormat] = useState<TimeFormat>(currentTimeFormat);
   const [theme, setTheme] = useState<ThemePreference>(currentTheme);
 
   const handleNext = useCallback(async () => {
-    // Save all preferences
     await i18n.changeLanguage(language);
     await setUnitSystem(units);
+    await setTimeFormat(selectedTimeFormat);
     await setThemePreference(theme);
 
     nextStep();
     router.push("/onboarding/sync");
-  }, [language, units, theme, i18n, setUnitSystem, setThemePreference, nextStep, router]);
+  }, [language, units, selectedTimeFormat, theme, i18n, setUnitSystem, setTimeFormat, setThemePreference, nextStep, router]);
 
   const handleSkip = useCallback(async () => {
     await skipOnboarding();
@@ -145,6 +148,24 @@ export default function PreferencesScreen() {
             icon="🇷🇸"
             isSelected={language === "sr"}
             onPress={() => setLanguage("sr")}
+            isDark={isDark}
+          />
+        </Section>
+
+        {/* Time Format Selection */}
+        <Section title={t("onboarding.timeFormat")}>
+          <OptionButton
+            label={t("settings.12hour")}
+            icon="🕐"
+            isSelected={selectedTimeFormat === "12h"}
+            onPress={() => setSelectedTimeFormat("12h")}
+            isDark={isDark}
+          />
+          <OptionButton
+            label={t("settings.24hour")}
+            icon="🕑"
+            isSelected={selectedTimeFormat === "24h"}
+            onPress={() => setSelectedTimeFormat("24h")}
             isDark={isDark}
           />
         </Section>

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   formatDuration,
   formatTime,
+  formatHourValue,
   timeSince,
   calculateDuration,
   isToday,
@@ -88,6 +89,71 @@ describe("formatTime", () => {
   it("pads minutes with zero", () => {
     const date = new Date(2024, 0, 15, 8, 5);
     expect(formatTime(date)).toBe("8:05 AM");
+  });
+
+  describe("24h format", () => {
+    it("formats morning time", () => {
+      const date = new Date(2024, 0, 15, 9, 30);
+      expect(formatTime(date, "24h")).toBe("9:30");
+    });
+
+    it("formats afternoon time", () => {
+      const date = new Date(2024, 0, 15, 14, 45);
+      expect(formatTime(date, "24h")).toBe("14:45");
+    });
+
+    it("formats midnight as 0:00", () => {
+      const date = new Date(2024, 0, 15, 0, 0);
+      expect(formatTime(date, "24h")).toBe("0:00");
+    });
+
+    it("formats noon as 12:00", () => {
+      const date = new Date(2024, 0, 15, 12, 0);
+      expect(formatTime(date, "24h")).toBe("12:00");
+    });
+
+    it("pads minutes with zero", () => {
+      const date = new Date(2024, 0, 15, 8, 5);
+      expect(formatTime(date, "24h")).toBe("8:05");
+    });
+  });
+});
+
+describe("formatHourValue", () => {
+  describe("12h format", () => {
+    it("formats morning hour", () => {
+      expect(formatHourValue(6)).toBe("6 AM");
+    });
+
+    it("formats afternoon hour", () => {
+      expect(formatHourValue(19)).toBe("7 PM");
+    });
+
+    it("formats noon", () => {
+      expect(formatHourValue(12)).toBe("12 PM");
+    });
+
+    it("formats midnight", () => {
+      expect(formatHourValue(0)).toBe("12 AM");
+    });
+  });
+
+  describe("24h format", () => {
+    it("formats morning hour", () => {
+      expect(formatHourValue(6, "24h")).toBe("6:00");
+    });
+
+    it("formats afternoon hour", () => {
+      expect(formatHourValue(19, "24h")).toBe("19:00");
+    });
+
+    it("formats midnight", () => {
+      expect(formatHourValue(0, "24h")).toBe("0:00");
+    });
+
+    it("formats noon", () => {
+      expect(formatHourValue(12, "24h")).toBe("12:00");
+    });
   });
 });
 

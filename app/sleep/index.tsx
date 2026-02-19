@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useSleep } from "@/contexts";
+import { useSleep, useAuth } from "@/contexts";
 import { useBaby } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
@@ -21,6 +21,8 @@ export default function SleepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { session } = useAuth();
+  const isAuthenticated = !!session?.access_token;
   const {
     activeTimer,
     startSleep,
@@ -34,6 +36,7 @@ export default function SleepScreen() {
     suggestedGoalMinutes,
     acceptMilestoneSuggestion,
     dismissMilestoneSuggestion,
+    wakeWindowConfig,
   } = useSleep();
 
   const napAlert = useTimerAlertIntegration("nap");
@@ -79,8 +82,8 @@ export default function SleepScreen() {
   }, [activeTimer, tick]);
 
   const suggestedType = useMemo(() => {
-    return determineSleepType(new Date());
-  }, []);
+    return determineSleepType(new Date(), wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour);
+  }, [wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
 
   const handleStartSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date) => {
     await startSleep(sleepType, customStartTime);
@@ -166,8 +169,8 @@ export default function SleepScreen() {
             isPaused={activeTimer?.isPaused ?? false}
             onTypeChange={handleTypeChange}
             onStop={handleStopSleep}
-            onPause={handlePause}
-            onResume={handleResume}
+            onPause={isAuthenticated ? handlePause : undefined}
+            onResume={isAuthenticated ? handleResume : undefined}
           />
         ) : (
           <SleepTypeSelectionView
@@ -214,20 +217,6 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
     setShowTimePicker(true);
   }, []);
 
-  const handleTimeChange = useCallback(
-    (_event: DateTimePickerEvent, selectedTime?: Date) => {
-      if (Platform.OS === "android") {
-        setShowTimePicker(false);
-      }
-      if (selectedTime) {
-        const now = new Date();
-        const clampedTime = selectedTime > now ? now : selectedTime;
-        setCustomStartTime(clampedTime);
-      }
-    },
-    []
-  );
-
   // Start of yesterday (midnight)
   const yesterdayStart = useMemo(() => {
     const date = new Date();
@@ -235,6 +224,32 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
     date.setHours(0, 0, 0, 0);
     return date;
   }, []);
+
+  const handleTimeChange = useCallback(
+    (_event: DateTimePickerEvent, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
+      if (selectedTime) {
+        const now = new Date();
+        let finalTime: Date;
+        if (Platform.OS === "android") {
+          finalTime = new Date();
+          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
+          if (finalTime > now) {
+            finalTime.setDate(finalTime.getDate() - 1);
+          }
+          if (finalTime < yesterdayStart) {
+            finalTime = new Date(yesterdayStart);
+          }
+        } else {
+          finalTime = selectedTime > now ? now : selectedTime;
+        }
+        setCustomStartTime(finalTime);
+      }
+    },
+    [yesterdayStart]
+  );
 
   const handleTimeDone = useCallback(() => {
     setShowTimePicker(false);
@@ -362,11 +377,11 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
           )}
           <DateTimePicker
             value={customStartTime ?? new Date()}
-            mode="datetime"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            mode={Platform.OS === "ios" ? "datetime" : "time"}
+            display="spinner"
             onChange={handleTimeChange}
-            minimumDate={yesterdayStart}
-            maximumDate={new Date()}
+            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
+            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
           />
         </View>
       )}
@@ -427,8 +442,8 @@ interface RunningTimerViewProps {
   isPaused: boolean;
   onTypeChange: (sleepType: SleepType) => void;
   onStop: () => void;
-  onPause: () => void;
-  onResume: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
 }
 
 function RunningTimerView({
@@ -495,17 +510,19 @@ function RunningTimerView({
       </View>
 
       <View className="flex-row items-center gap-6">
-        <Pressable
-          onPress={isPaused ? onResume : onPause}
-          className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
-          style={{ borderColor: SLEEP_PURPLE, backgroundColor: isPaused ? SLEEP_PURPLE : "transparent" }}
-          accessibilityRole="button"
-          accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
-        >
-          <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : SLEEP_PURPLE }}>
-            {isPaused ? "▶" : "⏸"}
-          </Text>
-        </Pressable>
+        {onPause && onResume && (
+          <Pressable
+            onPress={isPaused ? onResume : onPause}
+            className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+            style={{ borderColor: SLEEP_PURPLE, backgroundColor: isPaused ? SLEEP_PURPLE : "transparent" }}
+            accessibilityRole="button"
+            accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+          >
+            <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : SLEEP_PURPLE }}>
+              {isPaused ? "▶" : "⏸"}
+            </Text>
+          </Pressable>
+        )}
 
         <Pressable
           onPress={onStop}

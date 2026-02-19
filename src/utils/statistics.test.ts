@@ -7,6 +7,11 @@ import {
   calculatePumpingStats,
   calculateTummyTimeStats,
   calculateWeeklyBreakdown,
+  calculateDailyBreakdown,
+  calculateExtendedFeedingStats,
+  calculateExtendedSleepStats,
+  calculateExtendedDiaperStats,
+  calculateRolling7DayAverage,
   getDateRangeForPeriod,
   type DateRange,
 } from "./statistics";
@@ -17,9 +22,9 @@ import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 
 describe("getDateRangeForPeriod", () => {
-  it("returns today's date range for daily period", () => {
+  it("returns today's date range for today period", () => {
     const now = new Date(2024, 0, 15, 14, 30);
-    const range = getDateRangeForPeriod("daily", now);
+    const range = getDateRangeForPeriod("today", now);
 
     expect(range.start.getFullYear()).toBe(2024);
     expect(range.start.getMonth()).toBe(0);
@@ -34,9 +39,9 @@ describe("getDateRangeForPeriod", () => {
     expect(range.end.getMinutes()).toBe(59);
   });
 
-  it("returns last 7 days for weekly period", () => {
+  it("returns last 7 days for 7days period", () => {
     const now = new Date(2024, 0, 15, 14, 30);
-    const range = getDateRangeForPeriod("weekly", now);
+    const range = getDateRangeForPeriod("7days", now);
 
     expect(range.start.getFullYear()).toBe(2024);
     expect(range.start.getMonth()).toBe(0);
@@ -46,6 +51,21 @@ describe("getDateRangeForPeriod", () => {
     expect(range.end.getFullYear()).toBe(2024);
     expect(range.end.getMonth()).toBe(0);
     expect(range.end.getDate()).toBe(15);
+    expect(range.end.getHours()).toBe(23);
+  });
+
+  it("returns last 30 days for 30days period", () => {
+    const now = new Date(2024, 0, 30, 14, 30);
+    const range = getDateRangeForPeriod("30days", now);
+
+    expect(range.start.getFullYear()).toBe(2024);
+    expect(range.start.getMonth()).toBe(0);
+    expect(range.start.getDate()).toBe(1);
+    expect(range.start.getHours()).toBe(0);
+
+    expect(range.end.getFullYear()).toBe(2024);
+    expect(range.end.getMonth()).toBe(0);
+    expect(range.end.getDate()).toBe(30);
     expect(range.end.getHours()).toBe(23);
   });
 });
@@ -429,5 +449,254 @@ describe("calculateWeeklyBreakdown", () => {
 
     expect(breakdown.get("2024-01-15")?.length).toBe(1);
     expect(breakdown.get("2024-01-01")).toBeUndefined();
+  });
+});
+
+describe("calculateDailyBreakdown", () => {
+  it("creates entries for specified number of days", () => {
+    const referenceDate = new Date("2024-01-15T12:00:00Z");
+    const breakdown = calculateDailyBreakdown(
+      [],
+      (entry: { date: string }) => entry.date,
+      30,
+      referenceDate
+    );
+    expect(breakdown.size).toBe(30);
+  });
+
+  it("groups entries by day within window", () => {
+    const entries = [
+      { date: "2024-01-15T10:00:00Z" },
+      { date: "2024-01-15T14:00:00Z" },
+      { date: "2024-01-01T08:00:00Z" },
+    ];
+    const referenceDate = new Date("2024-01-15T12:00:00Z");
+    const breakdown = calculateDailyBreakdown(entries, (e) => e.date, 30, referenceDate);
+
+    expect(breakdown.get("2024-01-15")?.length).toBe(2);
+    expect(breakdown.get("2024-01-01")?.length).toBe(1);
+  });
+
+  it("ignores entries outside window", () => {
+    const entries = [{ date: "2023-12-01T08:00:00Z" }];
+    const referenceDate = new Date("2024-01-15T12:00:00Z");
+    const breakdown = calculateDailyBreakdown(entries, (e) => e.date, 30, referenceDate);
+
+    expect(breakdown.get("2023-12-01")).toBeUndefined();
+  });
+
+  it("with 7 days matches calculateWeeklyBreakdown behavior", () => {
+    const entries = [
+      { date: "2024-01-15T10:00:00Z" },
+      { date: "2024-01-14T08:00:00Z" },
+    ];
+    const referenceDate = new Date("2024-01-15T12:00:00Z");
+    const daily = calculateDailyBreakdown(entries, (e) => e.date, 7, referenceDate);
+    const weekly = calculateWeeklyBreakdown(entries, (e) => e.date, referenceDate);
+
+    expect(daily.size).toBe(weekly.size);
+    expect(daily.get("2024-01-15")?.length).toBe(weekly.get("2024-01-15")?.length);
+    expect(daily.get("2024-01-14")?.length).toBe(weekly.get("2024-01-14")?.length);
+  });
+});
+
+describe("calculateExtendedFeedingStats", () => {
+  const makeFeeding = (overrides: Partial<StoredFeedingEntry> & { id: string; startedAt: string }): StoredFeedingEntry => ({
+    babyId: "baby1",
+    type: "breast",
+    createdAt: overrides.startedAt,
+    updatedAt: overrides.startedAt,
+    ...overrides,
+  });
+
+  it("calculates avg time between sessions", () => {
+    const feedings = [
+      makeFeeding({ id: "1", startedAt: "2024-01-15T08:00:00Z", endedAt: "2024-01-15T08:15:00Z" }),
+      makeFeeding({ id: "2", startedAt: "2024-01-15T11:00:00Z", endedAt: "2024-01-15T11:15:00Z" }),
+      makeFeeding({ id: "3", startedAt: "2024-01-15T14:00:00Z", endedAt: "2024-01-15T14:15:00Z" }),
+    ];
+    const stats = calculateExtendedFeedingStats(feedings);
+    // Gap 1: 11:00 - 08:15 = 9900s, Gap 2: 14:00 - 11:15 = 9900s, avg = 9900s
+    expect(stats.avgTimeBetweenSessionsSeconds).toBe(9900);
+  });
+
+  it("groups feedings within 1hr into same session for avg gap", () => {
+    const feedings = [
+      makeFeeding({ id: "1", startedAt: "2024-01-15T08:00:00Z", endedAt: "2024-01-15T08:15:00Z" }),
+      makeFeeding({ id: "2", startedAt: "2024-01-15T08:30:00Z", endedAt: "2024-01-15T08:45:00Z" }),
+      makeFeeding({ id: "3", startedAt: "2024-01-15T12:00:00Z", endedAt: "2024-01-15T12:15:00Z" }),
+    ];
+    const stats = calculateExtendedFeedingStats(feedings);
+    // Session 1: 08:00-08:45, Session 2: 12:00-12:15
+    // Gap: 12:00 - 08:45 = 3h 15m = 11700s
+    expect(stats.avgTimeBetweenSessionsSeconds).toBe(11700);
+  });
+
+  it("returns 0 for single feeding", () => {
+    const feedings = [
+      makeFeeding({ id: "1", startedAt: "2024-01-15T08:00:00Z" }),
+    ];
+    const stats = calculateExtendedFeedingStats(feedings);
+    expect(stats.avgTimeBetweenSessionsSeconds).toBe(0);
+  });
+
+  it("returns 0 for empty array", () => {
+    const stats = calculateExtendedFeedingStats([]);
+    expect(stats.avgTimeBetweenSessionsSeconds).toBe(0);
+    expect(stats.leftRightBalancePercent).toBeNull();
+  });
+
+  it("calculates L/R breast balance", () => {
+    const feedings = [
+      makeFeeding({ id: "1", startedAt: "2024-01-15T08:00:00Z", leftDurationSeconds: 600, rightDurationSeconds: 400 }),
+      makeFeeding({ id: "2", startedAt: "2024-01-15T12:00:00Z", leftDurationSeconds: 500, rightDurationSeconds: 500 }),
+    ];
+    const stats = calculateExtendedFeedingStats(feedings);
+    expect(stats.leftDurationSeconds).toBe(1100);
+    expect(stats.rightDurationSeconds).toBe(900);
+    expect(stats.leftRightBalancePercent).toEqual({ left: 55, right: 45 });
+  });
+
+  it("returns null balance when no L/R data", () => {
+    const feedings = [
+      makeFeeding({ id: "1", startedAt: "2024-01-15T08:00:00Z", type: "bottle", amountMl: 120 }),
+    ];
+    const stats = calculateExtendedFeedingStats(feedings);
+    expect(stats.leftRightBalancePercent).toBeNull();
+  });
+
+  it("calculates bottle volume by content type", () => {
+    const feedings = [
+      makeFeeding({ id: "1", startedAt: "2024-01-15T08:00:00Z", type: "bottle", contentType: "formula", amountMl: 120 }),
+      makeFeeding({ id: "2", startedAt: "2024-01-15T12:00:00Z", type: "bottle", contentType: "breastMilk", amountMl: 90 }),
+      makeFeeding({ id: "3", startedAt: "2024-01-15T16:00:00Z", type: "bottle", contentType: "formula", amountMl: 150 }),
+    ];
+    const stats = calculateExtendedFeedingStats(feedings);
+    expect(stats.bottleFormulaVolumeMl).toBe(270);
+    expect(stats.bottleBreastMilkVolumeMl).toBe(90);
+  });
+});
+
+describe("calculateExtendedSleepStats", () => {
+  const makeSleep = (overrides: Partial<StoredSleepEntry> & { id: string; startedAt: string }): StoredSleepEntry => ({
+    babyId: "baby1",
+    type: "nap",
+    createdAt: overrides.startedAt,
+    updatedAt: overrides.startedAt,
+    ...overrides,
+  });
+
+  it("finds longest stretch", () => {
+    const sleeps = [
+      makeSleep({ id: "1", startedAt: "2024-01-15T10:00:00Z", durationSeconds: 3600 }),
+      makeSleep({ id: "2", startedAt: "2024-01-15T21:00:00Z", type: "night", durationSeconds: 18000 }),
+      makeSleep({ id: "3", startedAt: "2024-01-15T14:00:00Z", durationSeconds: 5400 }),
+    ];
+    const stats = calculateExtendedSleepStats(sleeps);
+    expect(stats.longestStretchSeconds).toBe(18000);
+  });
+
+  it("returns 0 for empty array", () => {
+    const stats = calculateExtendedSleepStats([]);
+    expect(stats.longestStretchSeconds).toBe(0);
+  });
+
+  it("handles sleeps with undefined duration", () => {
+    const sleeps = [
+      makeSleep({ id: "1", startedAt: "2024-01-15T10:00:00Z", durationSeconds: undefined }),
+      makeSleep({ id: "2", startedAt: "2024-01-15T14:00:00Z", durationSeconds: 3600 }),
+    ];
+    const stats = calculateExtendedSleepStats(sleeps);
+    expect(stats.longestStretchSeconds).toBe(3600);
+  });
+});
+
+describe("calculateExtendedDiaperStats", () => {
+  const makeDiaper = (overrides: Partial<StoredDiaperEntry> & { id: string; changedAt: string }): StoredDiaperEntry => ({
+    babyId: "baby1",
+    type: "wet",
+    createdAt: overrides.changedAt,
+    updatedAt: overrides.changedAt,
+    ...overrides,
+  });
+
+  it("calculates stool color distribution", () => {
+    const diapers = [
+      makeDiaper({ id: "1", changedAt: "2024-01-15T08:00:00Z", type: "dirty", stoolColor: "yellow" }),
+      makeDiaper({ id: "2", changedAt: "2024-01-15T10:00:00Z", type: "dirty", stoolColor: "yellow" }),
+      makeDiaper({ id: "3", changedAt: "2024-01-15T12:00:00Z", type: "mixed", stoolColor: "brown" }),
+      makeDiaper({ id: "4", changedAt: "2024-01-15T14:00:00Z", type: "wet" }),
+    ];
+    const stats = calculateExtendedDiaperStats(diapers);
+    expect(stats.stoolColorDistribution).toEqual({ yellow: 2, brown: 1 });
+  });
+
+  it("ignores wet diapers for stool color", () => {
+    const diapers = [
+      makeDiaper({ id: "1", changedAt: "2024-01-15T08:00:00Z", type: "wet", stoolColor: "yellow" as never }),
+    ];
+    const stats = calculateExtendedDiaperStats(diapers);
+    expect(stats.stoolColorDistribution).toEqual({});
+  });
+
+  it("returns empty distribution when no colors tracked", () => {
+    const diapers = [
+      makeDiaper({ id: "1", changedAt: "2024-01-15T08:00:00Z", type: "dirty" }),
+    ];
+    const stats = calculateExtendedDiaperStats(diapers);
+    expect(stats.stoolColorDistribution).toEqual({});
+  });
+
+  it("returns empty distribution for empty array", () => {
+    const stats = calculateExtendedDiaperStats([]);
+    expect(stats.stoolColorDistribution).toEqual({});
+    expect(stats.totalCount).toBe(0);
+  });
+});
+
+describe("calculateRolling7DayAverage", () => {
+  it("calculates averages from 7 days ending yesterday", () => {
+    const referenceDate = new Date("2024-01-15T14:00:00Z");
+    const feedings: StoredFeedingEntry[] = [];
+    // 7 feedings on Jan 14 (yesterday) - well-spaced so each is its own session
+    for (let i = 0; i < 7; i++) {
+      feedings.push({
+        id: `f-${i}`,
+        babyId: "baby1",
+        type: "breast",
+        startedAt: `2024-01-14T${String(i * 2 + 6).padStart(2, "0")}:00:00Z`,
+        endedAt: `2024-01-14T${String(i * 2 + 6).padStart(2, "0")}:15:00Z`,
+        createdAt: `2024-01-14T${String(i * 2 + 6).padStart(2, "0")}:00:00Z`,
+        updatedAt: `2024-01-14T${String(i * 2 + 6).padStart(2, "0")}:00:00Z`,
+      });
+    }
+    const sleeps: StoredSleepEntry[] = [{
+      id: "s-1",
+      babyId: "baby1",
+      type: "night",
+      startedAt: "2024-01-14T21:00:00Z",
+      durationSeconds: 36000,
+      createdAt: "2024-01-14T21:00:00Z",
+      updatedAt: "2024-01-14T21:00:00Z",
+    }];
+
+    const avg = calculateRolling7DayAverage(feedings, sleeps, [], [], referenceDate);
+    expect(avg.feedingsPerDay).toBe(1);
+    expect(avg.sleepSecondsPerDay).toBe(Math.round(36000 / 7));
+  });
+
+  it("excludes today's data", () => {
+    const referenceDate = new Date("2024-01-15T14:00:00Z");
+    const feedings: StoredFeedingEntry[] = [{
+      id: "f-today",
+      babyId: "baby1",
+      type: "breast",
+      startedAt: "2024-01-15T08:00:00Z",
+      createdAt: "2024-01-15T08:00:00Z",
+      updatedAt: "2024-01-15T08:00:00Z",
+    }];
+
+    const avg = calculateRolling7DayAverage(feedings, [], [], [], referenceDate);
+    expect(avg.feedingsPerDay).toBe(0);
   });
 });

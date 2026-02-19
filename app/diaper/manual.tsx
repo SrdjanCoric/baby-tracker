@@ -1,11 +1,12 @@
-import { useCallback, useState } from "react";
-import { Pressable, Text, View, ScrollView, Platform } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { Pressable, Text, View, ScrollView, Platform, KeyboardAvoidingView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useDiaper } from "@/contexts/diaper-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useTimeFormat } from "@/contexts";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { STOOL_COLORS } from "@/constants/activities";
@@ -28,6 +29,7 @@ export default function ManualDiaperScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { addDiaper } = useDiaper();
 
   const [selectedType, setSelectedType] = useState<DiaperType | null>(null);
@@ -37,6 +39,7 @@ export default function ManualDiaperScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -82,8 +85,10 @@ export default function ManualDiaperScreen() {
   }, []);
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby || !selectedType) return;
 
+    isSavingRef.current = true;
     setIsSaving(true);
     try {
       await addDiaper({
@@ -94,6 +99,7 @@ export default function ManualDiaperScreen() {
       });
       router.replace("/(tabs)");
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }, [selectedBaby, selectedType, selectedColor, changeTime, addDiaper, router]);
@@ -107,12 +113,7 @@ export default function ManualDiaperScreen() {
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   const canSave = selectedType !== null && !isSaving;
 
@@ -143,6 +144,10 @@ export default function ManualDiaperScreen() {
         <View className="w-touch" />
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -296,6 +301,7 @@ export default function ManualDiaperScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

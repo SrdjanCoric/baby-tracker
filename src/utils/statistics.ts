@@ -9,7 +9,7 @@ import type { StoredDiaperEntry } from "@/services/diaper-storage";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 
-export type StatisticsPeriod = "daily" | "weekly";
+export type StatisticsPeriod = "today" | "7days" | "30days";
 
 export interface DateRange {
   start: Date;
@@ -57,14 +57,20 @@ export function getDateRangeForPeriod(
 ): DateRange {
   const start = new Date(referenceDate);
   const end = new Date(referenceDate);
+  end.setHours(23, 59, 59, 999);
 
-  if (period === "daily") {
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
-  } else {
-    start.setDate(start.getDate() - 6);
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
+  switch (period) {
+    case "today":
+      start.setHours(0, 0, 0, 0);
+      break;
+    case "7days":
+      start.setDate(start.getDate() - 6);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case "30days":
+      start.setDate(start.getDate() - 29);
+      start.setHours(0, 0, 0, 0);
+      break;
   }
 
   return { start, end };
@@ -257,6 +263,7 @@ export interface DailyAverages {
   feedingsPerDay: number;
   wetDiapersPerDay: number;
   dirtyDiapersPerDay: number;
+  totalDiapersPerDay: number;
   pumpingMlPerDay: number;
   tummyTimeMinutesPerDay: number;
   daysInPeriod: number;
@@ -275,10 +282,220 @@ export function calculateDailyAverages(
   return {
     sleepHoursPerDay: Math.round((sleepStats.totalDurationSeconds / 3600 / days) * 10) / 10,
     feedingsPerDay: Math.round((feedingStats.totalCount / days) * 10) / 10,
-    wetDiapersPerDay: Math.round(((diaperStats.wetCount + diaperStats.mixedCount) / days) * 10) / 10,
-    dirtyDiapersPerDay: Math.round(((diaperStats.dirtyCount + diaperStats.mixedCount) / days) * 10) / 10,
+    wetDiapersPerDay: Math.round((diaperStats.wetCount / days) * 10) / 10,
+    dirtyDiapersPerDay: Math.round((diaperStats.dirtyCount / days) * 10) / 10,
+    totalDiapersPerDay: Math.round((diaperStats.totalCount / days) * 10) / 10,
     pumpingMlPerDay: Math.round(pumpingStats.totalVolumeMl / days),
     tummyTimeMinutesPerDay: Math.round(tummyTimeStats.totalDurationSeconds / 60 / days),
     daysInPeriod: days,
+  };
+}
+
+export function calculateDailyBreakdown<T>(
+  entries: T[],
+  getDateField: (entry: T) => string,
+  daysBack: number,
+  referenceDate: Date = new Date()
+): Map<string, T[]> {
+  const breakdown = new Map<string, T[]>();
+
+  for (let i = daysBack - 1; i >= 0; i--) {
+    const date = new Date(referenceDate);
+    date.setDate(date.getDate() - i);
+    const dateKey = date.toISOString().split("T")[0];
+    breakdown.set(dateKey, []);
+  }
+
+  for (const entry of entries) {
+    const entryDate = new Date(getDateField(entry));
+    const dateKey = entryDate.toISOString().split("T")[0];
+    if (breakdown.has(dateKey)) {
+      breakdown.get(dateKey)!.push(entry);
+    }
+  }
+
+  return breakdown;
+}
+
+export interface ExtendedFeedingStats extends FeedingStats {
+  avgTimeBetweenSessionsSeconds: number;
+  leftDurationSeconds: number;
+  rightDurationSeconds: number;
+  leftRightBalancePercent: { left: number; right: number } | null;
+  bottleFormulaVolumeMl: number;
+  bottleBreastMilkVolumeMl: number;
+}
+
+const SESSION_GAP_MS = 60 * 60 * 1000;
+const MAX_FEEDING_GAP_S = 86400;
+
+export function calculateExtendedFeedingStats(
+  feedings: StoredFeedingEntry[]
+): ExtendedFeedingStats {
+  const base = calculateFeedingStats(feedings);
+
+  let leftDurationSeconds = 0;
+  let rightDurationSeconds = 0;
+  let bottleFormulaVolumeMl = 0;
+  let bottleBreastMilkVolumeMl = 0;
+
+  for (const feeding of feedings) {
+    if (feeding.leftDurationSeconds) leftDurationSeconds += feeding.leftDurationSeconds;
+    if (feeding.rightDurationSeconds) rightDurationSeconds += feeding.rightDurationSeconds;
+    if (feeding.type === "bottle" && feeding.amountMl) {
+      if (feeding.contentType === "formula") bottleFormulaVolumeMl += feeding.amountMl;
+      else if (feeding.contentType === "breastMilk") bottleBreastMilkVolumeMl += feeding.amountMl;
+    }
+  }
+
+  const totalLR = leftDurationSeconds + rightDurationSeconds;
+  const leftRightBalancePercent = totalLR > 0
+    ? {
+        left: Math.round((leftDurationSeconds / totalLR) * 100),
+        right: Math.round((rightDurationSeconds / totalLR) * 100),
+      }
+    : null;
+
+  const avgTimeBetweenSessionsSeconds = calculateAvgTimeBetweenSessions(feedings);
+
+  return {
+    ...base,
+    avgTimeBetweenSessionsSeconds,
+    leftDurationSeconds,
+    rightDurationSeconds,
+    leftRightBalancePercent,
+    bottleFormulaVolumeMl,
+    bottleBreastMilkVolumeMl,
+  };
+}
+
+function calculateAvgTimeBetweenSessions(feedings: StoredFeedingEntry[]): number {
+  if (feedings.length < 2) return 0;
+
+  const sorted = [...feedings].sort(
+    (a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime()
+  );
+
+  const sessionEnds: number[] = [];
+  const sessionStarts: number[] = [];
+  let currentSessionStart = new Date(sorted[0].startedAt).getTime();
+  let currentSessionEnd = new Date(sorted[0].endedAt || sorted[0].startedAt).getTime();
+
+  for (let i = 1; i < sorted.length; i++) {
+    const currStart = new Date(sorted[i].startedAt).getTime();
+    const currEnd = new Date(sorted[i].endedAt || sorted[i].startedAt).getTime();
+
+    if (currStart - currentSessionEnd >= SESSION_GAP_MS) {
+      sessionStarts.push(currentSessionStart);
+      sessionEnds.push(currentSessionEnd);
+      currentSessionStart = currStart;
+      currentSessionEnd = currEnd;
+    } else {
+      currentSessionEnd = Math.max(currentSessionEnd, currEnd);
+    }
+  }
+  sessionStarts.push(currentSessionStart);
+  sessionEnds.push(currentSessionEnd);
+
+  if (sessionStarts.length < 2) return 0;
+
+  let totalGap = 0;
+  let gapCount = 0;
+  for (let i = 1; i < sessionStarts.length; i++) {
+    const gapSeconds = (sessionStarts[i] - sessionEnds[i - 1]) / 1000;
+    if (gapSeconds > 0 && gapSeconds < MAX_FEEDING_GAP_S) {
+      totalGap += gapSeconds;
+      gapCount++;
+    }
+  }
+
+  return gapCount > 0 ? Math.round(totalGap / gapCount) : 0;
+}
+
+export interface ExtendedSleepStats extends SleepStats {
+  longestStretchSeconds: number;
+}
+
+export function calculateExtendedSleepStats(
+  sleeps: StoredSleepEntry[]
+): ExtendedSleepStats {
+  const base = calculateSleepStats(sleeps);
+
+  const longestStretchSeconds = sleeps.reduce(
+    (max, s) => Math.max(max, s.durationSeconds || 0),
+    0
+  );
+
+  return { ...base, longestStretchSeconds };
+}
+
+export interface ExtendedDiaperStats extends DiaperStats {
+  stoolColorDistribution: Record<string, number>;
+}
+
+export function calculateExtendedDiaperStats(
+  diapers: StoredDiaperEntry[]
+): ExtendedDiaperStats {
+  const base = calculateDiaperStats(diapers);
+
+  const stoolColorDistribution: Record<string, number> = {};
+  for (const diaper of diapers) {
+    if ((diaper.type === "dirty" || diaper.type === "mixed") && diaper.stoolColor) {
+      stoolColorDistribution[diaper.stoolColor] =
+        (stoolColorDistribution[diaper.stoolColor] || 0) + 1;
+    }
+  }
+
+  return { ...base, stoolColorDistribution };
+}
+
+export interface Rolling7DayAverage {
+  feedingsPerDay: number;
+  sleepSecondsPerDay: number;
+  wetDiapersPerDay: number;
+  dirtyDiapersPerDay: number;
+  totalDiapersPerDay: number;
+  tummyTimeSecondsPerDay: number;
+}
+
+export function calculateRolling7DayAverage(
+  feedings: StoredFeedingEntry[],
+  sleeps: StoredSleepEntry[],
+  diapers: StoredDiaperEntry[],
+  tummyTimes: StoredTummyTimeEntry[],
+  referenceDate: Date = new Date()
+): Rolling7DayAverage {
+  const end = new Date(referenceDate);
+  end.setHours(0, 0, 0, 0);
+  end.setMilliseconds(end.getMilliseconds() - 1);
+
+  const start = new Date(end);
+  start.setDate(start.getDate() - 6);
+  start.setHours(0, 0, 0, 0);
+
+  const range: DateRange = { start, end };
+
+  const filteredFeedings = filterEntriesByDateRange(feedings, range, (e) => e.startedAt);
+  const filteredSleeps = filterEntriesByDateRange(sleeps, range, (e) => e.startedAt);
+  const filteredDiapers = filterEntriesByDateRange(diapers, range, (e) => e.changedAt);
+  const filteredTummyTimes = filterEntriesByDateRange(tummyTimes, range, (e) => e.startedAt);
+
+  const feedingStats = calculateFeedingStats(filteredFeedings);
+  const diaperStats = calculateDiaperStats(filteredDiapers);
+
+  const totalSleepSeconds = filteredSleeps.reduce(
+    (sum, s) => sum + (s.durationSeconds || 0), 0
+  );
+  const totalTummySeconds = filteredTummyTimes.reduce(
+    (sum, t) => sum + (t.durationSeconds || 0), 0
+  );
+
+  return {
+    feedingsPerDay: Math.round((feedingStats.totalCount / 7) * 10) / 10,
+    sleepSecondsPerDay: Math.round(totalSleepSeconds / 7),
+    wetDiapersPerDay: Math.round((diaperStats.wetCount / 7) * 10) / 10,
+    dirtyDiapersPerDay: Math.round((diaperStats.dirtyCount / 7) * 10) / 10,
+    totalDiapersPerDay: Math.round((diaperStats.totalCount / 7) * 10) / 10,
+    tummyTimeSecondsPerDay: Math.round(totalTummySeconds / 7),
   };
 }

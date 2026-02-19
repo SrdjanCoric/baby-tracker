@@ -245,7 +245,13 @@ export const SleepStorageService = {
   async getWakeWindowConfig(babyId: string): Promise<WakeWindowConfig | null> {
     const data = await AsyncStorage.getItem(getWakeWindowConfigKey(babyId));
     if (!data) return null;
-    return JSON.parse(data) as WakeWindowConfig;
+    const config = JSON.parse(data) as WakeWindowConfig;
+    return {
+      ...config,
+      dayStartHour: config.dayStartHour ?? 6,
+      dayEndHour: config.dayEndHour ?? 19,
+      napContinuationMinutes: config.napContinuationMinutes ?? 15,
+    };
   },
 
   async setWakeWindowConfig(babyId: string, config: WakeWindowConfig): Promise<void> {

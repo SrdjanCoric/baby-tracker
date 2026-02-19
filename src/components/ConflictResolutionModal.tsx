@@ -14,6 +14,8 @@ import {
   SyncableEntry,
   SyncableTable,
 } from '@/services/sync/types';
+import { formatTime, type TimeFormat } from '@/utils/time';
+import { useTimeFormat } from '@/contexts/time-format-context';
 
 interface ConflictResolutionModalProps {
   visible: boolean;
@@ -31,6 +33,7 @@ interface ConflictItemProps {
   conflict: ConflictScenario;
   index: number;
   onResolve: (strategy: ResolutionStrategy) => void;
+  timeFormat: TimeFormat;
 }
 
 const tableLabels: Record<SyncableTable, string> = {
@@ -47,14 +50,13 @@ const tableLabels: Record<SyncableTable, string> = {
   wake_window_preferences: 'Wake Window',
 };
 
-function formatTimestamp(timestamp: string): string {
+function formatTimestamp(timestamp: string, timeFormat: TimeFormat): string {
   const date = new Date(timestamp);
-  return date.toLocaleString(undefined, {
+  const datePart = date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   });
+  return `${datePart} ${formatTime(date, timeFormat)}`;
 }
 
 function getEntryPreview(entry: SyncableEntry): string {
@@ -69,13 +71,13 @@ function getEntryPreview(entry: SyncableEntry): string {
   return preview.join(' - ') || 'Entry details';
 }
 
-function ConflictItem({ conflict, index, onResolve }: ConflictItemProps) {
+function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const tableLabel = tableLabels[conflict.table] || conflict.table;
-  const localTime = formatTimestamp(conflict.local.updatedAt);
-  const remoteTime = formatTimestamp(conflict.remote.updatedAt);
+  const localTime = formatTimestamp(conflict.local.updatedAt, timeFormat);
+  const remoteTime = formatTimestamp(conflict.remote.updatedAt, timeFormat);
 
   return (
     <View
@@ -174,6 +176,7 @@ export function ConflictResolutionModal({
   testID,
 }: ConflictResolutionModalProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
 
   const handleResolve = useCallback(
     (index: number) => (strategy: ResolutionStrategy) => {
@@ -266,6 +269,7 @@ export function ConflictResolutionModal({
               conflict={conflict}
               index={index}
               onResolve={handleResolve(index)}
+              timeFormat={timeFormat}
             />
           ))}
         </ScrollView>
