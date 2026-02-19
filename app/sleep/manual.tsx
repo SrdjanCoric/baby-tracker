@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   Keyboard,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -44,6 +45,7 @@ export default function ManualSleepScreen() {
 
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const suggestedType = useMemo(() => {
@@ -111,6 +113,7 @@ export default function ManualSleepScreen() {
   }, []);
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby) return;
 
     setErrors({});
@@ -127,6 +130,7 @@ export default function ManualSleepScreen() {
       return;
     }
 
+    isSavingRef.current = true;
     setIsSaving(true);
     try {
       const endedAt = new Date(
@@ -142,6 +146,7 @@ export default function ManualSleepScreen() {
       });
       router.replace("/(tabs)");
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }, [
@@ -194,6 +199,10 @@ export default function ManualSleepScreen() {
         <View className="w-touch" />
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -393,6 +402,7 @@ export default function ManualSleepScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

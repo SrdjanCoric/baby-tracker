@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { Pressable, Text, View, ScrollView } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { Pressable, Text, View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -43,6 +43,7 @@ export default function DiaperScreen() {
   const [selectedType, setSelectedType] = useState<DiaperType | null>(null);
   const [selectedColor, setSelectedColor] = useState<StoolColor | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
 
   const handleTypeSelect = useCallback((type: DiaperType) => {
     setSelectedType(type);
@@ -60,8 +61,10 @@ export default function DiaperScreen() {
   }, [router]);
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby || !selectedType) return;
 
+    isSavingRef.current = true;
     setIsSaving(true);
     try {
       await addDiaper({
@@ -72,6 +75,7 @@ export default function DiaperScreen() {
       });
       router.back();
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }, [selectedBaby, selectedType, selectedColor, addDiaper, router]);
@@ -95,6 +99,10 @@ export default function DiaperScreen() {
         </Text>
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -222,6 +230,7 @@ export default function DiaperScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
