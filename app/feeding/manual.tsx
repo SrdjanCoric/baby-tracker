@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useRef, useState, useMemo } from "react";
 import {
   Pressable,
   Text,
@@ -7,12 +7,13 @@ import {
   ScrollView,
   Keyboard,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useFeeding, useBaby, useUnits } from "@/contexts";
+import { useFeeding, useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { useNotificationIntegration } from "@/hooks";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/validators/feeding";
 import { COMMON_FOODS } from "@/constants/foods";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 
 const FEEDING_GREEN = "#88B04B";
@@ -42,6 +44,7 @@ export default function ManualFeedingScreen() {
   const { selectedBaby } = useBaby();
   const { addFeeding, feedings } = useFeeding();
   const { volumeUnit } = useUnits();
+  const { timeFormat } = useTimeFormat();
   const { scheduleReminderAfterFeeding } = useNotificationIntegration();
 
   // Map URL param to tab type
@@ -104,6 +107,7 @@ export default function ManualFeedingScreen() {
 
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleBack = useCallback(() => {
@@ -259,6 +263,7 @@ export default function ManualFeedingScreen() {
   };
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby) return;
 
     setErrors({});
@@ -277,6 +282,7 @@ export default function ManualFeedingScreen() {
         return;
       }
 
+      isSavingRef.current = true;
       setIsSaving(true);
       try {
         const endedAt = new Date(
@@ -294,6 +300,7 @@ export default function ManualFeedingScreen() {
         await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
+        isSavingRef.current = false;
         setIsSaving(false);
       }
     } else if (activeTab === "bottle") {
@@ -309,6 +316,7 @@ export default function ManualFeedingScreen() {
         return;
       }
 
+      isSavingRef.current = true;
       setIsSaving(true);
       try {
         await addFeeding({
@@ -322,6 +330,7 @@ export default function ManualFeedingScreen() {
         await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
+        isSavingRef.current = false;
         setIsSaving(false);
       }
     } else if (activeTab === "solids") {
@@ -331,6 +340,7 @@ export default function ManualFeedingScreen() {
         return;
       }
 
+      isSavingRef.current = true;
       setIsSaving(true);
       try {
         await addFeeding({
@@ -344,6 +354,7 @@ export default function ManualFeedingScreen() {
         await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
+        isSavingRef.current = false;
         setIsSaving(false);
       }
     }
@@ -401,12 +412,7 @@ export default function ManualFeedingScreen() {
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -452,6 +458,10 @@ export default function ManualFeedingScreen() {
         </View>
       )}
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -848,6 +858,7 @@ export default function ManualFeedingScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

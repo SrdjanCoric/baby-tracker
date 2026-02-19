@@ -18,9 +18,9 @@ export function NoBabyScreen() {
       </Text>
       <Pressable
         onPress={() => router.replace("/baby/add")}
-        className="bg-action-primary dark:bg-action-dark-primary px-8 py-3 rounded-full active:opacity-80"
+        className="bg-action-primary dark:bg-action-dark-primary px-6 py-3 rounded-button min-h-touch items-center justify-center active:opacity-80"
       >
-        <Text className="text-white font-semibold text-base">
+        <Text className="text-white font-semibold text-base text-center">
           {t("baby.addBaby")}
         </Text>
       </Pressable>

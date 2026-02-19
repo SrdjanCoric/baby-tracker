@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -7,13 +7,15 @@ import {
   ScrollView,
   Keyboard,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useTummyTime, useBaby } from "@/contexts";
+import { useTummyTime, useBaby, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import { validateManualTummyTime } from "@/validators/tummyTime";
 
 const TUMMY_ORANGE = "#E67E22";
@@ -26,6 +28,7 @@ export default function ManualTummyTimeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { addTummyTime } = useTummyTime();
 
   const [startTime, setStartTime] = useState(new Date());
@@ -38,6 +41,7 @@ export default function ManualTummyTimeScreen() {
 
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleBack = useCallback(() => {
@@ -101,6 +105,7 @@ export default function ManualTummyTimeScreen() {
   }, []);
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby) return;
 
     setErrors({});
@@ -116,6 +121,7 @@ export default function ManualTummyTimeScreen() {
       return;
     }
 
+    isSavingRef.current = true;
     setIsSaving(true);
     try {
       const endedAt = new Date(
@@ -130,6 +136,7 @@ export default function ManualTummyTimeScreen() {
       });
       router.replace("/(tabs)");
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }, [selectedBaby, startTime, durationMinutes, notes, addTummyTime, router]);
@@ -149,12 +156,7 @@ export default function ManualTummyTimeScreen() {
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -179,6 +181,10 @@ export default function ManualTummyTimeScreen() {
         <View className="w-touch" />
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -350,6 +356,7 @@ export default function ManualTummyTimeScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

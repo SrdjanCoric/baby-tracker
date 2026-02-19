@@ -1,18 +1,19 @@
 import "../global.css";
 import "../src/i18n";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { View, ActivityIndicator, Platform, AppState, AppStateStatus } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, TimeFormatProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
+import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
@@ -139,6 +140,11 @@ function WidgetStopHandler({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function WidgetPauseHandler({ children }: { children: React.ReactNode }) {
+  useWidgetPauseHandler();
+  return <>{children}</>;
+}
+
 function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
   useGlobalTimerAlerts();
   return <>{children}</>;
@@ -147,19 +153,6 @@ function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const hasHandledInitialUrl = useRef(false);
-
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'background') {
-        if (router.canDismiss()) {
-          router.dismissAll();
-        }
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
-  }, [router]);
 
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
@@ -388,6 +381,7 @@ export default function RootLayout() {
               <HouseholdProvider>
                 <SyncAuthSetup>
                 <UnitProvider>
+                <TimeFormatProvider>
                   <BabyProvider>
                     <FeedingProvider>
                       <SleepProvider>
@@ -402,9 +396,11 @@ export default function RootLayout() {
                                     <DashboardConfigProvider>
                                       <DisplayNamePromptWrapper>
                                         <WidgetStopHandler>
+                                        <WidgetPauseHandler>
                                         <GlobalTimerAlertWatcher>
                                           <AppContent />
                                         </GlobalTimerAlertWatcher>
+                                        </WidgetPauseHandler>
                                         </WidgetStopHandler>
                                       </DisplayNamePromptWrapper>
                                     </DashboardConfigProvider>
@@ -419,6 +415,7 @@ export default function RootLayout() {
                       </SleepProvider>
                     </FeedingProvider>
                   </BabyProvider>
+                </TimeFormatProvider>
                 </UnitProvider>
                 </SyncAuthSetup>
               </HouseholdProvider>

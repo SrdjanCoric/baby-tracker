@@ -409,9 +409,13 @@ struct StopActivityIntent: AppIntent {
                 laRequest.httpMethod = "POST"
                 laRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 laRequest.setValue(anonKey ?? "", forHTTPHeaderField: "apikey")
-                laRequest.setValue("Bearer \(anonKey ?? "")", forHTTPHeaderField: "Authorization")
+                laRequest.setValue("Bearer \(accessToken ?? anonKey ?? "")", forHTTPHeaderField: "Authorization")
                 laRequest.timeoutInterval = 10
-                laRequest.httpBody = try? JSONSerialization.data(withJSONObject: ["pushToken": pushToken])
+                var laBody: [String: Any] = ["pushToken": pushToken]
+                #if DEBUG
+                laBody["isSandbox"] = true
+                #endif
+                laRequest.httpBody = try? JSONSerialization.data(withJSONObject: laBody)
                 _ = try? await URLSession.shared.data(for: laRequest)
             }
             userDefaults.removeObject(forKey: "liveActivityPushToken")
@@ -507,8 +511,236 @@ struct StopActivityIntent: AppIntent {
             }
         }
 
-        WidgetCenter.shared.reloadAllTimelines()
+        userDefaults.synchronize()
+
+        for kind in ["SmallBabyWidget", "MediumBabyWidget", "LargeBabyWidget", "LockScreenCircularWidget", "LockScreenRectangularWidget"] {
+            WidgetCenter.shared.reloadTimelines(ofKind: kind)
+        }
         return .result()
+    }
+}
+
+// MARK: - Toggle Pause Intent
+
+struct TogglePauseActivityIntent: AppIntent {
+    static var title: LocalizedStringResource = "Pause/Resume Activity"
+    static var description = IntentDescription("Toggle pause on the current timer")
+    static var openAppWhenRun: Bool = false
+
+    @Parameter(title: "Activity")
+    var activity: ActivityType
+
+    init() {
+        self.activity = .feeding
+    }
+
+    init(activity: ActivityType) {
+        self.activity = activity
+    }
+
+    func perform() async throws -> some IntentResult {
+        NSLog("[TogglePause] perform() called for activity: \(activity.rawValue)")
+
+        guard let userDefaults = UserDefaults(suiteName: appGroupId) else {
+            NSLog("[TogglePause] ERROR: UserDefaults nil")
+            return .result()
+        }
+
+        let dbType = activity == .tummyTime ? "tummy_time" : activity.rawValue
+        let widgetType = activity.rawValue
+
+        let supabaseUrl = userDefaults.string(forKey: "supabaseUrl")
+        let anonKey = userDefaults.string(forKey: "supabaseAnonKey")
+        let accessToken = userDefaults.string(forKey: "supabaseAccessToken")
+        let babyId = userDefaults.string(forKey: "selectedBabyId")
+        let userId = userDefaults.string(forKey: "userId")
+
+        NSLog("[TogglePause] supabaseUrl=\(supabaseUrl != nil) anonKey=\(anonKey != nil) accessToken=\(accessToken != nil) babyId=\(babyId != nil) userId=\(userId != nil)")
+
+        guard let dataString = userDefaults.string(forKey: "widgetData"),
+              let data = dataString.data(using: .utf8),
+              var widgetData = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            NSLog("[TogglePause] ERROR: widgetData parse failed")
+            return .result()
+        }
+
+        var timers = widgetData["activeTimers"] as? [[String: Any]] ?? []
+        guard let timerIndex = timers.firstIndex(where: { ($0["type"] as? String) == widgetType }) else {
+            NSLog("[TogglePause] ERROR: no timer found for type \(widgetType)")
+            return .result()
+        }
+
+        var timer = timers[timerIndex]
+        let currentlyPaused = (timer["isPaused"] as? Bool) ?? false
+        let timerContext = timer["context"] as? String
+        let now = Date()
+        let isoNow = ISO8601DateFormatter().string(from: now)
+        let liveActivityPushToken = userDefaults.string(forKey: "liveActivityPushToken")
+
+        let widgetBabyId = widgetData["babyId"] as? String
+        NSLog("[TogglePause] currentlyPaused=\(currentlyPaused) context=\(timerContext ?? "nil") laPushToken=\(liveActivityPushToken != nil) widgetBabyId=\(widgetBabyId ?? "nil")")
+
+        let effectiveBabyId = babyId ?? widgetBabyId
+        let effectiveUserId = userId ?? ""
+
+        if currentlyPaused {
+            let pausedAtStr = timer["pausedAt"] as? String
+            var pauseDurationMs = 0
+            if let pausedAtStr {
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                var pausedAt = formatter.date(from: pausedAtStr)
+                if pausedAt == nil {
+                    formatter.formatOptions = [.withInternetDateTime]
+                    pausedAt = formatter.date(from: pausedAtStr)
+                }
+                if let pausedAt {
+                    pauseDurationMs = Int(now.timeIntervalSince(pausedAt) * 1000)
+                }
+            }
+
+            let accumulatedSeconds = (timer["accumulatedSeconds"] as? Int) ?? 0
+            let newStartTime = Date(timeIntervalSince1970: now.timeIntervalSince1970 - Double(accumulatedSeconds))
+            let effectiveStartISO = ISO8601DateFormatter().string(from: newStartTime)
+            timer["startTime"] = effectiveStartISO
+            timer["isPaused"] = false
+            timer.removeValue(forKey: "pausedAt")
+            timer.removeValue(forKey: "accumulatedSeconds")
+
+            timers[timerIndex] = timer
+            widgetData["activeTimers"] = timers
+            widgetData["activeTimer"] = timers.first
+            widgetData["updatedAt"] = isoNow
+
+            if let updatedData = try? JSONSerialization.data(withJSONObject: widgetData),
+               let updatedString = String(data: updatedData, encoding: .utf8) {
+                userDefaults.set(updatedString, forKey: "widgetData")
+            }
+
+            let pendingAction: [String: Any] = [
+                "activityType": dbType,
+                "action": "resume",
+                "resumedAt": isoNow,
+                "pauseDurationMs": pauseDurationMs
+            ]
+            if let json = try? JSONSerialization.data(withJSONObject: pendingAction),
+               let jsonString = String(data: json, encoding: .utf8) {
+                userDefaults.set(jsonString, forKey: "pendingWidgetPauseToggle")
+            }
+
+            if let supabaseUrl, let effectiveBabyId {
+                NSLog("[TogglePause] calling edge function: action=resume babyId=\(effectiveBabyId.prefix(8))")
+                var edgeBody: [String: Any] = [
+                    "babyId": effectiveBabyId,
+                    "activityType": dbType,
+                    "userId": effectiveUserId,
+                    "action": "resume",
+                    "timerData": ["isPaused": false],
+                    "elapsedSeconds": accumulatedSeconds,
+                    "effectiveStartTimeISO": effectiveStartISO
+                ]
+                if let timerContext { edgeBody["context"] = timerContext }
+                if let liveActivityPushToken, !liveActivityPushToken.isEmpty {
+                    edgeBody["liveActivityPushToken"] = liveActivityPushToken
+                }
+                #if DEBUG
+                edgeBody["isSandbox"] = true
+                #endif
+                await callTogglePauseEdgeFunction(supabaseUrl: supabaseUrl, anonKey: anonKey ?? "", accessToken: accessToken, body: edgeBody)
+                NSLog("[TogglePause] edge function returned")
+            } else {
+                NSLog("[TogglePause] SKIPPED edge function: supabaseUrl=\(supabaseUrl != nil) babyId=\(effectiveBabyId != nil)")
+            }
+        } else {
+            let startTimeStr = timer["startTime"] as? String
+            var accumulatedSeconds = 0
+            if let startTimeStr {
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                var startDate = formatter.date(from: startTimeStr)
+                if startDate == nil {
+                    formatter.formatOptions = [.withInternetDateTime]
+                    startDate = formatter.date(from: startTimeStr)
+                }
+                if let startDate {
+                    accumulatedSeconds = max(0, Int(now.timeIntervalSince(startDate)))
+                }
+            }
+
+            timer["isPaused"] = true
+            timer["pausedAt"] = isoNow
+            timer["accumulatedSeconds"] = accumulatedSeconds
+
+            timers[timerIndex] = timer
+            widgetData["activeTimers"] = timers
+            widgetData["activeTimer"] = timers.first
+            widgetData["updatedAt"] = isoNow
+
+            if let updatedData = try? JSONSerialization.data(withJSONObject: widgetData),
+               let updatedString = String(data: updatedData, encoding: .utf8) {
+                userDefaults.set(updatedString, forKey: "widgetData")
+            }
+
+            let pendingAction: [String: Any] = [
+                "activityType": dbType,
+                "action": "pause",
+                "pausedAt": isoNow,
+                "accumulatedSeconds": accumulatedSeconds
+            ]
+            if let json = try? JSONSerialization.data(withJSONObject: pendingAction),
+               let jsonString = String(data: json, encoding: .utf8) {
+                userDefaults.set(jsonString, forKey: "pendingWidgetPauseToggle")
+            }
+
+            if let supabaseUrl, let effectiveBabyId {
+                NSLog("[TogglePause] calling edge function: action=pause accumulated=\(accumulatedSeconds) babyId=\(effectiveBabyId.prefix(8))")
+                var edgeBody: [String: Any] = [
+                    "babyId": effectiveBabyId,
+                    "activityType": dbType,
+                    "userId": effectiveUserId,
+                    "action": "pause",
+                    "timerData": ["isPaused": true, "pausedAt": isoNow, "accumulatedSeconds": accumulatedSeconds],
+                    "elapsedSeconds": accumulatedSeconds
+                ]
+                if let timerContext { edgeBody["context"] = timerContext }
+                if let liveActivityPushToken, !liveActivityPushToken.isEmpty {
+                    edgeBody["liveActivityPushToken"] = liveActivityPushToken
+                }
+                #if DEBUG
+                edgeBody["isSandbox"] = true
+                #endif
+                await callTogglePauseEdgeFunction(supabaseUrl: supabaseUrl, anonKey: anonKey ?? "", accessToken: accessToken, body: edgeBody)
+                NSLog("[TogglePause] edge function returned")
+            } else {
+                NSLog("[TogglePause] SKIPPED edge function: supabaseUrl=\(supabaseUrl != nil) babyId=\(effectiveBabyId != nil)")
+            }
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
+        NSLog("[TogglePause] done, reloaded timelines")
+        return .result()
+    }
+
+    private func callTogglePauseEdgeFunction(supabaseUrl: String, anonKey: String, accessToken: String?, body: [String: Any]) async {
+        let edgeUrl = "\(supabaseUrl)/functions/v1/toggle-timer-pause"
+        guard let url = URL(string: edgeUrl) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(accessToken ?? anonKey)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 10
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse {
+                let bodyStr = String(data: data, encoding: .utf8) ?? ""
+                NSLog("[TogglePause] edge response: status=\(httpResponse.statusCode) body=\(bodyStr.prefix(200))")
+            }
+        } catch {
+            NSLog("[TogglePause] edge request error: \(error.localizedDescription)")
+        }
     }
 }
 
@@ -557,6 +789,7 @@ struct BabyWidgetEntry: TimelineEntry {
     let widgetData: WidgetDataModel?
     let selectedActivity: ActivityType
     let selectedActivities: [ActivityType]
+    let isUserAuthenticated: Bool
 }
 
 // MARK: - Shared Data Loading
@@ -568,6 +801,11 @@ func loadWidgetData() -> WidgetDataModel? {
         return nil
     }
     return try? JSONDecoder().decode(WidgetDataModel.self, from: data)
+}
+
+func isUserAuthenticated() -> Bool {
+    guard let userDefaults = UserDefaults(suiteName: appGroupId) else { return false }
+    return userDefaults.string(forKey: "supabaseAccessToken") != nil
 }
 
 func getLastActivityTime(for activity: ActivityType, data: WidgetDataModel?) -> Date? {
@@ -725,24 +963,25 @@ func createSampleWidgetData() -> WidgetDataModel {
 
 struct SingleActivityProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> BabyWidgetEntry {
-        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [])
+        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [], isUserAuthenticated: true)
     }
 
     func snapshot(for configuration: SelectActivityIntent, in context: Context) async -> BabyWidgetEntry {
         let data = context.isPreview ? createSampleWidgetData() : loadWidgetData()
-        return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: configuration.activity, selectedActivities: [])
+        return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: configuration.activity, selectedActivities: [], isUserAuthenticated: isUserAuthenticated())
     }
 
     func timeline(for configuration: SelectActivityIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
         let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
+        let authenticated = isUserAuthenticated()
 
         var entries: [BabyWidgetEntry] = []
         let now = Date()
         for minuteOffset in 0..<30 {
             let entryDate = now.addingTimeInterval(Double(minuteOffset) * 60)
-            let entry = BabyWidgetEntry(date: entryDate, widgetData: data, selectedActivity: configuration.activity, selectedActivities: [])
+            let entry = BabyWidgetEntry(date: entryDate, widgetData: data, selectedActivity: configuration.activity, selectedActivities: [], isUserAuthenticated: authenticated)
             entries.append(entry)
         }
 
@@ -753,13 +992,13 @@ struct SingleActivityProvider: AppIntentTimelineProvider {
 
 struct FourActivityProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> BabyWidgetEntry {
-        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [.feeding, .sleep, .diaper, .tummyTime])
+        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [.feeding, .sleep, .diaper, .tummyTime], isUserAuthenticated: true)
     }
 
     func snapshot(for configuration: SelectFourActivitiesIntent, in context: Context) async -> BabyWidgetEntry {
         let data = context.isPreview ? createSampleWidgetData() : loadWidgetData()
         let activities = [configuration.activity1, configuration.activity2, configuration.activity3, configuration.activity4]
-        return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: .feeding, selectedActivities: activities)
+        return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: .feeding, selectedActivities: activities, isUserAuthenticated: isUserAuthenticated())
     }
 
     func timeline(for configuration: SelectFourActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
@@ -767,12 +1006,13 @@ struct FourActivityProvider: AppIntentTimelineProvider {
         let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
         let activities = [configuration.activity1, configuration.activity2, configuration.activity3, configuration.activity4]
+        let authenticated = isUserAuthenticated()
 
         var entries: [BabyWidgetEntry] = []
         let now = Date()
         for minuteOffset in 0..<30 {
             let entryDate = now.addingTimeInterval(Double(minuteOffset) * 60)
-            let entry = BabyWidgetEntry(date: entryDate, widgetData: data, selectedActivity: .feeding, selectedActivities: activities)
+            let entry = BabyWidgetEntry(date: entryDate, widgetData: data, selectedActivity: .feeding, selectedActivities: activities, isUserAuthenticated: authenticated)
             entries.append(entry)
         }
 
@@ -783,13 +1023,13 @@ struct FourActivityProvider: AppIntentTimelineProvider {
 
 struct TwoActivityProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> BabyWidgetEntry {
-        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [.feeding, .sleep])
+        BabyWidgetEntry(date: Date(), widgetData: createSampleWidgetData(), selectedActivity: .feeding, selectedActivities: [.feeding, .sleep], isUserAuthenticated: true)
     }
 
     func snapshot(for configuration: SelectTwoActivitiesIntent, in context: Context) async -> BabyWidgetEntry {
         let data = context.isPreview ? createSampleWidgetData() : loadWidgetData()
         let activities = [configuration.activity1, configuration.activity2]
-        return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: .feeding, selectedActivities: activities)
+        return BabyWidgetEntry(date: Date(), widgetData: data, selectedActivity: .feeding, selectedActivities: activities, isUserAuthenticated: isUserAuthenticated())
     }
 
     func timeline(for configuration: SelectTwoActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
@@ -797,12 +1037,13 @@ struct TwoActivityProvider: AppIntentTimelineProvider {
         let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
         let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
         let activities = [configuration.activity1, configuration.activity2]
+        let authenticated = isUserAuthenticated()
 
         var entries: [BabyWidgetEntry] = []
         let now = Date()
         for minuteOffset in 0..<30 {
             let entryDate = now.addingTimeInterval(Double(minuteOffset) * 60)
-            let entry = BabyWidgetEntry(date: entryDate, widgetData: data, selectedActivity: .feeding, selectedActivities: activities)
+            let entry = BabyWidgetEntry(date: entryDate, widgetData: data, selectedActivity: .feeding, selectedActivities: activities, isUserAuthenticated: authenticated)
             entries.append(entry)
         }
 
@@ -971,22 +1212,34 @@ struct SmallWidgetView: View {
                         .fill(.white.opacity(0.25))
                 )
             } else if isActive {
-                Button(intent: StopActivityIntent(activity: activity)) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "stop.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Stop")
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                HStack(spacing: 8) {
+                    if entry.isUserAuthenticated {
+                        Button(intent: TogglePauseActivityIntent(activity: activity)) {
+                            let timerPaused = isTimerPausedForActivity(activity, data: entry.widgetData)
+                            Image(systemName: timerPaused ? "play.fill" : "pause.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(timerPaused ? .white : activity.accentColor)
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    Circle()
+                                        .fill(timerPaused ? activity.accentColor : .white)
+                                )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .foregroundStyle(Color(hex: "DC3545"))
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(
-                        Capsule()
-                            .fill(.white)
-                    )
+
+                    Button(intent: StopActivityIntent(activity: activity)) {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color(hex: "DC3545"))
+                            .frame(width: 36, height: 36)
+                            .background(
+                                Circle()
+                                    .fill(.white)
+                            )
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             } else if let data = entry.widgetData {
                 if let lastTime = getLastActivityTime(for: activity, data: data) {
                     Text(formatTimeAgoLong(lastTime, now: entry.date))
@@ -1349,7 +1602,8 @@ struct LargeWidgetView: View {
                         activity: activity,
                         data: entry.widgetData,
                         currentDate: entry.date,
-                        isRemoteLock: entry.widgetData?.isRemoteTimer(for: activity) ?? false
+                        isRemoteLock: entry.widgetData?.isRemoteTimer(for: activity) ?? false,
+                        isUserAuthenticated: entry.isUserAuthenticated
                     )
                 }
             }
@@ -1367,6 +1621,7 @@ struct ActivityRowView: View {
     let data: WidgetDataModel?
     let currentDate: Date
     var isRemoteLock: Bool = false
+    var isUserAuthenticated: Bool = true
 
     var isActive: Bool {
         data?.hasActiveTimer(for: activity) ?? false
@@ -1456,19 +1711,55 @@ struct ActivityRowView: View {
 
             Spacer()
 
-            ZStack {
-                Circle()
-                    .fill(Color(hex: WidgetColors.Button.light))
-                    .frame(width: 34, height: 34)
-                    .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
-
-                if isActive && isRemoteLock {
+            if isActive && isRemoteLock {
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: WidgetColors.Button.light))
+                        .frame(width: 34, height: 34)
+                        .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
                     Text("⏳")
                         .font(.system(size: 16))
-                } else {
-                    Image(systemName: isActive ? "stop.fill" : "plus")
+                }
+            } else if isActive {
+                HStack(spacing: 6) {
+                    if isUserAuthenticated {
+                        Button(intent: TogglePauseActivityIntent(activity: activity)) {
+                            let timerPaused = isTimerPausedForActivity(activity, data: data)
+                            ZStack {
+                                Circle()
+                                    .fill(timerPaused ? activity.accentColor : Color(hex: WidgetColors.Button.light))
+                                    .frame(width: 30, height: 30)
+                                    .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                                Image(systemName: timerPaused ? "play.fill" : "pause.fill")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(timerPaused ? .white : activity.accentColor)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Button(intent: StopActivityIntent(activity: activity)) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: WidgetColors.Button.light))
+                                .frame(width: 30, height: 30)
+                                .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                            Image(systemName: "stop.fill")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(Color.red)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: WidgetColors.Button.light))
+                        .frame(width: 34, height: 34)
+                        .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
+                    Image(systemName: "plus")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(isActive ? Color.red : activity.accentColor)
+                        .foregroundStyle(activity.accentColor)
                 }
             }
         }
@@ -1484,10 +1775,7 @@ struct ActivityRowView: View {
         if isRemoteLock && isActive {
             rowContent
         } else if isActive {
-            Button(intent: StopActivityIntent(activity: activity)) {
-                rowContent
-            }
-            .buttonStyle(.plain)
+            rowContent
         } else {
             Link(destination: activity.deepLinkURL) {
                 rowContent

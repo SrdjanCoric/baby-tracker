@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useTummyTime, useBaby } from "@/contexts";
+import { useTummyTime, useBaby, useAuth } from "@/contexts";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
@@ -20,6 +20,8 @@ export default function TummyTimeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { session } = useAuth();
+  const isAuthenticated = !!session?.access_token;
   const {
     activeTimer,
     startTummyTime,
@@ -164,8 +166,8 @@ export default function TummyTimeScreen() {
             dailyGoalSeconds={dailyGoalSeconds}
             isPaused={activeTimer?.isPaused ?? false}
             onStop={handleStopTummyTime}
-            onPause={handlePause}
-            onResume={handleResume}
+            onPause={isAuthenticated ? handlePause : undefined}
+            onResume={isAuthenticated ? handleResume : undefined}
           />
         ) : (
           <StartView
@@ -272,6 +274,13 @@ function StartView({
     setShowTimePicker(true);
   }, []);
 
+  const yesterdayStart = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
       if (Platform.OS === "android") {
@@ -279,19 +288,24 @@ function StartView({
       }
       if (selectedTime) {
         const now = new Date();
-        const clampedTime = selectedTime > now ? now : selectedTime;
-        setCustomStartTime(clampedTime);
+        let finalTime: Date;
+        if (Platform.OS === "android") {
+          finalTime = new Date();
+          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
+          if (finalTime > now) {
+            finalTime.setDate(finalTime.getDate() - 1);
+          }
+          if (finalTime < yesterdayStart) {
+            finalTime = new Date(yesterdayStart);
+          }
+        } else {
+          finalTime = selectedTime > now ? now : selectedTime;
+        }
+        setCustomStartTime(finalTime);
       }
     },
-    []
+    [yesterdayStart]
   );
-
-  const yesterdayStart = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
 
   const handleTimeDone = useCallback(() => {
     setShowTimePicker(false);
@@ -432,11 +446,11 @@ function StartView({
           )}
           <DateTimePicker
             value={customStartTime ?? new Date()}
-            mode="datetime"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            mode={Platform.OS === "ios" ? "datetime" : "time"}
+            display="spinner"
             onChange={handleTimeChange}
-            minimumDate={yesterdayStart}
-            maximumDate={new Date()}
+            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
+            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
           />
         </View>
       )}
@@ -451,8 +465,8 @@ interface RunningTimerViewProps {
   dailyGoalSeconds: number;
   isPaused: boolean;
   onStop: () => void;
-  onPause: () => void;
-  onResume: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
 }
 
 function RunningTimerView({
@@ -523,17 +537,19 @@ function RunningTimerView({
       </View>
 
       <View className="flex-row items-center gap-6">
-        <Pressable
-          onPress={isPaused ? onResume : onPause}
-          className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
-          style={{ borderColor: TUMMY_ORANGE, backgroundColor: isPaused ? TUMMY_ORANGE : "transparent" }}
-          accessibilityRole="button"
-          accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
-        >
-          <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : TUMMY_ORANGE }}>
-            {isPaused ? "▶" : "⏸"}
-          </Text>
-        </Pressable>
+        {onPause && onResume && (
+          <Pressable
+            onPress={isPaused ? onResume : onPause}
+            className="w-16 h-16 rounded-full items-center justify-center active:scale-95 border-2"
+            style={{ borderColor: TUMMY_ORANGE, backgroundColor: isPaused ? TUMMY_ORANGE : "transparent" }}
+            accessibilityRole="button"
+            accessibilityLabel={isPaused ? t("common.resumeTimer") : t("common.pauseTimer")}
+          >
+            <Text className="text-2xl" style={{ color: isPaused ? "#FFFFFF" : TUMMY_ORANGE }}>
+              {isPaused ? "▶" : "⏸"}
+            </Text>
+          </Pressable>
+        )}
 
         <Pressable
           onPress={onStop}

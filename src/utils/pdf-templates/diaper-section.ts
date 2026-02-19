@@ -30,8 +30,13 @@ export function renderDiaperSection(stats: DiaperReportStats): string {
           </div>
 
           <div class="stat-box">
-            <div class="stat-value">${stats.byType.dirty + stats.byType.mixed}</div>
-            <div class="stat-label">${t("reports.pdf.dirtyDiapers")}/${t("reports.pdf.mixedDiapers")}</div>
+            <div class="stat-value">${stats.byType.dirty}</div>
+            <div class="stat-label">${t("reports.pdf.dirtyDiapers")}</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-value">${stats.byType.mixed}</div>
+            <div class="stat-label">${t("reports.pdf.mixedDiapers")}</div>
           </div>
         </div>
       </div>

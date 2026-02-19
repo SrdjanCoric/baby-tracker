@@ -58,9 +58,13 @@ async function createApnsJwt(
 async function sendApnsLiveActivityEnd(
   deviceToken: string,
   jwt: string,
-  topic: string
+  topic: string,
+  isSandbox: boolean
 ): Promise<{ success: boolean; status: number }> {
-  const url = `https://api.push.apple.com/3/device/${deviceToken}`;
+  const apnsHost = isSandbox
+    ? "api.sandbox.push.apple.com"
+    : "api.push.apple.com";
+  const url = `https://${apnsHost}/3/device/${deviceToken}`;
 
   const now = Math.floor(Date.now() / 1000);
   const body = JSON.stringify({
@@ -71,6 +75,7 @@ async function sendApnsLiveActivityEnd(
       "content-state": {
         elapsedSeconds: 0,
         context: null,
+        isPaused: false,
       },
     },
   });
@@ -103,7 +108,7 @@ serve(async (req) => {
   }
 
   try {
-    const { pushToken } = (await req.json()) as { pushToken: string };
+    const { pushToken, isSandbox } = (await req.json()) as { pushToken: string; isSandbox?: boolean };
 
     if (!pushToken) {
       return new Response(
@@ -134,7 +139,7 @@ serve(async (req) => {
 
     const jwt = await createApnsJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
 
-    const result = await sendApnsLiveActivityEnd(pushToken, jwt, apnsTopic);
+    const result = await sendApnsLiveActivityEnd(pushToken, jwt, apnsTopic, isSandbox ?? false);
 
     if (result.success) {
       return new Response(

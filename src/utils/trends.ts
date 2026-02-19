@@ -2,7 +2,7 @@
  * Trend calculation utilities for week-over-week comparisons
  */
 
-import { getDateRangeForPeriod, filterEntriesByDateRange } from "./statistics";
+import { getDateRangeForPeriod, filterEntriesByDateRange, type StatisticsPeriod } from "./statistics";
 
 export type TrendDirection = "increase" | "decrease" | "stable";
 
@@ -71,34 +71,39 @@ export function calculateWeekOverWeekTrend<T>(
   calculateValue: (entries: T[]) => number,
   referenceDate: Date = new Date()
 ): TrendResult {
-  // Current week range (last 7 days ending today)
-  const currentWeekRange = getDateRangeForPeriod("weekly", referenceDate);
-
-  // Previous week range (7 days before the current week)
-  const previousWeekStart = new Date(currentWeekRange.start);
-  previousWeekStart.setDate(previousWeekStart.getDate() - 7);
-  const previousWeekEnd = new Date(currentWeekRange.start);
-  previousWeekEnd.setMilliseconds(previousWeekEnd.getMilliseconds() - 1);
-
-  const previousWeekRange = {
-    start: previousWeekStart,
-    end: previousWeekEnd,
-  };
-
-  const currentWeekEntries = filterEntriesByDateRange(
+  return calculatePeriodOverPeriodTrend(
     entries,
-    currentWeekRange,
-    getDateField
+    getDateField,
+    calculateValue,
+    "7days",
+    referenceDate
   );
+}
 
-  const previousWeekEntries = filterEntriesByDateRange(
-    entries,
-    previousWeekRange,
-    getDateField
-  );
+export function calculatePeriodOverPeriodTrend<T>(
+  entries: T[],
+  getDateField: (entry: T) => string,
+  calculateValue: (entries: T[]) => number,
+  period: StatisticsPeriod,
+  referenceDate: Date = new Date()
+): TrendResult {
+  const currentRange = getDateRangeForPeriod(period, referenceDate);
 
-  const currentValue = calculateValue(currentWeekEntries);
-  const previousValue = calculateValue(previousWeekEntries);
+  const periodDays = period === "today" ? 1 : period === "7days" ? 7 : 30;
+
+  const previousEnd = new Date(currentRange.start);
+  previousEnd.setMilliseconds(previousEnd.getMilliseconds() - 1);
+  const previousStart = new Date(previousEnd);
+  previousStart.setDate(previousStart.getDate() - (periodDays - 1));
+  previousStart.setHours(0, 0, 0, 0);
+
+  const previousRange = { start: previousStart, end: previousEnd };
+
+  const currentEntries = filterEntriesByDateRange(entries, currentRange, getDateField);
+  const previousEntries = filterEntriesByDateRange(entries, previousRange, getDateField);
+
+  const currentValue = calculateValue(currentEntries);
+  const previousValue = calculateValue(previousEntries);
 
   return calculateTrend(currentValue, previousValue);
 }

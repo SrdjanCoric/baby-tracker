@@ -173,6 +173,25 @@ describe("determineSleepType", () => {
     const sevenPm = new Date(2024, 5, 15, 19, 0);
     expect(determineSleepType(sevenPm)).toBe("night");
   });
+
+  it("uses custom day start hour", () => {
+    const sixThirtyAm = new Date(2024, 5, 15, 6, 30);
+    expect(determineSleepType(sixThirtyAm)).toBe("nap");
+    expect(determineSleepType(sixThirtyAm, 7)).toBe("night");
+  });
+
+  it("uses custom day end hour", () => {
+    const sevenThirtyPm = new Date(2024, 5, 15, 19, 30);
+    expect(determineSleepType(sevenThirtyPm)).toBe("night");
+    expect(determineSleepType(sevenThirtyPm, undefined, 20)).toBe("nap");
+  });
+
+  it("uses both custom boundaries", () => {
+    expect(determineSleepType(new Date(2024, 5, 15, 6, 30), 7, 20)).toBe("night");
+    expect(determineSleepType(new Date(2024, 5, 15, 7, 0), 7, 20)).toBe("nap");
+    expect(determineSleepType(new Date(2024, 5, 15, 19, 30), 7, 20)).toBe("nap");
+    expect(determineSleepType(new Date(2024, 5, 15, 20, 0), 7, 20)).toBe("night");
+  });
 });
 
 describe("validateSleep", () => {

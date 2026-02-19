@@ -4,6 +4,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
+import { computeSuggestedSide } from "@/utils/feeding-sessions";
 
 const FEEDINGS_KEY_PREFIX = "@feedings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_feeding_timer:";
@@ -195,6 +196,11 @@ export const FeedingStorageService = {
     );
     // Prefer lastFinishedSide (new entries), fall back to side (old entries)
     return sorted[0].lastFinishedSide ?? sorted[0].side ?? null;
+  },
+
+  async getSuggestedBreastSide(babyId: string): Promise<BreastSide | null> {
+    const feedings = await this.getAllFeedings(babyId);
+    return computeSuggestedSide(feedings);
   },
 
   async getActiveTimer(babyId: string): Promise<ActiveTimerData | null> {

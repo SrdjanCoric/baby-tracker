@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, TextInput, View, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useFeeding } from "@/contexts/feeding-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 
@@ -18,6 +18,7 @@ export default function EditFeedingScreen() {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { feedings, updateFeeding, deleteFeeding } = useFeeding();
 
   const feeding = useMemo(() => {
@@ -400,6 +401,10 @@ export default function EditFeedingScreen() {
         </Pressable>
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -421,7 +426,7 @@ export default function EditFeedingScreen() {
             {formatDate(new Date(feeding.startedAt))}
           </Text>
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatTime(new Date(feeding.startedAt))}
+            {formatTime(new Date(feeding.startedAt), timeFormat)}
           </Text>
         </View>
 
@@ -465,6 +470,7 @@ export default function EditFeedingScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

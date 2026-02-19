@@ -24,6 +24,7 @@ export async function syncWidgetPushToken(): Promise<void> {
     {
       user_id: user.id,
       device_token: token,
+      is_sandbox: __DEV__,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,device_token" }

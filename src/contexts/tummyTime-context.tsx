@@ -15,7 +15,7 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
-import { acquireTimerLock, releaseTimerLock, updateTimerData } from "@/services/active-timer-service";
+import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import {
   AgeGroup,
   GoalSource,
@@ -318,13 +318,48 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         if (activeTimer.liveActivityId) {
           liveActivityIdRef.current = activeTimer.liveActivityId;
         }
+      } else if (user?.id && user?.householdId) {
+        try {
+          const lock = await getActiveTimerLock(selectedBaby.id, "tummy_time");
+          if (lock && lock.startedBy === user.id) {
+            const td = lock.timerData || {};
+            const isPaused = td.isPaused === true;
+            const totalPausedMs = typeof td.totalPausedMs === "number" ? td.totalPausedMs : 0;
+            const pausedAt = typeof td.pausedAt === "string" ? td.pausedAt : undefined;
+
+            dispatch({
+              type: "RESTORE_TIMER",
+              payload: {
+                isRunning: true,
+                isPaused,
+                startTime: new Date(lock.startedAt),
+                totalPausedMs,
+                pausedAt: pausedAt ? new Date(pausedAt) : undefined,
+              },
+            });
+
+            await TummyTimeStorageService.setActiveTimer(selectedBaby.id, {
+              startedAt: lock.startedAt,
+              isPaused,
+              totalPausedMs,
+              pausedAt,
+            });
+
+            if (!isPaused) {
+              const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name, undefined, new Date(lock.startedAt));
+              if (activityId) liveActivityIdRef.current = activityId;
+            }
+          }
+        } catch (error) {
+          console.error("[TummyTimeContext] Failed to restore from server:", error);
+        }
       }
     } catch (error) {
       console.error("[TummyTimeContext] Failed to load tummy times:", error);
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [selectedBaby, user?.householdId]);
+  }, [selectedBaby, user?.householdId, user?.id]);
 
   useEffect(() => {
     loadTummyTimes();
@@ -335,7 +370,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        const lockResult = await acquireTimerLock(selectedBaby.id, "tummy_time", user.id);
+        const lockResult = await acquireTimerLock(selectedBaby.id, "tummy_time", user.id, {});
         if (!lockResult.success) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }
@@ -424,7 +459,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        await updateTimerData(selectedBaby.id, "tummy_time", user.id, { isPaused: true });
+        await updateTimerData(selectedBaby.id, "tummy_time", user.id, {
+          isPaused: true,
+          pausedAt: new Date().toISOString(),
+          totalPausedMs: state.activeTimer.totalPausedMs,
+        });
       } catch (error) {
         console.error("[TummyTimeContext] Failed to update timer data:", error);
       }
@@ -458,7 +497,10 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        await updateTimerData(selectedBaby.id, "tummy_time", user.id, { isPaused: false });
+        await updateTimerData(selectedBaby.id, "tummy_time", user.id, {
+          isPaused: false,
+          totalPausedMs: newTotalPausedMs,
+        });
       } catch (error) {
         console.error("[TummyTimeContext] Failed to update timer data:", error);
       }

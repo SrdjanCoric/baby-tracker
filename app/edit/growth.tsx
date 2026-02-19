@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, TextInput, View, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useGrowth } from "@/contexts/growth-context";
-import { useBaby } from "@/contexts";
+import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 
 const GROWTH_TEAL = "#009B77";
@@ -17,6 +17,7 @@ export default function EditGrowthScreen() {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const { measurements, updateMeasurement, deleteMeasurement } = useGrowth();
 
   const measurement = useMemo(() => {
@@ -186,6 +187,10 @@ export default function EditGrowthScreen() {
         </Pressable>
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -207,7 +212,7 @@ export default function EditGrowthScreen() {
             {formatDate(new Date(measurement.measuredAt))}
           </Text>
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatTime(new Date(measurement.measuredAt))}
+            {formatTime(new Date(measurement.measuredAt), timeFormat)}
           </Text>
         </View>
 
@@ -306,6 +311,7 @@ export default function EditGrowthScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

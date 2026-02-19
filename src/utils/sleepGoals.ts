@@ -296,6 +296,9 @@ export function getDefaultWakeWindowConfig(
       napCount: 2,
       slots: generateProgressiveSlots(2, 120, 180),
       source: "age_based",
+      dayStartHour: 6,
+      dayEndHour: 19,
+      napContinuationMinutes: 15,
     };
   }
 
@@ -312,6 +315,9 @@ export function getDefaultWakeWindowConfig(
       napCount: progression.napCount,
       slots,
       source: "age_based",
+      dayStartHour: 6,
+      dayEndHour: 19,
+      napContinuationMinutes: 15,
     };
   }
 
@@ -323,6 +329,9 @@ export function getDefaultWakeWindowConfig(
       ageGroup.wakeWindowMaxMinutes
     ),
     source: "age_based",
+    dayStartHour: 6,
+    dayEndHour: 19,
+    napContinuationMinutes: 15,
   };
 }
 

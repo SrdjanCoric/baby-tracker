@@ -148,6 +148,10 @@ export interface WakeWindowPreferenceRow {
   nap_count: number;
   wake_window_slots: { slotIndex: number; label: string; durationMinutes: number }[];
   source: string;
+  day_start_hour: number | null;
+  day_end_hour: number | null;
+  nap_continuation_minutes: number | null;
+  timezone: string | null;
 }
 
 export async function fetchWakeWindowPreference(
@@ -155,7 +159,7 @@ export async function fetchWakeWindowPreference(
 ): Promise<{ data: WakeWindowPreferenceRow | null; error: Error | null }> {
   const { data, error } = await supabase
     .from("wake_window_preferences")
-    .select("baby_id, enabled, nap_count, wake_window_slots, source")
+    .select("baby_id, enabled, nap_count, wake_window_slots, source, day_start_hour, day_end_hour, nap_continuation_minutes, timezone")
     .eq("baby_id", babyId)
     .maybeSingle();
 
@@ -171,13 +175,18 @@ export async function upsertWakeWindowPreference(
   enabled: boolean,
   napCount: number,
   slots: { slotIndex: number; label: string; durationMinutes: number }[],
-  source: string
+  source: string,
+  dayStartHour?: number,
+  dayEndHour?: number,
+  napContinuationMinutes?: number
 ): Promise<{ error: Error | null }> {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return { error: new Error("No authenticated user") };
   }
+
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const { error } = await supabase
     .from("wake_window_preferences")
@@ -188,6 +197,10 @@ export async function upsertWakeWindowPreference(
         nap_count: napCount,
         wake_window_slots: slots,
         source,
+        day_start_hour: dayStartHour ?? 6,
+        day_end_hour: dayEndHour ?? 19,
+        nap_continuation_minutes: napContinuationMinutes ?? 15,
+        timezone,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "baby_id" }

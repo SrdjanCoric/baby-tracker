@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, useRef } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
 import { useRouter } from "expo-router";
@@ -11,8 +11,8 @@ import {
   EmptyState,
   LoadingState,
 } from "@/components";
-import { ActivityFilterTabs, FilteredSummaryBanner, type FilterType } from "@/components/timeline";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold } from "@/contexts";
+import { ActivityFilterTabs, DailySummaryCard, type FilterType } from "@/components/timeline";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold, useTimeFormat, useBaby } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
@@ -108,10 +108,14 @@ export default function TimelineScreen() {
   const { measurements, isLoading: growthLoading, refreshMeasurements } = useGrowth();
   const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
   const { members } = useHousehold();
+  const { timeFormat } = useTimeFormat();
+  const { selectedBaby } = useBaby();
   const { colorScheme } = useColorScheme();
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const scrollViewRef = useRef<ScrollView>(null);
+  const dayPositionsRef = useRef<Map<string, number>>(new Map());
 
   const getMemberName = useCallback((userId: string | undefined): string | undefined => {
     // Don't show "logged by" if there's only 1 person in the household
@@ -172,7 +176,7 @@ export default function TimelineScreen() {
 
   const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
     const date = new Date(feeding.startedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     let title = "";
     let subtitle = "";
@@ -233,11 +237,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: feeding.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const sleepToTimelineEntry = useCallback((sleep: StoredSleepEntry): TimelineEntry => {
     const date = new Date(sleep.startedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const title = sleep.type === "nap" ? t("sleep.nap") : t("sleep.night");
     const durationLabel = sleep.durationSeconds
@@ -254,11 +258,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: sleep.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const diaperToTimelineEntry = useCallback((diaper: StoredDiaperEntry): TimelineEntry => {
     const date = new Date(diaper.changedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const typeLabels: Record<string, string> = {
       wet: t("diaper.wet"),
@@ -283,11 +287,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: diaper.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const pumpingToTimelineEntry = useCallback((pumping: StoredPumpingEntry): TimelineEntry => {
     const date = new Date(pumping.startedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const title = t("pumping.title");
     const sideLabel = pumping.side === "left"
@@ -314,11 +318,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: pumping.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const growthToTimelineEntry = useCallback((growth: StoredGrowthEntry): TimelineEntry => {
     const date = new Date(growth.measuredAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const title = t("growth.title");
     const parts: string[] = [];
@@ -336,11 +340,11 @@ export default function TimelineScreen() {
       date,
       loggedBy: growth.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const tummyTimeToTimelineEntry = useCallback((tummyTime: StoredTummyTimeEntry): TimelineEntry => {
     const date = new Date(tummyTime.startedAt);
-    const time = formatTime(date);
+    const time = formatTime(date, timeFormat);
 
     const title = t("tummyTime.title");
     const durationLabel = tummyTime.durationSeconds
@@ -357,7 +361,7 @@ export default function TimelineScreen() {
       date,
       loggedBy: tummyTime.loggedBy,
     };
-  }, [t]);
+  }, [t, timeFormat]);
 
   const timelineEntries = useMemo(() => {
     // Filter entries based on active filter
@@ -420,17 +424,21 @@ export default function TimelineScreen() {
   const translate = t as (key: string, options?: Record<string, unknown>) => string;
 
   const groupedEntries = useMemo(() => {
+    dayPositionsRef.current.clear();
     return groupEntriesByDay(timelineEntries, activeFilter, allData, translate);
   }, [timelineEntries, activeFilter, allData, translate]);
 
-  // Collect all summaries for the filtered summary banner
-  const allSummaries = useMemo(() => {
-    return groupedEntries.map((group) => group.summary);
-  }, [groupedEntries]);
+  const handleSummaryDateChange = useCallback((date: Date) => {
+    const dateKey = date.toDateString();
+    const y = dayPositionsRef.current.get(dateKey);
+    if (y !== undefined) {
+      scrollViewRef.current?.scrollTo({ y, animated: true });
+    }
+  }, []);
 
   const hasEntries = timelineEntries.length > 0;
 
-  if (isLoading) {
+  if (isLoading && !hasEntries) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
         <LoadingState fullScreen />
@@ -447,15 +455,18 @@ export default function TimelineScreen() {
         t={translate}
       />
 
-      {/* Summary banner for filtered views */}
-      <FilteredSummaryBanner
+      {/* Daily summary card for filtered views */}
+      <DailySummaryCard
         filter={activeFilter}
-        summaries={allSummaries}
+        allData={allData}
+        birthDate={selectedBaby?.birthDate}
         t={translate}
+        onDateChange={handleSummaryDateChange}
       />
 
       {hasEntries ? (
         <ScrollView
+          ref={scrollViewRef}
           className="flex-1"
           refreshControl={
             <RefreshControl
@@ -467,7 +478,15 @@ export default function TimelineScreen() {
           }
         >
           {groupedEntries.map((group) => (
-            <View key={group.header + group.dateLabel}>
+            <View
+              key={group.header + group.dateLabel}
+              onLayout={(e) => {
+                dayPositionsRef.current.set(
+                  group.dateObj.toDateString(),
+                  e.nativeEvent.layout.y
+                );
+              }}
+            >
               <TimelineDayHeader
                 title={group.header}
                 date={group.dateLabel}
