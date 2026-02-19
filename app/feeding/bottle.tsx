@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View, ScrollView, Keyboard } from "react-native";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Pressable, Text, TextInput, View, ScrollView, Keyboard, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,7 @@ export default function BottleFeedingScreen() {
   const [inputValue, setInputValue] = useState("");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [showValidation, setShowValidation] = useState(false);
 
   const handleBack = useCallback(() => {
@@ -87,6 +88,7 @@ export default function BottleFeedingScreen() {
   }, [unit, amountMl]);
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby) return;
 
     if (!contentType || !amountMl || amountMl <= 0) {
@@ -94,6 +96,7 @@ export default function BottleFeedingScreen() {
       return;
     }
 
+    isSavingRef.current = true;
     setIsSaving(true);
     try {
       await addFeeding({
@@ -107,6 +110,7 @@ export default function BottleFeedingScreen() {
       await scheduleReminderAfterFeeding(new Date());
       router.back();
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }, [selectedBaby, contentType, amountMl, notes, addFeeding, scheduleReminderAfterFeeding, router]);
@@ -156,6 +160,10 @@ export default function BottleFeedingScreen() {
         <View className="w-touch" />
       </Pressable>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -317,6 +325,7 @@ export default function BottleFeedingScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

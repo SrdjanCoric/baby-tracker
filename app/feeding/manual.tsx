@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useRef, useState, useMemo } from "react";
 import {
   Pressable,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   Keyboard,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -106,6 +107,7 @@ export default function ManualFeedingScreen() {
 
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleBack = useCallback(() => {
@@ -261,6 +263,7 @@ export default function ManualFeedingScreen() {
   };
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby) return;
 
     setErrors({});
@@ -279,6 +282,7 @@ export default function ManualFeedingScreen() {
         return;
       }
 
+      isSavingRef.current = true;
       setIsSaving(true);
       try {
         const endedAt = new Date(
@@ -296,6 +300,7 @@ export default function ManualFeedingScreen() {
         await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
+        isSavingRef.current = false;
         setIsSaving(false);
       }
     } else if (activeTab === "bottle") {
@@ -311,6 +316,7 @@ export default function ManualFeedingScreen() {
         return;
       }
 
+      isSavingRef.current = true;
       setIsSaving(true);
       try {
         await addFeeding({
@@ -324,6 +330,7 @@ export default function ManualFeedingScreen() {
         await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
+        isSavingRef.current = false;
         setIsSaving(false);
       }
     } else if (activeTab === "solids") {
@@ -333,6 +340,7 @@ export default function ManualFeedingScreen() {
         return;
       }
 
+      isSavingRef.current = true;
       setIsSaving(true);
       try {
         await addFeeding({
@@ -346,6 +354,7 @@ export default function ManualFeedingScreen() {
         await scheduleReminderAfterFeeding(startTime);
         router.replace("/(tabs)");
       } finally {
+        isSavingRef.current = false;
         setIsSaving(false);
       }
     }
@@ -449,6 +458,10 @@ export default function ManualFeedingScreen() {
         </View>
       )}
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -845,6 +858,7 @@ export default function ManualFeedingScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

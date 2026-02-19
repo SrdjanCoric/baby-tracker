@@ -438,7 +438,7 @@ export default function TimelineScreen() {
 
   const hasEntries = timelineEntries.length > 0;
 
-  if (isLoading) {
+  if (isLoading && !hasEntries) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
         <LoadingState fullScreen />

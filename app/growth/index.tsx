@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { Pressable, Text, TextInput, View, ScrollView, Keyboard, Platform } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { Pressable, Text, TextInput, View, ScrollView, Keyboard, Platform, KeyboardAvoidingView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -31,6 +31,7 @@ export default function GrowthScreen() {
   const [headCircumferenceValue, setHeadCircumferenceValue] = useState("");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [measuredAt, setMeasuredAt] = useState(new Date());
@@ -86,6 +87,7 @@ export default function GrowthScreen() {
   };
 
   const handleSave = useCallback(async () => {
+    if (isSavingRef.current) return;
     if (!selectedBaby) return;
 
     const weightInput = parseDecimal(weightValue);
@@ -116,6 +118,7 @@ export default function GrowthScreen() {
       return;
     }
 
+    isSavingRef.current = true;
     setIsSaving(true);
     try {
       await addMeasurement({
@@ -128,6 +131,7 @@ export default function GrowthScreen() {
       });
       router.back();
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }, [selectedBaby, weightValue, heightValue, headCircumferenceValue, notes, weightUnit, heightUnit, measuredAt, addMeasurement, router]);
@@ -167,6 +171,10 @@ export default function GrowthScreen() {
         </Text>
       </Pressable>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pb-6"
@@ -410,6 +418,7 @@ export default function GrowthScreen() {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

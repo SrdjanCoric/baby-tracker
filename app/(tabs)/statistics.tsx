@@ -459,7 +459,7 @@ export default function StatisticsScreen() {
     stats.diaper.totalCount > 0 ||
     stats.tummyTime.sessionCount > 0;
 
-  if (isLoading) {
+  if (isLoading && !hasAnyData) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
         <LoadingState fullScreen />
