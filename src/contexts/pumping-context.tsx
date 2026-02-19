@@ -347,7 +347,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         await endLiveActivityByType("pumping");
       }
       if (user?.id) {
-        try { await releaseTimerLock(selectedBaby.id, "pumping", user.id); } catch {}
+        try { await releaseTimerLock(selectedBaby.id, "pumping", user.id); } catch { /* ignore */ }
       }
       return null;
     }
