@@ -134,9 +134,9 @@ export function calculateZScore(
   L: number,
   M: number,
   S: number
-): number {
+): number | null {
   if (measurement <= 0 || M <= 0 || S <= 0) {
-    return 0;
+    return null;
   }
 
   if (Math.abs(L) < 0.0001) {
@@ -190,11 +190,14 @@ export function getLMSForAge(
   gender: Gender,
   ageMonths: number,
   measurementType: GrowthMeasurementType
-): LMSParameters {
+): LMSParameters | null {
+  if (ageMonths < 0 || ageMonths > 24) {
+    return null;
+  }
+
   const data = getWHOData(measurementType, gender);
 
-  // Clamp age to valid range
-  const clampedAge = Math.max(0, Math.min(24, ageMonths));
+  const clampedAge = ageMonths;
 
   // Find the surrounding data points
   const lowerIndex = Math.floor(clampedAge);
@@ -232,19 +235,20 @@ export function calculatePercentileFromMeasurement(
   ageMonths: number,
   measurement: number,
   measurementType: GrowthMeasurementType
-): PercentileResult {
-  // Clamp age to valid range
-  const clampedAge = Math.max(0, Math.min(24, ageMonths));
+): PercentileResult | null {
+  const lms = getLMSForAge(gender, ageMonths, measurementType);
+  if (!lms) return null;
 
-  const lms = getLMSForAge(gender, clampedAge, measurementType);
   const zScore = calculateZScore(measurement, lms.L, lms.M, lms.S);
+  if (zScore === null) return null;
+
   const percentile = calculatePercentile(zScore);
 
   return {
     percentile,
     zScore,
     measurement,
-    ageMonths: clampedAge,
+    ageMonths,
     measurementType,
   };
 }
@@ -263,16 +267,12 @@ export function getPercentileValue(
   ageMonths: number,
   percentile: number,
   measurementType: GrowthMeasurementType
-): number {
-  const clampedAge = Math.max(0, Math.min(24, ageMonths));
-  const lms = getLMSForAge(gender, clampedAge, measurementType);
+): number | null {
+  const lms = getLMSForAge(gender, ageMonths, measurementType);
+  if (!lms) return null;
 
-  // Convert percentile to Z-score
   const zScore = normalQuantile(percentile / 100);
 
-  // Reverse the LMS formula to get the measurement value
-  // X = M * (1 + L * S * Z)^(1/L)  when L ≠ 0
-  // X = M * exp(S * Z)              when L = 0
   if (Math.abs(lms.L) < 0.0001) {
     return lms.M * Math.exp(lms.S * zScore);
   }
@@ -303,7 +303,9 @@ export function generatePercentileLine(
 
   for (let age = minAge; age <= maxAge; age += stepMonths) {
     const value = getPercentileValue(gender, age, percentile, measurementType);
-    points.push({ ageMonths: age, value });
+    if (value !== null) {
+      points.push({ ageMonths: age, value });
+    }
   }
 
   return points;

@@ -43,6 +43,16 @@ describe("PercentileCalculator", () => {
       const zScore = calculateZScore(67.6236, 1, 67.6236, 0.03165);
       expect(zScore).toBeCloseTo(0, 2);
     });
+
+    it("should return null for zero or negative measurement", () => {
+      expect(calculateZScore(0, 0.1738, 6.3762, 0.11727)).toBeNull();
+      expect(calculateZScore(-1, 0.1738, 6.3762, 0.11727)).toBeNull();
+    });
+
+    it("should return null for zero or negative M or S", () => {
+      expect(calculateZScore(6.0, 0.1738, 0, 0.11727)).toBeNull();
+      expect(calculateZScore(6.0, 0.1738, 6.3762, 0)).toBeNull();
+    });
   });
 
   describe("calculatePercentile", () => {
@@ -93,7 +103,7 @@ describe("PercentileCalculator", () => {
         6.3762,
         "weight"
       );
-      expect(result.percentile).toBeCloseTo(50, 0);
+      expect(result!.percentile).toBeCloseTo(50, 0);
     });
 
     it("should calculate weight percentile for girl at 50th percentile", () => {
@@ -104,7 +114,7 @@ describe("PercentileCalculator", () => {
         5.8458,
         "weight"
       );
-      expect(result.percentile).toBeCloseTo(50, 0);
+      expect(result!.percentile).toBeCloseTo(50, 0);
     });
 
     it("should calculate height percentile correctly", () => {
@@ -115,7 +125,7 @@ describe("PercentileCalculator", () => {
         67.6236,
         "height"
       );
-      expect(result.percentile).toBeCloseTo(50, 0);
+      expect(result!.percentile).toBeCloseTo(50, 0);
     });
 
     it("should calculate head circumference percentile correctly", () => {
@@ -126,7 +136,7 @@ describe("PercentileCalculator", () => {
         42.1995,
         "head"
       );
-      expect(result.percentile).toBeCloseTo(50, 0);
+      expect(result!.percentile).toBeCloseTo(50, 0);
     });
 
     it("should handle measurement at low percentile (around 3rd)", () => {
@@ -137,7 +147,7 @@ describe("PercentileCalculator", () => {
         5.0,
         "weight"
       );
-      expect(result.percentile).toBeLessThan(10);
+      expect(result!.percentile).toBeLessThan(10);
     });
 
     it("should handle measurement at high percentile (around 97th)", () => {
@@ -148,7 +158,7 @@ describe("PercentileCalculator", () => {
         8.0,
         "weight"
       );
-      expect(result.percentile).toBeGreaterThan(90);
+      expect(result!.percentile).toBeGreaterThan(90);
     });
 
     it("should return Z-score along with percentile", () => {
@@ -158,7 +168,7 @@ describe("PercentileCalculator", () => {
         6.3762,
         "weight"
       );
-      expect(result.zScore).toBeCloseTo(0, 1);
+      expect(result!.zScore).toBeCloseTo(0, 1);
     });
 
     it("should interpolate between age data points", () => {
@@ -169,9 +179,9 @@ describe("PercentileCalculator", () => {
         6.7,
         "weight"
       );
-      expect(result.percentile).toBeDefined();
-      expect(result.percentile).toBeGreaterThan(0);
-      expect(result.percentile).toBeLessThan(100);
+      expect(result!.percentile).toBeDefined();
+      expect(result!.percentile).toBeGreaterThan(0);
+      expect(result!.percentile).toBeLessThan(100);
     });
 
     it("should handle decimal ages correctly", () => {
@@ -182,8 +192,8 @@ describe("PercentileCalculator", () => {
         5.5,
         "weight"
       );
-      expect(result.percentile).toBeDefined();
-      expect(result.ageMonths).toBe(2.5);
+      expect(result!.percentile).toBeDefined();
+      expect(result!.ageMonths).toBe(2.5);
     });
 
     it("should handle age 0 (newborn)", () => {
@@ -194,7 +204,7 @@ describe("PercentileCalculator", () => {
         3.3464,
         "weight"
       );
-      expect(result.percentile).toBeCloseTo(50, 0);
+      expect(result!.percentile).toBeCloseTo(50, 0);
     });
 
     it("should handle age 24 months", () => {
@@ -205,27 +215,27 @@ describe("PercentileCalculator", () => {
         11.4775,
         "weight"
       );
-      expect(result.percentile).toBeCloseTo(50, 0);
+      expect(result!.percentile).toBeCloseTo(50, 0);
     });
 
-    it("should clamp age below 0 to 0", () => {
+    it("should return null for age below 0", () => {
       const result = calculatePercentileFromMeasurement(
         "male",
         -1,
         3.3,
         "weight"
       );
-      expect(result.ageMonths).toBe(0);
+      expect(result).toBeNull();
     });
 
-    it("should clamp age above 24 to 24", () => {
+    it("should return null for age above 24", () => {
       const result = calculatePercentileFromMeasurement(
         "male",
         30,
         12.0,
         "weight"
       );
-      expect(result.ageMonths).toBe(24);
+      expect(result).toBeNull();
     });
   });
 
@@ -239,13 +249,13 @@ describe("PercentileCalculator", () => {
     it("should return lower value for 3rd percentile", () => {
       const value3rd = getPercentileValue("male", 3, 3, "weight");
       const value50th = getPercentileValue("male", 3, 50, "weight");
-      expect(value3rd).toBeLessThan(value50th);
+      expect(value3rd).toBeLessThan(value50th!);
     });
 
     it("should return higher value for 97th percentile", () => {
       const value97th = getPercentileValue("male", 3, 97, "weight");
       const value50th = getPercentileValue("male", 3, 50, "weight");
-      expect(value97th).toBeGreaterThan(value50th);
+      expect(value97th).toBeGreaterThan(value50th!);
     });
 
     it("should return correct values for standard percentiles", () => {
@@ -256,10 +266,10 @@ describe("PercentileCalculator", () => {
       const p85 = getPercentileValue("male", 6, 85, "weight");
       const p97 = getPercentileValue("male", 6, 97, "weight");
 
-      expect(p3).toBeLessThan(p15);
-      expect(p15).toBeLessThan(p50);
-      expect(p50).toBeLessThan(p85);
-      expect(p85).toBeLessThan(p97);
+      expect(p3).toBeLessThan(p15!);
+      expect(p15).toBeLessThan(p50!);
+      expect(p50).toBeLessThan(p85!);
+      expect(p85).toBeLessThan(p97!);
     });
 
     it("should work for height measurements", () => {
@@ -279,22 +289,24 @@ describe("PercentileCalculator", () => {
       const value3 = getPercentileValue("male", 3, 50, "weight");
       const value4 = getPercentileValue("male", 4, 50, "weight");
 
-      expect(value).toBeGreaterThan(value3);
-      expect(value).toBeLessThan(value4);
+      expect(value).toBeGreaterThan(value3!);
+      expect(value).toBeLessThan(value4!);
     });
   });
 
   describe("getLMSForAge", () => {
     it("should return exact LMS values for whole month ages", () => {
       const lms = getLMSForAge("male", 3, "weight");
-      expect(lms.L).toBeCloseTo(0.1738, 4);
-      expect(lms.M).toBeCloseTo(6.3762, 4);
-      expect(lms.S).toBeCloseTo(0.11727, 5);
+      expect(lms).not.toBeNull();
+      expect(lms!.L).toBeCloseTo(0.1738, 4);
+      expect(lms!.M).toBeCloseTo(6.3762, 4);
+      expect(lms!.S).toBeCloseTo(0.11727, 5);
     });
 
     it("should return LMS values for girls", () => {
       const lms = getLMSForAge("female", 6, "height");
-      expect(lms.M).toBeCloseTo(65.7311, 4);
+      expect(lms).not.toBeNull();
+      expect(lms!.M).toBeCloseTo(65.7311, 4);
     });
 
     it("should interpolate LMS for decimal ages", () => {
@@ -302,9 +314,16 @@ describe("PercentileCalculator", () => {
       const lms4 = getLMSForAge("male", 4, "weight");
       const lms3_5 = getLMSForAge("male", 3.5, "weight");
 
-      // M should be between the two values
-      expect(lms3_5.M).toBeGreaterThan(lms3.M);
-      expect(lms3_5.M).toBeLessThan(lms4.M);
+      expect(lms3_5!.M).toBeGreaterThan(lms3!.M);
+      expect(lms3_5!.M).toBeLessThan(lms4!.M);
+    });
+
+    it("should return null for age below 0", () => {
+      expect(getLMSForAge("male", -1, "weight")).toBeNull();
+    });
+
+    it("should return null for age above 24", () => {
+      expect(getLMSForAge("male", 25, "weight")).toBeNull();
     });
   });
 
@@ -351,8 +370,8 @@ describe("PercentileCalculator", () => {
         2.0,
         "weight"
       );
-      expect(result.percentile).toBeLessThan(1);
-      expect(result.percentile).toBeGreaterThan(0);
+      expect(result!.percentile).toBeLessThan(1);
+      expect(result!.percentile).toBeGreaterThan(0);
     });
 
     it("should handle very large measurements", () => {
@@ -362,8 +381,8 @@ describe("PercentileCalculator", () => {
         15.0,
         "weight"
       );
-      expect(result.percentile).toBeGreaterThan(99);
-      expect(result.percentile).toBeLessThan(100);
+      expect(result!.percentile).toBeGreaterThan(99);
+      expect(result!.percentile).toBeLessThan(100);
     });
 
     it("should be consistent - round trip from measurement to percentile and back", () => {
@@ -377,7 +396,7 @@ describe("PercentileCalculator", () => {
       const reconstructed = getPercentileValue(
         "male",
         6,
-        result.percentile,
+        result!.percentile,
         "weight"
       );
       expect(reconstructed).toBeCloseTo(originalMeasurement, 1);

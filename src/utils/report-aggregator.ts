@@ -412,7 +412,7 @@ export function aggregateGrowth(
           g.weightKg,
           "weight"
         );
-        point.weightPercentile = Math.round(result.percentile);
+        if (result) point.weightPercentile = Math.round(result.percentile);
       }
     }
 
@@ -425,7 +425,7 @@ export function aggregateGrowth(
           g.heightCm,
           "height"
         );
-        point.heightPercentile = Math.round(result.percentile);
+        if (result) point.heightPercentile = Math.round(result.percentile);
       }
     }
 
@@ -438,7 +438,7 @@ export function aggregateGrowth(
           g.headCircumferenceCm,
           "head"
         );
-        point.headPercentile = Math.round(result.percentile);
+        if (result) point.headPercentile = Math.round(result.percentile);
       }
     }
 

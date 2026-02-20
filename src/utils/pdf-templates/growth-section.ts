@@ -119,6 +119,7 @@ function generateGrowthChartSvg(
       <!-- Percentile labels -->
       ${percentileLines.map(({ percentile, color }) => {
         const lastValue = getPercentileValue(gender, maxAge, percentile, measurementType);
+        if (lastValue === null) return "";
         return `
           <text x="${width - padding.right + 4}" y="${scaleY(lastValue) + 3}" font-size="8" fill="${color}" font-weight="${percentile === 50 ? "bold" : "normal"}">
             ${percentile}%
