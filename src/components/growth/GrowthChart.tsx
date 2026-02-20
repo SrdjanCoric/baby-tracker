@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, useColorScheme } from "react-native";
+import { useAppTranslation } from "@/hooks/useAppTranslation";
 import Svg, {
   Path,
   Line,
@@ -65,6 +66,7 @@ export function GrowthChart({
   showLabels = true,
   showGrid = true,
 }: GrowthChartProps) {
+  const { t } = useAppTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -168,8 +170,8 @@ export function GrowthChart({
         return {
           ageMonths: m.ageMonths,
           value: m.value,
-          percentile: result.percentile,
-          zScore: result.zScore,
+          percentile: result?.percentile ?? 0,
+          zScore: result?.zScore ?? 0,
           date: m.date,
           measurementId: m.id,
         };
@@ -396,7 +398,7 @@ export function GrowthChart({
               style={{ backgroundColor: PERCENTILE_COLORS[p] }}
             />
             <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-              {p === 50 ? "50th (median)" : `${p}th`}
+              {p === 50 ? t("growth.medianLabel") : t("growth.percentileCompact", { value: p })}
             </Text>
           </View>
         ))}

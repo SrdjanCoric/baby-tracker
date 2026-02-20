@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
   classifyPercentile,
   getPercentileClassificationLabel,
@@ -59,20 +60,22 @@ export function PercentileDisplay({
   compact = false,
   label: customLabel,
 }: PercentileDisplayProps) {
+  const { t } = useTranslation();
+
   if (value == null || !Number.isFinite(value)) {
     return null;
   }
 
   const classification = classifyPercentile(percentile);
   const colors = CLASSIFICATION_COLORS[classification];
-  const classificationLabel = getPercentileClassificationLabel(classification);
+  const classificationLabel = getPercentileClassificationLabel(classification, t);
 
   const measurementLabel = customLabel ?? (
     measurementType === "weight"
-      ? "Weight"
+      ? t("growth.weight")
       : measurementType === "height"
-        ? "Height"
-        : "Head"
+        ? t("growth.height")
+        : t("growth.headCircumference")
   );
 
   if (compact) {
@@ -83,7 +86,7 @@ export function PercentileDisplay({
         <Text
           className={`text-sm font-semibold ${colors.text} dark:${colors.textDark}`}
         >
-          {Math.round(percentile)}th percentile
+          {t("growth.thPercentile", { value: Math.round(percentile) })}
         </Text>
       </View>
     );
@@ -111,7 +114,7 @@ export function PercentileDisplay({
           <Text
             className={`text-sm font-semibold ${colors.text} dark:${colors.textDark}`}
           >
-            {Math.round(percentile)}th percentile
+            {t("growth.thPercentile", { value: Math.round(percentile) })}
           </Text>
         </View>
 
@@ -145,13 +148,13 @@ export function PercentileDisplay({
         {/* Scale labels */}
         <View className="flex-row justify-between mt-1">
           <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-            3rd
+            {t("growth.scale3rd")}
           </Text>
           <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-            50th
+            {t("growth.scale50th")}
           </Text>
           <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-            97th
+            {t("growth.scale97th")}
           </Text>
         </View>
       </View>

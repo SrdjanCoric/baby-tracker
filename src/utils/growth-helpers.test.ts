@@ -15,6 +15,11 @@ describe("growth-helpers", () => {
       expect(isUnderTwoYears(undefined)).toBe(true);
     });
 
+    it("should return true for invalid birth date string", () => {
+      expect(isUnderTwoYears("invalid")).toBe(true);
+      expect(isUnderTwoYears("not-a-date")).toBe(true);
+    });
+
     it("should return true for baby born 6 months ago", () => {
       vi.setSystemTime(new Date("2024-06-15"));
       expect(isUnderTwoYears("2024-01-01")).toBe(true);
@@ -65,6 +70,15 @@ describe("growth-helpers", () => {
 
     it("should return negative value with minus sign", () => {
       expect(formatWeightChange(-50)).toBe("-50g");
+    });
+
+    it("should return dash for NaN", () => {
+      expect(formatWeightChange(NaN)).toBe("\u2014");
+    });
+
+    it("should return dash for Infinity", () => {
+      expect(formatWeightChange(Infinity)).toBe("\u2014");
+      expect(formatWeightChange(-Infinity)).toBe("\u2014");
     });
   });
 });

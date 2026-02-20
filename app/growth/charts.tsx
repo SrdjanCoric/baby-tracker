@@ -247,13 +247,13 @@ export default function GrowthChartsScreen() {
                             latestMeasurement.value,
                             activeTab as GrowthMeasurementType
                           );
-                          return result.percentile;
+                          return result?.percentile ?? 50;
                         })()
                       : 50
                   }
                   measurementType={activeTab}
                   value={latestMeasurement.value}
-                  unit={activeTab === "weight" ? "kg" : "cm"}
+                  unit={activeTab === "weight" ? t("settings.kg") : t("settings.cm")}
                   label={getTabLabel(activeTab, selectedBaby?.birthDate, t)}
                 />
               </View>
