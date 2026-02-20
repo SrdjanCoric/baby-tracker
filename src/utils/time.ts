@@ -1,6 +1,18 @@
 /**
  * Time formatting utilities for baby tracker
  */
+import i18n from "@i18n/index";
+
+function getLocale(): string {
+  const lang = i18n.language;
+  if (lang === "es") return "es-ES";
+  if (lang === "sr") return "sr-Latn";
+  return "en-US";
+}
+
+export function getDateLocale(): string {
+  return getLocale();
+}
 
 /**
  * Formats seconds into a human-readable duration string
@@ -105,15 +117,15 @@ export function isYesterday(date: Date, now: Date = new Date()): boolean {
  * Returns "Today", "Yesterday", or a formatted date
  */
 export function formatDayHeader(date: Date, now: Date = new Date()): string {
-  if (isToday(date, now)) return "Today";
-  if (isYesterday(date, now)) return "Yesterday";
+  if (isToday(date, now)) return i18n.t("common.today");
+  if (isYesterday(date, now)) return i18n.t("common.yesterday");
 
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",
     month: "short",
     day: "numeric"
   };
-  return date.toLocaleDateString("en-US", options);
+  return date.toLocaleDateString(getLocale(), options);
 }
 
 /**
@@ -125,7 +137,7 @@ export function formatDate(date: Date): string {
     day: "numeric",
     year: "numeric"
   };
-  return date.toLocaleDateString("en-US", options);
+  return date.toLocaleDateString(getLocale(), options);
 }
 
 /**
