@@ -340,7 +340,7 @@ export default function ManualSleepScreen() {
               className="text-lg font-medium ml-2"
               style={{ color: SLEEP_PURPLE }}
             >
-              min
+              {t("common.min")}
             </Text>
           </View>
 

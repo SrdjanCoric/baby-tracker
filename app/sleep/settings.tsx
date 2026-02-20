@@ -120,10 +120,8 @@ export default function SleepSettingsScreen() {
 
   const formatGoalDisplay = (minutes: number) => {
     const hours = minutes / 60;
-    if (Number.isInteger(hours)) {
-      return `${hours} hours`;
-    }
-    return `${hours.toFixed(1)} hours`;
+    const count = Number.isInteger(hours) ? Math.floor(hours) : parseFloat(hours.toFixed(1));
+    return t(count === 1 ? "common.hours_one" : "common.hours_other", { count });
   };
 
   const handleToggleReminders = useCallback(

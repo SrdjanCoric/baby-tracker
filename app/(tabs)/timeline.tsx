@@ -13,7 +13,7 @@ import {
 } from "@/components";
 import { ActivityFilterTabs, DailySummaryCard, type FilterType } from "@/components/timeline";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold, useTimeFormat, useBaby } from "@/contexts";
-import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
+import { formatTime, formatDuration, formatDayHeader, getDateLocale } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
 import { formatDualSideDuration } from "@/utils/feeding";
@@ -71,7 +71,7 @@ function groupEntriesByDay(
 
   for (const [_dateKey, { entries: dayEntries, date }] of grouped) {
     const header = formatDayHeader(date, now);
-    const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const dateLabel = date.toLocaleDateString(getDateLocale(), { month: "short", day: "numeric" });
 
     dayEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
 
@@ -186,14 +186,10 @@ export default function TimelineScreen() {
 
       const hasDualSideDurations = feeding.leftDurationSeconds || feeding.rightDurationSeconds;
       if (hasDualSideDurations) {
-        const dualSideLabel = formatDualSideDuration(
+        subtitle = formatDualSideDuration(
           feeding.leftDurationSeconds,
           feeding.rightDurationSeconds
         );
-        const totalLabel = feeding.durationSeconds
-          ? ` (${formatDuration(feeding.durationSeconds, "short")})`
-          : "";
-        subtitle = dualSideLabel + totalLabel;
       } else {
         const sideLabel = feeding.side === "left"
           ? t("feeding.left")

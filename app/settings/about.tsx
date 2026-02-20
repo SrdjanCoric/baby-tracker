@@ -28,7 +28,7 @@ export default function AboutSettingsScreen() {
             <Text className="text-5xl">{"\u{1F476}"}</Text>
           </View>
           <Text className="text-xl font-bold text-content-primary dark:text-content-dark-primary mb-1">
-            Baby Tracker
+            {t("about.appName")}
           </Text>
           <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
             {t("settings.version")} {APP_VERSION} ({BUILD_NUMBER})
@@ -37,7 +37,7 @@ export default function AboutSettingsScreen() {
 
         <View className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-card p-4 mb-4">
           <Text className="text-sm text-content-secondary dark:text-content-dark-secondary text-center">
-            A privacy-first, ad-free baby tracking app designed for sleep-deprived parents.
+            {t("about.description")}
           </Text>
         </View>
 
@@ -58,7 +58,7 @@ export default function AboutSettingsScreen() {
 
         <View className="items-center mt-8">
           <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-            Made with {"\u{2764}\u{FE0F}"} for parents everywhere
+            {t("about.madeWith")}
           </Text>
         </View>
       </ScrollView>

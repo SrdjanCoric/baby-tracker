@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useUnits, useAuth } from "@/contexts";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, getDateLocale } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
@@ -282,7 +282,7 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
   }, []);
 
   const formatCustomTime = (date: Date): string => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString(getDateLocale(), {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,

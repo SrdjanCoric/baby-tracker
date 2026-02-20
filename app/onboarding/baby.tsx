@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Input } from "@/components";
 import { useOnboarding, useBaby } from "@/contexts";
+import { getDateLocale } from "@/utils/time";
 import { OnboardingPagination, OnboardingIllustration } from "@/components/onboarding";
 import { validateBabyName, validateBirthDate } from "@/validators/baby";
 import { sanitizeName } from "@/utils/sanitize";
@@ -53,7 +54,7 @@ export default function BabySetupScreen() {
   );
 
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(getDateLocale(), {
       month: "long",
       day: "numeric",
       year: "numeric",

@@ -116,7 +116,7 @@ export default function EditFeedingScreen() {
       const durationSeconds = durationMinutes ? parseInt(durationMinutes, 10) * 60 : undefined;
       const parsedAmount = amountMl ? parseInt(amountMl, 10) : undefined;
 
-      await updateFeeding(feeding.id, {
+      const updateInput: Parameters<typeof updateFeeding>[1] = {
         side,
         durationSeconds,
         amountMl: parsedAmount,
@@ -125,7 +125,22 @@ export default function EditFeedingScreen() {
         amount,
         reaction,
         notes: notes || undefined,
-      });
+      };
+
+      if (feeding.type === "breast" && durationSeconds !== undefined) {
+        if (side === "left") {
+          updateInput.leftDurationSeconds = durationSeconds;
+          updateInput.rightDurationSeconds = 0;
+        } else if (side === "right") {
+          updateInput.rightDurationSeconds = durationSeconds;
+          updateInput.leftDurationSeconds = 0;
+        } else if (side === "both") {
+          updateInput.leftDurationSeconds = 0;
+          updateInput.rightDurationSeconds = 0;
+        }
+      }
+
+      await updateFeeding(feeding.id, updateInput);
       setIsInitialized(false);
       router.back();
     } finally {

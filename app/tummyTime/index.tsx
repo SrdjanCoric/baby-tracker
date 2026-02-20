@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useTummyTime, useBaby, useAuth } from "@/contexts";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, getDateLocale } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { MilestoneSuggestionModal } from "@/components";
@@ -316,7 +316,7 @@ function StartView({
   }, []);
 
   const formatCustomTime = (date: Date): string => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString(getDateLocale(), {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,

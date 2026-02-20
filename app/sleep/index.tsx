@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useSleep, useAuth } from "@/contexts";
 import { useBaby } from "@/contexts";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, getDateLocale } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
 import { determineSleepType } from "@/validators/sleep";
@@ -260,7 +260,7 @@ function SleepTypeSelectionView({ suggestedType, onSelectType, onLogPastSleep }:
   }, []);
 
   const formatCustomTime = (date: Date): string => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString(getDateLocale(), {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,

@@ -16,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Input } from "./Input";
 import { Button } from "./Button";
 import { validateBabyName, validateBirthDate } from "@/validators/baby";
+import { getDateLocale } from "@/utils/time";
 
 const isAndroid = Platform.OS === "android";
 
@@ -137,7 +138,7 @@ function BabyProfileForm({
   );
 
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(getDateLocale(), {
       month: "long",
       day: "numeric",
       year: "numeric",

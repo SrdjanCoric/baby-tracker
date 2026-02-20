@@ -257,7 +257,7 @@ export default function BottleFeedingScreen() {
         {/* Notes */}
         <View className="mb-6">
           <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
-            {t("feeding.duration")} / Notes
+            {t("feeding.duration")} / {t("common.notes")}
           </Text>
           <TextInput
             className="rounded-card-lg px-4 py-3 text-base bg-surface-secondary dark:bg-surface-dark-secondary text-content-primary dark:text-content-dark-primary"

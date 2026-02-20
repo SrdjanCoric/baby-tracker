@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useFeeding, useBaby, useUnits, useAuth } from "@/contexts";
 import type { CreateFeedingInput, StoredFeedingEntry } from "@/services/feeding-storage";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, getDateLocale } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { getLastFeedingType, feedingTypeToTab } from "@/utils/feeding";
 import { COMMON_FOODS } from "@/constants/foods";
@@ -330,7 +330,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
   }, []);
 
   const formatCustomTime = (date: Date): string => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString(getDateLocale(), {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
