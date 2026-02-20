@@ -1,4 +1,4 @@
-import { Platform, NativeModules } from "react-native";
+import { Platform, NativeModules, TurboModuleRegistry } from "react-native";
 
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
 export type BreastSide = "left" | "right" | "both";
@@ -40,15 +40,19 @@ function getLiveActivityModule(): LiveActivityControllerModule | null {
     return null;
   }
 
-  const module = NativeModules.LiveActivityController as
+  let module = NativeModules.LiveActivityController as
     | LiveActivityControllerModule
     | undefined;
 
   if (!module) {
-    return null;
+    try {
+      module = (TurboModuleRegistry.get("LiveActivityController") as LiveActivityControllerModule | null) ?? undefined;
+    } catch {
+      // TurboModuleRegistry not available or module not registered as turbo module
+    }
   }
 
-  return module;
+  return module ?? null;
 }
 
 export async function startTimerLiveActivity(
