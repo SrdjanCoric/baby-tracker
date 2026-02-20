@@ -3,6 +3,7 @@
  * Default values and configuration for CSV export
  */
 
+import type { TFunction } from "i18next";
 import type { DateRangePreset, ExportDataType, ExportRecordCounts } from "@/types/export";
 
 export const DEFAULT_DATE_RANGE_PRESET: DateRangePreset = "last30days";
@@ -40,14 +41,16 @@ export const CSV_MIME_TYPE = "text/csv";
 export const CSV_FILE_EXTENSION = ".csv";
 export const UTF8_BOM = "\uFEFF";
 
-export const DATA_TYPE_LABELS: Record<ExportDataType, string> = {
-  feedings: "Feedings",
-  sleep: "Sleep",
-  diapers: "Diapers",
-  pumping: "Pumping",
-  growth: "Growth",
-  tummyTime: "Tummy Time",
-};
+export function getDataTypeLabels(t: TFunction): Record<ExportDataType, string> {
+  return {
+    feedings: t("export.typeFeedings"),
+    sleep: t("export.typeSleep"),
+    diapers: t("export.typeDiapers"),
+    pumping: t("export.typePumping"),
+    growth: t("export.typeGrowth"),
+    tummyTime: t("export.typeTummyTime"),
+  };
+}
 
 export const DATA_TYPE_ICONS: Record<ExportDataType, string> = {
   feedings: "🍼",

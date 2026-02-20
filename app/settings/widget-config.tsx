@@ -21,6 +21,7 @@ import {
   type WidgetConfiguration,
 } from "@/services/widget-data-service";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
+import type { TFunction } from "i18next";
 
 const ALL_ACTIVITIES: ActivityType[] = [
   "feeding",
@@ -29,14 +30,6 @@ const ALL_ACTIVITIES: ActivityType[] = [
   "pumping",
   "tummyTime",
 ];
-
-const ACTIVITY_LABELS: Partial<Record<ActivityType, string>> = {
-  feeding: "Feeding",
-  sleep: "Sleep",
-  diaper: "Diaper",
-  pumping: "Pumping",
-  tummyTime: "Tummy Time",
-};
 
 interface ActivityItem {
   key: ActivityType;
@@ -50,27 +43,45 @@ type WidgetSection =
   | "lockScreen"
   | "watch";
 
-const SECTION_TITLES: Record<WidgetSection, string> = {
-  smallWidget: "Small Widget Activity",
-  quickLog: "Quick Log Widget (4 activities)",
-  summary: "Summary Widget (4 activities)",
-  lockScreen: "Lock Screen Widget (2 activities)",
-  watch: "Apple Watch (4 activities)",
-};
+function getActivityLabels(t: TFunction): Partial<Record<ActivityType, string>> {
+  return {
+    feeding: t("widget.activityFeeding"),
+    sleep: t("widget.activitySleep"),
+    diaper: t("widget.activityDiaper"),
+    pumping: t("widget.activityPumping"),
+    tummyTime: t("widget.activityTummyTime"),
+  };
+}
 
-const SECTION_DESCRIPTIONS: Record<WidgetSection, string> = {
-  smallWidget: "Choose which activity to display in the small widget",
-  quickLog: "Select and order activities for the medium quick log widget",
-  summary: "Select and order activities for the large summary widget",
-  lockScreen: "Select activities for lock screen widgets",
-  watch: "Select activities for Apple Watch app",
-};
+function getSectionTitles(t: TFunction): Record<WidgetSection, string> {
+  return {
+    smallWidget: t("widget.sectionSmallWidget"),
+    quickLog: t("widget.sectionQuickLog"),
+    summary: t("widget.sectionSummary"),
+    lockScreen: t("widget.sectionLockScreen"),
+    watch: t("widget.sectionAppleWatch"),
+  };
+}
+
+function getSectionDescriptions(t: TFunction): Record<WidgetSection, string> {
+  return {
+    smallWidget: t("widget.descChooseActivity"),
+    quickLog: t("widget.descSelectReorder4"),
+    summary: t("widget.descSelectReorder4"),
+    lockScreen: t("widget.descSelectUpTo2"),
+    watch: t("widget.descSelectReorder4"),
+  };
+}
 
 export default function WidgetConfigScreen() {
   const { t } = useTranslation();
   const [config, setConfig] = useState<WidgetConfiguration | null>(null);
   const [activeSection, setActiveSection] = useState<WidgetSection | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+
+  const activityLabels = getActivityLabels(t);
+  const sectionTitles = getSectionTitles(t);
+  const sectionDescriptions = getSectionDescriptions(t);
 
   useEffect(() => {
     loadConfig();
@@ -85,18 +96,18 @@ export default function WidgetConfigScreen() {
     if (!config) return;
     await saveWidgetConfiguration(config);
     setHasChanges(false);
-    Alert.alert(t("common.success"), "Widget configuration saved");
+    Alert.alert(t("common.success"), t("widget.saved"));
   };
 
   const handleBack = () => {
     if (hasChanges) {
       Alert.alert(
-        "Unsaved Changes",
-        "You have unsaved changes. Do you want to save them?",
+        t("widget.unsavedChangesTitle"),
+        t("widget.unsavedChangesMessage"),
         [
-          { text: "Discard", style: "destructive", onPress: () => router.back() },
-          { text: "Cancel", style: "cancel" },
-          { text: "Save", onPress: async () => {
+          { text: t("widget.discard"), style: "destructive", onPress: () => router.back() },
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("common.save"), onPress: async () => {
               await saveConfig();
               router.back();
             }
@@ -163,16 +174,16 @@ export default function WidgetConfigScreen() {
         <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
           <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
           <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            Widget Configuration
+            {t("widget.configuration")}
           </Text>
         </View>
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-6xl mb-4">📱</Text>
           <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary text-center mb-2">
-            iOS Only Feature
+            {t("widget.iosOnlyTitle")}
           </Text>
           <Text className="text-content-secondary dark:text-content-dark-secondary text-center">
-            Widget configuration is only available on iOS devices with widget support.
+            {t("widget.iosOnlyMessage")}
           </Text>
         </View>
       </SafeAreaView>
@@ -190,7 +201,7 @@ export default function WidgetConfigScreen() {
           </Pressable>
           <View className="flex-1">
             <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary text-center">
-              Widget Configuration
+              {t("widget.configuration")}
             </Text>
           </View>
           <Pressable onPress={saveConfig} disabled={!hasChanges}>
@@ -210,24 +221,24 @@ export default function WidgetConfigScreen() {
           {activeSection === null ? (
             <>
               <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-4 px-2">
-                Customize which activities appear in your iOS widgets and Apple Watch app.
+                {t("widget.description")}
               </Text>
 
               <SectionCard
-                title={SECTION_TITLES.smallWidget}
-                description={SECTION_DESCRIPTIONS.smallWidget}
+                title={sectionTitles.smallWidget}
+                description={sectionDescriptions.smallWidget}
                 icon="📱"
                 onPress={() => setActiveSection("smallWidget")}
                 preview={
                   <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-                    {ACTIVITY_CONFIG[config.smallWidgetActivity].icon} {ACTIVITY_LABELS[config.smallWidgetActivity]}
+                    {ACTIVITY_CONFIG[config.smallWidgetActivity].icon} {activityLabels[config.smallWidgetActivity]}
                   </Text>
                 }
               />
 
               <SectionCard
-                title={SECTION_TITLES.quickLog}
-                description={SECTION_DESCRIPTIONS.quickLog}
+                title={sectionTitles.quickLog}
+                description={sectionDescriptions.quickLog}
                 icon="⚡"
                 onPress={() => setActiveSection("quickLog")}
                 preview={
@@ -238,8 +249,8 @@ export default function WidgetConfigScreen() {
               />
 
               <SectionCard
-                title={SECTION_TITLES.summary}
-                description={SECTION_DESCRIPTIONS.summary}
+                title={sectionTitles.summary}
+                description={sectionDescriptions.summary}
                 icon="📊"
                 onPress={() => setActiveSection("summary")}
                 preview={
@@ -250,8 +261,8 @@ export default function WidgetConfigScreen() {
               />
 
               <SectionCard
-                title={SECTION_TITLES.lockScreen}
-                description={SECTION_DESCRIPTIONS.lockScreen}
+                title={sectionTitles.lockScreen}
+                description={sectionDescriptions.lockScreen}
                 icon="🔒"
                 onPress={() => setActiveSection("lockScreen")}
                 preview={
@@ -262,8 +273,8 @@ export default function WidgetConfigScreen() {
               />
 
               <SectionCard
-                title={SECTION_TITLES.watch}
-                description={SECTION_DESCRIPTIONS.watch}
+                title={sectionTitles.watch}
+                description={sectionDescriptions.watch}
                 icon="⌚"
                 onPress={() => setActiveSection("watch")}
                 preview={
@@ -277,47 +288,52 @@ export default function WidgetConfigScreen() {
             </>
           ) : activeSection === "smallWidget" ? (
             <SingleActivitySelector
-              title={SECTION_TITLES.smallWidget}
-              description={SECTION_DESCRIPTIONS.smallWidget}
+              title={sectionTitles.smallWidget}
+              description={sectionDescriptions.smallWidget}
               selectedActivity={config.smallWidgetActivity}
               onSelect={updateSmallWidgetActivity}
               onBack={() => setActiveSection(null)}
+              activityLabels={activityLabels}
             />
           ) : activeSection === "quickLog" ? (
             <MultiActivitySelector
-              title={SECTION_TITLES.quickLog}
-              description={SECTION_DESCRIPTIONS.quickLog}
+              title={sectionTitles.quickLog}
+              description={sectionDescriptions.quickLog}
               selectedActivities={[...config.quickLogActivities]}
               maxActivities={4}
               onUpdate={updateQuickLogActivities}
               onBack={() => setActiveSection(null)}
+              activityLabels={activityLabels}
             />
           ) : activeSection === "summary" ? (
             <MultiActivitySelector
-              title={SECTION_TITLES.summary}
-              description={SECTION_DESCRIPTIONS.summary}
+              title={sectionTitles.summary}
+              description={sectionDescriptions.summary}
               selectedActivities={[...config.summaryActivities]}
               maxActivities={4}
               onUpdate={updateSummaryActivities}
               onBack={() => setActiveSection(null)}
+              activityLabels={activityLabels}
             />
           ) : activeSection === "lockScreen" ? (
             <MultiActivitySelector
-              title={SECTION_TITLES.lockScreen}
-              description={SECTION_DESCRIPTIONS.lockScreen}
+              title={sectionTitles.lockScreen}
+              description={sectionDescriptions.lockScreen}
               selectedActivities={[...config.lockScreenActivities]}
               maxActivities={2}
               onUpdate={updateLockScreenActivities}
               onBack={() => setActiveSection(null)}
+              activityLabels={activityLabels}
             />
           ) : activeSection === "watch" ? (
             <MultiActivitySelector
-              title={SECTION_TITLES.watch}
-              description={SECTION_DESCRIPTIONS.watch}
+              title={sectionTitles.watch}
+              description={sectionDescriptions.watch}
               selectedActivities={[...config.watchActivities]}
               maxActivities={4}
               onUpdate={updateWatchActivities}
               onBack={() => setActiveSection(null)}
+              activityLabels={activityLabels}
             />
           ) : null}
         </ScrollView>
@@ -365,6 +381,7 @@ interface SingleActivitySelectorProps {
   selectedActivity: ActivityType;
   onSelect: (activity: ActivityType) => void;
   onBack: () => void;
+  activityLabels: Partial<Record<ActivityType, string>>;
 }
 
 function SingleActivitySelector({
@@ -373,7 +390,10 @@ function SingleActivitySelector({
   selectedActivity,
   onSelect,
   onBack,
+  activityLabels,
 }: SingleActivitySelectorProps) {
+  const { t } = useTranslation();
+
   return (
     <View>
       <Pressable onPress={onBack} className="flex-row items-center mb-4">
@@ -381,7 +401,7 @@ function SingleActivitySelector({
           ‹
         </Text>
         <Text className="text-action-primary dark:text-action-dark-primary">
-          Back
+          {t("common.back")}
         </Text>
       </Pressable>
 
@@ -404,7 +424,7 @@ function SingleActivitySelector({
         >
           <Text className="text-2xl mr-3">{ACTIVITY_CONFIG[activity].icon}</Text>
           <Text className="flex-1 text-base text-content-primary dark:text-content-dark-primary">
-            {ACTIVITY_LABELS[activity]}
+            {activityLabels[activity]}
           </Text>
           {selectedActivity === activity && (
             <Text className="text-action-primary dark:text-action-dark-primary text-xl">
@@ -424,6 +444,7 @@ interface MultiActivitySelectorProps {
   maxActivities: number;
   onUpdate: (activities: ActivityType[]) => void;
   onBack: () => void;
+  activityLabels: Partial<Record<ActivityType, string>>;
 }
 
 function MultiActivitySelector({
@@ -433,7 +454,9 @@ function MultiActivitySelector({
   maxActivities,
   onUpdate,
   onBack,
+  activityLabels,
 }: MultiActivitySelectorProps) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<ActivityItem[]>(() =>
     ALL_ACTIVITIES.map(key => ({
       key,
@@ -500,7 +523,7 @@ function MultiActivitySelector({
                 : "text-content-tertiary dark:text-content-dark-tertiary"
             }`}
           >
-            {ACTIVITY_LABELS[item.key]}
+            {activityLabels[item.key]}
           </Text>
           <Pressable
             onPress={() => toggleActivity(item.key)}
@@ -521,7 +544,7 @@ function MultiActivitySelector({
         </Pressable>
       </ScaleDecorator>
     ),
-    [toggleActivity]
+    [toggleActivity, activityLabels]
   );
 
   const onDragEnd = useCallback(
@@ -540,7 +563,7 @@ function MultiActivitySelector({
           ‹
         </Text>
         <Text className="text-action-primary dark:text-action-dark-primary">
-          Back
+          {t("common.back")}
         </Text>
       </Pressable>
 
@@ -551,7 +574,7 @@ function MultiActivitySelector({
         {description}
       </Text>
       <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary mb-4">
-        {enabledCount}/{maxActivities} selected • Hold and drag to reorder
+        {enabledCount}/{maxActivities} {t("widget.selectedReorder")}
       </Text>
 
       <DraggableFlatList

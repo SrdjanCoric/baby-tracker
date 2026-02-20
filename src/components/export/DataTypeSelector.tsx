@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { ExportDataType, ExportRecordCounts } from "@/types/export";
-import { DATA_TYPE_LABELS, DATA_TYPE_ICONS } from "@/constants/export";
+import { getDataTypeLabels, DATA_TYPE_ICONS } from "@/constants/export";
 
 interface DataTypeSelectorProps {
   selectedTypes: ExportDataType[];
@@ -26,6 +26,7 @@ function DataTypeItem({
   isSelected,
   onToggle,
 }: DataTypeItemProps) {
+  const { t } = useTranslation();
   const isDisabled = count === 0;
 
   return (
@@ -77,7 +78,7 @@ function DataTypeItem({
             : "text-content-secondary dark:text-content-dark-secondary"
         }`}
       >
-        {count} {count === 1 ? "record" : "records"}
+        {t(count === 1 ? "export.record_one" : "export.record_other", { count })}
       </Text>
     </Pressable>
   );
@@ -89,6 +90,7 @@ export function DataTypeSelector({
   onSelectionChange,
 }: DataTypeSelectorProps) {
   const { t } = useTranslation();
+  const dataTypeLabels = getDataTypeLabels(t);
 
   const dataTypes: ExportDataType[] = [
     "feedings",
@@ -147,7 +149,7 @@ export function DataTypeSelector({
         <DataTypeItem
           key={type}
           type={type}
-          label={DATA_TYPE_LABELS[type]}
+          label={dataTypeLabels[type]}
           icon={DATA_TYPE_ICONS[type]}
           count={recordCounts[type]}
           isSelected={selectedTypes.includes(type)}

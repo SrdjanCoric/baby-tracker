@@ -4,6 +4,7 @@ import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/dat
 import { useTranslation } from "react-i18next";
 import type { DateRangePreset, DateRange } from "@/types/export";
 import { DATE_RANGE_PRESETS } from "@/constants/export";
+import { getDateLocale } from "@/utils/time";
 
 interface DateRangePickerProps {
   dateRange: DateRange;
@@ -108,7 +109,7 @@ export function DateRangePicker({
   };
 
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(getDateLocale(), {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -149,7 +150,7 @@ export function DateRangePicker({
             <Pressable
               onPress={() => setShowStartPicker(true)}
               accessibilityRole="button"
-              accessibilityLabel={`Start date: ${formatDate(dateRange.startDate)}`}
+              accessibilityLabel={`${t("export.startDate")}: ${formatDate(dateRange.startDate)}`}
               className={`px-4 py-3 rounded-xl border ${
                 isDark
                   ? "border-gray-700 bg-surface-dark-card"
@@ -170,7 +171,7 @@ export function DateRangePicker({
             <Pressable
               onPress={() => setShowEndPicker(true)}
               accessibilityRole="button"
-              accessibilityLabel={`End date: ${formatDate(dateRange.endDate)}`}
+              accessibilityLabel={`${t("export.endDate")}: ${formatDate(dateRange.endDate)}`}
               className={`px-4 py-3 rounded-xl border ${
                 isDark
                   ? "border-gray-700 bg-surface-dark-card"
