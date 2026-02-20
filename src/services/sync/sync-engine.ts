@@ -265,6 +265,27 @@ export class SyncEngine {
     await this.queue.persist();
   }
 
+  private isAuthError(error: { code?: string; message?: string }): boolean {
+    return (
+      error.code === 'PGRST301' ||
+      error.code === '401' ||
+      error.code === '403' ||
+      !!error.message?.includes('JWT')
+    );
+  }
+
+  private async handleSupabaseError(
+    error: { code?: string; message?: string },
+    table: string,
+    verb: string
+  ): Promise<never> {
+    if (this.isAuthError(error)) {
+      await supabase.auth.refreshSession();
+      throw new Error(`Auth error on ${table}, retrying after refresh: ${error.message}`);
+    }
+    throw new Error(`Failed to ${verb} ${table}: ${error.message}`);
+  }
+
   private async executeOperation(operation: QueuedOperation): Promise<void> {
     const { table, type, entityId, data } = operation;
 
@@ -274,9 +295,9 @@ export class SyncEngine {
         const { error } = await supabase.from(table).insert(data);
         if (error) {
           if (error.code === '23505') {
-            return; // Record already exists, treat as success
+            return;
           }
-          throw new Error(`Failed to create ${table}: ${error.message}`);
+          await this.handleSupabaseError(error, table, 'create');
         }
         break;
       }
@@ -287,7 +308,7 @@ export class SyncEngine {
           .update(data)
           .eq('id', entityId);
         if (error) {
-          throw new Error(`Failed to update ${table}: ${error.message}`);
+          await this.handleSupabaseError(error, table, 'update');
         }
         break;
       }
@@ -297,7 +318,7 @@ export class SyncEngine {
           .delete()
           .eq('id', entityId);
         if (error) {
-          throw new Error(`Failed to delete from ${table}: ${error.message}`);
+          await this.handleSupabaseError(error, table, 'delete from');
         }
         break;
       }

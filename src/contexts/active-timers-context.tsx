@@ -54,7 +54,7 @@ const ActiveTimersContext = createContext<ActiveTimersContextValue | null>(
   null
 );
 
-function activeTimersReducer(
+export function activeTimersReducer(
   state: ActiveTimersState,
   action: ActiveTimersAction
 ): ActiveTimersState {

@@ -29,6 +29,9 @@ vi.mock('../supabase', () => ({
         eq: vi.fn().mockResolvedValue({ error: null }),
       }),
     }),
+    auth: {
+      refreshSession: vi.fn().mockResolvedValue({ data: { session: {} }, error: null }),
+    },
   },
 }));
 
@@ -283,6 +286,84 @@ describe('SyncEngine', () => {
       }));
 
       unsubscribe();
+    });
+  });
+
+  describe('auth error detection', () => {
+    beforeEach(() => {
+      syncEngine.setOnlineForTesting(true);
+    });
+
+    it('should call refreshSession on JWT auth error', async () => {
+      vi.useRealTimers();
+      const { supabase } = await import('../supabase');
+      vi.mocked(supabase.from).mockReturnValue({
+        insert: vi.fn().mockResolvedValue({
+          error: { code: 'PGRST301', message: 'JWT expired' },
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+      } as never);
+
+      const operation = createOperation('CREATE', 'feedings', 'f1');
+      await syncEngine.enqueueOperation(operation);
+      vi.spyOn(syncEngine, 'delay').mockResolvedValue();
+
+      await syncEngine.sync();
+
+      expect(supabase.auth.refreshSession).toHaveBeenCalled();
+    });
+
+    it('should call refreshSession on 401 error code', async () => {
+      vi.useRealTimers();
+      const { supabase } = await import('../supabase');
+      vi.mocked(supabase.from).mockReturnValue({
+        insert: vi.fn().mockResolvedValue({ error: null }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({
+            error: { code: '401', message: 'Unauthorized' },
+          }),
+        }),
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+      } as never);
+
+      const operation = createOperation('UPDATE', 'feedings', 'f2');
+      await syncEngine.enqueueOperation(operation);
+      vi.spyOn(syncEngine, 'delay').mockResolvedValue();
+
+      await syncEngine.sync();
+
+      expect(supabase.auth.refreshSession).toHaveBeenCalled();
+    });
+
+    it('should not call refreshSession on non-auth errors', async () => {
+      vi.useRealTimers();
+      const { supabase } = await import('../supabase');
+      vi.mocked(supabase.from).mockReturnValue({
+        insert: vi.fn().mockResolvedValue({
+          error: { code: '23503', message: 'Foreign key violation' },
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+      } as never);
+
+      const operation = createOperation('CREATE', 'feedings', 'f3');
+      await syncEngine.enqueueOperation(operation);
+      vi.spyOn(syncEngine, 'delay').mockResolvedValue();
+
+      await syncEngine.sync();
+
+      expect(supabase.auth.refreshSession).not.toHaveBeenCalled();
     });
   });
 });
