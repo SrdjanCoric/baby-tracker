@@ -285,8 +285,8 @@ export function calculateDailyAverages(
     wetDiapersPerDay: Math.round((diaperStats.wetCount / days) * 10) / 10,
     dirtyDiapersPerDay: Math.round((diaperStats.dirtyCount / days) * 10) / 10,
     totalDiapersPerDay: Math.round((diaperStats.totalCount / days) * 10) / 10,
-    pumpingMlPerDay: Math.round(pumpingStats.totalVolumeMl / days),
-    tummyTimeMinutesPerDay: Math.round(tummyTimeStats.totalDurationSeconds / 60 / days),
+    pumpingMlPerDay: Math.round((pumpingStats.totalVolumeMl / days) * 10) / 10,
+    tummyTimeMinutesPerDay: Math.round((tummyTimeStats.totalDurationSeconds / 60 / days) * 10) / 10,
     daysInPeriod: days,
   };
 }
