@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTranslation } from '@/hooks/useAppTranslation';
 
 interface CaregiverListItemProps {
   id: string;
@@ -33,7 +34,8 @@ export function CaregiverListItem({
   onRemove,
   testID,
 }: CaregiverListItemProps) {
-  const displayName = name || email || 'Unknown';
+  const { t } = useAppTranslation();
+  const displayName = name || email || t("household.unknownUser");
   const initials = getInitials(displayName);
 
   const handleRemove = () => {
@@ -45,7 +47,7 @@ export function CaregiverListItem({
   return (
     <View
       testID={testID}
-      accessibilityLabel={`${displayName}${isCurrentUser ? ', you' : ''}${isOwner ? ', household owner' : ''}`}
+      accessibilityLabel={`${displayName}${isCurrentUser ? `, ${t("household.you")}` : ''}${isOwner ? `, ${t("household.owner")}` : ''}`}
       className="flex-row items-center py-3 px-4 bg-surface-card dark:bg-surface-dark-card"
     >
       <View className="w-10 h-10 rounded-full bg-primary/15 dark:bg-primary-dark/15 items-center justify-center mr-3">
@@ -66,13 +68,13 @@ export function CaregiverListItem({
 
           {isCurrentUser && (
             <View className="bg-primary/15 dark:bg-primary-dark/15 px-2 py-0.5 rounded">
-              <Text className="text-primary dark:text-primary-dark text-xs font-medium">You</Text>
+              <Text className="text-primary dark:text-primary-dark text-xs font-medium">{t("household.you")}</Text>
             </View>
           )}
 
           {isOwner && (
             <View className="bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">
-              <Text className="text-amber-700 dark:text-amber-400 text-xs font-medium">Owner</Text>
+              <Text className="text-amber-700 dark:text-amber-400 text-xs font-medium">{t("household.owner")}</Text>
             </View>
           )}
         </View>

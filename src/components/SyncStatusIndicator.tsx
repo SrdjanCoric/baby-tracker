@@ -8,7 +8,9 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SyncStatus } from '@/services/sync/types';
+import type { TFunction } from 'i18next';
 
 interface SyncStatusIndicatorProps {
   status: SyncStatus;
@@ -18,13 +20,15 @@ interface SyncStatusIndicatorProps {
   testID?: string;
 }
 
-const statusConfig: Record<SyncStatus, { color: string; label: string; bgColor: string }> = {
-  online: { color: 'bg-green-600', label: 'Synced', bgColor: 'bg-green-100' },
-  syncing: { color: 'bg-green-500', label: 'Syncing...', bgColor: 'bg-green-50' },
-  offline: { color: 'bg-orange-500', label: 'Offline', bgColor: 'bg-orange-100' },
-  pending: { color: 'bg-amber-500', label: 'Pending', bgColor: 'bg-amber-100' },
-  error: { color: 'bg-red-500', label: 'Sync error', bgColor: 'bg-red-100' },
-};
+function getStatusConfig(t: TFunction): Record<SyncStatus, { color: string; label: string; bgColor: string }> {
+  return {
+    online: { color: 'bg-green-600', label: t('sync.synced'), bgColor: 'bg-green-100' },
+    syncing: { color: 'bg-green-500', label: t('sync.syncing'), bgColor: 'bg-green-50' },
+    offline: { color: 'bg-orange-500', label: t('sync.offline'), bgColor: 'bg-orange-100' },
+    pending: { color: 'bg-amber-500', label: t('sync.pending'), bgColor: 'bg-amber-100' },
+    error: { color: 'bg-red-500', label: t('sync.error'), bgColor: 'bg-red-100' },
+  };
+}
 
 function SpinnerIcon({ testID }: { testID?: string }) {
   const rotation = useSharedValue(0);
@@ -61,6 +65,8 @@ export function SyncStatusIndicator({
   onPress,
   testID,
 }: SyncStatusIndicatorProps) {
+  const { t } = useTranslation();
+  const statusConfig = getStatusConfig(t);
   const config = statusConfig[status];
   const isSyncing = status === 'syncing';
   const showPendingBadge = pendingCount > 0 && status !== 'syncing';
@@ -69,10 +75,10 @@ export function SyncStatusIndicator({
   const accessibilityLabel = (() => {
     let label = config.label;
     if (pendingCount > 0) {
-      label += `, ${pendingCount} pending change${pendingCount === 1 ? '' : 's'}`;
+      label += `, ${t('sync.pendingChange', { count: pendingCount })}`;
     }
     if (isError) {
-      label += '. Tap to retry';
+      label += `. ${t('sync.tapToRetry')}`;
     }
     return label;
   })();

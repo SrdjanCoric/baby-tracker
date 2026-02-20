@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { forwardRef } from "react";
 import { ACTIVITY_CONFIG, type TimerActivityType, type BreastSide } from "@/constants/activities";
+import { useAppTranslation } from "@/hooks/useAppTranslation";
 
 interface TimerDisplayProps {
   activity: TimerActivityType;
@@ -34,6 +35,7 @@ const TimerDisplay = forwardRef<View, TimerDisplayProps>(
     },
     ref
   ) => {
+    const { t } = useAppTranslation();
     const colors = getActivityColors(activity);
     const icon = getActivityIcon(activity);
     const showSideSelector = activity === "feeding" || activity === "pumping";
@@ -61,22 +63,22 @@ const TimerDisplay = forwardRef<View, TimerDisplayProps>(
         {showSideSelector && onSideChange && (
           <View className="flex-row mb-6 rounded-pill p-1" style={{ backgroundColor: colors.muted }}>
             <SideButton
-              label="L"
-              fullLabel="Left"
+              label={t("feeding.leftShort")}
+              fullLabel={t("feeding.left")}
               isSelected={side === "left"}
               onPress={() => onSideChange("left")}
               color={colors.primary}
             />
             <SideButton
               label="B"
-              fullLabel="Both"
+              fullLabel={t("feeding.both")}
               isSelected={side === "both"}
               onPress={() => onSideChange("both")}
               color={colors.primary}
             />
             <SideButton
-              label="R"
-              fullLabel="Right"
+              label={t("feeding.rightShort")}
+              fullLabel={t("feeding.right")}
               isSelected={side === "right"}
               onPress={() => onSideChange("right")}
               color={colors.primary}
@@ -105,7 +107,7 @@ const TimerDisplay = forwardRef<View, TimerDisplayProps>(
             style={{ backgroundColor: colors.primary }}
           />
           <Text className="text-base text-content-secondary dark:text-content-dark-secondary">
-            Timer running
+            {t("common.timerRunning")}
           </Text>
         </View>
 
@@ -115,13 +117,13 @@ const TimerDisplay = forwardRef<View, TimerDisplayProps>(
           className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
           style={{ backgroundColor: colors.primary }}
           accessibilityRole="button"
-          accessibilityLabel="Stop timer"
+          accessibilityLabel={t("common.stopTimer")}
         >
           <Text className="text-3xl text-white">⏹</Text>
         </Pressable>
 
         <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-3">
-          Tap to stop
+          {t("common.tapToStop")}
         </Text>
       </View>
     );

@@ -9,6 +9,7 @@ import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { SURFACE_COLORS, CONTENT_COLORS, BORDER_COLORS } from "@/constants/design-tokens";
 import { getDateParts } from "@/utils/timeline";
 import type { FilterType } from "./timeline/ActivityFilterTabs";
+import { useAppTranslation } from "@/hooks/useAppTranslation";
 
 type TimelineActivityType = ActivityType;
 
@@ -39,6 +40,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     },
     ref
   ) => {
+    const { t } = useAppTranslation();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
     const config = ACTIVITY_CONFIG[activity];
@@ -114,7 +116,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
               {/* Logged by attribution */}
               {loggedBy && (
                 <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary mt-1 italic">
-                  by {loggedBy}
+                  {t("timeline.loggedBy", { name: loggedBy })}
                 </Text>
               )}
             </View>

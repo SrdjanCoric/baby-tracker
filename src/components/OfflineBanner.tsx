@@ -4,6 +4,7 @@ import Animated, {
   SlideInUp,
   SlideOutUp,
 } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 interface OfflineBannerProps {
   pendingCount: number;
@@ -16,11 +17,8 @@ export function OfflineBanner({
   onDismiss,
   testID,
 }: OfflineBannerProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const changeText =
-    pendingCount === 1
-      ? '1 change pending'
-      : `${pendingCount} changes pending`;
 
   return (
     <Animated.View
@@ -34,11 +32,11 @@ export function OfflineBanner({
     >
       <View className="flex-1">
         <Text className="text-white font-semibold text-base">
-          You&apos;re offline
+          {t("sync.youreOffline")}
         </Text>
         {pendingCount > 0 && (
           <Text className="text-orange-100 text-sm mt-0.5">
-            {changeText} - will sync when connected
+            {t("sync.pendingChange", { count: pendingCount })} - {t("sync.changesWillSync")}
           </Text>
         )}
       </View>
