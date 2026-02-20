@@ -11,6 +11,11 @@ export default defineConfig({
     environment: "node",
     globals: true,
     setupFiles: ["./src/test-setup.ts"],
+    server: {
+      deps: {
+        external: ["react-native"],
+      },
+    },
   },
   resolve: {
     alias: {
