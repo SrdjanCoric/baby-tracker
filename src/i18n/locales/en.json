@@ -39,7 +39,13 @@
     "reset": "Reset",
     "share": "Share",
     "total": "Total",
-    "or": "or"
+    "or": "or",
+    "timerRunning": "Timer running",
+    "tapToStop": "Tap to stop",
+    "unknown": "Unknown",
+    "min": "min",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours"
   },
   "summary": {
     "today": "Today",
@@ -68,7 +74,16 @@
     "napIn": "Nap in {{time}}",
     "bedtimeIn": "Bedtime in {{time}}",
     "napTimeNow": "Nap time!",
-    "bedtimeNow": "Bedtime!"
+    "bedtimeNow": "Bedtime!",
+    "pausedBy": "{{name}} paused",
+    "isFeeding": "{{name}} is feeding",
+    "isSleeping": "{{name}} is sleeping",
+    "isPumping": "Pumping...",
+    "isOnTummy": "{{name}} is on tummy",
+    "isBusy": "{{name}} is busy",
+    "active": "Active",
+    "inProgressBy": "in progress by {{name}}",
+    "timeSinceLast": "Time since last: {{time}}"
   },
   "navigation": {
     "home": "Home",
@@ -313,7 +328,18 @@
     "noMeasurementsDescription": "Add your first measurement to see growth charts and percentiles.",
     "addMeasurement": "Add Measurement",
     "birthDateRequired": "Birth Date Needed",
-    "birthDateRequiredDescription": "Please add your baby's birth date in profile settings to view growth charts."
+    "birthDateRequiredDescription": "Please add your baby's birth date in profile settings to view growth charts.",
+    "thPercentile": "{{value}}th percentile",
+    "percentileCompact": "{{value}}th",
+    "scale3rd": "3rd",
+    "scale50th": "50th",
+    "scale97th": "97th",
+    "medianLabel": "50th (median)",
+    "percentileVeryLow": "Very Low (< 3rd)",
+    "percentileLow": "Low (3rd - 15th)",
+    "percentileNormal": "Normal (15th - 85th)",
+    "percentileHigh": "High (85th - 97th)",
+    "percentileVeryHigh": "Very High (> 97th)"
   },
   "tummyTime": {
     "title": "Tummy Time",
@@ -642,7 +668,10 @@
     "pendingChanges_other": "{{count}} pending changes",
     "lastSynced": "Last synced {{time}}",
     "tapToRetry": "Tap to retry",
-    "changesWillSync": "Changes will sync when connected"
+    "changesWillSync": "Changes will sync when connected",
+    "youreOffline": "You're offline",
+    "pendingChange_one": "{{count}} change pending",
+    "pendingChange_other": "{{count}} changes pending"
   },
   "household": {
     "title": "Household",
@@ -705,7 +734,8 @@
     "rateLimitExceeded": "Too many attempts. Please wait and try again.",
     "rateLimitCooldown": "Try again in {{time}}",
     "attemptsRemaining_one": "{{count}} attempt remaining",
-    "attemptsRemaining_other": "{{count}} attempts remaining"
+    "attemptsRemaining_other": "{{count}} attempts remaining",
+    "unknownUser": "Unknown"
   },
   "auth": {
     "signIn": "Sign In",
@@ -808,7 +838,9 @@
     "generic": "Something went wrong. Please try again.",
     "network": "Network error. Please check your connection.",
     "invalidCode": "Invalid invite code",
-    "requiredField": "This field is required"
+    "requiredField": "This field is required",
+    "somethingWentWrong": "Something went wrong",
+    "tryAgainMessage": "We're sorry for the inconvenience. Please try again."
   },
   "foods": {
     "banana": "Banana",
@@ -912,6 +944,11 @@
       "networkError": "Network error. Please check your connection and try again."
     }
   },
+  "about": {
+    "appName": "Sofi Baby Tracker",
+    "description": "A privacy-first, ad-free baby tracking app designed for sleep-deprived parents.",
+    "madeWith": "Made with love for parents everywhere"
+  },
   "export": {
     "title": "Export Data",
     "description": "Export {{babyName}}'s tracking data as a CSV file",
@@ -928,7 +965,15 @@
     "endDate": "End Date",
     "includeNotes": "Include Notes",
     "includeNotesDescription": "Add notes column to exported data",
+    "typeFeedings": "Feedings",
+    "typeSleep": "Sleep",
+    "typeDiapers": "Diapers",
+    "typePumping": "Pumping",
+    "typeGrowth": "Growth",
+    "typeTummyTime": "Tummy Time",
     "recordsSummary": "{{count}} records will be exported",
+    "record_one": "{{count}} record",
+    "record_other": "{{count}} records",
     "exportButton": "Export CSV",
     "loadingCounts": "Loading data...",
     "noBabySelected": "Please select a baby to export data",
@@ -1099,6 +1144,30 @@
     "minutesAgo": "{{count}} minutes ago",
     "hourAgo": "{{count}} hour ago",
     "hoursAgo": "{{count}} hours ago"
+  },
+  "widget": {
+    "configuration": "Widget Configuration",
+    "iosOnlyTitle": "iOS Only Feature",
+    "iosOnlyMessage": "Widget configuration is only available on iOS devices with widget support.",
+    "description": "Customize which activities appear in your iOS widgets and Apple Watch app.",
+    "saved": "Widget configuration saved",
+    "unsavedChangesTitle": "Unsaved Changes",
+    "unsavedChangesMessage": "You have unsaved changes. Do you want to save them?",
+    "discard": "Discard",
+    "selectedReorder": "selected • Hold and drag to reorder",
+    "activityFeeding": "Feeding",
+    "activitySleep": "Sleep",
+    "activityDiaper": "Diaper",
+    "activityPumping": "Pumping",
+    "activityTummyTime": "Tummy Time",
+    "sectionSmallWidget": "Small Widget Activity",
+    "sectionQuickLog": "Quick Log Widget (4 activities)",
+    "sectionSummary": "Summary Widget (4 activities)",
+    "sectionLockScreen": "Lock Screen Widget (2 activities)",
+    "sectionAppleWatch": "Apple Watch (4 activities)",
+    "descChooseActivity": "Choose which activity to display",
+    "descSelectReorder4": "Select and reorder up to 4 activities",
+    "descSelectUpTo2": "Select up to 2 activities"
   },
   "activities": {
     "feeding": "feeding",

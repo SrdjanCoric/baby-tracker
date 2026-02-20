@@ -39,7 +39,13 @@
     "reset": "Restablecer",
     "share": "Compartir",
     "total": "Total",
-    "or": "o"
+    "or": "o",
+    "timerRunning": "Temporizador activo",
+    "tapToStop": "Toca para detener",
+    "unknown": "Desconocido",
+    "min": "min",
+    "hours_one": "{{count}} hora",
+    "hours_other": "{{count}} horas"
   },
   "summary": {
     "today": "Hoy",
@@ -69,10 +75,19 @@
     "session_one": "{{count}} sesión",
     "session_other": "{{count}} sesiones",
     "daysAgo": "hace {{days}}d",
-    "napIn": "Siesta en {{time}}",
-    "bedtimeIn": "Dormir en {{time}}",
+    "napIn": "Hora de siesta en {{time}}",
+    "bedtimeIn": "Hora de dormir en {{time}}",
     "napTimeNow": "¡Hora de siesta!",
-    "bedtimeNow": "¡Hora de dormir!"
+    "bedtimeNow": "¡Hora de dormir!",
+    "pausedBy": "{{name}} pausó",
+    "isFeeding": "{{name}} está alimentando",
+    "isSleeping": "{{name}} está durmiendo",
+    "isPumping": "Extrayendo...",
+    "isOnTummy": "{{name}} está boca abajo",
+    "isBusy": "{{name}} está ocupado",
+    "active": "Activo",
+    "inProgressBy": "en progreso por {{name}}",
+    "timeSinceLast": "Tiempo desde la última: {{time}}"
   },
   "navigation": {
     "home": "Inicio",
@@ -317,7 +332,18 @@
     "noMeasurementsDescription": "Agrega tu primera medición para ver gráficos de crecimiento y percentiles.",
     "addMeasurement": "Agregar medición",
     "birthDateRequired": "Fecha de nacimiento necesaria",
-    "birthDateRequiredDescription": "Agrega la fecha de nacimiento del bebé en los ajustes de perfil para ver los gráficos de crecimiento."
+    "birthDateRequiredDescription": "Agrega la fecha de nacimiento del bebé en los ajustes de perfil para ver los gráficos de crecimiento.",
+    "thPercentile": "percentil {{value}}",
+    "percentileCompact": "{{value}}°",
+    "scale3rd": "3°",
+    "scale50th": "50°",
+    "scale97th": "97°",
+    "medianLabel": "50° (mediana)",
+    "percentileVeryLow": "Muy bajo (< 3°)",
+    "percentileLow": "Bajo (3° - 15°)",
+    "percentileNormal": "Normal (15° - 85°)",
+    "percentileHigh": "Alto (85° - 97°)",
+    "percentileVeryHigh": "Muy alto (> 97°)"
   },
   "tummyTime": {
     "title": "Tiempo boca abajo",
@@ -646,7 +672,10 @@
     "pendingChanges_other": "{{count}} cambios pendientes",
     "lastSynced": "Última sincronización {{time}}",
     "tapToRetry": "Toca para reintentar",
-    "changesWillSync": "Los cambios se sincronizarán cuando te conectes"
+    "changesWillSync": "Los cambios se sincronizarán cuando te conectes",
+    "youreOffline": "Sin conexión",
+    "pendingChange_one": "{{count}} cambio pendiente",
+    "pendingChange_other": "{{count}} cambios pendientes"
   },
   "household": {
     "title": "Hogar",
@@ -709,7 +738,8 @@
     "rateLimitExceeded": "Demasiados intentos. Espera e inténtalo de nuevo.",
     "rateLimitCooldown": "Inténtalo de nuevo en {{time}}",
     "attemptsRemaining_one": "{{count}} intento restante",
-    "attemptsRemaining_other": "{{count}} intentos restantes"
+    "attemptsRemaining_other": "{{count}} intentos restantes",
+    "unknownUser": "Desconocido"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -750,7 +780,7 @@
     "signInSubtitle": "Inicia sesión en tu cuenta",
     "signInDescription": "Inicia sesión para sincronizar entre dispositivos y compartir con cuidadores",
     "signUpTitle": "Crear cuenta",
-    "signUpSubtitle": "Comienza a registrar el camino de tu bebé",
+    "signUpSubtitle": "Comienza a seguir el desarrollo de tu bebé",
     "signInError": "Correo electrónico o contraseña inválidos",
     "signUpError": "No se pudo crear la cuenta",
     "emailRequired": "El correo electrónico es obligatorio",
@@ -812,7 +842,9 @@
     "generic": "Algo salió mal. Por favor intenta de nuevo.",
     "network": "Error de red. Por favor verifica tu conexión.",
     "invalidCode": "Código de invitación inválido",
-    "requiredField": "Este campo es obligatorio"
+    "requiredField": "Este campo es obligatorio",
+    "somethingWentWrong": "Algo salió mal",
+    "tryAgainMessage": "Disculpa las molestias. Por favor intenta de nuevo."
   },
   "foods": {
     "banana": "Plátano",
@@ -916,6 +948,11 @@
       "networkError": "Error de red. Por favor verifica tu conexión e intenta de nuevo."
     }
   },
+  "about": {
+    "appName": "Sofi Baby Tracker",
+    "description": "Una app de seguimiento de bebés sin publicidad, diseñada para padres con falta de sueño.",
+    "madeWith": "Hecho con amor para padres de todo el mundo"
+  },
   "export": {
     "title": "Exportar datos",
     "description": "Exportar los datos de seguimiento de {{babyName}} como archivo CSV",
@@ -932,7 +969,15 @@
     "endDate": "Fecha de fin",
     "includeNotes": "Incluir notas",
     "includeNotesDescription": "Agregar columna de notas a los datos exportados",
+    "typeFeedings": "Alimentaciones",
+    "typeSleep": "Sueño",
+    "typeDiapers": "Pañales",
+    "typePumping": "Extracción",
+    "typeGrowth": "Crecimiento",
+    "typeTummyTime": "Tiempo boca abajo",
     "recordsSummary": "{{count}} registros serán exportados",
+    "record_one": "{{count}} registro",
+    "record_other": "{{count}} registros",
     "exportButton": "Exportar CSV",
     "loadingCounts": "Cargando datos...",
     "noBabySelected": "Por favor selecciona un bebé para exportar datos",
@@ -1045,7 +1090,7 @@
       "tummyTimeTitle": "Tiempo boca abajo",
       "totalTummyTime": "Tiempo total",
       "tummyTimeSessions": "Sesiones",
-      "daysWithTummyTime": "Días con TBA",
+      "daysWithTummyTime": "Días con tiempo boca abajo",
       "goalAchievementRate": "Cumplimiento de meta"
     }
   },
@@ -1094,8 +1139,8 @@
   },
   "duplicateDetection": {
     "title": "Entrada similar detectada",
-    "message": "Se registró {{activity}} {{time}}. ¿Deseas registrar de nuevo?",
-    "messageWithUser": "{{user}} registró {{activity}} {{time}}. ¿Deseas registrar de nuevo?",
+    "message": "Se registró una {{activity}} {{time}}. ¿Deseas registrar otra?",
+    "messageWithUser": "{{user}} registró una {{activity}} {{time}}. ¿Deseas registrar otra?",
     "cancel": "Cancelar",
     "logAnyway": "Registrar de todos modos",
     "justNow": "justo ahora",
@@ -1103,6 +1148,30 @@
     "minutesAgo": "hace {{count}} minutos",
     "hourAgo": "hace {{count}} hora",
     "hoursAgo": "hace {{count}} horas"
+  },
+  "widget": {
+    "configuration": "Configuración de widgets",
+    "iosOnlyTitle": "Función solo para iOS",
+    "iosOnlyMessage": "La configuración de widgets solo está disponible en dispositivos iOS con soporte de widgets.",
+    "description": "Personaliza qué actividades aparecen en tus widgets de iOS y Apple Watch.",
+    "saved": "Configuración de widgets guardada",
+    "unsavedChangesTitle": "Cambios sin guardar",
+    "unsavedChangesMessage": "Tienes cambios sin guardar. ¿Quieres guardarlos?",
+    "discard": "Descartar",
+    "selectedReorder": "seleccionados • Mantén presionado y arrastra para reordenar",
+    "activityFeeding": "Alimentación",
+    "activitySleep": "Sueño",
+    "activityDiaper": "Pañal",
+    "activityPumping": "Extracción",
+    "activityTummyTime": "Tiempo boca abajo",
+    "sectionSmallWidget": "Widget pequeño",
+    "sectionQuickLog": "Widget de registro rápido (4 actividades)",
+    "sectionSummary": "Widget de resumen (4 actividades)",
+    "sectionLockScreen": "Widget de pantalla de bloqueo (2 actividades)",
+    "sectionAppleWatch": "Apple Watch (4 actividades)",
+    "descChooseActivity": "Elige qué actividad mostrar",
+    "descSelectReorder4": "Selecciona y reordena hasta 4 actividades",
+    "descSelectUpTo2": "Selecciona hasta 2 actividades"
   },
   "activities": {
     "feeding": "alimentación",
