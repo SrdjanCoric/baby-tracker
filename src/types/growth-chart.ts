@@ -2,6 +2,8 @@
  * Types for WHO growth chart calculations and display
  */
 
+import type { TFunction } from "i18next";
+
 export type Gender = "male" | "female";
 
 export type GrowthMeasurementType = "weight" | "height" | "head";
@@ -149,19 +151,20 @@ export function classifyPercentile(percentile: number): PercentileClassification
  * Get user-friendly label for percentile classification
  */
 export function getPercentileClassificationLabel(
-  classification: PercentileClassification
+  classification: PercentileClassification,
+  t: TFunction
 ): string {
   switch (classification) {
     case "very_low":
-      return "Very Low (< 3rd)";
+      return t("growth.percentileVeryLow");
     case "low":
-      return "Low (3rd - 15th)";
+      return t("growth.percentileLow");
     case "normal":
-      return "Normal (15th - 85th)";
+      return t("growth.percentileNormal");
     case "high":
-      return "High (85th - 97th)";
+      return t("growth.percentileHigh");
     case "very_high":
-      return "Very High (> 97th)";
+      return t("growth.percentileVeryHigh");
   }
 }
 
