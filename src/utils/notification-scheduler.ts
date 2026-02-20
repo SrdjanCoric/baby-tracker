@@ -95,7 +95,7 @@ function getNextQuietHoursEnd(
   result.setHours(end.hours, end.minutes, 0, 0);
 
   // If end time is before current time, it's the next day
-  if (result <= fromTime) {
+  if (result < fromTime) {
     result.setDate(result.getDate() + 1);
   }
 

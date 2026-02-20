@@ -5,6 +5,7 @@
 
 import { Platform } from "react-native";
 import Constants from "expo-constants";
+import * as Notifications from "expo-notifications";
 import type {
   NotificationContent,
   PermissionStatus,
@@ -12,19 +13,15 @@ import type {
 import { NOTIFICATION_CHANNELS } from "@/constants/notifications";
 import { getNavigationRoute } from "@/utils/notification-routes";
 
-// Dynamic import - expo-notifications not available in Expo Go (SDK 53+)
-let Notifications: typeof import("expo-notifications") | null = null;
-try {
-  Notifications = require("expo-notifications");
-} catch {
-  console.log("[Notifications] Module not available (Expo Go)");
-}
-
 let capturedDeviceToken: string | null = null;
-if (Notifications) {
-  Notifications.addPushTokenListener((token) => {
-    capturedDeviceToken = token.data;
-  });
+if (typeof Notifications?.addPushTokenListener === "function") {
+  try {
+    Notifications.addPushTokenListener((token) => {
+      capturedDeviceToken = token.data;
+    });
+  } catch {
+    // Native module not available
+  }
 }
 
 const IOS_NOTIFICATION_LIMIT = 64;
