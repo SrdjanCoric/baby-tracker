@@ -119,6 +119,7 @@ export default function EditFeedingScreen() {
       await updateFeeding(feeding.id, {
         side,
         durationSeconds,
+        ...(feeding.type === "breast" && { leftDurationSeconds: 0, rightDurationSeconds: 0 }),
         amountMl: parsedAmount,
         contentType,
         foodType: foodType || undefined,
