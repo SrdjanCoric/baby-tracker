@@ -385,8 +385,11 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             });
 
             if (!isPaused) {
+              const effectiveStartTime = totalPausedMs > 0
+                ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
+                : new Date(lock.startedAt);
               const activityId = await startTimerLiveActivity(
-                "feeding", selectedBaby.name, side as LiveActivityBreastSide, new Date(lock.startedAt)
+                "feeding", selectedBaby.name, side as LiveActivityBreastSide, effectiveStartTime
               );
               if (activityId) liveActivityIdRef.current = activityId;
             }
@@ -598,7 +601,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "PAUSE_TIMER", payload: { accumulatedSeconds } });
 
     if (liveActivityIdRef.current) {
-      await pauseTimerLiveActivity(liveActivityIdRef.current);
+      const activeElapsedSeconds = Math.floor(
+        (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+      );
+      await pauseTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
     }
 
     const prevSide = state.activeTimer.side;
