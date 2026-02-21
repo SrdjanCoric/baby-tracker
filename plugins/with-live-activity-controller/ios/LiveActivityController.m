@@ -30,6 +30,7 @@ RCT_EXTERN_METHOD(isActivityRunning:(NSString *)activityId
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(pauseTimerActivity:(NSString *)activityId
+                  activeElapsedSeconds:(nonnull NSNumber *)activeElapsedSeconds
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 

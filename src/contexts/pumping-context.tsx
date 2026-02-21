@@ -279,7 +279,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             });
 
             if (!isPaused) {
-              const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side, new Date(lock.startedAt));
+              const effectiveStartTime = totalPausedMs > 0
+                ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
+                : new Date(lock.startedAt);
+              const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side, effectiveStartTime);
               if (activityId) liveActivityIdRef.current = activityId;
             }
           }
@@ -417,10 +420,15 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const pausePumping = useCallback(async () => {
     if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
 
+    const now = new Date();
+
     dispatch({ type: "PAUSE_TIMER" });
 
     if (liveActivityIdRef.current) {
-      await pauseTimerLiveActivity(liveActivityIdRef.current);
+      const activeElapsedSeconds = Math.floor(
+        (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+      );
+      await pauseTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
     }
 
     await PumpingStorageService.setActiveTimer(selectedBaby.id, {
