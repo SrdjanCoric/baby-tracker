@@ -3,19 +3,24 @@
     {
       "idiom": "universal",
       "scale": "1x",
-      "filename": "1x.png"
+      "filename": "complication-icon@1x.png"
     },
     {
       "idiom": "universal",
-      "scale": "2x"
+      "scale": "2x",
+      "filename": "complication-icon@2x.png"
     },
     {
       "idiom": "universal",
-      "scale": "3x"
+      "scale": "3x",
+      "filename": "complication-icon@3x.png"
     }
   ],
   "info": {
     "version": 1,
-    "author": "expo"
+    "author": "xcode"
+  },
+  "properties": {
+    "template-rendering-intent": "template"
   }
 }

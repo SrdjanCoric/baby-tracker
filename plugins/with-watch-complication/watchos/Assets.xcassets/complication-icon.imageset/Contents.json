@@ -1,13 +1,26 @@
 {
   "images": [
     {
-      "filename": "complication-icon.png",
       "idiom": "universal",
-      "scale": "2x"
+      "scale": "1x",
+      "filename": "complication-icon@1x.png"
+    },
+    {
+      "idiom": "universal",
+      "scale": "2x",
+      "filename": "complication-icon@2x.png"
+    },
+    {
+      "idiom": "universal",
+      "scale": "3x",
+      "filename": "complication-icon@3x.png"
     }
   ],
   "info": {
-    "author": "xcode",
-    "version": 1
+    "version": 1,
+    "author": "xcode"
+  },
+  "properties": {
+    "template-rendering-intent": "template"
   }
 }
