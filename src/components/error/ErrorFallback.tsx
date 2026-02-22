@@ -1,4 +1,5 @@
 import { Text, View, Pressable, ScrollView } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { ErrorFallbackProps } from "@/types/error";
 
 export function ErrorFallback({
@@ -6,6 +7,7 @@ export function ErrorFallback({
   resetError,
   errorInfo,
 }: ErrorFallbackProps) {
+  const { t } = useTranslation();
   const isDev = __DEV__;
 
   return (
@@ -18,10 +20,10 @@ export function ErrorFallback({
         className="text-xl font-semibold text-content-primary dark:text-content-dark-primary mb-2 text-center"
         accessibilityRole="header"
       >
-        Something went wrong
+        {t("errorFallback.title")}
       </Text>
       <Text className="text-center text-content-secondary dark:text-content-dark-secondary mb-6 max-w-[300px]">
-        {"We're sorry for the inconvenience. Please try again."}
+        {t("errorFallback.message")}
       </Text>
 
       <View className="flex-row gap-3">
@@ -30,11 +32,11 @@ export function ErrorFallback({
           testID="error-retry-button"
           className="px-6 py-3 bg-action-primary dark:bg-action-dark-primary rounded-button min-h-touch active:opacity-80"
           accessibilityRole="button"
-          accessibilityLabel="Try again"
-          accessibilityHint="Attempts to recover from the error"
+          accessibilityLabel={t("errorFallback.tryAgain")}
+          accessibilityHint={t("errorFallback.tryAgain")}
         >
           <Text className="text-white dark:text-content-dark-inverse font-semibold text-center">
-            Try Again
+            {t("errorFallback.tryAgain")}
           </Text>
         </Pressable>
       </View>

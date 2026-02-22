@@ -39,7 +39,9 @@
     "reset": "Resetuj",
     "share": "Podeli",
     "total": "Ukupno",
-    "or": "ili"
+    "or": "ili",
+    "someone": "Neko",
+    "min": "min"
   },
   "summary": {
     "today": "Danas",
@@ -153,9 +155,9 @@
     "aLot": "Puno",
     "logSolidFeeding": "Evidentiraj čvrstu hranu",
     "howDidBabyLikeIt": "Kako se bebi svidelo?",
-    "loved": "Obožavala",
+    "loved": "Volelo",
     "meh": "Tako-tako",
-    "refused": "Odbila",
+    "refused": "Odbilo",
     "logPastBreastfeeding": "Evidentiraj prethodno dojenje",
     "logPastBottle": "Evidentiraj prethodnu flašicu",
     "logPastSolid": "Evidentiraj prethodnu čvrstu hranu",
@@ -241,7 +243,9 @@
     "nightStartsAt": "Noć počinje u",
     "dayNightExplainer": "Noćna buđenja neće prikazivati predloge za dremku",
     "napContinuation": "Nastavak dremke",
-    "napContinuationDesc": "Ako beba ponovo zaspi u okviru ovog vremena, računa se kao ista dremka"
+    "napContinuationDesc": "Ako beba ponovo zaspi u okviru ovog vremena, računa se kao ista dremka",
+    "householdGoalTitle": "Deljeni cilj",
+    "householdGoalConfirm": "Ovo će promeniti cilj spavanja za sve negovatelje u vašem domaćinstvu. Nastaviti?"
   },
   "diaper": {
     "title": "Pelene",
@@ -257,7 +261,7 @@
     "wetOnly": "Samo mokra - bez stolice",
     "dirtyOnly": "Prljava - prisutna stolica",
     "mixedType": "I mokra i prljava",
-    "dryOnly": "Čista provera - bez promena",
+    "dryOnly": "Suva - bez promena",
     "diaperSaved": "Promena pelene sačuvana",
     "quickLog": "Brza evidencija",
     "optionalColor": "Boja (opciono)",
@@ -371,7 +375,9 @@
     "goalUpdated": "Cilj ažuriran",
     "quickGoals": "Brzi izbor",
     "customMinutes": "Prilagođeno (minuti)",
-    "stopError": "Nije uspelo zaustavljanje vremena na stomaku. Molimo pokušajte ponovo."
+    "stopError": "Nije uspelo zaustavljanje vremena na stomaku. Molimo pokušajte ponovo.",
+    "householdGoalTitle": "Deljeni cilj",
+    "householdGoalConfirm": "Ovo će promeniti cilj vremena na stomaku za sve negovatelje u vašem domaćinstvu. Nastaviti?"
   },
   "baby": {
     "title": "Beba",
@@ -468,7 +474,7 @@
     "lightModeDesc": "Uvek koristi svetlu temu",
     "darkModeDesc": "Uvek koristi tamnu temu",
     "systemDefaultDesc": "Prati sistemsko podešavanje",
-    "currentlyUsing": "Trenutno koristi {{mode}} režim",
+    "currentlyUsing": "Koristi se {{mode}} režim",
     "notifications": "Obaveštenja",
     "notificationsDesc": "Upravljajte podsetnicima i upozorenjima",
     "feedingReminders": "Podsetnici za hranjenje",
@@ -734,6 +740,7 @@
     "rateLimitCooldown": "Pokušajte ponovo za {{time}}",
     "attemptsRemaining_one": "{{count}} pokušaj preostao",
     "attemptsRemaining_few": "{{count}} pokušaja preostalo",
+    "attemptsRemaining_many": "{{count}} pokušaja preostalo",
     "attemptsRemaining_other": "{{count}} pokušaja preostalo"
   },
   "auth": {
@@ -762,7 +769,7 @@
     "magicLinkSentTitle": "Proverite email",
     "magicLinkSentMessage": "Poslali smo vam link za prijavu na email. Dodirnite link da se prijavite - bez lozinke!",
     "magicLinkDescription": "Poslaćemo vam link za prijavu bez lozinke",
-    "magicLinkHint": "Poslaćemo vam link za trenutnu prijavu",
+    "magicLinkHint": "Poslaćemo vam link za brzu prijavu",
     "sendMagicLink": "Pošalji magični link",
     "continueWithoutAccount": "Nastavite bez naloga",
     "continueAsGuest": "Nastavite kao gost",
@@ -837,7 +844,33 @@
     "generic": "Nešto je pošlo naopako. Molimo pokušajte ponovo.",
     "network": "Greška mreže. Molimo proverite vašu konekciju.",
     "invalidCode": "Nevažeći kod za pozivnicu",
-    "requiredField": "Ovo polje je obavezno"
+    "requiredField": "Ovo polje je obavezno",
+    "connectionError": "Nije moguće povezati se. Molimo proverite internet konekciju.",
+    "timeout": "Zahtev je istekao. Molimo pokušajte ponovo.",
+    "sessionExpired": "Vaša sesija je istekla. Molimo prijavite se ponovo.",
+    "noPermission": "Nemate dozvolu za ovu radnju.",
+    "notFound": "Traženi podaci nisu pronađeni.",
+    "tooManyRequests": "Previše zahteva. Sačekajte trenutak i pokušajte ponovo.",
+    "serverError": "Nešto je pošlo naopako na našoj strani. Molimo pokušajte kasnije.",
+    "categoryConnection": "Greška povezivanja",
+    "categoryAuth": "Greška autentifikacije",
+    "categoryValidation": "Greška validacije",
+    "categorySync": "Greška sinhronizacije",
+    "categoryStorage": "Greška skladištenja"
+  },
+  "offline": {
+    "title": "Van mreže",
+    "changesPending_one": "{{count}} izmena na čekanju",
+    "changesPending_few": "{{count}} izmene na čekanju",
+    "changesPending_many": "{{count}} izmena na čekanju",
+    "changesPending_other": "{{count}} izmena na čekanju",
+    "willSyncWhenConnected": "{{changes}} - sinhronizuje se pri povezivanju",
+    "dismissBanner": "Odbaci obaveštenje"
+  },
+  "errorFallback": {
+    "title": "Nešto je pošlo naopako",
+    "message": "Izvinjavamo se za neugodnost. Molimo pokušajte ponovo.",
+    "tryAgain": "Pokušaj ponovo"
   },
   "foods": {
     "banana": "Banana",
@@ -1126,7 +1159,7 @@
     "cancel": "Otkaži",
     "logAnyway": "Ipak zabeleži",
     "justNow": "upravo sada",
-    "minuteAgo": "pre {{count}} minut",
+    "minuteAgo": "pre {{count}} minuta",
     "minutesAgo": "pre {{count}} minuta",
     "hourAgo": "pre {{count}} sat",
     "hoursAgo": "pre {{count}} sati"

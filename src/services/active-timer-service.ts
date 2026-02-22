@@ -1,4 +1,5 @@
 import { supabase } from "@/services/supabase";
+import i18n from "@/i18n";
 
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummy_time";
 
@@ -126,7 +127,7 @@ export async function getActiveTimerLock(
     babyId: row.baby_id,
     activityType: row.activity_type as TimerActivityType,
     startedBy: row.started_by,
-    startedByName: displayName || "Someone",
+    startedByName: displayName || i18n.t("common.someone"),
     startedAt: row.started_at,
     timerData: row.timer_data as Record<string, unknown> | undefined,
   };
@@ -166,7 +167,7 @@ export async function getActiveTimersForBaby(
       babyId: row.baby_id,
       activityType: row.activity_type as TimerActivityType,
       startedBy: row.started_by,
-      startedByName: displayName || "Someone",
+      startedByName: displayName || i18n.t("common.someone"),
       startedAt: row.started_at,
       timerData: row.timer_data as Record<string, unknown> | undefined,
     };

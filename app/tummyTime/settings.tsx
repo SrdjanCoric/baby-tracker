@@ -1,9 +1,8 @@
 import { useCallback, useState } from "react";
-import { Pressable, Text, View, TextInput, ScrollView } from "react-native";
+import { Alert, Keyboard, Pressable, Text, View, TextInput, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useTummyTime, useBaby } from "@/contexts";
+import { useTummyTime, useBaby, useHousehold } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { formatDuration } from "@/utils/time";
 import { isBabySixMonthsOrOlder } from "@/utils/tummyTimeGoals";
@@ -15,8 +14,9 @@ const QUICK_GOALS_MINUTES = [15, 30, 45, 60];
 
 export default function TummyTimeSettingsScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
   const { selectedBaby } = useBaby();
+  const { members } = useHousehold();
+  const isMultiCaregiver = members.length > 1;
   const {
     dailyGoalSeconds,
     goalSource,
@@ -30,29 +30,49 @@ export default function TummyTimeSettingsScreen() {
   );
   const [isSettingCustom, setIsSettingCustom] = useState(false);
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
-  const handleSelectQuickGoal = useCallback(
-    async (minutes: number) => {
-      await setCustomGoal(minutes * 60);
+  const confirmHouseholdChange = useCallback(
+    (onConfirm: () => void) => {
+      if (!isMultiCaregiver) {
+        onConfirm();
+        return;
+      }
+      Alert.alert(
+        t("tummyTime.householdGoalTitle"),
+        t("tummyTime.householdGoalConfirm"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("common.confirm"), onPress: onConfirm },
+        ]
+      );
     },
-    [setCustomGoal]
+    [isMultiCaregiver, t]
   );
 
-  const handleUseAgeBased = useCallback(async () => {
-    await resetToAgeBasedGoal();
-  }, [resetToAgeBasedGoal]);
+  const handleSelectQuickGoal = useCallback(
+    (minutes: number) => {
+      confirmHouseholdChange(async () => {
+        await setCustomGoal(minutes * 60);
+      });
+    },
+    [setCustomGoal, confirmHouseholdChange]
+  );
 
-  const handleSetCustomGoal = useCallback(async () => {
+  const handleUseAgeBased = useCallback(() => {
+    confirmHouseholdChange(async () => {
+      await resetToAgeBasedGoal();
+    });
+  }, [resetToAgeBasedGoal, confirmHouseholdChange]);
+
+  const handleSetCustomGoal = useCallback(() => {
     const minutes = parseInt(customMinutes, 10);
     if (isNaN(minutes) || minutes < 1 || minutes > 120) {
       return;
     }
-    await setCustomGoal(minutes * 60);
-    setIsSettingCustom(false);
-  }, [customMinutes, setCustomGoal]);
+    confirmHouseholdChange(async () => {
+      await setCustomGoal(minutes * 60);
+      setIsSettingCustom(false);
+    });
+  }, [customMinutes, setCustomGoal, confirmHouseholdChange]);
 
   const birthDate = selectedBaby?.birthDate
     ? new Date(selectedBaby.birthDate)
@@ -66,23 +86,17 @@ export default function TummyTimeSettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border-subtle dark:border-border-dark-subtle">
-        <Pressable
-          onPress={handleBack}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-        >
-          <Text className="text-2xl">←</Text>
-        </Pressable>
-        <View className="flex-1 items-center">
-          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            {t("tummyTime.goalSettingsTitle")}
-          </Text>
-        </View>
-        <View className="w-touch" />
-      </View>
+      {/* Header with drag handle */}
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="items-center pt-2 pb-3"
+        testID="dismiss-keyboard"
+      >
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+          {t("tummyTime.goalSettingsTitle")}
+        </Text>
+      </Pressable>
 
       <ScrollView className="flex-1 px-4 py-4">
         {/* Current Goal Display */}
