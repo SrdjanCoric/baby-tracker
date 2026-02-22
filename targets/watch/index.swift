@@ -44,9 +44,13 @@ struct WatchActivityData: Codable {
     struct SleepData: Codable {
         var lastTime: String?
         var todayMinutes: Int
+        var goalMinutes: Int?
         var lastDurationMinutes: Int?
         var isActive: Bool
         var sleepType: String?
+        var wakeWindowMinutes: Int?
+        var lastSleepEndedAt: String?
+        var napCountToday: Int?
     }
 
     struct DiaperData: Codable {
@@ -80,6 +84,9 @@ struct WatchActiveTimer: Codable {
     var type: String
     var startTime: String
     var context: String?
+    var isRemote: Bool?
+    var isPaused: Bool?
+    var accumulatedSeconds: Int?
 }
 
 // MARK: - Activity Type
@@ -647,6 +654,50 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         WKInterfaceDevice.current().play(.success)
     }
 
+    func pauseTimer(activityType: String) {
+        guard canPerformAction() else { return }
+
+        var message: [String: Any] = [
+            "action": "pauseTimer",
+            "activityType": activityType
+        ]
+        if let babyId = currentBabyId {
+            message["babyId"] = babyId
+        }
+        sendAction(message)
+
+        DispatchQueue.main.async {
+            if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
+                self.localActiveTimers[index].isPaused = true
+            }
+            self.syncOptimisticStateToCache()
+        }
+
+        WKInterfaceDevice.current().play(.click)
+    }
+
+    func resumeTimer(activityType: String) {
+        guard canPerformAction() else { return }
+
+        var message: [String: Any] = [
+            "action": "resumeTimer",
+            "activityType": activityType
+        ]
+        if let babyId = currentBabyId {
+            message["babyId"] = babyId
+        }
+        sendAction(message)
+
+        DispatchQueue.main.async {
+            if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
+                self.localActiveTimers[index].isPaused = false
+            }
+            self.syncOptimisticStateToCache()
+        }
+
+        WKInterfaceDevice.current().play(.click)
+    }
+
     func switchSide(activityType: String, currentSide: String) {
         guard canPerformAction() else { return }
         var message: [String: Any] = [
@@ -1048,7 +1099,15 @@ struct ActiveTimerCard: View {
     }
 
     var hasSideSwitch: Bool {
-        timer.type == "feeding" || timer.type == "pumping"
+        (timer.type == "feeding" || timer.type == "pumping") && timer.isRemote != true
+    }
+
+    var isPaused: Bool {
+        timer.isPaused == true
+    }
+
+    var isRemote: Bool {
+        timer.isRemote == true
     }
 
     var body: some View {
@@ -1062,54 +1121,114 @@ struct ActiveTimerCard: View {
                         .textCase(.uppercase)
                         .foregroundStyle(activity.primaryColor)
                 }
+                if isRemote {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 8))
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
-                if let start = startDate {
+                if isPaused, let accumulated = timer.accumulatedSeconds {
+                    Text(formatElapsedSeconds(accumulated))
+                        .font(.system(.body, design: .monospaced))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                } else if let start = startDate {
                     Text(start, style: .timer)
                         .font(.system(.body, design: .monospaced))
                         .monospacedDigit()
                 }
             }
 
-            if let context = timer.context {
-                Text(context.capitalized)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 4) {
+                if let context = timer.context {
+                    Text(isRemote ? context : context.capitalized)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                if isPaused {
+                    Text("Paused")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.orange)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 6) {
-                if hasSideSwitch, let context = timer.context {
-                    Button {
-                        connector.switchSide(activityType: timer.type, currentSide: context)
-                    } label: {
-                        HStack(spacing: 3) {
-                            Image(systemName: "arrow.left.arrow.right")
-                                .font(.system(size: 8))
-                            Text("Switch")
-                                .font(.system(size: 10, weight: .semibold))
+            if !isRemote {
+                HStack(spacing: 6) {
+                    if hasSideSwitch, let context = timer.context {
+                        Button {
+                            connector.switchSide(activityType: timer.type, currentSide: context)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "arrow.left.arrow.right")
+                                    .font(.system(size: 8))
+                                Text("Switch")
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 5)
+                        .buttonStyle(.bordered)
                     }
-                    .buttonStyle(.bordered)
-                }
 
-                Button {
-                    connector.stopTimer(activityType: timer.type)
-                } label: {
-                    Text("Stop")
-                        .font(.system(size: 10, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 5)
+                    if isPaused {
+                        Button {
+                            connector.resumeTimer(activityType: timer.type)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 8))
+                                Text("Resume")
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                    } else {
+                        Button {
+                            connector.pauseTimer(activityType: timer.type)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "pause.fill")
+                                    .font(.system(size: 8))
+                                Text("Pause")
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+
+                    Button {
+                        connector.stopTimer(activityType: timer.type)
+                    } label: {
+                        Text("Stop")
+                            .font(.system(size: 10, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
             }
         }
         .padding(8)
         .background(activityType?.backgroundColor ?? Color.gray.opacity(0.2))
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
+}
+
+func formatElapsedSeconds(_ seconds: Int) -> String {
+    let h = seconds / 3600
+    let m = (seconds % 3600) / 60
+    let s = seconds % 60
+    if h > 0 {
+        return String(format: "%d:%02d:%02d", h, m, s)
+    }
+    return String(format: "%d:%02d", m, s)
 }
 
 // MARK: - Feeding Menu View
@@ -1349,11 +1468,31 @@ struct SleepDetailView: View {
         allTimers.first { $0.type == "sleep" }
     }
 
+    var awakeMinutes: Int? {
+        guard let endedAt = data.lastSleepEndedAt, let date = parseDate(endedAt) else { return nil }
+        let minutes = Int(Date().timeIntervalSince(date)) / 60
+        return minutes >= 0 ? minutes : nil
+    }
+
     var body: some View {
         VStack(spacing: 10) {
             if let timer = sleepTimer {
                 ActiveTimerCard(timer: timer, connector: connector)
             } else {
+                if let awake = awakeMinutes, let window = data.wakeWindowMinutes, window > 0 {
+                    VStack(spacing: 4) {
+                        Text("Awake \(formatSleepDuration(awake))")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(awake >= window ? .red : .primary)
+                        Text("Next nap in \(formatSleepDuration(max(0, window - awake)))")
+                            .font(.system(size: 10))
+                            .foregroundStyle(awake >= window ? .red : WatchActivityType.sleep.primaryColor)
+                    }
+                } else if let awake = awakeMinutes {
+                    Text("Awake \(formatSleepDuration(awake))")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+
                 HStack(spacing: 16) {
                     SideButton(
                         letter: "\u{2600}",
@@ -1377,13 +1516,10 @@ struct SleepDetailView: View {
                 }
             }
 
-            VStack(spacing: 2) {
-                InfoRow(label: "Today", value: formatSleepDuration(data.todayMinutes))
-                if let lastDuration = data.lastDurationMinutes {
-                    Text("Last: \(formatSleepDuration(lastDuration))")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
-                }
+            if sleepTimer == nil, awakeMinutes == nil, let window = data.wakeWindowMinutes, window > 0 {
+                Text("Wake window: \(formatSleepDuration(window))")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
             }
         }
         .padding()
@@ -1411,6 +1547,16 @@ struct DiaperDetailView: View {
         connector.combinedDiaperCounts(serverCounts: data.todayCounts)
     }
 
+    var lastDiaperTimeText: String? {
+        if let localTime = connector.lastLocalDiaperTime {
+            return "Last: \(formatTimeSinceDate(localTime)) ago"
+        }
+        if let lastTime = data.lastTime {
+            return "Last: \(formatTimeSince(lastTime)) ago"
+        }
+        return nil
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
@@ -1423,6 +1569,12 @@ struct DiaperDetailView: View {
                     }
                     .foregroundStyle(.secondary)
                     .padding(.bottom, 2)
+                }
+
+                if let timeText = lastDiaperTimeText {
+                    Text(timeText)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
                 }
 
                 HStack(spacing: 3) {
@@ -1571,6 +1723,14 @@ struct PumpingActiveCard: View {
         parseDate(timer.startTime)
     }
 
+    var isPaused: Bool {
+        timer.isPaused == true
+    }
+
+    var isRemote: Bool {
+        timer.isRemote == true
+    }
+
     var body: some View {
         VStack(spacing: 4) {
             HStack {
@@ -1580,48 +1740,98 @@ struct PumpingActiveCard: View {
                     .font(.system(size: 9, weight: .semibold))
                     .textCase(.uppercase)
                     .foregroundStyle(WatchActivityType.pumping.primaryColor)
+                if isRemote {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 8))
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
-                if let start = startDate {
+                if isPaused, let accumulated = timer.accumulatedSeconds {
+                    Text(formatElapsedSeconds(accumulated))
+                        .font(.system(.body, design: .monospaced))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                } else if let start = startDate {
                     Text(start, style: .timer)
                         .font(.system(.body, design: .monospaced))
                         .monospacedDigit()
                 }
             }
 
-            if let context = timer.context {
-                Text(context.capitalized)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 if let context = timer.context {
-                    Button {
-                        connector.switchSide(activityType: timer.type, currentSide: context)
-                    } label: {
-                        HStack(spacing: 3) {
-                            Image(systemName: "arrow.left.arrow.right")
-                                .font(.system(size: 8))
-                            Text("Switch")
-                                .font(.system(size: 10, weight: .semibold))
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 5)
-                    }
-                    .buttonStyle(.bordered)
+                    Text(isRemote ? context : context.capitalized)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
+                if isPaused {
+                    Text("Paused")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.orange)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-                Button {
-                    showVolumeEntry = true
-                } label: {
-                    Text("Stop")
-                        .font(.system(size: 10, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 5)
+            if !isRemote {
+                HStack(spacing: 6) {
+                    if let context = timer.context, !isPaused {
+                        Button {
+                            connector.switchSide(activityType: timer.type, currentSide: context)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "arrow.left.arrow.right")
+                                    .font(.system(size: 8))
+                                Text("Switch")
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+
+                    if isPaused {
+                        Button {
+                            connector.resumeTimer(activityType: timer.type)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 8))
+                                Text("Resume")
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                    } else {
+                        Button {
+                            connector.pauseTimer(activityType: timer.type)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "pause.fill")
+                                    .font(.system(size: 8))
+                                Text("Pause")
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+
+                    Button {
+                        showVolumeEntry = true
+                    } label: {
+                        Text("Stop")
+                            .font(.system(size: 10, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
             }
         }
         .padding(8)
@@ -1647,7 +1857,7 @@ struct PumpingDetailView: View {
     }
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             if let timer = pumpingTimer {
                 PumpingActiveCard(timer: timer, connector: connector, showVolumeEntry: $showVolumeEntry)
             } else {
@@ -1655,7 +1865,7 @@ struct PumpingDetailView: View {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(WatchActivityType.pumping.primaryColor)
 
-                HStack(spacing: 20) {
+                HStack(spacing: 24) {
                     SideButton(
                         letter: "L",
                         label: "Left",
@@ -1676,14 +1886,9 @@ struct PumpingDetailView: View {
                 }
             }
 
-            VStack(spacing: 2) {
-                InfoRow(label: "Today", value: "\(data.todayVolumeMl) ml")
-                if let side = data.lastSide {
-                    Text("Last: \(side.capitalized) \u{2022} \(formatTimeSince(data.lastTime)) ago")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
-                }
-            }
+            Text("Today: \(data.todayVolumeMl) ml")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
         }
         .padding()
         .navigationTitle("Pumping")
@@ -1704,47 +1909,31 @@ struct TummyTimeDetailView: View {
         allTimers.first { $0.type == "tummyTime" }
     }
 
-    var progress: Double {
-        guard data.goalMinutes > 0 else { return 0 }
-        return min(1.0, Double(data.todayMinutes) / Double(data.goalMinutes))
-    }
-
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             if let timer = tummyTimer {
                 ActiveTimerCard(timer: timer, connector: connector)
-            }
-
-            ProgressRingView(
-                progress: progress,
-                color: WatchActivityType.tummyTime.primaryColor,
-                valueText: "\(data.todayMinutes)m",
-                labelText: "of \(data.goalMinutes)m"
-            )
-
-            if tummyTimer == nil {
+            } else {
                 Button {
                     connector.startTimer(activityType: "tummyTime")
                 } label: {
-                    VStack(spacing: 3) {
+                    VStack(spacing: 4) {
                         Image(systemName: "play.fill")
-                            .font(.system(size: 16))
+                            .font(.system(size: 22))
                         Text("Start")
-                            .font(.system(size: 9, weight: .medium))
+                            .font(.system(size: 11, weight: .medium))
                     }
                     .foregroundStyle(.white)
-                    .frame(width: 48, height: 48)
+                    .frame(width: 64, height: 64)
                     .background(WatchActivityType.tummyTime.primaryColor)
                     .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
             }
 
-            if let lastDuration = data.lastDurationMinutes {
-                Text("Last: \(lastDuration)m \u{2022} \(formatTimeSince(data.lastTime)) ago")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
-            }
+            Text("Today: \(data.todayMinutes)m")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
         }
         .padding()
         .navigationTitle("Tummy Time")
@@ -1767,15 +1956,15 @@ struct SideButton: View {
                 ZStack {
                     Circle()
                         .fill(color)
-                        .frame(width: 52, height: 52)
+                        .frame(width: 60, height: 60)
                         .opacity(isHighlighted ? 1.0 : 0.4)
                         .shadow(color: isHighlighted ? color.opacity(0.3) : .clear, radius: 8)
                     if isEmoji {
                         Text(letter)
-                            .font(.system(size: 18))
+                            .font(.system(size: 22))
                     } else {
                         Text(letter)
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(.white)
                     }
                 }
