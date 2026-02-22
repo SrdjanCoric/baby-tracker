@@ -4,6 +4,7 @@
  */
 
 import type { AppError, ErrorCategory, ErrorSeverity } from "@/types/error";
+import i18n from "@/i18n";
 
 interface CreateAppErrorOptions {
   message: string;
@@ -87,40 +88,40 @@ export function createAppError(options: CreateAppErrorOptions): AppError {
 
 export function getErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) {
-    return "Something went wrong. Please try again.";
+    return i18n.t("errors.generic");
   }
 
   const message = error.message.toLowerCase();
 
   if (NETWORK_ERROR_PATTERNS.some((p) => p.test(error.message))) {
-    return "Unable to connect. Please check your internet connection.";
+    return i18n.t("errors.connectionError");
   }
 
   if (/timeout/i.test(message)) {
-    return "Request timed out. Please try again.";
+    return i18n.t("errors.timeout");
   }
 
   if (/401/i.test(message) || /unauthorized/i.test(message)) {
-    return "Your session has expired. Please sign in again.";
+    return i18n.t("errors.sessionExpired");
   }
 
   if (/403/i.test(message) || /forbidden/i.test(message)) {
-    return "You don't have permission to perform this action.";
+    return i18n.t("errors.noPermission");
   }
 
   if (/404/i.test(message)) {
-    return "The requested data was not found.";
+    return i18n.t("errors.notFound");
   }
 
   if (/429/i.test(message)) {
-    return "Too many requests. Please wait a moment and try again.";
+    return i18n.t("errors.tooManyRequests");
   }
 
   if (/5\d{2}/i.test(message) || /server.*error/i.test(message)) {
-    return "Something went wrong on our end. Please try again later.";
+    return i18n.t("errors.serverError");
   }
 
-  return "Something went wrong. Please try again.";
+  return i18n.t("errors.generic");
 }
 
 export function getErrorCategory(error: Error): ErrorCategory {
@@ -237,17 +238,18 @@ interface FormattedError {
   canRetry: boolean;
 }
 
-const CATEGORY_TITLES: Record<ErrorCategory, string> = {
-  network: "Connection Error",
-  auth: "Authentication Error",
-  validation: "Validation Error",
-  sync: "Sync Error",
-  storage: "Storage Error",
-  unknown: "Error",
+const CATEGORY_TITLE_KEYS: Record<ErrorCategory, string> = {
+  network: "errors.categoryConnection",
+  auth: "errors.categoryAuth",
+  validation: "errors.categoryValidation",
+  sync: "errors.categorySync",
+  storage: "errors.categoryStorage",
+  unknown: "common.error",
 };
 
 export function formatErrorForUser(error: AppError): FormattedError {
-  const title = CATEGORY_TITLES[error.category] || "Error";
+  const titleKey = CATEGORY_TITLE_KEYS[error.category] ?? "common.error";
+  const title = i18n.t(titleKey as "common.error");
   const message = getErrorMessage(error.originalError || new Error(error.message));
 
   return {

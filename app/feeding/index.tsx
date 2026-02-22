@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View, ScrollView, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -91,9 +91,16 @@ export default function FeedingScreen() {
     await startBreastfeeding(side, customStartTime);
   }, [startBreastfeeding]);
 
+  const isStoppingRef = useRef(false);
   const handleStopBreastfeeding = useCallback(async () => {
-    await stopBreastfeeding();
-    router.back();
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
+    try {
+      await stopBreastfeeding();
+      router.back();
+    } finally {
+      isStoppingRef.current = false;
+    }
   }, [stopBreastfeeding, router]);
 
   const handleSideChange = useCallback((side: BreastSide) => {

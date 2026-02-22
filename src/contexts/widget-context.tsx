@@ -158,9 +158,12 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     const activeTimers: WidgetData["activeTimers"] = [];
 
     if (feedingTimer?.isRunning) {
+      const effectiveStart = feedingTimer.totalPausedMs > 0 && !feedingTimer.isPaused
+        ? new Date(feedingTimer.startTime.getTime() + feedingTimer.totalPausedMs)
+        : feedingTimer.startTime;
       const feedingEntry: WidgetData["activeTimers"][number] = {
         type: "feeding",
-        startTime: feedingTimer.startTime.toISOString(),
+        startTime: effectiveStart.toISOString(),
         context: feedingTimer.side,
         isPaused: feedingTimer.isPaused || undefined,
       };
@@ -173,9 +176,12 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       activeTimers.push(feedingEntry);
     }
     if (sleepTimer?.isRunning) {
+      const effectiveStart = sleepTimer.totalPausedMs > 0 && !sleepTimer.isPaused
+        ? new Date(sleepTimer.startTime.getTime() + sleepTimer.totalPausedMs)
+        : sleepTimer.startTime;
       const sleepEntry: WidgetData["activeTimers"][number] = {
         type: "sleep",
-        startTime: sleepTimer.startTime.toISOString(),
+        startTime: effectiveStart.toISOString(),
         context: sleepTimer.sleepType,
         isPaused: sleepTimer.isPaused || undefined,
       };
@@ -188,9 +194,12 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       activeTimers.push(sleepEntry);
     }
     if (pumpingTimer?.isRunning) {
+      const effectiveStart = pumpingTimer.totalPausedMs > 0 && !pumpingTimer.isPaused
+        ? new Date(pumpingTimer.startTime.getTime() + pumpingTimer.totalPausedMs)
+        : pumpingTimer.startTime;
       const pumpingEntry: WidgetData["activeTimers"][number] = {
         type: "pumping",
-        startTime: pumpingTimer.startTime.toISOString(),
+        startTime: effectiveStart.toISOString(),
         context: pumpingTimer.side,
         isPaused: pumpingTimer.isPaused || undefined,
       };
@@ -203,9 +212,12 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       activeTimers.push(pumpingEntry);
     }
     if (tummyTimeTimer?.isRunning) {
+      const effectiveStart = tummyTimeTimer.totalPausedMs > 0 && !tummyTimeTimer.isPaused
+        ? new Date(tummyTimeTimer.startTime.getTime() + tummyTimeTimer.totalPausedMs)
+        : tummyTimeTimer.startTime;
       const tummyEntry: WidgetData["activeTimers"][number] = {
         type: "tummyTime",
-        startTime: tummyTimeTimer.startTime.toISOString(),
+        startTime: effectiveStart.toISOString(),
         isPaused: tummyTimeTimer.isPaused || undefined,
       };
       if (tummyTimeTimer.isPaused) {
@@ -313,7 +325,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
 
     debounceTimerRef.current = setTimeout(() => {
       refreshWidgetData();
-    }, 500);
+    }, 100);
 
     return () => {
       if (debounceTimerRef.current) {

@@ -881,6 +881,11 @@ func getUpdatedAtDate(data: WidgetDataModel?) -> Date? {
     return formatter.date(from: data.updatedAt)
 }
 
+func isCachedDataFresh(data: WidgetDataModel?, now: Date = Date()) -> Bool {
+    guard let updatedAt = getUpdatedAtDate(data: data) else { return false }
+    return now.timeIntervalSince(updatedAt) <= 30
+}
+
 func isDataStale(data: WidgetDataModel?, now: Date = Date()) -> Bool {
     guard let updatedAt = getUpdatedAtDate(data: data) else { return true }
     let staleThresholdSeconds: TimeInterval = 60 * 60 // 1 hour
@@ -973,8 +978,13 @@ struct SingleActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectActivityIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
-        let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
+        let data: WidgetDataModel?
+        if isCachedDataFresh(data: cached) {
+            data = cached
+        } else {
+            let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
+            data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
+        }
         let authenticated = isUserAuthenticated()
 
         var entries: [BabyWidgetEntry] = []
@@ -1003,8 +1013,13 @@ struct FourActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectFourActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
-        let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
+        let data: WidgetDataModel?
+        if isCachedDataFresh(data: cached) {
+            data = cached
+        } else {
+            let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
+            data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
+        }
         let activities = [configuration.activity1, configuration.activity2, configuration.activity3, configuration.activity4]
         let authenticated = isUserAuthenticated()
 
@@ -1034,8 +1049,13 @@ struct TwoActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectTwoActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         let cached = loadWidgetData()
-        let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
-        let data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
+        let data: WidgetDataModel?
+        if isCachedDataFresh(data: cached) {
+            data = cached
+        } else {
+            let networkTimers = filterStoppedTimers(await fetchActiveTimersFromNetwork())
+            data = mergeNetworkTimers(cached: cached, networkTimers: networkTimers) ?? cached
+        }
         let activities = [configuration.activity1, configuration.activity2]
         let authenticated = isUserAuthenticated()
 
@@ -1278,11 +1298,11 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
         return "Feeding"
 
     case .sleep:
+        if let awakeText = getAwakeTimeText(data: data) {
+            return awakeText
+        }
         let todayMins = data.activities.sleep.todayMinutes
-        let goal = data.activities.sleep.goalMinutes
-        if goal > 0 && todayMins > 0 {
-            return "\(formatDuration(minutes: todayMins)) of \(formatDuration(minutes: goal))"
-        } else if todayMins > 0 {
+        if todayMins > 0 {
             return "\(formatDuration(minutes: todayMins)) today"
         }
         return "Sleep"
@@ -1789,7 +1809,8 @@ struct ActivityRowView: View {
             if let lastType = data.activities.feeding.lastType {
                 if lastType == "breast" || lastType == "nursing" {
                     if let side = data.activities.feeding.lastSide {
-                        return "\(side.capitalized) side"
+                        let nextSide = side.lowercased() == "left" ? "Right" : "Left"
+                        return "Next: \(nextSide) side"
                     }
                     return "Breastfeeding"
                 } else if lastType == "bottle" {
@@ -1801,19 +1822,21 @@ struct ActivityRowView: View {
             return "\(data.activities.feeding.todayCount) today"
 
         case .sleep:
+            if let awakeText = getAwakeTimeText(data: data, now: currentDate) {
+                return awakeText
+            }
             let mins = data.activities.sleep.todayMinutes
-            let goal = data.activities.sleep.goalMinutes
-            if goal > 0 {
-                return "\(mins)m of \(goal)m"
+            if mins > 0 {
+                return "\(formatDuration(minutes: mins)) today"
             }
             if let lastDuration = data.activities.sleep.lastDurationMinutes, lastDuration > 0 {
                 return formatDuration(minutes: lastDuration)
             }
-            return "\(formatDuration(minutes: mins)) today"
+            return "No sleep yet"
 
         case .diaper:
             let c = data.activities.diaper.todayCounts
-            return "\(c.wet)💧 \(c.dirty)💩"
+            return "\(c.wet + c.mixed)💧 \(c.dirty + c.mixed)💩"
 
         case .pumping:
             if data.activities.pumping.todayVolumeMl > 0 {
@@ -1895,6 +1918,33 @@ func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?) 
     } else {
         return "\(prefix) in \(remainingMinutes)m"
     }
+}
+
+func getAwakeTimeText(data: WidgetDataModel, now: Date = Date()) -> String? {
+    guard let lastEndedStr = data.activities.sleep.lastSleepEndedAt,
+          !data.activities.sleep.isActive else {
+        return nil
+    }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    var lastEnded = formatter.date(from: lastEndedStr)
+    if lastEnded == nil {
+        let basicFormatter = ISO8601DateFormatter()
+        lastEnded = basicFormatter.date(from: lastEndedStr)
+    }
+    guard let lastEnded else { return nil }
+
+    let awakeSeconds = now.timeIntervalSince(lastEnded)
+    let awakeMinutes = Int(awakeSeconds / 60)
+    if awakeMinutes < 0 { return nil }
+
+    let hours = awakeMinutes / 60
+    let mins = awakeMinutes % 60
+    if hours > 0 {
+        return "Awake \(hours)h \(mins)m"
+    }
+    return "Awake \(awakeMinutes)m"
 }
 
 func formatRelative(_ date: Date, now: Date = Date()) -> String {

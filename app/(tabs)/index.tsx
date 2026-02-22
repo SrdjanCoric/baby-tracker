@@ -3,7 +3,7 @@ import { RefreshControl, ScrollView, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
 import { useTimeRefresh } from "@/hooks";
@@ -530,30 +530,45 @@ export default function HomeScreen() {
     safeNavigate("/tummyTime");
   }, [safeNavigate]);
 
+  const isStoppingFeedingRef = useRef(false);
   const handleStopFeeding = useCallback(async () => {
+    if (isStoppingFeedingRef.current) return;
+    isStoppingFeedingRef.current = true;
     try {
       await stopBreastfeeding();
     } catch (error) {
       console.error("[HomeScreen] Failed to stop feeding:", error);
       Alert.alert(t("common.error"), t("feeding.stopError"));
+    } finally {
+      isStoppingFeedingRef.current = false;
     }
   }, [stopBreastfeeding, t]);
 
+  const isStoppingSleepRef = useRef(false);
   const handleStopSleep = useCallback(async () => {
+    if (isStoppingSleepRef.current) return;
+    isStoppingSleepRef.current = true;
     try {
       await stopSleep();
     } catch (error) {
       console.error("[HomeScreen] Failed to stop sleep:", error);
       Alert.alert(t("common.error"), t("sleep.stopError"));
+    } finally {
+      isStoppingSleepRef.current = false;
     }
   }, [stopSleep, t]);
 
+  const isStoppingTummyTimeRef = useRef(false);
   const handleStopTummyTime = useCallback(async () => {
+    if (isStoppingTummyTimeRef.current) return;
+    isStoppingTummyTimeRef.current = true;
     try {
       await stopTummyTime();
     } catch (error) {
       console.error("[HomeScreen] Failed to stop tummy time:", error);
       Alert.alert(t("common.error"), t("tummyTime.stopError"));
+    } finally {
+      isStoppingTummyTimeRef.current = false;
     }
   }, [stopTummyTime, t]);
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -89,11 +89,18 @@ export default function SleepScreen() {
     await startSleep(sleepType, customStartTime);
   }, [startSleep]);
 
+  const isStoppingRef = useRef(false);
   const handleStopSleep = useCallback(async () => {
-    napAlert.resetAlert();
-    nightSleepAlert.resetAlert();
-    await stopSleep();
-    router.back();
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
+    try {
+      napAlert.resetAlert();
+      nightSleepAlert.resetAlert();
+      await stopSleep();
+      router.back();
+    } finally {
+      isStoppingRef.current = false;
+    }
   }, [napAlert, nightSleepAlert, stopSleep, router]);
 
   const handleTypeChange = useCallback((sleepType: SleepType) => {

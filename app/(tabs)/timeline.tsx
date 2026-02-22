@@ -186,14 +186,10 @@ export default function TimelineScreen() {
 
       const hasDualSideDurations = feeding.leftDurationSeconds || feeding.rightDurationSeconds;
       if (hasDualSideDurations) {
-        const dualSideLabel = formatDualSideDuration(
+        subtitle = formatDualSideDuration(
           feeding.leftDurationSeconds,
           feeding.rightDurationSeconds
         );
-        const totalLabel = feeding.durationSeconds
-          ? ` (${formatDuration(feeding.durationSeconds, "short")})`
-          : "";
-        subtitle = dualSideLabel + totalLabel;
       } else {
         const sideLabel = feeding.side === "left"
           ? t("feeding.left")
