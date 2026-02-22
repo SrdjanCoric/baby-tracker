@@ -48,6 +48,7 @@ const tableLabels: Record<SyncableTable, string> = {
   households: 'Household',
   active_timers: 'Active Timer',
   wake_window_preferences: 'Wake Window',
+  activity_goals: 'Activity Goal',
 };
 
 function formatTimestamp(timestamp: string, timeFormat: TimeFormat): string {

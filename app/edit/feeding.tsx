@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, TextInput, View, KeyboardAvoidingView, Platform } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
@@ -85,29 +85,6 @@ export default function EditFeedingScreen() {
     );
   });
 
-  const confirmDiscard = useCallback((onDiscard: () => void) => {
-    Alert.alert(
-      t("timeline.discardChangesTitle"),
-      t("timeline.discardChangesMessage"),
-      [
-        { text: t("timeline.keepEditing"), style: "cancel" },
-        {
-          text: t("timeline.discard"),
-          style: "destructive",
-          onPress: onDiscard,
-        },
-      ]
-    );
-  }, [t]);
-
-  const handleBack = useCallback(() => {
-    if (hasChanges) {
-      confirmDiscard(() => router.back());
-    } else {
-      router.back();
-    }
-  }, [hasChanges, confirmDiscard, router]);
-
   const handleSave = useCallback(async () => {
     if (!selectedBaby || !feeding) return;
 
@@ -119,6 +96,7 @@ export default function EditFeedingScreen() {
       await updateFeeding(feeding.id, {
         side,
         durationSeconds,
+        ...(feeding.type === "breast" && { leftDurationSeconds: 0, rightDurationSeconds: 0 }),
         amountMl: parsedAmount,
         contentType,
         foodType: foodType || undefined,
@@ -373,33 +351,33 @@ export default function EditFeedingScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3">
-        <Pressable
-          onPress={handleBack}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-        >
-          <Text className="text-2xl">←</Text>
-        </Pressable>
-        <View className="flex-1 items-center">
-          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            {t("timeline.editEntry")}
-          </Text>
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-            {getTitle()}
-          </Text>
+      {/* Header with drag handle */}
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="items-center pt-2 pb-3"
+        testID="dismiss-keyboard"
+      >
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <View className="flex-row items-center w-full px-4">
+          <View className="w-touch" />
+          <View className="flex-1 items-center">
+            <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+              {t("timeline.editEntry")}
+            </Text>
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {getTitle()}
+            </Text>
+          </View>
+          <Pressable
+            onPress={handleDelete}
+            className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
+            accessibilityRole="button"
+            accessibilityLabel={t("common.delete")}
+          >
+            <Text className="text-2xl">🗑️</Text>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={handleDelete}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.delete")}
-        >
-          <Text className="text-2xl">🗑️</Text>
-        </Pressable>
-      </View>
+      </Pressable>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

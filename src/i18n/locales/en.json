@@ -39,7 +39,9 @@
     "reset": "Reset",
     "share": "Share",
     "total": "Total",
-    "or": "or"
+    "or": "or",
+    "someone": "Someone",
+    "min": "min"
   },
   "summary": {
     "today": "Today",
@@ -233,7 +235,9 @@
     "nightStartsAt": "Night starts at",
     "dayNightExplainer": "Night wakings won't show nap suggestions",
     "napContinuation": "Nap Continuation",
-    "napContinuationDesc": "If baby goes back to sleep within this time, it counts as the same nap"
+    "napContinuationDesc": "If baby goes back to sleep within this time, it counts as the same nap",
+    "householdGoalTitle": "Shared Goal",
+    "householdGoalConfirm": "This will change the sleep goal for all caregivers in your household. Continue?"
   },
   "diaper": {
     "title": "Diaper",
@@ -363,7 +367,9 @@
     "goalUpdated": "Goal updated",
     "quickGoals": "Quick Select",
     "customMinutes": "Custom (minutes)",
-    "stopError": "Failed to stop tummy time. Please try again."
+    "stopError": "Failed to stop tummy time. Please try again.",
+    "householdGoalTitle": "Shared Goal",
+    "householdGoalConfirm": "This will change the tummy time goal for all caregivers in your household. Continue?"
   },
   "baby": {
     "title": "Baby",
@@ -808,7 +814,31 @@
     "generic": "Something went wrong. Please try again.",
     "network": "Network error. Please check your connection.",
     "invalidCode": "Invalid invite code",
-    "requiredField": "This field is required"
+    "requiredField": "This field is required",
+    "connectionError": "Unable to connect. Please check your internet connection.",
+    "timeout": "Request timed out. Please try again.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "noPermission": "You don't have permission to perform this action.",
+    "notFound": "The requested data was not found.",
+    "tooManyRequests": "Too many requests. Please wait a moment and try again.",
+    "serverError": "Something went wrong on our end. Please try again later.",
+    "categoryConnection": "Connection Error",
+    "categoryAuth": "Authentication Error",
+    "categoryValidation": "Validation Error",
+    "categorySync": "Sync Error",
+    "categoryStorage": "Storage Error"
+  },
+  "offline": {
+    "title": "You're offline",
+    "changesPending_one": "{{count}} change pending",
+    "changesPending_other": "{{count}} changes pending",
+    "willSyncWhenConnected": "{{changes}} - will sync when connected",
+    "dismissBanner": "Dismiss offline banner"
+  },
+  "errorFallback": {
+    "title": "Something went wrong",
+    "message": "We're sorry for the inconvenience. Please try again.",
+    "tryAgain": "Try Again"
   },
   "foods": {
     "banana": "Banana",

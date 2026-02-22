@@ -31,7 +31,7 @@ interface LiveActivityControllerModule {
   endAllActivities(): Promise<void>;
   endActivityByType(activityType: string): Promise<boolean>;
   isActivityRunning(activityId: string): Promise<boolean>;
-  pauseTimerActivity(activityId: string): Promise<boolean>;
+  pauseTimerActivity(activityId: string, activeElapsedSeconds: number): Promise<boolean>;
   resumeTimerActivity(activityId: string, activeElapsedSeconds: number): Promise<boolean>;
 }
 
@@ -137,14 +137,17 @@ export async function endLiveActivityByType(activityType: TimerActivityType): Pr
   }
 }
 
-export async function pauseTimerLiveActivity(activityId: string): Promise<boolean> {
+export async function pauseTimerLiveActivity(
+  activityId: string,
+  activeElapsedSeconds: number
+): Promise<boolean> {
   const module = getLiveActivityModule();
   if (!module) {
     return false;
   }
 
   try {
-    const success = await module.pauseTimerActivity(activityId);
+    const success = await module.pauseTimerActivity(activityId, activeElapsedSeconds);
     return success;
   } catch (error) {
     console.error("[LiveActivity] Failed to pause:", error);

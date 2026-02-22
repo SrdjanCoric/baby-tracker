@@ -92,10 +92,12 @@ class LiveActivityController: NSObject {
                 return
             }
 
-            let elapsedSeconds = Int(Date().timeIntervalSince(activity.attributes.startTime))
+            let currentState = activity.content.state
             let updatedState = TimerActivityAttributes.ContentState(
-                elapsedSeconds: elapsedSeconds,
-                context: context
+                elapsedSeconds: currentState.elapsedSeconds,
+                context: context,
+                isPaused: currentState.isPaused,
+                effectiveStartTimeISO: currentState.effectiveStartTimeISO
             )
 
             await activity.update(
@@ -201,6 +203,7 @@ class LiveActivityController: NSObject {
 
     @objc func pauseTimerActivity(
         _ activityId: String,
+        activeElapsedSeconds: NSNumber,
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) {
@@ -217,9 +220,8 @@ class LiveActivityController: NSObject {
                 return
             }
 
-            let elapsedSeconds = Int(Date().timeIntervalSince(activity.attributes.startTime))
             let pausedState = TimerActivityAttributes.ContentState(
-                elapsedSeconds: elapsedSeconds,
+                elapsedSeconds: Int(activeElapsedSeconds.doubleValue),
                 context: activity.content.state.context,
                 isPaused: true
             )

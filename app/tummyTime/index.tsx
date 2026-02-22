@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -99,10 +99,17 @@ export default function TummyTimeScreen() {
     await resumeTummyTime();
   }, [resumeTummyTime]);
 
+  const isStoppingRef = useRef(false);
   const handleStopTummyTime = useCallback(async () => {
-    resetAlert();
-    await stopTummyTime();
-    router.back();
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
+    try {
+      resetAlert();
+      await stopTummyTime();
+      router.back();
+    } finally {
+      isStoppingRef.current = false;
+    }
   }, [resetAlert, stopTummyTime, router]);
 
   const handleLogPastTummyTime = useCallback(() => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -94,11 +94,18 @@ export default function PumpingScreen() {
     setShowVolumeInput(true);
   }, []);
 
+  const isStoppingRef = useRef(false);
   const handleConfirmStop = useCallback(async () => {
     if (volumeMl === null || volumeMl <= 0) return;
-    resetAlert();
-    await stopPumping(volumeMl);
-    router.back();
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
+    try {
+      resetAlert();
+      await stopPumping(volumeMl);
+      router.back();
+    } finally {
+      isStoppingRef.current = false;
+    }
   }, [resetAlert, stopPumping, volumeMl, router]);
 
   const handleCancelStop = useCallback(() => {
