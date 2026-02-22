@@ -29,6 +29,7 @@ const SYNCABLE_TABLES: SyncableTable[] = [
   'households',
   'active_timers',
   'wake_window_preferences',
+  'activity_goals',
 ];
 
 export class RealTimeSync {

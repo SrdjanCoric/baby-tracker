@@ -110,10 +110,6 @@ export default function ManualFeedingScreen() {
   const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
   const handleDateChange = useCallback(
     (_event: unknown, selectedDate?: Date) => {
       if (Platform.OS === "android") {
@@ -416,26 +412,20 @@ export default function ManualFeedingScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3">
-        <Pressable
-          onPress={handleBack}
-          className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back")}
-        >
-          <Text className="text-2xl">←</Text>
-        </Pressable>
-        <View className="flex-1 items-center">
-          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-            {getScreenTitle()}
-          </Text>
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-            {selectedBaby.name}
-          </Text>
-        </View>
-        <View className="w-touch" />
-      </View>
+      {/* Header with drag handle */}
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="items-center pt-2 pb-3"
+        testID="dismiss-keyboard"
+      >
+        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+          {getScreenTitle()}
+        </Text>
+        <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+          {selectedBaby.name}
+        </Text>
+      </Pressable>
 
       {/* Tab Selector - only show when type not specified in URL */}
       {!isTypeFromParam && (

@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   SlideInUp,
   SlideOutUp,
@@ -16,11 +17,9 @@ export function OfflineBanner({
   onDismiss,
   testID,
 }: OfflineBannerProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const changeText =
-    pendingCount === 1
-      ? '1 change pending'
-      : `${pendingCount} changes pending`;
+  const changeText = t('offline.changesPending', { count: pendingCount });
 
   return (
     <Animated.View
@@ -34,11 +33,11 @@ export function OfflineBanner({
     >
       <View className="flex-1">
         <Text className="text-white font-semibold text-base">
-          You&apos;re offline
+          {t('offline.title')}
         </Text>
         {pendingCount > 0 && (
           <Text className="text-orange-100 text-sm mt-0.5">
-            {changeText} - will sync when connected
+            {t('offline.willSyncWhenConnected', { changes: changeText })}
           </Text>
         )}
       </View>
@@ -49,7 +48,7 @@ export function OfflineBanner({
           onPress={onDismiss}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           accessibilityRole="button"
-          accessibilityLabel="Dismiss offline banner"
+          accessibilityLabel={t('offline.dismissBanner')}
           className="ml-3 p-2"
         >
           <Text className="text-white text-lg font-bold">×</Text>

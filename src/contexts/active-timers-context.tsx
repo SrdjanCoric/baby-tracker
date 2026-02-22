@@ -17,6 +17,7 @@ import {
   type TimerActivityType,
 } from "@/services/active-timer-service";
 import { supabase } from "@/services/supabase";
+import i18n from "@/i18n";
 import type { RemoteChange } from "@/services/sync/real-time-sync";
 
 interface ActiveTimersState {
@@ -210,7 +211,7 @@ export function ActiveTimersProvider({
           type: "ADD_LOCK",
           lock: {
             ...lockData,
-            startedByName: userData?.display_name || "Someone",
+            startedByName: userData?.display_name || i18n.t("common.someone"),
           },
         });
       } else if (change.eventType === "UPDATE" && change.new) {
@@ -225,7 +226,7 @@ export function ActiveTimersProvider({
           type: "UPDATE_LOCK",
           lock: {
             ...lockData,
-            startedByName: userData?.display_name || "Someone",
+            startedByName: userData?.display_name || i18n.t("common.someone"),
           },
         });
       }

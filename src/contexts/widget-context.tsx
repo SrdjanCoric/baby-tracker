@@ -325,7 +325,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
 
     debounceTimerRef.current = setTimeout(() => {
       refreshWidgetData();
-    }, 500);
+    }, 100);
 
     return () => {
       if (debounceTimerRef.current) {

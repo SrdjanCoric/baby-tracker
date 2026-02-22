@@ -18,6 +18,7 @@ import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import { fetchWakeWindowPreference } from "@/services/push-token-service";
+import { fetchActivityGoal, upsertActivityGoal } from "@/services/activity-goal-service";
 import {
   SleepAgeGroup,
   GoalSource,
@@ -255,6 +256,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
+  const isStoppingRef = useRef(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('sleep_sessions', (change: RemoteChange) => {
@@ -299,6 +301,28 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeToRemoteChanges('activity_goals', (change: RemoteChange) => {
+      if (!selectedBaby) return;
+      const data = change.new;
+      if (!data || data.baby_id !== selectedBaby.id || data.goal_type !== 'sleep') return;
+
+      if (change.eventType === 'INSERT' || change.eventType === 'UPDATE') {
+        const targetMinutes = data.target_value as number;
+        const source = data.source as GoalSource;
+        dispatch({ type: "SET_DAILY_GOAL", payload: targetMinutes });
+        dispatch({ type: "SET_GOAL_SOURCE", payload: source });
+        SleepStorageService.setDailyGoal(selectedBaby.id, targetMinutes);
+        if (source === 'custom') {
+          SleepStorageService.setCustomGoal(selectedBaby.id, targetMinutes);
+        } else {
+          SleepStorageService.clearCustomGoal(selectedBaby.id);
+        }
+      }
+    });
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
+
   const loadSleeps = useCallback(async () => {
     if (!selectedBaby) {
       dispatch({ type: "SET_SLEEPS", payload: [] });
@@ -336,6 +360,24 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.targetMinutes });
       dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
       dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
+
+      if (user?.householdId) {
+        try {
+          const { data: dbGoal } = await fetchActivityGoal(selectedBaby.id, 'sleep');
+          if (dbGoal) {
+            dispatch({ type: "SET_DAILY_GOAL", payload: dbGoal.target_value });
+            dispatch({ type: "SET_GOAL_SOURCE", payload: dbGoal.source as GoalSource });
+            await SleepStorageService.setDailyGoal(selectedBaby.id, dbGoal.target_value);
+            if (dbGoal.source === 'custom') {
+              await SleepStorageService.setCustomGoal(selectedBaby.id, dbGoal.target_value);
+            } else {
+              await SleepStorageService.clearCustomGoal(selectedBaby.id);
+            }
+          }
+        } catch (error) {
+          console.error("[SleepContext] Failed to fetch activity goal from DB:", error);
+        }
+      }
 
       if (birthDate) {
         const wakeWindowInfo = getWakeWindowForAge(birthDate);
@@ -501,63 +543,69 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
   const stopSleep = useCallback(async (requestedEndTime?: Date): Promise<StoredSleepEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
+    if (isStoppingRef.current) return null;
+    isStoppingRef.current = true;
 
-    const endTime = requestedEndTime ?? new Date();
-    const durationSeconds = Math.floor(
-      (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-    );
+    try {
+      const endTime = requestedEndTime ?? new Date();
+      const durationSeconds = Math.floor(
+        (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+      );
 
-    if (durationSeconds < 60) {
+      if (durationSeconds < 60) {
+        dispatch({ type: "STOP_TIMER" });
+        await SleepStorageService.clearActiveTimer(selectedBaby.id);
+        if (liveActivityIdRef.current) {
+          await endTimerLiveActivity(liveActivityIdRef.current);
+          liveActivityIdRef.current = null;
+        } else {
+          await endLiveActivityByType("sleep");
+        }
+        if (user?.id) {
+          try { await releaseTimerLock(selectedBaby.id, "sleep", user.id); } catch { /* ignore */ }
+        }
+        return null;
+      }
+
+      const sleepInput: CreateSleepInput = {
+        babyId: selectedBaby.id,
+        type: state.activeTimer.sleepType,
+        startedAt: state.activeTimer.startTime,
+        endedAt: endTime,
+        durationSeconds,
+      };
+
+      let sleep: StoredSleepEntry;
+
+      if (user?.householdId && user?.id) {
+        sleep = await createSleepInDatabase(sleepInput, user.id);
+      } else {
+        sleep = await SleepStorageService.addSleep(sleepInput);
+      }
+
+      dispatch({ type: "ADD_SLEEP", payload: sleep });
       dispatch({ type: "STOP_TIMER" });
       await SleepStorageService.clearActiveTimer(selectedBaby.id);
+
       if (liveActivityIdRef.current) {
         await endTimerLiveActivity(liveActivityIdRef.current);
         liveActivityIdRef.current = null;
       } else {
         await endLiveActivityByType("sleep");
       }
+
       if (user?.id) {
-        try { await releaseTimerLock(selectedBaby.id, "sleep", user.id); } catch { /* ignore */ }
+        try {
+          await releaseTimerLock(selectedBaby.id, "sleep", user.id);
+        } catch (error) {
+          console.error("[SleepContext] Failed to release timer lock:", error);
+        }
       }
-      return null;
+
+      return sleep;
+    } finally {
+      isStoppingRef.current = false;
     }
-
-    const sleepInput: CreateSleepInput = {
-      babyId: selectedBaby.id,
-      type: state.activeTimer.sleepType,
-      startedAt: state.activeTimer.startTime,
-      endedAt: endTime,
-      durationSeconds,
-    };
-
-    let sleep: StoredSleepEntry;
-
-    if (user?.householdId && user?.id) {
-      sleep = await createSleepInDatabase(sleepInput, user.id);
-    } else {
-      sleep = await SleepStorageService.addSleep(sleepInput);
-    }
-
-    dispatch({ type: "ADD_SLEEP", payload: sleep });
-    dispatch({ type: "STOP_TIMER" });
-    await SleepStorageService.clearActiveTimer(selectedBaby.id);
-
-    if (liveActivityIdRef.current) {
-      await endTimerLiveActivity(liveActivityIdRef.current);
-      liveActivityIdRef.current = null;
-    } else {
-      await endLiveActivityByType("sleep");
-    }
-
-    if (user?.id) {
-      try {
-        await releaseTimerLock(selectedBaby.id, "sleep", user.id);
-      } catch (error) {
-        console.error("[SleepContext] Failed to release timer lock:", error);
-      }
-    }
-
-    return sleep;
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
   const changeSleepType = useCallback((sleepType: SleepType) => {
@@ -756,8 +804,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       await SleepStorageService.setCustomGoal(selectedBaby.id, goalMinutes);
       dispatch({ type: "SET_DAILY_GOAL", payload: goalMinutes });
       dispatch({ type: "SET_GOAL_SOURCE", payload: "custom" });
+      if (user?.householdId) {
+        upsertActivityGoal(selectedBaby.id, 'sleep', goalMinutes, 'custom').catch(
+          (error) => console.error("[SleepContext] Failed to sync goal:", error)
+        );
+      }
     },
-    [selectedBaby]
+    [selectedBaby, user?.householdId]
   );
 
   const resetToAgeBasedGoal = useCallback(async (): Promise<void> => {
@@ -772,7 +825,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.targetMinutes });
     dispatch({ type: "SET_GOAL_SOURCE", payload: "age_based" });
     dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
-  }, [selectedBaby]);
+    if (user?.householdId) {
+      upsertActivityGoal(selectedBaby.id, 'sleep', goalInfo.targetMinutes, 'age_based').catch(
+        (error) => console.error("[SleepContext] Failed to sync goal:", error)
+      );
+    }
+  }, [selectedBaby, user?.householdId]);
 
   const dismissMilestoneSuggestion = useCallback(async (permanent = false): Promise<void> => {
     if (!selectedBaby || !state.currentAgeGroup) return;
@@ -791,7 +849,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_DAILY_GOAL", payload: state.suggestedGoalMinutes });
     dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
     dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
-  }, [selectedBaby, state.suggestedGoalMinutes]);
+    if (user?.householdId) {
+      upsertActivityGoal(selectedBaby.id, 'sleep', state.suggestedGoalMinutes, 'age_based').catch(
+        (error) => console.error("[SleepContext] Failed to sync goal:", error)
+      );
+    }
+  }, [selectedBaby, state.suggestedGoalMinutes, user?.householdId]);
 
   const getCompletedNapsSinceNightSleep = useCallback((): number => {
     const nightSleeps = state.sleeps

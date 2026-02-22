@@ -253,6 +253,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
+  const isStoppingRef = useRef(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('feedings', (change: RemoteChange) => {
@@ -451,88 +452,94 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
   const stopBreastfeeding = useCallback(async (requestedEndTime?: Date): Promise<StoredFeedingEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
+    if (isStoppingRef.current) return null;
+    isStoppingRef.current = true;
 
-    const endTime = requestedEndTime ?? new Date();
+    try {
+      const endTime = requestedEndTime ?? new Date();
 
-    let leftDurationSeconds = state.activeTimer.leftAccumulatedSeconds;
-    let rightDurationSeconds = state.activeTimer.rightAccumulatedSeconds;
+      let leftDurationSeconds = state.activeTimer.leftAccumulatedSeconds;
+      let rightDurationSeconds = state.activeTimer.rightAccumulatedSeconds;
 
-    if (!state.activeTimer.isPaused) {
-      const currentSideElapsed = Math.floor(
-        (endTime.getTime() - state.activeTimer.currentSideStartedAt.getTime()) / 1000
-      );
-      if (state.activeTimer.side === "left") {
-        leftDurationSeconds += currentSideElapsed;
-      } else if (state.activeTimer.side === "right") {
-        rightDurationSeconds += currentSideElapsed;
-      } else if (state.activeTimer.side === "both") {
-        leftDurationSeconds += currentSideElapsed;
-        rightDurationSeconds += currentSideElapsed;
+      if (!state.activeTimer.isPaused) {
+        const currentSideElapsed = Math.floor(
+          (endTime.getTime() - state.activeTimer.currentSideStartedAt.getTime()) / 1000
+        );
+        if (state.activeTimer.side === "left") {
+          leftDurationSeconds += currentSideElapsed;
+        } else if (state.activeTimer.side === "right") {
+          rightDurationSeconds += currentSideElapsed;
+        } else if (state.activeTimer.side === "both") {
+          leftDurationSeconds += currentSideElapsed;
+          rightDurationSeconds += currentSideElapsed;
+        }
       }
-    }
 
-    const durationSeconds = Math.floor(
-      (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-    );
+      const durationSeconds = Math.floor(
+        (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+      );
 
-    if (durationSeconds < 60) {
+      if (durationSeconds < 60) {
+        dispatch({ type: "STOP_TIMER" });
+        await FeedingStorageService.clearActiveTimer(selectedBaby.id);
+        if (liveActivityIdRef.current) {
+          await endTimerLiveActivity(liveActivityIdRef.current);
+          liveActivityIdRef.current = null;
+        } else {
+          await endLiveActivityByType("feeding");
+        }
+        if (user?.id) {
+          try { await releaseTimerLock(selectedBaby.id, "feeding", user.id); } catch { /* ignore */ }
+        }
+        return null;
+      }
+
+      const lastSide = leftDurationSeconds >= rightDurationSeconds ? "left" : "right";
+      const effectiveSide = leftDurationSeconds > 0 && rightDurationSeconds > 0 ? "both" : lastSide;
+
+      const feedingInput: CreateFeedingInput = {
+        babyId: selectedBaby.id,
+        type: "breast",
+        side: effectiveSide,
+        lastFinishedSide: state.activeTimer.side,
+        startedAt: state.activeTimer.startTime,
+        endedAt: endTime,
+        durationSeconds,
+        leftDurationSeconds: leftDurationSeconds > 0 ? leftDurationSeconds : undefined,
+        rightDurationSeconds: rightDurationSeconds > 0 ? rightDurationSeconds : undefined,
+      };
+
+      let feeding: StoredFeedingEntry;
+
+      if (user?.householdId && user?.id) {
+        feeding = await createFeedingInDatabase(feedingInput, user.id);
+      } else {
+        feeding = await FeedingStorageService.addFeeding(feedingInput);
+      }
+
+      dispatch({ type: "ADD_FEEDING", payload: feeding });
       dispatch({ type: "STOP_TIMER" });
       await FeedingStorageService.clearActiveTimer(selectedBaby.id);
+
       if (liveActivityIdRef.current) {
         await endTimerLiveActivity(liveActivityIdRef.current);
         liveActivityIdRef.current = null;
       } else {
         await endLiveActivityByType("feeding");
       }
+
       if (user?.id) {
-        try { await releaseTimerLock(selectedBaby.id, "feeding", user.id); } catch { /* ignore */ }
+        try {
+          await releaseTimerLock(selectedBaby.id, "feeding", user.id);
+        } catch (error) {
+          console.error("[FeedingContext] Failed to release timer lock:", error);
+        }
       }
-      return null;
+
+      return feeding;
+    } finally {
+      isStoppingRef.current = false;
     }
-
-    const lastSide = leftDurationSeconds >= rightDurationSeconds ? "left" : "right";
-    const effectiveSide = leftDurationSeconds > 0 && rightDurationSeconds > 0 ? "both" : lastSide;
-
-    const feedingInput: CreateFeedingInput = {
-      babyId: selectedBaby.id,
-      type: "breast",
-      side: effectiveSide,
-      lastFinishedSide: state.activeTimer.side,
-      startedAt: state.activeTimer.startTime,
-      endedAt: endTime,
-      durationSeconds,
-      leftDurationSeconds: leftDurationSeconds > 0 ? leftDurationSeconds : undefined,
-      rightDurationSeconds: rightDurationSeconds > 0 ? rightDurationSeconds : undefined,
-    };
-
-    let feeding: StoredFeedingEntry;
-
-    if (user?.householdId && user?.id) {
-      feeding = await createFeedingInDatabase(feedingInput, user.id);
-    } else {
-      feeding = await FeedingStorageService.addFeeding(feedingInput);
-    }
-
-    dispatch({ type: "ADD_FEEDING", payload: feeding });
-    dispatch({ type: "STOP_TIMER" });
-    await FeedingStorageService.clearActiveTimer(selectedBaby.id);
-
-    if (liveActivityIdRef.current) {
-      await endTimerLiveActivity(liveActivityIdRef.current);
-      liveActivityIdRef.current = null;
-    } else {
-      await endLiveActivityByType("feeding");
-    }
-
-    if (user?.id) {
-      try {
-        await releaseTimerLock(selectedBaby.id, "feeding", user.id);
-      } catch (error) {
-        console.error("[FeedingContext] Failed to release timer lock:", error);
-      }
-    }
-
-    return feeding;
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
   const changeSide = useCallback((side: BreastSide) => {

@@ -76,14 +76,14 @@ export default function SleepSettingsScreen() {
   const napContinuationMinutes = wakeWindowConfig?.napContinuationMinutes ?? 15;
 
   const confirmHouseholdChange = useCallback(
-    (onConfirm: () => void) => {
+    (onConfirm: () => void, options?: { title?: string; message?: string }) => {
       if (!isMultiCaregiver) {
         onConfirm();
         return;
       }
       Alert.alert(
-        t("sleep.householdSettingsTitle"),
-        t("sleep.householdSettingsConfirm"),
+        options?.title ?? t("sleep.householdSettingsTitle"),
+        options?.message ?? t("sleep.householdSettingsConfirm"),
         [
           { text: t("common.cancel"), style: "cancel" },
           { text: t("common.confirm"), onPress: onConfirm },
@@ -98,25 +98,36 @@ export default function SleepSettingsScreen() {
   const birthDate = selectedBaby?.birthDate ? new Date(selectedBaby.birthDate) : undefined;
   const presetPills = birthDate ? getPresetPillsForAge(birthDate) : [60, 90, 120, 150, 180];
 
+  const goalConfirmOptions = {
+    title: t("sleep.householdGoalTitle"),
+    message: t("sleep.householdGoalConfirm"),
+  };
+
   const handleSelectQuickGoal = useCallback(
-    async (hours: number) => {
-      await setCustomGoal(hours * 60);
+    (hours: number) => {
+      confirmHouseholdChange(async () => {
+        await setCustomGoal(hours * 60);
+      }, goalConfirmOptions);
     },
-    [setCustomGoal]
+    [setCustomGoal, confirmHouseholdChange, goalConfirmOptions]
   );
 
-  const handleUseAgeBased = useCallback(async () => {
-    await resetToAgeBasedGoal();
-  }, [resetToAgeBasedGoal]);
+  const handleUseAgeBased = useCallback(() => {
+    confirmHouseholdChange(async () => {
+      await resetToAgeBasedGoal();
+    }, goalConfirmOptions);
+  }, [resetToAgeBasedGoal, confirmHouseholdChange, goalConfirmOptions]);
 
-  const handleSetCustomGoal = useCallback(async () => {
+  const handleSetCustomGoal = useCallback(() => {
     const hours = parseFloat(customHours);
     if (isNaN(hours) || hours < 8 || hours > 20) {
       return;
     }
-    await setCustomGoal(hours * 60);
-    setIsSettingCustom(false);
-  }, [customHours, setCustomGoal]);
+    confirmHouseholdChange(async () => {
+      await setCustomGoal(hours * 60);
+      setIsSettingCustom(false);
+    }, goalConfirmOptions);
+  }, [customHours, setCustomGoal, confirmHouseholdChange, goalConfirmOptions]);
 
   const formatGoalDisplay = (minutes: number) => {
     const hours = minutes / 60;

@@ -114,7 +114,7 @@ export default function ProfileScreen() {
         </SettingsSection>
 
         {/* Preferences */}
-        <SettingsSection title="Preferences">
+        <SettingsSection title={t("settings.preferences")}>
           <SettingsRow
             icon="📏"
             label={t("settings.units")}
@@ -137,7 +137,7 @@ export default function ProfileScreen() {
         </SettingsSection>
 
         {/* Data */}
-        <SettingsSection title="Data">
+        <SettingsSection title={t("settings.data")}>
           <SettingsRow
             icon="📤"
             label={t("settings.export")}

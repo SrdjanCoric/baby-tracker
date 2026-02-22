@@ -22,6 +22,7 @@ import {
   getGoalInfo,
   checkMilestoneCrossing,
 } from "@/utils/tummyTimeGoals";
+import { fetchActivityGoal, upsertActivityGoal } from "@/services/activity-goal-service";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, pauseTimerLiveActivity, resumeTimerLiveActivity } from "@/services/live-activity-service";
 
 export interface ActiveTummyTimeTimer {
@@ -222,6 +223,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
+  const isStoppingRef = useRef(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('tummy_time_sessions', (change: RemoteChange) => {
@@ -239,6 +241,28 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         case 'DELETE':
           if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
           break;
+      }
+    });
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToRemoteChanges('activity_goals', (change: RemoteChange) => {
+      if (!selectedBaby) return;
+      const data = change.new;
+      if (!data || data.baby_id !== selectedBaby.id || data.goal_type !== 'tummy_time') return;
+
+      if (change.eventType === 'INSERT' || change.eventType === 'UPDATE') {
+        const targetSeconds = data.target_value as number;
+        const source = data.source as GoalSource;
+        dispatch({ type: "SET_DAILY_GOAL", payload: targetSeconds });
+        dispatch({ type: "SET_GOAL_SOURCE", payload: source });
+        TummyTimeStorageService.setDailyGoal(selectedBaby.id, targetSeconds);
+        if (source === 'custom') {
+          TummyTimeStorageService.setCustomGoal(selectedBaby.id, targetSeconds);
+        } else {
+          TummyTimeStorageService.clearCustomGoal(selectedBaby.id);
+        }
       }
     });
     return unsubscribe;
@@ -281,6 +305,24 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.goalSeconds });
       dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
       dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
+
+      if (user?.householdId) {
+        try {
+          const { data: dbGoal } = await fetchActivityGoal(selectedBaby.id, 'tummy_time');
+          if (dbGoal) {
+            dispatch({ type: "SET_DAILY_GOAL", payload: dbGoal.target_value });
+            dispatch({ type: "SET_GOAL_SOURCE", payload: dbGoal.source as GoalSource });
+            await TummyTimeStorageService.setDailyGoal(selectedBaby.id, dbGoal.target_value);
+            if (dbGoal.source === 'custom') {
+              await TummyTimeStorageService.setCustomGoal(selectedBaby.id, dbGoal.target_value);
+            } else {
+              await TummyTimeStorageService.clearCustomGoal(selectedBaby.id);
+            }
+          }
+        } catch (error) {
+          console.error("[TummyTimeContext] Failed to fetch activity goal from DB:", error);
+        }
+      }
 
       if (birthDate && !hasCustomGoal) {
         const lastCheckDate = await TummyTimeStorageService.getLastMilestoneCheckDate(selectedBaby.id);
@@ -400,47 +442,53 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
   const stopTummyTime = useCallback(async (requestedEndTime?: Date): Promise<StoredTummyTimeEntry | null> => {
     if (!selectedBaby || !state.activeTimer) return null;
+    if (isStoppingRef.current) return null;
+    isStoppingRef.current = true;
 
-    const endTime = requestedEndTime ?? new Date();
-    const durationSeconds = Math.floor(
-      (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-    );
+    try {
+      const endTime = requestedEndTime ?? new Date();
+      const durationSeconds = Math.floor(
+        (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+      );
 
-    const tummyTimeInput: CreateTummyTimeInput = {
-      babyId: selectedBaby.id,
-      startedAt: state.activeTimer.startTime,
-      endedAt: endTime,
-      durationSeconds,
-    };
+      const tummyTimeInput: CreateTummyTimeInput = {
+        babyId: selectedBaby.id,
+        startedAt: state.activeTimer.startTime,
+        endedAt: endTime,
+        durationSeconds,
+      };
 
-    let tummyTime: StoredTummyTimeEntry;
+      let tummyTime: StoredTummyTimeEntry;
 
-    if (user?.householdId && user?.id) {
-      tummyTime = await createTummyTimeInDatabase(tummyTimeInput, user.id);
-    } else {
-      tummyTime = await TummyTimeStorageService.addTummyTime(tummyTimeInput);
-    }
-
-    dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
-    dispatch({ type: "STOP_TIMER" });
-    await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
-
-    if (liveActivityIdRef.current) {
-      await endTimerLiveActivity(liveActivityIdRef.current);
-      liveActivityIdRef.current = null;
-    } else {
-      await endLiveActivityByType("tummyTime");
-    }
-
-    if (user?.id) {
-      try {
-        await releaseTimerLock(selectedBaby.id, "tummy_time", user.id);
-      } catch (error) {
-        console.error("[TummyTimeContext] Failed to release timer lock:", error);
+      if (user?.householdId && user?.id) {
+        tummyTime = await createTummyTimeInDatabase(tummyTimeInput, user.id);
+      } else {
+        tummyTime = await TummyTimeStorageService.addTummyTime(tummyTimeInput);
       }
-    }
 
-    return tummyTime;
+      dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
+      dispatch({ type: "STOP_TIMER" });
+      await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+
+      if (liveActivityIdRef.current) {
+        await endTimerLiveActivity(liveActivityIdRef.current);
+        liveActivityIdRef.current = null;
+      } else {
+        await endLiveActivityByType("tummyTime");
+      }
+
+      if (user?.id) {
+        try {
+          await releaseTimerLock(selectedBaby.id, "tummy_time", user.id);
+        } catch (error) {
+          console.error("[TummyTimeContext] Failed to release timer lock:", error);
+        }
+      }
+
+      return tummyTime;
+    } finally {
+      isStoppingRef.current = false;
+    }
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
   const pauseTummyTime = useCallback(async () => {
@@ -626,8 +674,13 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       if (!selectedBaby) return;
       await TummyTimeStorageService.setDailyGoal(selectedBaby.id, goalSeconds);
       dispatch({ type: "SET_DAILY_GOAL", payload: goalSeconds });
+      if (user?.householdId) {
+        upsertActivityGoal(selectedBaby.id, 'tummy_time', goalSeconds, state.goalSource).catch(
+          (error) => console.error("[TummyTimeContext] Failed to sync goal:", error)
+        );
+      }
     },
-    [selectedBaby]
+    [selectedBaby, user?.householdId, state.goalSource]
   );
 
   const setCustomGoal = useCallback(
@@ -636,8 +689,13 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       await TummyTimeStorageService.setCustomGoal(selectedBaby.id, goalSeconds);
       dispatch({ type: "SET_DAILY_GOAL", payload: goalSeconds });
       dispatch({ type: "SET_GOAL_SOURCE", payload: "custom" });
+      if (user?.householdId) {
+        upsertActivityGoal(selectedBaby.id, 'tummy_time', goalSeconds, 'custom').catch(
+          (error) => console.error("[TummyTimeContext] Failed to sync goal:", error)
+        );
+      }
     },
-    [selectedBaby]
+    [selectedBaby, user?.householdId]
   );
 
   const resetToAgeBasedGoal = useCallback(async (): Promise<void> => {
@@ -652,7 +710,12 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.goalSeconds });
     dispatch({ type: "SET_GOAL_SOURCE", payload: "age_based" });
     dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
-  }, [selectedBaby]);
+    if (user?.householdId) {
+      upsertActivityGoal(selectedBaby.id, 'tummy_time', goalInfo.goalSeconds, 'age_based').catch(
+        (error) => console.error("[TummyTimeContext] Failed to sync goal:", error)
+      );
+    }
+  }, [selectedBaby, user?.householdId]);
 
   const dismissMilestoneSuggestion = useCallback(async (): Promise<void> => {
     if (!selectedBaby || !state.currentAgeGroup) return;
@@ -669,7 +732,12 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_DAILY_GOAL", payload: state.suggestedGoalSeconds });
     dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
     dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
-  }, [selectedBaby, state.suggestedGoalSeconds]);
+    if (user?.householdId) {
+      upsertActivityGoal(selectedBaby.id, 'tummy_time', state.suggestedGoalSeconds, 'age_based').catch(
+        (error) => console.error("[TummyTimeContext] Failed to sync goal:", error)
+      );
+    }
+  }, [selectedBaby, state.suggestedGoalSeconds, user?.householdId]);
 
   const value: TummyTimeContextValue = {
     ...state,
