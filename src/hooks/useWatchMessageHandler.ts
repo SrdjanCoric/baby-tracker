@@ -16,11 +16,11 @@ interface UseWatchMessageHandlerOptions {
 
 export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) {
   const { selectedBaby, selectBaby } = useBaby();
-  const { startBreastfeeding, stopBreastfeeding, changeSide, addFeeding } = useFeeding();
-  const { startSleep, stopSleep } = useSleep();
+  const { startBreastfeeding, stopBreastfeeding, changeSide, addFeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
+  const { startSleep, stopSleep, pauseSleep, resumeSleep } = useSleep();
   const { addDiaper } = useDiaper();
-  const { startPumping, stopPumping, changePumpingSide } = usePumping();
-  const { startTummyTime, stopTummyTime } = useTummyTime();
+  const { startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping } = usePumping();
+  const { startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
 
   const handleMessage = useCallback(
     async (message: Record<string, unknown>, replyHandler?: WatchReplyHandler) => {
@@ -160,6 +160,42 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
             break;
           }
 
+          case "pauseTimer": {
+            switch (activityType) {
+              case "feeding":
+                await pauseBreastfeeding();
+                break;
+              case "sleep":
+                await pauseSleep();
+                break;
+              case "pumping":
+                await pausePumping();
+                break;
+              case "tummyTime":
+                await pauseTummyTime();
+                break;
+            }
+            break;
+          }
+
+          case "resumeTimer": {
+            switch (activityType) {
+              case "feeding":
+                await resumeBreastfeeding();
+                break;
+              case "sleep":
+                await resumeSleep();
+                break;
+              case "pumping":
+                await resumePumping();
+                break;
+              case "tummyTime":
+                await resumeTummyTime();
+                break;
+            }
+            break;
+          }
+
           case "switchSide": {
             const currentSide = message.currentSide as BreastSide;
             const newSide: BreastSide = currentSide === "left" ? "right" : "left";
@@ -182,16 +218,24 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       options?.onSelectBabyRequest,
       startBreastfeeding,
       stopBreastfeeding,
+      pauseBreastfeeding,
+      resumeBreastfeeding,
       changeSide,
       addFeeding,
       startSleep,
       stopSleep,
+      pauseSleep,
+      resumeSleep,
       addDiaper,
       startPumping,
       stopPumping,
+      pausePumping,
+      resumePumping,
       changePumpingSide,
       startTummyTime,
       stopTummyTime,
+      pauseTummyTime,
+      resumeTummyTime,
     ]
   );
 

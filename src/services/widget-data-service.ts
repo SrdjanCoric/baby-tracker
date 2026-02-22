@@ -195,6 +195,25 @@ export async function updateWidgetData(data: WidgetData): Promise<void> {
     } catch (error) {
       console.error("[WidgetDataService] Failed to update widget data:", error);
     }
+
+    try {
+      const { syncToWatch } = await import("./watch-service");
+      const watchData: WatchData = {
+        babies: [
+          {
+            id: data.babyId,
+            name: data.babyName,
+            activities: data.activities,
+            activeTimers: data.activeTimers,
+          },
+        ],
+        selectedBabyId: data.babyId,
+        updatedAt: data.updatedAt,
+      };
+      await syncToWatch(data, watchData);
+    } catch (error) {
+      console.error("[WidgetDataService] Failed to sync to watch:", error);
+    }
   }
 }
 
