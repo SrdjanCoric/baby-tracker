@@ -15,6 +15,8 @@ import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
+import { useWatchMessageHandler } from "@/hooks/useWatchMessageHandler";
+import { startWatchMessageListening } from "@/services/watch-service";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -147,6 +149,34 @@ function WidgetPauseHandler({ children }: { children: React.ReactNode }) {
 
 function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
   useGlobalTimerAlerts();
+  return <>{children}</>;
+}
+
+function WatchMessageHandler({ children }: { children: React.ReactNode }) {
+  const { getWidgetDataJson } = useWidget();
+  const { registerHandler } = useWatchMessageHandler({
+    onRequestSync: (replyHandler) => {
+      const json = getWidgetDataJson();
+      if (replyHandler && json) {
+        replyHandler({ widgetData: json });
+      }
+    },
+  });
+
+  useEffect(() => {
+    const unregister = registerHandler();
+    let unsubscribeListening: (() => void) | null = null;
+
+    startWatchMessageListening().then((unsub) => {
+      unsubscribeListening = unsub;
+    });
+
+    return () => {
+      unregister();
+      unsubscribeListening?.();
+    };
+  }, [registerHandler]);
+
   return <>{children}</>;
 }
 
@@ -397,9 +427,11 @@ export default function RootLayout() {
                                       <DisplayNamePromptWrapper>
                                         <WidgetStopHandler>
                                         <WidgetPauseHandler>
+                                        <WatchMessageHandler>
                                         <GlobalTimerAlertWatcher>
                                           <AppContent />
                                         </GlobalTimerAlertWatcher>
+                                        </WatchMessageHandler>
                                         </WidgetPauseHandler>
                                         </WidgetStopHandler>
                                       </DisplayNamePromptWrapper>

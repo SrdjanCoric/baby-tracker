@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SofiBaby — Apple Watch UI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap');
+
+  :root {
+    --bg: #1E1B19;
+    --bg-card: #2D2A28;
+    --bg-elevated: #3A3735;
+    --text-primary: #F5F2F0;
+    --text-secondary: #B8B3B0;
+    --text-muted: #7A756E;
+    --feeding: #8CB369;
+    --feeding-dim: rgba(140,179,105,0.28);
+    --sleep: #9E8DA9;
+    --sleep-dim: rgba(158,141,169,0.28);
+    --diaper: #E0A099;
+    --diaper-dim: rgba(224,160,153,0.28);
+    --pumping: #7BA3A8;
+    --pumping-dim: rgba(123,163,168,0.28);
+    --growth: #6AAB9C;
+    --growth-dim: rgba(106,171,156,0.28);
+    --tummy: #D4A574;
+    --tummy-dim: rgba(212,165,116,0.28);
+    --danger: #E05252;
+    --danger-dim: rgba(224,82,82,0.3);
+    --watch-w: 198px;
+    --watch-h: 242px;
+    --watch-radius: 42px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0E0C0B;
+    color: var(--text-primary);
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  h1 {
+    text-align: center;
+    font-family: 'Newsreader', serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 28px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 400;
+    margin-bottom: 48px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .screen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .screen-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .screen-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Watch bezel */
+  .watch {
+    width: 230px;
+    height: 282px;
+    background: #2A2725;
+    border-radius: 56px;
+    padding: 16px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04),
+      0 20px 60px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .watch::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -4px;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 32px;
+    background: #3A3735;
+    border-radius: 2px;
+    box-shadow: 0 16px 0 #3A3735;
+  }
+
+  .watch-screen {
+    width: var(--watch-w);
+    height: var(--watch-h);
+    background: var(--bg);
+    border-radius: var(--watch-radius);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .watch-screen-inner {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 14px 10px 10px;
+    scrollbar-width: none;
+  }
+
+  .watch-screen-inner::-webkit-scrollbar { display: none; }
+
+  /* ===================== */
+  /* SHARED COMPONENTS     */
+  /* ===================== */
+
+  .w-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .w-nav-title {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .w-baby-name {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-size: 16px;
+    font-weight: 400;
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    opacity: 0.9;
+  }
+
+  .w-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .w-info-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .w-info-value {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .w-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 6px 0;
+  }
+
+  .w-hint {
+    font-size: 8px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.4;
+    margin-top: 4px;
+  }
+
+  /* ===================== */
+  /* 1. MAIN ACTIVITY LIST */
+  /* ===================== */
+
+  .activity-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    margin-bottom: 5px;
+    position: relative;
+    transition: transform 0.15s;
+  }
+
+  .activity-row:active { transform: scale(0.97); }
+
+  .activity-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .activity-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .activity-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .activity-time {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .activity-add {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--text-primary);
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  /* Active Timer Card */
+  .timer-card {
+    padding: 8px 10px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .timer-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    pointer-events: none;
+  }
+
+  .timer-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .timer-emoji { font-size: 11px; }
+
+  .timer-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .timer-context {
+    font-size: 8px;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    margin-bottom: 2px;
+  }
+
+  .timer-display {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+    margin: 2px 0 6px;
+    color: var(--text-primary);
+  }
+
+  .timer-stop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px;
+    background: var(--danger);
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    width: 100%;
+  }
+
+  /* ===================== */
+  /* CIRCULAR BUTTONS      */
+  /* ===================== */
+
+  .circle-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+
+  .circle-btn-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .circle-btn-icon:active {
+    transform: scale(0.92);
+  }
+
+  .circle-btn-icon.large {
+    width: 60px;
+    height: 60px;
+    font-size: 20px;
+  }
+
+  .circle-btn-icon.highlighted {
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.15), 0 2px 16px rgba(0,0,0,0.4);
+  }
+
+  .circle-btn-icon.dimmed {
+    opacity: 0.4;
+  }
+
+  .circle-btn-label {
+    font-size: 9px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+
+  /* Side buttons (L/R) */
+  .side-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+  }
+
+  /* 2x2 grid */
+  .grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 4px 6px;
+  }
+
+  .grid-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 4px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .grid-btn:active { transform: scale(0.93); }
+
+  .grid-btn-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .grid-btn-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  /* 3-button layout */
+  .three-btns {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .three-btns-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  /* Option row (for feeding menu) */
+  .option-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .option-row:active { transform: scale(0.97); }
+
+  .option-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .option-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .option-chevron {
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  /* Volume picker */
+  .volume-display {
+    text-align: center;
+    margin: 6px 0;
+  }
+
+  .volume-num {
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+  }
+
+  .volume-unit {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 2px;
+  }
+
+  .volume-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 8px;
+  }
+
+  .vol-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  /* Toggle buttons */
+  .toggle-row {
+    display: flex;
+    gap: 4px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    padding: 3px;
+    margin-bottom: 8px;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 6px 4px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 500;
+    text-align: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .toggle-btn.active {
+    color: white;
+    font-weight: 600;
+  }
+
+  /* Save button */
+  .save-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  /* Progress ring */
+  .progress-ring-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 6px 0;
+  }
+
+  .progress-ring {
+    position: relative;
+    width: 88px;
+    height: 88px;
+  }
+
+  .progress-ring svg {
+    transform: rotate(-90deg);
+    width: 88px;
+    height: 88px;
+  }
+
+  .progress-ring .track {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+
+  .progress-ring .fill {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 226;
+    transition: stroke-dashoffset 0.6s ease;
+  }
+
+  .progress-ring-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .progress-ring-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .progress-ring-label {
+    font-size: 8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Growth screen */
+  .growth-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 10px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .growth-phone-icon {
+    font-size: 28px;
+    opacity: 0.7;
+  }
+
+  .growth-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+    padding: 6px 0;
+  }
+
+  /* Active timer full screen */
+  .timer-full {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 10px;
+    gap: 4px;
+  }
+
+  .timer-full-icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+
+  .timer-full-activity {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    opacity: 0.8;
+  }
+
+  .timer-full-time {
+    font-size: 34px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+    margin: 4px 0;
+  }
+
+  .timer-full-context {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .timer-full-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    padding: 0 4px;
+  }
+
+  .switch-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--bg-elevated);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .stop-btn-large {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 10px;
+    background: var(--danger);
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin: 4px 0 6px;
+    text-align: center;
+  }
+
+  /* Stat badges row */
+  .stat-badges {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 4px;
+  }
+
+  .stat-badge {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 2px;
+    border-radius: 6px;
+    background: var(--bg-card);
+  }
+
+  .stat-badge-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .stat-badge-label {
+    font-size: 7px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>SofiBaby Watch</h1>
+<p class="subtitle">Apple Watch UI — All Screens</p>
+
+<div class="screen-grid">
+
+  <!-- ========================================= -->
+  <!-- 1. MAIN ACTIVITY LIST                     -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner">
+          <div class="w-baby-name">Sofia</div>
+
+          <!-- Active Timer -->
+          <div class="timer-card" style="background: var(--sleep-dim);">
+            <div class="timer-header">
+              <span class="timer-emoji">😴</span>
+              <span class="timer-label" style="color: var(--sleep);">Sleep</span>
+            </div>
+            <div class="timer-context">Nap</div>
+            <div class="timer-display">0:42:15</div>
+            <div class="timer-stop">■ &nbsp;Stop</div>
+          </div>
+
+          <!-- Feeding -->
+          <div class="activity-row">
+            <div class="activity-icon" style="background: var(--feeding-dim);">🤱</div>
+            <div class="activity-info">
+              <div class="activity-name">Feeding</div>
+              <div class="activity-time">25m ago</div>
+            </div>
+            <div class="activity-add" style="background: var(--feeding-dim);">+</div>
+          </div>
+
+          <!-- Sleep -->
+          <div class="activity-row">
+            <div class="activity-icon" style="background: var(--sleep-dim);">😴</div>
+            <div class="activity-info">
+              <div class="activity-name">Sleep</div>
+              <div class="activity-time" style="color: var(--sleep);">● Active</div>
+            </div>
+            <div class="activity-add" style="background: var(--sleep-dim);">+</div>
+          </div>
+
+          <!-- Diaper -->
+          <div class="activity-row">
+            <div class="activity-icon" style="background: var(--diaper-dim);">🚼</div>
+            <div class="activity-info">
+              <div class="activity-name">Diaper</div>
+              <div class="activity-time">1h 10m ago</div>
+            </div>
+            <div class="activity-add" style="background: var(--diaper-dim);">+</div>
+          </div>
+
+          <!-- Pumping -->
+          <div class="activity-row">
+            <div class="activity-icon" style="background: var(--pumping-dim);">🫙</div>
+            <div class="activity-info">
+              <div class="activity-name">Pumping</div>
+              <div class="activity-time">3h ago</div>
+            </div>
+            <div class="activity-add" style="background: var(--pumping-dim);">+</div>
+          </div>
+
+          <!-- Tummy Time -->
+          <div class="activity-row">
+            <div class="activity-icon" style="background: var(--tummy-dim);">💪</div>
+            <div class="activity-info">
+              <div class="activity-name">Tummy Time</div>
+              <div class="activity-time">2h 30m ago</div>
+            </div>
+            <div class="activity-add" style="background: var(--tummy-dim);">+</div>
+          </div>
+
+          <!-- Growth -->
+          <div class="activity-row">
+            <div class="activity-icon" style="background: var(--growth-dim);">📏</div>
+            <div class="activity-info">
+              <div class="activity-name">Growth</div>
+              <div class="activity-time">3d ago</div>
+            </div>
+            <div class="activity-add" style="background: var(--growth-dim);">+</div>
+          </div>
+
+          <div style="height:12px"></div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">1 — Main Activity List</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 2. FEEDING DETAIL (Menu)                  -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="padding-top: 16px;">
+          <div class="w-nav-title">Feeding</div>
+
+          <div class="w-info-row" style="margin-bottom:2px;">
+            <span class="w-info-label">Last</span>
+            <span class="w-info-value">25m ago</span>
+          </div>
+          <div class="w-info-row">
+            <span class="w-info-label">Today</span>
+            <span class="w-info-value">6 feedings</span>
+          </div>
+
+          <div class="w-divider" style="margin: 8px 0;"></div>
+
+          <div class="option-row">
+            <div class="option-icon" style="background: var(--feeding-dim);">🤱</div>
+            <span class="option-label">Breast</span>
+            <span class="option-chevron">›</span>
+          </div>
+
+          <div class="option-row">
+            <div class="option-icon" style="background: var(--feeding-dim);">🍼</div>
+            <span class="option-label">Bottle</span>
+            <span class="option-chevron">›</span>
+          </div>
+
+          <div class="option-row">
+            <div class="option-icon" style="background: var(--feeding-dim);">🥄</div>
+            <span class="option-label">Solid</span>
+            <span class="option-chevron">›</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">2 — Feeding Menu</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 3. BREAST FEEDING (L / R)                 -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px 12px;">
+          <div class="w-nav-title" style="margin-bottom:4px;">Breast</div>
+
+          <div class="w-hint" style="margin-bottom:14px; color: var(--feeding); font-weight:500;">
+            ← Right suggested
+          </div>
+
+          <div class="side-buttons">
+            <div class="circle-btn">
+              <div class="circle-btn-icon large dimmed" style="background: var(--feeding);">
+                L
+              </div>
+              <span class="circle-btn-label">Left</span>
+            </div>
+            <div class="circle-btn">
+              <div class="circle-btn-icon large highlighted" style="background: var(--feeding);">
+                R
+              </div>
+              <span class="circle-btn-label">Right</span>
+            </div>
+          </div>
+
+          <div class="w-hint" style="margin-top: 14px;">Last: Left • 25m ago</div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">3 — Breast Side Selection</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 4. BOTTLE FEEDING                         -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="padding-top: 16px;">
+          <div class="w-nav-title">Bottle</div>
+
+          <div class="volume-display">
+            <span class="volume-num">120</span>
+            <span class="volume-unit">ml</span>
+          </div>
+
+          <div class="volume-controls">
+            <div class="vol-btn">−</div>
+            <div style="width:2px; height:16px; background: rgba(255,255,255,0.06); border-radius:1px;"></div>
+            <div class="vol-btn">+</div>
+          </div>
+
+          <div class="w-hint" style="margin-bottom:6px;">⟳ Use Digital Crown</div>
+
+          <div class="toggle-row">
+            <div class="toggle-btn active" style="background: var(--feeding);">Formula</div>
+            <div class="toggle-btn">Breast Milk</div>
+          </div>
+
+          <div class="save-btn" style="background: var(--feeding);">Save</div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">4 — Bottle Feeding</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 5. SLEEP DETAIL                           -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px 12px;">
+          <div class="w-nav-title" style="margin-bottom:6px;">Sleep</div>
+
+          <div class="side-buttons" style="gap:16px;">
+            <div class="circle-btn">
+              <div class="circle-btn-icon large" style="background: var(--sleep);">
+                <span style="font-size:18px;">☀</span>
+              </div>
+              <span class="circle-btn-label">Nap</span>
+            </div>
+            <div class="circle-btn">
+              <div class="circle-btn-icon large" style="background: var(--sleep);">
+                <span style="font-size:18px;">🌙</span>
+              </div>
+              <span class="circle-btn-label">Night</span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px; text-align:center;">
+            <div class="w-info-row" style="justify-content:center; gap:8px;">
+              <span class="w-info-label">Today</span>
+              <span class="w-info-value">2h 45m</span>
+            </div>
+            <div class="w-hint" style="margin-top:2px;">Last: 1h 10m nap</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">5 — Sleep</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 6. DIAPER                                 -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="padding-top: 16px;">
+          <div class="w-nav-title">Add Diaper</div>
+
+          <div class="stat-badges" style="margin-bottom:8px;">
+            <div class="stat-badge">
+              <span class="stat-badge-num" style="color: var(--diaper);">3</span>
+              <span class="stat-badge-label">Wet</span>
+            </div>
+            <div class="stat-badge">
+              <span class="stat-badge-num" style="color: var(--diaper);">1</span>
+              <span class="stat-badge-label">Dirty</span>
+            </div>
+            <div class="stat-badge">
+              <span class="stat-badge-num" style="color: var(--diaper);">2</span>
+              <span class="stat-badge-label">Mixed</span>
+            </div>
+          </div>
+
+          <div class="grid-2x2">
+            <div class="grid-btn" style="background: var(--diaper-dim); padding: 14px 4px;">
+              <span class="grid-btn-icon" style="font-size: 28px;">💧</span>
+            </div>
+            <div class="grid-btn" style="background: var(--diaper-dim); padding: 14px 4px;">
+              <span class="grid-btn-icon" style="font-size: 28px;">💩</span>
+            </div>
+            <div class="grid-btn" style="background: var(--diaper-dim); padding: 14px 4px;">
+              <span class="grid-btn-icon" style="font-size: 28px;">💧💩</span>
+            </div>
+            <div class="grid-btn" style="background: var(--diaper-dim); padding: 14px 4px;">
+              <span class="grid-btn-icon" style="font-size: 28px;">✨</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">6 — Diaper</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 7. PUMPING                                -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px 12px;">
+          <div class="w-nav-title" style="margin-bottom:4px;">Pumping</div>
+
+          <div class="w-hint" style="margin-bottom:14px; color: var(--pumping); font-weight:500;">
+            ← Left suggested
+          </div>
+
+          <div class="side-buttons">
+            <div class="circle-btn">
+              <div class="circle-btn-icon large highlighted" style="background: var(--pumping);">
+                L
+              </div>
+              <span class="circle-btn-label">Left</span>
+            </div>
+            <div class="circle-btn">
+              <div class="circle-btn-icon large dimmed" style="background: var(--pumping);">
+                R
+              </div>
+              <span class="circle-btn-label">Right</span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px; text-align:center;">
+            <div class="w-info-row" style="justify-content:center; gap:8px;">
+              <span class="w-info-label">Today</span>
+              <span class="w-info-value">240 ml</span>
+            </div>
+            <div class="w-hint" style="margin-top:2px;">Last: Right • 3h ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">7 — Pumping</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 8. TUMMY TIME                             -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 14px 12px;">
+          <div class="w-nav-title" style="margin-bottom:6px;">Tummy Time</div>
+
+          <div class="progress-ring-wrap">
+            <div class="progress-ring">
+              <svg viewBox="0 0 88 88">
+                <circle class="track" cx="44" cy="44" r="36" style="stroke: var(--tummy-dim); stroke-width: 6;" />
+                <circle class="fill" cx="44" cy="44" r="36" style="stroke: var(--tummy); stroke-dashoffset: 113;" />
+              </svg>
+              <div class="progress-ring-text">
+                <span class="progress-ring-value" style="color: var(--tummy);">15m</span>
+                <span class="progress-ring-label">of 30m</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="circle-btn" style="margin-top: 8px;">
+            <div class="circle-btn-icon" style="background: var(--tummy); width:48px; height:48px; font-size: 16px;">
+              ▶
+            </div>
+            <span class="circle-btn-label">Start</span>
+          </div>
+
+          <div class="w-hint" style="margin-top:8px;">Last: 8m • 2h 30m ago</div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">8 — Tummy Time</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 9. ACTIVE TIMER (Breast Feeding)          -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="padding: 0;">
+          <div class="timer-full" style="background: linear-gradient(180deg, rgba(140,179,105,0.1) 0%, transparent 60%);">
+            <span class="timer-full-icon">🤱</span>
+            <span class="timer-full-activity" style="color: var(--feeding);">Feeding</span>
+            <span class="timer-full-time">0:12:34</span>
+            <span class="timer-full-context">Left breast</span>
+
+            <div class="timer-full-actions">
+              <div class="switch-btn">
+                ⇄ Switch
+              </div>
+              <div class="stop-btn-large">
+                Stop
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">9 — Active Timer</span>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- 10. GROWTH                                -->
+  <!-- ========================================= -->
+  <div class="screen-item">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="watch-screen-inner" style="padding-top: 16px;">
+          <div class="w-nav-title">Growth</div>
+
+          <div class="growth-stats" style="margin-top:4px;">
+            <div class="w-info-row">
+              <span class="w-info-label">Weight</span>
+              <span class="w-info-value">5.8 kg</span>
+            </div>
+            <div class="w-info-row">
+              <span class="w-info-label">Height</span>
+              <span class="w-info-value">62.5 cm</span>
+            </div>
+            <div class="w-info-row">
+              <span class="w-info-label">Head</span>
+              <span class="w-info-value">40.2 cm</span>
+            </div>
+          </div>
+
+          <div class="w-divider" style="margin: 8px 0;"></div>
+
+          <div class="growth-placeholder" style="height:auto; padding: 16px 10px;">
+            <div class="growth-phone-icon">📱</div>
+            <div style="font-size: 11px; font-weight: 500; color: var(--text-secondary);">
+              Add Measurements
+            </div>
+            <div class="w-hint" style="margin-top: 0;">
+              Open SofiBaby on your<br>iPhone to log growth data
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="screen-label">10 — Growth</span>
+  </div>
+
+</div>
+
+</body>
+</html>
