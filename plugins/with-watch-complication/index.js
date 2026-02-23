@@ -13,7 +13,34 @@ const BUNDLE_ID = "com.sofibaby.app.watch.watchwidget";
 const WATCH_TARGET_NAME = "SofiBabyWatch";
 const MOD_NAME = "watchComplicationXcodeProject";
 
+function registerWithEAS(config) {
+  if (!config.extra) config.extra = {};
+  if (!config.extra.eas) config.extra.eas = {};
+  if (!config.extra.eas.build) config.extra.eas.build = {};
+  if (!config.extra.eas.build.experimental)
+    config.extra.eas.build.experimental = {};
+  if (!config.extra.eas.build.experimental.ios)
+    config.extra.eas.build.experimental.ios = {};
+  if (!config.extra.eas.build.experimental.ios.appExtensions)
+    config.extra.eas.build.experimental.ios.appExtensions = [];
+
+  const extensions = config.extra.eas.build.experimental.ios.appExtensions;
+  if (!extensions.some((ext) => ext.targetName === TARGET_NAME)) {
+    extensions.push({
+      bundleIdentifier: BUNDLE_ID,
+      targetName: TARGET_NAME,
+      entitlements: {
+        "com.apple.security.application-groups": ["group.com.sofibaby.app"],
+      },
+    });
+  }
+
+  return config;
+}
+
 function withWatchComplication(config) {
+  config = registerWithEAS(config);
+
   config = withDangerousMod(config, [
     "ios",
     async (config) => {
