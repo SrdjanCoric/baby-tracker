@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useBaby } from "@/contexts/baby-context";
 import { useFeeding } from "@/contexts/feeding-context";
 import { useSleep } from "@/contexts/sleep-context";
@@ -8,6 +8,8 @@ import { useTummyTime } from "@/contexts/tummyTime-context";
 import { setWatchMessageHandler } from "@/services/watch-service";
 import type { WatchReplyHandler } from "@/services/watch-service";
 import type { BreastSide, DiaperType, SleepType, BottleContentType } from "@/constants/activities";
+
+const REQUEST_DEDUP_TTL_MS = 30_000;
 
 interface UseWatchMessageHandlerOptions {
   onRequestSync?: (replyHandler?: WatchReplyHandler) => void;
@@ -22,14 +24,34 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
   const { startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping } = usePumping();
   const { startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
 
+  const processedRequestIds = useRef<Map<string, number>>(new Map());
+
   const handleMessage = useCallback(
     async (message: Record<string, unknown>, replyHandler?: WatchReplyHandler) => {
       const action = message.action as string;
       const messageBabyId = message.babyId as string | undefined;
+      const requestId = message.requestId as string | undefined;
 
       console.log(
-        `[WatchMessageHandler] Received: action=${action}, babyId=${messageBabyId}, selectedBaby=${selectedBaby?.id}`
+        `[WatchMessageHandler] Received: action=${action}, babyId=${messageBabyId}, requestId=${requestId}, selectedBaby=${selectedBaby?.id}`
       );
+
+      if (requestId) {
+        const now = Date.now();
+        const seen = processedRequestIds.current;
+
+        for (const [id, timestamp] of seen) {
+          if (now - timestamp > REQUEST_DEDUP_TTL_MS) {
+            seen.delete(id);
+          }
+        }
+
+        if (seen.has(requestId)) {
+          console.log(`[WatchMessageHandler] DUPLICATE requestId=${requestId}, skipping`);
+          return;
+        }
+        seen.set(requestId, now);
+      }
 
       if (action === "requestSync") {
         options?.onRequestSync?.(replyHandler);

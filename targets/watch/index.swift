@@ -479,9 +479,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
-    /// Send an action message (guaranteed delivery via transferUserInfo)
+    /// Send an action message (single delivery: sendMessage if reachable, else transferUserInfo)
     func sendAction(_ message: [String: Any]) {
-        print("[WatchConnector] sendAction called with: \(message)")
+        var messageWithId = message
+        messageWithId["requestId"] = UUID().uuidString
+
+        print("[WatchConnector] sendAction called with: \(messageWithId)")
 
         guard let session = session else {
             print("[WatchConnector] ERROR: session is nil!")
@@ -493,14 +496,15 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             return
         }
 
-        // Always use transferUserInfo for guaranteed delivery
-        session.transferUserInfo(message)
-        print("[WatchConnector] Action queued via transferUserInfo")
-
-        // Also try sendMessage for immediate delivery if reachable (fire and forget)
         if session.isReachable {
-            print("[WatchConnector] Also sending immediate message...")
-            session.sendMessage(message, replyHandler: nil, errorHandler: nil)
+            print("[WatchConnector] Sending immediate message...")
+            session.sendMessage(messageWithId, replyHandler: nil) { error in
+                print("[WatchConnector] sendMessage failed, queueing via transferUserInfo: \(error)")
+                session.transferUserInfo(messageWithId)
+            }
+        } else {
+            session.transferUserInfo(messageWithId)
+            print("[WatchConnector] Action queued via transferUserInfo (not reachable)")
         }
     }
 
