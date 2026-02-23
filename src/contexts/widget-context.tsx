@@ -101,7 +101,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
 
     const activities: WidgetActivityData = {
       feeding: {
-        lastTime: lastFeeding?.endedAt || lastFeeding?.startedAt || null,
+        lastTime: lastFeeding?.startedAt || lastFeeding?.endedAt || null,
         todayCount: countFeedingSessions(todayFeedings),
         lastType: lastFeeding?.type || null,
         lastSide: (lastFeeding?.side as BreastSide) || null,
@@ -130,7 +130,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         lastType: (lastDiaperEntry?.type as DiaperType) || null,
       },
       pumping: {
-        lastTime: lastPumping?.endedAt || lastPumping?.startedAt || null,
+        lastTime: lastPumping?.startedAt || lastPumping?.endedAt || null,
         todayVolumeMl: todayPumpingVolume,
         sessionCount: todayPumpings.length,
         lastSide: (lastPumping?.side as BreastSide) || null,
@@ -146,7 +146,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
           : null,
       },
       tummyTime: {
-        lastTime: lastTummyTime?.endedAt || lastTummyTime?.startedAt || null,
+        lastTime: lastTummyTime?.startedAt || lastTummyTime?.endedAt || null,
         todayMinutes: todayTummyTimeMinutes,
         goalMinutes: Math.floor(tummyTimeGoalSeconds / 60),
         lastDurationMinutes: lastTummyTime
