@@ -658,6 +658,17 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         WKInterfaceDevice.current().play(.success)
     }
 
+    private func findServerTimer(activityType: String) -> WatchActiveTimer? {
+        if let baby = currentBaby {
+            return baby.activeTimers.first { $0.type == activityType }
+        }
+        if let data = widgetData {
+            let timers = data.activeTimers ?? (data.activeTimer.map { [$0] } ?? [])
+            return timers.first { $0.type == activityType }
+        }
+        return nil
+    }
+
     func pauseTimer(activityType: String) {
         guard canPerformAction() else { return }
 
@@ -673,6 +684,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
                 self.localActiveTimers[index].isPaused = true
+            } else if var serverTimer = self.findServerTimer(activityType: activityType) {
+                serverTimer.isPaused = true
+                self.localActiveTimers.append(serverTimer)
             }
             self.syncOptimisticStateToCache()
         }
@@ -695,6 +709,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
                 self.localActiveTimers[index].isPaused = false
+            } else if var serverTimer = self.findServerTimer(activityType: activityType) {
+                serverTimer.isPaused = false
+                self.localActiveTimers.append(serverTimer)
             }
             self.syncOptimisticStateToCache()
         }
