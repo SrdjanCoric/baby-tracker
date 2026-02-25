@@ -19,8 +19,9 @@ import { useSleep, useBaby, useTheme, useHousehold, useTimeFormat } from "@/cont
 import { useAuth } from "@/contexts/auth-context";
 import { useNotifications } from "@/contexts/notification-context";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { NapReminderWarningModal } from "@/components/NapReminderWarningModal";
 import { formatHourValue } from "@/utils/time";
-import { getPresetPillsForAge, generateSlotsForNapCount, getDefaultWakeWindowConfig } from "@/utils/sleepGoals";
+import { getPresetPillsForAge, generateSlotsForNapCount, getDefaultWakeWindowConfig, isUnderTwoMonths } from "@/utils/sleepGoals";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_LIGHT = "#B5A7BD";
@@ -60,6 +61,7 @@ export default function SleepSettingsScreen() {
     setNapCount: setContextNapCount,
     setDayNightBoundary,
     setNapContinuationMinutes: setContextNapContinuation,
+    setNewbornNapOptIn,
   } = useSleep();
 
   const currentGoalHours = dailyGoalMinutes / 60;
@@ -69,6 +71,7 @@ export default function SleepSettingsScreen() {
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [durationError, setDurationError] = useState("");
   const [showReminderHint, setShowReminderHint] = useState(false);
+  const [showUnderTwoMonthsWarning, setShowUnderTwoMonthsWarning] = useState(false);
   const reminderHintAnim = useRef(new Animated.Value(0)).current;
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
@@ -137,14 +140,10 @@ export default function SleepSettingsScreen() {
     return `${hours.toFixed(1)} hours`;
   };
 
-  const handleToggleReminders = useCallback(
-    async (enabled: boolean) => {
-      if (enabled && permissionStatus !== "granted") {
-        const granted = await requestPermissions();
-        if (!granted) return;
-      }
+  const doEnableReminders = useCallback(
+    async () => {
       await updateSettings({
-        wakeWindowReminders: { ...settings.wakeWindowReminders, enabled },
+        wakeWindowReminders: { ...settings.wakeWindowReminders, enabled: true },
       });
       if (selectedBaby?.id && wakeWindowConfig) {
         await syncWakeWindowPreferenceForBaby(
@@ -152,14 +151,50 @@ export default function SleepSettingsScreen() {
           wakeWindowConfig.napCount,
           wakeWindowConfig.slots,
           wakeWindowConfig.source,
-          enabled,
+          true,
           wakeWindowConfig.dayStartHour,
           wakeWindowConfig.dayEndHour,
           wakeWindowConfig.napContinuationMinutes
         );
       }
     },
-    [settings.wakeWindowReminders, updateSettings, permissionStatus, requestPermissions, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby]
+    [settings.wakeWindowReminders, updateSettings, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby]
+  );
+
+  const handleToggleReminders = useCallback(
+    async (enabled: boolean) => {
+      if (!enabled) {
+        await updateSettings({
+          wakeWindowReminders: { ...settings.wakeWindowReminders, enabled: false },
+        });
+        if (isUnderTwoMonths(selectedBaby?.birthDate)) {
+          await setNewbornNapOptIn(false);
+        }
+        if (selectedBaby?.id && wakeWindowConfig) {
+          await syncWakeWindowPreferenceForBaby(
+            selectedBaby.id,
+            wakeWindowConfig.napCount,
+            wakeWindowConfig.slots,
+            wakeWindowConfig.source,
+            false,
+            wakeWindowConfig.dayStartHour,
+            wakeWindowConfig.dayEndHour,
+            wakeWindowConfig.napContinuationMinutes
+          );
+        }
+        return;
+      }
+      if (permissionStatus !== "granted") {
+        const granted = await requestPermissions();
+        if (!granted) return;
+      }
+      if (isUnderTwoMonths(selectedBaby?.birthDate)) {
+        setShowUnderTwoMonthsWarning(true);
+        return;
+      }
+      await doEnableReminders();
+    },
+    [doEnableReminders, updateSettings, settings.wakeWindowReminders, selectedBaby?.birthDate, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, permissionStatus, requestPermissions]
   );
 
   const handleSelectNapCount = useCallback(
@@ -876,6 +911,16 @@ export default function SleepSettingsScreen() {
 
         <View className="h-8" />
       </ScrollView>
+
+      <NapReminderWarningModal
+        visible={showUnderTwoMonthsWarning}
+        onEnable={async () => {
+          setShowUnderTwoMonthsWarning(false);
+          await setNewbornNapOptIn(true);
+          await doEnableReminders();
+        }}
+        onCancel={() => setShowUnderTwoMonthsWarning(false)}
+      />
     </SafeAreaView>
   );
 }

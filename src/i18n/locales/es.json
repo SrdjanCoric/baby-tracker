@@ -241,7 +241,10 @@
     "napContinuation": "Continuación de siesta",
     "napContinuationDesc": "Si el bebé vuelve a dormirse dentro de este tiempo, cuenta como la misma siesta",
     "householdGoalTitle": "Meta compartida",
-    "householdGoalConfirm": "Esto cambiará la meta de sueño para todos los cuidadores de tu hogar. ¿Continuar?"
+    "householdGoalConfirm": "Esto cambiará la meta de sueño para todos los cuidadores de tu hogar. ¿Continuar?",
+    "napReminderWarningTitle": "No recomendado",
+    "napReminderWarningMessage": "Los recordatorios de siesta no se recomiendan para bebés menores de 2 meses. El sueño del recién nacido es impredecible y las ventanas de vigilia pueden causar estrés innecesario. ¿Estás seguro/a de que quieres activarlos?",
+    "napReminderWarningEnable": "Activar de todos modos"
   },
   "diaper": {
     "title": "Pañal",

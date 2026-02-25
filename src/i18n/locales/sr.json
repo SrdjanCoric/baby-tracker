@@ -245,7 +245,10 @@
     "napContinuation": "Nastavak dremke",
     "napContinuationDesc": "Ako beba ponovo zaspi u okviru ovog vremena, računa se kao ista dremka",
     "householdGoalTitle": "Deljeni cilj",
-    "householdGoalConfirm": "Ovo će promeniti cilj spavanja za sve negovatelje u vašem domaćinstvu. Nastaviti?"
+    "householdGoalConfirm": "Ovo će promeniti cilj spavanja za sve negovatelje u vašem domaćinstvu. Nastaviti?",
+    "napReminderWarningTitle": "Nije preporučeno",
+    "napReminderWarningMessage": "Podsetnici za dremku nisu preporučeni za bebe mlađe od 2 meseca. San novorođenčadi je nepredvidiv i budni periodi mogu izazvati nepotreban stres. Da li ste sigurni da želite da ih omogućite?",
+    "napReminderWarningEnable": "Omogući svejedno"
   },
   "diaper": {
     "title": "Pelene",
