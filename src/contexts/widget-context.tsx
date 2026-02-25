@@ -15,11 +15,17 @@ import {
   writeAuthToAppGroup,
   writeSupabaseConfigToAppGroup,
   readPendingWidgetStop,
+  readPendingWidgetPauseToggle,
+  clearPendingWidgetStop,
+  readLiveActivityPushToken,
+  readPushToStartToken,
   type WidgetData,
   type WidgetActivityData,
   type ActiveTimerData,
+  type WatchAuthContext,
 } from "@/services/widget-data-service";
 import { syncWidgetPushToken } from "@/services/widget-push-token-service";
+import { registerPushToStart } from "@/services/live-activity-service";
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import type { TimerActivityType } from "@/services/active-timer-service";
 
@@ -289,9 +295,35 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     if (pendingStop) {
       const stopType = pendingStop.activityType === "tummy_time"
         ? "tummyTime" : pendingStop.activityType;
-      widgetData.activeTimers = widgetData.activeTimers.filter(
-        t => t.type !== stopType
+      const stoppedAtMs = new Date(pendingStop.stoppedAt).getTime();
+      const hasNewerTimer = widgetData.activeTimers.some(
+        t => t.type === stopType && new Date(t.startTime).getTime() > stoppedAtMs
       );
+      if (hasNewerTimer) {
+        await clearPendingWidgetStop();
+      } else {
+        widgetData.activeTimers = widgetData.activeTimers.filter(
+          t => t.type !== stopType || new Date(t.startTime).getTime() > stoppedAtMs
+        );
+        widgetData.activeTimer = widgetData.activeTimers[0] ?? null;
+      }
+    }
+
+    const pendingPause = await readPendingWidgetPauseToggle();
+    if (pendingPause) {
+      const pauseType = pendingPause.activityType === "tummy_time"
+        ? "tummyTime" : pendingPause.activityType;
+      widgetData.activeTimers = widgetData.activeTimers.map(t => {
+        if (t.type !== pauseType) return t;
+        if (pendingPause.action === "pause") {
+          return {
+            ...t,
+            isPaused: true,
+            accumulatedSeconds: pendingPause.accumulatedSeconds,
+          };
+        }
+        return { ...t, isPaused: false, accumulatedSeconds: undefined };
+      });
       widgetData.activeTimer = widgetData.activeTimers[0] ?? null;
     }
 
@@ -300,6 +332,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       activities: widgetData.activities,
       activeTimer: widgetData.activeTimer,
       activeTimers: widgetData.activeTimers,
+      accessToken: session?.access_token,
     });
 
     if (dataHash === lastUpdateRef.current) {
@@ -308,12 +341,30 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
 
     lastUpdateRef.current = dataHash;
 
+    let authContext: WatchAuthContext | undefined;
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseAnonKey && session?.access_token && user?.id) {
+      const [liveActivityPushToken, pushToStartToken] = await Promise.all([
+        readLiveActivityPushToken(),
+        readPushToStartToken(),
+      ]);
+      authContext = {
+        supabaseUrl,
+        supabaseAnonKey,
+        accessToken: session.access_token,
+        userId: user.id,
+        liveActivityPushToken: liveActivityPushToken ?? undefined,
+        pushToStartToken: pushToStartToken ?? undefined,
+      };
+    }
+
     try {
-      await updateWidgetData(widgetData);
+      await updateWidgetData(widgetData, authContext);
     } catch (error) {
       console.error("[WidgetContext] Failed to update widget data:", error);
     }
-  }, [buildWidgetData]);
+  }, [buildWidgetData, session?.access_token, user?.id]);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
@@ -367,6 +418,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseAnonKey) return;
     writeSupabaseConfigToAppGroup(supabaseUrl, supabaseAnonKey);
+    registerPushToStart();
   }, []);
 
   useEffect(() => {

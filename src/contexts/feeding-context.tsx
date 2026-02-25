@@ -18,7 +18,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
-import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity } from "@/services/live-activity-service";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 import type { BreastSide as LiveActivityBreastSide } from "@/services/live-activity-service";
 
 export interface ActiveTimer {
@@ -235,8 +235,8 @@ interface FeedingContextValue extends FeedingState {
   startBreastfeeding: (side: BreastSide, requestedStartTime?: Date) => Promise<TimerLockResult>;
   stopBreastfeeding: (requestedEndTime?: Date) => Promise<StoredFeedingEntry | null>;
   changeSide: (side: BreastSide) => void;
-  pauseBreastfeeding: () => Promise<void>;
-  resumeBreastfeeding: () => Promise<void>;
+  pauseBreastfeeding: (requestedPauseTime?: Date) => Promise<void>;
+  resumeBreastfeeding: (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => Promise<void>;
   suggestedSide: BreastSide;
   addFeeding: (input: CreateFeedingInput) => Promise<StoredFeedingEntry>;
   updateFeeding: (feedingId: string, input: UpdateFeedingInput) => Promise<StoredFeedingEntry | null>;
@@ -341,7 +341,28 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (activeTimer.liveActivityId) {
-          liveActivityIdRef.current = activeTimer.liveActivityId;
+          const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+          if (isRunning) {
+            liveActivityIdRef.current = activeTimer.liveActivityId;
+          } else if (!(activeTimer.isPaused ?? false)) {
+            const totalPausedMs = activeTimer.totalPausedMs ?? 0;
+            const effectiveStartTime = totalPausedMs > 0
+              ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
+              : new Date(activeTimer.startedAt);
+            const activityId = await startTimerLiveActivity(
+              "feeding", selectedBaby.name, activeTimer.side as LiveActivityBreastSide, effectiveStartTime
+            );
+            if (activityId) liveActivityIdRef.current = activityId;
+          }
+        } else if (!(activeTimer.isPaused ?? false)) {
+          const totalPausedMs = activeTimer.totalPausedMs ?? 0;
+          const effectiveStartTime = totalPausedMs > 0
+            ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
+            : new Date(activeTimer.startedAt);
+          const activityId = await startTimerLiveActivity(
+            "feeding", selectedBaby.name, activeTimer.side as LiveActivityBreastSide, effectiveStartTime
+          );
+          if (activityId) liveActivityIdRef.current = activityId;
         }
       } else if (user?.id && user?.householdId) {
         try {
@@ -597,10 +618,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedBaby, state.activeTimer, user?.id]);
 
-  const pauseBreastfeeding = useCallback(async () => {
+  const pauseBreastfeeding = useCallback(async (requestedPauseTime?: Date) => {
     if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
 
-    const now = new Date();
+    const now = requestedPauseTime ?? new Date();
     const accumulatedSeconds = Math.floor(
       (now.getTime() - state.activeTimer.currentSideStartedAt.getTime()) / 1000
     );
@@ -636,9 +657,13 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
+        const totalElapsed = Math.floor(
+          (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+        );
         await updateTimerData(selectedBaby.id, "feeding", user.id, {
           isPaused: true,
           pausedAt: now.toISOString(),
+          accumulatedSeconds: totalElapsed,
           totalPausedMs: state.activeTimer.totalPausedMs,
           side: state.activeTimer.side,
           type: "breast",
@@ -652,13 +677,13 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedBaby, state.activeTimer, user?.id]);
 
-  const resumeBreastfeeding = useCallback(async () => {
+  const resumeBreastfeeding = useCallback(async (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => {
     if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused) return;
 
-    const now = new Date();
-    const pauseDuration = state.activeTimer.pausedAt
+    const now = requestedResumeTime ?? new Date();
+    const pauseDuration = widgetPauseDurationMs ?? (state.activeTimer.pausedAt
       ? now.getTime() - state.activeTimer.pausedAt.getTime()
-      : 0;
+      : 0);
     const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
 
     dispatch({ type: "RESUME_TIMER" });
@@ -684,6 +709,9 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
+        const activeElapsedSeconds = Math.floor(
+          (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
+        );
         await updateTimerData(selectedBaby.id, "feeding", user.id, {
           isPaused: false,
           totalPausedMs: newTotalPausedMs,
@@ -692,6 +720,8 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           leftAccumulatedSeconds: state.activeTimer.leftAccumulatedSeconds,
           rightAccumulatedSeconds: state.activeTimer.rightAccumulatedSeconds,
           currentSideStartedAt: now.toISOString(),
+          effectiveStartTime: new Date(now.getTime() - activeElapsedSeconds * 1000).toISOString(),
+          accumulatedSeconds: activeElapsedSeconds,
         });
       } catch (error) {
         console.error("[FeedingContext] Failed to update timer data:", error);

@@ -8,6 +8,11 @@ import { useTummyTime } from "@/contexts/tummyTime-context";
 import { setWatchMessageHandler } from "@/services/watch-service";
 import type { WatchReplyHandler } from "@/services/watch-service";
 import type { BreastSide, DiaperType, SleepType, BottleContentType } from "@/constants/activities";
+import {
+  readPendingWidgetStop,
+  clearPendingWidgetStop,
+  clearPendingWidgetPauseToggle,
+} from "@/services/widget-data-service";
 
 const REQUEST_DEDUP_TTL_MS = 30_000;
 
@@ -128,6 +133,14 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
               case "tummyTime":
                 await startTummyTime(startTime);
                 break;
+            }
+            const pendingStop = await readPendingWidgetStop();
+            if (pendingStop) {
+              const dbType = activityType === "tummyTime" ? "tummy_time" : activityType;
+              if (pendingStop.activityType === dbType || pendingStop.activityType === activityType) {
+                await clearPendingWidgetStop();
+                await clearPendingWidgetPauseToggle();
+              }
             }
             break;
           }

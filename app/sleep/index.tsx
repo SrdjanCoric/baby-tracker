@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useSleep, useAuth } from "@/contexts";
@@ -20,6 +20,7 @@ const PAUSED_AMBER = "#D4A017";
 export default function SleepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { action } = useLocalSearchParams<{ action?: string }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
   const isAuthenticated = !!session?.access_token;
@@ -134,6 +135,22 @@ export default function SleepScreen() {
   const handleKeepCurrentGoal = useCallback(async () => {
     await dismissMilestoneSuggestion(false);
   }, [dismissMilestoneSuggestion]);
+
+  useEffect(() => {
+    if (!action || !activeTimer?.isRunning) return;
+    if (action === "pause" && !activeTimer.isPaused) {
+      pauseSleep();
+    } else if (action === "resume" && activeTimer.isPaused) {
+      resumeSleep();
+    } else if (action === "stop") {
+      if (isStoppingRef.current) return;
+      isStoppingRef.current = true;
+      napAlert.resetAlert();
+      nightSleepAlert.resetAlert();
+      stopSleep().then(() => router.back()).finally(() => { isStoppingRef.current = false; });
+    }
+    router.setParams({ action: undefined });
+  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pauseSleep, resumeSleep, stopSleep, napAlert, nightSleepAlert, router]);
 
   if (!selectedBaby) {
     return <NoBabyScreen />;

@@ -180,7 +180,16 @@ async function loadExtensionStorage(): Promise<typeof ExtensionStorageModule> {
   return null;
 }
 
-export async function updateWidgetData(data: WidgetData): Promise<void> {
+export interface WatchAuthContext {
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+  accessToken: string;
+  userId: string;
+  liveActivityPushToken?: string;
+  pushToStartToken?: string;
+}
+
+export async function updateWidgetData(data: WidgetData, authContext?: WatchAuthContext): Promise<void> {
   const jsonData = JSON.stringify(data);
 
   await AsyncStorage.setItem(WIDGET_DATA_KEY, jsonData);
@@ -210,7 +219,7 @@ export async function updateWidgetData(data: WidgetData): Promise<void> {
         selectedBabyId: data.babyId,
         updatedAt: data.updatedAt,
       };
-      await syncToWatch(data, watchData);
+      await syncToWatch(data, watchData, authContext);
     } catch (error) {
       console.error("[WidgetDataService] Failed to sync to watch:", error);
     }
@@ -448,6 +457,36 @@ export async function readWidgetPushToken(): Promise<string | null> {
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to read widget push token:", error);
+  }
+  return null;
+}
+
+export async function readLiveActivityPushToken(): Promise<string | null> {
+  if (Platform.OS !== "ios") return null;
+
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      return await extensionStorage.get("liveActivityPushToken", APP_GROUP);
+    }
+  } catch (error) {
+    console.error("[WidgetDataService] Failed to read live activity push token:", error);
+  }
+  return null;
+}
+
+export async function readPushToStartToken(): Promise<string | null> {
+  if (Platform.OS !== "ios") return null;
+
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      const token = await extensionStorage.get("pushToStartToken", APP_GROUP);
+      console.log("[WidgetDataService] readPushToStartToken:", token ? `${token.substring(0, 12)}...` : "null");
+      return token;
+    }
+  } catch (error) {
+    console.error("[WidgetDataService] Failed to read push-to-start token:", error);
   }
   return null;
 }
