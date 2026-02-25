@@ -8,7 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, ThemeProvider, UnitProvider, TimeFormatProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, HouseholdProvider, SyncProvider, NotificationProvider, DashboardConfigProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
@@ -374,6 +374,7 @@ function AppContent() {
         <Stack.Screen name="pumping" options={modalOptions} />
         <Stack.Screen name="growth" options={modalOptions} />
         <Stack.Screen name="tummyTime" options={modalOptions} />
+        <Stack.Screen name="milestones" options={modalOptions} />
         <Stack.Screen name="settings" options={modalOptions} />
         <Stack.Screen name="edit" options={modalOptions} />
       </Stack>
@@ -419,6 +420,7 @@ export default function RootLayout() {
                           <PumpingProvider>
                             <GrowthProvider>
                               <TummyTimeProvider>
+                              <MilestonesProvider>
                                 <ActiveTimersProvider>
                                 <WidgetProvider>
                                 <NotificationProvider>
@@ -440,6 +442,7 @@ export default function RootLayout() {
                                 </NotificationProvider>
                                 </WidgetProvider>
                                 </ActiveTimersProvider>
+                              </MilestonesProvider>
                               </TummyTimeProvider>
                             </GrowthProvider>
                           </PumpingProvider>

@@ -425,7 +425,7 @@ export default function SignInScreen() {
                     paddingTop: 14,
                     paddingBottom: 14,
                   }}
-                  placeholder="Password"
+                  placeholder={t("auth.passwordPlaceholder")}
                   placeholderTextColor={isDark ? TEXT.dark.secondary : TEXT.light.muted}
                   value={password}
                   onChangeText={setPassword}

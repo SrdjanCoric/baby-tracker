@@ -5,7 +5,7 @@
 
 import { ACTIVITY } from "./colors";
 
-export type ActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime";
+export type ActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime" | "milestones";
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
 export type BreastSide = "left" | "right" | "both";
 export type DiaperType = "wet" | "dirty" | "mixed" | "dry";
@@ -91,6 +91,13 @@ export const ACTIVITY_CONFIG: Record<ActivityType, ActivityColorConfig> = {
     mutedBg: ACTIVITY.tummyTime.muted,
     mutedBgDark: ACTIVITY.tummyTime.mutedDark,
   },
+  milestones: {
+    icon: "⭐",
+    accentColor: ACTIVITY.milestones.accent,
+    accentColorDark: ACTIVITY.milestones.accentDark,
+    mutedBg: ACTIVITY.milestones.muted,
+    mutedBgDark: ACTIVITY.milestones.mutedDark,
+  },
 };
 
 /**
@@ -132,7 +139,7 @@ export function getOppositeSide(side: BreastSide): BreastSide {
  * Validates that a string is a valid ActivityType
  */
 export function isValidActivityType(value: string): value is ActivityType {
-  return ["feeding", "sleep", "diaper", "pumping", "growth", "tummyTime"].includes(value);
+  return ["feeding", "sleep", "diaper", "pumping", "growth", "tummyTime", "milestones"].includes(value);
 }
 
 /**
