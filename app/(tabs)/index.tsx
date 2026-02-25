@@ -21,6 +21,7 @@ import { countFeedingSessions } from "@/utils/feeding-sessions";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { ActivityType } from "@/constants/activities";
 import { DashboardCardConfig } from "@/services/dashboard-config-storage";
+import { isUnderTwoMonths } from "@/utils/sleepGoals";
 
 interface CardProps {
   label: string;
@@ -263,22 +264,21 @@ export default function HomeScreen() {
     const windowMs = currentSlot.durationMinutes * 60000;
     const remainingMs = windowMs - awakeMs;
     const remainingMinutes = Math.floor(remainingMs / 60000);
+    const isBedtime = currentSlot.label === "bedtime" && !isUnderTwoMonths(selectedBaby?.birthDate);
 
     if (remainingMinutes <= 0) {
-      const isBedtime = currentSlot.label === "bedtime";
-      return `${awakeText} \u00B7 ${isBedtime ? t("dashboard.bedtimeNow") : t("dashboard.napTimeNow")}`;
+      return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeNow") : t("dashboard.napTimeNow")}`;
     }
 
-    const isBedtime = currentSlot.label === "bedtime";
     if (remainingMinutes >= 60) {
       const h = Math.floor(remainingMinutes / 60);
       const m = remainingMinutes % 60;
       const timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
-      return `${awakeText} \u00B7 ${isBedtime ? t("dashboard.bedtimeIn", { time: timeStr }) : t("dashboard.napIn", { time: timeStr })}`;
+      return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: timeStr }) : t("dashboard.napIn", { time: timeStr })}`;
     }
 
-    return `${awakeText} \u00B7 ${isBedtime ? t("dashboard.bedtimeIn", { time: `${remainingMinutes}m` }) : t("dashboard.napIn", { time: `${remainingMinutes}m` })}`;
-  }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender, wakeWindowConfig, getCurrentNapSlot, sleeps]);
+    return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: `${remainingMinutes}m` }) : t("dashboard.napIn", { time: `${remainingMinutes}m` })}`;
+  }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender, selectedBaby?.birthDate, wakeWindowConfig, getCurrentNapSlot, sleeps]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 

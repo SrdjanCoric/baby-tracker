@@ -27,6 +27,7 @@ import {
   checkSleepMilestoneCrossing,
   getDefaultWakeWindowConfig,
   generateSlotsForNapCount,
+  isUnderTwoMonths,
 } from "@/utils/sleepGoals";
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 import { isNightTime, countNapsWithContinuation } from "@/utils/day-night-boundary";
@@ -52,6 +53,7 @@ export interface SleepState {
   wakeWindowConfig: WakeWindowConfig | null;
   showMilestoneSuggestion: boolean;
   suggestedGoalMinutes: number | null;
+  newbornNapOptIn: boolean;
 }
 
 export type SleepAction =
@@ -73,6 +75,7 @@ export type SleepAction =
   | { type: "PAUSE_TIMER" }
   | { type: "RESUME_TIMER" }
   | { type: "RESTORE_TIMER"; payload: ActiveSleepTimer }
+  | { type: "SET_NEWBORN_NAP_OPT_IN"; payload: boolean }
   | { type: "REMOTE_INSERT"; payload: StoredSleepEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredSleepEntry }
   | { type: "REMOTE_DELETE"; payload: string };
@@ -91,6 +94,7 @@ export const initialSleepState: SleepState = {
   wakeWindowConfig: null,
   showMilestoneSuggestion: false,
   suggestedGoalMinutes: null,
+  newbornNapOptIn: false,
 };
 
 export function sleepReducer(state: SleepState, action: SleepAction): SleepState {
@@ -191,6 +195,9 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
         activeTimer: action.payload,
       };
 
+    case "SET_NEWBORN_NAP_OPT_IN":
+      return { ...state, newbornNapOptIn: action.payload };
+
     case "REMOTE_INSERT": {
       const exists = state.sleeps.some(s => s.id === action.payload.id);
       if (exists) return state;
@@ -246,6 +253,7 @@ interface SleepContextValue extends SleepState {
   isCurrentlyNightTime: () => boolean;
   setDayNightBoundary: (dayStartHour: number, dayEndHour: number) => Promise<void>;
   setNapContinuationMinutes: (minutes: number) => Promise<void>;
+  setNewbornNapOptIn: (optIn: boolean) => Promise<void>;
 }
 
 const SleepContext = createContext<SleepContextValue | null>(null);
@@ -416,6 +424,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: defaultConfig });
         await SleepStorageService.setWakeWindowConfig(selectedBaby.id, defaultConfig);
       }
+
+      const newbornOptIn = await SleepStorageService.getNewbornNapOptIn(selectedBaby.id);
+      dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: newbornOptIn });
 
       if (birthDate && !hasCustomGoal) {
         const lastCheckDate = await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
@@ -905,6 +916,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
   const getCurrentNapSlot = useCallback((): NapSlotWindow | null => {
     if (!state.wakeWindowConfig) return null;
+
+    if (isUnderTwoMonths(selectedBaby?.birthDate) && !state.newbornNapOptIn) return null;
+
     const { slots } = state.wakeWindowConfig;
     if (slots.length === 0) return null;
 
@@ -915,7 +929,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const napsDone = getCompletedNapsSinceNightSleep();
     const slotIndex = Math.min(napsDone, slots.length - 1);
     return slots[slotIndex];
-  }, [state.wakeWindowConfig, getCompletedNapsSinceNightSleep]);
+  }, [state.wakeWindowConfig, getCompletedNapsSinceNightSleep, selectedBaby?.birthDate, state.newbornNapOptIn]);
 
   const setWakeWindowConfigMethod = useCallback(async (config: WakeWindowConfig): Promise<void> => {
     if (!selectedBaby) return;
@@ -970,6 +984,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
   }, [selectedBaby, state.wakeWindowConfig]);
 
+  const setNewbornNapOptInMethod = useCallback(async (optIn: boolean): Promise<void> => {
+    if (!selectedBaby) return;
+    dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: optIn });
+    await SleepStorageService.setNewbornNapOptIn(selectedBaby.id, optIn);
+  }, [selectedBaby]);
+
   const setNapCount = useCallback(async (count: number): Promise<void> => {
     if (!selectedBaby) return;
     const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
@@ -1014,6 +1034,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     isCurrentlyNightTime,
     setDayNightBoundary,
     setNapContinuationMinutes,
+    setNewbornNapOptIn: setNewbornNapOptInMethod,
   };
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
