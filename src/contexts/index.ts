@@ -50,3 +50,5 @@ export type { LanguageCode } from "./language-context";
 export { ActiveTimersProvider, useActiveTimers } from "./active-timers-context";
 
 export { WidgetProvider, useWidget } from "./widget-context";
+
+export { MilestonesProvider, useMilestones } from "./milestones-context";

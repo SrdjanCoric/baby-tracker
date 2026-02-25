@@ -20,13 +20,14 @@ export default function DashboardSettingsScreen() {
     [config.cards]
   );
 
-  const activityLabels = useMemo(() => ({
+  const activityLabels: Record<string, string> = useMemo(() => ({
     feeding: t("feeding.title"),
     sleep: t("sleep.title"),
     diaper: t("diaper.title"),
     pumping: t("pumping.title"),
     tummyTime: t("tummyTime.title"),
     growth: t("growth.title"),
+    milestones: t("milestones.title"),
   }), [t]);
 
   const handleToggleVisibility = useCallback(

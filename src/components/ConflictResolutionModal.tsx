@@ -36,20 +36,21 @@ interface ConflictItemProps {
   timeFormat: TimeFormat;
 }
 
-const tableLabels: Record<SyncableTable, string> = {
-  feedings: 'Feeding',
-  sleep_sessions: 'Sleep',
-  diapers: 'Diaper',
-  pumping_sessions: 'Pumping',
-  growth_measurements: 'Growth',
-  tummy_time_sessions: 'Tummy Time',
-  babies: 'Baby',
-  users: 'User',
-  households: 'Household',
-  active_timers: 'Active Timer',
-  wake_window_preferences: 'Wake Window',
-  activity_goals: 'Activity Goal',
-};
+const tableLabelKeys = {
+  feedings: 'sync.tableLabels.feeding',
+  sleep_sessions: 'sync.tableLabels.sleep',
+  diapers: 'sync.tableLabels.diaper',
+  pumping_sessions: 'sync.tableLabels.pumping',
+  growth_measurements: 'sync.tableLabels.growth',
+  tummy_time_sessions: 'sync.tableLabels.tummyTime',
+  babies: 'sync.tableLabels.baby',
+  users: 'sync.tableLabels.user',
+  households: 'sync.tableLabels.household',
+  active_timers: 'sync.tableLabels.activeTimer',
+  wake_window_preferences: 'sync.tableLabels.wakeWindow',
+  activity_goals: 'sync.tableLabels.activityGoal',
+  milestone_responses: 'sync.tableLabels.milestone',
+} as const satisfies Record<SyncableTable, string>;
 
 function formatTimestamp(timestamp: string, timeFormat: TimeFormat): string {
   const date = new Date(timestamp);
@@ -69,14 +70,14 @@ function getEntryPreview(entry: SyncableEntry): string {
   if (data.duration_minutes) preview.push(`${data.duration_minutes}min`);
   if (data.notes) preview.push(String(data.notes).slice(0, 30));
 
-  return preview.join(' - ') || 'Entry details';
+  return preview.join(' - ') || '';
 }
 
 function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
-  const tableLabel = tableLabels[conflict.table] || conflict.table;
+  const tableLabel = t(tableLabelKeys[conflict.table]) || conflict.table;
   const localTime = formatTimestamp(conflict.local.updatedAt, timeFormat);
   const remoteTime = formatTimestamp(conflict.remote.updatedAt, timeFormat);
 
@@ -84,17 +85,17 @@ function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemPr
     <View
       className="bg-white rounded-xl mb-3 overflow-hidden border border-gray-200"
       accessible={true}
-      accessibilityLabel={`Conflict ${index + 1}: ${tableLabel} entry`}
+      accessibilityLabel={t('sync.conflictAccessibility', { index: index + 1, type: tableLabel })}
     >
       <Pressable
         onPress={() => setExpanded(!expanded)}
         className="p-4 flex-row justify-between items-center"
         accessibilityRole="button"
-        accessibilityLabel={expanded ? 'Collapse details' : 'Expand details'}
+        accessibilityLabel={expanded ? t('sync.collapseDetails') : t('sync.expandDetails')}
       >
         <View className="flex-1">
           <Text className="text-base font-semibold text-gray-900">
-            {tableLabel} Conflict
+            {t('sync.conflictLabel', { type: tableLabel })}
           </Text>
           <Text className="text-sm text-gray-500 mt-1">
             {conflict.type.replace('_', ' ').toLowerCase()}
@@ -108,19 +109,19 @@ function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemPr
           <View className="flex-row">
             <View className="flex-1 p-3 border-r border-gray-100">
               <Text className="text-xs font-semibold text-green-700 uppercase mb-2">
-                {t('sync.yourVersion', 'Your Version')}
+                {t('sync.yourVersion')}
               </Text>
               <Text className="text-sm text-gray-700">
-                {getEntryPreview(conflict.local)}
+                {getEntryPreview(conflict.local) || t('sync.entryDetails')}
               </Text>
               <Text className="text-xs text-gray-400 mt-2">{localTime}</Text>
             </View>
             <View className="flex-1 p-3">
               <Text className="text-xs font-semibold text-amber-700 uppercase mb-2">
-                {t('sync.theirVersion', 'Their Version')}
+                {t('sync.theirVersion')}
               </Text>
               <Text className="text-sm text-gray-700">
-                {getEntryPreview(conflict.remote)}
+                {getEntryPreview(conflict.remote) || t('sync.entryDetails')}
               </Text>
               <Text className="text-xs text-gray-400 mt-2">{remoteTime}</Text>
             </View>
@@ -131,20 +132,20 @@ function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemPr
               onPress={() => onResolve('KEEP_LOCAL')}
               className="flex-1 bg-green-600 py-2.5 rounded-lg"
               accessibilityRole="button"
-              accessibilityLabel="Keep my version"
+              accessibilityLabel={t('sync.keepMyVersion')}
             >
               <Text className="text-white text-center font-medium text-sm">
-                {t('sync.keepMine', 'Keep Mine')}
+                {t('sync.keepMine')}
               </Text>
             </Pressable>
             <Pressable
               onPress={() => onResolve('KEEP_REMOTE')}
               className="flex-1 bg-amber-600 py-2.5 rounded-lg"
               accessibilityRole="button"
-              accessibilityLabel="Keep their version"
+              accessibilityLabel={t('sync.keepTheirVersion')}
             >
               <Text className="text-white text-center font-medium text-sm">
-                {t('sync.keepTheirs', 'Keep Theirs')}
+                {t('sync.keepTheirs')}
               </Text>
             </Pressable>
             <Pressable
@@ -155,10 +156,10 @@ function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemPr
               )}
               className="flex-1 bg-gray-600 py-2.5 rounded-lg"
               accessibilityRole="button"
-              accessibilityLabel="Keep the newer version"
+              accessibilityLabel={t('sync.keepNewerVersion')}
             >
               <Text className="text-white text-center font-medium text-sm">
-                {t('sync.keepNewer', 'Keep Newer')}
+                {t('sync.keepNewer')}
               </Text>
             </Pressable>
           </View>
@@ -211,24 +212,21 @@ export function ConflictResolutionModal({
             onPress={onClose}
             className="p-2"
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={t('common.close')}
           >
             <Text className="text-green-700 text-base">
-              {t('common.cancel', 'Cancel')}
+              {t('common.cancel')}
             </Text>
           </Pressable>
           <Text className="text-lg font-semibold text-gray-900">
-            {t('sync.resolveConflicts', 'Resolve Conflicts')}
+            {t('sync.resolveConflicts')}
           </Text>
           <View className="w-16" />
         </View>
 
         <View className="px-4 py-3 bg-yellow-50 border-b border-yellow-200">
           <Text className="text-sm text-yellow-800">
-            {t(
-              'sync.conflictsExplanation',
-              'These entries were modified on multiple devices while offline. Choose which version to keep for each.'
-            )}
+            {t('sync.conflictsExplanation')}
           </Text>
         </View>
 
@@ -238,20 +236,20 @@ export function ConflictResolutionModal({
               onPress={handleResolveAllKeepMine}
               className="flex-1 bg-green-100 py-2.5 rounded-lg"
               accessibilityRole="button"
-              accessibilityLabel="Keep all my versions"
+              accessibilityLabel={t('sync.keepAllMyVersions')}
             >
               <Text className="text-green-700 text-center font-medium text-sm">
-                {t('sync.keepAllMine', 'Keep All Mine')}
+                {t('sync.keepAllMine')}
               </Text>
             </Pressable>
             <Pressable
               onPress={handleResolveAllKeepNewer}
               className="flex-1 bg-gray-100 py-2.5 rounded-lg"
               accessibilityRole="button"
-              accessibilityLabel="Keep all newer versions"
+              accessibilityLabel={t('sync.keepAllNewerVersions')}
             >
               <Text className="text-gray-700 text-center font-medium text-sm">
-                {t('sync.keepAllNewer', 'Keep All Newer')}
+                {t('sync.keepAllNewer')}
               </Text>
             </Pressable>
           </View>
@@ -259,7 +257,7 @@ export function ConflictResolutionModal({
 
         <ScrollView className="flex-1 px-4 py-4">
           <Text className="text-sm text-gray-500 mb-3">
-            {t('sync.conflictCount', '{{count}} conflict(s) to resolve', {
+            {t('sync.conflictCount', {
               count: conflicts.length,
             })}
           </Text>
