@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import type { WidgetData, WatchData } from "./widget-data-service";
+import type { WidgetData, WatchData, WatchAuthContext } from "./widget-data-service";
 
 type WatchPayload = Record<string, unknown>;
 
@@ -41,7 +41,7 @@ async function getWatchConnectivityModule(): Promise<WatchConnectivityModule | n
   return null;
 }
 
-export async function syncToWatch(data: WidgetData, watchData?: WatchData): Promise<void> {
+export async function syncToWatch(data: WidgetData, watchData?: WatchData, authContext?: WatchAuthContext): Promise<void> {
   const module = await getWatchConnectivityModule();
   if (!module) {
     return;
@@ -54,6 +54,19 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData): Prom
 
     if (watchData) {
       context.watchData = JSON.stringify(watchData);
+    }
+
+    if (authContext) {
+      context.supabaseUrl = authContext.supabaseUrl;
+      context.supabaseAnonKey = authContext.supabaseAnonKey;
+      context.accessToken = authContext.accessToken;
+      context.userId = authContext.userId;
+      if (authContext.liveActivityPushToken) {
+        context.liveActivityPushToken = authContext.liveActivityPushToken;
+      }
+      if (authContext.pushToStartToken) {
+        context.pushToStartToken = authContext.pushToStartToken;
+      }
     }
 
     module.updateApplicationContext(context);

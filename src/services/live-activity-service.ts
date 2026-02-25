@@ -33,6 +33,7 @@ interface LiveActivityControllerModule {
   isActivityRunning(activityId: string): Promise<boolean>;
   pauseTimerActivity(activityId: string, activeElapsedSeconds: number): Promise<boolean>;
   resumeTimerActivity(activityId: string, activeElapsedSeconds: number): Promise<boolean>;
+  registerPushToStart(): Promise<boolean | null>;
 }
 
 function getLiveActivityModule(): LiveActivityControllerModule | null {
@@ -217,4 +218,18 @@ export async function startTimerLiveActivityWithTimeout(
     LIVE_ACTIVITY_START_TIMEOUT_MS,
     null
   );
+}
+
+export async function registerPushToStart(): Promise<boolean> {
+  const module = getLiveActivityModule();
+  if (!module) return false;
+
+  try {
+    const result = await module.registerPushToStart();
+    console.log("[LiveActivity] registerPushToStart result:", result);
+    return result === true;
+  } catch (error) {
+    console.error("[LiveActivity] Failed to register push-to-start:", error);
+    return false;
+  }
 }
