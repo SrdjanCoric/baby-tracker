@@ -225,6 +225,16 @@ serve(async (req) => {
 
     const mergedTimerData = { ...(existingTimer.timer_data || {}), ...payload.timerData };
 
+    if (payload.action === "resume") {
+      if (payload.effectiveStartTimeISO) {
+        mergedTimerData.effectiveStartTime = payload.effectiveStartTimeISO;
+      }
+      delete mergedTimerData.pausedAt;
+    }
+    if (payload.action === "pause") {
+      delete mergedTimerData.effectiveStartTime;
+    }
+
     const { error: updateError } = await supabase
       .from("active_timers")
       .update({ timer_data: mergedTimerData })
@@ -299,8 +309,11 @@ serve(async (req) => {
       console.log(`Removed ${tokensToRemove.length} invalid widget push tokens`);
     }
 
+    console.log(`toggle-timer-pause: widget pushes sent=${widgetPushCount} tokensRemoved=${tokensToRemove.length}`);
+
     let liveActivityUpdated = false;
     if (payload.liveActivityPushToken) {
+      console.log(`Live Activity content-state: isPaused=${payload.action === "pause"} elapsed=${payload.elapsedSeconds ?? 0} effectiveStart=${payload.effectiveStartTimeISO ?? "null"}`);
       const laTopic = "com.sofibaby.app.push-type.liveactivity";
       const result = await sendLiveActivityUpdate(
         payload.liveActivityPushToken,
@@ -315,7 +328,11 @@ serve(async (req) => {
       liveActivityUpdated = result.success;
       if (!result.success) {
         console.error(`Live activity update failed: status=${result.status}`);
+      } else {
+        console.log(`toggle-timer-pause: Live Activity APNs push succeeded`);
       }
+    } else {
+      console.log(`toggle-timer-pause: NO liveActivityPushToken — Live Activity update SKIPPED`);
     }
 
     console.log(

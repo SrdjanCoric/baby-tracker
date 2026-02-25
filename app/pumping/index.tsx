@@ -26,7 +26,7 @@ type VolumeUnit = "ml" | "oz";
 export default function PumpingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { showVolumeInput: showVolumeInputParam } = useLocalSearchParams<{ showVolumeInput?: string }>();
+  const { showVolumeInput: showVolumeInputParam, action } = useLocalSearchParams<{ showVolumeInput?: string; action?: string }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
   const isAuthenticated = !!session?.access_token;
@@ -125,6 +125,18 @@ export default function PumpingScreen() {
   const handleResume = useCallback(async () => {
     await resumePumping();
   }, [resumePumping]);
+
+  useEffect(() => {
+    if (!action || !activeTimer?.isRunning) return;
+    if (action === "pause" && !activeTimer.isPaused) {
+      pausePumping();
+    } else if (action === "resume" && activeTimer.isPaused) {
+      resumePumping();
+    } else if (action === "stop") {
+      setShowVolumeInput(true);
+    }
+    router.setParams({ action: undefined });
+  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pausePumping, resumePumping, router]);
 
   const handleLogPastPumping = useCallback(() => {
     router.push("/pumping/manual");

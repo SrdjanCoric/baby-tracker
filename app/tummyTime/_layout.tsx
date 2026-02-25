@@ -1,12 +1,16 @@
 import { Stack } from "expo-router";
+import { useTheme } from "@/contexts";
+import { SURFACE } from "@/constants/colors";
 
 export default function TummyTimeLayout() {
+  const { isDark } = useTheme();
+  const bgColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
+
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        presentation: "modal",
-        animation: "slide_from_bottom",
+        contentStyle: { backgroundColor: bgColor },
       }}
     >
       <Stack.Screen name="index" />

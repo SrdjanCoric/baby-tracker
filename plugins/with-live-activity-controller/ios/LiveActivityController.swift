@@ -28,6 +28,24 @@ class LiveActivityController: NSObject {
             return
         }
 
+        // Check for existing activity of the same type (may have been started via push-to-start)
+        let existingActivity = Activity<TimerActivityAttributes>.activities.first {
+            $0.attributes.activityType == activityType
+        }
+        if let existing = existingActivity {
+            print("[LiveActivityController] Reusing existing activity (push-to-start): \(existing.id) type=\(activityType)")
+            Task {
+                for await tokenData in existing.pushTokenUpdates {
+                    let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
+                    if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
+                        userDefaults.set(tokenString, forKey: "liveActivityPushToken")
+                    }
+                }
+            }
+            resolve(existing.id)
+            return
+        }
+
         var activityStartTime = Date()
         if let iso = startTimeISO {
             let formatter = ISO8601DateFormatter()
@@ -291,5 +309,62 @@ class LiveActivityController: NSObject {
             print("[LiveActivityController] Activity \(activityId) running: \(isRunning)")
             resolve(isRunning)
         }
+    }
+
+    @objc func registerPushToStart(
+        _ resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        guard #available(iOS 17.2, *) else {
+            resolve(nil)
+            return
+        }
+
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            resolve(nil)
+            return
+        }
+
+        Task {
+            for await tokenData in Activity<TimerActivityAttributes>.pushToStartTokenUpdates {
+                let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
+                if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
+                    userDefaults.set(tokenString, forKey: "pushToStartToken")
+                }
+                print("[LiveActivityController] Push-to-start token: \(tokenString.prefix(12))...")
+            }
+        }
+
+        Task {
+            for activity in Activity<TimerActivityAttributes>.activities {
+                print("[LiveActivityController] Monitoring existing activity: \(activity.id) type=\(activity.attributes.activityType)")
+                Task {
+                    for await tokenData in activity.pushTokenUpdates {
+                        let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
+                        print("[LiveActivityController] Push token for existing activity \(activity.id): \(tokenString.prefix(12))...")
+                        if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
+                            userDefaults.set(tokenString, forKey: "liveActivityPushToken")
+                        }
+                    }
+                }
+            }
+        }
+
+        Task {
+            for await activity in Activity<TimerActivityAttributes>.activityUpdates {
+                print("[LiveActivityController] New activity detected via activityUpdates: \(activity.id) type=\(activity.attributes.activityType)")
+                Task {
+                    for await tokenData in activity.pushTokenUpdates {
+                        let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
+                        print("[LiveActivityController] Push token for new activity \(activity.id): \(tokenString.prefix(12))...")
+                        if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
+                            userDefaults.set(tokenString, forKey: "liveActivityPushToken")
+                        }
+                    }
+                }
+            }
+        }
+
+        resolve(true)
     }
 }
