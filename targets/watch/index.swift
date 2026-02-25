@@ -162,6 +162,17 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
+    // Supabase auth credentials (received via applicationContext, persisted to UserDefaults)
+    private var supabaseUrl: String?
+    private var supabaseAnonKey: String?
+    private var supabaseAccessToken: String?
+    private var supabaseUserId: String?
+
+    private var liveActivityPushToken: String?
+    private var pushToStartToken: String?
+
+    private var networkPollTimer: Timer?
+
     // Local optimistic timers (shown before phone confirms)
     @Published var localActiveTimers: [WatchActiveTimer] = []
 
@@ -186,8 +197,15 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     override init() {
         super.init()
         print("[WatchConnector] init: starting")
-        selectedBabyId = UserDefaults(suiteName: "group.com.sofibaby.app")?.string(forKey: "watchSelectedBabyId")
-        print("[WatchConnector] init: selectedBabyId = \(selectedBabyId ?? "nil")")
+        let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+        selectedBabyId = defaults?.string(forKey: "watchSelectedBabyId")
+        supabaseUrl = defaults?.string(forKey: "watchSupabaseUrl")
+        supabaseAnonKey = defaults?.string(forKey: "watchSupabaseAnonKey")
+        supabaseAccessToken = defaults?.string(forKey: "watchSupabaseAccessToken")
+        supabaseUserId = defaults?.string(forKey: "watchSupabaseUserId")
+        liveActivityPushToken = defaults?.string(forKey: "watchLiveActivityPushToken")
+        pushToStartToken = defaults?.string(forKey: "watchPushToStartToken")
+        print("[WatchConnector] init: selectedBabyId = \(selectedBabyId ?? "nil"), hasAuth = \(supabaseAccessToken != nil), hasLAPushToken = \(liveActivityPushToken != nil)")
         if WCSession.isSupported() {
             print("[WatchConnector] init: WCSession is supported, activating...")
             session = WCSession.default
@@ -392,6 +410,37 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func parseApplicationContext(_ context: [String: Any]) {
+        // Extract and persist auth credentials
+        if let url = context["supabaseUrl"] as? String,
+           let anonKey = context["supabaseAnonKey"] as? String,
+           let token = context["accessToken"] as? String,
+           let userId = context["userId"] as? String {
+            self.supabaseUrl = url
+            self.supabaseAnonKey = anonKey
+            self.supabaseAccessToken = token
+            self.supabaseUserId = userId
+            let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+            defaults?.set(url, forKey: "watchSupabaseUrl")
+            defaults?.set(anonKey, forKey: "watchSupabaseAnonKey")
+            defaults?.set(token, forKey: "watchSupabaseAccessToken")
+            defaults?.set(userId, forKey: "watchSupabaseUserId")
+            print("[WatchConnector] parseApplicationContext: stored auth credentials")
+        }
+
+        if let pushToken = context["liveActivityPushToken"] as? String, !pushToken.isEmpty {
+            self.liveActivityPushToken = pushToken
+            let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+            defaults?.set(pushToken, forKey: "watchLiveActivityPushToken")
+            print("[WatchConnector] parseApplicationContext: stored LA push token")
+        }
+
+        if let ptsToken = context["pushToStartToken"] as? String, !ptsToken.isEmpty {
+            self.pushToStartToken = ptsToken
+            let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+            defaults?.set(ptsToken, forKey: "watchPushToStartToken")
+            print("[WatchConnector] parseApplicationContext: stored push-to-start token")
+        }
+
         if let dataString = context["watchData"] as? String,
            let data = dataString.data(using: .utf8),
            let decoded = try? JSONDecoder().decode(MultiBabyWatchData.self, from: data) {
@@ -441,13 +490,16 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             self.isReachable = session.isReachable
             if session.isReachable {
-                // Request immediately
                 self.requestFreshData()
-                // Request again after delay to catch any queued actions that were just processed
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     self.requestFreshData()
                 }
+            } else {
+                self.refreshFromNetwork()
             }
+            // Always poll when timers are active — phone may be "reachable"
+            // but app backgrounded and not processing widget pause/resume
+            self.startNetworkPolling()
         }
     }
 
@@ -456,6 +508,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         parseApplicationContext(applicationContext)
         DispatchQueue.main.async {
             WidgetCenter.shared.reloadAllTimelines()
+            // Restart polling based on current timer state
+            self.startNetworkPolling()
         }
     }
 
@@ -532,6 +586,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         print("[WatchConnector] startTimer: sending action with requestedStartTime: \(startTimeString)")
         sendAction(message)
 
+        if !(session?.isReachable ?? false) {
+            supabaseStartTimer(activityType: activityType, startTime: startTimeString, context: context)
+        }
+
+        startLiveActivityViaEdgeFunction(activityType: activityType, startTimeUnix: Int(startTime.timeIntervalSince1970), context: context)
+
         // Add local optimistic timer
         let localTimer = WatchActiveTimer(
             type: activityType,
@@ -539,12 +599,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             context: context
         )
         DispatchQueue.main.async {
-            // Remove any existing timer of same type and clear stopped state
             self.localActiveTimers.removeAll { $0.type == activityType }
             self.locallyStoppedTimerTypes.remove(activityType)
             self.localActiveTimers.append(localTimer)
             print("[WatchConnector] startTimer: added local optimistic timer")
             self.syncOptimisticStateToCache()
+            self.startNetworkPolling()
         }
 
         WKInterfaceDevice.current().play(.start)
@@ -571,6 +631,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         }
         print("[WatchConnector] stopTimer: sending action with requestedEndTime: \(endTimeString)")
         sendAction(message)
+
+        if !(session?.isReachable ?? false) {
+            supabaseStopTimer(activityType: activityType)
+        }
 
         // Remove local optimistic timer and mark as locally stopped
         DispatchQueue.main.async {
@@ -601,6 +665,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             message["babyId"] = babyId
         }
         sendAction(message)
+
+        if !(session?.isReachable ?? false) {
+            supabaseStopTimer(activityType: "pumping")
+        }
 
         // Remove local optimistic timer and mark as locally stopped
         DispatchQueue.main.async {
@@ -658,6 +726,17 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         WKInterfaceDevice.current().play(.success)
     }
 
+    private func findServerTimer(activityType: String) -> WatchActiveTimer? {
+        if let baby = currentBaby {
+            return baby.activeTimers.first { $0.type == activityType }
+        }
+        if let data = widgetData {
+            let timers = data.activeTimers ?? (data.activeTimer.map { [$0] } ?? [])
+            return timers.first { $0.type == activityType }
+        }
+        return nil
+    }
+
     func pauseTimer(activityType: String) {
         guard canPerformAction() else { return }
 
@@ -671,10 +750,29 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         sendAction(message)
 
         DispatchQueue.main.async {
+            var accumulated: Int?
+            var timerContext: String?
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
+                timerContext = self.localActiveTimers[index].context
                 self.localActiveTimers[index].isPaused = true
+                if let startTime = ISO8601DateFormatter().date(from: self.localActiveTimers[index].startTime) {
+                    let secs = Int(Date().timeIntervalSince(startTime))
+                    self.localActiveTimers[index].accumulatedSeconds = secs
+                    accumulated = secs
+                }
+            } else if var serverTimer = self.findServerTimer(activityType: activityType) {
+                timerContext = serverTimer.context
+                serverTimer.isPaused = true
+                if let startTime = ISO8601DateFormatter().date(from: serverTimer.startTime) {
+                    let secs = Int(Date().timeIntervalSince(startTime))
+                    serverTimer.accumulatedSeconds = secs
+                    accumulated = secs
+                }
+                self.localActiveTimers.append(serverTimer)
             }
             self.syncOptimisticStateToCache()
+
+            self.supabaseTogglePause(activityType: activityType, action: "pause", accumulatedSeconds: accumulated, timerContext: timerContext)
         }
 
         WKInterfaceDevice.current().play(.click)
@@ -693,10 +791,31 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         sendAction(message)
 
         DispatchQueue.main.async {
+            var accumulated: Int?
+            var timerContext: String?
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
+                accumulated = self.localActiveTimers[index].accumulatedSeconds
+                timerContext = self.localActiveTimers[index].context
+                if let acc = accumulated {
+                    let newStart = Date().addingTimeInterval(-Double(acc))
+                    self.localActiveTimers[index].startTime = ISO8601DateFormatter().string(from: newStart)
+                }
                 self.localActiveTimers[index].isPaused = false
+                self.localActiveTimers[index].accumulatedSeconds = nil
+            } else if var serverTimer = self.findServerTimer(activityType: activityType) {
+                accumulated = serverTimer.accumulatedSeconds
+                timerContext = serverTimer.context
+                if let acc = accumulated {
+                    let newStart = Date().addingTimeInterval(-Double(acc))
+                    serverTimer.startTime = ISO8601DateFormatter().string(from: newStart)
+                }
+                serverTimer.isPaused = false
+                serverTimer.accumulatedSeconds = nil
+                self.localActiveTimers.append(serverTimer)
             }
             self.syncOptimisticStateToCache()
+
+            self.supabaseTogglePause(activityType: activityType, action: "resume", accumulatedSeconds: accumulated, timerContext: timerContext)
         }
 
         WKInterfaceDevice.current().play(.click)
@@ -766,6 +885,412 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                     self.cacheData(dataString)
                     WidgetCenter.shared.reloadAllTimelines()
                 }
+            }
+        }
+    }
+
+    // MARK: - Network Polling
+
+    private func startNetworkPolling() {
+        stopNetworkPolling()
+        let hasActiveTimers = !combinedActiveTimers.isEmpty
+        guard hasActiveTimers else {
+            print("[WatchConnector] startNetworkPolling: no active timers, skipping")
+            return
+        }
+        print("[WatchConnector] startNetworkPolling: starting 30s poll")
+        networkPollTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            self?.refreshFromNetwork()
+        }
+    }
+
+    private func stopNetworkPolling() {
+        networkPollTimer?.invalidate()
+        networkPollTimer = nil
+    }
+
+    // MARK: - Supabase Network Access
+
+    private var hasAuthCredentials: Bool {
+        supabaseUrl != nil && supabaseAnonKey != nil && supabaseAccessToken != nil && supabaseUserId != nil
+    }
+
+    func refreshFromNetwork() {
+        guard hasAuthCredentials else {
+            print("[WatchConnector] refreshFromNetwork: no auth credentials")
+            return
+        }
+        Task {
+            guard let remoteTimers = await fetchActiveTimersFromNetwork() else {
+                print("[WatchConnector] refreshFromNetwork: fetch failed")
+                return
+            }
+            await MainActor.run {
+                reconcileWithNetworkTimers(remoteTimers)
+            }
+        }
+    }
+
+    private func reconcileWithNetworkTimers(_ remoteTimers: [WatchActiveTimer]) {
+        print("[WatchConnector] reconcileWithNetworkTimers: remote has \(remoteTimers.count) timers")
+
+        let localTypes = Set(localActiveTimers.map { $0.type })
+        let remoteTypes = Set(remoteTimers.map { $0.type })
+
+        // Timers stopped externally (widget/other device) — remove from local state
+        for type in locallyStoppedTimerTypes {
+            if !remoteTypes.contains(type) {
+                print("[WatchConnector] reconcileWithNetworkTimers: confirmed stop for \(type)")
+            }
+        }
+
+        // Local timers that no longer exist on server — they were stopped externally
+        for localTimer in localActiveTimers {
+            if !remoteTypes.contains(localTimer.type) {
+                print("[WatchConnector] reconcileWithNetworkTimers: timer \(localTimer.type) stopped externally")
+                localStoppedActivityTimes[localTimer.type] = Date()
+            }
+        }
+
+        // Clear all local optimistic state and use network as source of truth
+        localActiveTimers.removeAll()
+        locallyStoppedTimerTypes.removeAll()
+
+        // Server timers that watch doesn't know about — adopt them
+        if let baby = currentBaby {
+            var updatedBaby = baby
+            updatedBaby.activeTimers = remoteTimers
+            if var multi = multiBabyData,
+               let index = multi.babies.firstIndex(where: { $0.id == baby.id }) {
+                multi.babies[index] = updatedBaby
+                multiBabyData = multi
+            }
+        } else if var widget = widgetData {
+            widget.activeTimers = remoteTimers
+            widget.activeTimer = remoteTimers.first
+            widgetData = widget
+        }
+
+        syncOptimisticStateToCache()
+
+        // Stop polling if no active timers remain
+        if combinedActiveTimers.isEmpty {
+            stopNetworkPolling()
+        }
+    }
+
+    private func fetchActiveTimersFromNetwork() async -> [WatchActiveTimer]? {
+        guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken,
+              let babyId = currentBabyId, let supabaseUserId else {
+            return nil
+        }
+
+        let urlString = "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&select=id,activity_type,started_by,started_at,timer_data"
+        guard let url = URL(string: urlString) else { return nil }
+
+        var request = URLRequest(url: url)
+        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 10
+
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              let httpResponse = response as? HTTPURLResponse else {
+            print("[WatchConnector] fetchActiveTimersFromNetwork: request failed")
+            return nil
+        }
+
+        if httpResponse.statusCode == 401 {
+            print("[WatchConnector] fetchActiveTimersFromNetwork: 401 — stale token")
+            return nil
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            print("[WatchConnector] fetchActiveTimersFromNetwork: status \(httpResponse.statusCode)")
+            return nil
+        }
+
+        struct RemoteTimer: Decodable {
+            let id: String
+            let activity_type: String
+            let started_by: String
+            let started_at: String
+            let timer_data: TimerDataPayload?
+
+            struct TimerDataPayload: Decodable {
+                let side: String?
+                let sleepType: String?
+                let isPaused: Bool?
+                let accumulatedSeconds: Int?
+                let effectiveStartTime: String?
+            }
+        }
+
+        guard let remoteTimers = try? JSONDecoder().decode([RemoteTimer].self, from: data) else {
+            print("[WatchConnector] fetchActiveTimersFromNetwork: decode failed")
+            return nil
+        }
+
+        let activityTypeMap: [String: String] = [
+            "feeding": "feeding",
+            "sleep": "sleep",
+            "pumping": "pumping",
+            "tummy_time": "tummyTime"
+        ]
+
+        return remoteTimers.compactMap { timer in
+            guard let watchType = activityTypeMap[timer.activity_type] else { return nil }
+            let isRemote = timer.started_by != supabaseUserId
+            let context = timer.timer_data?.side ?? timer.timer_data?.sleepType
+            let startTime: String
+            if !(timer.timer_data?.isPaused ?? false), let effective = timer.timer_data?.effectiveStartTime {
+                startTime = effective
+            } else {
+                startTime = timer.started_at
+            }
+            return WatchActiveTimer(
+                type: watchType,
+                startTime: startTime,
+                context: context,
+                isRemote: isRemote,
+                isPaused: timer.timer_data?.isPaused,
+                accumulatedSeconds: timer.timer_data?.accumulatedSeconds
+            )
+        }
+    }
+
+    // MARK: - Supabase Write Fallbacks
+
+    private func supabaseStartTimer(activityType: String, startTime: String, context: String?) {
+        guard hasAuthCredentials, let supabaseUrl, let supabaseAnonKey,
+              let supabaseAccessToken, let supabaseUserId,
+              let babyId = currentBabyId else { return }
+
+        let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
+        let urlString = "\(supabaseUrl)/rest/v1/rpc/acquire_timer_lock"
+        guard let url = URL(string: urlString) else { return }
+
+        var timerData: [String: Any] = [:]
+        if let context {
+            if dbType == "feeding" || dbType == "pumping" {
+                timerData["side"] = context
+            } else if dbType == "sleep" {
+                timerData["sleepType"] = context
+            }
+        }
+
+        let body: [String: Any] = [
+            "p_baby_id": babyId,
+            "p_activity_type": dbType,
+            "p_user_id": supabaseUserId,
+            "p_timer_data": timerData
+        ]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+        request.timeoutInterval = 10
+
+        Task {
+            do {
+                let (_, response) = try await URLSession.shared.data(for: request)
+                if let http = response as? HTTPURLResponse {
+                    print("[WatchConnector] supabaseStartTimer: status \(http.statusCode)")
+                }
+            } catch {
+                print("[WatchConnector] supabaseStartTimer: failed — \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func supabaseStopTimer(activityType: String) {
+        guard hasAuthCredentials, let supabaseUrl, let supabaseAnonKey,
+              let supabaseAccessToken, let supabaseUserId,
+              let babyId = currentBabyId else { return }
+
+        let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
+        let urlString = "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(supabaseUserId)"
+        guard let url = URL(string: urlString) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 10
+
+        let pushToken = self.liveActivityPushToken
+
+        Task {
+            do {
+                let (_, response) = try await URLSession.shared.data(for: request)
+                if let http = response as? HTTPURLResponse {
+                    print("[WatchConnector] supabaseStopTimer: status \(http.statusCode)")
+                }
+            } catch {
+                print("[WatchConnector] supabaseStopTimer: failed — \(error.localizedDescription)")
+            }
+
+            // End Live Activity via edge function
+            if let pushToken, !pushToken.isEmpty {
+                await endLiveActivityViaEdgeFunction(pushToken: pushToken)
+            }
+        }
+    }
+
+    private func endLiveActivityViaEdgeFunction(pushToken: String) async {
+        guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken else { return }
+
+        let urlString = "\(supabaseUrl)/functions/v1/end-live-activity"
+        guard let url = URL(string: urlString) else { return }
+
+        var body: [String: Any] = ["pushToken": pushToken]
+        #if DEBUG
+        body["isSandbox"] = true
+        #endif
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
+        request.httpBody = jsonData
+        request.timeoutInterval = 10
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let http = response as? HTTPURLResponse {
+                print("[WatchConnector] endLiveActivityViaEdgeFunction: status \(http.statusCode)")
+            }
+        } catch {
+            print("[WatchConnector] endLiveActivityViaEdgeFunction: failed — \(error.localizedDescription)")
+        }
+
+        // Clear the push token since the Live Activity is ended
+        DispatchQueue.main.async {
+            self.liveActivityPushToken = nil
+            UserDefaults(suiteName: "group.com.sofibaby.app")?.removeObject(forKey: "watchLiveActivityPushToken")
+        }
+    }
+
+    private func startLiveActivityViaEdgeFunction(activityType: String, startTimeUnix: Int, context: String?) {
+        guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken,
+              let ptsToken = pushToStartToken, !ptsToken.isEmpty else { return }
+
+        let babyName = currentBaby?.name ?? widgetData?.babyName ?? "Baby"
+        let urlString = "\(supabaseUrl)/functions/v1/start-live-activity"
+        guard let url = URL(string: urlString) else { return }
+
+        var body: [String: Any] = [
+            "pushToStartToken": ptsToken,
+            "activityType": activityType,
+            "babyName": babyName,
+            "startTimeUnix": startTimeUnix
+        ]
+        if let babyId = currentBabyId {
+            body["babyId"] = babyId
+        }
+        if let context {
+            body["context"] = context
+        }
+        #if DEBUG
+        body["isSandbox"] = true
+        #endif
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
+        request.httpBody = jsonData
+        request.timeoutInterval = 10
+
+        Task {
+            do {
+                let (_, response) = try await URLSession.shared.data(for: request)
+                if let http = response as? HTTPURLResponse {
+                    print("[WatchConnector] startLiveActivityViaEdgeFunction: status \(http.statusCode)")
+                }
+            } catch {
+                print("[WatchConnector] startLiveActivityViaEdgeFunction: failed — \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func supabaseTogglePause(activityType: String, action: String, accumulatedSeconds: Int?, timerContext: String? = nil) {
+        guard hasAuthCredentials, let supabaseUrl, let supabaseAnonKey,
+              let supabaseAccessToken, let supabaseUserId,
+              let babyId = currentBabyId else { return }
+
+        let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
+        let urlString = "\(supabaseUrl)/functions/v1/toggle-timer-pause"
+        guard let url = URL(string: urlString) else { return }
+
+        var timerData: [String: Any] = [:]
+        var body: [String: Any] = [
+            "babyId": babyId,
+            "activityType": dbType,
+            "userId": supabaseUserId,
+            "action": action
+        ]
+
+        if action == "pause" {
+            timerData["isPaused"] = true
+            timerData["pausedAt"] = ISO8601DateFormatter().string(from: Date())
+            if let accumulatedSeconds {
+                timerData["accumulatedSeconds"] = accumulatedSeconds
+                body["elapsedSeconds"] = accumulatedSeconds
+            }
+        } else {
+            timerData["isPaused"] = false
+            if let accumulatedSeconds {
+                body["elapsedSeconds"] = accumulatedSeconds
+                let newStart = Date().addingTimeInterval(-Double(accumulatedSeconds))
+                let effectiveISO = ISO8601DateFormatter().string(from: newStart)
+                body["effectiveStartTimeISO"] = effectiveISO
+                timerData["effectiveStartTime"] = effectiveISO
+                timerData["accumulatedSeconds"] = accumulatedSeconds
+            }
+        }
+
+        body["timerData"] = timerData
+        if let timerContext {
+            body["context"] = timerContext
+        }
+
+        if let pushToken = liveActivityPushToken, !pushToken.isEmpty {
+            body["liveActivityPushToken"] = pushToken
+        }
+
+        #if DEBUG
+        body["isSandbox"] = true
+        #endif
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+        request.timeoutInterval = 10
+
+        Task {
+            do {
+                let (_, response) = try await URLSession.shared.data(for: request)
+                if let http = response as? HTTPURLResponse {
+                    print("[WatchConnector] supabaseTogglePause: status \(http.statusCode)")
+                }
+            } catch {
+                print("[WatchConnector] supabaseTogglePause: failed — \(error.localizedDescription)")
             }
         }
     }

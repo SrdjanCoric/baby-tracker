@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View, ScrollView, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useFeeding, useBaby, useUnits, useAuth } from "@/contexts";
@@ -30,6 +30,7 @@ type VolumeUnit = "ml" | "oz";
 export default function FeedingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { action } = useLocalSearchParams<{ action?: string }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
   const isAuthenticated = !!session?.access_token;
@@ -58,6 +59,12 @@ export default function FeedingScreen() {
     const lastType = getLastFeedingType(feedings);
     return lastType ? feedingTypeToTab(lastType) : "breast";
   });
+
+  useEffect(() => {
+    if (activeTimer?.isRunning && activeTab !== "breast") {
+      setActiveTab("breast");
+    }
+  }, [activeTimer?.isRunning, activeTab]);
 
   // Timer tick for breastfeeding (stops ticking when paused)
   useEffect(() => {
@@ -114,6 +121,20 @@ export default function FeedingScreen() {
   const handleResume = useCallback(async () => {
     await resumeBreastfeeding();
   }, [resumeBreastfeeding]);
+
+  useEffect(() => {
+    if (!action || !activeTimer?.isRunning) return;
+    if (action === "pause" && !activeTimer.isPaused) {
+      pauseBreastfeeding();
+    } else if (action === "resume" && activeTimer.isPaused) {
+      resumeBreastfeeding();
+    } else if (action === "stop") {
+      if (isStoppingRef.current) return;
+      isStoppingRef.current = true;
+      stopBreastfeeding().finally(() => { isStoppingRef.current = false; });
+    }
+    router.setParams({ action: undefined });
+  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pauseBreastfeeding, resumeBreastfeeding, stopBreastfeeding, router]);
 
   if (!selectedBaby) {
     return <NoBabyScreen />;

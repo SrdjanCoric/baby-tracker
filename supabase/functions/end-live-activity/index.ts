@@ -85,7 +85,7 @@ async function sendApnsLiveActivityEnd(
     headers: {
       authorization: `bearer ${jwt}`,
       "apns-push-type": "liveactivity",
-      "apns-priority": "5",
+      "apns-priority": "10",
       "apns-topic": topic,
       "content-type": "application/json",
     },

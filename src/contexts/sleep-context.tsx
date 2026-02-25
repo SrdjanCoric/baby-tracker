@@ -30,7 +30,7 @@ import {
 } from "@/utils/sleepGoals";
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 import { isNightTime, countNapsWithContinuation } from "@/utils/day-night-boundary";
-import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity } from "@/services/live-activity-service";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 
 export interface ActiveSleepTimer {
   isRunning: boolean;
@@ -223,8 +223,8 @@ interface SleepContextValue extends SleepState {
   startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<TimerLockResult>;
   stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
-  pauseSleep: () => Promise<void>;
-  resumeSleep: () => Promise<void>;
+  pauseSleep: (requestedPauseTime?: Date) => Promise<void>;
+  resumeSleep: (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => Promise<void>;
   addSleep: (input: CreateSleepInput) => Promise<StoredSleepEntry>;
   updateSleep: (sleepId: string, input: UpdateSleepInput) => Promise<StoredSleepEntry | null>;
   deleteSleep: (sleepId: string) => Promise<boolean>;
@@ -455,7 +455,28 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (activeTimer.liveActivityId) {
-          liveActivityIdRef.current = activeTimer.liveActivityId;
+          const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+          if (isRunning) {
+            liveActivityIdRef.current = activeTimer.liveActivityId;
+          } else if (!(activeTimer.isPaused ?? false)) {
+            const totalPausedMs = activeTimer.totalPausedMs ?? 0;
+            const effectiveStartTime = totalPausedMs > 0
+              ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
+              : new Date(activeTimer.startedAt);
+            const activityId = await startTimerLiveActivity(
+              "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
+            );
+            if (activityId) liveActivityIdRef.current = activityId;
+          }
+        } else if (!(activeTimer.isPaused ?? false)) {
+          const totalPausedMs = activeTimer.totalPausedMs ?? 0;
+          const effectiveStartTime = totalPausedMs > 0
+            ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
+            : new Date(activeTimer.startedAt);
+          const activityId = await startTimerLiveActivity(
+            "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
+          );
+          if (activityId) liveActivityIdRef.current = activityId;
         }
       } else if (user?.id && user?.householdId) {
         try {
@@ -631,10 +652,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedBaby, state.activeTimer, user?.id]);
 
-  const pauseSleep = useCallback(async () => {
+  const pauseSleep = useCallback(async (requestedPauseTime?: Date) => {
     if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
 
-    const now = new Date();
+    const now = requestedPauseTime ?? new Date();
 
     dispatch({ type: "PAUSE_TIMER" });
 
@@ -650,15 +671,19 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       type: state.activeTimer.sleepType,
       liveActivityId: liveActivityIdRef.current ?? undefined,
       isPaused: true,
-      pausedAt: new Date().toISOString(),
+      pausedAt: now.toISOString(),
       totalPausedMs: state.activeTimer.totalPausedMs,
     });
 
     if (user?.id) {
       try {
+        const totalElapsed = Math.floor(
+          (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+        );
         await updateTimerData(selectedBaby.id, "sleep", user.id, {
           isPaused: true,
-          pausedAt: new Date().toISOString(),
+          pausedAt: now.toISOString(),
+          accumulatedSeconds: totalElapsed,
           totalPausedMs: state.activeTimer.totalPausedMs,
           type: state.activeTimer.sleepType,
         });
@@ -668,13 +693,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedBaby, state.activeTimer, user?.id]);
 
-  const resumeSleep = useCallback(async () => {
+  const resumeSleep = useCallback(async (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => {
     if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused) return;
 
-    const now = new Date();
-    const pauseDuration = state.activeTimer.pausedAt
+    const now = requestedResumeTime ?? new Date();
+    const pauseDuration = widgetPauseDurationMs ?? (state.activeTimer.pausedAt
       ? now.getTime() - state.activeTimer.pausedAt.getTime()
-      : 0;
+      : 0);
     const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
 
     dispatch({ type: "RESUME_TIMER" });
@@ -696,10 +721,15 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
+        const activeElapsedSeconds = Math.floor(
+          (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
+        );
         await updateTimerData(selectedBaby.id, "sleep", user.id, {
           isPaused: false,
           totalPausedMs: newTotalPausedMs,
           type: state.activeTimer.sleepType,
+          effectiveStartTime: new Date(now.getTime() - activeElapsedSeconds * 1000).toISOString(),
+          accumulatedSeconds: activeElapsedSeconds,
         });
       } catch (error) {
         console.error("[SleepContext] Failed to update timer data:", error);
