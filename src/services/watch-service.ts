@@ -26,7 +26,7 @@ async function getWatchConnectivityModule(): Promise<WatchConnectivityModule | n
 
   try {
     const connectivity = await import("react-native-watch-connectivity");
-    if (connectivity) {
+    if (connectivity?.updateApplicationContext && connectivity?.sendMessage) {
       watchModule = {
         updateApplicationContext: connectivity.updateApplicationContext,
         sendMessage: connectivity.sendMessage,
