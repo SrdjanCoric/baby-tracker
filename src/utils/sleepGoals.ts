@@ -114,6 +114,14 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   },
 ];
 
+export function isUnderTwoMonths(birthDate: string | undefined): boolean {
+  if (!birthDate) return false;
+  const birth = new Date(birthDate);
+  const now = new Date();
+  const ageDays = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
+  return ageDays < 61;
+}
+
 export function getSleepAgeGroupForBaby(
   birthDate: Date,
   now: Date = new Date()

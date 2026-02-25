@@ -13,6 +13,7 @@ const CUSTOM_GOAL_KEY_PREFIX = "@sleep_custom_goal:";
 const MILESTONE_CHECK_KEY_PREFIX = "@sleep_milestone_check:";
 const DISMISSED_MILESTONES_KEY_PREFIX = "@sleep_dismissed_milestones:";
 const WAKE_WINDOW_CONFIG_KEY_PREFIX = "@wake_window_config:";
+const NEWBORN_NAP_OPT_IN_KEY_PREFIX = "@newborn_nap_opt_in:";
 const DEFAULT_DAILY_GOAL_MINUTES = 14 * 60; // 14 hours in minutes
 
 export interface StoredSleepEntry {
@@ -83,6 +84,10 @@ function getDismissedMilestonesKey(babyId: string): string {
 
 function getWakeWindowConfigKey(babyId: string): string {
   return getUserScopedKey(`${WAKE_WINDOW_CONFIG_KEY_PREFIX}${babyId}`);
+}
+
+function getNewbornNapOptInKey(babyId: string): string {
+  return getUserScopedKey(`${NEWBORN_NAP_OPT_IN_KEY_PREFIX}${babyId}`);
 }
 
 function isToday(date: Date): boolean {
@@ -260,5 +265,14 @@ export const SleepStorageService = {
 
   async clearWakeWindowConfig(babyId: string): Promise<void> {
     await AsyncStorage.removeItem(getWakeWindowConfigKey(babyId));
+  },
+
+  async getNewbornNapOptIn(babyId: string): Promise<boolean> {
+    const val = await AsyncStorage.getItem(getNewbornNapOptInKey(babyId));
+    return val === "true";
+  },
+
+  async setNewbornNapOptIn(babyId: string, optIn: boolean): Promise<void> {
+    await AsyncStorage.setItem(getNewbornNapOptInKey(babyId), optIn ? "true" : "false");
   },
 };

@@ -322,15 +322,29 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
                   </View>
                 </View>
               )}
-              {secondaryInfo && (
-                <Text
-                  className="text-sm mt-1"
-                  style={{ color: secondaryTextColor }}
-                  numberOfLines={1}
-                >
-                  {secondaryInfo}
-                </Text>
-              )}
+              {secondaryInfo && (() => {
+                const parts = secondaryInfo.split("\n");
+                return (
+                  <View className="mt-1">
+                    <Text
+                      className="text-sm"
+                      style={{ color: secondaryTextColor }}
+                      numberOfLines={1}
+                    >
+                      {parts[0]}
+                    </Text>
+                    {parts[1] && (
+                      <Text
+                        className="text-xs mt-0.5"
+                        style={{ color: secondaryTextColor }}
+                        numberOfLines={1}
+                      >
+                        {parts[1]}
+                      </Text>
+                    )}
+                  </View>
+                );
+              })()}
             </View>
           )}
         </View>

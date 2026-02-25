@@ -237,7 +237,10 @@
     "napContinuation": "Nap Continuation",
     "napContinuationDesc": "If baby goes back to sleep within this time, it counts as the same nap",
     "householdGoalTitle": "Shared Goal",
-    "householdGoalConfirm": "This will change the sleep goal for all caregivers in your household. Continue?"
+    "householdGoalConfirm": "This will change the sleep goal for all caregivers in your household. Continue?",
+    "napReminderWarningTitle": "Not Recommended",
+    "napReminderWarningMessage": "Nap reminders are not recommended for babies under 2 months. Newborn sleep is unpredictable and wake windows can cause unnecessary stress. Are you sure you want to enable them?",
+    "napReminderWarningEnable": "Enable Anyway"
   },
   "diaper": {
     "title": "Diaper",
