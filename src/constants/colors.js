@@ -117,6 +117,14 @@ const ACTIVITY = {
     muted: "#F9F2EA",
     mutedDark: "#2A2730",
   },
+  milestones: {
+    accent: "#C9A55C",
+    accentDark: "#DABB78",
+    button: "#A88A3E",
+    buttonDark: "#8A7232",
+    muted: "#F9F4E8",
+    mutedDark: "#2A2730",
+  },
 };
 
 const SEMANTIC = {

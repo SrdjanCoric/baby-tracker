@@ -354,7 +354,7 @@ export default function SignInScreen() {
                 {emailError && (
                   <Text
                     className="text-sm mt-1.5"
-                    style={{ color: SEMANTIC.error.light, fontFamily: "Nunito-Regular" }}
+                    style={{ color: SEMANTIC.error[isDark ? "dark" : "light"], fontFamily: "Nunito-Regular" }}
                   >
                     {emailError}
                   </Text>
@@ -425,7 +425,7 @@ export default function SignInScreen() {
                     paddingTop: 14,
                     paddingBottom: 14,
                   }}
-                  placeholder="Password"
+                  placeholder={t("auth.passwordPlaceholder")}
                   placeholderTextColor={isDark ? TEXT.dark.secondary : TEXT.light.muted}
                   value={password}
                   onChangeText={setPassword}

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView, View, Platform } from "react-native";
+import { AppState, RefreshControl, ScrollView, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
@@ -12,16 +12,15 @@ const isAndroid = Platform.OS === "android";
 import {
   BabyHeader,
   DashboardCard,
-  TodaySummary,
 } from "@/components";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useDashboardConfig, useActiveTimers, useBaby, useAuth } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useDashboardConfig, useActiveTimers, useBaby, useAuth } from "@/contexts";
 import { Alert } from "react-native";
 import { timeSince, formatDate, hoursSince, formatDuration } from "@/utils/time";
-import { countFeedingSessions } from "@/utils/feeding-sessions";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { ActivityType } from "@/constants/activities";
 import { DashboardCardConfig } from "@/services/dashboard-config-storage";
 import { isUnderTwoMonths } from "@/utils/sleepGoals";
+import { getCurrentAgeGroupKey, AGE_GROUPS } from "@/constants/milestones";
 
 interface CardProps {
   label: string;
@@ -41,6 +40,7 @@ interface CardProps {
   lockedElapsedTime?: string;
   babyName?: string;
   isPausedByOther?: boolean;
+  todayBadge?: string;
 }
 
 export default function HomeScreen() {
@@ -70,6 +70,7 @@ export default function HomeScreen() {
   const { pumpings, activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide, refreshPumpings, pausePumping, resumePumping } = usePumping();
   const { measurements, getMeasurementHistory, getWeightChange, refreshMeasurements } = useGrowth();
   const { tummyTimes, activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
+  const { getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, isAgeCompleted, getStarsEarned, getCurrentAgeGroup, responses: milestoneResponses, refreshResponses: refreshMilestones } = useMilestones();
   const { colorScheme } = useColorScheme();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
@@ -97,6 +98,15 @@ export default function HomeScreen() {
     }
   }, [isFocused, refreshLocks]);
 
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        setRefreshing(false);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -107,12 +117,13 @@ export default function HomeScreen() {
         refreshPumpings(),
         refreshMeasurements(),
         refreshTummyTimes(),
+        refreshMilestones(),
         refreshLocks(),
       ]);
     } finally {
       setRefreshing(false);
     }
-  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshMeasurements, refreshTummyTimes, refreshLocks]);
+  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshMeasurements, refreshTummyTimes, refreshMilestones, refreshLocks]);
 
   const feedingElapsedTime = useMemo(() => {
     if (!feedingActiveTimer?.isRunning) return null;
@@ -458,26 +469,6 @@ export default function HomeScreen() {
     return getSleepDailyProgress();
   }, [getSleepDailyProgress, sleeps]);
 
-  const todayFeedings = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return feedings.filter(f => new Date(f.startedAt) >= today);
-  }, [feedings]);
-
-  const todaySleeps = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return sleeps.filter(s => new Date(s.startedAt) >= today);
-  }, [sleeps]);
-
-  const todaySleepTotal = useMemo(() => {
-    const totalMinutes = getTodaysTotalSleepMinutes();
-    if (totalMinutes === 0) return undefined;
-    const hours = Math.floor(totalMinutes / 60);
-    const mins = totalMinutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  }, [getTodaysTotalSleepMinutes, sleeps]);
-
   const handleAddFeeding = useCallback(() => {
     safeNavigate("/feeding");
   }, [safeNavigate]);
@@ -528,6 +519,10 @@ export default function HomeScreen() {
 
   const handleTummyTimeCardPress = useCallback(() => {
     safeNavigate("/tummyTime");
+  }, [safeNavigate]);
+
+  const handleMilestonesPress = useCallback(() => {
+    safeNavigate("/milestones");
   }, [safeNavigate]);
 
   const isStoppingFeedingRef = useRef(false);
@@ -675,7 +670,8 @@ export default function HomeScreen() {
           isPausedByOther: sleepLock.isPausedByOther,
         };
       }
-      case "diaper":
+      case "diaper": {
+        const wetCount = todayDiaperCounts.wet + todayDiaperCounts.mixed;
         return {
           label: t("diaper.title"),
           timeSince: diaperTimeSince,
@@ -684,7 +680,9 @@ export default function HomeScreen() {
           onPress: handleDiaperCardPress,
           onActionPress: handleAddDiaper,
           actionLabel: "+",
+          todayBadge: `${wetCount}\u{1F4A7} ${t("common.today").toLowerCase()}`,
         };
+      }
       case "pumping": {
         const pumpingLock = getTimerLockInfo("pumping");
         return {
@@ -736,6 +734,39 @@ export default function HomeScreen() {
           onActionPress: handleAddGrowth,
           actionLabel: "+",
         };
+      case "milestones": {
+        const currentAgeGroup = getCurrentAgeGroup();
+        const ageGroup = currentAgeGroup ?? AGE_GROUPS[0];
+        const ageKey = ageGroup.key;
+        const yesCount = getYesCountForAge(ageKey);
+        const notSureCount = getNotSureCountForAge(ageKey);
+        const total = getTotalCountForAge(ageKey);
+        const stars = getStarsEarned();
+        const allDone = isAgeCompleted(ageKey);
+        const starPrefix = stars > 0 ? "\u2605".repeat(stars) + " " : "";
+        const progress = total > 0 ? Math.round((yesCount / total) * 100) : 0;
+
+        let subtitle: string;
+        if (allDone) {
+          subtitle = t("milestones.allDone");
+        } else {
+          subtitle = t("milestones.progress", { yes: yesCount, total });
+          if (notSureCount > 0) {
+            subtitle += " \u00B7 " + t("milestones.notSureCount", { count: notSureCount });
+          }
+        }
+
+        return {
+          label: t("milestones.title"),
+          timeSince: `${starPrefix}${t(`milestones.age.${ageGroup.key}` as never)}`,
+          subtitle,
+          isActive: false,
+          onPress: handleMilestonesPress,
+          onActionPress: handleMilestonesPress,
+          actionLabel: "+",
+          progress,
+        };
+      }
     }
   }, [
     t,
@@ -745,7 +776,8 @@ export default function HomeScreen() {
     pumpingTimeSince, pumpingSubtitle, isPumpingActive, pumpingActiveTimer?.isPaused, handlePumpingCardPress, handleAddPumping, handleStopPumping, handleTogglePausePumping,
     tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, tummyTimeActiveTimer?.isPaused, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime, handleStopTummyTime, handleTogglePauseTummyTime,
     growthTimeSince, growthSubtitle, handleGrowthCardPress, handleAddGrowth,
-    getTimerLockInfo,
+    getCurrentAgeGroup, getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, getStarsEarned, isAgeCompleted, handleMilestonesPress, milestoneResponses,
+    getTimerLockInfo, todayDiaperCounts,
   ]);
 
   const cardRows = useMemo(() => {
@@ -766,7 +798,6 @@ export default function HomeScreen() {
           paddingHorizontal: isAndroid ? 12 : 16,
           paddingTop: isAndroid ? 8 : 0,
           paddingBottom: isAndroid ? 16 : 24,
-          flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -780,33 +811,23 @@ export default function HomeScreen() {
           )
         }
       >
-        {/* Activity Cards Grid */}
         <View className={isAndroid ? "gap-2.5" : "gap-3"}>
           {cardRows.map((row, rowIndex) => (
-            <View key={rowIndex} className={`flex-row ${isAndroid ? "gap-2.5" : "gap-3"}`}>
+            <View key={rowIndex} className={`flex-row ${isAndroid ? "gap-2.5" : "gap-3"} ${row.length === 1 ? "justify-center" : ""}`}>
               {row.map((cardConfig) => {
                 const props = getCardProps(cardConfig.activity);
                 return (
-                  <DashboardCard
-                    key={cardConfig.activity}
-                    activity={cardConfig.activity}
-                    testID={`${cardConfig.activity}-card`}
-                    {...props}
-                  />
+                  <View key={cardConfig.activity} className={row.length === 1 ? "w-[48%]" : "flex-1"}>
+                    <DashboardCard
+                      activity={cardConfig.activity}
+                      testID={`${cardConfig.activity}-card`}
+                      {...props}
+                    />
+                  </View>
                 );
               })}
-              {row.length === 1 && <View className="flex-1" />}
             </View>
           ))}
-        </View>
-
-        {/* Today Summary */}
-        <View className={isAndroid ? "mt-3" : "mt-6"}>
-          <TodaySummary
-            feedingCount={countFeedingSessions(todayFeedings)}
-            sleepTotal={todaySleepTotal}
-            wetDiaperCount={todayDiaperCounts.wet + todayDiaperCounts.mixed}
-          />
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -25,6 +25,12 @@ export function DashboardConfigProvider({ children }: { children: React.ReactNod
   useEffect(() => {
     const loadConfig = async () => {
       const storedConfig = await DashboardConfigStorageService.getConfig();
+      const hasMilestones = storedConfig.cards.some((c) => c.activity === "milestones");
+      if (!hasMilestones) {
+        const maxOrder = Math.max(...storedConfig.cards.map((c) => c.order), -1);
+        storedConfig.cards.push({ activity: "milestones", visible: true, order: maxOrder + 1 });
+        await DashboardConfigStorageService.setConfig(storedConfig);
+      }
       setConfig(storedConfig);
       setIsLoading(false);
     };
