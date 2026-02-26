@@ -758,7 +758,7 @@ export default function HomeScreen() {
 
         return {
           label: t("milestones.title"),
-          timeSince: `${starPrefix}${ageGroup.label}`,
+          timeSince: `${starPrefix}${t(`milestones.age.${ageGroup.key}` as never)}`,
           subtitle,
           isActive: false,
           onPress: handleMilestonesPress,
