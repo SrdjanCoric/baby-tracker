@@ -116,7 +116,7 @@ export default function MilestonesScreen() {
       <View className="items-center pt-2 pb-1">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <View className="flex-row items-center">
-          <Text className="text-lg font-semibold text-text-primary dark:text-text-primary-dark font-nunito-semibold">
+          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary font-nunito-semibold">
             {t("milestones.title")}
           </Text>
           <Pressable
@@ -148,7 +148,7 @@ export default function MilestonesScreen() {
           </Pressable>
         </View>
         {selectedBaby && (
-          <Text className="text-sm text-text-secondary dark:text-text-secondary-dark font-nunito">
+          <Text className="text-base text-content-secondary dark:text-content-dark-secondary font-nunito-medium">
             {selectedBaby.name}
           </Text>
         )}
@@ -218,10 +218,10 @@ export default function MilestonesScreen() {
                       ? (isDark ? TEXT.dark.primary : TEXT.light.primary)
                       : (isDark ? TEXT.dark.secondary : TEXT.light.secondary),
                     fontWeight: isActive ? "600" : "500",
-                    opacity: isFuture && !isActive ? 0.5 : 1,
+                    opacity: isFuture && !isActive ? 0.7 : 1,
                   }}
                 >
-                  {group.label}
+                  {t(`milestones.age.${group.key}` as never)}
                 </Text>
               </Pressable>
             );
@@ -230,10 +230,10 @@ export default function MilestonesScreen() {
 
         {/* Progress */}
         <View className="mb-4">
-          <Text className="text-sm text-text-secondary dark:text-text-secondary-dark font-nunito mb-1.5">
-            {yesCount} of {totalCount}
+          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary font-nunito mb-1.5">
+            {t("milestones.progressOf", { yes: yesCount, total: totalCount })}
           </Text>
-          <View className="h-2 rounded-full bg-border-subtle dark:bg-border-subtle-dark overflow-hidden">
+          <View className="h-2 rounded-full bg-border-subtle dark:bg-border-dark-subtle overflow-hidden">
             <View
               className="h-full rounded-full"
               style={{ width: `${progress}%`, backgroundColor: accent }}
@@ -254,7 +254,7 @@ export default function MilestonesScreen() {
                 <Text style={{ fontSize: 18 }} className="mr-2">
                   {CATEGORY_EMOJI[category]}
                 </Text>
-                <Text className="text-base font-nunito-semibold text-text-primary dark:text-text-primary-dark flex-1">
+                <Text className="text-base font-nunito-semibold text-content-primary dark:text-content-dark-primary flex-1">
                   {t(CATEGORY_LABELS[category])}
                 </Text>
                 <View
@@ -282,7 +282,7 @@ export default function MilestonesScreen() {
                   <MilestoneRow
                     key={milestone.id}
                     milestoneId={milestone.id}
-                    text={milestone.text}
+                    text={t(`milestones.items.${milestone.id}` as never, { context: selectedBaby?.gender })}
                     state={getMilestoneState(milestone.id)}
                     onToggle={handleToggle}
                     accent={accent}
@@ -295,7 +295,7 @@ export default function MilestonesScreen() {
         })}
 
         {/* Attribution */}
-        <Text className="text-xs text-text-tertiary dark:text-text-tertiary-dark text-center mt-2 mb-4 font-nunito">
+        <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary text-center mt-2 mb-4 font-nunito">
           {t("milestones.attribution")}
         </Text>
       </ScrollView>
@@ -356,8 +356,8 @@ function MilestoneRow({
         <Text
           className={`flex-1 ml-2.5 font-nunito-medium ${
             state === "yes"
-              ? "text-text-secondary dark:text-text-secondary-dark"
-              : "text-text-primary dark:text-text-primary-dark"
+              ? "text-content-secondary dark:text-content-dark-secondary"
+              : "text-content-primary dark:text-content-dark-primary"
           }`}
           style={{ fontSize: 14, lineHeight: 20 }}
         >
@@ -469,7 +469,7 @@ function MilestonesInfoOverlay({
         className="mx-8 rounded-2xl bg-surface-card dark:bg-surface-dark-card p-5"
         style={{ maxWidth: 340, width: "85%" }}
       >
-        <Text className="text-base font-nunito-semibold text-text-primary dark:text-text-primary-dark mb-3">
+        <Text className="text-base font-nunito-semibold text-content-primary dark:text-content-dark-primary mb-3">
           {t("milestones.infoTitle")}
         </Text>
 
@@ -482,10 +482,10 @@ function MilestonesInfoOverlay({
               <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "700", lineHeight: 15 }}>{"\u2713"}</Text>
             </View>
             <View className="flex-1">
-              <Text className="text-sm font-nunito-semibold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-sm font-nunito-semibold text-content-primary dark:text-content-dark-primary">
                 {t("milestones.yes")}
               </Text>
-              <Text className="text-xs font-nunito text-text-secondary dark:text-text-secondary-dark mt-0.5">
+              <Text className="text-xs font-nunito text-content-secondary dark:text-content-dark-secondary mt-0.5">
                 {t("milestones.infoYes")}
               </Text>
             </View>
@@ -499,10 +499,10 @@ function MilestonesInfoOverlay({
               <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "700", lineHeight: 15 }}>?</Text>
             </View>
             <View className="flex-1">
-              <Text className="text-sm font-nunito-semibold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-sm font-nunito-semibold text-content-primary dark:text-content-dark-primary">
                 {t("milestones.notSure")}
               </Text>
-              <Text className="text-xs font-nunito text-text-secondary dark:text-text-secondary-dark mt-0.5">
+              <Text className="text-xs font-nunito text-content-secondary dark:text-content-dark-secondary mt-0.5">
                 {t("milestones.infoNotSure")}
               </Text>
             </View>
@@ -520,18 +520,18 @@ function MilestonesInfoOverlay({
               }}
             />
             <View className="flex-1">
-              <Text className="text-sm font-nunito-semibold text-text-primary dark:text-text-primary-dark">
+              <Text className="text-sm font-nunito-semibold text-content-primary dark:text-content-dark-primary">
                 {t("milestones.notYet")}
               </Text>
-              <Text className="text-xs font-nunito text-text-secondary dark:text-text-secondary-dark mt-0.5">
+              <Text className="text-xs font-nunito text-content-secondary dark:text-content-dark-secondary mt-0.5">
                 {t("milestones.infoNotYet")}
               </Text>
             </View>
           </View>
         </View>
 
-        <View className="border-t border-border-subtle dark:border-border-subtle-dark pt-3 mt-1">
-          <Text className="text-xs font-nunito text-text-tertiary dark:text-text-tertiary-dark leading-4">
+        <View className="border-t border-border-subtle dark:border-border-dark-subtle pt-3 mt-1">
+          <Text className="text-xs font-nunito text-content-tertiary dark:text-content-dark-tertiary leading-4">
             {t("milestones.infoReassurance")}
           </Text>
         </View>
@@ -541,7 +541,7 @@ function MilestonesInfoOverlay({
           className="items-center mt-4 py-2 rounded-xl"
           style={{ backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)" }}
         >
-          <Text className="text-sm font-nunito-semibold text-text-primary dark:text-text-primary-dark">
+          <Text className="text-sm font-nunito-semibold text-content-primary dark:text-content-dark-primary">
             {t("common.done")}
           </Text>
         </Pressable>
