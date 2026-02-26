@@ -83,7 +83,7 @@ function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemPr
 
   return (
     <View
-      className="bg-white rounded-xl mb-3 overflow-hidden border border-gray-200"
+      className="bg-surface-card dark:bg-surface-dark-card rounded-xl mb-3 overflow-hidden border border-border-default dark:border-border-dark-default"
       accessible={true}
       accessibilityLabel={t('sync.conflictAccessibility', { index: index + 1, type: tableLabel })}
     >
@@ -94,43 +94,43 @@ function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemPr
         accessibilityLabel={expanded ? t('sync.collapseDetails') : t('sync.expandDetails')}
       >
         <View className="flex-1">
-          <Text className="text-base font-semibold text-gray-900">
+          <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary">
             {t('sync.conflictLabel', { type: tableLabel })}
           </Text>
-          <Text className="text-sm text-gray-500 mt-1">
+          <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-1">
             {conflict.type.replace('_', ' ').toLowerCase()}
           </Text>
         </View>
-        <Text className="text-gray-400 text-lg">{expanded ? '▲' : '▼'}</Text>
+        <Text className="text-content-muted dark:text-content-dark-muted text-lg">{expanded ? '▲' : '▼'}</Text>
       </Pressable>
 
       {expanded && (
-        <View className="border-t border-gray-100">
+        <View className="border-t border-border-subtle dark:border-border-dark-subtle">
           <View className="flex-row">
-            <View className="flex-1 p-3 border-r border-gray-100">
-              <Text className="text-xs font-semibold text-green-700 uppercase mb-2">
+            <View className="flex-1 p-3 border-r border-border-subtle dark:border-border-dark-subtle">
+              <Text className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase mb-2">
                 {t('sync.yourVersion')}
               </Text>
-              <Text className="text-sm text-gray-700">
+              <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
                 {getEntryPreview(conflict.local) || t('sync.entryDetails')}
               </Text>
-              <Text className="text-xs text-gray-400 mt-2">{localTime}</Text>
+              <Text className="text-xs text-content-muted dark:text-content-dark-muted mt-2">{localTime}</Text>
             </View>
             <View className="flex-1 p-3">
-              <Text className="text-xs font-semibold text-amber-700 uppercase mb-2">
+              <Text className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase mb-2">
                 {t('sync.theirVersion')}
               </Text>
-              <Text className="text-sm text-gray-700">
+              <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
                 {getEntryPreview(conflict.remote) || t('sync.entryDetails')}
               </Text>
-              <Text className="text-xs text-gray-400 mt-2">{remoteTime}</Text>
+              <Text className="text-xs text-content-muted dark:text-content-dark-muted mt-2">{remoteTime}</Text>
             </View>
           </View>
 
-          <View className="flex-row border-t border-gray-100 p-3 gap-2">
+          <View className="flex-row border-t border-border-subtle dark:border-border-dark-subtle p-3 gap-2">
             <Pressable
               onPress={() => onResolve('KEEP_LOCAL')}
-              className="flex-1 bg-green-600 py-2.5 rounded-lg"
+              className="flex-1 bg-green-600 dark:bg-green-700 py-2.5 rounded-lg"
               accessibilityRole="button"
               accessibilityLabel={t('sync.keepMyVersion')}
             >
@@ -140,7 +140,7 @@ function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemPr
             </Pressable>
             <Pressable
               onPress={() => onResolve('KEEP_REMOTE')}
-              className="flex-1 bg-amber-600 py-2.5 rounded-lg"
+              className="flex-1 bg-amber-600 dark:bg-amber-700 py-2.5 rounded-lg"
               accessibilityRole="button"
               accessibilityLabel={t('sync.keepTheirVersion')}
             >
@@ -154,7 +154,7 @@ function ConflictItem({ conflict, index, onResolve, timeFormat }: ConflictItemPr
                   ? 'KEEP_LOCAL'
                   : 'KEEP_REMOTE'
               )}
-              className="flex-1 bg-gray-600 py-2.5 rounded-lg"
+              className="flex-1 bg-gray-600 dark:bg-gray-500 py-2.5 rounded-lg"
               accessibilityRole="button"
               accessibilityLabel={t('sync.keepNewerVersion')}
             >
@@ -203,9 +203,9 @@ export function ConflictResolutionModal({
       onRequestClose={onClose}
       testID={testID}
     >
-      <SafeAreaView className="flex-1 bg-gray-50">
+      <SafeAreaView className="flex-1 bg-surface-secondary dark:bg-surface-dark-secondary">
         <View
-          className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200 bg-white"
+          className="flex-row items-center justify-between px-4 py-3 border-b border-border-default dark:border-border-dark-default bg-surface-card dark:bg-surface-dark-card"
           accessibilityRole="header"
         >
           <Pressable
@@ -214,41 +214,41 @@ export function ConflictResolutionModal({
             accessibilityRole="button"
             accessibilityLabel={t('common.close')}
           >
-            <Text className="text-green-700 text-base">
+            <Text className="text-green-700 dark:text-green-400 text-base">
               {t('common.cancel')}
             </Text>
           </Pressable>
-          <Text className="text-lg font-semibold text-gray-900">
+          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
             {t('sync.resolveConflicts')}
           </Text>
           <View className="w-16" />
         </View>
 
-        <View className="px-4 py-3 bg-yellow-50 border-b border-yellow-200">
-          <Text className="text-sm text-yellow-800">
+        <View className="px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
+          <Text className="text-sm text-yellow-800 dark:text-yellow-200">
             {t('sync.conflictsExplanation')}
           </Text>
         </View>
 
         {conflicts.length > 1 && (
-          <View className="flex-row gap-2 px-4 py-3 bg-white border-b border-gray-200">
+          <View className="flex-row gap-2 px-4 py-3 bg-surface-card dark:bg-surface-dark-card border-b border-border-default dark:border-border-dark-default">
             <Pressable
               onPress={handleResolveAllKeepMine}
-              className="flex-1 bg-green-100 py-2.5 rounded-lg"
+              className="flex-1 bg-green-100 dark:bg-green-900/30 py-2.5 rounded-lg"
               accessibilityRole="button"
               accessibilityLabel={t('sync.keepAllMyVersions')}
             >
-              <Text className="text-green-700 text-center font-medium text-sm">
+              <Text className="text-green-700 dark:text-green-400 text-center font-medium text-sm">
                 {t('sync.keepAllMine')}
               </Text>
             </Pressable>
             <Pressable
               onPress={handleResolveAllKeepNewer}
-              className="flex-1 bg-gray-100 py-2.5 rounded-lg"
+              className="flex-1 bg-gray-100 dark:bg-gray-800 py-2.5 rounded-lg"
               accessibilityRole="button"
               accessibilityLabel={t('sync.keepAllNewerVersions')}
             >
-              <Text className="text-gray-700 text-center font-medium text-sm">
+              <Text className="text-content-secondary dark:text-content-dark-secondary text-center font-medium text-sm">
                 {t('sync.keepAllNewer')}
               </Text>
             </Pressable>
@@ -256,7 +256,7 @@ export function ConflictResolutionModal({
         )}
 
         <ScrollView className="flex-1 px-4 py-4">
-          <Text className="text-sm text-gray-500 mb-3">
+          <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mb-3">
             {t('sync.conflictCount', {
               count: conflicts.length,
             })}

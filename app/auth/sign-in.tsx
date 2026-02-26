@@ -354,7 +354,7 @@ export default function SignInScreen() {
                 {emailError && (
                   <Text
                     className="text-sm mt-1.5"
-                    style={{ color: SEMANTIC.error.light, fontFamily: "Nunito-Regular" }}
+                    style={{ color: SEMANTIC.error[isDark ? "dark" : "light"], fontFamily: "Nunito-Regular" }}
                   >
                     {emailError}
                   </Text>
