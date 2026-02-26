@@ -22,12 +22,12 @@ function SummaryStat({ value, label, color }: SummaryStatProps) {
   return (
     <View className="items-center">
       <Text
-        className="text-xl font-semibold"
+        className="text-base font-semibold"
         style={{ color }}
       >
         {value}
       </Text>
-      <Text className="text-xs text-content-secondary dark:text-content-dark-primary mt-0.5 uppercase tracking-wider">
+      <Text className="text-xs text-content-secondary dark:text-content-dark-primary uppercase tracking-wider" style={{ fontSize: 10 }}>
         {label}
       </Text>
     </View>
@@ -39,14 +39,14 @@ function DiaperStat({ count, label, color }: { count: number; label: string; col
     <View className="items-center">
       <View className="flex-row items-center">
         <Text
-          className="text-xl font-semibold"
+          className="text-base font-semibold"
           style={{ color }}
         >
           {count}
         </Text>
-        <Text className="text-xs ml-0.5">💧</Text>
+        <Text className="ml-0.5" style={{ fontSize: 10 }}>💧</Text>
       </View>
-      <Text className="text-xs text-content-secondary dark:text-content-dark-primary mt-0.5 uppercase tracking-wider">
+      <Text className="text-xs text-content-secondary dark:text-content-dark-primary uppercase tracking-wider" style={{ fontSize: 10 }}>
         {label}
       </Text>
     </View>
@@ -55,7 +55,7 @@ function DiaperStat({ count, label, color }: { count: number; label: string; col
 
 function SummaryDivider() {
   return (
-    <View className="w-px h-8 bg-border-default dark:bg-border-dark-default mx-4" />
+    <View className="w-px h-6 bg-border-default dark:bg-border-dark-default mx-5" />
   );
 }
 
@@ -75,12 +75,11 @@ const TodaySummary = forwardRef<View, TodaySummaryProps>(
       <View
         ref={ref}
         testID={testID}
-        className={`bg-surface-card dark:bg-surface-dark-card rounded-card ${isAndroid ? "p-3" : "p-4"}`}
+        className={`bg-surface-card dark:bg-surface-dark-card rounded-card ${isAndroid ? "px-3 py-2" : "px-4 py-2.5"}`}
       >
-        {/* Header */}
-        <View className={`flex-row items-center ${isAndroid ? "mb-2" : "mb-4"}`}>
+        <View className={`flex-row items-center ${isAndroid ? "mb-1.5" : "mb-2"}`}>
           <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />
-          <Text className="px-3 text-sm text-content-secondary dark:text-content-dark-primary uppercase tracking-wider font-semibold">
+          <Text className="px-2.5 text-content-secondary dark:text-content-dark-primary uppercase tracking-wider font-semibold" style={{ fontSize: 10 }}>
             {t("summary.today")}
           </Text>
           <View className="h-px flex-1 bg-border-default dark:bg-border-dark-default" />

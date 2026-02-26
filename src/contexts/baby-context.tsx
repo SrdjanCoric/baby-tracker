@@ -201,60 +201,64 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   const loadBabies = useCallback(async () => {
     dispatch({ type: "SET_LOADING", payload: true });
 
-    let babies: StoredBabyProfile[];
+    try {
+      let babies: StoredBabyProfile[];
 
-    if (user?.householdId) {
-      if (!hasMigratedRef.current) {
-        hasMigratedRef.current = true;
-        const isNewUser = user.createdAt &&
-          (Date.now() - new Date(user.createdAt).getTime()) < 60 * 60 * 1000;
-        if (isNewUser) {
-          const guestBabies = await getGuestBabies();
-          if (guestBabies.length > 0) {
-            try {
-              const { idMap } = await syncLocalBabiesToDatabase(user.householdId, guestBabies);
-              await clearGuestBabies();
+      if (user?.householdId) {
+        if (!hasMigratedRef.current) {
+          hasMigratedRef.current = true;
+          const isNewUser = user.createdAt &&
+            (Date.now() - new Date(user.createdAt).getTime()) < 60 * 60 * 1000;
+          if (isNewUser) {
+            const guestBabies = await getGuestBabies();
+            if (guestBabies.length > 0) {
+              try {
+                const { idMap } = await syncLocalBabiesToDatabase(user.householdId, guestBabies);
+                await clearGuestBabies();
 
-              const babyIdMap = new Map<string, string>();
-              for (const baby of guestBabies) {
-                const newId = idMap.get(baby.id) || baby.id;
-                babyIdMap.set(baby.id, newId);
+                const babyIdMap = new Map<string, string>();
+                for (const baby of guestBabies) {
+                  const newId = idMap.get(baby.id) || baby.id;
+                  babyIdMap.set(baby.id, newId);
+                }
+
+                await syncGuestActivitiesToDatabase(user.id, babyIdMap);
+              } catch (error) {
+                console.error("[BabyContext] Failed to migrate guest data:", error);
               }
-
-              await syncGuestActivitiesToDatabase(user.id, babyIdMap);
-            } catch (error) {
-              console.error("[BabyContext] Failed to migrate guest data:", error);
             }
           }
         }
-      }
 
-      try {
-        babies = await fetchAndSyncHouseholdBabies(user.householdId);
-      } catch (error) {
-        console.error("[BabyContext] Failed to fetch from database, using local:", error);
+        try {
+          babies = await fetchAndSyncHouseholdBabies(user.householdId);
+        } catch (error) {
+          console.error("[BabyContext] Failed to fetch from database, using local:", error);
+          babies = await BabyStorageService.getAllBabies();
+        }
+      } else {
+        hasMigratedRef.current = false;
         babies = await BabyStorageService.getAllBabies();
       }
-    } else {
-      hasMigratedRef.current = false;
-      babies = await BabyStorageService.getAllBabies();
+
+      dispatch({ type: "SET_BABIES", payload: babies });
+
+      const selectedBabyId = await BabyStorageService.getSelectedBabyId();
+      const selectedBaby = selectedBabyId
+        ? babies.find(b => b.id === selectedBabyId) ?? null
+        : null;
+
+      if (!selectedBaby && babies.length > 0) {
+        await BabyStorageService.setSelectedBabyId(babies[0].id);
+        dispatch({ type: "SET_SELECTED_BABY", payload: babies[0] });
+      } else {
+        dispatch({ type: "SET_SELECTED_BABY", payload: selectedBaby });
+      }
+    } catch (error) {
+      console.error("[BabyContext] Failed to load babies:", error);
+    } finally {
+      dispatch({ type: "SET_LOADING", payload: false });
     }
-
-    dispatch({ type: "SET_BABIES", payload: babies });
-
-    const selectedBabyId = await BabyStorageService.getSelectedBabyId();
-    const selectedBaby = selectedBabyId
-      ? babies.find(b => b.id === selectedBabyId) ?? null
-      : null;
-
-    if (!selectedBaby && babies.length > 0) {
-      await BabyStorageService.setSelectedBabyId(babies[0].id);
-      dispatch({ type: "SET_SELECTED_BABY", payload: babies[0] });
-    } else {
-      dispatch({ type: "SET_SELECTED_BABY", payload: selectedBaby });
-    }
-
-    dispatch({ type: "SET_LOADING", payload: false });
   }, [user?.householdId, user?.id]);
 
   useEffect(() => {

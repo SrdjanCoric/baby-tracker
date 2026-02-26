@@ -42,6 +42,7 @@ interface DashboardCardProps {
   lockedElapsedTime?: string;
   babyName?: string;
   isPausedByOther?: boolean;
+  todayBadge?: string;
 }
 
 const DashboardCard = forwardRef<View, DashboardCardProps>(
@@ -66,6 +67,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
       lockedElapsedTime,
       babyName,
       isPausedByOther = false,
+      todayBadge,
     },
     ref
   ) => {
@@ -349,8 +351,24 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
           )}
         </View>
 
-        {/* Action button or locked status */}
-        <View className="items-end mt-1">
+        {/* Action row */}
+        <View className="flex-row items-end justify-between mt-1">
+          {todayBadge !== undefined && !isLockedByOther ? (
+            <View
+              className="px-2 py-1 rounded-full"
+              style={{ backgroundColor: `${accentColor}15` }}
+            >
+              <Text
+                className="text-[11px] font-semibold"
+                style={{ color: accentColor }}
+              >
+                {todayBadge}
+              </Text>
+            </View>
+          ) : (
+            <View />
+          )}
+          <View>
           {isLockedByOther ? (
             <View
               className={`${Platform.OS === "android" ? "min-w-[40px] min-h-[40px] rounded-xl" : "min-w-[48px] min-h-[48px] rounded-2xl"} items-center justify-center`}
@@ -426,6 +444,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
               </Text>
             </AnimatedPressable>
           )}
+          </View>
         </View>
       </AnimatedPressable>
     );

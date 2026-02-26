@@ -10,6 +10,7 @@ import type { StoredSleepEntry, CreateSleepInput, UpdateSleepInput } from "./sle
 import type { StoredPumpingEntry, CreatePumpingInput, UpdatePumpingInput } from "./pumping-storage";
 import type { StoredGrowthEntry, CreateGrowthInput, UpdateGrowthInput } from "./growth-storage";
 import type { StoredTummyTimeEntry, CreateTummyTimeInput, UpdateTummyTimeInput } from "./tummyTime-storage";
+import type { StoredMilestoneResponse, MilestoneState } from "./milestones-storage";
 
 const KEYS = {
   feedings: "@feedings:",
@@ -18,6 +19,7 @@ const KEYS = {
   pumping: "@pumpings:",
   growth: "@growth:",
   tummyTime: "@tummyTimes:",
+  milestones: "@milestones:",
 };
 
 function generateId(): string {
@@ -991,6 +993,135 @@ async function updateLocalTummyTime(
   const data = await AsyncStorage.getItem(key);
   const sessions = data ? (JSON.parse(data) as StoredTummyTimeEntry[]) : [];
   await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
+}
+
+// ============ MILESTONES ============
+
+export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promise<StoredMilestoneResponse[]> {
+  const { data, error } = await supabase
+    .from("milestone_responses")
+    .select("*")
+    .eq("baby_id", babyId);
+
+  if (error) {
+    console.error("[ActivitySync] Failed to fetch milestone responses:", error.message);
+    throw new Error("Failed to fetch milestone responses");
+  }
+
+  const responses: StoredMilestoneResponse[] = (data || []).map(transformMilestoneResponseFromDb);
+  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.milestones}${babyId}`), JSON.stringify(responses));
+  return responses;
+}
+
+export async function upsertMilestoneResponseInDatabase(
+  input: {
+    babyId: string;
+    milestoneId: string;
+    state: MilestoneState;
+    respondedBy?: string;
+  },
+  existingId?: string
+): Promise<StoredMilestoneResponse> {
+  const now = new Date().toISOString();
+  const id = existingId || generateId();
+
+  const response: StoredMilestoneResponse = {
+    id,
+    babyId: input.babyId,
+    milestoneId: input.milestoneId,
+    state: input.state,
+    respondedAt: now,
+    respondedBy: input.respondedBy,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await updateLocalMilestoneResponses(input.babyId, (responses) => {
+    const existing = responses.find((r) => r.milestoneId === input.milestoneId);
+    if (existing) {
+      return responses.map((r) =>
+        r.milestoneId === input.milestoneId
+          ? { ...r, state: input.state, respondedAt: now, updatedAt: now, respondedBy: input.respondedBy ?? r.respondedBy }
+          : r
+      );
+    }
+    return [...responses, response];
+  });
+
+  const dbData: Record<string, unknown> = {
+    id,
+    baby_id: input.babyId,
+    milestone_id: input.milestoneId,
+    state: input.state,
+    responded_at: now,
+    responded_by: input.respondedBy,
+    created_at: now,
+    updated_at: now,
+  };
+
+  if (existingId) {
+    await queueSyncOperation({
+      type: 'UPDATE',
+      table: 'milestone_responses',
+      entityId: id,
+      data: {
+        state: input.state,
+        responded_at: now,
+        updated_at: now,
+      },
+    });
+  } else {
+    await queueSyncOperation({
+      type: 'CREATE',
+      table: 'milestone_responses',
+      entityId: id,
+      data: dbData,
+    });
+  }
+
+  return response;
+}
+
+export async function deleteMilestoneResponseFromDatabase(
+  babyId: string,
+  responseId: string,
+  milestoneId: string
+): Promise<boolean> {
+  await updateLocalMilestoneResponses(babyId, (responses) =>
+    responses.filter((r) => r.milestoneId !== milestoneId)
+  );
+
+  await queueSyncOperation({
+    type: 'DELETE',
+    table: 'milestone_responses',
+    entityId: responseId,
+    data: null,
+  });
+
+  return true;
+}
+
+function transformMilestoneResponseFromDb(data: Record<string, unknown>): StoredMilestoneResponse {
+  return {
+    id: data.id as string,
+    babyId: data.baby_id as string,
+    milestoneId: data.milestone_id as string,
+    state: data.state as MilestoneState,
+    respondedAt: data.responded_at as string,
+    respondedBy: data.responded_by as string | undefined,
+    createdAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: (data.updated_at as string) || new Date().toISOString(),
+  };
+}
+
+async function updateLocalMilestoneResponses(
+  babyId: string,
+  updater: (responses: StoredMilestoneResponse[]) => StoredMilestoneResponse[]
+): Promise<void> {
+  const key = getUserScopedKey(`${KEYS.milestones}${babyId}`);
+  const data = await AsyncStorage.getItem(key);
+  const responses = data ? (JSON.parse(data) as StoredMilestoneResponse[]) : [];
+  await AsyncStorage.setItem(key, JSON.stringify(updater(responses)));
 }
 
 // ============ GUEST DATA MIGRATION ============
