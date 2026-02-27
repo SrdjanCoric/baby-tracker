@@ -819,19 +819,20 @@ export default function HomeScreen() {
       >
         <View className={isAndroid ? "gap-2.5" : "gap-3"}>
           {cardRows.map((row, rowIndex) => (
-            <View key={rowIndex} className={`flex-row ${isAndroid ? "gap-2.5" : "gap-3"} ${row.length === 1 ? "justify-center" : ""}`}>
+            <View key={rowIndex} className={`flex-row ${isAndroid ? "gap-2.5" : "gap-3"}`}>
+              {row.length === 1 && <View style={{ flex: 0.5 }} />}
               {row.map((cardConfig) => {
                 const props = cardPropsMap[cardConfig.activity];
                 return (
-                  <View key={cardConfig.activity} className={row.length === 1 ? "w-[48%]" : "flex-1"}>
-                    <DashboardCard
-                      activity={cardConfig.activity}
-                      testID={`${cardConfig.activity}-card`}
-                      {...props}
-                    />
-                  </View>
+                  <DashboardCard
+                    key={cardConfig.activity}
+                    activity={cardConfig.activity}
+                    testID={`${cardConfig.activity}-card`}
+                    {...props}
+                  />
                 );
               })}
+              {row.length === 1 && <View style={{ flex: 0.5 }} />}
             </View>
           ))}
         </View>

@@ -13,7 +13,7 @@ import Animated, {
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { CONTENT_COLORS, SURFACE, ACTIVITY } from "@/constants/design-tokens";
 
-const CARD_MIN_HEIGHT = Platform.OS === "android" ? 140 : 160;
+const CARD_MIN_HEIGHT = Platform.OS === "android" ? 180 : 200;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -191,11 +191,14 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       >
         {/* Top row: Icon + Label */}
         <View className="flex-row items-center justify-between mb-2">
-          <View className="flex-row items-center">
+          <View className="flex-row items-center flex-1 mr-2">
             <Text className="text-2xl mr-2">{config.icon}</Text>
             <Text
-              className="text-sm font-semibold uppercase tracking-wider"
+              className="text-sm font-semibold uppercase tracking-wider flex-1"
               style={{ color: accentColor }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
             >
               {label}
             </Text>
