@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   FeedingStorageService,
   StoredFeedingEntry,
@@ -790,7 +790,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
   const suggestedSide: BreastSide = state.lastBreastSide ?? "left";
 
-  const value: FeedingContextValue = {
+  const value: FeedingContextValue = useMemo(() => ({
     ...state,
     startBreastfeeding,
     stopBreastfeeding,
@@ -803,7 +803,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     deleteFeeding,
     refreshFeedings: loadFeedings,
     getLastFeeding,
-  };
+  }), [state, startBreastfeeding, stopBreastfeeding, changeSide, pauseBreastfeeding, resumeBreastfeeding, suggestedSide, addFeeding, updateFeeding, deleteFeeding, loadFeedings, getLastFeeding]);
 
   return <FeedingContext.Provider value={value}>{children}</FeedingContext.Provider>;
 }

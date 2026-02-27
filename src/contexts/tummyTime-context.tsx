@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   TummyTimeStorageService,
   StoredTummyTimeEntry,
@@ -767,7 +767,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedBaby, state.suggestedGoalSeconds, user?.householdId]);
 
-  const value: TummyTimeContextValue = {
+  const value: TummyTimeContextValue = useMemo(() => ({
     ...state,
     startTummyTime,
     stopTummyTime,
@@ -786,7 +786,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     resetToAgeBasedGoal,
     dismissMilestoneSuggestion,
     acceptMilestoneSuggestion,
-  };
+  }), [state, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
 
   return (
     <TummyTimeContext.Provider value={value}>{children}</TummyTimeContext.Provider>

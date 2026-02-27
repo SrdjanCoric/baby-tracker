@@ -4,7 +4,7 @@
  */
 
 import { Pressable, Text, View, useColorScheme } from "react-native";
-import { forwardRef } from "react";
+import { forwardRef, memo } from "react";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { SURFACE_COLORS, CONTENT_COLORS, BORDER_COLORS } from "@/constants/design-tokens";
 import { getDateParts } from "@/utils/timeline";
@@ -24,7 +24,7 @@ interface TimelineItemProps {
   isLast?: boolean;
 }
 
-const TimelineItem = forwardRef<View, TimelineItemProps>(
+const TimelineItemInner = forwardRef<View, TimelineItemProps>(
   (
     {
       activity,
@@ -135,7 +135,20 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
   }
 );
 
-TimelineItem.displayName = "TimelineItem";
+TimelineItemInner.displayName = "TimelineItem";
+
+const TimelineItem = memo(TimelineItemInner, (prev, next) => {
+  return (
+    prev.activity === next.activity &&
+    prev.time === next.time &&
+    prev.title === next.title &&
+    prev.subtitle === next.subtitle &&
+    prev.details === next.details &&
+    prev.loggedBy === next.loggedBy &&
+    prev.isLast === next.isLast &&
+    prev.testID === next.testID
+  );
+});
 
 // Day header component with date card and summary
 interface TimelineDayHeaderProps {

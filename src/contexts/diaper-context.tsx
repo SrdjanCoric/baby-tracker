@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from "react";
 import {
   DiaperStorageService,
   StoredDiaperEntry,
@@ -253,7 +253,7 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
     return counts;
   }, [state.diapers]);
 
-  const value: DiaperContextValue = {
+  const value: DiaperContextValue = useMemo(() => ({
     ...state,
     addDiaper,
     updateDiaper,
@@ -261,7 +261,7 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
     refreshDiapers: loadDiapers,
     getLastDiaper,
     getTodaysCounts,
-  };
+  }), [state, addDiaper, updateDiaper, deleteDiaper, loadDiapers, getLastDiaper, getTodaysCounts]);
 
   return <DiaperContext.Provider value={value}>{children}</DiaperContext.Provider>;
 }
