@@ -1,5 +1,5 @@
 import { Pressable, Text, View, useColorScheme, Platform } from "react-native";
-import { forwardRef, useCallback, useEffect } from "react";
+import { forwardRef, memo, useCallback, useEffect } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -45,7 +45,7 @@ interface DashboardCardProps {
   todayBadge?: string;
 }
 
-const DashboardCard = forwardRef<View, DashboardCardProps>(
+const DashboardCardInner = forwardRef<View, DashboardCardProps>(
   (
     {
       activity,
@@ -359,7 +359,7 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
               style={{ backgroundColor: `${accentColor}15` }}
             >
               <Text
-                className="text-[11px] font-semibold"
+                className="text-[13px] font-semibold"
                 style={{ color: accentColor }}
               >
                 {todayBadge}
@@ -451,7 +451,29 @@ const DashboardCard = forwardRef<View, DashboardCardProps>(
   }
 );
 
-DashboardCard.displayName = "DashboardCard";
+DashboardCardInner.displayName = "DashboardCard";
+
+const DashboardCard = memo(DashboardCardInner, (prev, next) => {
+  return (
+    prev.activity === next.activity &&
+    prev.label === next.label &&
+    prev.timeSince === next.timeSince &&
+    prev.subtitle === next.subtitle &&
+    prev.isActive === next.isActive &&
+    prev.activeLabel === next.activeLabel &&
+    prev.isPaused === next.isPaused &&
+    prev.actionLabel === next.actionLabel &&
+    prev.progress === next.progress &&
+    prev.secondaryInfo === next.secondaryInfo &&
+    prev.isLockedByOther === next.isLockedByOther &&
+    prev.lockedByName === next.lockedByName &&
+    prev.lockedElapsedTime === next.lockedElapsedTime &&
+    prev.babyName === next.babyName &&
+    prev.isPausedByOther === next.isPausedByOther &&
+    prev.todayBadge === next.todayBadge &&
+    prev.testID === next.testID
+  );
+});
 
 export { DashboardCard, type DashboardCardProps };
 export type { ActivityType } from "@/constants/activities";
