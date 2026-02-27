@@ -3,7 +3,7 @@
  * Manages onboarding state and navigation
  */
 
-import React, { createContext, useContext, useEffect, useReducer, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useReducer, useCallback, useMemo } from "react";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { onboardingReducer, initialOnboardingState, type OnboardingState, type OnboardingAction } from "./onboarding-reducer";
 import { TOTAL_ONBOARDING_STEPS } from "@/constants/onboarding";
@@ -96,7 +96,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const isLastStep = state.currentStep === TOTAL_ONBOARDING_STEPS - 1;
   const isFirstStep = state.currentStep === 0;
 
-  const value: OnboardingContextValue = {
+  const value: OnboardingContextValue = useMemo(() => ({
     state,
     currentScreen,
     totalSteps: TOTAL_ONBOARDING_STEPS,
@@ -108,7 +108,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     completeOnboarding,
     skipOnboarding,
     resetOnboarding,
-  };
+  }), [state, currentScreen, isLastStep, isFirstStep, nextStep, previousStep, goToStep, completeOnboarding, skipOnboarding, resetOnboarding]);
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useRef } from "react";
 import { AppState, Platform } from "react-native";
 import { useBaby } from "./baby-context";
 import { useFeeding } from "./feeding-context";
@@ -471,10 +471,10 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     return JSON.stringify(data);
   }, [buildWidgetData]);
 
-  const value: WidgetContextValue = {
+  const value: WidgetContextValue = useMemo(() => ({
     refreshWidgetData,
     getWidgetDataJson,
-  };
+  }), [refreshWidgetData, getWidgetDataJson]);
 
   return (
     <WidgetContext.Provider value={value}>{children}</WidgetContext.Provider>

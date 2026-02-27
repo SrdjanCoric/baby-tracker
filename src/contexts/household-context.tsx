@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "./auth-context";
 import { useSync } from "./sync-context";
 import { RemoteChange } from "@/services/sync";
@@ -357,7 +357,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
 
   const isOwner = user?.isOwner ?? false;
 
-  const value: HouseholdContextValue = {
+  const value: HouseholdContextValue = useMemo(() => ({
     ...state,
     refreshHousehold,
     regenerateCode,
@@ -365,7 +365,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     leaveHousehold,
     clearError,
     isOwner,
-  };
+  }), [state, refreshHousehold, regenerateCode, joinHousehold, leaveHousehold, clearError, isOwner]);
 
   return (
     <HouseholdContext.Provider value={value}>

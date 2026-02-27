@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback, useState } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from "react";
 import { UnitStorageService } from "@/services/unit-storage";
 import {
   type UnitSystem,
@@ -39,14 +39,18 @@ export function UnitProvider({ children }: { children: React.ReactNode }) {
     setUnitSystemState(newSystem);
   }, []);
 
-  const value: UnitContextValue = {
+  const weightUnit = getWeightUnit(unitSystem);
+  const heightUnit = getHeightUnit(unitSystem);
+  const volumeUnit = getVolumeUnit(unitSystem);
+
+  const value: UnitContextValue = useMemo(() => ({
     unitSystem,
-    weightUnit: getWeightUnit(unitSystem),
-    heightUnit: getHeightUnit(unitSystem),
-    volumeUnit: getVolumeUnit(unitSystem),
+    weightUnit,
+    heightUnit,
+    volumeUnit,
     isLoading,
     setUnitSystem: handleSetUnitSystem,
-  };
+  }), [unitSystem, weightUnit, heightUnit, volumeUnit, isLoading, handleSetUnitSystem]);
 
   return <UnitContext.Provider value={value}>{children}</UnitContext.Provider>;
 }

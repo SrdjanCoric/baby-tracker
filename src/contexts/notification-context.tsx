@@ -9,6 +9,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useMemo,
   useRef,
 } from "react";
 import { AppState, AppStateStatus } from "react-native";
@@ -483,7 +484,7 @@ export function NotificationProvider({
     return currentUserIdRef.current !== null;
   }, []);
 
-  const value: NotificationContextValue = {
+  const value: NotificationContextValue = useMemo(() => ({
     settings,
     permissionStatus,
     isLoading,
@@ -501,7 +502,7 @@ export function NotificationProvider({
     syncFeedingPreferenceForBaby,
     syncWakeWindowPreferenceForBaby,
     isUserAuthenticated,
-  };
+  }), [settings, permissionStatus, isLoading, inAppRemindersEnabled, activityNotificationsEnabled, updateSettings, requestPermissions, scheduleFeedingReminder, cancelFeedingReminder, checkTimerAlert, setInAppRemindersEnabled, checkInAppReminder, setActivityNotificationsEnabled, registerPushTokenForUser, syncFeedingPreferenceForBaby, syncWakeWindowPreferenceForBaby, isUserAuthenticated]);
 
   return (
     <NotificationContext.Provider value={value}>

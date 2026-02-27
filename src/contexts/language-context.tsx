@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback, useState } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from "react";
 import * as Localization from "expo-localization";
 import i18n from "@/i18n";
 import { LanguageStorageService, type LanguageCode } from "@/services/language-storage";
@@ -48,12 +48,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const resolvedLanguage = language === "system" ? getDeviceLanguage() : language;
 
-  const value: LanguageContextValue = {
+  const value: LanguageContextValue = useMemo(() => ({
     language,
     resolvedLanguage,
     isLoading,
     setLanguage: handleSetLanguage,
-  };
+  }), [language, resolvedLanguage, isLoading, handleSetLanguage]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

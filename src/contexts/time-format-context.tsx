@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback, useState } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from "react";
 import { TimeFormatStorageService } from "@/services/time-format-storage";
 import type { TimeFormat } from "@/utils/time";
 
@@ -30,11 +30,11 @@ export function TimeFormatProvider({ children }: { children: React.ReactNode }) 
     setTimeFormatState(newFormat);
   }, []);
 
-  const value: TimeFormatContextValue = {
+  const value: TimeFormatContextValue = useMemo(() => ({
     timeFormat,
     isLoading,
     setTimeFormat: handleSetTimeFormat,
-  };
+  }), [timeFormat, isLoading, handleSetTimeFormat]);
 
   return <TimeFormatContext.Provider value={value}>{children}</TimeFormatContext.Provider>;
 }

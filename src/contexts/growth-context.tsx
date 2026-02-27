@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from "react";
 import {
   GrowthStorageService,
   StoredGrowthEntry,
@@ -256,7 +256,7 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [getMeasurementHistory]);
 
-  const value: GrowthContextValue = {
+  const value: GrowthContextValue = useMemo(() => ({
     ...state,
     addMeasurement,
     updateMeasurement,
@@ -265,7 +265,7 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
     getLastMeasurement,
     getMeasurementHistory,
     getWeightChange,
-  };
+  }), [state, addMeasurement, updateMeasurement, deleteMeasurement, loadMeasurements, getLastMeasurement, getMeasurementHistory, getWeightChange]);
 
   return <GrowthContext.Provider value={value}>{children}</GrowthContext.Provider>;
 }

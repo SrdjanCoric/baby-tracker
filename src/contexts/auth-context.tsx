@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -432,11 +432,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return profile;
   }, [user?.id]);
 
-  const value: AuthContextValue = {
+  const isAuthenticated = !!user;
+
+  const value: AuthContextValue = useMemo(() => ({
     user,
     session,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated,
     signUp,
     signIn,
     signInWithMagicLink,
@@ -447,7 +449,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     verifyPassword,
     refreshUserProfile,
     isAppleSignInAvailable,
-  };
+  }), [user, session, isLoading, isAuthenticated, signUp, signIn, signInWithMagicLink, signInWithGoogle, signInWithApple, signOut, updateDisplayName, verifyPassword, refreshUserProfile, isAppleSignInAvailable]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
