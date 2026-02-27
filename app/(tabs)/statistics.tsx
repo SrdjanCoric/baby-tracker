@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import { Alert, AppState, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor, ACTION_COLORS, SURFACE, BORDER } from "@/constants/design-tokens";
 import { useFeeding, useSleep, useDiaper, usePumping, useTummyTime, useBaby } from "@/contexts";
@@ -167,15 +167,27 @@ export default function StatisticsScreen() {
   const isLoading = feedingsLoading || sleepsLoading || diapersLoading || pumpingsLoading || tummyTimesLoading;
   const [refreshing, setRefreshing] = useState(false);
 
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState !== "active") {
+        setRefreshing(false);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        refreshFeedings(),
-        refreshSleeps(),
-        refreshDiapers(),
-        refreshPumpings(),
-        refreshTummyTimes(),
+      await Promise.race([
+        Promise.all([
+          refreshFeedings(),
+          refreshSleeps(),
+          refreshDiapers(),
+          refreshPumpings(),
+          refreshTummyTimes(),
+        ]),
+        new Promise((resolve) => setTimeout(resolve, 15000)),
       ]);
     } finally {
       setRefreshing(false);

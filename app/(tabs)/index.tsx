@@ -100,7 +100,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active") {
+      if (nextState !== "active") {
         setRefreshing(false);
       }
     });
@@ -110,15 +110,18 @@ export default function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        refreshFeedings(),
-        refreshSleeps(),
-        refreshDiapers(),
-        refreshPumpings(),
-        refreshMeasurements(),
-        refreshTummyTimes(),
-        refreshMilestones(),
-        refreshLocks(),
+      await Promise.race([
+        Promise.all([
+          refreshFeedings(),
+          refreshSleeps(),
+          refreshDiapers(),
+          refreshPumpings(),
+          refreshMeasurements(),
+          refreshTummyTimes(),
+          refreshMilestones(),
+          refreshLocks(),
+        ]),
+        new Promise((resolve) => setTimeout(resolve, 15000)),
       ]);
     } finally {
       setRefreshing(false);
@@ -627,158 +630,161 @@ export default function HomeScreen() {
     };
   }, [selectedBaby?.id, isLockedByOther, getLockedByName, getLockForActivity]);
 
-  const getCardProps = useCallback((activity: ActivityType): CardProps => {
-    switch (activity) {
-      case "feeding": {
-        const feedingLock = getTimerLockInfo("feeding");
-        return {
-          label: t("feeding.title"),
-          timeSince: feedingTimeSince,
-          subtitle: feedingSubtitle,
-          isActive: isFeedingActive,
-          activeLabel: feedingActiveLabel,
-          onPress: handleFeedingCardPress,
-          onActionPress: isFeedingActive ? handleStopFeeding : handleAddFeeding,
-          onPausePress: isFeedingActive && isAuthenticated ? handleTogglePauseFeeding : undefined,
-          isPaused: feedingActiveTimer?.isPaused,
-          actionLabel: isFeedingActive ? undefined : "+",
-          isLockedByOther: feedingLock.isLocked,
-          lockedByName: feedingLock.lockedByName,
-          lockedElapsedTime: feedingLock.elapsedTime,
-          babyName: selectedBaby?.name,
-          isPausedByOther: feedingLock.isPausedByOther,
-        };
-      }
-      case "sleep": {
-        const sleepLock = getTimerLockInfo("sleep");
-        return {
-          label: t("sleep.title"),
-          timeSince: sleepTimeSince,
-          secondaryInfo: sleepSecondaryInfo,
-          isActive: isSleepActive,
-          activeLabel: t("sleep.sleeping"),
-          onPress: handleSleepCardPress,
-          onActionPress: isSleepActive ? handleStopSleep : handleAddSleep,
-          onPausePress: isSleepActive && isAuthenticated ? handleTogglePauseSleep : undefined,
-          isPaused: sleepActiveTimer?.isPaused,
-          actionLabel: isSleepActive ? undefined : "+",
-          progress: sleepProgress,
-          isLockedByOther: sleepLock.isLocked,
-          lockedByName: sleepLock.lockedByName,
-          lockedElapsedTime: sleepLock.elapsedTime,
-          babyName: selectedBaby?.name,
-          isPausedByOther: sleepLock.isPausedByOther,
-        };
-      }
-      case "diaper": {
-        const wetCount = todayDiaperCounts.wet + todayDiaperCounts.mixed;
-        return {
-          label: t("diaper.title"),
-          timeSince: diaperTimeSince,
-          subtitle: diaperSubtitle,
-          isActive: false,
-          onPress: handleDiaperCardPress,
-          onActionPress: handleAddDiaper,
-          actionLabel: "+",
-          todayBadge: `${wetCount}\u{1F4A7} ${t("common.today").toLowerCase()}`,
-        };
-      }
-      case "pumping": {
-        const pumpingLock = getTimerLockInfo("pumping");
-        return {
-          label: t("pumping.title"),
-          timeSince: pumpingTimeSince,
-          subtitle: pumpingSubtitle,
-          isActive: isPumpingActive,
-          activeLabel: t("pumping.pumping"),
-          onPress: handlePumpingCardPress,
-          onActionPress: isPumpingActive ? handleStopPumping : handleAddPumping,
-          onPausePress: isPumpingActive && isAuthenticated ? handleTogglePausePumping : undefined,
-          isPaused: pumpingActiveTimer?.isPaused,
-          actionLabel: isPumpingActive ? undefined : "+",
-          isLockedByOther: pumpingLock.isLocked,
-          lockedByName: pumpingLock.lockedByName,
-          lockedElapsedTime: pumpingLock.elapsedTime,
-          babyName: selectedBaby?.name,
-          isPausedByOther: pumpingLock.isPausedByOther,
-        };
-      }
-      case "tummyTime": {
-        const tummyTimeLock = getTimerLockInfo("tummy_time");
-        return {
-          label: t("tummyTime.title"),
-          timeSince: tummyTimeTimeSince,
-          secondaryInfo: tummyTimeSecondaryInfo,
-          isActive: isTummyTimeActive,
-          activeLabel: t("tummyTime.inProgress"),
-          onPress: handleTummyTimeCardPress,
-          onActionPress: isTummyTimeActive ? handleStopTummyTime : handleAddTummyTime,
-          onPausePress: isTummyTimeActive && isAuthenticated ? handleTogglePauseTummyTime : undefined,
-          isPaused: tummyTimeActiveTimer?.isPaused,
-          actionLabel: isTummyTimeActive ? undefined : "+",
-          progress: tummyTimeProgress,
-          isLockedByOther: tummyTimeLock.isLocked,
-          babyName: selectedBaby?.name,
-          lockedByName: tummyTimeLock.lockedByName,
-          lockedElapsedTime: tummyTimeLock.elapsedTime,
-          isPausedByOther: tummyTimeLock.isPausedByOther,
-        };
-      }
-      case "growth":
-        return {
-          label: t("growth.title"),
-          timeSince: growthTimeSince,
-          subtitle: growthSubtitle,
-          isActive: false,
-          onPress: handleGrowthCardPress,
-          onActionPress: handleAddGrowth,
-          actionLabel: "+",
-        };
-      case "milestones": {
-        const currentAgeGroup = getCurrentAgeGroup();
-        const ageGroup = currentAgeGroup ?? AGE_GROUPS[0];
-        const ageKey = ageGroup.key;
-        const yesCount = getYesCountForAge(ageKey);
-        const notSureCount = getNotSureCountForAge(ageKey);
-        const total = getTotalCountForAge(ageKey);
-        const stars = getStarsEarned();
-        const allDone = isAgeCompleted(ageKey);
-        const starPrefix = stars > 0 ? "\u2605".repeat(stars) + " " : "";
-        const progress = total > 0 ? Math.round((yesCount / total) * 100) : 0;
+  const feedingCardProps = useMemo((): CardProps => {
+    const feedingLock = getTimerLockInfo("feeding");
+    return {
+      label: t("feeding.title"),
+      timeSince: feedingTimeSince,
+      subtitle: feedingSubtitle,
+      isActive: isFeedingActive,
+      activeLabel: feedingActiveLabel,
+      onPress: handleFeedingCardPress,
+      onActionPress: isFeedingActive ? handleStopFeeding : handleAddFeeding,
+      onPausePress: isFeedingActive && isAuthenticated ? handleTogglePauseFeeding : undefined,
+      isPaused: feedingActiveTimer?.isPaused,
+      actionLabel: isFeedingActive ? undefined : "+",
+      isLockedByOther: feedingLock.isLocked,
+      lockedByName: feedingLock.lockedByName,
+      lockedElapsedTime: feedingLock.elapsedTime,
+      babyName: selectedBaby?.name,
+      isPausedByOther: feedingLock.isPausedByOther,
+    };
+  }, [t, feedingTimeSince, feedingSubtitle, isFeedingActive, feedingActiveLabel, feedingActiveTimer?.isPaused, handleFeedingCardPress, handleAddFeeding, handleStopFeeding, handleTogglePauseFeeding, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
-        let subtitle: string;
-        if (allDone) {
-          subtitle = t("milestones.allDone");
-        } else {
-          subtitle = t("milestones.progress", { yes: yesCount, total });
-          if (notSureCount > 0) {
-            subtitle += " \u00B7 " + t("milestones.notSureCount", { count: notSureCount });
-          }
-        }
+  const sleepCardProps = useMemo((): CardProps => {
+    const sleepLock = getTimerLockInfo("sleep");
+    return {
+      label: t("sleep.title"),
+      timeSince: sleepTimeSince,
+      secondaryInfo: sleepSecondaryInfo,
+      isActive: isSleepActive,
+      activeLabel: t("sleep.sleeping"),
+      onPress: handleSleepCardPress,
+      onActionPress: isSleepActive ? handleStopSleep : handleAddSleep,
+      onPausePress: isSleepActive && isAuthenticated ? handleTogglePauseSleep : undefined,
+      isPaused: sleepActiveTimer?.isPaused,
+      actionLabel: isSleepActive ? undefined : "+",
+      progress: sleepProgress,
+      isLockedByOther: sleepLock.isLocked,
+      lockedByName: sleepLock.lockedByName,
+      lockedElapsedTime: sleepLock.elapsedTime,
+      babyName: selectedBaby?.name,
+      isPausedByOther: sleepLock.isPausedByOther,
+    };
+  }, [t, sleepTimeSince, sleepSecondaryInfo, isSleepActive, sleepActiveTimer?.isPaused, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, handleTogglePauseSleep, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
-        return {
-          label: t("milestones.title"),
-          timeSince: `${starPrefix}${t(`milestones.age.${ageGroup.key}` as never)}`,
-          subtitle,
-          isActive: false,
-          onPress: handleMilestonesPress,
-          onActionPress: handleMilestonesPress,
-          actionLabel: "+",
-          progress,
-        };
+  const diaperCardProps = useMemo((): CardProps => {
+    const wetCount = todayDiaperCounts.wet + todayDiaperCounts.mixed;
+    return {
+      label: t("diaper.title"),
+      timeSince: diaperTimeSince,
+      subtitle: diaperSubtitle,
+      isActive: false,
+      onPress: handleDiaperCardPress,
+      onActionPress: handleAddDiaper,
+      actionLabel: "+",
+      todayBadge: `${wetCount}\u{1F4A7} ${t("common.today").toLowerCase()}`,
+    };
+  }, [t, diaperTimeSince, diaperSubtitle, handleDiaperCardPress, handleAddDiaper, todayDiaperCounts]);
+
+  const pumpingCardProps = useMemo((): CardProps => {
+    const pumpingLock = getTimerLockInfo("pumping");
+    return {
+      label: t("pumping.title"),
+      timeSince: pumpingTimeSince,
+      subtitle: pumpingSubtitle,
+      isActive: isPumpingActive,
+      activeLabel: t("pumping.pumping"),
+      onPress: handlePumpingCardPress,
+      onActionPress: isPumpingActive ? handleStopPumping : handleAddPumping,
+      onPausePress: isPumpingActive && isAuthenticated ? handleTogglePausePumping : undefined,
+      isPaused: pumpingActiveTimer?.isPaused,
+      actionLabel: isPumpingActive ? undefined : "+",
+      isLockedByOther: pumpingLock.isLocked,
+      lockedByName: pumpingLock.lockedByName,
+      lockedElapsedTime: pumpingLock.elapsedTime,
+      babyName: selectedBaby?.name,
+      isPausedByOther: pumpingLock.isPausedByOther,
+    };
+  }, [t, pumpingTimeSince, pumpingSubtitle, isPumpingActive, pumpingActiveTimer?.isPaused, handlePumpingCardPress, handleAddPumping, handleStopPumping, handleTogglePausePumping, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
+
+  const tummyTimeCardProps = useMemo((): CardProps => {
+    const tummyTimeLock = getTimerLockInfo("tummy_time");
+    return {
+      label: t("tummyTime.title"),
+      timeSince: tummyTimeTimeSince,
+      secondaryInfo: tummyTimeSecondaryInfo,
+      isActive: isTummyTimeActive,
+      activeLabel: t("tummyTime.inProgress"),
+      onPress: handleTummyTimeCardPress,
+      onActionPress: isTummyTimeActive ? handleStopTummyTime : handleAddTummyTime,
+      onPausePress: isTummyTimeActive && isAuthenticated ? handleTogglePauseTummyTime : undefined,
+      isPaused: tummyTimeActiveTimer?.isPaused,
+      actionLabel: isTummyTimeActive ? undefined : "+",
+      progress: tummyTimeProgress,
+      isLockedByOther: tummyTimeLock.isLocked,
+      babyName: selectedBaby?.name,
+      lockedByName: tummyTimeLock.lockedByName,
+      lockedElapsedTime: tummyTimeLock.elapsedTime,
+      isPausedByOther: tummyTimeLock.isPausedByOther,
+    };
+  }, [t, tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, tummyTimeActiveTimer?.isPaused, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime, handleStopTummyTime, handleTogglePauseTummyTime, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
+
+  const growthCardProps = useMemo((): CardProps => {
+    return {
+      label: t("growth.title"),
+      timeSince: growthTimeSince,
+      subtitle: growthSubtitle,
+      isActive: false,
+      onPress: handleGrowthCardPress,
+      onActionPress: handleAddGrowth,
+      actionLabel: "+",
+    };
+  }, [t, growthTimeSince, growthSubtitle, handleGrowthCardPress, handleAddGrowth]);
+
+  const milestonesCardProps = useMemo((): CardProps => {
+    const currentAgeGroup = getCurrentAgeGroup();
+    const ageGroup = currentAgeGroup ?? AGE_GROUPS[0];
+    const ageKey = ageGroup.key;
+    const yesCount = getYesCountForAge(ageKey);
+    const notSureCount = getNotSureCountForAge(ageKey);
+    const total = getTotalCountForAge(ageKey);
+    const stars = getStarsEarned();
+    const allDone = isAgeCompleted(ageKey);
+    const starPrefix = stars > 0 ? "\u2605".repeat(stars) + " " : "";
+    const progress = total > 0 ? Math.round((yesCount / total) * 100) : 0;
+
+    let subtitle: string;
+    if (allDone) {
+      subtitle = t("milestones.allDone");
+    } else {
+      subtitle = t("milestones.progress", { yes: yesCount, total });
+      if (notSureCount > 0) {
+        subtitle += " \u00B7 " + t("milestones.notSureCount", { count: notSureCount });
       }
     }
-  }, [
-    t,
-    feedingTimeSince, feedingSubtitle, isFeedingActive, feedingActiveLabel, feedingActiveTimer?.isPaused, handleFeedingCardPress, handleAddFeeding, handleStopFeeding, handleTogglePauseFeeding,
-    sleepTimeSince, sleepSecondaryInfo, isSleepActive, sleepActiveTimer?.isPaused, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, handleTogglePauseSleep,
-    diaperTimeSince, diaperSubtitle, handleDiaperCardPress, handleAddDiaper,
-    pumpingTimeSince, pumpingSubtitle, isPumpingActive, pumpingActiveTimer?.isPaused, handlePumpingCardPress, handleAddPumping, handleStopPumping, handleTogglePausePumping,
-    tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, tummyTimeActiveTimer?.isPaused, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime, handleStopTummyTime, handleTogglePauseTummyTime,
-    growthTimeSince, growthSubtitle, handleGrowthCardPress, handleAddGrowth,
-    getCurrentAgeGroup, getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, getStarsEarned, isAgeCompleted, handleMilestonesPress, milestoneResponses,
-    getTimerLockInfo, todayDiaperCounts,
-  ]);
+
+    return {
+      label: t("milestones.title"),
+      timeSince: `${starPrefix}${t(`milestones.age.${ageGroup.key}` as never)}`,
+      subtitle,
+      isActive: false,
+      onPress: handleMilestonesPress,
+      onActionPress: handleMilestonesPress,
+      actionLabel: "+",
+      progress,
+    };
+  }, [t, getCurrentAgeGroup, getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, getStarsEarned, isAgeCompleted, handleMilestonesPress, milestoneResponses]);
+
+  const cardPropsMap = useMemo((): Record<ActivityType, CardProps> => ({
+    feeding: feedingCardProps,
+    sleep: sleepCardProps,
+    diaper: diaperCardProps,
+    pumping: pumpingCardProps,
+    tummyTime: tummyTimeCardProps,
+    growth: growthCardProps,
+    milestones: milestonesCardProps,
+  }), [feedingCardProps, sleepCardProps, diaperCardProps, pumpingCardProps, tummyTimeCardProps, growthCardProps, milestonesCardProps]);
 
   const cardRows = useMemo(() => {
     const rows: DashboardCardConfig[][] = [];
@@ -815,7 +821,7 @@ export default function HomeScreen() {
           {cardRows.map((row, rowIndex) => (
             <View key={rowIndex} className={`flex-row ${isAndroid ? "gap-2.5" : "gap-3"} ${row.length === 1 ? "justify-center" : ""}`}>
               {row.map((cardConfig) => {
-                const props = getCardProps(cardConfig.activity);
+                const props = cardPropsMap[cardConfig.activity];
                 return (
                   <View key={cardConfig.activity} className={row.length === 1 ? "w-[48%]" : "flex-1"}>
                     <DashboardCard

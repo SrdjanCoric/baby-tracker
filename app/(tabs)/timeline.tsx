@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { AppState, RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useMemo, useCallback, useState, useRef } from "react";
+import { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
 import { useRouter } from "expo-router";
@@ -113,6 +113,16 @@ export default function TimelineScreen() {
   const { colorScheme } = useColorScheme();
 
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState !== "active") {
+        setRefreshing(false);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const scrollViewRef = useRef<ScrollView>(null);
   const dayPositionsRef = useRef<Map<string, number>>(new Map());
@@ -141,13 +151,16 @@ export default function TimelineScreen() {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        refreshFeedings(),
-        refreshSleeps(),
-        refreshDiapers(),
-        refreshPumpings(),
-        refreshMeasurements(),
-        refreshTummyTimes(),
+      await Promise.race([
+        Promise.all([
+          refreshFeedings(),
+          refreshSleeps(),
+          refreshDiapers(),
+          refreshPumpings(),
+          refreshMeasurements(),
+          refreshTummyTimes(),
+        ]),
+        new Promise((resolve) => setTimeout(resolve, 15000)),
       ]);
     } finally {
       setRefreshing(false);
