@@ -58,14 +58,14 @@ export function DashboardConfigProvider({ children }: { children: React.ReactNod
     setConfig(defaultConfig);
   }, []);
 
-  const value: DashboardConfigContextValue = {
+  const value: DashboardConfigContextValue = useMemo(() => ({
     config,
     visibleCards,
     isLoading,
     setCardVisibility,
     reorderCards,
     resetToDefault,
-  };
+  }), [config, visibleCards, isLoading, setCardVisibility, reorderCards, resetToDefault]);
 
   return (
     <DashboardConfigContext.Provider value={value}>

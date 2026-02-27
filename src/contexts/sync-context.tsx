@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { SyncEngine, SyncState as EngineSyncState, SyncStatus, RealTimeSync, RemoteChange, SyncableTable } from '@/services/sync';
 
@@ -265,7 +265,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const value: SyncContextValue = {
+  const value: SyncContextValue = useMemo(() => ({
     ...state,
     foregroundRefreshKey,
     forceSync,
@@ -274,7 +274,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     subscribeToRemoteChanges,
     setAuthContext,
     enqueueOperation,
-  };
+  }), [state, foregroundRefreshKey, forceSync, retryFailedSync, clearAllData, subscribeToRemoteChanges, setAuthContext, enqueueOperation]);
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }

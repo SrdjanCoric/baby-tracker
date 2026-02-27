@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   PumpingStorageService,
   StoredPumpingEntry,
@@ -607,7 +607,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     return lastPumping?.side ?? null;
   }, [getLastPumping]);
 
-  const value: PumpingContextValue = {
+  const value: PumpingContextValue = useMemo(() => ({
     ...state,
     startPumping,
     stopPumping,
@@ -621,7 +621,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     getLastPumping,
     getTodaysTotalVolume,
     getLastSide,
-  };
+  }), [state, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping, addPumping, updatePumping, deletePumping, loadPumpings, getLastPumping, getTodaysTotalVolume, getLastSide]);
 
   return <PumpingContext.Provider value={value}>{children}</PumpingContext.Provider>;
 }

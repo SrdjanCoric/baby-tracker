@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   SleepStorageService,
   StoredSleepEntry,
@@ -1006,7 +1006,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
   }, [selectedBaby, state.wakeWindowConfig]);
 
-  const value: SleepContextValue = {
+  const value: SleepContextValue = useMemo(() => ({
     ...state,
     startSleep,
     stopSleep,
@@ -1035,7 +1035,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     setDayNightBoundary,
     setNapContinuationMinutes,
     setNewbornNapOptIn: setNewbornNapOptInMethod,
-  };
+  }), [state, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setNewbornNapOptInMethod]);
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
 }
