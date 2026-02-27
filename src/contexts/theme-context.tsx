@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback, useState } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { ThemeStorageService } from "@/services/theme-storage";
 import { resolveThemeMode, type ThemePreference, type ThemeMode } from "@/utils/theme";
@@ -59,13 +59,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemColorScheme = colorScheme === "dark" ? "dark" : "light";
   const resolvedMode = resolveThemeMode(preference, systemColorScheme);
 
-  const value: ThemeContextValue = {
+  const isDark = resolvedMode === "dark";
+
+  const value: ThemeContextValue = useMemo(() => ({
     preference,
     resolvedMode,
-    isDark: resolvedMode === "dark",
+    isDark,
     isLoading,
     setThemePreference: handleSetThemePreference,
-  };
+  }), [preference, resolvedMode, isDark, isLoading, handleSetThemePreference]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

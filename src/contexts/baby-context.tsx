@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import { BabyStorageService, StoredBabyProfile, CreateBabyInput, UpdateBabyInput } from "@/services/baby-storage";
@@ -347,15 +347,17 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value: BabyContextValue = {
+  const getBabyById = useCallback((id: string) => state.babies.find((b) => b.id === id), [state.babies]);
+
+  const value: BabyContextValue = useMemo(() => ({
     ...state,
-    getBabyById: (id: string) => state.babies.find((b) => b.id === id),
+    getBabyById,
     addBaby,
     updateBaby,
     deleteBaby,
     selectBaby,
     refreshBabies: loadBabies,
-  };
+  }), [state, getBabyById, addBaby, updateBaby, deleteBaby, selectBaby, loadBabies]);
 
   return <BabyContext.Provider value={value}>{children}</BabyContext.Provider>;
 }
