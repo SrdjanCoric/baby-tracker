@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getFcmAccessToken, sendFcmNotification, isFcmTokenInvalid } from "../_shared/fcm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": Deno.env.get("SUPABASE_URL") || "",
@@ -201,7 +202,7 @@ serve(async (req) => {
 
     const { data: tokens, error: tokensError } = await supabase
       .from("user_push_tokens")
-      .select("device_token, user_id, is_sandbox")
+      .select("device_token, user_id, is_sandbox, device_type")
       .in("user_id", userIds)
       .not("device_token", "is", null);
 
@@ -229,24 +230,60 @@ serve(async (req) => {
     const apnsTopic = "com.sofibaby.app";
     const jwt = await createApnsJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
 
+    const iosTokens = tokens.filter((t) => t.device_type === "ios");
+    const androidTokens = tokens.filter((t) => t.device_type === "android");
+
     const tokensToRemove: string[] = [];
     let sentCount = 0;
 
-    for (const { device_token, is_sandbox } of tokens) {
+    const title = baby.name;
+    const body = `${loggerName} logged a ${activityName}`;
+    const notifData = { type: "activity_logged", table, babyId: record.baby_id };
+
+    for (const { device_token, is_sandbox } of iosTokens) {
       const result = await sendApnsAlert(
         device_token,
         jwt,
         apnsTopic,
-        baby.name,
-        `${loggerName} logged a ${activityName}`,
+        title,
+        body,
         is_sandbox ?? false,
-        { type: "activity_logged", table, babyId: record.baby_id }
+        notifData
       );
 
       if (result.success) {
         sentCount++;
       } else if (result.status === 410 || result.status === 400) {
         tokensToRemove.push(device_token);
+      }
+    }
+
+    if (androidTokens.length > 0) {
+      const fcmServiceAccountJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
+      if (!fcmServiceAccountJson) {
+        console.warn(`Skipping ${androidTokens.length} Android token(s): FCM_SERVICE_ACCOUNT_JSON not set`);
+      } else {
+        try {
+          const { accessToken, projectId } = await getFcmAccessToken(fcmServiceAccountJson);
+          for (const { device_token } of androidTokens) {
+            const result = await sendFcmNotification({
+              accessToken,
+              projectId,
+              deviceToken: device_token,
+              title,
+              body,
+              data: { type: "activity_logged", table, babyId: record.baby_id },
+            });
+
+            if (result.success) {
+              sentCount++;
+            } else if (isFcmTokenInvalid(result.status, result.errorCode)) {
+              tokensToRemove.push(device_token);
+            }
+          }
+        } catch (fcmError) {
+          console.error("FCM auth/send failed:", fcmError);
+        }
       }
     }
 
@@ -260,7 +297,7 @@ serve(async (req) => {
       console.log(`Cleared ${tokensToRemove.length} invalid device tokens`);
     }
 
-    console.log(`Activity notifications sent: ${sentCount}/${tokens.length}`);
+    console.log(`Activity notifications sent: ${sentCount}/${tokens.length} (${iosTokens.length} iOS, ${androidTokens.length} Android)`);
 
     return new Response(
       JSON.stringify({ success: true, sent: sentCount, total: tokens.length }),
