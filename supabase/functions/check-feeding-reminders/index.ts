@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getFcmAccessToken, sendFcmNotification, isFcmTokenInvalid } from "../_shared/fcm.ts";
 
 interface ReminderRow {
   user_id: string;
@@ -155,8 +156,36 @@ serve(async (req) => {
 
     console.log(`Found ${dueReminders.length} due feeding reminder(s)`);
 
+    const deviceTokens = (dueReminders as ReminderRow[])
+      .map((r) => r.device_token)
+      .filter(Boolean);
+    const { data: tokenMeta } = await supabase
+      .from("user_push_tokens")
+      .select("device_token, device_type")
+      .in("device_token", deviceTokens);
+    const deviceTypeMap = new Map<string, string>();
+    for (const row of tokenMeta || []) {
+      deviceTypeMap.set(row.device_token, row.device_type);
+    }
+
     const apnsTopic = "com.sofibaby.app";
     const jwt = await createApnsJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
+
+    const fcmServiceAccountJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
+    let fcmCreds: { accessToken: string; projectId: string } | null = null;
+
+    const androidReminders = (dueReminders as ReminderRow[]).filter(
+      (r) => deviceTypeMap.get(r.device_token) === "android"
+    );
+    if (androidReminders.length > 0 && fcmServiceAccountJson) {
+      try {
+        fcmCreds = await getFcmAccessToken(fcmServiceAccountJson);
+      } catch (fcmError) {
+        console.error("FCM auth failed:", fcmError);
+      }
+    } else if (androidReminders.length > 0) {
+      console.warn(`Skipping ${androidReminders.length} Android token(s): FCM_SERVICE_ACCOUNT_JSON not set`);
+    }
 
     const tokensToRemove: string[] = [];
     let sentCount = 0;
@@ -169,21 +198,40 @@ serve(async (req) => {
         ? `Time to feed ${reminder.baby_name}`
         : "Time to feed";
 
-      const result = await sendApnsAlert(
-        reminder.device_token,
-        jwt,
-        apnsTopic,
-        title,
-        body,
-        reminder.is_sandbox,
-        { type: "feeding_reminder", babyId: reminder.baby_id }
-      );
+      const platform = deviceTypeMap.get(reminder.device_token);
 
-      if (result.success) {
-        sentCount++;
-        notifiedPairs.add(`${reminder.user_id}:${reminder.baby_id}`);
-      } else if (result.status === 410 || result.status === 400) {
-        tokensToRemove.push(reminder.device_token);
+      if (platform === "android") {
+        if (!fcmCreds) continue;
+        const result = await sendFcmNotification({
+          accessToken: fcmCreds.accessToken,
+          projectId: fcmCreds.projectId,
+          deviceToken: reminder.device_token,
+          title,
+          body,
+          data: { type: "feeding_reminder", babyId: reminder.baby_id },
+        });
+        if (result.success) {
+          sentCount++;
+          notifiedPairs.add(`${reminder.user_id}:${reminder.baby_id}`);
+        } else if (isFcmTokenInvalid(result.status, result.errorCode)) {
+          tokensToRemove.push(reminder.device_token);
+        }
+      } else {
+        const result = await sendApnsAlert(
+          reminder.device_token,
+          jwt,
+          apnsTopic,
+          title,
+          body,
+          reminder.is_sandbox,
+          { type: "feeding_reminder", babyId: reminder.baby_id }
+        );
+        if (result.success) {
+          sentCount++;
+          notifiedPairs.add(`${reminder.user_id}:${reminder.baby_id}`);
+        } else if (result.status === 410 || result.status === 400) {
+          tokensToRemove.push(reminder.device_token);
+        }
       }
     }
 

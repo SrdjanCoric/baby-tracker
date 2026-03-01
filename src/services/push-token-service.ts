@@ -42,7 +42,7 @@ export async function saveDeviceToken(deviceToken: string): Promise<{ error: Err
 
   const { error } = await supabase
     .from("user_push_tokens")
-    .update({ device_token: deviceToken, is_sandbox: __DEV__ })
+    .update({ device_token: deviceToken, is_sandbox: __DEV__, device_type: getDeviceType() })
     .eq("user_id", user.id);
 
   if (error) {

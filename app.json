@@ -44,6 +44,7 @@
       },
       "edgeToEdgeEnabled": false,
       "package": "com.sofibaby.app",
+      "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
           "action": "VIEW",
