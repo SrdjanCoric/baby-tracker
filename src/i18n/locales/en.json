@@ -78,7 +78,31 @@
     "log": "Log",
     "statistics": "Stats",
     "settings": "Settings",
-    "profile": "Profile"
+    "profile": "Profile",
+    "sleepPatterns": "Sleep"
+  },
+  "sleepPatterns": {
+    "title": "Sleep Patterns",
+    "day": "Day",
+    "week": "Week",
+    "summary": "Summary",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "nightSleep": "Night Sleep",
+    "napSleep": "Nap",
+    "now": "Now",
+    "avgBedtime": "Avg Bedtime",
+    "avgWakeTime": "Avg Wake Time",
+    "avgTotalSleep": "Avg Total Sleep",
+    "longestStretch": "Longest Stretch",
+    "avgNightSleep": "Night Sleep",
+    "avgNapsPerDay": "Naps/Day",
+    "avgNapDuration": "Nap Duration",
+    "nightWakings": "Night Wakings",
+    "bedtimeWakeTrends": "Bedtime & Wake Time Trends",
+    "averages": "Averages",
+    "noData": "No Sleep Data",
+    "noDataDescription": "Start tracking sleep to see patterns here"
   },
   "feeding": {
     "title": "Feeding",

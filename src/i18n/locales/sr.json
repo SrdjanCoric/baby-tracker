@@ -86,7 +86,31 @@
     "log": "Evidencija",
     "statistics": "Statistika",
     "settings": "Podešavanja",
-    "profile": "Profil"
+    "profile": "Profil",
+    "sleepPatterns": "San"
+  },
+  "sleepPatterns": {
+    "title": "Obrasci Spavanja",
+    "day": "Dan",
+    "week": "Nedelja",
+    "summary": "Pregled",
+    "today": "Danas",
+    "yesterday": "Juče",
+    "nightSleep": "Noćni San",
+    "napSleep": "Dremka",
+    "now": "Sada",
+    "avgBedtime": "Prosečno Vreme Spavanja",
+    "avgWakeTime": "Prosečno Vreme Buđenja",
+    "avgTotalSleep": "Prosečan Ukupni San",
+    "longestStretch": "Najduži Period",
+    "avgNightSleep": "Noćni San",
+    "avgNapsPerDay": "Dremke/Dan",
+    "avgNapDuration": "Trajanje Dremke",
+    "nightWakings": "Noćna Buđenja",
+    "bedtimeWakeTrends": "Trendovi Spavanja i Buđenja",
+    "averages": "Proseci",
+    "noData": "Nema Podataka o Snu",
+    "noDataDescription": "Počnite da pratite san da biste videli obrasce ovde"
   },
   "feeding": {
     "title": "Hranjenje",
