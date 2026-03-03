@@ -82,7 +82,31 @@
     "log": "Registro",
     "statistics": "Estadísticas",
     "settings": "Ajustes",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "sleepPatterns": "Sueño"
+  },
+  "sleepPatterns": {
+    "title": "Patrones de Sueño",
+    "day": "Día",
+    "week": "Semana",
+    "summary": "Resumen",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "nightSleep": "Sueño Nocturno",
+    "napSleep": "Siesta",
+    "now": "Ahora",
+    "avgBedtime": "Hora Promedio de Dormir",
+    "avgWakeTime": "Hora Promedio de Despertar",
+    "avgTotalSleep": "Sueño Total Promedio",
+    "longestStretch": "Período Más Largo",
+    "avgNightSleep": "Sueño Nocturno",
+    "avgNapsPerDay": "Siestas/Día",
+    "avgNapDuration": "Duración de Siesta",
+    "nightWakings": "Despertares Nocturnos",
+    "bedtimeWakeTrends": "Tendencias de Hora de Dormir y Despertar",
+    "averages": "Promedios",
+    "noData": "Sin Datos de Sueño",
+    "noDataDescription": "Comienza a registrar el sueño para ver patrones aquí"
   },
   "feeding": {
     "title": "Alimentación",
