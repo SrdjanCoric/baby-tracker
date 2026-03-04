@@ -102,7 +102,14 @@
     "bedtimeWakeTrends": "Bedtime & Wake Time Trends",
     "averages": "Averages",
     "noData": "No Sleep Data",
-    "noDataDescription": "Start tracking sleep to see patterns here"
+    "noDataDescription": "Start tracking sleep to see patterns here",
+    "newbornNote": "Bedtime and wake time patterns typically emerge around 3–4 months as your baby's circadian rhythm develops.",
+    "totalSleep": "Total",
+    "periodDays": "{{count}}d",
+    "recommended": "{{min}}-{{max}}h recommended",
+    "dailySleep": "Daily Sleep",
+    "sleepSplit": "Sleep Composition",
+    "consistency": "\u00b1 {{minutes}}m"
   },
   "feeding": {
     "title": "Feeding",
@@ -1421,6 +1428,95 @@
       "5y-cognitive-6": "Names some letters when you point to them",
       "5y-movement-1": "Buttons some buttons",
       "5y-movement-2": "Hops on one foot"
+    }
+  },
+  "stats": {
+    "title": "Statistics",
+    "categories": {
+      "sleep": "Sleep",
+      "feeding": "Feeding",
+      "diapers": "Diapers",
+      "growth": "Growth",
+      "pumping": "Pumping",
+      "tummyTime": "Tummy Time"
+    },
+    "periods": {
+      "day": "Day",
+      "week": "Week",
+      "summary": "Summary",
+      "today": "Today",
+      "7days": "7 Days"
+    },
+    "feeding": {
+      "totalFeeds": "Total Feeds",
+      "timeSinceLast": "Time Since Last",
+      "avgBetweenFeeds": "Avg Between Feeds",
+      "breastfeedingTime": "Breastfeeding Time",
+      "breastBalance": "Breast Balance",
+      "bottleVolume": "Bottle Volume",
+      "formula": "Formula",
+      "breastMilk": "Breast milk",
+      "solids": "Solids",
+      "sessions": "sessions",
+      "avgPerDay": "avg {{value}} / day",
+      "breastfeedingChart": "Breastfeeding",
+      "breastfeedingChartSub": "total minutes per day - past 7 days",
+      "bottleChart": "Bottle Feeding",
+      "bottleChartSub": "total ml per day - past 7 days",
+      "avgBetween": "Avg between feeds",
+      "bottleVolumeTotal": "Bottle volume total",
+      "7days": "FEEDING — 7 DAYS"
+    },
+    "diapers": {
+      "totalDiapers": "Total Diapers",
+      "wet": "Wet",
+      "dirty": "Dirty",
+      "mixed": "Mixed",
+      "dry": "Dry",
+      "dailyDiapers": "Daily Diapers",
+      "avgPerDay": "avg {{value}} / day",
+      "typeBreakdown": "Type Breakdown",
+      "breakdown": "Breakdown",
+      "7days": "DIAPERS — 7 DAYS"
+    },
+    "growth": {
+      "latestMeasurements": "Latest Measurements",
+      "viewGrowthCharts": "View Growth Charts",
+      "weight": "Weight",
+      "length": "Length",
+      "headCircumference": "Head Circumference",
+      "percentile": "{{value}}th",
+      "change": "+{{value}} this week"
+    },
+    "pumping": {
+      "totalDailyOutput": "Total Daily Output",
+      "acrossSessions": "across {{count}} sessions",
+      "sessionsToday": "Sessions Today",
+      "avgPerSession": "Avg Per Session",
+      "totalSessions": "Total sessions",
+      "avgDailyOutput": "Avg daily output",
+      "dailyVolume": "Daily Volume",
+      "dailyVolumeSub": "ml per day - past 7 days",
+      "totalVolume": "total volume",
+      "7days": "PUMPING — 7 DAYS"
+    },
+    "tummyTime": {
+      "totalTummyTime": "Total Tummy Time",
+      "sessions": "Sessions",
+      "longestSession": "Longest Session",
+      "aboveAvg": "↑ {{value}} above 7-day avg",
+      "belowAvg": "↓ {{value}} below 7-day avg",
+      "avgDailyTotal": "Avg daily total",
+      "avgSessionLength": "Avg session length",
+      "dailyTummyTime": "Daily Tummy Time",
+      "dailyTummyTimeSub": "minutes per day - past 7 days",
+      "totalAcrossSessions": "total across {{count}} sessions",
+      "7days": "TUMMY TIME — 7 DAYS"
+    },
+    "common": {
+      "past7Days": "Past 7 Days",
+      "noData": "No data yet",
+      "noDataDescription": "Start tracking to see your statistics"
     }
   }
 }

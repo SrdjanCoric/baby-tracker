@@ -110,7 +110,14 @@
     "bedtimeWakeTrends": "Trendovi Spavanja i Buđenja",
     "averages": "Proseci",
     "noData": "Nema Podataka o Snu",
-    "noDataDescription": "Počnite da pratite san da biste videli obrasce ovde"
+    "noDataDescription": "Počnite da pratite san da biste videli obrasce ovde",
+    "newbornNote": "Obrasci vremena spavanja i buđenja obično se pojavljuju oko 3–4 meseca kako se cirkadijalni ritam bebe razvija.",
+    "totalSleep": "Ukupno",
+    "periodDays": "{{count}}d",
+    "recommended": "{{min}}-{{max}}h preporu\u010deno",
+    "dailySleep": "Dnevni San",
+    "sleepSplit": "Sastav Sna",
+    "consistency": "\u00b1 {{minutes}}m"
   },
   "feeding": {
     "title": "Hranjenje",
@@ -1499,6 +1506,95 @@
       "5y-cognitive-6": "Imenuje neka slova kad ih pokažete",
       "5y-movement-1": "Zakopčava neka dugmeta",
       "5y-movement-2": "Skače na jednoj nozi"
+    }
+  },
+  "stats": {
+    "title": "Statistika",
+    "categories": {
+      "sleep": "San",
+      "feeding": "Hranjenje",
+      "diapers": "Pelene",
+      "growth": "Rast",
+      "pumping": "Izdajanje",
+      "tummyTime": "Na stomaku"
+    },
+    "periods": {
+      "day": "Dan",
+      "week": "Nedelja",
+      "summary": "Pregled",
+      "today": "Danas",
+      "7days": "7 dana"
+    },
+    "feeding": {
+      "totalFeeds": "Ukupno hranjenja",
+      "timeSinceLast": "Od poslednjeg",
+      "avgBetweenFeeds": "Prosek između",
+      "breastfeedingTime": "Vreme dojenja",
+      "breastBalance": "Balans dojki",
+      "bottleVolume": "Količina flašice",
+      "formula": "Formula",
+      "breastMilk": "Majčino mleko",
+      "solids": "Čvrsta hrana",
+      "sessions": "sesija",
+      "avgPerDay": "prosek {{value}} / dan",
+      "breastfeedingChart": "Dojenje",
+      "breastfeedingChartSub": "ukupno minuta dnevno - poslednjih 7 dana",
+      "bottleChart": "Flašica",
+      "bottleChartSub": "ukupno ml dnevno - poslednjih 7 dana",
+      "avgBetween": "Prosek između hranjenja",
+      "bottleVolumeTotal": "Ukupno flašica",
+      "7days": "HRANJENJE — 7 DANA"
+    },
+    "diapers": {
+      "totalDiapers": "Ukupno pelena",
+      "wet": "Mokra",
+      "dirty": "Prljava",
+      "mixed": "Mešovita",
+      "dry": "Suva",
+      "dailyDiapers": "Dnevne pelene",
+      "avgPerDay": "prosek {{value}} / dan",
+      "typeBreakdown": "Pregled po tipu",
+      "breakdown": "Pregled",
+      "7days": "PELENE — 7 DANA"
+    },
+    "growth": {
+      "latestMeasurements": "Poslednja merenja",
+      "viewGrowthCharts": "Pogledaj grafikone rasta",
+      "weight": "Težina",
+      "length": "Dužina",
+      "headCircumference": "Obim glave",
+      "percentile": "{{value}}.",
+      "change": "+{{value}} ove nedelje"
+    },
+    "pumping": {
+      "totalDailyOutput": "Ukupna dnevna količina",
+      "acrossSessions": "u {{count}} sesija",
+      "sessionsToday": "Sesije danas",
+      "avgPerSession": "Prosek po sesiji",
+      "totalSessions": "Ukupno sesija",
+      "avgDailyOutput": "Prosek dnevno",
+      "dailyVolume": "Dnevna količina",
+      "dailyVolumeSub": "ml dnevno - poslednjih 7 dana",
+      "totalVolume": "ukupna količina",
+      "7days": "IZDAJANJE — 7 DANA"
+    },
+    "tummyTime": {
+      "totalTummyTime": "Ukupno na stomaku",
+      "sessions": "Sesije",
+      "longestSession": "Najduža sesija",
+      "aboveAvg": "↑ {{value}} iznad proseka 7 dana",
+      "belowAvg": "↓ {{value}} ispod proseka 7 dana",
+      "avgDailyTotal": "Prosek dnevno ukupno",
+      "avgSessionLength": "Prosek trajanja sesije",
+      "dailyTummyTime": "Dnevno na stomaku",
+      "dailyTummyTimeSub": "minuta dnevno - poslednjih 7 dana",
+      "totalAcrossSessions": "ukupno u {{count}} sesija",
+      "7days": "NA STOMAKU — 7 DANA"
+    },
+    "common": {
+      "past7Days": "Poslednjih 7 dana",
+      "noData": "Još nema podataka",
+      "noDataDescription": "Počnite sa praćenjem da vidite statistiku"
     }
   }
 }
