@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { SURFACE } from "@/constants/colors";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, formatTime } from "@/utils/time";
 import type { TimeFormat } from "@/utils/time";
 import { calculateSleepSummary, buildDailySleepBars } from "@/utils/sleep-patterns";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
@@ -236,11 +236,7 @@ export function SummaryView({
           {data.avgBedtime ? (
             <MetricCard
               label={t("sleepPatterns.avgBedtime")}
-              value={data.avgBedtime.toLocaleTimeString(locale, {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: timeFormat === "12h",
-              })}
+              value={formatTime(data.avgBedtime, timeFormat)}
               colors={colors}
               subtitle={bedtimeSubtitle}
             />

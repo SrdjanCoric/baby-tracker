@@ -44,7 +44,7 @@ export function StackedBarChartWithAxis({
 
   const textTertiary = isDark ? TEXT.dark.tertiary : TEXT.light.tertiary;
   const textSecondary = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
-  const gridLine = isDark ? BORDER.dark.subtle : BORDER.light.subtle;
+  const gridLine = isDark ? BORDER.dark.strong : BORDER.light.subtle;
 
   const cardPadding = 64;
   const totalWidth = screenWidth - cardPadding;

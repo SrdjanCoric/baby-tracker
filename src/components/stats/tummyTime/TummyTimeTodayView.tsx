@@ -21,6 +21,7 @@ export function TummyTimeTodayView() {
   const isDark = colorScheme === "dark";
 
   const accentColor = isDark ? ACTIVITY.tummyTime.accentDark : ACTIVITY.tummyTime.accent;
+  const textAccent = isDark ? ACTIVITY.tummyTime.textAccentDark : ACTIVITY.tummyTime.textAccent;
 
   const { stats, comparisonText } = useMemo(() => {
     const range = getDateRangeForPeriod("today");
@@ -64,6 +65,7 @@ export function TummyTimeTodayView() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
       <HighlightCard
         accentColor={accentColor}
+        labelColor={textAccent}
         label={t("stats.tummyTime.totalTummyTime")}
         value={totalStr}
         subtitle={`${stats.sessionCount} ${t("stats.feeding.sessions")}`}

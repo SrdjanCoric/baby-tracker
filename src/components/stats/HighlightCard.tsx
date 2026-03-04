@@ -4,6 +4,7 @@ import { SURFACE, TEXT, ACTION } from "@/constants/colors";
 
 interface HighlightCardProps {
   accentColor: string;
+  labelColor?: string;
   label: string;
   value: string;
   unit?: string;
@@ -14,6 +15,7 @@ interface HighlightCardProps {
 
 export function HighlightCard({
   accentColor,
+  labelColor,
   label,
   value,
   unit,
@@ -46,7 +48,7 @@ export function HighlightCard({
           fontWeight: "600",
           textTransform: "uppercase",
           letterSpacing: 0.5,
-          color: accentColor,
+          color: labelColor ?? accentColor,
           marginBottom: 8,
         }}
       >

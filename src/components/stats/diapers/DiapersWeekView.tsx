@@ -30,6 +30,7 @@ export function DiapersWeekView() {
   const locale = i18n.language;
 
   const accentColor = isDark ? ACTIVITY.diaper.accentDark : ACTIVITY.diaper.accent;
+  const textAccent = isDark ? ACTIVITY.diaper.textAccentDark : ACTIVITY.diaper.textAccent;
   const diaperColors = getDiaperTypeColors(isDark);
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
@@ -67,6 +68,7 @@ export function DiapersWeekView() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
       <StatCard
         accentColor={accentColor}
+        labelColor={textAccent}
         label={t("stats.diapers.7days")}
         value={String(stats.totalCount)}
         subtitle={t("stats.diapers.avgPerDay", { value: avgPerDay })}

@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
-import { useFeeding } from "@/contexts";
+import { useFeeding, useUnits } from "@/contexts";
+import { formatVolume, mlToOz } from "@/utils/volume";
 import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS } from "@/constants/colors";
 import { StatCard } from "../StatCard";
 import { BreastBalanceBar } from "../BreastBalanceBar";
@@ -25,11 +26,13 @@ function getWeekdayLabel(dateKey: string, locale: string): string {
 export function FeedingWeekView() {
   const { t, i18n } = useTranslation();
   const { feedings } = useFeeding();
+  const { volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const locale = i18n.language;
 
   const accentColor = isDark ? ACTIVITY.feeding.accentDark : ACTIVITY.feeding.accent;
+  const textAccent = isDark ? ACTIVITY.feeding.textAccentDark : ACTIVITY.feeding.textAccent;
   const accentDark = isDark ? ACTIVITY.feeding.buttonDark : ACTIVITY.feeding.button;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
@@ -76,7 +79,7 @@ export function FeedingWeekView() {
         }]
       : []),
     ...(stats.totalBottleVolumeMl > 0
-      ? [{ label: t("stats.feeding.bottleVolumeTotal"), value: `${stats.totalBottleVolumeMl} ml` }]
+      ? [{ label: t("stats.feeding.bottleVolumeTotal"), value: formatVolume(stats.totalBottleVolumeMl, volumeUnit) }]
       : []),
   ];
 
@@ -87,6 +90,7 @@ export function FeedingWeekView() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
       <StatCard
         accentColor={accentColor}
+        labelColor={textAccent}
         label={t("stats.feeding.7days")}
         value={`${stats.totalCount} ${t("stats.feeding.sessions")}`}
         subtitle={t("stats.feeding.avgPerDay", { value: avgPerDay })}
@@ -120,10 +124,11 @@ export function FeedingWeekView() {
             {t("stats.feeding.bottleChartSub")}
           </Text>
           <BarChartWithAxis
-            data={dailyBottleMl}
-            yAxisLabels={[0, 50, 100, 150, 200]}
+            data={volumeUnit === "oz" ? dailyBottleMl.map(d => ({ ...d, value: mlToOz(d.value) })) : dailyBottleMl}
+            yAxisLabels={volumeUnit === "oz" ? [0, 2, 4, 6, 8] : [0, 50, 100, 150, 200]}
             barColor={accentDark}
-            maxY={200}
+            maxY={volumeUnit === "oz" ? 8 : 200}
+            formatBarLabel={volumeUnit === "oz" ? (v) => `${v} oz` : undefined}
           />
         </View>
       )}

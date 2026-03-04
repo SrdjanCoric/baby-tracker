@@ -29,6 +29,7 @@ export function TummyTimeWeekView() {
   const locale = i18n.language;
 
   const accentColor = isDark ? ACTIVITY.tummyTime.accentDark : ACTIVITY.tummyTime.accent;
+  const textAccent = isDark ? ACTIVITY.tummyTime.textAccentDark : ACTIVITY.tummyTime.textAccent;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
   const { stats, dailyMin } = useMemo(() => {
@@ -57,6 +58,7 @@ export function TummyTimeWeekView() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
       <StatCard
         accentColor={accentColor}
+        labelColor={textAccent}
         label={t("stats.tummyTime.7days")}
         value={totalStr}
         subtitle={t("stats.tummyTime.totalAcrossSessions", { count: stats.sessionCount })}
