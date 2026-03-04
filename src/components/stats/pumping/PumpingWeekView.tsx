@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
-import { usePumping } from "@/contexts";
+import { usePumping, useUnits } from "@/contexts";
+import { formatVolume, mlToOz } from "@/utils/volume";
 import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS } from "@/constants/colors";
 import { StatCard } from "../StatCard";
 import { BarChartWithAxis } from "../BarChartWithAxis";
@@ -23,11 +24,13 @@ function getWeekdayLabel(dateKey: string, locale: string): string {
 export function PumpingWeekView() {
   const { t, i18n } = useTranslation();
   const { pumpings } = usePumping();
+  const { volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const locale = i18n.language;
 
   const accentColor = isDark ? ACTIVITY.pumping.accentDark : ACTIVITY.pumping.accent;
+  const textAccent = isDark ? ACTIVITY.pumping.textAccentDark : ACTIVITY.pumping.textAccent;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
   const { stats, dailyMl } = useMemo(() => {
@@ -55,13 +58,14 @@ export function PumpingWeekView() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
       <StatCard
         accentColor={accentColor}
+        labelColor={textAccent}
         label={t("stats.pumping.7days")}
-        value={`${stats.totalVolumeMl.toLocaleString()} ml`}
+        value={formatVolume(stats.totalVolumeMl, volumeUnit)}
         subtitle={t("stats.pumping.totalVolume")}
         details={[
           { label: t("stats.pumping.totalSessions"), value: String(stats.totalCount) },
-          { label: t("stats.pumping.avgDailyOutput"), value: `${avgDaily} ml` },
-          { label: t("stats.pumping.avgPerSession"), value: `${avgPerSession} ml` },
+          { label: t("stats.pumping.avgDailyOutput"), value: formatVolume(avgDaily, volumeUnit) },
+          { label: t("stats.pumping.avgPerSession"), value: formatVolume(avgPerSession, volumeUnit) },
         ]}
       />
 
@@ -74,10 +78,11 @@ export function PumpingWeekView() {
             {t("stats.pumping.dailyVolumeSub")}
           </Text>
           <BarChartWithAxis
-            data={dailyMl}
-            yAxisLabels={[0, 150, 300, 450, 600]}
+            data={volumeUnit === "oz" ? dailyMl.map(d => ({ ...d, value: mlToOz(d.value) })) : dailyMl}
+            yAxisLabels={volumeUnit === "oz" ? [0, 5, 10, 15, 20] : [0, 150, 300, 450, 600]}
             barColor={accentColor}
-            maxY={600}
+            maxY={volumeUnit === "oz" ? 20 : 600}
+            formatBarLabel={volumeUnit === "oz" ? (v) => `${v} oz` : undefined}
           />
         </View>
       )}

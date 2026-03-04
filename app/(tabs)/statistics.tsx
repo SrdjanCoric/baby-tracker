@@ -26,13 +26,13 @@ type PeriodMap = Record<StatsCategory, string>;
 const SLEEP_TABS = ["day", "week", "summary"] as const;
 const TWO_PERIOD_TABS = ["today", "7days"] as const;
 
-const CATEGORY_ACCENT: Record<StatsCategory, { light: string; dark: string }> = {
-  sleep: { light: ACTIVITY.sleep.accent, dark: ACTIVITY.sleep.accentDark },
-  feeding: { light: ACTIVITY.feeding.accent, dark: ACTIVITY.feeding.accentDark },
-  diapers: { light: ACTIVITY.diaper.accent, dark: ACTIVITY.diaper.accentDark },
-  growth: { light: ACTIVITY.growth.accent, dark: ACTIVITY.growth.accentDark },
-  pumping: { light: ACTIVITY.pumping.accent, dark: ACTIVITY.pumping.accentDark },
-  tummyTime: { light: ACTIVITY.tummyTime.accent, dark: ACTIVITY.tummyTime.accentDark },
+const CATEGORY_ACCENT: Record<StatsCategory, { light: string; dark: string; textLight: string; textDark: string }> = {
+  sleep: { light: ACTIVITY.sleep.accent, dark: ACTIVITY.sleep.accentDark, textLight: ACTIVITY.sleep.textAccent, textDark: ACTIVITY.sleep.textAccentDark },
+  feeding: { light: ACTIVITY.feeding.accent, dark: ACTIVITY.feeding.accentDark, textLight: ACTIVITY.feeding.textAccent, textDark: ACTIVITY.feeding.textAccentDark },
+  diapers: { light: ACTIVITY.diaper.accent, dark: ACTIVITY.diaper.accentDark, textLight: ACTIVITY.diaper.textAccent, textDark: ACTIVITY.diaper.textAccentDark },
+  growth: { light: ACTIVITY.growth.accent, dark: ACTIVITY.growth.accentDark, textLight: ACTIVITY.growth.textAccent, textDark: ACTIVITY.growth.textAccentDark },
+  pumping: { light: ACTIVITY.pumping.accent, dark: ACTIVITY.pumping.accentDark, textLight: ACTIVITY.pumping.textAccent, textDark: ACTIVITY.pumping.textAccentDark },
+  tummyTime: { light: ACTIVITY.tummyTime.accent, dark: ACTIVITY.tummyTime.accentDark, textLight: ACTIVITY.tummyTime.textAccent, textDark: ACTIVITY.tummyTime.textAccentDark },
 };
 
 export default function StatisticsScreen() {
@@ -59,15 +59,18 @@ export default function StatisticsScreen() {
     { key: "sleep" as const, label: t("stats.categories.sleep") },
     { key: "feeding" as const, label: t("stats.categories.feeding") },
     { key: "diapers" as const, label: t("stats.categories.diapers") },
-    { key: "growth" as const, label: t("stats.categories.growth") },
     { key: "pumping" as const, label: t("stats.categories.pumping") },
     { key: "tummyTime" as const, label: t("stats.categories.tummyTime") },
+    { key: "growth" as const, label: t("stats.categories.growth") },
   ];
 
   const activePeriod = periodByCategory[activeCategory];
   const accentColor = isDark
     ? CATEGORY_ACCENT[activeCategory].dark
     : CATEGORY_ACCENT[activeCategory].light;
+  const textAccentColor = isDark
+    ? CATEGORY_ACCENT[activeCategory].textDark
+    : CATEGORY_ACCENT[activeCategory].textLight;
 
   const handlePeriodChange = useCallback(
     (period: string) => {
@@ -135,7 +138,7 @@ export default function StatisticsScreen() {
           tabs={segmentedTabs}
           activeTab={activePeriod}
           onTabChange={handlePeriodChange}
-          accentColor={accentColor}
+          accentColor={textAccentColor}
         />
       )}
 

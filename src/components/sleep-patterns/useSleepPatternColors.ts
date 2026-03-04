@@ -12,6 +12,7 @@ export interface SleepPatternColors {
   accentColor: string;
   nightColor: string;
   napColor: string;
+  napTextColor: string;
   isDark: boolean;
 }
 
@@ -26,10 +27,11 @@ export function useSleepPatternColors(): SleepPatternColors {
     textSecondary: isDark ? TEXT.dark.secondary : TEXT.light.secondary,
     textTertiary: isDark ? TEXT.dark.tertiary : TEXT.light.tertiary,
     borderSubtle: isDark ? BORDER.dark.subtle : BORDER.light.subtle,
-    gridLine: isDark ? "#4A464F" : "#D5D1CC",
+    gridLine: isDark ? BORDER.dark.strong : BORDER.light.strong,
     accentColor: isDark ? ACTION.dark.primary : ACTION.light.primary,
     nightColor: isDark ? ACTIVITY.sleep.buttonDark : ACTIVITY.sleep.button,
     napColor: isDark ? ACTIVITY.sleep.accentDark : ACTIVITY.sleep.accent,
+    napTextColor: isDark ? "#1C1A1D" : "#2D2A26",
     isDark,
   };
 }

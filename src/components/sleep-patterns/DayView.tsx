@@ -123,7 +123,7 @@ export function DayView({
                 <>
                   <Text
                     style={{
-                      color: "#FFFFFF",
+                      color: block.type === "night" ? "#FFFFFF" : colors.napTextColor,
                       fontSize: 11,
                       fontWeight: "700",
                     }}
@@ -135,7 +135,7 @@ export function DayView({
                   </Text>
                   <Text
                     style={{
-                      color: "#FFFFFF",
+                      color: block.type === "night" ? "#FFFFFF" : colors.napTextColor,
                       fontSize: 11,
                       fontWeight: "500",
                     }}

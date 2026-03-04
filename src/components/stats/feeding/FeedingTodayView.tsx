@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
-import { useFeeding } from "@/contexts";
+import { useFeeding, useUnits } from "@/contexts";
+import { formatVolume } from "@/utils/volume";
 import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS, BORDER } from "@/constants/colors";
 import { StatsMetricCard } from "../StatsMetricCard";
 import { BreastBalanceBar } from "../BreastBalanceBar";
@@ -16,6 +17,7 @@ import { formatDuration, timeSince } from "@/utils/time";
 export function FeedingTodayView() {
   const { t } = useTranslation();
   const { feedings } = useFeeding();
+  const { volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -53,11 +55,11 @@ export function FeedingTodayView() {
 
   const detailRows: { icon: string; label: string; value: string }[] = [];
   if (stats.totalBottleVolumeMl > 0)
-    detailRows.push({ icon: "\uD83C\uDF7C", label: t("stats.feeding.bottleVolume"), value: `${stats.totalBottleVolumeMl} ml` });
+    detailRows.push({ icon: "\uD83C\uDF7C", label: t("stats.feeding.bottleVolume"), value: formatVolume(stats.totalBottleVolumeMl, volumeUnit) });
   if (stats.bottleFormulaVolumeMl > 0)
-    detailRows.push({ icon: "\uD83E\uDDEA", label: t("stats.feeding.formula"), value: `${stats.bottleFormulaVolumeMl} ml` });
+    detailRows.push({ icon: "\uD83E\uDDEA", label: t("stats.feeding.formula"), value: formatVolume(stats.bottleFormulaVolumeMl, volumeUnit) });
   if (stats.bottleBreastMilkVolumeMl > 0)
-    detailRows.push({ icon: "\uD83E\uDD31", label: t("stats.feeding.breastMilk"), value: `${stats.bottleBreastMilkVolumeMl} ml` });
+    detailRows.push({ icon: "\uD83E\uDD31", label: t("stats.feeding.breastMilk"), value: formatVolume(stats.bottleBreastMilkVolumeMl, volumeUnit) });
   if (stats.solidsCount > 0)
     detailRows.push({ icon: "\uD83E\uDD44", label: t("stats.feeding.solids"), value: String(stats.solidsCount) });
 

@@ -35,7 +35,7 @@ export const TEXT = {
   dark: {
     primary: "#F5F2F0",
     secondary: "#B8B3B0",
-    tertiary: "#8A8588",
+    tertiary: "#9E9A97",
     muted: "#9A9598",
     inverse: "#1C1A1D",
   },
@@ -43,14 +43,14 @@ export const TEXT = {
 
 export const ACTION = {
   light: {
-    primary: "#6B9E6E",
-    primaryHover: "#5A8A5D",
-    primaryPressed: "#4A754C",
+    primary: "#4A7F4D",
+    primaryHover: "#3E6E41",
+    primaryPressed: "#335D36",
   },
   dark: {
-    primary: "#5A9A5D",
-    primaryHover: "#4A8A4D",
-    primaryPressed: "#3A7A3D",
+    primary: "#6DB070",
+    primaryHover: "#5DA060",
+    primaryPressed: "#4D9050",
   },
 } as const;
 
@@ -71,6 +71,8 @@ export const ACTIVITY = {
   feeding: {
     accent: "#8CB369",
     accentDark: "#A5C88A",
+    textAccent: "#4E7A2E",
+    textAccentDark: "#A5C88A",
     button: "#6A9A4D",
     buttonDark: "#5A8A4D",
     muted: "#EEF4E9",
@@ -79,6 +81,8 @@ export const ACTIVITY = {
   sleep: {
     accent: "#9E8DA9",
     accentDark: "#B5A7BD",
+    textAccent: "#6B5C78",
+    textAccentDark: "#B5A7BD",
     button: "#7A6B85",
     buttonDark: "#6A5B75",
     muted: "#F2EFF4",
@@ -87,6 +91,8 @@ export const ACTIVITY = {
   diaper: {
     accent: "#E0A099",
     accentDark: "#EAB8B2",
+    textAccent: "#A1524A",
+    textAccentDark: "#EAB8B2",
     button: "#B8706A",
     buttonDark: "#7A4A44",
     muted: "#FBF0EE",
@@ -95,6 +101,8 @@ export const ACTIVITY = {
   pumping: {
     accent: "#7BA3A8",
     accentDark: "#96B8BC",
+    textAccent: "#3D6E74",
+    textAccentDark: "#96B8BC",
     button: "#5A8589",
     buttonDark: "#4A7579",
     muted: "#EDF3F4",
@@ -103,6 +111,8 @@ export const ACTIVITY = {
   growth: {
     accent: "#6AAB9C",
     accentDark: "#88BEB0",
+    textAccent: "#306B5C",
+    textAccentDark: "#88BEB0",
     button: "#4A8A7A",
     buttonDark: "#3A7A6A",
     muted: "#EBF4F2",
@@ -111,6 +121,8 @@ export const ACTIVITY = {
   tummyTime: {
     accent: "#D4A574",
     accentDark: "#E0B990",
+    textAccent: "#8B5E2A",
+    textAccentDark: "#E0B990",
     button: "#B8844E",
     buttonDark: "#A8743E",
     muted: "#F9F2EA",

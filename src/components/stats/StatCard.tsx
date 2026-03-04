@@ -11,6 +11,7 @@ interface StatCardDetail {
 
 interface StatCardProps {
   accentColor: string;
+  labelColor?: string;
   label: string;
   value: string;
   subtitle?: string;
@@ -18,7 +19,7 @@ interface StatCardProps {
   children?: React.ReactNode;
 }
 
-export function StatCard({ accentColor, label, value, subtitle, details, children }: StatCardProps) {
+export function StatCard({ accentColor, labelColor, label, value, subtitle, details, children }: StatCardProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -43,7 +44,7 @@ export function StatCard({ accentColor, label, value, subtitle, details, childre
           fontWeight: "600",
           textTransform: "uppercase",
           letterSpacing: 0.5,
-          color: accentColor,
+          color: labelColor ?? accentColor,
           marginBottom: 8,
         }}
       >
