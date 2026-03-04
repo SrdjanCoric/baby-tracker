@@ -106,7 +106,14 @@
     "bedtimeWakeTrends": "Tendencias de Hora de Dormir y Despertar",
     "averages": "Promedios",
     "noData": "Sin Datos de Sueño",
-    "noDataDescription": "Comienza a registrar el sueño para ver patrones aquí"
+    "noDataDescription": "Comienza a registrar el sueño para ver patrones aquí",
+    "newbornNote": "Los patrones de hora de dormir y despertar suelen aparecer alrededor de los 3–4 meses a medida que se desarrolla el ritmo circadiano del bebé.",
+    "totalSleep": "Total",
+    "periodDays": "{{count}}d",
+    "recommended": "{{min}}-{{max}}h recomendado",
+    "dailySleep": "Sue\u00f1o Diario",
+    "sleepSplit": "Composici\u00f3n del Sue\u00f1o",
+    "consistency": "\u00b1 {{minutes}}m"
   },
   "feeding": {
     "title": "Alimentación",
@@ -1425,6 +1432,95 @@
       "5y-cognitive-6": "Nombra algunas letras cuando las señalas",
       "5y-movement-1": "Abotona algunos botones",
       "5y-movement-2": "Salta en un pie"
+    }
+  },
+  "stats": {
+    "title": "Estadísticas",
+    "categories": {
+      "sleep": "Sueño",
+      "feeding": "Alimentación",
+      "diapers": "Pañales",
+      "growth": "Crecimiento",
+      "pumping": "Extracción",
+      "tummyTime": "Boca abajo"
+    },
+    "periods": {
+      "day": "Día",
+      "week": "Semana",
+      "summary": "Resumen",
+      "today": "Hoy",
+      "7days": "7 Días"
+    },
+    "feeding": {
+      "totalFeeds": "Total alimentaciones",
+      "timeSinceLast": "Desde la última",
+      "avgBetweenFeeds": "Prom. entre tomas",
+      "breastfeedingTime": "Tiempo de lactancia",
+      "breastBalance": "Balance de pecho",
+      "bottleVolume": "Volumen biberón",
+      "formula": "Fórmula",
+      "breastMilk": "Leche materna",
+      "solids": "Sólidos",
+      "sessions": "sesiones",
+      "avgPerDay": "prom. {{value}} / día",
+      "breastfeedingChart": "Lactancia",
+      "breastfeedingChartSub": "minutos totales por día - últimos 7 días",
+      "bottleChart": "Biberón",
+      "bottleChartSub": "ml totales por día - últimos 7 días",
+      "avgBetween": "Prom. entre tomas",
+      "bottleVolumeTotal": "Volumen total biberón",
+      "7days": "ALIMENTACIÓN — 7 DÍAS"
+    },
+    "diapers": {
+      "totalDiapers": "Total pañales",
+      "wet": "Mojado",
+      "dirty": "Sucio",
+      "mixed": "Mixto",
+      "dry": "Seco",
+      "dailyDiapers": "Pañales diarios",
+      "avgPerDay": "prom. {{value}} / día",
+      "typeBreakdown": "Desglose por tipo",
+      "breakdown": "Desglose",
+      "7days": "PAÑALES — 7 DÍAS"
+    },
+    "growth": {
+      "latestMeasurements": "Últimas mediciones",
+      "viewGrowthCharts": "Ver gráficos de crecimiento",
+      "weight": "Peso",
+      "length": "Longitud",
+      "headCircumference": "Circunferencia craneal",
+      "percentile": "{{value}}°",
+      "change": "+{{value}} esta semana"
+    },
+    "pumping": {
+      "totalDailyOutput": "Producción diaria total",
+      "acrossSessions": "en {{count}} sesiones",
+      "sessionsToday": "Sesiones hoy",
+      "avgPerSession": "Prom. por sesión",
+      "totalSessions": "Sesiones totales",
+      "avgDailyOutput": "Prom. diario",
+      "dailyVolume": "Volumen diario",
+      "dailyVolumeSub": "ml por día - últimos 7 días",
+      "totalVolume": "volumen total",
+      "7days": "EXTRACCIÓN — 7 DÍAS"
+    },
+    "tummyTime": {
+      "totalTummyTime": "Tiempo boca abajo total",
+      "sessions": "Sesiones",
+      "longestSession": "Sesión más larga",
+      "aboveAvg": "↑ {{value}} sobre prom. 7 días",
+      "belowAvg": "↓ {{value}} bajo prom. 7 días",
+      "avgDailyTotal": "Prom. diario total",
+      "avgSessionLength": "Prom. por sesión",
+      "dailyTummyTime": "Tiempo boca abajo diario",
+      "dailyTummyTimeSub": "minutos por día - últimos 7 días",
+      "totalAcrossSessions": "total en {{count}} sesiones",
+      "7days": "BOCA ABAJO — 7 DÍAS"
+    },
+    "common": {
+      "past7Days": "Últimos 7 días",
+      "noData": "Sin datos aún",
+      "noDataDescription": "Comienza a registrar para ver tus estadísticas"
     }
   }
 }
