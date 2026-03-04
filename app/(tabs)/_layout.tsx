@@ -118,18 +118,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="sleep-patterns"
         options={{
-          title: t("navigation.sleepPatterns"),
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="sleep-patterns" focused={focused} isDark={isDark} />
-          ),
-          tabBarButton: (props) => <TabButton {...props} testID="sleep-tab" />,
+          href: null,
         }}
       />
       <Tabs.Screen
         name="statistics"
         options={{
           title: t("navigation.statistics"),
+          headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon name="statistics" focused={focused} isDark={isDark} />
           ),
