@@ -2,6 +2,7 @@ import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 
 export interface SleepAgeGroup {
   label: string;
+  labelKey: string;
   minAgeDays: number;
   maxAgeDays: number;
   totalSleepHoursMin: number;
@@ -48,6 +49,7 @@ export interface SleepMilestoneCrossing {
 export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "0-2 months",
+    labelKey: "ageGroups.sleep.0-2months",
     minAgeDays: 0,
     maxAgeDays: 60,
     totalSleepHoursMin: 15,
@@ -59,6 +61,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   },
   {
     label: "3-5 months",
+    labelKey: "ageGroups.sleep.3-5months",
     minAgeDays: 61,
     maxAgeDays: 150,
     totalSleepHoursMin: 14,
@@ -70,6 +73,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   },
   {
     label: "6-8 months",
+    labelKey: "ageGroups.sleep.6-8months",
     minAgeDays: 151,
     maxAgeDays: 240,
     totalSleepHoursMin: 14,
@@ -81,6 +85,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   },
   {
     label: "9-12 months",
+    labelKey: "ageGroups.sleep.9-12months",
     minAgeDays: 241,
     maxAgeDays: 365,
     totalSleepHoursMin: 13,
@@ -92,6 +97,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   },
   {
     label: "13-18 months",
+    labelKey: "ageGroups.sleep.13-18months",
     minAgeDays: 366,
     maxAgeDays: 540,
     totalSleepHoursMin: 13,
@@ -103,6 +109,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   },
   {
     label: "19+ months",
+    labelKey: "ageGroups.sleep.19+months",
     minAgeDays: 541,
     maxAgeDays: Infinity,
     totalSleepHoursMin: 11,

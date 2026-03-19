@@ -54,7 +54,7 @@ describe("validateStartTime", () => {
   });
 
   it("returns error for undefined start time", () => {
-    expect(validateStartTime(undefined)).toBe("Start time is required");
+    expect(validateStartTime(undefined)).toBe("validation.startTimeRequired");
   });
 });
 
@@ -73,7 +73,7 @@ describe("validateEndTime", () => {
   it("returns error when end is before start", () => {
     const start = new Date(2024, 5, 15, 10, 30);
     const end = new Date(2024, 5, 15, 10, 0);
-    expect(validateEndTime(start, end)).toBe("End time cannot be before start time");
+    expect(validateEndTime(start, end)).toBe("validation.endTimeBeforeStart");
   });
 });
 
@@ -89,11 +89,11 @@ describe("validateFeedingDuration", () => {
   });
 
   it("returns error for negative duration", () => {
-    expect(validateFeedingDuration(-1)).toBe("Duration cannot be negative");
+    expect(validateFeedingDuration(-1)).toBe("validation.durationNegative");
   });
 
   it("returns error for duration over 2 hours", () => {
-    expect(validateFeedingDuration(7201)).toBe("Duration seems too long (over 2 hours)");
+    expect(validateFeedingDuration(7201)).toBe("validation.durationTooLong2h");
   });
 });
 
@@ -104,8 +104,8 @@ describe("validateBottleAmount", () => {
   });
 
   it("returns error for bottle feeding without amount", () => {
-    expect(validateBottleAmount(undefined, "bottle")).toBe("Amount is required for bottle feeding");
-    expect(validateBottleAmount(0, "bottle")).toBe("Amount is required for bottle feeding");
+    expect(validateBottleAmount(undefined, "bottle")).toBe("validation.amountRequiredBottle");
+    expect(validateBottleAmount(0, "bottle")).toBe("validation.amountRequiredBottle");
   });
 
   it("returns null for valid bottle amount", () => {
@@ -115,7 +115,7 @@ describe("validateBottleAmount", () => {
   });
 
   it("returns error for amount over 500ml", () => {
-    expect(validateBottleAmount(501, "bottle")).toBe("Amount seems too large (over 500ml)");
+    expect(validateBottleAmount(501, "bottle")).toBe("validation.amountTooLarge500ml");
   });
 });
 
@@ -126,7 +126,7 @@ describe("validateBottleContentType", () => {
   });
 
   it("returns error for bottle feeding without content type", () => {
-    expect(validateBottleContentType(undefined, "bottle")).toBe("Content type is required for bottle feeding");
+    expect(validateBottleContentType(undefined, "bottle")).toBe("validation.contentTypeRequired");
   });
 
   it("returns null for valid content types", () => {
@@ -135,7 +135,7 @@ describe("validateBottleContentType", () => {
   });
 
   it("returns error for invalid content type", () => {
-    expect(validateBottleContentType("water" as "formula", "bottle")).toBe("Invalid content type");
+    expect(validateBottleContentType("water" as "formula", "bottle")).toBe("validation.invalidContentType");
   });
 });
 
@@ -277,7 +277,7 @@ describe("validateStartTimeNotInFuture", () => {
 
   it("returns error for future time", () => {
     const futureTime = new Date(Date.now() + 60000);
-    expect(validateStartTimeNotInFuture(futureTime)).toBe("Start time cannot be in the future");
+    expect(validateStartTimeNotInFuture(futureTime)).toBe("validation.startTimeNotInFuture");
   });
 
   it("allows small tolerance for near-future times", () => {
@@ -288,8 +288,8 @@ describe("validateStartTimeNotInFuture", () => {
 
 describe("validateManualFeedingDuration", () => {
   it("returns error for duration less than 1 minute", () => {
-    expect(validateManualFeedingDuration(30)).toBe("Duration must be at least 1 minute");
-    expect(validateManualFeedingDuration(59)).toBe("Duration must be at least 1 minute");
+    expect(validateManualFeedingDuration(30)).toBe("validation.durationMinimum1m");
+    expect(validateManualFeedingDuration(59)).toBe("validation.durationMinimum1m");
   });
 
   it("returns null for duration of exactly 1 minute", () => {
@@ -303,11 +303,11 @@ describe("validateManualFeedingDuration", () => {
   });
 
   it("returns error for duration over 2 hours", () => {
-    expect(validateManualFeedingDuration(7201)).toBe("Duration seems too long (over 2 hours)");
+    expect(validateManualFeedingDuration(7201)).toBe("validation.durationTooLong2h");
   });
 
   it("returns error for undefined duration", () => {
-    expect(validateManualFeedingDuration(undefined)).toBe("Duration is required for manual entry");
+    expect(validateManualFeedingDuration(undefined)).toBe("validation.durationRequired");
   });
 });
 
@@ -333,7 +333,7 @@ describe("validateManualBreastfeeding", () => {
       side: "left"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+    expect(result.errors.startedAt).toBe("validation.startTimeNotInFuture");
   });
 
   it("returns error for missing duration", () => {
@@ -344,7 +344,7 @@ describe("validateManualBreastfeeding", () => {
       side: "left"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.durationSeconds).toBe("Duration is required for manual entry");
+    expect(result.errors.durationSeconds).toBe("validation.durationRequired");
   });
 
   it("returns error for duration too short", () => {
@@ -356,7 +356,7 @@ describe("validateManualBreastfeeding", () => {
       side: "left"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.durationSeconds).toBe("Duration must be at least 1 minute");
+    expect(result.errors.durationSeconds).toBe("validation.durationMinimum1m");
   });
 
   it("returns error for wrong feeding type", () => {
@@ -378,7 +378,7 @@ describe("validateManualBreastfeeding", () => {
       durationSeconds: 600
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.side).toBe("Side is required for breastfeeding");
+    expect(result.errors.side).toBe("validation.sideRequiredBreast");
   });
 });
 
@@ -404,7 +404,7 @@ describe("validateManualBottleFeeding", () => {
       contentType: "formula"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+    expect(result.errors.startedAt).toBe("validation.startTimeNotInFuture");
   });
 
   it("returns error for missing amount", () => {
@@ -438,17 +438,17 @@ describe("validateFoodType", () => {
   });
 
   it("returns error for empty food type", () => {
-    expect(validateFoodType("")).toBe("Food type is required");
-    expect(validateFoodType("   ")).toBe("Food type is required");
+    expect(validateFoodType("")).toBe("validation.foodTypeRequired");
+    expect(validateFoodType("   ")).toBe("validation.foodTypeRequired");
   });
 
   it("returns error for undefined food type", () => {
-    expect(validateFoodType(undefined)).toBe("Food type is required");
+    expect(validateFoodType(undefined)).toBe("validation.foodTypeRequired");
   });
 
   it("returns error for food type that is too long", () => {
     const longFood = "a".repeat(101);
-    expect(validateFoodType(longFood)).toBe("Food type is too long (max 100 characters)");
+    expect(validateFoodType(longFood)).toBe("validation.foodTypeTooLong");
   });
 
   it("returns null for food type at max length", () => {
@@ -465,8 +465,8 @@ describe("validateSolidAmount", () => {
   });
 
   it("returns error for invalid amount", () => {
-    expect(validateSolidAmount("invalid" as "aLittle")).toBe("Invalid amount");
-    expect(validateSolidAmount("" as "aLittle")).toBe("Invalid amount");
+    expect(validateSolidAmount("invalid" as "aLittle")).toBe("validation.invalidAmount");
+    expect(validateSolidAmount("" as "aLittle")).toBe("validation.invalidAmount");
   });
 
   it("returns null for undefined amount (optional)", () => {
@@ -482,8 +482,8 @@ describe("validateSolidReaction", () => {
   });
 
   it("returns error for invalid reaction", () => {
-    expect(validateSolidReaction("invalid" as "loved")).toBe("Invalid reaction");
-    expect(validateSolidReaction("" as "loved")).toBe("Invalid reaction");
+    expect(validateSolidReaction("invalid" as "loved")).toBe("validation.invalidReaction");
+    expect(validateSolidReaction("" as "loved")).toBe("validation.invalidReaction");
   });
 
   it("returns null for undefined reaction (optional)", () => {
@@ -536,7 +536,7 @@ describe("validateSolidFeeding", () => {
       reaction: "invalid" as "loved"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.reaction).toBe("Invalid reaction");
+    expect(result.errors.reaction).toBe("validation.invalidReaction");
   });
 
   it("returns error for wrong feeding type", () => {
@@ -546,7 +546,7 @@ describe("validateSolidFeeding", () => {
       foodType: "banana"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.type).toBe("Invalid feeding type for solid food");
+    expect(result.errors.type).toBe("validation.invalidFeedingTypeSolid");
   });
 
   it("returns error for missing food type", () => {
@@ -556,7 +556,7 @@ describe("validateSolidFeeding", () => {
       startedAt: pastTime
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.foodType).toBe("Food type is required");
+    expect(result.errors.foodType).toBe("validation.foodTypeRequired");
   });
 
   it("returns error for empty food type", () => {
@@ -567,7 +567,7 @@ describe("validateSolidFeeding", () => {
       foodType: ""
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.foodType).toBe("Food type is required");
+    expect(result.errors.foodType).toBe("validation.foodTypeRequired");
   });
 
   it("returns error for future start time", () => {
@@ -578,7 +578,7 @@ describe("validateSolidFeeding", () => {
       foodType: "banana"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+    expect(result.errors.startedAt).toBe("validation.startTimeNotInFuture");
   });
 
   it("returns error for missing start time", () => {
@@ -587,7 +587,7 @@ describe("validateSolidFeeding", () => {
       foodType: "banana"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.startedAt).toBe("Start time is required");
+    expect(result.errors.startedAt).toBe("validation.startTimeRequired");
   });
 
   it("returns error for invalid amount", () => {
@@ -599,7 +599,7 @@ describe("validateSolidFeeding", () => {
       amount: "invalid" as "aLittle"
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.amount).toBe("Invalid amount");
+    expect(result.errors.amount).toBe("validation.invalidAmount");
   });
 
   it("returns multiple errors when multiple fields invalid", () => {

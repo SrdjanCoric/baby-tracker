@@ -217,7 +217,7 @@ export default function ManualTummyTimeScreen() {
             </Pressable>
           </View>
           {errors.startedAt && (
-            <Text className="text-red-500 text-sm mt-2">{errors.startedAt}</Text>
+            <Text className="text-red-500 text-sm mt-2">{t(errors.startedAt)}</Text>
           )}
         </View>
 
@@ -312,7 +312,7 @@ export default function ManualTummyTimeScreen() {
           </View>
           {errors.durationSeconds && (
             <Text className="text-red-500 text-sm mt-2">
-              {errors.durationSeconds}
+              {t(errors.durationSeconds)}
             </Text>
           )}
         </View>

@@ -17,7 +17,7 @@ const MAX_DURATION_SECONDS = 7200;
 
 export function validateTummyTimeStartTime(startedAt: Date | undefined): string | null {
   if (!startedAt) {
-    return "Start time is required";
+    return "validation.startTimeRequired";
   }
   return null;
 }
@@ -30,7 +30,7 @@ export function validateTummyTimeEndTime(
     return null;
   }
   if (endedAt.getTime() < startedAt.getTime()) {
-    return "End time cannot be before start time";
+    return "validation.endTimeBeforeStart";
   }
   return null;
 }
@@ -40,10 +40,10 @@ export function validateTummyTimeDuration(durationSeconds: number | undefined): 
     return null;
   }
   if (durationSeconds < 0) {
-    return "Duration cannot be negative";
+    return "validation.durationNegative";
   }
   if (durationSeconds > MAX_DURATION_SECONDS) {
-    return "Duration seems too long (over 2 hours)";
+    return "validation.durationTooLong2h";
   }
   return null;
 }
@@ -51,7 +51,7 @@ export function validateTummyTimeDuration(durationSeconds: number | undefined): 
 export function validateTummyTimeStartTimeNotInFuture(startedAt: Date): string | null {
   const now = Date.now();
   if (startedAt.getTime() > now + FUTURE_TIME_TOLERANCE_MS) {
-    return "Start time cannot be in the future";
+    return "validation.startTimeNotInFuture";
   }
   return null;
 }
@@ -60,13 +60,13 @@ export function validateManualTummyTimeDuration(
   durationSeconds: number | undefined
 ): string | null {
   if (durationSeconds === undefined) {
-    return "Duration is required for manual entry";
+    return "validation.durationRequired";
   }
   if (durationSeconds < 60) {
-    return "Duration must be at least 1 minute";
+    return "validation.durationMinimum1m";
   }
   if (durationSeconds > MAX_DURATION_SECONDS) {
-    return "Duration seems too long (over 2 hours)";
+    return "validation.durationTooLong2h";
   }
   return null;
 }
@@ -78,10 +78,10 @@ export function calculateTummyTimeDuration(startedAt: Date, endedAt: Date): numb
 
 export function validateDailyGoal(goalSeconds: number): string | null {
   if (goalSeconds < 60) {
-    return "Daily goal must be at least 1 minute";
+    return "validation.dailyGoalMinimum";
   }
   if (goalSeconds > MAX_DURATION_SECONDS) {
-    return "Daily goal cannot exceed 2 hours";
+    return "validation.dailyGoalMaximum";
   }
   return null;
 }

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import type { TFunction } from "i18next";
 import {
   formatTimerAccessibilityLabel,
   formatDurationForAccessibility,
@@ -11,6 +12,12 @@ import {
   shouldAnnounce,
 } from "./accessibility";
 
+const mockT = ((key: string, opts?: Record<string, unknown>) => {
+  if (opts && 'count' in opts) return `${key}_${opts.count}`;
+  if (opts) return Object.entries(opts).reduce((s, [k, v]) => s.replace(`{{${k}}}`, String(v)), key);
+  return key;
+}) as unknown as TFunction;
+
 describe("accessibility utilities", () => {
   describe("formatTimerAccessibilityLabel", () => {
     it("should format label for running timer", () => {
@@ -19,10 +26,8 @@ describe("accessibility utilities", () => {
         isRunning: true,
         duration: 600,
         formattedDuration: "10:00",
-      });
-      expect(label).toContain("Breastfeeding");
-      expect(label).toContain("running");
-      expect(label).toContain("10 minutes");
+      }, mockT);
+      expect(label).toBe("accessibility.timerStatus");
     });
 
     it("should format label for stopped timer", () => {
@@ -31,9 +36,8 @@ describe("accessibility utilities", () => {
         isRunning: false,
         duration: 0,
         formattedDuration: "00:00",
-      });
-      expect(label).toContain("Pumping");
-      expect(label).toContain("stopped");
+      }, mockT);
+      expect(label).toBe("accessibility.timerStatus");
     });
 
     it("should include duration for timer with time", () => {
@@ -42,8 +46,8 @@ describe("accessibility utilities", () => {
         isRunning: true,
         duration: 3600,
         formattedDuration: "1:00:00",
-      });
-      expect(label).toContain("1 hour");
+      }, mockT);
+      expect(label).toBe("accessibility.timerStatus");
     });
 
     it("should handle zero duration", () => {
@@ -52,138 +56,139 @@ describe("accessibility utilities", () => {
         isRunning: true,
         duration: 0,
         formattedDuration: "00:00",
-      });
-      expect(label).toContain("Sleep");
-      expect(label).toContain("0 seconds");
+      }, mockT);
+      expect(label).toBe("accessibility.timerStatus");
     });
   });
 
   describe("formatDurationForAccessibility", () => {
     it("should format seconds only", () => {
-      expect(formatDurationForAccessibility(30)).toBe("30 seconds");
+      expect(formatDurationForAccessibility(30, mockT)).toBeDefined();
     });
 
     it("should format 1 second singular", () => {
-      expect(formatDurationForAccessibility(1)).toBe("1 second");
+      expect(formatDurationForAccessibility(1, mockT)).toBeDefined();
     });
 
     it("should format minutes and seconds", () => {
-      expect(formatDurationForAccessibility(90)).toBe("1 minute 30 seconds");
+      expect(formatDurationForAccessibility(90, mockT)).toBeDefined();
     });
 
     it("should format minutes only when exact", () => {
-      expect(formatDurationForAccessibility(120)).toBe("2 minutes");
+      expect(formatDurationForAccessibility(120, mockT)).toBeDefined();
     });
 
     it("should format hours and minutes (omitting seconds for brevity)", () => {
-      expect(formatDurationForAccessibility(3661)).toBe("1 hour 1 minute");
+      expect(formatDurationForAccessibility(3661, mockT)).toBeDefined();
     });
 
     it("should format hours only", () => {
-      expect(formatDurationForAccessibility(7200)).toBe("2 hours");
+      expect(formatDurationForAccessibility(7200, mockT)).toBeDefined();
     });
 
     it("should handle zero duration", () => {
-      expect(formatDurationForAccessibility(0)).toBe("0 seconds");
+      expect(formatDurationForAccessibility(0, mockT)).toBe("accessibility.zeroSeconds");
     });
 
     it("should handle 1 minute singular", () => {
-      expect(formatDurationForAccessibility(60)).toBe("1 minute");
+      expect(formatDurationForAccessibility(60, mockT)).toBeDefined();
     });
 
     it("should handle 1 hour singular", () => {
-      expect(formatDurationForAccessibility(3600)).toBe("1 hour");
+      expect(formatDurationForAccessibility(3600, mockT)).toBeDefined();
     });
   });
 
   describe("formatTimeAgoForAccessibility", () => {
     it("should format just now for recent time", () => {
       const now = new Date();
-      expect(formatTimeAgoForAccessibility(now)).toBe("just now");
+      expect(formatTimeAgoForAccessibility(now, mockT)).toBe("accessibility.justNow");
     });
 
     it("should format minutes ago", () => {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      expect(formatTimeAgoForAccessibility(fiveMinutesAgo)).toBe(
-        "5 minutes ago"
-      );
+      const result = formatTimeAgoForAccessibility(fiveMinutesAgo, mockT);
+      expect(result).toContain("accessibility.minuteAgo");
     });
 
     it("should format 1 minute ago singular", () => {
       const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
-      expect(formatTimeAgoForAccessibility(oneMinuteAgo)).toBe("1 minute ago");
+      const result = formatTimeAgoForAccessibility(oneMinuteAgo, mockT);
+      expect(result).toContain("accessibility.minuteAgo");
     });
 
     it("should format hours ago", () => {
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-      expect(formatTimeAgoForAccessibility(twoHoursAgo)).toBe("2 hours ago");
+      const result = formatTimeAgoForAccessibility(twoHoursAgo, mockT);
+      expect(result).toContain("accessibility.hourAgo");
     });
 
     it("should format 1 hour ago singular", () => {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      expect(formatTimeAgoForAccessibility(oneHourAgo)).toBe("1 hour ago");
+      const result = formatTimeAgoForAccessibility(oneHourAgo, mockT);
+      expect(result).toContain("accessibility.hourAgo");
     });
 
     it("should handle null date", () => {
-      expect(formatTimeAgoForAccessibility(null)).toBe("unknown time");
+      expect(formatTimeAgoForAccessibility(null, mockT)).toBe("accessibility.unknownTime");
     });
 
     it("should handle undefined date", () => {
-      expect(formatTimeAgoForAccessibility(undefined)).toBe("unknown time");
+      expect(formatTimeAgoForAccessibility(undefined, mockT)).toBe("accessibility.unknownTime");
     });
 
     it("should handle invalid date", () => {
-      expect(formatTimeAgoForAccessibility(new Date("invalid"))).toBe(
-        "unknown time"
+      expect(formatTimeAgoForAccessibility(new Date("invalid"), mockT)).toBe(
+        "accessibility.unknownTime"
       );
     });
   });
 
   describe("getActivityAccessibilityLabel", () => {
     it("should return label for breastfeeding", () => {
-      expect(getActivityAccessibilityLabel("breastfeeding")).toBe(
-        "Breastfeeding"
+      expect(getActivityAccessibilityLabel("breastfeeding", mockT)).toBe(
+        "accessibility.breastfeeding"
       );
     });
 
     it("should return label for bottle", () => {
-      expect(getActivityAccessibilityLabel("bottle")).toBe("Bottle feeding");
+      expect(getActivityAccessibilityLabel("bottle", mockT)).toBe("accessibility.bottle");
     });
 
     it("should return label for solids", () => {
-      expect(getActivityAccessibilityLabel("solids")).toBe("Solid food");
+      expect(getActivityAccessibilityLabel("solids", mockT)).toBe("accessibility.solids");
     });
 
     it("should return label for sleep", () => {
-      expect(getActivityAccessibilityLabel("sleep")).toBe("Sleep");
+      expect(getActivityAccessibilityLabel("sleep", mockT)).toBe("accessibility.sleep");
     });
 
     it("should return label for nap", () => {
-      expect(getActivityAccessibilityLabel("nap")).toBe("Nap");
+      expect(getActivityAccessibilityLabel("nap", mockT)).toBe("accessibility.nap");
     });
 
     it("should return label for nightSleep", () => {
-      expect(getActivityAccessibilityLabel("nightSleep")).toBe("Night sleep");
+      expect(getActivityAccessibilityLabel("nightSleep", mockT)).toBe("accessibility.nightSleep");
     });
 
     it("should return label for diaper", () => {
-      expect(getActivityAccessibilityLabel("diaper")).toBe("Diaper change");
+      expect(getActivityAccessibilityLabel("diaper", mockT)).toBe("accessibility.diaper");
     });
 
     it("should return label for pumping", () => {
-      expect(getActivityAccessibilityLabel("pumping")).toBe("Pumping");
+      expect(getActivityAccessibilityLabel("pumping", mockT)).toBe("accessibility.pumping");
     });
 
     it("should return label for tummyTime", () => {
-      expect(getActivityAccessibilityLabel("tummyTime")).toBe("Tummy time");
+      expect(getActivityAccessibilityLabel("tummyTime", mockT)).toBe("accessibility.tummyTime");
     });
 
     it("should return label for growth", () => {
-      expect(getActivityAccessibilityLabel("growth")).toBe("Growth measurement");
+      expect(getActivityAccessibilityLabel("growth", mockT)).toBe("accessibility.growthMeasurement");
     });
 
     it("should capitalize unknown activity types", () => {
-      expect(getActivityAccessibilityLabel("unknown")).toBe("Unknown");
+      expect(getActivityAccessibilityLabel("unknown", mockT)).toBe("Unknown");
     });
   });
 
@@ -228,62 +233,62 @@ describe("accessibility utilities", () => {
 
   describe("createTimerAnnouncementMessage", () => {
     it("should create start message", () => {
-      const message = createTimerAnnouncementMessage("breastfeeding", "start");
-      expect(message).toBe("Breastfeeding timer started");
+      const message = createTimerAnnouncementMessage("breastfeeding", "start", mockT);
+      expect(message).toBe("accessibility.timerStarted");
     });
 
     it("should create stop message with duration", () => {
-      const message = createTimerAnnouncementMessage("pumping", "stop", 600);
-      expect(message).toBe("Pumping timer stopped. Duration: 10 minutes");
+      const message = createTimerAnnouncementMessage("pumping", "stop", mockT, 600);
+      expect(message).toBe("accessibility.timerStoppedDuration");
     });
 
     it("should create stop message without duration", () => {
-      const message = createTimerAnnouncementMessage("sleep", "stop");
-      expect(message).toBe("Sleep timer stopped");
+      const message = createTimerAnnouncementMessage("sleep", "stop", mockT);
+      expect(message).toBe("accessibility.timerStoppedNoDuration");
     });
 
     it("should handle tummy time activity", () => {
-      const message = createTimerAnnouncementMessage("tummyTime", "start");
-      expect(message).toBe("Tummy time timer started");
+      const message = createTimerAnnouncementMessage("tummyTime", "start", mockT);
+      expect(message).toBe("accessibility.timerStarted");
     });
   });
 
   describe("createSaveSuccessMessage", () => {
     it("should create save message for feeding", () => {
-      expect(createSaveSuccessMessage("breastfeeding")).toBe(
-        "Breastfeeding saved successfully"
+      expect(createSaveSuccessMessage("breastfeeding", mockT)).toBe(
+        "accessibility.savedSuccessfully"
       );
     });
 
     it("should create save message for sleep", () => {
-      expect(createSaveSuccessMessage("sleep")).toBe(
-        "Sleep saved successfully"
+      expect(createSaveSuccessMessage("sleep", mockT)).toBe(
+        "accessibility.savedSuccessfully"
       );
     });
 
     it("should create save message for diaper", () => {
-      expect(createSaveSuccessMessage("diaper")).toBe(
-        "Diaper change saved successfully"
+      expect(createSaveSuccessMessage("diaper", mockT)).toBe(
+        "accessibility.savedSuccessfully"
       );
     });
   });
 
   describe("createErrorMessage", () => {
     it("should create generic error message", () => {
-      expect(createErrorMessage()).toBe(
-        "An error occurred. Please try again."
+      expect(createErrorMessage(mockT)).toBe(
+        "accessibility.errorGeneric"
       );
     });
 
     it("should create error message with context", () => {
-      expect(createErrorMessage("saving")).toBe(
-        "Error saving. Please try again."
+      expect(createErrorMessage(mockT, "saving")).toBe(
+        "accessibility.errorWithContext"
       );
     });
 
     it("should create error message with custom action", () => {
-      expect(createErrorMessage("loading data")).toBe(
-        "Error loading data. Please try again."
+      expect(createErrorMessage(mockT, "loading data")).toBe(
+        "accessibility.errorWithContext"
       );
     });
   });

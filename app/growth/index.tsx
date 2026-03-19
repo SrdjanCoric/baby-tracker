@@ -308,7 +308,7 @@ export default function GrowthScreen() {
               </Text>
             </View>
             {errors.weightKg && (
-              <Text className="text-sm text-red-500 mt-1">{errors.weightKg}</Text>
+              <Text className="text-sm text-red-500 mt-1">{t(errors.weightKg)}</Text>
             )}
           </View>
 
@@ -335,7 +335,7 @@ export default function GrowthScreen() {
               </Text>
             </View>
             {errors.heightCm && (
-              <Text className="text-sm text-red-500 mt-1">{errors.heightCm}</Text>
+              <Text className="text-sm text-red-500 mt-1">{t(errors.heightCm)}</Text>
             )}
           </View>
 
@@ -362,7 +362,7 @@ export default function GrowthScreen() {
               </Text>
             </View>
             {errors.headCircumferenceCm && (
-              <Text className="text-sm text-red-500 mt-1">{errors.headCircumferenceCm}</Text>
+              <Text className="text-sm text-red-500 mt-1">{t(errors.headCircumferenceCm)}</Text>
             )}
           </View>
 
@@ -386,7 +386,7 @@ export default function GrowthScreen() {
 
         {/* Validation error for no measurements */}
         {errors.measurements && (
-          <Text className="text-sm text-red-500 text-center mb-4">{errors.measurements}</Text>
+          <Text className="text-sm text-red-500 text-center mb-4">{t(errors.measurements)}</Text>
         )}
 
         {/* Quick entry hint */}

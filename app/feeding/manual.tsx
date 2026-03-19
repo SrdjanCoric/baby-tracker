@@ -498,7 +498,7 @@ export default function ManualFeedingScreen() {
             </Pressable>
           </View>
           {errors.startedAt && (
-            <Text className="text-red-500 text-sm mt-2">{errors.startedAt}</Text>
+            <Text className="text-red-500 text-sm mt-2">{t(errors.startedAt)}</Text>
           )}
         </View>
 
@@ -594,7 +594,7 @@ export default function ManualFeedingScreen() {
                 </Text>
               </Pressable>
               {errors.side && (
-                <Text className="text-red-500 text-sm mt-2">{errors.side}</Text>
+                <Text className="text-red-500 text-sm mt-2">{t(errors.side)}</Text>
               )}
             </View>
 
@@ -645,7 +645,7 @@ export default function ManualFeedingScreen() {
               </View>
               {errors.durationSeconds && (
                 <Text className="text-red-500 text-sm mt-2">
-                  {errors.durationSeconds}
+                  {t(errors.durationSeconds)}
                 </Text>
               )}
             </View>
@@ -679,7 +679,7 @@ export default function ManualFeedingScreen() {
               </View>
               {errors.contentType && (
                 <Text className="text-red-500 text-sm mt-2">
-                  {errors.contentType}
+                  {t(errors.contentType)}
                 </Text>
               )}
             </View>
@@ -742,7 +742,7 @@ export default function ManualFeedingScreen() {
               </View>
               {errors.amountMl && (
                 <Text className="text-red-500 text-sm mt-2">
-                  {errors.amountMl}
+                  {t(errors.amountMl)}
                 </Text>
               )}
             </View>
