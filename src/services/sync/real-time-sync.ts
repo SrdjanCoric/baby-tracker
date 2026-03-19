@@ -31,6 +31,7 @@ const SYNCABLE_TABLES: SyncableTable[] = [
   'wake_window_preferences',
   'activity_goals',
   'milestone_responses',
+  'health_entries',
 ];
 
 export class RealTimeSync {

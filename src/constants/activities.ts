@@ -5,7 +5,7 @@
 
 import { ACTIVITY } from "./colors";
 
-export type ActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime" | "milestones";
+export type ActivityType = "feeding" | "sleep" | "diaper" | "pumping" | "growth" | "tummyTime" | "milestones" | "health";
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
 export type BreastSide = "left" | "right" | "both";
 export type DiaperType = "wet" | "dirty" | "mixed" | "dry";
@@ -14,6 +14,30 @@ export type SleepType = "nap" | "night";
 export type BottleContentType = "formula" | "breastMilk";
 export type SolidAmount = "aLittle" | "some" | "aLot";
 export type SolidReaction = "loved" | "meh" | "refused";
+
+export type HealthType = "medication" | "temperature" | "vaccination" | "symptom";
+export type MeasurementMethod = "forehead" | "ear" | "rectal" | "armpit";
+
+export const HEALTH_TYPES: HealthType[] = ["medication", "temperature", "vaccination", "symptom"];
+
+export const SYMPTOM_OPTIONS = [
+  "runny_nose",
+  "vomiting",
+  "fussy",
+  "lethargic",
+  "wont_eat",
+  "rash",
+] as const;
+
+export type SymptomType = typeof SYMPTOM_OPTIONS[number];
+
+export const MEASUREMENT_METHODS: MeasurementMethod[] = ["forehead", "ear", "rectal", "armpit"];
+
+export const COMMON_MEDICATION_KEYS = ["tylenol", "ibuprofen", "vitamin_d"] as const;
+export type MedicationKey = typeof COMMON_MEDICATION_KEYS[number];
+
+export const COMMON_VACCINE_KEYS = ["dtap", "hexavalent", "ipv", "hep_b", "mmr", "rotavirus", "pcv", "hib", "varicella", "flu", "covid"] as const;
+export type VaccineKey = typeof COMMON_VACCINE_KEYS[number];
 
 export const SOLID_AMOUNTS: SolidAmount[] = ["aLittle", "some", "aLot"];
 export const SOLID_REACTIONS: SolidReaction[] = ["loved", "meh", "refused"];
@@ -98,6 +122,13 @@ export const ACTIVITY_CONFIG: Record<ActivityType, ActivityColorConfig> = {
     mutedBg: ACTIVITY.milestones.muted,
     mutedBgDark: ACTIVITY.milestones.mutedDark,
   },
+  health: {
+    icon: "💊",
+    accentColor: ACTIVITY.health.accent,
+    accentColorDark: ACTIVITY.health.accentDark,
+    mutedBg: ACTIVITY.health.muted,
+    mutedBgDark: ACTIVITY.health.mutedDark,
+  },
 };
 
 /**
@@ -139,7 +170,7 @@ export function getOppositeSide(side: BreastSide): BreastSide {
  * Validates that a string is a valid ActivityType
  */
 export function isValidActivityType(value: string): value is ActivityType {
-  return ["feeding", "sleep", "diaper", "pumping", "growth", "tummyTime", "milestones"].includes(value);
+  return ["feeding", "sleep", "diaper", "pumping", "growth", "tummyTime", "milestones", "health"].includes(value);
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   getWeightUnit,
   getHeightUnit,
   getVolumeUnit,
+  getTemperatureUnit,
   DEFAULT_UNIT_SYSTEM,
 } from "@/utils/units";
 
@@ -15,6 +16,7 @@ interface UnitContextValue {
   weightUnit: "kg" | "lbs";
   heightUnit: "cm" | "in";
   volumeUnit: "ml" | "oz";
+  temperatureUnit: "°C" | "°F";
   isLoading: boolean;
   setUnitSystem: (system: UnitSystem) => Promise<void>;
 }
@@ -42,15 +44,17 @@ export function UnitProvider({ children }: { children: React.ReactNode }) {
   const weightUnit = getWeightUnit(unitSystem);
   const heightUnit = getHeightUnit(unitSystem);
   const volumeUnit = getVolumeUnit(unitSystem);
+  const temperatureUnit = getTemperatureUnit(unitSystem);
 
   const value: UnitContextValue = useMemo(() => ({
     unitSystem,
     weightUnit,
     heightUnit,
     volumeUnit,
+    temperatureUnit,
     isLoading,
     setUnitSystem: handleSetUnitSystem,
-  }), [unitSystem, weightUnit, heightUnit, volumeUnit, isLoading, handleSetUnitSystem]);
+  }), [unitSystem, weightUnit, heightUnit, volumeUnit, temperatureUnit, isLoading, handleSetUnitSystem]);
 
   return <UnitContext.Provider value={value}>{children}</UnitContext.Provider>;
 }

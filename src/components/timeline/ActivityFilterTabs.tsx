@@ -25,6 +25,7 @@ const FILTER_OPTIONS: FilterOption[] = [
   { key: "pumping", labelKey: "pumping.title", icon: "🫙" },
   { key: "growth", labelKey: "growth.title", icon: "📏" },
   { key: "tummyTime", labelKey: "tummyTime.title", icon: "💪" },
+  { key: "health", labelKey: "health.title", icon: "💊" },
 ];
 
 interface ActivityFilterTabsProps {
