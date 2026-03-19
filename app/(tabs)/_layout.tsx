@@ -29,6 +29,7 @@ function TabIcon({ name, focused, isDark }: TabIconProps) {
     home: "🏠",
     timeline: "📋",
     statistics: "📊",
+    "sleep-patterns": "🌙",
   };
 
   const activeColor = isDark ? ACTION.dark.primary : ACTION.light.primary;
@@ -115,9 +116,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="sleep-patterns"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="statistics"
         options={{
           title: t("navigation.statistics"),
+          headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon name="statistics" focused={focused} isDark={isDark} />
           ),

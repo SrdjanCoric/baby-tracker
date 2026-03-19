@@ -16,7 +16,7 @@ import type { TimeFormat } from "@/contexts/time-format-context";
 
 const PRIMARY_COLOR = "#6B9E6E";
 
-type LanguageCode = "en" | "sr";
+type LanguageCode = "en" | "sr" | "es";
 
 interface OptionButtonProps {
   label: string;
@@ -81,7 +81,7 @@ export default function PreferencesScreen() {
   const { setTimeFormat, timeFormat: currentTimeFormat } = useTimeFormat();
 
   const [language, setLanguage] = useState<LanguageCode>(
-    (i18n.language?.startsWith("sr") ? "sr" : "en") as LanguageCode
+    (i18n.language?.startsWith("sr") ? "sr" : i18n.language?.startsWith("es") ? "es" : "en") as LanguageCode
   );
   const [units, setUnits] = useState<UnitSystem>(currentUnits);
   const [selectedTimeFormat, setSelectedTimeFormat] = useState<TimeFormat>(currentTimeFormat);
@@ -148,6 +148,13 @@ export default function PreferencesScreen() {
             icon="🇷🇸"
             isSelected={language === "sr"}
             onPress={() => setLanguage("sr")}
+            isDark={isDark}
+          />
+          <OptionButton
+            label="Español"
+            icon="🇪🇸"
+            isSelected={language === "es"}
+            onPress={() => setLanguage("es")}
             isDark={isDark}
           />
         </Section>

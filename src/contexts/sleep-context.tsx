@@ -808,16 +808,24 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   }, [state.sleeps]);
 
   const getTodaysTotalSleepMinutes = useCallback((): number => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const todayMidnight = new Date(now);
+    todayMidnight.setHours(0, 0, 0, 0);
+    const tomorrowMidnight = new Date(todayMidnight);
+    tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 1);
 
-    const todaysSleeps = state.sleeps.filter(s => {
-      const sleepDate = new Date(s.startedAt);
-      sleepDate.setHours(0, 0, 0, 0);
-      return sleepDate.getTime() === today.getTime();
-    });
+    let totalSeconds = 0;
+    for (const s of state.sleeps) {
+      const start = new Date(s.startedAt);
+      const end = s.endedAt ? new Date(s.endedAt) : now;
 
-    const totalSeconds = todaysSleeps.reduce((sum, s) => sum + (s.durationSeconds ?? 0), 0);
+      if (end <= todayMidnight || start >= tomorrowMidnight) continue;
+
+      const clampedStart = start < todayMidnight ? todayMidnight : start;
+      const clampedEnd = end > tomorrowMidnight ? tomorrowMidnight : end;
+      totalSeconds += Math.floor((clampedEnd.getTime() - clampedStart.getTime()) / 1000);
+    }
+
     return Math.floor(totalSeconds / 60);
   }, [state.sleeps]);
 
