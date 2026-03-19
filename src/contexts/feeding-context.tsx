@@ -441,7 +441,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           type: "breast",
           leftAccumulatedSeconds: 0,
           rightAccumulatedSeconds: 0,
-        });
+        }, requestedStartTime);
         if (!lockResult.success) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }

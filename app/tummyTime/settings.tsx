@@ -10,7 +10,7 @@ import { isBabySixMonthsOrOlder } from "@/utils/tummyTimeGoals";
 const TUMMY_ORANGE = "#E67E22";
 const TUMMY_ORANGE_MUTED = "#FEF3E2";
 
-const QUICK_GOALS_MINUTES = [15, 30, 45, 60];
+const QUICK_GOALS_MINUTES = [5, 10, 15, 30, 45, 60];
 
 export default function TummyTimeSettingsScreen() {
   const { t } = useTranslation();

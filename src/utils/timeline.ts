@@ -10,6 +10,7 @@ import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredGrowthEntry } from "@/services/growth-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import type { ActivityType } from "@/constants/activities";
+import { sleepDayKey, localDateKey } from "@/utils/sleep-patterns";
 
 export interface DailySummary {
   date: Date;
@@ -56,7 +57,8 @@ function isSameDay(date1: Date, date2: Date): boolean {
 
 export function calculateDailySummary(
   date: Date,
-  data: TimelineDataByDate
+  data: TimelineDataByDate,
+  dayStartHour: number = 6
 ): DailySummary {
   const targetDate = new Date(date);
   targetDate.setHours(0, 0, 0, 0);
@@ -65,8 +67,9 @@ export function calculateDailySummary(
   const dayFeedings = data.feedings.filter((f) =>
     isSameDay(new Date(f.startedAt), targetDate)
   );
-  const daySleeps = data.sleeps.filter((s) =>
-    isSameDay(new Date(s.startedAt), targetDate)
+  const targetDayKey = localDateKey(targetDate);
+  const daySleeps = data.sleeps.filter(
+    (s) => sleepDayKey(new Date(s.startedAt), dayStartHour) === targetDayKey
   );
   const dayDiapers = data.diapers.filter((d) =>
     isSameDay(new Date(d.changedAt), targetDate)

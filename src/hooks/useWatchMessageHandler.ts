@@ -8,6 +8,7 @@ import { useTummyTime } from "@/contexts/tummyTime-context";
 import { setWatchMessageHandler } from "@/services/watch-service";
 import type { WatchReplyHandler } from "@/services/watch-service";
 import type { BreastSide, DiaperType, SleepType, BottleContentType } from "@/constants/activities";
+import { determineSleepType } from "@/validators/sleep";
 import {
   readPendingWidgetStop,
   clearPendingWidgetStop,
@@ -124,9 +125,16 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
               case "feeding":
                 await startBreastfeeding((context as BreastSide) || "left", startTime);
                 break;
-              case "sleep":
-                await startSleep((context as SleepType) || "nap", startTime);
+              case "sleep": {
+                let sleepType: SleepType;
+                if (context === "auto" || !context) {
+                  sleepType = determineSleepType(startTime ?? new Date());
+                } else {
+                  sleepType = context as SleepType;
+                }
+                await startSleep(sleepType, startTime);
                 break;
+              }
               case "pumping":
                 await startPumping((context as BreastSide) || "left", startTime);
                 break;

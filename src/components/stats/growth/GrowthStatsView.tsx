@@ -138,7 +138,7 @@ export function GrowthStatsView() {
         <View style={{ alignItems: "flex-end" }}>
           <View style={{ flexDirection: "row", alignItems: "baseline" }}>
             <Text style={{ fontSize: 20, fontWeight: "700", color: textPrimary }}>
-              {unit === "kg" ? data.value.toFixed(2) : data.value.toFixed(1)}
+              {data.value.toFixed(3)}
             </Text>
             <Text style={{ fontSize: 13, color: textSecondary, marginLeft: 2 }}>{unit}</Text>
           </View>

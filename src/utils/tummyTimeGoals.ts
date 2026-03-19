@@ -21,39 +21,53 @@ export interface GoalInfo {
 
 export const AGE_GROUPS: AgeGroup[] = [
   {
-    label: "0-4 weeks",
+    label: "0-2 weeks",
     minAgeDays: 0,
+    maxAgeDays: 14,
+    defaultGoalSeconds: 2 * 60, // 2 min
+    rationale: "2 sessions of ~1 min (AAP newborn guidance)",
+  },
+  {
+    label: "2-4 weeks",
+    minAgeDays: 15,
     maxAgeDays: 28,
-    defaultGoalSeconds: 15 * 60, // 15 min
-    rationale: "Realistic for newborns",
+    defaultGoalSeconds: 5 * 60, // 5 min
+    rationale: "2-3 sessions of ~2 min",
   },
   {
     label: "1-2 months",
     minAgeDays: 29,
     maxAgeDays: 60,
-    defaultGoalSeconds: 30 * 60, // 30 min
-    rationale: "WHO baseline",
+    defaultGoalSeconds: 10 * 60, // 10 min
+    rationale: "Short sessions building tolerance",
   },
   {
     label: "2-3 months",
     minAgeDays: 61,
     maxAgeDays: 90,
-    defaultGoalSeconds: 45 * 60, // 45 min
-    rationale: "Building toward 60 min",
+    defaultGoalSeconds: 20 * 60, // 20 min
+    rationale: "Gradual increase with better head control",
   },
   {
-    label: "3-6 months",
+    label: "3-4 months",
     minAgeDays: 91,
+    maxAgeDays: 120,
+    defaultGoalSeconds: 30 * 60, // 30 min
+    rationale: "Building toward AAP target",
+  },
+  {
+    label: "4-6 months",
+    minAgeDays: 121,
     maxAgeDays: 180,
-    defaultGoalSeconds: 60 * 60, // 60 min
-    rationale: "AAP target",
+    defaultGoalSeconds: 45 * 60, // 45 min
+    rationale: "Approaching AAP/Pathways target",
   },
   {
     label: "6+ months",
     minAgeDays: 181,
     maxAgeDays: Infinity,
     defaultGoalSeconds: 60 * 60, // 60 min
-    rationale: "With transition to floor play",
+    rationale: "Consensus target, transitions to floor play",
   },
 ];
 
@@ -73,7 +87,7 @@ export function getAgeGroupForBaby(birthDate: Date, now: Date = new Date()): Age
 
 export function getDefaultGoalForAge(birthDate: Date, now: Date = new Date()): number {
   const ageGroup = getAgeGroupForBaby(birthDate, now);
-  return ageGroup?.defaultGoalSeconds ?? 30 * 60; // Default to 30 min if no birthdate
+  return ageGroup?.defaultGoalSeconds ?? 10 * 60; // Default to 10 min if no birthdate
 }
 
 export function getAgeGroupLabel(birthDate: Date, now: Date = new Date()): string {
@@ -129,7 +143,7 @@ export function getGoalInfo(
 
   if (!birthDate) {
     return {
-      goalSeconds: 30 * 60, // Default 30 min when no birthdate
+      goalSeconds: 10 * 60, // Default 10 min when no birthdate
       source: "age_based",
       ageGroup: null,
     };
@@ -137,7 +151,7 @@ export function getGoalInfo(
 
   const ageGroup = getAgeGroupForBaby(birthDate, now);
   return {
-    goalSeconds: ageGroup?.defaultGoalSeconds ?? 30 * 60,
+    goalSeconds: ageGroup?.defaultGoalSeconds ?? 10 * 60,
     source: "age_based",
     ageGroup,
   };

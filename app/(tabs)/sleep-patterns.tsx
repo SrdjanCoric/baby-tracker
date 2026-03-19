@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSleep } from "@/contexts/sleep-context";
 import { useBaby } from "@/contexts/baby-context";
 import { useTimeFormat } from "@/contexts/time-format-context";
-import { buildDayViewData, buildWeekViewData } from "@/utils/sleep-patterns";
+import { buildDayViewData, buildWeekViewData, getSleepDate } from "@/utils/sleep-patterns";
 import { isUnderThreeMonths } from "@/utils/sleepGoals";
 import {
   DayView,
@@ -30,23 +30,20 @@ export default function SleepPatternsScreen() {
   const locale = i18n.language;
 
   const [activeTab, setActiveTab] = useState<TabView>("day");
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [weekEndDate, setWeekEndDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => getSleepDate(new Date(), dayStartHour));
+  const [weekEndDate, setWeekEndDate] = useState(() => getSleepDate(new Date(), dayStartHour));
 
   const hasSleepData = sleeps.length > 0;
   const isNewborn = isUnderThreeMonths(selectedBaby?.birthDate);
 
-  const todayLabel = t("sleepPatterns.today");
-  const yesterdayLabel = t("sleepPatterns.yesterday");
-
   const dayViewData = useMemo(
-    () => buildDayViewData(sleeps, selectedDate, PX_PER_HOUR, new Date(), dayStartHour, locale, todayLabel, yesterdayLabel),
-    [sleeps, selectedDate, dayStartHour, locale, todayLabel, yesterdayLabel]
+    () => buildDayViewData(sleeps, selectedDate, PX_PER_HOUR, new Date(), dayStartHour, locale, dayEndHour),
+    [sleeps, selectedDate, dayStartHour, dayEndHour, locale]
   );
 
   const weekViewData = useMemo(
-    () => buildWeekViewData(sleeps, weekEndDate, new Date(), dayStartHour, locale),
-    [sleeps, weekEndDate, dayStartHour, locale]
+    () => buildWeekViewData(sleeps, weekEndDate, new Date(), dayStartHour, locale, dayEndHour),
+    [sleeps, weekEndDate, dayStartHour, dayEndHour, locale]
   );
 
   const navigateDay = (offset: number) => {

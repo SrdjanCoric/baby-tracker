@@ -97,7 +97,7 @@ export function PercentileDisplay({
 
       <View className="flex-row items-baseline mb-2">
         <Text className="text-3xl font-bold text-content-primary dark:text-content-dark-primary">
-          {measurementType === "weight" ? value.toFixed(2) : value.toFixed(1)}
+          {value.toFixed(3)}
         </Text>
         <Text className="text-lg text-content-secondary dark:text-content-dark-secondary ml-1">
           {unit}

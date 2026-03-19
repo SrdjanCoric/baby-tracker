@@ -328,7 +328,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        const lockResult = await acquireTimerLock(selectedBaby.id, "pumping", user.id, { side });
+        const lockResult = await acquireTimerLock(selectedBaby.id, "pumping", user.id, { side }, requestedStartTime);
         if (!lockResult.success) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }
