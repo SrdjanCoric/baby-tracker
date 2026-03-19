@@ -92,10 +92,14 @@ export default function EditFeedingScreen() {
     try {
       const durationSeconds = durationMinutes ? parseInt(durationMinutes, 10) * 60 : undefined;
       const parsedAmount = amountMl ? parseInt(amountMl, 10) : undefined;
+      const endedAt = durationSeconds
+        ? new Date(new Date(feeding.startedAt).getTime() + durationSeconds * 1000)
+        : undefined;
 
       await updateFeeding(feeding.id, {
         side,
         durationSeconds,
+        endedAt,
         ...(feeding.type === "breast" && { leftDurationSeconds: 0, rightDurationSeconds: 0 }),
         amountMl: parsedAmount,
         contentType,

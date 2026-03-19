@@ -31,7 +31,7 @@ export function useSleepPatternColors(): SleepPatternColors {
     accentColor: isDark ? ACTION.dark.primary : ACTION.light.primary,
     nightColor: isDark ? ACTIVITY.sleep.buttonDark : ACTIVITY.sleep.button,
     napColor: isDark ? ACTIVITY.sleep.accentDark : ACTIVITY.sleep.accent,
-    napTextColor: isDark ? "#1C1A1D" : "#2D2A26",
+    napTextColor: "#463B58",
     isDark,
   };
 }

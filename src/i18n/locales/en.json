@@ -1460,7 +1460,7 @@
       "sessions": "sessions",
       "avgPerDay": "avg {{value}} / day",
       "breastfeedingChart": "Breastfeeding",
-      "breastfeedingChartSub": "total minutes per day - past 7 days",
+      "breastfeedingChartSub": "total per day - past 7 days",
       "bottleChart": "Bottle Feeding",
       "bottleChartSub": "total ml per day - past 7 days",
       "avgBetween": "Avg between feeds",

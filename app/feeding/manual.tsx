@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useColorScheme } from "nativewind";
 import { useFeeding, useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { useNotificationIntegration } from "@/hooks";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
@@ -24,10 +25,7 @@ import { COMMON_FOODS } from "@/constants/foods";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { formatTime as formatTimeUtil } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
-
-const FEEDING_GREEN = "#88B04B";
-const FEEDING_GREEN_MUTED = "#E8F0E0";
-const FEEDING_GREEN_DARK = "#6A9030";
+import { ACTIVITY } from "@/constants/colors";
 
 const QUICK_AMOUNTS_OZ = [1, 2, 3, 4, 5, 6];
 const QUICK_AMOUNTS_ML = [30, 60, 90, 120, 150, 180];
@@ -46,6 +44,13 @@ export default function ManualFeedingScreen() {
   const { volumeUnit } = useUnits();
   const { timeFormat } = useTimeFormat();
   const { scheduleReminderAfterFeeding } = useNotificationIntegration();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const colors = {
+    accent: isDark ? ACTIVITY.feeding.accentDark : ACTIVITY.feeding.accent,
+    mutedBg: isDark ? ACTIVITY.feeding.mutedDark : ACTIVITY.feeding.muted,
+    textOnMuted: isDark ? ACTIVITY.feeding.textAccentDark : ACTIVITY.feeding.textAccent,
+  };
 
   // Map URL param to tab type
   const getInitialTab = (): FeedingTab => {
@@ -432,17 +437,21 @@ export default function ManualFeedingScreen() {
         <View className="px-6 mb-4">
           <View
             className="flex-row rounded-pill p-1"
-            style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+            style={{ backgroundColor: colors.mutedBg }}
         >
           <TabButton
             label={t("feeding.breastfeedingTab")}
             isActive={activeTab === "breast"}
             onPress={() => setActiveTab("breast")}
+            accentColor={colors.accent}
+            textColor={colors.textOnMuted}
           />
           <TabButton
             label={t("feeding.bottleTab")}
             isActive={activeTab === "bottle"}
             onPress={() => setActiveTab("bottle")}
+            accentColor={colors.accent}
+            textColor={colors.textOnMuted}
           />
         </View>
         </View>
@@ -466,26 +475,26 @@ export default function ManualFeedingScreen() {
             <Pressable
               onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+              style={{ backgroundColor: colors.mutedBg }}
               accessibilityRole="button"
               accessibilityLabel={t("feeding.selectDate")}
             >
-              <Text className="text-base" style={{ color: FEEDING_GREEN_DARK }}>
+              <Text className="text-base" style={{ color: colors.textOnMuted }}>
                 {formatDate(startTime)}
               </Text>
-              <Text style={{ color: FEEDING_GREEN }}>📅</Text>
+              <Text style={{ color: colors.accent }}>📅</Text>
             </Pressable>
             <Pressable
               onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+              style={{ backgroundColor: colors.mutedBg }}
               accessibilityRole="button"
               accessibilityLabel={t("feeding.selectTime")}
             >
-              <Text className="text-base" style={{ color: FEEDING_GREEN_DARK }}>
+              <Text className="text-base" style={{ color: colors.textOnMuted }}>
                 {formatTime(startTime)}
               </Text>
-              <Text style={{ color: FEEDING_GREEN }}>🕐</Text>
+              <Text style={{ color: colors.accent }}>🕐</Text>
             </Pressable>
           </View>
           {errors.startedAt && (
@@ -501,7 +510,7 @@ export default function ManualFeedingScreen() {
                 onPress={() => setShowDateTimePicker(false)}
                 className="py-1 px-3"
               >
-                <Text className="text-sm font-semibold" style={{ color: FEEDING_GREEN }}>
+                <Text className="text-sm font-semibold" style={{ color: colors.accent }}>
                   {t("common.done")}
                 </Text>
               </Pressable>
@@ -551,6 +560,9 @@ export default function ManualFeedingScreen() {
                   shortLabel="L"
                   isSelected={side === "left"}
                   onPress={() => setSide("left")}
+                  accentColor={colors.accent}
+                  mutedColor={colors.mutedBg}
+                  textColor={colors.textOnMuted}
                 />
                 <SideButton
                   side="right"
@@ -558,6 +570,9 @@ export default function ManualFeedingScreen() {
                   shortLabel="R"
                   isSelected={side === "right"}
                   onPress={() => setSide("right")}
+                  accentColor={colors.accent}
+                  mutedColor={colors.mutedBg}
+                  textColor={colors.textOnMuted}
                 />
               </View>
               <Pressable
@@ -565,7 +580,7 @@ export default function ManualFeedingScreen() {
                 className={`mt-3 py-3 rounded-button-lg items-center active:scale-[0.98]`}
                 style={{
                   backgroundColor:
-                    side === "both" ? FEEDING_GREEN : FEEDING_GREEN_MUTED,
+                    side === "both" ? colors.accent : colors.mutedBg,
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={t("feeding.bothSides")}
@@ -573,7 +588,7 @@ export default function ManualFeedingScreen() {
               >
                 <Text
                   className="text-base font-semibold"
-                  style={{ color: side === "both" ? "#FFFFFF" : FEEDING_GREEN }}
+                  style={{ color: side === "both" ? "#FFFFFF" : colors.textOnMuted }}
                 >
                   {t("feeding.bothSides")}
                 </Text>
@@ -590,11 +605,11 @@ export default function ManualFeedingScreen() {
               </Text>
               <View
                 className="flex-row items-center rounded-card-lg px-4 py-3 mb-4"
-                style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+                style={{ backgroundColor: colors.mutedBg }}
               >
                 <TextInput
                   className="flex-1 text-2xl font-semibold text-center"
-                  style={{ color: FEEDING_GREEN_DARK }}
+                  style={{ color: colors.textOnMuted }}
                   value={durationInput}
                   onChangeText={handleDurationChange}
                   placeholder="0"
@@ -605,7 +620,7 @@ export default function ManualFeedingScreen() {
                 />
                 <Text
                   className="text-lg font-medium ml-2"
-                  style={{ color: FEEDING_GREEN }}
+                  style={{ color: colors.accent }}
                 >
                   min
                 </Text>
@@ -622,6 +637,9 @@ export default function ManualFeedingScreen() {
                     label={`${minutes}`}
                     isSelected={durationMinutes === minutes}
                     onPress={() => handleQuickDurationSelect(minutes)}
+                    accentColor={colors.accent}
+                    mutedColor={colors.mutedBg}
+                    textColor={colors.textOnMuted}
                   />
                 ))}
               </View>
@@ -645,12 +663,18 @@ export default function ManualFeedingScreen() {
                   emoji="🤱"
                   isSelected={contentType === "breastMilk"}
                   onPress={() => setContentType("breastMilk")}
+                  accentColor={colors.accent}
+                  mutedColor={colors.mutedBg}
+                  textColor={colors.textOnMuted}
                 />
                 <ContentTypeButton
                   label={t("feeding.formula")}
                   emoji="🧪"
                   isSelected={contentType === "formula"}
                   onPress={() => setContentType("formula")}
+                  accentColor={colors.accent}
+                  mutedColor={colors.mutedBg}
+                  textColor={colors.textOnMuted}
                 />
               </View>
               {errors.contentType && (
@@ -666,16 +690,16 @@ export default function ManualFeedingScreen() {
                 <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary">
                   {t("feeding.amount")}
                 </Text>
-                <UnitToggle unit={unit} onToggle={handleUnitToggle} />
+                <UnitToggle unit={unit} onToggle={handleUnitToggle} accentColor={colors.accent} mutedColor={colors.mutedBg} textColor={colors.textOnMuted} />
               </View>
 
               <View
                 className="flex-row items-center rounded-card-lg px-4 py-3 mb-4"
-                style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+                style={{ backgroundColor: colors.mutedBg }}
               >
                 <TextInput
                   className="flex-1 text-2xl font-semibold text-center"
-                  style={{ color: FEEDING_GREEN_DARK }}
+                  style={{ color: colors.textOnMuted }}
                   value={amountInput}
                   onChangeText={handleAmountChange}
                   placeholder="0"
@@ -686,7 +710,7 @@ export default function ManualFeedingScreen() {
                 />
                 <Text
                   className="text-lg font-medium ml-2"
-                  style={{ color: FEEDING_GREEN }}
+                  style={{ color: colors.accent }}
                 >
                   {unit}
                 </Text>
@@ -709,6 +733,9 @@ export default function ManualFeedingScreen() {
                           : amountMl === amount
                       }
                       onPress={() => handleQuickAmountSelect(amount)}
+                      accentColor={colors.accent}
+                      mutedColor={colors.mutedBg}
+                      textColor={colors.textOnMuted}
                     />
                   )
                 )}
@@ -741,11 +768,11 @@ export default function ManualFeedingScreen() {
               {/* Food input */}
               <View
                 className="flex-row items-center min-h-[48px] px-4 rounded-2xl mb-4"
-                style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+                style={{ backgroundColor: colors.mutedBg }}
               >
                 <TextInput
                   className="flex-1"
-                  style={{ fontSize: 16, lineHeight: 20, paddingBottom: 6, paddingTop: 6, color: FEEDING_GREEN_DARK }}
+                  style={{ fontSize: 16, lineHeight: 20, paddingBottom: 6, paddingTop: 6, color: colors.textOnMuted }}
                   value={foodType}
                   onChangeText={setFoodType}
                   placeholder={t("feeding.foodPlaceholder")}
@@ -774,6 +801,9 @@ export default function ManualFeedingScreen() {
                     label={getFoodLabel(food)}
                     isSelected={foodType === food}
                     onPress={() => handleFoodSelect(food)}
+                    accentColor={colors.accent}
+                    mutedColor={colors.mutedBg}
+                    textColor={colors.textOnMuted}
                   />
                 ))}
               </View>
@@ -791,6 +821,9 @@ export default function ManualFeedingScreen() {
                   label={t("feeding.loved")}
                   isSelected={reaction === "loved"}
                   onPress={() => handleReactionSelect("loved")}
+                  accentColor={colors.accent}
+                  mutedColor={colors.mutedBg}
+                  textColor={colors.textOnMuted}
                 />
                 <ReactionButton
                   reaction="meh"
@@ -798,6 +831,9 @@ export default function ManualFeedingScreen() {
                   label={t("feeding.meh")}
                   isSelected={reaction === "meh"}
                   onPress={() => handleReactionSelect("meh")}
+                  accentColor={colors.accent}
+                  mutedColor={colors.mutedBg}
+                  textColor={colors.textOnMuted}
                 />
                 <ReactionButton
                   reaction="refused"
@@ -805,6 +841,9 @@ export default function ManualFeedingScreen() {
                   label={t("feeding.refused")}
                   isSelected={reaction === "refused"}
                   onPress={() => handleReactionSelect("refused")}
+                  accentColor={colors.accent}
+                  mutedColor={colors.mutedBg}
+                  textColor={colors.textOnMuted}
                 />
               </View>
             </View>
@@ -838,7 +877,7 @@ export default function ManualFeedingScreen() {
           className={`py-4 rounded-button-lg items-center active:scale-[0.98] ${
             !canSave || isSaving ? "opacity-50" : ""
           }`}
-          style={{ backgroundColor: FEEDING_GREEN }}
+          style={{ backgroundColor: colors.accent }}
           accessibilityRole="button"
           accessibilityLabel={getSaveButtonLabel()}
           accessibilityState={{ disabled: !canSave || isSaving }}
@@ -857,20 +896,22 @@ interface TabButtonProps {
   label: string;
   isActive: boolean;
   onPress: () => void;
+  accentColor: string;
+  textColor: string;
 }
 
-function TabButton({ label, isActive, onPress }: TabButtonProps) {
+function TabButton({ label, isActive, onPress, accentColor, textColor }: TabButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-1 py-3 rounded-pill items-center active:scale-95"
-      style={isActive ? { backgroundColor: FEEDING_GREEN } : undefined}
+      style={isActive ? { backgroundColor: accentColor } : undefined}
       accessibilityRole="tab"
       accessibilityState={{ selected: isActive }}
     >
       <Text
         className="text-base font-semibold"
-        style={{ color: isActive ? "#FFFFFF" : FEEDING_GREEN }}
+        style={{ color: isActive ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>
@@ -884,6 +925,9 @@ interface SideButtonProps {
   shortLabel: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
 function SideButton({
@@ -891,13 +935,16 @@ function SideButton({
   shortLabel,
   isSelected,
   onPress,
+  accentColor,
+  mutedColor,
+  textColor,
 }: SideButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-1 items-center py-5 rounded-card-lg active:scale-[0.97]"
       style={{
-        backgroundColor: isSelected ? FEEDING_GREEN : FEEDING_GREEN_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -905,13 +952,13 @@ function SideButton({
     >
       <Text
         className="text-3xl font-bold mb-1"
-        style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {shortLabel}
       </Text>
       <Text
         className="text-base font-medium"
-        style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN_DARK }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>
@@ -924,6 +971,9 @@ interface ContentTypeButtonProps {
   emoji: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
 function ContentTypeButton({
@@ -931,13 +981,16 @@ function ContentTypeButton({
   emoji,
   isSelected,
   onPress,
+  accentColor,
+  mutedColor,
+  textColor,
 }: ContentTypeButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-1 items-center py-4 rounded-card-lg active:scale-[0.97]"
       style={{
-        backgroundColor: isSelected ? FEEDING_GREEN : FEEDING_GREEN_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -946,7 +999,7 @@ function ContentTypeButton({
       <Text className="text-3xl mb-2">{emoji}</Text>
       <Text
         className="text-base font-medium"
-        style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN_DARK }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>
@@ -957,37 +1010,40 @@ function ContentTypeButton({
 interface UnitToggleProps {
   unit: VolumeUnit;
   onToggle: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
-function UnitToggle({ unit, onToggle }: UnitToggleProps) {
+function UnitToggle({ unit, onToggle, accentColor, mutedColor, textColor }: UnitToggleProps) {
   const { t } = useTranslation();
 
   return (
     <Pressable
       onPress={onToggle}
       className="flex-row rounded-pill p-1"
-      style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+      style={{ backgroundColor: mutedColor }}
       accessibilityRole="button"
       accessibilityLabel={`Switch to ${unit === "oz" ? "milliliters" : "ounces"}`}
     >
       <View
         className="px-3 py-1 rounded-pill"
-        style={unit === "oz" ? { backgroundColor: FEEDING_GREEN } : undefined}
+        style={unit === "oz" ? { backgroundColor: accentColor } : undefined}
       >
         <Text
           className="text-sm font-semibold"
-          style={{ color: unit === "oz" ? "#FFFFFF" : FEEDING_GREEN }}
+          style={{ color: unit === "oz" ? "#FFFFFF" : textColor }}
         >
           {t("feeding.oz")}
         </Text>
       </View>
       <View
         className="px-3 py-1 rounded-pill"
-        style={unit === "ml" ? { backgroundColor: FEEDING_GREEN } : undefined}
+        style={unit === "ml" ? { backgroundColor: accentColor } : undefined}
       >
         <Text
           className="text-sm font-semibold"
-          style={{ color: unit === "ml" ? "#FFFFFF" : FEEDING_GREEN }}
+          style={{ color: unit === "ml" ? "#FFFFFF" : textColor }}
         >
           {t("feeding.ml")}
         </Text>
@@ -1000,15 +1056,18 @@ interface QuickButtonProps {
   label: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
-function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
+function QuickButton({ label, isSelected, onPress, accentColor, mutedColor, textColor }: QuickButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="min-w-[56px] py-2 px-3 rounded-button-lg items-center active:scale-95"
       style={{
-        backgroundColor: isSelected ? FEEDING_GREEN : FEEDING_GREEN_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -1016,7 +1075,7 @@ function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
     >
       <Text
         className="text-base font-semibold"
-        style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>
@@ -1029,15 +1088,18 @@ interface FoodButtonProps {
   label: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
-function FoodButton({ label, isSelected, onPress }: FoodButtonProps) {
+function FoodButton({ label, isSelected, onPress, accentColor, mutedColor, textColor }: FoodButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="py-2 px-4 rounded-button-lg active:scale-95"
       style={{
-        backgroundColor: isSelected ? FEEDING_GREEN : FEEDING_GREEN_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -1045,7 +1107,7 @@ function FoodButton({ label, isSelected, onPress }: FoodButtonProps) {
     >
       <Text
         className="text-base font-medium"
-        style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>
@@ -1059,15 +1121,18 @@ interface ReactionButtonProps {
   label: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
-function ReactionButton({ emoji, label, isSelected, onPress }: ReactionButtonProps) {
+function ReactionButton({ emoji, label, isSelected, onPress, accentColor, mutedColor, textColor }: ReactionButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-1 items-center py-4 rounded-card-lg active:scale-[0.97]"
       style={{
-        backgroundColor: isSelected ? FEEDING_GREEN : FEEDING_GREEN_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -1076,7 +1141,7 @@ function ReactionButton({ emoji, label, isSelected, onPress }: ReactionButtonPro
       <Text className="text-2xl mb-1">{emoji}</Text>
       <Text
         className="text-sm font-semibold"
-        style={{ color: isSelected ? "#FFFFFF" : FEEDING_GREEN_DARK }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>

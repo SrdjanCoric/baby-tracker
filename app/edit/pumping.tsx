@@ -79,10 +79,14 @@ export default function EditPumpingScreen() {
     try {
       const durationSeconds = durationMinutes ? parseInt(durationMinutes, 10) * 60 : undefined;
       const parsedVolume = volumeMl ? parseInt(volumeMl, 10) : undefined;
+      const endedAt = durationSeconds
+        ? new Date(new Date(pumping.startedAt).getTime() + durationSeconds * 1000)
+        : undefined;
 
       await updatePumping(pumping.id, {
         side,
         durationSeconds,
+        endedAt,
         volumeMl: parsedVolume,
         notes: notes || undefined,
       });

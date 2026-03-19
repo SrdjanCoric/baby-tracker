@@ -102,7 +102,7 @@ export default function TimelineScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { feedings, isLoading: feedingsLoading, refreshFeedings } = useFeeding();
-  const { sleeps, isLoading: sleepsLoading, refreshSleeps } = useSleep();
+  const { sleeps, isLoading: sleepsLoading, refreshSleeps, wakeWindowConfig } = useSleep();
   const { diapers, isLoading: diapersLoading, refreshDiapers } = useDiaper();
   const { pumpings, isLoading: pumpingsLoading, refreshPumpings } = usePumping();
   const { measurements, isLoading: growthLoading, refreshMeasurements } = useGrowth();
@@ -469,6 +469,7 @@ export default function TimelineScreen() {
         filter={activeFilter}
         allData={allData}
         birthDate={selectedBaby?.birthDate}
+        dayStartHour={wakeWindowConfig?.dayStartHour ?? 6}
         t={translate}
         onDateChange={handleSummaryDateChange}
       />

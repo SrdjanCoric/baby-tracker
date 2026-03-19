@@ -103,7 +103,7 @@ export function WeekView({
 
       <Legend colors={colors} />
 
-      <View style={{ height: totalHeight + 6, position: "relative", marginBottom: 8, paddingTop: 6 }}>
+      <View style={{ height: totalHeight + 12, position: "relative", marginBottom: 8, paddingTop: 6 }}>
           {[...evenHours, dayStartHour].map((hour, i) => (
             <View
               key={`${hour}-${i}`}

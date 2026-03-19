@@ -1896,6 +1896,7 @@ struct BottleFeedingView: View {
     @State private var volumeDouble: Double = 120
     var volumeMl: Int { Int(volumeDouble) }
     @State private var contentType: String = "formula"
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollView {
@@ -1949,6 +1950,7 @@ struct BottleFeedingView: View {
 
                 Button {
                     connector.logBottleFeeding(volumeMl: volumeMl, contentType: contentType)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
                 } label: {
                     Text("Save")
                         .font(.system(size: 11, weight: .semibold))
@@ -2022,26 +2024,14 @@ struct SleepDetailView: View {
                         .font(.system(size: 12, weight: .semibold))
                 }
 
-                HStack(spacing: 16) {
-                    SideButton(
-                        letter: "\u{2600}",
-                        label: "Nap",
-                        color: WatchActivityType.sleep.primaryColor,
-                        isHighlighted: true,
-                        isEmoji: true
-                    ) {
-                        connector.startTimer(activityType: "sleep", context: "nap")
-                    }
-
-                    SideButton(
-                        letter: "\u{1F319}",
-                        label: "Night",
-                        color: WatchActivityType.sleep.primaryColor,
-                        isHighlighted: true,
-                        isEmoji: true
-                    ) {
-                        connector.startTimer(activityType: "sleep", context: "night")
-                    }
+                SideButton(
+                    letter: "😴",
+                    label: "Sleep",
+                    color: WatchActivityType.sleep.primaryColor,
+                    isHighlighted: true,
+                    isEmoji: true
+                ) {
+                    connector.startTimer(activityType: "sleep", context: "auto")
                 }
             }
 

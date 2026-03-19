@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useColorScheme } from "nativewind";
 import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { formatTime as formatTimeUtil } from "@/utils/time";
@@ -21,10 +22,7 @@ import { validateManualPumping } from "@/validators/pumping";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
-
-const PUMPING_BLUE = "#7B9BC9";
-const PUMPING_BLUE_MUTED = "#E8EDF5";
-const PUMPING_BLUE_DARK = "#5A7AA8";
+import { ACTIVITY } from "@/constants/colors";
 
 const QUICK_DURATIONS = [5, 10, 15, 20, 30, 45];
 const QUICK_AMOUNTS_OZ = [1, 2, 3, 4, 5, 6];
@@ -39,6 +37,13 @@ export default function ManualPumpingScreen() {
   const { volumeUnit } = useUnits();
   const { timeFormat } = useTimeFormat();
   const { addPumping, getLastSide } = usePumping();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const colors = {
+    accent: isDark ? ACTIVITY.pumping.accentDark : ACTIVITY.pumping.accent,
+    mutedBg: isDark ? ACTIVITY.pumping.mutedDark : ACTIVITY.pumping.muted,
+    textOnMuted: isDark ? ACTIVITY.pumping.textAccentDark : ACTIVITY.pumping.textAccent,
+  };
 
   const suggestedSide = useMemo((): BreastSide => {
     const lastSide = getLastSide();
@@ -262,6 +267,9 @@ export default function ManualPumpingScreen() {
               isSuggested={suggestedSide === "left"}
               isSelected={side === "left"}
               onPress={() => setSide("left")}
+              accentColor={colors.accent}
+              mutedColor={colors.mutedBg}
+              textColor={colors.textOnMuted}
             />
             <SideButton
               sideValue="both"
@@ -270,6 +278,9 @@ export default function ManualPumpingScreen() {
               isSuggested={suggestedSide === "both"}
               isSelected={side === "both"}
               onPress={() => setSide("both")}
+              accentColor={colors.accent}
+              mutedColor={colors.mutedBg}
+              textColor={colors.textOnMuted}
             />
             <SideButton
               sideValue="right"
@@ -278,6 +289,9 @@ export default function ManualPumpingScreen() {
               isSuggested={suggestedSide === "right"}
               isSelected={side === "right"}
               onPress={() => setSide("right")}
+              accentColor={colors.accent}
+              mutedColor={colors.mutedBg}
+              textColor={colors.textOnMuted}
             />
           </View>
           {errors.side && (
@@ -294,26 +308,26 @@ export default function ManualPumpingScreen() {
             <Pressable
               onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: PUMPING_BLUE_MUTED }}
+              style={{ backgroundColor: colors.mutedBg }}
               accessibilityRole="button"
               accessibilityLabel={t("feeding.selectDate")}
             >
-              <Text className="text-base" style={{ color: PUMPING_BLUE_DARK }}>
+              <Text className="text-base" style={{ color: colors.textOnMuted }}>
                 {formatDate(startTime)}
               </Text>
-              <Text style={{ color: PUMPING_BLUE }}>📅</Text>
+              <Text style={{ color: colors.accent }}>📅</Text>
             </Pressable>
             <Pressable
               onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: PUMPING_BLUE_MUTED }}
+              style={{ backgroundColor: colors.mutedBg }}
               accessibilityRole="button"
               accessibilityLabel={t("feeding.selectTime")}
             >
-              <Text className="text-base" style={{ color: PUMPING_BLUE_DARK }}>
+              <Text className="text-base" style={{ color: colors.textOnMuted }}>
                 {formatTime(startTime)}
               </Text>
-              <Text style={{ color: PUMPING_BLUE }}>🕐</Text>
+              <Text style={{ color: colors.accent }}>🕐</Text>
             </Pressable>
           </View>
           {errors.startedAt && (
@@ -329,7 +343,7 @@ export default function ManualPumpingScreen() {
                 onPress={() => setShowDateTimePicker(false)}
                 className="py-1 px-3"
               >
-                <Text className="text-sm font-semibold" style={{ color: PUMPING_BLUE }}>
+                <Text className="text-sm font-semibold" style={{ color: colors.accent }}>
                   {t("common.done")}
                 </Text>
               </Pressable>
@@ -372,11 +386,11 @@ export default function ManualPumpingScreen() {
           </Text>
           <View
             className="flex-row items-center rounded-card-lg px-4 py-3 mb-4"
-            style={{ backgroundColor: PUMPING_BLUE_MUTED }}
+            style={{ backgroundColor: colors.mutedBg }}
           >
             <TextInput
               className="flex-1 text-2xl font-semibold text-center"
-              style={{ color: PUMPING_BLUE_DARK }}
+              style={{ color: colors.textOnMuted }}
               value={durationInput}
               onChangeText={handleDurationChange}
               placeholder="0"
@@ -388,7 +402,7 @@ export default function ManualPumpingScreen() {
             />
             <Text
               className="text-lg font-medium ml-2"
-              style={{ color: PUMPING_BLUE }}
+              style={{ color: colors.accent }}
             >
               min
             </Text>
@@ -405,6 +419,9 @@ export default function ManualPumpingScreen() {
                 label={`${minutes}`}
                 isSelected={durationMinutes === minutes}
                 onPress={() => handleQuickDurationSelect(minutes)}
+                accentColor={colors.accent}
+                mutedColor={colors.mutedBg}
+                textColor={colors.textOnMuted}
               />
             ))}
           </View>
@@ -421,16 +438,16 @@ export default function ManualPumpingScreen() {
             <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary">
               {t("pumping.amount")}
             </Text>
-            <UnitToggle unit={unit} onToggle={handleUnitToggle} />
+            <UnitToggle unit={unit} onToggle={handleUnitToggle} accentColor={colors.accent} mutedColor={colors.mutedBg} textColor={colors.textOnMuted} />
           </View>
 
           <View
             className="flex-row items-center rounded-card-lg px-4 py-3 mb-4"
-            style={{ backgroundColor: PUMPING_BLUE_MUTED }}
+            style={{ backgroundColor: colors.mutedBg }}
           >
             <TextInput
               className="flex-1 text-2xl font-semibold text-center"
-              style={{ color: PUMPING_BLUE_DARK }}
+              style={{ color: colors.textOnMuted }}
               value={volumeInput}
               onChangeText={handleVolumeChange}
               placeholder="0"
@@ -440,7 +457,7 @@ export default function ManualPumpingScreen() {
               accessibilityLabel={t("pumping.enterVolume")}
               testID="volume-input"
             />
-            <Text className="text-lg font-medium ml-2" style={{ color: PUMPING_BLUE }}>
+            <Text className="text-lg font-medium ml-2" style={{ color: colors.accent }}>
               {unit}
             </Text>
           </View>
@@ -460,6 +477,9 @@ export default function ManualPumpingScreen() {
                     : volumeMl === amount
                 }
                 onPress={() => handleQuickAmountSelect(amount)}
+                accentColor={colors.accent}
+                mutedColor={colors.mutedBg}
+                textColor={colors.textOnMuted}
               />
             ))}
           </View>
@@ -504,7 +524,7 @@ export default function ManualPumpingScreen() {
           className={`py-4 rounded-button-lg items-center active:scale-[0.98] ${
             !canSave || isSaving ? "opacity-50" : ""
           }`}
-          style={{ backgroundColor: PUMPING_BLUE }}
+          style={{ backgroundColor: colors.accent }}
           accessibilityRole="button"
           accessibilityLabel={t("pumping.logManualPumping")}
           accessibilityState={{ disabled: !canSave || isSaving }}
@@ -527,6 +547,9 @@ interface SideButtonProps {
   isSuggested: boolean;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
 function SideButton({
@@ -535,6 +558,9 @@ function SideButton({
   isSuggested,
   isSelected,
   onPress,
+  accentColor,
+  mutedColor,
+  textColor,
 }: SideButtonProps) {
   const { t } = useTranslation();
 
@@ -543,7 +569,7 @@ function SideButton({
       onPress={onPress}
       className="flex-1 items-center py-4 rounded-card-lg active:scale-[0.97]"
       style={{
-        backgroundColor: isSelected ? PUMPING_BLUE : PUMPING_BLUE_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={`${label}${isSuggested ? `, ${t("feeding.suggested")}` : ""}`}
@@ -551,22 +577,22 @@ function SideButton({
     >
       <Text
         className="text-2xl font-bold mb-1"
-        style={{ color: isSelected ? "#FFFFFF" : PUMPING_BLUE }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {shortLabel}
       </Text>
       <Text
         className="text-sm font-medium"
-        style={{ color: isSelected ? "#FFFFFF" : PUMPING_BLUE_DARK }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>
       {isSuggested && !isSelected && (
         <View
           className="px-2 py-0.5 rounded-pill mt-1"
-          style={{ backgroundColor: PUMPING_BLUE + "30" }}
+          style={{ backgroundColor: accentColor + "30" }}
         >
-          <Text className="text-xs font-medium" style={{ color: PUMPING_BLUE }}>
+          <Text className="text-xs font-medium" style={{ color: textColor }}>
             {t("feeding.suggested")}
           </Text>
         </View>
@@ -579,15 +605,18 @@ interface QuickButtonProps {
   label: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
-function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
+function QuickButton({ label, isSelected, onPress, accentColor, mutedColor, textColor }: QuickButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="min-w-[56px] py-2 px-3 rounded-button-lg items-center active:scale-95"
       style={{
-        backgroundColor: isSelected ? PUMPING_BLUE : PUMPING_BLUE_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -595,7 +624,7 @@ function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
     >
       <Text
         className="text-base font-semibold"
-        style={{ color: isSelected ? "#FFFFFF" : PUMPING_BLUE }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>
@@ -606,37 +635,40 @@ function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
 interface UnitToggleProps {
   unit: VolumeUnit;
   onToggle: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
-function UnitToggle({ unit, onToggle }: UnitToggleProps) {
+function UnitToggle({ unit, onToggle, accentColor, mutedColor, textColor }: UnitToggleProps) {
   const { t } = useTranslation();
 
   return (
     <Pressable
       onPress={onToggle}
       className="flex-row rounded-pill p-1"
-      style={{ backgroundColor: PUMPING_BLUE_MUTED }}
+      style={{ backgroundColor: mutedColor }}
       accessibilityRole="button"
       accessibilityLabel={`Switch to ${unit === "oz" ? "milliliters" : "ounces"}`}
     >
       <View
         className="px-3 py-1 rounded-pill"
-        style={unit === "oz" ? { backgroundColor: PUMPING_BLUE } : undefined}
+        style={unit === "oz" ? { backgroundColor: accentColor } : undefined}
       >
         <Text
           className="text-sm font-semibold"
-          style={{ color: unit === "oz" ? "#FFFFFF" : PUMPING_BLUE }}
+          style={{ color: unit === "oz" ? "#FFFFFF" : textColor }}
         >
           {t("feeding.oz")}
         </Text>
       </View>
       <View
         className="px-3 py-1 rounded-pill"
-        style={unit === "ml" ? { backgroundColor: PUMPING_BLUE } : undefined}
+        style={unit === "ml" ? { backgroundColor: accentColor } : undefined}
       >
         <Text
           className="text-sm font-semibold"
-          style={{ color: unit === "ml" ? "#FFFFFF" : PUMPING_BLUE }}
+          style={{ color: unit === "ml" ? "#FFFFFF" : textColor }}
         >
           {t("feeding.ml")}
         </Text>

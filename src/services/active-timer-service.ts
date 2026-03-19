@@ -34,13 +34,15 @@ export async function acquireTimerLock(
   babyId: string,
   activityType: TimerActivityType,
   userId: string,
-  timerData?: Record<string, unknown>
+  timerData?: Record<string, unknown>,
+  startedAt?: Date
 ): Promise<AcquireLockResult> {
   const { data, error } = await supabase.rpc("acquire_timer_lock", {
     p_baby_id: babyId,
     p_activity_type: activityType,
     p_user_id: userId,
     p_timer_data: timerData || null,
+    p_started_at: startedAt?.toISOString() || null,
   });
 
   if (error) {

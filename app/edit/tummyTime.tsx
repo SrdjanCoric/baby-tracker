@@ -70,9 +70,13 @@ export default function EditTummyTimeScreen() {
     setIsSaving(true);
     try {
       const durationSeconds = durationMinutes ? parseInt(durationMinutes, 10) * 60 : undefined;
+      const endedAt = durationSeconds
+        ? new Date(new Date(tummyTime.startedAt).getTime() + durationSeconds * 1000)
+        : undefined;
 
       await updateTummyTime(tummyTime.id, {
         durationSeconds,
+        endedAt,
         notes: notes || undefined,
       });
       setIsInitialized(false);

@@ -13,14 +13,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useColorScheme } from "nativewind";
 import { useTummyTime, useBaby, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { formatTime as formatTimeUtil } from "@/utils/time";
 import { validateManualTummyTime } from "@/validators/tummyTime";
-
-const TUMMY_ORANGE = "#E67E22";
-const TUMMY_ORANGE_MUTED = "#FEF3E2";
-const TUMMY_ORANGE_DARK = "#D35400";
+import { ACTIVITY } from "@/constants/colors";
 
 const QUICK_DURATIONS = [1, 2, 3, 5, 10, 15];
 
@@ -30,6 +28,13 @@ export default function ManualTummyTimeScreen() {
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addTummyTime } = useTummyTime();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const colors = {
+    accent: isDark ? ACTIVITY.tummyTime.accentDark : ACTIVITY.tummyTime.accent,
+    mutedBg: isDark ? ACTIVITY.tummyTime.mutedDark : ACTIVITY.tummyTime.muted,
+    textOnMuted: isDark ? ACTIVITY.tummyTime.textAccentDark : ACTIVITY.tummyTime.textAccent,
+  };
 
   const [startTime, setStartTime] = useState(new Date());
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
@@ -189,26 +194,26 @@ export default function ManualTummyTimeScreen() {
             <Pressable
               onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
+              style={{ backgroundColor: colors.mutedBg }}
               accessibilityRole="button"
               accessibilityLabel={t("feeding.selectDate")}
             >
-              <Text className="text-base" style={{ color: TUMMY_ORANGE_DARK }}>
+              <Text className="text-base" style={{ color: colors.textOnMuted }}>
                 {formatDate(startTime)}
               </Text>
-              <Text style={{ color: TUMMY_ORANGE }}>📅</Text>
+              <Text style={{ color: colors.accent }}>📅</Text>
             </Pressable>
             <Pressable
               onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
+              style={{ backgroundColor: colors.mutedBg }}
               accessibilityRole="button"
               accessibilityLabel={t("feeding.selectTime")}
             >
-              <Text className="text-base" style={{ color: TUMMY_ORANGE_DARK }}>
+              <Text className="text-base" style={{ color: colors.textOnMuted }}>
                 {formatTime(startTime)}
               </Text>
-              <Text style={{ color: TUMMY_ORANGE }}>🕐</Text>
+              <Text style={{ color: colors.accent }}>🕐</Text>
             </Pressable>
           </View>
           {errors.startedAt && (
@@ -224,7 +229,7 @@ export default function ManualTummyTimeScreen() {
                 onPress={() => setShowDateTimePicker(false)}
                 className="py-1 px-3"
               >
-                <Text className="text-sm font-semibold" style={{ color: TUMMY_ORANGE }}>
+                <Text className="text-sm font-semibold" style={{ color: colors.accent }}>
                   {t("common.done")}
                 </Text>
               </Pressable>
@@ -267,11 +272,11 @@ export default function ManualTummyTimeScreen() {
           </Text>
           <View
             className="flex-row items-center rounded-card-lg px-4 py-3 mb-4"
-            style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
+            style={{ backgroundColor: colors.mutedBg }}
           >
             <TextInput
               className="flex-1 text-2xl font-semibold text-center"
-              style={{ color: TUMMY_ORANGE_DARK }}
+              style={{ color: colors.textOnMuted }}
               value={durationInput}
               onChangeText={handleDurationChange}
               placeholder="0"
@@ -282,7 +287,7 @@ export default function ManualTummyTimeScreen() {
             />
             <Text
               className="text-lg font-medium ml-2"
-              style={{ color: TUMMY_ORANGE }}
+              style={{ color: colors.accent }}
             >
               {t("common.min")}
             </Text>
@@ -299,6 +304,9 @@ export default function ManualTummyTimeScreen() {
                 label={`${minutes}`}
                 isSelected={durationMinutes === minutes}
                 onPress={() => handleQuickDurationSelect(minutes)}
+                accentColor={colors.accent}
+                mutedColor={colors.mutedBg}
+                textColor={colors.textOnMuted}
               />
             ))}
           </View>
@@ -336,7 +344,7 @@ export default function ManualTummyTimeScreen() {
           className={`py-4 rounded-button-lg items-center active:scale-[0.98] ${
             !canSave || isSaving ? "opacity-50" : ""
           }`}
-          style={{ backgroundColor: TUMMY_ORANGE }}
+          style={{ backgroundColor: colors.accent }}
           accessibilityRole="button"
           accessibilityLabel={t("tummyTime.logManualTummyTime")}
           accessibilityState={{ disabled: !canSave || isSaving }}
@@ -355,15 +363,18 @@ interface QuickButtonProps {
   label: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
-function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
+function QuickButton({ label, isSelected, onPress, accentColor, mutedColor, textColor }: QuickButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="min-w-[56px] py-2 px-3 rounded-button-lg items-center active:scale-95"
       style={{
-        backgroundColor: isSelected ? TUMMY_ORANGE : TUMMY_ORANGE_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -371,7 +382,7 @@ function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
     >
       <Text
         className="text-base font-semibold"
-        style={{ color: isSelected ? "#FFFFFF" : TUMMY_ORANGE }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>

@@ -74,10 +74,14 @@ export default function EditSleepScreen() {
     setIsSaving(true);
     try {
       const durationSeconds = durationMinutes ? parseInt(durationMinutes, 10) * 60 : undefined;
+      const endedAt = durationSeconds
+        ? new Date(new Date(sleep.startedAt).getTime() + durationSeconds * 1000)
+        : undefined;
 
       await updateSleep(sleep.id, {
         type: sleepType,
         durationSeconds,
+        endedAt,
         notes: notes || undefined,
       });
       setIsInitialized(false);

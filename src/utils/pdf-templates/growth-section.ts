@@ -178,7 +178,7 @@ export function renderGrowthSection(
             ${hasWeight ? `
             <tr>
               <td>${t("reports.pdf.weight")}</td>
-              <td class="text-center">${stats.latestWeight!.value.toFixed(2)} kg</td>
+              <td class="text-center">${stats.latestWeight!.value.toFixed(3)} kg</td>
               <td class="text-center">${renderPercentileBadge(stats.latestWeight!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestWeight!.date)}</td>
             </tr>
@@ -186,7 +186,7 @@ export function renderGrowthSection(
             ${hasHeight ? `
             <tr>
               <td>${t("reports.pdf.height")}</td>
-              <td class="text-center">${stats.latestHeight!.value.toFixed(1)} cm</td>
+              <td class="text-center">${stats.latestHeight!.value.toFixed(3)} cm</td>
               <td class="text-center">${renderPercentileBadge(stats.latestHeight!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestHeight!.date)}</td>
             </tr>
@@ -194,7 +194,7 @@ export function renderGrowthSection(
             ${hasHead ? `
             <tr>
               <td>${t("reports.pdf.headCircumference")}</td>
-              <td class="text-center">${stats.latestHeadCircumference!.value.toFixed(1)} cm</td>
+              <td class="text-center">${stats.latestHeadCircumference!.value.toFixed(3)} cm</td>
               <td class="text-center">${renderPercentileBadge(stats.latestHeadCircumference!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestHeadCircumference!.date)}</td>
             </tr>
@@ -213,11 +213,11 @@ export function renderGrowthSection(
             <div class="info-row">
               <span class="info-label">${t("reports.pdf.weight")}</span>
               <span class="info-value" style="color: ${stats.weightGain.change >= 0 ? "#22C55E" : "#EF4444"}">
-                ${stats.weightGain.change >= 0 ? "+" : ""}${stats.weightGain.change.toFixed(2)} kg
+                ${stats.weightGain.change >= 0 ? "+" : ""}${stats.weightGain.change.toFixed(3)} kg
               </span>
             </div>
             <div style="font-size: 10px; color: #6B7280; margin-top: 2px;">
-              ${stats.weightGain.startValue.toFixed(2)} kg → ${stats.weightGain.endValue.toFixed(2)} kg
+              ${stats.weightGain.startValue.toFixed(3)} kg → ${stats.weightGain.endValue.toFixed(3)} kg
             </div>
           </div>
           ` : ""}
@@ -226,11 +226,11 @@ export function renderGrowthSection(
             <div class="info-row">
               <span class="info-label">${t("reports.pdf.height")}</span>
               <span class="info-value" style="color: ${stats.heightGain.change >= 0 ? "#22C55E" : "#EF4444"}">
-                ${stats.heightGain.change >= 0 ? "+" : ""}${stats.heightGain.change.toFixed(1)} cm
+                ${stats.heightGain.change >= 0 ? "+" : ""}${stats.heightGain.change.toFixed(3)} cm
               </span>
             </div>
             <div style="font-size: 10px; color: #6B7280; margin-top: 2px;">
-              ${stats.heightGain.startValue.toFixed(1)} cm → ${stats.heightGain.endValue.toFixed(1)} cm
+              ${stats.heightGain.startValue.toFixed(3)} cm → ${stats.heightGain.endValue.toFixed(3)} cm
             </div>
           </div>
           ` : ""}

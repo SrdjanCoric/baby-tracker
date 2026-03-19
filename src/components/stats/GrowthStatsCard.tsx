@@ -294,7 +294,7 @@ export function GrowthStatsCard() {
               <MeasurementRow
                 icon="⚖️"
                 label={t("growth.weight")}
-                value={measurements.weight.value.toFixed(2)}
+                value={measurements.weight.value.toFixed(3)}
                 unit="kg"
                 measuredAt={measurements.weight.measuredAt}
                 percentile={measurements.weight.percentile}
@@ -315,7 +315,7 @@ export function GrowthStatsCard() {
                 <MeasurementRow
                   icon="📏"
                   label={heightLabel}
-                  value={measurements.height.value.toFixed(1)}
+                  value={measurements.height.value.toFixed(3)}
                   unit="cm"
                   measuredAt={measurements.height.measuredAt}
                   percentile={measurements.height.percentile}
@@ -337,7 +337,7 @@ export function GrowthStatsCard() {
                 <MeasurementRow
                   icon="👶"
                   label={t("growth.headCircumference")}
-                  value={measurements.head.value.toFixed(1)}
+                  value={measurements.head.value.toFixed(3)}
                   unit="cm"
                   measuredAt={measurements.head.measuredAt}
                   percentile={measurements.head.percentile}
