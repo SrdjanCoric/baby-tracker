@@ -90,7 +90,7 @@ export function formatTimeAgoForAccessibility(
 export function getActivityAccessibilityLabel(activityType: string, t: TFunction): string {
   const key = ACTIVITY_LABEL_KEYS[activityType];
   if (key) {
-    return t(key);
+    return t(key, { defaultValue: key });
   }
 
   return activityType.charAt(0).toUpperCase() + activityType.slice(1);
@@ -129,9 +129,9 @@ export function createSaveSuccessMessage(activityType: string, t: TFunction): st
   return t("accessibility.savedSuccessfully", { activity: activityLabel });
 }
 
-export function createErrorMessage(t: TFunction, context?: string): string {
-  if (context) {
-    return t("accessibility.errorWithContext", { context });
+export function createErrorMessage(t: TFunction, errorContext?: string): string {
+  if (errorContext) {
+    return t("accessibility.errorWithContext", { context: errorContext, defaultValue: `Error ${errorContext}. Please try again.` });
   }
   return t("accessibility.errorGeneric");
 }
