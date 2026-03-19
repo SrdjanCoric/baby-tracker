@@ -122,9 +122,9 @@ export function useAccessibility(): UseAccessibilityReturn {
   );
 
   const announceError = useCallback(
-    (context?: string) => {
+    (errorContext?: string) => {
       if (!shouldAnnounce("error")) return;
-      const message = createErrorMessage(t, context);
+      const message = createErrorMessage(t, errorContext);
       announce(message);
     },
     [announce, t]
