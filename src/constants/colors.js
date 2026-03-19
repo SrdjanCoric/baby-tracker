@@ -75,7 +75,7 @@ const ACTIVITY = {
     button: "#6A9A4D",
     buttonDark: "#5A8A4D",
     muted: "#EEF4E9",
-    mutedDark: "#2A2730",
+    mutedDark: "#253025",
   },
   sleep: {
     accent: "#9E8DA9",
@@ -83,7 +83,7 @@ const ACTIVITY = {
     button: "#7A6B85",
     buttonDark: "#6A5B75",
     muted: "#F2EFF4",
-    mutedDark: "#2A2730",
+    mutedDark: "#2E2840",
   },
   diaper: {
     accent: "#E0A099",
@@ -91,7 +91,7 @@ const ACTIVITY = {
     button: "#B8706A",
     buttonDark: "#7A4A44",
     muted: "#FBF0EE",
-    mutedDark: "#2A2730",
+    mutedDark: "#302525",
   },
   pumping: {
     accent: "#7BA3A8",
@@ -99,7 +99,7 @@ const ACTIVITY = {
     button: "#5A8589",
     buttonDark: "#4A7579",
     muted: "#EDF3F4",
-    mutedDark: "#2A2730",
+    mutedDark: "#252A30",
   },
   growth: {
     accent: "#6AAB9C",
@@ -107,7 +107,7 @@ const ACTIVITY = {
     button: "#4A8A7A",
     buttonDark: "#3A7A6A",
     muted: "#EBF4F2",
-    mutedDark: "#2A2730",
+    mutedDark: "#253028",
   },
   tummyTime: {
     accent: "#D4A574",
@@ -115,7 +115,7 @@ const ACTIVITY = {
     button: "#B8844E",
     buttonDark: "#A8743E",
     muted: "#F9F2EA",
-    mutedDark: "#2A2730",
+    mutedDark: "#302A22",
   },
   milestones: {
     accent: "#C9A55C",
@@ -123,7 +123,7 @@ const ACTIVITY = {
     button: "#A88A3E",
     buttonDark: "#8A7232",
     muted: "#F9F4E8",
-    mutedDark: "#2A2730",
+    mutedDark: "#302C22",
   },
 };
 

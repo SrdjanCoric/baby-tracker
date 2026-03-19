@@ -28,8 +28,8 @@ function computeMaxY(data: DailySleepBar[]): number {
     const total = bar.nightHours + bar.napHours;
     if (total > max) max = total;
   }
-  const rounded = Math.ceil(max / GRID_STEP) * GRID_STEP;
-  return Math.max(rounded, 18);
+  const withHeadroom = Math.ceil((max * 1.1) / GRID_STEP) * GRID_STEP;
+  return Math.max(withHeadroom, 18);
 }
 
 function getWeekday(dateKey: string, locale: string): string {

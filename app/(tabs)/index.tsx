@@ -78,6 +78,7 @@ export default function HomeScreen() {
   const isAuthenticated = !!session?.access_token;
 
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [timerTick, setTimerTick] = useState(0);
 
   const hasActiveTimer = feedingActiveTimer?.isRunning || sleepActiveTimer?.isRunning || pumpingActiveTimer?.isRunning || tummyTimeActiveTimer?.isRunning;
@@ -100,6 +101,9 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        setRefreshKey(k => k + 1);
+      }
       if (nextState !== "active") {
         setRefreshing(false);
       }
@@ -809,6 +813,7 @@ export default function HomeScreen() {
         refreshControl={
           isAndroid ? undefined : (
             <RefreshControl
+              key={refreshKey}
               refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor={getActionColor("primary", colorScheme === "dark")}

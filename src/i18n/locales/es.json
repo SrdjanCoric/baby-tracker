@@ -1464,7 +1464,7 @@
       "sessions": "sesiones",
       "avgPerDay": "prom. {{value}} / día",
       "breastfeedingChart": "Lactancia",
-      "breastfeedingChartSub": "minutos totales por día - últimos 7 días",
+      "breastfeedingChartSub": "total por día - últimos 7 días",
       "bottleChart": "Biberón",
       "bottleChartSub": "ml totales por día - últimos 7 días",
       "avgBetween": "Prom. entre tomas",
