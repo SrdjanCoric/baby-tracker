@@ -17,6 +17,7 @@ import { useColorScheme } from "nativewind";
 import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { formatTime as formatTimeUtil } from "@/utils/time";
+import { te } from "@/utils/translate-errors";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { validateManualPumping } from "@/validators/pumping";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
@@ -295,7 +296,7 @@ export default function ManualPumpingScreen() {
             />
           </View>
           {errors.side && (
-            <Text className="text-red-500 text-sm mt-2">{t(errors.side)}</Text>
+            <Text className="text-red-500 text-sm mt-2">{te(t, errors.side)}</Text>
           )}
         </View>
 
@@ -331,7 +332,7 @@ export default function ManualPumpingScreen() {
             </Pressable>
           </View>
           {errors.startedAt && (
-            <Text className="text-red-500 text-sm mt-2">{t(errors.startedAt)}</Text>
+            <Text className="text-red-500 text-sm mt-2">{te(t, errors.startedAt)}</Text>
           )}
         </View>
 
@@ -427,7 +428,7 @@ export default function ManualPumpingScreen() {
           </View>
           {errors.durationSeconds && (
             <Text className="text-red-500 text-sm mt-2">
-              {t(errors.durationSeconds)}
+              {te(t, errors.durationSeconds)}
             </Text>
           )}
         </View>
@@ -484,7 +485,7 @@ export default function ManualPumpingScreen() {
             ))}
           </View>
           {errors.volumeMl && (
-            <Text className="text-red-500 text-sm mt-2">{t(errors.volumeMl)}</Text>
+            <Text className="text-red-500 text-sm mt-2">{te(t, errors.volumeMl)}</Text>
           )}
         </View>
 
