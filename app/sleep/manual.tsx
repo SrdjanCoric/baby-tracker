@@ -17,6 +17,7 @@ import { useColorScheme } from "nativewind";
 import { useSleep, useBaby, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { formatTime as formatTimeUtil } from "@/utils/time";
+import { te } from "@/utils/translate-errors";
 import { validateManualSleep, determineSleepType } from "@/validators/sleep";
 import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import { ACTIVITY } from "@/constants/colors";
@@ -234,7 +235,7 @@ export default function ManualSleepScreen() {
             </Pressable>
           </View>
           {errors.startedAt && (
-            <Text className="text-red-500 text-sm mt-2">{t(errors.startedAt)}</Text>
+            <Text className="text-red-500 text-sm mt-2">{te(t, errors.startedAt)}</Text>
           )}
         </View>
 
@@ -329,7 +330,7 @@ export default function ManualSleepScreen() {
           </View>
           {errors.durationSeconds && (
             <Text className="text-red-500 text-sm mt-2">
-              {t(errors.durationSeconds)}
+              {te(t, errors.durationSeconds)}
             </Text>
           )}
         </View>

@@ -15,6 +15,7 @@ import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/dat
 import * as ImagePicker from "expo-image-picker";
 import { Input } from "./Input";
 import { Button } from "./Button";
+import { te } from "@/utils/translate-errors";
 import { validateBabyName, validateBirthDate } from "@/validators/baby";
 
 const isAndroid = Platform.OS === "android";
@@ -201,7 +202,7 @@ function BabyProfileForm({
             const error = validateBabyName(name);
             setErrors((prev) => ({ ...prev, name: error ?? "" }));
           }}
-          error={touched.name ? (errors.name ? t(errors.name) : undefined) : undefined}
+          error={touched.name ? (errors.name ? te(t, errors.name) : undefined) : undefined}
           autoCapitalize="words"
           autoCorrect={false}
           returnKeyType="done"
@@ -256,7 +257,7 @@ function BabyProfileForm({
         </Pressable>
 
         {touched.birthDate && errors.birthDate && (
-          <Text className="mt-1.5 text-sm text-red-600">{t(errors.birthDate)}</Text>
+          <Text className="mt-1.5 text-sm text-red-600">{te(t, errors.birthDate)}</Text>
         )}
 
         {showDatePicker && (

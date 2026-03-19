@@ -7,6 +7,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useGrowth } from "@/contexts/growth-context";
 import { useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { te } from "@/utils/translate-errors";
 import { validateGrowthMeasurement } from "@/validators/growth";
 import { formatTime as formatTimeUtil } from "@/utils/time";
 import { lbsToKg, inchesToCm } from "@/utils/growth";
@@ -308,7 +309,7 @@ export default function GrowthScreen() {
               </Text>
             </View>
             {errors.weightKg && (
-              <Text className="text-sm text-red-500 mt-1">{t(errors.weightKg)}</Text>
+              <Text className="text-sm text-red-500 mt-1">{te(t, errors.weightKg)}</Text>
             )}
           </View>
 
@@ -335,7 +336,7 @@ export default function GrowthScreen() {
               </Text>
             </View>
             {errors.heightCm && (
-              <Text className="text-sm text-red-500 mt-1">{t(errors.heightCm)}</Text>
+              <Text className="text-sm text-red-500 mt-1">{te(t, errors.heightCm)}</Text>
             )}
           </View>
 
@@ -362,7 +363,7 @@ export default function GrowthScreen() {
               </Text>
             </View>
             {errors.headCircumferenceCm && (
-              <Text className="text-sm text-red-500 mt-1">{t(errors.headCircumferenceCm)}</Text>
+              <Text className="text-sm text-red-500 mt-1">{te(t, errors.headCircumferenceCm)}</Text>
             )}
           </View>
 
@@ -386,7 +387,7 @@ export default function GrowthScreen() {
 
         {/* Validation error for no measurements */}
         {errors.measurements && (
-          <Text className="text-sm text-red-500 text-center mb-4">{t(errors.measurements)}</Text>
+          <Text className="text-sm text-red-500 text-center mb-4">{te(t, errors.measurements)}</Text>
         )}
 
         {/* Quick entry hint */}

@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Input } from "@/components";
 import { useOnboarding, useBaby } from "@/contexts";
+import { te } from "@/utils/translate-errors";
 import { OnboardingPagination, OnboardingIllustration } from "@/components/onboarding";
 import { validateBabyName, validateBirthDate } from "@/validators/baby";
 import { sanitizeName } from "@/utils/sanitize";
@@ -213,7 +214,7 @@ export default function BabySetupScreen() {
                 </Text>
               </Pressable>
               {errors.birthDate && (
-                <Text className="text-red-500 text-sm mt-1">{t(errors.birthDate)}</Text>
+                <Text className="text-red-500 text-sm mt-1">{te(t, errors.birthDate)}</Text>
               )}
             </View>
 

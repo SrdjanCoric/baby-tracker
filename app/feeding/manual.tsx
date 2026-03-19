@@ -17,6 +17,7 @@ import { useColorScheme } from "nativewind";
 import { useFeeding, useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { useNotificationIntegration } from "@/hooks";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
+import { te } from "@/utils/translate-errors";
 import {
   validateManualBreastfeeding,
   validateManualBottleFeeding,
@@ -498,7 +499,7 @@ export default function ManualFeedingScreen() {
             </Pressable>
           </View>
           {errors.startedAt && (
-            <Text className="text-red-500 text-sm mt-2">{t(errors.startedAt)}</Text>
+            <Text className="text-red-500 text-sm mt-2">{te(t, errors.startedAt)}</Text>
           )}
         </View>
 
@@ -594,7 +595,7 @@ export default function ManualFeedingScreen() {
                 </Text>
               </Pressable>
               {errors.side && (
-                <Text className="text-red-500 text-sm mt-2">{t(errors.side)}</Text>
+                <Text className="text-red-500 text-sm mt-2">{te(t, errors.side)}</Text>
               )}
             </View>
 
@@ -645,7 +646,7 @@ export default function ManualFeedingScreen() {
               </View>
               {errors.durationSeconds && (
                 <Text className="text-red-500 text-sm mt-2">
-                  {t(errors.durationSeconds)}
+                  {te(t, errors.durationSeconds)}
                 </Text>
               )}
             </View>
@@ -679,7 +680,7 @@ export default function ManualFeedingScreen() {
               </View>
               {errors.contentType && (
                 <Text className="text-red-500 text-sm mt-2">
-                  {t(errors.contentType)}
+                  {te(t, errors.contentType)}
                 </Text>
               )}
             </View>
@@ -742,7 +743,7 @@ export default function ManualFeedingScreen() {
               </View>
               {errors.amountMl && (
                 <Text className="text-red-500 text-sm mt-2">
-                  {t(errors.amountMl)}
+                  {te(t, errors.amountMl)}
                 </Text>
               )}
             </View>
