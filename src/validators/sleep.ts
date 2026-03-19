@@ -22,7 +22,7 @@ export function validateSleepType(type: string): type is SleepType {
 
 export function validateSleepStartTime(startedAt: Date | undefined): string | null {
   if (!startedAt) {
-    return "Start time is required";
+    return "validation.startTimeRequired";
   }
   return null;
 }
@@ -32,7 +32,7 @@ export function validateSleepEndTime(startedAt: Date, endedAt: Date | undefined)
     return null;
   }
   if (endedAt.getTime() < startedAt.getTime()) {
-    return "End time cannot be before start time";
+    return "validation.endTimeBeforeStart";
   }
   return null;
 }
@@ -42,10 +42,10 @@ export function validateSleepDuration(durationSeconds: number | undefined): stri
     return null;
   }
   if (durationSeconds < 0) {
-    return "Duration cannot be negative";
+    return "validation.durationNegative";
   }
   if (durationSeconds > 86400) {
-    return "Duration seems too long (over 24 hours)";
+    return "validation.durationTooLong24h";
   }
   return null;
 }
@@ -55,20 +55,20 @@ const FUTURE_TIME_TOLERANCE_MS = 10000;
 export function validateSleepStartTimeNotInFuture(startedAt: Date): string | null {
   const now = Date.now();
   if (startedAt.getTime() > now + FUTURE_TIME_TOLERANCE_MS) {
-    return "Start time cannot be in the future";
+    return "validation.startTimeNotInFuture";
   }
   return null;
 }
 
 export function validateManualSleepDuration(durationSeconds: number | undefined): string | null {
   if (durationSeconds === undefined) {
-    return "Duration is required for manual entry";
+    return "validation.durationRequired";
   }
   if (durationSeconds < 60) {
-    return "Duration must be at least 1 minute";
+    return "validation.durationMinimum1m";
   }
   if (durationSeconds > 86400) {
-    return "Duration seems too long (over 24 hours)";
+    return "validation.durationTooLong24h";
   }
   return null;
 }
@@ -90,7 +90,7 @@ export function validateSleep(entry: Partial<SleepEntry>): SleepValidationResult
   const errors: Record<string, string> = {};
 
   if (entry.type && !validateSleepType(entry.type)) {
-    errors.type = "Invalid sleep type";
+    errors.type = "validation.invalidSleepType";
   }
 
   const startError = validateSleepStartTime(entry.startedAt);
@@ -114,7 +114,7 @@ export function validateManualSleep(entry: Partial<SleepEntry>): SleepValidation
   const errors: Record<string, string> = {};
 
   if (entry.type && !validateSleepType(entry.type)) {
-    errors.type = "Invalid sleep type";
+    errors.type = "validation.invalidSleepType";
   }
 
   const startError = validateSleepStartTime(entry.startedAt);

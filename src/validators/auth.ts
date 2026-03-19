@@ -15,17 +15,17 @@ const PASSWORD_HAS_NUMBER = /[0-9]/;
 
 export function validateEmail(email: string): EmailValidationResult {
   if (!email || typeof email !== "string") {
-    return { isValid: false, error: "Email is required" };
+    return { isValid: false, error: "validation.emailRequired" };
   }
 
   const trimmed = email.trim();
 
   if (trimmed.length === 0) {
-    return { isValid: false, error: "Email is required" };
+    return { isValid: false, error: "validation.emailRequired" };
   }
 
   if (!EMAIL_REGEX.test(trimmed)) {
-    return { isValid: false, error: "Invalid email format" };
+    return { isValid: false, error: "validation.emailInvalid" };
   }
 
   const normalizedEmail = trimmed.toLowerCase();
@@ -35,34 +35,34 @@ export function validateEmail(email: string): EmailValidationResult {
 
 export function validatePassword(password: string): AuthValidationResult {
   if (!password || typeof password !== "string") {
-    return { isValid: false, error: "Password is required" };
+    return { isValid: false, error: "validation.passwordRequired" };
   }
 
   if (password.length < MIN_PASSWORD_LENGTH) {
     return {
       isValid: false,
-      error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+      error: "validation.passwordMinLength",
     };
   }
 
   if (!PASSWORD_HAS_UPPERCASE.test(password)) {
     return {
       isValid: false,
-      error: "Password must contain at least one uppercase letter",
+      error: "validation.passwordUppercase",
     };
   }
 
   if (!PASSWORD_HAS_LOWERCASE.test(password)) {
     return {
       isValid: false,
-      error: "Password must contain at least one lowercase letter",
+      error: "validation.passwordLowercase",
     };
   }
 
   if (!PASSWORD_HAS_NUMBER.test(password)) {
     return {
       isValid: false,
-      error: "Password must contain at least one number",
+      error: "validation.passwordNumber",
     };
   }
 
@@ -74,11 +74,11 @@ export function validatePasswordConfirmation(
   confirmPassword: string
 ): AuthValidationResult {
   if (!confirmPassword || typeof confirmPassword !== "string") {
-    return { isValid: false, error: "Please confirm your password" };
+    return { isValid: false, error: "validation.confirmPasswordRequired" };
   }
 
   if (password !== confirmPassword) {
-    return { isValid: false, error: "Passwords do not match" };
+    return { isValid: false, error: "validation.passwordsMismatch" };
   }
 
   return { isValid: true };
@@ -86,21 +86,21 @@ export function validatePasswordConfirmation(
 
 export function validateDisplayName(name: string): AuthValidationResult {
   if (!name || typeof name !== "string") {
-    return { isValid: false, error: "Display name is required" };
+    return { isValid: false, error: "validation.displayNameRequired" };
   }
 
   const trimmed = name.trim();
 
   if (trimmed.length === 0) {
-    return { isValid: false, error: "Display name is required" };
+    return { isValid: false, error: "validation.displayNameRequired" };
   }
 
   if (trimmed.length < 2) {
-    return { isValid: false, error: "Display name must be at least 2 characters" };
+    return { isValid: false, error: "validation.displayNameMinLength" };
   }
 
   if (trimmed.length > 50) {
-    return { isValid: false, error: "Display name must be less than 50 characters" };
+    return { isValid: false, error: "validation.displayNameMaxLength" };
   }
 
   return { isValid: true };
@@ -240,7 +240,7 @@ export function validateSignIn(input: SignInInput): SignInValidationResult {
   }
 
   if (!input.password || input.password.length === 0) {
-    errors.password = "Password is required";
+    errors.password = "validation.passwordRequired";
   }
 
   const isValid = Object.keys(errors).length === 0;

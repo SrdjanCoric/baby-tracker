@@ -32,7 +32,7 @@ describe("validateSleepStartTime", () => {
   });
 
   it("returns error for undefined start time", () => {
-    expect(validateSleepStartTime(undefined)).toBe("Start time is required");
+    expect(validateSleepStartTime(undefined)).toBe("validation.startTimeRequired");
   });
 });
 
@@ -51,7 +51,7 @@ describe("validateSleepEndTime", () => {
   it("returns error when end is before start", () => {
     const start = new Date(2024, 5, 15, 10, 30);
     const end = new Date(2024, 5, 15, 10, 0);
-    expect(validateSleepEndTime(start, end)).toBe("End time cannot be before start time");
+    expect(validateSleepEndTime(start, end)).toBe("validation.endTimeBeforeStart");
   });
 });
 
@@ -68,11 +68,11 @@ describe("validateSleepDuration", () => {
   });
 
   it("returns error for negative duration", () => {
-    expect(validateSleepDuration(-1)).toBe("Duration cannot be negative");
+    expect(validateSleepDuration(-1)).toBe("validation.durationNegative");
   });
 
   it("returns error for duration over 24 hours", () => {
-    expect(validateSleepDuration(86401)).toBe("Duration seems too long (over 24 hours)");
+    expect(validateSleepDuration(86401)).toBe("validation.durationTooLong24h");
   });
 });
 
@@ -94,18 +94,18 @@ describe("validateSleepStartTimeNotInFuture", () => {
 
   it("returns error for future time beyond tolerance", () => {
     const futureTime = new Date(Date.now() + 60000);
-    expect(validateSleepStartTimeNotInFuture(futureTime)).toBe("Start time cannot be in the future");
+    expect(validateSleepStartTimeNotInFuture(futureTime)).toBe("validation.startTimeNotInFuture");
   });
 });
 
 describe("validateManualSleepDuration", () => {
   it("returns error for undefined duration", () => {
-    expect(validateManualSleepDuration(undefined)).toBe("Duration is required for manual entry");
+    expect(validateManualSleepDuration(undefined)).toBe("validation.durationRequired");
   });
 
   it("returns error for duration less than 1 minute", () => {
-    expect(validateManualSleepDuration(30)).toBe("Duration must be at least 1 minute");
-    expect(validateManualSleepDuration(59)).toBe("Duration must be at least 1 minute");
+    expect(validateManualSleepDuration(30)).toBe("validation.durationMinimum1m");
+    expect(validateManualSleepDuration(59)).toBe("validation.durationMinimum1m");
   });
 
   it("returns null for valid duration", () => {
@@ -115,7 +115,7 @@ describe("validateManualSleepDuration", () => {
   });
 
   it("returns error for duration over 24 hours", () => {
-    expect(validateManualSleepDuration(86401)).toBe("Duration seems too long (over 24 hours)");
+    expect(validateManualSleepDuration(86401)).toBe("validation.durationTooLong24h");
   });
 });
 
@@ -327,7 +327,7 @@ describe("validateManualSleep", () => {
       durationSeconds: 1800
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+    expect(result.errors.startedAt).toBe("validation.startTimeNotInFuture");
   });
 
   it("returns error for missing duration", () => {
@@ -348,7 +348,7 @@ describe("validateManualSleep", () => {
       durationSeconds: 30
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.durationSeconds).toBe("Duration must be at least 1 minute");
+    expect(result.errors.durationSeconds).toBe("validation.durationMinimum1m");
   });
 
   it("returns error for duration over 24 hours", () => {
@@ -359,7 +359,7 @@ describe("validateManualSleep", () => {
       durationSeconds: 86401
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.durationSeconds).toBe("Duration seems too long (over 24 hours)");
+    expect(result.errors.durationSeconds).toBe("validation.durationTooLong24h");
   });
 
   it("returns multiple errors for multiple issues", () => {

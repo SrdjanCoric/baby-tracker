@@ -35,13 +35,13 @@ describe("validatePumpingVolume", () => {
   });
 
   it("returns error for non-positive volume", () => {
-    expect(validatePumpingVolume(0)).toBe("Volume must be positive");
-    expect(validatePumpingVolume(-1)).toBe("Volume must be positive");
+    expect(validatePumpingVolume(0)).toBe("validation.volumePositive");
+    expect(validatePumpingVolume(-1)).toBe("validation.volumePositive");
   });
 
   it("returns error for volume over 500ml", () => {
-    expect(validatePumpingVolume(501)).toBe("Volume seems too large (over 500ml)");
-    expect(validatePumpingVolume(1000)).toBe("Volume seems too large (over 500ml)");
+    expect(validatePumpingVolume(501)).toBe("validation.volumeTooLarge500ml");
+    expect(validatePumpingVolume(1000)).toBe("validation.volumeTooLarge500ml");
   });
 });
 
@@ -58,12 +58,12 @@ describe("validatePumpingDuration", () => {
   });
 
   it("returns error for negative duration", () => {
-    expect(validatePumpingDuration(-1)).toBe("Duration cannot be negative");
+    expect(validatePumpingDuration(-1)).toBe("validation.durationNegative");
   });
 
   it("returns error for duration over 1 hour", () => {
-    expect(validatePumpingDuration(3601)).toBe("Duration seems too long (over 1 hour)");
-    expect(validatePumpingDuration(7200)).toBe("Duration seems too long (over 1 hour)");
+    expect(validatePumpingDuration(3601)).toBe("validation.durationTooLong1h");
+    expect(validatePumpingDuration(7200)).toBe("validation.durationTooLong1h");
   });
 });
 
@@ -80,7 +80,7 @@ describe("validateStartTimeNotInFuture", () => {
 
   it("returns error for future time", () => {
     const futureTime = new Date(Date.now() + 60000);
-    expect(validateStartTimeNotInFuture(futureTime)).toBe("Start time cannot be in the future");
+    expect(validateStartTimeNotInFuture(futureTime)).toBe("validation.startTimeNotInFuture");
   });
 
   it("allows small tolerance for near-future times", () => {
@@ -119,7 +119,7 @@ describe("validatePumping", () => {
       side: "left",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.startedAt).toBe("Start time is required");
+    expect(result.errors.startedAt).toBe("validation.startTimeRequired");
   });
 
   it("returns error for missing side", () => {
@@ -128,7 +128,7 @@ describe("validatePumping", () => {
       startedAt: new Date(),
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.side).toBe("Side is required");
+    expect(result.errors.side).toBe("validation.sideRequired");
   });
 
   it("returns error for invalid side", () => {
@@ -138,7 +138,7 @@ describe("validatePumping", () => {
       startedAt: new Date(),
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.side).toBe("Invalid side");
+    expect(result.errors.side).toBe("validation.invalidSide");
   });
 
   it("returns error when end time is before start time", () => {
@@ -151,7 +151,7 @@ describe("validatePumping", () => {
       endedAt: end,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.endedAt).toBe("End time cannot be before start time");
+    expect(result.errors.endedAt).toBe("validation.endTimeBeforeStart");
   });
 
   it("returns error for negative duration", () => {
@@ -201,7 +201,7 @@ describe("validateManualPumping", () => {
       volumeMl: 120,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+    expect(result.errors.startedAt).toBe("validation.startTimeNotInFuture");
   });
 
   it("returns error for missing volume in manual entry", () => {
@@ -213,7 +213,7 @@ describe("validateManualPumping", () => {
       durationSeconds: 900,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.volumeMl).toBe("Volume is required for manual entry");
+    expect(result.errors.volumeMl).toBe("validation.volumeRequired");
   });
 
   it("returns error for missing duration in manual entry", () => {
@@ -225,7 +225,7 @@ describe("validateManualPumping", () => {
       volumeMl: 120,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.durationSeconds).toBe("Duration is required for manual entry");
+    expect(result.errors.durationSeconds).toBe("validation.durationRequired");
   });
 
   it("returns error for duration less than 1 minute", () => {
@@ -238,7 +238,7 @@ describe("validateManualPumping", () => {
       volumeMl: 120,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.durationSeconds).toBe("Duration must be at least 1 minute");
+    expect(result.errors.durationSeconds).toBe("validation.durationMinimum1m");
   });
 
   it("returns error for missing side", () => {
@@ -250,7 +250,7 @@ describe("validateManualPumping", () => {
       volumeMl: 120,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.side).toBe("Side is required");
+    expect(result.errors.side).toBe("validation.sideRequired");
   });
 
   it("returns error for zero volume", () => {
@@ -263,7 +263,7 @@ describe("validateManualPumping", () => {
       volumeMl: 0,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.volumeMl).toBe("Volume must be positive");
+    expect(result.errors.volumeMl).toBe("validation.volumePositive");
   });
 
   it("returns multiple errors when multiple fields invalid", () => {

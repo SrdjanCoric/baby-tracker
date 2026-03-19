@@ -36,6 +36,7 @@ import {
 } from "@/utils/notification-scheduler";
 import { createSafeNotificationContent } from "@/utils/notification-sanitizer";
 import { withRetryResult } from "@/utils/retry";
+import i18n from "@/i18n";
 
 interface NotificationContextValue {
   settings: NotificationSettings;
@@ -205,8 +206,8 @@ export function NotificationProvider({
             if (reminderTime) {
               const content = createSafeNotificationContent(
                 {
-                  title: "Feeding Reminder",
-                  body: `It's been ${newSettings.feedingReminders.intervalHours} hours since the last feeding`,
+                  title: i18n.t("notifications.feedingReminderTitle"),
+                  body: i18n.t("notifications.feedingReminderBody", { hours: newSettings.feedingReminders.intervalHours }),
                   data: {
                     type: "feeding_reminder",
                     babyId: reminder.babyId,
@@ -294,10 +295,10 @@ export function NotificationProvider({
       // Create sanitized notification content with privacy settings applied
       const content = createSafeNotificationContent(
         {
-          title: "Feeding Reminder",
+          title: i18n.t("notifications.feedingReminderTitle"),
           body: settings.privacy.showBabyName && babyName
-            ? `Time to feed ${babyName}`
-            : `It's been ${settings.feedingReminders.intervalHours} hours since the last feeding`,
+            ? i18n.t("notifications.feedingReminderBodyWithName", { name: babyName, hours: settings.feedingReminders.intervalHours })
+            : i18n.t("notifications.feedingReminderBody", { hours: settings.feedingReminders.intervalHours }),
           data: {
             type: "feeding_reminder",
             babyId,

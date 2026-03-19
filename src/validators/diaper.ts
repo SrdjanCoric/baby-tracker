@@ -24,7 +24,7 @@ export function validateStoolColor(color: StoolColor | undefined): string | null
     return null;
   }
   if (!STOOL_COLORS.includes(color)) {
-    return "Invalid stool color";
+    return "validation.invalidStoolColor";
   }
   return null;
 }
@@ -34,7 +34,7 @@ const FUTURE_TIME_TOLERANCE_MS = 10000;
 export function validateChangeTimeNotInFuture(changedAt: Date): string | null {
   const now = Date.now();
   if (changedAt.getTime() > now + FUTURE_TIME_TOLERANCE_MS) {
-    return "Change time cannot be in the future";
+    return "validation.changeTimeNotInFuture";
   }
   return null;
 }
@@ -48,7 +48,7 @@ function validateStoolColorForType(
   }
 
   if (type === "wet" || type === "dry") {
-    return "Stool color is only applicable for dirty or mixed diapers";
+    return "validation.stoolColorNotApplicable";
   }
 
   return validateStoolColor(stoolColor);
@@ -58,9 +58,9 @@ export function validateDiaperEntry(entry: Partial<DiaperEntry>): DiaperValidati
   const errors: Record<string, string> = {};
 
   if (!entry.type) {
-    errors.type = "Diaper type is required";
+    errors.type = "validation.diaperTypeRequired";
   } else if (!validateDiaperType(entry.type)) {
-    errors.type = "Invalid diaper type";
+    errors.type = "validation.invalidDiaperType";
   }
 
   const stoolColorError = validateStoolColorForType(entry.type, entry.stoolColor);
@@ -69,7 +69,7 @@ export function validateDiaperEntry(entry: Partial<DiaperEntry>): DiaperValidati
   }
 
   if (!entry.changedAt) {
-    errors.changedAt = "Change time is required";
+    errors.changedAt = "validation.changeTimeRequired";
   }
 
   return {
@@ -82,9 +82,9 @@ export function validateManualDiaper(entry: Partial<DiaperEntry>): DiaperValidat
   const errors: Record<string, string> = {};
 
   if (!entry.type) {
-    errors.type = "Diaper type is required";
+    errors.type = "validation.diaperTypeRequired";
   } else if (!validateDiaperType(entry.type)) {
-    errors.type = "Invalid diaper type";
+    errors.type = "validation.invalidDiaperType";
   }
 
   const stoolColorError = validateStoolColorForType(entry.type, entry.stoolColor);
@@ -93,7 +93,7 @@ export function validateManualDiaper(entry: Partial<DiaperEntry>): DiaperValidat
   }
 
   if (!entry.changedAt) {
-    errors.changedAt = "Change time is required";
+    errors.changedAt = "validation.changeTimeRequired";
   } else {
     const futureError = validateChangeTimeNotInFuture(entry.changedAt);
     if (futureError) {

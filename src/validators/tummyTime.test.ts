@@ -20,7 +20,7 @@ describe("validateTummyTimeStartTime", () => {
   });
 
   it("returns error for undefined start time", () => {
-    expect(validateTummyTimeStartTime(undefined)).toBe("Start time is required");
+    expect(validateTummyTimeStartTime(undefined)).toBe("validation.startTimeRequired");
   });
 });
 
@@ -39,7 +39,7 @@ describe("validateTummyTimeEndTime", () => {
   it("returns error when end is before start", () => {
     const start = new Date(2024, 5, 15, 10, 30);
     const end = new Date(2024, 5, 15, 10, 0);
-    expect(validateTummyTimeEndTime(start, end)).toBe("End time cannot be before start time");
+    expect(validateTummyTimeEndTime(start, end)).toBe("validation.endTimeBeforeStart");
   });
 });
 
@@ -56,11 +56,11 @@ describe("validateTummyTimeDuration", () => {
   });
 
   it("returns error for negative duration", () => {
-    expect(validateTummyTimeDuration(-1)).toBe("Duration cannot be negative");
+    expect(validateTummyTimeDuration(-1)).toBe("validation.durationNegative");
   });
 
   it("returns error for duration over 2 hours", () => {
-    expect(validateTummyTimeDuration(7201)).toBe("Duration seems too long (over 2 hours)");
+    expect(validateTummyTimeDuration(7201)).toBe("validation.durationTooLong2h");
   });
 });
 
@@ -82,18 +82,18 @@ describe("validateTummyTimeStartTimeNotInFuture", () => {
 
   it("returns error for future time beyond tolerance", () => {
     const futureTime = new Date(Date.now() + 60000);
-    expect(validateTummyTimeStartTimeNotInFuture(futureTime)).toBe("Start time cannot be in the future");
+    expect(validateTummyTimeStartTimeNotInFuture(futureTime)).toBe("validation.startTimeNotInFuture");
   });
 });
 
 describe("validateManualTummyTimeDuration", () => {
   it("returns error for undefined duration", () => {
-    expect(validateManualTummyTimeDuration(undefined)).toBe("Duration is required for manual entry");
+    expect(validateManualTummyTimeDuration(undefined)).toBe("validation.durationRequired");
   });
 
   it("returns error for duration less than 1 minute", () => {
-    expect(validateManualTummyTimeDuration(30)).toBe("Duration must be at least 1 minute");
-    expect(validateManualTummyTimeDuration(59)).toBe("Duration must be at least 1 minute");
+    expect(validateManualTummyTimeDuration(30)).toBe("validation.durationMinimum1m");
+    expect(validateManualTummyTimeDuration(59)).toBe("validation.durationMinimum1m");
   });
 
   it("returns null for valid duration", () => {
@@ -103,7 +103,7 @@ describe("validateManualTummyTimeDuration", () => {
   });
 
   it("returns error for duration over 2 hours", () => {
-    expect(validateManualTummyTimeDuration(7201)).toBe("Duration seems too long (over 2 hours)");
+    expect(validateManualTummyTimeDuration(7201)).toBe("validation.durationTooLong2h");
   });
 });
 
@@ -134,19 +134,19 @@ describe("validateDailyGoal", () => {
   });
 
   it("returns error for zero goal", () => {
-    expect(validateDailyGoal(0)).toBe("Daily goal must be at least 1 minute");
+    expect(validateDailyGoal(0)).toBe("validation.dailyGoalMinimum");
   });
 
   it("returns error for negative goal", () => {
-    expect(validateDailyGoal(-100)).toBe("Daily goal must be at least 1 minute");
+    expect(validateDailyGoal(-100)).toBe("validation.dailyGoalMinimum");
   });
 
   it("returns error for goal less than 1 minute", () => {
-    expect(validateDailyGoal(30)).toBe("Daily goal must be at least 1 minute");
+    expect(validateDailyGoal(30)).toBe("validation.dailyGoalMinimum");
   });
 
   it("returns error for goal over 2 hours", () => {
-    expect(validateDailyGoal(7201)).toBe("Daily goal cannot exceed 2 hours");
+    expect(validateDailyGoal(7201)).toBe("validation.dailyGoalMaximum");
   });
 });
 
@@ -306,7 +306,7 @@ describe("validateManualTummyTime", () => {
       durationSeconds: 300,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.startedAt).toBe("Start time cannot be in the future");
+    expect(result.errors.startedAt).toBe("validation.startTimeNotInFuture");
   });
 
   it("returns error for missing duration", () => {
@@ -325,7 +325,7 @@ describe("validateManualTummyTime", () => {
       durationSeconds: 30,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.durationSeconds).toBe("Duration must be at least 1 minute");
+    expect(result.errors.durationSeconds).toBe("validation.durationMinimum1m");
   });
 
   it("returns error for duration over 2 hours", () => {
@@ -335,7 +335,7 @@ describe("validateManualTummyTime", () => {
       durationSeconds: 7201,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.durationSeconds).toBe("Duration seems too long (over 2 hours)");
+    expect(result.errors.durationSeconds).toBe("validation.durationTooLong2h");
   });
 
   it("returns multiple errors for multiple issues", () => {

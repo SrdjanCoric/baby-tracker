@@ -1,6 +1,7 @@
 /**
  * Baby profile validation utilities
  */
+import type { TFunction } from "i18next";
 
 export interface BabyProfile {
   id?: string;
@@ -21,13 +22,13 @@ export interface ValidationResult {
 export function validateBabyName(name: string): string | null {
   const trimmed = name.trim();
   if (!trimmed) {
-    return "Name is required";
+    return "validation.nameRequired";
   }
   if (trimmed.length < 1) {
-    return "Name must be at least 1 character";
+    return "validation.nameMinLength";
   }
   if (trimmed.length > 100) {
-    return "Name must be less than 100 characters";
+    return "validation.nameMaxLength";
   }
   return null;
 }
@@ -42,14 +43,14 @@ export function validateBirthDate(date: Date | undefined, now: Date = new Date()
 
   // Check if date is in the future
   if (date.getTime() > now.getTime()) {
-    return "Birth date cannot be in the future";
+    return "validation.birthDateFuture";
   }
 
   // Check if date is unreasonably old (more than 5 years ago)
   const fiveYearsAgo = new Date(now);
   fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
   if (date.getTime() < fiveYearsAgo.getTime()) {
-    return "Birth date seems too far in the past";
+    return "validation.birthDateTooFar";
   }
 
   return null;
@@ -81,36 +82,41 @@ export function validateBabyProfile(profile: Partial<BabyProfile>, now: Date = n
  * Calculates baby age from birth date
  * Returns age in appropriate units (days, weeks, months, years)
  */
-export function calculateBabyAge(birthDate: Date, now: Date = new Date()): string {
+export function calculateBabyAge(birthDate: Date, now: Date = new Date(), t?: TFunction): string {
   const diffMs = now.getTime() - birthDate.getTime();
-  if (diffMs < 0) return "Not born yet";
+  if (diffMs < 0) return t ? t("babyAge.notBornYet") : "Not born yet";
 
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   // Less than 14 days: show in days
   if (diffDays < 14) {
-    return diffDays === 1 ? "1 day old" : `${diffDays} days old`;
+    if (!t) return diffDays === 1 ? "1 day old" : `${diffDays} days old`;
+    return t("babyAge.daysOld", { count: diffDays });
   }
 
   // Less than 8 weeks: show in weeks
   const diffWeeks = Math.floor(diffDays / 7);
   if (diffWeeks < 8) {
-    return diffWeeks === 1 ? "1 week old" : `${diffWeeks} weeks old`;
+    if (!t) return diffWeeks === 1 ? "1 week old" : `${diffWeeks} weeks old`;
+    return t("babyAge.weeksOld", { count: diffWeeks });
   }
 
   // Less than 24 months: show in months
   const diffMonths = Math.floor(diffDays / 30.44); // Average days per month
   if (diffMonths < 24) {
-    return diffMonths === 1 ? "1 month old" : `${diffMonths} months old`;
+    if (!t) return diffMonths === 1 ? "1 month old" : `${diffMonths} months old`;
+    return t("babyAge.monthsOld", { count: diffMonths });
   }
 
   // 2+ years: show in years and months
   const years = Math.floor(diffMonths / 12);
   const months = diffMonths % 12;
   if (months === 0) {
-    return years === 1 ? "1 year old" : `${years} years old`;
+    if (!t) return years === 1 ? "1 year old" : `${years} years old`;
+    return t("babyAge.yearsOld", { count: years });
   }
-  return `${years}y ${months}m old`;
+  if (!t) return `${years}y ${months}m old`;
+  return t("babyAge.yearsMonthsOld", { years, months });
 }
 
 /**

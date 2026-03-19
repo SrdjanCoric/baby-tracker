@@ -104,16 +104,16 @@ export function isYesterday(date: Date, now: Date = new Date()): boolean {
  * Formats a date for display in day headers
  * Returns "Today", "Yesterday", or a formatted date
  */
-export function formatDayHeader(date: Date, now: Date = new Date()): string {
-  if (isToday(date, now)) return "Today";
-  if (isYesterday(date, now)) return "Yesterday";
+export function formatDayHeader(date: Date, now: Date = new Date(), t?: (key: string) => string): string {
+  if (isToday(date, now)) return t ? t("time.today") : "Today";
+  if (isYesterday(date, now)) return t ? t("time.yesterday") : "Yesterday";
 
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",
     month: "short",
     day: "numeric"
   };
-  return date.toLocaleDateString("en-US", options);
+  return date.toLocaleDateString(undefined, options);
 }
 
 /**
@@ -125,7 +125,7 @@ export function formatDate(date: Date): string {
     day: "numeric",
     year: "numeric"
   };
-  return date.toLocaleDateString("en-US", options);
+  return date.toLocaleDateString(undefined, options);
 }
 
 /**
