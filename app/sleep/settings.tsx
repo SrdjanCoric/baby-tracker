@@ -3,6 +3,7 @@ import {
   Alert,
   Animated,
   Keyboard,
+  Platform,
   Pressable,
   Text,
   View,
@@ -14,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerEvent, IOSNativeProps, AndroidNativeProps } from "@react-native-community/datetimepicker";
 import { useSleep, useBaby, useTheme, useHousehold, useTimeFormat } from "@/contexts";
 import { useAuth } from "@/contexts/auth-context";
 import { useNotifications } from "@/contexts/notification-context";
@@ -72,6 +73,8 @@ export default function SleepSettingsScreen() {
   const [durationError, setDurationError] = useState("");
   const [showReminderHint, setShowReminderHint] = useState(false);
   const [showUnderTwoMonthsWarning, setShowUnderTwoMonthsWarning] = useState(false);
+  const [showDayStartPicker, setShowDayStartPicker] = useState(false);
+  const [showNightStartPicker, setShowNightStartPicker] = useState(false);
   const reminderHintAnim = useRef(new Animated.Value(0)).current;
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
@@ -301,6 +304,7 @@ export default function SleepSettingsScreen() {
   const formatHour = (hour: number) => formatHourValue(hour, timeFormat);
 
   const handleDayStartPickerChange = useCallback(async (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === "android") setShowDayStartPicker(false);
     if (!selectedDate) return;
     const hour = selectedDate.getHours();
     if (hour >= dayEndHour) return;
@@ -320,6 +324,7 @@ export default function SleepSettingsScreen() {
   }, [setDayNightBoundary, dayEndHour, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
 
   const handleNightStartPickerChange = useCallback(async (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === "android") setShowNightStartPicker(false);
     if (!selectedDate) return;
     const hour = selectedDate.getHours();
     if (hour <= dayStartHour) return;
@@ -557,13 +562,46 @@ export default function SleepSettingsScreen() {
                     {t("sleep.dayStartsAt")}
                   </Text>
                 </View>
-                <DateTimePicker
-                  value={(() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })()}
-                  mode="time"
-                  display="compact"
-                  onChange={handleDayStartPickerChange}
-                  style={{ alignSelf: "flex-start" }}
-                />
+                <Pressable
+                  onPress={() => setShowDayStartPicker(true)}
+                  className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-input px-4 py-3 self-start"
+                >
+                  <Text className="text-base font-medium" style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}>
+                    {formatHour(dayStartHour)}
+                  </Text>
+                </Pressable>
+                {showDayStartPicker && Platform.OS === "ios" && (
+                  <View className="mt-2">
+                    <Pressable
+                      onPress={() => setShowDayStartPicker(false)}
+                      className="self-end px-4 py-2"
+                    >
+                      <Text className="text-base font-semibold" style={{ color: SLEEP_PURPLE }}>
+                        {t("common.done")}
+                      </Text>
+                    </Pressable>
+                    <DateTimePicker
+                      {...{
+                        value: (() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })(),
+                        mode: "time",
+                        display: "spinner",
+                        onChange: handleDayStartPickerChange,
+                        minuteInterval: 30,
+                      } as IOSNativeProps}
+                    />
+                  </View>
+                )}
+                {showDayStartPicker && Platform.OS === "android" && (
+                  <DateTimePicker
+                    {...{
+                      value: (() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })(),
+                      mode: "time",
+                      display: "default",
+                      onChange: handleDayStartPickerChange,
+                      minuteInterval: 30,
+                    } as AndroidNativeProps}
+                  />
+                )}
               </View>
 
               <View className="mb-3">
@@ -573,13 +611,46 @@ export default function SleepSettingsScreen() {
                     {t("sleep.nightStartsAt")}
                   </Text>
                 </View>
-                <DateTimePicker
-                  value={(() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })()}
-                  mode="time"
-                  display="compact"
-                  onChange={handleNightStartPickerChange}
-                  style={{ alignSelf: "flex-start" }}
-                />
+                <Pressable
+                  onPress={() => setShowNightStartPicker(true)}
+                  className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-input px-4 py-3 self-start"
+                >
+                  <Text className="text-base font-medium" style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}>
+                    {formatHour(dayEndHour)}
+                  </Text>
+                </Pressable>
+                {showNightStartPicker && Platform.OS === "ios" && (
+                  <View className="mt-2">
+                    <Pressable
+                      onPress={() => setShowNightStartPicker(false)}
+                      className="self-end px-4 py-2"
+                    >
+                      <Text className="text-base font-semibold" style={{ color: SLEEP_PURPLE }}>
+                        {t("common.done")}
+                      </Text>
+                    </Pressable>
+                    <DateTimePicker
+                      {...{
+                        value: (() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })(),
+                        mode: "time",
+                        display: "spinner",
+                        onChange: handleNightStartPickerChange,
+                        minuteInterval: 30,
+                      } as IOSNativeProps}
+                    />
+                  </View>
+                )}
+                {showNightStartPicker && Platform.OS === "android" && (
+                  <DateTimePicker
+                    {...{
+                      value: (() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })(),
+                      mode: "time",
+                      display: "default",
+                      onChange: handleNightStartPickerChange,
+                      minuteInterval: 30,
+                    } as AndroidNativeProps}
+                  />
+                )}
               </View>
 
               <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
