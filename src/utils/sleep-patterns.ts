@@ -46,40 +46,139 @@ export interface DailySleepBar {
 const HOURS_IN_DAY = 24;
 const MIN_BLOCK_PX = 4;
 
-function localDateKey(date: Date): string {
+export function localDateKey(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
 
-function splitSleepAtMidnight(
-  sleep: StoredSleepEntry
+export function getSleepDate(now: Date = new Date(), dayStartHour: number = 6): Date {
+  const adjusted = new Date(now);
+  if (adjusted.getHours() < dayStartHour) {
+    adjusted.setDate(adjusted.getDate() - 1);
+  }
+  adjusted.setHours(0, 0, 0, 0);
+  return adjusted;
+}
+
+export function sleepDayKey(date: Date, dayStartHour: number): string {
+  const d = new Date(date);
+  if (d.getHours() < dayStartHour) {
+    d.setDate(d.getDate() - 1);
+  }
+  return localDateKey(d);
+}
+
+export function classifySleepType(
+  hour: number,
+  dayStartHour: number,
+  dayEndHour: number
+): "nap" | "night" {
+  if (dayStartHour <= dayEndHour) {
+    return hour >= dayStartHour && hour < dayEndHour ? "nap" : "night";
+  }
+  return hour >= dayStartHour || hour < dayEndHour ? "nap" : "night";
+}
+
+function getNextTypeBoundary(from: Date, dayStartHour: number, dayEndHour: number): Date {
+  const b1 = new Date(from);
+  b1.setHours(dayStartHour, 0, 0, 0);
+  if (b1 <= from) b1.setDate(b1.getDate() + 1);
+
+  const b2 = new Date(from);
+  b2.setHours(dayEndHour, 0, 0, 0);
+  if (b2 <= from) b2.setDate(b2.getDate() + 1);
+
+  return b1 < b2 ? b1 : b2;
+}
+
+export function splitSleepAtDayBoundary(
+  sleep: StoredSleepEntry,
+  dayStartHour: number,
+  dayEndHour: number
 ): { dateKey: string; seconds: number; type: "nap" | "night" }[] {
   const start = new Date(sleep.startedAt);
   const end = sleep.endedAt ? new Date(sleep.endedAt) : null;
   if (!end) return [];
 
-  const type = sleep.type as "nap" | "night";
   const result: { dateKey: string; seconds: number; type: "nap" | "night" }[] = [];
 
   let segStart = start;
   while (segStart < end) {
-    const nextMidnight = new Date(segStart);
-    nextMidnight.setDate(nextMidnight.getDate() + 1);
-    nextMidnight.setHours(0, 0, 0, 0);
-
-    const segEnd = nextMidnight < end ? nextMidnight : end;
+    const nextBoundary = getNextTypeBoundary(segStart, dayStartHour, dayEndHour);
+    const segEnd = nextBoundary < end ? nextBoundary : end;
     const seconds = Math.floor((segEnd.getTime() - segStart.getTime()) / 1000);
 
     if (seconds > 0) {
-      result.push({ dateKey: localDateKey(segStart), seconds, type });
+      result.push({
+        dateKey: sleepDayKey(segStart, dayStartHour),
+        seconds,
+        type: classifySleepType(segStart.getHours(), dayStartHour, dayEndHour),
+      });
     }
 
     segStart = segEnd;
   }
 
   return result;
+}
+
+export function splitSleepTimeRange(
+  startedAt: Date,
+  endedAt: Date,
+  dayStartHour: number,
+  dayEndHour: number
+): { startedAt: Date; endedAt: Date; type: "nap" | "night"; durationSeconds: number }[] {
+  const result: { startedAt: Date; endedAt: Date; type: "nap" | "night"; durationSeconds: number }[] = [];
+
+  let segStart = startedAt;
+  while (segStart < endedAt) {
+    const nextBoundary = getNextTypeBoundary(segStart, dayStartHour, dayEndHour);
+    const segEnd = nextBoundary < endedAt ? nextBoundary : endedAt;
+    const durationSeconds = Math.floor((segEnd.getTime() - segStart.getTime()) / 1000);
+
+    if (durationSeconds > 0) {
+      result.push({
+        startedAt: new Date(segStart),
+        endedAt: new Date(segEnd),
+        type: classifySleepType(segStart.getHours(), dayStartHour, dayEndHour),
+        durationSeconds,
+      });
+    }
+
+    segStart = segEnd;
+  }
+
+  return result;
+}
+
+const RECLASSIFY_THRESHOLD_SECONDS = 30 * 60;
+
+export function classifySleepByTimeRange(
+  startedAt: Date,
+  endedAt: Date,
+  dayStartHour: number,
+  dayEndHour: number
+): "nap" | "night" {
+  const startType = classifySleepType(startedAt.getHours(), dayStartHour, dayEndHour);
+  const segments = splitSleepTimeRange(startedAt, endedAt, dayStartHour, dayEndHour);
+
+  let napSeconds = 0;
+  let nightSeconds = 0;
+  for (const seg of segments) {
+    if (seg.type === "nap") napSeconds += seg.durationSeconds;
+    else nightSeconds += seg.durationSeconds;
+  }
+
+  const otherType = startType === "nap" ? "night" : "nap";
+  const otherSeconds = otherType === "nap" ? napSeconds : nightSeconds;
+  const startSeconds = startType === "nap" ? napSeconds : nightSeconds;
+
+  if (otherSeconds > RECLASSIFY_THRESHOLD_SECONDS && otherSeconds > startSeconds) {
+    return otherType;
+  }
+  return startType;
 }
 
 function getDayWindowStart(date: Date, dayStartHour: number = 6): Date {
@@ -106,14 +205,13 @@ export function buildDayViewData(
   now: Date = new Date(),
   dayStartHour: number = 6,
   locale: string = "en",
-  todayLabel: string = "Today",
-  yesterdayLabel: string = "Yesterday"
+  dayEndHour: number = 19
 ): DayViewData {
   const windowStart = getDayWindowStart(date, dayStartHour);
   const windowEnd = getDayWindowEnd(date, dayStartHour);
   const totalPx = HOURS_IN_DAY * pxPerHour;
 
-  const dateLabel = formatDateLabel(date, now, locale, todayLabel, yesterdayLabel);
+  const dateLabel = formatDateLabel(date, now, locale);
 
   const blocks: DayBlock[] = [];
 
@@ -139,7 +237,7 @@ export function buildDayViewData(
     blocks.push({
       topPx,
       heightPx,
-      type: sleep.type as "nap" | "night",
+      type: classifySleepType(clampedStart.getHours(), dayStartHour, dayEndHour),
       durationSeconds,
       startedAt: sleep.startedAt,
     });
@@ -149,7 +247,7 @@ export function buildDayViewData(
   let totalSleepSeconds = 0;
   for (const sleep of sleeps) {
     if (!sleep.endedAt) continue;
-    for (const seg of splitSleepAtMidnight(sleep)) {
+    for (const seg of splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour)) {
       if (seg.dateKey === dateKey) {
         totalSleepSeconds += seg.seconds;
       }
@@ -164,7 +262,8 @@ export function buildWeekViewData(
   weekEndDate: Date,
   now: Date = new Date(),
   dayStartHour: number = 6,
-  locale: string = "en"
+  locale: string = "en",
+  dayEndHour: number = 19
 ): WeekColumn[] {
   const columns: WeekColumn[] = [];
 
@@ -208,7 +307,7 @@ export function buildWeekViewData(
         dayBlocks.push({
           topFraction,
           heightFraction,
-          type: sleep.type as "nap" | "night",
+          type: classifySleepType(clampedStart.getHours(), dayStartHour, dayEndHour),
         });
       }
     }
@@ -319,7 +418,7 @@ export function calculateSleepSummary(
   for (let i = 0; i < days; i++) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
-    const key = localDateKey(d);
+    const key = sleepDayKey(d, dayStartHour);
     dailyData.set(key, {
       date: new Date(d),
       totalSeconds: 0,
@@ -331,7 +430,7 @@ export function calculateSleepSummary(
   }
 
   for (const sleep of recentSleeps) {
-    const segments = splitSleepAtMidnight(sleep);
+    const segments = splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour);
     for (const seg of segments) {
       const day = dailyData.get(seg.dateKey);
       if (!day) continue;
@@ -346,10 +445,11 @@ export function calculateSleepSummary(
     }
 
     const startDate = new Date(sleep.startedAt);
-    const startKey = localDateKey(startDate);
+    const startKey = sleepDayKey(startDate, dayStartHour);
     const startDay = dailyData.get(startKey);
     if (startDay) {
-      if (sleep.type === "night") {
+      const autoType = classifySleepType(startDate.getHours(), dayStartHour, dayEndHour);
+      if (autoType === "night") {
         startDay.nightSessions++;
       } else {
         startDay.napCount++;
@@ -362,7 +462,10 @@ export function calculateSleepSummary(
     { nightDate: Date; starts: Date[]; ends: Date[] }
   > = new Map();
 
-  const nightSleeps = recentSleeps.filter((s) => s.type === "night");
+  const nightSleeps = recentSleeps.filter((s) => {
+    const startHour = new Date(s.startedAt).getHours();
+    return classifySleepType(startHour, dayStartHour, dayEndHour) === "night";
+  });
   for (const sleep of nightSleeps) {
     const startDate = new Date(sleep.startedAt);
     const nightKey = getNightKey(startDate, dayStartHour, dayEndHour);
@@ -499,11 +602,11 @@ export function buildDailySleepBars(
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
-    dailyMap.set(localDateKey(d), { nightSeconds: 0, napSeconds: 0 });
+    dailyMap.set(sleepDayKey(d, dayStartHour), { nightSeconds: 0, napSeconds: 0 });
   }
 
   for (const sleep of recentSleeps) {
-    const segments = splitSleepAtMidnight(sleep);
+    const segments = splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour);
     for (const seg of segments) {
       const day = dailyMap.get(seg.dateKey);
       if (!day) continue;
@@ -533,22 +636,8 @@ export function buildDailySleepBars(
 export function formatDateLabel(
   date: Date,
   now: Date = new Date(),
-  locale: string = "en",
-  todayLabel: string = "Today",
-  yesterdayLabel: string = "Yesterday"
+  locale: string = "en"
 ): string {
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.round(
-    (today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  if (diffDays === 0) return todayLabel;
-  if (diffDays === 1) return yesterdayLabel;
-
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",
     month: "short",

@@ -60,7 +60,7 @@ export function formatWeight(kg: number, preferredUnit: "kg" | "lbs" = "kg"): st
     const lbs = kgToLbs(kg, 0);
     return `${lbs} lbs`;
   }
-  const formatted = Number(kg.toFixed(1));
+  const formatted = Number(kg.toFixed(3));
   return `${formatted} kg`;
 }
 
@@ -74,7 +74,7 @@ export function formatHeight(cm: number, preferredUnit: "cm" | "in" = "cm"): str
     const inches = cmToInches(cm);
     return `${inches} in`;
   }
-  const formatted = Number(cm.toFixed(1));
+  const formatted = Number(cm.toFixed(3));
   return `${formatted} cm`;
 }
 

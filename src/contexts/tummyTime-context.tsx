@@ -434,7 +434,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        const lockResult = await acquireTimerLock(selectedBaby.id, "tummy_time", user.id, {});
+        const lockResult = await acquireTimerLock(selectedBaby.id, "tummy_time", user.id, {}, requestedStartTime);
         if (!lockResult.success) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }

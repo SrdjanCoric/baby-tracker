@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -13,15 +13,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useColorScheme } from "nativewind";
 import { useSleep, useBaby, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { formatTime as formatTimeUtil } from "@/utils/time";
 import { validateManualSleep, determineSleepType } from "@/validators/sleep";
-import type { SleepType } from "@/constants/activities";
-
-const SLEEP_PURPLE = "#6B5B95";
-const SLEEP_PURPLE_MUTED = "#E8E4F0";
-const SLEEP_PURPLE_DARK = "#574A7B";
+import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
+import { ACTIVITY } from "@/constants/colors";
 
 const QUICK_DURATIONS = [15, 30, 45, 60, 90, 120];
 
@@ -31,15 +29,19 @@ export default function ManualSleepScreen() {
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addSleep, wakeWindowConfig } = useSleep();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const colors = {
+    accent: isDark ? ACTIVITY.sleep.accentDark : ACTIVITY.sleep.accent,
+    mutedBg: isDark ? ACTIVITY.sleep.mutedDark : ACTIVITY.sleep.muted,
+    textOnMuted: isDark ? ACTIVITY.sleep.textAccentDark : ACTIVITY.sleep.textAccent,
+  };
 
   const [startTime, setStartTime] = useState(new Date());
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const [sleepType, setSleepType] = useState<SleepType>(() =>
-    determineSleepType(new Date(), wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour)
-  );
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
   const [durationInput, setDurationInput] = useState("");
 
@@ -47,10 +49,6 @@ export default function ManualSleepScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const suggestedType = useMemo(() => {
-    return determineSleepType(startTime, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour);
-  }, [startTime, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
 
   const handleDateChange = useCallback(
     (_event: unknown, selectedDate?: Date) => {
@@ -115,6 +113,7 @@ export default function ManualSleepScreen() {
     setErrors({});
 
     const durationSeconds = durationMinutes ? durationMinutes * 60 : undefined;
+    const sleepType = determineSleepType(startTime, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour);
     const validation = validateManualSleep({
       type: sleepType,
       startedAt: startTime,
@@ -132,12 +131,16 @@ export default function ManualSleepScreen() {
       const endedAt = new Date(
         startTime.getTime() + (durationSeconds ?? 0) * 1000
       );
+      const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
+      const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
+      const sleepType = classifySleepByTimeRange(startTime, endedAt, dayStartHour, dayEndHour);
+
       await addSleep({
         babyId: selectedBaby.id,
         type: sleepType,
         startedAt: startTime,
         endedAt,
-        durationSeconds,
+        durationSeconds: durationSeconds ?? 0,
         notes: notes || undefined,
       });
       router.replace("/(tabs)");
@@ -147,15 +150,16 @@ export default function ManualSleepScreen() {
     }
   }, [
     selectedBaby,
-    sleepType,
     startTime,
     durationMinutes,
     notes,
     addSleep,
     router,
+    wakeWindowConfig?.dayStartHour,
+    wakeWindowConfig?.dayEndHour,
   ]);
 
-  const canSave = sleepType !== null && durationMinutes !== null && durationMinutes > 0;
+  const canSave = durationMinutes !== null && durationMinutes > 0;
 
   if (!selectedBaby) {
     return <NoBabyScreen />;
@@ -198,34 +202,6 @@ export default function ManualSleepScreen() {
         contentContainerClassName="px-6 pb-6"
         keyboardShouldPersistTaps="handled"
       >
-        {/* Sleep Type Selection */}
-        <View className="mb-6">
-          <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
-            {t("sleep.sleepType")}
-          </Text>
-          <View className="flex-row gap-3">
-            <SleepTypeButton
-              type="nap"
-              label={t("sleep.nap")}
-              icon="💤"
-              isSuggested={suggestedType === "nap"}
-              isSelected={sleepType === "nap"}
-              onPress={() => setSleepType("nap")}
-            />
-            <SleepTypeButton
-              type="night"
-              label={t("sleep.night")}
-              icon="🌙"
-              isSuggested={suggestedType === "night"}
-              isSelected={sleepType === "night"}
-              onPress={() => setSleepType("night")}
-            />
-          </View>
-          {errors.type && (
-            <Text className="text-red-500 text-sm mt-2">{errors.type}</Text>
-          )}
-        </View>
-
         {/* Start Time Selection */}
         <View className="mb-6">
           <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
@@ -235,26 +211,26 @@ export default function ManualSleepScreen() {
             <Pressable
               onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: SLEEP_PURPLE_MUTED }}
+              style={{ backgroundColor: colors.mutedBg }}
               accessibilityRole="button"
               accessibilityLabel={t("feeding.selectDate")}
             >
-              <Text className="text-base" style={{ color: SLEEP_PURPLE_DARK }}>
+              <Text className="text-base" style={{ color: colors.textOnMuted }}>
                 {formatDate(startTime)}
               </Text>
-              <Text style={{ color: SLEEP_PURPLE }}>📅</Text>
+              <Text style={{ color: colors.accent }}>📅</Text>
             </Pressable>
             <Pressable
               onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
               className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: SLEEP_PURPLE_MUTED }}
+              style={{ backgroundColor: colors.mutedBg }}
               accessibilityRole="button"
               accessibilityLabel={t("feeding.selectTime")}
             >
-              <Text className="text-base" style={{ color: SLEEP_PURPLE_DARK }}>
+              <Text className="text-base" style={{ color: colors.textOnMuted }}>
                 {formatTime(startTime)}
               </Text>
-              <Text style={{ color: SLEEP_PURPLE }}>🕐</Text>
+              <Text style={{ color: colors.accent }}>🕐</Text>
             </Pressable>
           </View>
           {errors.startedAt && (
@@ -270,7 +246,7 @@ export default function ManualSleepScreen() {
                 onPress={() => setShowDateTimePicker(false)}
                 className="py-1 px-3"
               >
-                <Text className="text-sm font-semibold" style={{ color: SLEEP_PURPLE }}>
+                <Text className="text-sm font-semibold" style={{ color: colors.accent }}>
                   {t("common.done")}
                 </Text>
               </Pressable>
@@ -313,11 +289,11 @@ export default function ManualSleepScreen() {
           </Text>
           <View
             className="flex-row items-center rounded-card-lg px-4 py-3 mb-4"
-            style={{ backgroundColor: SLEEP_PURPLE_MUTED }}
+            style={{ backgroundColor: colors.mutedBg }}
           >
             <TextInput
               className="flex-1 text-2xl font-semibold text-center"
-              style={{ color: SLEEP_PURPLE_DARK }}
+              style={{ color: colors.textOnMuted }}
               value={durationInput}
               onChangeText={handleDurationChange}
               placeholder="0"
@@ -328,7 +304,7 @@ export default function ManualSleepScreen() {
             />
             <Text
               className="text-lg font-medium ml-2"
-              style={{ color: SLEEP_PURPLE }}
+              style={{ color: colors.accent }}
             >
               {t("common.min")}
             </Text>
@@ -345,6 +321,9 @@ export default function ManualSleepScreen() {
                 label={`${minutes}`}
                 isSelected={durationMinutes === minutes}
                 onPress={() => handleQuickDurationSelect(minutes)}
+                accentColor={colors.accent}
+                mutedColor={colors.mutedBg}
+                textColor={colors.textOnMuted}
               />
             ))}
           </View>
@@ -382,7 +361,7 @@ export default function ManualSleepScreen() {
           className={`py-4 rounded-button-lg items-center active:scale-[0.98] ${
             !canSave || isSaving ? "opacity-50" : ""
           }`}
-          style={{ backgroundColor: SLEEP_PURPLE }}
+          style={{ backgroundColor: colors.accent }}
           accessibilityRole="button"
           accessibilityLabel={t("sleep.logManualSleep")}
           accessibilityState={{ disabled: !canSave || isSaving }}
@@ -397,69 +376,22 @@ export default function ManualSleepScreen() {
   );
 }
 
-interface SleepTypeButtonProps {
-  type: SleepType;
-  label: string;
-  icon: string;
-  isSuggested: boolean;
-  isSelected: boolean;
-  onPress: () => void;
-}
-
-function SleepTypeButton({
-  label,
-  icon,
-  isSuggested,
-  isSelected,
-  onPress,
-}: SleepTypeButtonProps) {
-  const { t } = useTranslation();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      className="flex-1 items-center py-5 rounded-card-lg active:scale-[0.97]"
-      style={{
-        backgroundColor: isSelected ? SLEEP_PURPLE : SLEEP_PURPLE_MUTED,
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`${label}${isSuggested ? `, ${t("feeding.suggested")}` : ""}`}
-      accessibilityState={{ selected: isSelected }}
-    >
-      <Text className="text-3xl mb-2">{icon}</Text>
-      <Text
-        className="text-base font-medium"
-        style={{ color: isSelected ? "#FFFFFF" : SLEEP_PURPLE_DARK }}
-      >
-        {label}
-      </Text>
-      {isSuggested && !isSelected && (
-        <View
-          className="px-2 py-0.5 rounded-pill mt-2"
-          style={{ backgroundColor: SLEEP_PURPLE + "30" }}
-        >
-          <Text className="text-xs font-medium" style={{ color: SLEEP_PURPLE }}>
-            {t("feeding.suggested")}
-          </Text>
-        </View>
-      )}
-    </Pressable>
-  );
-}
-
 interface QuickButtonProps {
   label: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
-function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
+function QuickButton({ label, isSelected, onPress, accentColor, mutedColor, textColor }: QuickButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       className="min-w-[56px] py-2 px-3 rounded-button-lg items-center active:scale-95"
       style={{
-        backgroundColor: isSelected ? SLEEP_PURPLE : SLEEP_PURPLE_MUTED,
+        backgroundColor: isSelected ? accentColor : mutedColor,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -467,7 +399,7 @@ function QuickButton({ label, isSelected, onPress }: QuickButtonProps) {
     >
       <Text
         className="text-base font-semibold"
-        style={{ color: isSelected ? "#FFFFFF" : SLEEP_PURPLE }}
+        style={{ color: isSelected ? "#FFFFFF" : textColor }}
       >
         {label}
       </Text>

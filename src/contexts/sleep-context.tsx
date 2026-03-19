@@ -16,6 +16,7 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
+import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import { fetchWakeWindowPreference } from "@/services/push-token-service";
 import { fetchActivityGoal, upsertActivityGoal } from "@/services/activity-goal-service";
@@ -547,7 +548,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        const lockResult = await acquireTimerLock(selectedBaby.id, "sleep", user.id, { type: sleepType });
+        const lockResult = await acquireTimerLock(selectedBaby.id, "sleep", user.id, { type: sleepType }, customStartTime);
         if (!lockResult.success) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }
@@ -599,23 +600,31 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
 
+      const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
+      const dayEndHour = state.wakeWindowConfig?.dayEndHour ?? 19;
+      const sleepType = classifySleepByTimeRange(
+        state.activeTimer.startTime,
+        endTime,
+        dayStartHour,
+        dayEndHour
+      );
+
       const sleepInput: CreateSleepInput = {
         babyId: selectedBaby.id,
-        type: state.activeTimer.sleepType,
+        type: sleepType,
         startedAt: state.activeTimer.startTime,
         endedAt: endTime,
         durationSeconds,
       };
 
-      let sleep: StoredSleepEntry;
-
+      let lastSleep: StoredSleepEntry;
       if (user?.householdId && user?.id) {
-        sleep = await createSleepInDatabase(sleepInput, user.id);
+        lastSleep = await createSleepInDatabase(sleepInput, user.id);
       } else {
-        sleep = await SleepStorageService.addSleep(sleepInput);
+        lastSleep = await SleepStorageService.addSleep(sleepInput);
       }
+      dispatch({ type: "ADD_SLEEP", payload: lastSleep });
 
-      dispatch({ type: "ADD_SLEEP", payload: sleep });
       dispatch({ type: "STOP_TIMER" });
       await SleepStorageService.clearActiveTimer(selectedBaby.id);
 
@@ -634,11 +643,11 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      return sleep;
+      return lastSleep;
     } finally {
       isStoppingRef.current = false;
     }
-  }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
+  }, [selectedBaby, state.activeTimer, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, user?.householdId, user?.id]);
 
   const changeSleepType = useCallback((sleepType: SleepType) => {
     if (state.activeTimer?.isPaused) return;
@@ -809,25 +818,30 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
   const getTodaysTotalSleepMinutes = useCallback((): number => {
     const now = new Date();
-    const todayMidnight = new Date(now);
-    todayMidnight.setHours(0, 0, 0, 0);
-    const tomorrowMidnight = new Date(todayMidnight);
-    tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 1);
+    const dayStart = state.wakeWindowConfig?.dayStartHour ?? 6;
+
+    const windowStart = new Date(now);
+    windowStart.setHours(dayStart, 0, 0, 0);
+    if (now.getHours() < dayStart) {
+      windowStart.setDate(windowStart.getDate() - 1);
+    }
+    const windowEnd = new Date(windowStart);
+    windowEnd.setDate(windowEnd.getDate() + 1);
 
     let totalSeconds = 0;
     for (const s of state.sleeps) {
       const start = new Date(s.startedAt);
       const end = s.endedAt ? new Date(s.endedAt) : now;
 
-      if (end <= todayMidnight || start >= tomorrowMidnight) continue;
+      if (end <= windowStart || start >= windowEnd) continue;
 
-      const clampedStart = start < todayMidnight ? todayMidnight : start;
-      const clampedEnd = end > tomorrowMidnight ? tomorrowMidnight : end;
+      const clampedStart = start < windowStart ? windowStart : start;
+      const clampedEnd = end > windowEnd ? windowEnd : end;
       totalSeconds += Math.floor((clampedEnd.getTime() - clampedStart.getTime()) / 1000);
     }
 
     return Math.floor(totalSeconds / 60);
-  }, [state.sleeps]);
+  }, [state.sleeps, state.wakeWindowConfig?.dayStartHour]);
 
   const getWakeWindowProgress = useCallback((): number | undefined => {
     const lastSleep = getLastSleep();

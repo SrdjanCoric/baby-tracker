@@ -1538,7 +1538,7 @@
       "sessions": "sesija",
       "avgPerDay": "prosek {{value}} / dan",
       "breastfeedingChart": "Dojenje",
-      "breastfeedingChartSub": "ukupno minuta dnevno - poslednjih 7 dana",
+      "breastfeedingChartSub": "ukupno dnevno - poslednjih 7 dana",
       "bottleChart": "Flašica",
       "bottleChartSub": "ukupno ml dnevno - poslednjih 7 dana",
       "avgBetween": "Prosek između hranjenja",

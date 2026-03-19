@@ -11,6 +11,7 @@ interface DailySummaryCardProps {
   filter: FilterType;
   allData: TimelineDataByDate;
   birthDate?: string;
+  dayStartHour?: number;
   t: (key: string, options?: Record<string, unknown>) => string;
   onDateChange?: (date: Date) => void;
 }
@@ -19,6 +20,7 @@ export function DailySummaryCard({
   filter,
   allData,
   birthDate,
+  dayStartHour = 6,
   t,
   onDateChange,
 }: DailySummaryCardProps) {
@@ -32,8 +34,8 @@ export function DailySummaryCard({
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const summary = useMemo(
-    () => calculateDailySummary(selectedDate, allData),
-    [selectedDate, allData]
+    () => calculateDailySummary(selectedDate, allData, dayStartHour),
+    [selectedDate, allData, dayStartHour]
   );
 
   const handleDatePress = useCallback(() => {

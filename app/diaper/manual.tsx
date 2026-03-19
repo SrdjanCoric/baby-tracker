@@ -4,16 +4,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useColorScheme } from "nativewind";
 import { useDiaper } from "@/contexts/diaper-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import { formatTime as formatTimeUtil } from "@/utils/time";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { STOOL_COLORS } from "@/constants/activities";
-
-const DIAPER_PEACH = "#D4837D";
-const DIAPER_PEACH_MUTED = "#FDF0EF";
-const DIAPER_PEACH_DARK = "#A85E58";
+import { ACTIVITY } from "@/constants/colors";
 
 const STOOL_COLOR_MAP: Record<StoolColor, string> = {
   yellow: "#F4D03F",
@@ -31,6 +29,13 @@ export default function ManualDiaperScreen() {
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addDiaper } = useDiaper();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const colors = {
+    accent: isDark ? ACTIVITY.diaper.accentDark : ACTIVITY.diaper.accent,
+    mutedBg: isDark ? ACTIVITY.diaper.mutedDark : ACTIVITY.diaper.muted,
+    textOnMuted: isDark ? ACTIVITY.diaper.textAccentDark : ACTIVITY.diaper.textAccent,
+  };
 
   const [selectedType, setSelectedType] = useState<DiaperType | null>(null);
   const [selectedColor, setSelectedColor] = useState<StoolColor | null>(null);
@@ -153,28 +158,28 @@ export default function ManualDiaperScreen() {
           <Pressable
             onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
             className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-            style={{ backgroundColor: DIAPER_PEACH_MUTED }}
+            style={{ backgroundColor: colors.mutedBg }}
             accessibilityRole="button"
             accessibilityLabel={t("feeding.selectDate")}
           >
-            <Text className="text-base" style={{ color: DIAPER_PEACH_DARK }}>
+            <Text className="text-base" style={{ color: colors.textOnMuted }}>
               {formatDate(changeTime)}
             </Text>
-            <Text style={{ color: DIAPER_PEACH }}>📅</Text>
+            <Text style={{ color: colors.accent }}>📅</Text>
           </Pressable>
 
           {/* Time Picker */}
           <Pressable
             onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
             className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-            style={{ backgroundColor: DIAPER_PEACH_MUTED }}
+            style={{ backgroundColor: colors.mutedBg }}
             accessibilityRole="button"
             accessibilityLabel={t("feeding.selectTime")}
           >
-            <Text className="text-base" style={{ color: DIAPER_PEACH_DARK }}>
+            <Text className="text-base" style={{ color: colors.textOnMuted }}>
               {formatTime(changeTime)}
             </Text>
-            <Text style={{ color: DIAPER_PEACH }}>🕐</Text>
+            <Text style={{ color: colors.accent }}>🕐</Text>
           </Pressable>
         </View>
 
@@ -186,7 +191,7 @@ export default function ManualDiaperScreen() {
                 onPress={() => setShowDateTimePicker(false)}
                 className="py-1 px-3"
               >
-                <Text className="text-sm font-semibold" style={{ color: DIAPER_PEACH }}>
+                <Text className="text-sm font-semibold" style={{ color: colors.accent }}>
                   {t("common.done")}
                 </Text>
               </Pressable>
@@ -234,6 +239,9 @@ export default function ManualDiaperScreen() {
             icon="💧"
             isSelected={selectedType === "wet"}
             onPress={() => handleTypeSelect("wet")}
+            accentColor={colors.accent}
+            mutedColor={colors.mutedBg}
+            textColor={colors.textOnMuted}
           />
           <DiaperTypeButton
             type="dirty"
@@ -241,6 +249,9 @@ export default function ManualDiaperScreen() {
             icon="💩"
             isSelected={selectedType === "dirty"}
             onPress={() => handleTypeSelect("dirty")}
+            accentColor={colors.accent}
+            mutedColor={colors.mutedBg}
+            textColor={colors.textOnMuted}
           />
           <DiaperTypeButton
             type="mixed"
@@ -248,6 +259,9 @@ export default function ManualDiaperScreen() {
             icon="💧💩"
             isSelected={selectedType === "mixed"}
             onPress={() => handleTypeSelect("mixed")}
+            accentColor={colors.accent}
+            mutedColor={colors.mutedBg}
+            textColor={colors.textOnMuted}
           />
         </View>
 
@@ -267,6 +281,8 @@ export default function ManualDiaperScreen() {
                   hexColor={STOOL_COLOR_MAP[color]}
                   isSelected={selectedColor === color}
                   onPress={() => handleColorSelect(color)}
+                  accentColor={colors.accent}
+                  textColor={colors.textOnMuted}
                 />
               ))}
             </View>
@@ -282,7 +298,7 @@ export default function ManualDiaperScreen() {
           className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
             !canSave ? "opacity-50" : ""
           }`}
-          style={{ backgroundColor: DIAPER_PEACH }}
+          style={{ backgroundColor: colors.accent }}
           accessibilityRole="button"
           accessibilityLabel={t("diaper.logDiaper")}
         >
@@ -302,6 +318,9 @@ interface DiaperTypeButtonProps {
   icon: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  mutedColor: string;
+  textColor: string;
 }
 
 function DiaperTypeButton({
@@ -310,6 +329,9 @@ function DiaperTypeButton({
   icon,
   isSelected,
   onPress,
+  accentColor,
+  mutedColor,
+  textColor,
 }: DiaperTypeButtonProps) {
   return (
     <Pressable
@@ -317,7 +339,7 @@ function DiaperTypeButton({
       className={`flex-row items-center p-4 rounded-card-lg active:scale-[0.98] ${
         isSelected ? "border-2" : "border border-border dark:border-border-dark"
       }`}
-      style={isSelected ? { borderColor: DIAPER_PEACH, backgroundColor: DIAPER_PEACH_MUTED } : undefined}
+      style={isSelected ? { borderColor: accentColor, backgroundColor: mutedColor } : undefined}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected: isSelected }}
@@ -327,14 +349,14 @@ function DiaperTypeButton({
         className={`text-base font-medium flex-1 ${
           isSelected ? "" : "text-content-primary dark:text-content-dark-primary"
         }`}
-        style={isSelected ? { color: DIAPER_PEACH_DARK } : undefined}
+        style={isSelected ? { color: textColor } : undefined}
       >
         {label}
       </Text>
       {isSelected && (
         <View
           className="w-6 h-6 rounded-full items-center justify-center"
-          style={{ backgroundColor: DIAPER_PEACH }}
+          style={{ backgroundColor: accentColor }}
         >
           <Text className="text-white text-sm">✓</Text>
         </View>
@@ -349,6 +371,8 @@ interface StoolColorButtonProps {
   hexColor: string;
   isSelected: boolean;
   onPress: () => void;
+  accentColor: string;
+  textColor: string;
 }
 
 function StoolColorButton({
@@ -357,6 +381,8 @@ function StoolColorButton({
   hexColor,
   isSelected,
   onPress,
+  accentColor,
+  textColor,
 }: StoolColorButtonProps) {
   return (
     <Pressable
@@ -364,7 +390,7 @@ function StoolColorButton({
       className={`items-center p-3 rounded-card active:scale-[0.95] ${
         isSelected ? "border-2" : "border border-border dark:border-border-dark"
       }`}
-      style={isSelected ? { borderColor: DIAPER_PEACH } : undefined}
+      style={isSelected ? { borderColor: accentColor } : undefined}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected: isSelected }}
@@ -379,7 +405,7 @@ function StoolColorButton({
             ? ""
             : "text-content-secondary dark:text-content-dark-secondary"
         }`}
-        style={isSelected ? { color: DIAPER_PEACH_DARK } : undefined}
+        style={isSelected ? { color: textColor } : undefined}
         numberOfLines={2}
       >
         {label}

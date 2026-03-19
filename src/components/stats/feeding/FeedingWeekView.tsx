@@ -23,6 +23,24 @@ function getWeekdayLabel(dateKey: string, locale: string): string {
   return date.toLocaleDateString(locale, { weekday: "short" });
 }
 
+function formatMinutes(v: number): string {
+  if (v < 60) return `${v}m`;
+  const h = Math.floor(v / 60);
+  const m = v % 60;
+  return m === 0 ? `${h}h` : `${h}h${m}m`;
+}
+
+function computeNiceYAxis(data: { value: number }[], minMax = 60) {
+  const dataMax = Math.max(...data.map((d) => d.value), 0);
+  const ceiling = Math.ceil(Math.max(dataMax * 1.2, minMax));
+  const niceSteps = [15, 30, 45, 60, 90, 120];
+  const step = niceSteps.find((s) => Math.ceil(ceiling / s) <= 5)
+    ?? Math.ceil(ceiling / 5 / 60) * 60;
+  const count = Math.ceil(ceiling / step);
+  const labels = Array.from({ length: count + 1 }, (_, i) => i * step);
+  return { maxY: count * step, labels };
+}
+
 export function FeedingWeekView() {
   const { t, i18n } = useTranslation();
   const { feedings } = useFeeding();
@@ -36,7 +54,7 @@ export function FeedingWeekView() {
   const accentDark = isDark ? ACTIVITY.feeding.buttonDark : ACTIVITY.feeding.button;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
-  const { stats, dailyBreastMin, dailyBottleMl } = useMemo(() => {
+  const { stats, dailyBreastMin, dailyBottleMl, breastYAxis } = useMemo(() => {
     const range = getDateRangeForPeriod("7days");
     const weekFeedings = filterEntriesByDateRange(feedings, range, (e) => e.startedAt);
     const s = calculateExtendedFeedingStats(weekFeedings);
@@ -57,7 +75,8 @@ export function FeedingWeekView() {
       bottleMl.push({ value: bottleVol, label });
     }
 
-    return { stats: s, dailyBreastMin: breastMin, dailyBottleMl: bottleMl };
+    const breastYAxis = computeNiceYAxis(breastMin);
+    return { stats: s, dailyBreastMin: breastMin, dailyBottleMl: bottleMl, breastYAxis };
   }, [feedings, locale]);
 
   const avgPerDay = (stats.totalCount / 7).toFixed(1);
@@ -107,10 +126,11 @@ export function FeedingWeekView() {
           </Text>
           <BarChartWithAxis
             data={dailyBreastMin}
-            yAxisLabels={[0, 15, 30, 45, 60]}
+            yAxisLabels={breastYAxis.labels}
             barColor={accentColor}
-            maxY={60}
-            formatBarLabel={(v) => `${v}m`}
+            maxY={breastYAxis.maxY}
+            formatBarLabel={formatMinutes}
+            formatValue={formatMinutes}
           />
         </View>
       )}

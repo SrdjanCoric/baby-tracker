@@ -35,7 +35,11 @@ export function DayView({
   const hours = getHoursForAxis(dayStartHour);
   const totalHeight = 24 * PX_PER_HOUR;
   const nowPos = getNowPosition(PX_PER_HOUR, new Date(), dayStartHour);
-  const isViewingToday = data.dateLabel === t("sleepPatterns.today");
+  const today = new Date();
+  const isViewingToday =
+    selectedDate.getFullYear() === today.getFullYear() &&
+    selectedDate.getMonth() === today.getMonth() &&
+    selectedDate.getDate() === today.getDate();
 
   const totalDaySeconds = data.totalSleepSeconds;
 
@@ -62,8 +66,8 @@ export function DayView({
         </View>
       )}
       <Legend colors={colors} />
-      <ScrollView ref={scrollRef} style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        <View style={{ height: totalHeight, position: "relative", marginBottom: 8, paddingTop: 7 }}>
+      <ScrollView ref={scrollRef} style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 7 }}>
+        <View style={{ height: totalHeight, position: "relative", marginBottom: 8 }}>
           {hours.map((hour, i) => (
             <View
               key={hour}
