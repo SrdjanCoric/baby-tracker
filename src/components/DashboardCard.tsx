@@ -1,5 +1,6 @@
 import { Pressable, Text, View, useColorScheme, Platform } from "react-native";
 import { forwardRef, memo, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -71,6 +72,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
     },
     ref
   ) => {
+    const { t } = useTranslation();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
     const config = ACTIVITY_CONFIG[activity];
@@ -185,8 +187,8 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
         accessibilityRole="button"
         accessibilityLabel={
           isLockedByOther
-            ? `${label} in progress by ${lockedByName}`
-            : `${label} card. ${timeSince ? `Time since last: ${timeSince}` : ""}`
+            ? t("accessibility.lockedByOther", { label, name: lockedByName })
+            : timeSince ? t("accessibility.cardTimeSince", { label, time: timeSince }) : t("accessibility.cardNoTime", { label })
         }
       >
         {/* Top row: Icon + Label */}
@@ -246,12 +248,12 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 minimumFontScale={0.7}
               >
                 {isPausedByOther
-                  ? `${lockedByName} paused`
-                  : activity === "feeding" ? `${lockedByName} is feeding` :
-                    activity === "sleep" ? `${babyName || "Baby"} is sleeping` :
-                    activity === "pumping" ? "Pumping..." :
-                    activity === "tummyTime" ? `${babyName || "Baby"} is on tummy` :
-                    `${lockedByName} is busy`}
+                  ? t("dashboardCard.paused", { name: lockedByName })
+                  : activity === "feeding" ? t("dashboardCard.isFeeding", { name: lockedByName }) :
+                    activity === "sleep" ? t("dashboardCard.isSleeping", { name: babyName || t("dashboardCard.baby") }) :
+                    activity === "pumping" ? t("dashboardCard.pumpingActive") :
+                    activity === "tummyTime" ? t("dashboardCard.isOnTummy", { name: babyName || t("dashboardCard.baby") }) :
+                    t("dashboardCard.isBusy", { name: lockedByName })}
               </Text>
               {lockedElapsedTime && (
                 <Text
@@ -272,7 +274,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 adjustsFontSizeToFit
                 minimumFontScale={0.7}
               >
-                {activeLabel || "Active"}
+                {activeLabel || t("dashboardCard.active")}
               </Text>
               <Text
                 className="text-sm mt-1"
@@ -400,7 +402,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                   },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={isPaused ? "Resume" : "Pause"}
+                accessibilityLabel={isPaused ? t("common.resume") : t("common.pause")}
                 testID={testID ? `${testID}-pause` : undefined}
               >
                 <Text
@@ -420,7 +422,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 className={`${Platform.OS === "android" ? "min-w-[36px] min-h-[36px] rounded-xl" : "min-w-[40px] min-h-[40px] rounded-2xl"} items-center justify-center`}
                 style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor }]}
                 accessibilityRole="button"
-                accessibilityLabel="Stop"
+                accessibilityLabel={t("common.stop")}
                 testID={testID ? `${testID}-action` : undefined}
               >
                 <Text className={`${Platform.OS === "android" ? "text-sm" : "text-base"} font-bold text-white`}>
@@ -439,7 +441,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
               className={`${Platform.OS === "android" ? "min-w-[40px] min-h-[40px] rounded-xl" : "min-w-[48px] min-h-[48px] rounded-2xl"} items-center justify-center`}
               style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor }]}
               accessibilityRole="button"
-              accessibilityLabel={isActive ? "Stop" : `Add ${label}`}
+              accessibilityLabel={isActive ? t("common.stop") : t("accessibility.addActivity", { label })}
               testID={testID ? `${testID}-action` : undefined}
             >
               <Text className={`${Platform.OS === "android" ? "text-base" : "text-lg"} font-bold text-white`}>

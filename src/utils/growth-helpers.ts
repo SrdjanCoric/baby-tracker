@@ -13,8 +13,8 @@ export function getGrowthTrendArrow(change: number | undefined): string {
   return change > 0 ? "↗" : "↘";
 }
 
-export function formatWeightChange(changeGrams: number): string {
-  if (changeGrams === 0) return "stable";
+export function formatWeightChange(changeGrams: number, t?: (key: string) => string): string {
+  if (changeGrams === 0) return t ? t("growthHelpers.stable") : "stable";
   const sign = changeGrams > 0 ? "+" : "";
   return `${sign}${changeGrams}g`;
 }

@@ -38,14 +38,18 @@ npm run lint:fix             # Auto-fix lint issues
 - Expo Router v6 (file-based routing)
 - Supabase (auth + PostgreSQL backend + Realtime)
 - Custom sync engine with offline queue and conflict resolution
+- i18next for internationalization (en, sr, es)
 
 ### State Management
-Uses React Context + Reducers pattern (no Redux). Each feature has its own context provider. Main contexts include: AuthContext, BabyContext, HouseholdContext, SyncContext, NotificationContext, and activity-specific contexts (Feeding, Sleep, Diaper, Pumping, Growth, TummyTime).
+Uses React Context + Reducers pattern (no Redux). Each feature has its own context provider. The provider tree is ~20 levels deep — see `app/_layout.tsx` lines 405-463 for the exact nesting order.
 
-Provider nesting order is defined in `app/_layout.tsx` - maintain this order when adding new providers.
+**Contexts:** ThemeProvider, LanguageProvider, AuthProvider, SyncProvider, HouseholdProvider, UnitProvider, TimeFormatProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ActiveTimersProvider, WidgetProvider, NotificationProvider, DashboardConfigProvider.
+
+Maintain nesting order when adding new providers.
 
 ### Storage Pattern
-- AsyncStorage for preferences with prefixed keys (`@babies`, `@feedings:`, etc.)
+- AsyncStorage for preferences with prefixed keys
+- Keys are scoped per user via `getUserScopedKey()`, activity data keyed by babyId (e.g., `@feedings:{babyId}`)
 - Local-first architecture: save locally first, then sync to Supabase
 - Each activity type has paired files: `*-storage.ts` (local) and sync handled via `activity-sync-service.ts`
 
@@ -54,7 +58,7 @@ The app uses a custom sync system with the following components:
 
 **Core Services (`src/services/sync/`):**
 - `sync-engine.ts` - Main orchestrator for sync operations with auth context, queue management, and push changes
-- `real-time-sync.ts` - Supabase Realtime subscriptions for live updates between household members
+- `real-time-sync.ts` - Supabase Realtime subscriptions for live updates between household members; uses device ID for echo filtering
 - `sync-queue.ts` - Persistent queue for offline operations with retry logic
 - `conflict-resolver.ts` - Handles sync conflicts with timestamp-based resolution
 
@@ -67,6 +71,14 @@ The app uses a custom sync system with the following components:
 - Remote changes dispatch actions like `REMOTE_INSERT`, `REMOTE_UPDATE`, `REMOTE_DELETE` to contexts
 - SyncContext manages auth context and coordinates sync operations
 - Retry utility (`src/utils/retry.ts`) provides exponential backoff for network operations
+- On foreground resume: flush sync queue before pulling server data (prevents overwriting local optimistic state)
+
+### Active Timers
+Household-wide timer exclusivity via `active_timers` table:
+- Atomic lock acquisition via `acquire_timer_lock()` RPC
+- Prevents simultaneous timers per `(baby_id, activity_type)`
+- Stale lock cleanup after 12 hours
+- Service: `src/services/active-timer-service.ts`
 
 ### Household System
 Multi-caregiver support with household management:
@@ -90,15 +102,48 @@ Multi-caregiver support with household management:
 ### Push Notifications
 - `src/services/notification-service.ts` - Local notification scheduling
 - `src/services/push-token-service.ts` - Push token registration with Supabase
-- `supabase/functions/send-activity-notification/` - Edge function for push delivery
-- Tokens stored in `push_tokens` table with `last_used_at` tracking
+- Tokens stored in `user_push_tokens` table with `device_token` and `is_sandbox` columns
+- `is_sandbox` per-token routing determines APNs endpoint (dev builds get sandbox tokens)
+- All push delivery uses direct APNs (not Expo Push API)
+
+**Edge Functions:**
+- `send-activity-notification` - Push for activity events between caregivers
+- `send-widget-push` - WidgetKit push to refresh widget timeline
+- `check-feeding-reminders` - Scheduled feeding reminder checks
+- `check-wake-window-reminders` - Wake window alert checks
+- `start-live-activity` / `end-live-activity` - iOS Live Activity management
+- `toggle-timer-pause` - Server-side timer pause/resume
+
+### Widget, Watch & Live Activities
+**iOS Widget** (`targets/widget/index.swift`):
+- Uses App Group `group.com.sofibaby.app`
+- Data flow: React contexts → `widget-data-service.ts` → ExtensionStorage → Widget reads UserDefaults
+- Widget push tokens in `widget_push_tokens` table
+- Auth credentials written to App Group for widget extension Supabase REST calls
+
+**Apple Watch** (`src/services/watch-service.ts`):
+- WCSession for phone↔watch communication
+- Falls back to direct Supabase REST when phone unreachable
+
+**Live Activities** (`src/services/live-activity-service.ts`):
+- iOS Dynamic Island timers
+- Deep link actions: `sofibaby://?action=pause|resume|stop`
+
+### i18n
+- i18next + react-i18next + expo-localization
+- 3 languages: English (en), Serbian (sr), Spanish (es)
+- Translation files: `src/i18n/locales/{en,sr,es}.json`
+- Custom hook: `useAppTranslation()` wraps i18next
 
 ### Navigation Structure
 - `app/(tabs)/` - Main tab navigation (home, timeline, stats)
 - `app/auth/` - Authentication screens (sign-in)
 - `app/onboarding/` - Onboarding flow with auth choice
-- `app/settings/` - Settings screens (household, caregivers, notifications, about)
+- `app/settings/` - Settings screens (household, caregivers, notifications, about, theme, language, units, time-format, widget-config, dashboard, export, reports, join-household, delete-account)
 - Activity screens: `app/feeding/`, `app/sleep/`, `app/diaper/`, `app/pumping/`, `app/growth/`, `app/tummyTime/`
+- `app/milestones/` - Milestone tracking
+- `app/edit/` - Edit screens for all activity types
+- Deep link scheme: `sofibaby://` with action params (`?action=pause|resume|stop`)
 
 ### Authentication
 Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Supabase with native ID token exchange. Deep linking handles OAuth callbacks via `sofibaby://` scheme.
@@ -107,6 +152,13 @@ Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Su
 - PKCE flow for Android magic link authentication
 - Display name prompt for new OAuth users (Google/Apple don't auto-save names)
 - Non-blocking profile fetch: auth state updates immediately, profile loads in background
+
+## Constants
+- `src/constants/colors.ts` - Single source of truth for ALL colors (light/dark themes, activity colors)
+- `src/constants/activities.ts` - Activity type definitions
+- `src/constants/design-tokens.ts` - Border radius, spacing, shadows, typography scales
+- `src/constants/milestones.ts` - Milestone category definitions
+- Font: Nunito (Regular, Medium, SemiBold, Bold)
 
 ## Growth & Statistics
 
@@ -131,6 +183,13 @@ Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Su
 - `useTimeRefresh(intervalMs)` - Triggers re-renders at intervals for relative time displays
 - `useDuplicateCheck()` - Detects potential duplicate activity entries
 - `useTimerAlertIntegration()` - Coordinates timer state with notification alerts
+- `useAppTranslation()` - Wraps i18next with app-specific defaults
+- `useGlobalTimerAlerts()` - Global timer alert monitoring (mounted at root layout)
+- `useNotificationIntegration()` - Coordinates notification scheduling with activity state
+- `useAccessibility()` - Accessibility helpers
+- `useWidgetStopHandler()` - Handles stop actions from widget deep links
+- `useWidgetPauseHandler()` - Handles pause/resume actions from widget deep links
+- `useWatchMessageHandler()` - Processes incoming Apple Watch messages
 
 ## Testing Strategy
 
@@ -165,12 +224,21 @@ To reveal items in a horizontal ScrollView (e.g., filter tabs), use swipe with s
 **Loading States:**
 Ensure screens have consistent `testID` on both loading and loaded states, otherwise assertions may fail during loading.
 
+## Known Gotchas
+
+- **NativeWind `dark:` variants crash under rapid re-renders** — Use inline `style` props with `useColorScheme()` boolean instead of `dark:` className variants on screens with many context providers. See `docs/debug-insights/nativewind-dark-variant-navigation-context.md`
+- **Offline sync: push before pull** — When app returns to foreground with pending queue items, flush the sync queue before fetching server data. Otherwise server fetch overwrites local optimistic state. See `docs/debug-insights/offline-sync-race-condition.md`
+- **Global hooks must mount at root layout** — Hooks that need to run regardless of screen (timer alerts, widget handlers) must be in `_layout.tsx` wrapper components, not individual screens. See `docs/debug-insights/server-side-notifications-and-foreground-refresh.md`
+- **APNs push type for widgets is `widgets` (plural)** — Not `widget`, `widgetpush`, or `background`. See `docs/debug-insights/widgetkit-push-notifications.md`
+- **Push tokens need per-token sandbox routing** — Dev builds get sandbox tokens; `is_sandbox` column on `user_push_tokens` determines APNs endpoint. See `docs/debug-insights/apns-sandbox-per-token-routing.md`
+- **Silent Supabase query failures cascade** — A query on a non-existent column returns default/null, doesn't throw. Always verify column existence. See `docs/debug-insights/guest-migration-and-notification-sync.md`
+- **Schema-qualify functions in auth triggers** — See Database Trigger Patterns section below
+
 ## Code Style
 
 - No comments unless code is complex - code should be self-explanatory
 - Never use `any` to fix TypeScript issues - properly type everything
 - Never bend tests to make them pass - tests validate correct behavior
-- Follow TDD: write failing tests first, then implement
 
 ### TypeScript Patterns
 
@@ -197,7 +265,7 @@ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
 
 ## Database Migrations
 
-Migrations are in `supabase/migrations/`. Key migrations:
+Migrations are in `supabase/migrations/`. Numbering may include lettered variants (e.g., 009b). Key migrations:
 
 | Migration | Purpose |
 |-----------|---------|
@@ -214,6 +282,21 @@ Migrations are in `supabase/migrations/`. Key migrations:
 | 022 | Add last_finished_side to feedings |
 | 023 | Enable Realtime for active_timers table |
 | 024 | Fix trigger schema path for magic link auth |
+| 025-026 | Invite code search path fix, RLS recursion fix |
+| 027 | Widget push tokens table |
+| 028 | Join attempt rate limiting |
+| 029-030 | Feeding reminders (then migrated to APNs) |
+| 031 | Add device_token to user_push_tokens |
+| 032-035 | Wake window reminders |
+| 036 | Add is_sandbox to push tokens |
+| 037-038 | Wake window per-baby + Realtime |
+| 039 | Day/night boundary setting, fix account deletion FK |
+| 040 | Growth measured_at to timestamptz |
+| 041 | Toggle timer pause RPC |
+| 042 | Widget push tokens is_sandbox |
+| 043 | Activity goals |
+| 044 | Milestones |
+| 045-046 | Timer lock fixes (started_at, overload) |
 
 ## Android-Specific Setup
 

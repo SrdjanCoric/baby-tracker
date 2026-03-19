@@ -11,6 +11,7 @@ import type {
 } from "@/types/notifications";
 import { NOTIFICATION_CHANNELS } from "@/constants/notifications";
 import { getNavigationRoute } from "@/utils/notification-routes";
+import i18n from "@/i18n";
 
 // Dynamic import - expo-notifications not available in Expo Go (SDK 53+)
 let Notifications: typeof import("expo-notifications") | null = null;
@@ -59,45 +60,45 @@ export const NotificationService = {
     await Notifications.setNotificationChannelAsync(
       NOTIFICATION_CHANNELS.FEEDING_REMINDERS,
       {
-        name: "Feeding Reminders",
+        name: i18n.t("notifications.feedingRemindersChannel"),
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: "#14b8a6",
-        description: "Reminders for feeding times",
+        description: i18n.t("notifications.feedingRemindersDescription"),
       }
     );
 
     await Notifications.setNotificationChannelAsync(
       NOTIFICATION_CHANNELS.TIMER_ALERTS,
       {
-        name: "Timer Alerts",
+        name: i18n.t("notifications.timerAlertsChannel"),
         importance: Notifications.AndroidImportance.DEFAULT,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: "#14b8a6",
-        description: "Alerts when timers exceed thresholds",
+        description: i18n.t("notifications.timerAlertsDescription"),
       }
     );
 
     await Notifications.setNotificationChannelAsync(
       NOTIFICATION_CHANNELS.HOUSEHOLD_ACTIVITY,
       {
-        name: "Household Activity",
+        name: i18n.t("notifications.householdActivityChannel"),
         importance: Notifications.AndroidImportance.DEFAULT,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: "#14b8a6",
-        description: "Notifications when household members log activities",
+        description: i18n.t("notifications.householdActivityDescription"),
       }
     );
 
     await Notifications.setNotificationChannelAsync(
       NOTIFICATION_CHANNELS.ACTIVE_TIMERS,
       {
-        name: "Active Timers",
+        name: i18n.t("notifications.activeTimersChannel"),
         importance: Notifications.AndroidImportance.LOW,
         enableVibrate: false,
         sound: undefined,
         showBadge: false,
-        description: "Ongoing notifications for active timer activities",
+        description: i18n.t("notifications.activeTimersDescription"),
       }
     );
   },

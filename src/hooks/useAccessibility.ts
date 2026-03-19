@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { AccessibilityInfo, Platform } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import {
   createTimerAnnouncementMessage,
   createSaveSuccessMessage,
@@ -30,6 +31,7 @@ export function useAccessibility(): UseAccessibilityReturn {
   const reduceMotionEnabled = useReducedMotion();
   const announcementQueueRef = useRef<string[]>([]);
   const isAnnouncingRef = useRef(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkScreenReader = async () => {
@@ -90,10 +92,10 @@ export function useAccessibility(): UseAccessibilityReturn {
   const announceTimerStart = useCallback(
     (activityType: string) => {
       if (!shouldAnnounce("timer_start")) return;
-      const message = createTimerAnnouncementMessage(activityType, "start");
+      const message = createTimerAnnouncementMessage(activityType, "start", t);
       announce(message);
     },
-    [announce]
+    [announce, t]
   );
 
   const announceTimerStop = useCallback(
@@ -102,29 +104,30 @@ export function useAccessibility(): UseAccessibilityReturn {
       const message = createTimerAnnouncementMessage(
         activityType,
         "stop",
+        t,
         durationSeconds
       );
       announce(message);
     },
-    [announce]
+    [announce, t]
   );
 
   const announceSaveSuccess = useCallback(
     (activityType: string) => {
       if (!shouldAnnounce("save_success")) return;
-      const message = createSaveSuccessMessage(activityType);
+      const message = createSaveSuccessMessage(activityType, t);
       announce(message);
     },
-    [announce]
+    [announce, t]
   );
 
   const announceError = useCallback(
-    (context?: string) => {
+    (errorContext?: string) => {
       if (!shouldAnnounce("error")) return;
-      const message = createErrorMessage(context);
+      const message = createErrorMessage(t, errorContext);
       announce(message);
     },
-    [announce]
+    [announce, t]
   );
 
   const setAccessibilityFocus = useCallback(

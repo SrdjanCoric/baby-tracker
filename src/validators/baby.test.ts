@@ -16,13 +16,13 @@ describe("validateBabyName", () => {
   });
 
   it("returns error for empty name", () => {
-    expect(validateBabyName("")).toBe("Name is required");
-    expect(validateBabyName("   ")).toBe("Name is required");
+    expect(validateBabyName("")).toBe("validation.nameRequired");
+    expect(validateBabyName("   ")).toBe("validation.nameRequired");
   });
 
   it("returns error for name over 100 characters", () => {
     const longName = "A".repeat(101);
-    expect(validateBabyName(longName)).toBe("Name must be less than 100 characters");
+    expect(validateBabyName(longName)).toBe("validation.nameMaxLength");
   });
 
   it("trims whitespace before validation", () => {
@@ -44,12 +44,12 @@ describe("validateBirthDate", () => {
 
   it("returns error for future date", () => {
     const futureDate = new Date(2024, 7, 1);
-    expect(validateBirthDate(futureDate, now)).toBe("Birth date cannot be in the future");
+    expect(validateBirthDate(futureDate, now)).toBe("validation.birthDateFuture");
   });
 
   it("returns error for date more than 5 years ago", () => {
     const oldDate = new Date(2018, 0, 1);
-    expect(validateBirthDate(oldDate, now)).toBe("Birth date seems too far in the past");
+    expect(validateBirthDate(oldDate, now)).toBe("validation.birthDateTooFar");
   });
 
   it("accepts date exactly 5 years ago", () => {

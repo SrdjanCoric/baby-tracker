@@ -21,6 +21,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth, useTheme } from "@/contexts";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
+import { te } from "@/utils/translate-errors";
 import { validateEmail } from "@/validators";
 import { SURFACE, TEXT, ACTION, BORDER, SEMANTIC } from "@/constants/colors";
 
@@ -356,7 +357,7 @@ export default function SignInScreen() {
                     className="text-sm mt-1.5"
                     style={{ color: SEMANTIC.error[isDark ? "dark" : "light"], fontFamily: "Nunito-Regular" }}
                   >
-                    {emailError}
+                    {te(t, emailError)}
                   </Text>
                 )}
               </View>

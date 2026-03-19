@@ -5,10 +5,12 @@
 
 export interface AgeGroup {
   label: string;
+  labelKey: string;
   minAgeDays: number;
   maxAgeDays: number;
   defaultGoalSeconds: number;
   rationale: string;
+  rationaleKey: string;
 }
 
 export type GoalSource = "age_based" | "custom";
@@ -22,52 +24,66 @@ export interface GoalInfo {
 export const AGE_GROUPS: AgeGroup[] = [
   {
     label: "0-2 weeks",
+    labelKey: "ageGroups.tummyTime.0-2weeks",
     minAgeDays: 0,
     maxAgeDays: 14,
-    defaultGoalSeconds: 2 * 60, // 2 min
+    defaultGoalSeconds: 2 * 60,
     rationale: "2 sessions of ~1 min (AAP newborn guidance)",
+    rationaleKey: "ageGroups.rationale.0-2weeks",
   },
   {
     label: "2-4 weeks",
+    labelKey: "ageGroups.tummyTime.2-4weeks",
     minAgeDays: 15,
     maxAgeDays: 28,
-    defaultGoalSeconds: 5 * 60, // 5 min
+    defaultGoalSeconds: 5 * 60,
     rationale: "2-3 sessions of ~2 min",
+    rationaleKey: "ageGroups.rationale.2-4weeks",
   },
   {
     label: "1-2 months",
+    labelKey: "ageGroups.tummyTime.1-2months",
     minAgeDays: 29,
     maxAgeDays: 60,
-    defaultGoalSeconds: 10 * 60, // 10 min
+    defaultGoalSeconds: 10 * 60,
     rationale: "Short sessions building tolerance",
+    rationaleKey: "ageGroups.rationale.1-2months",
   },
   {
     label: "2-3 months",
+    labelKey: "ageGroups.tummyTime.2-3months",
     minAgeDays: 61,
     maxAgeDays: 90,
-    defaultGoalSeconds: 20 * 60, // 20 min
+    defaultGoalSeconds: 20 * 60,
     rationale: "Gradual increase with better head control",
+    rationaleKey: "ageGroups.rationale.2-3months",
   },
   {
     label: "3-4 months",
+    labelKey: "ageGroups.tummyTime.3-4months",
     minAgeDays: 91,
     maxAgeDays: 120,
-    defaultGoalSeconds: 30 * 60, // 30 min
+    defaultGoalSeconds: 30 * 60,
     rationale: "Building toward AAP target",
+    rationaleKey: "ageGroups.rationale.3-4months",
   },
   {
     label: "4-6 months",
+    labelKey: "ageGroups.tummyTime.4-6months",
     minAgeDays: 121,
     maxAgeDays: 180,
-    defaultGoalSeconds: 45 * 60, // 45 min
+    defaultGoalSeconds: 45 * 60,
     rationale: "Approaching AAP/Pathways target",
+    rationaleKey: "ageGroups.rationale.4-6months",
   },
   {
     label: "6+ months",
+    labelKey: "ageGroups.tummyTime.6+months",
     minAgeDays: 181,
     maxAgeDays: Infinity,
-    defaultGoalSeconds: 60 * 60, // 60 min
+    defaultGoalSeconds: 60 * 60,
     rationale: "Consensus target, transitions to floor play",
+    rationaleKey: "ageGroups.rationale.6+months",
   },
 ];
 

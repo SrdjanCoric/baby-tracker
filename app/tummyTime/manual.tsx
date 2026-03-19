@@ -17,6 +17,7 @@ import { useColorScheme } from "nativewind";
 import { useTummyTime, useBaby, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { formatTime as formatTimeUtil } from "@/utils/time";
+import { te } from "@/utils/translate-errors";
 import { validateManualTummyTime } from "@/validators/tummyTime";
 import { ACTIVITY } from "@/constants/colors";
 
@@ -217,7 +218,7 @@ export default function ManualTummyTimeScreen() {
             </Pressable>
           </View>
           {errors.startedAt && (
-            <Text className="text-red-500 text-sm mt-2">{errors.startedAt}</Text>
+            <Text className="text-red-500 text-sm mt-2">{te(t, errors.startedAt)}</Text>
           )}
         </View>
 
@@ -312,7 +313,7 @@ export default function ManualTummyTimeScreen() {
           </View>
           {errors.durationSeconds && (
             <Text className="text-red-500 text-sm mt-2">
-              {errors.durationSeconds}
+              {te(t, errors.durationSeconds)}
             </Text>
           )}
         </View>

@@ -70,8 +70,8 @@ function groupEntriesByDay(
   const now = new Date();
 
   for (const [_dateKey, { entries: dayEntries, date }] of grouped) {
-    const header = formatDayHeader(date, now);
-    const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const header = formatDayHeader(date, now, t);
+    const dateLabel = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
     dayEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
 
