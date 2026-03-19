@@ -12,7 +12,7 @@ import {
   LoadingState,
 } from "@/components";
 import { ActivityFilterTabs, DailySummaryCard, type FilterType } from "@/components/timeline";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHousehold, useTimeFormat, useBaby } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useHealth, useHousehold, useTimeFormat, useBaby, useUnits } from "@/contexts";
 import { formatTime, formatDuration, formatDayHeader } from "@/utils/time";
 import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
@@ -29,7 +29,9 @@ import type { StoredDiaperEntry } from "@/services/diaper-storage";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredGrowthEntry } from "@/services/growth-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
+import type { StoredHealthEntry } from "@/services/health-storage";
 import type { ActivityType } from "@/constants/activities";
+import { formatTemperature, getFeverStatus } from "@/utils/temperature";
 
 interface TimelineEntry {
   id: string;
@@ -107,6 +109,8 @@ export default function TimelineScreen() {
   const { pumpings, isLoading: pumpingsLoading, refreshPumpings } = usePumping();
   const { measurements, isLoading: growthLoading, refreshMeasurements } = useGrowth();
   const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
+  const { healthEntries, isLoading: healthLoading, refreshHealth } = useHealth();
+  const { temperatureUnit, volumeUnit } = useUnits();
   const { members } = useHousehold();
   const { timeFormat } = useTimeFormat();
   const { selectedBaby } = useBaby();
@@ -159,15 +163,16 @@ export default function TimelineScreen() {
           refreshPumpings(),
           refreshMeasurements(),
           refreshTummyTimes(),
+          refreshHealth(),
         ]),
         new Promise((resolve) => setTimeout(resolve, 15000)),
       ]);
     } finally {
       setRefreshing(false);
     }
-  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshMeasurements, refreshTummyTimes]);
+  }, [refreshFeedings, refreshSleeps, refreshDiapers, refreshPumpings, refreshMeasurements, refreshTummyTimes, refreshHealth]);
 
-  const isLoading = feedingsLoading || sleepsLoading || diapersLoading || pumpingsLoading || growthLoading || tummyTimesLoading;
+  const isLoading = feedingsLoading || sleepsLoading || diapersLoading || pumpingsLoading || growthLoading || tummyTimesLoading || healthLoading;
 
   const handleEditEntry = useCallback((activity: TimelineEntry["activity"], id: string) => {
     router.push(`/edit/${activity}?id=${id}`);
@@ -372,8 +377,50 @@ export default function TimelineScreen() {
     };
   }, [t, timeFormat]);
 
+  const healthToTimelineEntry = useCallback((entry: StoredHealthEntry): TimelineEntry => {
+    const date = new Date(entry.loggedAt);
+    const time = formatTime(date, timeFormat);
+
+    let title = "";
+    let subtitle = "";
+
+    switch (entry.type) {
+      case "medication":
+        title = t("health.medication");
+        subtitle = [entry.medicationName, entry.dosageMl ? formatVolume(entry.dosageMl, volumeUnit) : ""].filter(Boolean).join(" \u00B7 ");
+        break;
+      case "temperature":
+        title = t("health.temperature");
+        if (entry.temperatureCelsius) {
+          const tempStr = formatTemperature(entry.temperatureCelsius, temperatureUnit);
+          const status = getFeverStatus(entry.temperatureCelsius);
+          subtitle = `${tempStr} \u00B7 ${t(`health.feverStatus.${status}`)}`;
+        }
+        break;
+      case "vaccination":
+        title = t("health.vaccination");
+        subtitle = entry.vaccineName || "";
+        break;
+      case "symptom":
+        title = t("health.symptomsLabel");
+        if (entry.symptoms && entry.symptoms.length > 0) {
+          subtitle = entry.symptoms.map(s => t(`health.symptom.${s}`)).join(", ");
+        }
+        break;
+    }
+
+    return {
+      id: entry.id,
+      activity: "health",
+      time,
+      title,
+      subtitle,
+      date,
+      loggedBy: entry.loggedBy,
+    };
+  }, [t, timeFormat, temperatureUnit, volumeUnit]);
+
   const timelineEntries = useMemo(() => {
-    // Filter entries based on active filter
     const filterActivity = (activity: ActivityType) => {
       if (activeFilter === "all") return true;
       return activity === activeFilter;
@@ -397,6 +444,9 @@ export default function TimelineScreen() {
     const tummyTimeEntries = filterActivity("tummyTime")
       ? tummyTimes.map(tummyTimeToTimelineEntry)
       : [];
+    const healthTimelineEntries = filterActivity("health")
+      ? healthEntries.map(healthToTimelineEntry)
+      : [];
 
     const allEntries = [
       ...feedingEntries,
@@ -405,6 +455,7 @@ export default function TimelineScreen() {
       ...pumpingEntries,
       ...growthEntries,
       ...tummyTimeEntries,
+      ...healthTimelineEntries,
     ];
     return allEntries
       .map(entry => ({
