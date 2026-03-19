@@ -25,10 +25,10 @@ export function validatePumpingVolume(volumeMl: number | undefined): string | nu
     return null;
   }
   if (volumeMl <= 0) {
-    return "Volume must be positive";
+    return "validation.volumePositive";
   }
   if (volumeMl > 500) {
-    return "Volume seems too large (over 500ml)";
+    return "validation.volumeTooLarge500ml";
   }
   return null;
 }
@@ -38,10 +38,10 @@ export function validatePumpingDuration(durationSeconds: number | undefined): st
     return null;
   }
   if (durationSeconds < 0) {
-    return "Duration cannot be negative";
+    return "validation.durationNegative";
   }
   if (durationSeconds > 3600) {
-    return "Duration seems too long (over 1 hour)";
+    return "validation.durationTooLong1h";
   }
   return null;
 }
@@ -51,14 +51,14 @@ const FUTURE_TIME_TOLERANCE_MS = 10000;
 export function validateStartTimeNotInFuture(startedAt: Date): string | null {
   const now = Date.now();
   if (startedAt.getTime() > now + FUTURE_TIME_TOLERANCE_MS) {
-    return "Start time cannot be in the future";
+    return "validation.startTimeNotInFuture";
   }
   return null;
 }
 
 export function validateStartTime(startedAt: Date | undefined): string | null {
   if (!startedAt) {
-    return "Start time is required";
+    return "validation.startTimeRequired";
   }
   return null;
 }
@@ -68,7 +68,7 @@ export function validateEndTime(startedAt: Date, endedAt: Date | undefined): str
     return null;
   }
   if (endedAt.getTime() < startedAt.getTime()) {
-    return "End time cannot be before start time";
+    return "validation.endTimeBeforeStart";
   }
   return null;
 }
@@ -80,9 +80,9 @@ export function validatePumping(entry: Partial<PumpingEntry>): PumpingValidation
   if (startError) errors.startedAt = startError;
 
   if (!entry.side) {
-    errors.side = "Side is required";
+    errors.side = "validation.sideRequired";
   } else if (!validatePumpingSide(entry.side)) {
-    errors.side = "Invalid side";
+    errors.side = "validation.invalidSide";
   }
 
   if (entry.startedAt && entry.endedAt) {
@@ -104,26 +104,26 @@ export function validatePumping(entry: Partial<PumpingEntry>): PumpingValidation
 
 export function validateManualPumpingDuration(durationSeconds: number | undefined): string | null {
   if (durationSeconds === undefined) {
-    return "Duration is required for manual entry";
+    return "validation.durationRequired";
   }
   if (durationSeconds < 60) {
-    return "Duration must be at least 1 minute";
+    return "validation.durationMinimum1m";
   }
   if (durationSeconds > 3600) {
-    return "Duration seems too long (over 1 hour)";
+    return "validation.durationTooLong1h";
   }
   return null;
 }
 
 export function validateManualPumpingVolume(volumeMl: number | undefined): string | null {
   if (volumeMl === undefined) {
-    return "Volume is required for manual entry";
+    return "validation.volumeRequired";
   }
   if (volumeMl <= 0) {
-    return "Volume must be positive";
+    return "validation.volumePositive";
   }
   if (volumeMl > 500) {
-    return "Volume seems too large (over 500ml)";
+    return "validation.volumeTooLarge500ml";
   }
   return null;
 }
@@ -140,9 +140,9 @@ export function validateManualPumping(entry: Partial<PumpingEntry>): PumpingVali
   }
 
   if (!entry.side) {
-    errors.side = "Side is required";
+    errors.side = "validation.sideRequired";
   } else if (!validatePumpingSide(entry.side)) {
-    errors.side = "Invalid side";
+    errors.side = "validation.invalidSide";
   }
 
   const durationError = validateManualPumpingDuration(entry.durationSeconds);

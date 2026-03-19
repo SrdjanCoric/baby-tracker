@@ -32,7 +32,7 @@ export function validateBreastSide(side: string): side is BreastSide {
 
 export function validateStartTime(startedAt: Date | undefined): string | null {
   if (!startedAt) {
-    return "Start time is required";
+    return "validation.startTimeRequired";
   }
   return null;
 }
@@ -42,7 +42,7 @@ export function validateEndTime(startedAt: Date, endedAt: Date | undefined): str
     return null;
   }
   if (endedAt.getTime() < startedAt.getTime()) {
-    return "End time cannot be before start time";
+    return "validation.endTimeBeforeStart";
   }
   return null;
 }
@@ -52,10 +52,10 @@ export function validateFeedingDuration(durationSeconds: number | undefined): st
     return null;
   }
   if (durationSeconds < 0) {
-    return "Duration cannot be negative";
+    return "validation.durationNegative";
   }
   if (durationSeconds > 7200) {
-    return "Duration seems too long (over 2 hours)";
+    return "validation.durationTooLong2h";
   }
   return null;
 }
@@ -65,10 +65,10 @@ export function validateBottleAmount(amountMl: number | undefined, type: Feeding
     return null;
   }
   if (amountMl === undefined || amountMl <= 0) {
-    return "Amount is required for bottle feeding";
+    return "validation.amountRequiredBottle";
   }
   if (amountMl > 500) {
-    return "Amount seems too large (over 500ml)";
+    return "validation.amountTooLarge500ml";
   }
   return null;
 }
@@ -78,10 +78,10 @@ export function validateBottleContentType(contentType: BottleContentType | undef
     return null;
   }
   if (!contentType) {
-    return "Content type is required for bottle feeding";
+    return "validation.contentTypeRequired";
   }
   if (!["formula", "breastMilk"].includes(contentType)) {
-    return "Invalid content type";
+    return "validation.invalidContentType";
   }
   return null;
 }
@@ -90,7 +90,7 @@ export function validateBreastfeeding(entry: Partial<FeedingEntry>): FeedingVali
   const errors: Record<string, string> = {};
 
   if (entry.type !== "breast") {
-    errors.type = "Invalid feeding type for breastfeeding";
+    errors.type = "validation.invalidFeedingTypeBreast";
   }
 
   const startError = validateStartTime(entry.startedAt);
@@ -105,7 +105,7 @@ export function validateBreastfeeding(entry: Partial<FeedingEntry>): FeedingVali
   if (durationError) errors.durationSeconds = durationError;
 
   if (entry.side && !validateBreastSide(entry.side)) {
-    errors.side = "Invalid breast side";
+    errors.side = "validation.invalidBreastSide";
   }
 
   return {
@@ -118,7 +118,7 @@ export function validateBottleFeeding(entry: Partial<FeedingEntry>): FeedingVali
   const errors: Record<string, string> = {};
 
   if (entry.type !== "bottle") {
-    errors.type = "Invalid feeding type for bottle feeding";
+    errors.type = "validation.invalidFeedingTypeBottle";
   }
 
   const startError = validateStartTime(entry.startedAt);
@@ -146,20 +146,20 @@ const FUTURE_TIME_TOLERANCE_MS = 10000;
 export function validateStartTimeNotInFuture(startedAt: Date): string | null {
   const now = Date.now();
   if (startedAt.getTime() > now + FUTURE_TIME_TOLERANCE_MS) {
-    return "Start time cannot be in the future";
+    return "validation.startTimeNotInFuture";
   }
   return null;
 }
 
 export function validateManualFeedingDuration(durationSeconds: number | undefined): string | null {
   if (durationSeconds === undefined) {
-    return "Duration is required for manual entry";
+    return "validation.durationRequired";
   }
   if (durationSeconds < 60) {
-    return "Duration must be at least 1 minute";
+    return "validation.durationMinimum1m";
   }
   if (durationSeconds > 7200) {
-    return "Duration seems too long (over 2 hours)";
+    return "validation.durationTooLong2h";
   }
   return null;
 }
@@ -168,7 +168,7 @@ export function validateManualBreastfeeding(entry: Partial<FeedingEntry>): Feedi
   const errors: Record<string, string> = {};
 
   if (entry.type !== "breast") {
-    errors.type = "Invalid feeding type for breastfeeding";
+    errors.type = "validation.invalidFeedingTypeBreast";
   }
 
   const startError = validateStartTime(entry.startedAt);
@@ -183,9 +183,9 @@ export function validateManualBreastfeeding(entry: Partial<FeedingEntry>): Feedi
   if (durationError) errors.durationSeconds = durationError;
 
   if (!entry.side) {
-    errors.side = "Side is required for breastfeeding";
+    errors.side = "validation.sideRequiredBreast";
   } else if (!validateBreastSide(entry.side)) {
-    errors.side = "Invalid breast side";
+    errors.side = "validation.invalidBreastSide";
   }
 
   return {
@@ -198,7 +198,7 @@ export function validateManualBottleFeeding(entry: Partial<FeedingEntry>): Feedi
   const errors: Record<string, string> = {};
 
   if (entry.type !== "bottle") {
-    errors.type = "Invalid feeding type for bottle feeding";
+    errors.type = "validation.invalidFeedingTypeBottle";
   }
 
   const startError = validateStartTime(entry.startedAt);
@@ -223,10 +223,10 @@ export function validateManualBottleFeeding(entry: Partial<FeedingEntry>): Feedi
 
 export function validateFoodType(foodType: string | undefined): string | null {
   if (!foodType || foodType.trim() === "") {
-    return "Food type is required";
+    return "validation.foodTypeRequired";
   }
   if (foodType.length > 100) {
-    return "Food type is too long (max 100 characters)";
+    return "validation.foodTypeTooLong";
   }
   return null;
 }
@@ -236,7 +236,7 @@ export function validateSolidAmount(amount: SolidAmount | undefined): string | n
     return null;
   }
   if (!SOLID_AMOUNTS.includes(amount)) {
-    return "Invalid amount";
+    return "validation.invalidAmount";
   }
   return null;
 }
@@ -246,7 +246,7 @@ export function validateSolidReaction(reaction: SolidReaction | undefined): stri
     return null;
   }
   if (!SOLID_REACTIONS.includes(reaction)) {
-    return "Invalid reaction";
+    return "validation.invalidReaction";
   }
   return null;
 }
@@ -255,7 +255,7 @@ export function validateSolidFeeding(entry: Partial<FeedingEntry>): FeedingValid
   const errors: Record<string, string> = {};
 
   if (entry.type !== "solid") {
-    errors.type = "Invalid feeding type for solid food";
+    errors.type = "validation.invalidFeedingTypeSolid";
   }
 
   const startError = validateStartTime(entry.startedAt);

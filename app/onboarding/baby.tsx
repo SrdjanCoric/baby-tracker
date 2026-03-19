@@ -213,7 +213,7 @@ export default function BabySetupScreen() {
                 </Text>
               </Pressable>
               {errors.birthDate && (
-                <Text className="text-red-500 text-sm mt-1">{errors.birthDate}</Text>
+                <Text className="text-red-500 text-sm mt-1">{t(errors.birthDate)}</Text>
               )}
             </View>
 

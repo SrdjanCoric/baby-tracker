@@ -31,49 +31,49 @@ describe("validateEmail", () => {
   it("should return invalid for empty string", () => {
     const result = validateEmail("");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Email is required");
+    expect(result.error).toBe("validation.emailRequired");
   });
 
   it("should return invalid for whitespace only", () => {
     const result = validateEmail("   ");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Email is required");
+    expect(result.error).toBe("validation.emailRequired");
   });
 
   it("should return invalid for missing @ symbol", () => {
     const result = validateEmail("testexample.com");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Invalid email format");
+    expect(result.error).toBe("validation.emailInvalid");
   });
 
   it("should return invalid for missing domain", () => {
     const result = validateEmail("test@");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Invalid email format");
+    expect(result.error).toBe("validation.emailInvalid");
   });
 
   it("should return invalid for missing local part", () => {
     const result = validateEmail("@example.com");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Invalid email format");
+    expect(result.error).toBe("validation.emailInvalid");
   });
 
   it("should return invalid for missing TLD", () => {
     const result = validateEmail("test@example");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Invalid email format");
+    expect(result.error).toBe("validation.emailInvalid");
   });
 
   it("should return invalid for null", () => {
     const result = validateEmail(null as unknown as string);
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Email is required");
+    expect(result.error).toBe("validation.emailRequired");
   });
 
   it("should return invalid for undefined", () => {
     const result = validateEmail(undefined as unknown as string);
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Email is required");
+    expect(result.error).toBe("validation.emailRequired");
   });
 
   it("should accept email with subdomain", () => {
@@ -101,43 +101,43 @@ describe("validatePassword", () => {
   it("should return invalid for password with 7 characters", () => {
     const result = validatePassword("Pass12");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Password must be at least 8 characters");
+    expect(result.error).toBe("validation.passwordMinLength");
   });
 
   it("should return invalid for empty password", () => {
     const result = validatePassword("");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Password is required");
+    expect(result.error).toBe("validation.passwordRequired");
   });
 
   it("should return invalid for null", () => {
     const result = validatePassword(null as unknown as string);
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Password is required");
+    expect(result.error).toBe("validation.passwordRequired");
   });
 
   it("should return invalid for undefined", () => {
     const result = validatePassword(undefined as unknown as string);
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Password is required");
+    expect(result.error).toBe("validation.passwordRequired");
   });
 
   it("should return invalid for password without uppercase", () => {
     const result = validatePassword("password1");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Password must contain at least one uppercase letter");
+    expect(result.error).toBe("validation.passwordUppercase");
   });
 
   it("should return invalid for password without lowercase", () => {
     const result = validatePassword("PASSWORD1");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Password must contain at least one lowercase letter");
+    expect(result.error).toBe("validation.passwordLowercase");
   });
 
   it("should return invalid for password without number", () => {
     const result = validatePassword("Password");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Password must contain at least one number");
+    expect(result.error).toBe("validation.passwordNumber");
   });
 
   it("should accept very long passwords with complexity", () => {
@@ -156,13 +156,13 @@ describe("validatePasswordConfirmation", () => {
   it("should return invalid when passwords do not match", () => {
     const result = validatePasswordConfirmation("Password123", "Password456");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Passwords do not match");
+    expect(result.error).toBe("validation.passwordsMismatch");
   });
 
   it("should return invalid for empty confirmation", () => {
     const result = validatePasswordConfirmation("Password123", "");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Please confirm your password");
+    expect(result.error).toBe("validation.confirmPasswordRequired");
   });
 
   it("should return invalid for null confirmation", () => {
@@ -171,13 +171,13 @@ describe("validatePasswordConfirmation", () => {
       null as unknown as string
     );
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Please confirm your password");
+    expect(result.error).toBe("validation.confirmPasswordRequired");
   });
 
   it("should be case sensitive", () => {
     const result = validatePasswordConfirmation("Password123", "password123");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Passwords do not match");
+    expect(result.error).toBe("validation.passwordsMismatch");
   });
 });
 
@@ -195,26 +195,26 @@ describe("validateDisplayName", () => {
   it("should return invalid for single character", () => {
     const result = validateDisplayName("J");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Display name must be at least 2 characters");
+    expect(result.error).toBe("validation.displayNameMinLength");
   });
 
   it("should return invalid for empty string", () => {
     const result = validateDisplayName("");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Display name is required");
+    expect(result.error).toBe("validation.displayNameRequired");
   });
 
   it("should return invalid for whitespace only", () => {
     const result = validateDisplayName("   ");
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Display name is required");
+    expect(result.error).toBe("validation.displayNameRequired");
   });
 
   it("should return invalid for name over 50 characters", () => {
     const longName = "a".repeat(51);
     const result = validateDisplayName(longName);
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Display name must be less than 50 characters");
+    expect(result.error).toBe("validation.displayNameMaxLength");
   });
 
   it("should return valid for exactly 50 characters", () => {
@@ -226,7 +226,7 @@ describe("validateDisplayName", () => {
   it("should return invalid for null", () => {
     const result = validateDisplayName(null as unknown as string);
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe("Display name is required");
+    expect(result.error).toBe("validation.displayNameRequired");
   });
 });
 
@@ -260,11 +260,11 @@ describe("validateSignUp", () => {
       displayName: "J",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.email).toBe("Email is required");
-    expect(result.errors.password).toBe("Password must be at least 8 characters");
-    expect(result.errors.confirmPassword).toBe("Passwords do not match");
+    expect(result.errors.email).toBe("validation.emailRequired");
+    expect(result.errors.password).toBe("validation.passwordMinLength");
+    expect(result.errors.confirmPassword).toBe("validation.passwordsMismatch");
     expect(result.errors.displayName).toBe(
-      "Display name must be at least 2 characters"
+      "validation.displayNameMinLength"
     );
   });
 
@@ -275,7 +275,7 @@ describe("validateSignUp", () => {
       confirmPassword: "Password123",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.email).toBe("Invalid email format");
+    expect(result.errors.email).toBe("validation.emailInvalid");
   });
 
   it("should return password error for short password", () => {
@@ -285,7 +285,7 @@ describe("validateSignUp", () => {
       confirmPassword: "short",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.password).toBe("Password must be at least 8 characters");
+    expect(result.errors.password).toBe("validation.passwordMinLength");
   });
 
   it("should return confirmation error for mismatched passwords", () => {
@@ -295,7 +295,7 @@ describe("validateSignUp", () => {
       confirmPassword: "Password456",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.confirmPassword).toBe("Passwords do not match");
+    expect(result.errors.confirmPassword).toBe("validation.passwordsMismatch");
   });
 
   it("should not validate display name if not provided", () => {
@@ -315,7 +315,7 @@ describe("validateSignUp", () => {
       confirmPassword: "password",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.password).toBe("Password must contain at least one uppercase letter");
+    expect(result.errors.password).toBe("validation.passwordUppercase");
   });
 });
 
@@ -324,19 +324,19 @@ describe("Security Payloads", () => {
     it("should reject SQL injection with OR", () => {
       const result = validateEmail("' OR '1'='1");
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe("Invalid email format");
+      expect(result.error).toBe("validation.emailInvalid");
     });
 
     it("should reject SQL injection with UNION", () => {
       const result = validateEmail("admin@test.com' UNION SELECT * FROM users--");
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe("Invalid email format");
+      expect(result.error).toBe("validation.emailInvalid");
     });
 
     it("should reject SQL injection with DROP", () => {
       const result = validateEmail("test'; DROP TABLE users;--@example.com");
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe("Invalid email format");
+      expect(result.error).toBe("validation.emailInvalid");
     });
   });
 
@@ -351,13 +351,13 @@ describe("Security Payloads", () => {
     it("should reject XSS script tag in email", () => {
       const result = validateEmail("<script>alert('xss')</script>@test.com");
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe("Invalid email format");
+      expect(result.error).toBe("validation.emailInvalid");
     });
 
     it("should reject XSS with event handler", () => {
       const result = validateEmail("test@<img onerror=alert('xss')>.com");
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe("Invalid email format");
+      expect(result.error).toBe("validation.emailInvalid");
     });
   });
 
@@ -389,7 +389,7 @@ describe("Security Payloads", () => {
     it("should reject homograph characters in email", () => {
       const result = validateEmail("аdmin@example.com");
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe("Invalid email format");
+      expect(result.error).toBe("validation.emailInvalid");
     });
   });
 });
@@ -411,7 +411,7 @@ describe("validateSignIn", () => {
       password: "Password123",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.email).toBe("Invalid email format");
+    expect(result.errors.email).toBe("validation.emailInvalid");
   });
 
   it("should return password error for empty password", () => {
@@ -420,7 +420,7 @@ describe("validateSignIn", () => {
       password: "",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.password).toBe("Password is required");
+    expect(result.errors.password).toBe("validation.passwordRequired");
   });
 
   it("should return both errors for invalid email and empty password", () => {
@@ -429,8 +429,8 @@ describe("validateSignIn", () => {
       password: "",
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.email).toBe("Email is required");
-    expect(result.errors.password).toBe("Password is required");
+    expect(result.errors.email).toBe("validation.emailRequired");
+    expect(result.errors.password).toBe("validation.passwordRequired");
   });
 
   it("should not validate password complexity for sign in", () => {

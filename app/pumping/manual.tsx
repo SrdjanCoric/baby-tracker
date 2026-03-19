@@ -295,7 +295,7 @@ export default function ManualPumpingScreen() {
             />
           </View>
           {errors.side && (
-            <Text className="text-red-500 text-sm mt-2">{errors.side}</Text>
+            <Text className="text-red-500 text-sm mt-2">{t(errors.side)}</Text>
           )}
         </View>
 
@@ -331,7 +331,7 @@ export default function ManualPumpingScreen() {
             </Pressable>
           </View>
           {errors.startedAt && (
-            <Text className="text-red-500 text-sm mt-2">{errors.startedAt}</Text>
+            <Text className="text-red-500 text-sm mt-2">{t(errors.startedAt)}</Text>
           )}
         </View>
 
@@ -427,7 +427,7 @@ export default function ManualPumpingScreen() {
           </View>
           {errors.durationSeconds && (
             <Text className="text-red-500 text-sm mt-2">
-              {errors.durationSeconds}
+              {t(errors.durationSeconds)}
             </Text>
           )}
         </View>
@@ -484,7 +484,7 @@ export default function ManualPumpingScreen() {
             ))}
           </View>
           {errors.volumeMl && (
-            <Text className="text-red-500 text-sm mt-2">{errors.volumeMl}</Text>
+            <Text className="text-red-500 text-sm mt-2">{t(errors.volumeMl)}</Text>
           )}
         </View>
 

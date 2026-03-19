@@ -35,8 +35,8 @@ describe("validateStoolColor", () => {
   });
 
   it("returns error for invalid stool color", () => {
-    expect(validateStoolColor("purple" as StoolColor)).toBe("Invalid stool color");
-    expect(validateStoolColor("" as StoolColor)).toBe("Invalid stool color");
+    expect(validateStoolColor("purple" as StoolColor)).toBe("validation.invalidStoolColor");
+    expect(validateStoolColor("" as StoolColor)).toBe("validation.invalidStoolColor");
   });
 
   it("returns null for undefined stool color", () => {
@@ -62,7 +62,7 @@ describe("validateChangeTimeNotInFuture", () => {
 
   it("returns error for future time beyond tolerance", () => {
     const futureTime = new Date(Date.now() + 60000);
-    expect(validateChangeTimeNotInFuture(futureTime)).toBe("Change time cannot be in the future");
+    expect(validateChangeTimeNotInFuture(futureTime)).toBe("validation.changeTimeNotInFuture");
   });
 });
 
@@ -106,7 +106,7 @@ describe("validateDiaperEntry", () => {
       changedAt: new Date(),
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.type).toBe("Invalid diaper type");
+    expect(result.errors.type).toBe("validation.invalidDiaperType");
   });
 
   it("returns error for missing diaper type", () => {
@@ -115,7 +115,7 @@ describe("validateDiaperEntry", () => {
       changedAt: new Date(),
     } as { babyId: string; type: DiaperType; changedAt: Date });
     expect(result.isValid).toBe(false);
-    expect(result.errors.type).toBe("Diaper type is required");
+    expect(result.errors.type).toBe("validation.diaperTypeRequired");
   });
 
   it("returns error when stool color is provided for wet diaper", () => {
@@ -126,7 +126,7 @@ describe("validateDiaperEntry", () => {
       changedAt: new Date(),
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.stoolColor).toBe("Stool color is only applicable for dirty or mixed diapers");
+    expect(result.errors.stoolColor).toBe("validation.stoolColorNotApplicable");
   });
 
   it("returns error for invalid stool color on dirty diaper", () => {
@@ -137,7 +137,7 @@ describe("validateDiaperEntry", () => {
       changedAt: new Date(),
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.stoolColor).toBe("Invalid stool color");
+    expect(result.errors.stoolColor).toBe("validation.invalidStoolColor");
   });
 
   it("returns error for missing changedAt", () => {
@@ -146,7 +146,7 @@ describe("validateDiaperEntry", () => {
       type: "wet",
     } as { babyId: string; type: DiaperType; changedAt: Date });
     expect(result.isValid).toBe(false);
-    expect(result.errors.changedAt).toBe("Change time is required");
+    expect(result.errors.changedAt).toBe("validation.changeTimeRequired");
   });
 
   it("returns valid for dirty diaper without stool color (optional)", () => {
@@ -191,7 +191,7 @@ describe("validateManualDiaper", () => {
       changedAt: futureTime,
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.changedAt).toBe("Change time cannot be in the future");
+    expect(result.errors.changedAt).toBe("validation.changeTimeNotInFuture");
   });
 
   it("returns error for invalid diaper type in manual entry", () => {
@@ -201,7 +201,7 @@ describe("validateManualDiaper", () => {
       changedAt: new Date(Date.now() - 3600000),
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.type).toBe("Invalid diaper type");
+    expect(result.errors.type).toBe("validation.invalidDiaperType");
   });
 
   it("returns multiple errors for multiple issues", () => {

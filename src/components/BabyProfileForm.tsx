@@ -201,7 +201,7 @@ function BabyProfileForm({
             const error = validateBabyName(name);
             setErrors((prev) => ({ ...prev, name: error ?? "" }));
           }}
-          error={touched.name ? errors.name : undefined}
+          error={touched.name ? (errors.name ? t(errors.name) : undefined) : undefined}
           autoCapitalize="words"
           autoCorrect={false}
           returnKeyType="done"
@@ -256,7 +256,7 @@ function BabyProfileForm({
         </Pressable>
 
         {touched.birthDate && errors.birthDate && (
-          <Text className="mt-1.5 text-sm text-red-600">{errors.birthDate}</Text>
+          <Text className="mt-1.5 text-sm text-red-600">{t(errors.birthDate)}</Text>
         )}
 
         {showDatePicker && (

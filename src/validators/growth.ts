@@ -20,13 +20,13 @@ export function validateWeightKg(weight: number | undefined): string | null {
     return null;
   }
   if (weight <= 0) {
-    return "Weight must be positive";
+    return "validation.weightPositive";
   }
   if (weight < 0.5) {
-    return "Weight seems too low (under 0.5 kg)";
+    return "validation.weightTooLow";
   }
   if (weight > 30) {
-    return "Weight seems too high (over 30 kg)";
+    return "validation.weightTooHigh";
   }
   return null;
 }
@@ -36,13 +36,13 @@ export function validateHeightCm(height: number | undefined): string | null {
     return null;
   }
   if (height <= 0) {
-    return "Height must be positive";
+    return "validation.heightPositive";
   }
   if (height < 20) {
-    return "Height seems too low (under 20 cm)";
+    return "validation.heightTooLow";
   }
   if (height > 150) {
-    return "Height seems too high (over 150 cm)";
+    return "validation.heightTooHigh";
   }
   return null;
 }
@@ -52,20 +52,20 @@ export function validateHeadCircumferenceCm(circumference: number | undefined): 
     return null;
   }
   if (circumference <= 0) {
-    return "Head circumference must be positive";
+    return "validation.headCircumferencePositive";
   }
   if (circumference < 20) {
-    return "Head circumference seems too low (under 20 cm)";
+    return "validation.headCircumferenceTooLow";
   }
   if (circumference > 60) {
-    return "Head circumference seems too high (over 60 cm)";
+    return "validation.headCircumferenceTooHigh";
   }
   return null;
 }
 
 export function validateMeasurementDate(date: Date | undefined): string | null {
   if (!date) {
-    return "Measurement date is required";
+    return "validation.measurementDateRequired";
   }
   return null;
 }
@@ -73,7 +73,7 @@ export function validateMeasurementDate(date: Date | undefined): string | null {
 export function validateMeasurementDateNotInFuture(date: Date): string | null {
   const now = Date.now();
   if (date.getTime() > now + FUTURE_TIME_TOLERANCE_MS) {
-    return "Measurement date cannot be in the future";
+    return "validation.measurementDateNotInFuture";
   }
   return null;
 }
@@ -84,7 +84,7 @@ export function validateAtLeastOneMeasurement(
   headCircumference: number | undefined
 ): string | null {
   if (weight === undefined && height === undefined && headCircumference === undefined) {
-    return "At least one measurement is required";
+    return "validation.atLeastOneMeasurement";
   }
   return null;
 }
