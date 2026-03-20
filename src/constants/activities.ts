@@ -27,17 +27,34 @@ export const SYMPTOM_OPTIONS = [
   "lethargic",
   "wont_eat",
   "rash",
+  "cough",
+  "congestion",
+  "diarrhea",
+  "ear_pulling",
+  "teething",
+  "excessive_crying",
+  "eye_discharge",
+  "skin_irritation",
 ] as const;
 
 export type SymptomType = typeof SYMPTOM_OPTIONS[number];
 
 export const MEASUREMENT_METHODS: MeasurementMethod[] = ["forehead", "ear", "rectal", "armpit"];
 
-export const COMMON_MEDICATION_KEYS = ["tylenol", "ibuprofen", "vitamin_d"] as const;
+export const COMMON_MEDICATION_KEYS = ["tylenol", "ibuprofen", "vitamin_d", "amoxicillin", "gripe_water", "simethicone", "probiotics", "iron_supplement", "multivitamin", "fenistil", "cetirizine", "saline_drops", "pedialyte", "nystatin"] as const;
 export type MedicationKey = typeof COMMON_MEDICATION_KEYS[number];
 
-export const COMMON_VACCINE_KEYS = ["dtap", "hexavalent", "ipv", "hep_b", "mmr", "rotavirus", "pcv", "hib", "varicella", "flu", "covid"] as const;
+export const COMMON_VACCINE_KEYS = ["dtap", "hexavalent", "ipv", "hep_b", "mmr", "rotavirus", "pcv", "hib", "varicella", "flu", "hep_a", "bcg", "tdap"] as const;
 export type VaccineKey = typeof COMMON_VACCINE_KEYS[number];
+
+export type DosageUnit = "ml" | "mg" | "drops" | "tsp";
+export const DOSAGE_UNITS: DosageUnit[] = ["ml", "mg", "drops", "tsp"];
+export const DOSAGE_QUICK_VALUES: Record<DosageUnit, number[]> = {
+  ml: [2.5, 5, 7.5, 10],
+  mg: [50, 100, 200, 400],
+  drops: [1, 2, 5, 10],
+  tsp: [0.5, 1, 1.5, 2],
+};
 
 export const SOLID_AMOUNTS: SolidAmount[] = ["aLittle", "some", "aLot"];
 export const SOLID_REACTIONS: SolidReaction[] = ["loved", "meh", "refused"];

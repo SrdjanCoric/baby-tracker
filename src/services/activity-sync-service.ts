@@ -1436,8 +1436,9 @@ export async function createHealthInDatabase(
     loggedAt: input.loggedAt.toISOString(),
     notes: input.notes,
     medicationName: input.medicationName,
-    dosageMl: input.dosageMl,
-    reminderIntervalHours: input.reminderIntervalHours,
+    dosageAmount: input.dosageAmount,
+    dosageUnit: input.dosageUnit,
+    doseNumber: input.doseNumber,
     temperatureCelsius: input.temperatureCelsius,
     measurementMethod: input.measurementMethod,
     vaccineName: input.vaccineName,
@@ -1460,8 +1461,9 @@ export async function createHealthInDatabase(
       logged_at: input.loggedAt.toISOString(),
       notes: input.notes,
       medication_name: input.medicationName,
-      dosage_ml: input.dosageMl,
-      reminder_interval_hours: input.reminderIntervalHours,
+      dosage_amount: input.dosageAmount,
+      dosage_unit: input.dosageUnit,
+      dose_number: input.doseNumber,
       temperature_celsius: input.temperatureCelsius,
       measurement_method: input.measurementMethod,
       vaccine_name: input.vaccineName,
@@ -1482,30 +1484,59 @@ export async function updateHealthInDatabase(
 ): Promise<StoredHealthEntry | null> {
   const now = new Date().toISOString();
 
+  const fieldMap: Record<string, string> = {
+    type: "type",
+    notes: "notes",
+    medicationName: "medication_name",
+    dosageAmount: "dosage_amount",
+    dosageUnit: "dosage_unit",
+    doseNumber: "dose_number",
+    temperatureCelsius: "temperature_celsius",
+    measurementMethod: "measurement_method",
+    vaccineName: "vaccine_name",
+    symptoms: "symptoms",
+  };
+
   const updateData: Record<string, unknown> = {};
-  if (input.type !== undefined) updateData.type = input.type;
-  if (input.loggedAt !== undefined) updateData.logged_at = input.loggedAt.toISOString();
-  if (input.notes !== undefined) updateData.notes = input.notes;
-  if (input.medicationName !== undefined) updateData.medication_name = input.medicationName;
-  if (input.dosageMl !== undefined) updateData.dosage_ml = input.dosageMl;
-  if (input.reminderIntervalHours !== undefined) updateData.reminder_interval_hours = input.reminderIntervalHours;
-  if (input.temperatureCelsius !== undefined) updateData.temperature_celsius = input.temperatureCelsius;
-  if (input.measurementMethod !== undefined) updateData.measurement_method = input.measurementMethod;
-  if (input.vaccineName !== undefined) updateData.vaccine_name = input.vaccineName;
-  if (input.symptoms !== undefined) updateData.symptoms = input.symptoms;
+  if (input.loggedAt !== undefined) updateData.logged_at = input.loggedAt?.toISOString() ?? null;
+
+  for (const [jsField, dbField] of Object.entries(fieldMap)) {
+    const value = (input as Record<string, unknown>)[jsField];
+    if (value !== undefined) {
+      updateData[dbField] = value;
+    }
+  }
 
   let updatedEntry: StoredHealthEntry | null = null;
 
   await updateLocalHealth(babyId, (entries) =>
     entries.map((h) => {
       if (h.id === healthId) {
-        updatedEntry = {
+        const updated: StoredHealthEntry = {
           ...h,
-          ...input,
+          type: input.type ?? h.type,
           loggedAt: input.loggedAt?.toISOString() ?? h.loggedAt,
           updatedAt: now,
         };
-        return updatedEntry;
+
+        const nullableFields = [
+          "notes", "medicationName", "dosageAmount", "dosageUnit",
+          "doseNumber", "temperatureCelsius", "measurementMethod",
+          "vaccineName", "symptoms",
+        ] as const;
+
+        for (const field of nullableFields) {
+          if ((input as unknown as Record<string, unknown>)[field] !== undefined) {
+            if ((input as unknown as Record<string, unknown>)[field] === null) {
+              delete (updated as unknown as Record<string, unknown>)[field];
+            } else {
+              (updated as unknown as Record<string, unknown>)[field] = (input as unknown as Record<string, unknown>)[field];
+            }
+          }
+        }
+
+        updatedEntry = updated;
+        return updated;
       }
       return h;
     })
@@ -1544,8 +1575,9 @@ function transformHealthFromDb(data: Record<string, unknown>): StoredHealthEntry
     loggedAt: data.logged_at as string,
     notes: data.notes as string | undefined,
     medicationName: data.medication_name as string | undefined,
-    dosageMl: data.dosage_ml as number | undefined,
-    reminderIntervalHours: data.reminder_interval_hours as number | undefined,
+    dosageAmount: data.dosage_amount as number | undefined,
+    dosageUnit: data.dosage_unit as StoredHealthEntry["dosageUnit"],
+    doseNumber: data.dose_number as number | undefined,
     temperatureCelsius: data.temperature_celsius as number | undefined,
     measurementMethod: data.measurement_method as StoredHealthEntry["measurementMethod"],
     vaccineName: data.vaccine_name as string | undefined,

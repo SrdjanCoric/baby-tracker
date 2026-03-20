@@ -15,7 +15,15 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
-import type { HealthType, MeasurementMethod, SymptomType } from "@/constants/activities";
+import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/constants/activities";
+import { CDC_VACCINE_SCHEDULE, getNextDoseNumber } from "@/constants/vaccine-schedule";
+import { useTranslation } from "react-i18next";
+
+export interface CompletedVaccination {
+  vaccineName: string;
+  doseNumber: number;
+  loggedAt: string;
+}
 
 export interface HealthState {
   healthEntries: StoredHealthEntry[];
@@ -90,6 +98,7 @@ interface HealthContextValue extends HealthState {
   refreshHealth: () => Promise<void>;
   getLastHealth: () => StoredHealthEntry | null;
   getTodaysCount: () => number;
+  getCompletedVaccinations: () => CompletedVaccination[];
 }
 
 const HealthContext = createContext<HealthContextValue | null>(null);
@@ -99,6 +108,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('health_entries', (change: RemoteChange) => {
@@ -238,6 +248,84 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     }).length;
   }, [state.healthEntries]);
 
+  const getCompletedVaccinations = useCallback((): CompletedVaccination[] => {
+    const resolveVaccineKey = (name: string): string => {
+      const direct = CDC_VACCINE_SCHEDULE.find(s => s.key === name);
+      if (direct) return name;
+      const byLabel = CDC_VACCINE_SCHEDULE.find(s =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        t(`health.commonVaccine.${s.key}` as any) === name
+      );
+      return byLabel ? byLabel.key : name;
+    };
+
+    const vaccinationEntries = state.healthEntries
+      .filter(h => h.type === 'vaccination' && h.vaccineName)
+      .sort((a, b) => new Date(a.loggedAt).getTime() - new Date(b.loggedAt).getTime());
+
+    const directEntries: CompletedVaccination[] = [];
+    const assignedByVaccine: Record<string, number[]> = {};
+
+    for (const h of vaccinationEntries) {
+      const key = resolveVaccineKey(h.vaccineName!);
+      if (!assignedByVaccine[key]) assignedByVaccine[key] = [];
+
+      let dose = h.doseNumber;
+      if (!dose) {
+        const schedule = CDC_VACCINE_SCHEDULE.find(s => s.key === key);
+        if (schedule) {
+          dose = getNextDoseNumber(key, assignedByVaccine[key].map(d => ({ vaccineName: key, doseNumber: d })));
+        } else {
+          dose = assignedByVaccine[key].length + 1;
+        }
+      }
+
+      assignedByVaccine[key].push(dose);
+      directEntries.push({
+        vaccineName: key,
+        doseNumber: dose,
+        loggedAt: h.loggedAt,
+      });
+    }
+
+    const expanded: CompletedVaccination[] = [...directEntries];
+
+    for (const entry of directEntries) {
+      const scheduleEntry = CDC_VACCINE_SCHEDULE.find(s => s.key === entry.vaccineName);
+      if (!scheduleEntry?.isCombo || !scheduleEntry.coversVaccines) continue;
+
+      for (const coveredVaccine of scheduleEntry.coversVaccines) {
+        const coveredSchedule = CDC_VACCINE_SCHEDULE.find(s => s.key === coveredVaccine);
+        const existingDoses = expanded
+          .filter(e => e.vaccineName === coveredVaccine)
+          .map(e => e.doseNumber);
+
+        let mappedDoseNumber = entry.doseNumber;
+        if (coveredSchedule) {
+          for (let d = 1; d <= coveredSchedule.totalDoses; d++) {
+            if (!existingDoses.includes(d)) {
+              mappedDoseNumber = d;
+              break;
+            }
+          }
+        }
+
+        const alreadyExists = expanded.some(
+          e => e.vaccineName === coveredVaccine && e.doseNumber === mappedDoseNumber
+        );
+        if (!alreadyExists) {
+          expanded.push({
+            vaccineName: coveredVaccine,
+            doseNumber: mappedDoseNumber,
+            loggedAt: entry.loggedAt,
+          });
+        }
+      }
+    }
+
+    return expanded.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+  }, [state.healthEntries, t]);
+
   const value: HealthContextValue = useMemo(() => ({
     ...state,
     addHealth,
@@ -246,7 +334,8 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     refreshHealth: loadHealth,
     getLastHealth,
     getTodaysCount,
-  }), [state, addHealth, updateHealth, deleteHealth, loadHealth, getLastHealth, getTodaysCount]);
+    getCompletedVaccinations,
+  }), [state, addHealth, updateHealth, deleteHealth, loadHealth, getLastHealth, getTodaysCount, getCompletedVaccinations]);
 
   return <HealthContext.Provider value={value}>{children}</HealthContext.Provider>;
 }
@@ -266,8 +355,9 @@ function transformHealthFromRemote(data: Record<string, unknown>): StoredHealthE
     type: data.type as HealthType,
     loggedAt: data.logged_at as string,
     medicationName: data.medication_name as string | undefined,
-    dosageMl: data.dosage_ml as number | undefined,
-    reminderIntervalHours: data.reminder_interval_hours as number | undefined,
+    dosageAmount: data.dosage_amount as number | undefined,
+    dosageUnit: data.dosage_unit as DosageUnit | undefined,
+    doseNumber: data.dose_number as number | undefined,
     temperatureCelsius: data.temperature_celsius as number | undefined,
     measurementMethod: data.measurement_method as MeasurementMethod | undefined,
     vaccineName: data.vaccine_name as string | undefined,

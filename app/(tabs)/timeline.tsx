@@ -32,6 +32,7 @@ import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import type { StoredHealthEntry } from "@/services/health-storage";
 import type { ActivityType } from "@/constants/activities";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
+import { getHealthDisplayName } from "@/utils/health-display";
 
 interface TimelineEntry {
   id: string;
@@ -387,19 +388,22 @@ export default function TimelineScreen() {
     switch (entry.type) {
       case "medication":
         title = t("health.medication");
-        subtitle = [entry.medicationName, entry.dosageMl ? formatVolume(entry.dosageMl, volumeUnit) : ""].filter(Boolean).join(" \u00B7 ");
+        const doseAmt = entry.dosageAmount || 0;
+        const unitLabels = { ml: t("health.unitMl"), mg: t("health.unitMg"), drops: t("health.unitDrops", { count: doseAmt }), tsp: t("health.unitTsp") } as const;
+        const dosageStr = entry.dosageAmount ? `${entry.dosageAmount} ${unitLabels[entry.dosageUnit || "ml"] || t("health.unitMl")}` : "";
+        subtitle = [entry.medicationName ? getHealthDisplayName(entry.medicationName, "medication", t) : "", dosageStr].filter(Boolean).join(" \u00B7 ");
         break;
       case "temperature":
         title = t("health.temperature");
         if (entry.temperatureCelsius) {
           const tempStr = formatTemperature(entry.temperatureCelsius, temperatureUnit);
-          const status = getFeverStatus(entry.temperatureCelsius);
+          const status = getFeverStatus(entry.temperatureCelsius, entry.measurementMethod);
           subtitle = `${tempStr} \u00B7 ${t(`health.feverStatus.${status}`)}`;
         }
         break;
       case "vaccination":
         title = t("health.vaccination");
-        subtitle = entry.vaccineName || "";
+        subtitle = entry.vaccineName ? getHealthDisplayName(entry.vaccineName, "vaccine", t) : "";
         break;
       case "symptom":
         title = t("health.symptomsLabel");

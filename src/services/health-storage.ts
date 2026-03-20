@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { HealthType, MeasurementMethod, SymptomType } from "@/constants/activities";
+import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
 
 const HEALTH_KEY_PREFIX = "@health:";
@@ -11,8 +11,9 @@ export interface StoredHealthEntry {
   loggedAt: string;
   notes?: string;
   medicationName?: string;
-  dosageMl?: number;
-  reminderIntervalHours?: number;
+  dosageAmount?: number;
+  dosageUnit?: DosageUnit;
+  doseNumber?: number;
   temperatureCelsius?: number;
   measurementMethod?: MeasurementMethod;
   vaccineName?: string;
@@ -28,8 +29,9 @@ export interface CreateHealthInput {
   loggedAt: Date;
   notes?: string;
   medicationName?: string;
-  dosageMl?: number;
-  reminderIntervalHours?: number;
+  dosageAmount?: number;
+  dosageUnit?: DosageUnit;
+  doseNumber?: number;
   temperatureCelsius?: number;
   measurementMethod?: MeasurementMethod;
   vaccineName?: string;
@@ -39,14 +41,15 @@ export interface CreateHealthInput {
 export interface UpdateHealthInput {
   type?: HealthType;
   loggedAt?: Date;
-  notes?: string;
-  medicationName?: string;
-  dosageMl?: number;
-  reminderIntervalHours?: number;
-  temperatureCelsius?: number;
-  measurementMethod?: MeasurementMethod;
-  vaccineName?: string;
-  symptoms?: SymptomType[];
+  notes?: string | null;
+  medicationName?: string | null;
+  dosageAmount?: number | null;
+  dosageUnit?: DosageUnit | null;
+  doseNumber?: number | null;
+  temperatureCelsius?: number | null;
+  measurementMethod?: MeasurementMethod | null;
+  vaccineName?: string | null;
+  symptoms?: SymptomType[] | null;
 }
 
 function generateId(): string {
@@ -79,6 +82,10 @@ export const HealthStorageService = {
   },
 
   async addHealth(input: CreateHealthInput): Promise<StoredHealthEntry> {
+    if (input.dosageAmount !== undefined && input.dosageAmount <= 0) {
+      throw new Error("Dosage amount must be greater than 0");
+    }
+
     const entries = await this.getAllHealth(input.babyId);
     const now = new Date().toISOString();
 
@@ -89,8 +96,9 @@ export const HealthStorageService = {
       loggedAt: input.loggedAt.toISOString(),
       notes: input.notes,
       medicationName: input.medicationName,
-      dosageMl: input.dosageMl,
-      reminderIntervalHours: input.reminderIntervalHours,
+      dosageAmount: input.dosageAmount,
+      dosageUnit: input.dosageUnit,
+      doseNumber: input.doseNumber,
       temperatureCelsius: input.temperatureCelsius,
       measurementMethod: input.measurementMethod,
       vaccineName: input.vaccineName,
@@ -110,6 +118,10 @@ export const HealthStorageService = {
     healthId: string,
     input: UpdateHealthInput
   ): Promise<StoredHealthEntry | null> {
+    if (input.dosageAmount !== undefined && input.dosageAmount !== null && input.dosageAmount <= 0) {
+      throw new Error("Dosage amount must be greater than 0");
+    }
+
     const entries = await this.getAllHealth(babyId);
     const index = entries.findIndex(h => h.id === healthId);
 
@@ -118,17 +130,25 @@ export const HealthStorageService = {
     const updatedHealth: StoredHealthEntry = {
       ...entries[index],
       ...(input.type !== undefined && { type: input.type }),
-      ...(input.loggedAt !== undefined && { loggedAt: input.loggedAt.toISOString() }),
-      ...(input.notes !== undefined && { notes: input.notes }),
-      ...(input.medicationName !== undefined && { medicationName: input.medicationName }),
-      ...(input.dosageMl !== undefined && { dosageMl: input.dosageMl }),
-      ...(input.reminderIntervalHours !== undefined && { reminderIntervalHours: input.reminderIntervalHours }),
-      ...(input.temperatureCelsius !== undefined && { temperatureCelsius: input.temperatureCelsius }),
-      ...(input.measurementMethod !== undefined && { measurementMethod: input.measurementMethod }),
-      ...(input.vaccineName !== undefined && { vaccineName: input.vaccineName }),
-      ...(input.symptoms !== undefined && { symptoms: input.symptoms }),
+      ...(input.loggedAt !== undefined && { loggedAt: input.loggedAt!.toISOString() }),
       updatedAt: new Date().toISOString(),
     };
+
+    const nullableFields = [
+      "notes", "medicationName", "dosageAmount", "dosageUnit",
+      "doseNumber", "temperatureCelsius", "measurementMethod",
+      "vaccineName", "symptoms",
+    ] as const;
+
+    for (const field of nullableFields) {
+      if (input[field] !== undefined) {
+        if (input[field] === null) {
+          delete (updatedHealth as unknown as Record<string, unknown>)[field];
+        } else {
+          (updatedHealth as unknown as Record<string, unknown>)[field] = input[field];
+        }
+      }
+    }
 
     entries[index] = updatedHealth;
     await AsyncStorage.setItem(getHealthKey(babyId), JSON.stringify(entries));
