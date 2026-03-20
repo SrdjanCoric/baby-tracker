@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Tracking — 5 UI Proposals</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* SofiBaby design tokens */
+    --bg: #F5EDE8;
+    --bg-secondary: #EFE7E2;
+    --card: #FFFFFF;
+    --card-elevated: #FFFFFF;
+    --text-primary: #2D2A26;
+    --text-secondary: #5C5752;
+    --text-tertiary: #7A756E;
+    --text-muted: #9A958E;
+    --border-default: #E5E2DE;
+    --border-subtle: #EDEAE6;
+
+    /* Health activity color — warm dusty rose */
+    --health-accent: #C48B9F;
+    --health-text-accent: #8B4A62;
+    --health-button: #A86B82;
+    --health-muted: #F8F0F3;
+
+    /* Existing activity colors for context */
+    --feeding-accent: #8CB369;
+    --sleep-accent: #9E8DA9;
+    --diaper-accent: #E0A099;
+
+    /* Semantic */
+    --fever-high: #ef4444;
+    --fever-mild: #f59e0b;
+    --temp-normal: #22c55e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #1a1a2e;
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  /* Page header */
+  .page-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #F5F2F0;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    font-size: 15px;
+    color: #9E9A97;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* Proposal section */
+  .proposal {
+    margin-bottom: 72px;
+  }
+  .proposal-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .proposal-number {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--health-accent);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .proposal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F5F2F0;
+  }
+  .proposal-desc {
+    font-size: 14px;
+    color: #9E9A97;
+    margin-bottom: 28px;
+    line-height: 1.6;
+    max-width: 700px;
+  }
+  .proposal-desc strong {
+    color: #B8B3B0;
+  }
+
+  /* Phone frames */
+  .phones {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .phone-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .phone-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #7A756E;
+  }
+  .phone {
+    width: 320px;
+    border-radius: 36px;
+    background: var(--bg);
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    position: relative;
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 28px;
+    background: #1a1a2e;
+    border-radius: 0 0 16px 16px;
+    z-index: 10;
+  }
+  .phone-content {
+    padding: 44px 16px 24px;
+  }
+
+  /* Shared card styles — matches DashboardCard exactly */
+  .dash-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 16px;
+    min-height: 200px;
+    border-left: 3px solid var(--health-accent);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .dash-card-row {
+    display: flex;
+    gap: 12px;
+  }
+  .dash-card-row .dash-card {
+    flex: 1;
+  }
+
+  /* Card header */
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .card-icon {
+    font-size: 24px;
+    line-height: 1;
+  }
+  .card-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--health-accent);
+  }
+  .card-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--health-accent);
+    margin-left: auto;
+  }
+
+  /* Card content */
+  .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 0;
+  }
+  .card-value-lg {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .card-value-accent {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--health-accent);
+    line-height: 1.2;
+  }
+  .card-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .card-secondary {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .card-secondary-sm {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* Card footer */
+  .card-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .today-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--health-accent);
+    background: rgba(196, 139, 159, 0.12);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .card-action-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: var(--health-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+  }
+  .card-action-btn-outline {
+    width: 40px;
+    height: 40px;
+    border-radius: 16px;
+    background: transparent;
+    border: 2px solid var(--health-button);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--health-button);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Progress bar */
+  .progress-track {
+    height: 8px;
+    border-radius: 99px;
+    background: rgba(196, 139, 159, 0.15);
+    border: 1px solid rgba(196, 139, 159, 0.25);
+    margin-top: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--health-accent);
+  }
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .progress-row .progress-track {
+    flex: 1;
+  }
+  .progress-pct {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  /* Temperature display */
+  .temp-display {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .temp-value {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .temp-unit {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+  }
+  .temp-normal { color: var(--temp-normal); }
+  .temp-mild { color: var(--fever-mild); }
+  .temp-high { color: var(--fever-high); }
+
+  /* Mini stat pill */
+  .mini-stats {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .mini-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 3px 8px;
+    border-radius: 99px;
+  }
+  .mini-stat-icon {
+    font-size: 11px;
+  }
+
+  /* Context cards for other dashboard items */
+  .context-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 12px 16px;
+    border-left: 3px solid;
+    margin-bottom: 8px;
+    opacity: 0.5;
+  }
+  .context-card .card-header {
+    margin-bottom: 0;
+  }
+
+  /* ---- Logging screen styles ---- */
+  .log-screen {
+    padding: 44px 0 0;
+  }
+  .log-header {
+    text-align: center;
+    padding: 8px 16px 16px;
+  }
+  .log-drag-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 99px;
+    background: #D5D1CC;
+    margin: 0 auto 12px;
+  }
+  .log-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .log-baby-name {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .log-body {
+    padding: 0 20px 20px;
+  }
+  .log-illustration {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin: 0 auto 20px;
+  }
+  .log-section-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+  .log-section-label .optional {
+    font-weight: 400;
+    color: var(--text-tertiary);
+    font-size: 13px;
+  }
+
+  /* Type buttons (like diaper type) */
+  .type-btn {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border-default);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    gap: 12px;
+  }
+  .type-btn:hover { background: var(--bg-secondary); }
+  .type-btn.selected {
+    border: 2px solid var(--health-accent);
+    background: var(--bg-secondary);
+  }
+  .type-btn-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+  .type-btn-text {
+    flex: 1;
+  }
+  .type-btn-text .name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .type-btn-text .desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .type-btn-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--health-accent);
+    color: #fff;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Quick select row */
+  .quick-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .quick-btn {
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+  }
+  .quick-btn.selected {
+    background: var(--health-accent);
+    color: #fff;
+    border-color: var(--health-accent);
+  }
+
+  /* Text input mock */
+  .input-mock {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-default);
+    background: var(--card);
+    font-size: 15px;
+    color: var(--text-muted);
+    font-family: 'Nunito', sans-serif;
+    margin-bottom: 16px;
+  }
+
+  /* Save button */
+  .save-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--health-button);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    margin-top: 8px;
+  }
+
+  /* Tab bar mock */
+  .tab-bar {
+    display: flex;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .tab.active {
+    background: var(--card);
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* Medication list items */
+  .med-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    margin-bottom: 8px;
+    gap: 10px;
+  }
+  .med-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--health-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .med-item-info {
+    flex: 1;
+  }
+  .med-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .med-item-detail {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .med-item-time {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-align: right;
+  }
+
+  /* Vaccine timeline */
+  .vaccine-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .vaccine-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .vaccine-dot.done { background: var(--temp-normal); }
+  .vaccine-dot.upcoming { background: var(--border-default); }
+  .vaccine-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .vaccine-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Separator */
+  .divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 10px 0;
+  }
+
+  /* Sub-section inside card */
+  .card-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+  }
+  .card-sub-icon {
+    font-size: 16px;
+  }
+  .card-sub-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    flex: 1;
+  }
+  .card-sub-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Status indicator */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .status-pill.normal {
+    background: rgba(34,197,94,0.12);
+    color: var(--temp-normal);
+  }
+  .status-pill.warning {
+    background: rgba(245,158,11,0.12);
+    color: var(--fever-mild);
+  }
+  .status-pill.alert {
+    background: rgba(239,68,68,0.12);
+    color: var(--fever-high);
+  }
+
+  /* Next dose countdown */
+  .next-dose {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(196,139,159,0.08);
+    margin-top: 6px;
+  }
+  .next-dose-icon {
+    font-size: 14px;
+  }
+  .next-dose-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--health-text-accent);
+  }
+
+  /* Log past link */
+  .log-past-link {
+    text-align: center;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--health-button);
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+
+  /* Dosage quick buttons */
+  .dosage-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .dosage-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    text-align: center;
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+  }
+  .dosage-btn .amount {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .dosage-btn .unit {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .dosage-btn.selected {
+    background: var(--health-muted);
+    border-color: var(--health-accent);
+  }
+
+  /* Symptom chips */
+  .symptom-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .symptom-chip {
+    padding: 8px 14px;
+    border-radius: 99px;
+    background: var(--bg-secondary);
+    font-size: 13px;
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+  }
+  .symptom-chip.selected {
+    background: var(--health-muted);
+    border-color: var(--health-accent);
+    color: var(--health-text-accent);
+  }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    .phones {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Health Tracking — 5 UI Proposals</h1>
+  <p>Each proposal shows a dashboard card (how it appears on the home screen alongside feeding, sleep, diaper cards) and the logging screen (what the user sees when tapping + or the card).</p>
+</div>
+
+<!-- ============================================ -->
+<!-- PROPOSAL 1 -->
+<!-- ============================================ -->
+<div class="proposal">
+  <div class="proposal-header">
+    <span class="proposal-number">Proposal 1</span>
+    <span class="proposal-title">Unified Health Card</span>
+  </div>
+  <p class="proposal-desc">
+    A single card that combines <strong>medications, temperature, and vaccinations</strong> into one view. The card always shows the most recent health event (last medication dose, last temperature reading) with a today badge counting total health logs. The logging screen uses tabs to switch between medication, temperature, and vaccination entry.
+    <br><br>
+    <strong>Best for:</strong> Parents who want one place for all health info without cluttering the dashboard with multiple cards.
+  </p>
+  <div class="phones">
+    <!-- Dashboard Card -->
+    <div class="phone-wrapper">
+      <span class="phone-label">Dashboard Card</span>
+      <div class="phone">
+        <div class="phone-content">
+          <!-- Context: other cards above (faded) -->
+          <div class="context-card" style="border-left-color: var(--feeding-accent);">
+            <div class="card-header">
+              <span class="card-icon">🤱</span>
+              <span class="card-label" style="color: var(--feeding-accent);">Feeding</span>
+            </div>
+          </div>
+
+          <!-- THE health card -->
+          <div class="dash-card" style="margin-bottom: 12px;">
+            <div class="card-header">
+              <span class="card-icon">💊</span>
+              <span class="card-label">Health</span>
+            </div>
+            <div class="card-body">
+              <div class="card-value-lg">2h 15m ago</div>
+              <div class="card-subtitle">Tylenol · 2.5ml</div>
+              <div class="card-secondary-sm">🌡️ 37.2°C at 10:30 AM</div>
+              <div class="next-dose">
+                <span class="next-dose-icon">⏰</span>
+                <span class="next-dose-text">Next dose in 1h 45m</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="today-badge">3 logs today</span>
+              <button class="card-action-btn">+</button>
+            </div>
+          </div>
+
+          <div class="context-card" style="border-left-color: var(--sleep-accent);">
+            <div class="card-header">
+              <span class="card-icon">😴</span>
+              <span class="card-label" style="color: var(--sleep-accent);">Sleep</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logging Screen -->
+    <div class="phone-wrapper">
+      <span class="phone-label">Logging Screen</span>
+      <div class="phone">
+        <div class="log-screen">
+          <div class="log-header">
+            <div class="log-drag-handle"></div>
+            <div class="log-title">Log Health</div>
+            <div class="log-baby-name">Sofia</div>
+          </div>
+          <div class="log-body">
+            <!-- Tab bar -->
+            <div class="tab-bar">
+              <div class="tab active">💊 Medication</div>
+              <div class="tab">🌡️ Temp</div>
+              <div class="tab">💉 Vaccine</div>
+            </div>
+
+            <!-- Medication tab content -->
+            <div class="log-section-label">Medication name</div>
+            <div class="quick-row">
+              <button class="quick-btn selected">Tylenol</button>
+              <button class="quick-btn">Ibuprofen</button>
+              <button class="quick-btn">Vitamin D</button>
+              <button class="quick-btn">+ Custom</button>
+            </div>
+
+            <div class="log-section-label">Dosage</div>
+            <div class="dosage-row">
+              <div class="dosage-btn selected">
+                <div class="amount">2.5</div>
+                <div class="unit">ml</div>
+              </div>
+              <div class="dosage-btn">
+                <div class="amount">5</div>
+                <div class="unit">ml</div>
+              </div>
+              <div class="dosage-btn">
+                <div class="amount">7.5</div>
+                <div class="unit">ml</div>
+              </div>
+              <div class="dosage-btn">
+                <div class="amount">10</div>
+                <div class="unit">ml</div>
+              </div>
+            </div>
+
+            <div class="log-section-label">Notes <span class="optional">(optional)</span></div>
+            <div class="input-mock">Add notes...</div>
+
+            <div class="log-past-link">Log Past Medication</div>
+            <button class="save-btn">Log Medication</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PROPOSAL 2 -->
+<!-- ============================================ -->
+<div class="proposal">
+  <div class="proposal-header">
+    <span class="proposal-number">Proposal 2</span>
+    <span class="proposal-title">Medication Schedule Card</span>
+  </div>
+  <p class="proposal-desc">
+    Prioritizes the <strong>medication schedule</strong> — shows what's due next and when the last dose was given. Designed for parents managing recurring medications (antibiotics, fever reducers). The card acts like a mini medication tracker with a countdown to the next dose.
+    <br><br>
+    <strong>Best for:</strong> Parents actively managing an illness where timing between doses is critical.
+  </p>
+  <div class="phones">
+    <div class="phone-wrapper">
+      <span class="phone-label">Dashboard Card</span>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="context-card" style="border-left-color: var(--diaper-accent);">
+            <div class="card-header">
+              <span class="card-icon">🚼</span>
+              <span class="card-label" style="color: var(--diaper-accent);">Diaper</span>
+            </div>
+          </div>
+
+          <div class="dash-card" style="margin-bottom: 12px;">
+            <div class="card-header">
+              <span class="card-icon">💊</span>
+              <span class="card-label">Medication</span>
+              <div class="card-dot"></div>
+            </div>
+            <div class="card-body">
+              <div class="card-value-accent">Tylenol — due in 1h 45m</div>
+              <div class="card-subtitle">Last dose: 2.5ml at 8:15 AM</div>
+              <div class="progress-row" style="margin-top: 8px;">
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: 56%;"></div>
+                </div>
+                <span class="progress-pct">56%</span>
+              </div>
+              <div class="card-secondary-sm" style="margin-top: 6px;">4h interval · 2 of 4 doses given</div>
+            </div>
+            <div class="card-footer">
+              <span class="today-badge">💊 2 doses</span>
+              <button class="card-action-btn">+</button>
+            </div>
+          </div>
+
+          <div class="context-card" style="border-left-color: var(--feeding-accent);">
+            <div class="card-header">
+              <span class="card-icon">🤱</span>
+              <span class="card-label" style="color: var(--feeding-accent);">Feeding</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-wrapper">
+      <span class="phone-label">Logging Screen</span>
+      <div class="phone">
+        <div class="log-screen">
+          <div class="log-header">
+            <div class="log-drag-handle"></div>
+            <div class="log-title">Log Medication</div>
+            <div class="log-baby-name">Sofia</div>
+          </div>
+          <div class="log-body">
+            <div class="log-illustration">💊</div>
+
+            <div class="log-section-label">Select medication</div>
+            <!-- Recent medications -->
+            <div class="type-btn selected">
+              <span class="type-btn-icon">💊</span>
+              <div class="type-btn-text">
+                <div class="name">Tylenol (Acetaminophen)</div>
+                <div class="desc">Last: 2.5ml · 2h ago · Next in 1h 45m</div>
+              </div>
+              <div class="type-btn-check">✓</div>
+            </div>
+            <div class="type-btn">
+              <span class="type-btn-icon">💧</span>
+              <div class="type-btn-text">
+                <div class="name">Vitamin D Drops</div>
+                <div class="desc">Last: 1 drop · yesterday</div>
+              </div>
+            </div>
+            <div class="type-btn">
+              <span class="type-btn-icon">➕</span>
+              <div class="type-btn-text">
+                <div class="name">Add new medication</div>
+                <div class="desc">Name, dosage unit, interval</div>
+              </div>
+            </div>
+
+            <div style="height: 16px;"></div>
+            <div class="log-section-label">Dosage</div>
+            <div class="dosage-row">
+              <div class="dosage-btn selected">
+                <div class="amount">2.5</div>
+                <div class="unit">ml</div>
+              </div>
+              <div class="dosage-btn">
+                <div class="amount">5</div>
+                <div class="unit">ml</div>
+              </div>
+              <div class="dosage-btn" style="flex: 1.5;">
+                <div class="amount" style="font-size: 13px;">Custom</div>
+                <div class="unit">amount</div>
+              </div>
+            </div>
+
+            <button class="save-btn">Log Dose</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PROPOSAL 3 -->
+<!-- ============================================ -->
+<div class="proposal">
+  <div class="proposal-header">
+    <span class="proposal-number">Proposal 3</span>
+    <span class="proposal-title">Temperature-Forward Card</span>
+  </div>
+  <p class="proposal-desc">
+    Leads with a <strong>prominent temperature reading</strong> — the number parents care about most when their baby is sick. The temperature is large and color-coded (green/amber/red). Medications and symptoms are shown as secondary info below. When there's no active fever being tracked, the card falls back to showing the last medication or a calm "All clear" state.
+    <br><br>
+    <strong>Best for:</strong> Fever monitoring scenarios where temperature is the #1 concern and parents need to see it at a glance.
+  </p>
+  <div class="phones">
+    <div class="phone-wrapper">
+      <span class="phone-label">Dashboard Card (Fever Active)</span>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="context-card" style="border-left-color: var(--feeding-accent);">
+            <div class="card-header">
+              <span class="card-icon">🤱</span>
+              <span class="card-label" style="color: var(--feeding-accent);">Feeding</span>
+            </div>
+          </div>
+
+          <div class="dash-card" style="margin-bottom: 12px; border-left-color: var(--fever-mild);">
+            <div class="card-header">
+              <span class="card-icon">🌡️</span>
+              <span class="card-label" style="color: var(--fever-mild);">Health</span>
+              <span class="status-pill warning">Fever</span>
+            </div>
+            <div class="card-body">
+              <div class="temp-display">
+                <span class="temp-value temp-mild">38.3</span>
+                <span class="temp-unit">°C</span>
+              </div>
+              <div class="card-subtitle">Measured 45m ago</div>
+              <div class="mini-stats">
+                <span class="mini-stat"><span class="mini-stat-icon">💊</span> Tylenol 2h ago</span>
+                <span class="mini-stat"><span class="mini-stat-icon">🤧</span> Runny nose</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="today-badge" style="background: rgba(245,158,11,0.1); color: var(--fever-mild);">⬆ 37.8 → 38.3</span>
+              <button class="card-action-btn" style="background: var(--fever-mild);">+</button>
+            </div>
+          </div>
+
+          <div class="context-card" style="border-left-color: var(--sleep-accent);">
+            <div class="card-header">
+              <span class="card-icon">😴</span>
+              <span class="card-label" style="color: var(--sleep-accent);">Sleep</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-wrapper">
+      <span class="phone-label">Logging Screen</span>
+      <div class="phone">
+        <div class="log-screen">
+          <div class="log-header">
+            <div class="log-drag-handle"></div>
+            <div class="log-title">Log Health</div>
+            <div class="log-baby-name">Sofia</div>
+          </div>
+          <div class="log-body">
+            <!-- Tab bar: temp selected -->
+            <div class="tab-bar">
+              <div class="tab">💊 Meds</div>
+              <div class="tab active">🌡️ Temp</div>
+              <div class="tab">🤒 Symptoms</div>
+            </div>
+
+            <!-- Temperature input -->
+            <div style="text-align: center; margin: 16px 0 24px;">
+              <div class="temp-display" style="justify-content: center;">
+                <span class="temp-value temp-mild" style="font-size: 52px;">38.3</span>
+                <span class="temp-unit" style="font-size: 24px;">°C</span>
+              </div>
+              <div style="font-size: 13px; color: var(--fever-mild); font-weight: 600; margin-top: 4px;">Low-grade fever</div>
+            </div>
+
+            <div class="log-section-label">Quick select</div>
+            <div class="quick-row">
+              <button class="quick-btn">36.5</button>
+              <button class="quick-btn">37.0</button>
+              <button class="quick-btn">37.5</button>
+              <button class="quick-btn selected">38.3</button>
+              <button class="quick-btn">38.5</button>
+              <button class="quick-btn">39.0</button>
+            </div>
+
+            <div class="log-section-label">Measurement method <span class="optional">(optional)</span></div>
+            <div class="quick-row">
+              <button class="quick-btn selected">Forehead</button>
+              <button class="quick-btn">Ear</button>
+              <button class="quick-btn">Rectal</button>
+              <button class="quick-btn">Armpit</button>
+            </div>
+
+            <div class="log-section-label">Symptoms <span class="optional">(optional)</span></div>
+            <div class="symptom-chips">
+              <span class="symptom-chip selected">🤧 Runny nose</span>
+              <span class="symptom-chip">🤮 Vomiting</span>
+              <span class="symptom-chip">😫 Fussy</span>
+              <span class="symptom-chip">😴 Lethargic</span>
+              <span class="symptom-chip">🍽️ Won't eat</span>
+              <span class="symptom-chip">🔴 Rash</span>
+            </div>
+
+            <button class="save-btn" style="background: var(--fever-mild);">Log Temperature</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PROPOSAL 4 -->
+<!-- ============================================ -->
+<div class="proposal">
+  <div class="proposal-header">
+    <span class="proposal-number">Proposal 4</span>
+    <span class="proposal-title">Split Sub-Sections Card</span>
+  </div>
+  <p class="proposal-desc">
+    The card is divided into <strong>compact sub-sections</strong> showing the last event for each health type — temperature, medication, and vaccination — in a structured list. Each row has an icon, label, and the latest value/time. This gives a quick "health dashboard at a glance" without needing to tap in. The logging screen presents all three options as entry points.
+    <br><br>
+    <strong>Best for:</strong> Parents who want to see all health data points simultaneously without scrolling or tapping.
+  </p>
+  <div class="phones">
+    <div class="phone-wrapper">
+      <span class="phone-label">Dashboard Card</span>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="context-card" style="border-left-color: var(--sleep-accent);">
+            <div class="card-header">
+              <span class="card-icon">😴</span>
+              <span class="card-label" style="color: var(--sleep-accent);">Sleep</span>
+            </div>
+          </div>
+
+          <div class="dash-card" style="margin-bottom: 12px; min-height: 220px;">
+            <div class="card-header">
+              <span class="card-icon">🏥</span>
+              <span class="card-label">Health</span>
+            </div>
+            <div class="card-body" style="padding: 4px 0;">
+              <div class="card-sub">
+                <span class="card-sub-icon">🌡️</span>
+                <span class="card-sub-label">Temperature</span>
+                <span class="card-sub-value temp-normal">37.0°C</span>
+                <span class="status-pill normal" style="margin-left: 4px;">Normal</span>
+              </div>
+              <div class="divider"></div>
+              <div class="card-sub">
+                <span class="card-sub-icon">💊</span>
+                <span class="card-sub-label">Medication</span>
+                <span class="card-sub-value">Tylenol 2.5ml</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-tertiary); padding-left: 24px; margin-top: -2px;">2h 15m ago · next in 1h 45m</div>
+              <div class="divider"></div>
+              <div class="card-sub">
+                <span class="card-sub-icon">💉</span>
+                <span class="card-sub-label">Vaccination</span>
+                <span class="card-sub-value" style="font-size: 13px;">DTaP #2 — 3d ago</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span></span>
+              <button class="card-action-btn">+</button>
+            </div>
+          </div>
+
+          <div class="context-card" style="border-left-color: var(--diaper-accent);">
+            <div class="card-header">
+              <span class="card-icon">🚼</span>
+              <span class="card-label" style="color: var(--diaper-accent);">Diaper</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-wrapper">
+      <span class="phone-label">Logging Screen</span>
+      <div class="phone">
+        <div class="log-screen">
+          <div class="log-header">
+            <div class="log-drag-handle"></div>
+            <div class="log-title">Log Health</div>
+            <div class="log-baby-name">Sofia</div>
+          </div>
+          <div class="log-body">
+            <div class="log-illustration">🏥</div>
+
+            <div class="log-section-label">What would you like to log?</div>
+
+            <div class="type-btn selected">
+              <span class="type-btn-icon">💊</span>
+              <div class="type-btn-text">
+                <div class="name">Medication</div>
+                <div class="desc">Log a dose of medicine</div>
+              </div>
+              <div class="type-btn-check">✓</div>
+            </div>
+            <div class="type-btn">
+              <span class="type-btn-icon">🌡️</span>
+              <div class="type-btn-text">
+                <div class="name">Temperature</div>
+                <div class="desc">Record a temperature reading</div>
+              </div>
+            </div>
+            <div class="type-btn">
+              <span class="type-btn-icon">💉</span>
+              <div class="type-btn-text">
+                <div class="name">Vaccination</div>
+                <div class="desc">Log an immunization</div>
+              </div>
+            </div>
+            <div class="type-btn">
+              <span class="type-btn-icon">🤒</span>
+              <div class="type-btn-text">
+                <div class="name">Symptoms</div>
+                <div class="desc">Track symptoms and illness</div>
+              </div>
+            </div>
+
+            <div style="height: 8px;"></div>
+
+            <!-- Once medication is selected, show the dosage section -->
+            <div class="log-section-label">Medication name</div>
+            <div class="quick-row">
+              <button class="quick-btn selected">Tylenol</button>
+              <button class="quick-btn">Vitamin D</button>
+              <button class="quick-btn">+ New</button>
+            </div>
+
+            <div class="log-section-label">Dosage</div>
+            <div class="input-mock">2.5 ml</div>
+
+            <button class="save-btn">Log Medication</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PROPOSAL 5 -->
+<!-- ============================================ -->
+<div class="proposal">
+  <div class="proposal-header">
+    <span class="proposal-number">Proposal 5</span>
+    <span class="proposal-title">Smart Status Card</span>
+  </div>
+  <p class="proposal-desc">
+    An <strong>adaptive card that changes based on context</strong>. When the baby is healthy, it shows a calm "all clear" state with the last check-up info. When medications are active, it becomes a medication tracker. When a fever is detected, it shifts to fever monitoring mode with prominent temperature. The card intelligently surfaces what matters most right now.
+    <br><br>
+    <strong>Best for:</strong> Keeping the dashboard clean during healthy periods while surfacing critical info during illness.
+  </p>
+  <div class="phones">
+    <!-- Healthy state -->
+    <div class="phone-wrapper">
+      <span class="phone-label">Dashboard — Healthy State</span>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="context-card" style="border-left-color: var(--feeding-accent);">
+            <div class="card-header">
+              <span class="card-icon">🤱</span>
+              <span class="card-label" style="color: var(--feeding-accent);">Feeding</span>
+            </div>
+          </div>
+
+          <div class="dash-card" style="margin-bottom: 12px;">
+            <div class="card-header">
+              <span class="card-icon">💚</span>
+              <span class="card-label">Health</span>
+              <span class="status-pill normal">All clear</span>
+            </div>
+            <div class="card-body">
+              <div class="card-value-lg">Vitamin D</div>
+              <div class="card-subtitle">1 drop · given today at 9:00 AM</div>
+              <div class="mini-stats">
+                <span class="mini-stat"><span class="mini-stat-icon">💉</span> DTaP #2 due in 12d</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="today-badge">✅ 1 med today</span>
+              <button class="card-action-btn">+</button>
+            </div>
+          </div>
+
+          <div class="context-card" style="border-left-color: var(--sleep-accent);">
+            <div class="card-header">
+              <span class="card-icon">😴</span>
+              <span class="card-label" style="color: var(--sleep-accent);">Sleep</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sick state -->
+    <div class="phone-wrapper">
+      <span class="phone-label">Dashboard — Sick Mode</span>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="context-card" style="border-left-color: var(--feeding-accent);">
+            <div class="card-header">
+              <span class="card-icon">🤱</span>
+              <span class="card-label" style="color: var(--feeding-accent);">Feeding</span>
+            </div>
+          </div>
+
+          <div class="dash-card" style="margin-bottom: 12px; border-left-color: var(--fever-high); border-left-width: 3px;">
+            <div class="card-header">
+              <span class="card-icon">🌡️</span>
+              <span class="card-label" style="color: var(--fever-high);">Health</span>
+              <span class="status-pill alert">Fever — 38.9°C</span>
+            </div>
+            <div class="card-body">
+              <div class="card-value-accent" style="color: var(--fever-high);">Tylenol due NOW</div>
+              <div class="card-subtitle">Last dose: 4h 10m ago (overdue)</div>
+              <div class="card-secondary-sm">🤧 Runny nose · 😫 Fussy · 😴 Lethargic</div>
+              <div class="progress-row" style="margin-top: 6px;">
+                <div class="progress-track" style="background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.25);">
+                  <div class="progress-fill" style="width: 100%; background: var(--fever-high);"></div>
+                </div>
+                <span class="progress-pct" style="color: var(--fever-high);">overdue</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="today-badge" style="background: rgba(239,68,68,0.08); color: var(--fever-high);">💊 3 doses · 🌡️ 4 readings</span>
+              <button class="card-action-btn" style="background: var(--fever-high);">+</button>
+            </div>
+          </div>
+
+          <div class="context-card" style="border-left-color: var(--sleep-accent);">
+            <div class="card-header">
+              <span class="card-icon">😴</span>
+              <span class="card-label" style="color: var(--sleep-accent);">Sleep</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logging screen -->
+    <div class="phone-wrapper">
+      <span class="phone-label">Logging — Quick Actions</span>
+      <div class="phone">
+        <div class="log-screen">
+          <div class="log-header">
+            <div class="log-drag-handle"></div>
+            <div class="log-title">Log Health</div>
+            <div class="log-baby-name">Sofia</div>
+          </div>
+          <div class="log-body">
+            <!-- Active medication banner -->
+            <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">⚠️</span>
+              <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--fever-high);">Tylenol is overdue</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">Last dose was 4h 10m ago (4h interval)</div>
+              </div>
+            </div>
+
+            <!-- Quick log actions -->
+            <div class="log-section-label">Quick actions</div>
+            <div class="type-btn" style="background: var(--health-muted); border-color: var(--health-accent);">
+              <span class="type-btn-icon">💊</span>
+              <div class="type-btn-text">
+                <div class="name">Log Tylenol dose</div>
+                <div class="desc">2.5ml (same as last)</div>
+              </div>
+              <span style="font-size: 20px;">→</span>
+            </div>
+            <div class="type-btn">
+              <span class="type-btn-icon">🌡️</span>
+              <div class="type-btn-text">
+                <div class="name">Take temperature</div>
+                <div class="desc">Last: 38.9°C at 2:30 PM</div>
+              </div>
+              <span style="font-size: 20px;">→</span>
+            </div>
+            <div class="type-btn">
+              <span class="type-btn-icon">🤒</span>
+              <div class="type-btn-text">
+                <div class="name">Update symptoms</div>
+                <div class="desc">3 active: runny nose, fussy, lethargic</div>
+              </div>
+              <span style="font-size: 20px;">→</span>
+            </div>
+
+            <div style="height: 8px;"></div>
+            <div class="divider"></div>
+            <div style="height: 8px;"></div>
+
+            <div class="log-section-label">Recent health log</div>
+            <div class="med-item">
+              <div class="med-item-icon">🌡️</div>
+              <div class="med-item-info">
+                <div class="med-item-name">38.9°C</div>
+                <div class="med-item-detail">Forehead · runny nose, fussy</div>
+              </div>
+              <div class="med-item-time">2:30 PM</div>
+            </div>
+            <div class="med-item">
+              <div class="med-item-icon">💊</div>
+              <div class="med-item-info">
+                <div class="med-item-name">Tylenol 2.5ml</div>
+                <div class="med-item-detail">Dose 3 of 4</div>
+              </div>
+              <div class="med-item-time">12:20 PM</div>
+            </div>
+            <div class="med-item">
+              <div class="med-item-icon">🌡️</div>
+              <div class="med-item-info">
+                <div class="med-item-name">38.1°C</div>
+                <div class="med-item-detail">Forehead</div>
+              </div>
+              <div class="med-item-time">10:00 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- COMPLEXITY EVALUATION -->
+<!-- ============================================ -->
+<div class="proposal" style="margin-bottom: 40px;">
+  <div class="proposal-header">
+    <span class="proposal-number">Reference</span>
+    <span class="proposal-title">Proposal Comparison</span>
+  </div>
+  <div style="background: var(--card); border-radius: 20px; padding: 24px; max-width: 800px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--border-default);">
+          <th style="text-align: left; padding: 8px 12px; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Proposal</th>
+          <th style="text-align: left; padding: 8px 12px; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Focus</th>
+          <th style="text-align: center; padding: 8px 12px; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Complexity</th>
+          <th style="text-align: left; padding: 8px 12px; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Tradeoff</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--border-subtle);">
+          <td style="padding: 10px 12px; font-weight: 600;">1. Unified</td>
+          <td style="padding: 10px 12px;">Everything in one card + tabs</td>
+          <td style="padding: 10px 12px; text-align: center;">⭐⭐</td>
+          <td style="padding: 10px 12px; color: var(--text-secondary);">Simple but card can feel crowded</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle);">
+          <td style="padding: 10px 12px; font-weight: 600;">2. Med Schedule</td>
+          <td style="padding: 10px 12px;">Medication timing & doses</td>
+          <td style="padding: 10px 12px; text-align: center;">⭐⭐⭐</td>
+          <td style="padding: 10px 12px; color: var(--text-secondary);">Great for illness, less useful when healthy</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle);">
+          <td style="padding: 10px 12px; font-weight: 600;">3. Temp-Forward</td>
+          <td style="padding: 10px 12px;">Temperature as hero metric</td>
+          <td style="padding: 10px 12px; text-align: center;">⭐⭐</td>
+          <td style="padding: 10px 12px; color: var(--text-secondary);">Striking during fever, empty when healthy</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle);">
+          <td style="padding: 10px 12px; font-weight: 600;">4. Split Sections</td>
+          <td style="padding: 10px 12px;">All data points visible at once</td>
+          <td style="padding: 10px 12px; text-align: center;">⭐⭐</td>
+          <td style="padding: 10px 12px; color: var(--text-secondary);">Info-dense, but taller card on dashboard</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 12px; font-weight: 600;">5. Smart Status</td>
+          <td style="padding: 10px 12px;">Adaptive to baby's current state</td>
+          <td style="padding: 10px 12px; text-align: center;">⭐⭐⭐⭐</td>
+          <td style="padding: 10px 12px; color: var(--text-secondary);">Best UX but most logic to implement</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>
