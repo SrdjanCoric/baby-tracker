@@ -33,7 +33,7 @@
           }
         ],
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleLocalizations": ["en", "sr", "es"],
+        "CFBundleLocalizations": ["en", "sr", "es", "fr", "pt", "de"],
         "NSSupportsLiveActivities": true
       }
     },
