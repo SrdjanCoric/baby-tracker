@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=414, initial-scale=1">
+<title>Vaccine Schedule V2 - Refined Timeline</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Nunito', -apple-system, sans-serif;
+    background: #f0f0f5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    padding: 40px;
+    justify-content: center;
+  }
+
+  .mockup-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mockup-label {
+    font-size: 22px;
+    font-weight: 800;
+    color: #6366f1;
+  }
+
+  .mockup-desc {
+    font-size: 13px;
+    color: #666;
+    max-width: 380px;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    border: 8px solid #1a1a1a;
+    position: relative;
+  }
+
+  .notch {
+    width: 160px;
+    height: 34px;
+    background: #1a1a1a;
+    border-radius: 0 0 20px 20px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+
+  .screen {
+    height: 100%;
+    overflow-y: auto;
+    background: #f8f8fc;
+    padding-top: 54px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  .header {
+    background: #fff;
+    padding: 12px 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  .back-btn { font-size: 22px; color: #6366f1; }
+  .header-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+  .header-subtitle { font-size: 12px; color: #888; }
+
+  /* Stats */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    padding: 14px 16px 6px;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 6px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .stat-number { font-size: 20px; font-weight: 800; }
+  .stat-number.green { color: #10b981; }
+  .stat-number.amber { color: #f59e0b; }
+  .stat-number.gray { color: #bbb; }
+  .stat-label { font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* Timeline */
+  .timeline { padding: 12px 20px 20px; }
+
+  .timeline-group { position: relative; padding-left: 28px; }
+
+  .timeline-group::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e0e0e8;
+  }
+
+  .timeline-group:last-child::before { display: none; }
+
+  .tl-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 2px;
+    z-index: 2;
+  }
+  .tl-dot.done { background: #10b981; }
+  .tl-dot.window { background: #f59e0b; }
+  .tl-dot.upcoming { background: #d0d0dd; }
+  .tl-dot.mixed {
+    background: conic-gradient(#10b981 0deg 180deg, #f59e0b 180deg 360deg);
+  }
+
+  .tl-age {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-top: 0;
+  }
+  .tl-age.done { color: #10b981; }
+  .tl-age.window { color: #f59e0b; }
+  .tl-age.upcoming { color: #bbb; }
+
+  .tl-age .age-range {
+    font-size: 10px;
+    font-weight: 500;
+    color: #aaa;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 4px;
+  }
+
+  .tl-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 18px;
+  }
+
+  .vax-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+  }
+
+  .vax-card.optional {
+    border-left: 3px solid transparent;
+  }
+
+  .vax-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .vax-icon.done { background: #d1fae5; color: #059669; }
+  .vax-icon.window { background: #fef3c7; color: #d97706; }
+  .vax-icon.upcoming { background: #f0f0f5; color: #999; }
+
+  .vax-body { flex: 1; min-width: 0; }
+
+  .vax-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .vax-combo-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #ede9fe;
+    color: #7c3aed;
+    white-space: nowrap;
+  }
+
+  .optional-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #f0f0f5;
+    color: #999;
+    white-space: nowrap;
+  }
+
+  .vax-sub {
+    font-size: 11px;
+    color: #999;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .vax-sub.window-text { color: #d97706; font-weight: 600; }
+
+  .vax-right {
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .vax-date {
+    font-size: 12px;
+    font-weight: 600;
+    color: #10b981;
+  }
+
+  .vax-dose-label {
+    font-size: 10px;
+    color: #888;
+    margin-top: 1px;
+  }
+
+  .vax-window-label {
+    font-size: 11px;
+    color: #d97706;
+    font-weight: 600;
+  }
+
+  .vax-upcoming-label {
+    font-size: 11px;
+    color: #bbb;
+  }
+
+  .log-btn {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 6px;
+    background: #6366f1;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  /* Combo explainer */
+  .combo-note {
+    font-size: 11px;
+    color: #888;
+    padding: 4px 14px 2px;
+    line-height: 1.4;
+  }
+
+  .combo-note strong {
+    color: #7c3aed;
+  }
+
+  /* Section divider */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0 10px;
+  }
+
+  .section-divider-line {
+    flex: 1;
+    height: 1px;
+    background: #e8e8f0;
+  }
+
+  .section-divider-text {
+    font-size: 10px;
+    font-weight: 700;
+    color: #bbb;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== REFINED OPTION B ==================== -->
+<div class="mockup-container">
+  <div class="mockup-label">Vaccine Schedule — Refined</div>
+  <div class="mockup-desc">
+    Age ranges instead of exact dates. Combination vaccines (5-in-1, 6-in-1) shown clearly.
+    Optional vaccines tagged. Window-based scheduling for vaccines like Rotavirus.
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="header">
+        <span class="back-btn">‹</span>
+        <div>
+          <div class="header-title">Vaccine Schedule</div>
+          <div class="header-subtitle">Emma · 14 weeks old</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-number green">7</div>
+          <div class="stat-label">Given</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number amber">3</div>
+          <div class="stat-label">In Window</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number gray">14</div>
+          <div class="stat-label">Upcoming</div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <!-- BIRTH -->
+        <div class="timeline-group">
+          <div class="tl-dot done"></div>
+          <div class="tl-age done">Birth</div>
+          <div class="tl-cards">
+            <div class="vax-card">
+              <div class="vax-icon done">✓</div>
+              <div class="vax-body">
+                <div class="vax-name">Hep B</div>
+                <div class="vax-sub">Hepatitis B · Dose 1 of 3</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-date">Jan 5, 2026</div>
+                <div class="vax-dose-label">Dose 1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 MONTHS -->
+        <div class="timeline-group">
+          <div class="tl-dot done"></div>
+          <div class="tl-age done">2 Months <span class="age-range">(6–8 weeks)</span></div>
+          <div class="tl-cards">
+            <div class="vax-card">
+              <div class="vax-icon done">✓</div>
+              <div class="vax-body">
+                <div class="vax-name">6-in-1 <span class="vax-combo-tag">Hexavalent</span></div>
+                <div class="vax-sub">DTaP + IPV + Hib + Hep B · Dose 1</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-date">Mar 2, 2026</div>
+                <div class="vax-dose-label">Dose 1 of 3</div>
+              </div>
+            </div>
+            <div class="combo-note">
+              <strong>6-in-1</strong> covers: Diphtheria, Tetanus, Pertussis, Polio, Hib, Hep B
+            </div>
+            <div class="vax-card">
+              <div class="vax-icon done">✓</div>
+              <div class="vax-body">
+                <div class="vax-name">PCV13</div>
+                <div class="vax-sub">Pneumococcal · Dose 1 of 4</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-date">Mar 2, 2026</div>
+                <div class="vax-dose-label">Dose 1 of 4</div>
+              </div>
+            </div>
+            <div class="vax-card">
+              <div class="vax-icon done">✓</div>
+              <div class="vax-body">
+                <div class="vax-name">Rotavirus</div>
+                <div class="vax-sub">Dose 1 · Window: 6–14 weeks</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-date">Mar 2, 2026</div>
+                <div class="vax-dose-label">Dose 1 of 3</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 MONTHS — current window -->
+        <div class="timeline-group">
+          <div class="tl-dot window"></div>
+          <div class="tl-age window">3–4 Months <span class="age-range">(current window)</span></div>
+          <div class="tl-cards">
+            <div class="vax-card" style="border-left: 3px solid #f59e0b;">
+              <div class="vax-icon window">2</div>
+              <div class="vax-body">
+                <div class="vax-name">6-in-1 <span class="vax-combo-tag">Hexavalent</span></div>
+                <div class="vax-sub window-text">Dose 2 of 3 · Window open now</div>
+              </div>
+              <div class="vax-right">
+                <div class="log-btn">Log</div>
+              </div>
+            </div>
+            <div class="vax-card" style="border-left: 3px solid #f59e0b;">
+              <div class="vax-icon window">2</div>
+              <div class="vax-body">
+                <div class="vax-name">PCV13</div>
+                <div class="vax-sub window-text">Dose 2 of 4 · Window open now</div>
+              </div>
+              <div class="vax-right">
+                <div class="log-btn">Log</div>
+              </div>
+            </div>
+            <div class="vax-card" style="border-left: 3px solid #f59e0b;">
+              <div class="vax-icon window">2</div>
+              <div class="vax-body">
+                <div class="vax-name">Rotavirus</div>
+                <div class="vax-sub window-text">Dose 2 of 3 · 4 wk after dose 1</div>
+              </div>
+              <div class="vax-right">
+                <div class="log-btn">Log</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 MONTHS -->
+        <div class="timeline-group">
+          <div class="tl-dot upcoming"></div>
+          <div class="tl-age upcoming">6 Months <span class="age-range">(~8 weeks away)</span></div>
+          <div class="tl-cards">
+            <div class="vax-card" style="opacity: 0.65;">
+              <div class="vax-icon upcoming">3</div>
+              <div class="vax-body">
+                <div class="vax-name">6-in-1 <span class="vax-combo-tag">Hexavalent</span></div>
+                <div class="vax-sub">Dose 3 of 3 · Final dose</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~8 wk</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.65;">
+              <div class="vax-icon upcoming">3</div>
+              <div class="vax-body">
+                <div class="vax-name">PCV13</div>
+                <div class="vax-sub">Dose 3 of 4</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~8 wk</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.65;">
+              <div class="vax-icon upcoming">3</div>
+              <div class="vax-body">
+                <div class="vax-name">Rotavirus</div>
+                <div class="vax-sub">Dose 3 of 3 · Final · before 32 wk</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~8 wk</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.65;">
+              <div class="vax-icon upcoming">1</div>
+              <div class="vax-body">
+                <div class="vax-name">Flu <span class="optional-tag">Recommended</span></div>
+                <div class="vax-sub">Annual · First eligible at 6 months</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~8 wk</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 12 MONTHS -->
+        <div class="timeline-group">
+          <div class="tl-dot upcoming"></div>
+          <div class="tl-age upcoming">12 Months <span class="age-range">(~34 weeks away)</span></div>
+          <div class="tl-cards">
+            <div class="vax-card" style="opacity: 0.45;">
+              <div class="vax-icon upcoming">1</div>
+              <div class="vax-body">
+                <div class="vax-name">MMR</div>
+                <div class="vax-sub">Measles, Mumps, Rubella · Dose 1 of 2</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~34 wk</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.45;">
+              <div class="vax-icon upcoming">1</div>
+              <div class="vax-body">
+                <div class="vax-name">Varicella</div>
+                <div class="vax-sub">Chickenpox · Dose 1 of 2</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~34 wk</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.45;">
+              <div class="vax-icon upcoming">1</div>
+              <div class="vax-body">
+                <div class="vax-name">Hep A</div>
+                <div class="vax-sub">Hepatitis A · Dose 1 of 2</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~34 wk</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.45;">
+              <div class="vax-icon upcoming">4</div>
+              <div class="vax-body">
+                <div class="vax-name">PCV13</div>
+                <div class="vax-sub">Dose 4 of 4 · Booster</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~34 wk</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div style="height: 40px;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== SERBIAN VERSION ==================== -->
+<div class="mockup-container">
+  <div class="mockup-label">Raspored Vakcinacije — Srpski</div>
+  <div class="mockup-desc">
+    Serbian version showing "Šestovalentna" (6-in-1) and "Petovalentna" (5-in-1) naming.
+    Same timeline, localized labels.
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="header">
+        <span class="back-btn">‹</span>
+        <div>
+          <div class="header-title">Raspored vakcinacija</div>
+          <div class="header-subtitle">Emma · 14 nedelja</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-number green">7</div>
+          <div class="stat-label">Primljeno</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number amber">3</div>
+          <div class="stat-label">Na redu</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number gray">14</div>
+          <div class="stat-label">Predstojeće</div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <!-- ROĐENJE -->
+        <div class="timeline-group">
+          <div class="tl-dot done"></div>
+          <div class="tl-age done">Rođenje</div>
+          <div class="tl-cards">
+            <div class="vax-card">
+              <div class="vax-icon done">✓</div>
+              <div class="vax-body">
+                <div class="vax-name">Hep B</div>
+                <div class="vax-sub">Hepatitis B · Doza 1 od 3</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-date">5. jan 2026</div>
+                <div class="vax-dose-label">Doza 1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 MESECA -->
+        <div class="timeline-group">
+          <div class="tl-dot done"></div>
+          <div class="tl-age done">2 meseca <span class="age-range">(6–8 nedelja)</span></div>
+          <div class="tl-cards">
+            <div class="vax-card">
+              <div class="vax-icon done">✓</div>
+              <div class="vax-body">
+                <div class="vax-name">Šestovalentna <span class="vax-combo-tag">6-u-1</span></div>
+                <div class="vax-sub">DTaP + IPV + Hib + Hep B · Doza 1</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-date">2. mar 2026</div>
+                <div class="vax-dose-label">Doza 1 od 3</div>
+              </div>
+            </div>
+            <div class="combo-note">
+              <strong>6-u-1</strong> pokriva: difterija, tetanus, pertusis, polio, Hib, hepatitis B
+            </div>
+            <div class="vax-card">
+              <div class="vax-icon done">✓</div>
+              <div class="vax-body">
+                <div class="vax-name">PCV13</div>
+                <div class="vax-sub">Pneumokokna · Doza 1 od 4</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-date">2. mar 2026</div>
+                <div class="vax-dose-label">Doza 1 od 4</div>
+              </div>
+            </div>
+            <div class="vax-card">
+              <div class="vax-icon done">✓</div>
+              <div class="vax-body">
+                <div class="vax-name">Rotavirus</div>
+                <div class="vax-sub">Doza 1 · Period: 6–14 nedelja</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-date">2. mar 2026</div>
+                <div class="vax-dose-label">Doza 1 od 3</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3-4 MESECA — current -->
+        <div class="timeline-group">
+          <div class="tl-dot window"></div>
+          <div class="tl-age window">3–4 meseca <span class="age-range">(trenutni period)</span></div>
+          <div class="tl-cards">
+            <div class="vax-card" style="border-left: 3px solid #f59e0b;">
+              <div class="vax-icon window">2</div>
+              <div class="vax-body">
+                <div class="vax-name">Petovalentna <span class="vax-combo-tag">5-u-1</span></div>
+                <div class="vax-sub window-text">Doza 2 od 4 · Period otvoren</div>
+              </div>
+              <div class="vax-right">
+                <div class="log-btn">Upiši</div>
+              </div>
+            </div>
+            <div class="combo-note">
+              <strong>5-u-1</strong> pokriva: difterija, tetanus, pertusis, polio, Hib
+            </div>
+            <div class="vax-card" style="border-left: 3px solid #f59e0b;">
+              <div class="vax-icon window">2</div>
+              <div class="vax-body">
+                <div class="vax-name">PCV13</div>
+                <div class="vax-sub window-text">Doza 2 od 4 · Period otvoren</div>
+              </div>
+              <div class="vax-right">
+                <div class="log-btn">Upiši</div>
+              </div>
+            </div>
+            <div class="vax-card" style="border-left: 3px solid #f59e0b;">
+              <div class="vax-icon window">2</div>
+              <div class="vax-body">
+                <div class="vax-name">Rotavirus</div>
+                <div class="vax-sub window-text">Doza 2 od 3 · 4 ned. nakon doze 1</div>
+              </div>
+              <div class="vax-right">
+                <div class="log-btn">Upiši</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 MESECI -->
+        <div class="timeline-group">
+          <div class="tl-dot upcoming"></div>
+          <div class="tl-age upcoming">6 meseci <span class="age-range">(~8 nedelja)</span></div>
+          <div class="tl-cards">
+            <div class="vax-card" style="opacity: 0.65;">
+              <div class="vax-icon upcoming">3</div>
+              <div class="vax-body">
+                <div class="vax-name">Petovalentna <span class="vax-combo-tag">5-u-1</span></div>
+                <div class="vax-sub">Doza 3 od 4</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~8 ned.</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.65;">
+              <div class="vax-icon upcoming">3</div>
+              <div class="vax-body">
+                <div class="vax-name">PCV13</div>
+                <div class="vax-sub">Doza 3 od 4</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~8 ned.</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.65;">
+              <div class="vax-icon upcoming">3</div>
+              <div class="vax-body">
+                <div class="vax-name">Rotavirus</div>
+                <div class="vax-sub">Doza 3 od 3 · Poslednja · pre 32. ned.</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~8 ned.</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.65;">
+              <div class="vax-icon upcoming">1</div>
+              <div class="vax-body">
+                <div class="vax-name">Grip <span class="optional-tag">Preporučena</span></div>
+                <div class="vax-sub">Godišnja · Prva od 6 meseci</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~8 ned.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 12 MESECI -->
+        <div class="timeline-group">
+          <div class="tl-dot upcoming"></div>
+          <div class="tl-age upcoming">12 meseci <span class="age-range">(~34 nedelje)</span></div>
+          <div class="tl-cards">
+            <div class="vax-card" style="opacity: 0.45;">
+              <div class="vax-icon upcoming">1</div>
+              <div class="vax-body">
+                <div class="vax-name">MMR</div>
+                <div class="vax-sub">Morbili, zaušci, rubela · Doza 1 od 2</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~34 ned.</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.45;">
+              <div class="vax-icon upcoming">1</div>
+              <div class="vax-body">
+                <div class="vax-name">Varičela</div>
+                <div class="vax-sub">Ovčije boginje · Doza 1 od 2</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~34 ned.</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.45;">
+              <div class="vax-icon upcoming">1</div>
+              <div class="vax-body">
+                <div class="vax-name">Hep A <span class="optional-tag">Preporučena</span></div>
+                <div class="vax-sub">Hepatitis A · Doza 1 od 2</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~34 ned.</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.45;">
+              <div class="vax-icon upcoming">4</div>
+              <div class="vax-body">
+                <div class="vax-name">PCV13</div>
+                <div class="vax-sub">Doza 4 od 4 · Buster</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~34 ned.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 18 MESECI -->
+        <div class="timeline-group">
+          <div class="tl-dot upcoming"></div>
+          <div class="tl-age upcoming">18 meseci</div>
+          <div class="tl-cards">
+            <div class="vax-card" style="opacity: 0.35;">
+              <div class="vax-icon upcoming">4</div>
+              <div class="vax-body">
+                <div class="vax-name">Petovalentna <span class="vax-combo-tag">5-u-1</span></div>
+                <div class="vax-sub">Doza 4 od 4 · Buster</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~60 ned.</div>
+              </div>
+            </div>
+            <div class="vax-card" style="opacity: 0.35;">
+              <div class="vax-icon upcoming">2</div>
+              <div class="vax-body">
+                <div class="vax-name">Hep A <span class="optional-tag">Preporučena</span></div>
+                <div class="vax-sub">Doza 2 od 2 · Poslednja</div>
+              </div>
+              <div class="vax-right">
+                <div class="vax-upcoming-label">~60 ned.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div style="height: 40px;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== INLINE VACCINATION LOGGING ==================== -->
+<div class="mockup-container">
+  <div class="mockup-label">Log Vaccination — Inline Dose</div>
+  <div class="mockup-desc">
+    When logging a vaccination, dose number is auto-suggested based on previous entries.
+    Tapping "Log" from schedule pre-fills vaccine + dose.
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="header">
+        <span class="back-btn">‹</span>
+        <div>
+          <div class="header-title">Log Vaccination</div>
+        </div>
+      </div>
+
+      <div style="padding: 16px;">
+        <!-- Vaccine selected -->
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Vaccine</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #6366f1; color: #fff;">6-in-1</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">PCV13</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">Rotavirus</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">MMR</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">DTaP</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">IPV</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">Hep B</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">Hib</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">Varicella</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">Hep A</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">Flu</div>
+            <div style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1.5px dashed #ccc; color: #999;">Custom...</div>
+          </div>
+        </div>
+
+        <!-- Dose number (auto-suggested) -->
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Dose Number</div>
+
+          <!-- Auto-suggestion banner -->
+          <div style="background: #ede9fe; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <div style="font-size: 16px;">💡</div>
+            <div style="font-size: 12px; color: #6d28d9; font-weight: 600;">
+              Dose 1 was given on Mar 2. This would be dose 2 of 3.
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <div style="padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">1</div>
+            <div style="padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #6366f1; color: #fff;">2</div>
+            <div style="padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #f0f0f5; color: #666;">3</div>
+          </div>
+        </div>
+
+        <!-- Date -->
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Date Given</div>
+          <div style="background: #fff; border: 1.5px solid #e0e0e8; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 15px; color: #1a1a2e; font-weight: 600;">March 19, 2026</span>
+            <span style="color: #6366f1;">📅</span>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div style="margin-bottom: 24px;">
+          <div style="font-size: 13px; font-weight: 700; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Notes</div>
+          <div style="background: #fff; border: 1.5px solid #e0e0e8; border-radius: 10px; padding: 12px 14px; min-height: 60px;">
+            <span style="font-size: 14px; color: #bbb;">Add notes (optional)</span>
+          </div>
+        </div>
+
+        <!-- View schedule link -->
+        <div style="text-align: center; margin-bottom: 16px;">
+          <span style="font-size: 13px; color: #6366f1; font-weight: 600;">📋 View Vaccine Schedule</span>
+        </div>
+
+        <!-- Save button -->
+        <div style="background: #6366f1; color: #fff; text-align: center; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 700;">
+          Log Vaccination
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
