@@ -2,6 +2,8 @@
  * Time formatting utilities for baby tracker
  */
 
+import type { TFunction } from "i18next";
+
 /**
  * Formats seconds into a human-readable duration string
  * @param seconds Total seconds to format
@@ -60,11 +62,18 @@ export function formatHourValue(hour: number, format: TimeFormat = "12h"): strin
  * Calculates time elapsed since a given date
  * Returns a human-readable string like "2h 15m" or "45m"
  */
-export function timeSince(date: Date, now: Date = new Date()): string {
+export function timeSince(date: Date, now: Date = new Date(), t?: TFunction): string {
   const diffMs = now.getTime() - date.getTime();
   if (diffMs < 0) return "0m";
 
   const diffSeconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(diffSeconds / 3600);
+
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    return t ? t("time.dayCount", { count: days }) : `${days}d`;
+  }
+
   return formatDuration(diffSeconds, "short");
 }
 

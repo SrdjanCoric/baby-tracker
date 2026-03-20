@@ -42,7 +42,7 @@ export function FeedingTodayView() {
   }, [feedings]);
 
   const timeSinceLastStr = lastFeeding
-    ? timeSince(new Date(lastFeeding.startedAt))
+    ? timeSince(new Date(lastFeeding.startedAt), undefined, t)
     : "--";
 
   const avgBetweenStr = stats.avgTimeBetweenSessionsSeconds > 0

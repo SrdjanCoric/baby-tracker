@@ -1746,7 +1746,9 @@
   },
   "time": {
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "dayCount_one": "{{count}} day",
+    "dayCount_other": "{{count}} days"
   },
   "accessibility": {
     "breastfeeding": "Breastfeeding",

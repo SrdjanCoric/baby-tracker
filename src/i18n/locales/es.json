@@ -1750,7 +1750,9 @@
   },
   "time": {
     "today": "Hoy",
-    "yesterday": "Ayer"
+    "yesterday": "Ayer",
+    "dayCount_one": "{{count}} día",
+    "dayCount_other": "{{count}} días"
   },
   "accessibility": {
     "breastfeeding": "Lactancia",
