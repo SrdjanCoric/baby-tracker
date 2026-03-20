@@ -7,17 +7,20 @@ export type { LanguageCode };
 
 interface LanguageContextValue {
   language: LanguageCode;
-  resolvedLanguage: "en" | "sr" | "es";
+  resolvedLanguage: "en" | "sr" | "es" | "fr" | "pt" | "de";
   isLoading: boolean;
   setLanguage: (language: LanguageCode) => Promise<void>;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-function getDeviceLanguage(): "en" | "sr" | "es" {
+function getDeviceLanguage(): "en" | "sr" | "es" | "fr" | "pt" | "de" {
   const deviceLocale = Localization.getLocales()[0]?.languageCode ?? "en";
   if (deviceLocale === "sr") return "sr";
   if (deviceLocale === "es") return "es";
+  if (deviceLocale === "fr") return "fr";
+  if (deviceLocale === "pt") return "pt";
+  if (deviceLocale === "de") return "de";
   return "en";
 }
 

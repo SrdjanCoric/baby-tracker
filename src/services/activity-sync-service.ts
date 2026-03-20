@@ -11,6 +11,7 @@ import type { StoredPumpingEntry, CreatePumpingInput, UpdatePumpingInput } from 
 import type { StoredGrowthEntry, CreateGrowthInput, UpdateGrowthInput } from "./growth-storage";
 import type { StoredTummyTimeEntry, CreateTummyTimeInput, UpdateTummyTimeInput } from "./tummyTime-storage";
 import type { StoredMilestoneResponse, MilestoneState } from "./milestones-storage";
+import type { StoredHealthEntry, CreateHealthInput, UpdateHealthInput } from "./health-storage";
 
 const KEYS = {
   feedings: "@feedings:",
@@ -20,6 +21,7 @@ const KEYS = {
   growth: "@growth:",
   tummyTime: "@tummyTimes:",
   milestones: "@milestones:",
+  health: "@health:",
 };
 
 function generateId(): string {
@@ -1399,4 +1401,199 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
   );
 
   await clearGuestActivities(KEYS.tummyTime, oldBabyId);
+}
+
+// ============ HEALTH ============
+
+export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHealthEntry[]> {
+  const { data, error } = await supabase
+    .from("health_entries")
+    .select("*")
+    .eq("baby_id", babyId)
+    .order("logged_at", { ascending: false });
+
+  if (error) {
+    console.error("[ActivitySync] Failed to fetch health:", error.message);
+    throw new Error("Failed to fetch health");
+  }
+
+  const entries: StoredHealthEntry[] = (data || []).map(transformHealthFromDb);
+  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.health}${babyId}`), JSON.stringify(entries));
+  return entries;
+}
+
+export async function createHealthInDatabase(
+  input: CreateHealthInput,
+  userId: string
+): Promise<StoredHealthEntry> {
+  const now = new Date().toISOString();
+  const id = generateId();
+
+  const entry: StoredHealthEntry = {
+    id,
+    babyId: input.babyId,
+    type: input.type,
+    loggedAt: input.loggedAt.toISOString(),
+    notes: input.notes,
+    medicationName: input.medicationName,
+    dosageAmount: input.dosageAmount,
+    dosageUnit: input.dosageUnit,
+    doseNumber: input.doseNumber,
+    temperatureCelsius: input.temperatureCelsius,
+    measurementMethod: input.measurementMethod,
+    vaccineName: input.vaccineName,
+    symptoms: input.symptoms,
+    loggedBy: userId,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await updateLocalHealth(input.babyId, (entries) => [...entries, entry]);
+
+  await queueSyncOperation({
+    type: 'CREATE',
+    table: 'health_entries',
+    entityId: id,
+    data: {
+      id,
+      baby_id: input.babyId,
+      type: input.type,
+      logged_at: input.loggedAt.toISOString(),
+      notes: input.notes,
+      medication_name: input.medicationName,
+      dosage_amount: input.dosageAmount,
+      dosage_unit: input.dosageUnit,
+      dose_number: input.doseNumber,
+      temperature_celsius: input.temperatureCelsius,
+      measurement_method: input.measurementMethod,
+      vaccine_name: input.vaccineName,
+      symptoms: input.symptoms,
+      logged_by: userId,
+      created_at: now,
+      updated_at: now,
+    },
+  });
+
+  return entry;
+}
+
+export async function updateHealthInDatabase(
+  babyId: string,
+  healthId: string,
+  input: UpdateHealthInput
+): Promise<StoredHealthEntry | null> {
+  const now = new Date().toISOString();
+
+  const fieldMap: Record<string, string> = {
+    type: "type",
+    notes: "notes",
+    medicationName: "medication_name",
+    dosageAmount: "dosage_amount",
+    dosageUnit: "dosage_unit",
+    doseNumber: "dose_number",
+    temperatureCelsius: "temperature_celsius",
+    measurementMethod: "measurement_method",
+    vaccineName: "vaccine_name",
+    symptoms: "symptoms",
+  };
+
+  const updateData: Record<string, unknown> = {};
+  if (input.loggedAt !== undefined) updateData.logged_at = input.loggedAt?.toISOString() ?? null;
+
+  for (const [jsField, dbField] of Object.entries(fieldMap)) {
+    const value = (input as Record<string, unknown>)[jsField];
+    if (value !== undefined) {
+      updateData[dbField] = value;
+    }
+  }
+
+  let updatedEntry: StoredHealthEntry | null = null;
+
+  await updateLocalHealth(babyId, (entries) =>
+    entries.map((h) => {
+      if (h.id === healthId) {
+        const updated: StoredHealthEntry = {
+          ...h,
+          type: input.type ?? h.type,
+          loggedAt: input.loggedAt?.toISOString() ?? h.loggedAt,
+          updatedAt: now,
+        };
+
+        const nullableFields = [
+          "notes", "medicationName", "dosageAmount", "dosageUnit",
+          "doseNumber", "temperatureCelsius", "measurementMethod",
+          "vaccineName", "symptoms",
+        ] as const;
+
+        for (const field of nullableFields) {
+          if ((input as unknown as Record<string, unknown>)[field] !== undefined) {
+            if ((input as unknown as Record<string, unknown>)[field] === null) {
+              delete (updated as unknown as Record<string, unknown>)[field];
+            } else {
+              (updated as unknown as Record<string, unknown>)[field] = (input as unknown as Record<string, unknown>)[field];
+            }
+          }
+        }
+
+        updatedEntry = updated;
+        return updated;
+      }
+      return h;
+    })
+  );
+
+  if (!updatedEntry) return null;
+
+  await queueSyncOperation({
+    type: 'UPDATE',
+    table: 'health_entries',
+    entityId: healthId,
+    data: updateData,
+  });
+
+  return updatedEntry;
+}
+
+export async function deleteHealthFromDatabase(babyId: string, healthId: string): Promise<boolean> {
+  await updateLocalHealth(babyId, (entries) => entries.filter((h) => h.id !== healthId));
+
+  await queueSyncOperation({
+    type: 'DELETE',
+    table: 'health_entries',
+    entityId: healthId,
+    data: null,
+  });
+
+  return true;
+}
+
+function transformHealthFromDb(data: Record<string, unknown>): StoredHealthEntry {
+  return {
+    id: data.id as string,
+    babyId: data.baby_id as string,
+    type: data.type as StoredHealthEntry["type"],
+    loggedAt: data.logged_at as string,
+    notes: data.notes as string | undefined,
+    medicationName: data.medication_name as string | undefined,
+    dosageAmount: data.dosage_amount as number | undefined,
+    dosageUnit: data.dosage_unit as StoredHealthEntry["dosageUnit"],
+    doseNumber: data.dose_number as number | undefined,
+    temperatureCelsius: data.temperature_celsius as number | undefined,
+    measurementMethod: data.measurement_method as StoredHealthEntry["measurementMethod"],
+    vaccineName: data.vaccine_name as string | undefined,
+    symptoms: data.symptoms as StoredHealthEntry["symptoms"],
+    loggedBy: data.logged_by as string | undefined,
+    createdAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: (data.updated_at as string) || new Date().toISOString(),
+  };
+}
+
+async function updateLocalHealth(
+  babyId: string,
+  updater: (entries: StoredHealthEntry[]) => StoredHealthEntry[]
+): Promise<void> {
+  const key = getUserScopedKey(`${KEYS.health}${babyId}`);
+  const data = await AsyncStorage.getItem(key);
+  const entries = data ? (JSON.parse(data) as StoredHealthEntry[]) : [];
+  await AsyncStorage.setItem(key, JSON.stringify(updater(entries)));
 }

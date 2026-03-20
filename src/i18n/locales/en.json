@@ -41,7 +41,8 @@
     "total": "Total",
     "or": "or",
     "someone": "Someone",
-    "min": "min"
+    "min": "min",
+    "custom": "Custom"
   },
   "summary": {
     "today": "Today",
@@ -61,7 +62,7 @@
     "wetToday": "{{count}} wet today",
     "lastDirty": "Last dirty: {{time}} ago",
     "todayVolume": "Today: {{volume}}ml",
-"goalProgress": "{{current}}h / {{goal}}h",
+    "goalProgress": "{{current}}h / {{goal}}h",
     "goalProgressWithMinutes": "{{hours}}h {{minutes}}m / {{goal}}h",
     "minuteProgress": "{{current}} / {{goal}} min",
     "session_one": "{{count}} session",
@@ -103,7 +104,7 @@
     "averages": "Averages",
     "noData": "No Sleep Data",
     "noDataDescription": "Start tracking sleep to see patterns here",
-    "newbornNote": "Bedtime and wake time patterns typically emerge around 3–4 months as your baby's circadian rhythm develops.",
+    "newbornNote": "Bedtime and wake time patterns typically emerge around 3\u20134 months as your baby's circadian rhythm develops.",
     "totalSleep": "Total",
     "periodDays": "{{count}}d",
     "recommended": "{{min}}-{{max}}h recommended",
@@ -297,6 +298,148 @@
     "logPastDiaperDesc": "Record a diaper change from earlier",
     "changeTime": "Change Time"
   },
+  "health": {
+    "title": "Health",
+    "logHealth": "Log Health",
+    "logPastHealth": "Log Past Entry",
+    "selectType": "What would you like to log?",
+    "medication": "Medication",
+    "medicationDesc": "Track doses and set reminders",
+    "temperature": "Temperature",
+    "temperatureDesc": "Record temperature readings",
+    "vaccination": "Vaccination",
+    "vaccinationDesc": "Log vaccines and immunizations",
+    "symptom": {
+      "runny_nose": "Runny nose",
+      "vomiting": "Vomiting",
+      "fussy": "Fussy",
+      "lethargic": "Lethargic",
+      "wont_eat": "Won't eat",
+      "rash": "Rash",
+      "cough": "Cough",
+      "congestion": "Congestion",
+      "diarrhea": "Diarrhea",
+      "ear_pulling": "Ear pulling",
+      "teething": "Teething",
+      "excessive_crying": "Excessive crying",
+      "eye_discharge": "Eye discharge",
+      "skin_irritation": "Skin irritation"
+    },
+    "medicationName": "Medication",
+    "dosage": "Dosage",
+    "dosageOptional": "Dosage (optional)",
+    "custom": "Custom",
+    "sameAsLast": "Same as last: {{name}} {{dosage}}",
+    "recentMeds": "Recent Medications",
+    "measurementMethod": {
+      "forehead": "Forehead",
+      "ear": "Ear",
+      "rectal": "Rectal",
+      "armpit": "Armpit"
+    },
+    "forehead": "Forehead",
+    "ear": "Ear",
+    "rectal": "Rectal",
+    "armpit": "Armpit",
+    "normal": "Normal",
+    "lowFever": "Low-grade fever",
+    "fever": "Fever",
+    "highFever": "High fever",
+    "vaccineName": "Vaccine",
+    "selectSymptoms": "Select Symptoms",
+    "runnyNose": "Runny nose",
+    "vomiting": "Vomiting",
+    "fussy": "Fussy",
+    "lethargic": "Lethargic",
+    "wontEat": "Won't eat",
+    "rash": "Rash",
+    "customSymptom": "Custom",
+    "noHealthData": "No health data yet",
+    "logsToday": "{{count}} logs today",
+    "doses": "{{count}} doses",
+    "logTime": "Log Time",
+    "notes": "Notes",
+    "notesPlaceholder": "Add notes (optional)",
+    "healthSaved": "Health entry saved",
+    "symptomsLabel": "Symptoms",
+    "measurementMethodLabel": "Measurement Method",
+    "symptomsDesc": "Track how baby is feeling",
+    "selectMedication": "Select Medication",
+    "medicationNamePlaceholder": "Enter medication name",
+    "dosagePlaceholder": "Enter dosage",
+    "quickTemperatures": "Quick Select",
+    "selectVaccine": "Select Vaccine",
+    "vaccineNamePlaceholder": "Enter vaccine name",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time",
+    "commonMedication": {
+      "tylenol": "Tylenol",
+      "ibuprofen": "Ibuprofen",
+      "vitamin_d": "Vitamin D",
+      "amoxicillin": "Amoxicillin",
+      "gripe_water": "Gripe Water",
+      "simethicone": "Simethicone",
+      "probiotics": "Probiotics",
+      "iron_supplement": "Iron Supplement",
+      "multivitamin": "Multivitamin",
+      "fenistil": "Benadryl",
+      "cetirizine": "Cetirizine (Zyrtec)",
+      "saline_drops": "Saline Drops",
+      "pedialyte": "Pedialyte",
+      "nystatin": "Nystatin"
+    },
+    "commonVaccine": {
+      "dtap": "DTaP",
+      "hexavalent": "6-in-1",
+      "ipv": "IPV",
+      "hep_b": "Hep B",
+      "mmr": "MMR",
+      "rotavirus": "Rotavirus",
+      "pcv": "PCV",
+      "hib": "Hib",
+      "varicella": "Varicella",
+      "flu": "Flu",
+      "hep_a": "Hep A",
+      "bcg": "BCG",
+      "tdap": "Tdap",
+      "pentavalent": "Pentavalent"
+    },
+    "feverStatus": {
+      "normal": "Normal",
+      "low_fever": "Low-grade fever",
+      "fever": "Fever",
+      "high_fever": "High fever"
+    },
+    "dosageUnit": "Unit",
+    "unitMl": "ml",
+    "unitMg": "mg",
+    "unitDrops_one": "drop",
+    "unitDrops_other": "drops",
+    "unitTsp": "tsp",
+    "customDosage": "Custom amount",
+    "doseOf": "Dose {{current}} of {{total}}",
+    "doseLabel": "Dose {{number}}",
+    "saveError": "Failed to save health entry. Please try again.",
+    "allDosesCompleted": "All doses completed",
+    "customDose": "Dose",
+    "given": "Given",
+    "inWindow": "In Window",
+    "upcoming": "Upcoming",
+    "recommended": "Recommended",
+    "doseGivenOn": "Given on {{date}}",
+    "weeksAway": "~{{count}} wk",
+    "monthsAway": "~{{count}} mo",
+    "comboCovers": "Covers: {{vaccines}}",
+    "ageBirth": "Birth",
+    "ageMonths": "{{count}} months",
+    "booster": "Booster",
+    "annual": "Annual",
+    "nextDose": "Next: Dose {{number}}",
+    "doseHistory": "Dose {{number}} given on {{date}}",
+    "comboVaccine": "Combo",
+    "moShort": "mo",
+    "yrShort": "yr"
+  },
   "stoolColors": {
     "yellow": "Yellow (mustard)",
     "brown": "Brown",
@@ -465,6 +608,9 @@
     "english": "English",
     "serbian": "Srpski",
     "spanish": "Español",
+    "french": "Français",
+    "portuguese": "Português",
+    "german": "Deutsch",
     "units": "Units",
     "metric": "Metric (kg, cm, ml)",
     "imperial": "Imperial (lbs, in, oz)",
@@ -601,7 +747,7 @@
     "session_other": "{{count}} sessions",
     "nap_one": "{{count}} nap",
     "nap_other": "{{count}} naps",
-    "wetAndDirty": "{{wet}} wet · {{dirty}} dirty",
+    "wetAndDirty": "{{wet}} wet \u00b7 {{dirty}} dirty",
     "daySun": "Sun",
     "dayMon": "Mon",
     "dayTue": "Tue",
@@ -737,7 +883,8 @@
       "activeTimer": "Active Timer",
       "wakeWindow": "Wake Window",
       "activityGoal": "Activity Goal",
-      "milestone": "Milestone"
+      "milestone": "Milestone",
+      "health": "Health"
     }
   },
   "household": {
@@ -1227,6 +1374,7 @@
     "pumping": "pumping session",
     "growth": "growth measurement",
     "tummyTime": "tummy time session",
+    "health": "health",
     "milestones": "milestone"
   },
   "milestones": {
@@ -1252,7 +1400,7 @@
     "infoYes": "Your child is doing this. Tap to mark as achieved.",
     "infoNotSure": "You're not sure yet. You'll keep an eye on it.",
     "infoNotYet": "Your child isn't doing this yet. That's okay!",
-    "infoReassurance": "Children develop at their own pace. These milestones show what most children (75%) can do by a certain age. If you have concerns, talk to your child's doctor — early support makes a difference.",
+    "infoReassurance": "Children develop at their own pace. These milestones show what most children (75%) can do by a certain age. If you have concerns, talk to your child's doctor \u2014 early support makes a difference.",
     "progressOf": "{{yes}} of {{total}}",
     "age": {
       "2m": "by 2 mo",
@@ -1438,7 +1586,8 @@
       "diapers": "Diapers",
       "growth": "Growth",
       "pumping": "Pumping",
-      "tummyTime": "Tummy Time"
+      "tummyTime": "Tummy Time",
+      "health": "Health"
     },
     "periods": {
       "day": "Day",
@@ -1465,7 +1614,7 @@
       "bottleChartSub": "total ml per day - past 7 days",
       "avgBetween": "Avg between feeds",
       "bottleVolumeTotal": "Bottle volume total",
-      "7days": "FEEDING — 7 DAYS"
+      "7days": "FEEDING \u2014 7 DAYS"
     },
     "diapers": {
       "totalDiapers": "Total Diapers",
@@ -1477,7 +1626,7 @@
       "avgPerDay": "avg {{value}} / day",
       "typeBreakdown": "Type Breakdown",
       "breakdown": "Breakdown",
-      "7days": "DIAPERS — 7 DAYS"
+      "7days": "DIAPERS \u2014 7 DAYS"
     },
     "growth": {
       "latestMeasurements": "Latest Measurements",
@@ -1498,20 +1647,32 @@
       "dailyVolume": "Daily Volume",
       "dailyVolumeSub": "ml per day - past 7 days",
       "totalVolume": "total volume",
-      "7days": "PUMPING — 7 DAYS"
+      "7days": "PUMPING \u2014 7 DAYS"
     },
     "tummyTime": {
       "totalTummyTime": "Total Tummy Time",
       "sessions": "Sessions",
       "longestSession": "Longest Session",
-      "aboveAvg": "↑ {{value}} above 7-day avg",
-      "belowAvg": "↓ {{value}} below 7-day avg",
+      "aboveAvg": "\u2191 {{value}} above 7-day avg",
+      "belowAvg": "\u2193 {{value}} below 7-day avg",
       "avgDailyTotal": "Avg daily total",
       "avgSessionLength": "Avg session length",
       "dailyTummyTime": "Daily Tummy Time",
       "dailyTummyTimeSub": "minutes per day - past 7 days",
       "totalAcrossSessions": "total across {{count}} sessions",
-      "7days": "TUMMY TIME — 7 DAYS"
+      "7days": "TUMMY TIME \u2014 7 DAYS"
+    },
+    "health": {
+      "latestTemp": "Latest Temperature",
+      "medsToday": "Medications Today",
+      "vaccineProgress": "Vaccine Progress",
+      "recentSymptoms": "Recent Symptoms",
+      "recentEntries": "Recent Entries",
+      "noReadings": "No readings",
+      "noEntries": "No health data yet",
+      "justNow": "Just now",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
     },
     "common": {
       "past7Days": "Past 7 Days",
@@ -1588,7 +1749,9 @@
   },
   "time": {
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "dayCount_one": "{{count}} day",
+    "dayCount_other": "{{count}} days"
   },
   "accessibility": {
     "breastfeeding": "Breastfeeding",
@@ -1669,7 +1832,7 @@
   "aboutScreen": {
     "appName": "Baby Tracker",
     "appDescription": "A privacy-first, ad-free baby tracking app designed for sleep-deprived parents.",
-    "madeWithLove": "Made with ❤️ for parents everywhere"
+    "madeWithLove": "Made with \u2764\ufe0f for parents everywhere"
   },
   "notifications": {
     "feedingRemindersChannel": "Feeding Reminders",

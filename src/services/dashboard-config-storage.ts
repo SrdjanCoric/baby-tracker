@@ -25,6 +25,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
     { activity: "tummyTime", visible: true, order: 4 },
     { activity: "growth", visible: true, order: 5 },
     { activity: "milestones", visible: true, order: 6 },
+    { activity: "health", visible: true, order: 7 },
   ],
   lastModified: new Date().toISOString(),
 };

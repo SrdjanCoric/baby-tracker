@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=414, initial-scale=1">
+<title>Vaccine Schedule - UI Mockups</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f0f0f5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    padding: 40px;
+    justify-content: center;
+  }
+
+  .mockup-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .mockup-label {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+    text-align: center;
+  }
+
+  .mockup-desc {
+    font-size: 14px;
+    color: #666;
+    max-width: 380px;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    border: 8px solid #1a1a1a;
+    position: relative;
+  }
+
+  .notch {
+    width: 160px;
+    height: 34px;
+    background: #1a1a1a;
+    border-radius: 0 0 20px 20px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+
+  .screen {
+    height: 100%;
+    overflow-y: auto;
+    background: #f8f8fc;
+    padding-top: 54px;
+  }
+
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* Header */
+  .header {
+    background: #fff;
+    padding: 12px 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  .back-btn {
+    font-size: 22px;
+    color: #6366f1;
+    cursor: pointer;
+  }
+
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+    flex: 1;
+  }
+
+  .header-subtitle {
+    font-size: 12px;
+    color: #888;
+  }
+
+  /* Progress bar */
+  .progress-section {
+    background: #fff;
+    padding: 16px 20px;
+    margin-bottom: 2px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .progress-count {
+    font-size: 13px;
+    color: #6366f1;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #e8e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 4px;
+    transition: width 0.3s;
+  }
+
+  /* ===== OPTION A: Age-grouped checklist ===== */
+  .age-group {
+    margin-top: 12px;
+  }
+
+  .age-group-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 10px;
+  }
+
+  .age-badge {
+    background: #6366f1;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+
+  .age-badge.past {
+    background: #a5a5b8;
+  }
+
+  .age-badge.current {
+    background: #f59e0b;
+  }
+
+  .age-line {
+    flex: 1;
+    height: 1px;
+    background: #ddd;
+  }
+
+  .vaccine-card {
+    background: #fff;
+    margin: 0 16px 8px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .vaccine-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .vaccine-check.done {
+    background: #10b981;
+    color: #fff;
+  }
+
+  .vaccine-check.due {
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    color: #f59e0b;
+  }
+
+  .vaccine-check.upcoming {
+    background: #f0f0f5;
+    border: 2px solid #d0d0dd;
+    color: #999;
+  }
+
+  .vaccine-check.overdue {
+    background: #fee2e2;
+    border: 2px solid #ef4444;
+    color: #ef4444;
+  }
+
+  .vaccine-info {
+    flex: 1;
+  }
+
+  .vaccine-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .vaccine-detail {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  .vaccine-detail.overdue-text {
+    color: #ef4444;
+    font-weight: 600;
+  }
+
+  .vaccine-detail.due-text {
+    color: #f59e0b;
+    font-weight: 600;
+  }
+
+  .dose-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .dose-badge.done {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  .dose-badge.due {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .dose-badge.upcoming {
+    background: #f0f0f5;
+    color: #888;
+  }
+
+  .dose-badge.overdue {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .completed-date {
+    font-size: 11px;
+    color: #10b981;
+    font-weight: 500;
+  }
+
+  /* ===== OPTION B: Timeline view ===== */
+  .timeline-container {
+    padding: 16px 20px;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 14px;
+    position: relative;
+    padding-bottom: 4px;
+  }
+
+  .timeline-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 36px;
+    flex-shrink: 0;
+  }
+
+  .timeline-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    z-index: 2;
+    flex-shrink: 0;
+  }
+
+  .timeline-dot.done { background: #10b981; }
+  .timeline-dot.due { background: #f59e0b; }
+  .timeline-dot.upcoming { background: #d0d0dd; }
+  .timeline-dot.overdue { background: #ef4444; }
+
+  .timeline-line {
+    width: 2px;
+    flex: 1;
+    background: #e0e0e8;
+    min-height: 20px;
+  }
+
+  .timeline-age-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6366f1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    padding-top: 1px;
+  }
+
+  .timeline-vaccines {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 16px;
+  }
+
+  .timeline-vaccine-row {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .timeline-vaccine-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .timeline-vaccine-dose {
+    font-size: 11px;
+    color: #888;
+  }
+
+  /* ===== OPTION C: Card grid ===== */
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px;
+    overflow-x: auto;
+  }
+
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .filter-tab.active {
+    background: #6366f1;
+    color: #fff;
+  }
+
+  .filter-tab.inactive {
+    background: #fff;
+    color: #666;
+    border: 1px solid #e0e0e8;
+  }
+
+  .count-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.3);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    margin-left: 4px;
+  }
+
+  .vaccine-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 16px 16px;
+  }
+
+  .vaccine-card-c {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .vaccine-card-c .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .vaccine-card-c .name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .vaccine-card-c .full-name {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  .dose-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .dose-dot {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .dose-dot.done {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  .dose-dot.due {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .dose-dot.upcoming {
+    background: #f0f0f5;
+    color: #999;
+  }
+
+  .dose-dot.overdue {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .log-btn {
+    margin-top: 10px;
+    padding: 8px;
+    background: #6366f1;
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-indicator.due { background: #f59e0b; }
+  .status-indicator.overdue { background: #ef4444; }
+
+  /* Section label for option */
+  .option-label {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: #6366f1;
+    margin-bottom: 4px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 12px;
+    padding: 8px 20px 4px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #666;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .legend-dot.done { background: #10b981; }
+  .legend-dot.due { background: #f59e0b; }
+  .legend-dot.overdue { background: #ef4444; }
+  .legend-dot.upcoming { background: #d0d0dd; }
+
+  /* Summary stats row */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .stat-number.green { color: #10b981; }
+  .stat-number.amber { color: #f59e0b; }
+  .stat-number.red { color: #ef4444; }
+  .stat-number.gray { color: #999; }
+
+  .stat-label {
+    font-size: 11px;
+    color: #888;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== OPTION A: Age-Grouped Checklist ==================== -->
+<div class="mockup-container">
+  <div class="option-label">Option A</div>
+  <div class="mockup-label">Age-Grouped Checklist</div>
+  <div class="mockup-desc">Vaccines grouped by CDC-recommended age. Each group shows all vaccines due at that milestone. Clean, scannable layout.</div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="header">
+        <span class="back-btn">‹</span>
+        <div>
+          <div class="header-title">Vaccine Schedule</div>
+          <div class="header-subtitle">Emma · 14 weeks old</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Immunization Progress</span>
+          <span class="progress-count">5 of 24 doses</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 21%"></div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot done"></div> Done</div>
+        <div class="legend-item"><div class="legend-dot due"></div> Due</div>
+        <div class="legend-item"><div class="legend-dot overdue"></div> Overdue</div>
+        <div class="legend-item"><div class="legend-dot upcoming"></div> Upcoming</div>
+      </div>
+
+      <!-- Birth -->
+      <div class="age-group">
+        <div class="age-group-header">
+          <span class="age-badge past">Birth</span>
+          <div class="age-line"></div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check done">✓</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Hep B</div>
+            <div class="vaccine-detail">Dose 1 of 3</div>
+          </div>
+          <div>
+            <div class="completed-date">Jan 5</div>
+            <div class="dose-badge done">Done</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 months -->
+      <div class="age-group">
+        <div class="age-group-header">
+          <span class="age-badge past">2 months</span>
+          <div class="age-line"></div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check done">✓</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">DTaP</div>
+            <div class="vaccine-detail">Dose 1 of 5</div>
+          </div>
+          <div>
+            <div class="completed-date">Mar 7</div>
+            <div class="dose-badge done">Done</div>
+          </div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check done">✓</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Rotavirus</div>
+            <div class="vaccine-detail">Dose 1 of 3</div>
+          </div>
+          <div>
+            <div class="completed-date">Mar 7</div>
+            <div class="dose-badge done">Done</div>
+          </div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check done">✓</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">PCV13</div>
+            <div class="vaccine-detail">Dose 1 of 4</div>
+          </div>
+          <div>
+            <div class="completed-date">Mar 7</div>
+            <div class="dose-badge done">Done</div>
+          </div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check done">✓</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">IPV</div>
+            <div class="vaccine-detail">Dose 1 of 4</div>
+          </div>
+          <div>
+            <div class="completed-date">Mar 7</div>
+            <div class="dose-badge done">Done</div>
+          </div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check done">✓</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Hib</div>
+            <div class="vaccine-detail">Dose 1 of 4</div>
+          </div>
+          <div>
+            <div class="completed-date">Mar 7</div>
+            <div class="dose-badge done">Done</div>
+          </div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check done">✓</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Hep B</div>
+            <div class="vaccine-detail">Dose 2 of 3</div>
+          </div>
+          <div>
+            <div class="completed-date">Mar 7</div>
+            <div class="dose-badge done">Done</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 months -->
+      <div class="age-group">
+        <div class="age-group-header">
+          <span class="age-badge current">4 months ← Now</span>
+          <div class="age-line"></div>
+        </div>
+        <div class="vaccine-card" style="border-left: 3px solid #f59e0b;">
+          <div class="vaccine-check due">!</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">DTaP</div>
+            <div class="vaccine-detail due-text">Dose 2 of 5 · Due now</div>
+          </div>
+          <div class="dose-badge due">Due</div>
+        </div>
+        <div class="vaccine-card" style="border-left: 3px solid #ef4444;">
+          <div class="vaccine-check overdue">!</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Rotavirus</div>
+            <div class="vaccine-detail overdue-text">Dose 2 of 3 · 2 weeks overdue</div>
+          </div>
+          <div class="dose-badge overdue">Overdue</div>
+        </div>
+        <div class="vaccine-card" style="border-left: 3px solid #f59e0b;">
+          <div class="vaccine-check due">!</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">PCV13</div>
+            <div class="vaccine-detail due-text">Dose 2 of 4 · Due now</div>
+          </div>
+          <div class="dose-badge due">Due</div>
+        </div>
+        <div class="vaccine-card" style="border-left: 3px solid #f59e0b;">
+          <div class="vaccine-check due">!</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">IPV</div>
+            <div class="vaccine-detail due-text">Dose 2 of 4 · Due now</div>
+          </div>
+          <div class="dose-badge due">Due</div>
+        </div>
+        <div class="vaccine-card" style="border-left: 3px solid #f59e0b;">
+          <div class="vaccine-check due">!</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Hib</div>
+            <div class="vaccine-detail due-text">Dose 2 of 4 · Due now</div>
+          </div>
+          <div class="dose-badge due">Due</div>
+        </div>
+      </div>
+
+      <!-- 6 months -->
+      <div class="age-group">
+        <div class="age-group-header">
+          <span class="age-badge">6 months</span>
+          <div class="age-line"></div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">3</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">DTaP</div>
+            <div class="vaccine-detail">Dose 3 of 5</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">3</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Rotavirus</div>
+            <div class="vaccine-detail">Dose 3 of 3</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">3</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">PCV13</div>
+            <div class="vaccine-detail">Dose 3 of 4</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">3</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Hep B</div>
+            <div class="vaccine-detail">Dose 3 of 3 · Final</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">1</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Flu</div>
+            <div class="vaccine-detail">Annual · First eligible</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+      </div>
+
+      <!-- 12 months -->
+      <div class="age-group">
+        <div class="age-group-header">
+          <span class="age-badge">12 months</span>
+          <div class="age-line"></div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">1</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">MMR</div>
+            <div class="vaccine-detail">Dose 1 of 2</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">1</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Varicella</div>
+            <div class="vaccine-detail">Dose 1 of 2</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">1</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">Hep A</div>
+            <div class="vaccine-detail">Dose 1 of 2</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+        <div class="vaccine-card">
+          <div class="vaccine-check upcoming">4</div>
+          <div class="vaccine-info">
+            <div class="vaccine-name">PCV13</div>
+            <div class="vaccine-detail">Dose 4 of 4 · Final</div>
+          </div>
+          <div class="dose-badge upcoming">Upcoming</div>
+        </div>
+      </div>
+
+      <div style="height: 40px;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== OPTION B: Timeline View ==================== -->
+<div class="mockup-container">
+  <div class="option-label">Option B</div>
+  <div class="mockup-label">Vertical Timeline</div>
+  <div class="mockup-desc">Connected timeline showing progression through age milestones. More visual and compact. Shows dose number inline.</div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="header">
+        <span class="back-btn">‹</span>
+        <div>
+          <div class="header-title">Vaccine Schedule</div>
+          <div class="header-subtitle">Emma · 14 weeks old</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-number green">5</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number amber">5</div>
+          <div class="stat-label">Due</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number red">1</div>
+          <div class="stat-label">Overdue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number gray">13</div>
+          <div class="stat-label">Upcoming</div>
+        </div>
+      </div>
+
+      <div class="timeline-container">
+        <!-- Birth -->
+        <div class="timeline-item">
+          <div class="timeline-track">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-vaccines">
+            <div class="timeline-age-label">Birth</div>
+            <div class="timeline-vaccine-row">
+              <div>
+                <div class="timeline-vaccine-name">Hep B</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 3</div>
+              </div>
+              <div class="dose-badge done">✓ Jan 5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 months -->
+        <div class="timeline-item">
+          <div class="timeline-track">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-vaccines">
+            <div class="timeline-age-label">2 Months</div>
+            <div class="timeline-vaccine-row">
+              <div>
+                <div class="timeline-vaccine-name">DTaP</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 5</div>
+              </div>
+              <div class="dose-badge done">✓ Mar 7</div>
+            </div>
+            <div class="timeline-vaccine-row">
+              <div>
+                <div class="timeline-vaccine-name">Rotavirus</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 3</div>
+              </div>
+              <div class="dose-badge done">✓ Mar 7</div>
+            </div>
+            <div class="timeline-vaccine-row">
+              <div>
+                <div class="timeline-vaccine-name">PCV13</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 4</div>
+              </div>
+              <div class="dose-badge done">✓ Mar 7</div>
+            </div>
+            <div class="timeline-vaccine-row">
+              <div>
+                <div class="timeline-vaccine-name">IPV</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 4</div>
+              </div>
+              <div class="dose-badge done">✓ Mar 7</div>
+            </div>
+            <div class="timeline-vaccine-row">
+              <div>
+                <div class="timeline-vaccine-name">Hib</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 4</div>
+              </div>
+              <div class="dose-badge done">✓ Mar 7</div>
+            </div>
+            <div class="timeline-vaccine-row">
+              <div>
+                <div class="timeline-vaccine-name">Hep B</div>
+                <div class="timeline-vaccine-dose">Dose 2 of 3</div>
+              </div>
+              <div class="dose-badge done">✓ Mar 7</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 months -->
+        <div class="timeline-item">
+          <div class="timeline-track">
+            <div class="timeline-dot due"></div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-vaccines">
+            <div class="timeline-age-label" style="color: #f59e0b;">4 Months ← Now</div>
+            <div class="timeline-vaccine-row" style="border-left: 3px solid #ef4444;">
+              <div>
+                <div class="timeline-vaccine-name">Rotavirus</div>
+                <div class="timeline-vaccine-dose" style="color: #ef4444; font-weight: 600;">Dose 2 of 3 · Overdue</div>
+              </div>
+              <div class="dose-badge overdue">Log</div>
+            </div>
+            <div class="timeline-vaccine-row" style="border-left: 3px solid #f59e0b;">
+              <div>
+                <div class="timeline-vaccine-name">DTaP</div>
+                <div class="timeline-vaccine-dose" style="color: #d97706;">Dose 2 of 5 · Due</div>
+              </div>
+              <div class="dose-badge due">Log</div>
+            </div>
+            <div class="timeline-vaccine-row" style="border-left: 3px solid #f59e0b;">
+              <div>
+                <div class="timeline-vaccine-name">PCV13</div>
+                <div class="timeline-vaccine-dose" style="color: #d97706;">Dose 2 of 4 · Due</div>
+              </div>
+              <div class="dose-badge due">Log</div>
+            </div>
+            <div class="timeline-vaccine-row" style="border-left: 3px solid #f59e0b;">
+              <div>
+                <div class="timeline-vaccine-name">IPV</div>
+                <div class="timeline-vaccine-dose" style="color: #d97706;">Dose 2 of 4 · Due</div>
+              </div>
+              <div class="dose-badge due">Log</div>
+            </div>
+            <div class="timeline-vaccine-row" style="border-left: 3px solid #f59e0b;">
+              <div>
+                <div class="timeline-vaccine-name">Hib</div>
+                <div class="timeline-vaccine-dose" style="color: #d97706;">Dose 2 of 4 · Due</div>
+              </div>
+              <div class="dose-badge due">Log</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 months -->
+        <div class="timeline-item">
+          <div class="timeline-track">
+            <div class="timeline-dot upcoming"></div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-vaccines">
+            <div class="timeline-age-label" style="color: #999;">6 Months</div>
+            <div class="timeline-vaccine-row" style="opacity: 0.7;">
+              <div>
+                <div class="timeline-vaccine-name">DTaP</div>
+                <div class="timeline-vaccine-dose">Dose 3 of 5</div>
+              </div>
+              <div class="dose-badge upcoming">8 wk</div>
+            </div>
+            <div class="timeline-vaccine-row" style="opacity: 0.7;">
+              <div>
+                <div class="timeline-vaccine-name">Rotavirus</div>
+                <div class="timeline-vaccine-dose">Dose 3 of 3 · Final</div>
+              </div>
+              <div class="dose-badge upcoming">8 wk</div>
+            </div>
+            <div class="timeline-vaccine-row" style="opacity: 0.7;">
+              <div>
+                <div class="timeline-vaccine-name">PCV13</div>
+                <div class="timeline-vaccine-dose">Dose 3 of 4</div>
+              </div>
+              <div class="dose-badge upcoming">8 wk</div>
+            </div>
+            <div class="timeline-vaccine-row" style="opacity: 0.7;">
+              <div>
+                <div class="timeline-vaccine-name">Hep B</div>
+                <div class="timeline-vaccine-dose">Dose 3 of 3 · Final</div>
+              </div>
+              <div class="dose-badge upcoming">8 wk</div>
+            </div>
+            <div class="timeline-vaccine-row" style="opacity: 0.7;">
+              <div>
+                <div class="timeline-vaccine-name">Flu</div>
+                <div class="timeline-vaccine-dose">Annual · First eligible</div>
+              </div>
+              <div class="dose-badge upcoming">8 wk</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 12 months -->
+        <div class="timeline-item">
+          <div class="timeline-track">
+            <div class="timeline-dot upcoming"></div>
+          </div>
+          <div class="timeline-vaccines">
+            <div class="timeline-age-label" style="color: #999;">12 Months</div>
+            <div class="timeline-vaccine-row" style="opacity: 0.5;">
+              <div>
+                <div class="timeline-vaccine-name">MMR</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 2</div>
+              </div>
+              <div class="dose-badge upcoming">34 wk</div>
+            </div>
+            <div class="timeline-vaccine-row" style="opacity: 0.5;">
+              <div>
+                <div class="timeline-vaccine-name">Varicella</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 2</div>
+              </div>
+              <div class="dose-badge upcoming">34 wk</div>
+            </div>
+            <div class="timeline-vaccine-row" style="opacity: 0.5;">
+              <div>
+                <div class="timeline-vaccine-name">Hep A</div>
+                <div class="timeline-vaccine-dose">Dose 1 of 2</div>
+              </div>
+              <div class="dose-badge upcoming">34 wk</div>
+            </div>
+            <div class="timeline-vaccine-row" style="opacity: 0.5;">
+              <div>
+                <div class="timeline-vaccine-name">PCV13</div>
+                <div class="timeline-vaccine-dose">Dose 4 of 4 · Final</div>
+              </div>
+              <div class="dose-badge upcoming">34 wk</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 40px;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== OPTION C: Vaccine Cards with Filter ==================== -->
+<div class="mockup-container">
+  <div class="option-label">Option C</div>
+  <div class="mockup-label">Vaccine Cards + Filter</div>
+  <div class="mockup-desc">Each vaccine gets its own card showing all doses as a progress row. Filter tabs let you focus on what needs attention. Best for per-vaccine tracking.</div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="header">
+        <span class="back-btn">‹</span>
+        <div>
+          <div class="header-title">Vaccine Schedule</div>
+          <div class="header-subtitle">Emma · 14 weeks old</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Overall Progress</span>
+          <span class="progress-count">5 / 24 doses</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 21%"></div>
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <div class="filter-tab active">All<span class="count-badge">10</span></div>
+        <div class="filter-tab inactive">Due<span class="count-badge" style="background: #fef3c7; color: #d97706; margin-left: 4px;">5</span></div>
+        <div class="filter-tab inactive">Overdue<span class="count-badge" style="background: #fee2e2; color: #dc2626; margin-left: 4px;">1</span></div>
+        <div class="filter-tab inactive">Done<span class="count-badge" style="background: #d1fae5; color: #059669; margin-left: 4px;">5</span></div>
+      </div>
+
+      <div class="vaccine-grid">
+        <!-- Rotavirus - has overdue dose -->
+        <div class="vaccine-card-c" style="border-left: 3px solid #ef4444;">
+          <div class="top-row">
+            <div>
+              <div class="name">Rotavirus</div>
+              <div class="full-name">Rotavirus vaccine (RV)</div>
+            </div>
+            <span class="status-indicator overdue"></span>
+          </div>
+          <div class="dose-dots">
+            <div class="dose-dot done">✓ Dose 1</div>
+            <div class="dose-dot overdue">! Dose 2</div>
+            <div class="dose-dot upcoming">Dose 3</div>
+          </div>
+          <div class="log-btn">Log Dose 2</div>
+        </div>
+
+        <!-- DTaP -->
+        <div class="vaccine-card-c" style="border-left: 3px solid #f59e0b;">
+          <div class="top-row">
+            <div>
+              <div class="name">DTaP</div>
+              <div class="full-name">Diphtheria, Tetanus, Pertussis</div>
+            </div>
+            <span class="status-indicator due"></span>
+          </div>
+          <div class="dose-dots">
+            <div class="dose-dot done">✓ Dose 1</div>
+            <div class="dose-dot due">! Dose 2</div>
+            <div class="dose-dot upcoming">Dose 3</div>
+            <div class="dose-dot upcoming">+2</div>
+          </div>
+          <div class="log-btn">Log Dose 2</div>
+        </div>
+
+        <!-- Hep B -->
+        <div class="vaccine-card-c">
+          <div class="top-row">
+            <div>
+              <div class="name">Hep B</div>
+              <div class="full-name">Hepatitis B</div>
+            </div>
+          </div>
+          <div class="dose-dots">
+            <div class="dose-dot done">✓ Dose 1</div>
+            <div class="dose-dot done">✓ Dose 2</div>
+            <div class="dose-dot upcoming">Dose 3</div>
+          </div>
+        </div>
+
+        <!-- PCV13 -->
+        <div class="vaccine-card-c" style="border-left: 3px solid #f59e0b;">
+          <div class="top-row">
+            <div>
+              <div class="name">PCV13</div>
+              <div class="full-name">Pneumococcal conjugate</div>
+            </div>
+            <span class="status-indicator due"></span>
+          </div>
+          <div class="dose-dots">
+            <div class="dose-dot done">✓ Dose 1</div>
+            <div class="dose-dot due">! Dose 2</div>
+            <div class="dose-dot upcoming">Dose 3</div>
+            <div class="dose-dot upcoming">Dose 4</div>
+          </div>
+          <div class="log-btn">Log Dose 2</div>
+        </div>
+
+        <!-- IPV -->
+        <div class="vaccine-card-c" style="border-left: 3px solid #f59e0b;">
+          <div class="top-row">
+            <div>
+              <div class="name">IPV</div>
+              <div class="full-name">Inactivated Poliovirus</div>
+            </div>
+            <span class="status-indicator due"></span>
+          </div>
+          <div class="dose-dots">
+            <div class="dose-dot done">✓ Dose 1</div>
+            <div class="dose-dot due">! Dose 2</div>
+            <div class="dose-dot upcoming">Dose 3</div>
+            <div class="dose-dot upcoming">Dose 4</div>
+          </div>
+          <div class="log-btn">Log Dose 2</div>
+        </div>
+
+        <!-- MMR -->
+        <div class="vaccine-card-c">
+          <div class="top-row">
+            <div>
+              <div class="name">MMR</div>
+              <div class="full-name">Measles, Mumps, Rubella</div>
+            </div>
+          </div>
+          <div class="dose-dots">
+            <div class="dose-dot upcoming">Dose 1</div>
+            <div class="dose-dot upcoming">Dose 2</div>
+          </div>
+        </div>
+
+        <!-- Varicella -->
+        <div class="vaccine-card-c">
+          <div class="top-row">
+            <div>
+              <div class="name">Varicella</div>
+              <div class="full-name">Chickenpox</div>
+            </div>
+          </div>
+          <div class="dose-dots">
+            <div class="dose-dot upcoming">Dose 1</div>
+            <div class="dose-dot upcoming">Dose 2</div>
+          </div>
+        </div>
+
+        <!-- Hep A -->
+        <div class="vaccine-card-c">
+          <div class="top-row">
+            <div>
+              <div class="name">Hep A</div>
+              <div class="full-name">Hepatitis A</div>
+            </div>
+          </div>
+          <div class="dose-dots">
+            <div class="dose-dot upcoming">Dose 1</div>
+            <div class="dose-dot upcoming">Dose 2</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 40px;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

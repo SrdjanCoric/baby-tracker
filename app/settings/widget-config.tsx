@@ -38,6 +38,7 @@ const ACTIVITY_LABEL_KEYS = {
   growth: "sync.tableLabels.growth",
   tummyTime: "sync.tableLabels.tummyTime",
   milestones: "sync.tableLabels.milestone",
+  health: "health.title",
 } as const satisfies Record<ActivityType, string>;
 
 interface ActivityItem {

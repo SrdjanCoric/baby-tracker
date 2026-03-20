@@ -4,11 +4,17 @@ import * as Localization from "expo-localization";
 import en from "./locales/en.json";
 import sr from "./locales/sr.json";
 import es from "./locales/es.json";
+import fr from "./locales/fr.json";
+import pt from "./locales/pt.json";
+import de from "./locales/de.json";
 
 const resources = {
   en: { translation: en },
   sr: { translation: sr },
   es: { translation: es },
+  fr: { translation: fr },
+  pt: { translation: pt },
+  de: { translation: de },
 };
 
 i18n.use(initReactI18next).init({

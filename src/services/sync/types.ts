@@ -28,7 +28,8 @@ export type SyncableTable =
   | 'active_timers'
   | 'wake_window_preferences'
   | 'activity_goals'
-  | 'milestone_responses';
+  | 'milestone_responses'
+  | 'health_entries';
 
 export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE';
 

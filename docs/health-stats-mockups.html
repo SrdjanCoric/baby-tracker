@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Stats — UI Mockups</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #F5EDE8;
+    --card: #FFFFFF;
+    --surface-secondary: #EFE7E2;
+    --accent: #D4836B;
+    --accent-button: #B96B55;
+    --accent-muted: #FBF0EC;
+    --text-primary: #2D2A26;
+    --text-secondary: #5C5752;
+    --text-tertiary: #7A756E;
+    --text-muted: #9A958E;
+    --success: #22c55e;
+    --success-muted: #dcfce7;
+    --warning: #f59e0b;
+    --warning-muted: #fef3c7;
+    --error: #ef4444;
+    --error-muted: #fee2e2;
+    --neutral: #6b7280;
+    --border: #E5E2DE;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --radius-pill: 50px;
+
+    /* Other activity colors for category tabs */
+    --sleep-accent: #9E8DA9;
+    --feeding-accent: #8CB369;
+    --diaper-accent: #E0A099;
+    --pumping-accent: #7BA3A8;
+    --tummy-accent: #D4A574;
+    --growth-accent: #6AAB9C;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #e8ddd6;
+    min-height: 100vh;
+    padding: 40px 20px;
+    color: var(--text-primary);
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .page-subtitle {
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 15px;
+    margin-bottom: 48px;
+    font-weight: 500;
+  }
+
+  .options-row {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .option-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .option-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-button);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    background: var(--accent-muted);
+    padding: 6px 18px;
+    border-radius: var(--radius-pill);
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 3px #c4b8ae,
+      0 0 0 6px #b0a49a,
+      0 25px 80px rgba(0,0,0,0.25),
+      0 8px 30px rgba(0,0,0,0.12);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 28px;
+    background: #2D2A26;
+    border-radius: 0 0 18px 18px;
+    z-index: 10;
+  }
+
+  .status-bar {
+    height: 54px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 8px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .status-time { font-size: 15px; }
+  .status-icons { display: flex; gap: 5px; align-items: center; font-size: 12px; }
+
+  .screen-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: 2px 0 10px;
+  }
+
+  /* Category tabs */
+  .cat-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 0 16px 12px;
+    overflow-x: auto;
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-secondary);
+    background: var(--surface-secondary);
+  }
+  .cat-tab.active {
+    color: white;
+  }
+  .cat-tab .emoji { font-size: 14px; }
+
+  /* Period tabs */
+  .period-tabs {
+    display: flex;
+    margin: 0 16px 16px;
+    background: var(--surface-secondary);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+  }
+  .period-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .period-tab.active {
+    background: var(--card);
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* Content area */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 20px;
+  }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* Stat cards */
+  .metric-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .metric-card {
+    flex: 1;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 4px 0 0 4px;
+  }
+  .metric-card.health-border::before { background: var(--accent); }
+  .metric-card.success-border::before { background: var(--success); }
+  .metric-card.warning-border::before { background: var(--warning); }
+  .metric-card.error-border::before { background: var(--error); }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .metric-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+  .metric-value .unit {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+  }
+  .metric-subtitle {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  /* Highlight card */
+  .highlight-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .highlight-emoji { font-size: 36px; margin-bottom: 6px; }
+  .highlight-value {
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+  .highlight-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .highlight-context {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  /* Breakdown card */
+  .breakdown-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .breakdown-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .breakdown-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  .breakdown-label {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .breakdown-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .breakdown-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-left: 8px;
+    font-weight: 500;
+  }
+
+  /* Vaccine progress card */
+  .vaccine-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .vaccine-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+  }
+  .vaccine-row {
+    display: flex;
+    align-items: center;
+    padding: 7px 0;
+    gap: 10px;
+  }
+  .vaccine-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .vaccine-progress {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .progress-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700;
+  }
+  .progress-dot.filled {
+    background: var(--success);
+    color: white;
+  }
+  .progress-dot.empty {
+    background: var(--surface-secondary);
+    color: var(--text-muted);
+  }
+  .progress-dot.next-dot {
+    background: var(--warning-muted);
+    color: var(--warning);
+    border: 1.5px solid var(--warning);
+  }
+  .vaccine-status {
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 44px;
+    text-align: right;
+  }
+
+  /* Temperature chart placeholder */
+  .temp-chart {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .temp-chart-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .temp-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 100px;
+    padding: 0 4px;
+  }
+  .temp-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .temp-bar {
+    width: 100%;
+    border-radius: 6px 6px 3px 3px;
+    min-height: 4px;
+    transition: height 0.3s;
+  }
+  .temp-bar-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .temp-bar-value {
+    font-size: 9px;
+    color: var(--text-secondary);
+    font-weight: 700;
+  }
+  .temp-reference {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+  .temp-ref-line {
+    width: 16px;
+    height: 2px;
+    background: var(--success);
+    border-radius: 1px;
+  }
+  .temp-ref-text {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+
+  /* Symptom tags */
+  .symptom-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .symptom-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+  .symptom-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .symptom-tag {
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .symptom-tag .count {
+    background: rgba(0,0,0,0.08);
+    padding: 1px 6px;
+    border-radius: var(--radius-pill);
+    font-size: 10px;
+  }
+
+  /* Recent entries list */
+  .recent-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .recent-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+  .recent-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .recent-row:last-child { border-bottom: none; }
+  .recent-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .recent-info { flex: 1; }
+  .recent-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .recent-detail {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+  .recent-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    display: flex;
+    padding: 8px 20px 28px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    gap: 0;
+  }
+  .tab-item {
+    flex: 1;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .tab-item.active-tab { color: var(--accent); }
+  .tab-item .tab-icon { font-size: 20px; }
+</style>
+</head>
+<body>
+
+<h1>Health Stats</h1>
+<p class="page-subtitle">Two approaches for health statistics in the Stats tab</p>
+
+<div class="options-row">
+
+  <!-- ==================== TODAY VIEW ==================== -->
+  <div class="option-wrapper">
+    <div class="option-label">Today View</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons"><span>●●●●</span> <span>📶</span> <span>🔋</span></div>
+      </div>
+
+      <div class="screen-title">Statistics</div>
+
+      <div class="cat-tabs">
+        <div class="cat-tab"><span class="emoji">🌙</span> Sleep</div>
+        <div class="cat-tab"><span class="emoji">🍼</span> Feeding</div>
+        <div class="cat-tab"><span class="emoji">💧</span> Diapers</div>
+        <div class="cat-tab active" style="background:var(--accent)"><span class="emoji">🏥</span> Health</div>
+        <div class="cat-tab"><span class="emoji">🤱</span> Pumping</div>
+        <div class="cat-tab"><span class="emoji">📈</span> Growth</div>
+      </div>
+
+      <div class="period-tabs">
+        <div class="period-tab active">Today</div>
+        <div class="period-tab">7 Days</div>
+      </div>
+
+      <div class="content">
+        <!-- Highlight -->
+        <div class="highlight-card">
+          <div class="highlight-emoji">🏥</div>
+          <div class="highlight-value">4</div>
+          <div class="highlight-label">Health entries today</div>
+          <div class="highlight-context">1 medication · 1 temperature · 2 symptoms</div>
+        </div>
+
+        <!-- Type breakdown -->
+        <div class="metric-row">
+          <div class="metric-card health-border">
+            <div class="metric-label">Medications</div>
+            <div class="metric-value">1</div>
+            <div class="metric-subtitle">Tylenol · 5 ml</div>
+          </div>
+          <div class="metric-card warning-border">
+            <div class="metric-label">Temperature</div>
+            <div class="metric-value">38.2<span class="unit">°C</span></div>
+            <div class="metric-subtitle">Low-grade fever</div>
+          </div>
+        </div>
+
+        <div class="metric-row">
+          <div class="metric-card success-border">
+            <div class="metric-label">Vaccinations</div>
+            <div class="metric-value">0</div>
+            <div class="metric-subtitle">No vaccines today</div>
+          </div>
+          <div class="metric-card error-border">
+            <div class="metric-label">Symptoms</div>
+            <div class="metric-value">2</div>
+            <div class="metric-subtitle">Fussy, Runny nose</div>
+          </div>
+        </div>
+
+        <!-- Recent entries -->
+        <div class="recent-card">
+          <div class="recent-title">Today's Entries</div>
+          <div class="recent-row">
+            <div class="recent-icon" style="background:var(--accent-muted)">💊</div>
+            <div class="recent-info">
+              <div class="recent-name">Tylenol</div>
+              <div class="recent-detail">5 ml</div>
+            </div>
+            <div class="recent-time">2:30 PM</div>
+          </div>
+          <div class="recent-row">
+            <div class="recent-icon" style="background:var(--warning-muted)">🌡️</div>
+            <div class="recent-info">
+              <div class="recent-name">Temperature</div>
+              <div class="recent-detail">38.2°C · Forehead</div>
+            </div>
+            <div class="recent-time">2:15 PM</div>
+          </div>
+          <div class="recent-row">
+            <div class="recent-icon" style="background:var(--error-muted)">🤒</div>
+            <div class="recent-info">
+              <div class="recent-name">Symptoms</div>
+              <div class="recent-detail">Fussy, Runny nose</div>
+            </div>
+            <div class="recent-time">10:00 AM</div>
+          </div>
+          <div class="recent-row">
+            <div class="recent-icon" style="background:var(--error-muted)">🤒</div>
+            <div class="recent-info">
+              <div class="recent-name">Symptoms</div>
+              <div class="recent-detail">Won't eat</div>
+            </div>
+            <div class="recent-time">8:20 AM</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon">🏠</span>Home</div>
+        <div class="tab-item"><span class="tab-icon">📋</span>Timeline</div>
+        <div class="tab-item active-tab"><span class="tab-icon">📊</span>Stats</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 7-DAY VIEW ==================== -->
+  <div class="option-wrapper">
+    <div class="option-label">7-Day View</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons"><span>●●●●</span> <span>📶</span> <span>🔋</span></div>
+      </div>
+
+      <div class="screen-title">Statistics</div>
+
+      <div class="cat-tabs">
+        <div class="cat-tab"><span class="emoji">🌙</span> Sleep</div>
+        <div class="cat-tab"><span class="emoji">🍼</span> Feeding</div>
+        <div class="cat-tab"><span class="emoji">💧</span> Diapers</div>
+        <div class="cat-tab active" style="background:var(--accent)"><span class="emoji">🏥</span> Health</div>
+        <div class="cat-tab"><span class="emoji">🤱</span> Pumping</div>
+        <div class="cat-tab"><span class="emoji">📈</span> Growth</div>
+      </div>
+
+      <div class="period-tabs">
+        <div class="period-tab">Today</div>
+        <div class="period-tab active">7 Days</div>
+      </div>
+
+      <div class="content">
+        <!-- Weekly summary metrics -->
+        <div class="metric-row">
+          <div class="metric-card health-border">
+            <div class="metric-label">Total entries</div>
+            <div class="metric-value">12</div>
+            <div class="metric-subtitle">avg 1.7/day</div>
+          </div>
+          <div class="metric-card warning-border">
+            <div class="metric-label">Avg temp</div>
+            <div class="metric-value">37.4<span class="unit">°C</span></div>
+            <div class="metric-subtitle">Range: 36.8 – 38.5</div>
+          </div>
+        </div>
+
+        <!-- Temperature 7-day chart -->
+        <div class="temp-chart">
+          <div class="temp-chart-title">Temperature Trend</div>
+          <div class="temp-bars">
+            <div class="temp-bar-wrap">
+              <div class="temp-bar-value">37.0</div>
+              <div class="temp-bar" style="height:30px; background:var(--success);"></div>
+              <div class="temp-bar-label">Mon</div>
+            </div>
+            <div class="temp-bar-wrap">
+              <div class="temp-bar-value">36.8</div>
+              <div class="temp-bar" style="height:24px; background:var(--success);"></div>
+              <div class="temp-bar-label">Tue</div>
+            </div>
+            <div class="temp-bar-wrap">
+              <div class="temp-bar-value">37.8</div>
+              <div class="temp-bar" style="height:54px; background:var(--warning);"></div>
+              <div class="temp-bar-label">Wed</div>
+            </div>
+            <div class="temp-bar-wrap">
+              <div class="temp-bar-value">38.5</div>
+              <div class="temp-bar" style="height:80px; background:var(--error);"></div>
+              <div class="temp-bar-label">Thu</div>
+            </div>
+            <div class="temp-bar-wrap">
+              <div class="temp-bar-value">38.2</div>
+              <div class="temp-bar" style="height:70px; background:var(--warning);"></div>
+              <div class="temp-bar-label">Fri</div>
+            </div>
+            <div class="temp-bar-wrap">
+              <div class="temp-bar-value">37.5</div>
+              <div class="temp-bar" style="height:44px; background:var(--warning);"></div>
+              <div class="temp-bar-label">Sat</div>
+            </div>
+            <div class="temp-bar-wrap">
+              <div class="temp-bar-value">37.1</div>
+              <div class="temp-bar" style="height:33px; background:var(--success);"></div>
+              <div class="temp-bar-label">Sun</div>
+            </div>
+          </div>
+          <div class="temp-reference">
+            <div class="temp-ref-line"></div>
+            <div class="temp-ref-text">Normal: below 37.5°C</div>
+          </div>
+        </div>
+
+        <!-- Type breakdown -->
+        <div class="breakdown-card">
+          <div class="breakdown-title">Entry Breakdown</div>
+          <div class="breakdown-row">
+            <div class="breakdown-dot" style="background:var(--accent)"></div>
+            <span class="breakdown-label">Medications</span>
+            <span class="breakdown-value">5</span>
+            <span class="breakdown-sub">42%</span>
+          </div>
+          <div class="breakdown-row">
+            <div class="breakdown-dot" style="background:var(--warning)"></div>
+            <span class="breakdown-label">Temperature</span>
+            <span class="breakdown-value">4</span>
+            <span class="breakdown-sub">33%</span>
+          </div>
+          <div class="breakdown-row">
+            <div class="breakdown-dot" style="background:var(--error)"></div>
+            <span class="breakdown-label">Symptoms</span>
+            <span class="breakdown-value">3</span>
+            <span class="breakdown-sub">25%</span>
+          </div>
+          <div class="breakdown-row">
+            <div class="breakdown-dot" style="background:var(--success)"></div>
+            <span class="breakdown-label">Vaccinations</span>
+            <span class="breakdown-value">0</span>
+            <span class="breakdown-sub">0%</span>
+          </div>
+        </div>
+
+        <!-- Symptom frequency -->
+        <div class="symptom-card">
+          <div class="symptom-card-title">Symptoms This Week</div>
+          <div class="symptom-tags">
+            <div class="symptom-tag" style="background:var(--error-muted); color:#991b1b;">
+              Fussy <span class="count">3x</span>
+            </div>
+            <div class="symptom-tag" style="background:var(--warning-muted); color:#92400e;">
+              Runny nose <span class="count">2x</span>
+            </div>
+            <div class="symptom-tag" style="background:var(--accent-muted); color:var(--accent-button);">
+              Won't eat <span class="count">2x</span>
+            </div>
+            <div class="symptom-tag" style="background:var(--surface-secondary); color:var(--text-secondary);">
+              Cough <span class="count">1x</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vaccine progress -->
+        <div class="vaccine-card">
+          <div class="vaccine-card-title">Vaccine Progress</div>
+          <div class="vaccine-row">
+            <span class="vaccine-name">DTaP</span>
+            <div class="vaccine-progress">
+              <div class="progress-dot filled">✓</div>
+              <div class="progress-dot filled">✓</div>
+              <div class="progress-dot next-dot">3</div>
+              <div class="progress-dot empty"></div>
+              <div class="progress-dot empty"></div>
+            </div>
+            <span class="vaccine-status" style="color:var(--warning)">2/5</span>
+          </div>
+          <div class="vaccine-row">
+            <span class="vaccine-name">6-in-1</span>
+            <div class="vaccine-progress">
+              <div class="progress-dot filled">✓</div>
+              <div class="progress-dot filled">✓</div>
+              <div class="progress-dot next-dot">3</div>
+            </div>
+            <span class="vaccine-status" style="color:var(--warning)">2/3</span>
+          </div>
+          <div class="vaccine-row">
+            <span class="vaccine-name">Rotavirus</span>
+            <div class="vaccine-progress">
+              <div class="progress-dot filled">✓</div>
+              <div class="progress-dot filled">✓</div>
+              <div class="progress-dot filled">✓</div>
+            </div>
+            <span class="vaccine-status" style="color:var(--success)">3/3</span>
+          </div>
+          <div class="vaccine-row">
+            <span class="vaccine-name">PCV</span>
+            <div class="vaccine-progress">
+              <div class="progress-dot filled">✓</div>
+              <div class="progress-dot next-dot">2</div>
+              <div class="progress-dot empty"></div>
+              <div class="progress-dot empty"></div>
+            </div>
+            <span class="vaccine-status" style="color:var(--warning)">1/4</span>
+          </div>
+          <div class="vaccine-row">
+            <span class="vaccine-name">MMR</span>
+            <div class="vaccine-progress">
+              <div class="progress-dot empty"></div>
+              <div class="progress-dot empty"></div>
+            </div>
+            <span class="vaccine-status" style="color:var(--text-muted)">0/2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon">🏠</span>Home</div>
+        <div class="tab-item"><span class="tab-icon">📋</span>Timeline</div>
+        <div class="tab-item active-tab"><span class="tab-icon">📊</span>Stats</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

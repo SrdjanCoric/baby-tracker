@@ -125,6 +125,16 @@ const ACTIVITY = {
     muted: "#F9F4E8",
     mutedDark: "#302C22",
   },
+  health: {
+    accent: "#D4836B",
+    accentDark: "#E09B85",
+    textAccent: "#9E5840",
+    textAccentDark: "#E09B85",
+    button: "#B96B55",
+    buttonDark: "#A05E4A",
+    muted: "#FBF0EC",
+    mutedDark: "#302520",
+  },
 };
 
 const SEMANTIC = {
