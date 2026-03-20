@@ -6,8 +6,7 @@ CREATE TABLE health_entries (
   notes TEXT,
 
   medication_name TEXT,
-  dosage_ml REAL,
-  reminder_interval_hours REAL,
+  dosage_amount REAL,
 
   temperature_celsius REAL,
   measurement_method TEXT,

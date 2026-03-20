@@ -8,12 +8,12 @@ import { useColorScheme } from "nativewind";
 import { useHealth } from "@/contexts/health-context";
 import { useBaby, useTimeFormat, useUnits } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
-import { formatTemperature, getFeverStatus, getFeverColor, celsiusToFahrenheit, fahrenheitToCelsius, QUICK_TEMPS_CELSIUS } from "@/utils/temperature";
-import { formatVolume } from "@/utils/volume";
+import { getFeverStatus, getFeverColor, celsiusToFahrenheit, fahrenheitToCelsius, TEMP_RANGE_CELSIUS } from "@/utils/temperature";
 import type { UpdateHealthInput } from "@/services/health-storage";
-import type { HealthType, MeasurementMethod, SymptomType } from "@/constants/activities";
-import { SYMPTOM_OPTIONS, MEASUREMENT_METHODS } from "@/constants/activities";
+import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/constants/activities";
+import { SYMPTOM_OPTIONS, MEASUREMENT_METHODS, DOSAGE_UNITS, COMMON_MEDICATION_KEYS, COMMON_VACCINE_KEYS } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
+import { getHealthDisplayName } from "@/utils/health-display";
 
 const HEALTH_COLORS = {
   accent: { light: ACTIVITY.health.accent, dark: ACTIVITY.health.accentDark },
@@ -28,7 +28,7 @@ export default function EditHealthScreen() {
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { healthEntries, updateHealth, deleteHealth } = useHealth();
-  const { volumeUnit, temperatureUnit } = useUnits();
+  const { temperatureUnit } = useUnits();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const accentColor = isDark ? HEALTH_COLORS.accent.dark : HEALTH_COLORS.accent.light;
@@ -40,8 +40,9 @@ export default function EditHealthScreen() {
 
   const [healthType, setHealthType] = useState<HealthType>("medication");
   const [medicationName, setMedicationName] = useState("");
-  const [dosageMl, setDosageMl] = useState<number | undefined>(undefined);
-  const [reminderHours, setReminderHours] = useState<number | undefined>(undefined);
+  const [dosageAmount, setDosageAmount] = useState<number | undefined>(undefined);
+  const [dosageUnit, setDosageUnit] = useState<DosageUnit>("ml");
+  const [doseNumber, setDoseNumber] = useState<number | undefined>(undefined);
   const [temperatureCelsius, setTemperatureCelsius] = useState<number>(36.5);
   const [measurementMethod, setMeasurementMethod] = useState<MeasurementMethod | undefined>(undefined);
   const [vaccineName, setVaccineName] = useState("");
@@ -54,8 +55,9 @@ export default function EditHealthScreen() {
     if (health && !isInitialized) {
       setHealthType(health.type);
       setMedicationName(health.medicationName ?? "");
-      setDosageMl(health.dosageMl);
-      setReminderHours(health.reminderIntervalHours);
+      setDosageAmount(health.dosageAmount);
+      setDosageUnit(health.dosageUnit ?? "ml");
+      setDoseNumber(health.doseNumber);
       setTemperatureCelsius(health.temperatureCelsius ?? 36.5);
       setMeasurementMethod(health.measurementMethod);
       setVaccineName(health.vaccineName ?? "");
@@ -70,8 +72,9 @@ export default function EditHealthScreen() {
 
     if (healthType !== health.type) return true;
     if (medicationName !== (health.medicationName ?? "")) return true;
-    if (dosageMl !== health.dosageMl) return true;
-    if (reminderHours !== health.reminderIntervalHours) return true;
+    if (dosageAmount !== health.dosageAmount) return true;
+    if (dosageUnit !== (health.dosageUnit ?? "ml")) return true;
+    if (doseNumber !== health.doseNumber) return true;
     if (temperatureCelsius !== (health.temperatureCelsius ?? 36.5)) return true;
     if (measurementMethod !== health.measurementMethod) return true;
     if (vaccineName !== (health.vaccineName ?? "")) return true;
@@ -79,7 +82,7 @@ export default function EditHealthScreen() {
     if (notes !== (health.notes ?? "")) return true;
 
     return false;
-  }, [health, isInitialized, healthType, medicationName, dosageMl, reminderHours, temperatureCelsius, measurementMethod, vaccineName, symptoms, notes]);
+  }, [health, isInitialized, healthType, medicationName, dosageAmount, dosageUnit, doseNumber, temperatureCelsius, measurementMethod, vaccineName, symptoms, notes]);
 
   usePreventRemove(hasChanges, ({ data }) => {
     Alert.alert(
@@ -111,17 +114,26 @@ export default function EditHealthScreen() {
     try {
       const updateData: UpdateHealthInput = {
         type: healthType,
+        medicationName: null,
+        dosageAmount: null,
+        dosageUnit: null,
+        temperatureCelsius: null,
+        measurementMethod: null,
+        vaccineName: null,
+        doseNumber: null,
+        symptoms: null,
       };
 
       if (healthType === "medication") {
         updateData.medicationName = medicationName || undefined;
-        updateData.dosageMl = dosageMl;
-        updateData.reminderIntervalHours = reminderHours;
+        updateData.dosageAmount = dosageAmount;
+        updateData.dosageUnit = dosageUnit;
       } else if (healthType === "temperature") {
-        updateData.temperatureCelsius = temperatureCelsius;
+        updateData.temperatureCelsius = Math.min(TEMP_RANGE_CELSIUS.max, Math.max(TEMP_RANGE_CELSIUS.min, temperatureCelsius));
         updateData.measurementMethod = measurementMethod;
       } else if (healthType === "vaccination") {
         updateData.vaccineName = vaccineName || undefined;
+        updateData.doseNumber = doseNumber;
       } else if (healthType === "symptom") {
         updateData.symptoms = symptoms.length > 0 ? symptoms : undefined;
       }
@@ -134,7 +146,7 @@ export default function EditHealthScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, health, healthType, medicationName, dosageMl, reminderHours, temperatureCelsius, measurementMethod, vaccineName, symptoms, notes, updateHealth, router]);
+  }, [selectedBaby, health, healthType, medicationName, dosageAmount, dosageUnit, doseNumber, temperatureCelsius, measurementMethod, vaccineName, symptoms, notes, updateHealth, router]);
 
   const canSave = !isSaving && hasChanges && (
     (healthType === "medication" && !!medicationName) ||
@@ -177,7 +189,7 @@ export default function EditHealthScreen() {
     ? celsiusToFahrenheit(temperatureCelsius)
     : temperatureCelsius;
 
-  const feverStatus = getFeverStatus(temperatureCelsius);
+  const feverStatus = getFeverStatus(temperatureCelsius, measurementMethod);
   const feverColor = getFeverColor(feverStatus);
 
   return (
@@ -274,7 +286,7 @@ export default function EditHealthScreen() {
                   {t("health.selectMedication")}
                 </Text>
                 <TextInput
-                  value={medicationName}
+                  value={getHealthDisplayName(medicationName, "medication", t)}
                   onChangeText={setMedicationName}
                   placeholder={t("health.medicationNamePlaceholder")}
                   className="px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
@@ -284,11 +296,49 @@ export default function EditHealthScreen() {
 
               <View className="mb-4">
                 <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
+                  {t("health.dosageUnit")} ({t("common.optional")})
+                </Text>
+                <View className="flex-row gap-2 mb-3">
+                  {DOSAGE_UNITS.map(unit => {
+                    let unitLabel = "";
+                    if (unit === "ml") unitLabel = t("health.unitMl");
+                    else if (unit === "mg") unitLabel = t("health.unitMg");
+                    else if (unit === "drops") unitLabel = t("health.unitDrops", { count: 2 });
+                    else if (unit === "tsp") unitLabel = t("health.unitTsp");
+
+                    return (
+                      <Pressable
+                        key={unit}
+                        onPress={() => setDosageUnit(unit)}
+                        className={`px-4 py-2 rounded-full active:scale-[0.95] ${
+                          dosageUnit === unit
+                            ? ""
+                            : "bg-surface-secondary dark:bg-surface-dark-secondary"
+                        }`}
+                        style={dosageUnit === unit ? { backgroundColor: accentColor } : undefined}
+                      >
+                        <Text
+                          className={`text-sm font-medium ${
+                            dosageUnit === unit
+                              ? "text-white"
+                              : "text-content-primary dark:text-content-dark-primary"
+                          }`}
+                        >
+                          {unitLabel}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View className="mb-4">
+                <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
                   {t("health.dosage")} ({t("common.optional")})
                 </Text>
                 <TextInput
-                  value={dosageMl ? dosageMl.toString() : ""}
-                  onChangeText={(text) => setDosageMl(text ? parseFloat(text) : undefined)}
+                  value={dosageAmount ? dosageAmount.toString() : ""}
+                  onChangeText={(text) => setDosageAmount(text ? parseFloat(text) : undefined)}
                   placeholder={t("health.dosagePlaceholder")}
                   keyboardType="decimal-pad"
                   className="px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
@@ -296,19 +346,6 @@ export default function EditHealthScreen() {
                 />
               </View>
 
-              <View className="mb-4">
-                <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-                  {t("health.reminderInterval")} ({t("common.optional")})
-                </Text>
-                <TextInput
-                  value={reminderHours ? reminderHours.toString() : ""}
-                  onChangeText={(text) => setReminderHours(text ? parseInt(text, 10) : undefined)}
-                  placeholder={t("health.reminderPlaceholder")}
-                  keyboardType="number-pad"
-                  className="px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
-                  placeholderTextColor="#999"
-                />
-              </View>
             </>
           )}
 
@@ -382,13 +419,28 @@ export default function EditHealthScreen() {
                   {t("health.selectVaccine")}
                 </Text>
                 <TextInput
-                  value={vaccineName}
+                  value={getHealthDisplayName(vaccineName, "vaccine", t)}
                   onChangeText={setVaccineName}
                   placeholder={t("health.vaccineNamePlaceholder")}
                   className="px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
                   placeholderTextColor="#999"
                 />
               </View>
+              {doseNumber && (
+                <View className="mb-4">
+                  <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
+                    {t("health.doseOf", { current: doseNumber, total: 1 })} ({t("common.optional")})
+                  </Text>
+                  <Pressable
+                    onPress={() => setDoseNumber(undefined)}
+                    className="px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg"
+                  >
+                    <Text className="text-base text-content-primary dark:text-content-dark-primary">
+                      {t("health.doseLabel", { number: doseNumber })}
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
             </>
           )}
 

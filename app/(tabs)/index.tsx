@@ -18,6 +18,7 @@ import { Alert } from "react-native";
 import { timeSince, formatDate, hoursSince, formatDuration } from "@/utils/time";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
+import { getHealthDisplayName } from "@/utils/health-display";
 import { formatVolume } from "@/utils/volume";
 import { ActivityType } from "@/constants/activities";
 import { DashboardCardConfig } from "@/services/dashboard-config-storage";
@@ -73,7 +74,7 @@ export default function HomeScreen() {
   const { measurements, getMeasurementHistory, getWeightChange, refreshMeasurements } = useGrowth();
   const { tummyTimes, activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
   const { getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, isAgeCompleted, getStarsEarned, getCurrentAgeGroup, responses: milestoneResponses, refreshResponses: refreshMilestones } = useMilestones();
-  const { healthEntries, getLastHealth, getTodaysCount: getTodaysHealthCount, refreshHealth } = useHealth();
+  const { healthEntries, getLastHealth, refreshHealth } = useHealth();
   const { temperatureUnit, volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
   const { selectedBaby } = useBaby();
@@ -559,20 +560,25 @@ export default function HomeScreen() {
     switch (lastHealth.type) {
       case "medication": {
         const parts: string[] = [];
-        if (lastHealth.medicationName) parts.push(lastHealth.medicationName);
-        if (lastHealth.dosageMl) parts.push(formatVolume(lastHealth.dosageMl, volumeUnit));
+        if (lastHealth.medicationName) parts.push(getHealthDisplayName(lastHealth.medicationName, "medication", t));
+        if (lastHealth.dosageAmount) {
+          const amt = lastHealth.dosageAmount;
+          const unitLabels = { ml: t("health.unitMl"), mg: t("health.unitMg"), drops: t("health.unitDrops", { count: amt }), tsp: t("health.unitTsp") } as const;
+          const unitLabel = unitLabels[lastHealth.dosageUnit || "ml"] || t("health.unitMl");
+          parts.push(`${lastHealth.dosageAmount} ${unitLabel}`);
+        }
         return parts.length > 0 ? parts.join(" \u00B7 ") : t("health.medication");
       }
       case "temperature": {
         if (lastHealth.temperatureCelsius) {
           const tempStr = formatTemperature(lastHealth.temperatureCelsius, temperatureUnit);
-          const status = getFeverStatus(lastHealth.temperatureCelsius);
+          const status = getFeverStatus(lastHealth.temperatureCelsius, lastHealth.measurementMethod);
           return `\uD83C\uDF21\uFE0F ${tempStr} \u00B7 ${t(`health.feverStatus.${status}`)}`;
         }
         return t("health.temperature");
       }
       case "vaccination":
-        return lastHealth.vaccineName ? `\uD83D\uDC89 ${lastHealth.vaccineName}` : t("health.vaccination");
+        return lastHealth.vaccineName ? `\uD83D\uDC89 ${getHealthDisplayName(lastHealth.vaccineName, "vaccine", t)}` : t("health.vaccination");
       case "symptom": {
         if (lastHealth.symptoms && lastHealth.symptoms.length > 0) {
           const symptomLabels = lastHealth.symptoms.slice(0, 2).map(s =>
@@ -587,11 +593,7 @@ export default function HomeScreen() {
     }
   }, [getLastHealth, t, temperatureUnit, volumeUnit, timeTick, healthEntries]);
 
-  const healthTodayBadge = useMemo(() => {
-    const count = getTodaysHealthCount();
-    if (count === 0) return undefined;
-    return t("health.logsToday", { count });
-  }, [getTodaysHealthCount, t, healthEntries]);
+
 
   const isStoppingFeedingRef = useRef(false);
   const handleStopFeeding = useCallback(async () => {
@@ -850,9 +852,8 @@ export default function HomeScreen() {
       onPress: handleHealthCardPress,
       onActionPress: handleAddHealth,
       actionLabel: "+",
-      todayBadge: healthTodayBadge,
     };
-  }, [t, healthTimeSince, healthSubtitle, healthTodayBadge, handleHealthCardPress, handleAddHealth]);
+  }, [t, healthTimeSince, healthSubtitle, handleHealthCardPress, handleAddHealth]);
 
   const cardPropsMap = useMemo((): Record<ActivityType, CardProps> => ({
     feeding: feedingCardProps,

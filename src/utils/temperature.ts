@@ -15,10 +15,21 @@ export function formatTemperature(celsius: number, unit: "°C" | "°F"): string 
 
 export type FeverStatus = "normal" | "low_fever" | "fever" | "high_fever";
 
-export function getFeverStatus(celsius: number): FeverStatus {
-  if (celsius >= 39.5) return "high_fever";
-  if (celsius >= 38.5) return "fever";
-  if (celsius >= 37.5) return "low_fever";
+export type TemperatureMeasurementMethod = "forehead" | "ear" | "rectal" | "armpit";
+
+const FEVER_THRESHOLDS: Record<TemperatureMeasurementMethod | "default", { lowFever: number; fever: number; highFever: number }> = {
+  rectal: { lowFever: 38.0, fever: 39.0, highFever: 40.0 },
+  ear: { lowFever: 38.0, fever: 39.0, highFever: 40.0 },
+  forehead: { lowFever: 38.0, fever: 39.0, highFever: 40.0 },
+  armpit: { lowFever: 37.2, fever: 38.0, highFever: 39.0 },
+  default: { lowFever: 37.5, fever: 38.5, highFever: 39.5 },
+};
+
+export function getFeverStatus(celsius: number, method?: TemperatureMeasurementMethod | null): FeverStatus {
+  const thresholds = method ? FEVER_THRESHOLDS[method] : FEVER_THRESHOLDS.default;
+  if (celsius >= thresholds.highFever) return "high_fever";
+  if (celsius >= thresholds.fever) return "fever";
+  if (celsius >= thresholds.lowFever) return "low_fever";
   return "normal";
 }
 
