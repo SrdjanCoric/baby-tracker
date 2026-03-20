@@ -11,7 +11,7 @@ import { formatDate, formatTime } from "@/utils/time";
 import { getFeverStatus, getFeverColor, celsiusToFahrenheit, fahrenheitToCelsius, TEMP_RANGE_CELSIUS } from "@/utils/temperature";
 import type { UpdateHealthInput } from "@/services/health-storage";
 import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/constants/activities";
-import { SYMPTOM_OPTIONS, MEASUREMENT_METHODS, DOSAGE_UNITS, COMMON_MEDICATION_KEYS, COMMON_VACCINE_KEYS } from "@/constants/activities";
+import { SYMPTOM_OPTIONS, MEASUREMENT_METHODS, DOSAGE_UNITS } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
 import { getHealthDisplayName } from "@/utils/health-display";
 
