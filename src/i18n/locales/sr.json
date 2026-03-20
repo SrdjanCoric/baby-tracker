@@ -1825,7 +1825,10 @@
   },
   "time": {
     "today": "Danas",
-    "yesterday": "Ju\u010de"
+    "yesterday": "Ju\u010de",
+    "dayCount_one": "{{count}} dan",
+    "dayCount_few": "{{count}} dana",
+    "dayCount_other": "{{count}} dana"
   },
   "accessibility": {
     "breastfeeding": "Dojenje",

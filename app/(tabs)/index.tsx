@@ -171,7 +171,7 @@ export default function HomeScreen() {
       return "--";
     }
 
-    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastFeeding.startedAt)) });
+    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastFeeding.startedAt), undefined, t) });
     const typeIcon = lastFeeding.type === "breast" ? "🤱" : lastFeeding.type === "bottle" ? "🍼" : "🥣";
 
     return `${typeIcon} ${timeAgo}`;
@@ -274,7 +274,7 @@ export default function HomeScreen() {
 
     if (!lastSleep?.endedAt) return undefined;
 
-    const awakeText = t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt)), context: selectedBaby?.gender });
+    const awakeText = t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt), undefined, t), context: selectedBaby?.gender });
 
     if (!wakeWindowConfig || wakeWindowConfig.slots.length === 0) {
       return awakeText;
@@ -331,7 +331,7 @@ export default function HomeScreen() {
     if (!lastDiaper) return undefined;
 
     // Show time since last change
-    return t("dashboard.last", { time: timeSince(new Date(lastDiaper.changedAt)) });
+    return t("dashboard.last", { time: timeSince(new Date(lastDiaper.changedAt), undefined, t) });
   }, [diapers, t, timeTick]);
 
   const todayDiaperCounts = useMemo(() => {
@@ -375,7 +375,7 @@ export default function HomeScreen() {
 
     if (!lastPumping) return undefined;
 
-    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastPumping.startedAt)) });
+    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastPumping.startedAt), undefined, t) });
     const parts: string[] = [timeAgo];
 
     if (lastSide) {
@@ -550,7 +550,7 @@ export default function HomeScreen() {
     const lastHealth = getLastHealth();
     if (!lastHealth) return "--";
 
-    return t("dashboard.last", { time: timeSince(new Date(lastHealth.loggedAt)) });
+    return t("dashboard.last", { time: timeSince(new Date(lastHealth.loggedAt), undefined, t) });
   }, [getLastHealth, t, timeTick, healthEntries]);
 
   const healthSubtitle = useMemo(() => {
