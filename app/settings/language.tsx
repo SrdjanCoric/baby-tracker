@@ -26,6 +26,18 @@ const LANGUAGE_OPTIONS: LanguageOptionConfig[] = [
     value: "es",
     icon: "\u{1F1EA}\u{1F1F8}",
   },
+  {
+    value: "fr",
+    icon: "\u{1F1EB}\u{1F1F7}",
+  },
+  {
+    value: "pt",
+    icon: "\u{1F1E7}\u{1F1F7}",
+  },
+  {
+    value: "de",
+    icon: "\u{1F1E9}\u{1F1EA}",
+  },
 ];
 
 const LANGUAGE_LABELS = {
@@ -33,6 +45,9 @@ const LANGUAGE_LABELS = {
   en: { label: "settings.english", description: "English" },
   sr: { label: "settings.serbian", description: "Srpski" },
   es: { label: "settings.spanish", description: "Español" },
+  fr: { label: "settings.french", description: "Français" },
+  pt: { label: "settings.portuguese", description: "Português" },
+  de: { label: "settings.german", description: "Deutsch" },
 } as const;
 
 export default function LanguageSettingsScreen() {
@@ -58,7 +73,7 @@ export default function LanguageSettingsScreen() {
       <ScrollView className="flex-1 px-4 py-4">
         <View className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-card p-4 mb-6">
           <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-1">
-            {resolvedLanguage === "sr" ? "Srpski" : resolvedLanguage === "es" ? "Español" : "English"}
+            {resolvedLanguage === "sr" ? "Srpski" : resolvedLanguage === "es" ? "Español" : resolvedLanguage === "fr" ? "Français" : resolvedLanguage === "pt" ? "Português" : resolvedLanguage === "de" ? "Deutsch" : "English"}
           </Text>
         </View>
 
