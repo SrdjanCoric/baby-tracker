@@ -43,7 +43,7 @@ npm run lint:fix             # Auto-fix lint issues
 ### State Management
 Uses React Context + Reducers pattern (no Redux). Each feature has its own context provider. The provider tree is ~20 levels deep — see `app/_layout.tsx` lines 405-463 for the exact nesting order.
 
-**Contexts:** ThemeProvider, LanguageProvider, AuthProvider, SyncProvider, HouseholdProvider, UnitProvider, TimeFormatProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ActiveTimersProvider, WidgetProvider, NotificationProvider, DashboardConfigProvider.
+**Contexts:** ThemeProvider, LanguageProvider, AuthProvider, SyncProvider, HouseholdProvider, UnitProvider, TimeFormatProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, HealthProvider, ActiveTimersProvider, WidgetProvider, NotificationProvider, DashboardConfigProvider.
 
 Maintain nesting order when adding new providers.
 
@@ -140,7 +140,7 @@ Multi-caregiver support with household management:
 - `app/auth/` - Authentication screens (sign-in)
 - `app/onboarding/` - Onboarding flow with auth choice
 - `app/settings/` - Settings screens (household, caregivers, notifications, about, theme, language, units, time-format, widget-config, dashboard, export, reports, join-household, delete-account)
-- Activity screens: `app/feeding/`, `app/sleep/`, `app/diaper/`, `app/pumping/`, `app/growth/`, `app/tummyTime/`
+- Activity screens: `app/feeding/`, `app/sleep/`, `app/diaper/`, `app/pumping/`, `app/growth/`, `app/tummyTime/`, `app/health/`
 - `app/milestones/` - Milestone tracking
 - `app/edit/` - Edit screens for all activity types
 - Deep link scheme: `sofibaby://` with action params (`?action=pause|resume|stop`)
@@ -155,7 +155,9 @@ Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Su
 
 ## Constants
 - `src/constants/colors.ts` - Single source of truth for ALL colors (light/dark themes, activity colors)
-- `src/constants/activities.ts` - Activity type definitions
+- `src/constants/colors.js` - JS mirror of colors.ts for NativeWind/Tailwind config (must stay in sync)
+- `src/constants/activities.ts` - Activity type definitions, dosage units, symptom/medication/vaccine presets
+- `src/constants/vaccine-schedule.ts` - CDC vaccine schedule data, combo vaccine coverage, dose helpers
 - `src/constants/design-tokens.ts` - Border radius, spacing, shadows, typography scales
 - `src/constants/milestones.ts` - Milestone category definitions
 - Font: Nunito (Regular, Medium, SemiBold, Bold)
@@ -173,10 +175,20 @@ Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Su
 - Database field remains `height_cm` - label is UI-only based on baby's age
 - `isUnderTwoYears(birthDate)` helper determines which label to show
 
+### Health Tracking
+- `src/contexts/health-context.tsx` - Health state, CRUD, `getCompletedVaccinations()` with combo vaccine expansion
+- `src/services/health-storage.ts` - Local storage for health entries (medication, temperature, vaccination, symptom)
+- `src/utils/temperature.ts` - Fever thresholds vary by measurement method (armpit uses lower cutoffs per AAP)
+- `src/utils/health-display.ts` - Translates stored medication/vaccine keys to display names
+- Combo vaccines: hexavalent dose N auto-counts as DTaP/IPV/Hib dose N + HepB dose N+1
+- Medication stores dosage with unit (ml/mg/drops/tsp) — `dosageAmount` + `dosageUnit` fields
+- Vaccination stores `doseNumber` for multi-dose tracking
+
 ### Statistics Components
 - `src/components/SimpleBarChart.tsx` - Basic bar chart for weekly data
 - `src/components/StackedBarChart.tsx` - Stacked bars (e.g., night sleep vs naps)
 - `src/components/stats/GrowthStatsCard.tsx` - Growth metrics with WHO percentiles
+- `src/components/stats/health/HealthStatsView.tsx` - Health overview (no tabs, like Growth): latest temp, vaccine progress, symptom frequency
 
 ## Custom Hooks
 
@@ -297,6 +309,9 @@ Migrations are in `supabase/migrations/`. Numbering may include lettered variant
 | 043 | Activity goals |
 | 044 | Milestones |
 | 045-046 | Timer lock fixes (started_at, overload) |
+| 047 | Health entries table (medication, temperature, vaccination, symptom) |
+| 048 | Health dosage_unit, dose_number columns |
+| 049 | Add tsp dosage unit |
 
 ## Android-Specific Setup
 
