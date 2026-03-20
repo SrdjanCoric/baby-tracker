@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
@@ -48,6 +49,10 @@ export default function EditHealthScreen() {
   const [vaccineName, setVaccineName] = useState("");
   const [symptoms, setSymptoms] = useState<SymptomType[]>([]);
   const [notes, setNotes] = useState("");
+  const [loggedAt, setLoggedAt] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -63,6 +68,7 @@ export default function EditHealthScreen() {
       setVaccineName(health.vaccineName ?? "");
       setSymptoms(health.symptoms ?? []);
       setNotes(health.notes ?? "");
+      setLoggedAt(new Date(health.loggedAt));
       setIsInitialized(true);
     }
   }, [health, isInitialized]);
@@ -80,9 +86,10 @@ export default function EditHealthScreen() {
     if (vaccineName !== (health.vaccineName ?? "")) return true;
     if (JSON.stringify(symptoms) !== JSON.stringify(health.symptoms ?? [])) return true;
     if (notes !== (health.notes ?? "")) return true;
+    if (loggedAt.toISOString() !== health.loggedAt) return true;
 
     return false;
-  }, [health, isInitialized, healthType, medicationName, dosageAmount, dosageUnit, doseNumber, temperatureCelsius, measurementMethod, vaccineName, symptoms, notes]);
+  }, [health, isInitialized, healthType, medicationName, dosageAmount, dosageUnit, doseNumber, temperatureCelsius, measurementMethod, vaccineName, symptoms, notes, loggedAt]);
 
   usePreventRemove(hasChanges, ({ data }) => {
     Alert.alert(
@@ -105,6 +112,34 @@ export default function EditHealthScreen() {
         ? prev.filter(s => s !== symptom)
         : [...prev, symptom]
     );
+  }, []);
+
+  const handleDateChange = useCallback((_event: unknown, date?: Date) => {
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+    if (date) {
+      const newDateTime = new Date(loggedAt);
+      newDateTime.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+      setLoggedAt(newDateTime);
+    }
+  }, [loggedAt]);
+
+  const handleTimeChange = useCallback((_event: unknown, date?: Date) => {
+    if (Platform.OS === "android") {
+      setShowTimePicker(false);
+    }
+    if (date) {
+      const newDateTime = new Date(loggedAt);
+      newDateTime.setHours(date.getHours(), date.getMinutes());
+      setLoggedAt(newDateTime);
+    }
+  }, [loggedAt]);
+
+  const handleDateTimeChange = useCallback((_event: unknown, selectedDateTime?: Date) => {
+    if (selectedDateTime) {
+      setLoggedAt(selectedDateTime);
+    }
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -139,6 +174,7 @@ export default function EditHealthScreen() {
       }
 
       updateData.notes = notes || undefined;
+      updateData.loggedAt = loggedAt;
 
       await updateHealth(health.id, updateData);
       setIsInitialized(false);
@@ -146,7 +182,7 @@ export default function EditHealthScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, health, healthType, medicationName, dosageAmount, dosageUnit, doseNumber, temperatureCelsius, measurementMethod, vaccineName, symptoms, notes, updateHealth, router]);
+  }, [selectedBaby, health, healthType, medicationName, dosageAmount, dosageUnit, doseNumber, temperatureCelsius, measurementMethod, vaccineName, symptoms, notes, loggedAt, updateHealth, router]);
 
   const canSave = !isSaving && hasChanges && (
     (healthType === "medication" && !!medicationName) ||
@@ -239,14 +275,74 @@ export default function EditHealthScreen() {
             </View>
           </View>
 
-          <View className="items-center mb-6">
-            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-              {formatDate(new Date(health.loggedAt))}
-            </Text>
-            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-              {formatTime(new Date(health.loggedAt), timeFormat)}
-            </Text>
+          <View className="flex-row gap-3 mb-6">
+            <Pressable
+              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
+              className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
+              style={{ backgroundColor: mutedColor }}
+              accessibilityRole="button"
+              accessibilityLabel={t("health.selectDate")}
+            >
+              <Text className="text-base text-content-primary dark:text-content-dark-primary">
+                {formatDate(loggedAt)}
+              </Text>
+              <Text style={{ color: accentColor }}>📅</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
+              className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
+              style={{ backgroundColor: mutedColor }}
+              accessibilityRole="button"
+              accessibilityLabel={t("health.selectTime")}
+            >
+              <Text className="text-base text-content-primary dark:text-content-dark-primary">
+                {formatTime(loggedAt, timeFormat)}
+              </Text>
+              <Text style={{ color: accentColor }}>🕐</Text>
+            </Pressable>
           </View>
+
+          {showDateTimePicker && Platform.OS === "ios" && (
+            <View className="mb-4">
+              <View className="flex-row justify-end px-2">
+                <Pressable
+                  onPress={() => setShowDateTimePicker(false)}
+                  className="py-1 px-3"
+                >
+                  <Text className="text-sm font-semibold" style={{ color: accentColor }}>
+                    {t("common.done")}
+                  </Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                value={loggedAt}
+                mode="datetime"
+                display="spinner"
+                onChange={handleDateTimeChange}
+                maximumDate={new Date()}
+              />
+            </View>
+          )}
+
+          {showDatePicker && Platform.OS === "android" && (
+            <DateTimePicker
+              value={loggedAt}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+            />
+          )}
+
+          {showTimePicker && Platform.OS === "android" && (
+            <DateTimePicker
+              value={loggedAt}
+              mode="time"
+              display="default"
+              onChange={handleTimeChange}
+            />
+          )}
 
           <View className="mb-4">
             <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
