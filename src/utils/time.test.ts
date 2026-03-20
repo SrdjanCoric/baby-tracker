@@ -180,6 +180,33 @@ describe("timeSince", () => {
     const now = new Date(2024, 0, 15, 12, 0);
     expect(timeSince(future, now)).toBe("0m");
   });
+
+  it("returns days fallback when >= 24h without t function", () => {
+    const start = new Date(2024, 0, 14, 10, 45);
+    const now = new Date(2024, 0, 15, 12, 0);
+    expect(timeSince(start, now)).toBe("1d");
+  });
+
+  it("returns multi-day fallback without t function", () => {
+    const start = new Date(2024, 0, 13, 11, 0);
+    const now = new Date(2024, 0, 15, 12, 0);
+    expect(timeSince(start, now)).toBe("2d");
+  });
+
+  it("calls t function with dayCount key when >= 24h", () => {
+    const start = new Date(2024, 0, 14, 10, 45);
+    const now = new Date(2024, 0, 15, 12, 0);
+    const mockT = ((key: string, opts?: Record<string, unknown>) =>
+      `${key}:${JSON.stringify(opts)}`) as never;
+    const result = timeSince(start, now, mockT);
+    expect(result).toBe('time.dayCount:{"count":1}');
+  });
+
+  it("still returns hours format for 23h", () => {
+    const start = new Date(2024, 0, 15, 1, 0);
+    const now = new Date(2024, 0, 16, 0, 0);
+    expect(timeSince(start, now)).toBe("23h");
+  });
 });
 
 describe("calculateDuration", () => {
