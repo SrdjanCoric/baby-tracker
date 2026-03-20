@@ -2,24 +2,6 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-// MARK: - Activity Attributes
-
-// IMPORTANT: This struct is duplicated in plugins/with-live-activity-controller/ios/TimerActivityAttributes.swift
-// Both definitions MUST stay in sync. The widget extension is a separate compilation unit
-// and cannot share code with the main app target.
-struct TimerActivityAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        var elapsedSeconds: Int
-        var context: String?
-        var isPaused: Bool = false
-        var effectiveStartTimeISO: String? = nil
-    }
-
-    var activityType: String
-    var babyName: String
-    var startTime: Date
-}
-
 // MARK: - Activity Colors
 
 private let feedingColor = Color(red: 140/255, green: 179/255, blue: 105/255)  // #8CB369

@@ -57,7 +57,7 @@ export function useWidgetStopHandler() {
         await stopSleep(endTime);
         break;
       case "pumping":
-        await stopPumping(0, endTime);
+        await stopPumping(pending.volumeMl ?? 0, endTime);
         break;
       case "tummy_time":
         await stopTummyTime(endTime);

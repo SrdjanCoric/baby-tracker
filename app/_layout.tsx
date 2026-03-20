@@ -14,6 +14,9 @@ import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
+import { useWidgetStartHandler } from "@/hooks/useWidgetStartHandler";
+import { useWidgetDiaperLogHandler } from "@/hooks/useWidgetDiaperLogHandler";
+import { useWidgetBottleFeedingHandler } from "@/hooks/useWidgetBottleFeedingHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
 import { useWatchMessageHandler } from "@/hooks/useWatchMessageHandler";
 import { startWatchMessageListening } from "@/services/watch-service";
@@ -144,6 +147,21 @@ function WidgetStopHandler({ children }: { children: React.ReactNode }) {
 
 function WidgetPauseHandler({ children }: { children: React.ReactNode }) {
   useWidgetPauseHandler();
+  return <>{children}</>;
+}
+
+function WidgetStartHandler({ children }: { children: React.ReactNode }) {
+  useWidgetStartHandler();
+  return <>{children}</>;
+}
+
+function WidgetDiaperLogHandler({ children }: { children: React.ReactNode }) {
+  useWidgetDiaperLogHandler();
+  return <>{children}</>;
+}
+
+function WidgetBottleFeedingHandler({ children }: { children: React.ReactNode }) {
+  useWidgetBottleFeedingHandler();
   return <>{children}</>;
 }
 
@@ -431,11 +449,17 @@ export default function RootLayout() {
                                       <DisplayNamePromptWrapper>
                                         <WidgetStopHandler>
                                         <WidgetPauseHandler>
+                                        <WidgetStartHandler>
+                                        <WidgetDiaperLogHandler>
+                                        <WidgetBottleFeedingHandler>
                                         <WatchMessageHandler>
                                         <GlobalTimerAlertWatcher>
                                           <AppContent />
                                         </GlobalTimerAlertWatcher>
                                         </WatchMessageHandler>
+                                        </WidgetBottleFeedingHandler>
+                                        </WidgetDiaperLogHandler>
+                                        </WidgetStartHandler>
                                         </WidgetPauseHandler>
                                         </WidgetStopHandler>
                                       </DisplayNamePromptWrapper>

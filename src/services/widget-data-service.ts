@@ -189,7 +189,7 @@ export interface WatchAuthContext {
   pushToStartToken?: string;
 }
 
-export async function updateWidgetData(data: WidgetData, authContext?: WatchAuthContext): Promise<void> {
+export async function updateWidgetData(data: WidgetData, authContext?: WatchAuthContext, options?: { volumeUnit?: string }): Promise<void> {
   const jsonData = JSON.stringify(data);
 
   await AsyncStorage.setItem(WIDGET_DATA_KEY, jsonData);
@@ -199,6 +199,10 @@ export async function updateWidgetData(data: WidgetData, authContext?: WatchAuth
       const extensionStorage = await loadExtensionStorage();
       if (extensionStorage) {
         await extensionStorage.set("widgetData", jsonData, APP_GROUP);
+        await extensionStorage.set("selectedBabyName", data.babyName, APP_GROUP);
+        if (options?.volumeUnit) {
+          await extensionStorage.set("preferredVolumeUnit", options.volumeUnit, APP_GROUP);
+        }
         await extensionStorage.reloadWidget();
       }
     } catch (error) {
@@ -494,6 +498,7 @@ export async function readPushToStartToken(): Promise<string | null> {
 export async function readPendingWidgetStop(): Promise<{
   activityType: string;
   stoppedAt: string;
+  volumeMl?: number;
 } | null> {
   if (Platform.OS !== "ios") return null;
   try {
@@ -546,6 +551,87 @@ export async function clearPendingWidgetStop(): Promise<void> {
       await extensionStorage.set("pendingWidgetStop", "", APP_GROUP);
     }
   } catch (_) { /* best-effort cleanup */ }
+}
+
+export async function readPendingWidgetStart(): Promise<{
+  activityType: string;
+  requestedAt: string;
+  side?: string;
+} | null> {
+  if (Platform.OS !== "ios") return null;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (!extensionStorage) return null;
+    const raw = await extensionStorage.get("pendingWidgetStart", APP_GROUP);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export async function clearPendingWidgetStart(): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      await extensionStorage.set("pendingWidgetStart", "", APP_GROUP);
+    }
+  } catch (_) { /* best-effort cleanup */ }
+}
+
+export async function readPendingDiaperLog(): Promise<{
+  type: string;
+  stoolColor?: string;
+  requestedAt: string;
+} | null> {
+  if (Platform.OS !== "ios") return null;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (!extensionStorage) return null;
+    const raw = await extensionStorage.get("pendingDiaperLog", APP_GROUP);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export async function clearPendingDiaperLog(): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      await extensionStorage.set("pendingDiaperLog", "", APP_GROUP);
+    }
+  } catch (_) { /* best-effort */ }
+}
+
+export async function readPendingBottleLog(): Promise<{
+  amountMl: number;
+  contentType: string;
+  requestedAt: string;
+} | null> {
+  if (Platform.OS !== "ios") return null;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (!extensionStorage) return null;
+    const raw = await extensionStorage.get("pendingBottleLog", APP_GROUP);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export async function clearPendingBottleLog(): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (extensionStorage) {
+      await extensionStorage.set("pendingBottleLog", "", APP_GROUP);
+    }
+  } catch (_) { /* best-effort */ }
 }
 
 export async function clearWidgetData(): Promise<void> {

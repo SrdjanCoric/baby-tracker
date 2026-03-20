@@ -87,7 +87,6 @@ function withLiveActivityController(config) {
       const filesToCopy = [
         "LiveActivityController.swift",
         "LiveActivityController.m",
-        "TimerActivityAttributes.swift",
       ];
 
       for (const file of filesToCopy) {
@@ -128,7 +127,6 @@ function withLiveActivityController(config) {
     const filesToAdd = [
       { name: "LiveActivityController.swift", type: "sourcecode.swift" },
       { name: "LiveActivityController.m", type: "sourcecode.c.objc" },
-      { name: "TimerActivityAttributes.swift", type: "sourcecode.swift" },
     ];
 
     // Find the main app group

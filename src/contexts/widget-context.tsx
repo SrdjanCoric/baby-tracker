@@ -28,6 +28,7 @@ import { syncWidgetPushToken } from "@/services/widget-push-token-service";
 import { registerPushToStart } from "@/services/live-activity-service";
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import type { TimerActivityType } from "@/services/active-timer-service";
+import { useUnits } from "./unit-context";
 
 interface WidgetContextValue {
   refreshWidgetData: () => Promise<void>;
@@ -59,6 +60,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { tummyTimes, activeTimer: tummyTimeTimer, dailyGoalSeconds: tummyTimeGoalSeconds } = useTummyTime();
   const { locks } = useActiveTimers();
   const { user, session } = useAuth();
+  const { volumeUnit } = useUnits();
 
   const lastUpdateRef = useRef<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -360,11 +362,11 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      await updateWidgetData(widgetData, authContext);
+      await updateWidgetData(widgetData, authContext, { volumeUnit });
     } catch (error) {
       console.error("[WidgetContext] Failed to update widget data:", error);
     }
-  }, [buildWidgetData, session?.access_token, user?.id]);
+  }, [buildWidgetData, session?.access_token, user?.id, volumeUnit]);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
