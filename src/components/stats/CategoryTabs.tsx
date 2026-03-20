@@ -1,8 +1,8 @@
-import { ScrollView, Pressable, Text, View } from "react-native";
+import { ScrollView, Pressable, Text } from "react-native";
 import { useColorScheme } from "nativewind";
 import { SURFACE, TEXT, ACTION } from "@/constants/colors";
 
-export type StatsCategory = "sleep" | "feeding" | "diapers" | "growth" | "pumping" | "tummyTime";
+export type StatsCategory = "sleep" | "feeding" | "diapers" | "growth" | "pumping" | "tummyTime" | "health";
 
 const CATEGORY_ICONS: Record<StatsCategory, string> = {
   sleep: "\uD83C\uDF19",
@@ -11,6 +11,7 @@ const CATEGORY_ICONS: Record<StatsCategory, string> = {
   growth: "\uD83D\uDCC8",
   pumping: "\uD83E\uDD31",
   tummyTime: "\uD83D\uDCAA",
+  health: "🏥",
 };
 
 interface CategoryTabsProps {

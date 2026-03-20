@@ -4,7 +4,7 @@ import { View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
 import { useBaby } from "@/contexts";
-import { SURFACE, TEXT as TEXT_COLORS, ACTIVITY, ACTION } from "@/constants/colors";
+import { SURFACE, TEXT as TEXT_COLORS, ACTIVITY } from "@/constants/colors";
 import {
   CategoryTabs,
   SegmentedTabs,
@@ -18,6 +18,7 @@ import {
   PumpingWeekView,
   TummyTimeTodayView,
   TummyTimeWeekView,
+  HealthStatsView,
 } from "@/components/stats";
 import type { StatsCategory } from "@/components/stats";
 
@@ -33,6 +34,7 @@ const CATEGORY_ACCENT: Record<StatsCategory, { light: string; dark: string; text
   growth: { light: ACTIVITY.growth.accent, dark: ACTIVITY.growth.accentDark, textLight: ACTIVITY.growth.textAccent, textDark: ACTIVITY.growth.textAccentDark },
   pumping: { light: ACTIVITY.pumping.accent, dark: ACTIVITY.pumping.accentDark, textLight: ACTIVITY.pumping.textAccent, textDark: ACTIVITY.pumping.textAccentDark },
   tummyTime: { light: ACTIVITY.tummyTime.accent, dark: ACTIVITY.tummyTime.accentDark, textLight: ACTIVITY.tummyTime.textAccent, textDark: ACTIVITY.tummyTime.textAccentDark },
+  health: { light: ACTIVITY.health.accent, dark: ACTIVITY.health.accentDark, textLight: ACTIVITY.health.textAccent, textDark: ACTIVITY.health.textAccentDark },
 };
 
 export default function StatisticsScreen() {
@@ -53,6 +55,7 @@ export default function StatisticsScreen() {
     growth: "none",
     pumping: "today",
     tummyTime: "today",
+    health: "none",
   });
 
   const categories = [
@@ -61,6 +64,7 @@ export default function StatisticsScreen() {
     { key: "diapers" as const, label: t("stats.categories.diapers") },
     { key: "pumping" as const, label: t("stats.categories.pumping") },
     { key: "tummyTime" as const, label: t("stats.categories.tummyTime") },
+    { key: "health" as const, label: t("stats.categories.health") },
     { key: "growth" as const, label: t("stats.categories.growth") },
   ];
 
@@ -86,7 +90,7 @@ export default function StatisticsScreen() {
         label: t(`stats.periods.${key}`),
       }));
     }
-    if (activeCategory === "growth") return null;
+    if (activeCategory === "growth" || activeCategory === "health") return null;
     return TWO_PERIOD_TABS.map((key) => ({
       key,
       label: t(`stats.periods.${key}`),
@@ -109,6 +113,8 @@ export default function StatisticsScreen() {
         return activePeriod === "today" ? <PumpingTodayView /> : <PumpingWeekView />;
       case "tummyTime":
         return activePeriod === "today" ? <TummyTimeTodayView /> : <TummyTimeWeekView />;
+      case "health":
+        return <HealthStatsView />;
     }
   };
 

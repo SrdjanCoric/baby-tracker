@@ -19,13 +19,13 @@ const UNIT_OPTIONS: UnitOptionConfig[] = [
     value: "metric",
     icon: "\u{1F30D}",
     label: "settings.metric",
-    description: "kg, cm, ml",
+    description: "kg, cm, ml, °C",
   },
   {
     value: "imperial",
     icon: "\u{1F1FA}\u{1F1F8}",
     label: "settings.imperial",
-    description: "lbs, in, oz",
+    description: "lbs, in, oz, °F",
   },
 ];
 

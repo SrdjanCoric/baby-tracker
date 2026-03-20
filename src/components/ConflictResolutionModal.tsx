@@ -50,6 +50,7 @@ const tableLabelKeys = {
   wake_window_preferences: 'sync.tableLabels.wakeWindow',
   activity_goals: 'sync.tableLabels.activityGoal',
   milestone_responses: 'sync.tableLabels.milestone',
+  health_entries: 'sync.tableLabels.health',
 } as const satisfies Record<SyncableTable, string>;
 
 function formatTimestamp(timestamp: string, timeFormat: TimeFormat): string {

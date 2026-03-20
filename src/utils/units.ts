@@ -24,3 +24,7 @@ export function getHeightUnit(system: UnitSystem): "cm" | "in" {
 export function getVolumeUnit(system: UnitSystem): "ml" | "oz" {
   return system === "imperial" ? "oz" : "ml";
 }
+
+export function getTemperatureUnit(system: UnitSystem): "°C" | "°F" {
+  return system === "imperial" ? "°F" : "°C";
+}

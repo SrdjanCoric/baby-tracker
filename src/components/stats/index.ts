@@ -24,3 +24,4 @@ export { PumpingTodayView } from "./pumping/PumpingTodayView";
 export { PumpingWeekView } from "./pumping/PumpingWeekView";
 export { TummyTimeTodayView } from "./tummyTime/TummyTimeTodayView";
 export { TummyTimeWeekView } from "./tummyTime/TummyTimeWeekView";
+export { HealthStatsView } from "./health/HealthStatsView";

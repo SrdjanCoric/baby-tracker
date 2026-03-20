@@ -28,6 +28,7 @@ export default function DashboardSettingsScreen() {
     tummyTime: t("tummyTime.title"),
     growth: t("growth.title"),
     milestones: t("milestones.title"),
+    health: t("health.title"),
   }), [t]);
 
   const handleToggleVisibility = useCallback(

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=414, initial-scale=1">
+<title>Health Tracking — Final UI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* App colors from colors.ts */
+  :root {
+    --bg: #F5EDE8;
+    --bg-secondary: #EFE7E2;
+    --card: #FFFFFF;
+    --card-elevated: #FFFFFF;
+    --muted: #FEF7F4;
+    --input: #FFFFFF;
+
+    --text-primary: #2D2A26;
+    --text-secondary: #5C5752;
+    --text-tertiary: #7A756E;
+    --text-muted: #9A958E;
+
+    --action: #4A7F4D;
+
+    --border: #E5E2DE;
+    --border-subtle: #EDEAE6;
+    --border-strong: #D5D1CC;
+
+    --health-accent: #D4836B;
+    --health-button: #B96B55;
+    --health-muted: #FBF0EC;
+    --health-text: #9E5840;
+
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --neutral: #6b7280;
+
+    /* Combo vaccine tag */
+    --combo-bg: #F3EDF7;
+    --combo-text: #7c3aed;
+  }
+
+  body {
+    font-family: 'Nunito', -apple-system, sans-serif;
+    background: #2D2A26;
+    padding: 40px 20px;
+  }
+
+  h1 { text-align: center; color: #F5EDE8; font-size: 28px; margin-bottom: 8px; }
+  h1 span { color: var(--health-accent); }
+  .page-desc { text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+
+  .section-title { text-align: center; color: var(--health-accent); font-size: 18px; font-weight: 800; margin: 48px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .section-desc { text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; margin-bottom: 32px; }
+
+  .mockup-container { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .mockup-label { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+
+  .phone {
+    width: 375px;
+    height: 780px;
+    background: var(--card);
+    border-radius: 36px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    border: 6px solid #333;
+    position: relative;
+  }
+  .notch { width: 140px; height: 30px; background: #333; border-radius: 0 0 18px 18px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 10; }
+  .screen { height: 100%; overflow-y: auto; background: var(--bg); padding-top: 48px; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  .header { background: var(--card); padding: 10px 18px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; z-index: 5; }
+  .back-btn { font-size: 20px; color: var(--health-accent); }
+  .header-title { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+  .header-subtitle { font-size: 11px; color: var(--text-muted); }
+
+  /* Stats */
+  .stats-row { display: flex; gap: 6px; padding: 12px 14px 4px; }
+  .stat-card { flex: 1; background: var(--card); border-radius: 12px; padding: 8px 4px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .stat-number { font-size: 18px; font-weight: 800; }
+  .stat-number.green { color: var(--success); }
+  .stat-number.amber { color: var(--warning); }
+  .stat-number.gray { color: var(--text-muted); }
+  .stat-label { font-size: 9px; color: var(--text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* Timeline */
+  .timeline { padding: 10px 18px 18px; }
+  .timeline-group { position: relative; padding-left: 26px; }
+  .timeline-group::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .timeline-group:last-child::before { display: none; }
+  .tl-dot { width: 12px; height: 12px; border-radius: 50%; position: absolute; left: 0; top: 2px; z-index: 2; }
+  .tl-dot.done { background: var(--success); }
+  .tl-dot.window { background: var(--warning); }
+  .tl-dot.upcoming { background: var(--border-strong); }
+  .tl-age { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .tl-age.done { color: var(--success); }
+  .tl-age.window { color: var(--warning); }
+  .tl-age.upcoming { color: var(--text-muted); }
+  .tl-age .age-range { font-size: 9px; font-weight: 500; color: var(--text-muted); text-transform: none; letter-spacing: 0; margin-left: 3px; }
+  .tl-cards { display: flex; flex-direction: column; gap: 5px; padding-bottom: 14px; }
+
+  .vax-card { background: var(--card); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .vax-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; font-weight: 700; }
+  .vax-icon.done { background: #dcfce7; color: #16a34a; }
+  .vax-icon.window { background: #fef3c7; color: #d97706; }
+  .vax-icon.upcoming { background: var(--bg-secondary); color: var(--text-muted); }
+  .vax-body { flex: 1; min-width: 0; }
+  .vax-name { font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 5px; }
+  .vax-combo-tag { font-size: 8px; font-weight: 700; padding: 1px 4px; border-radius: 3px; background: var(--combo-bg); color: var(--combo-text); }
+  .optional-tag { font-size: 8px; font-weight: 700; padding: 1px 4px; border-radius: 3px; background: var(--bg-secondary); color: var(--text-muted); }
+  .vax-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vax-sub.window-text { color: #d97706; font-weight: 600; }
+  .vax-right { flex-shrink: 0; text-align: right; }
+  .vax-date { font-size: 11px; font-weight: 600; color: var(--success); }
+  .vax-dose-label { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+  .vax-upcoming-label { font-size: 10px; color: var(--text-muted); }
+  .log-btn { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 8px; background: var(--health-button); color: #fff; }
+  .combo-note { font-size: 10px; color: var(--text-muted); padding: 2px 12px 1px; line-height: 1.3; }
+  .combo-note strong { color: var(--combo-text); }
+
+  /* Hidden vaccines */
+  .hidden-section { margin: 0 14px 12px; background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .hidden-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .hidden-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+  .hidden-toggle { font-size: 11px; color: var(--health-accent); font-weight: 600; }
+  .hidden-list { padding: 0 14px 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .hidden-pill { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: var(--bg-secondary); color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .hidden-pill .unhide { font-size: 12px; color: var(--health-accent); margin-left: 2px; }
+
+  /* Context menu */
+  .context-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 20; display: flex; align-items: center; justify-content: center; }
+  .context-menu { background: var(--card); border-radius: 14px; width: 260px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+  .context-menu-header { padding: 14px 16px 8px; font-size: 14px; font-weight: 700; color: var(--text-primary); text-align: center; }
+  .context-menu-desc { padding: 0 16px 12px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.3; }
+  .context-menu-btn { padding: 13px 16px; font-size: 14px; font-weight: 600; text-align: center; border-top: 1px solid var(--border-subtle); }
+  .context-menu-btn.danger { color: var(--error); }
+  .context-menu-btn.cancel { color: var(--health-accent); }
+
+  /* Form */
+  .form-section { padding: 14px 16px; }
+  .form-label { font-size: 11px; font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { padding: 7px 12px; border-radius: 18px; font-size: 12px; font-weight: 600; }
+  .pill.active { background: var(--health-button); color: #fff; }
+  .pill.inactive { background: var(--card); color: var(--text-secondary); border: 1px solid var(--border); }
+  .pill.custom { border: 1.5px dashed var(--border-strong); color: var(--text-muted); background: transparent; }
+  .suggestion-banner { background: var(--health-muted); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--health-text); font-weight: 600; }
+  .text-input { background: var(--input); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--text-primary); font-weight: 600; width: 100%; }
+  .text-input.placeholder { color: var(--text-muted); font-weight: 400; }
+  .save-btn { background: var(--health-button); color: #fff; text-align: center; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; margin: 8px 16px 16px; }
+  .link-text { text-align: center; font-size: 12px; color: var(--health-accent); font-weight: 600; padding: 8px; }
+
+  /* Unit toggle */
+  .unit-toggle { display: inline-flex; background: var(--bg-secondary); border-radius: 8px; padding: 2px; margin-bottom: 8px; }
+  .unit-opt { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+  .unit-opt.active { background: var(--health-button); color: #fff; }
+  .unit-opt.inactive { color: var(--text-muted); }
+
+  /* Custom dosage input */
+  .dosage-input-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .dosage-text-input {
+    flex: 1;
+    background: var(--input);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .dosage-text-input.placeholder { color: var(--text-muted); font-weight: 400; font-size: 13px; }
+  .dosage-unit-suffix {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+  }
+</style>
+</head>
+<body>
+
+<h1>Health Tracking — <span>Final UI</span></h1>
+<p class="page-desc">Mockups using actual app color palette (warm earth tones). Font: Nunito. Health accent: terracotta coral.</p>
+
+<!-- ===== SECTION 1: VACCINE SCHEDULE ===== -->
+<div class="section-title">1. Vaccine Schedule</div>
+<div class="section-desc">Vertical timeline · window-based scheduling · combo vaccine tags · "Recommended" for optional · long-press to hide</div>
+
+<div class="row">
+  <div class="mockup-container">
+    <div class="mockup-label">Schedule Timeline</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="header">
+          <span class="back-btn">‹</span>
+          <div>
+            <div class="header-title">Vaccine Schedule</div>
+            <div class="header-subtitle">Emma · 14 weeks old</div>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-number green">7</div><div class="stat-label">Given</div></div>
+          <div class="stat-card"><div class="stat-number amber">3</div><div class="stat-label">In Window</div></div>
+          <div class="stat-card"><div class="stat-number gray">14</div><div class="stat-label">Upcoming</div></div>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-group">
+            <div class="tl-dot done"></div>
+            <div class="tl-age done">Birth</div>
+            <div class="tl-cards">
+              <div class="vax-card">
+                <div class="vax-icon done">✓</div>
+                <div class="vax-body">
+                  <div class="vax-name">Hep B</div>
+                  <div class="vax-sub">Hepatitis B · Dose 1 of 3</div>
+                </div>
+                <div class="vax-right"><div class="vax-date">Jan 5, 2026</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-group">
+            <div class="tl-dot done"></div>
+            <div class="tl-age done">2 Months <span class="age-range">(6–8 wk)</span></div>
+            <div class="tl-cards">
+              <div class="vax-card">
+                <div class="vax-icon done">✓</div>
+                <div class="vax-body">
+                  <div class="vax-name">6-in-1 <span class="vax-combo-tag">Hexavalent</span></div>
+                  <div class="vax-sub">DTaP + IPV + Hib + Hep B · Dose 1</div>
+                </div>
+                <div class="vax-right"><div class="vax-date">Mar 2, 2026</div></div>
+              </div>
+              <div class="combo-note"><strong>6-in-1</strong> covers: Diphtheria, Tetanus, Pertussis, Polio, Hib, Hep B</div>
+              <div class="vax-card">
+                <div class="vax-icon done">✓</div>
+                <div class="vax-body">
+                  <div class="vax-name">PCV13</div>
+                  <div class="vax-sub">Pneumococcal · Dose 1 of 4</div>
+                </div>
+                <div class="vax-right"><div class="vax-date">Mar 2, 2026</div></div>
+              </div>
+              <div class="vax-card">
+                <div class="vax-icon done">✓</div>
+                <div class="vax-body">
+                  <div class="vax-name">Rotavirus</div>
+                  <div class="vax-sub">Dose 1 · Window: 6–14 wk</div>
+                </div>
+                <div class="vax-right"><div class="vax-date">Mar 2, 2026</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-group">
+            <div class="tl-dot window"></div>
+            <div class="tl-age window">3–4 Months <span class="age-range">(current window)</span></div>
+            <div class="tl-cards">
+              <div class="vax-card" style="border-left: 3px solid var(--warning);">
+                <div class="vax-icon window">2</div>
+                <div class="vax-body">
+                  <div class="vax-name">6-in-1 <span class="vax-combo-tag">Hexavalent</span></div>
+                  <div class="vax-sub window-text">Dose 2 of 3 · Window open</div>
+                </div>
+                <div class="vax-right"><div class="log-btn">Log</div></div>
+              </div>
+              <div class="vax-card" style="border-left: 3px solid var(--warning);">
+                <div class="vax-icon window">2</div>
+                <div class="vax-body">
+                  <div class="vax-name">PCV13</div>
+                  <div class="vax-sub window-text">Dose 2 of 4 · Window open</div>
+                </div>
+                <div class="vax-right"><div class="log-btn">Log</div></div>
+              </div>
+              <div class="vax-card" style="border-left: 3px solid var(--warning);">
+                <div class="vax-icon window">2</div>
+                <div class="vax-body">
+                  <div class="vax-name">Rotavirus</div>
+                  <div class="vax-sub window-text">Dose 2 · 4 wk after dose 1</div>
+                </div>
+                <div class="vax-right"><div class="log-btn">Log</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-group">
+            <div class="tl-dot upcoming"></div>
+            <div class="tl-age upcoming">6 Months <span class="age-range">(~8 wk away)</span></div>
+            <div class="tl-cards">
+              <div class="vax-card" style="opacity: 0.6;">
+                <div class="vax-icon upcoming">3</div>
+                <div class="vax-body">
+                  <div class="vax-name">6-in-1 <span class="vax-combo-tag">Hexavalent</span></div>
+                  <div class="vax-sub">Dose 3 of 3 · Final</div>
+                </div>
+                <div class="vax-right"><div class="vax-upcoming-label">~8 wk</div></div>
+              </div>
+              <div class="vax-card" style="opacity: 0.6;">
+                <div class="vax-icon upcoming">3</div>
+                <div class="vax-body">
+                  <div class="vax-name">PCV13</div>
+                  <div class="vax-sub">Dose 3 of 4</div>
+                </div>
+                <div class="vax-right"><div class="vax-upcoming-label">~8 wk</div></div>
+              </div>
+              <div class="vax-card" style="opacity: 0.6;">
+                <div class="vax-icon upcoming">3</div>
+                <div class="vax-body">
+                  <div class="vax-name">Rotavirus</div>
+                  <div class="vax-sub">Dose 3 · Final · before 32 wk</div>
+                </div>
+                <div class="vax-right"><div class="vax-upcoming-label">~8 wk</div></div>
+              </div>
+              <div class="vax-card" style="opacity: 0.6;">
+                <div class="vax-icon upcoming">1</div>
+                <div class="vax-body">
+                  <div class="vax-name">Flu <span class="optional-tag">Recommended</span></div>
+                  <div class="vax-sub">Annual · First eligible at 6 mo</div>
+                </div>
+                <div class="vax-right"><div class="vax-upcoming-label">~8 wk</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-group">
+            <div class="tl-dot upcoming"></div>
+            <div class="tl-age upcoming">12 Months</div>
+            <div class="tl-cards">
+              <div class="vax-card" style="opacity: 0.4;">
+                <div class="vax-icon upcoming">1</div>
+                <div class="vax-body"><div class="vax-name">MMR</div><div class="vax-sub">Measles, Mumps, Rubella · Dose 1 of 2</div></div>
+                <div class="vax-right"><div class="vax-upcoming-label">~34 wk</div></div>
+              </div>
+              <div class="vax-card" style="opacity: 0.4;">
+                <div class="vax-icon upcoming">1</div>
+                <div class="vax-body"><div class="vax-name">Varicella</div><div class="vax-sub">Chickenpox · Dose 1 of 2</div></div>
+                <div class="vax-right"><div class="vax-upcoming-label">~34 wk</div></div>
+              </div>
+              <div class="vax-card" style="opacity: 0.4;">
+                <div class="vax-icon upcoming">4</div>
+                <div class="vax-body"><div class="vax-name">PCV13</div><div class="vax-sub">Dose 4 of 4 · Booster</div></div>
+                <div class="vax-right"><div class="vax-upcoming-label">~34 wk</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden-section">
+          <div class="hidden-header">
+            <span class="hidden-label">2 hidden vaccines</span>
+            <span class="hidden-toggle">Show ›</span>
+          </div>
+          <div class="hidden-list">
+            <div class="hidden-pill">BCG <span class="unhide">+</span></div>
+            <div class="hidden-pill">Hep A <span class="unhide">+</span></div>
+          </div>
+        </div>
+        <div style="height: 20px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup-container">
+    <div class="mockup-label">Long-press → Hide</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen" style="filter: brightness(0.6);">
+        <div class="header">
+          <span class="back-btn">‹</span>
+          <div><div class="header-title">Vaccine Schedule</div><div class="header-subtitle">Emma · 14 weeks old</div></div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-number green">7</div><div class="stat-label">Given</div></div>
+          <div class="stat-card"><div class="stat-number amber">3</div><div class="stat-label">In Window</div></div>
+          <div class="stat-card"><div class="stat-number gray">14</div><div class="stat-label">Upcoming</div></div>
+        </div>
+      </div>
+      <div class="context-overlay">
+        <div class="context-menu">
+          <div class="context-menu-header">Flu</div>
+          <div class="context-menu-desc">This vaccine won't appear on your schedule. You can restore it from the bottom of the list.</div>
+          <div class="context-menu-btn danger">Hide from Schedule</div>
+          <div class="context-menu-btn cancel">Cancel</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 2: LOG VACCINATION ===== -->
+<div class="section-title">2. Log Vaccination</div>
+<div class="section-desc">Auto-suggests next dose · pre-fills from schedule tap · shows dose history</div>
+
+<div class="row">
+  <div class="mockup-container">
+    <div class="mockup-label">Dose Auto-suggestion</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="header">
+          <span class="back-btn">‹</span>
+          <div><div class="header-title">Log Vaccination</div></div>
+        </div>
+        <div class="form-section">
+          <div class="form-label">Vaccine</div>
+          <div class="pill-row">
+            <div class="pill active">6-in-1</div>
+            <div class="pill inactive">PCV13</div>
+            <div class="pill inactive">Rotavirus</div>
+            <div class="pill inactive">MMR</div>
+            <div class="pill inactive">Hep B</div>
+            <div class="pill inactive">Hib</div>
+            <div class="pill inactive">IPV</div>
+            <div class="pill inactive">DTaP</div>
+            <div class="pill inactive">Varicella</div>
+            <div class="pill inactive">Hep A</div>
+            <div class="pill inactive">Flu</div>
+            <div class="pill custom">Custom...</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Dose Number</div>
+          <div class="suggestion-banner">💡 Dose 1 given Mar 2. This would be dose 2 of 3.</div>
+          <div class="pill-row">
+            <div class="pill inactive" style="padding: 7px 16px;">1</div>
+            <div class="pill active" style="padding: 7px 16px;">2</div>
+            <div class="pill inactive" style="padding: 7px 16px;">3</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Date Given</div>
+          <div class="text-input"><span style="display: flex; justify-content: space-between; align-items: center;"><span>March 19, 2026</span><span style="color: var(--health-accent);">📅</span></span></div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Notes</div>
+          <div class="text-input placeholder" style="min-height: 50px;">Add notes (optional)</div>
+        </div>
+        <div class="link-text">📋 View Vaccine Schedule</div>
+        <div class="save-btn">Log Vaccination</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 3: MEDICATION DOSAGE ===== -->
+<div class="section-title">3. Medication — Dosage Units</div>
+<div class="section-desc">Unit toggle (ml / mg / drops) · quick-select presets · custom input for any value · expanded medication list</div>
+
+<div class="row">
+  <div class="mockup-container">
+    <div class="mockup-label">ml — quick select</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="header">
+          <span class="back-btn">‹</span>
+          <div><div class="header-title">Log Medication</div></div>
+        </div>
+        <div class="form-section">
+          <div class="form-label">Medication</div>
+          <div class="pill-row">
+            <div class="pill active">Tylenol</div>
+            <div class="pill inactive">Ibuprofen</div>
+            <div class="pill inactive">Vitamin D</div>
+            <div class="pill inactive">Amoxicillin</div>
+            <div class="pill inactive">Gripe Water</div>
+            <div class="pill inactive">Simethicone</div>
+            <div class="pill inactive">Probiotics</div>
+            <div class="pill inactive">Iron</div>
+            <div class="pill inactive">Multivitamin</div>
+            <div class="pill custom">Custom...</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Dosage</div>
+          <div class="unit-toggle">
+            <div class="unit-opt active">ml</div>
+            <div class="unit-opt inactive">mg</div>
+            <div class="unit-opt inactive">drops</div>
+          </div>
+          <div class="pill-row" style="margin-bottom: 0;">
+            <div class="pill inactive">2.5</div>
+            <div class="pill active">5</div>
+            <div class="pill inactive">7.5</div>
+            <div class="pill inactive">10</div>
+          </div>
+          <div class="dosage-input-row">
+            <div class="dosage-text-input">5</div>
+            <div class="dosage-unit-suffix">ml</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Reminder Interval</div>
+          <div class="pill-row">
+            <div class="pill active">Every 4h</div>
+            <div class="pill inactive">Every 6h</div>
+            <div class="pill inactive">Every 8h</div>
+            <div class="pill inactive">None</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Notes</div>
+          <div class="text-input placeholder" style="min-height: 36px;">Add notes (optional)</div>
+        </div>
+        <div class="save-btn">Log Medication</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup-container">
+    <div class="mockup-label">mg — custom value</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="header">
+          <span class="back-btn">‹</span>
+          <div><div class="header-title">Log Medication</div></div>
+        </div>
+        <div class="form-section">
+          <div class="form-label">Medication</div>
+          <div class="pill-row">
+            <div class="pill inactive">Tylenol</div>
+            <div class="pill inactive">Ibuprofen</div>
+            <div class="pill inactive">Vitamin D</div>
+            <div class="pill active">Amoxicillin</div>
+            <div class="pill inactive">Gripe Water</div>
+            <div class="pill inactive">Simethicone</div>
+            <div class="pill inactive">Probiotics</div>
+            <div class="pill inactive">Iron</div>
+            <div class="pill inactive">Multivitamin</div>
+            <div class="pill custom">Custom...</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Dosage</div>
+          <div class="unit-toggle">
+            <div class="unit-opt inactive">ml</div>
+            <div class="unit-opt active">mg</div>
+            <div class="unit-opt inactive">drops</div>
+          </div>
+          <div class="pill-row" style="margin-bottom: 0;">
+            <div class="pill inactive">50</div>
+            <div class="pill inactive">100</div>
+            <div class="pill inactive">200</div>
+            <div class="pill inactive">400</div>
+          </div>
+          <div class="dosage-input-row">
+            <div class="dosage-text-input">250</div>
+            <div class="dosage-unit-suffix">mg</div>
+          </div>
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Custom value — no preset selected</div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Reminder Interval</div>
+          <div class="pill-row">
+            <div class="pill inactive">Every 4h</div>
+            <div class="pill inactive">Every 6h</div>
+            <div class="pill active">Every 8h</div>
+            <div class="pill inactive">None</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Notes</div>
+          <div class="text-input placeholder" style="min-height: 36px;">Add notes (optional)</div>
+        </div>
+        <div class="save-btn">Log Medication</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup-container">
+    <div class="mockup-label">drops</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="header">
+          <span class="back-btn">‹</span>
+          <div><div class="header-title">Log Medication</div></div>
+        </div>
+        <div class="form-section">
+          <div class="form-label">Medication</div>
+          <div class="pill-row">
+            <div class="pill inactive">Tylenol</div>
+            <div class="pill inactive">Ibuprofen</div>
+            <div class="pill active">Vitamin D</div>
+            <div class="pill inactive">Amoxicillin</div>
+            <div class="pill inactive">Gripe Water</div>
+            <div class="pill inactive">Simethicone</div>
+            <div class="pill inactive">Probiotics</div>
+            <div class="pill inactive">Iron</div>
+            <div class="pill inactive">Multivitamin</div>
+            <div class="pill custom">Custom...</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Dosage</div>
+          <div class="unit-toggle">
+            <div class="unit-opt inactive">ml</div>
+            <div class="unit-opt inactive">mg</div>
+            <div class="unit-opt active">drops</div>
+          </div>
+          <div class="pill-row" style="margin-bottom: 0;">
+            <div class="pill active">1</div>
+            <div class="pill inactive">2</div>
+            <div class="pill inactive">5</div>
+            <div class="pill inactive">10</div>
+          </div>
+          <div class="dosage-input-row">
+            <div class="dosage-text-input">1</div>
+            <div class="dosage-unit-suffix">drops</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Reminder Interval</div>
+          <div class="pill-row">
+            <div class="pill inactive">Every 4h</div>
+            <div class="pill inactive">Every 6h</div>
+            <div class="pill inactive">Every 8h</div>
+            <div class="pill active">None</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Notes</div>
+          <div class="text-input placeholder" style="min-height: 36px;">Add notes (optional)</div>
+        </div>
+        <div class="save-btn">Log Medication</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 4: SYMPTOMS ===== -->
+<div class="section-title">4. Expanded Symptoms</div>
+<div class="section-desc">14 symptoms (was 6) · multi-select pills</div>
+
+<div class="row">
+  <div class="mockup-container">
+    <div class="mockup-label">Multi-select</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="header">
+          <span class="back-btn">‹</span>
+          <div><div class="header-title">Log Symptoms</div></div>
+        </div>
+        <div class="form-section">
+          <div class="form-label">Select Symptoms</div>
+          <div class="pill-row">
+            <div class="pill active">Runny nose</div>
+            <div class="pill inactive">Vomiting</div>
+            <div class="pill active">Fussy</div>
+            <div class="pill inactive">Lethargic</div>
+            <div class="pill inactive">Won't eat</div>
+            <div class="pill inactive">Rash</div>
+            <div class="pill active">Cough</div>
+            <div class="pill inactive">Congestion</div>
+            <div class="pill inactive">Diarrhea</div>
+            <div class="pill inactive">Ear pulling</div>
+            <div class="pill inactive">Teething</div>
+            <div class="pill inactive">Excessive crying</div>
+            <div class="pill inactive">Eye discharge</div>
+            <div class="pill inactive">Skin irritation</div>
+          </div>
+        </div>
+        <div class="form-section" style="padding-top: 0;">
+          <div class="form-label">Notes</div>
+          <div class="text-input placeholder" style="min-height: 50px;">Add notes (optional)</div>
+        </div>
+        <div class="save-btn">Log Symptoms</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
