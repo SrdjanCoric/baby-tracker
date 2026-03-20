@@ -251,6 +251,7 @@ Ensure screens have consistent `testID` on both loading and loaded states, other
 - No comments unless code is complex - code should be self-explanatory
 - Never use `any` to fix TypeScript issues - properly type everything
 - Never bend tests to make them pass - tests validate correct behavior
+- Never mention Claude Code or any AI assistant as co-author in commit messages or PR descriptions
 
 ### TypeScript Patterns
 
