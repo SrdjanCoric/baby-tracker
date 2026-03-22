@@ -838,7 +838,8 @@
     "filterPumping": "Ordenha",
     "filterGrowth": "Crescimento",
     "filterTummyTime": "Tempo de Barriguinha",
-    "summary": "Resumo"
+    "summary": "Resumo",
+    "sleepSummaryInfo": "Os totais são calculados a partir das {{hour}}, com base na configuração de início do dia"
   },
   "sync": {
     "synced": "Sincronizado",
