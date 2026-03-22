@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -75,6 +75,8 @@ export default function SleepSettingsScreen() {
   const [showUnderTwoMonthsWarning, setShowUnderTwoMonthsWarning] = useState(false);
   const [showDayStartPicker, setShowDayStartPicker] = useState(false);
   const [showNightStartPicker, setShowNightStartPicker] = useState(false);
+  const [pendingDayStartHour, setPendingDayStartHour] = useState<number | null>(null);
+  const [pendingNightStartHour, setPendingNightStartHour] = useState<number | null>(null);
   const reminderHintAnim = useRef(new Animated.Value(0)).current;
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
@@ -303,10 +305,36 @@ export default function SleepSettingsScreen() {
 
   const formatHour = (hour: number) => formatHourValue(hour, timeFormat);
 
-  const handleDayStartPickerChange = useCallback(async (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === "android") setShowDayStartPicker(false);
-    if (!selectedDate) return;
-    const hour = selectedDate.getHours();
+  const handleDayStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowDayStartPicker(false);
+      if (!selectedDate) return;
+      const hour = selectedDate.getHours();
+      if (hour >= dayEndHour) return;
+      setDayNightBoundary(hour, dayEndHour);
+      if (selectedBaby?.id && wakeWindowConfig) {
+        syncWakeWindowPreferenceForBaby(
+          selectedBaby.id,
+          wakeWindowConfig.napCount,
+          wakeWindowConfig.slots,
+          wakeWindowConfig.source,
+          settings.wakeWindowReminders.enabled,
+          hour,
+          dayEndHour,
+          napContinuationMinutes
+        );
+      }
+      return;
+    }
+    if (selectedDate) {
+      setPendingDayStartHour(selectedDate.getHours());
+    }
+  }, [dayEndHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+
+  const handleDayStartDone = useCallback(async () => {
+    setShowDayStartPicker(false);
+    const hour = pendingDayStartHour ?? dayStartHour;
+    setPendingDayStartHour(null);
     if (hour >= dayEndHour) return;
     await setDayNightBoundary(hour, dayEndHour);
     if (selectedBaby?.id && wakeWindowConfig) {
@@ -321,12 +349,38 @@ export default function SleepSettingsScreen() {
         napContinuationMinutes
       );
     }
-  }, [setDayNightBoundary, dayEndHour, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+  }, [pendingDayStartHour, dayStartHour, dayEndHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
 
-  const handleNightStartPickerChange = useCallback(async (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === "android") setShowNightStartPicker(false);
-    if (!selectedDate) return;
-    const hour = selectedDate.getHours();
+  const handleNightStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowNightStartPicker(false);
+      if (!selectedDate) return;
+      const hour = selectedDate.getHours();
+      if (hour <= dayStartHour) return;
+      setDayNightBoundary(dayStartHour, hour);
+      if (selectedBaby?.id && wakeWindowConfig) {
+        syncWakeWindowPreferenceForBaby(
+          selectedBaby.id,
+          wakeWindowConfig.napCount,
+          wakeWindowConfig.slots,
+          wakeWindowConfig.source,
+          settings.wakeWindowReminders.enabled,
+          dayStartHour,
+          hour,
+          napContinuationMinutes
+        );
+      }
+      return;
+    }
+    if (selectedDate) {
+      setPendingNightStartHour(selectedDate.getHours());
+    }
+  }, [dayStartHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+
+  const handleNightStartDone = useCallback(async () => {
+    setShowNightStartPicker(false);
+    const hour = pendingNightStartHour ?? dayEndHour;
+    setPendingNightStartHour(null);
     if (hour <= dayStartHour) return;
     await setDayNightBoundary(dayStartHour, hour);
     if (selectedBaby?.id && wakeWindowConfig) {
@@ -341,7 +395,7 @@ export default function SleepSettingsScreen() {
         napContinuationMinutes
       );
     }
-  }, [setDayNightBoundary, dayStartHour, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+  }, [pendingNightStartHour, dayEndHour, dayStartHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
 
   const handleNapContinuationChange = useCallback((minutes: number) => {
     confirmHouseholdChange(async () => {
@@ -360,6 +414,18 @@ export default function SleepSettingsScreen() {
       }
     });
   }, [confirmHouseholdChange, setContextNapContinuation, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, dayStartHour, dayEndHour]);
+
+  const dayStartPickerValue = useMemo(() => {
+    const d = new Date();
+    d.setHours(pendingDayStartHour ?? dayStartHour, 0, 0, 0);
+    return d;
+  }, [pendingDayStartHour, dayStartHour]);
+
+  const nightStartPickerValue = useMemo(() => {
+    const d = new Date();
+    d.setHours(pendingNightStartHour ?? dayEndHour, 0, 0, 0);
+    return d;
+  }, [pendingNightStartHour, dayEndHour]);
 
   if (!selectedBaby) {
     return <NoBabyScreen />;
@@ -573,7 +639,7 @@ export default function SleepSettingsScreen() {
                 {showDayStartPicker && Platform.OS === "ios" && (
                   <View className="mt-2">
                     <Pressable
-                      onPress={() => setShowDayStartPicker(false)}
+                      onPress={handleDayStartDone}
                       className="self-end px-4 py-2"
                     >
                       <Text className="text-base font-semibold" style={{ color: SLEEP_PURPLE }}>
@@ -582,11 +648,10 @@ export default function SleepSettingsScreen() {
                     </Pressable>
                     <DateTimePicker
                       {...{
-                        value: (() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })(),
+                        value: dayStartPickerValue,
                         mode: "time",
                         display: "spinner",
                         onChange: handleDayStartPickerChange,
-                        minuteInterval: 30,
                       } as IOSNativeProps}
                     />
                   </View>
@@ -594,7 +659,7 @@ export default function SleepSettingsScreen() {
                 {showDayStartPicker && Platform.OS === "android" && (
                   <DateTimePicker
                     {...{
-                      value: (() => { const d = new Date(); d.setHours(dayStartHour, 0, 0, 0); return d; })(),
+                      value: dayStartPickerValue,
                       mode: "time",
                       display: "default",
                       onChange: handleDayStartPickerChange,
@@ -622,7 +687,7 @@ export default function SleepSettingsScreen() {
                 {showNightStartPicker && Platform.OS === "ios" && (
                   <View className="mt-2">
                     <Pressable
-                      onPress={() => setShowNightStartPicker(false)}
+                      onPress={handleNightStartDone}
                       className="self-end px-4 py-2"
                     >
                       <Text className="text-base font-semibold" style={{ color: SLEEP_PURPLE }}>
@@ -631,11 +696,10 @@ export default function SleepSettingsScreen() {
                     </Pressable>
                     <DateTimePicker
                       {...{
-                        value: (() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })(),
+                        value: nightStartPickerValue,
                         mode: "time",
                         display: "spinner",
                         onChange: handleNightStartPickerChange,
-                        minuteInterval: 30,
                       } as IOSNativeProps}
                     />
                   </View>
@@ -643,7 +707,7 @@ export default function SleepSettingsScreen() {
                 {showNightStartPicker && Platform.OS === "android" && (
                   <DateTimePicker
                     {...{
-                      value: (() => { const d = new Date(); d.setHours(dayEndHour, 0, 0, 0); return d; })(),
+                      value: nightStartPickerValue,
                       mode: "time",
                       display: "default",
                       onChange: handleNightStartPickerChange,

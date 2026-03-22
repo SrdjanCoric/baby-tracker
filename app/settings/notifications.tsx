@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Pressable,
@@ -109,6 +109,8 @@ export default function NotificationSettingsScreen() {
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [pendingStartTime, setPendingStartTime] = useState<string | null>(null);
+  const [pendingEndTime, setPendingEndTime] = useState<string | null>(null);
   const [showSoloHint, setShowSoloHint] = useState(false);
   const [showFeedingHint, setShowFeedingHint] = useState(false);
   const soloHintAnim = useRef(new Animated.Value(0)).current;
@@ -124,44 +126,84 @@ export default function NotificationSettingsScreen() {
     [t]
   );
 
-  const parseTimeToDate = useCallback((timeString: string): Date => {
+  const formatTimeFromDate = (date: Date): string => {
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
+  const parseTimeToDate = (timeString: string): Date => {
     const [hours, minutes] = timeString.split(":").map(Number);
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     return date;
-  }, []);
+  };
+
+  const startTimePickerValue = useMemo(
+    () => parseTimeToDate(pendingStartTime ?? settings.quietHours.startTime),
+    [pendingStartTime, settings.quietHours.startTime]
+  );
+
+  const endTimePickerValue = useMemo(
+    () => parseTimeToDate(pendingEndTime ?? settings.quietHours.endTime),
+    [pendingEndTime, settings.quietHours.endTime]
+  );
 
   const handleStartTimeChange = useCallback(
-    async (_event: unknown, selectedTime?: Date) => {
+    (_event: unknown, selectedTime?: Date) => {
       if (Platform.OS === "android") {
         setShowStartTimePicker(false);
+        if (selectedTime) {
+          updateSettings({
+            quietHours: { ...settings.quietHours, startTime: formatTimeFromDate(selectedTime) },
+          });
+        }
+        return;
       }
       if (selectedTime) {
-        const hours = selectedTime.getHours().toString().padStart(2, "0");
-        const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
-        await updateSettings({
-          quietHours: { ...settings.quietHours, startTime: `${hours}:${minutes}` },
-        });
+        setPendingStartTime(formatTimeFromDate(selectedTime));
       }
     },
     [settings.quietHours, updateSettings]
   );
 
+  const handleStartTimeDone = useCallback(async () => {
+    setShowStartTimePicker(false);
+    if (pendingStartTime) {
+      await updateSettings({
+        quietHours: { ...settings.quietHours, startTime: pendingStartTime },
+      });
+      setPendingStartTime(null);
+    }
+  }, [pendingStartTime, settings.quietHours, updateSettings]);
+
   const handleEndTimeChange = useCallback(
-    async (_event: unknown, selectedTime?: Date) => {
+    (_event: unknown, selectedTime?: Date) => {
       if (Platform.OS === "android") {
         setShowEndTimePicker(false);
+        if (selectedTime) {
+          updateSettings({
+            quietHours: { ...settings.quietHours, endTime: formatTimeFromDate(selectedTime) },
+          });
+        }
+        return;
       }
       if (selectedTime) {
-        const hours = selectedTime.getHours().toString().padStart(2, "0");
-        const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
-        await updateSettings({
-          quietHours: { ...settings.quietHours, endTime: `${hours}:${minutes}` },
-        });
+        setPendingEndTime(formatTimeFromDate(selectedTime));
       }
     },
     [settings.quietHours, updateSettings]
   );
+
+  const handleEndTimeDone = useCallback(async () => {
+    setShowEndTimePicker(false);
+    if (pendingEndTime) {
+      await updateSettings({
+        quietHours: { ...settings.quietHours, endTime: pendingEndTime },
+      });
+      setPendingEndTime(null);
+    }
+  }, [pendingEndTime, settings.quietHours, updateSettings]);
 
   const handleRequestPermissions = useCallback(async () => {
     if (permissionStatus === "denied") {
@@ -553,7 +595,7 @@ export default function NotificationSettingsScreen() {
                     {Platform.OS === "ios" && (
                       <View className="flex-row justify-end mb-2">
                         <Pressable
-                          onPress={() => setShowStartTimePicker(false)}
+                          onPress={handleStartTimeDone}
                           className="py-1 px-2"
                         >
                           <Text className="text-primary dark:text-primary-dark font-medium">
@@ -563,7 +605,7 @@ export default function NotificationSettingsScreen() {
                       </View>
                     )}
                     <DateTimePicker
-                      value={parseTimeToDate(settings.quietHours.startTime)}
+                      value={startTimePickerValue}
                       mode="time"
                       is24Hour={true}
                       display={Platform.OS === "ios" ? "spinner" : "default"}
@@ -582,7 +624,7 @@ export default function NotificationSettingsScreen() {
                     {Platform.OS === "ios" && (
                       <View className="flex-row justify-end mb-2">
                         <Pressable
-                          onPress={() => setShowEndTimePicker(false)}
+                          onPress={handleEndTimeDone}
                           className="py-1 px-2"
                         >
                           <Text className="text-primary dark:text-primary-dark font-medium">
@@ -592,7 +634,7 @@ export default function NotificationSettingsScreen() {
                       </View>
                     )}
                     <DateTimePicker
-                      value={parseTimeToDate(settings.quietHours.endTime)}
+                      value={endTimePickerValue}
                       mode="time"
                       is24Hour={true}
                       display={Platform.OS === "ios" ? "spinner" : "default"}
