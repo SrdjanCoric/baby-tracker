@@ -681,7 +681,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         WKInterfaceDevice.current().play(.stop)
     }
 
-    func logDiaper(type: String) {
+    func logDiaper(type: String, stoolColor: String? = nil) {
         guard canPerformAction() else { return }
 
         let logTime = Date()
@@ -694,6 +694,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         ]
         if let babyId = currentBabyId {
             message["babyId"] = babyId
+        }
+        if let stoolColor = stoolColor {
+            message["stoolColor"] = stoolColor
         }
         sendAction(message)
 
@@ -1465,7 +1468,7 @@ struct MainView: View {
         case .sleep:
             SleepDetailView(data: activities.sleep, allTimers: allTimers, connector: connector)
         case .diaper:
-            DiaperDetailView(data: activities.diaper, connector: connector)
+            DiaperDetailView(data: activities.diaper, connector: connector, navigationPath: $navigationPath)
         case .pumping:
             PumpingDetailView(data: activities.pumping, allTimers: allTimers, connector: connector)
         case .tummyTime:
@@ -2060,7 +2063,9 @@ func formatSleepDuration(_ minutes: Int) -> String {
 struct DiaperDetailView: View {
     let data: WatchActivityData.DiaperData
     @ObservedObject var connector: PhoneConnector
-    @Environment(\.dismiss) private var dismiss
+    @Binding var navigationPath: NavigationPath
+    @State private var showColorPicker = false
+    @State private var pendingDiaperType: String? = nil
 
     var combinedCounts: WatchActivityData.DiaperData.DiaperCounts {
         connector.combinedDiaperCounts(serverCounts: data.todayCounts)
@@ -2105,19 +2110,19 @@ struct DiaperDetailView: View {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     DiaperButton(emoji: "\u{1F4A7}", color: WatchActivityType.diaper.primaryColor) {
                         connector.logDiaper(type: "wet")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { navigationPath.removeLast(navigationPath.count) }
                     }
                     DiaperButton(emoji: "\u{1F4A9}", color: WatchActivityType.diaper.primaryColor) {
-                        connector.logDiaper(type: "dirty")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        pendingDiaperType = "dirty"
+                        showColorPicker = true
                     }
                     DiaperButton(emoji: "\u{1F4A7}\u{1F4A9}", color: WatchActivityType.diaper.primaryColor) {
-                        connector.logDiaper(type: "mixed")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        pendingDiaperType = "mixed"
+                        showColorPicker = true
                     }
                     DiaperButton(emoji: "\u{2728}", color: WatchActivityType.diaper.primaryColor) {
                         connector.logDiaper(type: "dry")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { navigationPath.removeLast(navigationPath.count) }
                     }
                 }
                 .padding(.horizontal, 6)
@@ -2125,6 +2130,19 @@ struct DiaperDetailView: View {
             .padding(.horizontal, 4)
         }
         .navigationTitle("Diaper")
+        .navigationDestination(isPresented: $showColorPicker) {
+            StoolColorPickerView(
+                diaperType: pendingDiaperType ?? "dirty",
+                connector: connector,
+                isPresented: $showColorPicker
+            )
+        }
+        .onChange(of: showColorPicker) { oldValue, newValue in
+            if oldValue == true && newValue == false && pendingDiaperType != nil {
+                pendingDiaperType = nil
+                navigationPath.removeLast(navigationPath.count)
+            }
+        }
     }
 }
 
@@ -2143,6 +2161,65 @@ struct DiaperButton: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
+    }
+}
+
+struct StoolColorPickerView: View {
+    let diaperType: String
+    @ObservedObject var connector: PhoneConnector
+    @Binding var isPresented: Bool
+
+    private let colors: [(name: String, color: Color)] = [
+        ("yellow", Color(red: 0.957, green: 0.816, blue: 0.247)),
+        ("brown", Color(red: 0.545, green: 0.271, blue: 0.075)),
+        ("green", Color(red: 0.133, green: 0.545, blue: 0.133)),
+        ("orange", Color(red: 1.0, green: 0.549, blue: 0.0)),
+        ("black", Color(red: 0.173, green: 0.173, blue: 0.173)),
+        ("white", Color(red: 0.961, green: 0.961, blue: 0.878)),
+        ("red", Color(red: 0.804, green: 0.361, blue: 0.361)),
+    ]
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 8) {
+                Text("Stool Color")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.secondary)
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    ForEach(colors, id: \.name) { item in
+                        Button {
+                            connector.logDiaper(type: diaperType, stoolColor: item.name)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { isPresented = false }
+                        } label: {
+                            Circle()
+                                .fill(item.color)
+                                .frame(width: 36, height: 36)
+                                .overlay(
+                                    Circle()
+                                        .strokeBorder(Color.white.opacity(0.3), lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 6)
+
+                Button {
+                    connector.logDiaper(type: diaperType)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { isPresented = false }
+                } label: {
+                    Text("Skip")
+                        .font(.system(size: 14))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 4)
+        }
+        .navigationTitle("Color")
     }
 }
 
