@@ -532,6 +532,7 @@ export default function TimelineScreen() {
         allData={allData}
         birthDate={selectedBaby?.birthDate}
         dayStartHour={wakeWindowConfig?.dayStartHour ?? 6}
+        timeFormat={timeFormat}
         t={translate}
         onDateChange={handleSummaryDateChange}
       />
