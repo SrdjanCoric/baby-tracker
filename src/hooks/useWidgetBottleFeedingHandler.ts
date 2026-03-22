@@ -24,7 +24,7 @@ export function useWidgetBottleFeedingHandler() {
       return;
     }
 
-    const validContentTypes = ["formula", "breast_milk"];
+    const validContentTypes = ["formula", "breastMilk"];
     if (!validContentTypes.includes(pending.contentType)) {
       await clearPendingBottleLog();
       return;

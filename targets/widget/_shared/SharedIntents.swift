@@ -14,10 +14,26 @@ enum TimerActivityType: String, CaseIterable, AppEnum {
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Timer Activity"
     static var caseDisplayRepresentations: [TimerActivityType: DisplayRepresentation] = [
-        .feeding: DisplayRepresentation(title: "Feeding", image: .init(systemName: "drop.fill")),
-        .sleep: DisplayRepresentation(title: "Sleep", image: .init(systemName: "moon.fill")),
-        .pumping: DisplayRepresentation(title: "Pumping", image: .init(systemName: "flask.fill")),
-        .tummyTime: DisplayRepresentation(title: "Tummy Time", image: .init(systemName: "figure.play"))
+        .feeding: DisplayRepresentation(
+            title: "Feeding",
+            image: .init(systemName: "drop.fill"),
+            synonyms: ["Breastfeeding", "Nursing", "Feed"]
+        ),
+        .sleep: DisplayRepresentation(
+            title: "Sleep",
+            image: .init(systemName: "moon.fill"),
+            synonyms: ["Nap", "Sleeping", "Napping"]
+        ),
+        .pumping: DisplayRepresentation(
+            title: "Pumping",
+            image: .init(systemName: "flask.fill"),
+            synonyms: ["Pump", "Breast pump"]
+        ),
+        .tummyTime: DisplayRepresentation(
+            title: "Tummy Time",
+            image: .init(systemName: "figure.play"),
+            synonyms: ["Floor time", "Tummy"]
+        )
     ]
 
     var asActivityType: ActivityType {
@@ -37,11 +53,31 @@ enum ActivityType: String, CaseIterable, AppEnum {
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Activity Type"
     static var caseDisplayRepresentations: [ActivityType: DisplayRepresentation] = [
-        .feeding: DisplayRepresentation(title: "Feeding", image: .init(systemName: "drop.fill")),
-        .sleep: DisplayRepresentation(title: "Sleep", image: .init(systemName: "moon.fill")),
-        .diaper: DisplayRepresentation(title: "Diaper", image: .init(systemName: "leaf.fill")),
-        .pumping: DisplayRepresentation(title: "Pumping", image: .init(systemName: "flask.fill")),
-        .tummyTime: DisplayRepresentation(title: "Tummy Time", image: .init(systemName: "figure.play"))
+        .feeding: DisplayRepresentation(
+            title: "Feeding",
+            image: .init(systemName: "drop.fill"),
+            synonyms: ["Breastfeeding", "Nursing", "Feed", "Bottle feeding"]
+        ),
+        .sleep: DisplayRepresentation(
+            title: "Sleep",
+            image: .init(systemName: "moon.fill"),
+            synonyms: ["Nap", "Sleeping", "Napping", "Bedtime"]
+        ),
+        .diaper: DisplayRepresentation(
+            title: "Diaper",
+            image: .init(systemName: "leaf.fill"),
+            synonyms: ["Nappy", "Diaper change"]
+        ),
+        .pumping: DisplayRepresentation(
+            title: "Pumping",
+            image: .init(systemName: "flask.fill"),
+            synonyms: ["Pump", "Breast pump", "Express milk"]
+        ),
+        .tummyTime: DisplayRepresentation(
+            title: "Tummy Time",
+            image: .init(systemName: "figure.play"),
+            synonyms: ["Floor time", "Tummy"]
+        )
     ]
 
     var icon: String {
@@ -156,9 +192,9 @@ enum DiaperTypeEnum: String, CaseIterable, AppEnum {
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Diaper Type"
     static var caseDisplayRepresentations: [DiaperTypeEnum: DisplayRepresentation] = [
-        .wet: "Wet",
-        .dirty: "Dirty",
-        .mixed: "Mixed",
+        .wet: DisplayRepresentation(title: "Wet", synonyms: ["Pee"]),
+        .dirty: DisplayRepresentation(title: "Dirty", synonyms: ["Poop", "Poopy"]),
+        .mixed: DisplayRepresentation(title: "Mixed", synonyms: ["Both"]),
         .dry: "Dry"
     ]
 }
@@ -210,8 +246,8 @@ enum BottleFeedingTypeEnum: String, CaseIterable, AppEnum {
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Bottle Type"
     static var caseDisplayRepresentations: [BottleFeedingTypeEnum: DisplayRepresentation] = [
-        .formula: "Formula",
-        .breastMilk: "Breast Milk"
+        .formula: DisplayRepresentation(title: "Formula", synonyms: ["Formula milk"]),
+        .breastMilk: DisplayRepresentation(title: "Breast Milk", synonyms: ["Expressed milk", "Pumped milk"])
     ]
 }
 
@@ -331,6 +367,10 @@ struct StartActivityIntent: AppIntent {
     static var description = IntentDescription("Start tracking an activity")
     static var openAppWhenRun: Bool = true
 
+    static var parameterSummary: some ParameterSummary {
+        Summary("Start \(\.$activity)")
+    }
+
     @Parameter(title: "Activity")
     var activity: ActivityType
 
@@ -378,6 +418,13 @@ struct StartActivityIntent: AppIntent {
             } else if lastSide == "right" {
                 resolvedSide = "left"
             }
+        }
+
+        if resolvedSide == nil && (activity == .feeding || activity == .pumping) {
+            side = try await $side.requestValue(
+                IntentDialog("Which side — left, right, or both?")
+            )
+            resolvedSide = side?.rawValue
         }
 
         var pending: [String: String] = [
@@ -434,6 +481,10 @@ struct StopActivityIntent: AppIntent {
     static var title: LocalizedStringResource = "Stop Activity"
     static var description = IntentDescription("Stop the current timer")
     static var openAppWhenRun: Bool = false
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Stop \(\.$activity)")
+    }
 
     @Parameter(title: "Activity")
     var activity: TimerActivityType
@@ -684,6 +735,10 @@ struct TogglePauseActivityIntent: AppIntent {
     static var title: LocalizedStringResource = "Pause/Resume Activity"
     static var description = IntentDescription("Toggle pause on the current timer")
     static var openAppWhenRun: Bool = false
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Pause or resume \(\.$activity)")
+    }
 
     @Parameter(title: "Activity")
     var activity: TimerActivityType
@@ -945,6 +1000,10 @@ struct LogDiaperIntent: AppIntent {
     static var description = IntentDescription("Log a diaper change")
     static var openAppWhenRun: Bool = false
 
+    static var parameterSummary: some ParameterSummary {
+        Summary("Log \(\.$diaperType) diaper")
+    }
+
     @Parameter(title: "Type")
     var diaperType: DiaperTypeEnum
 
@@ -1056,6 +1115,10 @@ struct QueryLastActivityIntent: AppIntent {
     static var description = IntentDescription("Check when the last activity was")
     static var openAppWhenRun: Bool = false
 
+    static var parameterSummary: some ParameterSummary {
+        Summary("Check last \(\.$activity)")
+    }
+
     @Parameter(title: "Activity")
     var activity: ActivityType
 
@@ -1122,6 +1185,10 @@ struct QueryActiveTimerIntent: AppIntent {
     static var title: LocalizedStringResource = "Check Timer"
     static var description = IntentDescription("Check how long a timer has been running")
     static var openAppWhenRun: Bool = false
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Check \(\.$activity) timer")
+    }
 
     @Parameter(title: "Activity")
     var activity: TimerActivityType
@@ -1267,6 +1334,10 @@ struct LogBottleFeedingIntent: AppIntent {
     @Parameter(title: "Unit")
     var unit: VolumeUnitEnum?
 
+    static var parameterSummary: some ParameterSummary {
+        Summary("Log \(\.$amount) \(\.$unit) \(\.$feedingType) bottle feeding")
+    }
+
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         guard let userDefaults = UserDefaults(suiteName: appGroupId) else {
             return .result(value: "Failed to log bottle feeding")
@@ -1281,7 +1352,7 @@ struct LogBottleFeedingIntent: AppIntent {
         case .ml: amountMl = amount
         }
 
-        let contentType = feedingType == .formula ? "formula" : "breast_milk"
+        let contentType = feedingType == .formula ? "formula" : "breastMilk"
         let now = ISO8601DateFormatter().string(from: Date())
 
         if let dataString = userDefaults.string(forKey: "widgetData"),

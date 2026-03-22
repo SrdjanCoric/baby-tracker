@@ -11,7 +11,6 @@ struct SofiBabyShortcuts: AppShortcutsProvider {
                 "Begin \(\.$activity) in \(.applicationName)",
                 "Log \(\.$activity) in \(.applicationName)",
                 "Record \(\.$activity) in \(.applicationName)",
-                "Start \(\.$activity) timer in \(.applicationName)",
                 "Baby fell asleep in \(.applicationName)",
                 "Baby is sleeping in \(.applicationName)"
             ],
@@ -75,6 +74,8 @@ struct SofiBabyShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: LogBottleFeedingIntent(),
             phrases: [
+                "Log \(\.$feedingType) bottle in \(.applicationName)",
+                "Record \(\.$feedingType) bottle in \(.applicationName)",
                 "Log bottle feeding in \(.applicationName)",
                 "Record bottle feeding in \(.applicationName)"
             ],
