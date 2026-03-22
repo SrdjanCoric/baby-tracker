@@ -57,7 +57,9 @@ function groupEntriesByDay(
   entries: TimelineEntry[],
   filter: FilterType,
   allData: TimelineDataByDate,
-  t: (key: string, options?: Record<string, unknown>) => string
+  t: (key: string, options?: Record<string, unknown>) => string,
+  dayStartHour: number = 6,
+  dayEndHour: number = 19
 ): GroupedEntries[] {
   const grouped: Map<string, { entries: TimelineEntry[]; date: Date }> = new Map();
 
@@ -79,7 +81,7 @@ function groupEntriesByDay(
     dayEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
 
     // Calculate daily summary
-    const summary = calculateDailySummary(date, allData);
+    const summary = calculateDailySummary(date, allData, dayStartHour, dayEndHour);
     const summaryLines = formatDailySummaryText(summary, filter, t);
 
     result.push({
@@ -492,8 +494,10 @@ export default function TimelineScreen() {
 
   const groupedEntries = useMemo(() => {
     dayPositionsRef.current.clear();
-    return groupEntriesByDay(timelineEntries, activeFilter, allData, translate);
-  }, [timelineEntries, activeFilter, allData, translate]);
+    const startHour = wakeWindowConfig?.dayStartHour ?? 6;
+    const endHour = wakeWindowConfig?.dayEndHour ?? 19;
+    return groupEntriesByDay(timelineEntries, activeFilter, allData, translate, startHour, endHour);
+  }, [timelineEntries, activeFilter, allData, translate, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
 
   const handleSummaryDateChange = useCallback((date: Date) => {
     const dateKey = date.toDateString();
