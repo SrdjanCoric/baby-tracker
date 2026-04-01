@@ -520,7 +520,10 @@ const DashboardCard = memo(DashboardCardInner, (prev, next) => {
     prev.testID === next.testID &&
     prev.timerStartTime === next.timerStartTime &&
     prev.timerPausedAt === next.timerPausedAt &&
-    prev.timerTotalPausedMs === next.timerTotalPausedMs
+    prev.timerTotalPausedMs === next.timerTotalPausedMs &&
+    prev.onPress === next.onPress &&
+    prev.onActionPress === next.onActionPress &&
+    prev.onPausePress === next.onPausePress
   );
 });
 
