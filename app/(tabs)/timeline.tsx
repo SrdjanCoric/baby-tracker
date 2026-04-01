@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { AppState, RefreshControl, ScrollView, View } from "react-native";
+import { ActivityIndicator, AppState, RefreshControl, ScrollView, SectionList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { useColorScheme } from "nativewind";
@@ -44,13 +44,13 @@ interface TimelineEntry {
   loggedBy?: string;
 }
 
-interface GroupedEntries {
+interface TimelineSection {
   header: string;
   dateLabel: string;
   dateObj: Date;
-  entries: TimelineEntry[];
   summaryLines: string[];
   summary: DailySummary;
+  data: TimelineEntry[];
 }
 
 function groupEntriesByDay(
@@ -60,7 +60,7 @@ function groupEntriesByDay(
   t: (key: string, options?: Record<string, unknown>) => string,
   dayStartHour: number = 6,
   dayEndHour: number = 19
-): GroupedEntries[] {
+): TimelineSection[] {
   const grouped: Map<string, { entries: TimelineEntry[]; date: Date }> = new Map();
 
   for (const entry of entries) {
@@ -71,7 +71,7 @@ function groupEntriesByDay(
     grouped.get(dateKey)!.entries.push(entry);
   }
 
-  const result: GroupedEntries[] = [];
+  const result: TimelineSection[] = [];
   const now = new Date();
 
   for (const [_dateKey, { entries: dayEntries, date }] of grouped) {
@@ -80,7 +80,6 @@ function groupEntriesByDay(
 
     dayEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    // Calculate daily summary
     const summary = calculateDailySummary(date, allData, dayStartHour, dayEndHour);
     const summaryLines = formatDailySummaryText(summary, filter, t);
 
@@ -88,15 +87,15 @@ function groupEntriesByDay(
       header,
       dateLabel,
       dateObj: date,
-      entries: dayEntries,
+      data: dayEntries,
       summaryLines,
       summary,
     });
   }
 
   result.sort((a, b) => {
-    const dateA = new Date(a.entries[0]?.date || 0);
-    const dateB = new Date(b.entries[0]?.date || 0);
+    const dateA = new Date(a.data[0]?.date || 0);
+    const dateB = new Date(b.data[0]?.date || 0);
     return dateB.getTime() - dateA.getTime();
   });
 
@@ -131,8 +130,8 @@ export default function TimelineScreen() {
   }, []);
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-  const scrollViewRef = useRef<ScrollView>(null);
-  const dayPositionsRef = useRef<Map<string, number>>(new Map());
+  const [daysToShow, setDaysToShow] = useState(14);
+  const sectionListRef = useRef<SectionList<TimelineEntry, TimelineSection>>(null);
 
   const getMemberName = useCallback((userId: string | undefined): string | undefined => {
     // Don't show "logged by" if there's only 1 person in the household
@@ -183,6 +182,7 @@ export default function TimelineScreen() {
 
   const handleFilterChange = useCallback((filter: FilterType) => {
     setActiveFilter(filter);
+    setDaysToShow(14);
   }, []);
 
   // Collect all data for summary calculations
@@ -489,25 +489,54 @@ export default function TimelineScreen() {
     getMemberName,
   ]);
 
+  const cutoffDate = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - daysToShow);
+    return d;
+  }, [daysToShow]);
+
+  const paginatedEntries = useMemo(() => {
+    return timelineEntries.filter(entry => entry.date >= cutoffDate);
+  }, [timelineEntries, cutoffDate]);
+
+  const hasMoreData = paginatedEntries.length < timelineEntries.length;
+
+  const handleLoadMore = useCallback(() => {
+    if (hasMoreData) {
+      setDaysToShow(prev => prev + 14);
+    }
+  }, [hasMoreData]);
+
   // Type cast for t function to match component interfaces
   const translate = t as (key: string, options?: Record<string, unknown>) => string;
 
-  const groupedEntries = useMemo(() => {
-    dayPositionsRef.current.clear();
+  const sections = useMemo(() => {
     const startHour = wakeWindowConfig?.dayStartHour ?? 6;
     const endHour = wakeWindowConfig?.dayEndHour ?? 19;
-    return groupEntriesByDay(timelineEntries, activeFilter, allData, translate, startHour, endHour);
-  }, [timelineEntries, activeFilter, allData, translate, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
+    return groupEntriesByDay(paginatedEntries, activeFilter, allData, translate, startHour, endHour);
+  }, [paginatedEntries, activeFilter, allData, translate, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
+
+  const dateToSectionIndex = useMemo(() => {
+    const map = new Map<string, number>();
+    sections.forEach((section, index) => {
+      map.set(section.dateObj.toDateString(), index);
+    });
+    return map;
+  }, [sections]);
 
   const handleSummaryDateChange = useCallback((date: Date) => {
-    const dateKey = date.toDateString();
-    const y = dayPositionsRef.current.get(dateKey);
-    if (y !== undefined) {
-      scrollViewRef.current?.scrollTo({ y, animated: true });
+    const sectionIndex = dateToSectionIndex.get(date.toDateString());
+    if (sectionIndex !== undefined) {
+      sectionListRef.current?.scrollToLocation({
+        sectionIndex,
+        itemIndex: 0,
+        animated: true,
+      });
     }
-  }, []);
+  }, [dateToSectionIndex]);
 
-  const hasEntries = timelineEntries.length > 0;
+  const hasEntries = paginatedEntries.length > 0;
 
   if (isLoading && !hasEntries) {
     return (
@@ -538,9 +567,39 @@ export default function TimelineScreen() {
       />
 
       {hasEntries ? (
-        <ScrollView
-          ref={scrollViewRef}
+        <SectionList
+          ref={sectionListRef}
+          sections={sections}
+          keyExtractor={(item) => item.id}
+          renderSectionHeader={({ section }) => (
+            <TimelineDayHeader
+              title={activeFilter !== "all" ? section.header : undefined}
+              date={section.dateLabel}
+              dateObj={section.dateObj}
+              summaryLines={activeFilter !== "all" ? section.summaryLines : undefined}
+              filter={activeFilter}
+            />
+          )}
+          renderItem={({ item, index, section }) => (
+            <TimelineItem
+              activity={item.activity}
+              time={item.time}
+              title={item.title}
+              subtitle={item.subtitle}
+              loggedBy={item.loggedBy}
+              isLast={index === section.data.length - 1}
+              onPress={() => handleEditEntry(item.activity, item.id)}
+              testID="timeline-item"
+            />
+          )}
           className="flex-1"
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={hasMoreData ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator size="small" color={getActionColor("primary", colorScheme === "dark")} />
+            </View>
+          ) : null}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -549,40 +608,7 @@ export default function TimelineScreen() {
               colors={[getActionColor("primary", colorScheme === "dark")]}
             />
           }
-        >
-          {groupedEntries.map((group) => (
-            <View
-              key={group.header + group.dateLabel}
-              onLayout={(e) => {
-                dayPositionsRef.current.set(
-                  group.dateObj.toDateString(),
-                  e.nativeEvent.layout.y
-                );
-              }}
-            >
-              <TimelineDayHeader
-                title={group.header}
-                date={group.dateLabel}
-                dateObj={group.dateObj}
-                filter={activeFilter}
-              />
-
-              {group.entries.map((item, index) => (
-                <TimelineItem
-                  key={item.id}
-                  activity={item.activity}
-                  time={item.time}
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  loggedBy={item.loggedBy}
-                  isLast={index === group.entries.length - 1}
-                  onPress={() => handleEditEntry(item.activity, item.id)}
-                  testID="timeline-item"
-                />
-              ))}
-            </View>
-          ))}
-        </ScrollView>
+        />
       ) : (
         <ScrollView
           className="flex-1"
