@@ -152,25 +152,23 @@ const TimelineItem = memo(TimelineItemInner, (prev, next) => {
 
 // Day header component with date card and summary
 interface TimelineDayHeaderProps {
-  title: string;
+  title?: string;
   date?: string;
   dateObj?: Date;
   summaryLines?: string[];
   filter?: FilterType;
 }
 
-function TimelineDayHeader({ title, date, dateObj, summaryLines }: TimelineDayHeaderProps) {
+function TimelineDayHeaderInner({ title, date, dateObj, summaryLines }: TimelineDayHeaderProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const cardBg = isDark ? SURFACE_COLORS.dark.secondary : SURFACE_COLORS.light.secondary;
   const accentColor = isDark ? "#8FC091" : "#6B9E6E";
 
-  // Get date parts for the card
   const dateParts = dateObj ? getDateParts(dateObj) : null;
 
   return (
-    <View className="flex-row px-4 pt-4 pb-2">
-      {/* Date card */}
+    <View className="flex-row px-4 pt-4 pb-2 bg-surface dark:bg-surface-dark">
       {dateParts ? (
         <View
           className="w-14 rounded-xl py-2 px-1 items-center mr-3"
@@ -193,11 +191,12 @@ function TimelineDayHeader({ title, date, dateObj, summaryLines }: TimelineDayHe
         <View className="w-14 mr-3" />
       )}
 
-      {/* Header text and summary */}
       <View className="flex-1 justify-center">
-        <Text className="text-sm font-bold text-content-primary dark:text-content-dark-primary uppercase tracking-wide mb-1">
-          {title}
-        </Text>
+        {title ? (
+          <Text className="text-sm font-bold text-content-primary dark:text-content-dark-primary uppercase tracking-wide mb-1">
+            {title}
+          </Text>
+        ) : null}
         {summaryLines && summaryLines.length > 0 && (
           <View className="gap-0.5">
             {summaryLines.slice(0, 3).map((line, index) => (
@@ -211,15 +210,12 @@ function TimelineDayHeader({ title, date, dateObj, summaryLines }: TimelineDayHe
             ))}
           </View>
         )}
-        {!summaryLines && date && (
-          <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-            {date}
-          </Text>
-        )}
       </View>
     </View>
   );
 }
+
+const TimelineDayHeader = memo(TimelineDayHeaderInner);
 
 // Timeline divider - simplified for new design
 function TimelineDivider() {
