@@ -1,4 +1,5 @@
 import { Pressable, Text, View, useColorScheme, Platform } from "react-native";
+import type { ReactNode } from "react";
 import { forwardRef, memo, useCallback, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Animated, {
@@ -48,6 +49,7 @@ interface DashboardCardProps {
   timerStartTime?: number;
   timerPausedAt?: number;
   timerTotalPausedMs?: number;
+  customContent?: ReactNode;
 }
 
 const DashboardCardInner = forwardRef<View, DashboardCardProps>(
@@ -76,6 +78,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       timerStartTime,
       timerPausedAt,
       timerTotalPausedMs,
+      customContent,
     },
     ref
   ) => {
@@ -371,7 +374,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 </View>
               )}
               {secondaryInfo && (() => {
-                const parts = secondaryInfo.split("\n");
+                const parts = customContent ? [secondaryInfo] : secondaryInfo.split("\n");
                 return (
                   <View className="mt-1">
                     <Text
@@ -393,6 +396,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                   </View>
                 );
               })()}
+              {customContent}
             </View>
           )}
         </View>
@@ -521,6 +525,7 @@ const DashboardCard = memo(DashboardCardInner, (prev, next) => {
     prev.timerStartTime === next.timerStartTime &&
     prev.timerPausedAt === next.timerPausedAt &&
     prev.timerTotalPausedMs === next.timerTotalPausedMs &&
+    prev.customContent === next.customContent &&
     prev.onPress === next.onPress &&
     prev.onActionPress === next.onActionPress &&
     prev.onPausePress === next.onPausePress

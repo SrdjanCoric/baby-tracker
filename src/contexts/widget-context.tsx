@@ -28,6 +28,7 @@ import { syncWidgetPushToken } from "@/services/widget-push-token-service";
 import { registerPushToStart } from "@/services/live-activity-service";
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import type { TimerActivityType } from "@/services/active-timer-service";
+import { computePredictionWithTiming } from "@/utils/smart-sleep";
 
 interface WidgetContextValue {
   refreshWidgetData: () => Promise<void>;
@@ -52,7 +53,7 @@ const ACTIVITY_TYPE_MAP: Record<TimerActivityType, ActiveTimerData["type"]> = {
 export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { feedings, activeTimer: feedingTimer, getLastFeeding } = useFeeding();
-  const { sleeps, activeTimer: sleepTimer, dailyGoalMinutes: sleepGoal, wakeWindowConfig, getCurrentNapSlot, getCompletedNapsSinceNightSleep } = useSleep();
+  const { sleeps, activeTimer: sleepTimer, dailyGoalMinutes: sleepGoal, wakeWindowConfig, getSmartNapSlot, getCompletedNapsSinceNightSleep } = useSleep();
   const { diapers, getTodaysCounts, getLastDiaper } = useDiaper();
   const { pumpings, activeTimer: pumpingTimer } = usePumping();
   const { measurements } = useGrowth();
@@ -113,10 +114,41 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         lastSide: (lastFeeding?.side as BreastSide) || null,
       },
       sleep: (() => {
-        const currentSlot = getCurrentNapSlot();
+        const currentSlot = getSmartNapSlot();
         const lastEndedSleep = [...sleeps]
           .filter(s => s.endedAt)
           .sort((a, b) => new Date(b.endedAt!).getTime() - new Date(a.endedAt!).getTime())[0];
+        const napsDone = getCompletedNapsSinceNightSleep();
+        const lastWakeMs = lastEndedSleep?.endedAt ? new Date(lastEndedSleep.endedAt).getTime() : 0;
+
+        let predictionRangeStartISO: string | null = null;
+        let predictionRangeEndISO: string | null = null;
+        let predictionSlotLabel: "nap" | "bedtime" | null = null;
+        let predictionConfidence: "personalized" | "age_based" | null = null;
+
+        if (wakeWindowConfig && wakeWindowConfig.slots.length > 0 && selectedBaby?.birthDate && lastWakeMs > 0) {
+          const slotIndex = napsDone;
+          if (wakeWindowConfig.source === "smart") {
+            const prediction = computePredictionWithTiming(
+              sleeps, selectedBaby.birthDate, slotIndex, wakeWindowConfig, lastWakeMs, new Date(), napsDone
+            );
+            if (prediction.isEligible && prediction.rangeStartMs && prediction.rangeEndMs) {
+              predictionRangeStartISO = new Date(prediction.rangeStartMs).toISOString();
+              predictionRangeEndISO = new Date(prediction.rangeEndMs).toISOString();
+              predictionSlotLabel = prediction.slotType;
+              predictionConfidence = prediction.confidence;
+            }
+          } else {
+            const RANGE_HALF_WIDTH_MS = 15 * 60 * 1000;
+            const slot = wakeWindowConfig.slots[Math.min(slotIndex, wakeWindowConfig.slots.length - 1)];
+            const centerMs = lastWakeMs + slot.durationMinutes * 60000;
+            predictionRangeStartISO = new Date(centerMs - RANGE_HALF_WIDTH_MS).toISOString();
+            predictionRangeEndISO = new Date(centerMs + RANGE_HALF_WIDTH_MS).toISOString();
+            predictionSlotLabel = slot.label === "bedtime" ? "bedtime" : "nap";
+            predictionConfidence = "age_based";
+          }
+        }
+
         return {
           lastTime: lastSleep?.endedAt || lastSleep?.startedAt || null,
           todayMinutes: todaySleepMinutes,
@@ -127,7 +159,11 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
           wakeWindowMinutes: currentSlot?.durationMinutes ?? null,
           wakeWindowSlotLabel: currentSlot?.label ?? null,
           lastSleepEndedAt: lastEndedSleep?.endedAt ?? null,
-          napCountToday: getCompletedNapsSinceNightSleep(),
+          napCountToday: napsDone,
+          predictionRangeStartISO,
+          predictionRangeEndISO,
+          predictionSlotLabel,
+          predictionConfidence,
         };
       })(),
       diaper: {
@@ -270,7 +306,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     sleepTimer,
     sleepGoal,
     wakeWindowConfig,
-    getCurrentNapSlot,
+    getSmartNapSlot,
     getCompletedNapsSinceNightSleep,
     diapers,
     getTodaysCounts,

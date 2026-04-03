@@ -73,6 +73,18 @@
     "napTimeNow": "Zeit fürs Nickerchen!",
     "bedtimeNow": "Schlafenszeit!"
   },
+  "prediction": {
+    "nap": "Nickerchen",
+    "bedtime": "Schlafenszeit",
+    "inTime": "in {{time}}",
+    "now": "jetzt",
+    "overdue": "\u00fcberf\u00e4llig",
+    "basedOnPatterns": "Basierend auf {{name}}s Mustern",
+    "building": "Vorhersagen werden erstellt... noch {{days}}T",
+    "logSleep": "Schlaf protokollieren f\u00fcr Vorhersagen",
+    "transitioning": "{{name}} wechselt m\u00f6glicherweise zu {{count}} Nickerchen",
+    "allDone": "Alles erledigt für heute"
+  },
   "navigation": {
     "home": "Startseite",
     "timeline": "Verlauf",
@@ -272,7 +284,24 @@
     "householdGoalConfirm": "Dies ändert das Schlafziel für alle Betreuungspersonen in deinem Haushalt. Fortfahren?",
     "napReminderWarningTitle": "Nicht empfohlen",
     "napReminderWarningMessage": "Nickerchen-Erinnerungen werden für Babys unter 2 Monaten nicht empfohlen. Neugeborenen-Schlaf ist unvorhersehbar und Wachfenster können unnötigen Stress verursachen. Bist du sicher, dass du sie aktivieren möchtest?",
-    "napReminderWarningEnable": "Trotzdem aktivieren"
+    "napReminderWarningEnable": "Trotzdem aktivieren",
+    "sourceLabel": "Vorhersagemodus",
+    "sourceAgeBased": "Altersbasiert",
+    "sourceCustom": "Benutzerdefiniert",
+    "sourceSmart": "Smart",
+    "smartRecommended": "Empfohlen",
+    "smartDescription": "Sagt Nickerchen- und Schlafenszeiten basierend auf {{name}}s Mustern der letzten 7 Tage voraus",
+    "smartNotEligible": "Der Smart-Modus ist verf\u00fcgbar, wenn {{name}} mindestens 8 Wochen alt ist",
+    "smartNotEligibleWithDate": "Der Smart-Modus wird verf\u00fcgbar, wenn {{name}} 8 Wochen alt wird ({{date}})",
+    "smartAvailableAt": "Ab 8 Wochen ({{date}})",
+    "smartLearnedAverages": "Gelernte Wachfenster",
+    "smartSlotBuilding": "Wird erstellt...",
+    "earlyWakeWindowsTitle": "Zu fr\u00fch f\u00fcr Wachfenster",
+    "earlyWakeWindowsMessage": "Wachfenster sind vor 8 Wochen weniger vorhersehbar. Vorhersagen k\u00f6nnen in diesem Alter weniger genau sein.",
+    "continueAnyway": "Trotzdem fortfahren",
+    "notificationsSection": "Benachrichtigungen",
+    "notifyBeforeSleepWindows": "Vor Schlaffenstern benachrichtigen",
+    "notifyBeforeSleepWindowsDesc": "5 Minuten vor jedem Fenster"
   },
   "diaper": {
     "title": "Windel",

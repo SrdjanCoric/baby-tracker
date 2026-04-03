@@ -73,6 +73,18 @@
     "napTimeNow": "Nap time!",
     "bedtimeNow": "Bedtime!"
   },
+  "prediction": {
+    "nap": "Nap",
+    "bedtime": "Bedtime",
+    "inTime": "in {{time}}",
+    "now": "now",
+    "overdue": "overdue",
+    "basedOnPatterns": "Based on {{name}}'s patterns",
+    "building": "Building predictions... {{days}}d left",
+    "logSleep": "Log sleep to see predictions",
+    "transitioning": "{{name}} may be transitioning to {{count}} naps",
+    "allDone": "All done for today"
+  },
   "navigation": {
     "home": "Home",
     "timeline": "Timeline",
@@ -272,7 +284,24 @@
     "householdGoalConfirm": "This will change the sleep goal for all caregivers in your household. Continue?",
     "napReminderWarningTitle": "Not Recommended",
     "napReminderWarningMessage": "Nap reminders are not recommended for babies under 2 months. Newborn sleep is unpredictable and wake windows can cause unnecessary stress. Are you sure you want to enable them?",
-    "napReminderWarningEnable": "Enable Anyway"
+    "napReminderWarningEnable": "Enable Anyway",
+    "sourceLabel": "Prediction Mode",
+    "sourceAgeBased": "Age-based",
+    "sourceCustom": "Custom",
+    "sourceSmart": "Smart",
+    "smartRecommended": "Recommended",
+    "smartDescription": "Predicts nap and bedtime windows based on {{name}}'s actual patterns from the last 7 days",
+    "smartNotEligible": "Smart mode is available when {{name}} is at least 8 weeks old",
+    "smartNotEligibleWithDate": "Smart mode will be available when {{name}} turns 8 weeks ({{date}})",
+    "smartAvailableAt": "At 8 weeks ({{date}})",
+    "smartLearnedAverages": "Learned wake windows",
+    "smartSlotBuilding": "Building...",
+    "earlyWakeWindowsTitle": "Early for Wake Windows",
+    "earlyWakeWindowsMessage": "Wake windows are less predictable before 8 weeks. Predictions may be less accurate at this age.",
+    "continueAnyway": "Continue Anyway",
+    "notificationsSection": "Notifications",
+    "notifyBeforeSleepWindows": "Notify me before sleep windows",
+    "notifyBeforeSleepWindowsDesc": "5 minutes before each window"
   },
   "diaper": {
     "title": "Diaper",

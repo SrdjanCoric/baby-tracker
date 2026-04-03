@@ -75,6 +75,18 @@
     "napTimeNow": "Hora do cochilo!",
     "bedtimeNow": "Hora de dormir!"
   },
+  "prediction": {
+    "nap": "Cochilo",
+    "bedtime": "Dormir",
+    "inTime": "em {{time}}",
+    "now": "agora",
+    "overdue": "atrasado",
+    "basedOnPatterns": "Baseado nos padr\u00f5es de {{name}}",
+    "building": "Criando previs\u00f5es... {{days}}d restantes",
+    "logSleep": "Registre o sono para ver previs\u00f5es",
+    "transitioning": "{{name}} pode estar em transi\u00e7\u00e3o para {{count}} sonecas",
+    "allDone": "Tudo pronto por hoje"
+  },
   "navigation": {
     "home": "Início",
     "timeline": "Linha do tempo",
@@ -274,7 +286,24 @@
     "householdGoalConfirm": "Isso mudará a meta de sono para todos os cuidadores em sua família. Continuar?",
     "napReminderWarningTitle": "Não Recomendado",
     "napReminderWarningMessage": "Lembretes de cochilo não são recomendados para bebês menores de 2 meses. O sono de recém-nascidos é imprevisível e janelas de vigília podem causar estresse desnecessário. Tem certeza de que deseja ativá-los?",
-    "napReminderWarningEnable": "Ativar Mesmo Assim"
+    "napReminderWarningEnable": "Ativar Mesmo Assim",
+    "sourceLabel": "Modo de previs\u00e3o",
+    "sourceAgeBased": "Por idade",
+    "sourceCustom": "Personalizado",
+    "sourceSmart": "Inteligente",
+    "smartRecommended": "Recomendado",
+    "smartDescription": "Prev\u00ea janelas de cochilo e hora de dormir com base nos padr\u00f5es de {{name}} dos \u00faltimos 7 dias",
+    "smartNotEligible": "O modo inteligente est\u00e1 dispon\u00edvel quando {{name}} tiver pelo menos 8 semanas",
+    "smartNotEligibleWithDate": "O modo inteligente estar\u00e1 dispon\u00edvel quando {{name}} completar 8 semanas ({{date}})",
+    "smartAvailableAt": "\u00c0s 8 semanas ({{date}})",
+    "smartLearnedAverages": "Janelas de vig\u00edlia aprendidas",
+    "smartSlotBuilding": "Criando...",
+    "earlyWakeWindowsTitle": "Cedo para janelas de vig\u00edlia",
+    "earlyWakeWindowsMessage": "As janelas de vig\u00edlia s\u00e3o menos previs\u00edveis antes de 8 semanas. As previs\u00f5es podem ser menos precisas nesta idade.",
+    "continueAnyway": "Continuar mesmo assim",
+    "notificationsSection": "Notifica\u00e7\u00f5es",
+    "notifyBeforeSleepWindows": "Notificar-me antes das janelas de sono",
+    "notifyBeforeSleepWindowsDesc": "5 minutos antes de cada janela"
   },
   "diaper": {
     "title": "Fralda",

@@ -77,6 +77,18 @@
     "napTimeNow": "\u00a1Hora de siesta!",
     "bedtimeNow": "\u00a1Hora de dormir!"
   },
+  "prediction": {
+    "nap": "Siesta",
+    "bedtime": "Dormir",
+    "inTime": "en {{time}}",
+    "now": "ahora",
+    "overdue": "pasado",
+    "basedOnPatterns": "Basado en los patrones de {{name}}",
+    "building": "Creando predicciones... {{days}}d restantes",
+    "logSleep": "Registra sue\u00f1o para ver predicciones",
+    "transitioning": "{{name}} puede estar en transici\u00f3n a {{count}} siestas",
+    "allDone": "Todo listo por hoy"
+  },
   "navigation": {
     "home": "Inicio",
     "timeline": "Cronolog\u00eda",
@@ -276,7 +288,24 @@
     "householdGoalConfirm": "Esto cambiar\u00e1 la meta de sue\u00f1o para todos los cuidadores de tu hogar. \u00bfContinuar?",
     "napReminderWarningTitle": "No recomendado",
     "napReminderWarningMessage": "Los recordatorios de siesta no se recomiendan para beb\u00e9s menores de 2 meses. El sue\u00f1o del reci\u00e9n nacido es impredecible y las ventanas de vigilia pueden causar estr\u00e9s innecesario. \u00bfEst\u00e1s seguro/a de que quieres activarlos?",
-    "napReminderWarningEnable": "Activar de todos modos"
+    "napReminderWarningEnable": "Activar de todos modos",
+    "sourceLabel": "Modo de predicci\u00f3n",
+    "sourceAgeBased": "Por edad",
+    "sourceCustom": "Personalizado",
+    "sourceSmart": "Inteligente",
+    "smartRecommended": "Recomendado",
+    "smartDescription": "Predice ventanas de siesta y hora de dormir basado en los patrones de {{name}} de los \u00faltimos 7 d\u00edas",
+    "smartNotEligible": "El modo inteligente est\u00e1 disponible cuando {{name}} tenga al menos 8 semanas",
+    "smartNotEligibleWithDate": "El modo inteligente estar\u00e1 disponible cuando {{name}} cumpla 8 semanas ({{date}})",
+    "smartAvailableAt": "A las 8 semanas ({{date}})",
+    "smartLearnedAverages": "Ventanas de vigilia aprendidas",
+    "smartSlotBuilding": "Creando...",
+    "earlyWakeWindowsTitle": "Temprano para ventanas de vigilia",
+    "earlyWakeWindowsMessage": "Las ventanas de vigilia son menos predecibles antes de las 8 semanas. Las predicciones pueden ser menos precisas a esta edad.",
+    "continueAnyway": "Continuar de todos modos",
+    "notificationsSection": "Notificaciones",
+    "notifyBeforeSleepWindows": "Notificarme antes de las ventanas de sue\u00f1o",
+    "notifyBeforeSleepWindowsDesc": "5 minutos antes de cada ventana"
   },
   "diaper": {
     "title": "Pa\u00f1al",

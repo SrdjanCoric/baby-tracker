@@ -1282,6 +1282,8 @@ struct SmallWidgetView: View {
                                     .multilineTextAlignment(.center)
                             }
                         }
+                    } else if activity == .sleep {
+                        SmallWidgetSleepContent(data: data, now: entry.date)
                     } else {
                         Text(getSmallWidgetMainText(for: activity, data: data))
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -1525,6 +1527,180 @@ func getLastActivityDetailText(for activity: ActivityType, data: WidgetDataModel
         }
         return "Last tummy time"
     }
+}
+
+// MARK: - Small Widget Sleep Content (V2 Split Layout)
+
+struct SmallWidgetSleepContent: View {
+    let data: WidgetDataModel
+    let now: Date
+
+    var body: some View {
+        let sleep = data.activities.sleep
+        let prediction = computeSleepPrediction(sleep: sleep, now: now)
+
+        VStack(spacing: 0) {
+            // Top half: Awake duration (centered)
+            if let awakeText = getAwakeOnly(sleep: sleep, now: now) {
+                VStack(spacing: 1) {
+                    Text("AWAKE")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .tracking(0.8)
+                    Text(awakeText)
+                        .font(.system(size: 19, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            // Bottom half: Prediction box
+            if let pred = prediction {
+                VStack(spacing: 2) {
+                    HStack {
+                        Text(pred.slotLabel.uppercased())
+                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .tracking(0.8)
+                        Spacer()
+                        Text(pred.countdownText)
+                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .foregroundStyle(pred.isOverdue ? Color(hex: "f59e0b") : .white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 1)
+                            .background(
+                                Capsule()
+                                    .fill(pred.isOverdue ? Color(hex: "f59e0b").opacity(0.3) : .white.opacity(0.2))
+                            )
+                    }
+
+                    Text(pred.timeRangeText)
+                        .font(.system(size: 17, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .minimumScaleFactor(0.8)
+                        .lineLimit(1)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(.white.opacity(pred.isOverdue ? 0.12 : 0.15))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(pred.isNow ? .white.opacity(0.4) : pred.isOverdue ? Color(hex: "f59e0b").opacity(0.5) : .clear, lineWidth: 1.5)
+                        )
+                )
+            } else {
+                // No prediction available
+                VStack(spacing: 2) {
+                    Text("🌙")
+                        .font(.system(size: 16))
+                    Text("Log sleep to see predictions")
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
+struct SleepPredictionInfo {
+    let slotLabel: String
+    let timeRangeText: String
+    let countdownText: String
+    let isNow: Bool
+    let isOverdue: Bool
+}
+
+func computeSleepPrediction(sleep: WidgetDataModel.ActivityData.SleepData, now: Date) -> SleepPredictionInfo? {
+    guard let windowMinutes = sleep.wakeWindowMinutes,
+          let lastEndedStr = sleep.lastSleepEndedAt,
+          !sleep.isActive else {
+        return nil
+    }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    var lastEnded = formatter.date(from: lastEndedStr)
+    if lastEnded == nil {
+        let basicFormatter = ISO8601DateFormatter()
+        lastEnded = basicFormatter.date(from: lastEndedStr)
+    }
+    guard let lastEnded else { return nil }
+
+    let rangeStartDate = lastEnded.addingTimeInterval(Double(windowMinutes - 15) * 60.0)
+    let rangeEndDate = lastEnded.addingTimeInterval(Double(windowMinutes + 15) * 60.0)
+
+    let isBedtime = sleep.wakeWindowSlotLabel == "bedtime"
+    let slotLabel = isBedtime ? "Bedtime" : "Nap"
+
+    let timeFormatter = DateFormatter()
+    timeFormatter.dateFormat = "h:mm"
+    let periodFormatter = DateFormatter()
+    periodFormatter.dateFormat = "a"
+
+    let startStr = timeFormatter.string(from: rangeStartDate)
+    let endStr = timeFormatter.string(from: rangeEndDate)
+    let period = periodFormatter.string(from: rangeEndDate)
+    let timeRangeText = "\(startStr) – \(endStr) \(period)"
+
+    let awakeSeconds = now.timeIntervalSince(lastEnded)
+    let windowSeconds = Double(windowMinutes) * 60.0
+    let remainingSeconds = windowSeconds - awakeSeconds
+    let remainingMinutes = Int(remainingSeconds / 60.0)
+
+    let isNow = now >= rangeStartDate && now <= rangeEndDate
+    let isOverdue = now > rangeEndDate
+
+    let countdownText: String
+    if isOverdue {
+        countdownText = "overdue"
+    } else if isNow {
+        countdownText = "now"
+    } else if remainingMinutes >= 60 {
+        let h = remainingMinutes / 60
+        let m = remainingMinutes % 60
+        countdownText = m > 0 ? "in \(h)h \(m)m" : "in \(h)h"
+    } else {
+        countdownText = "in \(max(1, remainingMinutes))m"
+    }
+
+    return SleepPredictionInfo(
+        slotLabel: slotLabel,
+        timeRangeText: timeRangeText,
+        countdownText: countdownText,
+        isNow: isNow,
+        isOverdue: isOverdue
+    )
+}
+
+func getAwakeOnly(sleep: WidgetDataModel.ActivityData.SleepData, now: Date) -> String? {
+    guard let lastEndedStr = sleep.lastSleepEndedAt,
+          !sleep.isActive else {
+        return nil
+    }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    var lastEnded = formatter.date(from: lastEndedStr)
+    if lastEnded == nil {
+        let basicFormatter = ISO8601DateFormatter()
+        lastEnded = basicFormatter.date(from: lastEndedStr)
+    }
+    guard let lastEnded else { return nil }
+
+    let awakeMinutes = Int(now.timeIntervalSince(lastEnded) / 60)
+    if awakeMinutes < 0 { return nil }
+
+    let hours = awakeMinutes / 60
+    let mins = awakeMinutes % 60
+    if hours > 0 {
+        return "\(hours)h \(mins)m"
+    }
+    return "\(awakeMinutes)m"
 }
 
 // MARK: - Medium Widget View (Huckleberry-style with colorful circles)

@@ -24,6 +24,10 @@ export interface WidgetActivityData {
     wakeWindowSlotLabel: string | null;
     lastSleepEndedAt: string | null;
     napCountToday: number;
+    predictionRangeStartISO: string | null;
+    predictionRangeEndISO: string | null;
+    predictionSlotLabel: "nap" | "bedtime" | null;
+    predictionConfidence: "personalized" | "age_based" | null;
   };
   diaper: {
     lastTime: string | null;
@@ -117,6 +121,10 @@ const DEFAULT_WIDGET_ACTIVITY_DATA: WidgetActivityData = {
     wakeWindowSlotLabel: null,
     lastSleepEndedAt: null,
     napCountToday: 0,
+    predictionRangeStartISO: null,
+    predictionRangeEndISO: null,
+    predictionSlotLabel: null,
+    predictionConfidence: null,
   },
   diaper: {
     lastTime: null,
@@ -312,7 +320,11 @@ export function updateSleepWidgetData(
   wakeWindowMinutes: number | null = null,
   wakeWindowSlotLabel: string | null = null,
   lastSleepEndedAt: string | null = null,
-  napCountToday: number = 0
+  napCountToday: number = 0,
+  predictionRangeStartISO: string | null = null,
+  predictionRangeEndISO: string | null = null,
+  predictionSlotLabel: "nap" | "bedtime" | null = null,
+  predictionConfidence: "personalized" | "age_based" | null = null,
 ): WidgetActivityData {
   return {
     ...current,
@@ -327,6 +339,10 @@ export function updateSleepWidgetData(
       wakeWindowSlotLabel,
       lastSleepEndedAt,
       napCountToday,
+      predictionRangeStartISO,
+      predictionRangeEndISO,
+      predictionSlotLabel,
+      predictionConfidence,
     },
   };
 }

@@ -3,6 +3,7 @@ import { AppState, RefreshControl, ScrollView, View, Platform } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
@@ -12,10 +13,14 @@ const isAndroid = Platform.OS === "android";
 import {
   BabyHeader,
   DashboardCard,
+  SleepPredictionBox,
 } from "@/components";
+import type { PredictionState } from "@/components";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useDashboardConfig, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
 import { Alert } from "react-native";
-import { timeSince, hoursSince, formatDuration } from "@/utils/time";
+import { timeSince, hoursSince, formatDuration, formatTime } from "@/utils/time";
+import { useTimeFormat } from "@/contexts/time-format-context";
+import { computePredictionWithTiming, isSmartSleepEligible } from "@/utils/smart-sleep";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
 import { getHealthDisplayName } from "@/utils/health-display";
@@ -47,6 +52,7 @@ interface CardProps {
   timerStartTime?: number;
   timerPausedAt?: number;
   timerTotalPausedMs?: number;
+  customContent?: ReactNode;
 }
 
 export default function HomeScreen() {
@@ -55,6 +61,7 @@ export default function HomeScreen() {
   const isFocused = useIsFocused();
   const { visibleCards } = useDashboardConfig();
   const timeTick = useTimeRefresh(60000);
+  const { timeFormat } = useTimeFormat();
 
   // Navigate safely - if a modal is open, dismiss it first then navigate
   const safeNavigate = useCallback((path: string) => {
@@ -229,38 +236,180 @@ export default function HomeScreen() {
   const sleepSecondaryInfo = useMemo(() => {
     if (sleepActiveTimer?.isRunning) return undefined;
     const lastSleep = getLastSleep();
-
     if (!lastSleep?.endedAt) return undefined;
+    return t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt), undefined, t), context: selectedBaby?.gender });
+  }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender, sleeps]);
 
-    const awakeText = t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt), undefined, t), context: selectedBaby?.gender });
+  const OVERDUE_THRESHOLD_MS = 15 * 60 * 1000;
+  const RANGE_HALF_WIDTH_MS = 15 * 60 * 1000;
 
-    if (!wakeWindowConfig || wakeWindowConfig.slots.length === 0) {
-      return awakeText;
+  const sleepPredictionContent = useMemo((): ReactNode => {
+    if (sleepActiveTimer?.isRunning) return undefined;
+
+    if (!wakeWindowConfig || wakeWindowConfig.slots.length === 0) return undefined;
+
+    const lastSleep = getLastSleep();
+    const nowMs = Date.now();
+    const nowDate = new Date(nowMs);
+    const currentHour = nowDate.getHours();
+    const dayStartHour = wakeWindowConfig.dayStartHour ?? 6;
+
+    const todayDayStart = new Date(nowDate);
+    todayDayStart.setHours(dayStartHour, 0, 0, 0);
+    if (nowMs < todayDayStart.getTime()) {
+      todayDayStart.setDate(todayDayStart.getDate() - 1);
     }
+    const todayDayStartMs = todayDayStart.getTime();
+
+    const lastWakeMs = lastSleep?.endedAt ? new Date(lastSleep.endedAt).getTime() : 0;
+    const hasWakeToday = lastSleep?.endedAt && lastWakeMs >= todayDayStartMs;
+
+    if (!hasWakeToday) {
+      if (currentHour >= dayStartHour) {
+        return <SleepPredictionBox state="noSleepLogged" />;
+      }
+      return <SleepPredictionBox state="allDone" />;
+    }
+
+    const babyIsUnderEightWeeks = selectedBaby?.birthDate ? !isSmartSleepEligible(selectedBaby.birthDate) : true;
+    if (babyIsUnderEightWeeks && !wakeWindowConfig.sourceExplicitlyChosen) return undefined;
 
     const currentSlot = getCurrentNapSlot();
-    if (!currentSlot) return awakeText;
+    if (!currentSlot) return <SleepPredictionBox state="allDone" />;
+    const napsDone = getCompletedNapsSinceNightSleep();
+    const { slots, source } = wakeWindowConfig;
 
-    const endedAt = new Date(lastSleep.endedAt);
-    const awakeMs = Date.now() - endedAt.getTime();
-    const windowMs = currentSlot.durationMinutes * 60000;
-    const remainingMs = windowMs - awakeMs;
-    const remainingMinutes = Math.floor(remainingMs / 60000);
-    const isBedtime = currentSlot.label === "bedtime" && !isUnderTwoMonths(selectedBaby?.birthDate);
+    let slotIndex = napsDone;
+    let centerMinutes: number;
+    let slotType: "nap" | "bedtime";
+    let confidence: "personalized" | "age_based" = "age_based";
+    let isTransitioning = false;
+    let transitionNapCount: number | undefined;
 
-    if (remainingMinutes <= 0) {
-      return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeNow") : t("dashboard.napTimeNow")}`;
+    if (source === "smart" && selectedBaby?.birthDate) {
+      const prediction = computePredictionWithTiming(
+        sleeps, selectedBaby.birthDate, slotIndex, wakeWindowConfig, lastWakeMs, new Date(), napsDone
+      );
+      if (!prediction.isEligible) return undefined;
+      centerMinutes = prediction.centerMinutes;
+      slotType = prediction.slotType;
+      confidence = prediction.confidence;
+      isTransitioning = prediction.isTransitioning ?? false;
+      transitionNapCount = prediction.transitionNapCount;
+
+      if (confidence === "age_based") {
+        const totalDataDays = Math.min(7, Math.floor((nowMs - lastWakeMs) / (24 * 60 * 60 * 1000)));
+        const daysRemaining = Math.max(1, 3 - totalDataDays);
+        const rangeStartMs = lastWakeMs + centerMinutes * 60000 - RANGE_HALF_WIDTH_MS;
+        const rangeEndMs = lastWakeMs + centerMinutes * 60000 + RANGE_HALF_WIDTH_MS;
+        const label = slotType === "bedtime" ? t("prediction.bedtime") : t("prediction.nap");
+
+        let pillState: PredictionState = "countdown";
+        let countdownText = "";
+        const minutesToStart = Math.floor((rangeStartMs - nowMs) / 60000);
+        if (nowMs >= rangeEndMs) {
+          pillState = nowMs > rangeEndMs + OVERDUE_THRESHOLD_MS ? "hidden" : "overdue";
+          countdownText = t("prediction.overdue");
+        } else if (nowMs >= rangeStartMs) {
+          pillState = "now";
+          countdownText = t("prediction.now");
+        } else if (minutesToStart >= 60) {
+          const h = Math.floor(minutesToStart / 60);
+          const m = minutesToStart % 60;
+          countdownText = t("prediction.inTime", { time: m > 0 ? `${h}h ${m}m` : `${h}h` });
+        } else {
+          countdownText = t("prediction.inTime", { time: `${minutesToStart}m` });
+        }
+
+        if (pillState === "hidden") return <SleepPredictionBox state="allDone" />;
+
+        return (
+          <SleepPredictionBox
+            state={pillState}
+            rangeStart={formatTime(new Date(rangeStartMs), timeFormat)}
+            rangeEnd={formatTime(new Date(rangeEndMs), timeFormat)}
+            slotLabel={label}
+            countdownText={countdownText}
+            subtitle={t("prediction.building", { days: daysRemaining })}
+          />
+        );
+      }
+    } else {
+      const slot = slots[Math.min(slotIndex, slots.length - 1)];
+      centerMinutes = slot.durationMinutes;
+      slotType = slot.label === "bedtime" && !isUnderTwoMonths(selectedBaby?.birthDate) ? "bedtime" : "nap";
     }
 
-    if (remainingMinutes >= 60) {
-      const h = Math.floor(remainingMinutes / 60);
-      const m = remainingMinutes % 60;
-      const timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
-      return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: timeStr }) : t("dashboard.napIn", { time: timeStr })}`;
+    let rangeStartMs = lastWakeMs + centerMinutes * 60000 - RANGE_HALF_WIDTH_MS;
+    let rangeEndMs = lastWakeMs + centerMinutes * 60000 + RANGE_HALF_WIDTH_MS;
+
+    if (nowMs > rangeEndMs + OVERDUE_THRESHOLD_MS) {
+      let nextIndex = slotIndex + 1;
+      while (nextIndex < slots.length && nowMs > lastWakeMs + slots[nextIndex].durationMinutes * 60000 + RANGE_HALF_WIDTH_MS + OVERDUE_THRESHOLD_MS) {
+        nextIndex++;
+      }
+      if (nextIndex >= slots.length) {
+        return <SleepPredictionBox state="allDone" />;
+      }
+
+      const nextSlot = slots[nextIndex];
+      if (source === "smart" && selectedBaby?.birthDate) {
+        const nextPrediction = computePredictionWithTiming(
+          sleeps, selectedBaby.birthDate, nextIndex, wakeWindowConfig, lastWakeMs, new Date(), napsDone
+        );
+        centerMinutes = nextPrediction.centerMinutes;
+        slotType = nextPrediction.slotType;
+        confidence = nextPrediction.confidence;
+        isTransitioning = nextPrediction.isTransitioning ?? false;
+        transitionNapCount = nextPrediction.transitionNapCount;
+      } else {
+        centerMinutes = nextSlot.durationMinutes;
+        slotType = nextSlot.label === "bedtime" && !isUnderTwoMonths(selectedBaby?.birthDate) ? "bedtime" : "nap";
+      }
+      rangeStartMs = lastWakeMs + centerMinutes * 60000 - RANGE_HALF_WIDTH_MS;
+      rangeEndMs = lastWakeMs + centerMinutes * 60000 + RANGE_HALF_WIDTH_MS;
     }
 
-    return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: `${remainingMinutes}m` }) : t("dashboard.napIn", { time: `${remainingMinutes}m` })}`;
-  }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender, selectedBaby?.birthDate, wakeWindowConfig, getCurrentNapSlot, sleeps]);
+    const label = slotType === "bedtime" ? t("prediction.bedtime") : t("prediction.nap");
+
+    let state: PredictionState = "countdown";
+    let countdownText = "";
+    const minutesToStart = Math.floor((rangeStartMs - nowMs) / 60000);
+
+    if (nowMs >= rangeEndMs) {
+      state = "overdue";
+      countdownText = t("prediction.overdue");
+    } else if (nowMs >= rangeStartMs) {
+      state = "now";
+      countdownText = t("prediction.now");
+    } else if (minutesToStart >= 60) {
+      const h = Math.floor(minutesToStart / 60);
+      const m = minutesToStart % 60;
+      countdownText = t("prediction.inTime", { time: m > 0 ? `${h}h ${m}m` : `${h}h` });
+    } else {
+      countdownText = t("prediction.inTime", { time: `${minutesToStart}m` });
+    }
+
+    let subtitle: string | undefined;
+    if (source === "smart" && selectedBaby?.name) {
+      if (isTransitioning && transitionNapCount !== undefined) {
+        subtitle = t("prediction.transitioning", { name: selectedBaby.name, count: transitionNapCount });
+      } else if (confidence === "personalized") {
+        subtitle = t("prediction.basedOnPatterns", { name: selectedBaby.name });
+      }
+    }
+
+    return (
+      <SleepPredictionBox
+        state={state}
+        rangeStart={formatTime(new Date(rangeStartMs), timeFormat)}
+        rangeEnd={formatTime(new Date(rangeEndMs), timeFormat)}
+        slotLabel={label}
+        countdownText={countdownText}
+        subtitle={subtitle}
+      />
+    );
+  }, [sleepActiveTimer, getLastSleep, wakeWindowConfig, getCurrentNapSlot, getCompletedNapsSinceNightSleep, sleeps, selectedBaby?.birthDate, selectedBaby?.name, t, timeTick, timeFormat]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
@@ -652,6 +801,7 @@ export default function HomeScreen() {
       label: t("sleep.title"),
       timeSince: sleepTimeSince,
       secondaryInfo: sleepSecondaryInfo,
+      customContent: sleepPredictionContent,
       isActive: isSleepActive,
       activeLabel: t("sleep.sleeping"),
       onPress: handleSleepCardPress,
@@ -669,7 +819,7 @@ export default function HomeScreen() {
       timerPausedAt: sleepActiveTimer?.pausedAt?.getTime(),
       timerTotalPausedMs: sleepActiveTimer?.totalPausedMs,
     };
-  }, [t, sleepTimeSince, sleepSecondaryInfo, isSleepActive, sleepActiveTimer, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, handleTogglePauseSleep, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
+  }, [t, sleepTimeSince, sleepSecondaryInfo, sleepPredictionContent, isSleepActive, sleepActiveTimer, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, handleTogglePauseSleep, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
   const diaperCardProps = useMemo((): CardProps => {
     const wetCount = todayDiaperCounts.wet + todayDiaperCounts.mixed;

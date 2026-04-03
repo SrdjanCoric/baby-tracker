@@ -51,6 +51,10 @@ struct WatchActivityData: Codable {
         var wakeWindowMinutes: Int?
         var lastSleepEndedAt: String?
         var napCountToday: Int?
+        var predictionRangeStartISO: String?
+        var predictionRangeEndISO: String?
+        var predictionSlotLabel: String?
+        var predictionConfidence: String?
     }
 
     struct DiaperData: Codable {
@@ -2011,13 +2015,37 @@ struct SleepDetailView: View {
         return minutes >= 0 ? minutes : nil
     }
 
+    var predictionRangeStart: Date? {
+        guard let iso = data.predictionRangeStartISO else { return nil }
+        return parseDate(iso)
+    }
+
+    var predictionRangeEnd: Date? {
+        guard let iso = data.predictionRangeEndISO else { return nil }
+        return parseDate(iso)
+    }
+
+    var hasPrediction: Bool {
+        predictionRangeStart != nil && predictionRangeEnd != nil
+    }
+
     var body: some View {
         VStack(spacing: 10) {
             if let timer = sleepTimer {
                 ActiveTimerCard(timer: timer, connector: connector)
             } else {
-                TimelineView(.periodic(from: .now, by: 60)) { _ in
-                    if let awake = awakeMinutes, let window = data.wakeWindowMinutes, window > 0 {
+                TimelineView(.periodic(from: .now, by: 60)) { context in
+                    let now = context.date
+                    if hasPrediction, let rangeStart = predictionRangeStart, let rangeEnd = predictionRangeEnd {
+                        SleepPredictionCard(
+                            now: now,
+                            rangeStart: rangeStart,
+                            rangeEnd: rangeEnd,
+                            slotLabel: data.predictionSlotLabel ?? "nap",
+                            confidence: data.predictionConfidence,
+                            awakeMinutes: awakeMinutes
+                        )
+                    } else if let awake = awakeMinutes, let window = data.wakeWindowMinutes, window > 0 {
                         VStack(spacing: 4) {
                             Text("Awake \(formatSleepDuration(awake))")
                                 .font(.system(size: 12, weight: .semibold))
@@ -2044,7 +2072,7 @@ struct SleepDetailView: View {
             }
 
             TimelineView(.periodic(from: .now, by: 60)) { _ in
-                if sleepTimer == nil, awakeMinutes == nil, let window = data.wakeWindowMinutes, window > 0 {
+                if sleepTimer == nil, !hasPrediction, awakeMinutes == nil, let window = data.wakeWindowMinutes, window > 0 {
                     Text("Wake window: \(formatSleepDuration(window))")
                         .font(.system(size: 9))
                         .foregroundStyle(.secondary)
@@ -2054,6 +2082,93 @@ struct SleepDetailView: View {
         .padding()
         .navigationTitle("Sleep")
     }
+}
+
+struct SleepPredictionCard: View {
+    let now: Date
+    let rangeStart: Date
+    let rangeEnd: Date
+    let slotLabel: String
+    let confidence: String?
+    let awakeMinutes: Int?
+
+    private let overdueThresholdSeconds: TimeInterval = 15 * 60
+
+    private var isOverdue: Bool {
+        now > rangeEnd && now <= rangeEnd.addingTimeInterval(overdueThresholdSeconds)
+    }
+
+    private var isPastOverdue: Bool {
+        now > rangeEnd.addingTimeInterval(overdueThresholdSeconds)
+    }
+
+    private var isNow: Bool {
+        now >= rangeStart && now <= rangeEnd
+    }
+
+    private var minutesToStart: Int {
+        max(0, Int(rangeStart.timeIntervalSince(now)) / 60)
+    }
+
+    private var slotDisplayLabel: String {
+        slotLabel == "bedtime" ? "Bedtime" : "Nap"
+    }
+
+    private var pillColor: Color {
+        if isOverdue { return Color(red: 0.96, green: 0.62, blue: 0.04) }
+        if isNow { return Color.green }
+        return WatchActivityType.sleep.primaryColor
+    }
+
+    private var pillText: String {
+        if isOverdue { return "overdue" }
+        if isNow { return "now" }
+        let h = minutesToStart / 60
+        let m = minutesToStart % 60
+        if h > 0 {
+            return m > 0 ? "in \(h)h \(m)m" : "in \(h)h"
+        }
+        return "in \(m)m"
+    }
+
+    var body: some View {
+        if isPastOverdue {
+            if let awake = awakeMinutes {
+                Text("Awake \(formatSleepDuration(awake))")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+        } else {
+            VStack(spacing: 6) {
+                Text(slotDisplayLabel)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                Text(formatTimeRange(rangeStart, rangeEnd))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.primary)
+
+                Text(pillText)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(pillColor)
+                    .clipShape(Capsule())
+
+                if let awake = awakeMinutes {
+                    Text("Awake \(formatSleepDuration(awake))")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
+
+func formatTimeRange(_ start: Date, _ end: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = DateFormatter.dateFormat(fromTemplate: "j:mm", options: 0, locale: Locale.current)
+    return "\(formatter.string(from: start)) – \(formatter.string(from: end))"
 }
 
 func formatSleepDuration(_ minutes: Int) -> String {

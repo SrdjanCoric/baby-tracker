@@ -31,6 +31,7 @@ import {
   isUnderTwoMonths,
 } from "@/utils/sleepGoals";
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
+import { isSmartSleepEligible, computePredictionWithTiming } from "@/utils/smart-sleep";
 import { isNightTime, countNapsWithContinuation } from "@/utils/day-night-boundary";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 
@@ -247,6 +248,7 @@ interface SleepContextValue extends SleepState {
   acceptMilestoneSuggestion: () => Promise<void>;
   getCompletedNapsSinceNightSleep: () => number;
   getCurrentNapSlot: () => NapSlotWindow | null;
+  getSmartNapSlot: () => NapSlotWindow | null;
   setWakeWindowConfig: (config: WakeWindowConfig) => Promise<void>;
   setCustomWakeWindows: (slots: NapSlotWindow[]) => Promise<void>;
   resetToAgeBasedWakeWindows: () => Promise<void>;
@@ -402,7 +404,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             wakeConfig = {
               napCount: dbPref.nap_count,
               slots: dbPref.wake_window_slots,
-              source: dbPref.source as "age_based" | "custom",
+              source: dbPref.source as "age_based" | "custom" | "smart",
+              sourceExplicitlyChosen: true,
               dayStartHour: dbPref.day_start_hour ?? 6,
               dayEndHour: dbPref.day_end_hour ?? 19,
               napContinuationMinutes: dbPref.nap_continuation_minutes ?? 15,
@@ -419,9 +422,16 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (wakeConfig) {
+        if (!wakeConfig.sourceExplicitlyChosen && birthDate && isSmartSleepEligible(birthDate.toISOString())) {
+          wakeConfig = { ...wakeConfig, source: "smart" };
+          await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
+        }
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: wakeConfig });
       } else if (birthDate) {
         const defaultConfig = getDefaultWakeWindowConfig(birthDate);
+        if (isSmartSleepEligible(birthDate.toISOString())) {
+          defaultConfig.source = "smart";
+        }
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: defaultConfig });
         await SleepStorageService.setWakeWindowConfig(selectedBaby.id, defaultConfig);
       }
@@ -953,6 +963,38 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     return slots[slotIndex];
   }, [state.wakeWindowConfig, getCompletedNapsSinceNightSleep, selectedBaby?.birthDate, state.newbornNapOptIn]);
 
+  const getSmartNapSlot = useCallback((): NapSlotWindow | null => {
+    const baseSlot = getCurrentNapSlot();
+    if (!baseSlot) return null;
+
+    const config = state.wakeWindowConfig;
+    if (!config || config.source !== "smart" || !selectedBaby?.birthDate) {
+      return baseSlot;
+    }
+
+    const napsDone = getCompletedNapsSinceNightSleep();
+    const slotIndex = napsDone;
+
+    const lastEndedSleep = [...state.sleeps]
+      .filter(s => s.endedAt)
+      .sort((a, b) => new Date(b.endedAt!).getTime() - new Date(a.endedAt!).getTime())[0];
+    const lastWakeMs = lastEndedSleep?.endedAt ? new Date(lastEndedSleep.endedAt).getTime() : 0;
+    if (lastWakeMs === 0) return baseSlot;
+
+    const prediction = computePredictionWithTiming(
+      state.sleeps, selectedBaby.birthDate, slotIndex, config, lastWakeMs, new Date(), napsDone
+    );
+
+    if (!prediction.isEligible) return baseSlot;
+
+    const label = prediction.slotType === "bedtime" ? "bedtime" : baseSlot.label;
+    return {
+      slotIndex: baseSlot.slotIndex,
+      label,
+      durationMinutes: prediction.centerMinutes,
+    };
+  }, [getCurrentNapSlot, state.wakeWindowConfig, state.sleeps, selectedBaby?.birthDate, getCompletedNapsSinceNightSleep]);
+
   const setWakeWindowConfigMethod = useCallback(async (config: WakeWindowConfig): Promise<void> => {
     if (!selectedBaby) return;
     dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
@@ -1049,6 +1091,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     acceptMilestoneSuggestion,
     getCompletedNapsSinceNightSleep,
     getCurrentNapSlot,
+    getSmartNapSlot,
     setWakeWindowConfig: setWakeWindowConfigMethod,
     setCustomWakeWindows,
     resetToAgeBasedWakeWindows,

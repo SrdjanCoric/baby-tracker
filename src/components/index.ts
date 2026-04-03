@@ -53,6 +53,7 @@ export {
 
 // Sleep components
 export { SleepMilestoneSuggestionModal } from "./SleepMilestoneSuggestionModal";
+export { SleepPredictionBox, type SleepPredictionBoxProps, type PredictionState } from "./SleepPredictionBox";
 
 // Tummy Time components
 export { MilestoneSuggestionModal } from "./MilestoneSuggestionModal";

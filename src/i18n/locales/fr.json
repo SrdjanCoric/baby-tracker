@@ -73,6 +73,18 @@
     "napTimeNow": "C'est l'heure de la sieste !",
     "bedtimeNow": "C'est l'heure de dormir !"
   },
+  "prediction": {
+    "nap": "Sieste",
+    "bedtime": "Coucher",
+    "inTime": "dans {{time}}",
+    "now": "maintenant",
+    "overdue": "en retard",
+    "basedOnPatterns": "Bas\u00e9 sur les habitudes de {{name}}",
+    "building": "Cr\u00e9ation des pr\u00e9dictions... {{days}}j restants",
+    "logSleep": "Enregistrez le sommeil pour voir les pr\u00e9dictions",
+    "transitioning": "{{name}} est peut-\u00eatre en transition vers {{count}} siestes",
+    "allDone": "Tout est fait pour aujourd'hui"
+  },
   "navigation": {
     "home": "Accueil",
     "timeline": "Chronologie",
@@ -272,7 +284,24 @@
     "householdGoalConfirm": "Cela modifiera l'objectif de sommeil pour tous les aidants de votre foyer. Continuer ?",
     "napReminderWarningTitle": "Non recommandé",
     "napReminderWarningMessage": "Les rappels de sieste ne sont pas recommandés pour les bébés de moins de 2 mois. Le sommeil du nouveau-né est imprévisible et les fenêtres d'éveil peuvent causer un stress inutile. Souhaitez-vous quand même les activer ?",
-    "napReminderWarningEnable": "Activer quand même"
+    "napReminderWarningEnable": "Activer quand même",
+    "sourceLabel": "Mode de prédiction",
+    "sourceAgeBased": "Par âge",
+    "sourceCustom": "Personnalisé",
+    "sourceSmart": "Smart",
+    "smartRecommended": "Recommandé",
+    "smartDescription": "Prédit les fenêtres de sieste et de coucher basé sur les habitudes de {{name}} des 7 derniers jours",
+    "smartNotEligible": "Le mode Smart est disponible quand {{name}} a au moins 8 semaines",
+    "smartNotEligibleWithDate": "Le mode Smart sera disponible quand {{name}} aura 8 semaines ({{date}})",
+    "smartAvailableAt": "À 8 semaines ({{date}})",
+    "smartLearnedAverages": "Fenêtres d'éveil apprises",
+    "smartSlotBuilding": "En cours...",
+    "earlyWakeWindowsTitle": "Trop tôt pour les fenêtres d'éveil",
+    "earlyWakeWindowsMessage": "Les fenêtres d'éveil sont moins prévisibles avant 8 semaines. Les prédictions peuvent être moins précises à cet âge.",
+    "continueAnyway": "Continuer quand même",
+    "notificationsSection": "Notifications",
+    "notifyBeforeSleepWindows": "Me notifier avant les fenêtres de sommeil",
+    "notifyBeforeSleepWindowsDesc": "5 minutes avant chaque fenêtre"
   },
   "diaper": {
     "title": "Couche",
