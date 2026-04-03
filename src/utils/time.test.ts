@@ -296,8 +296,7 @@ describe("formatDayHeader", () => {
     const now = new Date(2024, 0, 15, 12, 0);
     const older = new Date(2024, 0, 10, 12, 0);
     const result = formatDayHeader(older, now);
-    expect(result).toContain("Jan");
-    expect(result).toContain("10");
+    expect(result).toBe("Wednesday");
   });
 });
 
