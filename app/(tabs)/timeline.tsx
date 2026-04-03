@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, AppState, RefreshControl, ScrollView, SectionList, View } from "react-native";
+import { ActivityIndicator, AppState, InteractionManager, RefreshControl, ScrollView, SectionList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { useColorScheme } from "nativewind";
@@ -131,7 +131,15 @@ export default function TimelineScreen() {
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [daysToShow, setDaysToShow] = useState(14);
+  const [isReady, setIsReady] = useState(false);
   const sectionListRef = useRef<SectionList<TimelineEntry, TimelineSection>>(null);
+
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      setIsReady(true);
+    });
+    return () => task.cancel();
+  }, []);
 
   const getMemberName = useCallback((userId: string | undefined): string | undefined => {
     // Don't show "logged by" if there's only 1 person in the household
@@ -525,6 +533,26 @@ export default function TimelineScreen() {
     return map;
   }, [sections]);
 
+  const pendingScrollDateRef = useRef<Date | null>(null);
+
+  const scrollToDate = useCallback((date: Date) => {
+    const sectionIndex = dateToSectionIndex.get(date.toDateString());
+    if (sectionIndex !== undefined) {
+      sectionListRef.current?.scrollToLocation({
+        sectionIndex,
+        itemIndex: 0,
+        animated: true,
+      });
+      pendingScrollDateRef.current = null;
+    }
+  }, [dateToSectionIndex]);
+
+  useEffect(() => {
+    if (pendingScrollDateRef.current) {
+      scrollToDate(pendingScrollDateRef.current);
+    }
+  }, [scrollToDate]);
+
   const handleSummaryDateChange = useCallback((date: Date) => {
     const sectionIndex = dateToSectionIndex.get(date.toDateString());
     if (sectionIndex !== undefined) {
@@ -533,14 +561,23 @@ export default function TimelineScreen() {
         itemIndex: 0,
         animated: true,
       });
+    } else {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+      const needed = Math.ceil(diffDays / 14) * 14;
+      if (needed > daysToShow) {
+        pendingScrollDateRef.current = date;
+        setDaysToShow(needed);
+      }
     }
-  }, [dateToSectionIndex]);
+  }, [dateToSectionIndex, daysToShow]);
 
   const hasEntries = paginatedEntries.length > 0;
 
-  if (isLoading && !hasEntries) {
+  if (!isReady || (isLoading && !hasEntries)) {
     return (
-      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]}>
+      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["bottom"]} testID="timeline-screen">
         <LoadingState fullScreen />
       </SafeAreaView>
     );
