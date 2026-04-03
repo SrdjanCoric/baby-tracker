@@ -15,7 +15,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import DateTimePicker, { DateTimePickerEvent, IOSNativeProps, AndroidNativeProps } from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerEvent, AndroidNativeProps } from "@react-native-community/datetimepicker";
+import RNDatePicker from "react-native-date-picker";
 import { useSleep, useBaby, useTheme, useHousehold, useTimeFormat } from "@/contexts";
 import { useAuth } from "@/contexts/auth-context";
 import { useNotifications } from "@/contexts/notification-context";
@@ -646,13 +647,11 @@ export default function SleepSettingsScreen() {
                         {t("common.done")}
                       </Text>
                     </Pressable>
-                    <DateTimePicker
-                      {...{
-                        value: dayStartPickerValue,
-                        mode: "time",
-                        display: "spinner",
-                        onChange: handleDayStartPickerChange,
-                      } as IOSNativeProps}
+                    <RNDatePicker
+                      date={dayStartPickerValue}
+                      mode="time"
+                      onDateChange={(date) => setPendingDayStartHour(date.getHours())}
+                      theme={isDark ? "dark" : "light"}
                     />
                   </View>
                 )}
@@ -694,13 +693,11 @@ export default function SleepSettingsScreen() {
                         {t("common.done")}
                       </Text>
                     </Pressable>
-                    <DateTimePicker
-                      {...{
-                        value: nightStartPickerValue,
-                        mode: "time",
-                        display: "spinner",
-                        onChange: handleNightStartPickerChange,
-                      } as IOSNativeProps}
+                    <RNDatePicker
+                      date={nightStartPickerValue}
+                      mode="time"
+                      onDateChange={(date) => setPendingNightStartHour(date.getHours())}
+                      theme={isDark ? "dark" : "light"}
                     />
                   </View>
                 )}
