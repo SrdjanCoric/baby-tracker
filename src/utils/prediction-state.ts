@@ -1,4 +1,4 @@
-import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
+import type { WakeWindowConfig } from "@/types/wake-windows";
 import type { SmartSleepPrediction } from "@/types/wake-windows";
 
 export type PredictionDisplayState =
@@ -81,7 +81,7 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
   if (isNightTime) return { state: "allDone" };
 
   const { slots, source } = wakeWindowConfig;
-  let slotIndex = napsDone;
+  const slotIndex = napsDone;
   let centerMinutes: number;
   let slotType: "nap" | "bedtime";
   let confidence: "personalized" | "age_based" = "age_based";

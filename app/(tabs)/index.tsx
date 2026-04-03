@@ -279,7 +279,7 @@ export default function HomeScreen() {
     const napsDone = getCompletedNapsSinceNightSleep();
     const { slots, source } = wakeWindowConfig;
 
-    let slotIndex = napsDone;
+    const slotIndex = napsDone;
     let centerMinutes: number;
     let slotType: "nap" | "bedtime";
     let confidence: "personalized" | "age_based" = "age_based";
