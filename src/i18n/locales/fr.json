@@ -836,7 +836,8 @@
     "filterPumping": "Tire-lait",
     "filterGrowth": "Croissance",
     "filterTummyTime": "Temps sur le ventre",
-    "summary": "Résumé"
+    "summary": "Résumé",
+    "sleepSummaryInfo": "Les totaux sont calculés à partir de {{hour}}, selon votre réglage de début de journée"
   },
   "sync": {
     "synced": "Synchronisé",

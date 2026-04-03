@@ -1,5 +1,5 @@
 import { Pressable, Text, View, useColorScheme, Platform } from "react-native";
-import { forwardRef, memo, useCallback, useEffect } from "react";
+import { forwardRef, memo, useCallback, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Animated, {
   useSharedValue,
@@ -13,6 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { CONTENT_COLORS, SURFACE, ACTIVITY } from "@/constants/design-tokens";
+import { formatDuration } from "@/utils/time";
 
 const CARD_MIN_HEIGHT = Platform.OS === "android" ? 180 : 200;
 
@@ -44,6 +45,9 @@ interface DashboardCardProps {
   babyName?: string;
   isPausedByOther?: boolean;
   todayBadge?: string;
+  timerStartTime?: number;
+  timerPausedAt?: number;
+  timerTotalPausedMs?: number;
 }
 
 const DashboardCardInner = forwardRef<View, DashboardCardProps>(
@@ -69,12 +73,49 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       babyName,
       isPausedByOther = false,
       todayBadge,
+      timerStartTime,
+      timerPausedAt,
+      timerTotalPausedMs,
     },
     ref
   ) => {
     const { t } = useTranslation();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
+
+    const [localElapsed, setLocalElapsed] = useState<string | null>(null);
+    const timerStartTimeRef = useRef(timerStartTime);
+    const timerPausedAtRef = useRef(timerPausedAt);
+    const timerTotalPausedMsRef = useRef(timerTotalPausedMs);
+
+    timerStartTimeRef.current = timerStartTime;
+    timerPausedAtRef.current = timerPausedAt;
+    timerTotalPausedMsRef.current = timerTotalPausedMs;
+
+    useEffect(() => {
+      if (!isActive || !timerStartTime) {
+        setLocalElapsed(null);
+        return;
+      }
+
+      const computeElapsed = () => {
+        const start = timerStartTimeRef.current!;
+        const pausedAt = timerPausedAtRef.current;
+        const totalPaused = timerTotalPausedMsRef.current ?? 0;
+
+        let elapsed: number;
+        if (pausedAt) {
+          elapsed = Math.floor((pausedAt - start - totalPaused) / 1000);
+        } else {
+          elapsed = Math.floor((Date.now() - start - totalPaused) / 1000);
+        }
+        setLocalElapsed(formatDuration(elapsed, "long"));
+      };
+
+      computeElapsed();
+      const interval = setInterval(computeElapsed, 1000);
+      return () => clearInterval(interval);
+    }, [isActive, timerStartTime, timerPausedAt, timerTotalPausedMs]);
     const config = ACTIVITY_CONFIG[activity];
     const activityColors = ACTIVITY[activity as keyof typeof ACTIVITY];
     const bgColor = isDark ? SURFACE.dark.card : SURFACE.light.card;
@@ -281,7 +322,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 style={{ color: secondaryTextColor }}
                 numberOfLines={1}
               >
-                {timeSince}
+                {localElapsed ?? timeSince}
               </Text>
             </View>
           ) : (
@@ -476,7 +517,13 @@ const DashboardCard = memo(DashboardCardInner, (prev, next) => {
     prev.babyName === next.babyName &&
     prev.isPausedByOther === next.isPausedByOther &&
     prev.todayBadge === next.todayBadge &&
-    prev.testID === next.testID
+    prev.testID === next.testID &&
+    prev.timerStartTime === next.timerStartTime &&
+    prev.timerPausedAt === next.timerPausedAt &&
+    prev.timerTotalPausedMs === next.timerTotalPausedMs &&
+    prev.onPress === next.onPress &&
+    prev.onActionPress === next.onActionPress &&
+    prev.onPausePress === next.onPausePress
   );
 });
 

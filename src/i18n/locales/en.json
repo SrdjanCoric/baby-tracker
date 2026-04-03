@@ -836,7 +836,8 @@
     "filterPumping": "Pumping",
     "filterGrowth": "Growth",
     "filterTummyTime": "Tummy Time",
-    "summary": "Summary"
+    "summary": "Summary",
+    "sleepSummaryInfo": "Totals are calculated from {{hour}}, based on your day start time setting"
   },
   "sync": {
     "synced": "Synced",

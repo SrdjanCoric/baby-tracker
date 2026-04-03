@@ -10,7 +10,7 @@ import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredGrowthEntry } from "@/services/growth-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import type { ActivityType } from "@/constants/activities";
-import { sleepDayKey, localDateKey } from "@/utils/sleep-patterns";
+import { sleepDayKey, localDateKey, splitSleepAtDayBoundary } from "@/utils/sleep-patterns";
 
 export interface DailySummary {
   date: Date;
@@ -58,19 +58,16 @@ function isSameDay(date1: Date, date2: Date): boolean {
 export function calculateDailySummary(
   date: Date,
   data: TimelineDataByDate,
-  dayStartHour: number = 6
+  dayStartHour: number = 6,
+  dayEndHour: number = 19
 ): DailySummary {
   const targetDate = new Date(date);
   targetDate.setHours(0, 0, 0, 0);
 
-  // Filter entries for the target date
   const dayFeedings = data.feedings.filter((f) =>
     isSameDay(new Date(f.startedAt), targetDate)
   );
   const targetDayKey = localDateKey(targetDate);
-  const daySleeps = data.sleeps.filter(
-    (s) => sleepDayKey(new Date(s.startedAt), dayStartHour) === targetDayKey
-  );
   const dayDiapers = data.diapers.filter((d) =>
     isSameDay(new Date(d.changedAt), targetDate)
   );
@@ -84,7 +81,6 @@ export function calculateDailySummary(
     isSameDay(new Date(t.startedAt), targetDate)
   );
 
-  // Calculate feeding metrics
   const nursingFeedings = dayFeedings.filter((f) => f.type === "breast");
   const bottleFeedings = dayFeedings.filter((f) => f.type === "bottle");
   const solidFeedings = dayFeedings.filter((f) => f.type === "solid");
@@ -98,13 +94,30 @@ export function calculateDailySummary(
     0
   );
 
-  // Calculate sleep metrics
-  const naps = daySleeps.filter((s) => s.type === "nap");
-  const nightSleeps = daySleeps.filter((s) => s.type === "night");
-  const sleepMinutes = daySleeps.reduce(
-    (sum, s) => sum + Math.round((s.durationSeconds || 0) / 60),
-    0
-  );
+  let sleepSeconds = 0;
+  let napCount = 0;
+  let nightSleepCount = 0;
+  const countedNaps = new Set<string>();
+  const countedNights = new Set<string>();
+
+  for (const sleep of data.sleeps) {
+    const segments = splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour);
+    const daySegments = segments.filter((seg) => seg.dateKey === targetDayKey);
+    if (daySegments.length === 0) continue;
+
+    sleepSeconds += daySegments.reduce((sum, seg) => sum + seg.seconds, 0);
+
+    for (const seg of daySegments) {
+      if (seg.type === "nap" && !countedNaps.has(sleep.id)) {
+        countedNaps.add(sleep.id);
+        napCount++;
+      } else if (seg.type === "night" && !countedNights.has(sleep.id)) {
+        countedNights.add(sleep.id);
+        nightSleepCount++;
+      }
+    }
+  }
+  const sleepMinutes = Math.round(sleepSeconds / 60);
 
   // Calculate diaper counts
   const diaperCount = {
@@ -136,8 +149,8 @@ export function calculateDailySummary(
     bottleCount: bottleFeedings.length,
     solidCount: solidFeedings.length,
     sleepMinutes,
-    napCount: naps.length,
-    nightSleepCount: nightSleeps.length,
+    napCount,
+    nightSleepCount,
     diaperCount,
     pumpingCount: dayPumpings.length,
     pumpingTotalMl,

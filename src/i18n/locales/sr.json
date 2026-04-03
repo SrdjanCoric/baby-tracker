@@ -861,7 +861,8 @@
     "filterPumping": "Izdajanje",
     "filterGrowth": "Rast",
     "filterTummyTime": "Vreme na stomaku",
-    "summary": "Rezime"
+    "summary": "Rezime",
+    "sleepSummaryInfo": "Ukupno se računa od {{hour}}, na osnovu podešavanja početka dana"
   },
   "sync": {
     "synced": "Sinhronizovano",

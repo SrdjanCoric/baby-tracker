@@ -836,7 +836,8 @@
     "filterPumping": "Abpumpen",
     "filterGrowth": "Wachstum",
     "filterTummyTime": "Bauchlage",
-    "summary": "Zusammenfassung"
+    "summary": "Zusammenfassung",
+    "sleepSummaryInfo": "Summen werden ab {{hour}} berechnet, basierend auf Ihrer Tagesbeginn-Einstellung"
   },
   "sync": {
     "synced": "Synchronisiert",

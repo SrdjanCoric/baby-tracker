@@ -840,7 +840,8 @@
     "filterPumping": "Extracci\u00f3n",
     "filterGrowth": "Crecimiento",
     "filterTummyTime": "Tiempo boca abajo",
-    "summary": "Resumen"
+    "summary": "Resumen",
+    "sleepSummaryInfo": "Los totales se calculan desde las {{hour}}, según la configuración de inicio del día"
   },
   "sync": {
     "synced": "Sincronizado",

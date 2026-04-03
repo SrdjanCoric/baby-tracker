@@ -5,6 +5,7 @@ import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/dat
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { CONTENT_COLORS, ACTION_COLORS, SURFACE_COLORS } from "@/constants/design-tokens";
 import { calculateDailySummary, type TimelineDataByDate } from "@/utils/timeline";
+import { formatHourValue, type TimeFormat } from "@/utils/time";
 import type { FilterType } from "./ActivityFilterTabs";
 
 interface DailySummaryCardProps {
@@ -12,6 +13,7 @@ interface DailySummaryCardProps {
   allData: TimelineDataByDate;
   birthDate?: string;
   dayStartHour?: number;
+  timeFormat?: TimeFormat;
   t: (key: string, options?: Record<string, unknown>) => string;
   onDateChange?: (date: Date) => void;
 }
@@ -21,6 +23,7 @@ export function DailySummaryCard({
   allData,
   birthDate,
   dayStartHour = 6,
+  timeFormat = "12h",
   t,
   onDateChange,
 }: DailySummaryCardProps) {
@@ -32,6 +35,7 @@ export function DailySummaryCard({
     return today;
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   const summary = useMemo(
     () => calculateDailySummary(selectedDate, allData, dayStartHour),
@@ -215,6 +219,11 @@ export function DailySummaryCard({
           >
             {t("timeline.summary")}
           </Text>
+          {filter === "sleep" && (
+            <Pressable onPress={() => setShowInfo(prev => !prev)} hitSlop={8}>
+              <Text style={{ color: isDark ? CONTENT_COLORS.dark.secondary : CONTENT_COLORS.light.secondary, fontSize: 14, marginLeft: 4 }}>ⓘ</Text>
+            </Pressable>
+          )}
         </View>
 
         <Pressable
@@ -237,6 +246,15 @@ export function DailySummaryCard({
           </Text>
         </Pressable>
       </View>
+
+      {showInfo && filter === "sleep" && (
+        <Text
+          className="text-xs mb-1"
+          style={{ color: isDark ? CONTENT_COLORS.dark.tertiary : CONTENT_COLORS.light.tertiary }}
+        >
+          {t("timeline.sleepSummaryInfo", { hour: formatHourValue(dayStartHour, timeFormat) })}
+        </Text>
+      )}
 
       {content.length > 0 ? (
         <View className="flex-row flex-wrap gap-x-4 gap-y-1">
