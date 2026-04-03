@@ -12,12 +12,14 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import RNDatePicker from "react-native-date-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useNotifications } from "@/contexts/notification-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useHousehold } from "@/contexts/household-context";
 import { useBaby } from "@/contexts/baby-context";
+import { useTheme } from "@/contexts";
 import { FEEDING_REMINDER_INTERVALS } from "@/constants/notifications";
 
 type SectionHeaderProps = {
@@ -89,6 +91,7 @@ type IntervalOption = (typeof FEEDING_REMINDER_INTERVALS)[number];
 export default function NotificationSettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { isDark } = useTheme();
   const { isAuthenticated } = useAuth();
   const { members } = useHousehold();
   const isMultiPersonHousehold = members.length > 1;
@@ -590,28 +593,34 @@ export default function NotificationSettingsScreen() {
                   value={settings.quietHours.startTime}
                   onPress={() => setShowStartTimePicker(true)}
                 />
-                {showStartTimePicker && (
+                {showStartTimePicker && Platform.OS === "ios" && (
                   <View className="px-4 py-2 bg-surface-secondary dark:bg-surface-dark-secondary">
-                    {Platform.OS === "ios" && (
-                      <View className="flex-row justify-end mb-2">
-                        <Pressable
-                          onPress={handleStartTimeDone}
-                          className="py-1 px-2"
-                        >
-                          <Text className="text-primary dark:text-primary-dark font-medium">
-                            {t("common.done")}
-                          </Text>
-                        </Pressable>
-                      </View>
-                    )}
-                    <DateTimePicker
-                      value={startTimePickerValue}
+                    <View className="flex-row justify-end mb-2">
+                      <Pressable
+                        onPress={handleStartTimeDone}
+                        className="py-1 px-2"
+                      >
+                        <Text className="text-primary dark:text-primary-dark font-medium">
+                          {t("common.done")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                    <RNDatePicker
+                      date={startTimePickerValue}
                       mode="time"
-                      is24Hour={true}
-                      display={Platform.OS === "ios" ? "spinner" : "default"}
-                      onChange={handleStartTimeChange}
+                      onDateChange={(date) => setPendingStartTime(formatTimeFromDate(date))}
+                      theme={isDark ? "dark" : "light"}
                     />
                   </View>
+                )}
+                {showStartTimePicker && Platform.OS === "android" && (
+                  <DateTimePicker
+                    value={startTimePickerValue}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={handleStartTimeChange}
+                  />
                 )}
                 <SettingsRow
                   label={t("settings.quietHoursEndTime")}
@@ -619,28 +628,34 @@ export default function NotificationSettingsScreen() {
                   onPress={() => setShowEndTimePicker(true)}
                   isLast={!showEndTimePicker}
                 />
-                {showEndTimePicker && (
+                {showEndTimePicker && Platform.OS === "ios" && (
                   <View className="px-4 py-2 bg-surface-secondary dark:bg-surface-dark-secondary">
-                    {Platform.OS === "ios" && (
-                      <View className="flex-row justify-end mb-2">
-                        <Pressable
-                          onPress={handleEndTimeDone}
-                          className="py-1 px-2"
-                        >
-                          <Text className="text-primary dark:text-primary-dark font-medium">
-                            {t("common.done")}
-                          </Text>
-                        </Pressable>
-                      </View>
-                    )}
-                    <DateTimePicker
-                      value={endTimePickerValue}
+                    <View className="flex-row justify-end mb-2">
+                      <Pressable
+                        onPress={handleEndTimeDone}
+                        className="py-1 px-2"
+                      >
+                        <Text className="text-primary dark:text-primary-dark font-medium">
+                          {t("common.done")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                    <RNDatePicker
+                      date={endTimePickerValue}
                       mode="time"
-                      is24Hour={true}
-                      display={Platform.OS === "ios" ? "spinner" : "default"}
-                      onChange={handleEndTimeChange}
+                      onDateChange={(date) => setPendingEndTime(formatTimeFromDate(date))}
+                      theme={isDark ? "dark" : "light"}
                     />
                   </View>
+                )}
+                {showEndTimePicker && Platform.OS === "android" && (
+                  <DateTimePicker
+                    value={endTimePickerValue}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={handleEndTimeChange}
+                  />
                 )}
               </>
             )}
