@@ -117,12 +117,7 @@ export function formatDayHeader(date: Date, now: Date = new Date(), t?: (key: st
   if (isToday(date, now)) return t ? t("time.today") : "Today";
   if (isYesterday(date, now)) return t ? t("time.yesterday") : "Yesterday";
 
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    month: "short",
-    day: "numeric"
-  };
-  return date.toLocaleDateString(undefined, options);
+  return date.toLocaleDateString(undefined, { weekday: "long" });
 }
 
 /**

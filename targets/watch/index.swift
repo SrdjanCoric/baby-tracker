@@ -1562,9 +1562,11 @@ struct ActivityRowView: View {
                         .font(.system(size: 9))
                         .foregroundStyle(activity.primaryColor)
                 } else {
-                    Text(getTimeSince() + " ago")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
+                    TimelineView(.periodic(from: .now, by: 60)) { _ in
+                        Text(getTimeSince() + " ago")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -1778,7 +1780,9 @@ struct FeedingMenuView: View {
                     ActiveTimerCard(timer: timer, connector: connector)
                 }
 
-                InfoRow(label: "Last", value: formatTimeSince(data.lastTime) + " ago")
+                TimelineView(.periodic(from: .now, by: 60)) { _ in
+                    InfoRow(label: "Last", value: formatTimeSince(data.lastTime) + " ago")
+                }
                 InfoRow(label: "Today", value: "\(data.todayCount) feedings")
 
                 Divider().padding(.vertical, 2)
@@ -1877,10 +1881,12 @@ struct BreastFeedingView: View {
                 }
             }
 
-            if let side = data.lastSide {
-                Text("Last: \(side.capitalized) \u{2022} \(formatTimeSince(data.lastTime)) ago")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
+            TimelineView(.periodic(from: .now, by: 60)) { _ in
+                if let side = data.lastSide {
+                    Text("Last: \(side.capitalized) \u{2022} \(formatTimeSince(data.lastTime)) ago")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding()
@@ -2010,18 +2016,20 @@ struct SleepDetailView: View {
             if let timer = sleepTimer {
                 ActiveTimerCard(timer: timer, connector: connector)
             } else {
-                if let awake = awakeMinutes, let window = data.wakeWindowMinutes, window > 0 {
-                    VStack(spacing: 4) {
+                TimelineView(.periodic(from: .now, by: 60)) { _ in
+                    if let awake = awakeMinutes, let window = data.wakeWindowMinutes, window > 0 {
+                        VStack(spacing: 4) {
+                            Text("Awake \(formatSleepDuration(awake))")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(awake >= window ? .red : .primary)
+                            Text("Next nap in \(formatSleepDuration(max(0, window - awake)))")
+                                .font(.system(size: 10))
+                                .foregroundStyle(awake >= window ? .red : WatchActivityType.sleep.primaryColor)
+                        }
+                    } else if let awake = awakeMinutes {
                         Text("Awake \(formatSleepDuration(awake))")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(awake >= window ? .red : .primary)
-                        Text("Next nap in \(formatSleepDuration(max(0, window - awake)))")
-                            .font(.system(size: 10))
-                            .foregroundStyle(awake >= window ? .red : WatchActivityType.sleep.primaryColor)
                     }
-                } else if let awake = awakeMinutes {
-                    Text("Awake \(formatSleepDuration(awake))")
-                        .font(.system(size: 12, weight: .semibold))
                 }
 
                 SideButton(
@@ -2035,10 +2043,12 @@ struct SleepDetailView: View {
                 }
             }
 
-            if sleepTimer == nil, awakeMinutes == nil, let window = data.wakeWindowMinutes, window > 0 {
-                Text("Wake window: \(formatSleepDuration(window))")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
+            TimelineView(.periodic(from: .now, by: 60)) { _ in
+                if sleepTimer == nil, awakeMinutes == nil, let window = data.wakeWindowMinutes, window > 0 {
+                    Text("Wake window: \(formatSleepDuration(window))")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding()
@@ -2090,10 +2100,12 @@ struct DiaperDetailView: View {
                     .padding(.bottom, 2)
                 }
 
-                if let timeText = lastDiaperTimeText {
-                    Text(timeText)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
+                TimelineView(.periodic(from: .now, by: 60)) { _ in
+                    if let timeText = lastDiaperTimeText {
+                        Text(timeText)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 HStack(spacing: 3) {
