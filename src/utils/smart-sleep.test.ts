@@ -7,6 +7,7 @@ import {
   getPerSlotAverages,
   isSmartSleepEligible,
   getAgeDays,
+  countConsecutiveDays,
 } from "./smart-sleep";
 
 function makeSleep(
@@ -766,5 +767,46 @@ describe("EWMA algorithm", () => {
     expect(result.rangeStartMs).toBe(expectedCenter - halfWidthMs);
     expect(result.rangeEndMs).toBe(expectedCenter + halfWidthMs);
     expect(result.halfWidthMinutes).toBe(10);
+  });
+});
+
+describe("countConsecutiveDays", () => {
+  function makeSequence(dateKey: string): { dateKey: string; morningWakeMs: number; slots: [] } {
+    return { dateKey, morningWakeMs: 0, slots: [] };
+  }
+
+  it("returns 0 for empty sequences", () => {
+    expect(countConsecutiveDays([], new Date("2025-03-15T10:00:00"))).toBe(0);
+  });
+
+  it("counts consecutive days backwards from today", () => {
+    const sequences = [
+      makeSequence("2025-03-15"),
+      makeSequence("2025-03-14"),
+      makeSequence("2025-03-13"),
+    ];
+    expect(countConsecutiveDays(sequences, new Date("2025-03-15T10:00:00"))).toBe(3);
+  });
+
+  it("stops counting at a gap", () => {
+    const sequences = [
+      makeSequence("2025-03-15"),
+      makeSequence("2025-03-14"),
+      makeSequence("2025-03-12"),
+    ];
+    expect(countConsecutiveDays(sequences, new Date("2025-03-15T10:00:00"))).toBe(2);
+  });
+
+  it("skips today if no data for today and starts from yesterday", () => {
+    const sequences = [
+      makeSequence("2025-03-14"),
+      makeSequence("2025-03-13"),
+    ];
+    expect(countConsecutiveDays(sequences, new Date("2025-03-15T10:00:00"))).toBe(2);
+  });
+
+  it("returns 1 for a single day matching today", () => {
+    const sequences = [makeSequence("2025-03-15")];
+    expect(countConsecutiveDays(sequences, new Date("2025-03-15T10:00:00"))).toBe(1);
   });
 });

@@ -238,7 +238,7 @@ describe("computePredictionDisplayState", () => {
       expect(result.state).toBe("allDone");
     });
 
-    it("shows allDone when smart/age_based prediction is past overdue", () => {
+    it("building phase auto-advances when past overdue instead of allDone", () => {
       const config = makeConfig({ source: "smart" });
       const wakeTime = todayAt(7);
       const centerMinutes = 120;
@@ -266,7 +266,9 @@ describe("computePredictionDisplayState", () => {
         napsDone: 0,
         smartPrediction,
       });
-      expect(result.state).toBe("allDone");
+      expect(result.state).not.toBe("allDone");
+      expect(result.subtitle).toBe("building");
+      expect(result.rangeStartMs).toBe(wakeTime + 150 * 60000 - RANGE_HALF_WIDTH_MS);
     });
   });
 
@@ -736,6 +738,339 @@ describe("computePredictionDisplayState", () => {
         napsDone: 0,
       });
       expect(result.state).toBe("noSleepLogged");
+    });
+  });
+
+  describe("Bug fix: auto-advance uses smart predictions", () => {
+    it("uses smartPredictions centerMinutes in auto-advance when source is smart", () => {
+      const config = makeConfig({
+        source: "smart",
+        slots: [
+          { slotIndex: 0, label: "nap1", durationMinutes: 120 },
+          { slotIndex: 1, label: "nap2", durationMinutes: 150 },
+          { slotIndex: 2, label: "bedtime", durationMinutes: 210 },
+        ],
+      });
+      const wakeTime = todayAt(7);
+      const nowMs = wakeTime + 155 * 60000;
+
+      const smartPrediction: SmartSleepPrediction = {
+        rangeStartMs: 0,
+        rangeEndMs: 0,
+        slotType: "nap",
+        slotIndex: 0,
+        confidence: "personalized",
+        isEligible: true,
+        centerMinutes: 120,
+      };
+
+      const smartPredictions: SmartSleepPrediction[] = [
+        smartPrediction,
+        {
+          rangeStartMs: 0,
+          rangeEndMs: 0,
+          slotType: "nap",
+          slotIndex: 1,
+          confidence: "personalized",
+          isEligible: true,
+          centerMinutes: 160,
+          halfWidthMinutes: 12,
+        },
+        {
+          rangeStartMs: 0,
+          rangeEndMs: 0,
+          slotType: "bedtime",
+          slotIndex: 2,
+          confidence: "personalized",
+          isEligible: true,
+          centerMinutes: 220,
+        },
+      ];
+
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: config,
+        lastSleepEndedAt: new Date(wakeTime).toISOString(),
+        nowMs,
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        smartPrediction,
+        smartPredictions,
+      });
+
+      expect(result.state).not.toBe("allDone");
+      expect(result.rangeStartMs).toBe(wakeTime + 160 * 60000 - 12 * 60000);
+      expect(result.rangeEndMs).toBe(wakeTime + 160 * 60000 + 12 * 60000);
+    });
+
+    it("falls back to config slot durations when smartPredictions not provided", () => {
+      const config = makeConfig({
+        source: "smart",
+        slots: [
+          { slotIndex: 0, label: "nap1", durationMinutes: 120 },
+          { slotIndex: 1, label: "nap2", durationMinutes: 150 },
+        ],
+      });
+      const wakeTime = todayAt(7);
+      const nowMs = wakeTime + 155 * 60000;
+
+      const smartPrediction: SmartSleepPrediction = {
+        rangeStartMs: 0,
+        rangeEndMs: 0,
+        slotType: "nap",
+        slotIndex: 0,
+        confidence: "personalized",
+        isEligible: true,
+        centerMinutes: 120,
+      };
+
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: config,
+        lastSleepEndedAt: new Date(wakeTime).toISOString(),
+        nowMs,
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        smartPrediction,
+      });
+
+      expect(result.rangeStartMs).toBe(wakeTime + 150 * 60000 - RANGE_HALF_WIDTH_MS);
+    });
+  });
+
+  describe("Bug fix: daysRemaining uses consecutiveDays", () => {
+    it("computes daysRemaining from consecutiveDays on the prediction", () => {
+      const config = makeConfig({ source: "smart" });
+      const wakeTime = todayAt(7);
+      const nowMs = todayAt(8);
+
+      const smartPrediction: SmartSleepPrediction = {
+        rangeStartMs: 0,
+        rangeEndMs: 0,
+        slotType: "nap",
+        slotIndex: 0,
+        confidence: "age_based",
+        isEligible: true,
+        centerMinutes: 120,
+        consecutiveDays: 1,
+      };
+
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: config,
+        lastSleepEndedAt: new Date(wakeTime).toISOString(),
+        nowMs,
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        smartPrediction,
+      });
+
+      expect(result.subtitle).toBe("building");
+      expect(result.daysRemaining).toBe(2);
+    });
+
+    it("daysRemaining is at least 1 even with 3+ consecutive days", () => {
+      const config = makeConfig({ source: "smart" });
+      const wakeTime = todayAt(7);
+      const nowMs = todayAt(8);
+
+      const smartPrediction: SmartSleepPrediction = {
+        rangeStartMs: 0,
+        rangeEndMs: 0,
+        slotType: "nap",
+        slotIndex: 0,
+        confidence: "age_based",
+        isEligible: true,
+        centerMinutes: 120,
+        consecutiveDays: 5,
+      };
+
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: config,
+        lastSleepEndedAt: new Date(wakeTime).toISOString(),
+        nowMs,
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        smartPrediction,
+      });
+
+      expect(result.daysRemaining).toBe(1);
+    });
+
+    it("defaults to 0 consecutiveDays when field is missing", () => {
+      const config = makeConfig({ source: "smart" });
+      const wakeTime = todayAt(7);
+      const nowMs = todayAt(8);
+
+      const smartPrediction: SmartSleepPrediction = {
+        rangeStartMs: 0,
+        rangeEndMs: 0,
+        slotType: "nap",
+        slotIndex: 0,
+        confidence: "age_based",
+        isEligible: true,
+        centerMinutes: 120,
+      };
+
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: config,
+        lastSleepEndedAt: new Date(wakeTime).toISOString(),
+        nowMs,
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        smartPrediction,
+      });
+
+      expect(result.daysRemaining).toBe(3);
+    });
+  });
+
+  describe("Bug fix: building phase auto-advances when overdue", () => {
+    it("auto-advances to next slot instead of returning allDone when building and overdue", () => {
+      const config = makeConfig({
+        source: "smart",
+        slots: [
+          { slotIndex: 0, label: "nap1", durationMinutes: 120 },
+          { slotIndex: 1, label: "nap2", durationMinutes: 150 },
+          { slotIndex: 2, label: "bedtime", durationMinutes: 210 },
+        ],
+      });
+      const wakeTime = todayAt(7);
+      const rangeEndMs = wakeTime + 120 * 60000 + RANGE_HALF_WIDTH_MS;
+      const nowMs = rangeEndMs + OVERDUE_THRESHOLD_MS + 60000;
+
+      const smartPrediction: SmartSleepPrediction = {
+        rangeStartMs: 0,
+        rangeEndMs: 0,
+        slotType: "nap",
+        slotIndex: 0,
+        confidence: "age_based",
+        isEligible: true,
+        centerMinutes: 120,
+        consecutiveDays: 1,
+      };
+
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: config,
+        lastSleepEndedAt: new Date(wakeTime).toISOString(),
+        nowMs,
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        smartPrediction,
+      });
+
+      expect(result.state).not.toBe("allDone");
+      expect(result.subtitle).toBe("building");
+      expect(result.rangeStartMs).toBe(wakeTime + 150 * 60000 - RANGE_HALF_WIDTH_MS);
+    });
+
+    it("returns allDone when building phase exhausts all slots", () => {
+      const config = makeConfig({
+        source: "smart",
+        slots: [
+          { slotIndex: 0, label: "nap1", durationMinutes: 90 },
+          { slotIndex: 1, label: "bedtime", durationMinutes: 120 },
+        ],
+      });
+      const wakeTime = todayAt(7);
+      const nowMs = wakeTime + (120 + 15 + 15 + 1) * 60000;
+
+      const smartPrediction: SmartSleepPrediction = {
+        rangeStartMs: 0,
+        rangeEndMs: 0,
+        slotType: "nap",
+        slotIndex: 0,
+        confidence: "age_based",
+        isEligible: true,
+        centerMinutes: 90,
+        consecutiveDays: 1,
+      };
+
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: config,
+        lastSleepEndedAt: new Date(wakeTime).toISOString(),
+        nowMs,
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        smartPrediction,
+      });
+
+      expect(result.state).toBe("allDone");
+    });
+
+    it("building phase auto-advance uses smartPredictions when available", () => {
+      const config = makeConfig({
+        source: "smart",
+        slots: [
+          { slotIndex: 0, label: "nap1", durationMinutes: 120 },
+          { slotIndex: 1, label: "nap2", durationMinutes: 150 },
+          { slotIndex: 2, label: "bedtime", durationMinutes: 210 },
+        ],
+      });
+      const wakeTime = todayAt(7);
+      const rangeEndMs = wakeTime + 120 * 60000 + RANGE_HALF_WIDTH_MS;
+      const nowMs = rangeEndMs + OVERDUE_THRESHOLD_MS + 60000;
+
+      const smartPrediction: SmartSleepPrediction = {
+        rangeStartMs: 0,
+        rangeEndMs: 0,
+        slotType: "nap",
+        slotIndex: 0,
+        confidence: "age_based",
+        isEligible: true,
+        centerMinutes: 120,
+        consecutiveDays: 2,
+      };
+
+      const smartPredictions: SmartSleepPrediction[] = [
+        smartPrediction,
+        {
+          rangeStartMs: 0,
+          rangeEndMs: 0,
+          slotType: "nap",
+          slotIndex: 1,
+          confidence: "age_based",
+          isEligible: true,
+          centerMinutes: 165,
+          halfWidthMinutes: 20,
+        },
+      ];
+
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: config,
+        lastSleepEndedAt: new Date(wakeTime).toISOString(),
+        nowMs,
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        smartPrediction,
+        smartPredictions,
+      });
+
+      expect(result.state).not.toBe("allDone");
+      expect(result.subtitle).toBe("building");
+      expect(result.rangeStartMs).toBe(wakeTime + 165 * 60000 - 20 * 60000);
+      expect(result.daysRemaining).toBe(1);
     });
   });
 });
