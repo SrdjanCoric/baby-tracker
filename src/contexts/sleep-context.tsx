@@ -255,7 +255,6 @@ interface SleepContextValue extends SleepState {
   setNapCount: (count: number) => Promise<void>;
   isCurrentlyNightTime: () => boolean;
   setDayNightBoundary: (dayStartHour: number, dayEndHour: number) => Promise<void>;
-  setNapContinuationMinutes: (minutes: number) => Promise<void>;
   setNewbornNapOptIn: (optIn: boolean) => Promise<void>;
 }
 
@@ -303,7 +302,6 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           source: data.source as "age_based" | "custom",
           dayStartHour: (data.day_start_hour as number | undefined) ?? 6,
           dayEndHour: (data.day_end_hour as number | undefined) ?? 19,
-          napContinuationMinutes: (data.nap_continuation_minutes as number | undefined) ?? 15,
         };
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
         SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
@@ -408,7 +406,6 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               sourceExplicitlyChosen: true,
               dayStartHour: dbPref.day_start_hour ?? 6,
               dayEndHour: dbPref.day_end_hour ?? 19,
-              napContinuationMinutes: dbPref.nap_continuation_minutes ?? 15,
             };
             await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
           }
@@ -942,9 +939,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       s => s.type === "nap" && s.endedAt && new Date(s.startedAt) >= lastNightEnd
     );
 
-    const threshold = state.wakeWindowConfig?.napContinuationMinutes ?? 15;
-    return countNapsWithContinuation(napsSinceNight, threshold);
-  }, [state.sleeps, state.wakeWindowConfig?.napContinuationMinutes]);
+    return countNapsWithContinuation(napsSinceNight, 20);
+  }, [state.sleeps]);
 
   const getCurrentNapSlot = useCallback((): NapSlotWindow | null => {
     if (!state.wakeWindowConfig) return null;
@@ -1038,16 +1034,6 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
   }, [selectedBaby, state.wakeWindowConfig]);
 
-  const setNapContinuationMinutes = useCallback(async (minutes: number): Promise<void> => {
-    if (!selectedBaby) return;
-    const config: WakeWindowConfig = {
-      ...(state.wakeWindowConfig ?? { napCount: 2, slots: [], source: "age_based" }),
-      napContinuationMinutes: minutes,
-    };
-    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig]);
-
   const setNewbornNapOptInMethod = useCallback(async (optIn: boolean): Promise<void> => {
     if (!selectedBaby) return;
     dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: optIn });
@@ -1098,9 +1084,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     setNapCount,
     isCurrentlyNightTime,
     setDayNightBoundary,
-    setNapContinuationMinutes,
     setNewbornNapOptIn: setNewbornNapOptInMethod,
-  }), [state, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setNewbornNapOptInMethod]);
+  }), [state, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNewbornNapOptInMethod]);
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
 }

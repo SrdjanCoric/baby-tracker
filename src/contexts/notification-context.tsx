@@ -64,8 +64,7 @@ interface NotificationContextValue {
     source: string,
     enabled: boolean,
     dayStartHour?: number,
-    dayEndHour?: number,
-    napContinuationMinutes?: number
+    dayEndHour?: number
   ) => Promise<void>;
   isUserAuthenticated: () => boolean;
 }
@@ -461,8 +460,7 @@ export function NotificationProvider({
     source: string,
     enabled: boolean,
     dayStartHour?: number,
-    dayEndHour?: number,
-    napContinuationMinutes?: number
+    dayEndHour?: number
   ) => {
     if (!currentUserIdRef.current || !babyId) return;
 
@@ -473,8 +471,7 @@ export function NotificationProvider({
       slots,
       source,
       dayStartHour,
-      dayEndHour,
-      napContinuationMinutes
+      dayEndHour
     );
     if (error) {
       console.error("Failed to sync wake window preference:", error);

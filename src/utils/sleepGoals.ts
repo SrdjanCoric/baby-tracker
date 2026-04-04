@@ -321,7 +321,7 @@ export function getDefaultWakeWindowConfig(
       source: "age_based",
       dayStartHour: 6,
       dayEndHour: 19,
-      napContinuationMinutes: 15,
+
     };
   }
 
@@ -340,7 +340,7 @@ export function getDefaultWakeWindowConfig(
       source: "age_based",
       dayStartHour: 6,
       dayEndHour: 19,
-      napContinuationMinutes: 15,
+
     };
   }
 
@@ -354,7 +354,6 @@ export function getDefaultWakeWindowConfig(
     source: "age_based",
     dayStartHour: 6,
     dayEndHour: 19,
-    napContinuationMinutes: 15,
   };
 }
 

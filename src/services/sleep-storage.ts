@@ -255,7 +255,6 @@ export const SleepStorageService = {
       ...config,
       dayStartHour: config.dayStartHour ?? 6,
       dayEndHour: config.dayEndHour ?? 19,
-      napContinuationMinutes: config.napContinuationMinutes ?? 15,
     };
   },
 

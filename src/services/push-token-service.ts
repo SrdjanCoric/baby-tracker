@@ -177,8 +177,7 @@ export async function upsertWakeWindowPreference(
   slots: { slotIndex: number; label: string; durationMinutes: number }[],
   source: string,
   dayStartHour?: number,
-  dayEndHour?: number,
-  napContinuationMinutes?: number
+  dayEndHour?: number
 ): Promise<{ error: Error | null }> {
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -199,7 +198,7 @@ export async function upsertWakeWindowPreference(
         source,
         day_start_hour: dayStartHour ?? 6,
         day_end_hour: dayEndHour ?? 19,
-        nap_continuation_minutes: napContinuationMinutes ?? 15,
+        nap_continuation_minutes: 20,
         timezone,
         updated_at: new Date().toISOString(),
       },

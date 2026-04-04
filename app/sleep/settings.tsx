@@ -34,7 +34,7 @@ const SLEEP_PURPLE_MUTED_DARK = "#362E42";
 
 const QUICK_GOALS_HOURS = [11, 12, 13, 14, 15, 16];
 const NAP_COUNT_OPTIONS = [1, 2, 3, 4, 5];
-const NAP_CONTINUATION_OPTIONS = [10, 15, 20, 30];
+
 
 export default function SleepSettingsScreen() {
   const { t } = useTranslation();
@@ -65,7 +65,6 @@ export default function SleepSettingsScreen() {
     setWakeWindowConfig,
     setNapCount: setContextNapCount,
     setDayNightBoundary,
-    setNapContinuationMinutes: setContextNapContinuation,
     setNewbornNapOptIn,
   } = useSleep();
 
@@ -85,7 +84,6 @@ export default function SleepSettingsScreen() {
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
   const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
-  const napContinuationMinutes = wakeWindowConfig?.napContinuationMinutes ?? 15;
 
   const confirmHouseholdChange = useCallback(
     (onConfirm: () => void, options?: { title?: string; message?: string }) => {
@@ -162,8 +160,7 @@ export default function SleepSettingsScreen() {
           wakeWindowConfig.source,
           true,
           wakeWindowConfig.dayStartHour,
-          wakeWindowConfig.dayEndHour,
-          wakeWindowConfig.napContinuationMinutes
+          wakeWindowConfig.dayEndHour
         );
       }
     },
@@ -184,8 +181,7 @@ export default function SleepSettingsScreen() {
             wakeWindowConfig.source,
             false,
             wakeWindowConfig.dayStartHour,
-            wakeWindowConfig.dayEndHour,
-            wakeWindowConfig.napContinuationMinutes
+            wakeWindowConfig.dayEndHour
           );
         }
         return;
@@ -212,13 +208,12 @@ export default function SleepSettingsScreen() {
             "age_based",
             settings.wakeWindowReminders.enabled,
             dayStartHour,
-            dayEndHour,
-            napContinuationMinutes
+            dayEndHour
           );
         }
       });
     },
-    [confirmHouseholdChange, setContextNapCount, selectedBaby?.id, selectedBaby?.birthDate, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, dayStartHour, dayEndHour, napContinuationMinutes]
+    [confirmHouseholdChange, setContextNapCount, selectedBaby?.id, selectedBaby?.birthDate, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, dayStartHour, dayEndHour]
   );
 
   const handleSlotDurationChange = useCallback(
@@ -239,12 +234,11 @@ export default function SleepSettingsScreen() {
           "custom",
           settings.wakeWindowReminders.enabled,
           dayStartHour,
-          dayEndHour,
-          napContinuationMinutes
+          dayEndHour
         );
       });
     },
-    [confirmHouseholdChange, wakeWindowConfig, setCustomWakeWindows, selectedBaby?.id, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, dayStartHour, dayEndHour, napContinuationMinutes]
+    [confirmHouseholdChange, wakeWindowConfig, setCustomWakeWindows, selectedBaby?.id, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, dayStartHour, dayEndHour]
   );
 
   const handleCustomDuration = useCallback(
@@ -275,8 +269,7 @@ export default function SleepSettingsScreen() {
           defaultConfig.source,
           settings.wakeWindowReminders.enabled,
           defaultConfig.dayStartHour,
-          defaultConfig.dayEndHour,
-          defaultConfig.napContinuationMinutes
+          defaultConfig.dayEndHour
         );
       }
     });
@@ -317,8 +310,7 @@ export default function SleepSettingsScreen() {
           wakeWindowConfig.source,
           settings.wakeWindowReminders.enabled,
           hour,
-          dayEndHour,
-          napContinuationMinutes
+          dayEndHour
         );
       }
       return;
@@ -326,7 +318,7 @@ export default function SleepSettingsScreen() {
     if (selectedDate) {
       setPendingDayStartHour(selectedDate.getHours());
     }
-  }, [dayEndHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+  }, [dayEndHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
 
   const handleDayStartDone = useCallback(async () => {
     setShowDayStartPicker(false);
@@ -342,11 +334,10 @@ export default function SleepSettingsScreen() {
         wakeWindowConfig.source,
         settings.wakeWindowReminders.enabled,
         hour,
-        dayEndHour,
-        napContinuationMinutes
+        dayEndHour
       );
     }
-  }, [pendingDayStartHour, dayStartHour, dayEndHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+  }, [pendingDayStartHour, dayStartHour, dayEndHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
 
   const handleNightStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") {
@@ -363,8 +354,7 @@ export default function SleepSettingsScreen() {
           wakeWindowConfig.source,
           settings.wakeWindowReminders.enabled,
           dayStartHour,
-          hour,
-          napContinuationMinutes
+          hour
         );
       }
       return;
@@ -372,7 +362,7 @@ export default function SleepSettingsScreen() {
     if (selectedDate) {
       setPendingNightStartHour(selectedDate.getHours());
     }
-  }, [dayStartHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
+  }, [dayStartHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
 
   const handleNightStartDone = useCallback(async () => {
     setShowNightStartPicker(false);
@@ -388,29 +378,10 @@ export default function SleepSettingsScreen() {
         wakeWindowConfig.source,
         settings.wakeWindowReminders.enabled,
         dayStartHour,
-        hour,
-        napContinuationMinutes
+        hour
       );
     }
-  }, [pendingNightStartHour, dayEndHour, dayStartHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, napContinuationMinutes]);
-
-  const handleNapContinuationChange = useCallback((minutes: number) => {
-    confirmHouseholdChange(async () => {
-      await setContextNapContinuation(minutes);
-      if (selectedBaby?.id && wakeWindowConfig) {
-        await syncWakeWindowPreferenceForBaby(
-          selectedBaby.id,
-          wakeWindowConfig.napCount,
-          wakeWindowConfig.slots,
-          wakeWindowConfig.source,
-          settings.wakeWindowReminders.enabled,
-          dayStartHour,
-          dayEndHour,
-          minutes
-        );
-      }
-    });
-  }, [confirmHouseholdChange, setContextNapContinuation, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled, dayStartHour, dayEndHour]);
+  }, [pendingNightStartHour, dayEndHour, dayStartHour, setDayNightBoundary, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
 
   const isSmartEligible = birthDate ? isSmartSleepEligible(birthDate.toISOString()) : false;
   const isSmartAvailable = true; // TODO: gate via subscription/paywall
@@ -479,8 +450,7 @@ export default function SleepSettingsScreen() {
                 defaultConfig.source,
                 settings.wakeWindowReminders.enabled,
                 defaultConfig.dayStartHour,
-                defaultConfig.dayEndHour,
-                defaultConfig.napContinuationMinutes
+                defaultConfig.dayEndHour
               );
             }
           } else if (wakeWindowConfig) {
@@ -494,8 +464,7 @@ export default function SleepSettingsScreen() {
                 source,
                 settings.wakeWindowReminders.enabled,
                 newConfig.dayStartHour,
-                newConfig.dayEndHour,
-                newConfig.napContinuationMinutes
+                newConfig.dayEndHour
               );
             }
           }
@@ -814,42 +783,6 @@ export default function SleepSettingsScreen() {
               </Text>
             </View>
 
-            {/* Nap Continuation */}
-            <View className="mb-6">
-              <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-3">
-                {t("sleep.napContinuation")}
-              </Text>
-              <View className="flex-row gap-2 mb-3">
-                {NAP_CONTINUATION_OPTIONS.map((minutes) => {
-                  const isSelected = napContinuationMinutes === minutes;
-                  return (
-                    <Pressable
-                      key={minutes}
-                      onPress={() => handleNapContinuationChange(minutes)}
-                      className={`flex-1 py-3 items-center rounded-button-lg ${
-                        isSelected ? "" : "bg-surface-secondary dark:bg-surface-dark-secondary"
-                      } active:opacity-80`}
-                      style={isSelected ? { backgroundColor: SLEEP_PURPLE } : undefined}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isSelected }}
-                    >
-                      <Text
-                        className={`text-sm font-medium ${
-                          isSelected
-                            ? "text-white"
-                            : "text-content-primary dark:text-content-dark-primary"
-                        }`}
-                      >
-                        {`${minutes}m`}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-                {t("sleep.napContinuationDesc")}
-              </Text>
-            </View>
           </>
         )}
 
