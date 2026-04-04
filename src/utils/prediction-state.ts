@@ -19,6 +19,7 @@ export interface PredictionDisplayResult {
   subtitle?: "personalized" | "building" | "transitioning";
   daysRemaining?: number;
   transitionNapCount?: number;
+  halfWidthMinutes?: number;
 }
 
 const OVERDUE_THRESHOLD_MS = 15 * 60 * 1000;
@@ -88,6 +89,8 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
   let isTransitioning = false;
   let transitionNapCount: number | undefined;
 
+  let halfWidthMs = RANGE_HALF_WIDTH_MS;
+
   if (source === "smart" && smartPrediction) {
     if (!smartPrediction.isEligible) return { state: "hidden" };
     centerMinutes = smartPrediction.centerMinutes;
@@ -95,6 +98,10 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
     confidence = smartPrediction.confidence;
     isTransitioning = smartPrediction.isTransitioning ?? false;
     transitionNapCount = smartPrediction.transitionNapCount;
+
+    if (smartPrediction.halfWidthMinutes) {
+      halfWidthMs = smartPrediction.halfWidthMinutes * 60 * 1000;
+    }
 
     if (confidence === "age_based") {
       const totalDataDays = Math.min(7, Math.floor((nowMs - lastWakeMs) / (24 * 60 * 60 * 1000)));
@@ -124,8 +131,8 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
     slotType = slot.label === "bedtime" && !babyIsUnderTwoMonths ? "bedtime" : "nap";
   }
 
-  let rangeStartMs = lastWakeMs + centerMinutes * 60000 - RANGE_HALF_WIDTH_MS;
-  let rangeEndMs = lastWakeMs + centerMinutes * 60000 + RANGE_HALF_WIDTH_MS;
+  let rangeStartMs = lastWakeMs + centerMinutes * 60000 - halfWidthMs;
+  let rangeEndMs = lastWakeMs + centerMinutes * 60000 + halfWidthMs;
 
   if (nowMs > rangeEndMs + OVERDUE_THRESHOLD_MS) {
     let nextIndex = slotIndex + 1;
@@ -165,6 +172,7 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
     countdownMinutes: Math.floor((rangeStartMs - nowMs) / 60000),
     subtitle,
     transitionNapCount,
+    halfWidthMinutes: halfWidthMs / 60000,
   };
 }
 

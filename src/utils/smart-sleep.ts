@@ -1,11 +1,10 @@
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { SmartSleepPrediction, WakeWindowConfig } from "@/types/wake-windows";
-import { countNapsWithContinuation } from "@/utils/day-night-boundary";
 import { getDefaultWakeWindowConfig } from "@/utils/sleepGoals";
 
 const MIN_AGE_DAYS = 56;
 const MIN_DATA_POINTS_PER_SLOT = 3;
-const ROLLING_WINDOW_DAYS = 7;
+const ROLLING_WINDOW_DAYS = 14;
 const RANGE_HALF_WIDTH_MINUTES = 15;
 
 interface DayNapSequence {
@@ -195,38 +194,70 @@ export function detectNapTransition(
   return { isTransitioning: false, transitionNapCount: modeCount, napCountsPerDay };
 }
 
-function computePerSlotAverages(
-  sequences: DayNapSequence[]
-): Map<number, { avg: number; count: number; slotType: "nap" | "bedtime" }> {
-  const slotAccumulators = new Map<number, { total: number; count: number; slotType: "nap" | "bedtime" }>();
+function getProgressiveAlpha(count: number): number {
+  if (count >= 14) return 0.15;
+  if (count >= 7) return 0.25;
+  return 0.4;
+}
 
-  for (const seq of sequences) {
+interface EWMASlotResult {
+  ewma: number;
+  sd: number;
+  count: number;
+  slotType: "nap" | "bedtime";
+}
+
+function computePerSlotEWMA(
+  sequences: DayNapSequence[]
+): Map<number, EWMASlotResult> {
+  const sorted = [...sequences].sort(
+    (a, b) => a.morningWakeMs - b.morningWakeMs
+  );
+
+  const slotValues = new Map<number, { values: number[]; slotType: "nap" | "bedtime" }>();
+
+  for (const seq of sorted) {
     for (const slot of seq.slots) {
-      const existing = slotAccumulators.get(slot.slotIndex);
+      const existing = slotValues.get(slot.slotIndex);
       if (existing) {
-        existing.total += slot.wakeWindowMinutes;
-        existing.count += 1;
+        existing.values.push(slot.wakeWindowMinutes);
       } else {
-        slotAccumulators.set(slot.slotIndex, {
-          total: slot.wakeWindowMinutes,
-          count: 1,
+        slotValues.set(slot.slotIndex, {
+          values: [slot.wakeWindowMinutes],
           slotType: slot.slotType,
         });
       }
     }
   }
 
-  const result = new Map<number, { avg: number; count: number; slotType: "nap" | "bedtime" }>();
+  const result = new Map<number, EWMASlotResult>();
 
-  for (const [slotIndex, acc] of slotAccumulators) {
+  for (const [slotIndex, { values, slotType }] of slotValues) {
+    const count = values.length;
+    const alpha = getProgressiveAlpha(count);
+
+    let ewma = values[0];
+    let ewmaVar = 0;
+
+    for (let i = 1; i < values.length; i++) {
+      const diff = values[i] - ewma;
+      ewma = alpha * values[i] + (1 - alpha) * ewma;
+      ewmaVar = alpha * diff * diff + (1 - alpha) * ewmaVar;
+    }
+
     result.set(slotIndex, {
-      avg: acc.total / acc.count,
-      count: acc.count,
-      slotType: acc.slotType,
+      ewma,
+      sd: Math.sqrt(ewmaVar),
+      count,
+      slotType,
     });
   }
 
   return result;
+}
+
+function computeDynamicHalfWidth(sd: number): number {
+  return Math.round(Math.min(25, Math.max(10, 1.5 * sd)));
 }
 
 export function computeSmartSleepPrediction(
@@ -282,8 +313,8 @@ export function computeSmartSleepPrediction(
     }
   }
 
-  const slotAverages = computePerSlotAverages(filteredSequences);
-  const slotData = slotAverages.get(currentNapSlotIndex);
+  const slotEWMA = computePerSlotEWMA(filteredSequences);
+  const slotData = slotEWMA.get(currentNapSlotIndex);
 
   if (!slotData || slotData.count < MIN_DATA_POINTS_PER_SLOT) {
     const fallbackConfig = getDefaultWakeWindowConfig(new Date(babyBirthDate), now);
@@ -303,7 +334,8 @@ export function computeSmartSleepPrediction(
     };
   }
 
-  const centerMinutes = Math.round(slotData.avg);
+  const centerMinutes = Math.round(slotData.ewma);
+  const halfWidthMinutes = computeDynamicHalfWidth(slotData.sd);
 
   return {
     rangeStartMs: 0,
@@ -315,6 +347,8 @@ export function computeSmartSleepPrediction(
     centerMinutes,
     isTransitioning: transition.isTransitioning || undefined,
     transitionNapCount: transition.isTransitioning ? transition.transitionNapCount : undefined,
+    standardDeviation: Math.round(slotData.sd * 10) / 10,
+    halfWidthMinutes,
   };
 }
 
@@ -340,9 +374,10 @@ export function computePredictionWithTiming(
     return prediction;
   }
 
+  const halfWidth = prediction.halfWidthMinutes ?? RANGE_HALF_WIDTH_MINUTES;
   const centerMs = lastWakeTimeMs + prediction.centerMinutes * 60 * 1000;
-  const rangeStartMs = centerMs - RANGE_HALF_WIDTH_MINUTES * 60 * 1000;
-  const rangeEndMs = centerMs + RANGE_HALF_WIDTH_MINUTES * 60 * 1000;
+  const rangeStartMs = centerMs - halfWidth * 60 * 1000;
+  const rangeEndMs = centerMs + halfWidth * 60 * 1000;
 
   return {
     ...prediction,
@@ -371,7 +406,12 @@ export function getPerSlotAverages(
     now
   );
 
-  return computePerSlotAverages(sequences);
+  const ewmaResult = computePerSlotEWMA(sequences);
+  const result = new Map<number, { avg: number; count: number; slotType: "nap" | "bedtime" }>();
+  for (const [slotIndex, data] of ewmaResult) {
+    result.set(slotIndex, { avg: data.ewma, count: data.count, slotType: data.slotType });
+  }
+  return result;
 }
 
 export { MIN_AGE_DAYS, MIN_DATA_POINTS_PER_SLOT, ROLLING_WINDOW_DAYS, RANGE_HALF_WIDTH_MINUTES };
