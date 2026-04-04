@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Text, View, useColorScheme } from "react-native";
+import { Text, View, Pressable, useColorScheme } from "react-native";
 import { useTranslation } from "react-i18next";
 import { ACTIVITY } from "@/constants/colors";
 import { CONTENT_COLORS } from "@/constants/design-tokens";
@@ -11,6 +11,7 @@ type PredictionState =
   | "noSleepLogged"
   | "building"
   | "allDone"
+  | "confirmWake"
   | "hidden";
 
 interface SleepPredictionBoxProps {
@@ -21,6 +22,8 @@ interface SleepPredictionBoxProps {
   countdownText?: string;
   subtitle?: string;
   daysRemaining?: number;
+  onConfirmWake?: () => void;
+  onDismissWake?: () => void;
 }
 
 const OVERDUE_COLOR_LIGHT = "#f59e0b";
@@ -55,6 +58,8 @@ function SleepPredictionBoxInner({
   countdownText,
   subtitle,
   daysRemaining,
+  onConfirmWake,
+  onDismissWake,
 }: SleepPredictionBoxProps) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
@@ -143,6 +148,62 @@ function SleepPredictionBoxInner({
         >
           {t("prediction.allDone")}
         </Text>
+      </View>
+    );
+  }
+
+  if (state === "confirmWake") {
+    return (
+      <View
+        style={{
+          backgroundColor: boxBg,
+          borderRadius: 10,
+          paddingHorizontal: 10,
+          paddingVertical: 8,
+          marginTop: 6,
+          borderWidth: 1,
+          borderColor: boxBorderColor,
+        }}
+      >
+        <Text
+          style={{
+            color: pred.promptMessage,
+            fontSize: 12,
+            fontWeight: "600",
+            textAlign: "center",
+            marginBottom: 6,
+          }}
+        >
+          {t("prediction.upForTheDay")}
+        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "center", gap: 8 }}>
+          <Pressable
+            onPress={onConfirmWake}
+            style={{
+              backgroundColor: accentColor,
+              borderRadius: 8,
+              paddingHorizontal: 14,
+              paddingVertical: 5,
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700" }}>
+              {t("prediction.yesUpForDay")}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={onDismissWake}
+            style={{
+              backgroundColor: isDark ? "#4A4744" : "#E8E4E0",
+              borderRadius: 8,
+              paddingHorizontal: 14,
+              paddingVertical: 5,
+            }}
+          >
+            <Text style={{ color: isDark ? "#D4D0CC" : "#6B6560", fontSize: 11, fontWeight: "700" }}>
+              {t("prediction.noNightFeed")}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     );
   }

@@ -83,7 +83,10 @@
     "building": "Cr\u00e9ation des pr\u00e9dictions... {{days}}j restants",
     "logSleep": "Enregistrez le sommeil pour voir les pr\u00e9dictions",
     "transitioning": "{{name}} est peut-\u00eatre en transition vers {{count}} siestes",
-    "allDone": "Tout est fait pour aujourd'hui"
+    "allDone": "Tout est fait pour aujourd'hui",
+    "upForTheDay": "Debout pour la journée ?",
+    "yesUpForDay": "Oui",
+    "noNightFeed": "Non, tétée de nuit"
   },
   "navigation": {
     "home": "Accueil",

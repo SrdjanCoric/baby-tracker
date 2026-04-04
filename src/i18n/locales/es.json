@@ -87,7 +87,10 @@
     "building": "Creando predicciones... {{days}}d restantes",
     "logSleep": "Registra sue\u00f1o para ver predicciones",
     "transitioning": "{{name}} puede estar en transici\u00f3n a {{count}} siestas",
-    "allDone": "Todo listo por hoy"
+    "allDone": "Todo listo por hoy",
+    "upForTheDay": "¿Despierto/a para el día?",
+    "yesUpForDay": "Sí",
+    "noNightFeed": "No, toma nocturna"
   },
   "navigation": {
     "home": "Inicio",

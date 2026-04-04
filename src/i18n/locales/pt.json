@@ -85,7 +85,10 @@
     "building": "Criando previs\u00f5es... {{days}}d restantes",
     "logSleep": "Registre o sono para ver previs\u00f5es",
     "transitioning": "{{name}} pode estar em transi\u00e7\u00e3o para {{count}} sonecas",
-    "allDone": "Tudo pronto por hoje"
+    "allDone": "Tudo pronto por hoje",
+    "upForTheDay": "Acordou para o dia?",
+    "yesUpForDay": "Sim",
+    "noNightFeed": "N��o, mamada noturna"
   },
   "navigation": {
     "home": "Início",

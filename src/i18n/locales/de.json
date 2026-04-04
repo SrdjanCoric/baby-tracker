@@ -83,7 +83,10 @@
     "building": "Vorhersagen werden erstellt... noch {{days}}T",
     "logSleep": "Schlaf protokollieren f\u00fcr Vorhersagen",
     "transitioning": "{{name}} wechselt m\u00f6glicherweise zu {{count}} Nickerchen",
-    "allDone": "Alles erledigt für heute"
+    "allDone": "Alles erledigt für heute",
+    "upForTheDay": "Wach für den Tag?",
+    "yesUpForDay": "Ja",
+    "noNightFeed": "Nein, Nachtfütterung"
   },
   "navigation": {
     "home": "Startseite",

@@ -91,7 +91,10 @@
     "building": "Izgradnja predvi\u0111anja... jo\u0161 {{days}}d",
     "logSleep": "Zabele\u017eite spavanje da vidite predvi\u0111anja",
     "transitioning": "{{name}} mo\u017eda prelazi na {{count}} dremke",
-    "allDone": "Sve gotovo za danas"
+    "allDone": "Sve gotovo za danas",
+    "upForTheDay": "Ustala/o za danas?",
+    "yesUpForDay": "Da",
+    "noNightFeed": "Ne, noćno hranjenje"
   },
   "navigation": {
     "home": "Po\u010detna",

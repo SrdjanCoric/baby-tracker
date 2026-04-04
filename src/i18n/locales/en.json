@@ -83,7 +83,10 @@
     "building": "Building predictions... {{days}}d left",
     "logSleep": "Log sleep to see predictions",
     "transitioning": "{{name}} may be transitioning to {{count}} naps",
-    "allDone": "All done for today"
+    "allDone": "All done for today",
+    "upForTheDay": "Up for the day?",
+    "yesUpForDay": "Yes",
+    "noNightFeed": "No, night feed"
   },
   "navigation": {
     "home": "Home",
