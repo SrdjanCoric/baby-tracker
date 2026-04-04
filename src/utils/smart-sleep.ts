@@ -1,6 +1,6 @@
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { SmartSleepPrediction, WakeWindowConfig } from "@/types/wake-windows";
-import { getDefaultWakeWindowConfig } from "@/utils/sleepGoals";
+import { getDefaultWakeWindowConfig, getSleepAgeGroupForBaby } from "@/utils/sleepGoals";
 
 const MIN_AGE_DAYS = 56;
 const MIN_DATA_POINTS_PER_SLOT = 3;
@@ -11,6 +11,7 @@ const NAP_CONTINUATION_MINUTES = 20;
 interface DayNapSequence {
   dateKey: string;
   morningWakeMs: number;
+  morningWakeMinutesSinceMidnight: number;
   slots: SlotData[];
 }
 
@@ -18,6 +19,7 @@ interface SlotData {
   slotIndex: number;
   wakeWindowMinutes: number;
   slotType: "nap" | "bedtime";
+  napStartMinutesSinceMidnight: number;
 }
 
 export function getAgeDays(birthDate: string, now: Date = new Date()): number {
@@ -117,10 +119,13 @@ function reconstructDaySequences(
     const slots: SlotData[] = [];
 
     let lastWakeMs = day.morningWakeMs;
+    const morningWakeDate = new Date(day.morningWakeMs);
+    const morningWakeMinutesSinceMidnight = morningWakeDate.getHours() * 60 + morningWakeDate.getMinutes();
 
     for (let i = 0; i < napGroups.length; i++) {
       const group = napGroups[i];
       const napStartMs = new Date(group[0].startedAt).getTime();
+      const napStartDate = new Date(napStartMs);
       const wakeWindowMinutes = (napStartMs - lastWakeMs) / (1000 * 60);
 
       if (wakeWindowMinutes > 0) {
@@ -128,6 +133,7 @@ function reconstructDaySequences(
           slotIndex: i,
           wakeWindowMinutes,
           slotType: "nap",
+          napStartMinutesSinceMidnight: napStartDate.getHours() * 60 + napStartDate.getMinutes(),
         });
       }
 
@@ -141,15 +147,17 @@ function reconstructDaySequences(
     if (bedtimeNight && napGroups.length > 0) {
       const bedtimeWakeWindow = (bedtimeNight.startMs - lastWakeMs) / (1000 * 60);
       if (bedtimeWakeWindow > 0) {
+        const bedtimeDate = new Date(bedtimeNight.startMs);
         slots.push({
           slotIndex: napGroups.length,
           wakeWindowMinutes: bedtimeWakeWindow,
           slotType: "bedtime",
+          napStartMinutesSinceMidnight: bedtimeDate.getHours() * 60 + bedtimeDate.getMinutes(),
         });
       }
     }
 
-    sequences.push({ dateKey, morningWakeMs: day.morningWakeMs, slots });
+    sequences.push({ dateKey, morningWakeMs: day.morningWakeMs, morningWakeMinutesSinceMidnight, slots });
   }
 
   return sequences;
@@ -282,6 +290,121 @@ function computeDynamicHalfWidth(sd: number): number {
   return Math.round(Math.min(25, Math.max(10, 1.5 * sd)));
 }
 
+const CLOCK_TIME_MIN_DATA_POINTS = 5;
+
+interface ClockTimeEWMAResult {
+  ewma: number;
+  sd: number;
+  count: number;
+}
+
+function computeClockTimeEWMA(
+  sequences: DayNapSequence[]
+): Map<number, ClockTimeEWMAResult> {
+  const sorted = [...sequences].sort(
+    (a, b) => a.morningWakeMs - b.morningWakeMs
+  );
+
+  const slotValues = new Map<number, number[]>();
+
+  for (const seq of sorted) {
+    for (const slot of seq.slots) {
+      const existing = slotValues.get(slot.slotIndex);
+      if (existing) {
+        existing.push(slot.napStartMinutesSinceMidnight);
+      } else {
+        slotValues.set(slot.slotIndex, [slot.napStartMinutesSinceMidnight]);
+      }
+    }
+  }
+
+  const result = new Map<number, ClockTimeEWMAResult>();
+
+  for (const [slotIndex, values] of slotValues) {
+    const count = values.length;
+    const alpha = getProgressiveAlpha(count);
+
+    let ewma = values[0];
+    let ewmaVar = 0;
+
+    for (let i = 1; i < values.length; i++) {
+      const diff = values[i] - ewma;
+      ewma = alpha * values[i] + (1 - alpha) * ewma;
+      ewmaVar = alpha * diff * diff + (1 - alpha) * ewmaVar;
+    }
+
+    result.set(slotIndex, { ewma, sd: Math.sqrt(ewmaVar), count });
+  }
+
+  return result;
+}
+
+function computeMorningWakeEWMA(sequences: DayNapSequence[]): ClockTimeEWMAResult | null {
+  const sorted = [...sequences].sort(
+    (a, b) => a.morningWakeMs - b.morningWakeMs
+  );
+
+  const values = sorted.map(s => s.morningWakeMinutesSinceMidnight);
+  if (values.length === 0) return null;
+
+  const count = values.length;
+  const alpha = getProgressiveAlpha(count);
+
+  let ewma = values[0];
+  let ewmaVar = 0;
+
+  for (let i = 1; i < values.length; i++) {
+    const diff = values[i] - ewma;
+    ewma = alpha * values[i] + (1 - alpha) * ewma;
+    ewmaVar = alpha * diff * diff + (1 - alpha) * ewmaVar;
+  }
+
+  return { ewma, sd: Math.sqrt(ewmaVar), count };
+}
+
+export function getCircadianMaturity(ageWeeks: number): number {
+  return 1 / (1 + Math.exp(-(ageWeeks - 12) / 4));
+}
+
+const SLOT_WEIGHTS: Record<string, number> = {
+  nap1: 0.7,
+  nap2: 0.6,
+  nap3: 0.3,
+  bedtime: 0.8,
+};
+
+export function getSlotWeight(slotIndex: number, slotType: "nap" | "bedtime", _napCount: number): number {
+  if (slotType === "bedtime") return SLOT_WEIGHTS.bedtime;
+  const key = `nap${slotIndex + 1}`;
+  return SLOT_WEIGHTS[key] ?? 0.3;
+}
+
+export function getSDConfidence(clockTimeSD: number): number {
+  return Math.max(0, 1 - clockTimeSD / 60);
+}
+
+interface ClockAdjustmentInput {
+  basePredictionMinutesSinceMidnight: number;
+  clockAnchorMinutesSinceMidnight: number;
+  effectiveClockWeight: number;
+}
+
+function computeClockAdjustment(input: ClockAdjustmentInput): number {
+  const { basePredictionMinutesSinceMidnight, clockAnchorMinutesSinceMidnight, effectiveClockWeight } = input;
+  const deviation = basePredictionMinutesSinceMidnight - clockAnchorMinutesSinceMidnight;
+  const factor = deviation > 0 ? 0.8 : 0.4;
+  return -deviation * effectiveClockWeight * factor;
+}
+
+function computeUnusualWakeDampener(
+  actualWakeMinutes: number,
+  ewmaWakeMinutes: number
+): number {
+  const deviation = ewmaWakeMinutes - actualWakeMinutes;
+  if (deviation <= 45) return 1.0;
+  return Math.max(0.1, 1 - (deviation - 45) / 90);
+}
+
 export function computeSmartSleepPrediction(
   sleepEntries: StoredSleepEntry[],
   babyBirthDate: string,
@@ -332,7 +455,10 @@ export function computeSmartSleepPrediction(
   }
 
   const slotEWMA = computePerSlotEWMA(filteredSequences);
+  const clockTimeEWMA = computeClockTimeEWMA(filteredSequences);
+  const morningWakeEWMA = computeMorningWakeEWMA(filteredSequences);
   const slotData = slotEWMA.get(currentNapSlotIndex);
+  const clockData = clockTimeEWMA.get(currentNapSlotIndex);
   const consecutiveDays = countConsecutiveDays(sequences, now);
 
   if (!slotData || slotData.count < MIN_DATA_POINTS_PER_SLOT) {
@@ -357,6 +483,11 @@ export function computeSmartSleepPrediction(
   const centerMinutes = Math.round(slotData.ewma);
   const halfWidthMinutes = computeDynamicHalfWidth(slotData.sd);
 
+  let clockAnchorMinutes: number | undefined;
+  if (clockData && clockData.count >= CLOCK_TIME_MIN_DATA_POINTS) {
+    clockAnchorMinutes = Math.round(clockData.ewma);
+  }
+
   return {
     rangeStartMs: 0,
     rangeEndMs: 0,
@@ -370,6 +501,9 @@ export function computeSmartSleepPrediction(
     standardDeviation: Math.round(slotData.sd * 10) / 10,
     halfWidthMinutes,
     consecutiveDays,
+    clockAnchorMinutes,
+    clockTimeSD: clockData?.sd !== undefined ? Math.round(clockData.sd * 10) / 10 : undefined,
+    morningWakeEWMA: morningWakeEWMA?.ewma !== undefined ? Math.round(morningWakeEWMA.ewma * 10) / 10 : undefined,
   };
 }
 
@@ -380,7 +514,8 @@ export function computePredictionWithTiming(
   wakeWindowConfig: WakeWindowConfig | null,
   lastWakeTimeMs: number,
   now: Date = new Date(),
-  todayNapsDone?: number
+  todayNapsDone?: number,
+  isAutoAdvanced?: boolean
 ): SmartSleepPrediction {
   const prediction = computeSmartSleepPrediction(
     sleepEntries,
@@ -395,13 +530,56 @@ export function computePredictionWithTiming(
     return prediction;
   }
 
+  let adjustedCenterMinutes = prediction.centerMinutes;
+
+  if (prediction.confidence === "personalized" && prediction.clockAnchorMinutes !== undefined) {
+    const ageDays = getAgeDays(babyBirthDate, now);
+    const ageWeeks = ageDays / 7;
+    const maturity = getCircadianMaturity(ageWeeks);
+    const slotWeight = getSlotWeight(currentNapSlotIndex, prediction.slotType, wakeWindowConfig?.napCount ?? 3);
+    const sdFactor = getSDConfidence(prediction.clockTimeSD ?? 60);
+
+    let effectiveClockWeight = maturity * slotWeight * sdFactor;
+
+    if (isAutoAdvanced) {
+      effectiveClockWeight = 0.9;
+    }
+
+    if (currentNapSlotIndex === 0 && prediction.morningWakeEWMA !== undefined) {
+      const lastWakeDate = new Date(lastWakeTimeMs);
+      const actualWakeMinutes = lastWakeDate.getHours() * 60 + lastWakeDate.getMinutes();
+      const dampener = computeUnusualWakeDampener(actualWakeMinutes, prediction.morningWakeEWMA);
+      effectiveClockWeight *= dampener;
+    }
+
+    const basePredictionMs = lastWakeTimeMs + prediction.centerMinutes * 60 * 1000;
+    const basePredictionDate = new Date(basePredictionMs);
+    const basePredictionMinutesSinceMidnight = basePredictionDate.getHours() * 60 + basePredictionDate.getMinutes();
+
+    const adjustment = computeClockAdjustment({
+      basePredictionMinutesSinceMidnight,
+      clockAnchorMinutesSinceMidnight: prediction.clockAnchorMinutes,
+      effectiveClockWeight,
+    });
+
+    const ageGroup = getSleepAgeGroupForBaby(new Date(babyBirthDate), now);
+    const minWW = ageGroup?.wakeWindowMinMinutes ?? 60;
+    const maxWW = ageGroup?.wakeWindowMaxMinutes ?? 360;
+
+    const lowerBound = Math.min(prediction.centerMinutes, minWW);
+    const upperBound = Math.max(prediction.centerMinutes, maxWW);
+    const adjustedMinutes = prediction.centerMinutes + adjustment;
+    adjustedCenterMinutes = Math.round(Math.min(upperBound, Math.max(lowerBound, adjustedMinutes)));
+  }
+
   const halfWidth = prediction.halfWidthMinutes ?? RANGE_HALF_WIDTH_MINUTES;
-  const centerMs = lastWakeTimeMs + prediction.centerMinutes * 60 * 1000;
+  const centerMs = lastWakeTimeMs + adjustedCenterMinutes * 60 * 1000;
   const rangeStartMs = centerMs - halfWidth * 60 * 1000;
   const rangeEndMs = centerMs + halfWidth * 60 * 1000;
 
   return {
     ...prediction,
+    centerMinutes: adjustedCenterMinutes,
     rangeStartMs,
     rangeEndMs,
   };
@@ -431,4 +609,4 @@ export function getPerSlotAverages(
   return result;
 }
 
-export { MIN_AGE_DAYS, MIN_DATA_POINTS_PER_SLOT, ROLLING_WINDOW_DAYS, RANGE_HALF_WIDTH_MINUTES, NAP_CONTINUATION_MINUTES };
+export { MIN_AGE_DAYS, MIN_DATA_POINTS_PER_SLOT, ROLLING_WINDOW_DAYS, RANGE_HALF_WIDTH_MINUTES, NAP_CONTINUATION_MINUTES, CLOCK_TIME_MIN_DATA_POINTS };

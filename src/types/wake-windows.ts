@@ -26,6 +26,9 @@ export interface SmartSleepPrediction {
   standardDeviation?: number;
   halfWidthMinutes?: number;
   consecutiveDays?: number;
+  clockAnchorMinutes?: number;
+  clockTimeSD?: number;
+  morningWakeEWMA?: number;
 }
 
 export interface WakeWindowReminderSettings {
