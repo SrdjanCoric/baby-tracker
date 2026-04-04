@@ -7,10 +7,6 @@ import {
   getPerSlotAverages,
   isSmartSleepEligible,
   getAgeDays,
-  detectNapTransition,
-  MIN_AGE_DAYS,
-  MIN_DATA_POINTS_PER_SLOT,
-  RANGE_HALF_WIDTH_MINUTES,
 } from "./smart-sleep";
 
 function makeSleep(
@@ -282,7 +278,7 @@ describe("computeSmartSleepPrediction", () => {
 });
 
 describe("computePredictionWithTiming", () => {
-  it("computes range start/end based on last wake time", () => {
+  it("computes range start/end based on last wake time with dynamic half-width", () => {
     const now = new Date("2026-04-03T12:00:00.000Z");
     const entries = generateWeekOfSleepData({
       baseDate: now,
@@ -298,10 +294,12 @@ describe("computePredictionWithTiming", () => {
 
     expect(result.isEligible).toBe(true);
     expect(result.confidence).toBe("personalized");
+    expect(result.halfWidthMinutes).toBeDefined();
 
+    const halfWidth = result.halfWidthMinutes!;
     const expectedCenter = lastWakeMs + 120 * 60 * 1000;
-    expect(result.rangeStartMs).toBe(expectedCenter - RANGE_HALF_WIDTH_MINUTES * 60 * 1000);
-    expect(result.rangeEndMs).toBe(expectedCenter + RANGE_HALF_WIDTH_MINUTES * 60 * 1000);
+    expect(result.rangeStartMs).toBe(expectedCenter - halfWidth * 60 * 1000);
+    expect(result.rangeEndMs).toBe(expectedCenter + halfWidth * 60 * 1000);
   });
 
   it("returns zero range when lastWakeTimeMs is 0", () => {
@@ -425,7 +423,6 @@ describe("detectNapTransition", () => {
 
     const entries = [...threeNapDays, ...twoNapDays];
     const config = makeConfig({ napCount: 3 });
-    const averages = getPerSlotAverages(entries, BABY_4_MONTHS, config, now);
 
     const prediction = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
     expect(prediction.isTransitioning).toBe(true);
@@ -520,5 +517,254 @@ describe("transition-aware prediction", () => {
     expect(prediction.isTransitioning).toBeUndefined();
     expect(prediction.transitionNapCount).toBeUndefined();
     expect(prediction.confidence).toBe("personalized");
+  });
+});
+
+describe("EWMA algorithm", () => {
+  it("returns standardDeviation and halfWidthMinutes for personalized predictions", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries = generateWeekOfSleepData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [120, 300, 480],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig();
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+
+    expect(result.confidence).toBe("personalized");
+    expect(result.standardDeviation).toBeDefined();
+    expect(result.halfWidthMinutes).toBeDefined();
+    expect(result.halfWidthMinutes).toBeGreaterThanOrEqual(10);
+    expect(result.halfWidthMinutes).toBeLessThanOrEqual(25);
+  });
+
+  it("does not return SD/halfWidth for age_based fallback", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries = generateWeekOfSleepData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [120],
+      napDurationMinutes: 60,
+      days: 2,
+    });
+
+    const config = makeConfig();
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+
+    expect(result.confidence).toBe("age_based");
+    expect(result.standardDeviation).toBeUndefined();
+    expect(result.halfWidthMinutes).toBeUndefined();
+  });
+
+  it("produces tight half-width (10min) for consistent data", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries = generateWeekOfSleepData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [120, 300, 480],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig();
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+
+    expect(result.halfWidthMinutes).toBe(10);
+    expect(result.standardDeviation).toBe(0);
+  });
+
+  it("produces wider half-width for variable data", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries: StoredSleepEntry[] = [];
+
+    const wakeWindows = [100, 130, 110, 140, 120, 135, 105];
+
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(now);
+      day.setDate(day.getDate() - d);
+
+      const nightStart = new Date(day);
+      nightStart.setDate(nightStart.getDate() - 1);
+      nightStart.setHours(19, 30, 0, 0);
+
+      const nightEnd = new Date(day);
+      nightEnd.setHours(7, 0, 0, 0);
+
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: nightStart.toISOString(),
+        endedAt: nightEnd.toISOString(),
+      }));
+
+      const napStart = new Date(nightEnd.getTime() + wakeWindows[d] * 60 * 1000);
+      const napEnd = new Date(napStart.getTime() + 60 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: napStart.toISOString(),
+        endedAt: napEnd.toISOString(),
+      }));
+    }
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+
+    expect(result.confidence).toBe("personalized");
+    expect(result.halfWidthMinutes!).toBeGreaterThan(10);
+    expect(result.standardDeviation!).toBeGreaterThan(0);
+  });
+
+  it("clamps half-width to maximum 25 minutes", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries: StoredSleepEntry[] = [];
+
+    const wakeWindows = [80, 160, 90, 170, 100, 150, 110];
+
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(now);
+      day.setDate(day.getDate() - d);
+
+      const nightStart = new Date(day);
+      nightStart.setDate(nightStart.getDate() - 1);
+      nightStart.setHours(19, 30, 0, 0);
+
+      const nightEnd = new Date(day);
+      nightEnd.setHours(7, 0, 0, 0);
+
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: nightStart.toISOString(),
+        endedAt: nightEnd.toISOString(),
+      }));
+
+      const napStart = new Date(nightEnd.getTime() + wakeWindows[d] * 60 * 1000);
+      const napEnd = new Date(napStart.getTime() + 60 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: napStart.toISOString(),
+        endedAt: napEnd.toISOString(),
+      }));
+    }
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+
+    expect(result.halfWidthMinutes).toBe(25);
+  });
+
+  it("weights recent data more heavily (outlier resistance)", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries: StoredSleepEntry[] = [];
+
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(now);
+      day.setDate(day.getDate() - d);
+
+      const nightStart = new Date(day);
+      nightStart.setDate(nightStart.getDate() - 1);
+      nightStart.setHours(19, 30, 0, 0);
+
+      const nightEnd = new Date(day);
+      nightEnd.setHours(7, 0, 0, 0);
+
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: nightStart.toISOString(),
+        endedAt: nightEnd.toISOString(),
+      }));
+
+      const wakeWindow = d === 6 ? 180 : 120;
+      const napStart = new Date(nightEnd.getTime() + wakeWindow * 60 * 1000);
+      const napEnd = new Date(napStart.getTime() + 60 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: napStart.toISOString(),
+        endedAt: napEnd.toISOString(),
+      }));
+    }
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+
+    expect(result.centerMinutes).toBeGreaterThan(120);
+    expect(result.centerMinutes).toBeLessThan(150);
+  });
+
+  it("uses 14-day lookback window", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries = generateWeekOfSleepData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [120],
+      napDurationMinutes: 60,
+      days: 14,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+
+    expect(result.confidence).toBe("personalized");
+
+    const averages = getPerSlotAverages(entries, BABY_4_MONTHS, config, now);
+    expect(averages.get(0)!.count).toBe(14);
+  });
+
+  it("uses higher alpha for fewer data points, weighting recent data strongly", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries: StoredSleepEntry[] = [];
+
+    const wakeWindows = [100, 110, 120, 130, 140];
+
+    for (let d = 0; d < 5; d++) {
+      const day = new Date(now);
+      day.setDate(day.getDate() - d);
+
+      const nightEnd = new Date(day);
+      nightEnd.setHours(7, 0, 0, 0);
+
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: new Date(nightEnd.getTime() - 10 * 60 * 60 * 1000).toISOString(),
+        endedAt: nightEnd.toISOString(),
+      }));
+
+      const napStart = new Date(nightEnd.getTime() + wakeWindows[d] * 60 * 1000);
+      const napEnd = new Date(napStart.getTime() + 60 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: napStart.toISOString(),
+        endedAt: napEnd.toISOString(),
+      }));
+    }
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+
+    expect(result.confidence).toBe("personalized");
+    expect(result.centerMinutes).toBeLessThan(120);
+    expect(result.centerMinutes).toBeGreaterThan(100);
+  });
+
+  it("computePredictionWithTiming uses dynamic half-width from EWMA", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries = generateWeekOfSleepData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [120, 300, 480],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig();
+    const lastWakeMs = new Date("2026-04-03T07:00:00.000Z").getTime();
+    const result = computePredictionWithTiming(entries, BABY_4_MONTHS, 0, config, lastWakeMs, now);
+
+    const expectedCenter = lastWakeMs + 120 * 60 * 1000;
+    const halfWidthMs = result.halfWidthMinutes! * 60 * 1000;
+    expect(result.rangeStartMs).toBe(expectedCenter - halfWidthMs);
+    expect(result.rangeEndMs).toBe(expectedCenter + halfWidthMs);
+    expect(result.halfWidthMinutes).toBe(10);
   });
 });
