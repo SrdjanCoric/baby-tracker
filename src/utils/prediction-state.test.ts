@@ -1073,4 +1073,156 @@ describe("computePredictionDisplayState", () => {
       expect(result.daysRemaining).toBe(1);
     });
   });
+
+  describe("confirmWake state", () => {
+    it("shows confirmWake when sleep ended in 2h window before dayStartHour and isDayStart is null", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(4, 30),
+        nowMs: todayAt(4, 45),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: null,
+      });
+      expect(result.state).toBe("confirmWake");
+    });
+
+    it("shows confirmWake when isDayStart is null (explicitly unset)", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(5, 0),
+        nowMs: todayAt(5, 15),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: null,
+      });
+      expect(result.state).toBe("confirmWake");
+    });
+
+    it("shows noSleepLogged when isDayStart is false (dismissed as night feed) during daytime", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(5, 0),
+        nowMs: todayAt(8),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: false,
+      });
+      expect(result.state).toBe("noSleepLogged");
+    });
+
+    it("shows allDone when isDayStart is false and before dayStartHour", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(5, 0),
+        nowMs: todayAt(5, 15),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: false,
+      });
+      expect(result.state).toBe("allDone");
+    });
+
+    it("proceeds normally when isDayStart is true (confirmed as day start)", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(5, 0),
+        nowMs: todayAt(6),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: true,
+      });
+      expect(result.state).not.toBe("confirmWake");
+      expect(result.state).not.toBe("noSleepLogged");
+    });
+
+    it("does not show confirmWake when wake is before the 2h window", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(2, 0),
+        nowMs: todayAt(2, 15),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: null,
+      });
+      expect(result.state).not.toBe("confirmWake");
+    });
+
+    it("does not show confirmWake when wake is after dayStartHour", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(7, 0),
+        nowMs: todayAt(8),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: null,
+      });
+      expect(result.state).not.toBe("confirmWake");
+    });
+
+    it("does not show confirmWake when lastSleepIsDayStart is not provided (legacy/undefined)", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(5, 0),
+        nowMs: todayAt(5, 15),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+      });
+      expect(result.state).not.toBe("confirmWake");
+    });
+
+    it("handles custom dayStartHour for confirmWake window", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 8 }),
+        lastSleepEndedAt: todayIso(6, 30),
+        nowMs: todayAt(6, 45),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: null,
+      });
+      expect(result.state).toBe("confirmWake");
+    });
+
+    it("shows confirmWake at exact boundary of 2h window", () => {
+      const result = computePredictionDisplayState({
+        isTimerRunning: false,
+        wakeWindowConfig: makeConfig({ dayStartHour: 6 }),
+        lastSleepEndedAt: todayIso(4, 0),
+        nowMs: todayAt(4, 15),
+        isNightTime: false,
+        babyAgeEligible: true,
+        sourceExplicitlyChosen: true,
+        napsDone: 0,
+        lastSleepIsDayStart: null,
+      });
+      expect(result.state).toBe("confirmWake");
+    });
+  });
 });
