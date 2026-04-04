@@ -1,0 +1,1 @@
+ALTER TABLE sleep_sessions ADD COLUMN is_day_start BOOLEAN DEFAULT NULL;
