@@ -8,6 +8,9 @@ import {
   isSmartSleepEligible,
   getAgeDays,
   countConsecutiveDays,
+  getCircadianMaturity,
+  getSlotWeight,
+  getSDConfidence,
 } from "./smart-sleep";
 
 function makeSleep(
@@ -297,9 +300,9 @@ describe("computePredictionWithTiming", () => {
     expect(result.halfWidthMinutes).toBeDefined();
 
     const halfWidth = result.halfWidthMinutes!;
-    const expectedCenter = lastWakeMs + 120 * 60 * 1000;
-    expect(result.rangeStartMs).toBe(expectedCenter - halfWidth * 60 * 1000);
-    expect(result.rangeEndMs).toBe(expectedCenter + halfWidth * 60 * 1000);
+    const centerMs = lastWakeMs + result.centerMinutes * 60 * 1000;
+    expect(result.rangeStartMs).toBe(centerMs - halfWidth * 60 * 1000);
+    expect(result.rangeEndMs).toBe(centerMs + halfWidth * 60 * 1000);
   });
 
   it("returns zero range when lastWakeTimeMs is 0", () => {
@@ -786,10 +789,10 @@ describe("EWMA algorithm", () => {
     const lastWakeMs = new Date("2026-04-03T07:00:00.000Z").getTime();
     const result = computePredictionWithTiming(entries, BABY_4_MONTHS, 0, config, lastWakeMs, now);
 
-    const expectedCenter = lastWakeMs + 120 * 60 * 1000;
+    const centerMs = lastWakeMs + result.centerMinutes * 60 * 1000;
     const halfWidthMs = result.halfWidthMinutes! * 60 * 1000;
-    expect(result.rangeStartMs).toBe(expectedCenter - halfWidthMs);
-    expect(result.rangeEndMs).toBe(expectedCenter + halfWidthMs);
+    expect(result.rangeStartMs).toBe(centerMs - halfWidthMs);
+    expect(result.rangeEndMs).toBe(centerMs + halfWidthMs);
     expect(result.halfWidthMinutes).toBe(10);
   });
 });
@@ -973,5 +976,348 @@ describe("bedtime slot uses actual night sleep", () => {
     const slot1 = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 1, config, now);
     expect(slot1.confidence).toBe("personalized");
     expect(slot1.centerMinutes).toBe(150);
+  });
+});
+
+describe("clock-time anchoring", () => {
+  const BABY_6_MONTHS = "2025-10-03";
+  const BABY_8_WEEKS = "2026-02-06";
+
+  function generateClockConsistentData(options: {
+    baseDate: Date;
+    morningWakeHour: number;
+    napStartHours: number[];
+    napDurationMinutes: number;
+    bedtimeHour?: number;
+    days: number;
+    variationMinutes?: number;
+  }): StoredSleepEntry[] {
+    const entries: StoredSleepEntry[] = [];
+    const { baseDate, morningWakeHour, napStartHours, napDurationMinutes, bedtimeHour, days, variationMinutes = 0 } = options;
+
+    for (let d = 0; d < days; d++) {
+      const day = new Date(baseDate);
+      day.setDate(day.getDate() - d);
+
+      const nightStart = new Date(day);
+      nightStart.setDate(nightStart.getDate() - 1);
+      nightStart.setHours(bedtimeHour ?? 19, 30, 0, 0);
+
+      const nightEnd = new Date(day);
+      nightEnd.setHours(morningWakeHour, 0, 0, 0);
+
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: nightStart.toISOString(),
+        endedAt: nightEnd.toISOString(),
+      }));
+
+      for (const napHour of napStartHours) {
+        const variation = variationMinutes > 0
+          ? (d % 3 - 1) * variationMinutes
+          : 0;
+        const napStart = new Date(day);
+        napStart.setHours(Math.floor(napHour), (napHour % 1) * 60 + variation, 0, 0);
+        const napEnd = new Date(napStart.getTime() + napDurationMinutes * 60 * 1000);
+
+        entries.push(makeSleep({
+          type: "nap",
+          startedAt: napStart.toISOString(),
+          endedAt: napEnd.toISOString(),
+        }));
+      }
+
+      if (bedtimeHour) {
+        const bedNightStart = new Date(day);
+        bedNightStart.setHours(bedtimeHour, 30, 0, 0);
+        entries.push(makeSleep({
+          type: "night",
+          startedAt: bedNightStart.toISOString(),
+          endedAt: new Date(bedNightStart.getTime() + 11 * 60 * 60 * 1000).toISOString(),
+        }));
+      }
+    }
+
+    return entries;
+  }
+
+  describe("getCircadianMaturity", () => {
+    it("returns ~0.27 at 8 weeks", () => {
+      const maturity = getCircadianMaturity(8);
+      expect(maturity).toBeCloseTo(0.27, 1);
+    });
+
+    it("returns 0.50 at 12 weeks", () => {
+      const maturity = getCircadianMaturity(12);
+      expect(maturity).toBeCloseTo(0.50, 2);
+    });
+
+    it("returns ~0.73 at 16 weeks", () => {
+      const maturity = getCircadianMaturity(16);
+      expect(maturity).toBeCloseTo(0.73, 1);
+    });
+
+    it("returns ~0.95 at 24 weeks", () => {
+      const maturity = getCircadianMaturity(24);
+      expect(maturity).toBeCloseTo(0.95, 1);
+    });
+  });
+
+  describe("getSlotWeight", () => {
+    it("returns 0.7 for nap1", () => {
+      expect(getSlotWeight(0, "nap", 3)).toBe(0.7);
+    });
+
+    it("returns 0.6 for nap2", () => {
+      expect(getSlotWeight(1, "nap", 3)).toBe(0.6);
+    });
+
+    it("returns 0.3 for nap3", () => {
+      expect(getSlotWeight(2, "nap", 3)).toBe(0.3);
+    });
+
+    it("returns 0.8 for bedtime", () => {
+      expect(getSlotWeight(3, "bedtime", 3)).toBe(0.8);
+    });
+  });
+
+  describe("getSDConfidence", () => {
+    it("returns 1.0 for SD of 0 (perfectly consistent)", () => {
+      expect(getSDConfidence(0)).toBe(1);
+    });
+
+    it("returns 0.5 for SD of 30", () => {
+      expect(getSDConfidence(30)).toBeCloseTo(0.5);
+    });
+
+    it("returns 0 for SD of 60 or more", () => {
+      expect(getSDConfidence(60)).toBe(0);
+      expect(getSDConfidence(90)).toBe(0);
+    });
+  });
+
+  function localDate(hour: number, minute: number = 0): Date {
+    const d = new Date("2026-04-03");
+    d.setHours(hour, minute, 0, 0);
+    return d;
+  }
+
+  function localMs(hour: number, minute: number = 0): number {
+    return localDate(hour, minute).getTime();
+  }
+
+  const BABY_13_MONTHS = "2025-03-03";
+
+  it("applies asymmetric pull: stronger for late predictions", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [10.5],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+
+    const earlyWakeMs = localMs(6, 30);
+    const earlyResult = computePredictionWithTiming(entries, BABY_13_MONTHS, 0, config, earlyWakeMs, now);
+
+    const lateWakeMs = localMs(7, 30);
+    const lateResult = computePredictionWithTiming(entries, BABY_13_MONTHS, 0, config, lateWakeMs, now);
+
+    const basePrediction = computeSmartSleepPrediction(entries, BABY_13_MONTHS, 0, config, now);
+    const earlyPull = Math.abs(earlyResult.centerMinutes - basePrediction.centerMinutes);
+    const latePull = Math.abs(lateResult.centerMinutes - basePrediction.centerMinutes);
+
+    expect(latePull).toBeGreaterThan(earlyPull);
+  });
+
+  it("requires 5+ data points per slot to activate clock-time", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [10],
+      napDurationMinutes: 60,
+      days: 4,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_6_MONTHS, 0, config, now);
+
+    expect(result.confidence).toBe("personalized");
+    expect(result.clockAnchorMinutes).toBeUndefined();
+  });
+
+  it("activates clock-time with 5+ data points per slot", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [10],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_6_MONTHS, 0, config, now);
+
+    expect(result.confidence).toBe("personalized");
+    expect(result.clockAnchorMinutes).toBeDefined();
+    expect(result.clockAnchorMinutes).toBeCloseTo(10 * 60, -1);
+  });
+
+  it("young baby (8 weeks) gets negligible clock adjustment", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [9],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+    const lastWakeMs = localMs(7, 20);
+
+    const result = computePredictionWithTiming(entries, BABY_8_WEEKS, 0, config, lastWakeMs, now);
+    const basePrediction = computeSmartSleepPrediction(entries, BABY_8_WEEKS, 0, config, now);
+
+    const adjustment = Math.abs(result.centerMinutes - basePrediction.centerMinutes);
+    expect(adjustment).toBeLessThanOrEqual(5);
+  });
+
+  it("older baby gets meaningful clock adjustment when waking late", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [10.5],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+    const lateWakeMs = localMs(7, 30);
+
+    const basePrediction = computeSmartSleepPrediction(entries, BABY_13_MONTHS, 0, config, now);
+    const result = computePredictionWithTiming(entries, BABY_13_MONTHS, 0, config, lateWakeMs, now);
+
+    expect(result.centerMinutes).toBeLessThan(basePrediction.centerMinutes);
+  });
+
+  it("unusual wake dampener reduces clock pull for slot 0 with early wake > 45min", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [10.5],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+
+    const normalWakeMs = localMs(7, 30);
+    const normalResult = computePredictionWithTiming(entries, BABY_13_MONTHS, 0, config, normalWakeMs, now);
+
+    const earlyWakeMs = localMs(5, 30);
+    const earlyResult = computePredictionWithTiming(entries, BABY_13_MONTHS, 0, config, earlyWakeMs, now);
+
+    const basePrediction = computeSmartSleepPrediction(entries, BABY_13_MONTHS, 0, config, now);
+    const normalPull = Math.abs(normalResult.centerMinutes - basePrediction.centerMinutes);
+    const earlyPull = Math.abs(earlyResult.centerMinutes - basePrediction.centerMinutes);
+
+    expect(earlyPull).toBeLessThan(normalPull);
+  });
+
+  it("auto-advance boosts clock weight to 0.9", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [10.5],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+    const lateWakeMs = localMs(7, 30);
+
+    const normalResult = computePredictionWithTiming(entries, BABY_13_MONTHS, 0, config, lateWakeMs, now);
+    const boostedResult = computePredictionWithTiming(entries, BABY_13_MONTHS, 0, config, lateWakeMs, now, undefined, true);
+
+    const basePrediction = computeSmartSleepPrediction(entries, BABY_13_MONTHS, 0, config, now);
+    const normalPull = Math.abs(normalResult.centerMinutes - basePrediction.centerMinutes);
+    const boostedPull = Math.abs(boostedResult.centerMinutes - basePrediction.centerMinutes);
+
+    expect(boostedPull).toBeGreaterThan(normalPull);
+  });
+
+  it("clamps final prediction to wake window bounds", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [9],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+    const veryLateWakeMs = localMs(10, 0);
+
+    const result = computePredictionWithTiming(entries, BABY_6_MONTHS, 0, config, veryLateWakeMs, now);
+
+    expect(result.centerMinutes).toBeGreaterThanOrEqual(120);
+  });
+
+  it("transition filtering applies to clock-time EWMA", () => {
+    const now = localDate(12);
+
+    const threeNapDays = generateDaysWithNapCount({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [90, 240, 400],
+      napDurationMinutes: 60,
+      dayOffsets: [0, 1, 2, 3],
+    });
+
+    const twoNapDays = generateDaysWithNapCount({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [120, 300],
+      napDurationMinutes: 60,
+      dayOffsets: [4, 5, 6],
+    });
+
+    const entries = [...threeNapDays, ...twoNapDays];
+    const config = makeConfig({ napCount: 3 });
+
+    const predictionLower = computeSmartSleepPrediction(entries, BABY_6_MONTHS, 0, config, now, 1);
+    expect(predictionLower.isTransitioning).toBe(true);
+    expect(predictionLower.centerMinutes).toBe(120);
+
+    const predictionHigher = computeSmartSleepPrediction(entries, BABY_6_MONTHS, 0, config, now, 3);
+    expect(predictionHigher.isTransitioning).toBe(true);
+    expect(predictionHigher.centerMinutes).toBe(90);
+  });
+
+  it("clock-time SD field is populated for personalized predictions with sufficient data", () => {
+    const now = localDate(12);
+    const entries = generateClockConsistentData({
+      baseDate: now,
+      morningWakeHour: 7,
+      napStartHours: [9],
+      napDurationMinutes: 60,
+      days: 7,
+    });
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_6_MONTHS, 0, config, now);
+
+    expect(result.clockTimeSD).toBeDefined();
+    expect(result.morningWakeEWMA).toBeDefined();
   });
 });
