@@ -26,6 +26,7 @@ export interface SmartSleepPrediction {
   transitionNapCount?: number;
   standardDeviation?: number;
   halfWidthMinutes?: number;
+  consecutiveDays?: number;
 }
 
 export interface WakeWindowReminderSettings {

@@ -35,7 +35,52 @@ interface PredictionInput {
   sourceExplicitlyChosen: boolean;
   napsDone: number;
   smartPrediction?: SmartSleepPrediction | null;
+  smartPredictions?: SmartSleepPrediction[];
   babyIsUnderTwoMonths?: boolean;
+}
+
+interface AutoAdvanceResult {
+  centerMinutes: number;
+  slotType: "nap" | "bedtime";
+  halfWidthMs: number;
+}
+
+function autoAdvance(
+  nowMs: number,
+  lastWakeMs: number,
+  currentSlotIndex: number,
+  slots: WakeWindowConfig["slots"],
+  source: WakeWindowConfig["source"],
+  smartPredictions?: SmartSleepPrediction[],
+  babyIsUnderTwoMonths?: boolean
+): AutoAdvanceResult | null {
+  let nextIndex = currentSlotIndex + 1;
+
+  while (nextIndex < slots.length) {
+    let nextCenter: number;
+    let nextHalfWidthMs = RANGE_HALF_WIDTH_MS;
+
+    if (source === "smart" && smartPredictions && smartPredictions[nextIndex]) {
+      nextCenter = smartPredictions[nextIndex].centerMinutes;
+      if (smartPredictions[nextIndex].halfWidthMinutes) {
+        nextHalfWidthMs = smartPredictions[nextIndex].halfWidthMinutes! * 60 * 1000;
+      }
+    } else {
+      nextCenter = slots[nextIndex].durationMinutes;
+    }
+
+    const nextRangeEnd = lastWakeMs + nextCenter * 60000 + nextHalfWidthMs;
+    if (nowMs <= nextRangeEnd + OVERDUE_THRESHOLD_MS) {
+      const nextSlot = slots[nextIndex];
+      const slotType: "nap" | "bedtime" =
+        nextSlot.label === "bedtime" && !babyIsUnderTwoMonths ? "bedtime" : "nap";
+      return { centerMinutes: nextCenter, slotType, halfWidthMs: nextHalfWidthMs };
+    }
+
+    nextIndex++;
+  }
+
+  return null;
 }
 
 export function computePredictionDisplayState(input: PredictionInput): PredictionDisplayResult {
@@ -49,6 +94,7 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
     sourceExplicitlyChosen,
     napsDone,
     smartPrediction,
+    smartPredictions,
     babyIsUnderTwoMonths,
   } = input;
 
@@ -104,13 +150,26 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
     }
 
     if (confidence === "age_based") {
-      const totalDataDays = Math.min(7, Math.floor((nowMs - lastWakeMs) / (24 * 60 * 60 * 1000)));
-      const daysRemaining = Math.max(1, 3 - totalDataDays);
-      const rangeStartMs = lastWakeMs + centerMinutes * 60000 - RANGE_HALF_WIDTH_MS;
-      const rangeEndMs = lastWakeMs + centerMinutes * 60000 + RANGE_HALF_WIDTH_MS;
+      const consecutiveDays = smartPrediction.consecutiveDays ?? 0;
+      const daysRemaining = Math.max(1, 3 - consecutiveDays);
+      let currentCenter = centerMinutes;
+      let currentSlotType = slotType;
+      let currentHalfWidthMs = RANGE_HALF_WIDTH_MS;
+
+      let rangeStartMs = lastWakeMs + currentCenter * 60000 - currentHalfWidthMs;
+      let rangeEndMs = lastWakeMs + currentCenter * 60000 + currentHalfWidthMs;
 
       if (nowMs > rangeEndMs + OVERDUE_THRESHOLD_MS) {
-        return { state: "allDone" };
+        const advanceResult = autoAdvance(
+          nowMs, lastWakeMs, slotIndex, slots, source,
+          smartPredictions, babyIsUnderTwoMonths
+        );
+        if (!advanceResult) return { state: "allDone" };
+        currentCenter = advanceResult.centerMinutes;
+        currentSlotType = advanceResult.slotType;
+        currentHalfWidthMs = advanceResult.halfWidthMs;
+        rangeStartMs = lastWakeMs + currentCenter * 60000 - currentHalfWidthMs;
+        rangeEndMs = lastWakeMs + currentCenter * 60000 + currentHalfWidthMs;
       }
 
       const state = computeTimingState(nowMs, rangeStartMs, rangeEndMs);
@@ -119,7 +178,7 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
         state,
         rangeStartMs,
         rangeEndMs,
-        slotLabel: slotType,
+        slotLabel: currentSlotType,
         countdownMinutes: Math.floor((rangeStartMs - nowMs) / 60000),
         subtitle: "building",
         daysRemaining,
@@ -135,22 +194,16 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
   let rangeEndMs = lastWakeMs + centerMinutes * 60000 + halfWidthMs;
 
   if (nowMs > rangeEndMs + OVERDUE_THRESHOLD_MS) {
-    let nextIndex = slotIndex + 1;
-    while (
-      nextIndex < slots.length &&
-      nowMs > lastWakeMs + slots[nextIndex].durationMinutes * 60000 + RANGE_HALF_WIDTH_MS + OVERDUE_THRESHOLD_MS
-    ) {
-      nextIndex++;
-    }
-    if (nextIndex >= slots.length) {
-      return { state: "allDone" };
-    }
-
-    const nextSlot = slots[nextIndex];
-    centerMinutes = nextSlot.durationMinutes;
-    slotType = nextSlot.label === "bedtime" && !babyIsUnderTwoMonths ? "bedtime" : "nap";
-    rangeStartMs = lastWakeMs + centerMinutes * 60000 - RANGE_HALF_WIDTH_MS;
-    rangeEndMs = lastWakeMs + centerMinutes * 60000 + RANGE_HALF_WIDTH_MS;
+    const advanceResult = autoAdvance(
+      nowMs, lastWakeMs, slotIndex, slots, source,
+      smartPredictions, babyIsUnderTwoMonths
+    );
+    if (!advanceResult) return { state: "allDone" };
+    centerMinutes = advanceResult.centerMinutes;
+    slotType = advanceResult.slotType;
+    halfWidthMs = advanceResult.halfWidthMs;
+    rangeStartMs = lastWakeMs + centerMinutes * 60000 - halfWidthMs;
+    rangeEndMs = lastWakeMs + centerMinutes * 60000 + halfWidthMs;
   }
 
   const state = computeTimingState(nowMs, rangeStartMs, rangeEndMs);

@@ -194,6 +194,28 @@ export function detectNapTransition(
   return { isTransitioning: false, transitionNapCount: modeCount, napCountsPerDay };
 }
 
+export function countConsecutiveDays(sequences: DayNapSequence[], now: Date): number {
+  if (sequences.length === 0) return 0;
+
+  const todayKey = getDayKey(now, 6);
+  const dateKeys = new Set(sequences.map(s => s.dateKey));
+
+  let count = 0;
+  const d = new Date(now);
+
+  for (let i = 0; i < 30; i++) {
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (dateKeys.has(key)) {
+      count++;
+    } else if (key !== todayKey) {
+      break;
+    }
+    d.setDate(d.getDate() - 1);
+  }
+
+  return count;
+}
+
 function getProgressiveAlpha(count: number): number {
   if (count >= 14) return 0.15;
   if (count >= 7) return 0.25;
@@ -315,6 +337,7 @@ export function computeSmartSleepPrediction(
 
   const slotEWMA = computePerSlotEWMA(filteredSequences);
   const slotData = slotEWMA.get(currentNapSlotIndex);
+  const consecutiveDays = countConsecutiveDays(sequences, now);
 
   if (!slotData || slotData.count < MIN_DATA_POINTS_PER_SLOT) {
     const fallbackConfig = getDefaultWakeWindowConfig(new Date(babyBirthDate), now);
@@ -331,6 +354,7 @@ export function computeSmartSleepPrediction(
       centerMinutes: fallbackMinutes,
       isTransitioning: transition.isTransitioning || undefined,
       transitionNapCount: transition.isTransitioning ? transition.transitionNapCount : undefined,
+      consecutiveDays,
     };
   }
 
@@ -349,6 +373,7 @@ export function computeSmartSleepPrediction(
     transitionNapCount: transition.isTransitioning ? transition.transitionNapCount : undefined,
     standardDeviation: Math.round(slotData.sd * 10) / 10,
     halfWidthMinutes,
+    consecutiveDays,
   };
 }
 
