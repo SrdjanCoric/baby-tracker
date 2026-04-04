@@ -85,16 +85,23 @@ function reconstructDaySequences(
     .filter(s => s.type === "nap" && s.endedAt && new Date(s.startedAt) >= cutoff)
     .sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime());
 
-  const dayMap = new Map<string, { morningWakeMs: number; naps: StoredSleepEntry[] }>();
+  const dayMap = new Map<string, { morningWakeMs: number; hasDayStartEntry: boolean; naps: StoredSleepEntry[] }>();
 
   for (const night of nightSleeps) {
+    if (night.isDayStart === false) continue;
+
     const wakeTime = new Date(night.endedAt!);
     const key = getDayKey(wakeTime, dayStartHour);
+    const hasExplicitDayStart = night.isDayStart === true;
+
     if (!dayMap.has(key)) {
-      dayMap.set(key, { morningWakeMs: wakeTime.getTime(), naps: [] });
+      dayMap.set(key, { morningWakeMs: wakeTime.getTime(), hasDayStartEntry: hasExplicitDayStart, naps: [] });
     } else {
       const existing = dayMap.get(key)!;
-      if (wakeTime.getTime() > existing.morningWakeMs) {
+      if (hasExplicitDayStart && !existing.hasDayStartEntry) {
+        existing.morningWakeMs = wakeTime.getTime();
+        existing.hasDayStartEntry = true;
+      } else if (!existing.hasDayStartEntry && wakeTime.getTime() > existing.morningWakeMs) {
         existing.morningWakeMs = wakeTime.getTime();
       }
     }

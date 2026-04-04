@@ -246,6 +246,7 @@ interface SleepContextValue extends SleepState {
   resetToAgeBasedGoal: () => Promise<void>;
   dismissMilestoneSuggestion: (permanent?: boolean) => Promise<void>;
   acceptMilestoneSuggestion: () => Promise<void>;
+  confirmDayStart: (sleepId: string, isDayStart: boolean) => Promise<void>;
   getCompletedNapsSinceNightSleep: () => number;
   getCurrentNapSlot: () => NapSlotWindow | null;
   getSmartNapSlot: () => NapSlotWindow | null;
@@ -926,6 +927,18 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedBaby, state.suggestedGoalMinutes, user?.householdId]);
 
+  const confirmDayStart = useCallback(async (sleepId: string, isDayStart: boolean): Promise<void> => {
+    if (!selectedBaby) return;
+
+    const updated = await (user?.householdId
+      ? updateSleepInDatabase(selectedBaby.id, sleepId, { isDayStart })
+      : SleepStorageService.updateSleep(selectedBaby.id, sleepId, { isDayStart }));
+
+    if (updated) {
+      dispatch({ type: "UPDATE_SLEEP", payload: updated });
+    }
+  }, [selectedBaby, user?.householdId]);
+
   const getCompletedNapsSinceNightSleep = useCallback((): number => {
     const nightSleeps = state.sleeps
       .filter(s => s.type === "night" && s.endedAt)
@@ -1075,6 +1088,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     resetToAgeBasedGoal,
     dismissMilestoneSuggestion,
     acceptMilestoneSuggestion,
+    confirmDayStart,
     getCompletedNapsSinceNightSleep,
     getCurrentNapSlot,
     getSmartNapSlot,
@@ -1085,7 +1099,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     isCurrentlyNightTime,
     setDayNightBoundary,
     setNewbornNapOptIn: setNewbornNapOptInMethod,
-  }), [state, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNewbornNapOptInMethod]);
+  }), [state, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, confirmDayStart, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNewbornNapOptInMethod]);
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
 }
@@ -1108,6 +1122,7 @@ function transformSleepFromRemote(data: Record<string, unknown>): StoredSleepEnt
     durationSeconds: data.duration_seconds as number | undefined,
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
+    isDayStart: data.is_day_start as boolean | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };

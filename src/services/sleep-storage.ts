@@ -27,6 +27,7 @@ export interface StoredSleepEntry {
   createdAt: string;
   updatedAt: string;
   loggedBy?: string;
+  isDayStart?: boolean;
 }
 
 export interface CreateSleepInput {
@@ -43,6 +44,7 @@ export interface UpdateSleepInput {
   durationSeconds?: number;
   notes?: string;
   type?: SleepType;
+  isDayStart?: boolean;
 }
 
 export interface ActiveSleepTimerData {
@@ -149,6 +151,7 @@ export const SleepStorageService = {
       ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
       ...(input.notes !== undefined && { notes: input.notes }),
       ...(input.type !== undefined && { type: input.type }),
+      ...(input.isDayStart !== undefined && { isDayStart: input.isDayStart }),
       updatedAt: new Date().toISOString(),
     };
 

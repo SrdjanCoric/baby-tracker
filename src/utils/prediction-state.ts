@@ -8,6 +8,7 @@ export type PredictionDisplayState =
   | "noSleepLogged"
   | "building"
   | "allDone"
+  | "confirmWake"
   | "hidden";
 
 export interface PredictionDisplayResult {
@@ -37,6 +38,7 @@ interface PredictionInput {
   smartPrediction?: SmartSleepPrediction | null;
   smartPredictions?: SmartSleepPrediction[];
   babyIsUnderTwoMonths?: boolean;
+  lastSleepIsDayStart?: boolean | null;
 }
 
 interface AutoAdvanceResult {
@@ -96,6 +98,7 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
     smartPrediction,
     smartPredictions,
     babyIsUnderTwoMonths,
+    lastSleepIsDayStart,
   } = input;
 
   if (isTimerRunning) return { state: "hidden" };
@@ -114,7 +117,32 @@ export function computePredictionDisplayState(input: PredictionInput): Predictio
   const todayDayStartMs = todayDayStart.getTime();
 
   const lastWakeMs = lastSleepEndedAt ? new Date(lastSleepEndedAt).getTime() : 0;
-  const hasWakeToday = lastSleepEndedAt && lastWakeMs >= todayDayStartMs;
+
+  let earlyWakeConfirmed = false;
+  if (lastSleepEndedAt && lastWakeMs > 0) {
+    const nearestDayStart = new Date(nowMs);
+    nearestDayStart.setHours(dayStartHour, 0, 0, 0);
+    const nearestDayStartMs = nearestDayStart.getTime();
+    const windowStartMs = nearestDayStartMs - 2 * 60 * 60 * 1000;
+    const isInEarlyWakeWindow = lastWakeMs >= windowStartMs && lastWakeMs < nearestDayStartMs;
+
+    if (isInEarlyWakeWindow) {
+      if (lastSleepIsDayStart === null) {
+        return { state: "confirmWake" };
+      }
+      if (lastSleepIsDayStart === false) {
+        if (currentHour >= dayStartHour) {
+          return { state: "noSleepLogged" };
+        }
+        return { state: "allDone" };
+      }
+      if (lastSleepIsDayStart === true) {
+        earlyWakeConfirmed = true;
+      }
+    }
+  }
+
+  const hasWakeToday = lastSleepEndedAt && (lastWakeMs >= todayDayStartMs || earlyWakeConfirmed);
 
   if (!hasWakeToday) {
     if (currentHour >= dayStartHour) {

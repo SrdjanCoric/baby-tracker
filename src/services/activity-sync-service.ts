@@ -505,6 +505,7 @@ export async function updateSleepInDatabase(
   if (input.durationSeconds !== undefined) updateData.duration_seconds = input.durationSeconds;
   if (input.notes !== undefined) updateData.notes = input.notes;
   if (input.type !== undefined) updateData.type = input.type;
+  if (input.isDayStart !== undefined) updateData.is_day_start = input.isDayStart;
 
   let updatedSleep: StoredSleepEntry | null = null;
 
