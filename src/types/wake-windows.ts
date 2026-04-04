@@ -11,7 +11,6 @@ export interface WakeWindowConfig {
   sourceExplicitlyChosen?: boolean;
   dayStartHour?: number;
   dayEndHour?: number;
-  napContinuationMinutes?: number;
 }
 
 export interface SmartSleepPrediction {

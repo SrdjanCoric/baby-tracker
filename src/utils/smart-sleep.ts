@@ -6,6 +6,7 @@ const MIN_AGE_DAYS = 56;
 const MIN_DATA_POINTS_PER_SLOT = 3;
 const ROLLING_WINDOW_DAYS = 14;
 const RANGE_HALF_WIDTH_MINUTES = 15;
+const NAP_CONTINUATION_MINUTES = 20;
 
 interface DayNapSequence {
   dateKey: string;
@@ -69,8 +70,6 @@ function groupNapsByContinuation(
 function reconstructDaySequences(
   sleepEntries: StoredSleepEntry[],
   dayStartHour: number,
-  dayEndHour: number,
-  napContinuationMinutes: number,
   lookbackDays: number,
   now: Date
 ): DayNapSequence[] {
@@ -105,12 +104,16 @@ function reconstructDaySequences(
     dayMap.get(key)!.naps.push(nap);
   }
 
+  const nightStartsSorted = nightSleeps
+    .map(n => ({ startMs: new Date(n.startedAt).getTime(), key: getDayKey(new Date(n.startedAt), dayStartHour) }))
+    .sort((a, b) => a.startMs - b.startMs);
+
   const sequences: DayNapSequence[] = [];
 
   for (const [dateKey, day] of dayMap) {
     if (day.naps.length === 0) continue;
 
-    const napGroups = groupNapsByContinuation(day.naps, napContinuationMinutes);
+    const napGroups = groupNapsByContinuation(day.naps, NAP_CONTINUATION_MINUTES);
     const slots: SlotData[] = [];
 
     let lastWakeMs = day.morningWakeMs;
@@ -134,19 +137,16 @@ function reconstructDaySequences(
         : napStartMs;
     }
 
-    const dayEndMs = new Date(day.morningWakeMs);
-    dayEndMs.setHours(dayEndHour, 0, 0, 0);
-    if (dayEndMs.getTime() <= day.morningWakeMs) {
-      dayEndMs.setDate(dayEndMs.getDate() + 1);
-    }
-
-    const bedtimeWakeWindow = (dayEndMs.getTime() - lastWakeMs) / (1000 * 60);
-    if (bedtimeWakeWindow > 0 && napGroups.length > 0) {
-      slots.push({
-        slotIndex: napGroups.length,
-        wakeWindowMinutes: bedtimeWakeWindow,
-        slotType: "bedtime",
-      });
+    const bedtimeNight = nightStartsSorted.find(n => n.key === dateKey && n.startMs > lastWakeMs);
+    if (bedtimeNight && napGroups.length > 0) {
+      const bedtimeWakeWindow = (bedtimeNight.startMs - lastWakeMs) / (1000 * 60);
+      if (bedtimeWakeWindow > 0) {
+        slots.push({
+          slotIndex: napGroups.length,
+          wakeWindowMinutes: bedtimeWakeWindow,
+          slotType: "bedtime",
+        });
+      }
     }
 
     sequences.push({ dateKey, morningWakeMs: day.morningWakeMs, slots });
@@ -186,7 +186,7 @@ export function detectNapTransition(
   const [modeCount] = sorted[0];
   const [secondCount, secondFreq] = sorted[1];
 
-  if (secondFreq >= 2) {
+  if (secondFreq >= 3) {
     const lowerCount = Math.min(modeCount, secondCount);
     return { isTransitioning: true, transitionNapCount: lowerCount, napCountsPerDay };
   }
@@ -304,14 +304,10 @@ export function computeSmartSleepPrediction(
 
   const config = wakeWindowConfig ?? getDefaultWakeWindowConfig(new Date(babyBirthDate), now);
   const dayStartHour = config.dayStartHour ?? 6;
-  const dayEndHour = config.dayEndHour ?? 19;
-  const napContinuationMinutes = config.napContinuationMinutes ?? 15;
 
   const sequences = reconstructDaySequences(
     sleepEntries,
     dayStartHour,
-    dayEndHour,
-    napContinuationMinutes,
     ROLLING_WINDOW_DAYS,
     now
   );
@@ -419,14 +415,10 @@ export function getPerSlotAverages(
 ): Map<number, { avg: number; count: number; slotType: "nap" | "bedtime" }> {
   const config = wakeWindowConfig ?? getDefaultWakeWindowConfig(new Date(babyBirthDate), now);
   const dayStartHour = config.dayStartHour ?? 6;
-  const dayEndHour = config.dayEndHour ?? 19;
-  const napContinuationMinutes = config.napContinuationMinutes ?? 15;
 
   const sequences = reconstructDaySequences(
     sleepEntries,
     dayStartHour,
-    dayEndHour,
-    napContinuationMinutes,
     ROLLING_WINDOW_DAYS,
     now
   );
@@ -439,4 +431,4 @@ export function getPerSlotAverages(
   return result;
 }
 
-export { MIN_AGE_DAYS, MIN_DATA_POINTS_PER_SLOT, ROLLING_WINDOW_DAYS, RANGE_HALF_WIDTH_MINUTES };
+export { MIN_AGE_DAYS, MIN_DATA_POINTS_PER_SLOT, ROLLING_WINDOW_DAYS, RANGE_HALF_WIDTH_MINUTES, NAP_CONTINUATION_MINUTES };

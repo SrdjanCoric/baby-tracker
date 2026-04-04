@@ -3,7 +3,7 @@ import type { StoredSleepEntry } from "@/services/sleep-storage";
 
 const DEFAULT_DAY_START = 6;
 const DEFAULT_DAY_END = 19;
-const DEFAULT_NAP_CONTINUATION_MINUTES = 15;
+const DEFAULT_NAP_CONTINUATION_MINUTES = 20;
 
 export function isNightTime(
   date: Date,
