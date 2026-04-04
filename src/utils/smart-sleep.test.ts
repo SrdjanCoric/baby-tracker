@@ -37,7 +37,6 @@ function makeConfig(overrides?: Partial<WakeWindowConfig>): WakeWindowConfig {
     source: "smart",
     dayStartHour: 6,
     dayEndHour: 19,
-    napContinuationMinutes: 15,
     ...overrides,
   };
 }
@@ -266,7 +265,7 @@ describe("computeSmartSleepPrediction", () => {
       }));
     }
 
-    const config = makeConfig({ napCount: 2, napContinuationMinutes: 15 });
+    const config = makeConfig({ napCount: 2 });
 
     const slot0 = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
     expect(slot0.confidence).toBe("personalized");
@@ -462,6 +461,31 @@ describe("detectNapTransition", () => {
       napTimesAfterWake: [120, 300],
       napDurationMinutes: 60,
       dayOffsets: [6],
+    });
+
+    const entries = [...threeNapDays, ...twoNapDays];
+    const config = makeConfig({ napCount: 3 });
+    const prediction = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+    expect(prediction.isTransitioning).toBeUndefined();
+  });
+
+  it("requires 3+ days of alternate nap count to detect transition", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+
+    const threeNapDays = generateDaysWithNapCount({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [120, 300, 480],
+      napDurationMinutes: 60,
+      dayOffsets: [0, 1, 2, 3, 4],
+    });
+
+    const twoNapDays = generateDaysWithNapCount({
+      baseDate: now,
+      morningWakeHour: 7,
+      napTimesAfterWake: [120, 300],
+      napDurationMinutes: 60,
+      dayOffsets: [5, 6],
     });
 
     const entries = [...threeNapDays, ...twoNapDays];
@@ -808,5 +832,146 @@ describe("countConsecutiveDays", () => {
   it("returns 1 for a single day matching today", () => {
     const sequences = [makeSequence("2025-03-15")];
     expect(countConsecutiveDays(sequences, new Date("2025-03-15T10:00:00"))).toBe(1);
+  });
+});
+
+describe("bedtime slot uses actual night sleep", () => {
+  it("computes bedtime wake window from last nap end to night sleep start", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries: StoredSleepEntry[] = [];
+
+    for (let d = 0; d < 5; d++) {
+      const day = new Date(now);
+      day.setDate(day.getDate() - d);
+
+      const nightEnd = new Date(day);
+      nightEnd.setHours(7, 0, 0, 0);
+
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: new Date(nightEnd.getTime() - 10 * 60 * 60 * 1000).toISOString(),
+        endedAt: nightEnd.toISOString(),
+      }));
+
+      const napStart = new Date(nightEnd.getTime() + 120 * 60 * 1000);
+      const napEnd = new Date(napStart.getTime() + 60 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: napStart.toISOString(),
+        endedAt: napEnd.toISOString(),
+      }));
+
+      const nightStart = new Date(day);
+      nightStart.setHours(19, 30, 0, 0);
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: nightStart.toISOString(),
+        endedAt: new Date(nightStart.getTime() + 11 * 60 * 60 * 1000).toISOString(),
+      }));
+    }
+
+    const config = makeConfig({ napCount: 1 });
+    const result = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 1, config, now);
+
+    expect(result.confidence).toBe("personalized");
+    expect(result.slotType).toBe("bedtime");
+    expect(result.centerMinutes).toBe(570);
+  });
+
+  it("excludes bedtime slot for days without following night sleep", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries: StoredSleepEntry[] = [];
+
+    for (let d = 0; d < 5; d++) {
+      const day = new Date(now);
+      day.setDate(day.getDate() - d);
+
+      const nightEnd = new Date(day);
+      nightEnd.setHours(7, 0, 0, 0);
+
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: new Date(nightEnd.getTime() - 10 * 60 * 60 * 1000).toISOString(),
+        endedAt: nightEnd.toISOString(),
+      }));
+
+      const napStart = new Date(nightEnd.getTime() + 120 * 60 * 1000);
+      const napEnd = new Date(napStart.getTime() + 60 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: napStart.toISOString(),
+        endedAt: napEnd.toISOString(),
+      }));
+
+      if (d >= 2) {
+        const nightStart = new Date(day);
+        nightStart.setHours(19, 30, 0, 0);
+        entries.push(makeSleep({
+          type: "night",
+          startedAt: nightStart.toISOString(),
+          endedAt: new Date(nightStart.getTime() + 11 * 60 * 60 * 1000).toISOString(),
+        }));
+      }
+    }
+
+    const config = makeConfig({ napCount: 1 });
+    const averages = getPerSlotAverages(entries, BABY_4_MONTHS, config, now);
+    const bedtimeSlot = averages.get(1);
+
+    expect(bedtimeSlot).toBeDefined();
+    expect(bedtimeSlot!.count).toBeLessThan(5);
+  });
+
+  it("uses hardcoded 20min nap continuation threshold", () => {
+    const now = new Date("2026-04-03T12:00:00.000Z");
+    const entries: StoredSleepEntry[] = [];
+
+    for (let d = 0; d < 5; d++) {
+      const day = new Date(now);
+      day.setDate(day.getDate() - d);
+
+      const nightEnd = new Date(day);
+      nightEnd.setHours(7, 0, 0, 0);
+
+      entries.push(makeSleep({
+        type: "night",
+        startedAt: new Date(nightEnd.getTime() - 10 * 60 * 60 * 1000).toISOString(),
+        endedAt: nightEnd.toISOString(),
+      }));
+
+      const nap1Start = new Date(nightEnd.getTime() + 120 * 60 * 1000);
+      const nap1End = new Date(nap1Start.getTime() + 20 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: nap1Start.toISOString(),
+        endedAt: nap1End.toISOString(),
+      }));
+
+      const nap1bStart = new Date(nap1End.getTime() + 15 * 60 * 1000);
+      const nap1bEnd = new Date(nap1bStart.getTime() + 30 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: nap1bStart.toISOString(),
+        endedAt: nap1bEnd.toISOString(),
+      }));
+
+      const nap2Start = new Date(nap1bEnd.getTime() + 150 * 60 * 1000);
+      const nap2End = new Date(nap2Start.getTime() + 60 * 60 * 1000);
+      entries.push(makeSleep({
+        type: "nap",
+        startedAt: nap2Start.toISOString(),
+        endedAt: nap2End.toISOString(),
+      }));
+    }
+
+    const config = makeConfig({ napCount: 2 });
+
+    const slot0 = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 0, config, now);
+    expect(slot0.confidence).toBe("personalized");
+    expect(slot0.centerMinutes).toBe(120);
+
+    const slot1 = computeSmartSleepPrediction(entries, BABY_4_MONTHS, 1, config, now);
+    expect(slot1.confidence).toBe("personalized");
+    expect(slot1.centerMinutes).toBe(150);
   });
 });
