@@ -117,6 +117,8 @@
     "breast": "Allaitement",
     "breastfeeding": "Allaitement",
     "bottle": "Biberon",
+    "bottleBreastMilk": "Biberon (Lait maternel)",
+    "bottleFormula": "Biberon (Lait infantile)",
     "bottleFeeding": "Biberon",
     "solid": "Aliments solides",
     "left": "Gauche",
