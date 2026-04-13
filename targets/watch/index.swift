@@ -222,7 +222,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     var currentBaby: BabyWatchData? {
         guard let babyId = currentBabyId else { return nil }
-        return multiBabyData?.babies.first { $0.id == babyId }
+        return multiBabyData?.babies.first { $0.id == babyId } ?? multiBabyData?.babies.first
     }
 
     var allBabies: [BabyWatchData] {
@@ -450,9 +450,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                     print("[WatchConnector] parseApplicationContext: baby \(baby.name) has \(baby.activeTimers.count) active timers")
                 }
                 self.multiBabyData = decoded
-                if self.selectedBabyId == nil {
-                    self.selectedBabyId = decoded.selectedBabyId
-                }
+                self.selectedBabyId = decoded.selectedBabyId
                 self.cacheData(dataString, forKey: "multiBabyWatchData")
                 // Clear local optimistic data - phone data is source of truth
                 self.localActiveTimers.removeAll()
@@ -472,7 +470,6 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 print("[WatchConnector] parseApplicationContext: \(timerCount) active timers in widgetData")
                 self.widgetData = decoded
                 self.cacheData(dataString, forKey: "watchData")
-                // Cache baby ID from legacy format if not already set
                 if self.selectedBabyId == nil {
                     self.selectedBabyId = decoded.babyId
                 }
@@ -550,14 +547,16 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             return
         }
 
+        // Always queue via transferUserInfo for guaranteed delivery
+        // (sendMessage is unreliable when the phone app is backgrounded)
+        session.transferUserInfo(messageWithId)
+
         if session.isReachable {
-            print("[WatchConnector] Sending immediate message...")
+            print("[WatchConnector] Sending immediate message + queued via transferUserInfo")
             session.sendMessage(messageWithId, replyHandler: nil) { error in
-                print("[WatchConnector] sendMessage failed, queueing via transferUserInfo: \(error)")
-                session.transferUserInfo(messageWithId)
+                print("[WatchConnector] sendMessage failed (transferUserInfo already queued): \(error)")
             }
         } else {
-            session.transferUserInfo(messageWithId)
             print("[WatchConnector] Action queued via transferUserInfo (not reachable)")
         }
     }
@@ -681,7 +680,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         WKInterfaceDevice.current().play(.stop)
     }
 
-    func logDiaper(type: String) {
+    func logDiaper(type: String, stoolColor: String? = nil) {
         guard canPerformAction() else { return }
 
         let logTime = Date()
@@ -692,6 +691,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             "diaperType": type,
             "requestedLogTime": logTimeString
         ]
+        if let color = stoolColor {
+            message["stoolColor"] = color
+        }
         if let babyId = currentBabyId {
             message["babyId"] = babyId
         }
@@ -1465,7 +1467,7 @@ struct MainView: View {
         case .sleep:
             SleepDetailView(data: activities.sleep, allTimers: allTimers, connector: connector)
         case .diaper:
-            DiaperDetailView(data: activities.diaper, connector: connector)
+            DiaperDetailView(data: activities.diaper, connector: connector, navigationPath: $navigationPath)
         case .pumping:
             PumpingDetailView(data: activities.pumping, allTimers: allTimers, connector: connector)
         case .tummyTime:
@@ -2071,6 +2073,8 @@ struct DiaperDetailView: View {
     let data: WatchActivityData.DiaperData
     @ObservedObject var connector: PhoneConnector
     @Environment(\.dismiss) private var dismiss
+    @State private var showColorPicker = false
+    @State private var colorPickerDiaperType = "dirty"
 
     var combinedCounts: WatchActivityData.DiaperData.DiaperCounts {
         connector.combinedDiaperCounts(serverCounts: data.todayCounts)
@@ -2120,12 +2124,12 @@ struct DiaperDetailView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
                     }
                     DiaperButton(emoji: "\u{1F4A9}", color: WatchActivityType.diaper.primaryColor) {
-                        connector.logDiaper(type: "dirty")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        colorPickerDiaperType = "dirty"
+                        showColorPicker = true
                     }
                     DiaperButton(emoji: "\u{1F4A7}\u{1F4A9}", color: WatchActivityType.diaper.primaryColor) {
-                        connector.logDiaper(type: "mixed")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        colorPickerDiaperType = "mixed"
+                        showColorPicker = true
                     }
                     DiaperButton(emoji: "\u{2728}", color: WatchActivityType.diaper.primaryColor) {
                         connector.logDiaper(type: "dry")
@@ -2137,6 +2141,46 @@ struct DiaperDetailView: View {
             .padding(.horizontal, 4)
         }
         .navigationTitle("Diaper")
+        .navigationDestination(isPresented: $showColorPicker) {
+            StoolColorPickerView(diaperType: colorPickerDiaperType, connector: connector)
+        }
+    }
+}
+
+struct StoolColorPickerView: View {
+    let diaperType: String
+    @ObservedObject var connector: PhoneConnector
+    @Environment(\.dismiss) private var dismiss
+
+    private let stoolColors: [(name: String, color: Color)] = [
+        ("yellow", Color(red: 0.918, green: 0.702, blue: 0.031)),
+        ("brown", Color(red: 0.573, green: 0.251, blue: 0.055)),
+        ("green", Color(red: 0.086, green: 0.639, blue: 0.290)),
+        ("orange", Color(red: 0.918, green: 0.345, blue: 0.047)),
+        ("black", Color(red: 0.110, green: 0.098, blue: 0.090)),
+        ("white", Color(red: 0.831, green: 0.831, blue: 0.847)),
+        ("red", Color(red: 0.863, green: 0.149, blue: 0.149)),
+    ]
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                ForEach(stoolColors, id: \.name) { item in
+                    Button {
+                        connector.logDiaper(type: diaperType, stoolColor: item.name)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                    } label: {
+                        Circle()
+                            .fill(item.color)
+                            .frame(width: 40, height: 40)
+                            .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 6)
+        }
+        .navigationTitle("Color")
     }
 }
 

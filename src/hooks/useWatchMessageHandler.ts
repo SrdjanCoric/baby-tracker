@@ -7,7 +7,7 @@ import { usePumping } from "@/contexts/pumping-context";
 import { useTummyTime } from "@/contexts/tummyTime-context";
 import { setWatchMessageHandler } from "@/services/watch-service";
 import type { WatchReplyHandler } from "@/services/watch-service";
-import type { BreastSide, DiaperType, SleepType, BottleContentType } from "@/constants/activities";
+import type { BreastSide, DiaperType, SleepType, BottleContentType, StoolColor } from "@/constants/activities";
 import { determineSleepType } from "@/validators/sleep";
 import {
   readPendingWidgetStop,
@@ -179,10 +179,12 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
 
           case "logDiaper": {
             const diaperType = message.diaperType as DiaperType;
+            const stoolColor = message.stoolColor as StoolColor | undefined;
             const changedAt = logTime ?? new Date();
             await addDiaper({
               babyId: selectedBaby.id,
               type: diaperType,
+              stoolColor,
               changedAt,
             });
             break;
