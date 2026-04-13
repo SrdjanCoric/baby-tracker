@@ -117,6 +117,8 @@
     "breast": "Breastfeed",
     "breastfeeding": "Breastfeeding",
     "bottle": "Bottle",
+    "bottleBreastMilk": "Bottle (Breast Milk)",
+    "bottleFormula": "Bottle (Formula)",
     "bottleFeeding": "Bottle Feeding",
     "solid": "Solid Food",
     "left": "Left",

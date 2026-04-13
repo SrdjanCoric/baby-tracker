@@ -19,6 +19,10 @@ export interface DailySummary {
   nursingMinutes: number;
   nursingCount: number;
   bottleCount: number;
+  bottleBreastMilkMl: number;
+  bottleBreastMilkCount: number;
+  bottleFormulaMl: number;
+  bottleFormulaCount: number;
   solidCount: number;
   sleepMinutes: number;
   napCount: number;
@@ -85,11 +89,22 @@ export function calculateDailySummary(
   const bottleFeedings = dayFeedings.filter((f) => f.type === "bottle");
   const solidFeedings = dayFeedings.filter((f) => f.type === "solid");
 
+  const bottleBreastMilkFeedings = bottleFeedings.filter((f) => f.contentType === "breastMilk");
+  const bottleFormulaFeedings = bottleFeedings.filter((f) => f.contentType === "formula");
+
   const nursingMinutes = nursingFeedings.reduce(
     (sum, f) => sum + Math.round((f.durationSeconds || 0) / 60),
     0
   );
   const feedingTotalMl = bottleFeedings.reduce(
+    (sum, f) => sum + (f.amountMl || 0),
+    0
+  );
+  const bottleBreastMilkMl = bottleBreastMilkFeedings.reduce(
+    (sum, f) => sum + (f.amountMl || 0),
+    0
+  );
+  const bottleFormulaMl = bottleFormulaFeedings.reduce(
     (sum, f) => sum + (f.amountMl || 0),
     0
   );
@@ -147,6 +162,10 @@ export function calculateDailySummary(
     nursingMinutes,
     nursingCount: nursingFeedings.length,
     bottleCount: bottleFeedings.length,
+    bottleBreastMilkMl,
+    bottleBreastMilkCount: bottleBreastMilkFeedings.length,
+    bottleFormulaMl,
+    bottleFormulaCount: bottleFormulaFeedings.length,
     solidCount: solidFeedings.length,
     sleepMinutes,
     napCount,
@@ -173,7 +192,17 @@ export function formatDailySummaryText(
         `${t("feeding.breastfeeding")} ${summary.nursingMinutes}m · ${summary.nursingCount}×`
       );
     }
-    if (summary.bottleCount > 0) {
+    if (summary.bottleBreastMilkCount > 0) {
+      lines.push(
+        `${t("feeding.bottleBreastMilk")} ${summary.bottleBreastMilkMl}ml · ${summary.bottleBreastMilkCount}×`
+      );
+    }
+    if (summary.bottleFormulaCount > 0) {
+      lines.push(
+        `${t("feeding.bottleFormula")} ${summary.bottleFormulaMl}ml · ${summary.bottleFormulaCount}×`
+      );
+    }
+    if (summary.bottleCount > 0 && summary.bottleBreastMilkCount === 0 && summary.bottleFormulaCount === 0) {
       lines.push(
         `${t("feeding.bottle")} ${summary.feedingTotalMl}ml · ${summary.bottleCount}×`
       );

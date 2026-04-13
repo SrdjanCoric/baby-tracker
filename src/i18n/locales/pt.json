@@ -119,6 +119,8 @@
     "breast": "Amamentar",
     "breastfeeding": "Amamentação",
     "bottle": "Mamadeira",
+    "bottleBreastMilk": "Mamadeira (Leite materno)",
+    "bottleFormula": "Mamadeira (Fórmula)",
     "bottleFeeding": "Alimentação com Mamadeira",
     "solid": "Alimento Sólido",
     "left": "Esquerdo",
