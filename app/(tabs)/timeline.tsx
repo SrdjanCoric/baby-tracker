@@ -537,30 +537,43 @@ export default function TimelineScreen() {
 
   const scrollToDate = useCallback((date: Date) => {
     const sectionIndex = dateToSectionIndex.get(date.toDateString());
-    if (sectionIndex !== undefined) {
-      sectionListRef.current?.scrollToLocation({
-        sectionIndex,
-        itemIndex: 0,
-        animated: true,
-      });
+    if (sectionIndex !== undefined && sectionIndex < sections.length) {
+      try {
+        sectionListRef.current?.scrollToLocation({
+          sectionIndex,
+          itemIndex: 0,
+          animated: true,
+        });
+      } catch {
+        // SectionList may not have laid out the target section yet
+      }
       pendingScrollDateRef.current = null;
     }
-  }, [dateToSectionIndex]);
+  }, [dateToSectionIndex, sections.length]);
 
   useEffect(() => {
     if (pendingScrollDateRef.current) {
-      scrollToDate(pendingScrollDateRef.current);
+      const timer = setTimeout(() => {
+        if (pendingScrollDateRef.current) {
+          scrollToDate(pendingScrollDateRef.current);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [scrollToDate]);
 
   const handleSummaryDateChange = useCallback((date: Date) => {
     const sectionIndex = dateToSectionIndex.get(date.toDateString());
-    if (sectionIndex !== undefined) {
-      sectionListRef.current?.scrollToLocation({
-        sectionIndex,
-        itemIndex: 0,
-        animated: true,
-      });
+    if (sectionIndex !== undefined && sectionIndex < sections.length) {
+      try {
+        sectionListRef.current?.scrollToLocation({
+          sectionIndex,
+          itemIndex: 0,
+          animated: true,
+        });
+      } catch {
+        // SectionList may not have laid out the target section yet
+      }
     } else {
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -571,7 +584,7 @@ export default function TimelineScreen() {
         setDaysToShow(needed);
       }
     }
-  }, [dateToSectionIndex, daysToShow]);
+  }, [dateToSectionIndex, daysToShow, sections.length]);
 
   const hasEntries = paginatedEntries.length > 0;
 
