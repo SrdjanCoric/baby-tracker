@@ -182,9 +182,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     // Local optimistic diaper logs (pending confirmation from phone)
     @Published var pendingDiaperLogs: [(type: String, time: Date)] = []
 
-    // Last local diaper log time (for "X ago" display)
+    var activePendingDiaperLogs: [(type: String, time: Date)] {
+        pendingDiaperLogs.filter { Date().timeIntervalSince($0.time) < 60 }
+    }
+
     var lastLocalDiaperTime: Date? {
-        pendingDiaperLogs.last?.time
+        activePendingDiaperLogs.last?.time
     }
 
     // Local stopped activity times (for "X ago" display after stopping timer offline)
@@ -263,7 +266,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     /// Combined diaper counts: server data + pending local logs
     func combinedDiaperCounts(serverCounts: WatchActivityData.DiaperData.DiaperCounts) -> WatchActivityData.DiaperData.DiaperCounts {
         var counts = serverCounts
-        for log in pendingDiaperLogs {
+        for log in activePendingDiaperLogs {
             switch log.type {
             case "wet": counts.wet += 1
             case "dirty": counts.dirty += 1
@@ -276,7 +279,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     var hasPendingDiaperLogs: Bool {
-        !pendingDiaperLogs.isEmpty
+        !activePendingDiaperLogs.isEmpty
     }
 
     /// Sync optimistic state to UserDefaults cache so complications can read it
@@ -839,6 +842,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     func selectBaby(babyId: String) {
         selectedBabyId = babyId
+        localActiveTimers.removeAll()
+        locallyStoppedTimerTypes.removeAll()
+        localStoppedActivityTimes.removeAll()
+        pendingDiaperLogs.removeAll()
         sendAction([
             "action": "selectBaby",
             "babyId": babyId
@@ -2072,6 +2079,7 @@ func formatSleepDuration(_ minutes: Int) -> String {
 struct DiaperDetailView: View {
     let data: WatchActivityData.DiaperData
     @ObservedObject var connector: PhoneConnector
+    @Binding var navigationPath: NavigationPath
     @Environment(\.dismiss) private var dismiss
     @State private var showColorPicker = false
     @State private var colorPickerDiaperType = "dirty"
@@ -2142,7 +2150,7 @@ struct DiaperDetailView: View {
         }
         .navigationTitle("Diaper")
         .navigationDestination(isPresented: $showColorPicker) {
-            StoolColorPickerView(diaperType: colorPickerDiaperType, connector: connector)
+            StoolColorPickerView(diaperType: colorPickerDiaperType, connector: connector, navigationPath: $navigationPath)
         }
     }
 }
@@ -2150,7 +2158,7 @@ struct DiaperDetailView: View {
 struct StoolColorPickerView: View {
     let diaperType: String
     @ObservedObject var connector: PhoneConnector
-    @Environment(\.dismiss) private var dismiss
+    @Binding var navigationPath: NavigationPath
 
     private let stoolColors: [(name: String, color: Color)] = [
         ("yellow", Color(red: 0.918, green: 0.702, blue: 0.031)),
@@ -2168,7 +2176,7 @@ struct StoolColorPickerView: View {
                 ForEach(stoolColors, id: \.name) { item in
                     Button {
                         connector.logDiaper(type: diaperType, stoolColor: item.name)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { navigationPath = NavigationPath() }
                     } label: {
                         Circle()
                             .fill(item.color)
