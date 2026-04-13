@@ -20,8 +20,8 @@ describe("getSleepAgeGroupForBaby", () => {
     const now = new Date("2024-06-15");
     const birthDate = new Date("2024-06-10"); // 5 days old
     const result = getSleepAgeGroupForBaby(birthDate, now);
-    expect(result?.label).toBe("0-2 months");
-    expect(result?.totalSleepHoursMin).toBe(15);
+    expect(result?.label).toBe("0-3 months");
+    expect(result?.totalSleepHoursMin).toBe(14);
     expect(result?.totalSleepHoursMax).toBe(17);
   });
 
@@ -29,16 +29,16 @@ describe("getSleepAgeGroupForBaby", () => {
     const now = new Date("2024-08-10");
     const birthDate = new Date("2024-06-11"); // 60 days old
     const result = getSleepAgeGroupForBaby(birthDate, now);
-    expect(result?.label).toBe("0-2 months");
+    expect(result?.label).toBe("0-3 months");
   });
 
-  it("should return 3-5 months group for 61 days old", () => {
+  it("should return 0-3 months group for 61 days old", () => {
     const now = new Date("2024-08-11");
     const birthDate = new Date("2024-06-11"); // 61 days old
     const result = getSleepAgeGroupForBaby(birthDate, now);
-    expect(result?.label).toBe("3-5 months");
+    expect(result?.label).toBe("0-3 months");
     expect(result?.totalSleepHoursMin).toBe(14);
-    expect(result?.totalSleepHoursMax).toBe(15);
+    expect(result?.totalSleepHoursMax).toBe(17);
   });
 
   it("should return 3-5 months group for 150 days old", () => {
@@ -114,13 +114,13 @@ describe("getSleepAgeGroupForBaby", () => {
 });
 
 describe("getDefaultSleepGoalForAge", () => {
-  it("should return 16 hours (midpoint of 15-17) for 0-2 months", () => {
+  it("should return 15.5 hours (midpoint of 14-17) for 0-3 months", () => {
     const now = new Date("2024-06-15");
     const birthDate = new Date("2024-06-10");
     const result = getDefaultSleepGoalForAge(birthDate, now);
-    expect(result.minHours).toBe(15);
+    expect(result.minHours).toBe(14);
     expect(result.maxHours).toBe(17);
-    expect(result.targetMinutes).toBe(16 * 60); // midpoint
+    expect(result.targetMinutes).toBe(15.5 * 60); // midpoint
   });
 
   it("should return 14.5 hours (midpoint of 14-15) for 3-5 months", () => {
@@ -170,13 +170,13 @@ describe("getDefaultSleepGoalForAge", () => {
 });
 
 describe("getWakeWindowForAge", () => {
-  it("should return 30-60 min for 0-2 months", () => {
+  it("should return 30-90 min for 0-3 months", () => {
     const now = new Date("2024-06-15");
     const birthDate = new Date("2024-06-10");
     const result = getWakeWindowForAge(birthDate, now);
     expect(result.minMinutes).toBe(30);
-    expect(result.maxMinutes).toBe(60);
-    expect(result.targetMinutes).toBe(45); // midpoint
+    expect(result.maxMinutes).toBe(90);
+    expect(result.targetMinutes).toBe(60); // midpoint
   });
 
   it("should return 60-120 min for 3-5 months", () => {
@@ -283,14 +283,14 @@ describe("checkSleepMilestoneCrossing", () => {
     expect(checkSleepMilestoneCrossing(birthDate, lastChecked, now)).toBeNull();
   });
 
-  it("should detect crossing from 0-2 months to 3-5 months", () => {
+  it("should detect crossing from 0-3 months to 3-5 months", () => {
     const birthDate = new Date("2024-06-10");
-    const lastChecked = new Date("2024-08-08"); // 59 days
-    const now = new Date("2024-08-11"); // 62 days
+    const lastChecked = new Date("2024-09-07"); // 89 days
+    const now = new Date("2024-09-10"); // 92 days
 
     const result = checkSleepMilestoneCrossing(birthDate, lastChecked, now);
     expect(result).not.toBeNull();
-    expect(result?.previousGroup.label).toBe("0-2 months");
+    expect(result?.previousGroup.label).toBe("0-3 months");
     expect(result?.newGroup.label).toBe("3-5 months");
     expect(result?.shouldSuggestGoalUpdate).toBe(true);
   });
@@ -321,9 +321,9 @@ describe("getSleepGoalInfo", () => {
     const now = new Date("2024-06-15"); // 5 days old
 
     const result = getSleepGoalInfo(birthDate, null, now);
-    expect(result.targetMinutes).toBe(16 * 60);
+    expect(result.targetMinutes).toBe(15.5 * 60);
     expect(result.source).toBe("age_based");
-    expect(result.ageGroup?.label).toBe("0-2 months");
+    expect(result.ageGroup?.label).toBe("0-3 months");
   });
 
   it("should return custom goal when set", () => {
@@ -334,7 +334,7 @@ describe("getSleepGoalInfo", () => {
     const result = getSleepGoalInfo(birthDate, customGoal, now);
     expect(result.targetMinutes).toBe(14 * 60);
     expect(result.source).toBe("custom");
-    expect(result.ageGroup?.label).toBe("0-2 months");
+    expect(result.ageGroup?.label).toBe("0-3 months");
   });
 
   it("should return default 14 hours when no birthdate", () => {
