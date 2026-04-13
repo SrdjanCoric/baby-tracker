@@ -234,7 +234,7 @@ export default function HomeScreen() {
 
     const awakeText = t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt), undefined, t), context: selectedBaby?.gender });
 
-    if (!wakeWindowConfig || wakeWindowConfig.slots.length === 0) {
+    if (!wakeWindowConfig || !wakeWindowConfig.enabled || wakeWindowConfig.source !== "custom" || wakeWindowConfig.slots.length === 0) {
       return awakeText;
     }
 
