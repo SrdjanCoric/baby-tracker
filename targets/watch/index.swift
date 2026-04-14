@@ -87,6 +87,7 @@ struct WatchActiveTimer: Codable {
     var isRemote: Bool?
     var isPaused: Bool?
     var accumulatedSeconds: Int?
+    var startedBy: String?
 }
 
 // MARK: - Activity Type
@@ -172,6 +173,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private var pushToStartToken: String?
 
     private var networkPollTimer: Timer?
+
+    @Published var isTokenStale = false
 
     // Local optimistic timers (shown before phone confirms)
     @Published var localActiveTimers: [WatchActiveTimer] = []
@@ -422,6 +425,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             self.supabaseAnonKey = anonKey
             self.supabaseAccessToken = token
             self.supabaseUserId = userId
+            self.isTokenStale = false
             let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
             defaults?.set(url, forKey: "watchSupabaseUrl")
             defaults?.set(anonKey, forKey: "watchSupabaseAnonKey")
@@ -598,7 +602,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         let localTimer = WatchActiveTimer(
             type: activityType,
             startTime: startTimeString,
-            context: context
+            context: context,
+            startedBy: supabaseUserId
         )
         DispatchQueue.main.async {
             self.localActiveTimers.removeAll { $0.type == activityType }
@@ -903,12 +908,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private func startNetworkPolling() {
         stopNetworkPolling()
         let hasActiveTimers = !combinedActiveTimers.isEmpty
-        guard hasActiveTimers else {
-            print("[WatchConnector] startNetworkPolling: no active timers, skipping")
-            return
-        }
-        print("[WatchConnector] startNetworkPolling: starting 30s poll")
-        networkPollTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+        let interval: TimeInterval = hasActiveTimers ? 30 : 120
+        print("[WatchConnector] startNetworkPolling: \(Int(interval))s poll (activeTimers=\(hasActiveTimers))")
+        networkPollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.refreshFromNetwork()
         }
     }
@@ -921,7 +923,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     // MARK: - Supabase Network Access
 
     private var hasAuthCredentials: Bool {
-        supabaseUrl != nil && supabaseAnonKey != nil && supabaseAccessToken != nil && supabaseUserId != nil
+        supabaseUrl != nil && supabaseAnonKey != nil && supabaseAccessToken != nil && supabaseUserId != nil && !isTokenStale
     }
 
     func refreshFromNetwork() {
@@ -943,7 +945,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private func reconcileWithNetworkTimers(_ remoteTimers: [WatchActiveTimer]) {
         print("[WatchConnector] reconcileWithNetworkTimers: remote has \(remoteTimers.count) timers")
 
-        let localTypes = Set(localActiveTimers.map { $0.type })
+        typealias TimerKey = String
+        func makeKey(type: String, startedBy: String?) -> TimerKey {
+            "\(type)|\(startedBy ?? "unknown")"
+        }
+
+        let remoteKeys = Set(remoteTimers.map { makeKey(type: $0.type, startedBy: $0.startedBy) })
         let remoteTypes = Set(remoteTimers.map { $0.type })
 
         // Timers stopped externally (widget/other device) — remove from local state
@@ -955,7 +962,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         // Local timers that no longer exist on server — they were stopped externally
         for localTimer in localActiveTimers {
-            if !remoteTypes.contains(localTimer.type) {
+            let key = makeKey(type: localTimer.type, startedBy: localTimer.startedBy)
+            if !remoteKeys.contains(key) {
                 print("[WatchConnector] reconcileWithNetworkTimers: timer \(localTimer.type) stopped externally")
                 localStoppedActivityTimes[localTimer.type] = Date()
             }
@@ -1010,6 +1018,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         if httpResponse.statusCode == 401 {
             print("[WatchConnector] fetchActiveTimersFromNetwork: 401 — stale token")
+            await MainActor.run {
+                self.isTokenStale = true
+            }
+            sendAction(["action": "requestSync"])
             return nil
         }
 
@@ -1062,7 +1074,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 context: context,
                 isRemote: isRemote,
                 isPaused: timer.timer_data?.isPaused,
-                accumulatedSeconds: timer.timer_data?.accumulatedSeconds
+                accumulatedSeconds: timer.timer_data?.accumulatedSeconds,
+                startedBy: timer.started_by
             )
         }
     }
@@ -1441,6 +1454,13 @@ struct MainView: View {
                         .font(.system(.headline, design: .serif))
                         .italic()
                         .padding(.bottom, 2)
+                }
+
+                if connector.isTokenStale {
+                    Text("Open iPhone app to refresh")
+                        .font(.system(.caption2))
+                        .foregroundColor(.orange)
+                        .multilineTextAlignment(.center)
                 }
 
                 ForEach(allTimers, id: \.type) { timer in
