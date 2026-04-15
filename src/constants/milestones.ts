@@ -259,16 +259,13 @@ export function getCurrentAgeGroupKey(birthDate: Date): string | null {
   const ageMs = now.getTime() - birthDate.getTime();
   const ageMonths = ageMs / (1000 * 60 * 60 * 24 * 30.44);
 
-  if (ageMonths < 2) return null;
-
-  const sortedGroups = [...AGE_GROUPS].sort((a, b) => b.months - a.months);
-  for (const group of sortedGroups) {
-    if (ageMonths >= group.months) {
+  for (const group of AGE_GROUPS) {
+    if (ageMonths < group.months) {
       return group.key;
     }
   }
 
-  return null;
+  return AGE_GROUPS[AGE_GROUPS.length - 1].key;
 }
 
 export function getAgeGroupByKey(key: string): AgeGroup | undefined {
