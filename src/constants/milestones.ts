@@ -256,8 +256,9 @@ export const AGE_GROUPS: AgeGroup[] = [
 
 export function getCurrentAgeGroupKey(birthDate: Date): string | null {
   const now = new Date();
-  const ageMs = now.getTime() - birthDate.getTime();
-  const ageMonths = ageMs / (1000 * 60 * 60 * 24 * 30.44);
+  const ageMonths = (now.getFullYear() - birthDate.getFullYear()) * 12
+    + (now.getMonth() - birthDate.getMonth())
+    - (now.getDate() < birthDate.getDate() ? 1 : 0);
 
   for (const group of AGE_GROUPS) {
     if (ageMonths < group.months) {
