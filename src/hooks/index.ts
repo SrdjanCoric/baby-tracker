@@ -4,3 +4,4 @@ export { useTimerAlertIntegration } from "./useTimerAlertIntegration";
 export { useDuplicateCheck } from "./useDuplicateCheck";
 export { useTimeRefresh } from "./useTimeRefresh";
 export { useGlobalTimerAlerts } from "./useGlobalTimerAlerts";
+export { useBirthdayCelebration } from "./useBirthdayCelebration";

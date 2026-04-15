@@ -1877,5 +1877,14 @@
   },
   "growthHelpers": {
     "stable": "estable"
+  },
+  "birthday": {
+    "today": "Hoy",
+    "iAm": "Tengo",
+    "old": "",
+    "month_one": "Mes",
+    "month_other": "Meses",
+    "year_one": "A\u00f1o",
+    "year_other": "A\u00f1os"
   }
 }
