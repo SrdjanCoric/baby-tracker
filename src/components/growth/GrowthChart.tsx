@@ -39,6 +39,8 @@ interface GrowthChartProps {
   height?: number;
   showLabels?: boolean;
   showGrid?: boolean;
+  axisLabel?: string;
+  unitConverter?: (value: number) => number;
   onPointPress?: (point: GrowthChartPoint) => void;
 }
 
@@ -64,22 +66,26 @@ export function GrowthChart({
   height = DEFAULT_HEIGHT,
   showLabels = true,
   showGrid = true,
+  axisLabel,
+  unitConverter,
 }: GrowthChartProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  const convert = unitConverter ?? ((v: number) => v);
 
   const dimensions: ChartDimensions = useMemo(
     () => ({
       width,
       height,
-      paddingLeft: showLabels ? 40 : 16,
-      paddingRight: showLabels ? 36 : 16, // Extra space for percentile labels
+      paddingLeft: showLabels ? (axisLabel ? 56 : 40) : 16,
+      paddingRight: showLabels ? 36 : 16,
       paddingTop: 20,
       paddingBottom: showLabels ? 32 : 16,
-      chartWidth: width - (showLabels ? 40 : 16) - (showLabels ? 36 : 16),
+      chartWidth: width - (showLabels ? (axisLabel ? 56 : 40) : 16) - (showLabels ? 36 : 16),
       chartHeight: height - 20 - (showLabels ? 32 : 16),
     }),
-    [width, height, showLabels]
+    [width, height, showLabels, axisLabel]
   );
 
   // Calculate Y-axis range based on percentile data and measurements
@@ -101,12 +107,11 @@ export function GrowthChart({
       1
     );
 
-    let min = Math.min(...p3Data.map((p) => p.value));
-    let max = Math.max(...p97Data.map((p) => p.value));
+    let min = Math.min(...p3Data.map((p) => convert(p.value)));
+    let max = Math.max(...p97Data.map((p) => convert(p.value)));
 
-    // Include user measurements in range
     if (measurements.length > 0) {
-      const measurementValues = measurements.map((m) => m.value);
+      const measurementValues = measurements.map((m) => convert(m.value));
       min = Math.min(min, ...measurementValues);
       max = Math.max(max, ...measurementValues);
     }
@@ -117,7 +122,7 @@ export function GrowthChart({
       minY: Math.max(0, min - range * 0.1),
       maxY: max + range * 0.1,
     };
-  }, [gender, measurementType, measurements]);
+  }, [gender, measurementType, measurements, convert]);
 
   // Generate percentile line data
   const percentileLines = useMemo(() => {
@@ -139,7 +144,6 @@ export function GrowthChart({
     return dimensions.paddingTop + (1 - ratio) * dimensions.chartHeight;
   };
 
-  // Generate SVG path for a line
   const generatePath = (
     points: Array<{ ageMonths: number; value: number }>
   ): string => {
@@ -147,7 +151,7 @@ export function GrowthChart({
 
     const pathParts = points.map((p, i) => {
       const x = toSvgX(p.ageMonths);
-      const y = toSvgY(p.value);
+      const y = toSvgY(convert(p.value));
       return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
     });
 
@@ -194,15 +198,16 @@ export function GrowthChart({
       lines.push({ type: "x", value: age, label: `${age}m` });
     }
 
-    // Y-axis grid
     const yRange = maxY - minY;
-    const yStep = yRange > 50 ? 10 : yRange > 10 ? 5 : 1;
+    const yStep = yRange > 50 ? 10 : yRange > 10 ? 5 : yRange > 5 ? 2 : 1;
     const startY = Math.ceil(minY / yStep) * yStep;
     for (let y = startY; y <= maxY; y += yStep) {
       lines.push({
         type: "y",
         value: y,
-        label: measurementType === "weight" ? y.toFixed(1) : Math.round(y).toString(),
+        label: yStep < 1 || (measurementType === "weight" && yStep <= 2)
+          ? y.toFixed(1)
+          : Math.round(y).toString(),
       });
     }
 
@@ -228,6 +233,30 @@ export function GrowthChart({
           fill={colors.background}
           rx={12}
         />
+
+        {/* Y-axis label with bracket */}
+        {showLabels && axisLabel && (
+          <G>
+            <Path
+              d={`M ${dimensions.paddingLeft - 34} ${dimensions.paddingTop + 4} L ${dimensions.paddingLeft - 38} ${dimensions.paddingTop + 4} L ${dimensions.paddingLeft - 38} ${dimensions.paddingTop + dimensions.chartHeight / 2} L ${dimensions.paddingLeft - 42} ${dimensions.paddingTop + dimensions.chartHeight / 2} M ${dimensions.paddingLeft - 38} ${dimensions.paddingTop + dimensions.chartHeight / 2} L ${dimensions.paddingLeft - 38} ${dimensions.paddingTop + dimensions.chartHeight - 4} L ${dimensions.paddingLeft - 34} ${dimensions.paddingTop + dimensions.chartHeight - 4}`}
+              stroke={isDark ? "#505050" : "#B0B0B0"}
+              strokeWidth={0.8}
+              fill="none"
+              strokeLinecap="round"
+            />
+            <SvgText
+              x={dimensions.paddingLeft - 44}
+              y={dimensions.paddingTop + dimensions.chartHeight / 2}
+              fontSize={10}
+              fill={colors.axisText}
+              textAnchor="middle"
+              fontFamily="-apple-system, sans-serif"
+              transform={`rotate(-90, ${dimensions.paddingLeft - 44}, ${dimensions.paddingTop + dimensions.chartHeight / 2})`}
+            >
+              {axisLabel}
+            </SvgText>
+          </G>
+        )}
 
         {/* Grid lines */}
         {showGrid && (
@@ -297,7 +326,7 @@ export function GrowthChart({
             d={generatePath(
               measurementPoints.map((p) => ({
                 ageMonths: p.ageMonths,
-                value: p.value,
+                value: p.value, // generatePath applies convert
               }))
             )}
             stroke={colors.measurementLine}
@@ -313,14 +342,14 @@ export function GrowthChart({
           <G key={point.measurementId}>
             <Circle
               cx={toSvgX(point.ageMonths)}
-              cy={toSvgY(point.value)}
+              cy={toSvgY(convert(point.value))}
               r={8}
               fill={colors.measurementPoint}
               opacity={0.2}
             />
             <Circle
               cx={toSvgX(point.ageMonths)}
-              cy={toSvgY(point.value)}
+              cy={toSvgY(convert(point.value))}
               r={5}
               fill={colors.measurementPoint}
               stroke={colors.background}
@@ -369,13 +398,12 @@ export function GrowthChart({
         {/* Percentile labels on right side */}
         {percentileLines.map(({ percentile, points, color }) => {
           const lastPoint = points[points.length - 1];
-          // Add leading space for single-digit percentiles to align with two-digit ones
           const label = percentile < 10 ? ` ${percentile}%` : `${percentile}%`;
           return (
             <SvgText
               key={`p-label-${percentile}`}
               x={dimensions.paddingLeft + dimensions.chartWidth + 4}
-              y={toSvgY(lastPoint.value) + 3}
+              y={toSvgY(convert(lastPoint.value)) + 3}
               fontSize={9}
               fill={color}
               textAnchor="start"

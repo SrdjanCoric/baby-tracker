@@ -119,6 +119,8 @@
     "breast": "Amamentar",
     "breastfeeding": "Amamentação",
     "bottle": "Mamadeira",
+    "bottleBreastMilk": "Mamadeira (Leite materno)",
+    "bottleFormula": "Mamadeira (Fórmula)",
     "bottleFeeding": "Alimentação com Mamadeira",
     "solid": "Alimento Sólido",
     "left": "Esquerdo",
@@ -255,6 +257,14 @@
     "slotBedtime": "Antes de Dormir",
     "customMinutes": "Personalizado (min)",
     "customMinutesError": "Digite um valor entre {{min}} e 480 minutos",
+    "trackWakeWindows": "Acompanhar janelas de vigília",
+    "trackWakeWindowsDesc": "Mostrar contagem regressiva de cochilo no painel",
+    "saveWakeWindows": "Salvar janelas de vigília",
+    "wakeWindowsSaved": "Salvo!",
+    "wakeWindowsHint": "Pré-preenchido com sugestões baseadas na idade. Ajuste ao ritmo do seu bebê e salve.",
+    "disableWakeWindowsTitle": "Desativar janelas de vigília",
+    "disableWakeWindowsConfirm": "Isso removerá a contagem regressiva de cochilo do painel para todos os cuidadores da casa. Os lembretes também serão desativados.",
+    "remindersRequireSave": "Salve suas janelas de vigília primeiro para ativar lembretes push",
     "resetWakeWindows": "Redefinir para Padrões Baseados em Idade",
     "resetWakeWindowsDesc": "Restaurar janelas de vigília com base na idade do seu bebê",
     "wakeWindowExplainer": "Janelas de vigília são o tempo de vigília recomendado entre cochilos. Geralmente são mais curtas pela manhã e mais longas antes de dormir.",
@@ -478,6 +488,7 @@
     "height": "Altura",
     "length": "Comprimento",
     "headCircumference": "Perímetro Cefálico",
+    "headCircShort": "Pér. Cef.",
     "stable": "estável",
     "measurementDate": "Data da Medição",
     "logMeasurement": "Registrar Medição",
@@ -1796,7 +1807,7 @@
   },
   "ageGroups": {
     "sleep": {
-      "0-2months": "0-2 meses",
+      "0-3months": "0-3 meses",
       "3-5months": "3-5 meses",
       "6-8months": "6-8 meses",
       "9-12months": "9-12 meses",
@@ -1864,5 +1875,14 @@
   },
   "growthHelpers": {
     "stable": "estável"
+  },
+  "birthday": {
+    "today": "Hoje",
+    "iAm": "Tenho",
+    "old": "",
+    "month_one": "Mês",
+    "month_other": "Meses",
+    "year_one": "Ano",
+    "year_other": "Anos"
   }
 }

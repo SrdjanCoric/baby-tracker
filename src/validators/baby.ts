@@ -101,8 +101,10 @@ export function calculateBabyAge(birthDate: Date, now: Date = new Date(), t?: TF
     return t("babyAge.weeksOld", { count: diffWeeks });
   }
 
-  // Less than 24 months: show in months
-  const diffMonths = Math.floor(diffDays / 30.44); // Average days per month
+  // Calendar-based month counting
+  const diffMonths = (now.getFullYear() - birthDate.getFullYear()) * 12
+    + (now.getMonth() - birthDate.getMonth())
+    - (now.getDate() < birthDate.getDate() ? 1 : 0);
   if (diffMonths < 24) {
     if (!t) return diffMonths === 1 ? "1 month old" : `${diffMonths} months old`;
     return t("babyAge.monthsOld", { count: diffMonths });

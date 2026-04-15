@@ -12,10 +12,12 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useGrowth } from "@/contexts/growth-context";
 import { useBaby } from "@/contexts/baby-context";
+import { useUnits } from "@/contexts/unit-context";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { GrowthChart, PercentileDisplay } from "@/components";
 import { calculateAgeInMonths } from "@/utils/percentile-calculator";
 import { isUnderTwoYears } from "@/utils/growth-helpers";
+import { kgToLbs, cmToInches } from "@/utils/growth";
 import type { GrowthMeasurementType } from "@/types/growth-chart";
 
 const GROWTH_TEAL = "#009B77";
@@ -43,6 +45,7 @@ export default function GrowthChartsScreen() {
   const { getMeasurementHistory } = useGrowth();
   const { width: screenWidth } = useWindowDimensions();
 
+  const { weightUnit, heightUnit } = useUnits();
   const [activeTab, setActiveTab] = useState<TabType>("weight");
 
   // Calculate baby's birth date and current age
@@ -131,8 +134,30 @@ export default function GrowthChartsScreen() {
   // Baby gender - default to female if not set
   const gender = selectedBaby?.gender || "female";
 
-  // Calculate chart width
   const chartWidth = Math.min(screenWidth - 32, 400);
+
+  const axisLabel = useMemo(() => {
+    if (activeTab === "weight") {
+      return `${t("growth.weight")} (${weightUnit})`;
+    }
+    if (activeTab === "height") {
+      const label = isUnderTwoYears(selectedBaby?.birthDate) ? t("growth.length") : t("growth.height");
+      return `${label} (${heightUnit})`;
+    }
+    return `${t("growth.headCircShort")} (${heightUnit})`;
+  }, [activeTab, weightUnit, heightUnit, selectedBaby?.birthDate, t]);
+
+  const unitConverter = useMemo(() => {
+    if (activeTab === "weight" && weightUnit === "lbs") {
+      return (v: number) => kgToLbs(v, 2);
+    }
+    if ((activeTab === "height" || activeTab === "head") && heightUnit === "in") {
+      return (v: number) => cmToInches(v, 2);
+    }
+    return undefined;
+  }, [activeTab, weightUnit, heightUnit]);
+
+  const displayUnit = activeTab === "weight" ? weightUnit : heightUnit;
 
   if (!selectedBaby) {
     return <NoBabyScreen />;
@@ -252,8 +277,8 @@ export default function GrowthChartsScreen() {
                       : 50
                   }
                   measurementType={activeTab}
-                  value={latestMeasurement.value}
-                  unit={activeTab === "weight" ? "kg" : "cm"}
+                  value={unitConverter ? unitConverter(latestMeasurement.value) : latestMeasurement.value}
+                  unit={displayUnit}
                   label={getTabLabel(activeTab, selectedBaby?.birthDate, t)}
                 />
               </View>
@@ -270,6 +295,8 @@ export default function GrowthChartsScreen() {
                 measurements={activeMeasurements}
                 width={chartWidth - 24}
                 height={280}
+                axisLabel={axisLabel}
+                unitConverter={unitConverter}
               />
             </View>
 
@@ -302,9 +329,11 @@ export default function GrowthChartsScreen() {
                       </Text>
                     </View>
                     <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary">
-                      {activeTab === "weight"
-                        ? `${m.value.toFixed(2)} kg`
-                        : `${m.value.toFixed(1)} cm`}
+                      {unitConverter
+                        ? `${unitConverter(m.value).toFixed(activeTab === "weight" ? 1 : 1)} ${displayUnit}`
+                        : activeTab === "weight"
+                          ? `${m.value.toFixed(2)} ${displayUnit}`
+                          : `${m.value.toFixed(1)} ${displayUnit}`}
                     </Text>
                   </View>
                 ))}

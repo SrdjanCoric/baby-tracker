@@ -102,7 +102,19 @@ export function DailySummaryCard({
             value: `${timeStr} · ${summary.nursingCount}×`,
           });
         }
-        if (summary.bottleCount > 0) {
+        if (summary.bottleBreastMilkCount > 0) {
+          lines.push({
+            label: t("feeding.bottleBreastMilk"),
+            value: `${summary.bottleBreastMilkMl}ml · ${summary.bottleBreastMilkCount}×`,
+          });
+        }
+        if (summary.bottleFormulaCount > 0) {
+          lines.push({
+            label: t("feeding.bottleFormula"),
+            value: `${summary.bottleFormulaMl}ml · ${summary.bottleFormulaCount}×`,
+          });
+        }
+        if (summary.bottleCount > 0 && summary.bottleBreastMilkCount === 0 && summary.bottleFormulaCount === 0) {
           lines.push({
             label: t("feeding.bottle"),
             value: `${summary.feedingTotalMl}ml · ${summary.bottleCount}×`,

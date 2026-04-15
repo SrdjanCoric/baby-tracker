@@ -77,6 +77,9 @@ export { OfflineBanner } from "./OfflineBanner";
 export { CaregiverListItem } from "./CaregiverListItem";
 export { ConflictResolutionModal } from "./ConflictResolutionModal";
 
+// Celebration components
+export { BirthdayCelebrationModal } from "./BirthdayCelebrationModal";
+
 // Auth components
 export { DisplayNamePrompt } from "./DisplayNamePrompt";
 export { NoBabyScreen } from "./NoBabyScreen";
