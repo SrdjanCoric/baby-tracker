@@ -63,6 +63,7 @@ export default function SleepSettingsScreen() {
     setNapCount: setContextNapCount,
     setDayNightBoundary,
     setNapContinuationMinutes: setContextNapContinuation,
+    setWakeWindowsEnabled,
     setNewbornNapOptIn,
   } = useSleep();
 
@@ -73,6 +74,7 @@ export default function SleepSettingsScreen() {
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [durationError, setDurationError] = useState("");
   const [showReminderHint, setShowReminderHint] = useState(false);
+  const [saveButtonFeedback, setSaveButtonFeedback] = useState(false);
   const [showUnderTwoMonthsWarning, setShowUnderTwoMonthsWarning] = useState(false);
   const [showDayStartPicker, setShowDayStartPicker] = useState(false);
   const [showNightStartPicker, setShowNightStartPicker] = useState(false);
@@ -285,6 +287,68 @@ export default function SleepSettingsScreen() {
       }
     });
   }, [confirmHouseholdChange, resetToAgeBasedWakeWindows, selectedBaby?.id, selectedBaby?.birthDate, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
+
+  const handleToggleMasterWakeWindows = useCallback(
+    (enabled: boolean) => {
+      if (!enabled) {
+        const doDisable = async () => {
+          await setWakeWindowsEnabled(false);
+          await updateSettings({
+            wakeWindowReminders: { ...settings.wakeWindowReminders, enabled: false },
+          });
+          if (selectedBaby?.id && wakeWindowConfig) {
+            await syncWakeWindowPreferenceForBaby(
+              selectedBaby.id,
+              wakeWindowConfig.napCount,
+              wakeWindowConfig.slots,
+              "age_based",
+              false,
+              wakeWindowConfig.dayStartHour,
+              wakeWindowConfig.dayEndHour,
+              wakeWindowConfig.napContinuationMinutes
+            );
+          }
+        };
+        if (isMultiCaregiver) {
+          Alert.alert(
+            t("sleep.disableWakeWindowsTitle"),
+            t("sleep.disableWakeWindowsConfirm"),
+            [
+              { text: t("common.cancel"), style: "cancel" },
+              { text: t("common.confirm"), onPress: doDisable },
+            ]
+          );
+        } else {
+          doDisable();
+        }
+      } else {
+        setWakeWindowsEnabled(true);
+      }
+    },
+    [setWakeWindowsEnabled, updateSettings, settings.wakeWindowReminders, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, isMultiCaregiver, t]
+  );
+
+  const handleSaveWakeWindows = useCallback(() => {
+    if (!wakeWindowConfig || !selectedBaby?.id) return;
+    confirmHouseholdChange(async () => {
+      await setCustomWakeWindows(wakeWindowConfig.slots);
+      await setWakeWindowsEnabled(true);
+      if (selectedBaby?.id) {
+        await syncWakeWindowPreferenceForBaby(
+          selectedBaby.id,
+          wakeWindowConfig.napCount,
+          wakeWindowConfig.slots,
+          "custom",
+          settings.wakeWindowReminders.enabled,
+          wakeWindowConfig.dayStartHour,
+          wakeWindowConfig.dayEndHour,
+          wakeWindowConfig.napContinuationMinutes
+        );
+      }
+      setSaveButtonFeedback(true);
+      setTimeout(() => setSaveButtonFeedback(false), 1500);
+    });
+  }, [confirmHouseholdChange, wakeWindowConfig, selectedBaby?.id, setCustomWakeWindows, setWakeWindowsEnabled, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
 
   const handleReminderHintPress = useCallback(() => {
     const toValue = showReminderHint ? 0 : 1;
@@ -590,10 +654,268 @@ export default function SleepSettingsScreen() {
           </Pressable>
         )}
 
+        {/* Divider before wake windows */}
+        <View className="h-px bg-border-subtle dark:bg-border-dark-subtle mb-6" />
+
+        {/* Birthdate prompt (when no birthdate) */}
+        {!hasBirthDate && (
+          <View
+            className="rounded-card p-4 mb-6"
+            style={{ backgroundColor: isDark ? SLEEP_PURPLE_MUTED_DARK : SLEEP_PURPLE_MUTED }}
+          >
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-3">
+              {t("sleep.setBirthDatePrompt")}
+            </Text>
+            <Pressable
+              onPress={() => router.push(`/baby/${selectedBaby.id}`)}
+              className="py-3 px-4 rounded-button-lg items-center active:opacity-80"
+              style={{ backgroundColor: SLEEP_PURPLE }}
+              accessibilityRole="button"
+            >
+              <Text className="text-base font-medium text-white">
+                {t("sleep.setBirthDate")}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         {hasBirthDate && (
           <>
-            {/* Divider */}
-            <View className="h-px bg-border-subtle dark:bg-border-dark-subtle mb-6" />
+            <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-3">
+              {t("sleep.wakeWindows")}
+            </Text>
+
+            <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden mb-6">
+              {/* Master Toggle */}
+              <View className="flex-row items-center py-4 px-4">
+                <View className="flex-1">
+                  <Text className="text-base text-content-primary dark:text-content-dark-primary">
+                    {t("sleep.trackWakeWindows")}
+                  </Text>
+                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-0.5">
+                    {t("sleep.trackWakeWindowsDesc")}
+                  </Text>
+                </View>
+                <Switch
+                  value={wakeWindowConfig?.enabled ?? false}
+                  onValueChange={handleToggleMasterWakeWindows}
+                />
+              </View>
+
+              {(wakeWindowConfig?.enabled ?? false) && wakeWindowConfig && (
+                <>
+                  <View className="h-px bg-border-subtle dark:bg-border-dark-subtle mx-4" />
+
+                  {/* Nap Count */}
+                  <View className="px-4 pt-4 pb-3">
+                    <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
+                      {t("sleep.napCount")}
+                    </Text>
+                    {currentAgeGroup && (
+                      <View className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-card p-3 mb-3">
+                        <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
+                          {t("sleep.napCountRecommendation", {
+                            min: currentAgeGroup.napsMin,
+                            max: currentAgeGroup.napsMax,
+                            ageGroup: currentAgeGroup.label,
+                          })}
+                        </Text>
+                      </View>
+                    )}
+                    <View className="flex-row gap-2">
+                      {NAP_COUNT_OPTIONS.map((count) => {
+                        const isSelected = wakeWindowConfig.napCount === count;
+                        return (
+                          <Pressable
+                            key={count}
+                            onPress={() => handleSelectNapCount(count)}
+                            className={`flex-1 py-3 items-center rounded-button-lg ${
+                              isSelected ? "" : "bg-surface-secondary dark:bg-surface-dark-secondary"
+                            } active:opacity-80`}
+                            style={isSelected ? { backgroundColor: SLEEP_PURPLE } : undefined}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: isSelected }}
+                          >
+                            <Text
+                              className={`text-base font-medium ${
+                                isSelected ? "text-white" : "text-content-primary dark:text-content-dark-primary"
+                              }`}
+                            >
+                              {count}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
+
+                  {/* Wake Window Slots */}
+                  {wakeWindowConfig.slots.length > 0 && (
+                    <View>
+                      {wakeWindowConfig.slots.map((slot, index) => {
+                        const isExpanded = expandedSlotIndex === slot.slotIndex;
+                        const isLast = index === wakeWindowConfig.slots.length - 1;
+                        const isBedtime = slot.label === "bedtime";
+                        const icon = isBedtime ? "\u{1F319}" : "\u{2600}\u{FE0F}";
+
+                        return (
+                          <View key={slot.slotIndex}>
+                            <Pressable
+                              onPress={() => setExpandedSlotIndex(isExpanded ? null : slot.slotIndex)}
+                              className={`flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary ${
+                                !isLast && !isExpanded ? "border-b border-border-subtle dark:border-border-dark-subtle" : ""
+                              }`}
+                            >
+                              <Text className="text-lg mr-3">{icon}</Text>
+                              <View className="flex-1">
+                                <Text className="text-base text-content-primary dark:text-content-dark-primary">
+                                  {isBedtime
+                                    ? t("sleep.slotBedtime")
+                                    : t("sleep.slotNap", { number: slot.slotIndex + 1 })}
+                                </Text>
+                              </View>
+                              <Text className="text-base font-medium" style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}>
+                                {formatDuration(slot.durationMinutes)}
+                              </Text>
+                              <Text className="text-content-tertiary dark:text-content-dark-tertiary ml-2">
+                                {isExpanded ? "\u{25B2}" : "\u{25BC}"}
+                              </Text>
+                            </Pressable>
+
+                            {isExpanded && (
+                              <View className={`px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary ${
+                                !isLast ? "border-b border-border-subtle dark:border-border-dark-subtle" : ""
+                              }`}>
+                                <View className="flex-row flex-wrap gap-2 mb-3">
+                                  {presetPills.map((preset) => {
+                                    const isPresetSelected = slot.durationMinutes === preset;
+                                    return (
+                                      <Pressable
+                                        key={preset}
+                                        onPress={() => handleSlotDurationChange(slot.slotIndex, preset)}
+                                        className={`px-4 py-2 rounded-full ${
+                                          isPresetSelected ? "" : "bg-surface-card dark:bg-surface-dark-card"
+                                        }`}
+                                        style={isPresetSelected ? { backgroundColor: SLEEP_PURPLE } : undefined}
+                                      >
+                                        <Text
+                                          className={`text-sm ${
+                                            isPresetSelected ? "text-white font-medium" : "text-content-primary dark:text-content-dark-primary"
+                                          }`}
+                                        >
+                                          {formatDuration(preset)}
+                                        </Text>
+                                      </Pressable>
+                                    );
+                                  })}
+                                </View>
+                                <View className="flex-row items-center gap-2">
+                                  <TextInput
+                                    value={customDurationInput}
+                                    onChangeText={(text) => { setCustomDurationInput(text); setDurationError(""); }}
+                                    keyboardType="number-pad"
+                                    maxLength={3}
+                                    placeholder={t("sleep.customMinutes")}
+                                    className="flex-1 bg-surface-card dark:bg-surface-dark-card rounded-input px-3 py-2 text-sm text-content-primary dark:text-content-dark-primary"
+                                  />
+                                  <Pressable
+                                    onPress={() => handleCustomDuration(slot.slotIndex)}
+                                    className="px-4 py-2 rounded-button-lg"
+                                    style={{ backgroundColor: SLEEP_PURPLE }}
+                                  >
+                                    <Text className="text-sm font-medium text-white">
+                                      {t("common.save")}
+                                    </Text>
+                                  </Pressable>
+                                </View>
+                                {durationError ? (
+                                  <Text className="text-xs text-red-500 mt-1">{durationError}</Text>
+                                ) : null}
+                              </View>
+                            )}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+
+                  {/* Hint text */}
+                  <View className="px-4 py-3">
+                    <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary" style={{ fontStyle: "italic" }}>
+                      {t("sleep.wakeWindowsHint")}
+                    </Text>
+                  </View>
+
+                  {/* Save Button */}
+                  <View className="px-4 pb-4">
+                    <Pressable
+                      onPress={handleSaveWakeWindows}
+                      className="py-3.5 items-center rounded-button-lg active:opacity-80"
+                      style={{ backgroundColor: saveButtonFeedback ? "#4A7F4D" : SLEEP_PURPLE }}
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-base font-semibold text-white">
+                        {saveButtonFeedback ? t("sleep.wakeWindowsSaved") : t("sleep.saveWakeWindows")}
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  <View className="h-px bg-border-subtle dark:bg-border-dark-subtle mx-4" />
+
+                  {/* Push Reminders */}
+                  <View className="flex-row items-center py-4 px-4">
+                    <View className="flex-1">
+                      <Text className={`text-base ${
+                        wakeWindowConfig.source === "custom"
+                          ? "text-content-primary dark:text-content-dark-primary"
+                          : "text-content-tertiary dark:text-content-dark-tertiary"
+                      }`}>
+                        {t("sleep.napReminders")}
+                      </Text>
+                      <Text className={`text-sm mt-0.5 ${
+                        wakeWindowConfig.source === "custom"
+                          ? "text-content-tertiary dark:text-content-dark-tertiary"
+                          : "text-content-muted dark:text-content-dark-muted"
+                      }`}>
+                        {wakeWindowConfig.source === "custom"
+                          ? t("sleep.napRemindersDesc")
+                          : t("sleep.remindersRequireSave")}
+                      </Text>
+                    </View>
+                    {isAuthenticated ? (
+                      <Switch
+                        value={settings.wakeWindowReminders.enabled}
+                        onValueChange={handleToggleReminders}
+                        disabled={wakeWindowConfig.source !== "custom"}
+                      />
+                    ) : (
+                      <Switch value={false} disabled />
+                    )}
+                  </View>
+
+                  {!hasPermission && settings.wakeWindowReminders.enabled && (
+                    <Pressable
+                      onPress={handleRequestPermissions}
+                      className="mx-4 mb-4 bg-amber-100 dark:bg-amber-900/30 rounded-card p-3"
+                    >
+                      <Text className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                        {permissionStatus === "denied"
+                          ? t("settings.permissionDenied")
+                          : t("settings.permissionRequired")}
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
+
+            {(wakeWindowConfig?.enabled ?? false) && isMultiCaregiver && (
+              <View className="bg-blue-50 dark:bg-blue-900/20 rounded-card p-4 mb-6">
+                <Text className="text-sm text-blue-700 dark:text-blue-300">
+                  {t("sleep.wakeWindowHouseholdWarning")}
+                </Text>
+              </View>
+            )}
 
             {/* Day & Night Hours */}
             <View className="mb-6">
@@ -755,290 +1077,23 @@ export default function SleepSettingsScreen() {
                 {t("sleep.napContinuationDesc")}
               </Text>
             </View>
-          </>
-        )}
 
-        {/* Divider before reminders section */}
-        <View className="h-px bg-border-subtle dark:bg-border-dark-subtle mb-6" />
-
-        {/* Section A: Nap Reminder Toggle */}
-        <View className="mb-6">
-          <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-3">
-            {t("sleep.wakeWindowReminders")}
-          </Text>
-
-          {!hasPermission && (
-            <Pressable
-              onPress={handleRequestPermissions}
-              className="bg-amber-100 dark:bg-amber-900/30 rounded-card p-4 mb-3"
-            >
-              <Text className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-1">
-                {permissionStatus === "denied"
-                  ? t("settings.permissionDenied")
-                  : t("settings.permissionRequired")}
-              </Text>
-              <Text className="text-xs text-amber-600 dark:text-amber-300">
-                {permissionStatus === "denied"
-                  ? t("settings.permissionDeniedDesc")
-                  : t("settings.permissionRequiredDesc")}
-              </Text>
-            </Pressable>
-          )}
-
-          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">
-            {isAuthenticated ? (
-              <View className="flex-row items-center py-4 px-4">
-                <View className="flex-1">
-                  <Text className="text-base text-content-primary dark:text-content-dark-primary">
-                    {t("sleep.napReminders")}
-                  </Text>
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-0.5">
-                    {t("sleep.napRemindersDesc")}
-                  </Text>
-                </View>
-                <Switch
-                  value={settings.wakeWindowReminders.enabled}
-                  onValueChange={handleToggleReminders}
-                  disabled={!hasBirthDate}
-                />
-              </View>
-            ) : (
-              <View>
-                <Pressable
-                  onPress={handleReminderHintPress}
-                  className="flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
-                >
-                  <View className="flex-1">
-                    <Text className="text-base text-content-primary dark:text-content-dark-primary">
-                      {t("sleep.napReminders")}
-                    </Text>
-                  </View>
-                  <Switch value={false} disabled />
-                </Pressable>
-                <Animated.View
-                  style={{
-                    maxHeight: reminderHintAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 60],
-                    }),
-                    opacity: reminderHintAnim,
-                    overflow: "hidden",
-                  }}
-                >
-                  <View className="px-4 pb-3">
-                    <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-                      {t("sleep.napRemindersSignInRequired")}
-                    </Text>
-                  </View>
-                </Animated.View>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {settings.wakeWindowReminders.enabled && isMultiCaregiver && (
-          <View className="bg-blue-50 dark:bg-blue-900/20 rounded-card p-4 mb-6">
-            <Text className="text-sm text-blue-700 dark:text-blue-300">
-              {t("sleep.wakeWindowHouseholdWarning")}
-            </Text>
-          </View>
-        )}
-
-        {/* Birthdate prompt (when no birthdate) */}
-        {!hasBirthDate && (
-          <View
-            className="rounded-card p-4 mb-6"
-            style={{ backgroundColor: isDark ? SLEEP_PURPLE_MUTED_DARK : SLEEP_PURPLE_MUTED }}
-          >
-            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-3">
-              {t("sleep.setBirthDatePrompt")}
-            </Text>
-            <Pressable
-              onPress={() => router.push(`/baby/${selectedBaby.id}`)}
-              className="py-3 px-4 rounded-button-lg items-center active:opacity-80"
-              style={{ backgroundColor: SLEEP_PURPLE }}
-              accessibilityRole="button"
-            >
-              <Text className="text-base font-medium text-white">
-                {t("sleep.setBirthDate")}
-              </Text>
-            </Pressable>
-          </View>
-        )}
-
-        {/* Section B: Nap Count Selector */}
-        {settings.wakeWindowReminders.enabled && wakeWindowConfig && (
-          <View className="mb-6">
-            <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-3">
-              {t("sleep.napCount")}
-            </Text>
-            {currentAgeGroup && (
-              <View className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-card p-3 mb-3">
-                <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-                  {t("sleep.napCountRecommendation", {
-                    min: currentAgeGroup.napsMin,
-                    max: currentAgeGroup.napsMax,
-                    ageGroup: currentAgeGroup.label,
-                  })}
+            {/* Reset to Defaults */}
+            {wakeWindowConfig?.source === "custom" && (
+              <Pressable
+                onPress={handleResetWakeWindows}
+                className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-card p-4 active:opacity-80 mb-6"
+                accessibilityRole="button"
+              >
+                <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-1">
+                  {t("sleep.resetWakeWindows")}
                 </Text>
-              </View>
+                <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
+                  {t("sleep.resetWakeWindowsDesc")}
+                </Text>
+              </Pressable>
             )}
-            <View className="flex-row gap-2">
-              {NAP_COUNT_OPTIONS.map((count) => {
-                const isSelected = wakeWindowConfig.napCount === count;
-                return (
-                  <Pressable
-                    key={count}
-                    onPress={() => handleSelectNapCount(count)}
-                    className={`flex-1 py-3 items-center rounded-button-lg ${
-                      isSelected ? "" : "bg-surface-secondary dark:bg-surface-dark-secondary"
-                    } active:opacity-80`}
-                    style={isSelected ? { backgroundColor: SLEEP_PURPLE } : undefined}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isSelected }}
-                  >
-                    <Text
-                      className={`text-base font-medium ${
-                        isSelected ? "text-white" : "text-content-primary dark:text-content-dark-primary"
-                      }`}
-                    >
-                      {count}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        )}
-
-        {/* Educational Info Card */}
-        {settings.wakeWindowReminders.enabled && currentAgeGroup && wakeWindowConfig && (
-          <View
-            className="rounded-card p-4 mb-6"
-            style={{ backgroundColor: isDark ? SLEEP_PURPLE_MUTED_DARK : SLEEP_PURPLE_MUTED }}
-          >
-            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-2">
-              {t("sleep.wakeWindowExplainer")}
-            </Text>
-            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-              {t("sleep.wakeWindowGuidelines", {
-                ageGroup: currentAgeGroup.label,
-                min: currentAgeGroup.wakeWindowMinMinutes,
-                max: currentAgeGroup.wakeWindowMaxMinutes,
-              })}
-            </Text>
-          </View>
-        )}
-
-        {/* Section C: Wake Window Slots */}
-        {settings.wakeWindowReminders.enabled && wakeWindowConfig && wakeWindowConfig.slots.length > 0 && (
-          <View className="mb-6">
-            <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-3">
-              {t("sleep.wakeWindows")}
-            </Text>
-            <View className="bg-surface-card dark:bg-surface-dark-card rounded-card">
-              {wakeWindowConfig.slots.map((slot, index) => {
-                const isExpanded = expandedSlotIndex === slot.slotIndex;
-                const isLast = index === wakeWindowConfig.slots.length - 1;
-                const isBedtime = slot.label === "bedtime";
-                const icon = isBedtime ? "\u{1F319}" : "\u{2600}\u{FE0F}";
-
-                return (
-                  <View key={slot.slotIndex}>
-                    <Pressable
-                      onPress={() => setExpandedSlotIndex(isExpanded ? null : slot.slotIndex)}
-                      className={`flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary ${
-                        !isLast && !isExpanded ? "border-b border-border-subtle dark:border-border-dark-subtle" : ""
-                      }`}
-                    >
-                      <Text className="text-lg mr-3">{icon}</Text>
-                      <View className="flex-1">
-                        <Text className="text-base text-content-primary dark:text-content-dark-primary">
-                          {isBedtime
-                            ? t("sleep.slotBedtime")
-                            : t("sleep.slotNap", { number: slot.slotIndex + 1 })}
-                        </Text>
-                      </View>
-                      <Text className="text-base font-medium" style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}>
-                        {formatDuration(slot.durationMinutes)}
-                      </Text>
-                      <Text className="text-content-tertiary dark:text-content-dark-tertiary ml-2">
-                        {isExpanded ? "\u{25B2}" : "\u{25BC}"}
-                      </Text>
-                    </Pressable>
-
-                    {isExpanded && (
-                      <View className={`px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary ${
-                        !isLast ? "border-b border-border-subtle dark:border-border-dark-subtle" : ""
-                      }`}>
-                        <View className="flex-row flex-wrap gap-2 mb-3">
-                          {presetPills.map((preset) => {
-                            const isPresetSelected = slot.durationMinutes === preset;
-                            return (
-                              <Pressable
-                                key={preset}
-                                onPress={() => handleSlotDurationChange(slot.slotIndex, preset)}
-                                className={`px-4 py-2 rounded-full ${
-                                  isPresetSelected ? "" : "bg-surface-card dark:bg-surface-dark-card"
-                                }`}
-                                style={isPresetSelected ? { backgroundColor: SLEEP_PURPLE } : undefined}
-                              >
-                                <Text
-                                  className={`text-sm ${
-                                    isPresetSelected ? "text-white font-medium" : "text-content-primary dark:text-content-dark-primary"
-                                  }`}
-                                >
-                                  {formatDuration(preset)}
-                                </Text>
-                              </Pressable>
-                            );
-                          })}
-                        </View>
-                        <View className="flex-row items-center gap-2">
-                          <TextInput
-                            value={customDurationInput}
-                            onChangeText={(text) => { setCustomDurationInput(text); setDurationError(""); }}
-                            keyboardType="number-pad"
-                            maxLength={3}
-                            placeholder={t("sleep.customMinutes")}
-                            className="flex-1 bg-surface-card dark:bg-surface-dark-card rounded-input px-3 py-2 text-sm text-content-primary dark:text-content-dark-primary"
-                          />
-                          <Pressable
-                            onPress={() => handleCustomDuration(slot.slotIndex)}
-                            className="px-4 py-2 rounded-button-lg"
-                            style={{ backgroundColor: SLEEP_PURPLE }}
-                          >
-                            <Text className="text-sm font-medium text-white">
-                              {t("common.save")}
-                            </Text>
-                          </Pressable>
-                        </View>
-                        {durationError ? (
-                          <Text className="text-xs text-red-500 mt-1">{durationError}</Text>
-                        ) : null}
-                      </View>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        )}
-
-        {/* Section D: Reset to Defaults */}
-        {settings.wakeWindowReminders.enabled && wakeWindowConfig?.source === "custom" && (
-          <Pressable
-            onPress={handleResetWakeWindows}
-            className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-card p-4 active:opacity-80 mb-6"
-            accessibilityRole="button"
-          >
-            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-1">
-              {t("sleep.resetWakeWindows")}
-            </Text>
-            <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
-              {t("sleep.resetWakeWindowsDesc")}
-            </Text>
-          </Pressable>
+          </>
         )}
 
         <View className="h-8" />

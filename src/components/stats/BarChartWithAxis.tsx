@@ -18,12 +18,22 @@ interface BarChartWithAxisProps {
   showBarLabels?: boolean;
 }
 
-const PADDING_LEFT = 30;
 const PADDING_RIGHT = 8;
 const PADDING_TOP = 18;
 const PADDING_BOTTOM = 28;
 const CHART_HEIGHT = 120;
 const BAR_FILL_RATIO = 0.65;
+const CHAR_WIDTH = 5.5;
+const MIN_paddingLeft = 30;
+
+function estimateLabelWidth(labels: number[], formatValue?: (v: number) => string): number {
+  let maxLen = 0;
+  for (const v of labels) {
+    const text = formatValue ? formatValue(v) : String(v);
+    if (text.length > maxLen) maxLen = text.length;
+  }
+  return Math.max(maxLen * CHAR_WIDTH + 8, MIN_paddingLeft);
+}
 
 export function BarChartWithAxis({
   data,
@@ -42,9 +52,10 @@ export function BarChartWithAxis({
   const textSecondary = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
   const gridLine = isDark ? BORDER.dark.strong : BORDER.light.subtle;
 
+  const paddingLeft = estimateLabelWidth(yAxisLabels, formatValue);
   const cardPadding = 64;
   const totalWidth = screenWidth - cardPadding;
-  const chartAreaWidth = totalWidth - PADDING_LEFT - PADDING_RIGHT;
+  const chartAreaWidth = totalWidth - paddingLeft - PADDING_RIGHT;
   const svgHeight = PADDING_TOP + CHART_HEIGHT + PADDING_BOTTOM;
 
   const maxY = maxYProp ?? Math.max(...yAxisLabels, ...data.map((d) => d.value));
@@ -66,15 +77,15 @@ export function BarChartWithAxis({
             return (
               <G key={`grid-${value}`}>
                 <Line
-                  x1={PADDING_LEFT}
+                  x1={paddingLeft}
                   y1={y}
-                  x2={PADDING_LEFT + chartAreaWidth}
+                  x2={paddingLeft + chartAreaWidth}
                   y2={y}
                   stroke={gridLine}
                   strokeWidth={0.5}
                 />
                 <SvgText
-                  x={PADDING_LEFT - 4}
+                  x={paddingLeft - 4}
                   y={y + 3}
                   fontSize={9}
                   fill={textTertiary}
@@ -89,7 +100,7 @@ export function BarChartWithAxis({
 
         <G>
           {data.map((bar, i) => {
-            const slotX = PADDING_LEFT + i * slotWidth;
+            const slotX = paddingLeft + i * slotWidth;
             const barX = slotX + (slotWidth - barWidth) / 2;
             const barH = (bar.value / safeMaxY) * CHART_HEIGHT;
             const barY = PADDING_TOP + CHART_HEIGHT - barH;
@@ -129,7 +140,7 @@ export function BarChartWithAxis({
 
         <G>
           {data.map((bar, i) => {
-            const slotX = PADDING_LEFT + i * slotWidth;
+            const slotX = paddingLeft + i * slotWidth;
             const centerX = slotX + slotWidth / 2;
             return (
               <SvgText

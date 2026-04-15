@@ -5,6 +5,7 @@ export interface NapSlotWindow {
 }
 
 export interface WakeWindowConfig {
+  enabled: boolean;
   napCount: number;
   slots: NapSlotWindow[];
   source: "age_based" | "custom";

@@ -87,6 +87,7 @@ struct WatchActiveTimer: Codable {
     var isRemote: Bool?
     var isPaused: Bool?
     var accumulatedSeconds: Int?
+    var startedBy: String?
 }
 
 // MARK: - Activity Type
@@ -173,6 +174,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     private var networkPollTimer: Timer?
 
+    @Published var isTokenStale = false
+
     // Local optimistic timers (shown before phone confirms)
     @Published var localActiveTimers: [WatchActiveTimer] = []
 
@@ -182,9 +185,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     // Local optimistic diaper logs (pending confirmation from phone)
     @Published var pendingDiaperLogs: [(type: String, time: Date)] = []
 
-    // Last local diaper log time (for "X ago" display)
+    var activePendingDiaperLogs: [(type: String, time: Date)] {
+        pendingDiaperLogs.filter { Date().timeIntervalSince($0.time) < 60 }
+    }
+
     var lastLocalDiaperTime: Date? {
-        pendingDiaperLogs.last?.time
+        activePendingDiaperLogs.last?.time
     }
 
     // Local stopped activity times (for "X ago" display after stopping timer offline)
@@ -222,7 +228,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     var currentBaby: BabyWatchData? {
         guard let babyId = currentBabyId else { return nil }
-        return multiBabyData?.babies.first { $0.id == babyId }
+        return multiBabyData?.babies.first { $0.id == babyId } ?? multiBabyData?.babies.first
     }
 
     var allBabies: [BabyWatchData] {
@@ -263,7 +269,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     /// Combined diaper counts: server data + pending local logs
     func combinedDiaperCounts(serverCounts: WatchActivityData.DiaperData.DiaperCounts) -> WatchActivityData.DiaperData.DiaperCounts {
         var counts = serverCounts
-        for log in pendingDiaperLogs {
+        for log in activePendingDiaperLogs {
             switch log.type {
             case "wet": counts.wet += 1
             case "dirty": counts.dirty += 1
@@ -276,7 +282,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     var hasPendingDiaperLogs: Bool {
-        !pendingDiaperLogs.isEmpty
+        !activePendingDiaperLogs.isEmpty
     }
 
     /// Sync optimistic state to UserDefaults cache so complications can read it
@@ -419,6 +425,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             self.supabaseAnonKey = anonKey
             self.supabaseAccessToken = token
             self.supabaseUserId = userId
+            self.isTokenStale = false
             let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
             defaults?.set(url, forKey: "watchSupabaseUrl")
             defaults?.set(anonKey, forKey: "watchSupabaseAnonKey")
@@ -450,9 +457,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                     print("[WatchConnector] parseApplicationContext: baby \(baby.name) has \(baby.activeTimers.count) active timers")
                 }
                 self.multiBabyData = decoded
-                if self.selectedBabyId == nil {
-                    self.selectedBabyId = decoded.selectedBabyId
-                }
+                self.selectedBabyId = decoded.selectedBabyId
                 self.cacheData(dataString, forKey: "multiBabyWatchData")
                 // Clear local optimistic data - phone data is source of truth
                 self.localActiveTimers.removeAll()
@@ -472,7 +477,6 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 print("[WatchConnector] parseApplicationContext: \(timerCount) active timers in widgetData")
                 self.widgetData = decoded
                 self.cacheData(dataString, forKey: "watchData")
-                // Cache baby ID from legacy format if not already set
                 if self.selectedBabyId == nil {
                     self.selectedBabyId = decoded.babyId
                 }
@@ -550,14 +554,16 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             return
         }
 
+        // Always queue via transferUserInfo for guaranteed delivery
+        // (sendMessage is unreliable when the phone app is backgrounded)
+        session.transferUserInfo(messageWithId)
+
         if session.isReachable {
-            print("[WatchConnector] Sending immediate message...")
+            print("[WatchConnector] Sending immediate message + queued via transferUserInfo")
             session.sendMessage(messageWithId, replyHandler: nil) { error in
-                print("[WatchConnector] sendMessage failed, queueing via transferUserInfo: \(error)")
-                session.transferUserInfo(messageWithId)
+                print("[WatchConnector] sendMessage failed (transferUserInfo already queued): \(error)")
             }
         } else {
-            session.transferUserInfo(messageWithId)
             print("[WatchConnector] Action queued via transferUserInfo (not reachable)")
         }
     }
@@ -596,7 +602,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         let localTimer = WatchActiveTimer(
             type: activityType,
             startTime: startTimeString,
-            context: context
+            context: context,
+            startedBy: supabaseUserId
         )
         DispatchQueue.main.async {
             self.localActiveTimers.removeAll { $0.type == activityType }
@@ -681,7 +688,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         WKInterfaceDevice.current().play(.stop)
     }
 
-    func logDiaper(type: String) {
+    func logDiaper(type: String, stoolColor: String? = nil) {
         guard canPerformAction() else { return }
 
         let logTime = Date()
@@ -692,6 +699,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             "diaperType": type,
             "requestedLogTime": logTimeString
         ]
+        if let color = stoolColor {
+            message["stoolColor"] = color
+        }
         if let babyId = currentBabyId {
             message["babyId"] = babyId
         }
@@ -837,6 +847,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     func selectBaby(babyId: String) {
         selectedBabyId = babyId
+        localActiveTimers.removeAll()
+        locallyStoppedTimerTypes.removeAll()
+        localStoppedActivityTimes.removeAll()
+        pendingDiaperLogs.removeAll()
         sendAction([
             "action": "selectBaby",
             "babyId": babyId
@@ -894,12 +908,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private func startNetworkPolling() {
         stopNetworkPolling()
         let hasActiveTimers = !combinedActiveTimers.isEmpty
-        guard hasActiveTimers else {
-            print("[WatchConnector] startNetworkPolling: no active timers, skipping")
-            return
-        }
-        print("[WatchConnector] startNetworkPolling: starting 30s poll")
-        networkPollTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+        let interval: TimeInterval = hasActiveTimers ? 30 : 120
+        print("[WatchConnector] startNetworkPolling: \(Int(interval))s poll (activeTimers=\(hasActiveTimers))")
+        networkPollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.refreshFromNetwork()
         }
     }
@@ -912,7 +923,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     // MARK: - Supabase Network Access
 
     private var hasAuthCredentials: Bool {
-        supabaseUrl != nil && supabaseAnonKey != nil && supabaseAccessToken != nil && supabaseUserId != nil
+        supabaseUrl != nil && supabaseAnonKey != nil && supabaseAccessToken != nil && supabaseUserId != nil && !isTokenStale
     }
 
     func refreshFromNetwork() {
@@ -934,7 +945,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private func reconcileWithNetworkTimers(_ remoteTimers: [WatchActiveTimer]) {
         print("[WatchConnector] reconcileWithNetworkTimers: remote has \(remoteTimers.count) timers")
 
-        let localTypes = Set(localActiveTimers.map { $0.type })
+        typealias TimerKey = String
+        func makeKey(type: String, startedBy: String?) -> TimerKey {
+            "\(type)|\(startedBy ?? "unknown")"
+        }
+
+        let remoteKeys = Set(remoteTimers.map { makeKey(type: $0.type, startedBy: $0.startedBy) })
         let remoteTypes = Set(remoteTimers.map { $0.type })
 
         // Timers stopped externally (widget/other device) — remove from local state
@@ -946,7 +962,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         // Local timers that no longer exist on server — they were stopped externally
         for localTimer in localActiveTimers {
-            if !remoteTypes.contains(localTimer.type) {
+            let key = makeKey(type: localTimer.type, startedBy: localTimer.startedBy)
+            if !remoteKeys.contains(key) {
                 print("[WatchConnector] reconcileWithNetworkTimers: timer \(localTimer.type) stopped externally")
                 localStoppedActivityTimes[localTimer.type] = Date()
             }
@@ -1001,6 +1018,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         if httpResponse.statusCode == 401 {
             print("[WatchConnector] fetchActiveTimersFromNetwork: 401 — stale token")
+            await MainActor.run {
+                self.isTokenStale = true
+            }
+            sendAction(["action": "requestSync"])
             return nil
         }
 
@@ -1053,7 +1074,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 context: context,
                 isRemote: isRemote,
                 isPaused: timer.timer_data?.isPaused,
-                accumulatedSeconds: timer.timer_data?.accumulatedSeconds
+                accumulatedSeconds: timer.timer_data?.accumulatedSeconds,
+                startedBy: timer.started_by
             )
         }
     }
@@ -1434,6 +1456,13 @@ struct MainView: View {
                         .padding(.bottom, 2)
                 }
 
+                if connector.isTokenStale {
+                    Text("Open iPhone app to refresh")
+                        .font(.system(.caption2))
+                        .foregroundColor(.orange)
+                        .multilineTextAlignment(.center)
+                }
+
                 ForEach(allTimers, id: \.type) { timer in
                     ActiveTimerCard(timer: timer, connector: connector)
                 }
@@ -1465,7 +1494,7 @@ struct MainView: View {
         case .sleep:
             SleepDetailView(data: activities.sleep, allTimers: allTimers, connector: connector)
         case .diaper:
-            DiaperDetailView(data: activities.diaper, connector: connector)
+            DiaperDetailView(data: activities.diaper, connector: connector, navigationPath: $navigationPath)
         case .pumping:
             PumpingDetailView(data: activities.pumping, allTimers: allTimers, connector: connector)
         case .tummyTime:
@@ -2070,7 +2099,10 @@ func formatSleepDuration(_ minutes: Int) -> String {
 struct DiaperDetailView: View {
     let data: WatchActivityData.DiaperData
     @ObservedObject var connector: PhoneConnector
+    @Binding var navigationPath: NavigationPath
     @Environment(\.dismiss) private var dismiss
+    @State private var showColorPicker = false
+    @State private var colorPickerDiaperType = "dirty"
 
     var combinedCounts: WatchActivityData.DiaperData.DiaperCounts {
         connector.combinedDiaperCounts(serverCounts: data.todayCounts)
@@ -2120,12 +2152,12 @@ struct DiaperDetailView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
                     }
                     DiaperButton(emoji: "\u{1F4A9}", color: WatchActivityType.diaper.primaryColor) {
-                        connector.logDiaper(type: "dirty")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        colorPickerDiaperType = "dirty"
+                        showColorPicker = true
                     }
                     DiaperButton(emoji: "\u{1F4A7}\u{1F4A9}", color: WatchActivityType.diaper.primaryColor) {
-                        connector.logDiaper(type: "mixed")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                        colorPickerDiaperType = "mixed"
+                        showColorPicker = true
                     }
                     DiaperButton(emoji: "\u{2728}", color: WatchActivityType.diaper.primaryColor) {
                         connector.logDiaper(type: "dry")
@@ -2137,6 +2169,46 @@ struct DiaperDetailView: View {
             .padding(.horizontal, 4)
         }
         .navigationTitle("Diaper")
+        .navigationDestination(isPresented: $showColorPicker) {
+            StoolColorPickerView(diaperType: colorPickerDiaperType, connector: connector, navigationPath: $navigationPath)
+        }
+    }
+}
+
+struct StoolColorPickerView: View {
+    let diaperType: String
+    @ObservedObject var connector: PhoneConnector
+    @Binding var navigationPath: NavigationPath
+
+    private let stoolColors: [(name: String, color: Color)] = [
+        ("yellow", Color(red: 0.918, green: 0.702, blue: 0.031)),
+        ("brown", Color(red: 0.573, green: 0.251, blue: 0.055)),
+        ("green", Color(red: 0.086, green: 0.639, blue: 0.290)),
+        ("orange", Color(red: 0.918, green: 0.345, blue: 0.047)),
+        ("black", Color(red: 0.110, green: 0.098, blue: 0.090)),
+        ("white", Color(red: 0.831, green: 0.831, blue: 0.847)),
+        ("red", Color(red: 0.863, green: 0.149, blue: 0.149)),
+    ]
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                ForEach(stoolColors, id: \.name) { item in
+                    Button {
+                        connector.logDiaper(type: diaperType, stoolColor: item.name)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { navigationPath = NavigationPath() }
+                    } label: {
+                        Circle()
+                            .fill(item.color)
+                            .frame(width: 40, height: 40)
+                            .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 6)
+        }
+        .navigationTitle("Color")
     }
 }
 

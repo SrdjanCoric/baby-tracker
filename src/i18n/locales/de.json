@@ -117,6 +117,8 @@
     "breast": "Stillen",
     "breastfeeding": "Stillen",
     "bottle": "Flasche",
+    "bottleBreastMilk": "Flasche (Muttermilch)",
+    "bottleFormula": "Flasche (Säuglingsnahrung)",
     "bottleFeeding": "Flaschenfütterung",
     "solid": "Beikost",
     "left": "Links",
@@ -253,6 +255,14 @@
     "slotBedtime": "Vor dem Schlafengehen",
     "customMinutes": "Benutzerdefiniert (Min.)",
     "customMinutesError": "Gib einen Wert zwischen {{min}} und 480 Minuten ein",
+    "trackWakeWindows": "Wachfenster verfolgen",
+    "trackWakeWindowsDesc": "Nickerchen-Countdown auf dem Dashboard anzeigen",
+    "saveWakeWindows": "Wachfenster speichern",
+    "wakeWindowsSaved": "Gespeichert!",
+    "wakeWindowsHint": "Vorausgefüllt mit altersbasierten Vorschlägen. Passe sie an den Rhythmus deines Babys an und speichere.",
+    "disableWakeWindowsTitle": "Wachfenster deaktivieren",
+    "disableWakeWindowsConfirm": "Dies entfernt den Nickerchen-Countdown vom Dashboard für alle Betreuer im Haushalt. Erinnerungen werden ebenfalls deaktiviert.",
+    "remindersRequireSave": "Speichere zuerst deine Wachfenster, um Push-Erinnerungen zu aktivieren",
     "resetWakeWindows": "Auf altersbasierte Standardwerte zurücksetzen",
     "resetWakeWindowsDesc": "Wachfenster basierend auf dem Alter deines Babys wiederherstellen",
     "wakeWindowExplainer": "Wachfenster sind die empfohlene Wachzeit zwischen Nickerchen. Sie sind morgens typischerweise kürzer und vor dem Schlafengehen länger.",
@@ -476,6 +486,7 @@
     "height": "Größe",
     "length": "Länge",
     "headCircumference": "Kopfumfang",
+    "headCircShort": "Kopfumf.",
     "stable": "stabil",
     "measurementDate": "Messdatum",
     "logMeasurement": "Messung erfassen",
@@ -1794,7 +1805,7 @@
   },
   "ageGroups": {
     "sleep": {
-      "0-2months": "0–2 Monate",
+      "0-3months": "0–3 Monate",
       "3-5months": "3–5 Monate",
       "6-8months": "6–8 Monate",
       "9-12months": "9–12 Monate",
@@ -1862,5 +1873,14 @@
   },
   "growthHelpers": {
     "stable": "stabil"
+  },
+  "birthday": {
+    "today": "Heute",
+    "iAm": "Ich bin",
+    "old": "Alt",
+    "month_one": "Monat",
+    "month_other": "Monate",
+    "year_one": "Jahr",
+    "year_other": "Jahre"
   }
 }

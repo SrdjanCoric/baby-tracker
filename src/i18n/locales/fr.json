@@ -117,6 +117,8 @@
     "breast": "Allaitement",
     "breastfeeding": "Allaitement",
     "bottle": "Biberon",
+    "bottleBreastMilk": "Biberon (Lait maternel)",
+    "bottleFormula": "Biberon (Lait infantile)",
     "bottleFeeding": "Biberon",
     "solid": "Aliments solides",
     "left": "Gauche",
@@ -253,6 +255,14 @@
     "slotBedtime": "Avant le coucher",
     "customMinutes": "Personnalisé (min)",
     "customMinutesError": "Saisissez une valeur entre {{min}} et 480 minutes",
+    "trackWakeWindows": "Suivre les fenêtres d'éveil",
+    "trackWakeWindowsDesc": "Afficher le compte à rebours de sieste sur le tableau de bord",
+    "saveWakeWindows": "Enregistrer les fenêtres d'éveil",
+    "wakeWindowsSaved": "Enregistré !",
+    "wakeWindowsHint": "Pré-rempli avec des suggestions basées sur l'âge. Ajustez au rythme de votre bébé, puis enregistrez.",
+    "disableWakeWindowsTitle": "Désactiver les fenêtres d'éveil",
+    "disableWakeWindowsConfirm": "Cela supprimera le compte à rebours de sieste du tableau de bord pour tous les soignants du foyer. Les rappels seront également désactivés.",
+    "remindersRequireSave": "Enregistrez d'abord vos fenêtres d'éveil pour activer les rappels push",
     "resetWakeWindows": "Réinitialiser selon l'âge",
     "resetWakeWindowsDesc": "Restaurer les fenêtres d'éveil en fonction de l'âge de votre bébé",
     "wakeWindowExplainer": "Les fenêtres d'éveil sont les durées d'éveil recommandées entre les siestes. Elles sont généralement plus courtes le matin et plus longues avant le coucher.",
@@ -476,6 +486,7 @@
     "height": "Taille",
     "length": "Longueur",
     "headCircumference": "Périmètre crânien",
+    "headCircShort": "Pér. crânien",
     "stable": "stable",
     "measurementDate": "Date de mesure",
     "logMeasurement": "Enregistrer une mesure",
@@ -1794,7 +1805,7 @@
   },
   "ageGroups": {
     "sleep": {
-      "0-2months": "0-2 mois",
+      "0-3months": "0-3 mois",
       "3-5months": "3-5 mois",
       "6-8months": "6-8 mois",
       "9-12months": "9-12 mois",
@@ -1862,5 +1873,14 @@
   },
   "growthHelpers": {
     "stable": "stable"
+  },
+  "birthday": {
+    "today": "Aujourd'hui",
+    "iAm": "J'ai",
+    "old": "",
+    "month_one": "Mois",
+    "month_other": "Mois",
+    "year_one": "An",
+    "year_other": "Ans"
   }
 }

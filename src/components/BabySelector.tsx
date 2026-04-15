@@ -31,8 +31,10 @@ function useTranslatedBabyAge() {
       return t("baby.weeksOld", { count: diffWeeks });
     }
 
-    // Less than 24 months: show in months
-    const diffMonths = Math.floor(diffDays / 30.44);
+    // Calendar-based month counting
+    const diffMonths = (now.getFullYear() - birthDate.getFullYear()) * 12
+      + (now.getMonth() - birthDate.getMonth())
+      - (now.getDate() < birthDate.getDate() ? 1 : 0);
     if (diffMonths < 24) {
       return t("baby.monthsOld", { count: diffMonths });
     }

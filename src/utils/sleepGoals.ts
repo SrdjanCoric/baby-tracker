@@ -48,21 +48,21 @@ export interface SleepMilestoneCrossing {
 
 export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
-    label: "0-2 months",
-    labelKey: "ageGroups.sleep.0-2months",
+    label: "0-3 months",
+    labelKey: "ageGroups.sleep.0-3months",
     minAgeDays: 0,
-    maxAgeDays: 60,
-    totalSleepHoursMin: 15,
+    maxAgeDays: 90,
+    totalSleepHoursMin: 14,
     totalSleepHoursMax: 17,
     napsMin: 4,
     napsMax: 5,
     wakeWindowMinMinutes: 30,
-    wakeWindowMaxMinutes: 60,
+    wakeWindowMaxMinutes: 90,
   },
   {
     label: "3-5 months",
     labelKey: "ageGroups.sleep.3-5months",
-    minAgeDays: 61,
+    minAgeDays: 91,
     maxAgeDays: 150,
     totalSleepHoursMin: 14,
     totalSleepHoursMax: 15,
@@ -282,7 +282,7 @@ interface WakeWindowProgression {
 }
 
 const WAKE_WINDOW_PROGRESSIONS: Record<string, WakeWindowProgression> = {
-  "0-2 months": { napCount: 5, windows: [30, 36, 42, 48, 54, 60] },
+  "0-3 months": { napCount: 5, windows: [30, 36, 42, 48, 54, 60] },
   "3-5 months": { napCount: 4, windows: [60, 75, 90, 105, 120] },
   "6-8 months": { napCount: 3, windows: [120, 140, 160, 180] },
   "9-12 months": { napCount: 2, windows: [150, 180, 210] },
@@ -316,6 +316,7 @@ export function getDefaultWakeWindowConfig(
 
   if (!ageGroup) {
     return {
+      enabled: false,
       napCount: 2,
       slots: generateProgressiveSlots(2, 120, 180),
       source: "age_based",
@@ -335,6 +336,7 @@ export function getDefaultWakeWindowConfig(
     }));
 
     return {
+      enabled: false,
       napCount: progression.napCount,
       slots,
       source: "age_based",
@@ -345,6 +347,7 @@ export function getDefaultWakeWindowConfig(
   }
 
   return {
+    enabled: false,
     napCount: ageGroup.napsMax,
     slots: generateProgressiveSlots(
       ageGroup.napsMax,
