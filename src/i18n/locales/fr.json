@@ -1873,5 +1873,14 @@
   },
   "growthHelpers": {
     "stable": "stable"
+  },
+  "birthday": {
+    "today": "Aujourd'hui",
+    "iAm": "J'ai",
+    "old": "",
+    "month_one": "Mois",
+    "month_other": "Mois",
+    "year_one": "An",
+    "year_other": "Ans"
   }
 }

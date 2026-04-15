@@ -6,12 +6,13 @@ import { useIsFocused } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor } from "@/constants/design-tokens";
-import { useTimeRefresh } from "@/hooks";
+import { useTimeRefresh, useBirthdayCelebration } from "@/hooks";
 
 const isAndroid = Platform.OS === "android";
 import {
   BabyHeader,
   DashboardCard,
+  BirthdayCelebrationModal,
 } from "@/components";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useDashboardConfig, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
 import { Alert } from "react-native";
@@ -84,6 +85,8 @@ export default function HomeScreen() {
   const { session } = useAuth();
   const { isLockedByOther, getLockedByName, getLockForActivity, refreshLocks } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
+
+  const { showCelebration, milestoneAge, dismiss: dismissCelebration } = useBirthdayCelebration(selectedBaby);
 
   const [refreshing, setRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -855,6 +858,15 @@ export default function HomeScreen() {
           ))}
         </View>
       </ScrollView>
+
+      {selectedBaby && (
+        <BirthdayCelebrationModal
+          visible={showCelebration}
+          baby={selectedBaby}
+          milestoneAge={milestoneAge}
+          onClose={dismissCelebration}
+        />
+      )}
     </SafeAreaView>
   );
 }

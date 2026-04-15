@@ -1962,5 +1962,16 @@
   },
   "growthHelpers": {
     "stable": "stabilna"
+  },
+  "birthday": {
+    "today": "Danas",
+    "iAm": "Punim",
+    "old": "",
+    "month_one": "Mesec",
+    "month_few": "Meseca",
+    "month_other": "Meseci",
+    "year_one": "Godinu",
+    "year_few": "Godine",
+    "year_other": "Godina"
   }
 }
