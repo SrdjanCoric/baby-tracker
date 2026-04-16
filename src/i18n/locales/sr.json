@@ -724,7 +724,23 @@
     "resetDashboardConfirm": "Ovo \u0107e resetovati sve kartice na podrazumevani redosled i vidljivost. Nastaviti?",
     "resetToDefault": "Resetuj na podrazumevano",
     "widgets": "Vid\u017eeti",
-    "widgetsDescription": "Podesi iOS vid\u017eete i Apple Watch"
+    "widgetsDescription": "Podesi iOS vid\u017eete i Apple Watch",
+    "dailyTips": "Dnevni saveti",
+    "on": "Uklju\u010deno",
+    "off": "Isklju\u010deno"
+  },
+  "tips": {
+    "swipeForMore": "Prevucite za vi\u0161e \u2192",
+    "tipCount": "{{current}} od {{total}}",
+    "todaysTip": "Savet dana",
+    "category": {
+      "development": "Razvoj",
+      "sleep": "Spavanje",
+      "feeding": "Ishrana",
+      "health": "Zdravlje",
+      "play": "Igra",
+      "safety": "Bezbednost"
+    }
   },
   "widget": {
     "title": "Pode\u0161avanje vid\u017eeta",

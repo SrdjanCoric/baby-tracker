@@ -703,7 +703,23 @@
     "resetDashboardConfirm": "Cela réinitialisera toutes les cartes à leur ordre et visibilité par défaut. Continuer ?",
     "resetToDefault": "Réinitialiser par défaut",
     "widgets": "Widgets",
-    "widgetsDescription": "Configurer les widgets iOS et Apple Watch"
+    "widgetsDescription": "Configurer les widgets iOS et Apple Watch",
+    "dailyTips": "Conseils du Jour",
+    "on": "Activé",
+    "off": "Désactivé"
+  },
+  "tips": {
+    "swipeForMore": "Glissez pour plus →",
+    "tipCount": "{{current}} sur {{total}}",
+    "todaysTip": "Conseil du jour",
+    "category": {
+      "development": "Développement",
+      "sleep": "Sommeil",
+      "feeding": "Alimentation",
+      "health": "Santé",
+      "play": "Jeu",
+      "safety": "Sécurité"
+    }
   },
   "widget": {
     "title": "Configuration des widgets",

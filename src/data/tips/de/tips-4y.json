@@ -1,0 +1,542 @@
+[
+  {
+    "id": "4y-development-01",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind kann wahrscheinlich einfache Geschichten mit Anfang, Mitte und Ende erzählen. Stelle offene Fragen wie \"Was ist dann passiert?\", um die Erzählfähigkeiten zu fördern."
+  },
+  {
+    "id": "4y-development-02",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind könnte Interesse daran zeigen, Buchstaben oder seinen Namen zu schreiben. Lass es auf großem Papier mit dicken Buntstiften oder Filzstiften üben — Gekritzel und Versuche sind Teil des Lernens."
+  },
+  {
+    "id": "4y-development-03",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind entwickelt einen Sinn für Humor und liebt vielleicht alberne Witze und Wortspiele. Zusammen lachen stärkt eure Bindung und fördert die Sprachentwicklung."
+  },
+  {
+    "id": "4y-development-04",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Hüpfen, Galoppieren und Springen zeigen eine reifende Grobmotorik. Übe diese Bewegungen durch Spiele statt durch Drill."
+  },
+  {
+    "id": "4y-development-05",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind könnte einen unsichtbaren Freund haben. Das ist gesund und zeigt fortgeschrittene kognitive Entwicklung, Kreativität und emotionale Verarbeitung."
+  },
+  {
+    "id": "4y-development-06",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Bis 10 oder darüber hinaus zählen, einige Zahlen erkennen und \"mehr\" und \"weniger\" verstehen sind typische Mathematikfähigkeiten in diesem Alter."
+  },
+  {
+    "id": "4y-development-07",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind lernt, Menschen zu zeichnen und könnte Kopf, Körper, Arme oder Beine einzeichnen. Zum vierten Geburtstag ist das Zeichnen einer Person mit 3 oder mehr Körperteilen ein häufiger Meilenstein."
+  },
+  {
+    "id": "4y-development-08",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Freundschaften werden jetzt bedeutungsvoller. Dein Kind könnte einen bevorzugten Freund haben und beginnt, die Komplexität sozialer Beziehungen zu verstehen."
+  },
+  {
+    "id": "4y-development-09",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind versteht grundlegende Regeln und Fairness. Nutze Spiele und Familienaktivitäten, um zu verdeutlichen, dass Regeln für alle gleich gelten."
+  },
+  {
+    "id": "4y-development-10",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Entlang einer Linie mit der Schere schneiden, Knöpfe schließen und einen Reißverschluss benutzen zeigen, dass die Feinmotorik reift. Würdige die Anstrengung."
+  },
+  {
+    "id": "4y-development-11",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind könnte manchmal Fantasie und Wirklichkeit verwechseln. Hilf ihm sanft, zwischen Erfundenem und Realem zu unterscheiden, ohne die Vorstellungskraft zu unterdrücken."
+  },
+  {
+    "id": "4y-development-12",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Ermutige dein Kind, kleine Probleme selbstständig zu lösen, bevor du eingreifst. \"Was meinst du, was wir ausprobieren könnten?\" stärkt Selbstvertrauen und kritisches Denken."
+  },
+  {
+    "id": "4y-development-13",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind kann Gegenstände wahrscheinlich nach mehreren Merkmalen sortieren — Farbe UND Größe zum Beispiel. Gemeinsames Sortieren von Wäsche oder Spielzeug macht das spielerisch und praktisch."
+  },
+  {
+    "id": "4y-development-14",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Emotionale Selbstregulation entwickelt sich noch. Hilf deinem Kind, komplexe Gefühle wie \"enttäuscht\" oder \"eifersüchtig\" zu benennen — ein reichhaltiges emotionales Vokabular hilft ihm, damit umzugehen."
+  },
+  {
+    "id": "4y-development-15",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Dein Kind könnte Interesse an Buchstaben und frühem Lesen zeigen. Folge seinem Interesse — zeige auf Wörter auf Schildern und lass es dir vertraute Bücher \"vorlesen\"."
+  },
+  {
+    "id": "4y-sleep-01",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Viele Kinder geben ihren Mittagsschlaf zwischen 3 und 5 Jahren auf, obwohl einige ihn noch brauchen. Wenn dein Kind nicht mehr schläft, strebe eine Schlafenszeit an, die früh genug ist, um 10-13 Stunden Nachtschlaf zu bekommen."
+  },
+  {
+    "id": "4y-sleep-02",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Dein Kind könnte endlos über die Schlafenszeit verhandeln wollen. Lege eine berechenbare Routine fest und halte dich liebevoll daran — \"Wir lesen zwei Bücher, dann ist Licht aus\" gibt Klarheit."
+  },
+  {
+    "id": "4y-sleep-03",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Albträume können in diesem Alter lebhafter sein, da die Fantasie wächst. Tröste dein Kind und sprich kurz über den Traum, ohne lange darauf einzugehen."
+  },
+  {
+    "id": "4y-sleep-04",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Wenn dein Kind Angst vor der Dunkelheit hat, überlegt gemeinsam Lösungen — ein spezielles Nachtlicht, ein \"mutiger Freund\" als Kuscheltier oder ein kurzer Zimmercheck können helfen."
+  },
+  {
+    "id": "4y-sleep-05",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Ruhige Zeit vor dem Schlafengehen ist genauso wichtig wie der Schlaf selbst. Vorlesen, sanftes Dehnen oder ein ruhiges Gespräch helfen dem Gehirn, zur Ruhe zu kommen."
+  },
+  {
+    "id": "4y-sleep-06",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Wenn dein Kind häufig nachts aufwacht, überprüfe zuerst äußere Ursachen — Raumtemperatur, Lärm, Licht oder eine unbequeme Matratze."
+  },
+  {
+    "id": "4y-sleep-07",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Eine gleichbleibende Aufwachzeit ist genauso wichtig wie eine feste Schlafenszeit. Versuche, die Aufwachzeit am Morgen täglich innerhalb von 30 Minuten gleich zu halten."
+  },
+  {
+    "id": "4y-sleep-08",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Dein Kind könnte anfangen, sich gegen die Schlafenszeit zu wehren, indem es sagt, es sei nicht müde. Eine beruhigende Routine hilft dem Körper herunterzufahren, auch wenn der Kopf noch wach ist."
+  },
+  {
+    "id": "4y-sleep-09",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Bettnässen ist in diesem Alter völlig normal. Verwende einen wasserdichten Matratzenschoner und mach kein großes Thema daraus — die meisten Kinder wachsen bis 5-6 Jahre daraus heraus."
+  },
+  {
+    "id": "4y-sleep-10",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Wenn dein Kind kürzlich den Mittagsschlaf aufgegeben hat, könntest du am späten Nachmittag Quengeligkeit bemerken. Eine kurze Ruhepause mit einem Buch kann die Lücke überbrücken."
+  },
+  {
+    "id": "4y-sleep-11",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Tiefe Atemübungen vor dem Schlafengehen können deinem Kind helfen, sich selbst zu beruhigen. Probiere \"An der Blume riechen, die Kerze ausblasen\" als einfache Technik."
+  },
+  {
+    "id": "4y-sleep-12",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Vermeide zuckerhaltige Snacks kurz vor dem Schlafengehen. Wenn dein Kind einen Snack vor dem Schlafengehen braucht, wähle etwas Leichtes wie eine Banane oder eine kleine Handvoll Cracker."
+  },
+  {
+    "id": "4y-sleep-13",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Dein Kind könnte hinauszögern, indem es nach mehr Wasser oder Toilettengängen fragt. Erlaube einen Toilettengang und eine kleine Tasse Wasser vor dem Schlafengehen, dann halte die Grenze sanft ein."
+  },
+  {
+    "id": "4y-sleep-14",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Den \"schönsten Moment des Tages\" beim Schlafengehen zu teilen, gibt deinem Kind etwas Positives zum Nachdenken beim Einschlafen und stärkt eure Verbindung."
+  },
+  {
+    "id": "4y-sleep-15",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Wenn dein Kind ständig gegen die Schlafenszeit ankämpft, ist es vielleicht nicht müde genug. Stelle sicher, dass es tagsüber viel körperliche Bewegung bekommt."
+  },
+  {
+    "id": "4y-feeding-01",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Dein Kind kann ein Buttermesser verwenden, um weiche Lebensmittel zu streichen und weiche Speisen zu schneiden. Diese Küchenfertigkeiten stärken das Selbstvertrauen und die Feinmotorik."
+  },
+  {
+    "id": "4y-feeding-02",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Sprich über Lebensmittel in Bezug darauf, was sie für den Körper tun — \"Karotten helfen deinen Augen\" oder \"Eiweiß macht deine Muskeln stark\" — um ein Verständnis für Ernährung aufzubauen."
+  },
+  {
+    "id": "4y-feeding-03",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Wenn dein Kind eine ganze Lebensmittelgruppe verweigert, finde kreative Alternativen. Kein Gemüse? Versuche es in Smoothies, Muffins oder als Teil eines Dip-Tellers."
+  },
+  {
+    "id": "4y-feeding-04",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Dein Kind kann jetzt bei komplexeren Kochaufgaben helfen — Teig rühren, mit Hilfe Eier aufschlagen oder Beläge streuen. Gemeinsames Kochen weckt Begeisterung fürs Essen."
+  },
+  {
+    "id": "4y-feeding-05",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Lebe die Essgewohnheiten vor, die du bei deinem Kind entwickeln möchtest. Es bemerkt und ahmt nach, wie du über Essen sprichst und was du zu essen wählst."
+  },
+  {
+    "id": "4y-feeding-06",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Ballaststoffe sind wichtig für die Verdauung. Biete regelmäßig Vollkornbrot, Haferflocken, Beeren und Bohnen an, damit alles reibungslos läuft."
+  },
+  {
+    "id": "4y-feeding-07",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Bringe deinem Kind bei, Hunger- und Sättigungssignale zu erkennen. \"Ist dein Bauch noch hungrig?\" ist besser als \"Iss deinen Teller auf.\""
+  },
+  {
+    "id": "4y-feeding-08",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Einen kleinen Kräutergarten anlegen oder Samen keimen lassen lehrt dein Kind, woher Lebensmittel kommen. Kinder lieben es, Dinge zu essen, die sie selbst angebaut haben."
+  },
+  {
+    "id": "4y-feeding-09",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Versuche \"Lebensmittelbrücken\" — wenn dein Kind Pommes mag, biete gebackene Süßkartoffelpommes an. Nutze Lebensmittel, die es mag, als Brücke zu ähnlichen neuen Lebensmitteln."
+  },
+  {
+    "id": "4y-feeding-10",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Dein Kind braucht etwa 2 bis 2,5 Tassen Milchprodukte oder Kalzium-Äquivalent pro Tag. Wenn es keine Milch mag, zählen Joghurt, Käse und kalziumangereicherte Lebensmittel auch."
+  },
+  {
+    "id": "4y-feeding-11",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Mahlzeiten sollten etwa 20-30 Minuten dauern. Wenn dein Kind danach nicht gegessen hat, beende die Mahlzeit ruhig. Es wird bei der nächsten Gelegenheit essen."
+  },
+  {
+    "id": "4y-feeding-12",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Ermutige dein Kind, einen Bissen von neuen Lebensmitteln zu probieren, ohne es zu zwingen. Mit der Zeit funktioniert dieser sanfte Ansatz besser als Druck."
+  },
+  {
+    "id": "4y-feeding-13",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Omega-3-Fettsäuren unterstützen die Gehirnentwicklung. Baue wenn möglich Fisch, Walnüsse, Chiasamen oder Leinsamen in die Ernährung deines Kindes ein."
+  },
+  {
+    "id": "4y-feeding-14",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Vermeide es, Essen als Trost oder Belohnung einzusetzen. Zeige deinem Kind stattdessen andere Wege zum Feiern oder um sich besser zu fühlen — eine Umarmung, ein Spiel oder gemeinsame Zeit."
+  },
+  {
+    "id": "4y-feeding-15",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Dein Kind kann jetzt geschickt aus einem offenen Becher trinken. Biete den ganzen Tag über Wasser an und halte zuckerhaltige Getränke als gelegentliche Ausnahme."
+  },
+  {
+    "id": "4y-health-01",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Dein Kind könnte in dieser Phase wichtige Auffrischungsimpfungen benötigen. Sprich mit deinem Kinderarzt, um sicherzustellen, dass die Impfungen aktuell sind."
+  },
+  {
+    "id": "4y-health-02",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Dein Kind sollte sich zweimal täglich die Zähne mit einer erbsengroßen Menge fluoridhaltiger Zahnpasta putzen. Hilf beim Putzen, bis es seine Schuhe selbst binden kann — ungefähr im Alter von 6-7 Jahren."
+  },
+  {
+    "id": "4y-health-03",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Ein jährlicher Sehtest wird zwischen 3 und 5 Jahren empfohlen. Das frühzeitige Erkennen von Problemen wie Amblyopie (Schwachsichtigkeit) gibt der Behandlung die beste Erfolgschance."
+  },
+  {
+    "id": "4y-health-04",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Wenn dein Kind nachts über Wachstumsschmerzen in den Beinen klagt, helfen sanfte Massage und ein warmes Tuch meist. Diese Schmerzen sind normal und vorübergehend."
+  },
+  {
+    "id": "4y-health-05",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Bringe deinem Kind bei, sich die Hände richtig zu waschen: nass machen, einseifen, 20 Sekunden schrubben, abspülen, abtrocknen. Das ist besonders wichtig vor dem Essen und nach dem Toilettengang."
+  },
+  {
+    "id": "4y-health-06",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Die ersten bleibenden Backenzähne deines Kindes kommen mit etwa 6 Jahren. Frage dann deinen Zahnarzt nach Zahnversiegelungen, um sie vor Karies zu schützen."
+  },
+  {
+    "id": "4y-health-07",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Dein Kind könnte anfangen, saisonale Allergien zu entwickeln. Eine laufende Nase mit klarem Schleim, Niesen und juckende Augen, die anhalten, sind Anzeichen, die du mit deinem Arzt besprechen solltest."
+  },
+  {
+    "id": "4y-health-08",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Bindehautentzündung verbreitet sich leicht unter Kindern. Bringe deinem Kind bei, sich nicht in die Augen zu fassen und sein eigenes Handtuch zu benutzen."
+  },
+  {
+    "id": "4y-health-09",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Wenn dein Kind Asthma hat, erarbeite mit deinem Kinderarzt einen Aktionsplan. Kenne den Unterschied zwischen dem täglichen Dauermedikament und dem Notfallinhalator."
+  },
+  {
+    "id": "4y-health-10",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Achte auf die Haltung deines Kindes bei Aktivitäten. Ein stabiler, kindergerechter Stuhl und Tisch helfen, ein Zusammensacken beim Zeichnen oder Essen zu vermeiden."
+  },
+  {
+    "id": "4y-health-11",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Läuse kommen in Gemeinschaftseinrichtungen häufig vor und haben nichts mit Hygiene zu tun. Bringe deinem Kind bei, keine Mützen, Bürsten oder Haarschmuck zu teilen."
+  },
+  {
+    "id": "4y-health-12",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Dein Kind kann jetzt lernen, sich effektiv die Nase zu putzen. Übe das Benutzen und Entsorgen von Taschentüchern — das ist eine wichtige Fähigkeit, die die Keimverbreitung verringert."
+  },
+  {
+    "id": "4y-health-13",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Stelle sicher, dass dein Kind genügend Zeit im Freien verbringt. Natürliches Sonnenlicht unterstützt die Vitamin-D-Produktion, die Stimmung und gesunde Schlafzyklen."
+  },
+  {
+    "id": "4y-health-14",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Wenn dein Kind nachts mit den Zähnen knirscht, erwähne es beim nächsten Zahnarztbesuch. Es ist normalerweise harmlos, aber es lohnt sich, es im Auge zu behalten."
+  },
+  {
+    "id": "4y-health-15",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Bleib auf dem Laufenden mit der jährlichen Grippeimpfung. Kinder in Gemeinschaftseinrichtungen sind während der Grippesaison besonders anfällig."
+  },
+  {
+    "id": "4y-play-01",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Dein Kind kann jetzt komplexere Bauprojekte bewältigen. Das Bauen mit Steckbausteinen nach einfachen Anleitungen fördert räumliches Denken und Geduld."
+  },
+  {
+    "id": "4y-play-02",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Führe einfache Kartenspiele wie Quartett oder Zuordnungsspiele ein. Sie fördern Zahlenerkennung, Strategie und soziale Fähigkeiten gleichzeitig."
+  },
+  {
+    "id": "4y-play-03",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Spielen im Freien ist unverzichtbar — Klettern, Rennen und Schaukeln fördern Kraft, Koordination und Risikoeinschätzung. Vorschulkinder profitieren von Bewegung über den ganzen Tag, also sorge für reichlich Aktivität."
+  },
+  {
+    "id": "4y-play-04",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Dein Kind führt vielleicht gerne \"Vorstellungen\" oder Puppentheater auf. Dieses Rollenspiel stärkt das Selbstvertrauen, die Sprachfähigkeiten und den emotionalen Ausdruck."
+  },
+  {
+    "id": "4y-play-05",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Einfache Experimente — Backpulver und Essig mischen, Samen ziehen oder Magnete erforschen — wecken Neugier und vermitteln Ursache und Wirkung."
+  },
+  {
+    "id": "4y-play-06",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Ermutige dein Kind, seine Gefühle zu zeichnen oder zu malen. Kunst ist ein wirkungsvolles Ventil für Emotionen, für die es vielleicht noch keine Worte hat."
+  },
+  {
+    "id": "4y-play-07",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Dein Kind ist bereit für Spiele mit einfachen Regeln wie \"Simon sagt\" oder \"Rotes Licht, grünes Licht\". Diese fördern die Zuhörfähigkeit und Impulskontrolle."
+  },
+  {
+    "id": "4y-play-08",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Mit Messbechern, Löffeln und Wasser spielen vermittelt frühe Mathekonzepte wie Volumen, mehr und weniger sowie Schätzen auf praktische Weise."
+  },
+  {
+    "id": "4y-play-09",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Dein Kind bastelt vielleicht gerne mit Recyclingmaterialien — Papprollen, Eierkartons, Flaschenverschlüssen. Dieses offene Spiel weckt Kreativität und Einfallsreichtum."
+  },
+  {
+    "id": "4y-play-10",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Das Fahren mit einem Laufrad oder einem Fahrrad mit Stützrädern baut Koordination und Selbstvertrauen auf, die später auf das Fahren ohne Hilfe übertragen werden."
+  },
+  {
+    "id": "4y-play-11",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Spielt \"Ich sehe was, was du nicht siehst\" bei Autofahrten oder Spaziergängen. Es schärft die Beobachtungsgabe und den Wortschatz und hält dein Kind bei Laune."
+  },
+  {
+    "id": "4y-play-12",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Samen pflanzen und beobachten, wie sie wachsen, lehrt Geduld, Verantwortung und grundlegende Naturkunde. Lass dein Kind seine Pflanze täglich gießen."
+  },
+  {
+    "id": "4y-play-13",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Fädelspiele und Perlenauffädeln fördern die feinmotorische Präzision, die dein Kind später zum Schreiben braucht. Mit buntem Material macht es besonders Spaß."
+  },
+  {
+    "id": "4y-play-14",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Erstelle eine Schatzkarte von eurem Garten oder eurer Wohnung. Einer Karte zu folgen vermittelt räumliche Konzepte wie links, rechts, nah und fern."
+  },
+  {
+    "id": "4y-play-15",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Kooperative Spiele, bei denen alle auf ein gemeinsames Ziel hinarbeiten, fördern Teamfähigkeit und nehmen den Stress des Wettbewerbs für Kinder, die noch lernen, mit Niederlagen umzugehen."
+  },
+  {
+    "id": "4y-safety-01",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Lass dein Kind so lange wie möglich in einem vorwärtsgerichteten Kindersitz mit 5-Punkt-Gurt, bis zu den maximalen Größen- und Gewichtsgrenzen des Sitzes. Die meisten Kinder in diesem Alter haben den Gurt noch nicht herausgewachsen."
+  },
+  {
+    "id": "4y-safety-02",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Bringe deinem Kind bei, immer einen Erwachsenen zu fragen, bevor es in die Nähe von Wasser geht. Auch Kinder, die schwimmen können, sollten nie ohne Aufsicht im oder am Wasser sein."
+  },
+  {
+    "id": "4y-safety-03",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Übe, was zu tun ist, wenn ihr euch in einem Geschäft verliert: Stehen bleiben, nach einem Mitarbeiter Ausschau halten und auf keinen Fall das Gebäude verlassen."
+  },
+  {
+    "id": "4y-safety-04",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Dein Kind kann anfangen, seine Adresse zu lernen. Übe sie regelmäßig wie ein Lied oder einen Reim, damit sie sich einprägt."
+  },
+  {
+    "id": "4y-safety-05",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Bringe deinem Kind das Konzept von \"sicheren Erwachsenen\" bei — Eltern, Erzieher, Polizisten — an die es sich um Hilfe wenden kann. Vermeide den vagen Begriff \"Vorsicht vor Fremden\"."
+  },
+  {
+    "id": "4y-safety-06",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Dein Kind sollte beim Radfahren, Rollerfahren und Inlineskaten immer einen Helm tragen. Lass es einen Helm mitaussuchen, den es mag, damit es ihn auch gerne trägt."
+  },
+  {
+    "id": "4y-safety-07",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Das Bewusstsein für Küchensicherheit wächst in diesem Alter. Erkläre deinem Kind, dass Herd, Ofen und scharfe Gegenstände nur für Erwachsene sind, und lebe sicheres Verhalten in der Küche vor."
+  },
+  {
+    "id": "4y-safety-08",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Stelle sicher, dass dein Kind weiß, die Haustür nicht ohne einen Erwachsenen zu öffnen. Ein hoch angebrachter Riegel oder eine Türkette bieten zusätzliche Sicherheit."
+  },
+  {
+    "id": "4y-safety-09",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Besprich Spielplatzregeln: Die Rutsche mit den Füßen voran hinunterrutschen, an der Schaukel warten und sicheren Abstand zu schaukelnden Kindern halten."
+  },
+  {
+    "id": "4y-safety-10",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Wenn dein Kind ein Tablet oder ein anderes Gerät benutzt, richte eine Kindersicherung ein und stelle Bildschirme in gemeinsamen Räumen auf. Erkläre ihm, niemals persönliche Daten im Internet preiszugeben."
+  },
+  {
+    "id": "4y-safety-11",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Bringe deinem Kind Körperbewusstsein mit den korrekten anatomischen Bezeichnungen bei. Kinder, die die richtigen Wörter kennen, können sich besser mitteilen, wenn etwas nicht stimmt."
+  },
+  {
+    "id": "4y-safety-12",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Dein Kind ist alt genug, um zu üben, den Notruf zu wählen und zu wissen, was es sagen soll: seinen Namen, dass es Hilfe braucht und seine Adresse."
+  },
+  {
+    "id": "4y-safety-13",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Garagentore, Elektrowerkzeuge und Werkstattbereiche sollten ohne Aufsicht eines Erwachsenen immer tabu sein. Verwende bei Bedarf Schlösser oder Alarmanlagen."
+  },
+  {
+    "id": "4y-safety-14",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Wenn dein Kind im Auto mitfährt, sollte es immer auf dem Rücksitz sitzen. Der Rücksitz ist der sicherste Platz für alle Kinder unter 13 Jahren."
+  },
+  {
+    "id": "4y-safety-15",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Bringe deinem Kind bei, am Rand jeder Einfahrt und jedes Gehwegs stehen zu bleiben. Übt zusammen, nach links, rechts und nochmals links zu schauen, bevor ihr die Straße überquert."
+  }
+]

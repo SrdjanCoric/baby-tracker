@@ -1,0 +1,542 @@
+[
+  {
+    "id": "3y-development-01",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tu hijo probablemente está hablando en oraciones de 3-5 palabras ahora. Expande lo que dice — si dice \"perrito corriendo\", responde con \"¡Sí, el perrito grande está corriendo rápido!\""
+  },
+  {
+    "id": "3y-development-02",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Pedalear un triciclo es un hito importante que combina coordinación, fuerza y equilibrio. Dale a tu hijo muchas oportunidades para practicar."
+  },
+  {
+    "id": "3y-development-03",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a entender el concepto de \"mío\" y \"de ellos\". Los juegos de mesa simples y las actividades de compartir ayudan a desarrollar esta habilidad social."
+  },
+  {
+    "id": "3y-development-04",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Dibujar círculos e intentar copiar líneas demuestra un control motor fino creciente. Exhibe sus dibujos con orgullo — eso lo motiva a seguir practicando."
+  },
+  {
+    "id": "3y-development-05",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tu hijo probablemente puede contar hasta tres o más. Cuenten todo juntos — escaleras, refrigerios, juguetes — para hacer que los números sean parte de la vida diaria."
+  },
+  {
+    "id": "3y-development-06",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "El juego cooperativo está surgiendo. Tu hijo puede comenzar a jugar juegos simples con otros niños en lugar de simplemente junto a ellos."
+  },
+  {
+    "id": "3y-development-07",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tu hijo probablemente puede vestirse solo con algo de ayuda. Déjalo elegir entre dos conjuntos de ropa para fomentar la toma de decisiones y la independencia."
+  },
+  {
+    "id": "3y-development-08",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "El juego imaginativo se vuelve más complejo ahora — espera historias elaboradas con animales de peluche y muñecas. Esto es crucial para el desarrollo cognitivo y emocional."
+  },
+  {
+    "id": "3y-development-09",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a preguntar \"por qué\" constantemente. Esto es emocionante — está desarrollando el pensamiento lógico. Responde de forma simple y honesta, incluso cuando sea la pregunta número 50."
+  },
+  {
+    "id": "3y-development-10",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a intentar equilibrarse en un pie brevemente. Juegos como \"postura de flamenco\" ayudan a desarrollar la fuerza de piernas y la coordinación necesarias para saltar, que se desarrolla más cerca de los 4 años."
+  },
+  {
+    "id": "3y-development-11",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tu hijo está comenzando a entender el concepto de tiempo — \"después del almuerzo\" o \"antes de dormir\". Usa estas frases para ayudarle a anticipar los eventos del día."
+  },
+  {
+    "id": "3y-development-12",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Los berrinches pueden seguir siendo frecuentes, pero tu hijo está ganando más regulación emocional. Valida sus sentimientos primero, luego guíalo hacia soluciones."
+  },
+  {
+    "id": "3y-development-13",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Usar tijeras con supervisión es una actividad maravillosa de motricidad fina. Comienza con papel grueso y tijeras seguras para niños para fortalecer las manos."
+  },
+  {
+    "id": "3y-development-14",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a reconocer algunas letras, especialmente la primera letra de su nombre. Señala letras en entornos cotidianos como letreros y libros."
+  },
+  {
+    "id": "3y-development-15",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "La disposición para dejar el pañal varía mucho. Si tu hijo muestra interés, se mantiene seco durante dos horas y puede seguir instrucciones sencillas, puede estar listo."
+  },
+  {
+    "id": "3y-sleep-01",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Muchos niños a esta edad todavía necesitan una siesta diurna, pero algunos comienzan a dejarla. Si se salta la siesta, intenta un tiempo de descanso tranquilo con libros."
+  },
+  {
+    "id": "3y-sleep-02",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Tu hijo necesita 11-14 horas de sueño total en 24 horas. Si está dejando la siesta, la hora de dormir puede necesitar adelantarse para compensar."
+  },
+  {
+    "id": "3y-sleep-03",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Los terrores nocturnos pueden aparecer alrededor de los 3 años. Parecen aterradores, pero tu hijo no los recordará. Mantenlo seguro y evita despertarlo durante un episodio."
+  },
+  {
+    "id": "3y-sleep-04",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Si tu hijo sigue levantándose de la cama, llévalo de vuelta con calma cada vez con la mínima interacción. La constancia es clave — generalmente se resuelve en una semana."
+  },
+  {
+    "id": "3y-sleep-05",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Un cuadro visual de la rutina para dormir con imágenes puede ayudar a tu hijo a sentirse en control del proceso y reducir la resistencia a la hora de acostarse."
+  },
+  {
+    "id": "3y-sleep-06",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "La imaginación creciente de tu hijo puede generar miedos nocturnos sobre monstruos o la oscuridad. Toma sus sentimientos en serio y crea un simple \"spray antimonstruos\" o un ritual de revisión juntos."
+  },
+  {
+    "id": "3y-sleep-07",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Si tu hijo duerme la siesta en la guardería pero se resiste a dormir en casa, la siesta puede ser demasiado larga. Habla con la guardería sobre limitar su duración."
+  },
+  {
+    "id": "3y-sleep-08",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Un reloj infantil que cambia de color a la hora de despertar puede enseñar a tu hijo cuándo está bien levantarse. Le da una señal visual que puede entender."
+  },
+  {
+    "id": "3y-sleep-09",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "El juego activo al aire libre por la tarde ayuda a tu hijo a dormirse más fácilmente. Sin embargo, evita la actividad intensa en la hora previa a acostarse."
+  },
+  {
+    "id": "3y-sleep-10",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Deja de usar el saco de dormir si tu hijo ya está en una cama infantil. Las pijamas ligeras y bien ajustadas son la opción más segura."
+  },
+  {
+    "id": "3y-sleep-11",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Si tu hijo se despierta para ir al baño por la noche, limita las bebidas 1-2 horas antes de dormir y facilita el camino al baño con una luz nocturna tenue."
+  },
+  {
+    "id": "3y-sleep-12",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Algunos niños a esta edad se resisten a la siesta pero terminan agotados y de mal humor a la hora de la cena. Incluso 30 minutos de descanso tranquilo pueden ayudar a mejorar su ánimo."
+  },
+  {
+    "id": "3y-sleep-13",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Mantener la hora de dormir dentro de la misma ventana de 30 minutos cada noche — incluso los fines de semana — ayuda a regular el reloj interno de tu hijo."
+  },
+  {
+    "id": "3y-sleep-14",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Deja que tu hijo elija su pijama o el libro para la hora de dormir. Las pequeñas decisiones le dan un sentido de control que reduce las luchas de poder a la hora de dormir."
+  },
+  {
+    "id": "3y-sleep-15",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Si tu hijo ha comenzado a caminar dormido, asegúrate de que el entorno sea seguro con puertas de seguridad en las escaleras y las puertas exteriores bien cerradas."
+  },
+  {
+    "id": "3y-feeding-01",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Tu hijo ahora puede usar un tenedor para pinchar alimentos blandos y una cuchara casi sin derramar. Elogia su esfuerzo para motivar que siga practicando."
+  },
+  {
+    "id": "3y-feeding-02",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Ofrece nuevos alimentos junto a los favoritos de siempre. Puede tomar 15-20 exposiciones antes de que un niño acepte un alimento nuevo, así que la paciencia vale la pena."
+  },
+  {
+    "id": "3y-feeding-03",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Tu hijo necesita alrededor de 1,000-1,400 calorías por día, pero el apetito varía de comida a comida. Confía en sus señales de hambre en lugar de presionarlo para que termine."
+  },
+  {
+    "id": "3y-feeding-04",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Prueba servir las comidas \"al estilo familiar\" donde tu hijo pueda servirse solo porciones pequeñas. Esto fomenta la independencia y reduce las peleas con la comida."
+  },
+  {
+    "id": "3y-feeding-05",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Limita el picoteo entre comidas. Los horarios de merienda estructurados ayudan a que tu hijo llegue a las comidas con suficiente hambre para probar alimentos diferentes."
+  },
+  {
+    "id": "3y-feeding-06",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Tu hijo puede comer mucho un día y apenas comer al siguiente. Esto es normal — evalúa la nutrición a lo largo de una semana completa en lugar de un solo día."
+  },
+  {
+    "id": "3y-feeding-07",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Involucra a tu hijo en las compras del supermercado dejándolo elegir una fruta o verdura. Los niños se interesan más por la comida que ayudaron a elegir."
+  },
+  {
+    "id": "3y-feeding-08",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Los granos integrales, proteína magra, frutas, verduras y lácteos forman un plato equilibrado. Apunta a la variedad durante la semana, no a la perfección en cada comida."
+  },
+  {
+    "id": "3y-feeding-09",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Mojar la comida es mágico a esta edad. Ofrece hummus, yogur o mantequilla de frutos secos para untar — los niños son más propensos a comer verduras y frutas si pueden mojarlas."
+  },
+  {
+    "id": "3y-feeding-10",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Evita etiquetar a tu hijo como \"quisquilloso para comer\" frente a él. Los niños internalizan estas etiquetas, lo que puede hacer que el comportamiento persista más tiempo."
+  },
+  {
+    "id": "3y-feeding-11",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Tu hijo puede comenzar a aprender a servir desde una jarrita pequeña a su vaso. Esto desarrolla la motricidad fina y lo hace sentir capaz."
+  },
+  {
+    "id": "3y-feeding-12",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "El calcio y la vitamina D son fundamentales para el crecimiento óseo. Si tu hijo no toma mucha leche, el yogur, el queso y los alimentos fortificados pueden compensarlo."
+  },
+  {
+    "id": "3y-feeding-13",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Haz que las comidas sean agradables y sin presión. Evita sobornar, insistir o forzar a tu hijo a comer — tiene consecuencias negativas a largo plazo."
+  },
+  {
+    "id": "3y-feeding-14",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Las grasas saludables del aguacate, el aceite de oliva, las mantequillas de frutos secos y el pescado apoyan el desarrollo cerebral de tu hijo. Inclúyelas con regularidad."
+  },
+  {
+    "id": "3y-feeding-15",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Si tu hijo solo quiere alimentos blancos o beige, intenta introducir color gradualmente — un solo arándano en el plato, un pequeño ramito de brócoli junto a su pasta."
+  },
+  {
+    "id": "3y-health-01",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "La próxima visita de control de tu hijo es una revisión importante. El pediatra evaluará el habla, la visión, la audición y los hitos del desarrollo."
+  },
+  {
+    "id": "3y-health-02",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Usa una cantidad de pasta dental con flúor del tamaño de un guisante. Enseña a tu hijo a escupir en lugar de tragar, pero no te preocupes si de vez en cuando se le olvida."
+  },
+  {
+    "id": "3y-health-03",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Las alergias a menudo se hacen más evidentes alrededor de esta edad. Si tu hijo tiene estornudos persistentes, picazón en los ojos o erupciones en la piel, consulta sobre pruebas de alergia con tu médico."
+  },
+  {
+    "id": "3y-health-04",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Pregunta sobre un examen de visión en la próxima visita de control de tu hijo. La detección temprana de problemas como el ojo perezoso lleva a resultados mucho mejores."
+  },
+  {
+    "id": "3y-health-05",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Los virus estomacales se propagan rápido en entornos grupales. Enseña a tu hijo a lavarse las manos con jabón durante 20 segundos — cantar una canción corta lo hace divertido."
+  },
+  {
+    "id": "3y-health-06",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Si tu hijo se hace un corte o rasguño leve, límpialo con agua y ponle una curita. Esta también es una oportunidad para enseñarle el cuidado básico de heridas."
+  },
+  {
+    "id": "3y-health-07",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Algunos niños puede que todavía necesiten vacunas pendientes. Tu próxima visita de control es un buen momento para revisar el calendario de vacunación con tu pediatra."
+  },
+  {
+    "id": "3y-health-08",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "El crup, con su tos que suena como ladrido, es común en este grupo de edad y generalmente suena peor de lo que es. El aire fresco o salir al exterior brevemente puede ayudar."
+  },
+  {
+    "id": "3y-health-09",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Establece una rutina dental que no le dé miedo a tu hijo. Déjalo verte cepillarte, cuenta sus dientes y elogia su valentía durante las visitas."
+  },
+  {
+    "id": "3y-health-10",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Si tu hijo no ha tenido una prueba de audición recientemente, pide una. Los problemas de audición no detectados pueden afectar el desarrollo del habla y el lenguaje."
+  },
+  {
+    "id": "3y-health-11",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Enseña a tu hijo a toser o estornudar en el codo en lugar de en las manos. Da el ejemplo tú también — los niños aprenden observando."
+  },
+  {
+    "id": "3y-health-12",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Si tu hijo tiene eczema, una rutina de hidratación suave diaria después del baño puede prevenir brotes. Usa productos sin fragancia."
+  },
+  {
+    "id": "3y-health-13",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Los pies de tu hijo todavía se están desarrollando. Elige zapatos que sean flexibles y bien ajustados en lugar de estilos rígidos \"de soporte\"."
+  },
+  {
+    "id": "3y-health-14",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Si tu hijo tartamudea cuando está emocionado o se apresura al hablar, sé paciente y dale tiempo. El tartamudeo leve es común alrededor de los 3 años y a menudo se resuelve solo."
+  },
+  {
+    "id": "3y-health-15",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Enfócate en contenido de alta calidad y apropiado para la edad cuando tu hijo use pantallas. Mira junto con él cuando sea posible para poder hablar sobre lo que está viendo y hacerlo interactivo."
+  },
+  {
+    "id": "3y-play-01",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "El juego de disfraces es maravilloso a esta edad. Sombreros viejos, bufandas y camisas grandes permiten que tu hijo explore diferentes roles y narrativas."
+  },
+  {
+    "id": "3y-play-02",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Tu hijo ahora puede armar rompecabezas de 12-24 piezas. Los rompecabezas desarrollan la paciencia, el razonamiento espacial y la satisfacción de completar un desafío."
+  },
+  {
+    "id": "3y-play-03",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Organiza una búsqueda del tesoro sencilla por la casa o el patio. Desarrolla habilidades de observación y hace que tu hijo se mueva con un propósito."
+  },
+  {
+    "id": "3y-play-04",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Construir con bloques o fichas magnéticas fomenta el pensamiento de ingeniería. Pídele a tu hijo que describa lo que está construyendo para agregar un componente de lenguaje."
+  },
+  {
+    "id": "3y-play-05",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Tu hijo puede disfrutar jugando a la \"tienda\" o al \"restaurante\". Estos juegos de simulación enseñan a contar, roles sociales y habilidades de conversación."
+  },
+  {
+    "id": "3y-play-06",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Pintar con diferentes herramientas — esponjas, bolitas de algodón, hojas — mantiene el arte fresco y enseña a tu hijo que la creatividad no tiene reglas."
+  },
+  {
+    "id": "3y-play-07",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "El baile congelado es una actividad fantástica a esta edad. Enseña habilidades de escucha, control del cuerpo y garantiza muchas risas."
+  },
+  {
+    "id": "3y-play-08",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Comienza con juegos de mesa simples que involucren colores o una ruleta, no estrategia compleja. Enseñan a esperar turnos y a manejar el ganar y el perder."
+  },
+  {
+    "id": "3y-play-09",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Tu hijo puede comenzar a aprender a atrapar una pelota grande y blanda lanzada suavemente desde corta distancia. Desarrolla la coordinación ojo-mano y el tiempo de reacción."
+  },
+  {
+    "id": "3y-play-10",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Crea un \"contenedor sensorial\" con frijoles secos, cucharas y recipientes pequeños. Verter y trasvasar desarrollan la motricidad fina y mantienen a los niños entretenidos."
+  },
+  {
+    "id": "3y-play-11",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Contar cuentos donde tú comienzas la historia y tu hijo agrega lo que pasa después fomenta la creatividad, el lenguaje y el pensamiento narrativo."
+  },
+  {
+    "id": "3y-play-12",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Mantener el equilibrio sobre una viga baja, un bordillo o una línea de cinta en el piso es excelente para la fuerza central y la coordinación."
+  },
+  {
+    "id": "3y-play-13",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Dale a tu hijo revistas viejas para recortar con tijeras seguras. La práctica de recortar fortalece los músculos de la mano necesarios para escribir."
+  },
+  {
+    "id": "3y-play-14",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Los juegos de memoria con tarjetas de imágenes desarrollan la memoria y la concentración. Comienza con pocas parejas y aumenta a medida que mejore."
+  },
+  {
+    "id": "3y-play-15",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Deja que tu hijo se aburra a veces. El tiempo libre sin estructura le enseña a entretenerse solo y despierta la resolución creativa de problemas."
+  },
+  {
+    "id": "3y-safety-01",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Tu hijo se está convirtiendo en un escalador. Asegura todos los muebles altos, televisores y estantes a la pared — los volcamientos son un riesgo serio a esta edad."
+  },
+  {
+    "id": "3y-safety-02",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Practica tu plan de escape en caso de incendio con tu hijo. Enséñale a agacharse y avanzar hacia el punto de encuentro — mantenlo simple y sin asustar."
+  },
+  {
+    "id": "3y-safety-03",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Tu hijo debe estar en un asiento de auto con arnés — mirando hacia atrás el mayor tiempo posible, luego hacia adelante. Mantenlo sujeto con el arnés hasta que alcance la altura o el peso máximo del asiento."
+  },
+  {
+    "id": "3y-safety-04",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Enséñale a tu hijo que los medicamentos no son dulces. Siempre guarda los medicamentos en envases con seguro infantil y fuera de su alcance."
+  },
+  {
+    "id": "3y-safety-05",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "En el parque infantil, asegúrate de que los juegos sean apropiados para su edad. Las plataformas de más de {{4 feet|1,2 metros}} están diseñadas para niños mayores."
+  },
+  {
+    "id": "3y-safety-06",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Comienza a enseñarle a tu hijo sobre la autonomía corporal — puede decir que no a los toques no deseados, incluso de familiares que quieran darle abrazos."
+  },
+  {
+    "id": "3y-safety-07",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Mantén a tu hijo al alcance de tu brazo cerca de cualquier cuerpo de agua, incluyendo piscinas inflables. Las clases de natación pueden comenzar ahora, pero no reemplazan la supervisión."
+  },
+  {
+    "id": "3y-safety-08",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Enséñale a tu hijo a pedir permiso antes de acariciar a cualquier perro y a dejar que el perro olfatee su mano primero. Da el ejemplo de un comportamiento tranquilo y amable con los animales."
+  },
+  {
+    "id": "3y-safety-09",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Asegúrate de que los objetos pequeños como monedas, canicas y globos desinflados estén fuera de su alcance. El atragantamiento sigue siendo un riesgo durante los años de preescolar."
+  },
+  {
+    "id": "3y-safety-10",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Al caminar cerca de calles, siempre toma la mano de tu hijo. Todavía no tiene la capacidad de evaluar la velocidad o la distancia del tráfico."
+  },
+  {
+    "id": "3y-safety-11",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Verifica que tus detectores de humo y de monóxido de carbono tengan las baterías funcionando. Pruébalos cada mes — tu hijo puede ayudar a presionar el botón."
+  },
+  {
+    "id": "3y-safety-12",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Enséñale a tu hijo su nombre completo y tu nombre y apellido. Practícalo con regularidad para que pueda decirlo si alguna vez se separa de ti."
+  },
+  {
+    "id": "3y-safety-13",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Mantén los objetos afilados — cuchillos, tijeras, navajas — guardados en cajones con seguro o en un lugar alto. La curiosidad y el alcance de tu hijo crecen rápidamente."
+  },
+  {
+    "id": "3y-safety-14",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Asegúrate de que tu hijo siempre use casco al andar en triciclo o patineta. Un casco bien ajustado queda nivelado y no se mueve de lado a lado."
+  },
+  {
+    "id": "3y-safety-15",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Si tienes armas en el hogar, guárdalas descargadas en una caja fuerte con llave y la munición por separado. Los niños curiosos pueden encontrar objetos escondidos."
+  }
+]

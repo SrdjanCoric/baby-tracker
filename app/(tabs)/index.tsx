@@ -14,6 +14,7 @@ import {
   DashboardCard,
   BirthdayCelebrationModal,
 } from "@/components";
+import { TipCarousel } from "@/components/TipCarousel";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useDashboardConfig, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
 import { Alert } from "react-native";
 import { timeSince, hoursSince, formatDuration } from "@/utils/time";
@@ -838,6 +839,11 @@ export default function HomeScreen() {
           )
         }
       >
+        <TipCarousel
+          babyId={selectedBaby?.id}
+          birthDate={selectedBaby?.birthDate ? new Date(selectedBaby.birthDate) : undefined}
+        />
+
         <View className={isAndroid ? "gap-2.5" : "gap-3"}>
           {cardRows.map((row, rowIndex) => (
             <View key={rowIndex} className={`flex-row ${isAndroid ? "gap-2.5" : "gap-3"}`}>

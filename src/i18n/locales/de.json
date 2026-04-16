@@ -703,7 +703,23 @@
     "resetDashboardConfirm": "Dies setzt alle Karten auf ihre Standardreihenfolge und Sichtbarkeit zurück. Fortfahren?",
     "resetToDefault": "Auf Standard zurücksetzen",
     "widgets": "Widgets",
-    "widgetsDescription": "iOS-Widgets und Apple Watch konfigurieren"
+    "widgetsDescription": "iOS-Widgets und Apple Watch konfigurieren",
+    "dailyTips": "Tägliche Tipps",
+    "on": "An",
+    "off": "Aus"
+  },
+  "tips": {
+    "swipeForMore": "Wischen für mehr →",
+    "tipCount": "{{current}} von {{total}}",
+    "todaysTip": "Tipp des Tages",
+    "category": {
+      "development": "Entwicklung",
+      "sleep": "Schlaf",
+      "feeding": "Ernährung",
+      "health": "Gesundheit",
+      "play": "Spielen",
+      "safety": "Sicherheit"
+    }
   },
   "widget": {
     "title": "Widget-Konfiguration",
