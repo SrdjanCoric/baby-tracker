@@ -707,7 +707,23 @@
     "resetDashboardConfirm": "Esto restablecer\u00e1 todas las tarjetas a su orden y visibilidad predeterminados. \u00bfContinuar?",
     "resetToDefault": "Restablecer a predeterminado",
     "widgets": "Widgets",
-    "widgetsDescription": "Configura widgets de iOS y Apple Watch"
+    "widgetsDescription": "Configura widgets de iOS y Apple Watch",
+    "dailyTips": "Consejos Diarios",
+    "on": "Activado",
+    "off": "Desactivado"
+  },
+  "tips": {
+    "swipeForMore": "Desliza para más →",
+    "tipCount": "{{current}} de {{total}}",
+    "todaysTip": "Consejo del día",
+    "category": {
+      "development": "Desarrollo",
+      "sleep": "Sueño",
+      "feeding": "Alimentación",
+      "health": "Salud",
+      "play": "Juego",
+      "safety": "Seguridad"
+    }
   },
   "widget": {
     "title": "Configuraci\u00f3n de Widgets",

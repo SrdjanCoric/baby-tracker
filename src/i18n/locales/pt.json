@@ -705,7 +705,23 @@
     "resetDashboardConfirm": "Isso redefinirá todos os cartões para sua ordem e visibilidade padrão. Continuar?",
     "resetToDefault": "Redefinir para Padrão",
     "widgets": "Widgets",
-    "widgetsDescription": "Configurar widgets iOS e Apple Watch"
+    "widgetsDescription": "Configurar widgets iOS e Apple Watch",
+    "dailyTips": "Dicas Diárias",
+    "on": "Ativado",
+    "off": "Desativado"
+  },
+  "tips": {
+    "swipeForMore": "Deslize para mais →",
+    "tipCount": "{{current}} de {{total}}",
+    "todaysTip": "Dica do dia",
+    "category": {
+      "development": "Desenvolvimento",
+      "sleep": "Sono",
+      "feeding": "Alimentação",
+      "health": "Saúde",
+      "play": "Brincadeira",
+      "safety": "Segurança"
+    }
   },
   "widget": {
     "title": "Configuração de Widget",

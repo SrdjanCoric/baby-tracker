@@ -1,0 +1,542 @@
+[
+  {
+    "id": "5y-development-01",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind kann wahrscheinlich bis 20 oder darüber hinaus zählen und könnte anfangen, einfache Addition zu verstehen. Nutze echte Gegenstände — \"Du hast 3 Trauben, ich gebe dir noch 2 dazu\" — um Mathe greifbar zu machen."
+  },
+  {
+    "id": "5y-development-02",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Buchstaben und den eigenen Namen mit wachsender Kontrolle zu schreiben ist eine große Leistung. Biete liniertes Papier an und feiere Fortschritt statt Perfektion."
+  },
+  {
+    "id": "5y-development-03",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind entwickelt Empathie und kann erkennen, wenn andere traurig oder verärgert sind. Sprich über Gefühle in Büchern und im echten Leben, um diese Fähigkeit zu stärken."
+  },
+  {
+    "id": "5y-development-04",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Hüpfen, selbstbewusstes Klettern und das Werfen eines Balls überkopf zeigen, dass die Grobmotorik gut entwickelt ist. Biete weiterhin verschiedene körperliche Herausforderungen an."
+  },
+  {
+    "id": "5y-development-05",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind könnte anfangen, das Konzept der Zeit zu verstehen — heute, morgen, gestern. Ein einfacher Kalender kann ihm helfen, Tage, Wochen und bevorstehende Ereignisse zu begreifen."
+  },
+  {
+    "id": "5y-development-06",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind kann mehrstufige Anweisungen befolgen und Regeln merken. Gib ihm kleine Aufgaben wie das Decken des Tisches, um Selbstvertrauen aufzubauen."
+  },
+  {
+    "id": "5y-development-07",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Freundschaften werden stabiler und bedeutungsvoller. Dein Kind könnte einen besten Freund haben und beginnt, Konflikte selbstständiger zu bewältigen."
+  },
+  {
+    "id": "5y-development-08",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind könnte anfangen, einfache Wörter zu erlesen oder Sichtwörter zu erkennen. Gemeinsames abendliches Vorlesen bleibt die wirksamste Aktivität zur Leseförderung."
+  },
+  {
+    "id": "5y-development-09",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind kann erkennbare Bilder mit Details wie Häuser mit Fenstern und Menschen mit Fingern zeichnen. Diese Zeichnungen spiegeln wider, wie es seine Welt versteht."
+  },
+  {
+    "id": "5y-development-10",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Die Aufmerksamkeitsspanne wächst — dein Kind kann sich 10-15 Minuten lang auf eine einzelne Aktivität konzentrieren. Biete Gelegenheiten für anhaltende Konzentration ohne Unterbrechung."
+  },
+  {
+    "id": "5y-development-11",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind könnte anfangen, sich mit Gleichaltrigen zu vergleichen. Betone Anstrengung statt Ergebnis und feiere individuelle Stärken, um ein gesundes Selbstwertgefühl aufzubauen."
+  },
+  {
+    "id": "5y-development-12",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Reimen, Silben klatschen und das Erkennen von Anfangslauten sind Vorläuferfähigkeiten fürs Lesen, die sich jetzt entwickeln. Spiele Wortspiele, um sie auf natürliche Weise zu fördern."
+  },
+  {
+    "id": "5y-development-13",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind lernt, im Gespräch abzuwechseln — zuzuhören und dann zu antworten. Sei ein Vorbild, indem du ihm deine volle Aufmerksamkeit schenkst, wenn es spricht."
+  },
+  {
+    "id": "5y-development-14",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Problemlösung wird ausgefeilter. Wenn dein Kind vor einer Herausforderung steht, führe es durch mögliche Lösungen, anstatt das Problem für es zu lösen."
+  },
+  {
+    "id": "5y-development-15",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Dein Kind kann einfache Witze verstehen und erzählen. Humor ist eine komplexe kognitive Fähigkeit, die Überraschung, Wortspiel und soziales Bewusstsein beinhaltet."
+  },
+  {
+    "id": "5y-sleep-01",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Dein Kind braucht 10-13 Stunden Schlaf pro 24 Stunden. Die meisten Kinder in diesem Alter haben den Mittagsschlaf aufgegeben, aber einige 4-Jährige könnten ihn noch brauchen. Schütze die Schlafenszeit auch an vollen Tagen."
+  },
+  {
+    "id": "5y-sleep-02",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Eine Entspannungsphase von 30 Minuten vor dem Schlafengehen — Lesen, ruhiges Gespräch, sanftes Dehnen — hilft dem Gehirn deines Kindes, vom aktiven Modus in den Schlafmodus umzuschalten."
+  },
+  {
+    "id": "5y-sleep-03",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Wenn dein Kind anfängt, zur Schule zu gehen, wird regelmäßiger Schlaf noch wichtiger. Müde Kinder haben Schwierigkeiten, sich zu konzentrieren, zu lernen und Emotionen zu steuern."
+  },
+  {
+    "id": "5y-sleep-04",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Albträume können immer noch vorkommen und beinhalten oft Themen aus dem Alltag. Sprich kurz über den Traum, biete Trost und hilf deinem Kind, sich sicher zu fühlen."
+  },
+  {
+    "id": "5y-sleep-05",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Dein Kind kann anfangen, Teile seiner Abendroutine selbst zu übernehmen — Schlafanzug wählen, Zähne putzen, ein Buch aussuchen. Selbstständigkeit fördert die Bereitschaft zur Zusammenarbeit."
+  },
+  {
+    "id": "5y-sleep-06",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Bettnässen im Alter von 5 Jahren ist immer noch normal und betrifft etwa 15% der Kinder. Sei geduldig, verwende eine Schutzunterlage und vermeide Bestrafung — es wächst sich aus."
+  },
+  {
+    "id": "5y-sleep-07",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Wenn dein Kind sich gegen die Schlafenszeit wehrt, weil es mehr Zeit mit dir möchte, versuche, vor Beginn der Routine 10 Minuten besondere Eins-zu-Eins-Zeit einzubauen."
+  },
+  {
+    "id": "5y-sleep-08",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Halte das Schlafzimmer kühl, dunkel und ruhig. Dein Kind möchte vielleicht mitbestimmen — wo das Nachtlicht hinkommt oder wie die Kissen liegen."
+  },
+  {
+    "id": "5y-sleep-09",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Vermeide Bildschirme mindestens eine Stunde vor dem Schlafengehen. Die Stimulation und das blaue Licht erschweren es dem Gehirn deines Kindes, sich auf den Schlaf vorzubereiten."
+  },
+  {
+    "id": "5y-sleep-10",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Wenn dein Kind früh aufwacht und nicht wieder einschlafen kann, bringe ihm bei, ruhig Bücher im Bett anzuschauen, bis es Zeit ist aufzustehen."
+  },
+  {
+    "id": "5y-sleep-11",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Große Lebensveränderungen — Schulstart, ein neues Geschwisterchen oder Umzug — können den Schlaf vorübergehend stören. Zusätzlicher Trost und eine beständige Routine helfen bei der Anpassung."
+  },
+  {
+    "id": "5y-sleep-12",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Ein Dankbarkeitsritual vor dem Schlafengehen — drei Dinge nennen, für die es dankbar ist — kann deinem Kind helfen, mit einer positiven Einstellung einzuschlafen."
+  },
+  {
+    "id": "5y-sleep-13",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Wenn dein Kind regelmäßig schnarcht oder im Schlaf Atempausen hat, erwähne es bei deinem Kinderarzt. Es könnte auf eine Schlafapnoe hindeuten, die behandelbar ist."
+  },
+  {
+    "id": "5y-sleep-14",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Schlafenszeiten am Wochenende sollten nicht mehr als eine Stunde von den Wochentagen abweichen. Große Verschiebungen im Schlafrhythmus machen den Montagmorgen viel schwieriger."
+  },
+  {
+    "id": "5y-sleep-15",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Körperliche Aktivität tagsüber verbessert die Schlafqualität erheblich. Auch an regnerischen Tagen, finde Wege, damit dein Kind sich bewegt — Tanzen, Hindernisparcours drinnen oder Yoga."
+  },
+  {
+    "id": "5y-feeding-01",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Dein Kind kann Messer und Gabel zusammen mit zunehmender Geschicklichkeit verwenden. Lass es üben, weiche Lebensmittel wie Bananen oder Pfannkuchen zu schneiden."
+  },
+  {
+    "id": "5y-feeding-02",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Wenn dein Kind anfängt, zur Schule zu gehen, beziehe es beim Packen der Brotdose mit ein. Kinder essen besser, wenn sie beim Auswählen und Zubereiten geholfen haben."
+  },
+  {
+    "id": "5y-feeding-03",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Bringe deinem Kind Lebensmittelgruppen in einfachen Worten bei — \"Baustoffe\" (Eiweiß), \"Energielieferanten\" (Kohlenhydrate), \"Schutzstoffe\" (Obst und Gemüse) — um ein Bewusstsein für Ernährung aufzubauen."
+  },
+  {
+    "id": "5y-feeding-04",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Dein Kind braucht etwa 1.200-1.600 Kalorien pro Tag. Die Portionsgrößen sollten ungefähr ein Viertel bis ein Drittel der Erwachsenenportion betragen."
+  },
+  {
+    "id": "5y-feeding-05",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Wählerisches Essen bessert sich oft im Alter von 5 Jahren, wenn Kinder bereiter werden, neue Lebensmittel zu probieren. Biete weiterhin Vielfalt ohne Druck an."
+  },
+  {
+    "id": "5y-feeding-06",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Dein Kind kann bei echten Kochaufgaben helfen — Zutaten abmessen, Eier aufschlagen, Teig rühren. Diese Fähigkeiten fördern Mathekonzepte und Selbstständigkeit."
+  },
+  {
+    "id": "5y-feeding-07",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Wenn dein Kind in der Schule zu Mittag isst, sprich darüber, was es gegessen hat und was ihm geschmeckt hat. Das hält dich mit seiner Ernährung in Verbindung und fördert die Gesprächsfähigkeit."
+  },
+  {
+    "id": "5y-feeding-08",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Der Eisenbedarf bleibt in diesem Alter wichtig. Mageres Fleisch, Bohnen, Spinat und eisenangereichertes Müsli helfen, einen Mangel zu verhindern, der Energie und Konzentration beeinträchtigen kann."
+  },
+  {
+    "id": "5y-feeding-09",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Der Einfluss von Gleichaltrigen auf das Essen beginnt jetzt. Dein Kind möchte vielleicht Lebensmittel probieren, die es bei Freunden gesehen hat — nutze das als Gelegenheit, Neues einzuführen."
+  },
+  {
+    "id": "5y-feeding-10",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Bringe deinem Kind bei, bei Durst Wasser zu trinken, anstatt nach Saft oder gesüßten Getränken zu greifen. Gute Trinkgewohnheiten, die jetzt entstehen, halten ein Leben lang."
+  },
+  {
+    "id": "5y-feeding-11",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Gemeinsame Familienmahlzeiten — auch nur 3-4 Mal pro Woche — sind mit besserer Ernährung, größerem Wortschatz und engeren Familienbeziehungen verbunden."
+  },
+  {
+    "id": "5y-feeding-12",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Sprich positiv über Essen. Vermeide es, Lebensmittel als \"gut\" oder \"schlecht\" zu bezeichnen — erkläre stattdessen, dass manche Lebensmittel für jeden Tag sind und andere für besondere Anlässe."
+  },
+  {
+    "id": "5y-feeding-13",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Dein Kind kann anfangen, Grundlagen der Lebensmittelsicherheit zu verstehen — Obst und Gemüse waschen, nichts essen, das draußen auf den Boden gefallen ist, und bei unbekannten Lebensmitteln Erwachsene fragen."
+  },
+  {
+    "id": "5y-feeding-14",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Wenn dein Kind langsam isst, gib ihm ausreichend Zeit bei den Mahlzeiten, ohne es zu hetzen. Druck, schneller zu essen, kann Ängste rund um die Mahlzeiten erzeugen."
+  },
+  {
+    "id": "5y-feeding-15",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Eiweiß zum Frühstück — Eier, Joghurt, Nussbutter auf Toast — hilft deinem Kind, den ganzen Morgen über konzentriert und voller Energie zu bleiben, besonders an Schultagen."
+  },
+  {
+    "id": "5y-health-01",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Eine Vorsorgeuntersuchung in dieser Phase ist wichtig. Dein Kinderarzt wird Sehvermögen, Gehör, Wachstum und Entwicklungsstand überprüfen und kann alle erforderlichen Unterlagen für die Einschulung bereitstellen."
+  },
+  {
+    "id": "5y-health-02",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Dein Kind sollte die Zähne zweimal täglich putzen, aber du musst immer noch beaufsichtigen und bis etwa zum 7. Lebensjahr nachputzen."
+  },
+  {
+    "id": "5y-health-03",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Wenn dein Kind eine Brille trägt, stelle sicher, dass es sie konsequent trägt. Kinder passen sich schnell an und ihre Sehentwicklung hängt von der richtigen Korrektur ab."
+  },
+  {
+    "id": "5y-health-04",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Dein Kind könnte bald anfangen, Milchzähne zu verlieren. Erkläre, dass dies ein normaler und aufregender Teil des Großwerdens ist, um eventuelle Sorgen zu nehmen."
+  },
+  {
+    "id": "5y-health-05",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Händewaschen vor dem Essen, nach dem Toilettengang und nach dem Spielen draußen ist eine Gewohnheit, die Krankheiten deutlich reduziert. Achte darauf, dass dein Kind es konsequent tut."
+  },
+  {
+    "id": "5y-health-06",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Wenn dein Kind Angst vor dem Schulstart oder neuen Aktivitäten hat, bestätige seine Gefühle und übe die neue Situation durch Rollenspiel oder einen vorherigen Besuch."
+  },
+  {
+    "id": "5y-health-07",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Überprüfe mit deinem Kinderarzt, ob die Impfungen deines Kindes auf dem neuesten Stand sind. Einige Impfungen könnten vor dem Schulstart erforderlich sein."
+  },
+  {
+    "id": "5y-health-08",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Kopfläuse können sich in Schulumgebungen ausbreiten. Überprüfe die Haare deines Kindes wöchentlich, besonders hinter den Ohren und im Nacken."
+  },
+  {
+    "id": "5y-health-09",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Führe eine tägliche Zahnseide-Routine ein. Die Zähne deines Kindes stehen wahrscheinlich jetzt eng beieinander, und Zahnseide beugt Karies zwischen den Zähnen vor."
+  },
+  {
+    "id": "5y-health-10",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Ermutige dein Kind, dir zu sagen, wenn etwas wehtut oder sich nicht richtig anfühlt. In diesem Alter kann es anfangen, Symptome zu beschreiben, was dir hilft, angemessen zu reagieren."
+  },
+  {
+    "id": "5y-health-11",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Warzen sind bei Schulkindern häufig und werden durch ein Virus verursacht. Sie sind harmlos, können aber behandelt werden, wenn sie dein Kind stören."
+  },
+  {
+    "id": "5y-health-12",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Wenn dein Kind häufig über Kopfschmerzen klagt oder bei Büchern und Bildschirmen die Augen zusammenkneift, vereinbare einen Sehtest. Der Sehbedarf kann sich in diesem Alter schnell ändern."
+  },
+  {
+    "id": "5y-health-13",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Körperliche Aktivität schützt auch die psychische Gesundheit deines Kindes. Aktive Kinder zeigen weniger Ängstlichkeit und eine bessere emotionale Regulierung."
+  },
+  {
+    "id": "5y-health-14",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Bringe deinem Kind grundlegende Hygieneregeln bei — Husten abdecken, Hände waschen, Taschentücher verwenden. Diese Fähigkeiten helfen ihm, in Gruppensituationen gesund zu bleiben."
+  },
+  {
+    "id": "5y-health-15",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Wenn dein Kind nachts mit den Zähnen knirscht oder Kieferschmerzen hat, erwähne es beim nächsten Zahnarzttermin. Eine Aufbissschiene kann bei Bedarf verschrieben werden."
+  },
+  {
+    "id": "5y-play-01",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Brettspiele mit einfacher Strategie — wie Memory, Domino oder Dame — fördern kritisches Denken, Geduld und guten Sportsgeist."
+  },
+  {
+    "id": "5y-play-02",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Dein Kind könnte bereit sein, Fahrrad ohne Stützräder zu fahren. Beginne auf einer flachen, weichen Fläche und lass es in seinem eigenen Tempo Sicherheit gewinnen."
+  },
+  {
+    "id": "5y-play-03",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Ermutige dein Kind, eigene Geschichten zu erfinden — gezeichnet, diktiert oder geschrieben. Geschichtenerzählen fördert Lesefähigkeit, Kreativität und emotionale Verarbeitung."
+  },
+  {
+    "id": "5y-play-04",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Gruppensportarten oder Bewegungskurse können Teamarbeit und körperliche Fitness vermitteln. Konzentriere dich in diesem Alter auf Spaß und Teilnahme statt auf Wettbewerb."
+  },
+  {
+    "id": "5y-play-05",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Das Bauen von aufwendigen Bauwerken mit Bauklötzen, Kartons oder Konstruktionssets fördert technisches Verständnis, Planung und Ausdauer."
+  },
+  {
+    "id": "5y-play-06",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Dein Kind könnte einfache Kochprojekte genießen. Einen Smoothie mixen, ein Sandwich belegen oder Kekse verzieren verbindet Mathe, Lesen und Feinmotorik."
+  },
+  {
+    "id": "5y-play-07",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Naturerkundung — Steine sammeln, Vögel bestimmen oder Insekten beobachten — fördert Neugier und wissenschaftliches Denken."
+  },
+  {
+    "id": "5y-play-08",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Musikinstrumente oder Rhythmusaktivitäten fördern Koordination, mathematische Fähigkeiten und Selbstausdruck. Selbst eine einfache Trommel oder ein Xylophon bietet reichhaltiges Lernen."
+  },
+  {
+    "id": "5y-play-09",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Hindernisparcours mit Kriechen, Springen, Balancieren und Werfen fordern verschiedene körperliche Fähigkeiten und lassen sich mit Haushaltsgegenständen aufbauen."
+  },
+  {
+    "id": "5y-play-10",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Dein Kind kann anfangen, einfache Puzzles mit 48-100 Teilen zu machen. Puzzles fördern räumliches Denken, Geduld und ein Erfolgsgefühl."
+  },
+  {
+    "id": "5y-play-11",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Rollenspiele mit Themen wie Arzt, Lehrer oder Feuerwehr helfen deinem Kind, reale Erlebnisse zu verarbeiten und soziale Situationen zu üben."
+  },
+  {
+    "id": "5y-play-12",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Buchstaben- und Zahlenspiele — Hüpfspiel mit Buchstaben, Hampelmänner zählen — machen frühes Lernen körperlich und machen Spaß."
+  },
+  {
+    "id": "5y-play-13",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Gib deinem Kind eine Lupe und lass es den Garten aus der Nähe erforschen. Beobachtungsfähigkeiten, die beim Spielen entstehen, fördern Wissenschaftsverständnis und Lesebereitschaft."
+  },
+  {
+    "id": "5y-play-14",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Ermutige dein Kind, mit Kindern verschiedenen Alters zu spielen. Jüngere Kinder helfen ihm, Führung zu üben; ältere Kinder fordern es heraus, sich weiterzuentwickeln."
+  },
+  {
+    "id": "5y-play-15",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Freies, unstrukturiertes Spiel bleibt unverzichtbar, auch wenn geplante Aktivitäten zunehmen. Schütze jeden Tag Zeit, in der dein Kind so spielen kann, wie es möchte."
+  },
+  {
+    "id": "5y-safety-01",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Dein Kind sollte seinen vollständigen Namen, deine Telefonnummer und seine Adresse kennen. Übe regelmäßig, bis es alle drei auswendig aufsagen kann."
+  },
+  {
+    "id": "5y-safety-02",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Bringe deinem Kind Verkehrssicherheit bei: an jedem Bordstein stehen bleiben, links-rechts-links schauen und über die Straße gehen, nicht rennen. Übe bei jedem Ausflug gemeinsam."
+  },
+  {
+    "id": "5y-safety-03",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Dein Kind sollte in einem Kindersitz oder einer Sitzerhöhung bleiben, bis es mindestens {{4 feet 9 inches|145 cm}} groß ist, was in der Regel erst mit 8-12 Jahren der Fall ist."
+  },
+  {
+    "id": "5y-safety-04",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Schwimmunterricht wird in diesem Alter sehr empfohlen. Die meisten Kinder können im Alter von 4-5 Jahren grundlegende Überlebensfähigkeiten im Wasser erlernen, und formeller Unterricht kann noch früher beginnen."
+  },
+  {
+    "id": "5y-safety-05",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Bringe deinem Kind den Unterschied zwischen einem Geheimnis und einer Überraschung bei. Geheimnisse, bei denen es sich unwohl fühlt, sollte es immer einem vertrauten Erwachsenen erzählen."
+  },
+  {
+    "id": "5y-safety-06",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Wenn dein Kind zur Schule oder zur Bushaltestelle läuft, geh die Strecke mehrmals gemeinsam ab. Zeige sichere Stellen und übe, was zu tun ist, wenn es sich unsicher fühlt."
+  },
+  {
+    "id": "5y-safety-07",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Helme sind Pflicht beim Radfahren, Inlineskaten und Rollerfahren. Dein Kind sollte auch dich mit Helm sehen — Vorbild sein wirkt mehr als Regeln."
+  },
+  {
+    "id": "5y-safety-08",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Beginne einfache Gespräche über Internetsicherheit. Auch wenn es nicht allein online ist, erkläre, dass persönliche Daten privat bleiben und Bildschirme in gemeinsamen Räumen genutzt werden."
+  },
+  {
+    "id": "5y-safety-09",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Bringe deinem Kind bei, was im Notfall zu tun ist: den Notruf anrufen, seinen Namen und seine Adresse nennen und in der Leitung bleiben. Übe mit einem Spieltelefon."
+  },
+  {
+    "id": "5y-safety-10",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Dein Kind kann grundlegenden Brandschutz lernen — Anhalten, Hinlegen und Rollen; im Rauch tief bleiben; sich am Familientreffpunkt treffen. Übe euren Fluchtplan zweimal im Jahr."
+  },
+  {
+    "id": "5y-safety-11",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Bringe deinem Kind beim Besuch anderer Häuser bei, zu fragen, bevor es Dinge anfasst oder unbekannte Räume betritt. Das fördert Respekt und hält es sicher."
+  },
+  {
+    "id": "5y-safety-12",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Stelle sicher, dass dein Kind versteht, dass kein Erwachsener es bitten sollte, ein Geheimnis vor seinen Eltern zu bewahren. Offene Kommunikation ist der beste Schutz."
+  },
+  {
+    "id": "5y-safety-13",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Besprich Spielplatzregeln: nicht schubsen, warten bis man dran ist, und einem Erwachsenen Bescheid sagen, wenn sich jemand unsicher verhält. Dein Kind kann in solchen Situationen anfangen, für sich selbst einzutreten."
+  },
+  {
+    "id": "5y-safety-14",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Wenn dein Kind draußen allein spielt, setze klare Grenzen, wie weit es gehen darf, und schau regelmäßig nach ihm. Erweitere die Freiheit schrittweise, wenn es Verantwortung zeigt."
+  },
+  {
+    "id": "5y-safety-15",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Halte ein aktuelles Foto deines Kindes auf deinem Handy bereit. Für den unwahrscheinlichen Fall, dass es sich in einer Menschenmenge verirrt, hilft ein aktuelles Foto anderen, es schnell zu finden."
+  }
+]
