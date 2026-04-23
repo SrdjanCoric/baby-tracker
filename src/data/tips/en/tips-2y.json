@@ -1,97 +1,512 @@
 [
-  {"id": "2y-development-01", "ageGroup": "2y", "category": "development", "text": "Your toddler's vocabulary is exploding, and they may learn several new words each week. Read together daily and name everything you see."},
-  {"id": "2y-development-02", "ageGroup": "2y", "category": "development", "text": "Two-word phrases like \"big truck\" or \"want cookie\" are typical at this age. Expand on their words by saying \"Yes, that is a big red truck!\""},
-  {"id": "2y-development-03", "ageGroup": "2y", "category": "development", "text": "Your toddler may start showing interest in potty training. Watch for signs of readiness like staying dry for longer periods or telling you when their diaper is wet."},
-  {"id": "2y-development-04", "ageGroup": "2y", "category": "development", "text": "Jumping with both feet off the ground is a milestone between 18 and 24 months. Try jumping together on a soft surface for practice."},
-  {"id": "2y-development-05", "ageGroup": "2y", "category": "development", "text": "Your toddler may line up toys, sort objects by color, or group similar items together. These early math skills are building naturally through play."},
-  {"id": "2y-development-06", "ageGroup": "2y", "category": "development", "text": "Parallel play, where your toddler plays alongside but not directly with other children, is the normal social stage at this age."},
-  {"id": "2y-development-07", "ageGroup": "2y", "category": "development", "text": "Your toddler can follow simple one-step directions and may be starting to understand two-step instructions like \"pick up the ball and bring it to me.\" Practice during everyday routines."},
-  {"id": "2y-development-08", "ageGroup": "2y", "category": "development", "text": "Imaginative play is becoming more elaborate. Your toddler may create scenarios with toy figures, act out stories, or assign roles during play."},
-  {"id": "2y-development-09", "ageGroup": "2y", "category": "development", "text": "Your toddler may show a hand preference around this age, though it is normal for it to continue switching until age 3 or later."},
-  {"id": "2y-development-10", "ageGroup": "2y", "category": "development", "text": "Tantrums may increase as your toddler grapples with wanting independence but not yet having the skills to do everything alone. Stay calm and validate their feelings."},
-  {"id": "2y-development-11", "ageGroup": "2y", "category": "development", "text": "Your toddler may start recognizing themselves in photos and mirrors and use \"me\" and \"mine.\" This self-awareness is a major cognitive leap."},
-  {"id": "2y-development-12", "ageGroup": "2y", "category": "development", "text": "Walking up and down stairs while holding the railing is a developing skill. Practice together and celebrate their growing confidence."},
-  {"id": "2y-development-13", "ageGroup": "2y", "category": "development", "text": "Your toddler may begin to show empathy, comforting a crying friend or offering a toy to someone who is sad. Acknowledge and encourage this kindness."},
-  {"id": "2y-development-14", "ageGroup": "2y", "category": "development", "text": "Simple shape puzzles with 4-6 pieces challenge problem-solving skills. Show your toddler how to turn pieces to find the right fit."},
-  {"id": "2y-development-15", "ageGroup": "2y", "category": "development", "text": "Your toddler can likely identify several body parts and may start counting objects, even if the numbers are not always in order."},
-
-  {"id": "2y-sleep-01", "ageGroup": "2y", "category": "sleep", "text": "Your toddler still needs one nap per day, usually 1-2.5 hours after lunch. Most children benefit from keeping this nap until at least age 3."},
-  {"id": "2y-sleep-02", "ageGroup": "2y", "category": "sleep", "text": "Toddlers need about 11-14 hours of total sleep per day. If bedtime battles are frequent, evaluate whether the schedule needs adjusting."},
-  {"id": "2y-sleep-03", "ageGroup": "2y", "category": "sleep", "text": "Stalling tactics at bedtime become more creative now. Set a clear routine with a defined endpoint, like \"after two books, it is time for sleep.\""},
-  {"id": "2y-sleep-04", "ageGroup": "2y", "category": "sleep", "text": "If your toddler starts having nightmares, comfort them calmly and reassure them that they are safe. Nightmares are a normal part of cognitive development."},
-  {"id": "2y-sleep-05", "ageGroup": "2y", "category": "sleep", "text": "A toddler clock that changes color at wake-up time can help your child understand when it is OK to get out of bed."},
-  {"id": "2y-sleep-06", "ageGroup": "2y", "category": "sleep", "text": "Keep the crib as long as your toddler is not climbing out. Transitioning to a toddler bed too early often leads to more night wakings and bedtime resistance."},
-  {"id": "2y-sleep-07", "ageGroup": "2y", "category": "sleep", "text": "If your toddler skips a nap, move bedtime 30-60 minutes earlier to prevent overtiredness from snowballing into a rough night."},
-  {"id": "2y-sleep-08", "ageGroup": "2y", "category": "sleep", "text": "Consistency in your bedtime response matters more than the specific method you use. Choose an approach you can sustain and stick with it."},
-  {"id": "2y-sleep-09", "ageGroup": "2y", "category": "sleep", "text": "A predictable daily schedule with meals, nap, and bedtime at roughly the same times helps your toddler's body clock stay regulated."},
-  {"id": "2y-sleep-10", "ageGroup": "2y", "category": "sleep", "text": "Major transitions like a new sibling, moving, or starting preschool can disrupt sleep temporarily. Extra comfort and routine consistency help."},
-  {"id": "2y-sleep-11", "ageGroup": "2y", "category": "sleep", "text": "If your toddler is afraid of the dark, a dim red or warm nightlight can provide comfort without disrupting melatonin production."},
-  {"id": "2y-sleep-12", "ageGroup": "2y", "category": "sleep", "text": "A sleep regression around this age often coincides with language explosions, potty training, or the arrival of a new sibling. It typically resolves in 2-6 weeks."},
-  {"id": "2y-sleep-13", "ageGroup": "2y", "category": "sleep", "text": "Active play and outdoor time during the day genuinely improve sleep quality at night. A tired body leads to deeper, more restorative sleep."},
-  {"id": "2y-sleep-14", "ageGroup": "2y", "category": "sleep", "text": "Avoid using the bed or bedroom as a punishment spot. You want your toddler to associate their sleep space with comfort and safety."},
-  {"id": "2y-sleep-15", "ageGroup": "2y", "category": "sleep", "text": "If your toddler has transitioned to a bed and keeps getting up, calmly walk them back each time with minimal interaction. Consistency is key."},
-
-  {"id": "2y-feeding-01", "ageGroup": "2y", "category": "feeding", "text": "Your toddler can eat most of what the family eats now. Serve the same meals in toddler-appropriate portions and let them choose how much to eat."},
-  {"id": "2y-feeding-02", "ageGroup": "2y", "category": "feeding", "text": "Milk intake should be about {{16-24 ounces|475-710 ml}} (2-3 cups) per day. Too much milk fills the stomach and reduces appetite for nutrient-dense solid foods."},
-  {"id": "2y-feeding-03", "ageGroup": "2y", "category": "feeding", "text": "Whole milk is recommended for younger toddlers because the fat supports brain development. As your child grows, your pediatrician may suggest switching to low-fat milk when the time is right."},
-  {"id": "2y-feeding-04", "ageGroup": "2y", "category": "feeding", "text": "Offer three meals and 2-3 structured snack times daily. Grazing all day can reduce hunger at mealtimes and make nutrition less balanced."},
-  {"id": "2y-feeding-05", "ageGroup": "2y", "category": "feeding", "text": "Your toddler may go on food jags, eating only one food for days. Continue offering variety at every meal and don't short-order cook."},
-  {"id": "2y-feeding-06", "ageGroup": "2y", "category": "feeding", "text": "Make food fun by using cookie cutters on sandwiches, arranging food in colorful patterns, or serving meals on a special plate."},
-  {"id": "2y-feeding-07", "ageGroup": "2y", "category": "feeding", "text": "Your toddler is learning to use a fork and spoon more skillfully now. Expect some spills but praise the effort and growing independence."},
-  {"id": "2y-feeding-08", "ageGroup": "2y", "category": "feeding", "text": "Omega-3 fatty acids support brain development. Include foods like salmon, chia seeds, walnuts, or fortified eggs in your toddler's diet."},
-  {"id": "2y-feeding-09", "ageGroup": "2y", "category": "feeding", "text": "Encourage your toddler to drink water throughout the day, especially during active play. A small, easy-to-hold cup makes independent drinking easier."},
-  {"id": "2y-feeding-10", "ageGroup": "2y", "category": "feeding", "text": "If your toddler is still breastfeeding, the WHO supports continued breastfeeding up to 2 years and beyond. There is no need to stop if it works for both of you."},
-  {"id": "2y-feeding-11", "ageGroup": "2y", "category": "feeding", "text": "Avoid labeling foods as \"good\" or \"bad\" around your toddler. Use neutral language like \"this food gives us energy\" or \"this is a sometimes food.\""},
-  {"id": "2y-feeding-12", "ageGroup": "2y", "category": "feeding", "text": "Let your toddler help set the table, pour water from a small pitcher, or choose between two healthy options. Involvement encourages better eating."},
-  {"id": "2y-feeding-13", "ageGroup": "2y", "category": "feeding", "text": "Don't give up on rejected foods. Research shows it can take 15-20 exposures before a toddler accepts a new food. Keep offering without pressure."},
-  {"id": "2y-feeding-14", "ageGroup": "2y", "category": "feeding", "text": "If your toddler drinks juice, limit it to {{4 ounces|120 ml}} per day of 100% fruit juice. Better yet, offer whole fruit and water instead."},
-  {"id": "2y-feeding-15", "ageGroup": "2y", "category": "feeding", "text": "Fiber from fruits, vegetables, whole grains, and beans helps prevent constipation, which is common in toddlers. Aim for about 19 grams per day."},
-
-  {"id": "2y-health-01", "ageGroup": "2y", "category": "health", "text": "Well-child visits during this stage include growth measurements, developmental screening, and possibly blood tests your pediatrician recommends based on your child's needs."},
-  {"id": "2y-health-02", "ageGroup": "2y", "category": "health", "text": "Your toddler should have a dental check-up every six months. The dentist can apply fluoride varnish to protect developing teeth."},
-  {"id": "2y-health-03", "ageGroup": "2y", "category": "health", "text": "Brush your toddler's teeth twice daily with a smear (grain-of-rice size) of fluoride toothpaste until age 3, then increase to a pea-sized amount."},
-  {"id": "2y-health-04", "ageGroup": "2y", "category": "health", "text": "If your toddler is not putting two words together by age 2, talk to your pediatrician about a speech evaluation. Early intervention is most effective."},
-  {"id": "2y-health-05", "ageGroup": "2y", "category": "health", "text": "The annual flu vaccine is recommended for all children over 6 months. Getting vaccinated helps protect your toddler and those around them."},
-  {"id": "2y-health-06", "ageGroup": "2y", "category": "health", "text": "Toddlers in group care may get 8-12 colds per year. Each cold strengthens their immune system. Contact your pediatrician for high fever or symptoms lasting more than 10 days."},
-  {"id": "2y-health-07", "ageGroup": "2y", "category": "health", "text": "Canine teeth and second molars typically come in between 16 and 33 months. Offer cold foods and teething toys for comfort during this period."},
-  {"id": "2y-health-08", "ageGroup": "2y", "category": "health", "text": "If you introduce screen time, choose high-quality programming and watch together with your toddler. Co-viewing helps them understand what they are seeing."},
-  {"id": "2y-health-09", "ageGroup": "2y", "category": "health", "text": "Help your toddler learn to wash their hands with soap for 20 seconds, especially before meals and after using the bathroom or playing outside."},
-  {"id": "2y-health-10", "ageGroup": "2y", "category": "health", "text": "If your toddler snores loudly every night or seems to stop breathing during sleep, mention it to your pediatrician. It could indicate enlarged adenoids."},
-  {"id": "2y-health-11", "ageGroup": "2y", "category": "health", "text": "Your toddler's eyes should be aligned by now. If you notice one eye crossing in or turning out, schedule an eye exam promptly."},
-  {"id": "2y-health-12", "ageGroup": "2y", "category": "health", "text": "Protect your toddler's skin with SPF 30+ sunscreen, a hat, and UV-protective clothing when outdoors. Reapply sunscreen every 2 hours."},
-  {"id": "2y-health-13", "ageGroup": "2y", "category": "health", "text": "Stuttering or repeating words is common between ages 2 and 5 as language develops faster than speech muscles can keep up. It usually resolves on its own, but mention it to your pediatrician if it persists beyond 6 months."},
-  {"id": "2y-health-14", "ageGroup": "2y", "category": "health", "text": "If potty training causes constipation, increase fiber and fluid intake and avoid pressuring your toddler. Stool withholding is common during this transition."},
-  {"id": "2y-health-15", "ageGroup": "2y", "category": "health", "text": "Ensure your toddler gets 600 IU of vitamin D daily through diet, fortified milk, or a supplement. Many toddlers do not get enough from food alone."},
-
-  {"id": "2y-play-01", "ageGroup": "2y", "category": "play", "text": "Encourage your toddler to draw circles and lines on paper. These are the building blocks of letter formation and develop hand control."},
-  {"id": "2y-play-02", "ageGroup": "2y", "category": "play", "text": "Build with larger interlocking blocks. Your toddler can create towers, bridges, and structures, developing spatial thinking and planning skills."},
-  {"id": "2y-play-03", "ageGroup": "2y", "category": "play", "text": "Play pretend store, restaurant, or doctor. This role-play develops language, social skills, and emotional understanding."},
-  {"id": "2y-play-04", "ageGroup": "2y", "category": "play", "text": "Splash in puddles, run through sprinklers, or play in a sandbox. Messy, sensory-rich outdoor play is essential for healthy development."},
-  {"id": "2y-play-05", "ageGroup": "2y", "category": "play", "text": "Tearing paper and playing with playdough build the hand strength needed for future scissor use. Closer to age 2, you can introduce child-safe scissors for early snipping practice."},
-  {"id": "2y-play-06", "ageGroup": "2y", "category": "play", "text": "Read books with simple storylines and ask your toddler questions: \"What do you think happens next?\" or \"Can you find the cat?\""},
-  {"id": "2y-play-07", "ageGroup": "2y", "category": "play", "text": "Musical instruments like drums, shakers, and xylophones teach rhythm, cause and effect, and creative expression."},
-  {"id": "2y-play-08", "ageGroup": "2y", "category": "play", "text": "Set up a simple obstacle course: crawl under a table, jump over a pillow, walk along a tape line on the floor. This builds planning and gross motor skills."},
-  {"id": "2y-play-09", "ageGroup": "2y", "category": "play", "text": "Play matching games with pictures or colors. Start with just 3-4 pairs and increase as your toddler's memory grows."},
-  {"id": "2y-play-10", "ageGroup": "2y", "category": "play", "text": "Painting with brushes, sponges, or fingers lets your toddler experiment with color and texture. Focus on the process, not the product."},
-  {"id": "2y-play-11", "ageGroup": "2y", "category": "play", "text": "Encourage climbing at the playground. Going up ladders, across bridges, and down slides develops courage, coordination, and risk assessment."},
-  {"id": "2y-play-12", "ageGroup": "2y", "category": "play", "text": "Play hide-and-seek around the house. Your toddler will squeal with delight and practice spatial memory, listening skills, and self-control."},
-  {"id": "2y-play-13", "ageGroup": "2y", "category": "play", "text": "Introduce counting during everyday activities: count steps as you climb them, crackers on the plate, or toys as you put them away."},
-  {"id": "2y-play-14", "ageGroup": "2y", "category": "play", "text": "Let your toddler help with gardening. Digging, watering, and watching plants grow teaches patience, responsibility, and nature connection."},
-  {"id": "2y-play-15", "ageGroup": "2y", "category": "play", "text": "Encourage your toddler to tell you about their drawings, even if they look like scribbles to you. Asking \"tell me about your picture\" builds narrative skills."},
-
-  {"id": "2y-safety-01", "ageGroup": "2y", "category": "safety", "text": "Your toddler can climb higher and reach further than ever. Re-evaluate your home for new hazards from their perspective regularly."},
-  {"id": "2y-safety-02", "ageGroup": "2y", "category": "safety", "text": "Keep your toddler rear-facing in the car seat as long as possible, ideally until they reach the seat's maximum weight or height limit. Rear-facing is the safest position for young children."},
-  {"id": "2y-safety-03", "ageGroup": "2y", "category": "safety", "text": "Teach your toddler basic water safety rules: never go near water without a grown-up, and always wear a life jacket near open water."},
-  {"id": "2y-safety-04", "ageGroup": "2y", "category": "safety", "text": "Popcorn, whole nuts, hard candy, and chunks of raw vegetables remain serious choking hazards for toddlers. Continue cutting food into small pieces."},
-  {"id": "2y-safety-05", "ageGroup": "2y", "category": "safety", "text": "Practice fire escape routes with your family. Show your toddler how to crawl low and go to a designated meeting spot outside."},
-  {"id": "2y-safety-06", "ageGroup": "2y", "category": "safety", "text": "If your toddler can open the front door, add a high chain lock or deadbolt they cannot reach. Toddlers can wander outside unsupervised in moments."},
-  {"id": "2y-safety-07", "ageGroup": "2y", "category": "safety", "text": "Teach your toddler their full name and begin working on your phone number. Use songs or repetition to make it fun and memorable."},
-  {"id": "2y-safety-08", "ageGroup": "2y", "category": "safety", "text": "Always check that playground equipment is age-appropriate and well-maintained. Look for openings that could trap a toddler's head or fingers."},
-  {"id": "2y-safety-09", "ageGroup": "2y", "category": "safety", "text": "Keep bathroom doors closed or use a toilet lock. Toddlers are fascinated by water and a toilet poses a drowning risk for a top-heavy child."},
-  {"id": "2y-safety-10", "ageGroup": "2y", "category": "safety", "text": "Review your car seat installation regularly. Ensure the harness is snug with the chest clip at armpit level and no bulky winter coats under straps."},
-  {"id": "2y-safety-11", "ageGroup": "2y", "category": "safety", "text": "Teach your toddler to sit while eating. Running or playing with food in their mouth significantly increases the choking risk."},
-  {"id": "2y-safety-12", "ageGroup": "2y", "category": "safety", "text": "Store sharp kitchen tools like knives, peelers, and scissors in a high drawer with a child lock. Your toddler can now open many lower drawers and cabinets."},
-  {"id": "2y-safety-13", "ageGroup": "2y", "category": "safety", "text": "If your toddler is transitioning to a bed, place the mattress low to the ground and use a bed rail. Remove hazards from the room they could access at night."},
-  {"id": "2y-safety-14", "ageGroup": "2y", "category": "safety", "text": "Driveway and parking lot safety is critical. Always hold your toddler's hand and check behind your vehicle before backing up. They are too short to be seen."},
-  {"id": "2y-safety-15", "ageGroup": "2y", "category": "safety", "text": "Check smoke and carbon monoxide detectors monthly and replace batteries at least once a year. A working detector is one of the simplest ways to protect your family."}
+  {
+    "id": "2y-development-01",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Your toddler's vocabulary is exploding, and they may learn several new words each week. Read together daily and name everything you see."
+  },
+  {
+    "id": "2y-development-02",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Two-word phrases like \"big truck\" or \"want cookie\" are typical at this age. Expand on their words by saying \"Yes, that is a big red truck!\""
+  },
+  {
+    "id": "2y-development-03",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Your toddler may start showing interest in potty training. Watch for signs of readiness like staying dry for longer periods or telling you when their diaper is wet."
+  },
+  {
+    "id": "2y-development-04",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Jumping with both feet off the ground is a milestone between 18 and 24 months. Try jumping together on a soft surface for practice."
+  },
+  {
+    "id": "2y-development-05",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Your toddler may line up toys, sort objects by color, or group similar items together. These early math skills are building naturally through play."
+  },
+  {
+    "id": "2y-development-06",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Parallel play, where your toddler plays alongside but not directly with other children, is the normal social stage at this age."
+  },
+  {
+    "id": "2y-development-07",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Your toddler can follow simple one-step directions and may be starting to understand two-step instructions like \"pick up the ball and bring it to me.\" Practice during everyday routines."
+  },
+  {
+    "id": "2y-development-08",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Imaginative play is becoming more elaborate. Your toddler may create scenarios with toy figures, act out stories, or assign roles during play."
+  },
+  {
+    "id": "2y-development-09",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Your toddler may show a hand preference around this age, though it is normal for it to continue switching until age 3 or later."
+  },
+  {
+    "id": "2y-development-10",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tantrums may increase as your toddler grapples with wanting independence but not yet having the skills to do everything alone. Stay calm and validate their feelings."
+  },
+  {
+    "id": "2y-development-11",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Your toddler may start recognizing themselves in photos and mirrors and use \"me\" and \"mine.\" This self-awareness is a major cognitive leap."
+  },
+  {
+    "id": "2y-development-12",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Walking up and down stairs while holding the railing is a developing skill. Practice together and celebrate their growing confidence."
+  },
+  {
+    "id": "2y-development-13",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Your toddler may begin to show empathy, comforting a crying friend or offering a toy to someone who is sad. Acknowledge and encourage this kindness."
+  },
+  {
+    "id": "2y-development-14",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Simple shape puzzles with 4-6 pieces challenge problem-solving skills. Show your toddler how to turn pieces to find the right fit."
+  },
+  {
+    "id": "2y-development-15",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Your toddler can likely identify several body parts and may start counting objects, even if the numbers are not always in order."
+  },
+  {
+    "id": "2y-sleep-01",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Your toddler still needs one nap per day, usually 1-2.5 hours after lunch. Most children benefit from keeping this nap until at least age 3."
+  },
+  {
+    "id": "2y-sleep-02",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Toddlers need about 11-14 hours of total sleep per day. If bedtime battles are frequent, evaluate whether the schedule needs adjusting."
+  },
+  {
+    "id": "2y-sleep-03",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Stalling tactics at bedtime become more creative now. Set a clear routine with a defined endpoint, like \"after two books, it is time for sleep.\""
+  },
+  {
+    "id": "2y-sleep-04",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "If your toddler starts having nightmares, comfort them calmly and reassure them that they are safe. Nightmares are a normal part of cognitive development."
+  },
+  {
+    "id": "2y-sleep-05",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "A toddler clock that changes color at wake-up time can help your child understand when it is OK to get out of bed."
+  },
+  {
+    "id": "2y-sleep-06",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Keep the crib as long as your toddler is not climbing out. Transitioning to a toddler bed too early often leads to more night wakings and bedtime resistance."
+  },
+  {
+    "id": "2y-sleep-07",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "If your toddler skips a nap, move bedtime 30-60 minutes earlier to prevent overtiredness from snowballing into a rough night."
+  },
+  {
+    "id": "2y-sleep-08",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Consistency in your bedtime response matters more than the specific method you use. Choose an approach you can sustain and stick with it."
+  },
+  {
+    "id": "2y-sleep-09",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "A predictable daily schedule with meals, nap, and bedtime at roughly the same times helps your toddler's body clock stay regulated."
+  },
+  {
+    "id": "2y-sleep-10",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Major transitions like a new sibling, moving, or starting preschool can disrupt sleep temporarily. Extra comfort and routine consistency help."
+  },
+  {
+    "id": "2y-sleep-11",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "If your toddler is afraid of the dark, a dim red or warm nightlight can provide comfort without disrupting melatonin production."
+  },
+  {
+    "id": "2y-sleep-12",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "A sleep regression around this age often coincides with language explosions, potty training, or the arrival of a new sibling. It typically resolves in 2-6 weeks."
+  },
+  {
+    "id": "2y-sleep-13",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Active play and outdoor time during the day genuinely improve sleep quality at night. A tired body leads to deeper, more restorative sleep."
+  },
+  {
+    "id": "2y-sleep-14",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Avoid using the bed or bedroom as a punishment spot. You want your toddler to associate their sleep space with comfort and safety."
+  },
+  {
+    "id": "2y-sleep-15",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "If your toddler has transitioned to a bed and keeps getting up, calmly walk them back each time with minimal interaction. Consistency is key."
+  },
+  {
+    "id": "2y-feeding-01",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Your toddler can eat most of what the family eats now. Serve the same meals in toddler-appropriate portions and let them choose how much to eat."
+  },
+  {
+    "id": "2y-feeding-02",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Milk intake should be about {{16-24 ounces|475-710 ml}} (2-3 cups) per day. Too much milk fills the stomach and reduces appetite for nutrient-dense solid foods."
+  },
+  {
+    "id": "2y-feeding-04",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Offer three meals and 2-3 structured snack times daily. Grazing all day can reduce hunger at mealtimes and make nutrition less balanced."
+  },
+  {
+    "id": "2y-feeding-05",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Your toddler may go on food jags, eating only one food for days. Continue offering variety at every meal and don't short-order cook."
+  },
+  {
+    "id": "2y-feeding-06",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Make food fun by using cookie cutters on sandwiches, arranging food in colorful patterns, or serving meals on a special plate."
+  },
+  {
+    "id": "2y-feeding-07",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Your toddler is learning to use a fork and spoon more skillfully now. Expect some spills but praise the effort and growing independence."
+  },
+  {
+    "id": "2y-feeding-08",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Omega-3 fatty acids support brain development. Include foods like salmon, chia seeds, walnuts, or fortified eggs in your toddler's diet."
+  },
+  {
+    "id": "2y-feeding-09",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Encourage your toddler to drink water throughout the day, especially during active play. A small, easy-to-hold cup makes independent drinking easier."
+  },
+  {
+    "id": "2y-feeding-10",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "If your toddler is still breastfeeding, the WHO supports continued breastfeeding up to 2 years and beyond. There is no need to stop if it works for both of you."
+  },
+  {
+    "id": "2y-feeding-11",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Avoid labeling foods as \"good\" or \"bad\" around your toddler. Use neutral language like \"this food gives us energy\" or \"this is a sometimes food.\""
+  },
+  {
+    "id": "2y-feeding-12",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Let your toddler help set the table, pour water from a small pitcher, or choose between two healthy options. Involvement encourages better eating."
+  },
+  {
+    "id": "2y-feeding-14",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "If your toddler drinks juice, limit it to {{4 ounces|120 ml}} per day of 100% fruit juice. Better yet, offer whole fruit and water instead."
+  },
+  {
+    "id": "2y-health-01",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Well-child visits during this stage include growth measurements, developmental screening, and possibly blood tests your pediatrician recommends based on your child's needs."
+  },
+  {
+    "id": "2y-health-02",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Your toddler should have a dental check-up every six months. The dentist can apply fluoride varnish to protect developing teeth."
+  },
+  {
+    "id": "2y-health-03",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Brush your toddler's teeth twice daily with a smear (grain-of-rice size) of fluoride toothpaste until age 3, then increase to a pea-sized amount."
+  },
+  {
+    "id": "2y-health-04",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "If your toddler is not putting two words together by age 2, talk to your pediatrician about a speech evaluation. Early intervention is most effective."
+  },
+  {
+    "id": "2y-health-05",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "The annual flu vaccine is recommended for all children over 6 months. Getting vaccinated helps protect your toddler and those around them."
+  },
+  {
+    "id": "2y-health-06",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Toddlers in group care may get 8-12 colds per year. Each cold strengthens their immune system. Contact your pediatrician for high fever or symptoms lasting more than 10 days."
+  },
+  {
+    "id": "2y-health-07",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Canine teeth and second molars typically come in between 16 and 33 months. Offer cold foods and teething toys for comfort during this period."
+  },
+  {
+    "id": "2y-health-08",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "If you introduce screen time, choose high-quality programming and watch together with your toddler. Co-viewing helps them understand what they are seeing."
+  },
+  {
+    "id": "2y-health-09",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Help your toddler learn to wash their hands with soap for 20 seconds, especially before meals and after using the bathroom or playing outside."
+  },
+  {
+    "id": "2y-health-10",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "If your toddler snores loudly every night or seems to stop breathing during sleep, mention it to your pediatrician. It could indicate enlarged adenoids."
+  },
+  {
+    "id": "2y-health-11",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Your toddler's eyes should be aligned by now. If you notice one eye crossing in or turning out, schedule an eye exam promptly."
+  },
+  {
+    "id": "2y-health-14",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "If potty training causes constipation, increase fiber and fluid intake and avoid pressuring your toddler. Stool withholding is common during this transition."
+  },
+  {
+    "id": "2y-health-15",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Ensure your toddler gets 600 IU of vitamin D daily through diet, fortified milk, or a supplement. Many toddlers do not get enough from food alone."
+  },
+  {
+    "id": "2y-play-01",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Encourage your toddler to draw circles and lines on paper. These are the building blocks of letter formation and develop hand control."
+  },
+  {
+    "id": "2y-play-02",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Build with larger interlocking blocks. Your toddler can create towers, bridges, and structures, developing spatial thinking and planning skills."
+  },
+  {
+    "id": "2y-play-03",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Play pretend store, restaurant, or doctor. This role-play develops language, social skills, and emotional understanding."
+  },
+  {
+    "id": "2y-play-04",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Splash in puddles, run through sprinklers, or play in a sandbox. Messy, sensory-rich outdoor play is essential for healthy development."
+  },
+  {
+    "id": "2y-play-05",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Tearing paper and playing with playdough build the hand strength needed for future scissor use. Closer to age 2, you can introduce child-safe scissors for early snipping practice."
+  },
+  {
+    "id": "2y-play-06",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Read books with simple storylines and ask your toddler questions: \"What do you think happens next?\" or \"Can you find the cat?\""
+  },
+  {
+    "id": "2y-play-07",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Musical instruments like drums, shakers, and xylophones teach rhythm, cause and effect, and creative expression."
+  },
+  {
+    "id": "2y-play-08",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Set up a simple obstacle course: crawl under a table, jump over a pillow, walk along a tape line on the floor. This builds planning and gross motor skills."
+  },
+  {
+    "id": "2y-play-09",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Play matching games with pictures or colors. Start with just 3-4 pairs and increase as your toddler's memory grows."
+  },
+  {
+    "id": "2y-play-10",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Painting with brushes, sponges, or fingers lets your toddler experiment with color and texture. Focus on the process, not the product."
+  },
+  {
+    "id": "2y-play-11",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Encourage climbing at the playground. Going up ladders, across bridges, and down slides develops courage, coordination, and risk assessment."
+  },
+  {
+    "id": "2y-play-12",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Play hide-and-seek around the house. Your toddler will squeal with delight and practice spatial memory, listening skills, and self-control."
+  },
+  {
+    "id": "2y-play-13",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Introduce counting during everyday activities: count steps as you climb them, crackers on the plate, or toys as you put them away."
+  },
+  {
+    "id": "2y-play-14",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Let your toddler help with gardening. Digging, watering, and watching plants grow teaches patience, responsibility, and nature connection."
+  },
+  {
+    "id": "2y-play-15",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Encourage your toddler to tell you about their drawings, even if they look like scribbles to you. Asking \"tell me about your picture\" builds narrative skills."
+  },
+  {
+    "id": "2y-safety-01",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Your toddler can climb higher and reach further than ever. Re-evaluate your home for new hazards from their perspective regularly."
+  },
+  {
+    "id": "2y-safety-02",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Keep your toddler rear-facing in the car seat as long as possible, ideally until they reach the seat's maximum weight or height limit. Rear-facing is the safest position for young children."
+  },
+  {
+    "id": "2y-safety-03",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Teach your toddler basic water safety rules: never go near water without a grown-up, and always wear a life jacket near open water."
+  },
+  {
+    "id": "2y-safety-04",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Popcorn, whole nuts, hard candy, and chunks of raw vegetables remain serious choking hazards for toddlers. Continue cutting food into small pieces."
+  },
+  {
+    "id": "2y-safety-05",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Practice fire escape routes with your family. Show your toddler how to crawl low and go to a designated meeting spot outside."
+  },
+  {
+    "id": "2y-safety-06",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "If your toddler can open the front door, add a high chain lock or deadbolt they cannot reach. Toddlers can wander outside unsupervised in moments."
+  },
+  {
+    "id": "2y-safety-07",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Teach your toddler their full name and begin working on your phone number. Use songs or repetition to make it fun and memorable."
+  },
+  {
+    "id": "2y-safety-08",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Always check that playground equipment is age-appropriate and well-maintained. Look for openings that could trap a toddler's head or fingers."
+  },
+  {
+    "id": "2y-safety-09",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Keep bathroom doors closed or use a toilet lock. Toddlers are fascinated by water and a toilet poses a drowning risk for a top-heavy child."
+  },
+  {
+    "id": "2y-safety-10",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Review your car seat installation regularly. Ensure the harness is snug with the chest clip at armpit level and no bulky winter coats under straps."
+  },
+  {
+    "id": "2y-safety-11",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Teach your toddler to sit while eating. Running or playing with food in their mouth significantly increases the choking risk."
+  },
+  {
+    "id": "2y-safety-12",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Store sharp kitchen tools like knives, peelers, and scissors in a high drawer with a child lock. Your toddler can now open many lower drawers and cabinets."
+  },
+  {
+    "id": "2y-safety-13",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "If your toddler is transitioning to a bed, place the mattress low to the ground and use a bed rail. Remove hazards from the room they could access at night."
+  },
+  {
+    "id": "2y-safety-14",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Driveway and parking lot safety is critical. Always hold your toddler's hand and check behind your vehicle before backing up. They are too short to be seen."
+  },
+  {
+    "id": "2y-safety-15",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Check smoke and carbon monoxide detectors monthly and replace batteries at least once a year. A working detector is one of the simplest ways to protect your family."
+  }
 ]

@@ -18,12 +18,6 @@
     "text": "Dein Kind entwickelt einen Sinn für Humor und liebt vielleicht alberne Witze und Wortspiele. Zusammen lachen stärkt eure Bindung und fördert die Sprachentwicklung."
   },
   {
-    "id": "4y-development-04",
-    "ageGroup": "4y",
-    "category": "development",
-    "text": "Hüpfen, Galoppieren und Springen zeigen eine reifende Grobmotorik. Übe diese Bewegungen durch Spiele statt durch Drill."
-  },
-  {
     "id": "4y-development-05",
     "ageGroup": "4y",
     "category": "development",
@@ -90,12 +84,6 @@
     "text": "Dein Kind könnte Interesse an Buchstaben und frühem Lesen zeigen. Folge seinem Interesse — zeige auf Wörter auf Schildern und lass es dir vertraute Bücher \"vorlesen\"."
   },
   {
-    "id": "4y-sleep-01",
-    "ageGroup": "4y",
-    "category": "sleep",
-    "text": "Viele Kinder geben ihren Mittagsschlaf zwischen 3 und 5 Jahren auf, obwohl einige ihn noch brauchen. Wenn dein Kind nicht mehr schläft, strebe eine Schlafenszeit an, die früh genug ist, um 10-13 Stunden Nachtschlaf zu bekommen."
-  },
-  {
     "id": "4y-sleep-02",
     "ageGroup": "4y",
     "category": "sleep",
@@ -136,12 +124,6 @@
     "ageGroup": "4y",
     "category": "sleep",
     "text": "Dein Kind könnte anfangen, sich gegen die Schlafenszeit zu wehren, indem es sagt, es sei nicht müde. Eine beruhigende Routine hilft dem Körper herunterzufahren, auch wenn der Kopf noch wach ist."
-  },
-  {
-    "id": "4y-sleep-09",
-    "ageGroup": "4y",
-    "category": "sleep",
-    "text": "Bettnässen ist in diesem Alter völlig normal. Verwende einen wasserdichten Matratzenschoner und mach kein großes Thema daraus — die meisten Kinder wachsen bis 5-6 Jahre daraus heraus."
   },
   {
     "id": "4y-sleep-10",
@@ -274,18 +256,6 @@
     "ageGroup": "4y",
     "category": "health",
     "text": "Dein Kind könnte in dieser Phase wichtige Auffrischungsimpfungen benötigen. Sprich mit deinem Kinderarzt, um sicherzustellen, dass die Impfungen aktuell sind."
-  },
-  {
-    "id": "4y-health-02",
-    "ageGroup": "4y",
-    "category": "health",
-    "text": "Dein Kind sollte sich zweimal täglich die Zähne mit einer erbsengroßen Menge fluoridhaltiger Zahnpasta putzen. Hilf beim Putzen, bis es seine Schuhe selbst binden kann — ungefähr im Alter von 6-7 Jahren."
-  },
-  {
-    "id": "4y-health-03",
-    "ageGroup": "4y",
-    "category": "health",
-    "text": "Ein jährlicher Sehtest wird zwischen 3 und 5 Jahren empfohlen. Das frühzeitige Erkennen von Problemen wie Amblyopie (Schwachsichtigkeit) gibt der Behandlung die beste Erfolgschance."
   },
   {
     "id": "4y-health-04",

@@ -33,7 +33,7 @@
     "id": "2m-development-06",
     "ageGroup": "2m",
     "category": "development",
-    "text": "Um die 6-8 Wochen könntest du das erste echte soziale Lächeln deines Babys sehen. Diesmal sind es keine Blähungen \u2013 es reagiert wirklich auf dich!"
+    "text": "Um die 6-8 Wochen könntest du das erste echte soziale Lächeln deines Babys sehen. Diesmal sind es keine Blähungen – es reagiert wirklich auf dich!"
   },
   {
     "id": "2m-development-07",
@@ -57,13 +57,13 @@
     "id": "2m-development-10",
     "ageGroup": "2m",
     "category": "development",
-    "text": "Die kleinen Gurrlaute, die dein Baby macht, sind seine ersten Kommunikationsversuche. Gurre zurück \u2013 ihr führt eure ersten Gespräche!"
+    "text": "Die kleinen Gurrlaute, die dein Baby macht, sind seine ersten Kommunikationsversuche. Gurre zurück – ihr führt eure ersten Gespräche!"
   },
   {
     "id": "2m-development-11",
     "ageGroup": "2m",
     "category": "development",
-    "text": "Hautkontakt ist nicht nur beruhigend \u2013 er reguliert Herzfrequenz, Temperatur und Atmung deines Babys und fördert die Bindung."
+    "text": "Hautkontakt ist nicht nur beruhigend – er reguliert Herzfrequenz, Temperatur und Atmung deines Babys und fördert die Bindung."
   },
   {
     "id": "2m-development-12",
@@ -177,19 +177,7 @@
     "id": "2m-sleep-05",
     "ageGroup": "2m",
     "category": "sleep",
-    "text": "Eine einfache Abendroutine schon jetzt \u2013 gedämpftes Licht, leise Stimme, eine Stillmahlzeit \u2013 hilft deinem Baby, diese Signale mit der Schlafenszeit zu verknüpfen."
-  },
-  {
-    "id": "2m-sleep-06",
-    "ageGroup": "2m",
-    "category": "sleep",
-    "text": "Weißes Rauschen kann beruhigend wirken, weil es Geräusche aus dem Mutterleib nachahmt. Halte die Lautstärke niedrig (nicht lauter als eine sanfte Dusche) und stelle das Gerät mindestens {{7 feet|2 Meter}} vom Bettchen entfernt auf."
-  },
-  {
-    "id": "2m-sleep-07",
-    "ageGroup": "2m",
-    "category": "sleep",
-    "text": "Im selben Zimmer schlafen (nicht im selben Bett) wird für mindestens die ersten 6 Monate von Kinderärzten empfohlen, um das Risiko des plötzlichen Kindstods zu senken und dein Baby zum Füttern in der Nähe zu haben."
+    "text": "Eine einfache Abendroutine schon jetzt – gedämpftes Licht, leise Stimme, eine Stillmahlzeit – hilft deinem Baby, diese Signale mit der Schlafenszeit zu verknüpfen."
   },
   {
     "id": "2m-sleep-08",
@@ -237,7 +225,7 @@
     "id": "2m-sleep-15",
     "ageGroup": "2m",
     "category": "sleep",
-    "text": "Zieh deinem Baby eine Schicht mehr an, als du selbst bequem tragen würdest. Überhitzung ist ein Risikofaktor für den plötzlichen Kindstod \u2013 prüfe, ob es sich an der Brust warm, aber nicht verschwitzt anfühlt."
+    "text": "Zieh deinem Baby eine Schicht mehr an, als du selbst bequem tragen würdest. Überhitzung ist ein Risikofaktor für den plötzlichen Kindstod – prüfe, ob es sich an der Brust warm, aber nicht verschwitzt anfühlt."
   },
   {
     "id": "2m-sleep-16",
@@ -267,7 +255,7 @@
     "id": "2m-sleep-20",
     "ageGroup": "2m",
     "category": "sleep",
-    "text": "Es ist in Ordnung, ein schlafendes Neugeborenes zum Füttern zu wecken, wenn es länger als 3-4 Stunden geschlafen hat \u2013 besonders in den ersten zwei Wochen, wenn die Gewichtszunahme wichtig ist."
+    "text": "Es ist in Ordnung, ein schlafendes Neugeborenes zum Füttern zu wecken, wenn es länger als 3-4 Stunden geschlafen hat – besonders in den ersten zwei Wochen, wenn die Gewichtszunahme wichtig ist."
   },
   {
     "id": "2m-sleep-21",
@@ -285,7 +273,7 @@
     "id": "2m-sleep-23",
     "ageGroup": "2m",
     "category": "sleep",
-    "text": "\"Schlaf, wenn dein Baby schläft\" ist ein Klassiker \u2013 aus gutem Grund. Selbst kurze Nickerchen helfen dir bei der Erholung, und die Wäsche kann wirklich warten."
+    "text": "\"Schlaf, wenn dein Baby schläft\" ist ein Klassiker – aus gutem Grund. Selbst kurze Nickerchen helfen dir bei der Erholung, und die Wäsche kann wirklich warten."
   },
   {
     "id": "2m-sleep-24",
@@ -297,7 +285,7 @@
     "id": "2m-sleep-25",
     "ageGroup": "2m",
     "category": "sleep",
-    "text": "Jedes Baby hat unterschiedliche Schlafbedürfnisse. Manche Neugeborene schlafen eher 14 Stunden am Tag, andere eher 17 \u2013 beides kann völlig normal sein."
+    "text": "Jedes Baby hat unterschiedliche Schlafbedürfnisse. Manche Neugeborene schlafen eher 14 Stunden am Tag, andere eher 17 – beides kann völlig normal sein."
   },
   {
     "id": "2m-feeding-01",
@@ -321,7 +309,7 @@
     "id": "2m-feeding-04",
     "ageGroup": "2m",
     "category": "feeding",
-    "text": "Clusterfeeding \u2013 wenn dein Baby über mehrere Stunden besonders häufig trinken möchte \u2013 ist normal, vor allem abends. Es kurbelt deine Milchproduktion an."
+    "text": "Clusterfeeding – wenn dein Baby über mehrere Stunden besonders häufig trinken möchte – ist normal, vor allem abends. Es kurbelt deine Milchproduktion an."
   },
   {
     "id": "2m-feeding-05",
@@ -348,12 +336,6 @@
     "text": "Spucken ist sehr häufig und meist kein Grund zur Sorge. Solange dein Baby gut zunimmt und zufrieden wirkt, ist gelegentliches Spucken normal."
   },
   {
-    "id": "2m-feeding-09",
-    "ageGroup": "2m",
-    "category": "feeding",
-    "text": "Wenn du abpumpst, kann Muttermilch bei Raumtemperatur bis zu 4 Stunden, im Kühlschrank 4 Tage und im Gefrierschrank 6-12 Monate aufbewahrt werden (innerhalb von 6 Monaten ist ideal)."
-  },
-  {
     "id": "2m-feeding-10",
     "ageGroup": "2m",
     "category": "feeding",
@@ -375,19 +357,13 @@
     "id": "2m-feeding-13",
     "ageGroup": "2m",
     "category": "feeding",
-    "text": "Kippfütterung \u2013 die Flasche eher waagerecht halten und häufig Pausen einlegen \u2013 beugt Überfütterung vor und ist schonender für die Verdauung deines Babys."
+    "text": "Kippfütterung – die Flasche eher waagerecht halten und häufig Pausen einlegen – beugt Überfütterung vor und ist schonender für die Verdauung deines Babys."
   },
   {
     "id": "2m-feeding-14",
     "ageGroup": "2m",
     "category": "feeding",
     "text": "Vitamin-D-Tropfen (400 I.E. täglich) werden für alle gestillten Babys ab den ersten Lebenstagen empfohlen, da Muttermilch allein nicht genug Vitamin D liefert."
-  },
-  {
-    "id": "2m-feeding-15",
-    "ageGroup": "2m",
-    "category": "feeding",
-    "text": "Der Magen deines Babys ist winzig \u2013 mit einer Woche etwa walnussgroß. Kleine, häufige Mahlzeiten sind genau das Richtige."
   },
   {
     "id": "2m-feeding-16",
@@ -435,7 +411,7 @@
     "id": "2m-feeding-23",
     "ageGroup": "2m",
     "category": "feeding",
-    "text": "Erwärme Muttermilch oder Säuglingsnahrung niemals in der Mikrowelle \u2013 das erzeugt heiße Stellen, die den Mund deines Babys verbrennen können. Wärme Fläschchen stattdessen in einer Schüssel mit warmem Wasser."
+    "text": "Erwärme Muttermilch oder Säuglingsnahrung niemals in der Mikrowelle – das erzeugt heiße Stellen, die den Mund deines Babys verbrennen können. Wärme Fläschchen stattdessen in einer Schüssel mit warmem Wasser."
   },
   {
     "id": "2m-feeding-24",
@@ -459,7 +435,7 @@
     "id": "2m-health-02",
     "ageGroup": "2m",
     "category": "health",
-    "text": "Bei einem Neugeborenen unter 3 Monaten ist eine rektale Temperatur von {{100.4\u00b0F|38\u00b0C}} oder höher ein Notfall. Rufe sofort deinen Kinderarzt an."
+    "text": "Bei einem Neugeborenen unter 3 Monaten ist eine rektale Temperatur von {{100.4°F|38°C}} oder höher ein Notfall. Rufe sofort deinen Kinderarzt an."
   },
   {
     "id": "2m-health-03",
@@ -471,7 +447,7 @@
     "id": "2m-health-04",
     "ageGroup": "2m",
     "category": "health",
-    "text": "Kopfgneis \u2013 schuppige, gelbliche Stellen auf der Kopfhaut deines Babys \u2013 ist harmlos und häufig. Sanftes Bürsten mit einer weichen Bürste nach dem Baden kann helfen."
+    "text": "Kopfgneis – schuppige, gelbliche Stellen auf der Kopfhaut deines Babys – ist harmlos und häufig. Sanftes Bürsten mit einer weichen Bürste nach dem Baden kann helfen."
   },
   {
     "id": "2m-health-05",
@@ -573,19 +549,13 @@
     "id": "2m-health-21",
     "ageGroup": "2m",
     "category": "health",
-    "text": "Die Fontanelle (weiche Stelle) deines Babys ist normal und kann bedenkenlos sanft berührt werden. Sie pulsiert eventuell leicht \u2013 das ist nur der Blutfluss darunter. Eine eingefallene oder vorgewölbte Fontanelle sollte vom Arzt untersucht werden."
-  },
-  {
-    "id": "2m-health-22",
-    "ageGroup": "2m",
-    "category": "health",
-    "text": "Dreimonatskoliken \u2013 definiert als mehr als 3 Stunden Schreien pro Tag, an 3 Tagen pro Woche, über 3 Wochen oder länger \u2013 erreichen ihren Höhepunkt meist um die 6. Woche und bessern sich bis zum 3.-4. Monat. Es ist nicht deine Schuld."
+    "text": "Die Fontanelle (weiche Stelle) deines Babys ist normal und kann bedenkenlos sanft berührt werden. Sie pulsiert eventuell leicht – das ist nur der Blutfluss darunter. Eine eingefallene oder vorgewölbte Fontanelle sollte vom Arzt untersucht werden."
   },
   {
     "id": "2m-health-23",
     "ageGroup": "2m",
     "category": "health",
-    "text": "Bitte alle, die mit deinem Neugeborenen in Kontakt kommen, ihren Impfstatus zu überprüfen \u2013 besonders Keuchhusten und Grippe. Dieser \"Kokon\" aus Schutz hilft, dein Baby sicher zu halten."
+    "text": "Bitte alle, die mit deinem Neugeborenen in Kontakt kommen, ihren Impfstatus zu überprüfen – besonders Keuchhusten und Grippe. Dieser \"Kokon\" aus Schutz hilft, dein Baby sicher zu halten."
   },
   {
     "id": "2m-health-24",
@@ -597,7 +567,7 @@
     "id": "2m-health-25",
     "ageGroup": "2m",
     "category": "health",
-    "text": "Die Atmung deines Babys kann unregelmäßig wirken \u2013 schnelle Atemzüge gefolgt von kurzen Pausen. Diese periodische Atmung ist bei Neugeborenen normal, solange das Baby nicht blau anläuft."
+    "text": "Die Atmung deines Babys kann unregelmäßig wirken – schnelle Atemzüge gefolgt von kurzen Pausen. Diese periodische Atmung ist bei Neugeborenen normal, solange das Baby nicht blau anläuft."
   },
   {
     "id": "2m-play-01",
@@ -633,7 +603,7 @@
     "id": "2m-play-06",
     "ageGroup": "2m",
     "category": "play",
-    "text": "Lege einen kleinen, bruchsicheren Spiegel neben dein Baby während der Bauchlage. Auch wenn es sich noch nicht erkennt \u2013 Gesichter sind für Babys faszinierend."
+    "text": "Lege einen kleinen, bruchsicheren Spiegel neben dein Baby während der Bauchlage. Auch wenn es sich noch nicht erkennt – Gesichter sind für Babys faszinierend."
   },
   {
     "id": "2m-play-07",
@@ -651,7 +621,7 @@
     "id": "2m-play-09",
     "ageGroup": "2m",
     "category": "play",
-    "text": "Lass dein Baby verschiedene Materialien erspüren \u2013 eine weiche Decke, ein Seidentuch, einen Frotteewaschlappen \u2013 an seinen Händen und Wangen. Sanfte Sinneserfahrungen machen neugierig."
+    "text": "Lass dein Baby verschiedene Materialien erspüren – eine weiche Decke, ein Seidentuch, einen Frotteewaschlappen – an seinen Händen und Wangen. Sanfte Sinneserfahrungen machen neugierig."
   },
   {
     "id": "2m-play-10",
@@ -681,7 +651,7 @@
     "id": "2m-play-14",
     "ageGroup": "2m",
     "category": "play",
-    "text": "Mache übertriebene Grimassen \u2013 breites Grinsen, große Augen, offener Mund \u2013 nah vor dem Gesicht deines Babys. Es ist darauf programmiert, Gesichter zu studieren und irgendwann nachzuahmen."
+    "text": "Mache übertriebene Grimassen – breites Grinsen, große Augen, offener Mund – nah vor dem Gesicht deines Babys. Es ist darauf programmiert, Gesichter zu studieren und irgendwann nachzuahmen."
   },
   {
     "id": "2m-play-15",
@@ -699,13 +669,13 @@
     "id": "2m-play-17",
     "ageGroup": "2m",
     "category": "play",
-    "text": "Halte dein Baby in verschiedenen Positionen \u2013 bäuchlings auf deinem Unterarm, aufrecht an deiner Schulter oder im Schoß liegend. Jede gibt ihm eine neue Perspektive auf die Welt."
+    "text": "Halte dein Baby in verschiedenen Positionen – bäuchlings auf deinem Unterarm, aufrecht an deiner Schulter oder im Schoß liegend. Jede gibt ihm eine neue Perspektive auf die Welt."
   },
   {
     "id": "2m-play-18",
     "ageGroup": "2m",
     "category": "play",
-    "text": "Schüttle sanft eine Rassel erst neben dem einen Ohr deines Babys, dann neben dem anderen. Es wird üben, sich zum Geräusch zu drehen \u2013 das stärkt die Nackenmuskulatur und das Hören."
+    "text": "Schüttle sanft eine Rassel erst neben dem einen Ohr deines Babys, dann neben dem anderen. Es wird üben, sich zum Geräusch zu drehen – das stärkt die Nackenmuskulatur und das Hören."
   },
   {
     "id": "2m-play-19",
@@ -753,7 +723,7 @@
     "id": "2m-safety-01",
     "ageGroup": "2m",
     "category": "safety",
-    "text": "Lass dein Baby niemals unbeaufsichtigt auf dem Wickeltisch, Bett oder Sofa \u2013 auch wenn es sich noch nicht drehen kann. Das erste Mal kommt immer dann, wenn man es am wenigsten erwartet."
+    "text": "Lass dein Baby niemals unbeaufsichtigt auf dem Wickeltisch, Bett oder Sofa – auch wenn es sich noch nicht drehen kann. Das erste Mal kommt immer dann, wenn man es am wenigsten erwartet."
   },
   {
     "id": "2m-safety-02",
@@ -771,7 +741,7 @@
     "id": "2m-safety-04",
     "ageGroup": "2m",
     "category": "safety",
-    "text": "Teste das Badewasser mit der Innenseite deines Handgelenks oder Ellenbogens, bevor du dein Baby hineinlegst. Die ideale Temperatur liegt bei etwa {{98-100\u00b0F|37-38\u00b0C}}."
+    "text": "Teste das Badewasser mit der Innenseite deines Handgelenks oder Ellenbogens, bevor du dein Baby hineinlegst. Die ideale Temperatur liegt bei etwa {{98-100°F|37-38°C}}."
   },
   {
     "id": "2m-safety-05",
@@ -783,13 +753,13 @@
     "id": "2m-safety-06",
     "ageGroup": "2m",
     "category": "safety",
-    "text": "Lege deinem Baby nichts um den Hals \u2013 keine Ketten, Schnullerbänder mit langen Kordeln oder Kapuzenkleidung mit Zugbändern."
+    "text": "Lege deinem Baby nichts um den Hals – keine Ketten, Schnullerbänder mit langen Kordeln oder Kapuzenkleidung mit Zugbändern."
   },
   {
     "id": "2m-safety-07",
     "ageGroup": "2m",
     "category": "safety",
-    "text": "Entferne Kopfstützen des Autositzes, sobald der Kopf deines Babys nicht mehr zur Seite kippt \u2013 es sei denn, die Stütze gehört zum Originalsitz. Nachträglich gekaufte Einsätze sind nicht im Crashtest geprüft."
+    "text": "Entferne Kopfstützen des Autositzes, sobald der Kopf deines Babys nicht mehr zur Seite kippt – es sei denn, die Stütze gehört zum Originalsitz. Nachträglich gekaufte Einsätze sind nicht im Crashtest geprüft."
   },
   {
     "id": "2m-safety-08",
@@ -831,13 +801,13 @@
     "id": "2m-safety-14",
     "ageGroup": "2m",
     "category": "safety",
-    "text": "Halte kleine Gegenstände, Münzen und Knopfzellenbatterien außer Reichweite. Fang jetzt schon mit der Kindersicherung an \u2013 dein Baby wird schneller mobil, als du denkst."
+    "text": "Halte kleine Gegenstände, Münzen und Knopfzellenbatterien außer Reichweite. Fang jetzt schon mit der Kindersicherung an – dein Baby wird schneller mobil, als du denkst."
   },
   {
     "id": "2m-safety-15",
     "ageGroup": "2m",
     "category": "safety",
-    "text": "Höre mit dem Pucken auf, sobald dein Baby Anzeichen zeigt, sich drehen zu wollen \u2013 auch wenn das schon vor dem 2. Monat passiert. Sich im Pucktuch zu drehen erhöht das SIDS-Risiko."
+    "text": "Höre mit dem Pucken auf, sobald dein Baby Anzeichen zeigt, sich drehen zu wollen – auch wenn das schon vor dem 2. Monat passiert. Sich im Pucktuch zu drehen erhöht das SIDS-Risiko."
   },
   {
     "id": "2m-safety-16",
@@ -867,7 +837,7 @@
     "id": "2m-safety-20",
     "ageGroup": "2m",
     "category": "safety",
-    "text": "Überprüfe, dass die Gitterstäbe des Babybetts nicht mehr als {{2 3/8 inches|6 cm}} Abstand haben \u2013 ungefähr die Breite einer Getränkedose. Größere Abstände bergen ein Einklemmrisiko."
+    "text": "Überprüfe, dass die Gitterstäbe des Babybetts nicht mehr als {{2 3/8 inches|6 cm}} Abstand haben – ungefähr die Breite einer Getränkedose. Größere Abstände bergen ein Einklemmrisiko."
   },
   {
     "id": "2m-safety-21",

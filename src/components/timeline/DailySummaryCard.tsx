@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { View, Text, Pressable, Platform } from "react-native";
 import { useColorScheme } from "nativewind";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -42,28 +42,47 @@ export function DailySummaryCard({
     [selectedDate, allData, dayStartHour]
   );
 
+  const [pickerKey, setPickerKey] = useState(0);
+
   const handleDatePress = useCallback(() => {
+    setPickerKey(prev => prev + 1);
     setShowDatePicker(true);
   }, []);
+
+  const pendingDateRef = useRef<Date | null>(null);
 
   const handleDateChange = useCallback(
     (_event: DateTimePickerEvent, date?: Date) => {
       if (Platform.OS === "android") {
         setShowDatePicker(false);
-      }
-      if (date) {
-        const normalized = new Date(date);
-        normalized.setHours(0, 0, 0, 0);
-        setSelectedDate(normalized);
-        onDateChange?.(normalized);
+        if (date) {
+          const normalized = new Date(date);
+          normalized.setHours(0, 0, 0, 0);
+          setSelectedDate(normalized);
+          onDateChange?.(normalized);
+        }
+      } else if (date) {
+        pendingDateRef.current = date;
       }
     },
     [onDateChange]
   );
 
-  const handleDone = useCallback(() => {
+  const handleCancel = useCallback(() => {
+    pendingDateRef.current = null;
     setShowDatePicker(false);
   }, []);
+
+  const handleDone = useCallback(() => {
+    setShowDatePicker(false);
+    if (pendingDateRef.current) {
+      const normalized = new Date(pendingDateRef.current);
+      normalized.setHours(0, 0, 0, 0);
+      setSelectedDate(normalized);
+      onDateChange?.(normalized);
+      pendingDateRef.current = null;
+    }
+  }, [onDateChange]);
 
   const minDate = useMemo(() => {
     if (!birthDate) return undefined;
@@ -296,7 +315,18 @@ export function DailySummaryCard({
         </Text>
       )}
 
-      {showDatePicker && (
+      {showDatePicker && Platform.OS === "android" && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          minimumDate={minDate}
+          maximumDate={maxDate}
+        />
+      )}
+
+      {showDatePicker && Platform.OS === "ios" && (
         <View
           style={{
             backgroundColor: isDark
@@ -306,31 +336,43 @@ export function DailySummaryCard({
             marginTop: 8,
           }}
         >
-          {Platform.OS === "ios" && (
-            <View className="flex-row justify-end px-4 py-2 border-b border-border dark:border-border-dark">
-              <Pressable
-                onPress={handleDone}
-                className="py-2 px-4"
-                accessibilityRole="button"
-                accessibilityLabel={t("common.done")}
-              >
-                <Text
-                  className="font-semibold text-base"
-                  style={{ color: primaryColor }}
-                >
-                  {t("common.done")}
-                </Text>
-              </Pressable>
-            </View>
-          )}
           <DateTimePicker
+            key={pickerKey}
             value={selectedDate}
             mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            display="spinner"
             onChange={handleDateChange}
             minimumDate={minDate}
             maximumDate={maxDate}
           />
+          <View className="flex-row justify-between px-4 py-2 border-t border-border dark:border-border-dark">
+            <Pressable
+              onPress={handleCancel}
+              className="py-2 px-4"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.cancel")}
+            >
+              <Text
+                className="text-base"
+                style={{ color: isDark ? CONTENT_COLORS.dark.secondary : CONTENT_COLORS.light.secondary }}
+              >
+                {t("common.cancel")}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={handleDone}
+              className="py-2 px-4"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.done")}
+            >
+              <Text
+                className="font-semibold text-base"
+                style={{ color: primaryColor }}
+              >
+                {t("common.done")}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       )}
     </View>

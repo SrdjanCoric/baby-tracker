@@ -1,97 +1,506 @@
 [
-  {"id": "3y-development-01", "ageGroup": "3y", "category": "development", "text": "Tvoje dete verovatno govori u rečenicama od 3-5 reči. Proširi ono što kaže — ako kaže \"kuče trči\", odgovori \"Da, veliko kuče brzo trči!\""},
-  {"id": "3y-development-02", "ageGroup": "3y", "category": "development", "text": "Vožnja tricikla je velika prekretnica koja kombinuje koordinaciju, snagu i ravnotežu. Daj detetu dosta prilika da vežba."},
-  {"id": "3y-development-03", "ageGroup": "3y", "category": "development", "text": "Tvoje dete može početi da razume koncept \"moje\" i \"tvoje\". Jednostavne društvene igre i aktivnosti deljenja pomažu u građenju ove socijalne veštine."},
-  {"id": "3y-development-04", "ageGroup": "3y", "category": "development", "text": "Crtanje krugova i pokušaj kopiranja linija pokazuje rastuću kontrolu fine motorike. Izloži njegove crteže ponosno — to motiviše više vežbanja."},
-  {"id": "3y-development-05", "ageGroup": "3y", "category": "development", "text": "Tvoje dete verovatno može da broji do tri ili više. Broji sve zajedno — stepenice, užine, igračke — da bi brojevi postali deo svakodnevnog života."},
-  {"id": "3y-development-06", "ageGroup": "3y", "category": "development", "text": "Kooperativna igra se pojavljuje. Tvoje dete može početi da igra jednostavne igre sa drugom decom umesto samo pored njih."},
-  {"id": "3y-development-07", "ageGroup": "3y", "category": "development", "text": "Tvoje dete se verovatno može obući uz malo pomoći. Pusti ga da bira između dve kombinacije da gradi veštine donošenja odluka i samostalnost."},
-  {"id": "3y-development-08", "ageGroup": "3y", "category": "development", "text": "Maštovita igra postaje složenija — očekuj razrađene priče sa plišanim igračkama i lutkama. Ovo je ključno za kognitivni i emocionalni razvoj."},
-  {"id": "3y-development-09", "ageGroup": "3y", "category": "development", "text": "Tvoje dete može početi stalno da pita \"zašto\". Ovo je uzbudljivo — gradi logičko mišljenje. Odgovaraj jednostavno i iskreno, čak i kad je pedeseto zašto."},
-  {"id": "3y-development-10", "ageGroup": "3y", "category": "development", "text": "Tvoje dete može početi da pokušava da se kratko balansira na jednoj nozi. Igre poput \"stav flaminga\" pomažu u izgradnji snage nogu i koordinacije potrebne za skakutanje, koje se razvija bliže četvrtoj godini."},
-  {"id": "3y-development-11", "ageGroup": "3y", "category": "development", "text": "Tvoje dete počinje da razume koncept vremena — \"posle ručka\" ili \"pre spavanja\". Koristi ove fraze da mu pomogneš da predvidi dnevne događaje."},
-  {"id": "3y-development-12", "ageGroup": "3y", "category": "development", "text": "Izlivi besa mogu još biti česti, ali dete stiče više emocionalne regulacije. Prvo potvrdi njegova osećanja, pa ga usmeravaj ka rešenjima."},
-  {"id": "3y-development-13", "ageGroup": "3y", "category": "development", "text": "Korišćenje makaza uz nadzor je divna aktivnost za finu motoriku. Počni sa debelim papirom i bezbednim makazama za decu da se gradi snaga ruku."},
-  {"id": "3y-development-14", "ageGroup": "3y", "category": "development", "text": "Tvoje dete može početi da prepoznaje neka slova, naročito prvo slovo svog imena. Pokazuj slova u svakodnevnim okruženjima poput znakova i knjiga."},
-  {"id": "3y-development-15", "ageGroup": "3y", "category": "development", "text": "Spremnost za učenje korišćenja noše se veoma razlikuje. Ako dete pokazuje interesovanje, ostaje suvo dva sata i može da prati jednostavna uputstva, možda je spremno."},
-
-  {"id": "3y-sleep-01", "ageGroup": "3y", "category": "sleep", "text": "Mnoga deca u ovom uzrastu i dalje treba da dremnu danju, ali neka počinju da izbacuju dremku. Ako preskoče dremku, pokušaj sa tihim odmorom uz knjige."},
-  {"id": "3y-sleep-02", "ageGroup": "3y", "category": "sleep", "text": "Tvoje dete treba 11-14 sati ukupnog sna u 24 sata. Ako izbacuje dremku, spavanje možda treba pomeriti ranije da se nadoknadi."},
-  {"id": "3y-sleep-03", "ageGroup": "3y", "category": "sleep", "text": "Noćni strahovi se mogu pojaviti oko treće godine. Izgledaju zastrašujuće ali se dete neće sećati. Drži ga na sigurnom i izbegavaj da ga budiš tokom epizode."},
-  {"id": "3y-sleep-04", "ageGroup": "3y", "category": "sleep", "text": "Ako dete stalno ustaje iz kreveta, mirno ga vrati svaki put uz minimalnu interakciju. Doslednost je ključna — obično se reši za nedelju dana."},
-  {"id": "3y-sleep-05", "ageGroup": "3y", "category": "sleep", "text": "Vizuelna tabela rutine pred spavanje sa slikama može pomoći detetu da oseti kontrolu nad procesom i smanji otpor pred spavanje."},
-  {"id": "3y-sleep-06", "ageGroup": "3y", "category": "sleep", "text": "Rastuća mašta deteta može dovesti do strahova pred spavanje od čudovišta ili mraka. Ozbiljno shvati njegova osećanja i zajedno napravite jednostavan ritual provere ili \"sprej protiv čudovišta\"."},
-  {"id": "3y-sleep-07", "ageGroup": "3y", "category": "sleep", "text": "Ako dete drema u vrtiću ali se opire spavanju kod kuće, dremka je možda predugačka. Razgovaraj sa vrtićem o ograničavanju dužine dremke."},
-  {"id": "3y-sleep-08", "ageGroup": "3y", "category": "sleep", "text": "Sat za decu koji menja boju u vreme buđenja može naučiti dete kad je u redu da ustane. Daje mu vizuelni signal koji može da razume."},
-  {"id": "3y-sleep-09", "ageGroup": "3y", "category": "sleep", "text": "Aktivna igra napolju popodne pomaže detetu da lakše zaspi. Izbegavaj energičnu aktivnost u poslednjem satu pre spavanja."},
-  {"id": "3y-sleep-10", "ageGroup": "3y", "category": "sleep", "text": "Pređi sa vreće za spavanje ako je dete u dečjem krevetu. Lagane, dobro prilagođene pidžame su najbezbednija opcija."},
-  {"id": "3y-sleep-11", "ageGroup": "3y", "category": "sleep", "text": "Ako se dete budi noću da koristi toalet, ograniči napitke 1-2 sata pre spavanja i olakšaj put do kupatila sa slabim noćnim svetlom."},
-  {"id": "3y-sleep-12", "ageGroup": "3y", "category": "sleep", "text": "Neka deca u ovom uzrastu se opiru dremci ali postanu preumorna i nervozna do večere. Čak i 30 minuta tihog odmora može pomoći da im se popravi raspoloženje."},
-  {"id": "3y-sleep-13", "ageGroup": "3y", "category": "sleep", "text": "Držanje spavanja u istom prozoru od 30 minuta svake noći — čak i vikendom — pomaže regulaciji detetovog unutrašnjeg sata."},
-  {"id": "3y-sleep-14", "ageGroup": "3y", "category": "sleep", "text": "Pusti dete da izabere pidžamu ili knjigu pred spavanje. Mali izbori mu daju osećaj kontrole koji smanjuje borbe oko sna."},
-  {"id": "3y-sleep-15", "ageGroup": "3y", "category": "sleep", "text": "Ako je dete počelo da hoda u snu, proveri da je okruženje za spavanje bezbedno sa ogradama na stepenicama i zaključanim spoljašnjim vratima."},
-
-  {"id": "3y-feeding-01", "ageGroup": "3y", "category": "feeding", "text": "Tvoje dete sada može koristiti viljušku da nabode meku hranu i kašiku sa minimalnim prosipanjem. Hvali trud da podstakneš dalje vežbanje."},
-  {"id": "3y-feeding-02", "ageGroup": "3y", "category": "feeding", "text": "Nudi novu hranu pored poznatih omiljenih. Može trebati 15-20 izlaganja pre nego što dete prihvati novu hranu, pa se strpljenje isplati."},
-  {"id": "3y-feeding-03", "ageGroup": "3y", "category": "feeding", "text": "Tvoje dete treba oko 1.000-1.400 kalorija dnevno, ali apetit varira od obroka do obroka. Veruj njegovim signalima gladi umesto da ga teraš da završi."},
-  {"id": "3y-feeding-04", "ageGroup": "3y", "category": "feeding", "text": "Probaj da služiš obroke \"porodičnim stilom\" gde dete može samo da se posluži malim porcijama. Ovo gradi samostalnost i smanjuje borbe oko hrane."},
-  {"id": "3y-feeding-05", "ageGroup": "3y", "category": "feeding", "text": "Ograniči grickanje između obroka. Strukturirane užine pomažu da dete dođe na obrok dovoljno gladno da proba različitu hranu."},
-  {"id": "3y-feeding-06", "ageGroup": "3y", "category": "feeding", "text": "Tvoje dete može pojesti puno jednog dana i jedva jesti sledećeg. Ovo je normalno — gledaj ishranu tokom cele nedelje umesto jednog dana."},
-  {"id": "3y-feeding-07", "ageGroup": "3y", "category": "feeding", "text": "Uključi dete u kupovinu namirnica tako što mu dozvoliš da izabere voće ili povrće. Deca su zainteresovanija za hranu koju su pomogla da izaberu."},
-  {"id": "3y-feeding-08", "ageGroup": "3y", "category": "feeding", "text": "Integralne žitarice, nemasan protein, voće, povrće i mlečni proizvodi čine uravnotežen tanjir. Cilj je raznolikost tokom nedelje, ne savršenstvo na svakom obroku."},
-  {"id": "3y-feeding-09", "ageGroup": "3y", "category": "feeding", "text": "Umakanje je čarolija u ovom uzrastu. Ponudi humus, jogurt ili maslac od orašastih plodova za umakanje — deca će pre jesti povrće i voće koje mogu da umače."},
-  {"id": "3y-feeding-10", "ageGroup": "3y", "category": "feeding", "text": "Izbegavaj da nazivaš dete \"izbirljivim jedačem\" pred njim. Deca usvajaju takve opise, što može učiniti da se ponašanje duže zadrži."},
-  {"id": "3y-feeding-11", "ageGroup": "3y", "category": "feeding", "text": "Tvoje dete može početi da uči da sipa iz malog bokalčeta u svoju čašu. Ovo gradi kontrolu fine motorike i čini da se oseća sposobno."},
-  {"id": "3y-feeding-12", "ageGroup": "3y", "category": "feeding", "text": "Kalcijum i vitamin D su ključni za rast kostiju. Ako dete ne pije mnogo mleka, jogurt, sir i obogaćene namirnice mogu popuniti prazninu."},
-  {"id": "3y-feeding-13", "ageGroup": "3y", "category": "feeding", "text": "Učini obroke prijatnim i bez pritiska. Izbegavaj podmićivanje, primoravanje ili teranje deteta da jede — to se dugoročno vraća kao bumerang."},
-  {"id": "3y-feeding-14", "ageGroup": "3y", "category": "feeding", "text": "Zdrave masti iz avokada, maslinovog ulja, maslaca od orašastih plodova i ribe podržavaju razvoj detetovog mozga. Uključuj ih redovno."},
-  {"id": "3y-feeding-15", "ageGroup": "3y", "category": "feeding", "text": "Ako dete želi samo belu hranu, pokušaj da postepeno uvodiš boju — jednu borovnicu na tanjiru, mali cvet brokolija pored testenine."},
-
-  {"id": "3y-health-01", "ageGroup": "3y", "category": "health", "text": "Sledeća preventivna poseta deteta je važna kontrola. Pedijatar će proceniti govor, vid, sluh i razvojne prekretnice."},
-  {"id": "3y-health-02", "ageGroup": "3y", "category": "health", "text": "Koristi količinu paste sa fluorom veličine zrna graška. Nauči dete da ispljune umesto da proguta, ali ne brini ako povremeno zaboravi."},
-  {"id": "3y-health-03", "ageGroup": "3y", "category": "health", "text": "Alergije često postaju očiglednije oko ovog uzrasta. Ako dete ima uporno kijanje, svrab očiju ili osip na koži, razgovaraj sa lekarom o testiranju na alergije."},
-  {"id": "3y-health-04", "ageGroup": "3y", "category": "health", "text": "Pitaj za pregled vida na sledećoj preventivnoj poseti deteta. Rano otkrivanje problema poput lenjinog oka dovodi do mnogo boljih ishoda."},
-  {"id": "3y-health-05", "ageGroup": "3y", "category": "health", "text": "Stomačni virusi se brzo šire u grupnom okruženju. Nauči dete da pere ruke sapunom 20 sekundi — pevanje kratke pesme to čini zabavnim."},
-  {"id": "3y-health-06", "ageGroup": "3y", "category": "health", "text": "Ako dete dobije manju posekotinu ili ogrebotinu, očisti je vodom i stavi flaster. Ovo je i prilika da ga naučiš osnovnu negu rana."},
-  {"id": "3y-health-07", "ageGroup": "3y", "category": "health", "text": "Nekoj deci možda još trebaju nadoknadne vakcine. Sledeća preventivna poseta je dobra prilika da pregledaš raspored vakcinacije sa pedijatrom."},
-  {"id": "3y-health-08", "ageGroup": "3y", "category": "health", "text": "Krup, sa karakterističnim lajavim kašljem, je čest u ovom uzrastu i obično zvuči gore nego što jeste. Hladan vazduh ili kratko izlaženje napolje mogu pomoći."},
-  {"id": "3y-health-09", "ageGroup": "3y", "category": "health", "text": "Uspostavi rutinu kod zubara koje se dete ne plaši. Pusti ga da te gleda kako pereš zube, broji mu zube i hvali hrabrost tokom poseta."},
-  {"id": "3y-health-10", "ageGroup": "3y", "category": "health", "text": "Ako dete skorije nije imalo pregled sluha, zatraži ga. Neotkriveni problemi sa sluhom mogu uticati na razvoj govora i jezika."},
-  {"id": "3y-health-11", "ageGroup": "3y", "category": "health", "text": "Nauči dete da kašlje ili kija u lakat umesto u ruke. Pokazuj to ponašanje i sam — deca uče gledajući."},
-  {"id": "3y-health-12", "ageGroup": "3y", "category": "health", "text": "Ako dete ima ekcem, nežna dnevna rutina hidratacije posle kupanja može sprečiti pogoršanja. Koristi proizvode bez mirisa."},
-  {"id": "3y-health-13", "ageGroup": "3y", "category": "health", "text": "Detetova stopala se još razvijaju. Biraj cipele koje su fleksibilne i dobro pristaju umesto krutih modela sa čvrstim đonom."},
-  {"id": "3y-health-14", "ageGroup": "3y", "category": "health", "text": "Ako dete muca kad je uzbuđeno ili žuri da govori, budi strpljiv i daj mu vremena. Blago mucanje je uobičajeno oko treće godine i često prolazi."},
-  {"id": "3y-health-15", "ageGroup": "3y", "category": "health", "text": "Fokusiraj se na kvalitetan, uzrastu primeren sadržaj kada dete koristi ekrane. Gledaj zajedno kad je moguće da možeš da pričate o onome što vidi i učiniš to interaktivnim."},
-
-  {"id": "3y-play-01", "ageGroup": "3y", "category": "play", "text": "Igra prerušavanja je divna u ovom uzrastu. Stari šeširi, šalovi i prevelike košulje dozvoljavaju detetu da istražuje različite uloge i priče."},
-  {"id": "3y-play-02", "ageGroup": "3y", "category": "play", "text": "Tvoje dete može da rešava slagalice sa 12-24 komada. Slagalice grade strpljenje, prostorno razmišljanje i zadovoljavajući osećaj završetka izazova."},
-  {"id": "3y-play-03", "ageGroup": "3y", "category": "play", "text": "Organizuj jednostavan lov na blago po kući ili dvorištu. Gradi veštine posmatranja i pokreće dete sa ciljem."},
-  {"id": "3y-play-04", "ageGroup": "3y", "category": "play", "text": "Građenje kockama ili magnetnim pločicama podstiče inženjersko razmišljanje. Zamoli dete da opiše šta gradi da dodaš govornu komponentu."},
-  {"id": "3y-play-05", "ageGroup": "3y", "category": "play", "text": "Tvoje dete može uživati u igri \"prodavnice\" ili \"restorana\". Ovi zamišljeni scenariji uče brojanje, socijalne uloge i veštine razgovora."},
-  {"id": "3y-play-06", "ageGroup": "3y", "category": "play", "text": "Slikanje različitim alatima — sunđerima, pamučnim kuglicama, lišćem — čini umetnost svežom i uči dete da kreativnost nema pravila."},
-  {"id": "3y-play-07", "ageGroup": "3y", "category": "play", "text": "Igra \"zamrzni ples\" je fantastična aktivnost za ovaj uzrast. Uči veštine slušanja, kontrolu tela i garantovano izaziva smeh."},
-  {"id": "3y-play-08", "ageGroup": "3y", "category": "play", "text": "Počni sa jednostavnim društvenim igrama koje uključuju boje ili okretanje, ne složenu strategiju. Uče naizmenično igranje i kako se nositi sa pobedom i gubitkom."},
-  {"id": "3y-play-09", "ageGroup": "3y", "category": "play", "text": "Dete može početi da uči da hvata veliku, meku loptu bačenu nežno sa kratke udaljenosti. Ovo gradi koordinaciju oka i ruke i vreme reakcije."},
-  {"id": "3y-play-10", "ageGroup": "3y", "category": "play", "text": "Napravi senzornu kutiju sa suvim pasuljem, kašikama i malim posudama. Sipanje i zagrabljivanje gradi fine motoričke veštine i drži decu zaokupljenom."},
-  {"id": "3y-play-11", "ageGroup": "3y", "category": "play", "text": "Vreme pripovedanja gde ti počneš priču a dete doda šta se dalje dešava gradi kreativnost, govor i narativno mišljenje."},
-  {"id": "3y-play-12", "ageGroup": "3y", "category": "play", "text": "Balansiranje na niskoj gredi, ivičnjaku ili liniji trake na podu je odlična vežba za snagu trupa i koordinaciju."},
-  {"id": "3y-play-13", "ageGroup": "3y", "category": "play", "text": "Daj detetu stare časopise da seče bezbednim makazama. Vežba sečenja gradi mišiće ruku potrebne za pisanje."},
-  {"id": "3y-play-14", "ageGroup": "3y", "category": "play", "text": "Igre uparivanja sa karticama sa slikama razvijaju memoriju i koncentraciju. Počni sa malim brojem parova i povećavaj kako se poboljšava."},
-  {"id": "3y-play-15", "ageGroup": "3y", "category": "play", "text": "Pusti dete da se ponekad dosadi. Nestrukturirano slobodno vreme ga uči da se samo zabavlja i pokreće kreativno rešavanje problema."},
-
-  {"id": "3y-safety-01", "ageGroup": "3y", "category": "safety", "text": "Tvoje dete postaje penjač. Pričvrsti sav visok nameštaj, televizore i police za zid — prevrtanje je ozbiljan rizik u ovom uzrastu."},
-  {"id": "3y-safety-02", "ageGroup": "3y", "category": "safety", "text": "Vežbaj plan evakuacije iz kuće u slučaju požara sa detetom. Nauči ga da se spusti nisko i ode na mesto okupljanja — drži to jednostavno i nestrašno."},
-  {"id": "3y-safety-03", "ageGroup": "3y", "category": "safety", "text": "Tvoje dete treba da bude u autosedištu sa pojasom — okrenuto unazad što duže, pa okrenuto napred. Drži ga u pojasu dok ne dostigne maksimalnu visinu ili težinu sedišta."},
-  {"id": "3y-safety-04", "ageGroup": "3y", "category": "safety", "text": "Nauči dete da lek nije slatkiš. Uvek čuvaj lekove u posudama otpornim na decu i van domašaja."},
-  {"id": "3y-safety-05", "ageGroup": "3y", "category": "safety", "text": "Na igralištu, proveri da je oprema primerena uzrastu. Platforme više od {{4 feet|1,2 metra}} su dizajnirane za stariju decu."},
-  {"id": "3y-safety-06", "ageGroup": "3y", "category": "safety", "text": "Počni da učiš dete o telesnoj autonomiji — može da kaže ne na neželjene dodire, čak i od članova porodice koji nude zagrljaje."},
-  {"id": "3y-safety-07", "ageGroup": "3y", "category": "safety", "text": "Drži dete nadohvat ruke blizu bilo kakve vode, uključujući dečje bazene. Časovi plivanja mogu početi sada ali ne zamenjuju nadzor."},
-  {"id": "3y-safety-08", "ageGroup": "3y", "category": "safety", "text": "Nauči dete da pita pre nego što pomazi nekog psa i da pusti psa da mu prvo pomiriše ruku. Pokazuj mirno, nežno ponašanje oko životinja."},
-  {"id": "3y-safety-09", "ageGroup": "3y", "category": "safety", "text": "Proveri da su sitni predmeti poput novčića, klikera i izduvanih balona van domašaja. Gušenje je rizik tokom celih predškolskih godina."},
-  {"id": "3y-safety-10", "ageGroup": "3y", "category": "safety", "text": "Kada hodate blizu puteva, uvek drži dete za ruku. Još nema sposobnost procene brzine ili udaljenosti saobraćaja."},
-  {"id": "3y-safety-11", "ageGroup": "3y", "category": "safety", "text": "Proveri da detektori dima i ugljen-monoksida imaju ispravne baterije. Testiraj ih mesečno — dete može pomoći da pritisne dugme."},
-  {"id": "3y-safety-12", "ageGroup": "3y", "category": "safety", "text": "Nauči dete puno ime i tvoje ime i prezime. Vežbaj redovno da može da ga podeli ako se ikad odvoji od tebe."},
-  {"id": "3y-safety-13", "ageGroup": "3y", "category": "safety", "text": "Drži oštre predmete — noževe, makaze, brijače — u zaključanim fiokama ili visoko. Detetova radoznalost i domašaj brzo rastu."},
-  {"id": "3y-safety-14", "ageGroup": "3y", "category": "safety", "text": "Proveri da dete uvek nosi kacigu kada vozi tricikl ili trotinet. Pravilno nameštena kaciga stoji ravno i ne klima se levo-desno."},
-  {"id": "3y-safety-15", "ageGroup": "3y", "category": "safety", "text": "Ako imaš oružje u kući, čuvaj ga nenapunjeno u zaključanom sefu sa municijom odvojeno. Radoznala deca mogu pronaći skrivene predmete."}
+  {
+    "id": "3y-development-02",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Vožnja tricikla je velika prekretnica koja kombinuje koordinaciju, snagu i ravnotežu. Daj detetu dosta prilika da vežba."
+  },
+  {
+    "id": "3y-development-03",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tvoje dete može početi da razume koncept \"moje\" i \"tvoje\". Jednostavne društvene igre i aktivnosti deljenja pomažu u građenju ove socijalne veštine."
+  },
+  {
+    "id": "3y-development-04",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Crtanje krugova i pokušaj kopiranja linija pokazuje rastuću kontrolu fine motorike. Izloži njegove crteže ponosno — to motiviše više vežbanja."
+  },
+  {
+    "id": "3y-development-05",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tvoje dete verovatno može da broji do tri ili više. Broji sve zajedno — stepenice, užine, igračke — da bi brojevi postali deo svakodnevnog života."
+  },
+  {
+    "id": "3y-development-06",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Kooperativna igra se pojavljuje. Tvoje dete može početi da igra jednostavne igre sa drugom decom umesto samo pored njih."
+  },
+  {
+    "id": "3y-development-07",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tvoje dete se verovatno može obući uz malo pomoći. Pusti ga da bira između dve kombinacije da gradi veštine donošenja odluka i samostalnost."
+  },
+  {
+    "id": "3y-development-08",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Maštovita igra postaje složenija — očekuj razrađene priče sa plišanim igračkama i lutkama. Ovo je ključno za kognitivni i emocionalni razvoj."
+  },
+  {
+    "id": "3y-development-09",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tvoje dete može početi stalno da pita \"zašto\". Ovo je uzbudljivo — gradi logičko mišljenje. Odgovaraj jednostavno i iskreno, čak i kad je pedeseto zašto."
+  },
+  {
+    "id": "3y-development-10",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tvoje dete može početi da pokušava da se kratko balansira na jednoj nozi. Igre poput \"stav flaminga\" pomažu u izgradnji snage nogu i koordinacije potrebne za skakutanje, koje se razvija bliže četvrtoj godini."
+  },
+  {
+    "id": "3y-development-11",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tvoje dete počinje da razume koncept vremena — \"posle ručka\" ili \"pre spavanja\". Koristi ove fraze da mu pomogneš da predvidi dnevne događaje."
+  },
+  {
+    "id": "3y-development-12",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Izlivi besa mogu još biti česti, ali dete stiče više emocionalne regulacije. Prvo potvrdi njegova osećanja, pa ga usmeravaj ka rešenjima."
+  },
+  {
+    "id": "3y-development-13",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Korišćenje makaza uz nadzor je divna aktivnost za finu motoriku. Počni sa debelim papirom i bezbednim makazama za decu da se gradi snaga ruku."
+  },
+  {
+    "id": "3y-development-14",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tvoje dete može početi da prepoznaje neka slova, naročito prvo slovo svog imena. Pokazuj slova u svakodnevnim okruženjima poput znakova i knjiga."
+  },
+  {
+    "id": "3y-development-15",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Spremnost za učenje korišćenja noše se veoma razlikuje. Ako dete pokazuje interesovanje, ostaje suvo dva sata i može da prati jednostavna uputstva, možda je spremno."
+  },
+  {
+    "id": "3y-sleep-01",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Mnoga deca u ovom uzrastu i dalje treba da dremnu danju, ali neka počinju da izbacuju dremku. Ako preskoče dremku, pokušaj sa tihim odmorom uz knjige."
+  },
+  {
+    "id": "3y-sleep-03",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Noćni strahovi se mogu pojaviti oko treće godine. Izgledaju zastrašujuće ali se dete neće sećati. Drži ga na sigurnom i izbegavaj da ga budiš tokom epizode."
+  },
+  {
+    "id": "3y-sleep-04",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Ako dete stalno ustaje iz kreveta, mirno ga vrati svaki put uz minimalnu interakciju. Doslednost je ključna — obično se reši za nedelju dana."
+  },
+  {
+    "id": "3y-sleep-05",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Vizuelna tabela rutine pred spavanje sa slikama može pomoći detetu da oseti kontrolu nad procesom i smanji otpor pred spavanje."
+  },
+  {
+    "id": "3y-sleep-06",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Rastuća mašta deteta može dovesti do strahova pred spavanje od čudovišta ili mraka. Ozbiljno shvati njegova osećanja i zajedno napravite jednostavan ritual provere ili \"sprej protiv čudovišta\"."
+  },
+  {
+    "id": "3y-sleep-07",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Ako dete drema u vrtiću ali se opire spavanju kod kuće, dremka je možda predugačka. Razgovaraj sa vrtićem o ograničavanju dužine dremke."
+  },
+  {
+    "id": "3y-sleep-08",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Sat za decu koji menja boju u vreme buđenja može naučiti dete kad je u redu da ustane. Daje mu vizuelni signal koji može da razume."
+  },
+  {
+    "id": "3y-sleep-09",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Aktivna igra napolju popodne pomaže detetu da lakše zaspi. Izbegavaj energičnu aktivnost u poslednjem satu pre spavanja."
+  },
+  {
+    "id": "3y-sleep-10",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Pređi sa vreće za spavanje ako je dete u dečjem krevetu. Lagane, dobro prilagođene pidžame su najbezbednija opcija."
+  },
+  {
+    "id": "3y-sleep-11",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Ako se dete budi noću da koristi toalet, ograniči napitke 1-2 sata pre spavanja i olakšaj put do kupatila sa slabim noćnim svetlom."
+  },
+  {
+    "id": "3y-sleep-12",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Neka deca u ovom uzrastu se opiru dremci ali postanu preumorna i nervozna do večere. Čak i 30 minuta tihog odmora može pomoći da im se popravi raspoloženje."
+  },
+  {
+    "id": "3y-sleep-13",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Držanje spavanja u istom prozoru od 30 minuta svake noći — čak i vikendom — pomaže regulaciji detetovog unutrašnjeg sata."
+  },
+  {
+    "id": "3y-sleep-14",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Pusti dete da izabere pidžamu ili knjigu pred spavanje. Mali izbori mu daju osećaj kontrole koji smanjuje borbe oko sna."
+  },
+  {
+    "id": "3y-sleep-15",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Ako je dete počelo da hoda u snu, proveri da je okruženje za spavanje bezbedno sa ogradama na stepenicama i zaključanim spoljašnjim vratima."
+  },
+  {
+    "id": "3y-feeding-01",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Tvoje dete sada može koristiti viljušku da nabode meku hranu i kašiku sa minimalnim prosipanjem. Hvali trud da podstakneš dalje vežbanje."
+  },
+  {
+    "id": "3y-feeding-02",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Nudi novu hranu pored poznatih omiljenih. Može trebati 15-20 izlaganja pre nego što dete prihvati novu hranu, pa se strpljenje isplati."
+  },
+  {
+    "id": "3y-feeding-03",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Tvoje dete treba oko 1.000-1.400 kalorija dnevno, ali apetit varira od obroka do obroka. Veruj njegovim signalima gladi umesto da ga teraš da završi."
+  },
+  {
+    "id": "3y-feeding-04",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Probaj da služiš obroke \"porodičnim stilom\" gde dete može samo da se posluži malim porcijama. Ovo gradi samostalnost i smanjuje borbe oko hrane."
+  },
+  {
+    "id": "3y-feeding-05",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Ograniči grickanje između obroka. Strukturirane užine pomažu da dete dođe na obrok dovoljno gladno da proba različitu hranu."
+  },
+  {
+    "id": "3y-feeding-06",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Tvoje dete može pojesti puno jednog dana i jedva jesti sledećeg. Ovo je normalno — gledaj ishranu tokom cele nedelje umesto jednog dana."
+  },
+  {
+    "id": "3y-feeding-07",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Uključi dete u kupovinu namirnica tako što mu dozvoliš da izabere voće ili povrće. Deca su zainteresovanija za hranu koju su pomogla da izaberu."
+  },
+  {
+    "id": "3y-feeding-08",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Integralne žitarice, nemasan protein, voće, povrće i mlečni proizvodi čine uravnotežen tanjir. Cilj je raznolikost tokom nedelje, ne savršenstvo na svakom obroku."
+  },
+  {
+    "id": "3y-feeding-09",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Umakanje je čarolija u ovom uzrastu. Ponudi humus, jogurt ili maslac od orašastih plodova za umakanje — deca će pre jesti povrće i voće koje mogu da umače."
+  },
+  {
+    "id": "3y-feeding-10",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Izbegavaj da nazivaš dete \"izbirljivim jedačem\" pred njim. Deca usvajaju takve opise, što može učiniti da se ponašanje duže zadrži."
+  },
+  {
+    "id": "3y-feeding-11",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Tvoje dete može početi da uči da sipa iz malog bokalčeta u svoju čašu. Ovo gradi kontrolu fine motorike i čini da se oseća sposobno."
+  },
+  {
+    "id": "3y-feeding-12",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Kalcijum i vitamin D su ključni za rast kostiju. Ako dete ne pije mnogo mleka, jogurt, sir i obogaćene namirnice mogu popuniti prazninu."
+  },
+  {
+    "id": "3y-feeding-13",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Učini obroke prijatnim i bez pritiska. Izbegavaj podmićivanje, primoravanje ili teranje deteta da jede — to se dugoročno vraća kao bumerang."
+  },
+  {
+    "id": "3y-feeding-14",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Zdrave masti iz avokada, maslinovog ulja, maslaca od orašastih plodova i ribe podržavaju razvoj detetovog mozga. Uključuj ih redovno."
+  },
+  {
+    "id": "3y-feeding-15",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Ako dete želi samo belu hranu, pokušaj da postepeno uvodiš boju — jednu borovnicu na tanjiru, mali cvet brokolija pored testenine."
+  },
+  {
+    "id": "3y-health-01",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Sledeća preventivna poseta deteta je važna kontrola. Pedijatar će proceniti govor, vid, sluh i razvojne prekretnice."
+  },
+  {
+    "id": "3y-health-02",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Koristi količinu paste sa fluorom veličine zrna graška. Nauči dete da ispljune umesto da proguta, ali ne brini ako povremeno zaboravi."
+  },
+  {
+    "id": "3y-health-03",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Alergije često postaju očiglednije oko ovog uzrasta. Ako dete ima uporno kijanje, svrab očiju ili osip na koži, razgovaraj sa lekarom o testiranju na alergije."
+  },
+  {
+    "id": "3y-health-04",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Pitaj za pregled vida na sledećoj preventivnoj poseti deteta. Rano otkrivanje problema poput lenjinog oka dovodi do mnogo boljih ishoda."
+  },
+  {
+    "id": "3y-health-05",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Stomačni virusi se brzo šire u grupnom okruženju. Nauči dete da pere ruke sapunom 20 sekundi — pevanje kratke pesme to čini zabavnim."
+  },
+  {
+    "id": "3y-health-06",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Ako dete dobije manju posekotinu ili ogrebotinu, očisti je vodom i stavi flaster. Ovo je i prilika da ga naučiš osnovnu negu rana."
+  },
+  {
+    "id": "3y-health-07",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Nekoj deci možda još trebaju nadoknadne vakcine. Sledeća preventivna poseta je dobra prilika da pregledaš raspored vakcinacije sa pedijatrom."
+  },
+  {
+    "id": "3y-health-09",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Uspostavi rutinu kod zubara koje se dete ne plaši. Pusti ga da te gleda kako pereš zube, broji mu zube i hvali hrabrost tokom poseta."
+  },
+  {
+    "id": "3y-health-10",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Ako dete skorije nije imalo pregled sluha, zatraži ga. Neotkriveni problemi sa sluhom mogu uticati na razvoj govora i jezika."
+  },
+  {
+    "id": "3y-health-11",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Nauči dete da kašlje ili kija u lakat umesto u ruke. Pokazuj to ponašanje i sam — deca uče gledajući."
+  },
+  {
+    "id": "3y-health-12",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Ako dete ima ekcem, nežna dnevna rutina hidratacije posle kupanja može sprečiti pogoršanja. Koristi proizvode bez mirisa."
+  },
+  {
+    "id": "3y-health-13",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Detetova stopala se još razvijaju. Biraj cipele koje su fleksibilne i dobro pristaju umesto krutih modela sa čvrstim đonom."
+  },
+  {
+    "id": "3y-health-14",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Ako dete muca kad je uzbuđeno ili žuri da govori, budi strpljiv i daj mu vremena. Blago mucanje je uobičajeno oko treće godine i često prolazi."
+  },
+  {
+    "id": "3y-health-15",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Fokusiraj se na kvalitetan, uzrastu primeren sadržaj kada dete koristi ekrane. Gledaj zajedno kad je moguće da možeš da pričate o onome što vidi i učiniš to interaktivnim."
+  },
+  {
+    "id": "3y-play-01",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Igra prerušavanja je divna u ovom uzrastu. Stari šeširi, šalovi i prevelike košulje dozvoljavaju detetu da istražuje različite uloge i priče."
+  },
+  {
+    "id": "3y-play-03",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Organizuj jednostavan lov na blago po kući ili dvorištu. Gradi veštine posmatranja i pokreće dete sa ciljem."
+  },
+  {
+    "id": "3y-play-04",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Građenje kockama ili magnetnim pločicama podstiče inženjersko razmišljanje. Zamoli dete da opiše šta gradi da dodaš govornu komponentu."
+  },
+  {
+    "id": "3y-play-05",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Tvoje dete može uživati u igri \"prodavnice\" ili \"restorana\". Ovi zamišljeni scenariji uče brojanje, socijalne uloge i veštine razgovora."
+  },
+  {
+    "id": "3y-play-06",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Slikanje različitim alatima — sunđerima, pamučnim kuglicama, lišćem — čini umetnost svežom i uči dete da kreativnost nema pravila."
+  },
+  {
+    "id": "3y-play-07",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Igra \"zamrzni ples\" je fantastična aktivnost za ovaj uzrast. Uči veštine slušanja, kontrolu tela i garantovano izaziva smeh."
+  },
+  {
+    "id": "3y-play-08",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Počni sa jednostavnim društvenim igrama koje uključuju boje ili okretanje, ne složenu strategiju. Uče naizmenično igranje i kako se nositi sa pobedom i gubitkom."
+  },
+  {
+    "id": "3y-play-09",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Dete može početi da uči da hvata veliku, meku loptu bačenu nežno sa kratke udaljenosti. Ovo gradi koordinaciju oka i ruke i vreme reakcije."
+  },
+  {
+    "id": "3y-play-11",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Vreme pripovedanja gde ti počneš priču a dete doda šta se dalje dešava gradi kreativnost, govor i narativno mišljenje."
+  },
+  {
+    "id": "3y-play-12",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Balansiranje na niskoj gredi, ivičnjaku ili liniji trake na podu je odlična vežba za snagu trupa i koordinaciju."
+  },
+  {
+    "id": "3y-play-13",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Daj detetu stare časopise da seče bezbednim makazama. Vežba sečenja gradi mišiće ruku potrebne za pisanje."
+  },
+  {
+    "id": "3y-play-14",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Igre uparivanja sa karticama sa slikama razvijaju memoriju i koncentraciju. Počni sa malim brojem parova i povećavaj kako se poboljšava."
+  },
+  {
+    "id": "3y-play-15",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Pusti dete da se ponekad dosadi. Nestrukturirano slobodno vreme ga uči da se samo zabavlja i pokreće kreativno rešavanje problema."
+  },
+  {
+    "id": "3y-safety-01",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Tvoje dete postaje penjač. Pričvrsti sav visok nameštaj, televizore i police za zid — prevrtanje je ozbiljan rizik u ovom uzrastu."
+  },
+  {
+    "id": "3y-safety-02",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Vežbaj plan evakuacije iz kuće u slučaju požara sa detetom. Nauči ga da se spusti nisko i ode na mesto okupljanja — drži to jednostavno i nestrašno."
+  },
+  {
+    "id": "3y-safety-04",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Nauči dete da lek nije slatkiš. Uvek čuvaj lekove u posudama otpornim na decu i van domašaja."
+  },
+  {
+    "id": "3y-safety-05",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Na igralištu, proveri da je oprema primerena uzrastu. Platforme više od {{4 feet|1,2 metra}} su dizajnirane za stariju decu."
+  },
+  {
+    "id": "3y-safety-06",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Počni da učiš dete o telesnoj autonomiji — može da kaže ne na neželjene dodire, čak i od članova porodice koji nude zagrljaje."
+  },
+  {
+    "id": "3y-safety-07",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Drži dete nadohvat ruke blizu bilo kakve vode, uključujući dečje bazene. Časovi plivanja mogu početi sada ali ne zamenjuju nadzor."
+  },
+  {
+    "id": "3y-safety-08",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Nauči dete da pita pre nego što pomazi nekog psa i da pusti psa da mu prvo pomiriše ruku. Pokazuj mirno, nežno ponašanje oko životinja."
+  },
+  {
+    "id": "3y-safety-09",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Proveri da su sitni predmeti poput novčića, klikera i izduvanih balona van domašaja. Gušenje je rizik tokom celih predškolskih godina."
+  },
+  {
+    "id": "3y-safety-10",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Kada hodate blizu puteva, uvek drži dete za ruku. Još nema sposobnost procene brzine ili udaljenosti saobraćaja."
+  },
+  {
+    "id": "3y-safety-11",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Proveri da detektori dima i ugljen-monoksida imaju ispravne baterije. Testiraj ih mesečno — dete može pomoći da pritisne dugme."
+  },
+  {
+    "id": "3y-safety-12",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Nauči dete puno ime i tvoje ime i prezime. Vežbaj redovno da može da ga podeli ako se ikad odvoji od tebe."
+  },
+  {
+    "id": "3y-safety-13",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Drži oštre predmete — noževe, makaze, brijače — u zaključanim fiokama ili visoko. Detetova radoznalost i domašaj brzo rastu."
+  },
+  {
+    "id": "3y-safety-14",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Proveri da dete uvek nosi kacigu kada vozi tricikl ili trotinet. Pravilno nameštena kaciga stoji ravno i ne klima se levo-desno."
+  },
+  {
+    "id": "3y-safety-15",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Ako imaš oružje u kući, čuvaj ga nenapunjeno u zaključanom sefu sa municijom odvojeno. Radoznala deca mogu pronaći skrivene predmete."
+  }
 ]

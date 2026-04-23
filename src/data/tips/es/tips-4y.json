@@ -18,12 +18,6 @@
     "text": "Tu hijo está desarrollando un sentido del humor y puede amar bromas tontas y juegos de palabras. Reír juntos fortalece tu vínculo con él y desarrolla habilidades del lenguaje."
   },
   {
-    "id": "4y-development-04",
-    "ageGroup": "4y",
-    "category": "development",
-    "text": "Saltar, brincar y galopar demuestran la madurez de la coordinación motriz gruesa. Practica estos movimientos a través de juegos en lugar de ejercicios."
-  },
-  {
     "id": "4y-development-05",
     "ageGroup": "4y",
     "category": "development",
@@ -90,12 +84,6 @@
     "text": "Tu hijo puede mostrar interés en letras y lectura temprana. Sigue su iniciativa — señala palabras en carteles y déjalo \"leer\" libros familiares para ti."
   },
   {
-    "id": "4y-sleep-01",
-    "ageGroup": "4y",
-    "category": "sleep",
-    "text": "Muchos niños dejan de dormir la siesta entre los 3 y 5 años, aunque algunos aún la necesitan. Si tu hijo ya no duerme siesta, asegúrate de que la hora de dormir sea lo bastante temprano para obtener 10-13 horas de sueño nocturno."
-  },
-  {
     "id": "4y-sleep-02",
     "ageGroup": "4y",
     "category": "sleep",
@@ -136,12 +124,6 @@
     "ageGroup": "4y",
     "category": "sleep",
     "text": "Tu hijo puede comenzar a resistirse a la hora de dormir diciendo que no está cansado. Una rutina relajante ayuda al cuerpo a desacelerarse aunque la mente se sienta alerta."
-  },
-  {
-    "id": "4y-sleep-09",
-    "ageGroup": "4y",
-    "category": "sleep",
-    "text": "Mojar la cama es completamente normal a esta edad. Usa un protector de colchón impermeable y no hagas un gran escándalo — la mayoría de los niños lo superan entre los 5-6 años."
   },
   {
     "id": "4y-sleep-10",
@@ -274,18 +256,6 @@
     "ageGroup": "4y",
     "category": "health",
     "text": "Tu hijo puede necesitar importantes refuerzos de vacunas durante esta etapa. Habla con tu pediatra para asegurar que las inmunizaciones estén al día."
-  },
-  {
-    "id": "4y-health-02",
-    "ageGroup": "4y",
-    "category": "health",
-    "text": "Tu hijo debe cepillarse los dientes dos veces al día con una cantidad de pasta dental con flúor del tamaño de un guisante. Ayúdalo a cepillarse hasta que pueda atarse los zapatos solo — alrededor de los 6-7 años."
-  },
-  {
-    "id": "4y-health-03",
-    "ageGroup": "4y",
-    "category": "health",
-    "text": "Se recomienda una evaluación de visión anual entre los 3 y 5 años. Detectar condiciones como la ambliopía (ojo perezoso) a tiempo le da al tratamiento la mejor oportunidad de éxito."
   },
   {
     "id": "4y-health-04",

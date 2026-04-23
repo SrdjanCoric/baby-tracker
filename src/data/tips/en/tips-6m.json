@@ -1,157 +1,860 @@
 [
-  {"id": "6m-development-01", "ageGroup": "6m", "category": "development", "text": "Your baby may start sitting up with support or even independently for a few seconds. Place pillows around them for soft landings as they practice."},
-  {"id": "6m-development-02", "ageGroup": "6m", "category": "development", "text": "Around this age, many babies begin to pass objects from one hand to the other. Offer a toy and watch this impressive coordination in action."},
-  {"id": "6m-development-03", "ageGroup": "6m", "category": "development", "text": "Your baby may start responding to their name by turning to look at you. Use their name often during play and conversation to reinforce it."},
-  {"id": "6m-development-04", "ageGroup": "6m", "category": "development", "text": "Babbling is getting more complex, with strings of consonants and vowels like \"bababa\" or \"mamama.\" These aren't words yet, but they're the building blocks."},
-  {"id": "6m-development-05", "ageGroup": "6m", "category": "development", "text": "Your baby is discovering gravity! They may love dropping toys from their lap or a surface and watching them fall. This repetition is them learning about cause and effect."},
-  {"id": "6m-development-06", "ageGroup": "6m", "category": "development", "text": "Stranger anxiety may begin around 5-6 months. If your baby gets upset around unfamiliar faces, it's a sign of healthy attachment to their caregivers."},
-  {"id": "6m-development-07", "ageGroup": "6m", "category": "development", "text": "Your baby may start rocking on their hands and knees, which is the precursor to crawling. Give them lots of floor time to explore this movement."},
-  {"id": "6m-development-08", "ageGroup": "6m", "category": "development", "text": "Try playing simple turn-taking games: you babble, they babble; you smile, they smile. These back-and-forth exchanges are the foundation of conversation."},
-  {"id": "6m-development-09", "ageGroup": "6m", "category": "development", "text": "Your baby's depth perception is improving rapidly. They may now reach more accurately for objects and judge distances better than before."},
-  {"id": "6m-development-10", "ageGroup": "6m", "category": "development", "text": "Some babies this age start showing a preference for certain toys or comfort objects. Having a consistent lovey can become a helpful self-soothing tool."},
-  {"id": "6m-development-11", "ageGroup": "6m", "category": "development", "text": "Your baby may use a raking grasp \u2014 scooping things with all their fingers \u2014 to pick up objects. The more refined pincer grasp comes later."},
-  {"id": "6m-development-12", "ageGroup": "6m", "category": "development", "text": "Separation anxiety might start to appear. If your baby cries when you leave the room, it means they understand you exist even when they can't see you."},
-  {"id": "6m-development-13", "ageGroup": "6m", "category": "development", "text": "Your baby may start bouncing when held in a standing position. This leg strength and coordination is important preparation for standing and walking later."},
-  {"id": "6m-development-14", "ageGroup": "6m", "category": "development", "text": "Point at things and name them for your baby: \"Look, a bird!\" Pointing helps them learn to follow your gaze and builds vocabulary for later."},
-  {"id": "6m-development-15", "ageGroup": "6m", "category": "development", "text": "Your baby may start showing emotions more clearly \u2014 frustration when a toy is taken, excitement when they see food being prepared. Acknowledge these feelings out loud."},
-  {"id": "6m-development-16", "ageGroup": "6m", "category": "development", "text": "Your baby may begin army crawling or scooting on their belly before they get up on hands and knees. Every baby finds their own way to get moving."},
-  {"id": "6m-development-17", "ageGroup": "6m", "category": "development", "text": "Try offering your baby two toys at once \u2014 one in each hand. Holding two objects simultaneously is a big cognitive and motor milestone."},
-  {"id": "6m-development-18", "ageGroup": "6m", "category": "development", "text": "Your baby may start to understand simple words even though they can't say them yet. Saying \"where's the dog?\" and watching them look around shows early comprehension."},
-  {"id": "6m-development-19", "ageGroup": "6m", "category": "development", "text": "If your baby bangs objects on the table or floor, they're experimenting with cause and effect. Try giving them different items to hear the variety of sounds."},
-  {"id": "6m-development-20", "ageGroup": "6m", "category": "development", "text": "Your baby may start to look for a toy that has fallen out of sight rather than forgetting about it. This shows their object permanence is getting stronger."},
-  {"id": "6m-development-21", "ageGroup": "6m", "category": "development", "text": "As your baby builds upper body strength, they may start reaching up toward furniture or your hands. Offer sturdy surfaces for them to grip as they explore new positions."},
-  {"id": "6m-development-22", "ageGroup": "6m", "category": "development", "text": "Your baby may lean forward from a sitting position to grab something, then push back up. This balance recovery shows their core strength is developing nicely."},
-  {"id": "6m-development-23", "ageGroup": "6m", "category": "development", "text": "Wave bye-bye to your baby frequently. They won't wave back just yet, but modeling gestures now lays the groundwork for imitation in the months ahead."},
-  {"id": "6m-development-24", "ageGroup": "6m", "category": "development", "text": "Your baby may begin to show preferences for specific people, reaching out to a favorite caregiver. This selectiveness is a normal part of attachment development."},
-  {"id": "6m-development-25", "ageGroup": "6m", "category": "development", "text": "Most babies don't crawl until 7-10 months, and some skip it entirely. Right now, plenty of floor time helps your baby build the strength and coordination they'll need when they're ready to move."},
-
-  {"id": "6m-sleep-01", "ageGroup": "6m", "category": "sleep", "text": "Most babies this age can sleep 6-8 hour stretches at night, though some still wake for a feeding. Both patterns are normal."},
-  {"id": "6m-sleep-02", "ageGroup": "6m", "category": "sleep", "text": "Your baby likely needs about 2-3 naps a day now, with wake windows of 2-2.5 hours. Watch for yawning and eye-rubbing as sleep cues."},
-  {"id": "6m-sleep-03", "ageGroup": "6m", "category": "sleep", "text": "If your baby just learned to sit or is working on crawling, sleep may be disrupted as they practice new skills in the crib. This is temporary."},
-  {"id": "6m-sleep-04", "ageGroup": "6m", "category": "sleep", "text": "A predictable daytime routine (wake, eat, play, sleep) can help make nap times more consistent and less of a struggle."},
-  {"id": "6m-sleep-05", "ageGroup": "6m", "category": "sleep", "text": "If your baby starts pulling up in the crib and can't get back down, practice sitting from standing during the day so they learn to do it at night. This is more common in the coming months."},
-  {"id": "6m-sleep-06", "ageGroup": "6m", "category": "sleep", "text": "You can start introducing a lovey during awake and cuddle time so your baby forms an attachment to it. For safe sleep, keep the crib bare until 12 months per safe sleep guidelines."},
-  {"id": "6m-sleep-07", "ageGroup": "6m", "category": "sleep", "text": "If your baby is ready to drop from 3 naps to 2, you may need to temporarily move bedtime earlier to prevent overtiredness during the transition."},
-  {"id": "6m-sleep-08", "ageGroup": "6m", "category": "sleep", "text": "Teething can disrupt sleep, but the worst of it usually only lasts a few days per tooth. Extra comfort during this time is perfectly okay."},
-  {"id": "6m-sleep-09", "ageGroup": "6m", "category": "sleep", "text": "If you're starting solids, offer them earlier in the day rather than right before bed. New foods can sometimes cause discomfort that disrupts sleep."},
-  {"id": "6m-sleep-10", "ageGroup": "6m", "category": "sleep", "text": "Your baby may be ready for a slightly later morning wake-up time. Keeping the room dark and not rushing in at the first sound can encourage this."},
-  {"id": "6m-sleep-11", "ageGroup": "6m", "category": "sleep", "text": "Some babies this age start preferring to sleep on their tummy. As long as they can roll both ways, it's safe to let them find their preferred position."},
-  {"id": "6m-sleep-12", "ageGroup": "6m", "category": "sleep", "text": "Consistency is your best friend with sleep. Whatever approach you choose, sticking with it for at least a week gives it the best chance of working."},
-  {"id": "6m-sleep-13", "ageGroup": "6m", "category": "sleep", "text": "Travel and time changes can temporarily disrupt sleep. Try to maintain your usual bedtime routine even in unfamiliar settings."},
-  {"id": "6m-sleep-14", "ageGroup": "6m", "category": "sleep", "text": "If night wakings suddenly increase, consider whether your baby is getting enough daytime calories. Starting solids sometimes helps, but not always."},
-  {"id": "6m-sleep-15", "ageGroup": "6m", "category": "sleep", "text": "Total sleep for this age is typically 12-16 hours in a 24-hour period. If your baby seems happy and well-rested, they're likely getting enough."},
-  {"id": "6m-sleep-16", "ageGroup": "6m", "category": "sleep", "text": "If your baby babbles or talks to themselves in the crib before falling asleep, let them be. This self-soothing chatter is a healthy sign that they can settle independently."},
-  {"id": "6m-sleep-17", "ageGroup": "6m", "category": "sleep", "text": "Separation anxiety can cause increased night waking around this age. A brief, calm reassurance visit is fine, but try to avoid starting new habits you'll need to undo later."},
-  {"id": "6m-sleep-18", "ageGroup": "6m", "category": "sleep", "text": "As your baby transitions from 3 naps to 2, the last nap of the day is usually the one to drop. An earlier bedtime can bridge the gap while they adjust."},
-  {"id": "6m-sleep-19", "ageGroup": "6m", "category": "sleep", "text": "A dark room with blackout curtains can help both naps and nighttime sleep, especially if your baby is easily stimulated by light."},
-  {"id": "6m-sleep-20", "ageGroup": "6m", "category": "sleep", "text": "If your baby wakes very early in the morning (before 6 AM), check that the room is dark enough and consider whether bedtime needs to be shifted slightly later."},
-  {"id": "6m-sleep-21", "ageGroup": "6m", "category": "sleep", "text": "Some babies need a bit of physical activity before sleep to burn off energy. A short play session before the wind-down routine can help them settle faster."},
-  {"id": "6m-sleep-22", "ageGroup": "6m", "category": "sleep", "text": "If your baby has started practicing rolling, crawling, or other new skills in the crib at bedtime, calmly lay them back down without making it a game. They'll eventually settle."},
-  {"id": "6m-sleep-23", "ageGroup": "6m", "category": "sleep", "text": "On days when naps are short or skipped, don't be afraid to move bedtime up by 30-60 minutes. An overtired baby fights sleep harder."},
-  {"id": "6m-sleep-24", "ageGroup": "6m", "category": "sleep", "text": "Your baby's sleep needs are unique to them. If they're happy, growing, and meeting milestones, their sleep is likely fine even if it doesn't match what books say."},
-  {"id": "6m-sleep-25", "ageGroup": "6m", "category": "sleep", "text": "If you've been bed-sharing and want to transition to the crib, start with naps first. Daytime practice helps your baby get comfortable in their own space."},
-
-  {"id": "6m-feeding-01", "ageGroup": "6m", "category": "feeding", "text": "Around 6 months is typically a great time to start solid foods! Look for signs of readiness: sitting with support, good head control, and interest in food."},
-  {"id": "6m-feeding-02", "ageGroup": "6m", "category": "feeding", "text": "Whether you choose purees or baby-led weaning, breast milk or formula should still be the primary source of nutrition. Solids at this stage are for exploration."},
-  {"id": "6m-feeding-03", "ageGroup": "6m", "category": "feeding", "text": "When introducing major allergens (peanut, egg, dairy, etc.), offer one at a time and wait a couple of days before the next to watch for reactions. For other foods, you can introduce new ones more freely."},
-  {"id": "6m-feeding-04", "ageGroup": "6m", "category": "feeding", "text": "Current research suggests introducing common allergens (peanut, egg, dairy) early, around 4-6 months, rather than delaying them. Talk to your pediatrician about when and how to start."},
-  {"id": "6m-feeding-05", "ageGroup": "6m", "category": "feeding", "text": "It's normal for your baby to push food out with their tongue at first. The tongue-thrust reflex is fading, and they're learning to move food to the back of their mouth."},
-  {"id": "6m-feeding-06", "ageGroup": "6m", "category": "feeding", "text": "Gagging is different from choking and is actually a safety mechanism. Gagging is noisy and involves coughing; choking is silent. Learn to tell the difference."},
-  {"id": "6m-feeding-07", "ageGroup": "6m", "category": "feeding", "text": "Good first foods include iron-rich options like pureed meats, iron-fortified cereal, or mashed lentils. Babies' iron stores from birth start depleting around 6 months."},
-  {"id": "6m-feeding-08", "ageGroup": "6m", "category": "feeding", "text": "Offer water in an open cup or straw cup during meals. Your baby won't drink much at first, but early practice builds important oral motor skills."},
-  {"id": "6m-feeding-09", "ageGroup": "6m", "category": "feeding", "text": "Messy eating is learning! Let your baby touch, squish, and smear their food. Sensory exploration is an important part of accepting new textures."},
-  {"id": "6m-feeding-10", "ageGroup": "6m", "category": "feeding", "text": "If doing baby-led weaning, cut foods into finger-sized strips that your baby can grip in their fist. They'll gnaw on the part sticking out the top."},
-  {"id": "6m-feeding-11", "ageGroup": "6m", "category": "feeding", "text": "Avoid honey until age 1 due to the risk of infant botulism. Also skip cow's milk as a main drink, though small amounts in cooking are fine."},
-  {"id": "6m-feeding-12", "ageGroup": "6m", "category": "feeding", "text": "Don't be discouraged if your baby rejects a food. It can take 10-15 exposures before they accept something new. Keep offering without pressure."},
-  {"id": "6m-feeding-13", "ageGroup": "6m", "category": "feeding", "text": "Your baby should always be seated upright in a high chair during meals, never reclined. This position is safest for swallowing."},
-  {"id": "6m-feeding-14", "ageGroup": "6m", "category": "feeding", "text": "Pair iron-rich foods with vitamin C sources (like mashed strawberries or a little citrus juice) to boost iron absorption."},
-  {"id": "6m-feeding-15", "ageGroup": "6m", "category": "feeding", "text": "Let your baby set the pace during meals. When they turn away, close their mouth, or lose interest, they're telling you they're done."},
-  {"id": "6m-feeding-16", "ageGroup": "6m", "category": "feeding", "text": "Introduce peanut protein early by mixing smooth peanut butter into purees or oatmeal. Whole peanuts and chunky peanut butter are choking hazards at this age."},
-  {"id": "6m-feeding-17", "ageGroup": "6m", "category": "feeding", "text": "Offer a variety of colors on your baby's plate. Different colored fruits and vegetables provide different nutrients, and variety now encourages adventurous eating later."},
-  {"id": "6m-feeding-18", "ageGroup": "6m", "category": "feeding", "text": "Your baby may eat a lot one day and barely touch food the next. This inconsistency is completely normal. Breast milk or formula fills the nutritional gaps."},
-  {"id": "6m-feeding-19", "ageGroup": "6m", "category": "feeding", "text": "Try offering your baby a pre-loaded spoon to bring to their own mouth. This messy practice builds independence and fine motor skills."},
-  {"id": "6m-feeding-20", "ageGroup": "6m", "category": "feeding", "text": "Avoid adding salt or sugar to your baby's food. Their kidneys can't handle much sodium yet, and starting with natural flavors helps them appreciate real food tastes."},
-  {"id": "6m-feeding-21", "ageGroup": "6m", "category": "feeding", "text": "If your baby gags on a new texture, stay calm and let them work through it. Your relaxed reaction helps them feel safe exploring different foods."},
-  {"id": "6m-feeding-22", "ageGroup": "6m", "category": "feeding", "text": "Breastfeeding or formula feedings should still happen before solid food meals at this stage. Milk remains the primary nutrition source until closer to 12 months."},
-  {"id": "6m-feeding-23", "ageGroup": "6m", "category": "feeding", "text": "Offer soft-cooked vegetables like sweet potato, broccoli florets, or zucchini strips as great early finger foods. Cook them until they squish easily between your fingers."},
-  {"id": "6m-feeding-24", "ageGroup": "6m", "category": "feeding", "text": "Eating together as a family, even at this early stage, helps your baby learn by watching you. They'll mimic your chewing and be more willing to try what you're eating."},
-  {"id": "6m-feeding-25", "ageGroup": "6m", "category": "feeding", "text": "If your baby seems frustrated with purees, they may be ready for slightly thicker textures or soft finger foods. Follow their lead and adjust as they show you what they can handle."},
-
-  {"id": "6m-health-01", "ageGroup": "6m", "category": "health", "text": "Regular checkups during this period are important for tracking development. Your pediatrician may also recommend starting fluoride supplements if your water isn't fluoridated."},
-  {"id": "6m-health-02", "ageGroup": "6m", "category": "health", "text": "Your baby's first tooth may appear around now. Gently wipe it with a soft damp cloth or use a tiny smear of fluoride toothpaste on an infant toothbrush."},
-  {"id": "6m-health-03", "ageGroup": "6m", "category": "health", "text": "If your baby gets a fever of {{100.4\u00b0F|38\u00b0C}} or higher, call your pediatrician. At this age, a fever warrants a check to rule out infection."},
-  {"id": "6m-health-04", "ageGroup": "6m", "category": "health", "text": "Ear infections are common at this age. Pulling at ears, fussiness, and fever can be signs. Note that ear pulling alone is often just teething discomfort, but see your doctor if you suspect an infection."},
-  {"id": "6m-health-05", "ageGroup": "6m", "category": "health", "text": "Your baby may experience some constipation as they start solids. Offer small amounts of water, and try pureed prunes, pears, or peas to help."},
-  {"id": "6m-health-06", "ageGroup": "6m", "category": "health", "text": "Now is a good time to schedule your baby's first dental visit. Experts recommend seeing a dentist by age 1 or within 6 months of the first tooth."},
-  {"id": "6m-health-07", "ageGroup": "6m", "category": "health", "text": "Watch for signs of food allergies when introducing solids: hives, swelling, vomiting, or difficulty breathing. Mild rashes around the mouth are usually just skin irritation."},
-  {"id": "6m-health-08", "ageGroup": "6m", "category": "health", "text": "If it's flu season and your baby is at least 6 months old, they can receive the flu vaccine. This is especially important as maternal antibodies are waning."},
-  {"id": "6m-health-09", "ageGroup": "6m", "category": "health", "text": "Teething pain is real but usually manageable. Chilled teething rings and gentle gum massage with a clean finger can provide relief."},
-  {"id": "6m-health-10", "ageGroup": "6m", "category": "health", "text": "Your baby may develop food sensitivities as they try new things. A few loose stools after a new food isn't always an allergy \u2014 their digestive system is adapting."},
-  {"id": "6m-health-11", "ageGroup": "6m", "category": "health", "text": "Babies this age are increasingly mobile and love exploring with their mouths. Do a daily sweep of the floor for small objects that could be choking hazards."},
-  {"id": "6m-health-12", "ageGroup": "6m", "category": "health", "text": "If your baby seems to have persistent congestion, it might be related to the new foods they're eating or environmental allergens. Mention it at your next visit."},
-  {"id": "6m-health-13", "ageGroup": "6m", "category": "health", "text": "Amber teething necklaces are not recommended \u2014 they pose strangulation and choking risks with no proven benefit. Stick to safe teething alternatives."},
-  {"id": "6m-health-14", "ageGroup": "6m", "category": "health", "text": "Your baby's poop will change color and consistency as they start eating solids. Green, orange, and brown are all normal. Red or black stools should be reported to your doctor."},
-  {"id": "6m-health-15", "ageGroup": "6m", "category": "health", "text": "Once your baby is 6 months old, use sunscreen (SPF 30+) on exposed skin when going outside. Before 6 months, rely on shade, hats, and lightweight clothing for sun protection."},
-  {"id": "6m-health-16", "ageGroup": "6m", "category": "health", "text": "Keep brushing your baby's new teeth twice a day with a rice-grain-sized amount of fluoride toothpaste. Establishing this routine now makes it easier as more teeth come in."},
-  {"id": "6m-health-17", "ageGroup": "6m", "category": "health", "text": "If your baby gets a bump or bruise from their new mobility, a cold compress and comfort are usually all that's needed. Call your doctor for head injuries with vomiting or unusual drowsiness."},
-  {"id": "6m-health-18", "ageGroup": "6m", "category": "health", "text": "Hand, foot, and mouth disease is common in babies and toddlers. Look for small blisters on the hands, feet, and mouth. It's uncomfortable but usually resolves in about a week."},
-  {"id": "6m-health-19", "ageGroup": "6m", "category": "health", "text": "Your baby's iron needs increase significantly around 6 months. If your baby was premature or exclusively breastfed, ask your pediatrician whether an iron supplement is needed."},
-  {"id": "6m-health-20", "ageGroup": "6m", "category": "health", "text": "Croup, a barky cough that sounds like a seal, is common in babies. Cool night air or a steamy bathroom can help, but call your doctor if your baby has difficulty breathing."},
-  {"id": "6m-health-21", "ageGroup": "6m", "category": "health", "text": "If your baby develops a rash after trying a new food, take a photo and note the food and timing. This information is very helpful for your pediatrician."},
-  {"id": "6m-health-22", "ageGroup": "6m", "category": "health", "text": "Teething may cause a slight rise in temperature, but a true fever of {{100.4\u00b0F|38\u00b0C}} or higher is not caused by teething. If your baby has a fever while teething, check with your doctor to rule out other causes."},
-  {"id": "6m-health-23", "ageGroup": "6m", "category": "health", "text": "With increased mobility comes more falls and bumps. Baby-proofing sharp edges and hard surfaces helps, but some tumbles are a normal part of learning to move."},
-  {"id": "6m-health-24", "ageGroup": "6m", "category": "health", "text": "If your baby's eczema flares up after starting solids, keep a food diary to track potential triggers. Common culprits include dairy, eggs, and wheat."},
-  {"id": "6m-health-25", "ageGroup": "6m", "category": "health", "text": "RSV season can be especially concerning for babies under 12 months. Frequent handwashing and avoiding sick contacts are the best prevention strategies."},
-
-  {"id": "6m-play-01", "ageGroup": "6m", "category": "play", "text": "Offer stacking cups or nesting toys. Your baby won't stack them yet, but they'll love knocking over towers you build and exploring the different sizes."},
-  {"id": "6m-play-02", "ageGroup": "6m", "category": "play", "text": "Fill a small basket with safe household items (wooden spoon, silicone whisk, fabric scraps) and let your baby explore. A \"treasure basket\" encourages independent play."},
-  {"id": "6m-play-03", "ageGroup": "6m", "category": "play", "text": "Play \"where did it go?\" by partially hiding a toy under a cloth. Your baby is learning object permanence and will love searching for it."},
-  {"id": "6m-play-04", "ageGroup": "6m", "category": "play", "text": "Splash time in the bath is great sensory play! Give your baby cups to pour and toys that float. Always supervise \u2014 never leave them alone with water."},
-  {"id": "6m-play-05", "ageGroup": "6m", "category": "play", "text": "Sit your baby in front of a mirror and make faces together. At this age, they'll smile, laugh, and reach out to touch their reflection."},
-  {"id": "6m-play-06", "ageGroup": "6m", "category": "play", "text": "Try gentle roughhousing \u2014 bouncing on your knee, gentle swinging through the air, or silly sounds. These physical games build trust and body awareness."},
-  {"id": "6m-play-07", "ageGroup": "6m", "category": "play", "text": "Introduce simple musical instruments like a drum, shaker, or xylophone. Your baby will love making noise and discovering they can create sounds."},
-  {"id": "6m-play-08", "ageGroup": "6m", "category": "play", "text": "Create an obstacle course with cushions and rolled blankets for your baby to crawl over and around. This builds problem-solving skills alongside physical strength."},
-  {"id": "6m-play-09", "ageGroup": "6m", "category": "play", "text": "Read books with different textures (touch-and-feel books). Your baby will love running their fingers over furry, bumpy, and smooth surfaces."},
-  {"id": "6m-play-10", "ageGroup": "6m", "category": "play", "text": "Let your baby play with safe water toys in a shallow basin. Pouring, splashing, and feeling water flow teaches them about the physical world."},
-  {"id": "6m-play-11", "ageGroup": "6m", "category": "play", "text": "Play music from different genres and watch your baby react. They may bounce, kick, or wave their arms. Dancing together is wonderful bonding."},
-  {"id": "6m-play-12", "ageGroup": "6m", "category": "play", "text": "Offer your baby a spoon to hold during mealtime play. Banging it on the tray is messy and noisy, but it builds fine motor control and hand-eye coordination."},
-  {"id": "6m-play-13", "ageGroup": "6m", "category": "play", "text": "Try blowing on your baby's belly for a raspberry sound during diaper changes. These playful moments turn routine tasks into bonding opportunities."},
-  {"id": "6m-play-14", "ageGroup": "6m", "category": "play", "text": "Spend time on the floor with your baby at their level. Get down on your belly during tummy time or sit face-to-face. They engage more when you're at eye level."},
-  {"id": "6m-play-15", "ageGroup": "6m", "category": "play", "text": "Place toys in a muffin tin for your baby to pull out and explore. This simple activity challenges their grasping skills and keeps them engaged."},
-  {"id": "6m-play-16", "ageGroup": "6m", "category": "play", "text": "Try putting a toy inside a clear container and letting your baby figure out how to get it. This early problem-solving builds critical thinking skills."},
-  {"id": "6m-play-17", "ageGroup": "6m", "category": "play", "text": "Offer your baby a cardboard box to explore. They can push it, sit in it, or bang on it. Simple open-ended toys spark the most creativity."},
-  {"id": "6m-play-18", "ageGroup": "6m", "category": "play", "text": "Play clapping games like pat-a-cake with your baby. Guide their hands through the motions and enjoy their reactions. Over time, they'll start joining in on their own."},
-  {"id": "6m-play-19", "ageGroup": "6m", "category": "play", "text": "Let your baby explore safe foods during play, not just mealtime. Feeling the texture of a banana or squishing a piece of avocado is wonderful sensory learning."},
-  {"id": "6m-play-20", "ageGroup": "6m", "category": "play", "text": "Create a sensory bin with large, safe objects like soft balls, wooden rings, and fabric swatches. Supervised sensory play keeps your baby engaged and learning."},
-  {"id": "6m-play-21", "ageGroup": "6m", "category": "play", "text": "Roll a ball back and forth with your baby while they're sitting. This simple game teaches turn-taking and helps them practice tracking moving objects."},
-  {"id": "6m-play-22", "ageGroup": "6m", "category": "play", "text": "Let your baby tear paper (large pieces, supervised). The sound and motion are fascinating, and tearing builds hand strength and coordination."},
-  {"id": "6m-play-23", "ageGroup": "6m", "category": "play", "text": "Introduce lift-the-flap books and let your baby try to open the flaps themselves. This combines fine motor practice with the thrill of surprise."},
-  {"id": "6m-play-24", "ageGroup": "6m", "category": "play", "text": "Sing songs with hand motions like \"Itsy Bitsy Spider\" or \"Wheels on the Bus.\" Your baby will start to anticipate the movements and eventually try to copy them."},
-  {"id": "6m-play-25", "ageGroup": "6m", "category": "play", "text": "Take your baby on a \"texture walk\" around the house, letting them touch safe surfaces like a smooth countertop, soft pillow, cool window, and fuzzy rug."},
-
-  {"id": "6m-safety-01", "ageGroup": "6m", "category": "safety", "text": "Now that your baby is getting mobile, install safety gates at the top and bottom of stairs. Pressure-mounted gates are fine for the bottom; use hardware-mounted at the top."},
-  {"id": "6m-safety-02", "ageGroup": "6m", "category": "safety", "text": "Lower the crib mattress to its lowest setting before your baby can pull up to standing. They're stronger than you think and will surprise you."},
-  {"id": "6m-safety-03", "ageGroup": "6m", "category": "safety", "text": "Lock cabinets that contain cleaning products, medications, and sharp objects. Magnetic or adhesive cabinet locks are effective and easy to install."},
-  {"id": "6m-safety-04", "ageGroup": "6m", "category": "safety", "text": "Keep all foods cut into safe sizes during meals. Round, firm foods like grapes, cherry tomatoes, and hot dogs should be quartered lengthwise."},
-  {"id": "6m-safety-05", "ageGroup": "6m", "category": "safety", "text": "Never leave your baby alone in a high chair. Always use the safety straps, and push the chair away from tables and counters they could push off from."},
-  {"id": "6m-safety-06", "ageGroup": "6m", "category": "safety", "text": "Cover sharp furniture corners and edges with corner protectors. Your baby's head is at table height when they start pulling up, and bumps are inevitable."},
-  {"id": "6m-safety-07", "ageGroup": "6m", "category": "safety", "text": "Keep cords from blinds, curtains, and electronics out of reach. Strangulation from cords is a serious risk for curious, grabby babies."},
-  {"id": "6m-safety-08", "ageGroup": "6m", "category": "safety", "text": "Always supervise your baby around water, including baths, wading pools, and buckets. Drowning can happen quickly and silently."},
-  {"id": "6m-safety-09", "ageGroup": "6m", "category": "safety", "text": "Check that houseplants are non-toxic and out of reach. Many common plants are poisonous if ingested. When in doubt, move plants up high."},
-  {"id": "6m-safety-10", "ageGroup": "6m", "category": "safety", "text": "Make sure your baby's high chair has a wide, stable base and a crotch post to prevent sliding. A proper fit keeps them safe during meals."},
-  {"id": "6m-safety-11", "ageGroup": "6m", "category": "safety", "text": "Remove tablecloths or placemats that your baby could pull, bringing dishes and hot food down on themselves."},
-  {"id": "6m-safety-12", "ageGroup": "6m", "category": "safety", "text": "Save your local poison control number in your phone. Quick access matters if your baby ever gets into something they shouldn't."},
-  {"id": "6m-safety-13", "ageGroup": "6m", "category": "safety", "text": "If you have a pet water bowl, keep it out of reach. Babies are attracted to water and can drown in even very shallow containers."},
-  {"id": "6m-safety-14", "ageGroup": "6m", "category": "safety", "text": "Avoid wheeled baby walkers. Pediatric safety experts warn against them due to serious injury risk, especially falls down stairs. Stationary activity centers are a safer alternative."},
-  {"id": "6m-safety-15", "ageGroup": "6m", "category": "safety", "text": "Keep your diaper bag stocked with any medications well out of baby's reach. Even child-resistant caps aren't fully childproof."},
-  {"id": "6m-safety-16", "ageGroup": "6m", "category": "safety", "text": "Secure your toilet lid with a lock. Mobile babies are top-heavy and can fall headfirst into an open toilet, which is a drowning risk."},
-  {"id": "6m-safety-17", "ageGroup": "6m", "category": "safety", "text": "Keep purses and bags off the floor and out of reach. They often contain medications, coins, choking hazards, and small items that are dangerous for babies."},
-  {"id": "6m-safety-18", "ageGroup": "6m", "category": "safety", "text": "Anchor televisions and heavy appliances to the wall. Even before your baby is mobile, a bump or pulled cord can cause a dangerous tip-over."},
-  {"id": "6m-safety-19", "ageGroup": "6m", "category": "safety", "text": "Use door stops or door holders to prevent your baby from pinching their fingers in closing doors. Their little fingers can slip into gaps faster than you'd expect."},
-  {"id": "6m-safety-20", "ageGroup": "6m", "category": "safety", "text": "Remove refrigerator magnets that are small enough to swallow. Ingested magnets can be extremely dangerous if more than one is swallowed."},
-  {"id": "6m-safety-21", "ageGroup": "6m", "category": "safety", "text": "Never leave your baby unattended on a bed, even surrounded by pillows. At this age they can roll, scoot, and wiggle to an edge surprisingly quickly."},
-  {"id": "6m-safety-22", "ageGroup": "6m", "category": "safety", "text": "As your baby becomes more mobile, make sure bookshelves, dressers, and tall furniture are anchored to the wall with anti-tip straps. It's best to do this before they start pulling up."},
-  {"id": "6m-safety-23", "ageGroup": "6m", "category": "safety", "text": "Keep floors clear of small items like pen caps, paper clips, and rubber bands. Get in the habit of scanning the floor regularly at your baby's eye level."},
-  {"id": "6m-safety-24", "ageGroup": "6m", "category": "safety", "text": "Use stove knob covers to prevent your baby from turning on burners. Even from a high chair nearby, a curious baby can reach farther than you'd think."},
-  {"id": "6m-safety-25", "ageGroup": "6m", "category": "safety", "text": "Always stay within arm's reach when your baby is eating solid foods. Choking can happen silently, and quick action is critical."}
+  {
+    "id": "6m-development-01",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may start sitting up with support or even independently for a few seconds. Place pillows around them for soft landings as they practice."
+  },
+  {
+    "id": "6m-development-02",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Around this age, many babies begin to pass objects from one hand to the other. Offer a toy and watch this impressive coordination in action."
+  },
+  {
+    "id": "6m-development-03",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may start responding to their name by turning to look at you. Use their name often during play and conversation to reinforce it."
+  },
+  {
+    "id": "6m-development-04",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Babbling is getting more complex, with strings of consonants and vowels like \"bababa\" or \"mamama.\" These aren't words yet, but they're the building blocks."
+  },
+  {
+    "id": "6m-development-05",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby is discovering gravity! They may love dropping toys from their lap or a surface and watching them fall. This repetition is them learning about cause and effect."
+  },
+  {
+    "id": "6m-development-07",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may start rocking on their hands and knees, which is the precursor to crawling. Give them lots of floor time to explore this movement."
+  },
+  {
+    "id": "6m-development-08",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Try playing simple turn-taking games: you babble, they babble; you smile, they smile. These back-and-forth exchanges are the foundation of conversation."
+  },
+  {
+    "id": "6m-development-09",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby's depth perception is improving rapidly. They may now reach more accurately for objects and judge distances better than before."
+  },
+  {
+    "id": "6m-development-10",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Some babies this age start showing a preference for certain toys or comfort objects. Having a consistent lovey can become a helpful self-soothing tool."
+  },
+  {
+    "id": "6m-development-11",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may use a raking grasp — scooping things with all their fingers — to pick up objects. The more refined pincer grasp comes later."
+  },
+  {
+    "id": "6m-development-12",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Separation anxiety might start to appear. If your baby cries when you leave the room, it means they understand you exist even when they can't see you."
+  },
+  {
+    "id": "6m-development-13",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may start bouncing when held in a standing position. This leg strength and coordination is important preparation for standing and walking later."
+  },
+  {
+    "id": "6m-development-14",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Point at things and name them for your baby: \"Look, a bird!\" Pointing helps them learn to follow your gaze and builds vocabulary for later."
+  },
+  {
+    "id": "6m-development-15",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may start showing emotions more clearly — frustration when a toy is taken, excitement when they see food being prepared. Acknowledge these feelings out loud."
+  },
+  {
+    "id": "6m-development-16",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may begin army crawling or scooting on their belly before they get up on hands and knees. Every baby finds their own way to get moving."
+  },
+  {
+    "id": "6m-development-17",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Try offering your baby two toys at once — one in each hand. Holding two objects simultaneously is a big cognitive and motor milestone."
+  },
+  {
+    "id": "6m-development-18",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may start to understand simple words even though they can't say them yet. Saying \"where's the dog?\" and watching them look around shows early comprehension."
+  },
+  {
+    "id": "6m-development-19",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "If your baby bangs objects on the table or floor, they're experimenting with cause and effect. Try giving them different items to hear the variety of sounds."
+  },
+  {
+    "id": "6m-development-20",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may start to look for a toy that has fallen out of sight rather than forgetting about it. This shows their object permanence is getting stronger."
+  },
+  {
+    "id": "6m-development-21",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "As your baby builds upper body strength, they may start reaching up toward furniture or your hands. Offer sturdy surfaces for them to grip as they explore new positions."
+  },
+  {
+    "id": "6m-development-22",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may lean forward from a sitting position to grab something, then push back up. This balance recovery shows their core strength is developing nicely."
+  },
+  {
+    "id": "6m-development-23",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Wave bye-bye to your baby frequently. They won't wave back just yet, but modeling gestures now lays the groundwork for imitation in the months ahead."
+  },
+  {
+    "id": "6m-development-24",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Your baby may begin to show preferences for specific people, reaching out to a favorite caregiver. This selectiveness is a normal part of attachment development."
+  },
+  {
+    "id": "6m-development-25",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Most babies don't crawl until 7-10 months, and some skip it entirely. Right now, plenty of floor time helps your baby build the strength and coordination they'll need when they're ready to move."
+  },
+  {
+    "id": "6m-sleep-01",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Most babies this age can sleep 6-8 hour stretches at night, though some still wake for a feeding. Both patterns are normal."
+  },
+  {
+    "id": "6m-sleep-02",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Your baby likely needs about 2-3 naps a day now, with wake windows of 2-2.5 hours. Watch for yawning and eye-rubbing as sleep cues."
+  },
+  {
+    "id": "6m-sleep-03",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If your baby just learned to sit or is working on crawling, sleep may be disrupted as they practice new skills in the crib. This is temporary."
+  },
+  {
+    "id": "6m-sleep-04",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "A predictable daytime routine (wake, eat, play, sleep) can help make nap times more consistent and less of a struggle."
+  },
+  {
+    "id": "6m-sleep-05",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If your baby starts pulling up in the crib and can't get back down, practice sitting from standing during the day so they learn to do it at night. This is more common in the coming months."
+  },
+  {
+    "id": "6m-sleep-06",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "You can start introducing a lovey during awake and cuddle time so your baby forms an attachment to it. For safe sleep, keep the crib bare until 12 months per safe sleep guidelines."
+  },
+  {
+    "id": "6m-sleep-07",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If your baby is ready to drop from 3 naps to 2, you may need to temporarily move bedtime earlier to prevent overtiredness during the transition."
+  },
+  {
+    "id": "6m-sleep-08",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Teething can disrupt sleep, but the worst of it usually only lasts a few days per tooth. Extra comfort during this time is perfectly okay."
+  },
+  {
+    "id": "6m-sleep-09",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If you're starting solids, offer them earlier in the day rather than right before bed. New foods can sometimes cause discomfort that disrupts sleep."
+  },
+  {
+    "id": "6m-sleep-10",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Your baby may be ready for a slightly later morning wake-up time. Keeping the room dark and not rushing in at the first sound can encourage this."
+  },
+  {
+    "id": "6m-sleep-11",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Some babies this age start preferring to sleep on their tummy. As long as they can roll both ways, it's safe to let them find their preferred position."
+  },
+  {
+    "id": "6m-sleep-12",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Consistency is your best friend with sleep. Whatever approach you choose, sticking with it for at least a week gives it the best chance of working."
+  },
+  {
+    "id": "6m-sleep-13",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Travel and time changes can temporarily disrupt sleep. Try to maintain your usual bedtime routine even in unfamiliar settings."
+  },
+  {
+    "id": "6m-sleep-14",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If night wakings suddenly increase, consider whether your baby is getting enough daytime calories. Starting solids sometimes helps, but not always."
+  },
+  {
+    "id": "6m-sleep-15",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Total sleep for this age is typically 12-16 hours in a 24-hour period. If your baby seems happy and well-rested, they're likely getting enough."
+  },
+  {
+    "id": "6m-sleep-16",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If your baby babbles or talks to themselves in the crib before falling asleep, let them be. This self-soothing chatter is a healthy sign that they can settle independently."
+  },
+  {
+    "id": "6m-sleep-17",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Separation anxiety can cause increased night waking around this age. A brief, calm reassurance visit is fine, but try to avoid starting new habits you'll need to undo later."
+  },
+  {
+    "id": "6m-sleep-18",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "As your baby transitions from 3 naps to 2, the last nap of the day is usually the one to drop. An earlier bedtime can bridge the gap while they adjust."
+  },
+  {
+    "id": "6m-sleep-19",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "A dark room with blackout curtains can help both naps and nighttime sleep, especially if your baby is easily stimulated by light."
+  },
+  {
+    "id": "6m-sleep-20",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If your baby wakes very early in the morning (before 6 AM), check that the room is dark enough and consider whether bedtime needs to be shifted slightly later."
+  },
+  {
+    "id": "6m-sleep-21",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Some babies need a bit of physical activity before sleep to burn off energy. A short play session before the wind-down routine can help them settle faster."
+  },
+  {
+    "id": "6m-sleep-22",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If your baby has started practicing rolling, crawling, or other new skills in the crib at bedtime, calmly lay them back down without making it a game. They'll eventually settle."
+  },
+  {
+    "id": "6m-sleep-23",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "On days when naps are short or skipped, don't be afraid to move bedtime up by 30-60 minutes. An overtired baby fights sleep harder."
+  },
+  {
+    "id": "6m-sleep-24",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Your baby's sleep needs are unique to them. If they're happy, growing, and meeting milestones, their sleep is likely fine even if it doesn't match what books say."
+  },
+  {
+    "id": "6m-sleep-25",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "If you've been bed-sharing and want to transition to the crib, start with naps first. Daytime practice helps your baby get comfortable in their own space."
+  },
+  {
+    "id": "6m-feeding-01",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Around 6 months is typically a great time to start solid foods! Look for signs of readiness: sitting with support, good head control, and interest in food."
+  },
+  {
+    "id": "6m-feeding-02",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Whether you choose purees or baby-led weaning, breast milk or formula should still be the primary source of nutrition. Solids at this stage are for exploration."
+  },
+  {
+    "id": "6m-feeding-05",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "It's normal for your baby to push food out with their tongue at first. The tongue-thrust reflex is fading, and they're learning to move food to the back of their mouth."
+  },
+  {
+    "id": "6m-feeding-06",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Gagging is different from choking and is actually a safety mechanism. Gagging is noisy and involves coughing; choking is silent. Learn to tell the difference."
+  },
+  {
+    "id": "6m-feeding-07",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Good first foods include iron-rich options like pureed meats, iron-fortified cereal, or mashed lentils. Babies' iron stores from birth start depleting around 6 months."
+  },
+  {
+    "id": "6m-feeding-08",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Offer water in an open cup or straw cup during meals. Your baby won't drink much at first, but early practice builds important oral motor skills."
+  },
+  {
+    "id": "6m-feeding-09",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Messy eating is learning! Let your baby touch, squish, and smear their food. Sensory exploration is an important part of accepting new textures."
+  },
+  {
+    "id": "6m-feeding-10",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "If doing baby-led weaning, cut foods into finger-sized strips that your baby can grip in their fist. They'll gnaw on the part sticking out the top."
+  },
+  {
+    "id": "6m-feeding-11",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Avoid honey until age 1 due to the risk of infant botulism. Also skip cow's milk as a main drink, though small amounts in cooking are fine."
+  },
+  {
+    "id": "6m-feeding-12",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Don't be discouraged if your baby rejects a food. It can take 10-15 exposures before they accept something new. Keep offering without pressure."
+  },
+  {
+    "id": "6m-feeding-13",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Your baby should always be seated upright in a high chair during meals, never reclined. This position is safest for swallowing."
+  },
+  {
+    "id": "6m-feeding-14",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Pair iron-rich foods with vitamin C sources (like mashed strawberries or a little citrus juice) to boost iron absorption."
+  },
+  {
+    "id": "6m-feeding-15",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Let your baby set the pace during meals. When they turn away, close their mouth, or lose interest, they're telling you they're done."
+  },
+  {
+    "id": "6m-feeding-16",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Introduce peanut protein early by mixing smooth peanut butter into purees or oatmeal. Whole peanuts and chunky peanut butter are choking hazards at this age."
+  },
+  {
+    "id": "6m-feeding-17",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Offer a variety of colors on your baby's plate. Different colored fruits and vegetables provide different nutrients, and variety now encourages adventurous eating later."
+  },
+  {
+    "id": "6m-feeding-18",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Your baby may eat a lot one day and barely touch food the next. This inconsistency is completely normal. Breast milk or formula fills the nutritional gaps."
+  },
+  {
+    "id": "6m-feeding-19",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Try offering your baby a pre-loaded spoon to bring to their own mouth. This messy practice builds independence and fine motor skills."
+  },
+  {
+    "id": "6m-feeding-20",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Avoid adding salt or sugar to your baby's food. Their kidneys can't handle much sodium yet, and starting with natural flavors helps them appreciate real food tastes."
+  },
+  {
+    "id": "6m-feeding-21",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "If your baby gags on a new texture, stay calm and let them work through it. Your relaxed reaction helps them feel safe exploring different foods."
+  },
+  {
+    "id": "6m-feeding-22",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Breastfeeding or formula feedings should still happen before solid food meals at this stage. Milk remains the primary nutrition source until closer to 12 months."
+  },
+  {
+    "id": "6m-feeding-23",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Offer soft-cooked vegetables like sweet potato, broccoli florets, or zucchini strips as great early finger foods. Cook them until they squish easily between your fingers."
+  },
+  {
+    "id": "6m-feeding-24",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Eating together as a family, even at this early stage, helps your baby learn by watching you. They'll mimic your chewing and be more willing to try what you're eating."
+  },
+  {
+    "id": "6m-feeding-25",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "If your baby seems frustrated with purees, they may be ready for slightly thicker textures or soft finger foods. Follow their lead and adjust as they show you what they can handle."
+  },
+  {
+    "id": "6m-health-01",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Regular checkups during this period are important for tracking development. Your pediatrician may also recommend starting fluoride supplements if your water isn't fluoridated."
+  },
+  {
+    "id": "6m-health-03",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "If your baby gets a fever of {{100.4°F|38°C}} or higher, call your pediatrician. At this age, a fever warrants a check to rule out infection."
+  },
+  {
+    "id": "6m-health-04",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ear infections are common at this age. Pulling at ears, fussiness, and fever can be signs. Note that ear pulling alone is often just teething discomfort, but see your doctor if you suspect an infection."
+  },
+  {
+    "id": "6m-health-06",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Now is a good time to schedule your baby's first dental visit. Experts recommend seeing a dentist by age 1 or within 6 months of the first tooth."
+  },
+  {
+    "id": "6m-health-07",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Watch for signs of food allergies when introducing solids: hives, swelling, vomiting, or difficulty breathing. Mild rashes around the mouth are usually just skin irritation."
+  },
+  {
+    "id": "6m-health-08",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "If it's flu season and your baby is at least 6 months old, they can receive the flu vaccine. This is especially important as maternal antibodies are waning."
+  },
+  {
+    "id": "6m-health-09",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Teething pain is real but usually manageable. Chilled teething rings and gentle gum massage with a clean finger can provide relief."
+  },
+  {
+    "id": "6m-health-10",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Your baby may develop food sensitivities as they try new things. A few loose stools after a new food isn't always an allergy — their digestive system is adapting."
+  },
+  {
+    "id": "6m-health-11",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Babies this age are increasingly mobile and love exploring with their mouths. Do a daily sweep of the floor for small objects that could be choking hazards."
+  },
+  {
+    "id": "6m-health-12",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "If your baby seems to have persistent congestion, it might be related to the new foods they're eating or environmental allergens. Mention it at your next visit."
+  },
+  {
+    "id": "6m-health-13",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Amber teething necklaces are not recommended — they pose strangulation and choking risks with no proven benefit. Stick to safe teething alternatives."
+  },
+  {
+    "id": "6m-health-14",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Your baby's poop will change color and consistency as they start eating solids. Green, orange, and brown are all normal. Red or black stools should be reported to your doctor."
+  },
+  {
+    "id": "6m-health-15",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Once your baby is 6 months old, use sunscreen (SPF 30+) on exposed skin when going outside. Before 6 months, rely on shade, hats, and lightweight clothing for sun protection."
+  },
+  {
+    "id": "6m-health-16",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Keep brushing your baby's new teeth twice a day with a rice-grain-sized amount of fluoride toothpaste. Establishing this routine now makes it easier as more teeth come in."
+  },
+  {
+    "id": "6m-health-17",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "If your baby gets a bump or bruise from their new mobility, a cold compress and comfort are usually all that's needed. Call your doctor for head injuries with vomiting or unusual drowsiness."
+  },
+  {
+    "id": "6m-health-18",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Hand, foot, and mouth disease is common in babies and toddlers. Look for small blisters on the hands, feet, and mouth. It's uncomfortable but usually resolves in about a week."
+  },
+  {
+    "id": "6m-health-19",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Your baby's iron needs increase significantly around 6 months. If your baby was premature or exclusively breastfed, ask your pediatrician whether an iron supplement is needed."
+  },
+  {
+    "id": "6m-health-21",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "If your baby develops a rash after trying a new food, take a photo and note the food and timing. This information is very helpful for your pediatrician."
+  },
+  {
+    "id": "6m-health-22",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Teething may cause a slight rise in temperature, but a true fever of {{100.4°F|38°C}} or higher is not caused by teething. If your baby has a fever while teething, check with your doctor to rule out other causes."
+  },
+  {
+    "id": "6m-health-23",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "With increased mobility comes more falls and bumps. Baby-proofing sharp edges and hard surfaces helps, but some tumbles are a normal part of learning to move."
+  },
+  {
+    "id": "6m-health-24",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "If your baby's eczema flares up after starting solids, keep a food diary to track potential triggers. Common culprits include dairy, eggs, and wheat."
+  },
+  {
+    "id": "6m-health-25",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "RSV season can be especially concerning for babies under 12 months. Frequent handwashing and avoiding sick contacts are the best prevention strategies."
+  },
+  {
+    "id": "6m-play-01",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Offer stacking cups or nesting toys. Your baby won't stack them yet, but they'll love knocking over towers you build and exploring the different sizes."
+  },
+  {
+    "id": "6m-play-02",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Fill a small basket with safe household items (wooden spoon, silicone whisk, fabric scraps) and let your baby explore. A \"treasure basket\" encourages independent play."
+  },
+  {
+    "id": "6m-play-03",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Play \"where did it go?\" by partially hiding a toy under a cloth. Your baby is learning object permanence and will love searching for it."
+  },
+  {
+    "id": "6m-play-04",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Splash time in the bath is great sensory play! Give your baby cups to pour and toys that float. Always supervise — never leave them alone with water."
+  },
+  {
+    "id": "6m-play-05",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Sit your baby in front of a mirror and make faces together. At this age, they'll smile, laugh, and reach out to touch their reflection."
+  },
+  {
+    "id": "6m-play-06",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Try gentle roughhousing — bouncing on your knee, gentle swinging through the air, or silly sounds. These physical games build trust and body awareness."
+  },
+  {
+    "id": "6m-play-07",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Introduce simple musical instruments like a drum, shaker, or xylophone. Your baby will love making noise and discovering they can create sounds."
+  },
+  {
+    "id": "6m-play-08",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Create an obstacle course with cushions and rolled blankets for your baby to crawl over and around. This builds problem-solving skills alongside physical strength."
+  },
+  {
+    "id": "6m-play-09",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Read books with different textures (touch-and-feel books). Your baby will love running their fingers over furry, bumpy, and smooth surfaces."
+  },
+  {
+    "id": "6m-play-10",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Let your baby play with safe water toys in a shallow basin. Pouring, splashing, and feeling water flow teaches them about the physical world."
+  },
+  {
+    "id": "6m-play-11",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Play music from different genres and watch your baby react. They may bounce, kick, or wave their arms. Dancing together is wonderful bonding."
+  },
+  {
+    "id": "6m-play-12",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Offer your baby a spoon to hold during mealtime play. Banging it on the tray is messy and noisy, but it builds fine motor control and hand-eye coordination."
+  },
+  {
+    "id": "6m-play-13",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Try blowing on your baby's belly for a raspberry sound during diaper changes. These playful moments turn routine tasks into bonding opportunities."
+  },
+  {
+    "id": "6m-play-14",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Spend time on the floor with your baby at their level. Get down on your belly during tummy time or sit face-to-face. They engage more when you're at eye level."
+  },
+  {
+    "id": "6m-play-15",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Place toys in a muffin tin for your baby to pull out and explore. This simple activity challenges their grasping skills and keeps them engaged."
+  },
+  {
+    "id": "6m-play-16",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Try putting a toy inside a clear container and letting your baby figure out how to get it. This early problem-solving builds critical thinking skills."
+  },
+  {
+    "id": "6m-play-17",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Offer your baby a cardboard box to explore. They can push it, sit in it, or bang on it. Simple open-ended toys spark the most creativity."
+  },
+  {
+    "id": "6m-play-18",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Play clapping games like pat-a-cake with your baby. Guide their hands through the motions and enjoy their reactions. Over time, they'll start joining in on their own."
+  },
+  {
+    "id": "6m-play-19",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Let your baby explore safe foods during play, not just mealtime. Feeling the texture of a banana or squishing a piece of avocado is wonderful sensory learning."
+  },
+  {
+    "id": "6m-play-20",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Create a sensory bin with large, safe objects like soft balls, wooden rings, and fabric swatches. Supervised sensory play keeps your baby engaged and learning."
+  },
+  {
+    "id": "6m-play-21",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Roll a ball back and forth with your baby while they're sitting. This simple game teaches turn-taking and helps them practice tracking moving objects."
+  },
+  {
+    "id": "6m-play-22",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Let your baby tear paper (large pieces, supervised). The sound and motion are fascinating, and tearing builds hand strength and coordination."
+  },
+  {
+    "id": "6m-play-23",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Introduce lift-the-flap books and let your baby try to open the flaps themselves. This combines fine motor practice with the thrill of surprise."
+  },
+  {
+    "id": "6m-play-24",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Sing songs with hand motions like \"Itsy Bitsy Spider\" or \"Wheels on the Bus.\" Your baby will start to anticipate the movements and eventually try to copy them."
+  },
+  {
+    "id": "6m-play-25",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Take your baby on a \"texture walk\" around the house, letting them touch safe surfaces like a smooth countertop, soft pillow, cool window, and fuzzy rug."
+  },
+  {
+    "id": "6m-safety-01",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Now that your baby is getting mobile, install safety gates at the top and bottom of stairs. Pressure-mounted gates are fine for the bottom; use hardware-mounted at the top."
+  },
+  {
+    "id": "6m-safety-02",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Lower the crib mattress to its lowest setting before your baby can pull up to standing. They're stronger than you think and will surprise you."
+  },
+  {
+    "id": "6m-safety-03",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Lock cabinets that contain cleaning products, medications, and sharp objects. Magnetic or adhesive cabinet locks are effective and easy to install."
+  },
+  {
+    "id": "6m-safety-05",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Never leave your baby alone in a high chair. Always use the safety straps, and push the chair away from tables and counters they could push off from."
+  },
+  {
+    "id": "6m-safety-06",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Cover sharp furniture corners and edges with corner protectors. Your baby's head is at table height when they start pulling up, and bumps are inevitable."
+  },
+  {
+    "id": "6m-safety-07",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Keep cords from blinds, curtains, and electronics out of reach. Strangulation from cords is a serious risk for curious, grabby babies."
+  },
+  {
+    "id": "6m-safety-08",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Always supervise your baby around water, including baths, wading pools, and buckets. Drowning can happen quickly and silently."
+  },
+  {
+    "id": "6m-safety-09",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Check that houseplants are non-toxic and out of reach. Many common plants are poisonous if ingested. When in doubt, move plants up high."
+  },
+  {
+    "id": "6m-safety-10",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Make sure your baby's high chair has a wide, stable base and a crotch post to prevent sliding. A proper fit keeps them safe during meals."
+  },
+  {
+    "id": "6m-safety-11",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Remove tablecloths or placemats that your baby could pull, bringing dishes and hot food down on themselves."
+  },
+  {
+    "id": "6m-safety-12",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Save your local poison control number in your phone. Quick access matters if your baby ever gets into something they shouldn't."
+  },
+  {
+    "id": "6m-safety-13",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "If you have a pet water bowl, keep it out of reach. Babies are attracted to water and can drown in even very shallow containers."
+  },
+  {
+    "id": "6m-safety-14",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Avoid wheeled baby walkers. Pediatric safety experts warn against them due to serious injury risk, especially falls down stairs. Stationary activity centers are a safer alternative."
+  },
+  {
+    "id": "6m-safety-15",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Keep your diaper bag stocked with any medications well out of baby's reach. Even child-resistant caps aren't fully childproof."
+  },
+  {
+    "id": "6m-safety-16",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Secure your toilet lid with a lock. Mobile babies are top-heavy and can fall headfirst into an open toilet, which is a drowning risk."
+  },
+  {
+    "id": "6m-safety-17",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Keep purses and bags off the floor and out of reach. They often contain medications, coins, choking hazards, and small items that are dangerous for babies."
+  },
+  {
+    "id": "6m-safety-18",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Anchor televisions and heavy appliances to the wall. Even before your baby is mobile, a bump or pulled cord can cause a dangerous tip-over."
+  },
+  {
+    "id": "6m-safety-19",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Use door stops or door holders to prevent your baby from pinching their fingers in closing doors. Their little fingers can slip into gaps faster than you'd expect."
+  },
+  {
+    "id": "6m-safety-20",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Remove refrigerator magnets that are small enough to swallow. Ingested magnets can be extremely dangerous if more than one is swallowed."
+  },
+  {
+    "id": "6m-safety-21",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Never leave your baby unattended on a bed, even surrounded by pillows. At this age they can roll, scoot, and wiggle to an edge surprisingly quickly."
+  },
+  {
+    "id": "6m-safety-22",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "As your baby becomes more mobile, make sure bookshelves, dressers, and tall furniture are anchored to the wall with anti-tip straps. It's best to do this before they start pulling up."
+  },
+  {
+    "id": "6m-safety-23",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Keep floors clear of small items like pen caps, paper clips, and rubber bands. Get in the habit of scanning the floor regularly at your baby's eye level."
+  },
+  {
+    "id": "6m-safety-24",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Use stove knob covers to prevent your baby from turning on burners. Even from a high chair nearby, a curious baby can reach farther than you'd think."
+  },
+  {
+    "id": "6m-safety-25",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Always stay within arm's reach when your baby is eating solid foods. Choking can happen silently, and quick action is critical."
+  }
 ]

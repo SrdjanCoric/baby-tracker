@@ -162,12 +162,6 @@
     "text": "Si la hora de dormir se ha convertido en una batalla, tu bebé podría necesitar acostarse un poco más tarde o más juego activo durante el día para gastar energía."
   },
   {
-    "id": "9m-sleep-08",
-    "ageGroup": "9m",
-    "category": "sleep",
-    "text": "Un muñeco de apego u objeto de consuelo puede ayudar con la ansiedad por separación. Deja que tu bebé lo abrace durante la rutina de relajación, pero siempre retíralo de la cuna antes de dormir — las pautas de sueño seguro recomiendan una cuna vacía hasta los 12 meses."
-  },
-  {
     "id": "9m-sleep-09",
     "ageGroup": "9m",
     "category": "sleep",
@@ -178,12 +172,6 @@
     "ageGroup": "9m",
     "category": "sleep",
     "text": "Mantén la rutina de la hora de dormir corta y consistente: 20-30 minutos es suficiente. Un baño, un libro, una canción y a la cuna es una fórmula que funciona."
-  },
-  {
-    "id": "9m-sleep-11",
-    "ageGroup": "9m",
-    "category": "sleep",
-    "text": "Si tu bebé aún se despierta para comer de noche, es posible que ya no necesite esas calorías a esta edad. Reducir gradualmente las tomas nocturnas puede ayudarle a dormir toda la noche."
   },
   {
     "id": "9m-sleep-12",
@@ -262,12 +250,6 @@
     "ageGroup": "9m",
     "category": "feeding",
     "text": "Ofrece variedad de texturas: triturado, trozos blandos y alimentos para agarrar con los dedos. Ir más allá de los purés ayuda a desarrollar la masticación y previene el rechazo a las texturas más adelante."
-  },
-  {
-    "id": "9m-feeding-05",
-    "ageGroup": "9m",
-    "category": "feeding",
-    "text": "La leche materna o de fórmula sigue siendo importante, pero los sólidos están tomando un papel más relevante en la nutrición. Ofrece sólidos antes de la leche en las comidas si tu bebé muestra interés."
   },
   {
     "id": "9m-feeding-06",
@@ -372,12 +354,6 @@
     "text": "Con tu bebé cada vez más activo, los golpes y lesiones menores se vuelven más frecuentes. La mayoría son inofensivos, pero observa signos de conmoción cerebral después de golpes en la cabeza."
   },
   {
-    "id": "9m-health-03",
-    "ageGroup": "9m",
-    "category": "health",
-    "text": "Sigue cepillando los dientes que van saliendo dos veces al día con una pequeña cantidad de pasta dental con flúor. Esto previene las caries en la primera infancia."
-  },
-  {
     "id": "9m-health-04",
     "ageGroup": "9m",
     "category": "health",
@@ -430,12 +406,6 @@
     "ageGroup": "9m",
     "category": "health",
     "text": "La ropa con protección solar y la sombra son las mejores defensas contra el daño UV. Para la piel expuesta, el protector solar ya es seguro para bebés de 6 meses en adelante — elige uno de amplio espectro con SPF 30 o superior."
-  },
-  {
-    "id": "9m-health-13",
-    "ageGroup": "9m",
-    "category": "health",
-    "text": "Las picaduras de insectos son más comunes ahora que tu bebé pasa tiempo en el suelo y al aire libre. Los repelentes con DEET (hasta 30% de concentración) son seguros a esta edad. También puedes usar mosquiteros y vestir a tu bebé con mangas largas ligeras cuando estén afuera."
   },
   {
     "id": "9m-health-14",

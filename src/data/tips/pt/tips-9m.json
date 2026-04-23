@@ -1,122 +1,692 @@
 [
-  {"id": "9m-development-01", "ageGroup": "9m", "category": "development", "text": "Seu bebê pode começar a se puxar para ficar em pé usando os móveis. Certifique-se de que tudo em que se apoia é resistente o suficiente para suportar o peso dele."},
-  {"id": "9m-development-02", "ageGroup": "9m", "category": "development", "text": "A pegada do seu bebê está ficando mais precisa. Por volta de 8-9 meses, a preensão em pinça — pegar pequenos objetos entre o polegar e o indicador — começa a aparecer. Ofereça petiscos pequenos e seguros para estimular essa habilidade."},
-  {"id": "9m-development-03", "ageGroup": "9m", "category": "development", "text": "Seu bebê pode começar a \"navegar\" — caminhar se apoiando nos móveis. Disponha os móveis perto o suficiente para que consiga se mover de um para outro."},
-  {"id": "9m-development-04", "ageGroup": "9m", "category": "development", "text": "Dar tchau, bater palmas e apontar são gestos sociais que surgem por volta dessa idade. Demonstre esses gestos com frequência e comemore quando seu bebê participar."},
-  {"id": "9m-development-05", "ageGroup": "9m", "category": "development", "text": "Seu bebê entende mais palavras do que consegue dizer. Pode olhar para o cachorro quando você diz \"cachorro\" ou olhar para a porta quando ouve \"lá fora\"."},
-  {"id": "9m-development-06", "ageGroup": "9m", "category": "development", "text": "A ansiedade de separação costuma atingir o pico por volta de 8-9 meses. Despedidas rápidas e confiantes funcionam melhor do que as longas e arrastadas. Seu bebê vai se adaptar."},
-  {"id": "9m-development-07", "ageGroup": "9m", "category": "development", "text": "Seu bebê pode começar a bater um objeto no outro, o que mostra que está aprendendo a usar as duas mãos de forma coordenada. Ofereça blocos, colheres ou copinhos para bater."},
-  {"id": "9m-development-08", "ageGroup": "9m", "category": "development", "text": "\"Mamã\" ou \"papá\" podem surgir por volta de agora, embora seu bebê talvez não use essas palavras especificamente para você ainda. Responda com entusiasmo mesmo assim!"},
-  {"id": "9m-development-09", "ageGroup": "9m", "category": "development", "text": "Seu bebê pode começar a entender instruções simples como \"me dá a bola\" ou \"cadê seu copo?\" Use frases curtas e claras e repita com frequência."},
-  {"id": "9m-development-10", "ageGroup": "9m", "category": "development", "text": "Os estilos de engatinhar variam muito: engatinhar tradicional, rastejar de barriga, arrastar-se sentado ou até rolando. Todos são formas normais de se locomover."},
-  {"id": "9m-development-11", "ageGroup": "9m", "category": "development", "text": "Seu bebê está se tornando um pequeno solucionador de problemas. Pode puxar um cobertor para alcançar um brinquedo ou afastar um obstáculo do caminho."},
-  {"id": "9m-development-12", "ageGroup": "9m", "category": "development", "text": "A imitação está a todo vapor. Seu bebê observa você de perto e pode tentar \"falar\" ao telefone, pentear o cabelo ou limpar uma superfície como já viu você fazer."},
-  {"id": "9m-development-13", "ageGroup": "9m", "category": "development", "text": "Alguns bebês pulam o engatinhar por completo e vão direto para se apoiar e andar segurando nos móveis. Se seu bebê está encontrando o próprio jeito de se mover, está indo muito bem."},
-  {"id": "9m-development-14", "ageGroup": "9m", "category": "development", "text": "Seu bebê pode começar a mostrar preferência por uma mão. A verdadeira dominância de mão se desenvolve mais tarde, mas preferências iniciais são normais."},
-  {"id": "9m-development-15", "ageGroup": "9m", "category": "development", "text": "Tente mostrar ao seu bebê um brinquedo simples de causa e efeito, como apertar um botão para fazer um personagem aparecer. A surpresa e a repetição são maravilhosas para o aprendizado."},
-  {"id": "9m-sleep-01", "ageGroup": "9m", "category": "sleep", "text": "A maioria dos bebês nessa idade segue um cronograma firme de 2 sonecas. Sonecas de manhã e à tarde com janelas de vigília de 2,5-3,5 horas funcionam bem para muitas famílias."},
-  {"id": "9m-sleep-02", "ageGroup": "9m", "category": "sleep", "text": "Seu bebê pode passar por uma regressão de sono ligada a grandes saltos de desenvolvimento como engatinhar, ficar em pé e ansiedade de separação. Vai passar."},
-  {"id": "9m-sleep-03", "ageGroup": "9m", "category": "sleep", "text": "Se seu bebê pratica ficar em pé no berço em vez de dormir, deite-o com calma sem transformar isso em brincadeira. Logo vai se acostumar."},
-  {"id": "9m-sleep-04", "ageGroup": "9m", "category": "sleep", "text": "Seu bebê pode resistir às sonecas porque há muito para explorar. Uma rotina de relaxamento antes de cada soneca sinaliza que é hora de descansar."},
-  {"id": "9m-sleep-05", "ageGroup": "9m", "category": "sleep", "text": "Despertares noturnos por ansiedade de separação são comuns agora. Uma visita breve e discreta tranquiliza seu bebê sem acordá-lo por completo."},
-  {"id": "9m-sleep-06", "ageGroup": "9m", "category": "sleep", "text": "O sono total é tipicamente de 12-16 horas em 24 horas nessa idade, incluindo sonecas. Se seu bebê dorme menos, mas parece descansado e feliz, tudo bem."},
-  {"id": "9m-sleep-07", "ageGroup": "9m", "category": "sleep", "text": "Se a hora de dormir está virando uma batalha, seu bebê pode precisar de um horário um pouco mais tarde ou de mais brincadeiras ativas durante o dia para gastar energia."},
-  {"id": "9m-sleep-08", "ageGroup": "9m", "category": "sleep", "text": "Um bichinho ou objeto de conforto pode ajudar com a ansiedade de separação. Deixe seu bebê abraçá-lo durante a rotina de relaxamento, mas sempre retire do berço antes de dormir — as diretrizes de sono seguro recomendam um berço vazio até os 12 meses."},
-  {"id": "9m-sleep-09", "ageGroup": "9m", "category": "sleep", "text": "Se seu bebê acorda cedo (antes das 6h), pode estar muito cansado. Tente antecipar a hora de dormir — por incrível que pareça, isso muitas vezes faz o bebê acordar mais tarde."},
-  {"id": "9m-sleep-10", "ageGroup": "9m", "category": "sleep", "text": "Mantenha a rotina de dormir curta e consistente: 20-30 minutos é o suficiente. Um banho, um livro, uma canção e para o berço é uma fórmula confiável."},
-  {"id": "9m-sleep-11", "ageGroup": "9m", "category": "sleep", "text": "Se seu bebê ainda acorda para mamar à noite, pode não precisar mais dessas calorias nessa idade. Reduzir gradualmente as mamadas noturnas pode ajudá-lo a dormir a noite toda."},
-  {"id": "9m-sleep-12", "ageGroup": "9m", "category": "sleep", "text": "Novos dentes — como os incisivos superiores ou laterais — podem estar aparecendo por volta dessa idade e causar mais irritação na hora de dormir. Um mordedor gelado antes de deitar e conforto extra podem ajudar."},
-  {"id": "9m-sleep-13", "ageGroup": "9m", "category": "sleep", "text": "Evite telas perto da hora de dormir. A estimulação pode dificultar o relaxamento do seu bebê, mesmo que o conteúdo pareça calmo."},
-  {"id": "9m-sleep-14", "ageGroup": "9m", "category": "sleep", "text": "Se as sonecas estão ficando mais curtas, tente estender levemente as janelas de vigília. Às vezes 15-20 minutos a mais de tempo acordado resulta em sonecas melhores."},
-  {"id": "9m-sleep-15", "ageGroup": "9m", "category": "sleep", "text": "Mudanças de horário de verão podem ser difíceis. Ajuste a hora de dormir em 15 minutos por dia durante 3-4 dias para facilitar a transição."},
-  {"id": "9m-feeding-01", "ageGroup": "9m", "category": "feeding", "text": "Alimentos sólidos são um novo mundo empolgante para seu bebê. Comece com alimentos simples e vá ampliando a variedade de frutas, legumes, grãos e proteínas. Por volta de 8-9 meses, muitos bebês aproveitam 2-3 pequenas refeições por dia."},
-  {"id": "9m-feeding-02", "ageGroup": "9m", "category": "feeding", "text": "Incentive a autoalimentação com petiscos que o bebê segura sozinho. Pedacinhos macios de banana, abacate, batata-doce ou macarrão bem cozido são ótimas opções."},
-  {"id": "9m-feeding-03", "ageGroup": "9m", "category": "feeding", "text": "Seu bebê já pode comer a maioria do que a família come, basta cortar em tamanhos seguros e sem sal ou açúcar adicionado. Isso simplifica a preparação das refeições!"},
-  {"id": "9m-feeding-04", "ageGroup": "9m", "category": "feeding", "text": "Ofereça uma variedade de texturas: amassados, pedacinhos macios e alimentos que o bebê segura sozinho. Ir além dos purês ajuda a desenvolver a mastigação e evita aversão a texturas no futuro."},
-  {"id": "9m-feeding-05", "ageGroup": "9m", "category": "feeding", "text": "Leite materno ou fórmula ainda é importante, mas os sólidos estão ganhando um papel maior na nutrição. Ofereça sólidos antes do leite nas refeições se seu bebê estiver interessado."},
-  {"id": "9m-feeding-06", "ageGroup": "9m", "category": "feeding", "text": "A seletividade alimentar pode começar a aparecer. Continue oferecendo variedade sem pressão. Seu papel é oferecer; o do seu bebê é decidir quanto comer."},
-  {"id": "9m-feeding-07", "ageGroup": "9m", "category": "feeding", "text": "Deixe seu bebê praticar com uma colher, mesmo que a maior parte da comida acabe no chão. Coloque a comida na colher e entregue a ele para estimular a independência."},
-  {"id": "9m-feeding-08", "ageGroup": "9m", "category": "feeding", "text": "Ofereça água nas refeições em um copo aberto ou copo com canudo. Seu bebê precisa de pequenos goles de água agora que os sólidos fazem parte regular da dieta."},
-  {"id": "9m-feeding-09", "ageGroup": "9m", "category": "feeding", "text": "Alimentos ricos em ferro continuam importantes. Ofereça carne, feijão, lentilha, tofu e cereais enriquecidos com ferro regularmente para apoiar o crescimento acelerado do seu bebê."},
-  {"id": "9m-feeding-10", "ageGroup": "9m", "category": "feeding", "text": "Se seu bebê joga comida no chão, pode ter terminado de comer, estar experimentando a gravidade ou dizendo que não quer aquela comida. Tudo isso é normal."},
-  {"id": "9m-feeding-11", "ageGroup": "9m", "category": "feeding", "text": "Evite dar suco ao seu bebê. Frutas inteiras fornecem mais fibra e menos açúcar. Água e leite são as melhores opções de bebida."},
-  {"id": "9m-feeding-12", "ageGroup": "9m", "category": "feeding", "text": "Iogurte e queijo são ótimos alimentos ricos em cálcio para bebês nessa idade. Escolha versões naturais e integrais, sem açúcar adicionado."},
-  {"id": "9m-feeding-13", "ageGroup": "9m", "category": "feeding", "text": "Refeições em família, mesmo que seu bebê apenas brinque com a comida, ensinam habilidades sociais importantes e o deixam mais disposto a experimentar o que os outros estão comendo."},
-  {"id": "9m-feeding-14", "ageGroup": "9m", "category": "feeding", "text": "Se estiver amamentando, seu bebê pode começar a mamar menos conforme come mais sólidos. Essa é uma transição natural e não significa que você precisa fazer o desmame."},
-  {"id": "9m-feeding-15", "ageGroup": "9m", "category": "feeding", "text": "Gorduras saudáveis são essenciais para o desenvolvimento do cérebro. Abacate, azeite de oliva, pasta de amendoim (espalhada fina) e laticínios integrais são excelentes fontes."},
-  {"id": "9m-health-01", "ageGroup": "9m", "category": "health", "text": "Consultas regulares de desenvolvimento são importantes nessa fase. O pediatra vai avaliar habilidades motoras, comunicação e interação social."},
-  {"id": "9m-health-02", "ageGroup": "9m", "category": "health", "text": "Com seu bebê cada vez mais ativo, tombos e pequenas lesões se tornam mais comuns. A maioria é inofensiva, mas fique atento a sinais de concussão após pancadas na cabeça."},
-  {"id": "9m-health-03", "ageGroup": "9m", "category": "health", "text": "Continue escovando os dentinhos que estão nascendo duas vezes por dia com uma pequena quantidade de pasta de dente com flúor. Isso previne cáries na primeira infância."},
-  {"id": "9m-health-04", "ageGroup": "9m", "category": "health", "text": "Se seu bebê frequenta creche, espere mais resfriados e doenças leves. Cada um fortalece o sistema imunológico, mesmo que seja difícil de ver."},
-  {"id": "9m-health-05", "ageGroup": "9m", "category": "health", "text": "A doença mão-pé-boca é comum em bebês e crianças pequenas. Fique atento a bolhas nas mãos, pés e na boca, acompanhadas de febre. É desconfortável, mas geralmente se resolve sozinha."},
-  {"id": "9m-health-06", "ageGroup": "9m", "category": "health", "text": "Verifique com o pediatra se seu bebê está em dia com as vacinas. Seguir o calendário oferece a melhor proteção, e doses de recuperação estão disponíveis caso alguma tenha sido perdida."},
-  {"id": "9m-health-07", "ageGroup": "9m", "category": "health", "text": "A dentição pode causar salivação excessiva, irritação e uma temperatura levemente elevada, mas febre de verdade (acima de {{100.4°F|38°C}}) não é causada pela dentição. Consulte o médico se houver febre."},
-  {"id": "9m-health-08", "ageGroup": "9m", "category": "health", "text": "Exposição ao chumbo é uma preocupação quando os bebês começam a engatinhar e colocar tudo na boca. Se sua casa é antiga, pergunte sobre testes de chumbo."},
-  {"id": "9m-health-09", "ageGroup": "9m", "category": "health", "text": "O pediatra pode verificar os níveis de ferro por volta de 9-12 meses. A deficiência de ferro pode afetar o desenvolvimento, então mencione se tiver preocupação."},
-  {"id": "9m-health-10", "ageGroup": "9m", "category": "health", "text": "A roséola é comum entre 6-12 meses: febre alta repentina por alguns dias e depois uma erupção surge quando a febre cede. Pode assustar, mas geralmente é inofensiva."},
-  {"id": "9m-health-11", "ageGroup": "9m", "category": "health", "text": "Se seu bebê não está balbuciando, fazendo contato visual ou respondendo ao próprio nome aos 9 meses, converse com o pediatra para uma avaliação precoce."},
-  {"id": "9m-health-12", "ageGroup": "9m", "category": "health", "text": "Roupas com proteção solar e sombra são as melhores defesas contra os danos do sol. Para a pele exposta, o protetor solar já é seguro a partir dos 6 meses — escolha um de amplo espectro com FPS 30 ou superior."},
-  {"id": "9m-health-13", "ageGroup": "9m", "category": "health", "text": "Picadas de inseto são mais comuns agora que seu bebê passa tempo no chão e ao ar livre. Repelentes à base de DEET (até 30% de concentração) são seguros nessa idade. Você também pode usar mosquiteiros e vestir seu bebê com mangas longas leves quando estiver ao ar livre."},
-  {"id": "9m-health-14", "ageGroup": "9m", "category": "health", "text": "Se seu bebê tem infecções de ouvido recorrentes, converse com o pediatra sobre a possibilidade de colocar tubos de ventilação."},
-  {"id": "9m-health-15", "ageGroup": "9m", "category": "health", "text": "Não é necessário comprar sapatos até que seu bebê esteja caminhando ao ar livre regularmente. Por enquanto, pés descalços ou meias antiderrapantes oferecem melhor apoio e estímulo sensorial para aprender a ficar em pé."},
-  {"id": "9m-play-01", "ageGroup": "9m", "category": "play", "text": "Empilhe blocos e deixe seu bebê derrubá-los. Conforme ficam mais habilidosos, podem começar a empilhar um ou dois blocos sozinhos por volta de 9-12 meses."},
-  {"id": "9m-play-02", "ageGroup": "9m", "category": "play", "text": "Brinque de \"pega-pega\" engatinhando atrás do seu bebê ou deixando-o engatinhar atrás de você. Essa brincadeira ativa desenvolve habilidades físicas e rende muitas gargalhadas."},
-  {"id": "9m-play-03", "ageGroup": "9m", "category": "play", "text": "Ofereça potes com tampas para seu bebê praticar abrir e fechar. Colocar um brinquedo dentro dá a motivação para descobrir como funciona."},
-  {"id": "9m-play-04", "ageGroup": "9m", "category": "play", "text": "Leia livros com histórias simples e deixe seu bebê virar as páginas. Livros de papelão com abas para levantar trazem um elemento interativo que eles adoram."},
-  {"id": "9m-play-05", "ageGroup": "9m", "category": "play", "text": "Brinque de \"coloca e tira\" com um balde e bolas ou blocos. Essa repetição de colocar e tirar é fascinante para os bebês e desenvolve a coordenação motora fina."},
-  {"id": "9m-play-06", "ageGroup": "9m", "category": "play", "text": "Experimente atividades de separação simples: ofereça uma forma com divisórias e diferentes objetos para colocar em cada espaço. Seu bebê está começando a perceber categorias e diferenças."},
-  {"id": "9m-play-07", "ageGroup": "9m", "category": "play", "text": "Brincar com água na pia ou em uma bacia rasa com copinhos, colheres e funis diverte sem fim e ensina conceitos como cheio, vazio e derramar."},
-  {"id": "9m-play-08", "ageGroup": "9m", "category": "play", "text": "Cante cantigas com gestos como \"Dona Aranha\" ou \"Palminhas\" com movimentos de mão. Seu bebê pode começar a tentar fazer os gestos junto com você."},
-  {"id": "9m-play-09", "ageGroup": "9m", "category": "play", "text": "Crie um espaço seguro para escalar com almofadas grandes no chão. Bebês nessa idade adoram escalar, e isso fortalece os músculos, a coordenação e a confiança."},
-  {"id": "9m-play-10", "ageGroup": "9m", "category": "play", "text": "Brinquedos de empurrar (que o bebê empurra enquanto caminha) são ótimos para bebês que estão começando a andar apoiados. Dão suporte e motivação para dar os primeiros passos."},
-  {"id": "9m-play-11", "ageGroup": "9m", "category": "play", "text": "Perto do final dessa fase, experimente oferecer um giz de cera grande e atóxico com papel. Seu bebê pode bater ou levar à boca no início, mas com supervisão estará começando a descobrir que ferramentas podem deixar marcas."},
-  {"id": "9m-play-12", "ageGroup": "9m", "category": "play", "text": "Brinque de esconde-esconde se escondendo atrás de uma porta e chamando o nome do seu bebê. A alegria ao encontrá-lo reforça a noção de permanência do objeto."},
-  {"id": "9m-play-13", "ageGroup": "9m", "category": "play", "text": "Ofereça brinquedos com partes móveis: portinhas que abrem, rodinhas que giram, botões que clicam. Esses desafios de motricidade fina são perfeitos para essa idade."},
-  {"id": "9m-play-14", "ageGroup": "9m", "category": "play", "text": "Leve seu bebê a um parquinho e deixe-o experimentar o balanço de bebê. O movimento suave e o ambiente novo são ótimas experiências sensoriais."},
-  {"id": "9m-play-15", "ageGroup": "9m", "category": "play", "text": "Deixe seu bebê \"ajudar\" com tarefas simples como colocar uma toalhinha no cesto de roupa ou um copo na mesa. Eles adoram se sentir incluídos."},
-  {"id": "9m-safety-01", "ageGroup": "9m", "category": "safety", "text": "Agora que seu bebê se apoia em tudo para ficar em pé, verifique novamente se todos os móveis estão fixos na parede. Cômodas e estantes são os maiores riscos de tombamento."},
-  {"id": "9m-safety-02", "ageGroup": "9m", "category": "safety", "text": "Mantenha as portas do banheiro fechadas ou use protetores de maçaneta. Vasos sanitários, banheiras e armários do banheiro oferecem riscos para um bebê curioso que engatinha."},
-  {"id": "9m-safety-03", "ageGroup": "9m", "category": "safety", "text": "Protetores de botão de fogão e travas de forno são importantes agora. Seu bebê alcança mais alto do que você imagina, e superfícies quentes causam queimaduras graves."},
-  {"id": "9m-safety-04", "ageGroup": "9m", "category": "safety", "text": "Nunca deixe pequenos objetos como moedas, miçangas ou balões murchos ao alcance do seu bebê. A preensão em pinça aprimorada permite que peguem itens muito pequenos."},
-  {"id": "9m-safety-05", "ageGroup": "9m", "category": "safety", "text": "Mantenha seu bebê virado de costas na cadeirinha do carro pelo maior tempo possível, até atingir a altura ou o peso máximo permitido pelo fabricante. A posição virada de costas é a mais segura."},
-  {"id": "9m-safety-06", "ageGroup": "9m", "category": "safety", "text": "Verifique se os portões de segurança estão bem instalados. Um bebê determinado pode empurrar um portão mal fixado e deslocá-lo."},
-  {"id": "9m-safety-07", "ageGroup": "9m", "category": "safety", "text": "Coloque protetores ou batentes nas portas que podem prender dedinhos. Lesões nos dedos causadas por portas que fecham são muito comuns nessa idade."},
-  {"id": "9m-safety-08", "ageGroup": "9m", "category": "safety", "text": "Mantenha as lixeiras tampadas ou dentro de armários trancados. Bebês são fascinados por lixo e podem encontrar itens perigosos como tampas de lata afiadas ou embalagens pequenas."},
-  {"id": "9m-safety-09", "ageGroup": "9m", "category": "safety", "text": "Se você tem potes de comida ou água de animais de estimação no chão, mova-os para uma área inacessível ao bebê. Ração é risco de engasgo e tigelas de água são risco de afogamento."},
-  {"id": "9m-safety-10", "ageGroup": "9m", "category": "safety", "text": "Prenda os fios de eletrodomésticos (torradeira, chaleira, abajur) para que seu bebê não consiga puxá-los. Enrolar o excesso de fio e usar organizadores de cabos ajuda."},
-  {"id": "9m-safety-11", "ageGroup": "9m", "category": "safety", "text": "Grades ou travas de janela são essenciais, especialmente acima do térreo. Uma tela mosquiteira sozinha não impede um bebê de cair por uma janela aberta."},
-  {"id": "9m-safety-12", "ageGroup": "9m", "category": "safety", "text": "Fique atento aos brinquedos de irmãos mais velhos com peças pequenas. Legos, bolinhas de gude e acessórios de boneca são riscos de engasgo para um bebê nessa idade."},
-  {"id": "9m-safety-13", "ageGroup": "9m", "category": "safety", "text": "Guarde todos os medicamentos, vitaminas e suplementos em armários altos e trancados. Tampas com trava de segurança retardam as crianças, mas não as impedem."},
-  {"id": "9m-safety-14", "ageGroup": "9m", "category": "safety", "text": "Se seu bebê se apoia na porta da lava-louças, use uma trava. Facas, garfos e cápsulas de detergente lá dentro são perigos sérios."},
-  {"id": "9m-safety-15", "ageGroup": "9m", "category": "safety", "text": "Quando seu bebê começar a andar apoiado nos móveis, verifique se os tapetes estão fixados com bases antiderrapantes. Tapetes que deslizam podem causar quedas em pisos lisos."},
-  {"id": "9m-development-16", "ageGroup": "9m", "category": "development", "text": "Seu bebê pode começar a derrubar objetos de propósito e observar onde caem. Não é travessura — é um experimento científico sobre gravidade e causa e efeito."},
-  {"id": "9m-development-17", "ageGroup": "9m", "category": "development", "text": "Tente narrar suas atividades do dia com palavras simples. \"Agora vamos colocar suas meias\" ajuda a construir vocabulário mesmo antes de o bebê conseguir falar."},
-  {"id": "9m-development-18", "ageGroup": "9m", "category": "development", "text": "Seu bebê pode começar a olhar para onde você aponta, em vez de olhar para o seu dedo. Essa atenção compartilhada é um grande marco cognitivo que favorece o aprendizado da linguagem."},
-  {"id": "9m-development-19", "ageGroup": "9m", "category": "development", "text": "Ofereça dois brinquedos ao seu bebê quando as mãos dele já estiverem cheias. Descobrir como segurar um terceiro ou largar um é resolução de problemas na prática."},
-  {"id": "9m-development-20", "ageGroup": "9m", "category": "development", "text": "A memória do seu bebê está crescendo rápido. Pode se lembrar de onde um brinquedo favorito fica guardado e engatinhar até lá, mesmo sem conseguir vê-lo."},
-  {"id": "9m-sleep-16", "ageGroup": "9m", "category": "sleep", "text": "Se seu bebê começou a engatinhar durante o sono e se acordar, ofereça bastante prática de engatinhar durante o dia para que a novidade passe."},
-  {"id": "9m-sleep-17", "ageGroup": "9m", "category": "sleep", "text": "Um horário consistente para acordar de manhã ajuda a organizar o dia inteiro do seu bebê. Tente começar o dia dentro de uma janela de 30 minutos, inclusive nos fins de semana."},
-  {"id": "9m-sleep-18", "ageGroup": "9m", "category": "sleep", "text": "Se seu bebê resiste à segunda soneca, pode precisar de uma janela de vigília um pouco mais longa antes dela. Tente acrescentar 15 minutos de tempo acordado e veja se ajuda."},
-  {"id": "9m-sleep-19", "ageGroup": "9m", "category": "sleep", "text": "Oferecer um pequeno lanche 30 minutos antes de dormir pode ajudar seu bebê a dormir mais confortavelmente sem criar uma associação entre comer e dormir."},
-  {"id": "9m-sleep-20", "ageGroup": "9m", "category": "sleep", "text": "Se seu bebê só dorme 30 minutos, pode estar acordando entre ciclos de sono. Esperar alguns minutos antes de ir até lá pode ajudá-lo a aprender a emendar os ciclos."},
-  {"id": "9m-feeding-16", "ageGroup": "9m", "category": "feeding", "text": "Experimente oferecer tiras de comida macia que seu bebê consiga segurar no punho e roer. Pense em palitos de cenoura cozida, fatias de manga madura ou tirinhas de torrada."},
-  {"id": "9m-feeding-17", "ageGroup": "9m", "category": "feeding", "text": "Se seu bebê engasga com novas texturas, fique calmo e dê tempo. Engasgar é um reflexo de proteção que ajuda a aprender a lidar com a comida — não é a mesma coisa que asfixia."},
-  {"id": "9m-feeding-18", "ageGroup": "9m", "category": "feeding", "text": "Introduzir temperos e ervas como canela, manjericão e cominho é perfeitamente seguro e ajuda seu bebê a desenvolver um paladar variado desde cedo."},
-  {"id": "9m-feeding-19", "ageGroup": "9m", "category": "feeding", "text": "Se seu bebê de repente recusa uma comida que antes gostava, continue oferecendo sem pressão. As preferências de sabor mudam com frequência nessa idade e costumam voltar."},
-  {"id": "9m-feeding-20", "ageGroup": "9m", "category": "feeding", "text": "Oferecer alimentos do seu próprio prato (desde que sejam seguros e sem sal) pode despertar o interesse do seu bebê. Eles adoram comer o que você está comendo."},
-  {"id": "9m-health-16", "ageGroup": "9m", "category": "health", "text": "Se seu bebê tem tosse persistente à noite, um umidificador de névoa fria no quarto pode trazer alívio. Nunca eleve ou incline o colchão do berço — bebês precisam de uma superfície firme e plana. Consulte o pediatra se a tosse durar mais de uma semana."},
-  {"id": "9m-health-17", "ageGroup": "9m", "category": "health", "text": "Prisão de ventre pode acontecer conforme seu bebê come mais sólidos. Ofereça água entre as refeições e alimentos ricos em fibra como ameixa, pera e ervilha para ajudar o intestino a funcionar."},
-  {"id": "9m-health-18", "ageGroup": "9m", "category": "health", "text": "A crosta láctea às vezes reaparece ou surge pela primeira vez por volta dessa idade. Massagear suavemente o couro cabeludo com óleo e escovar com uma escova macia geralmente resolve."},
-  {"id": "9m-health-19", "ageGroup": "9m", "category": "health", "text": "Se o nariz do seu bebê vive escorrendo sem outros sintomas, pode ser alergia e não resfriado. Mencione na próxima consulta com o pediatra."},
-  {"id": "9m-health-20", "ageGroup": "9m", "category": "health", "text": "O crescimento acelerado do seu bebê pode causar uma leve curvatura nas pernas. Isso é completamente normal nessa idade e geralmente se corrige sozinho com o tempo."},
-  {"id": "9m-play-16", "ageGroup": "9m", "category": "play", "text": "Experimente dar ao seu bebê um cestinho com lenços ou retalhos de tecido para puxar um de cada vez. As cores e texturas tornam essa uma atividade sensorial maravilhosa."},
-  {"id": "9m-play-17", "ageGroup": "9m", "category": "play", "text": "Faça um chocalho caseiro colocando macarrão seco ou arroz dentro de um pote bem fechado. Seu bebê vai adorar chacoalhar e descobrir os sons que consegue criar."},
-  {"id": "9m-play-18", "ageGroup": "9m", "category": "play", "text": "Experimente brincar de \"cadê a música?\" escondendo um brinquedo musical debaixo de um cobertor enquanto toca. Seu bebê vai usar a audição para encontrá-lo."},
-  {"id": "9m-play-19", "ageGroup": "9m", "category": "play", "text": "Cole um pedaço grande de papel no chão e deixe seu bebê explorar a pintura com os dedos usando iogurte ou corante alimentar seguro. Faz sujeira, mas é maravilhoso para o desenvolvimento sensorial."},
-  {"id": "9m-play-20", "ageGroup": "9m", "category": "play", "text": "Ofereça ao seu bebê um telefone de brinquedo ou controle remoto e finja ter uma conversa com ele. Essa brincadeira de vai e vem desenvolve habilidades de comunicação desde cedo."},
-  {"id": "9m-safety-16", "ageGroup": "9m", "category": "safety", "text": "Verifique se as plantas de casa estão fora do alcance ou se são atóxicas. Muitas plantas comuns como jiboia e filodendro podem causar irritação ou mal-estar se mastigadas."},
-  {"id": "9m-safety-17", "ageGroup": "9m", "category": "safety", "text": "Mantenha bolsas e sacolas fora do chão. Costumam conter itens pequenos como moedas, batom, canetas e medicamentos que são perigosos para um bebê curioso."},
-  {"id": "9m-safety-18", "ageGroup": "9m", "category": "safety", "text": "Certifique-se de que o colchão do berço está na posição mais baixa agora que seu bebê consegue ficar em pé. Um bebê que se levanta pode tentar escalar a grade se o colchão estiver alto demais."},
-  {"id": "9m-safety-19", "ageGroup": "9m", "category": "safety", "text": "Ímãs de geladeira são um perigo oculto — os pequenos podem ser engolidos. Coloque os ímãs decorativos bem alto ou remova-os até que seu bebê seja mais velho."},
-  {"id": "9m-safety-20", "ageGroup": "9m", "category": "safety", "text": "Se você usa toalha de mesa, troque por jogos americanos por enquanto. Seu bebê pode puxar a toalha e derrubar comida quente, pratos ou objetos pesados sobre si."}
+  {
+    "id": "9m-development-01",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê pode começar a se puxar para ficar em pé usando os móveis. Certifique-se de que tudo em que se apoia é resistente o suficiente para suportar o peso dele."
+  },
+  {
+    "id": "9m-development-02",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "A pegada do seu bebê está ficando mais precisa. Por volta de 8-9 meses, a preensão em pinça — pegar pequenos objetos entre o polegar e o indicador — começa a aparecer. Ofereça petiscos pequenos e seguros para estimular essa habilidade."
+  },
+  {
+    "id": "9m-development-03",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê pode começar a \"navegar\" — caminhar se apoiando nos móveis. Disponha os móveis perto o suficiente para que consiga se mover de um para outro."
+  },
+  {
+    "id": "9m-development-04",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dar tchau, bater palmas e apontar são gestos sociais que surgem por volta dessa idade. Demonstre esses gestos com frequência e comemore quando seu bebê participar."
+  },
+  {
+    "id": "9m-development-05",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê entende mais palavras do que consegue dizer. Pode olhar para o cachorro quando você diz \"cachorro\" ou olhar para a porta quando ouve \"lá fora\"."
+  },
+  {
+    "id": "9m-development-06",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "A ansiedade de separação costuma atingir o pico por volta de 8-9 meses. Despedidas rápidas e confiantes funcionam melhor do que as longas e arrastadas. Seu bebê vai se adaptar."
+  },
+  {
+    "id": "9m-development-07",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê pode começar a bater um objeto no outro, o que mostra que está aprendendo a usar as duas mãos de forma coordenada. Ofereça blocos, colheres ou copinhos para bater."
+  },
+  {
+    "id": "9m-development-08",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "\"Mamã\" ou \"papá\" podem surgir por volta de agora, embora seu bebê talvez não use essas palavras especificamente para você ainda. Responda com entusiasmo mesmo assim!"
+  },
+  {
+    "id": "9m-development-09",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê pode começar a entender instruções simples como \"me dá a bola\" ou \"cadê seu copo?\" Use frases curtas e claras e repita com frequência."
+  },
+  {
+    "id": "9m-development-10",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Os estilos de engatinhar variam muito: engatinhar tradicional, rastejar de barriga, arrastar-se sentado ou até rolando. Todos são formas normais de se locomover."
+  },
+  {
+    "id": "9m-development-11",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê está se tornando um pequeno solucionador de problemas. Pode puxar um cobertor para alcançar um brinquedo ou afastar um obstáculo do caminho."
+  },
+  {
+    "id": "9m-development-12",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "A imitação está a todo vapor. Seu bebê observa você de perto e pode tentar \"falar\" ao telefone, pentear o cabelo ou limpar uma superfície como já viu você fazer."
+  },
+  {
+    "id": "9m-development-13",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Alguns bebês pulam o engatinhar por completo e vão direto para se apoiar e andar segurando nos móveis. Se seu bebê está encontrando o próprio jeito de se mover, está indo muito bem."
+  },
+  {
+    "id": "9m-development-14",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê pode começar a mostrar preferência por uma mão. A verdadeira dominância de mão se desenvolve mais tarde, mas preferências iniciais são normais."
+  },
+  {
+    "id": "9m-development-15",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tente mostrar ao seu bebê um brinquedo simples de causa e efeito, como apertar um botão para fazer um personagem aparecer. A surpresa e a repetição são maravilhosas para o aprendizado."
+  },
+  {
+    "id": "9m-sleep-01",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "A maioria dos bebês nessa idade segue um cronograma firme de 2 sonecas. Sonecas de manhã e à tarde com janelas de vigília de 2,5-3,5 horas funcionam bem para muitas famílias."
+  },
+  {
+    "id": "9m-sleep-02",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Seu bebê pode passar por uma regressão de sono ligada a grandes saltos de desenvolvimento como engatinhar, ficar em pé e ansiedade de separação. Vai passar."
+  },
+  {
+    "id": "9m-sleep-03",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se seu bebê pratica ficar em pé no berço em vez de dormir, deite-o com calma sem transformar isso em brincadeira. Logo vai se acostumar."
+  },
+  {
+    "id": "9m-sleep-04",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Seu bebê pode resistir às sonecas porque há muito para explorar. Uma rotina de relaxamento antes de cada soneca sinaliza que é hora de descansar."
+  },
+  {
+    "id": "9m-sleep-05",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Despertares noturnos por ansiedade de separação são comuns agora. Uma visita breve e discreta tranquiliza seu bebê sem acordá-lo por completo."
+  },
+  {
+    "id": "9m-sleep-06",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "O sono total é tipicamente de 12-16 horas em 24 horas nessa idade, incluindo sonecas. Se seu bebê dorme menos, mas parece descansado e feliz, tudo bem."
+  },
+  {
+    "id": "9m-sleep-07",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se a hora de dormir está virando uma batalha, seu bebê pode precisar de um horário um pouco mais tarde ou de mais brincadeiras ativas durante o dia para gastar energia."
+  },
+  {
+    "id": "9m-sleep-09",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se seu bebê acorda cedo (antes das 6h), pode estar muito cansado. Tente antecipar a hora de dormir — por incrível que pareça, isso muitas vezes faz o bebê acordar mais tarde."
+  },
+  {
+    "id": "9m-sleep-10",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Mantenha a rotina de dormir curta e consistente: 20-30 minutos é o suficiente. Um banho, um livro, uma canção e para o berço é uma fórmula confiável."
+  },
+  {
+    "id": "9m-sleep-12",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Novos dentes — como os incisivos superiores ou laterais — podem estar aparecendo por volta dessa idade e causar mais irritação na hora de dormir. Um mordedor gelado antes de deitar e conforto extra podem ajudar."
+  },
+  {
+    "id": "9m-sleep-13",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Evite telas perto da hora de dormir. A estimulação pode dificultar o relaxamento do seu bebê, mesmo que o conteúdo pareça calmo."
+  },
+  {
+    "id": "9m-sleep-14",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se as sonecas estão ficando mais curtas, tente estender levemente as janelas de vigília. Às vezes 15-20 minutos a mais de tempo acordado resulta em sonecas melhores."
+  },
+  {
+    "id": "9m-sleep-15",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Mudanças de horário de verão podem ser difíceis. Ajuste a hora de dormir em 15 minutos por dia durante 3-4 dias para facilitar a transição."
+  },
+  {
+    "id": "9m-feeding-01",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Alimentos sólidos são um novo mundo empolgante para seu bebê. Comece com alimentos simples e vá ampliando a variedade de frutas, legumes, grãos e proteínas. Por volta de 8-9 meses, muitos bebês aproveitam 2-3 pequenas refeições por dia."
+  },
+  {
+    "id": "9m-feeding-02",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Incentive a autoalimentação com petiscos que o bebê segura sozinho. Pedacinhos macios de banana, abacate, batata-doce ou macarrão bem cozido são ótimas opções."
+  },
+  {
+    "id": "9m-feeding-03",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Seu bebê já pode comer a maioria do que a família come, basta cortar em tamanhos seguros e sem sal ou açúcar adicionado. Isso simplifica a preparação das refeições!"
+  },
+  {
+    "id": "9m-feeding-04",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Ofereça uma variedade de texturas: amassados, pedacinhos macios e alimentos que o bebê segura sozinho. Ir além dos purês ajuda a desenvolver a mastigação e evita aversão a texturas no futuro."
+  },
+  {
+    "id": "9m-feeding-06",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "A seletividade alimentar pode começar a aparecer. Continue oferecendo variedade sem pressão. Seu papel é oferecer; o do seu bebê é decidir quanto comer."
+  },
+  {
+    "id": "9m-feeding-07",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Deixe seu bebê praticar com uma colher, mesmo que a maior parte da comida acabe no chão. Coloque a comida na colher e entregue a ele para estimular a independência."
+  },
+  {
+    "id": "9m-feeding-08",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Ofereça água nas refeições em um copo aberto ou copo com canudo. Seu bebê precisa de pequenos goles de água agora que os sólidos fazem parte regular da dieta."
+  },
+  {
+    "id": "9m-feeding-09",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Alimentos ricos em ferro continuam importantes. Ofereça carne, feijão, lentilha, tofu e cereais enriquecidos com ferro regularmente para apoiar o crescimento acelerado do seu bebê."
+  },
+  {
+    "id": "9m-feeding-10",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Se seu bebê joga comida no chão, pode ter terminado de comer, estar experimentando a gravidade ou dizendo que não quer aquela comida. Tudo isso é normal."
+  },
+  {
+    "id": "9m-feeding-11",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Evite dar suco ao seu bebê. Frutas inteiras fornecem mais fibra e menos açúcar. Água e leite são as melhores opções de bebida."
+  },
+  {
+    "id": "9m-feeding-12",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Iogurte e queijo são ótimos alimentos ricos em cálcio para bebês nessa idade. Escolha versões naturais e integrais, sem açúcar adicionado."
+  },
+  {
+    "id": "9m-feeding-13",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Refeições em família, mesmo que seu bebê apenas brinque com a comida, ensinam habilidades sociais importantes e o deixam mais disposto a experimentar o que os outros estão comendo."
+  },
+  {
+    "id": "9m-feeding-14",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Se estiver amamentando, seu bebê pode começar a mamar menos conforme come mais sólidos. Essa é uma transição natural e não significa que você precisa fazer o desmame."
+  },
+  {
+    "id": "9m-feeding-15",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Gorduras saudáveis são essenciais para o desenvolvimento do cérebro. Abacate, azeite de oliva, pasta de amendoim (espalhada fina) e laticínios integrais são excelentes fontes."
+  },
+  {
+    "id": "9m-health-01",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Consultas regulares de desenvolvimento são importantes nessa fase. O pediatra vai avaliar habilidades motoras, comunicação e interação social."
+  },
+  {
+    "id": "9m-health-02",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Com seu bebê cada vez mais ativo, tombos e pequenas lesões se tornam mais comuns. A maioria é inofensiva, mas fique atento a sinais de concussão após pancadas na cabeça."
+  },
+  {
+    "id": "9m-health-04",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se seu bebê frequenta creche, espere mais resfriados e doenças leves. Cada um fortalece o sistema imunológico, mesmo que seja difícil de ver."
+  },
+  {
+    "id": "9m-health-05",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A doença mão-pé-boca é comum em bebês e crianças pequenas. Fique atento a bolhas nas mãos, pés e na boca, acompanhadas de febre. É desconfortável, mas geralmente se resolve sozinha."
+  },
+  {
+    "id": "9m-health-06",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Verifique com o pediatra se seu bebê está em dia com as vacinas. Seguir o calendário oferece a melhor proteção, e doses de recuperação estão disponíveis caso alguma tenha sido perdida."
+  },
+  {
+    "id": "9m-health-07",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A dentição pode causar salivação excessiva, irritação e uma temperatura levemente elevada, mas febre de verdade (acima de {{100.4°F|38°C}}) não é causada pela dentição. Consulte o médico se houver febre."
+  },
+  {
+    "id": "9m-health-08",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Exposição ao chumbo é uma preocupação quando os bebês começam a engatinhar e colocar tudo na boca. Se sua casa é antiga, pergunte sobre testes de chumbo."
+  },
+  {
+    "id": "9m-health-09",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "O pediatra pode verificar os níveis de ferro por volta de 9-12 meses. A deficiência de ferro pode afetar o desenvolvimento, então mencione se tiver preocupação."
+  },
+  {
+    "id": "9m-health-10",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A roséola é comum entre 6-12 meses: febre alta repentina por alguns dias e depois uma erupção surge quando a febre cede. Pode assustar, mas geralmente é inofensiva."
+  },
+  {
+    "id": "9m-health-11",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se seu bebê não está balbuciando, fazendo contato visual ou respondendo ao próprio nome aos 9 meses, converse com o pediatra para uma avaliação precoce."
+  },
+  {
+    "id": "9m-health-12",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Roupas com proteção solar e sombra são as melhores defesas contra os danos do sol. Para a pele exposta, o protetor solar já é seguro a partir dos 6 meses — escolha um de amplo espectro com FPS 30 ou superior."
+  },
+  {
+    "id": "9m-health-14",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se seu bebê tem infecções de ouvido recorrentes, converse com o pediatra sobre a possibilidade de colocar tubos de ventilação."
+  },
+  {
+    "id": "9m-health-15",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Não é necessário comprar sapatos até que seu bebê esteja caminhando ao ar livre regularmente. Por enquanto, pés descalços ou meias antiderrapantes oferecem melhor apoio e estímulo sensorial para aprender a ficar em pé."
+  },
+  {
+    "id": "9m-play-01",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Empilhe blocos e deixe seu bebê derrubá-los. Conforme ficam mais habilidosos, podem começar a empilhar um ou dois blocos sozinhos por volta de 9-12 meses."
+  },
+  {
+    "id": "9m-play-02",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brinque de \"pega-pega\" engatinhando atrás do seu bebê ou deixando-o engatinhar atrás de você. Essa brincadeira ativa desenvolve habilidades físicas e rende muitas gargalhadas."
+  },
+  {
+    "id": "9m-play-03",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Ofereça potes com tampas para seu bebê praticar abrir e fechar. Colocar um brinquedo dentro dá a motivação para descobrir como funciona."
+  },
+  {
+    "id": "9m-play-04",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Leia livros com histórias simples e deixe seu bebê virar as páginas. Livros de papelão com abas para levantar trazem um elemento interativo que eles adoram."
+  },
+  {
+    "id": "9m-play-05",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brinque de \"coloca e tira\" com um balde e bolas ou blocos. Essa repetição de colocar e tirar é fascinante para os bebês e desenvolve a coordenação motora fina."
+  },
+  {
+    "id": "9m-play-06",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Experimente atividades de separação simples: ofereça uma forma com divisórias e diferentes objetos para colocar em cada espaço. Seu bebê está começando a perceber categorias e diferenças."
+  },
+  {
+    "id": "9m-play-07",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brincar com água na pia ou em uma bacia rasa com copinhos, colheres e funis diverte sem fim e ensina conceitos como cheio, vazio e derramar."
+  },
+  {
+    "id": "9m-play-08",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Cante cantigas com gestos como \"Dona Aranha\" ou \"Palminhas\" com movimentos de mão. Seu bebê pode começar a tentar fazer os gestos junto com você."
+  },
+  {
+    "id": "9m-play-09",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Crie um espaço seguro para escalar com almofadas grandes no chão. Bebês nessa idade adoram escalar, e isso fortalece os músculos, a coordenação e a confiança."
+  },
+  {
+    "id": "9m-play-10",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brinquedos de empurrar (que o bebê empurra enquanto caminha) são ótimos para bebês que estão começando a andar apoiados. Dão suporte e motivação para dar os primeiros passos."
+  },
+  {
+    "id": "9m-play-11",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Perto do final dessa fase, experimente oferecer um giz de cera grande e atóxico com papel. Seu bebê pode bater ou levar à boca no início, mas com supervisão estará começando a descobrir que ferramentas podem deixar marcas."
+  },
+  {
+    "id": "9m-play-12",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brinque de esconde-esconde se escondendo atrás de uma porta e chamando o nome do seu bebê. A alegria ao encontrá-lo reforça a noção de permanência do objeto."
+  },
+  {
+    "id": "9m-play-13",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Ofereça brinquedos com partes móveis: portinhas que abrem, rodinhas que giram, botões que clicam. Esses desafios de motricidade fina são perfeitos para essa idade."
+  },
+  {
+    "id": "9m-play-14",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Leve seu bebê a um parquinho e deixe-o experimentar o balanço de bebê. O movimento suave e o ambiente novo são ótimas experiências sensoriais."
+  },
+  {
+    "id": "9m-play-15",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Deixe seu bebê \"ajudar\" com tarefas simples como colocar uma toalhinha no cesto de roupa ou um copo na mesa. Eles adoram se sentir incluídos."
+  },
+  {
+    "id": "9m-safety-01",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Agora que seu bebê se apoia em tudo para ficar em pé, verifique novamente se todos os móveis estão fixos na parede. Cômodas e estantes são os maiores riscos de tombamento."
+  },
+  {
+    "id": "9m-safety-02",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Mantenha as portas do banheiro fechadas ou use protetores de maçaneta. Vasos sanitários, banheiras e armários do banheiro oferecem riscos para um bebê curioso que engatinha."
+  },
+  {
+    "id": "9m-safety-03",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Protetores de botão de fogão e travas de forno são importantes agora. Seu bebê alcança mais alto do que você imagina, e superfícies quentes causam queimaduras graves."
+  },
+  {
+    "id": "9m-safety-04",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Nunca deixe pequenos objetos como moedas, miçangas ou balões murchos ao alcance do seu bebê. A preensão em pinça aprimorada permite que peguem itens muito pequenos."
+  },
+  {
+    "id": "9m-safety-05",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Mantenha seu bebê virado de costas na cadeirinha do carro pelo maior tempo possível, até atingir a altura ou o peso máximo permitido pelo fabricante. A posição virada de costas é a mais segura."
+  },
+  {
+    "id": "9m-safety-06",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Verifique se os portões de segurança estão bem instalados. Um bebê determinado pode empurrar um portão mal fixado e deslocá-lo."
+  },
+  {
+    "id": "9m-safety-07",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Coloque protetores ou batentes nas portas que podem prender dedinhos. Lesões nos dedos causadas por portas que fecham são muito comuns nessa idade."
+  },
+  {
+    "id": "9m-safety-08",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Mantenha as lixeiras tampadas ou dentro de armários trancados. Bebês são fascinados por lixo e podem encontrar itens perigosos como tampas de lata afiadas ou embalagens pequenas."
+  },
+  {
+    "id": "9m-safety-09",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Se você tem potes de comida ou água de animais de estimação no chão, mova-os para uma área inacessível ao bebê. Ração é risco de engasgo e tigelas de água são risco de afogamento."
+  },
+  {
+    "id": "9m-safety-10",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Prenda os fios de eletrodomésticos (torradeira, chaleira, abajur) para que seu bebê não consiga puxá-los. Enrolar o excesso de fio e usar organizadores de cabos ajuda."
+  },
+  {
+    "id": "9m-safety-11",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Grades ou travas de janela são essenciais, especialmente acima do térreo. Uma tela mosquiteira sozinha não impede um bebê de cair por uma janela aberta."
+  },
+  {
+    "id": "9m-safety-12",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Fique atento aos brinquedos de irmãos mais velhos com peças pequenas. Legos, bolinhas de gude e acessórios de boneca são riscos de engasgo para um bebê nessa idade."
+  },
+  {
+    "id": "9m-safety-13",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Guarde todos os medicamentos, vitaminas e suplementos em armários altos e trancados. Tampas com trava de segurança retardam as crianças, mas não as impedem."
+  },
+  {
+    "id": "9m-safety-14",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Se seu bebê se apoia na porta da lava-louças, use uma trava. Facas, garfos e cápsulas de detergente lá dentro são perigos sérios."
+  },
+  {
+    "id": "9m-safety-15",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Quando seu bebê começar a andar apoiado nos móveis, verifique se os tapetes estão fixados com bases antiderrapantes. Tapetes que deslizam podem causar quedas em pisos lisos."
+  },
+  {
+    "id": "9m-development-16",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê pode começar a derrubar objetos de propósito e observar onde caem. Não é travessura — é um experimento científico sobre gravidade e causa e efeito."
+  },
+  {
+    "id": "9m-development-17",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tente narrar suas atividades do dia com palavras simples. \"Agora vamos colocar suas meias\" ajuda a construir vocabulário mesmo antes de o bebê conseguir falar."
+  },
+  {
+    "id": "9m-development-18",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Seu bebê pode começar a olhar para onde você aponta, em vez de olhar para o seu dedo. Essa atenção compartilhada é um grande marco cognitivo que favorece o aprendizado da linguagem."
+  },
+  {
+    "id": "9m-development-19",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Ofereça dois brinquedos ao seu bebê quando as mãos dele já estiverem cheias. Descobrir como segurar um terceiro ou largar um é resolução de problemas na prática."
+  },
+  {
+    "id": "9m-development-20",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "A memória do seu bebê está crescendo rápido. Pode se lembrar de onde um brinquedo favorito fica guardado e engatinhar até lá, mesmo sem conseguir vê-lo."
+  },
+  {
+    "id": "9m-sleep-16",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se seu bebê começou a engatinhar durante o sono e se acordar, ofereça bastante prática de engatinhar durante o dia para que a novidade passe."
+  },
+  {
+    "id": "9m-sleep-17",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Um horário consistente para acordar de manhã ajuda a organizar o dia inteiro do seu bebê. Tente começar o dia dentro de uma janela de 30 minutos, inclusive nos fins de semana."
+  },
+  {
+    "id": "9m-sleep-18",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se seu bebê resiste à segunda soneca, pode precisar de uma janela de vigília um pouco mais longa antes dela. Tente acrescentar 15 minutos de tempo acordado e veja se ajuda."
+  },
+  {
+    "id": "9m-sleep-19",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Oferecer um pequeno lanche 30 minutos antes de dormir pode ajudar seu bebê a dormir mais confortavelmente sem criar uma associação entre comer e dormir."
+  },
+  {
+    "id": "9m-sleep-20",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se seu bebê só dorme 30 minutos, pode estar acordando entre ciclos de sono. Esperar alguns minutos antes de ir até lá pode ajudá-lo a aprender a emendar os ciclos."
+  },
+  {
+    "id": "9m-feeding-16",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Experimente oferecer tiras de comida macia que seu bebê consiga segurar no punho e roer. Pense em palitos de cenoura cozida, fatias de manga madura ou tirinhas de torrada."
+  },
+  {
+    "id": "9m-feeding-17",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Se seu bebê engasga com novas texturas, fique calmo e dê tempo. Engasgar é um reflexo de proteção que ajuda a aprender a lidar com a comida — não é a mesma coisa que asfixia."
+  },
+  {
+    "id": "9m-feeding-18",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Introduzir temperos e ervas como canela, manjericão e cominho é perfeitamente seguro e ajuda seu bebê a desenvolver um paladar variado desde cedo."
+  },
+  {
+    "id": "9m-feeding-19",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Se seu bebê de repente recusa uma comida que antes gostava, continue oferecendo sem pressão. As preferências de sabor mudam com frequência nessa idade e costumam voltar."
+  },
+  {
+    "id": "9m-feeding-20",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Oferecer alimentos do seu próprio prato (desde que sejam seguros e sem sal) pode despertar o interesse do seu bebê. Eles adoram comer o que você está comendo."
+  },
+  {
+    "id": "9m-health-16",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se seu bebê tem tosse persistente à noite, um umidificador de névoa fria no quarto pode trazer alívio. Nunca eleve ou incline o colchão do berço — bebês precisam de uma superfície firme e plana. Consulte o pediatra se a tosse durar mais de uma semana."
+  },
+  {
+    "id": "9m-health-17",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Prisão de ventre pode acontecer conforme seu bebê come mais sólidos. Ofereça água entre as refeições e alimentos ricos em fibra como ameixa, pera e ervilha para ajudar o intestino a funcionar."
+  },
+  {
+    "id": "9m-health-18",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A crosta láctea às vezes reaparece ou surge pela primeira vez por volta dessa idade. Massagear suavemente o couro cabeludo com óleo e escovar com uma escova macia geralmente resolve."
+  },
+  {
+    "id": "9m-health-19",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se o nariz do seu bebê vive escorrendo sem outros sintomas, pode ser alergia e não resfriado. Mencione na próxima consulta com o pediatra."
+  },
+  {
+    "id": "9m-health-20",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "O crescimento acelerado do seu bebê pode causar uma leve curvatura nas pernas. Isso é completamente normal nessa idade e geralmente se corrige sozinho com o tempo."
+  },
+  {
+    "id": "9m-play-16",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Experimente dar ao seu bebê um cestinho com lenços ou retalhos de tecido para puxar um de cada vez. As cores e texturas tornam essa uma atividade sensorial maravilhosa."
+  },
+  {
+    "id": "9m-play-17",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Faça um chocalho caseiro colocando macarrão seco ou arroz dentro de um pote bem fechado. Seu bebê vai adorar chacoalhar e descobrir os sons que consegue criar."
+  },
+  {
+    "id": "9m-play-18",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Experimente brincar de \"cadê a música?\" escondendo um brinquedo musical debaixo de um cobertor enquanto toca. Seu bebê vai usar a audição para encontrá-lo."
+  },
+  {
+    "id": "9m-play-19",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Cole um pedaço grande de papel no chão e deixe seu bebê explorar a pintura com os dedos usando iogurte ou corante alimentar seguro. Faz sujeira, mas é maravilhoso para o desenvolvimento sensorial."
+  },
+  {
+    "id": "9m-play-20",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Ofereça ao seu bebê um telefone de brinquedo ou controle remoto e finja ter uma conversa com ele. Essa brincadeira de vai e vem desenvolve habilidades de comunicação desde cedo."
+  },
+  {
+    "id": "9m-safety-16",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Verifique se as plantas de casa estão fora do alcance ou se são atóxicas. Muitas plantas comuns como jiboia e filodendro podem causar irritação ou mal-estar se mastigadas."
+  },
+  {
+    "id": "9m-safety-17",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Mantenha bolsas e sacolas fora do chão. Costumam conter itens pequenos como moedas, batom, canetas e medicamentos que são perigosos para um bebê curioso."
+  },
+  {
+    "id": "9m-safety-18",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Certifique-se de que o colchão do berço está na posição mais baixa agora que seu bebê consegue ficar em pé. Um bebê que se levanta pode tentar escalar a grade se o colchão estiver alto demais."
+  },
+  {
+    "id": "9m-safety-19",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Ímãs de geladeira são um perigo oculto — os pequenos podem ser engolidos. Coloque os ímãs decorativos bem alto ou remova-os até que seu bebê seja mais velho."
+  },
+  {
+    "id": "9m-safety-20",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Se você usa toalha de mesa, troque por jogos americanos por enquanto. Seu bebê pode puxar a toalha e derrubar comida quente, pratos ou objetos pesados sobre si."
+  }
 ]

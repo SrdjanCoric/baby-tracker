@@ -1,11 +1,5 @@
 [
   {
-    "id": "3y-development-01",
-    "ageGroup": "3y",
-    "category": "development",
-    "text": "Tu hijo probablemente está hablando en oraciones de 3-5 palabras ahora. Expande lo que dice — si dice \"perrito corriendo\", responde con \"¡Sí, el perrito grande está corriendo rápido!\""
-  },
-  {
     "id": "3y-development-02",
     "ageGroup": "3y",
     "category": "development",
@@ -94,12 +88,6 @@
     "ageGroup": "3y",
     "category": "sleep",
     "text": "Muchos niños a esta edad todavía necesitan una siesta diurna, pero algunos comienzan a dejarla. Si se salta la siesta, intenta un tiempo de descanso tranquilo con libros."
-  },
-  {
-    "id": "3y-sleep-02",
-    "ageGroup": "3y",
-    "category": "sleep",
-    "text": "Tu hijo necesita 11-14 horas de sueño total en 24 horas. Si está dejando la siesta, la hora de dormir puede necesitar adelantarse para compensar."
   },
   {
     "id": "3y-sleep-03",
@@ -312,12 +300,6 @@
     "text": "Algunos niños puede que todavía necesiten vacunas pendientes. Tu próxima visita de control es un buen momento para revisar el calendario de vacunación con tu pediatra."
   },
   {
-    "id": "3y-health-08",
-    "ageGroup": "3y",
-    "category": "health",
-    "text": "El crup, con su tos que suena como ladrido, es común en este grupo de edad y generalmente suena peor de lo que es. El aire fresco o salir al exterior brevemente puede ayudar."
-  },
-  {
     "id": "3y-health-09",
     "ageGroup": "3y",
     "category": "health",
@@ -366,12 +348,6 @@
     "text": "El juego de disfraces es maravilloso a esta edad. Sombreros viejos, bufandas y camisas grandes permiten que tu hijo explore diferentes roles y narrativas."
   },
   {
-    "id": "3y-play-02",
-    "ageGroup": "3y",
-    "category": "play",
-    "text": "Tu hijo ahora puede armar rompecabezas de 12-24 piezas. Los rompecabezas desarrollan la paciencia, el razonamiento espacial y la satisfacción de completar un desafío."
-  },
-  {
     "id": "3y-play-03",
     "ageGroup": "3y",
     "category": "play",
@@ -414,12 +390,6 @@
     "text": "Tu hijo puede comenzar a aprender a atrapar una pelota grande y blanda lanzada suavemente desde corta distancia. Desarrolla la coordinación ojo-mano y el tiempo de reacción."
   },
   {
-    "id": "3y-play-10",
-    "ageGroup": "3y",
-    "category": "play",
-    "text": "Crea un \"contenedor sensorial\" con frijoles secos, cucharas y recipientes pequeños. Verter y trasvasar desarrollan la motricidad fina y mantienen a los niños entretenidos."
-  },
-  {
     "id": "3y-play-11",
     "ageGroup": "3y",
     "category": "play",
@@ -460,12 +430,6 @@
     "ageGroup": "3y",
     "category": "safety",
     "text": "Practica tu plan de escape en caso de incendio con tu hijo. Enséñale a agacharse y avanzar hacia el punto de encuentro — mantenlo simple y sin asustar."
-  },
-  {
-    "id": "3y-safety-03",
-    "ageGroup": "3y",
-    "category": "safety",
-    "text": "Tu hijo debe estar en un asiento de auto con arnés — mirando hacia atrás el mayor tiempo posible, luego hacia adelante. Mantenlo sujeto con el arnés hasta que alcance la altura o el peso máximo del asiento."
   },
   {
     "id": "3y-safety-04",

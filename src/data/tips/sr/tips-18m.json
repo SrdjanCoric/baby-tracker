@@ -1,97 +1,518 @@
 [
-  {"id": "18m-development-01", "ageGroup": "18m", "category": "development", "text": "Rečnik tvog deteta brzo raste i razume mnogo više reči nego što može da kaže. Razgovaraj sa njim tokom celog dana da nastaviš da gradiš govorne veštine."},
-  {"id": "18m-development-02", "ageGroup": "18m", "category": "development", "text": "Trčanje, mada nestabilno, se često pojavljuje oko 18 meseci. Daj detetu dosta vremena napolju da vežba kretanje različitim brzinama."},
-  {"id": "18m-development-03", "ageGroup": "18m", "category": "development", "text": "Tvoje dete gradi put ka kombinovanju reči, što se obično dešava bliže drugoj godini. Za sada, pojedinačne reči sa gestovima poput pokazivanja i govorenja \"mleko\" su odlična komunikacija."},
-  {"id": "18m-development-04", "ageGroup": "18m", "category": "development", "text": "Igra pretvaranja cveta. Tvoje dete može da hrani lutku, priča na igračkom telefonu ili se pretvara da kuva. Pridruži se i pusti dete da vodi igru."},
-  {"id": "18m-development-05", "ageGroup": "18m", "category": "development", "text": "Tvoje dete verovatno može da složi 3-4 kocke. Pokušaj da gradiš zajedno sa njim i vidi koliko visoko možete pre zabavnog rušenja."},
-  {"id": "18m-development-06", "ageGroup": "18m", "category": "development", "text": "Izlivi besa su normalni i dostižu vrhunac između 18 meseci i 3 godine. Tvoje dete ima velika osećanja ali još nema reči da ih izrazi."},
-  {"id": "18m-development-07", "ageGroup": "18m", "category": "development", "text": "Tvoje dete može pokazati delove tela kada ih imenuješ. Napravi igru od toga tokom kupanja ili oblačenja."},
-  {"id": "18m-development-08", "ageGroup": "18m", "category": "development", "text": "Penjanje uz stepenice držeći tvoju ruku je nov izazov za koji tvoje dete može biti spremno. Pusti ga da vodi i ide svojim tempom."},
-  {"id": "18m-development-09", "ageGroup": "18m", "category": "development", "text": "Tvoje dete može početi da često govori \"ne\". Ovo nije prkos već zdrav izraz rastućeg osećaja nezavisnosti i samosvesti."},
-  {"id": "18m-development-10", "ageGroup": "18m", "category": "development", "text": "Probaj jednostavne aktivnosti sortiranja sa dve boje ili oblika. Tvoje dete počinje da razume kategorije i razlike."},
-  {"id": "18m-development-11", "ageGroup": "18m", "category": "development", "text": "Tvoje dete može pokazati interesovanje za drugu decu, mada se prava kooperativna igra neće razviti do kasnije. Paralelna igra pored vršnjaka je norma za sada."},
-  {"id": "18m-development-12", "ageGroup": "18m", "category": "development", "text": "Šutiranje lopte je prekretnica koju mnoga mala deca dostižu oko 18 meseci. Počni sa velikom, mekom loptom na ravnoj površini."},
-  {"id": "18m-development-13", "ageGroup": "18m", "category": "development", "text": "Tvoje dete može pokušati da se svuče, počevši sa cipelama i čarapama. Podstakni ovu nezavisnost čak i kad treba malo više vremena."},
-  {"id": "18m-development-14", "ageGroup": "18m", "category": "development", "text": "Čitanje knjiga sa jednostavnim pričama i pokazivanje poznatih predmeta jača razumevanje i rečnik tvog deteta."},
-  {"id": "18m-development-15", "ageGroup": "18m", "category": "development", "text": "Tvoje dete može pratiti jednostavna uputstva poput \"donesi mi cipele\" bez potrebe za gestovima. Ovo pokazuje rastuće razumevanje, što je ključna prekretnica u ovoj fazi."},
-
-  {"id": "18m-sleep-01", "ageGroup": "18m", "category": "sleep", "text": "Većina male dece prelazi na jednu dremku između 14 i 18 meseci. Ako je tvoje dete na jednoj dremci, obično traje 1,5-3 sata rano popodne."},
-  {"id": "18m-sleep-02", "ageGroup": "18m", "category": "sleep", "text": "Tvoje dete može doživeti regresiju sna oko ovog uzrasta, često povezanu sa razvojem govora, anksioznošću od razdvajanja i novootkrivenom nezavisnošću. Ostani dosledan u rutini."},
-  {"id": "18m-sleep-03", "ageGroup": "18m", "category": "sleep", "text": "Tvoje dete treba oko 11-14 sati ukupnog sna dnevno, uključujući dremku. Cilj je vreme spavanja koje dozvoljava dovoljno noćnih sati."},
-  {"id": "18m-sleep-04", "ageGroup": "18m", "category": "sleep", "text": "Mala deca u ovom uzrastu mogu početi da odugovlače pred spavanje, tražeći još jednu knjigu ili još jedan gutljaj vode. Postavi jasne, nežne granice u rutini pred spavanje."},
-  {"id": "18m-sleep-05", "ageGroup": "18m", "category": "sleep", "text": "Ako se tvoje dete penje iz krevetca, proveri da je dušek na najnižoj poziciji. Najbezbednije je držati ga u krevetcu što je duže moguće."},
-  {"id": "18m-sleep-06", "ageGroup": "18m", "category": "sleep", "text": "Ponudi izbore u rutini pred spavanje da daš detetu osećaj kontrole: \"Hoćeš plave pidžame ili zelene?\""},
-  {"id": "18m-sleep-07", "ageGroup": "18m", "category": "sleep", "text": "Noćni strahovi su najčešći između 2 i 5 godina ali mogu ponekad početi ranije. Izgledaju zastrašujuće ali tvoje dete nije budno i neće se sećati. Izbegavaj da ga budiš tokom epizode."},
-  {"id": "18m-sleep-08", "ageGroup": "18m", "category": "sleep", "text": "Drži razmak između kraja dremke i spavanja najmanje 4-5 sati. Kasna dremka može pomeriti spavanje previše i poremetiti ceo raspored."},
-  {"id": "18m-sleep-09", "ageGroup": "18m", "category": "sleep", "text": "Vizuelna tabela za spavanje koja pokazuje svaki korak rutine može pomoći detetu da razume šta dolazi sledeće i da ima osećaj kontrole."},
-  {"id": "18m-sleep-10", "ageGroup": "18m", "category": "sleep", "text": "Ako se dete opire krevetcu, odolej porivu da pređeš na dečji krevet prerano. Većina dece nije spremna dok ne navrši najmanje 2,5-3 godine."},
-  {"id": "18m-sleep-11", "ageGroup": "18m", "category": "sleep", "text": "Anksioznost od razdvajanja pri spavanju može ponovo da se pojavi oko 18 meseci. Kratak, predvidljiv ritual za laku noć pomaže detetu da se oseća bezbedno."},
-  {"id": "18m-sleep-12", "ageGroup": "18m", "category": "sleep", "text": "Aktivna igra napolju tokom dana podržava bolji noćni san. Cilj je najmanje 60 minuta fizičke aktivnosti raspodeljene tokom dana."},
-  {"id": "18m-sleep-13", "ageGroup": "18m", "category": "sleep", "text": "Ako se dete probudi rano i srećno igra u krevetcu, u redu je da mu dozvoliš tiho vreme dok ne dođe razumno vreme buđenja."},
-  {"id": "18m-sleep-14", "ageGroup": "18m", "category": "sleep", "text": "Izbacivanje dremke se ne preporučuje sa 18 meseci. Ako dete povremeno preskoči dremku, pomeri spavanje ranije te noći."},
-  {"id": "18m-sleep-15", "ageGroup": "18m", "category": "sleep", "text": "Dosledno vreme buđenja, čak i vikendom, pomaže u regulaciji unutrašnjeg sata deteta i čini dremke i spavanje predvidljivijim."},
-
-  {"id": "18m-feeding-01", "ageGroup": "18m", "category": "feeding", "text": "Pedijatrijske smernice preporučuju odvikavanje od flašica tokom ove faze. Ako još nisi počeo, zamenjuj po jednu flašicu čašom."},
-  {"id": "18m-feeding-02", "ageGroup": "18m", "category": "feeding", "text": "Izbirljivost u ishrani je na vrhuncu. Nastavi da nudiš raznovrsnu hranu bez pritiska. Tvoj posao je da odlučiš šta i kada; dete odlučuje koliko."},
-  {"id": "18m-feeding-03", "ageGroup": "18m", "category": "feeding", "text": "Tvoje dete treba oko 1.000-1.400 kalorija dnevno, ali ne broji kalorije. Nudi uravnotežene obroke i užine i veruj njegovom apetitu."},
-  {"id": "18m-feeding-04", "ageGroup": "18m", "category": "feeding", "text": "Nudi puno mleko ili obogaćeno biljno mleko ali ograniči na {{16-24 ounces|475-710 ml}} dnevno. Previše mleka može napuniti stomak i smanjiti apetit za čvrstu hranu."},
-  {"id": "18m-feeding-05", "ageGroup": "18m", "category": "feeding", "text": "Tvoje dete može želeti da jede samo jednu ili dve omiljene hrane. Nastavi da nudiš druge opcije pored omiljenih bez pravljenja borbe."},
-  {"id": "18m-feeding-06", "ageGroup": "18m", "category": "feeding", "text": "Uključi dete u pripremu obroka. Može prati povrće, cepati zelenu salatu ili mešati sastojke. Deca koja pomažu u kuvanju verovatnije jedu ono što naprave."},
-  {"id": "18m-feeding-07", "ageGroup": "18m", "category": "feeding", "text": "Hrana za umakanje može učiniti obroke uzbudljivijim za malu decu. Probaj humus, jogurt ili gnječeni avokado kao zdrave opcije za umakanje."},
-  {"id": "18m-feeding-08", "ageGroup": "18m", "category": "feeding", "text": "Stopa rasta tvog deteta se značajno usporava u drugoj godini, što znači da mu apetit može opasti. Ovo je potpuno normalno."},
-  {"id": "18m-feeding-09", "ageGroup": "18m", "category": "feeding", "text": "Nudi hranu bogatu gvožđem svakodnevno: meso, pasulj, sočivo, obogaćene žitarice i tamno lisnato povrće. Kombinuj sa hranom bogatom vitaminom C da pojačaš apsorpciju."},
-  {"id": "18m-feeding-10", "ageGroup": "18m", "category": "feeding", "text": "Vreme za užinu je odlična prilika za ishranu. Razmišljaj o užinama kao mini-obrocima sa proteinima, zdravim mastima i vlaknima umesto samo krekera."},
-  {"id": "18m-feeding-11", "ageGroup": "18m", "category": "feeding", "text": "Pusti dete da vežba sa viljuškom bodući meku hranu poput komada banane, kuvane testenine ili kockica sira. Nabodi par komada unapred da ga uvedeš."},
-  {"id": "18m-feeding-12", "ageGroup": "18m", "category": "feeding", "text": "Ako dete odbija povrće, probaj različite pripreme: pečeno, kuvano na pari, u smutiju ili pomešano u sos za testeninu. Upornost se isplati."},
-  {"id": "18m-feeding-13", "ageGroup": "18m", "category": "feeding", "text": "Jedenje za stolom zajedno bez ometanja poput televizora ili tableta pomaže detetu da se fokusira na hranu i uči posmatrajući porodicu."},
-  {"id": "18m-feeding-14", "ageGroup": "18m", "category": "feeding", "text": "Mala deca često bolje jedu na nekim obrocima nego na drugima. Ako je doručak odličan a večera ne, ne brini. Gledaj unos tokom cele nedelje."},
-  {"id": "18m-feeding-15", "ageGroup": "18m", "category": "feeding", "text": "Izbegavaj korišćenje hrane kao nagrade ili utehe. Fraze poput \"pojedi povrće pa možeš da dobiješ kolač\" mogu stvoriti nezdrav odnos prema hrani."},
-
-  {"id": "18m-health-01", "ageGroup": "18m", "category": "health", "text": "Redovni preventivni pregledi u ovoj fazi uključuju razvojni pregled, proveru rasta i sve vakcine koje su na redu. Ponesi listu pitanja."},
-  {"id": "18m-health-02", "ageGroup": "18m", "category": "health", "text": "Prvi kutnjaci tvog deteta obično niču između 13 i 19 meseci, što može izazvati značajnu nelagodnost. Hladne krpe i odgovarajući lekovi protiv bolova mogu pomoći."},
-  {"id": "18m-health-03", "ageGroup": "18m", "category": "health", "text": "Nastavi da pereš detetu zube dva puta dnevno. Pusti ga da prvo samo proba, pa ti temeljno doperi da budu sve površine čiste."},
-  {"id": "18m-health-04", "ageGroup": "18m", "category": "health", "text": "Ako tvoje dete još ne koristi nijednu reč, razgovaraj o tome na pregledu u 18 meseci. Rana logopedska terapija može napraviti značajnu razliku."},
-  {"id": "18m-health-05", "ageGroup": "18m", "category": "health", "text": "Proliv kod male dece od previše soka ili voća je čest. Ograniči sok na {{4 ounces|120 ml}} ili manje dnevno i nudi celo voće umesto toga."},
-  {"id": "18m-health-06", "ageGroup": "18m", "category": "health", "text": "Udarci, ogrebotine i modrice na potkolenicama i čelu su normalan deo detinjstva. Očisti male rane sapunom i vodom i stavi flaster."},
-  {"id": "18m-health-07", "ageGroup": "18m", "category": "health", "text": "Nanesi kremu za sunčanje širokog spektra 15 minuta pre izlaska napolje i ponovi svakih 2 sata. Ne zaboravi uši, stopala i zadnji deo vrata."},
-  {"id": "18m-health-08", "ageGroup": "18m", "category": "health", "text": "Ako dete ima česte izlive besa sa udaranjem glavom, to je obično faza. Razgovaraj sa pedijatrom ako postane veoma često ili izaziva povrede."},
-  {"id": "18m-health-09", "ageGroup": "18m", "category": "health", "text": "RSV i grip su češći u hladnijim mesecima. Nauči dete da kašlje u lakat i da često pere ruke."},
-  {"id": "18m-health-10", "ageGroup": "18m", "category": "health", "text": "Proveri da cipele tvog deteta dobro stoje sa širinom palca prostora na vrhu prstiju. Stopala brzo rastu i cipele mogu trebati zamenu svakih nekoliko meseci."},
-  {"id": "18m-health-11", "ageGroup": "18m", "category": "health", "text": "Blago krivljenje nogu je normalno u ovom uzrastu i obično se ispravlja do treće godine. Pomeni svaku zabrinutost na sledećem preventivnom pregledu."},
-  {"id": "18m-health-12", "ageGroup": "18m", "category": "health", "text": "Ako dete povremeno hoda na prstima, to je obično samo istraživanje. Uporno hodanje na prstima posle 2 godine treba razmotriti sa pedijatrom."},
-  {"id": "18m-health-13", "ageGroup": "18m", "category": "health", "text": "Razvojni skrining za autizam se preporučuje oko ovog uzrasta. Pitaj pedijatra o tome ako još nije urađen. Rana identifikacija vodi ka najboljim ishodima intervencije."},
-  {"id": "18m-health-14", "ageGroup": "18m", "category": "health", "text": "Nedostatak gvožđa je najčešći nutritivni nedostatak kod male dece. Ako dete deluje neuobičajeno umorno ili bledo, pitaj pedijatra za testiranje."},
-  {"id": "18m-health-15", "ageGroup": "18m", "category": "health", "text": "Pedijatrijski stručnjaci preporučuju ograničavanje ekranskih medija osim video poziva za decu mlađu od 18 meseci. Fokusiraj se na interakciju u stvarnom svetu, jer ništa ne zamenjuje direktnu igru za učenje u ovom uzrastu."},
-
-  {"id": "18m-play-01", "ageGroup": "18m", "category": "play", "text": "Daj detetu bojice i veliki list papira na podu. Švrljanje prerasta u svesnije tragove i preteča je pisanja."},
-  {"id": "18m-play-02", "ageGroup": "18m", "category": "play", "text": "Plastelin je divna senzorna aktivnost u ovom uzrastu. Dete može da ga stiska, bode, valja i spljoštava, gradeći snagu ruku."},
-  {"id": "18m-play-03", "ageGroup": "18m", "category": "play", "text": "Pripremi zamišljenu kuhinju ili čajnu zabavu. Sipanje, mešanje i služenje razvijaju fine motoričke veštine i socijalnu maštu."},
-  {"id": "18m-play-04", "ageGroup": "18m", "category": "play", "text": "Kreni u šetnju prirodom i sakupi lišće, grančice i šišarke u kesicu. Sortiranje i pregledanje kasnije produžava učenje."},
-  {"id": "18m-play-05", "ageGroup": "18m", "category": "play", "text": "Jednostavne slagalice sa 3-5 velikih komada sa dugmićima pomažu detetu da razvije veštine rešavanja problema i prostornu svest."},
-  {"id": "18m-play-06", "ageGroup": "18m", "category": "play", "text": "Žurke za ples su savršene za ovaj uzrast. Pusti muziku i pokazuj različite pokrete poput skakanja, vrtenja i tapšanja."},
-  {"id": "18m-play-07", "ageGroup": "18m", "category": "play", "text": "Igra sa vodom sa čašama, levkovima i sunđerima je beskrajno fascinantna. Postavi posodu napolju ili koristi kadu uz stalan nadzor."},
-  {"id": "18m-play-08", "ageGroup": "18m", "category": "play", "text": "Sakrij igračke po sobi i pomozi detetu da ih pronađe. Ova igra potrage gradi memoriju i prostorno razmišljanje."},
-  {"id": "18m-play-09", "ageGroup": "18m", "category": "play", "text": "Tvoje dete može uživati da se igra lutkama ili plišanim igračkama, hraneći ih, stavljajući ih u krevet ili dajući im zagrljaje. Ova negovateljska igra gradi empatiju."},
-  {"id": "18m-play-10", "ageGroup": "18m", "category": "play", "text": "Pusti dete da se penje na igralištu na opremi primernoj za njegov uzrast. Nadgledano penjanje gradi samopouzdanje, snagu i koordinaciju."},
-  {"id": "18m-play-11", "ageGroup": "18m", "category": "play", "text": "Probaj da crtaš jednostavne oblike i vidi da li dete pokušava da ih kopira. Možda mu neće uspeti, ali pokušavanje je važan deo."},
-  {"id": "18m-play-12", "ageGroup": "18m", "category": "play", "text": "Ponudi igračku metlu, lopaticu ili kantu za zalivanje. Mala deca obožavaju da imitiraju kućne poslove i to ih čini da se osećaju kao sposobni saradnici."},
-  {"id": "18m-play-13", "ageGroup": "18m", "category": "play", "text": "Pevaj pesme sa pokretima poput \"Glava, ramena, kolena i prsti\". Dete će početi da očekuje pokrete i da se pridružuje."},
-  {"id": "18m-play-14", "ageGroup": "18m", "category": "play", "text": "Napravi umetničku stanicu sa perivim flomasterima, nalepnicama i papirom. Skidanje i lepljenje nalepnica je odlična vežba za finu motoriku."},
-  {"id": "18m-play-15", "ageGroup": "18m", "category": "play", "text": "Igraj se loptom: šutni je, kotrljaj je, baci je. Dete uči da koordiniše pokrete celog tela sa pokretnom metom."},
-
-  {"id": "18m-safety-01", "ageGroup": "18m", "category": "safety", "text": "Tvoje dete postaje penjač. Pričvrsti sav visok nameštaj, ukloni stolice blizu pultova i redovno proveravaj nove rizike od penjanja."},
-  {"id": "18m-safety-02", "ageGroup": "18m", "category": "safety", "text": "Drži dete okrenuto unazad u autosedištu dok ispunjava zahteve sedišta za visinu i težinu. Položaj okrenut unazad je najbezbedniji."},
-  {"id": "18m-safety-03", "ageGroup": "18m", "category": "safety", "text": "Uči dete \"vruće\" i \"ne diraj\" blizu rerne, šporeta i kamina. Počinje da razume ova upozorenja."},
-  {"id": "18m-safety-04", "ageGroup": "18m", "category": "safety", "text": "Nikada ne ostavljaj dete bez nadzora u vodi ili blizu vode, uključujući WC šolje. Mala deca su teža u gornjem delu tela i mogu pasti u WC šolju glavom napred."},
-  {"id": "18m-safety-05", "ageGroup": "18m", "category": "safety", "text": "Čuvaj sve lekove, vitamine i suplemente u posudama sa zaštitom od dece u zaključanom ormaru. Mala deca mogu otvoriti više vrsta posuda nego što očekuješ."},
-  {"id": "18m-safety-06", "ageGroup": "18m", "category": "safety", "text": "Seci hranu na komade ne veće od {{half an inch|1,5 cm}} za tvoje dete. Česte opasnosti od gušenja uključuju celo grožđe, viršle, sirovu šargarepu i kokice."},
-  {"id": "18m-safety-07", "ageGroup": "18m", "category": "safety", "text": "Koristi zadnje ringle pri kuvanju i okreći ručke šerpi ka unutra. Tvoje dete sada može dosegnuti prednje ringle povlačenjem ili penjanjem."},
-  {"id": "18m-safety-08", "ageGroup": "18m", "category": "safety", "text": "Ako imaš oružje u kući, čuvaj ga nenapunjeno u zaključanom sefu sa municijom zaključanom odvojeno. Ovo je kritična bezbednosna mera koju preporučuju pedijatrijski stručnjaci."},
-  {"id": "18m-safety-09", "ageGroup": "18m", "category": "safety", "text": "Padovi kroz prozore su ozbiljan rizik u ovom uzrastu. Instaliraj zaštite za prozore ili graničnike koji sprečavaju da se prozori otvaraju više od {{4 inches|10 cm}}."},
-  {"id": "18m-safety-10", "ageGroup": "18m", "category": "safety", "text": "Uvek nadgledaj dete oko kućnih ljubimaca, čak i blagih. Mala deca mogu nehotice da povrede životinje, koje mogu reagovati odbrambeno."},
-  {"id": "18m-safety-11", "ageGroup": "18m", "category": "safety", "text": "Vežbaj izgovaranje punog imena deteta, svog broja telefona i adrese naglas pred njim. Sada to neće zapamtiti, ali rana izloženost pomaže."},
-  {"id": "18m-safety-12", "ageGroup": "18m", "category": "safety", "text": "Proveri kuću za kapsule za pranje veša i pranje sudova, koje maloj deci izgledaju kao bombone. Čuvaj ih u visokom, zaključanom ormaru."},
-  {"id": "18m-safety-13", "ageGroup": "18m", "category": "safety", "text": "Tvoje dete može naučiti da otvara vrata. Postavi visoke reze ili poklopce za kvake na spoljašnjim vratima da sprečiš nenadzirani izlazak."},
-  {"id": "18m-safety-14", "ageGroup": "18m", "category": "safety", "text": "Proveri da dete nosi pravilno prilagođen prsluk za spasavanje blizu bilo kakve otvorene vode, bez obzira na dubinu. Rukavci za plivanje nisu zamena."},
-  {"id": "18m-safety-15", "ageGroup": "18m", "category": "safety", "text": "Drži dugmaste baterije van domašaja i osiguraj poklopce za baterije zavrtnjevima. Progutana dugmasta baterija može izazvati ozbiljne unutrašnje opekotine u roku od par sati."}
+  {
+    "id": "18m-development-01",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Rečnik tvog deteta brzo raste i razume mnogo više reči nego što može da kaže. Razgovaraj sa njim tokom celog dana da nastaviš da gradiš govorne veštine."
+  },
+  {
+    "id": "18m-development-02",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Trčanje, mada nestabilno, se često pojavljuje oko 18 meseci. Daj detetu dosta vremena napolju da vežba kretanje različitim brzinama."
+  },
+  {
+    "id": "18m-development-03",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Tvoje dete gradi put ka kombinovanju reči, što se obično dešava bliže drugoj godini. Za sada, pojedinačne reči sa gestovima poput pokazivanja i govorenja \"mleko\" su odlična komunikacija."
+  },
+  {
+    "id": "18m-development-04",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Igra pretvaranja cveta. Tvoje dete može da hrani lutku, priča na igračkom telefonu ili se pretvara da kuva. Pridruži se i pusti dete da vodi igru."
+  },
+  {
+    "id": "18m-development-05",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Tvoje dete verovatno može da složi 3-4 kocke. Pokušaj da gradiš zajedno sa njim i vidi koliko visoko možete pre zabavnog rušenja."
+  },
+  {
+    "id": "18m-development-06",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Izlivi besa su normalni i dostižu vrhunac između 18 meseci i 3 godine. Tvoje dete ima velika osećanja ali još nema reči da ih izrazi."
+  },
+  {
+    "id": "18m-development-07",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Tvoje dete može pokazati delove tela kada ih imenuješ. Napravi igru od toga tokom kupanja ili oblačenja."
+  },
+  {
+    "id": "18m-development-08",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Penjanje uz stepenice držeći tvoju ruku je nov izazov za koji tvoje dete može biti spremno. Pusti ga da vodi i ide svojim tempom."
+  },
+  {
+    "id": "18m-development-09",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Tvoje dete može početi da često govori \"ne\". Ovo nije prkos već zdrav izraz rastućeg osećaja nezavisnosti i samosvesti."
+  },
+  {
+    "id": "18m-development-10",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Probaj jednostavne aktivnosti sortiranja sa dve boje ili oblika. Tvoje dete počinje da razume kategorije i razlike."
+  },
+  {
+    "id": "18m-development-11",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Tvoje dete može pokazati interesovanje za drugu decu, mada se prava kooperativna igra neće razviti do kasnije. Paralelna igra pored vršnjaka je norma za sada."
+  },
+  {
+    "id": "18m-development-12",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Šutiranje lopte je prekretnica koju mnoga mala deca dostižu oko 18 meseci. Počni sa velikom, mekom loptom na ravnoj površini."
+  },
+  {
+    "id": "18m-development-13",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Tvoje dete može pokušati da se svuče, počevši sa cipelama i čarapama. Podstakni ovu nezavisnost čak i kad treba malo više vremena."
+  },
+  {
+    "id": "18m-development-14",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Čitanje knjiga sa jednostavnim pričama i pokazivanje poznatih predmeta jača razumevanje i rečnik tvog deteta."
+  },
+  {
+    "id": "18m-development-15",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Tvoje dete može pratiti jednostavna uputstva poput \"donesi mi cipele\" bez potrebe za gestovima. Ovo pokazuje rastuće razumevanje, što je ključna prekretnica u ovoj fazi."
+  },
+  {
+    "id": "18m-sleep-01",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Većina male dece prelazi na jednu dremku između 14 i 18 meseci. Ako je tvoje dete na jednoj dremci, obično traje 1,5-3 sata rano popodne."
+  },
+  {
+    "id": "18m-sleep-02",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Tvoje dete može doživeti regresiju sna oko ovog uzrasta, često povezanu sa razvojem govora, anksioznošću od razdvajanja i novootkrivenom nezavisnošću. Ostani dosledan u rutini."
+  },
+  {
+    "id": "18m-sleep-03",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Tvoje dete treba oko 11-14 sati ukupnog sna dnevno, uključujući dremku. Cilj je vreme spavanja koje dozvoljava dovoljno noćnih sati."
+  },
+  {
+    "id": "18m-sleep-04",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Mala deca u ovom uzrastu mogu početi da odugovlače pred spavanje, tražeći još jednu knjigu ili još jedan gutljaj vode. Postavi jasne, nežne granice u rutini pred spavanje."
+  },
+  {
+    "id": "18m-sleep-05",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Ako se tvoje dete penje iz krevetca, proveri da je dušek na najnižoj poziciji. Najbezbednije je držati ga u krevetcu što je duže moguće."
+  },
+  {
+    "id": "18m-sleep-06",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Ponudi izbore u rutini pred spavanje da daš detetu osećaj kontrole: \"Hoćeš plave pidžame ili zelene?\""
+  },
+  {
+    "id": "18m-sleep-07",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Noćni strahovi su najčešći između 2 i 5 godina ali mogu ponekad početi ranije. Izgledaju zastrašujuće ali tvoje dete nije budno i neće se sećati. Izbegavaj da ga budiš tokom epizode."
+  },
+  {
+    "id": "18m-sleep-08",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Drži razmak između kraja dremke i spavanja najmanje 4-5 sati. Kasna dremka može pomeriti spavanje previše i poremetiti ceo raspored."
+  },
+  {
+    "id": "18m-sleep-09",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Vizuelna tabela za spavanje koja pokazuje svaki korak rutine može pomoći detetu da razume šta dolazi sledeće i da ima osećaj kontrole."
+  },
+  {
+    "id": "18m-sleep-11",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Anksioznost od razdvajanja pri spavanju može ponovo da se pojavi oko 18 meseci. Kratak, predvidljiv ritual za laku noć pomaže detetu da se oseća bezbedno."
+  },
+  {
+    "id": "18m-sleep-12",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Aktivna igra napolju tokom dana podržava bolji noćni san. Cilj je najmanje 60 minuta fizičke aktivnosti raspodeljene tokom dana."
+  },
+  {
+    "id": "18m-sleep-13",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Ako se dete probudi rano i srećno igra u krevetcu, u redu je da mu dozvoliš tiho vreme dok ne dođe razumno vreme buđenja."
+  },
+  {
+    "id": "18m-sleep-14",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Izbacivanje dremke se ne preporučuje sa 18 meseci. Ako dete povremeno preskoči dremku, pomeri spavanje ranije te noći."
+  },
+  {
+    "id": "18m-sleep-15",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Dosledno vreme buđenja, čak i vikendom, pomaže u regulaciji unutrašnjeg sata deteta i čini dremke i spavanje predvidljivijim."
+  },
+  {
+    "id": "18m-feeding-01",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Pedijatrijske smernice preporučuju odvikavanje od flašica tokom ove faze. Ako još nisi počeo, zamenjuj po jednu flašicu čašom."
+  },
+  {
+    "id": "18m-feeding-02",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Izbirljivost u ishrani je na vrhuncu. Nastavi da nudiš raznovrsnu hranu bez pritiska. Tvoj posao je da odlučiš šta i kada; dete odlučuje koliko."
+  },
+  {
+    "id": "18m-feeding-03",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Tvoje dete treba oko 1.000-1.400 kalorija dnevno, ali ne broji kalorije. Nudi uravnotežene obroke i užine i veruj njegovom apetitu."
+  },
+  {
+    "id": "18m-feeding-04",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Nudi puno mleko ili obogaćeno biljno mleko ali ograniči na {{16-24 ounces|475-710 ml}} dnevno. Previše mleka može napuniti stomak i smanjiti apetit za čvrstu hranu."
+  },
+  {
+    "id": "18m-feeding-05",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Tvoje dete može želeti da jede samo jednu ili dve omiljene hrane. Nastavi da nudiš druge opcije pored omiljenih bez pravljenja borbe."
+  },
+  {
+    "id": "18m-feeding-06",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Uključi dete u pripremu obroka. Može prati povrće, cepati zelenu salatu ili mešati sastojke. Deca koja pomažu u kuvanju verovatnije jedu ono što naprave."
+  },
+  {
+    "id": "18m-feeding-07",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Hrana za umakanje može učiniti obroke uzbudljivijim za malu decu. Probaj humus, jogurt ili gnječeni avokado kao zdrave opcije za umakanje."
+  },
+  {
+    "id": "18m-feeding-08",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Stopa rasta tvog deteta se značajno usporava u drugoj godini, što znači da mu apetit može opasti. Ovo je potpuno normalno."
+  },
+  {
+    "id": "18m-feeding-09",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Nudi hranu bogatu gvožđem svakodnevno: meso, pasulj, sočivo, obogaćene žitarice i tamno lisnato povrće. Kombinuj sa hranom bogatom vitaminom C da pojačaš apsorpciju."
+  },
+  {
+    "id": "18m-feeding-10",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Vreme za užinu je odlična prilika za ishranu. Razmišljaj o užinama kao mini-obrocima sa proteinima, zdravim mastima i vlaknima umesto samo krekera."
+  },
+  {
+    "id": "18m-feeding-11",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Pusti dete da vežba sa viljuškom bodući meku hranu poput komada banane, kuvane testenine ili kockica sira. Nabodi par komada unapred da ga uvedeš."
+  },
+  {
+    "id": "18m-feeding-12",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Ako dete odbija povrće, probaj različite pripreme: pečeno, kuvano na pari, u smutiju ili pomešano u sos za testeninu. Upornost se isplati."
+  },
+  {
+    "id": "18m-feeding-13",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Jedenje za stolom zajedno bez ometanja poput televizora ili tableta pomaže detetu da se fokusira na hranu i uči posmatrajući porodicu."
+  },
+  {
+    "id": "18m-feeding-14",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Mala deca često bolje jedu na nekim obrocima nego na drugima. Ako je doručak odličan a večera ne, ne brini. Gledaj unos tokom cele nedelje."
+  },
+  {
+    "id": "18m-feeding-15",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Izbegavaj korišćenje hrane kao nagrade ili utehe. Fraze poput \"pojedi povrće pa možeš da dobiješ kolač\" mogu stvoriti nezdrav odnos prema hrani."
+  },
+  {
+    "id": "18m-health-01",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Redovni preventivni pregledi u ovoj fazi uključuju razvojni pregled, proveru rasta i sve vakcine koje su na redu. Ponesi listu pitanja."
+  },
+  {
+    "id": "18m-health-02",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Prvi kutnjaci tvog deteta obično niču između 13 i 19 meseci, što može izazvati značajnu nelagodnost. Hladne krpe i odgovarajući lekovi protiv bolova mogu pomoći."
+  },
+  {
+    "id": "18m-health-03",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Nastavi da pereš detetu zube dva puta dnevno. Pusti ga da prvo samo proba, pa ti temeljno doperi da budu sve površine čiste."
+  },
+  {
+    "id": "18m-health-05",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Proliv kod male dece od previše soka ili voća je čest. Ograniči sok na {{4 ounces|120 ml}} ili manje dnevno i nudi celo voće umesto toga."
+  },
+  {
+    "id": "18m-health-06",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Udarci, ogrebotine i modrice na potkolenicama i čelu su normalan deo detinjstva. Očisti male rane sapunom i vodom i stavi flaster."
+  },
+  {
+    "id": "18m-health-07",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Nanesi kremu za sunčanje širokog spektra 15 minuta pre izlaska napolje i ponovi svakih 2 sata. Ne zaboravi uši, stopala i zadnji deo vrata."
+  },
+  {
+    "id": "18m-health-08",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Ako dete ima česte izlive besa sa udaranjem glavom, to je obično faza. Razgovaraj sa pedijatrom ako postane veoma često ili izaziva povrede."
+  },
+  {
+    "id": "18m-health-09",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "RSV i grip su češći u hladnijim mesecima. Nauči dete da kašlje u lakat i da često pere ruke."
+  },
+  {
+    "id": "18m-health-10",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Proveri da cipele tvog deteta dobro stoje sa širinom palca prostora na vrhu prstiju. Stopala brzo rastu i cipele mogu trebati zamenu svakih nekoliko meseci."
+  },
+  {
+    "id": "18m-health-11",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Blago krivljenje nogu je normalno u ovom uzrastu i obično se ispravlja do treće godine. Pomeni svaku zabrinutost na sledećem preventivnom pregledu."
+  },
+  {
+    "id": "18m-health-12",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Ako dete povremeno hoda na prstima, to je obično samo istraživanje. Uporno hodanje na prstima posle 2 godine treba razmotriti sa pedijatrom."
+  },
+  {
+    "id": "18m-health-13",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Razvojni skrining za autizam se preporučuje oko ovog uzrasta. Pitaj pedijatra o tome ako još nije urađen. Rana identifikacija vodi ka najboljim ishodima intervencije."
+  },
+  {
+    "id": "18m-health-14",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Nedostatak gvožđa je najčešći nutritivni nedostatak kod male dece. Ako dete deluje neuobičajeno umorno ili bledo, pitaj pedijatra za testiranje."
+  },
+  {
+    "id": "18m-play-01",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Daj detetu bojice i veliki list papira na podu. Švrljanje prerasta u svesnije tragove i preteča je pisanja."
+  },
+  {
+    "id": "18m-play-02",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Plastelin je divna senzorna aktivnost u ovom uzrastu. Dete može da ga stiska, bode, valja i spljoštava, gradeći snagu ruku."
+  },
+  {
+    "id": "18m-play-03",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Pripremi zamišljenu kuhinju ili čajnu zabavu. Sipanje, mešanje i služenje razvijaju fine motoričke veštine i socijalnu maštu."
+  },
+  {
+    "id": "18m-play-04",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Kreni u šetnju prirodom i sakupi lišće, grančice i šišarke u kesicu. Sortiranje i pregledanje kasnije produžava učenje."
+  },
+  {
+    "id": "18m-play-05",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Jednostavne slagalice sa 3-5 velikih komada sa dugmićima pomažu detetu da razvije veštine rešavanja problema i prostornu svest."
+  },
+  {
+    "id": "18m-play-06",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Žurke za ples su savršene za ovaj uzrast. Pusti muziku i pokazuj različite pokrete poput skakanja, vrtenja i tapšanja."
+  },
+  {
+    "id": "18m-play-07",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Igra sa vodom sa čašama, levkovima i sunđerima je beskrajno fascinantna. Postavi posodu napolju ili koristi kadu uz stalan nadzor."
+  },
+  {
+    "id": "18m-play-08",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Sakrij igračke po sobi i pomozi detetu da ih pronađe. Ova igra potrage gradi memoriju i prostorno razmišljanje."
+  },
+  {
+    "id": "18m-play-09",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Tvoje dete može uživati da se igra lutkama ili plišanim igračkama, hraneći ih, stavljajući ih u krevet ili dajući im zagrljaje. Ova negovateljska igra gradi empatiju."
+  },
+  {
+    "id": "18m-play-10",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Pusti dete da se penje na igralištu na opremi primernoj za njegov uzrast. Nadgledano penjanje gradi samopouzdanje, snagu i koordinaciju."
+  },
+  {
+    "id": "18m-play-11",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Probaj da crtaš jednostavne oblike i vidi da li dete pokušava da ih kopira. Možda mu neće uspeti, ali pokušavanje je važan deo."
+  },
+  {
+    "id": "18m-play-12",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Ponudi igračku metlu, lopaticu ili kantu za zalivanje. Mala deca obožavaju da imitiraju kućne poslove i to ih čini da se osećaju kao sposobni saradnici."
+  },
+  {
+    "id": "18m-play-13",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Pevaj pesme sa pokretima poput \"Glava, ramena, kolena i prsti\". Dete će početi da očekuje pokrete i da se pridružuje."
+  },
+  {
+    "id": "18m-play-14",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Napravi umetničku stanicu sa perivim flomasterima, nalepnicama i papirom. Skidanje i lepljenje nalepnica je odlična vežba za finu motoriku."
+  },
+  {
+    "id": "18m-play-15",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Igraj se loptom: šutni je, kotrljaj je, baci je. Dete uči da koordiniše pokrete celog tela sa pokretnom metom."
+  },
+  {
+    "id": "18m-safety-01",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Tvoje dete postaje penjač. Pričvrsti sav visok nameštaj, ukloni stolice blizu pultova i redovno proveravaj nove rizike od penjanja."
+  },
+  {
+    "id": "18m-safety-02",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Drži dete okrenuto unazad u autosedištu dok ispunjava zahteve sedišta za visinu i težinu. Položaj okrenut unazad je najbezbedniji."
+  },
+  {
+    "id": "18m-safety-03",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Uči dete \"vruće\" i \"ne diraj\" blizu rerne, šporeta i kamina. Počinje da razume ova upozorenja."
+  },
+  {
+    "id": "18m-safety-04",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Nikada ne ostavljaj dete bez nadzora u vodi ili blizu vode, uključujući WC šolje. Mala deca su teža u gornjem delu tela i mogu pasti u WC šolju glavom napred."
+  },
+  {
+    "id": "18m-safety-05",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Čuvaj sve lekove, vitamine i suplemente u posudama sa zaštitom od dece u zaključanom ormaru. Mala deca mogu otvoriti više vrsta posuda nego što očekuješ."
+  },
+  {
+    "id": "18m-safety-07",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Koristi zadnje ringle pri kuvanju i okreći ručke šerpi ka unutra. Tvoje dete sada može dosegnuti prednje ringle povlačenjem ili penjanjem."
+  },
+  {
+    "id": "18m-safety-08",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Ako imaš oružje u kući, čuvaj ga nenapunjeno u zaključanom sefu sa municijom zaključanom odvojeno. Ovo je kritična bezbednosna mera koju preporučuju pedijatrijski stručnjaci."
+  },
+  {
+    "id": "18m-safety-09",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Padovi kroz prozore su ozbiljan rizik u ovom uzrastu. Instaliraj zaštite za prozore ili graničnike koji sprečavaju da se prozori otvaraju više od {{4 inches|10 cm}}."
+  },
+  {
+    "id": "18m-safety-10",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Uvek nadgledaj dete oko kućnih ljubimaca, čak i blagih. Mala deca mogu nehotice da povrede životinje, koje mogu reagovati odbrambeno."
+  },
+  {
+    "id": "18m-safety-11",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Vežbaj izgovaranje punog imena deteta, svog broja telefona i adrese naglas pred njim. Sada to neće zapamtiti, ali rana izloženost pomaže."
+  },
+  {
+    "id": "18m-safety-12",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Proveri kuću za kapsule za pranje veša i pranje sudova, koje maloj deci izgledaju kao bombone. Čuvaj ih u visokom, zaključanom ormaru."
+  },
+  {
+    "id": "18m-safety-13",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Tvoje dete može naučiti da otvara vrata. Postavi visoke reze ili poklopce za kvake na spoljašnjim vratima da sprečiš nenadzirani izlazak."
+  },
+  {
+    "id": "18m-safety-14",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Proveri da dete nosi pravilno prilagođen prsluk za spasavanje blizu bilo kakve otvorene vode, bez obzira na dubinu. Rukavci za plivanje nisu zamena."
+  },
+  {
+    "id": "18m-safety-15",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Drži dugmaste baterije van domašaja i osiguraj poklopce za baterije zavrtnjevima. Progutana dugmasta baterija može izazvati ozbiljne unutrašnje opekotine u roku od par sati."
+  }
 ]

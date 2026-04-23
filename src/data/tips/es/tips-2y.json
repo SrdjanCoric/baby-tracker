@@ -192,12 +192,6 @@
     "text": "La ingesta de leche debe ser aproximadamente {{16-24 onzas|475-710 ml}} (2-3 tazas) por día. Demasiada leche llena el estómago y reduce el apetito por alimentos sólidos ricos en nutrientes."
   },
   {
-    "id": "2y-feeding-03",
-    "ageGroup": "2y",
-    "category": "feeding",
-    "text": "Se recomienda leche entera para los más pequeños porque la grasa apoya el desarrollo del cerebro. A medida que tu hijo crece, tu pediatra puede sugerir cambiar a leche baja en grasa cuando sea el momento adecuado."
-  },
-  {
     "id": "2y-feeding-04",
     "ageGroup": "2y",
     "category": "feeding",
@@ -252,22 +246,10 @@
     "text": "Deja que tu hijo ayude a poner la mesa, sirva agua de una jarrita o elija entre dos opciones saludables. La participación fomenta una mejor alimentación."
   },
   {
-    "id": "2y-feeding-13",
-    "ageGroup": "2y",
-    "category": "feeding",
-    "text": "No te rindas con los alimentos rechazados. Los estudios muestran que pueden necesitarse 15-20 exposiciones antes de que un niño acepte un alimento nuevo. Sigue ofreciéndolos sin presión."
-  },
-  {
     "id": "2y-feeding-14",
     "ageGroup": "2y",
     "category": "feeding",
     "text": "Si tu hijo toma jugo, limítalo a {{4 onzas|120 ml}} por día de jugo de fruta 100% natural. Mejor aún, ofrece fruta entera y agua."
-  },
-  {
-    "id": "2y-feeding-15",
-    "ageGroup": "2y",
-    "category": "feeding",
-    "text": "La fibra de frutas, verduras, granos integrales y legumbres ayuda a prevenir el estreñimiento, algo común en los niños pequeños. Apunta a aproximadamente 19 gramos por día."
   },
   {
     "id": "2y-health-01",
@@ -334,18 +316,6 @@
     "ageGroup": "2y",
     "category": "health",
     "text": "Los ojos de tu hijo ya deben estar alineados. Si notas que un ojo se desvía hacia adentro o hacia afuera, programa un examen de la vista cuanto antes."
-  },
-  {
-    "id": "2y-health-12",
-    "ageGroup": "2y",
-    "category": "health",
-    "text": "Protege la piel de tu hijo con protector solar SPF 30+, un sombrero y ropa con protección UV cuando estén al aire libre. Reaplica el protector cada 2 horas."
-  },
-  {
-    "id": "2y-health-13",
-    "ageGroup": "2y",
-    "category": "health",
-    "text": "El tartamudeo o la repetición de palabras es común entre los 2 y 5 años, ya que el lenguaje se desarrolla más rápido de lo que los músculos del habla pueden seguir. Generalmente se resuelve solo, pero coméntalo con tu pediatra si persiste más de 6 meses."
   },
   {
     "id": "2y-health-14",

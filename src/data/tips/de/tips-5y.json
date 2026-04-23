@@ -120,12 +120,6 @@
     "text": "Dein Kind kann anfangen, Teile seiner Abendroutine selbst zu übernehmen — Schlafanzug wählen, Zähne putzen, ein Buch aussuchen. Selbstständigkeit fördert die Bereitschaft zur Zusammenarbeit."
   },
   {
-    "id": "5y-sleep-06",
-    "ageGroup": "5y",
-    "category": "sleep",
-    "text": "Bettnässen im Alter von 5 Jahren ist immer noch normal und betrifft etwa 15% der Kinder. Sei geduldig, verwende eine Schutzunterlage und vermeide Bestrafung — es wächst sich aus."
-  },
-  {
     "id": "5y-sleep-07",
     "ageGroup": "5y",
     "category": "sleep",
@@ -276,12 +270,6 @@
     "text": "Eine Vorsorgeuntersuchung in dieser Phase ist wichtig. Dein Kinderarzt wird Sehvermögen, Gehör, Wachstum und Entwicklungsstand überprüfen und kann alle erforderlichen Unterlagen für die Einschulung bereitstellen."
   },
   {
-    "id": "5y-health-02",
-    "ageGroup": "5y",
-    "category": "health",
-    "text": "Dein Kind sollte die Zähne zweimal täglich putzen, aber du musst immer noch beaufsichtigen und bis etwa zum 7. Lebensjahr nachputzen."
-  },
-  {
     "id": "5y-health-03",
     "ageGroup": "5y",
     "category": "health",
@@ -354,12 +342,6 @@
     "text": "Bringe deinem Kind grundlegende Hygieneregeln bei — Husten abdecken, Hände waschen, Taschentücher verwenden. Diese Fähigkeiten helfen ihm, in Gruppensituationen gesund zu bleiben."
   },
   {
-    "id": "5y-health-15",
-    "ageGroup": "5y",
-    "category": "health",
-    "text": "Wenn dein Kind nachts mit den Zähnen knirscht oder Kieferschmerzen hat, erwähne es beim nächsten Zahnarzttermin. Eine Aufbissschiene kann bei Bedarf verschrieben werden."
-  },
-  {
     "id": "5y-play-01",
     "ageGroup": "5y",
     "category": "play",
@@ -414,12 +396,6 @@
     "text": "Hindernisparcours mit Kriechen, Springen, Balancieren und Werfen fordern verschiedene körperliche Fähigkeiten und lassen sich mit Haushaltsgegenständen aufbauen."
   },
   {
-    "id": "5y-play-10",
-    "ageGroup": "5y",
-    "category": "play",
-    "text": "Dein Kind kann anfangen, einfache Puzzles mit 48-100 Teilen zu machen. Puzzles fördern räumliches Denken, Geduld und ein Erfolgsgefühl."
-  },
-  {
     "id": "5y-play-11",
     "ageGroup": "5y",
     "category": "play",
@@ -466,12 +442,6 @@
     "ageGroup": "5y",
     "category": "safety",
     "text": "Dein Kind sollte in einem Kindersitz oder einer Sitzerhöhung bleiben, bis es mindestens {{4 feet 9 inches|145 cm}} groß ist, was in der Regel erst mit 8-12 Jahren der Fall ist."
-  },
-  {
-    "id": "5y-safety-04",
-    "ageGroup": "5y",
-    "category": "safety",
-    "text": "Schwimmunterricht wird in diesem Alter sehr empfohlen. Die meisten Kinder können im Alter von 4-5 Jahren grundlegende Überlebensfähigkeiten im Wasser erlernen, und formeller Unterricht kann noch früher beginnen."
   },
   {
     "id": "5y-safety-05",

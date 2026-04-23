@@ -1,11 +1,5 @@
 [
   {
-    "id": "15m-development-01",
-    "ageGroup": "15m",
-    "category": "development",
-    "text": "Tu bebé podría decir 1-3 palabras con significado a esta edad. Celebra cada intento de comunicación, incluso si la pronunciación no es perfecta."
-  },
-  {
     "id": "15m-development-02",
     "ageGroup": "15m",
     "category": "development",
@@ -346,12 +340,6 @@
     "ageGroup": "15m",
     "category": "health",
     "text": "Tu bebé no necesita zapatos dentro de casa. Andar descalzo fortalece los músculos de los pies y mejora el equilibrio de los que recién empiezan a caminar."
-  },
-  {
-    "id": "15m-health-14",
-    "ageGroup": "15m",
-    "category": "health",
-    "text": "El crup, con su tos característica que suena como ladrido, es común en el segundo año. El aire fresco de la noche o el vapor de una ducha caliente pueden ayudar a aliviar los síntomas."
   },
   {
     "id": "15m-health-15",

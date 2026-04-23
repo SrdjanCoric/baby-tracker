@@ -1,133 +1,692 @@
 [
-  {"id": "9m-development-01", "ageGroup": "9m", "category": "development", "text": "Dein Baby fängt vielleicht an, sich an Möbeln hochzuziehen, um zu stehen. Stelle sicher, dass alles, woran es sich festhält, stabil genug ist, um sein Gewicht zu tragen."},
-  {"id": "9m-development-02", "ageGroup": "9m", "category": "development", "text": "Der Griff deines Babys wird immer präziser. Mit 8–9 Monaten entwickelt sich der Pinzettengriff – kleine Gegenstände zwischen Daumen und Zeigefinger aufheben. Biete kleine, sichere Fingerfood-Happen an, um diese Fähigkeit zu fördern."},
-  {"id": "9m-development-03", "ageGroup": "9m", "category": "development", "text": "Dein Baby fängt vielleicht an, sich an Möbeln entlangzutasten. Stelle Möbelstücke nah genug zusammen, damit es sich von einem zum anderen bewegen kann."},
-  {"id": "9m-development-04", "ageGroup": "9m", "category": "development", "text": "Winken, Klatschen und Zeigen sind soziale Gesten, die in diesem Alter entstehen. Mach sie oft vor und feiere es, wenn dein Baby mitmacht."},
-  {"id": "9m-development-05", "ageGroup": "9m", "category": "development", "text": "Dein Baby versteht mehr Wörter, als es sagen kann. Es schaut vielleicht zum Hund, wenn du \"Hund\" sagst, oder zur Tür, wenn es \"draußen\" hört."},
-  {"id": "9m-development-06", "ageGroup": "9m", "category": "development", "text": "Trennungsangst erreicht oft mit 8–9 Monaten ihren Höhepunkt. Kurze, selbstsichere Verabschiedungen funktionieren besser als lange, ausgedehnte. Dein Baby wird sich daran gewöhnen."},
-  {"id": "9m-development-07", "ageGroup": "9m", "category": "development", "text": "Dein Baby fängt vielleicht an, Gegenstände aneinanderzuschlagen – ein Zeichen dafür, dass es lernt, beide Hände koordiniert einzusetzen. Biete Bauklötze, Löffel oder Becher zum Klopfen an."},
-  {"id": "9m-development-08", "ageGroup": "9m", "category": "development", "text": "\"Mama\" oder \"Papa\" tauchen jetzt vielleicht auf, auch wenn dein Baby sie noch nicht gezielt für dich verwendet. Reagiere trotzdem begeistert!"},
-  {"id": "9m-development-09", "ageGroup": "9m", "category": "development", "text": "Dein Baby fängt vielleicht an, einfache Anweisungen zu verstehen wie \"Gib mir den Ball\" oder \"Wo ist dein Becher?\". Verwende kurze, klare Sätze und wiederhole sie oft."},
-  {"id": "9m-development-10", "ageGroup": "9m", "category": "development", "text": "Krabbelstile sind sehr unterschiedlich: klassisches Krabbeln, Robben, auf dem Po rutschen oder sogar Rollen. Alle sind normale Fortbewegungsarten."},
-  {"id": "9m-development-11", "ageGroup": "9m", "category": "development", "text": "Dein Baby wird zum kleinen Problemlöser. Es zieht vielleicht an einer Decke, um ein darauf liegendes Spielzeug zu erreichen, oder räumt ein Hindernis aus dem Weg."},
-  {"id": "9m-development-12", "ageGroup": "9m", "category": "development", "text": "Nachahmung ist in vollem Gange. Dein Baby beobachtet dich genau und versucht vielleicht, am Telefon zu \"sprechen\", sich die Haare zu bürsten oder eine Fläche abzuwischen – genauso wie es das bei dir gesehen hat."},
-  {"id": "9m-development-13", "ageGroup": "9m", "category": "development", "text": "Manche Babys überspringen das Krabbeln komplett und gehen direkt zum Hochziehen und Entlangtasten über. Wenn dein Baby seinen eigenen Weg findet, sich fortzubewegen, macht es das großartig."},
-  {"id": "9m-development-14", "ageGroup": "9m", "category": "development", "text": "Dein Baby zeigt vielleicht eine Vorliebe für eine Hand. Die echte Händigkeit entwickelt sich erst später, aber frühe Vorlieben sind ganz normal."},
-  {"id": "9m-development-15", "ageGroup": "9m", "category": "development", "text": "Zeige deinem Baby ein einfaches Ursache-Wirkungs-Spielzeug, zum Beispiel einen Knopf, der eine Figur herausspringen lässt. Die Überraschung und Wiederholung sind wunderbar zum Lernen."},
-
-  {"id": "9m-sleep-01", "ageGroup": "9m", "category": "sleep", "text": "Die meisten Babys in diesem Alter haben einen festen Rhythmus mit zwei Schläfchen. Ein Vormittags- und ein Nachmittagsschläfchen mit Wachphasen von 2,5–3,5 Stunden funktioniert für viele Familien gut."},
-  {"id": "9m-sleep-02", "ageGroup": "9m", "category": "sleep", "text": "Dein Baby erlebt vielleicht eine Schlafregression, die mit großen Entwicklungssprüngen wie Krabbeln, Hochziehen und Trennungsangst zusammenhängt. Das geht vorbei."},
-  {"id": "9m-sleep-03", "ageGroup": "9m", "category": "sleep", "text": "Wenn dein Baby im Bettchen lieber Stehen übt statt zu schlafen, lege es sanft wieder hin, ohne ein Spiel daraus zu machen. Es wird das bald verstehen."},
-  {"id": "9m-sleep-04", "ageGroup": "9m", "category": "sleep", "text": "Dein Baby wehrt sich vielleicht gegen Schläfchen, weil es so viel zu entdecken gibt. Eine ruhige Einschlafroutine vor jedem Schläfchen signalisiert, dass es Zeit zum Ausruhen ist."},
-  {"id": "9m-sleep-05", "ageGroup": "9m", "category": "sleep", "text": "Nächtliches Aufwachen wegen Trennungsangst ist jetzt häufig. Ein kurzer, ruhiger Kontrollbesuch beruhigt dein Baby, ohne es richtig wach zu machen."},
-  {"id": "9m-sleep-06", "ageGroup": "9m", "category": "sleep", "text": "Der Gesamtschlaf beträgt in diesem Alter normalerweise 12–16 Stunden pro Tag, einschließlich der Schläfchen. Wenn dein Baby eher am unteren Ende liegt, aber ausgeruht und fröhlich wirkt, ist das in Ordnung."},
-  {"id": "9m-sleep-07", "ageGroup": "9m", "category": "sleep", "text": "Wenn das Zubettgehen zum Kampf wird, braucht dein Baby vielleicht eine etwas spätere Schlafenszeit oder mehr aktives Spielen tagsüber, um Energie abzubauen."},
-  {"id": "9m-sleep-08", "ageGroup": "9m", "category": "sleep", "text": "Ein Kuscheltier oder Schmusetuch kann bei Trennungsangst helfen. Lass dein Baby es beim Einschlafritual halten, aber nimm es vor dem Einschlafen immer aus dem Bettchen – sichere Schlafempfehlungen raten bis 12 Monate zu einem leeren Bettchen."},
-  {"id": "9m-sleep-09", "ageGroup": "9m", "category": "sleep", "text": "Wenn dein Baby sehr früh aufwacht (vor 6 Uhr), ist es vielleicht übermüdet. Versuche eine frühere Schlafenszeit – das klingt widersinnig, führt aber oft zu späterem Aufwachen."},
-  {"id": "9m-sleep-10", "ageGroup": "9m", "category": "sleep", "text": "Halte die Abendroutine kurz und gleichbleibend: 20–30 Minuten reichen aus. Baden, Buch, Lied und ab ins Bettchen ist eine bewährte Formel."},
-  {"id": "9m-sleep-11", "ageGroup": "9m", "category": "sleep", "text": "Wenn dein Baby nachts noch zum Trinken aufwacht, braucht es die Kalorien in diesem Alter möglicherweise nicht mehr. Das schrittweise Reduzieren nächtlicher Mahlzeiten kann ihm helfen, durchzuschlafen."},
-  {"id": "9m-sleep-12", "ageGroup": "9m", "category": "sleep", "text": "Neue Zähne – wie die oberen Schneidezähne oder seitlichen Schneidezähne – können jetzt durchbrechen und für zusätzliche Unruhe beim Zubettgehen sorgen. Ein gekühlter Beißring vor dem Schlafen und extra Zuwendung können helfen."},
-  {"id": "9m-sleep-13", "ageGroup": "9m", "category": "sleep", "text": "Vermeide Bildschirmzeit kurz vor dem Schlafengehen. Die Reize können es deinem Baby schwerer machen, zur Ruhe zu kommen, selbst wenn der Inhalt ruhig wirkt."},
-  {"id": "9m-sleep-14", "ageGroup": "9m", "category": "sleep", "text": "Wenn die Schläfchen kürzer werden, versuche die Wachphasen leicht zu verlängern. Manchmal führen 15–20 Minuten mehr Wachzeit zu besseren Schläfchen."},
-  {"id": "9m-sleep-15", "ageGroup": "9m", "category": "sleep", "text": "Die Zeitumstellung kann schwierig sein. Verschiebe die Schlafenszeit über 3–4 Tage jeweils um 15 Minuten, um den Übergang zu erleichtern."},
-
-  {"id": "9m-feeding-01", "ageGroup": "9m", "category": "feeding", "text": "Beikost ist eine aufregende neue Welt für dein Baby. Beginne mit einzelnen Lebensmitteln und steigere dich schrittweise zu verschiedenem Obst, Gemüse, Getreide und Eiweiß. Mit 8–9 Monaten genießen viele Babys 2–3 kleine Mahlzeiten am Tag."},
-  {"id": "9m-feeding-02", "ageGroup": "9m", "category": "feeding", "text": "Fördere das Selbstessen mit Fingerfood. Weiche, mundgerechte Stücke von Banane, Avocado, Süßkartoffel oder gut gekochter Pasta sind tolle Möglichkeiten."},
-  {"id": "9m-feeding-03", "ageGroup": "9m", "category": "feeding", "text": "Dein Baby kann jetzt fast alles mitessen, was die Familie isst – einfach in sichere Stücke schneiden und ohne zusätzliches Salz oder Zucker. Das vereinfacht die Essensvorbereitung!"},
-  {"id": "9m-feeding-04", "ageGroup": "9m", "category": "feeding", "text": "Biete verschiedene Konsistenzen an: püriert, weiche Stückchen und Fingerfood. Über Brei hinauszugehen fördert die Kaufähigkeit und beugt späterer Texturabneigung vor."},
-  {"id": "9m-feeding-05", "ageGroup": "9m", "category": "feeding", "text": "Muttermilch oder Säuglingsnahrung bleibt wichtig, aber Beikost übernimmt eine immer größere Rolle in der Ernährung. Biete feste Nahrung vor der Milch bei den Mahlzeiten an, wenn dein Baby Interesse zeigt."},
-  {"id": "9m-feeding-06", "ageGroup": "9m", "category": "feeding", "text": "Wählerisches Essverhalten kann jetzt beginnen. Biete weiterhin abwechslungsreiches Essen ohne Druck an. Deine Aufgabe ist das Anbieten, die Aufgabe deines Babys ist zu entscheiden, wie viel es essen möchte."},
-  {"id": "9m-feeding-07", "ageGroup": "9m", "category": "feeding", "text": "Lass dein Baby mit dem Löffel üben, auch wenn das meiste auf dem Boden landet. Befülle einen Löffel vorab und gib ihn deinem Baby, um seine Selbstständigkeit zu fördern."},
-  {"id": "9m-feeding-08", "ageGroup": "9m", "category": "feeding", "text": "Biete zu den Mahlzeiten Wasser in einem offenen Becher oder Trinklernbecher an. Dein Baby braucht jetzt kleine Schlucke Wasser, da Beikost ein fester Bestandteil der Ernährung ist."},
-  {"id": "9m-feeding-09", "ageGroup": "9m", "category": "feeding", "text": "Eisenreiche Lebensmittel bleiben wichtig. Biete regelmäßig Fleisch, Bohnen, Linsen, Tofu und mit Eisen angereichertes Getreide an, um das schnelle Wachstum deines Babys zu unterstützen."},
-  {"id": "9m-feeding-10", "ageGroup": "9m", "category": "feeding", "text": "Wenn dein Baby Essen auf den Boden wirft, ist es vielleicht satt, experimentiert mit der Schwerkraft oder zeigt dir, dass es das Essen nicht möchte. Das ist alles ganz normal."},
-  {"id": "9m-feeding-11", "ageGroup": "9m", "category": "feeding", "text": "Vermeide es, deinem Baby Saft zu geben. Ganzes Obst liefert mehr Ballaststoffe und weniger Zucker. Wasser und Milch sind die besten Getränke."},
-  {"id": "9m-feeding-12", "ageGroup": "9m", "category": "feeding", "text": "Joghurt und Käse sind tolle kalziumreiche Lebensmittel für Babys in diesem Alter. Wähle naturbelassene Vollfett-Varianten ohne Zuckerzusatz."},
-  {"id": "9m-feeding-13", "ageGroup": "9m", "category": "feeding", "text": "Gemeinsame Familienmahlzeiten – auch wenn dein Baby nur mit dem Essen spielt – vermitteln wichtige soziale Fähigkeiten und machen es offener dafür, zu probieren, was die anderen essen."},
-  {"id": "9m-feeding-14", "ageGroup": "9m", "category": "feeding", "text": "Wenn du stillst, trinkt dein Baby vielleicht weniger, da es mehr Beikost isst. Das ist ein natürlicher Übergang und bedeutet nicht, dass du abstillen musst."},
-  {"id": "9m-feeding-15", "ageGroup": "9m", "category": "feeding", "text": "Gesunde Fette sind wichtig für die Gehirnentwicklung. Avocado, Olivenöl, Nussmus (dünn aufgestrichen) und Vollfett-Milchprodukte sind ausgezeichnete Quellen."},
-
-  {"id": "9m-health-01", "ageGroup": "9m", "category": "health", "text": "Regelmäßige Vorsorgeuntersuchungen sind in dieser Phase wichtig. Der Kinderarzt beurteilt die motorische Entwicklung, Kommunikation und soziale Interaktion."},
-  {"id": "9m-health-02", "ageGroup": "9m", "category": "health", "text": "Da dein Baby immer mobiler wird, kommen Beulen und kleine Verletzungen häufiger vor. Die meisten sind harmlos, aber achte nach Stößen am Kopf auf Anzeichen einer Gehirnerschütterung."},
-  {"id": "9m-health-03", "ageGroup": "9m", "category": "health", "text": "Putze die neuen Zähnchen weiterhin zweimal täglich mit einer winzigen Menge Fluorid-Zahnpasta. So beugst du frühkindlicher Karies vor."},
-  {"id": "9m-health-04", "ageGroup": "9m", "category": "health", "text": "Wenn dein Baby eine Kita besucht, rechne mit mehr Erkältungen und kleineren Infekten. Jeder einzelne stärkt das Immunsystem, auch wenn es schwer mit anzusehen ist."},
-  {"id": "9m-health-05", "ageGroup": "9m", "category": "health", "text": "Die Hand-Fuß-Mund-Krankheit ist bei Babys und Kleinkindern verbreitet. Achte auf Bläschen an Händen, Füßen und im Mund sowie Fieber. Sie ist unangenehm, heilt aber meist von selbst aus."},
-  {"id": "9m-health-06", "ageGroup": "9m", "category": "health", "text": "Sprich mit deinem Kinderarzt, ob dein Baby mit den Impfungen auf dem aktuellen Stand ist. Ein Impfplan bietet den besten Schutz, und Nachholimpfungen sind möglich, falls etwas versäumt wurde."},
-  {"id": "9m-health-07", "ageGroup": "9m", "category": "health", "text": "Zahnen kann Speichelfluss, Quengeligkeit und leicht erhöhte Temperatur verursachen, aber echtes Fieber (über {{100.4°F|38°C}}) wird nicht durch das Zahnen ausgelöst. Geh zum Arzt, wenn Fieber auftritt."},
-  {"id": "9m-health-08", "ageGroup": "9m", "category": "health", "text": "Bleibelastung ist ein Thema, sobald Babys krabbeln und alles in den Mund nehmen. Wenn du in einem älteren Haus wohnst, frag nach einem Bleitest."},
-  {"id": "9m-health-09", "ageGroup": "9m", "category": "health", "text": "Der Kinderarzt überprüft möglicherweise die Eisenwerte mit 9–12 Monaten. Eisenmangel kann die Entwicklung beeinträchtigen – sprich es an, wenn du dir Sorgen machst."},
-  {"id": "9m-health-10", "ageGroup": "9m", "category": "health", "text": "Das Dreitagefieber tritt häufig zwischen 6 und 12 Monaten auf: plötzliches hohes Fieber über einige Tage, dann erscheint ein Ausschlag, wenn das Fieber nachlässt. Es wirkt beunruhigend, ist aber in der Regel harmlos."},
-  {"id": "9m-health-11", "ageGroup": "9m", "category": "health", "text": "Wenn dein Baby mit 9 Monaten nicht brabbelt, keinen Blickkontakt hält oder nicht auf seinen Namen reagiert, sprich das bei deinem Kinderarzt an, um eine frühzeitige Abklärung zu veranlassen."},
-  {"id": "9m-health-12", "ageGroup": "9m", "category": "health", "text": "UV-Schutzkleidung und Schatten sind der beste Schutz vor Sonnenschäden. Für unbedeckte Haut ist Sonnencreme ab 6 Monaten sicher – wähle ein Breitspektrum-Produkt mit LSF 30 oder höher."},
-  {"id": "9m-health-13", "ageGroup": "9m", "category": "health", "text": "Insektenstiche kommen jetzt häufiger vor, da dein Baby mehr Zeit auf dem Boden und draußen verbringt. DEET-haltige Insektenschutzmittel (bis zu 30 % Konzentration) sind in diesem Alter sicher. Du kannst auch Moskitonetze verwenden und dein Baby draußen in leichte, langärmelige Kleidung anziehen."},
-  {"id": "9m-health-14", "ageGroup": "9m", "category": "health", "text": "Wenn dein Baby wiederholt Ohrenentzündungen hat, sprich mit deinem Kinderarzt darüber, ob Paukenröhrchen eine Überlegung wert sein könnten."},
-  {"id": "9m-health-15", "ageGroup": "9m", "category": "health", "text": "Schuhe sind erst nötig, wenn dein Baby regelmäßig draußen läuft. Barfuß oder mit rutschfesten Socken hat es den besten Halt und das beste Körpergefühl fürs Stehenlernen."},
-
-  {"id": "9m-play-01", "ageGroup": "9m", "category": "play", "text": "Stapel Bauklötze auf und lass dein Baby sie umwerfen. Mit zunehmender Geschicklichkeit stapelt es mit 9–12 Monaten vielleicht selbst ein oder zwei Klötze."},
-  {"id": "9m-play-02", "ageGroup": "9m", "category": "play", "text": "Spielt \"Fangen\" – krabbele deinem Baby hinterher oder lass es dir hinterherkrabbeln. Dieses aktive Spiel fördert körperliche Fähigkeiten und sorgt für viel Gekicher."},
-  {"id": "9m-play-03", "ageGroup": "9m", "category": "play", "text": "Biete Behälter mit Deckeln an, damit dein Baby das Öffnen und Schließen üben kann. Ein Spielzeug hineinzulegen motiviert es, die Lösung herauszufinden."},
-  {"id": "9m-play-04", "ageGroup": "9m", "category": "play", "text": "Lies Bücher mit einfachen Geschichten vor und lass dein Baby die Seiten umblättern. Pappbilderbücher mit Klappen zum Hochheben haben ein interaktives Element, das Babys lieben."},
-  {"id": "9m-play-05", "ageGroup": "9m", "category": "play", "text": "Spielt \"Rein und raus\" mit einem Eimer und Bällen oder Bauklötzen. Das ständige Rein und Raus fasziniert Babys und fördert die Feinmotorik."},
-  {"id": "9m-play-06", "ageGroup": "9m", "category": "play", "text": "Probiere einfache Sortieraufgaben aus: Biete eine Muffinform und verschiedene Gegenstände an, die in die Mulden gelegt werden können. Dein Baby beginnt, Unterschiede und Kategorien wahrzunehmen."},
-  {"id": "9m-play-07", "ageGroup": "9m", "category": "play", "text": "Wasserspiele am Waschbecken oder in einer flachen Schüssel mit Bechern, Löffeln und Trichtern sind endlos unterhaltsam und vermitteln Konzepte wie voll, leer und gießen."},
-  {"id": "9m-play-08", "ageGroup": "9m", "category": "play", "text": "Singe Bewegungslieder wie \"Backe, backe Kuchen\" oder \"Alle meine Entchen\" mit Handgesten. Dein Baby fängt vielleicht an, die Bewegungen nachzumachen."},
-  {"id": "9m-play-09", "ageGroup": "9m", "category": "play", "text": "Richte eine sichere Kletterlandschaft aus großen Kissen auf dem Boden ein. Babys in diesem Alter lieben es zu klettern, und es fördert Kraft, Koordination und Selbstvertrauen."},
-  {"id": "9m-play-10", "ageGroup": "9m", "category": "play", "text": "Schiebespielzeug (das dein Baby beim Laufen vor sich herschiebt) ist toll für Babys, die sich an Möbeln entlangtasten. Es bietet Halt und Motivation für die ersten Schritte."},
-  {"id": "9m-play-11", "ageGroup": "9m", "category": "play", "text": "Gegen Ende dieser Phase kannst du einen großen, ungiftigen Wachsmalstift und Papier anbieten. Dein Baby wird anfangs damit klopfen oder daran nuckeln, aber unter Aufsicht entdeckt es, dass Werkzeuge Spuren hinterlassen können."},
-  {"id": "9m-play-12", "ageGroup": "9m", "category": "play", "text": "Spielt Verstecken, indem du dich hinter einer Tür verbirgst und den Namen deines Babys rufst. Seine Freude, wenn es dich findet, stärkt das Verständnis der Objektpermanenz."},
-  {"id": "9m-play-13", "ageGroup": "9m", "category": "play", "text": "Biete Spielzeug mit beweglichen Teilen an: Türchen zum Öffnen, Räder zum Drehen, Knöpfe zum Drücken. Diese feinmotorischen Herausforderungen sind perfekt für dieses Alter."},
-  {"id": "9m-play-14", "ageGroup": "9m", "category": "play", "text": "Geh mit deinem Baby auf den Spielplatz und lass es die Babyschaukel ausprobieren. Die sanfte Bewegung und die neue Umgebung sind tolle Sinneserfahrungen."},
-  {"id": "9m-play-15", "ageGroup": "9m", "category": "play", "text": "Lass dein Baby bei einfachen Aufgaben \"helfen\", zum Beispiel einen Waschlappen in den Wäschekorb legen oder einen Becher auf den Tisch stellen. Es liebt es, einbezogen zu werden."},
-
-  {"id": "9m-safety-01", "ageGroup": "9m", "category": "safety", "text": "Da dein Baby sich jetzt überall hochzieht, überprüfe, ob alle Möbel an der Wand gesichert sind. Kommoden und Bücherregale sind die häufigsten Kippgefahren."},
-  {"id": "9m-safety-02", "ageGroup": "9m", "category": "safety", "text": "Halte Badezimmertüren geschlossen oder verwende Türgriffabdeckungen. Toiletten, Badewannen und Badezimmerschränke bergen Risiken für neugierige Krabbler."},
-  {"id": "9m-safety-03", "ageGroup": "9m", "category": "safety", "text": "Herdknopfabdeckungen und Backofensicherungen sind jetzt wichtig. Dein Baby kann höher greifen, als du denkst, und heiße Oberflächen verursachen schwere Verbrennungen."},
-  {"id": "9m-safety-04", "ageGroup": "9m", "category": "safety", "text": "Lass keine kleinen Gegenstände wie Münzen, Perlen oder leere Luftballons in Reichweite deines Babys. Dank seines verbesserten Pinzettengriffs kann es sehr kleine Dinge aufheben."},
-  {"id": "9m-safety-05", "ageGroup": "9m", "category": "safety", "text": "Transportiere dein Baby so lange wie möglich rückwärtsgerichtet im Autositz, bis es die vom Hersteller angegebene Maximalhöhe oder das Maximalgewicht erreicht. Rückwärtsgerichtet ist die sicherste Position."},
-  {"id": "9m-safety-06", "ageGroup": "9m", "category": "safety", "text": "Überprüfe, ob die Schutzgitter sicher montiert sind. Ein entschlossenes Baby kann gegen ein schlecht befestigtes Gitter drücken und es lösen."},
-  {"id": "9m-safety-07", "ageGroup": "9m", "category": "safety", "text": "Bringe Türstopper oder Türhalter an Türen an, die auf kleine Finger zuschlagen könnten. Fingerverletzungen durch zuschlagende Türen sind in diesem Alter sehr häufig."},
-  {"id": "9m-safety-08", "ageGroup": "9m", "category": "safety", "text": "Halte Mülleimer abgedeckt oder in verschlossenen Schränken. Babys sind fasziniert von Abfall und könnten gefährliche Dinge wie scharfe Dosendeckel oder kleine Verpackungen finden."},
-  {"id": "9m-safety-09", "ageGroup": "9m", "category": "safety", "text": "Wenn du Futter- oder Wassernäpfe für Haustiere auf dem Boden hast, stelle sie an einen für dein Baby unzugänglichen Ort. Tierfutter ist eine Erstickungsgefahr und Wassernäpfe bergen ein Ertrinkungsrisiko."},
-  {"id": "9m-safety-10", "ageGroup": "9m", "category": "safety", "text": "Sichere Gerätekabel (Toaster, Wasserkocher, Lampe), damit dein Baby sie nicht herunterziehen kann. Überschüssiges Kabel aufwickeln und Kabelabdeckungen verwenden hilft."},
-  {"id": "9m-safety-11", "ageGroup": "9m", "category": "safety", "text": "Fenstersicherungen oder Fensterbegrenzer sind unverzichtbar, besonders ab dem ersten Stockwerk. Ein Fliegengitter allein hält ein Baby nicht davon ab, durch ein offenes Fenster zu fallen."},
-  {"id": "9m-safety-12", "ageGroup": "9m", "category": "safety", "text": "Achte auf Spielzeug älterer Geschwister mit Kleinteilen. Legosteine, Murmeln und Puppenzubehör sind alles Erstickungsgefahren für ein Baby in diesem Alter."},
-  {"id": "9m-safety-13", "ageGroup": "9m", "category": "safety", "text": "Bewahre alle Medikamente, Vitamine und Nahrungsergänzungsmittel in hohen, abschließbaren Schränken auf. Kindersichere Verschlüsse bremsen Kinder aus, halten sie aber nicht auf."},
-  {"id": "9m-safety-14", "ageGroup": "9m", "category": "safety", "text": "Wenn dein Baby sich an der Spülmaschinentür hochzieht, verwende eine Spülmaschinensicherung. Messer, Gabeln und Spülmaschinentabs im Inneren sind ernsthafte Gefahren."},
-  {"id": "9m-safety-15", "ageGroup": "9m", "category": "safety", "text": "Wenn dein Baby anfängt, sich an Möbeln entlangzutasten, überprüfe, ob Teppiche mit rutschfesten Unterlagen gesichert sind. Rutschende Teppiche können auf glatten Böden zu Stürzen führen."},
-
-  {"id": "9m-development-16", "ageGroup": "9m", "category": "development", "text": "Dein Baby fängt vielleicht an, Gegenstände absichtlich fallen zu lassen und zu beobachten, wo sie landen. Das ist kein Unfug – es ist ein wissenschaftliches Experiment über Schwerkraft und Ursache und Wirkung."},
-  {"id": "9m-development-17", "ageGroup": "9m", "category": "development", "text": "Erzähle in einfachen Worten, was du gerade tust. \"Jetzt ziehen wir dir die Socken an\" baut den Wortschatz auf, noch bevor dein Baby selbst sprechen kann."},
-  {"id": "9m-development-18", "ageGroup": "9m", "category": "development", "text": "Dein Baby schaut jetzt vielleicht dorthin, wohin du zeigst, statt auf deinen Finger. Diese gemeinsame Aufmerksamkeit ist ein wichtiger kognitiver Meilenstein, der das Sprechenlernen unterstützt."},
-  {"id": "9m-development-19", "ageGroup": "9m", "category": "development", "text": "Biete deinem Baby zwei Spielzeuge auf einmal an, wenn es die Hände schon voll hat. Herauszufinden, wie es ein drittes nehmen oder eines ablegen kann, ist echtes Problemlösen in Aktion."},
-  {"id": "9m-development-20", "ageGroup": "9m", "category": "development", "text": "Das Gedächtnis deines Babys wächst schnell. Es erinnert sich vielleicht, wo ein Lieblingsspielzeug aufbewahrt wird, und krabbelt dorthin, selbst wenn es das Spielzeug nicht sehen kann."},
-
-  {"id": "9m-sleep-16", "ageGroup": "9m", "category": "sleep", "text": "Wenn dein Baby im Schlaf zu krabbeln anfängt und davon aufwacht, lass es tagsüber viel krabbeln üben, damit der Reiz des Neuen nachlässt."},
-  {"id": "9m-sleep-17", "ageGroup": "9m", "category": "sleep", "text": "Eine gleichbleibende Aufwachzeit am Morgen hilft, den gesamten Tagesablauf deines Babys zu strukturieren. Versuche, den Tag innerhalb eines 30-Minuten-Fensters zu starten, auch am Wochenende."},
-  {"id": "9m-sleep-18", "ageGroup": "9m", "category": "sleep", "text": "Wenn dein Baby sich gegen das zweite Schläfchen wehrt, braucht es vielleicht eine etwas längere Wachphase davor. Probiere 15 Minuten mehr Wachzeit und schau, ob es hilft."},
-  {"id": "9m-sleep-19", "ageGroup": "9m", "category": "sleep", "text": "Eine kleine Mahlzeit oder ein Snack 30 Minuten vor dem Schlafengehen kann deinem Baby helfen, bequemer zu schlafen, ohne eine Einschlafroutine ums Trinken zu schaffen."},
-  {"id": "9m-sleep-20", "ageGroup": "9m", "category": "sleep", "text": "Wenn dein Baby nur 30 Minuten schläft, wacht es möglicherweise zwischen den Schlafzyklen auf. Warte ein paar Minuten, bevor du hingehst – so kann es lernen, die Zyklen selbst zu verbinden."},
-
-  {"id": "9m-feeding-16", "ageGroup": "9m", "category": "feeding", "text": "Biete deinem Baby Streifen weicher Lebensmittel an, die es in der Faust halten und abknabbern kann. Gedämpfte Karottensticks, reife Mangostreifen oder Toaststreifen eignen sich gut."},
-  {"id": "9m-feeding-17", "ageGroup": "9m", "category": "feeding", "text": "Wenn dein Baby bei neuen Konsistenzen würgt, bleib ruhig und gib ihm Zeit. Würgen ist ein Schutzreflex, der ihm hilft, mit dem Essen umzugehen – es ist nicht dasselbe wie Verschlucken."},
-  {"id": "9m-feeding-18", "ageGroup": "9m", "category": "feeding", "text": "Gewürze und Kräuter wie Zimt, Basilikum und Kreuzkümmel einzuführen ist völlig unbedenklich und hilft deinem Baby, früh einen vielfältigen Geschmack zu entwickeln."},
-  {"id": "9m-feeding-19", "ageGroup": "9m", "category": "feeding", "text": "Wenn dein Baby plötzlich ein Essen ablehnt, das es vorher mochte, biete es weiterhin ohne Druck an. Geschmacksvorlieben ändern sich in diesem Alter häufig und kommen oft wieder zurück."},
-  {"id": "9m-feeding-20", "ageGroup": "9m", "category": "feeding", "text": "Essen von deinem eigenen Teller anzubieten (sofern es sicher und ungesalzen ist) kann das Interesse deines Babys wecken. Es liebt es, das zu essen, was du isst."},
-
-  {"id": "9m-health-16", "ageGroup": "9m", "category": "health", "text": "Wenn dein Baby nachts hartnäckig hustet, kann ein Kaltluftbefeuchter im Zimmer Linderung bringen. Erhöhe oder neige niemals die Matratze – Babys brauchen eine feste, flache Unterlage. Geh zum Kinderarzt, wenn der Husten länger als eine Woche anhält."},
-  {"id": "9m-health-17", "ageGroup": "9m", "category": "health", "text": "Verstopfung kann auftreten, wenn dein Baby mehr feste Nahrung isst. Biete zwischen den Mahlzeiten Wasser und ballaststoffreiche Lebensmittel wie Pflaumen, Birnen und Erbsen an, um die Verdauung in Schwung zu halten."},
-  {"id": "9m-health-18", "ageGroup": "9m", "category": "health", "text": "Milchschorf kann in diesem Alter zurückkehren oder zum ersten Mal auftreten. Sanftes Einmassieren von Öl in die Kopfhaut und vorsichtiges Bürsten mit einer weichen Bürste hilft in der Regel."},
-  {"id": "9m-health-19", "ageGroup": "9m", "category": "health", "text": "Wenn die Nase deines Babys ständig läuft, ohne dass andere Symptome auftreten, könnten Allergien statt einer Erkältung die Ursache sein. Erwähne es beim nächsten Kinderarztbesuch."},
-  {"id": "9m-health-20", "ageGroup": "9m", "category": "health", "text": "Das schnelle Wachstum deines Babys kann zu leichten O-Beinen führen. Das ist in diesem Alter völlig normal und verwächst sich in der Regel von selbst."},
-
-  {"id": "9m-play-16", "ageGroup": "9m", "category": "play", "text": "Gib deinem Baby einen kleinen Korb mit Tüchern oder Stoffresten zum einzelnen Herausziehen. Die Farben und Texturen machen es zu einem tollen Sinneserlebnis."},
-  {"id": "9m-play-17", "ageGroup": "9m", "category": "play", "text": "Bastle eine einfache Rassel, indem du trockene Nudeln oder Reis in einen verschlossenen Behälter füllst. Dein Baby wird es lieben, damit zu rasseln und die Geräusche zu entdecken."},
-  {"id": "9m-play-18", "ageGroup": "9m", "category": "play", "text": "Spielt \"Wo ist die Musik?\", indem du ein kleines Musikspielzeug unter einer Decke versteckst, während es spielt. Dein Baby wird sein Gehör nutzen, um es zu finden."},
-  {"id": "9m-play-19", "ageGroup": "9m", "category": "play", "text": "Klebe ein großes Blatt Papier auf den Boden und lass dein Baby mit Joghurt oder babysicherer Lebensmittelfarbe Fingermalerei ausprobieren. Es ist eine Sauerei, aber wunderbar für die Sinnesentwicklung."},
-  {"id": "9m-play-20", "ageGroup": "9m", "category": "play", "text": "Gib deinem Baby ein Spielzeugtelefon oder eine Spielfernbedienung und tu so, als würdest du ein Gespräch mit ihm führen. Dieses Hin und Her fördert frühe Kommunikationsfähigkeiten."},
-
-  {"id": "9m-safety-16", "ageGroup": "9m", "category": "safety", "text": "Überprüfe, ob Zimmerpflanzen außer Reichweite oder ungiftig sind. Viele verbreitete Zimmerpflanzen wie Efeutute und Philodendron können beim Kauen Reizungen oder Unwohlsein verursachen."},
-  {"id": "9m-safety-17", "ageGroup": "9m", "category": "safety", "text": "Lass Handtaschen und Taschen nicht auf dem Boden liegen. Sie enthalten oft kleine Gegenstände wie Münzen, Lippenpflege, Stifte und Medikamente, die für ein neugieriges Baby gefährlich sind."},
-  {"id": "9m-safety-18", "ageGroup": "9m", "category": "safety", "text": "Stelle sicher, dass die Matratze im Gitterbett auf der niedrigsten Stufe steht, da dein Baby sich jetzt hochziehen kann. Ein Baby, das stehen kann, könnte über die Gitterstäbe klettern, wenn die Matratze zu hoch eingestellt ist."},
-  {"id": "9m-safety-19", "ageGroup": "9m", "category": "safety", "text": "Kühlschrankmagnete sind eine versteckte Gefahr – kleine Magnete können verschluckt werden. Hänge dekorative Magnete hoch oder entferne sie, bis dein Baby älter ist."},
-  {"id": "9m-safety-20", "ageGroup": "9m", "category": "safety", "text": "Wenn du eine Tischdecke verwendest, steige vorerst auf Platzsets um. Dein Baby kann an einer Tischdecke ziehen und heißes Essen, Geschirr oder schwere Gegenstände auf sich herunterreißen."}
+  {
+    "id": "9m-development-01",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, sich an Möbeln hochzuziehen, um zu stehen. Stelle sicher, dass alles, woran es sich festhält, stabil genug ist, um sein Gewicht zu tragen."
+  },
+  {
+    "id": "9m-development-02",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Der Griff deines Babys wird immer präziser. Mit 8–9 Monaten entwickelt sich der Pinzettengriff – kleine Gegenstände zwischen Daumen und Zeigefinger aufheben. Biete kleine, sichere Fingerfood-Happen an, um diese Fähigkeit zu fördern."
+  },
+  {
+    "id": "9m-development-03",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, sich an Möbeln entlangzutasten. Stelle Möbelstücke nah genug zusammen, damit es sich von einem zum anderen bewegen kann."
+  },
+  {
+    "id": "9m-development-04",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Winken, Klatschen und Zeigen sind soziale Gesten, die in diesem Alter entstehen. Mach sie oft vor und feiere es, wenn dein Baby mitmacht."
+  },
+  {
+    "id": "9m-development-05",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby versteht mehr Wörter, als es sagen kann. Es schaut vielleicht zum Hund, wenn du \"Hund\" sagst, oder zur Tür, wenn es \"draußen\" hört."
+  },
+  {
+    "id": "9m-development-06",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Trennungsangst erreicht oft mit 8–9 Monaten ihren Höhepunkt. Kurze, selbstsichere Verabschiedungen funktionieren besser als lange, ausgedehnte. Dein Baby wird sich daran gewöhnen."
+  },
+  {
+    "id": "9m-development-07",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, Gegenstände aneinanderzuschlagen – ein Zeichen dafür, dass es lernt, beide Hände koordiniert einzusetzen. Biete Bauklötze, Löffel oder Becher zum Klopfen an."
+  },
+  {
+    "id": "9m-development-08",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "\"Mama\" oder \"Papa\" tauchen jetzt vielleicht auf, auch wenn dein Baby sie noch nicht gezielt für dich verwendet. Reagiere trotzdem begeistert!"
+  },
+  {
+    "id": "9m-development-09",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, einfache Anweisungen zu verstehen wie \"Gib mir den Ball\" oder \"Wo ist dein Becher?\". Verwende kurze, klare Sätze und wiederhole sie oft."
+  },
+  {
+    "id": "9m-development-10",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Krabbelstile sind sehr unterschiedlich: klassisches Krabbeln, Robben, auf dem Po rutschen oder sogar Rollen. Alle sind normale Fortbewegungsarten."
+  },
+  {
+    "id": "9m-development-11",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby wird zum kleinen Problemlöser. Es zieht vielleicht an einer Decke, um ein darauf liegendes Spielzeug zu erreichen, oder räumt ein Hindernis aus dem Weg."
+  },
+  {
+    "id": "9m-development-12",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Nachahmung ist in vollem Gange. Dein Baby beobachtet dich genau und versucht vielleicht, am Telefon zu \"sprechen\", sich die Haare zu bürsten oder eine Fläche abzuwischen – genauso wie es das bei dir gesehen hat."
+  },
+  {
+    "id": "9m-development-13",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Manche Babys überspringen das Krabbeln komplett und gehen direkt zum Hochziehen und Entlangtasten über. Wenn dein Baby seinen eigenen Weg findet, sich fortzubewegen, macht es das großartig."
+  },
+  {
+    "id": "9m-development-14",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby zeigt vielleicht eine Vorliebe für eine Hand. Die echte Händigkeit entwickelt sich erst später, aber frühe Vorlieben sind ganz normal."
+  },
+  {
+    "id": "9m-development-15",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Zeige deinem Baby ein einfaches Ursache-Wirkungs-Spielzeug, zum Beispiel einen Knopf, der eine Figur herausspringen lässt. Die Überraschung und Wiederholung sind wunderbar zum Lernen."
+  },
+  {
+    "id": "9m-sleep-01",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Die meisten Babys in diesem Alter haben einen festen Rhythmus mit zwei Schläfchen. Ein Vormittags- und ein Nachmittagsschläfchen mit Wachphasen von 2,5–3,5 Stunden funktioniert für viele Familien gut."
+  },
+  {
+    "id": "9m-sleep-02",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Dein Baby erlebt vielleicht eine Schlafregression, die mit großen Entwicklungssprüngen wie Krabbeln, Hochziehen und Trennungsangst zusammenhängt. Das geht vorbei."
+  },
+  {
+    "id": "9m-sleep-03",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Wenn dein Baby im Bettchen lieber Stehen übt statt zu schlafen, lege es sanft wieder hin, ohne ein Spiel daraus zu machen. Es wird das bald verstehen."
+  },
+  {
+    "id": "9m-sleep-04",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Dein Baby wehrt sich vielleicht gegen Schläfchen, weil es so viel zu entdecken gibt. Eine ruhige Einschlafroutine vor jedem Schläfchen signalisiert, dass es Zeit zum Ausruhen ist."
+  },
+  {
+    "id": "9m-sleep-05",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Nächtliches Aufwachen wegen Trennungsangst ist jetzt häufig. Ein kurzer, ruhiger Kontrollbesuch beruhigt dein Baby, ohne es richtig wach zu machen."
+  },
+  {
+    "id": "9m-sleep-06",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Der Gesamtschlaf beträgt in diesem Alter normalerweise 12–16 Stunden pro Tag, einschließlich der Schläfchen. Wenn dein Baby eher am unteren Ende liegt, aber ausgeruht und fröhlich wirkt, ist das in Ordnung."
+  },
+  {
+    "id": "9m-sleep-07",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Wenn das Zubettgehen zum Kampf wird, braucht dein Baby vielleicht eine etwas spätere Schlafenszeit oder mehr aktives Spielen tagsüber, um Energie abzubauen."
+  },
+  {
+    "id": "9m-sleep-09",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Wenn dein Baby sehr früh aufwacht (vor 6 Uhr), ist es vielleicht übermüdet. Versuche eine frühere Schlafenszeit – das klingt widersinnig, führt aber oft zu späterem Aufwachen."
+  },
+  {
+    "id": "9m-sleep-10",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Halte die Abendroutine kurz und gleichbleibend: 20–30 Minuten reichen aus. Baden, Buch, Lied und ab ins Bettchen ist eine bewährte Formel."
+  },
+  {
+    "id": "9m-sleep-12",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Neue Zähne – wie die oberen Schneidezähne oder seitlichen Schneidezähne – können jetzt durchbrechen und für zusätzliche Unruhe beim Zubettgehen sorgen. Ein gekühlter Beißring vor dem Schlafen und extra Zuwendung können helfen."
+  },
+  {
+    "id": "9m-sleep-13",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Vermeide Bildschirmzeit kurz vor dem Schlafengehen. Die Reize können es deinem Baby schwerer machen, zur Ruhe zu kommen, selbst wenn der Inhalt ruhig wirkt."
+  },
+  {
+    "id": "9m-sleep-14",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Wenn die Schläfchen kürzer werden, versuche die Wachphasen leicht zu verlängern. Manchmal führen 15–20 Minuten mehr Wachzeit zu besseren Schläfchen."
+  },
+  {
+    "id": "9m-sleep-15",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Die Zeitumstellung kann schwierig sein. Verschiebe die Schlafenszeit über 3–4 Tage jeweils um 15 Minuten, um den Übergang zu erleichtern."
+  },
+  {
+    "id": "9m-feeding-01",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Beikost ist eine aufregende neue Welt für dein Baby. Beginne mit einzelnen Lebensmitteln und steigere dich schrittweise zu verschiedenem Obst, Gemüse, Getreide und Eiweiß. Mit 8–9 Monaten genießen viele Babys 2–3 kleine Mahlzeiten am Tag."
+  },
+  {
+    "id": "9m-feeding-02",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Fördere das Selbstessen mit Fingerfood. Weiche, mundgerechte Stücke von Banane, Avocado, Süßkartoffel oder gut gekochter Pasta sind tolle Möglichkeiten."
+  },
+  {
+    "id": "9m-feeding-03",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Dein Baby kann jetzt fast alles mitessen, was die Familie isst – einfach in sichere Stücke schneiden und ohne zusätzliches Salz oder Zucker. Das vereinfacht die Essensvorbereitung!"
+  },
+  {
+    "id": "9m-feeding-04",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Biete verschiedene Konsistenzen an: püriert, weiche Stückchen und Fingerfood. Über Brei hinauszugehen fördert die Kaufähigkeit und beugt späterer Texturabneigung vor."
+  },
+  {
+    "id": "9m-feeding-06",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Wählerisches Essverhalten kann jetzt beginnen. Biete weiterhin abwechslungsreiches Essen ohne Druck an. Deine Aufgabe ist das Anbieten, die Aufgabe deines Babys ist zu entscheiden, wie viel es essen möchte."
+  },
+  {
+    "id": "9m-feeding-07",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Lass dein Baby mit dem Löffel üben, auch wenn das meiste auf dem Boden landet. Befülle einen Löffel vorab und gib ihn deinem Baby, um seine Selbstständigkeit zu fördern."
+  },
+  {
+    "id": "9m-feeding-08",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Biete zu den Mahlzeiten Wasser in einem offenen Becher oder Trinklernbecher an. Dein Baby braucht jetzt kleine Schlucke Wasser, da Beikost ein fester Bestandteil der Ernährung ist."
+  },
+  {
+    "id": "9m-feeding-09",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Eisenreiche Lebensmittel bleiben wichtig. Biete regelmäßig Fleisch, Bohnen, Linsen, Tofu und mit Eisen angereichertes Getreide an, um das schnelle Wachstum deines Babys zu unterstützen."
+  },
+  {
+    "id": "9m-feeding-10",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Wenn dein Baby Essen auf den Boden wirft, ist es vielleicht satt, experimentiert mit der Schwerkraft oder zeigt dir, dass es das Essen nicht möchte. Das ist alles ganz normal."
+  },
+  {
+    "id": "9m-feeding-11",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Vermeide es, deinem Baby Saft zu geben. Ganzes Obst liefert mehr Ballaststoffe und weniger Zucker. Wasser und Milch sind die besten Getränke."
+  },
+  {
+    "id": "9m-feeding-12",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Joghurt und Käse sind tolle kalziumreiche Lebensmittel für Babys in diesem Alter. Wähle naturbelassene Vollfett-Varianten ohne Zuckerzusatz."
+  },
+  {
+    "id": "9m-feeding-13",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Gemeinsame Familienmahlzeiten – auch wenn dein Baby nur mit dem Essen spielt – vermitteln wichtige soziale Fähigkeiten und machen es offener dafür, zu probieren, was die anderen essen."
+  },
+  {
+    "id": "9m-feeding-14",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Wenn du stillst, trinkt dein Baby vielleicht weniger, da es mehr Beikost isst. Das ist ein natürlicher Übergang und bedeutet nicht, dass du abstillen musst."
+  },
+  {
+    "id": "9m-feeding-15",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Gesunde Fette sind wichtig für die Gehirnentwicklung. Avocado, Olivenöl, Nussmus (dünn aufgestrichen) und Vollfett-Milchprodukte sind ausgezeichnete Quellen."
+  },
+  {
+    "id": "9m-health-01",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Regelmäßige Vorsorgeuntersuchungen sind in dieser Phase wichtig. Der Kinderarzt beurteilt die motorische Entwicklung, Kommunikation und soziale Interaktion."
+  },
+  {
+    "id": "9m-health-02",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Da dein Baby immer mobiler wird, kommen Beulen und kleine Verletzungen häufiger vor. Die meisten sind harmlos, aber achte nach Stößen am Kopf auf Anzeichen einer Gehirnerschütterung."
+  },
+  {
+    "id": "9m-health-04",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Wenn dein Baby eine Kita besucht, rechne mit mehr Erkältungen und kleineren Infekten. Jeder einzelne stärkt das Immunsystem, auch wenn es schwer mit anzusehen ist."
+  },
+  {
+    "id": "9m-health-05",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Die Hand-Fuß-Mund-Krankheit ist bei Babys und Kleinkindern verbreitet. Achte auf Bläschen an Händen, Füßen und im Mund sowie Fieber. Sie ist unangenehm, heilt aber meist von selbst aus."
+  },
+  {
+    "id": "9m-health-06",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Sprich mit deinem Kinderarzt, ob dein Baby mit den Impfungen auf dem aktuellen Stand ist. Ein Impfplan bietet den besten Schutz, und Nachholimpfungen sind möglich, falls etwas versäumt wurde."
+  },
+  {
+    "id": "9m-health-07",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Zahnen kann Speichelfluss, Quengeligkeit und leicht erhöhte Temperatur verursachen, aber echtes Fieber (über {{100.4°F|38°C}}) wird nicht durch das Zahnen ausgelöst. Geh zum Arzt, wenn Fieber auftritt."
+  },
+  {
+    "id": "9m-health-08",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Bleibelastung ist ein Thema, sobald Babys krabbeln und alles in den Mund nehmen. Wenn du in einem älteren Haus wohnst, frag nach einem Bleitest."
+  },
+  {
+    "id": "9m-health-09",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Der Kinderarzt überprüft möglicherweise die Eisenwerte mit 9–12 Monaten. Eisenmangel kann die Entwicklung beeinträchtigen – sprich es an, wenn du dir Sorgen machst."
+  },
+  {
+    "id": "9m-health-10",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Das Dreitagefieber tritt häufig zwischen 6 und 12 Monaten auf: plötzliches hohes Fieber über einige Tage, dann erscheint ein Ausschlag, wenn das Fieber nachlässt. Es wirkt beunruhigend, ist aber in der Regel harmlos."
+  },
+  {
+    "id": "9m-health-11",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Wenn dein Baby mit 9 Monaten nicht brabbelt, keinen Blickkontakt hält oder nicht auf seinen Namen reagiert, sprich das bei deinem Kinderarzt an, um eine frühzeitige Abklärung zu veranlassen."
+  },
+  {
+    "id": "9m-health-12",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "UV-Schutzkleidung und Schatten sind der beste Schutz vor Sonnenschäden. Für unbedeckte Haut ist Sonnencreme ab 6 Monaten sicher – wähle ein Breitspektrum-Produkt mit LSF 30 oder höher."
+  },
+  {
+    "id": "9m-health-14",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Wenn dein Baby wiederholt Ohrenentzündungen hat, sprich mit deinem Kinderarzt darüber, ob Paukenröhrchen eine Überlegung wert sein könnten."
+  },
+  {
+    "id": "9m-health-15",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Schuhe sind erst nötig, wenn dein Baby regelmäßig draußen läuft. Barfuß oder mit rutschfesten Socken hat es den besten Halt und das beste Körpergefühl fürs Stehenlernen."
+  },
+  {
+    "id": "9m-play-01",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Stapel Bauklötze auf und lass dein Baby sie umwerfen. Mit zunehmender Geschicklichkeit stapelt es mit 9–12 Monaten vielleicht selbst ein oder zwei Klötze."
+  },
+  {
+    "id": "9m-play-02",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Spielt \"Fangen\" – krabbele deinem Baby hinterher oder lass es dir hinterherkrabbeln. Dieses aktive Spiel fördert körperliche Fähigkeiten und sorgt für viel Gekicher."
+  },
+  {
+    "id": "9m-play-03",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Biete Behälter mit Deckeln an, damit dein Baby das Öffnen und Schließen üben kann. Ein Spielzeug hineinzulegen motiviert es, die Lösung herauszufinden."
+  },
+  {
+    "id": "9m-play-04",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Lies Bücher mit einfachen Geschichten vor und lass dein Baby die Seiten umblättern. Pappbilderbücher mit Klappen zum Hochheben haben ein interaktives Element, das Babys lieben."
+  },
+  {
+    "id": "9m-play-05",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Spielt \"Rein und raus\" mit einem Eimer und Bällen oder Bauklötzen. Das ständige Rein und Raus fasziniert Babys und fördert die Feinmotorik."
+  },
+  {
+    "id": "9m-play-06",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Probiere einfache Sortieraufgaben aus: Biete eine Muffinform und verschiedene Gegenstände an, die in die Mulden gelegt werden können. Dein Baby beginnt, Unterschiede und Kategorien wahrzunehmen."
+  },
+  {
+    "id": "9m-play-07",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Wasserspiele am Waschbecken oder in einer flachen Schüssel mit Bechern, Löffeln und Trichtern sind endlos unterhaltsam und vermitteln Konzepte wie voll, leer und gießen."
+  },
+  {
+    "id": "9m-play-08",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Singe Bewegungslieder wie \"Backe, backe Kuchen\" oder \"Alle meine Entchen\" mit Handgesten. Dein Baby fängt vielleicht an, die Bewegungen nachzumachen."
+  },
+  {
+    "id": "9m-play-09",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Richte eine sichere Kletterlandschaft aus großen Kissen auf dem Boden ein. Babys in diesem Alter lieben es zu klettern, und es fördert Kraft, Koordination und Selbstvertrauen."
+  },
+  {
+    "id": "9m-play-10",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Schiebespielzeug (das dein Baby beim Laufen vor sich herschiebt) ist toll für Babys, die sich an Möbeln entlangtasten. Es bietet Halt und Motivation für die ersten Schritte."
+  },
+  {
+    "id": "9m-play-11",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Gegen Ende dieser Phase kannst du einen großen, ungiftigen Wachsmalstift und Papier anbieten. Dein Baby wird anfangs damit klopfen oder daran nuckeln, aber unter Aufsicht entdeckt es, dass Werkzeuge Spuren hinterlassen können."
+  },
+  {
+    "id": "9m-play-12",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Spielt Verstecken, indem du dich hinter einer Tür verbirgst und den Namen deines Babys rufst. Seine Freude, wenn es dich findet, stärkt das Verständnis der Objektpermanenz."
+  },
+  {
+    "id": "9m-play-13",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Biete Spielzeug mit beweglichen Teilen an: Türchen zum Öffnen, Räder zum Drehen, Knöpfe zum Drücken. Diese feinmotorischen Herausforderungen sind perfekt für dieses Alter."
+  },
+  {
+    "id": "9m-play-14",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Geh mit deinem Baby auf den Spielplatz und lass es die Babyschaukel ausprobieren. Die sanfte Bewegung und die neue Umgebung sind tolle Sinneserfahrungen."
+  },
+  {
+    "id": "9m-play-15",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Lass dein Baby bei einfachen Aufgaben \"helfen\", zum Beispiel einen Waschlappen in den Wäschekorb legen oder einen Becher auf den Tisch stellen. Es liebt es, einbezogen zu werden."
+  },
+  {
+    "id": "9m-safety-01",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Da dein Baby sich jetzt überall hochzieht, überprüfe, ob alle Möbel an der Wand gesichert sind. Kommoden und Bücherregale sind die häufigsten Kippgefahren."
+  },
+  {
+    "id": "9m-safety-02",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Halte Badezimmertüren geschlossen oder verwende Türgriffabdeckungen. Toiletten, Badewannen und Badezimmerschränke bergen Risiken für neugierige Krabbler."
+  },
+  {
+    "id": "9m-safety-03",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Herdknopfabdeckungen und Backofensicherungen sind jetzt wichtig. Dein Baby kann höher greifen, als du denkst, und heiße Oberflächen verursachen schwere Verbrennungen."
+  },
+  {
+    "id": "9m-safety-04",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Lass keine kleinen Gegenstände wie Münzen, Perlen oder leere Luftballons in Reichweite deines Babys. Dank seines verbesserten Pinzettengriffs kann es sehr kleine Dinge aufheben."
+  },
+  {
+    "id": "9m-safety-05",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Transportiere dein Baby so lange wie möglich rückwärtsgerichtet im Autositz, bis es die vom Hersteller angegebene Maximalhöhe oder das Maximalgewicht erreicht. Rückwärtsgerichtet ist die sicherste Position."
+  },
+  {
+    "id": "9m-safety-06",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Überprüfe, ob die Schutzgitter sicher montiert sind. Ein entschlossenes Baby kann gegen ein schlecht befestigtes Gitter drücken und es lösen."
+  },
+  {
+    "id": "9m-safety-07",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Bringe Türstopper oder Türhalter an Türen an, die auf kleine Finger zuschlagen könnten. Fingerverletzungen durch zuschlagende Türen sind in diesem Alter sehr häufig."
+  },
+  {
+    "id": "9m-safety-08",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Halte Mülleimer abgedeckt oder in verschlossenen Schränken. Babys sind fasziniert von Abfall und könnten gefährliche Dinge wie scharfe Dosendeckel oder kleine Verpackungen finden."
+  },
+  {
+    "id": "9m-safety-09",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Wenn du Futter- oder Wassernäpfe für Haustiere auf dem Boden hast, stelle sie an einen für dein Baby unzugänglichen Ort. Tierfutter ist eine Erstickungsgefahr und Wassernäpfe bergen ein Ertrinkungsrisiko."
+  },
+  {
+    "id": "9m-safety-10",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Sichere Gerätekabel (Toaster, Wasserkocher, Lampe), damit dein Baby sie nicht herunterziehen kann. Überschüssiges Kabel aufwickeln und Kabelabdeckungen verwenden hilft."
+  },
+  {
+    "id": "9m-safety-11",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Fenstersicherungen oder Fensterbegrenzer sind unverzichtbar, besonders ab dem ersten Stockwerk. Ein Fliegengitter allein hält ein Baby nicht davon ab, durch ein offenes Fenster zu fallen."
+  },
+  {
+    "id": "9m-safety-12",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Achte auf Spielzeug älterer Geschwister mit Kleinteilen. Legosteine, Murmeln und Puppenzubehör sind alles Erstickungsgefahren für ein Baby in diesem Alter."
+  },
+  {
+    "id": "9m-safety-13",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Bewahre alle Medikamente, Vitamine und Nahrungsergänzungsmittel in hohen, abschließbaren Schränken auf. Kindersichere Verschlüsse bremsen Kinder aus, halten sie aber nicht auf."
+  },
+  {
+    "id": "9m-safety-14",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Wenn dein Baby sich an der Spülmaschinentür hochzieht, verwende eine Spülmaschinensicherung. Messer, Gabeln und Spülmaschinentabs im Inneren sind ernsthafte Gefahren."
+  },
+  {
+    "id": "9m-safety-15",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Wenn dein Baby anfängt, sich an Möbeln entlangzutasten, überprüfe, ob Teppiche mit rutschfesten Unterlagen gesichert sind. Rutschende Teppiche können auf glatten Böden zu Stürzen führen."
+  },
+  {
+    "id": "9m-development-16",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, Gegenstände absichtlich fallen zu lassen und zu beobachten, wo sie landen. Das ist kein Unfug – es ist ein wissenschaftliches Experiment über Schwerkraft und Ursache und Wirkung."
+  },
+  {
+    "id": "9m-development-17",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Erzähle in einfachen Worten, was du gerade tust. \"Jetzt ziehen wir dir die Socken an\" baut den Wortschatz auf, noch bevor dein Baby selbst sprechen kann."
+  },
+  {
+    "id": "9m-development-18",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dein Baby schaut jetzt vielleicht dorthin, wohin du zeigst, statt auf deinen Finger. Diese gemeinsame Aufmerksamkeit ist ein wichtiger kognitiver Meilenstein, der das Sprechenlernen unterstützt."
+  },
+  {
+    "id": "9m-development-19",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Biete deinem Baby zwei Spielzeuge auf einmal an, wenn es die Hände schon voll hat. Herauszufinden, wie es ein drittes nehmen oder eines ablegen kann, ist echtes Problemlösen in Aktion."
+  },
+  {
+    "id": "9m-development-20",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Das Gedächtnis deines Babys wächst schnell. Es erinnert sich vielleicht, wo ein Lieblingsspielzeug aufbewahrt wird, und krabbelt dorthin, selbst wenn es das Spielzeug nicht sehen kann."
+  },
+  {
+    "id": "9m-sleep-16",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Wenn dein Baby im Schlaf zu krabbeln anfängt und davon aufwacht, lass es tagsüber viel krabbeln üben, damit der Reiz des Neuen nachlässt."
+  },
+  {
+    "id": "9m-sleep-17",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Eine gleichbleibende Aufwachzeit am Morgen hilft, den gesamten Tagesablauf deines Babys zu strukturieren. Versuche, den Tag innerhalb eines 30-Minuten-Fensters zu starten, auch am Wochenende."
+  },
+  {
+    "id": "9m-sleep-18",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Wenn dein Baby sich gegen das zweite Schläfchen wehrt, braucht es vielleicht eine etwas längere Wachphase davor. Probiere 15 Minuten mehr Wachzeit und schau, ob es hilft."
+  },
+  {
+    "id": "9m-sleep-19",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Eine kleine Mahlzeit oder ein Snack 30 Minuten vor dem Schlafengehen kann deinem Baby helfen, bequemer zu schlafen, ohne eine Einschlafroutine ums Trinken zu schaffen."
+  },
+  {
+    "id": "9m-sleep-20",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Wenn dein Baby nur 30 Minuten schläft, wacht es möglicherweise zwischen den Schlafzyklen auf. Warte ein paar Minuten, bevor du hingehst – so kann es lernen, die Zyklen selbst zu verbinden."
+  },
+  {
+    "id": "9m-feeding-16",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Biete deinem Baby Streifen weicher Lebensmittel an, die es in der Faust halten und abknabbern kann. Gedämpfte Karottensticks, reife Mangostreifen oder Toaststreifen eignen sich gut."
+  },
+  {
+    "id": "9m-feeding-17",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Wenn dein Baby bei neuen Konsistenzen würgt, bleib ruhig und gib ihm Zeit. Würgen ist ein Schutzreflex, der ihm hilft, mit dem Essen umzugehen – es ist nicht dasselbe wie Verschlucken."
+  },
+  {
+    "id": "9m-feeding-18",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Gewürze und Kräuter wie Zimt, Basilikum und Kreuzkümmel einzuführen ist völlig unbedenklich und hilft deinem Baby, früh einen vielfältigen Geschmack zu entwickeln."
+  },
+  {
+    "id": "9m-feeding-19",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Wenn dein Baby plötzlich ein Essen ablehnt, das es vorher mochte, biete es weiterhin ohne Druck an. Geschmacksvorlieben ändern sich in diesem Alter häufig und kommen oft wieder zurück."
+  },
+  {
+    "id": "9m-feeding-20",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Essen von deinem eigenen Teller anzubieten (sofern es sicher und ungesalzen ist) kann das Interesse deines Babys wecken. Es liebt es, das zu essen, was du isst."
+  },
+  {
+    "id": "9m-health-16",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Wenn dein Baby nachts hartnäckig hustet, kann ein Kaltluftbefeuchter im Zimmer Linderung bringen. Erhöhe oder neige niemals die Matratze – Babys brauchen eine feste, flache Unterlage. Geh zum Kinderarzt, wenn der Husten länger als eine Woche anhält."
+  },
+  {
+    "id": "9m-health-17",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Verstopfung kann auftreten, wenn dein Baby mehr feste Nahrung isst. Biete zwischen den Mahlzeiten Wasser und ballaststoffreiche Lebensmittel wie Pflaumen, Birnen und Erbsen an, um die Verdauung in Schwung zu halten."
+  },
+  {
+    "id": "9m-health-18",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Milchschorf kann in diesem Alter zurückkehren oder zum ersten Mal auftreten. Sanftes Einmassieren von Öl in die Kopfhaut und vorsichtiges Bürsten mit einer weichen Bürste hilft in der Regel."
+  },
+  {
+    "id": "9m-health-19",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Wenn die Nase deines Babys ständig läuft, ohne dass andere Symptome auftreten, könnten Allergien statt einer Erkältung die Ursache sein. Erwähne es beim nächsten Kinderarztbesuch."
+  },
+  {
+    "id": "9m-health-20",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Das schnelle Wachstum deines Babys kann zu leichten O-Beinen führen. Das ist in diesem Alter völlig normal und verwächst sich in der Regel von selbst."
+  },
+  {
+    "id": "9m-play-16",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Gib deinem Baby einen kleinen Korb mit Tüchern oder Stoffresten zum einzelnen Herausziehen. Die Farben und Texturen machen es zu einem tollen Sinneserlebnis."
+  },
+  {
+    "id": "9m-play-17",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Bastle eine einfache Rassel, indem du trockene Nudeln oder Reis in einen verschlossenen Behälter füllst. Dein Baby wird es lieben, damit zu rasseln und die Geräusche zu entdecken."
+  },
+  {
+    "id": "9m-play-18",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Spielt \"Wo ist die Musik?\", indem du ein kleines Musikspielzeug unter einer Decke versteckst, während es spielt. Dein Baby wird sein Gehör nutzen, um es zu finden."
+  },
+  {
+    "id": "9m-play-19",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Klebe ein großes Blatt Papier auf den Boden und lass dein Baby mit Joghurt oder babysicherer Lebensmittelfarbe Fingermalerei ausprobieren. Es ist eine Sauerei, aber wunderbar für die Sinnesentwicklung."
+  },
+  {
+    "id": "9m-play-20",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Gib deinem Baby ein Spielzeugtelefon oder eine Spielfernbedienung und tu so, als würdest du ein Gespräch mit ihm führen. Dieses Hin und Her fördert frühe Kommunikationsfähigkeiten."
+  },
+  {
+    "id": "9m-safety-16",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Überprüfe, ob Zimmerpflanzen außer Reichweite oder ungiftig sind. Viele verbreitete Zimmerpflanzen wie Efeutute und Philodendron können beim Kauen Reizungen oder Unwohlsein verursachen."
+  },
+  {
+    "id": "9m-safety-17",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Lass Handtaschen und Taschen nicht auf dem Boden liegen. Sie enthalten oft kleine Gegenstände wie Münzen, Lippenpflege, Stifte und Medikamente, die für ein neugieriges Baby gefährlich sind."
+  },
+  {
+    "id": "9m-safety-18",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Stelle sicher, dass die Matratze im Gitterbett auf der niedrigsten Stufe steht, da dein Baby sich jetzt hochziehen kann. Ein Baby, das stehen kann, könnte über die Gitterstäbe klettern, wenn die Matratze zu hoch eingestellt ist."
+  },
+  {
+    "id": "9m-safety-19",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Kühlschrankmagnete sind eine versteckte Gefahr – kleine Magnete können verschluckt werden. Hänge dekorative Magnete hoch oder entferne sie, bis dein Baby älter ist."
+  },
+  {
+    "id": "9m-safety-20",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Wenn du eine Tischdecke verwendest, steige vorerst auf Platzsets um. Dein Baby kann an einer Tischdecke ziehen und heißes Essen, Geschirr oder schwere Gegenstände auf sich herunterreißen."
+  }
 ]

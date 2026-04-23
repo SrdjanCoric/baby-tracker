@@ -144,12 +144,6 @@
     "text": "Una tabla visual de la rutina nocturna que muestre cada paso puede ayudar a tu bebé a entender qué viene después y sentir más control."
   },
   {
-    "id": "18m-sleep-10",
-    "ageGroup": "18m",
-    "category": "sleep",
-    "text": "Si tu bebé está resistiendo la cuna, resiste la tentación de cambiar a una cama infantil muy temprano. La mayoría de los niños no están listos hasta al menos los 2.5-3 años."
-  },
-  {
     "id": "18m-sleep-11",
     "ageGroup": "18m",
     "category": "sleep",
@@ -288,12 +282,6 @@
     "text": "Continúa cepillando los dientes de tu bebé dos veces al día. Déjalo intentar primero y luego haz un repaso minucioso para asegurarte de que todas las superficies queden limpias."
   },
   {
-    "id": "18m-health-04",
-    "ageGroup": "18m",
-    "category": "health",
-    "text": "Si tu bebé aún no usa palabras, coméntalo en la visita de los 18 meses. La terapia del lenguaje temprana puede hacer una diferencia significativa."
-  },
-  {
     "id": "18m-health-05",
     "ageGroup": "18m",
     "category": "health",
@@ -352,12 +340,6 @@
     "ageGroup": "18m",
     "category": "health",
     "text": "La deficiencia de hierro es la carencia nutricional más común en los pequeños. Si tu bebé parece inusualmente cansado o pálido, pregúntale a tu pediatra sobre las pruebas."
-  },
-  {
-    "id": "18m-health-15",
-    "ageGroup": "18m",
-    "category": "health",
-    "text": "Los expertos pediátricos recomiendan limitar el tiempo de pantalla, excepto videollamadas, para niños menores de 18 meses. Prioriza la interacción en el mundo real, ya que nada reemplaza el juego cara a cara para aprender a esta edad."
   },
   {
     "id": "18m-play-01",
@@ -478,12 +460,6 @@
     "ageGroup": "18m",
     "category": "safety",
     "text": "Guarda todos los medicamentos, vitaminas y suplementos en envases a prueba de niños dentro de un gabinete con llave. Los bebés pueden abrir más tipos de envases de lo que imaginas."
-  },
-  {
-    "id": "18m-safety-06",
-    "ageGroup": "18m",
-    "category": "safety",
-    "text": "Corta la comida en trozos no más grandes que {{media pulgada|1.5 cm}} para tu bebé. Los peligros de asfixia comunes incluyen uvas enteras, salchichas, zanahorias crudas y palomitas de maíz."
   },
   {
     "id": "18m-safety-07",

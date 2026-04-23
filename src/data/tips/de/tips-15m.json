@@ -1,11 +1,5 @@
 [
   {
-    "id": "15m-development-01",
-    "ageGroup": "15m",
-    "category": "development",
-    "text": "Dein Baby könnte jetzt 1-3 Worte mit Bedeutung sagen. Feiere jeden Kommunikationsversuch, auch wenn die Aussprache nicht perfekt ist."
-  },
-  {
     "id": "15m-development-02",
     "ageGroup": "15m",
     "category": "development",
@@ -346,12 +340,6 @@
     "ageGroup": "15m",
     "category": "health",
     "text": "Dein Baby braucht drinnen keine Schuhe. Barfußlaufen stärkt die Fußmuskulatur und verbessert das Gleichgewicht bei Laufanfängern."
-  },
-  {
-    "id": "15m-health-14",
-    "ageGroup": "15m",
-    "category": "health",
-    "text": "Pseudokrupp mit seinem typischen bellenden Husten ist im zweiten Lebensjahr häufig. Kühle Nachtluft oder Dampf aus einer heißen Dusche können die Symptome lindern."
   },
   {
     "id": "15m-health-15",

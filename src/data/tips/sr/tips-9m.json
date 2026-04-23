@@ -1,133 +1,692 @@
 [
-  {"id": "9m-development-01", "ageGroup": "9m", "category": "development", "text": "Tvoja beba može početi da se podiže u stojeći položaj koristeći nameštaj. Proveri da je sve za šta se hvata dovoljno čvrsto da izdrži njenu težinu."},
-  {"id": "9m-development-02", "ageGroup": "9m", "category": "development", "text": "Bebin hvat postaje precizniji. Oko 8-9 meseci, hvat pincetom — podizanje malih predmeta između palca i kažiprsta — počinje da se javlja. Ponudi male, bezbedne zalogaje da podstakneš ovu veštinu."},
-  {"id": "9m-development-03", "ageGroup": "9m", "category": "development", "text": "Tvoja beba može početi da \"kruži\" — hoda držeći se za nameštaj. Rasporedi nameštaj dovoljno blizu da može da se kreće između komada."},
-  {"id": "9m-development-04", "ageGroup": "9m", "category": "development", "text": "Mahanje za ćao, tapšanje i pokazivanje su socijalni gestovi koji se javljaju oko ovog uzrasta. Često ih pokazuj i slavi kad beba počne da ih radi."},
-  {"id": "9m-development-05", "ageGroup": "9m", "category": "development", "text": "Tvoja beba razume više reči nego što može da izgovori. Može pogledati psa kada kažeš \"pas\" ili baciti pogled ka vratima kad čuje \"napolje\"."},
-  {"id": "9m-development-06", "ageGroup": "9m", "category": "development", "text": "Strah od razdvajanja često dostiže vrhunac oko 8-9 meseci. Kratki, smireni pozdravi funkcionišu bolje od dugih i razvučenih. Beba će se prilagoditi."},
-  {"id": "9m-development-07", "ageGroup": "9m", "category": "development", "text": "Tvoja beba može početi da udara predmete jedan o drugi, što pokazuje da uči da koristi obe ruke koordinisano. Ponudi kocke, kašike ili čaše za lupanje."},
-  {"id": "9m-development-08", "ageGroup": "9m", "category": "development", "text": "\"Mama\" ili \"tata\" se mogu pojaviti otprilike sada, mada beba možda još ne koristi te reči konkretno za tebe. Odgovaraj oduševljeno svejedno!"},
-  {"id": "9m-development-09", "ageGroup": "9m", "category": "development", "text": "Tvoja beba može početi da razume jednostavne naloge poput \"daj mi loptu\" ili \"gde ti je čaša?\" Koristi kratke, jasne rečenice i često ponavljaj."},
-  {"id": "9m-development-10", "ageGroup": "9m", "category": "development", "text": "Stilovi puzanja se veoma razlikuju: klasično puzanje, puzanje na stomaku, klizanje na guzi ili čak kotrljanje. Svi su normalni načini kretanja."},
-  {"id": "9m-development-11", "ageGroup": "9m", "category": "development", "text": "Tvoja beba postaje mali rešavač problema. Može povući ćebe da dohvati igračku na njemu ili ukloniti prepreku sa svog puta."},
-  {"id": "9m-development-12", "ageGroup": "9m", "category": "development", "text": "Imitacija je u punom jeku. Beba te pažljivo posmatra i može pokušati da \"priča\" na telefon, češlja se ili briše površinu kao što je videla da ti radiš."},
-  {"id": "9m-development-13", "ageGroup": "9m", "category": "development", "text": "Neke bebe potpuno preskoče puzanje i idu direktno na podizanje i kruženje. Ako beba pronalazi svoj način kretanja, ide joj odlično."},
-  {"id": "9m-development-14", "ageGroup": "9m", "category": "development", "text": "Tvoja beba može početi da pokazuje prednost za jednu ruku nad drugom. Prava dominantnost ruke se razvija kasnije, ali rane prednosti su normalne."},
-  {"id": "9m-development-15", "ageGroup": "9m", "category": "development", "text": "Probaj da pokažeš bebi jednostavnu igračku uzroka i posledice, poput pritiskanja dugmeta da iskoči lik. Iznenađenje i ponavljanje su divni za učenje."},
-
-  {"id": "9m-sleep-01", "ageGroup": "9m", "category": "sleep", "text": "Većina beba u ovom uzrastu je na stabilnom rasporedu sa 2 dremke. Jutarnja i popodnevna dremka sa periodima budnosti od 2,5-3,5 sata dobro funkcionišu za mnoge porodice."},
-  {"id": "9m-sleep-02", "ageGroup": "9m", "category": "sleep", "text": "Beba može doživeti regresiju sna vezanu za velike razvojne skokove poput puzanja, podizanja i straha od razdvajanja. Proći će."},
-  {"id": "9m-sleep-03", "ageGroup": "9m", "category": "sleep", "text": "Ako beba vežba stajanje u krevetcu umesto da spava, nežno je vrati u ležeći položaj bez pravljenja igre od toga. Uskoro će se snaći."},
-  {"id": "9m-sleep-04", "ageGroup": "9m", "category": "sleep", "text": "Beba se može opirati dremkama jer ima toliko toga da istraži. Mirna rutina smirivanja pre svake dremke signalizira da je vreme za odmor."},
-  {"id": "9m-sleep-05", "ageGroup": "9m", "category": "sleep", "text": "Noćna buđenja zbog straha od razdvajanja su sada česta. Kratka, tiha provera umiruje bebu bez potpunog buđenja."},
-  {"id": "9m-sleep-06", "ageGroup": "9m", "category": "sleep", "text": "Ukupan san je obično 12-16 sati u 24 sata u ovom uzrastu, uključujući dremke. Ako beba spava na donjoj granici ali deluje odmorno i srećno, to je u redu."},
-  {"id": "9m-sleep-07", "ageGroup": "9m", "category": "sleep", "text": "Ako odlazak na spavanje postaje borba, bebi možda treba malo kasniji odlazak na spavanje ili više aktivne igre tokom dana da potroši energiju."},
-  {"id": "9m-sleep-08", "ageGroup": "9m", "category": "sleep", "text": "Omiljena igračka za maženje ili predmet za utehu može pomoći sa strahom od razdvajanja. Pusti bebu da je mazi tokom rutine smirivanja, ali je uvek ukloni iz krevetca pre spavanja — smernice za bezbedan san preporučuju prazan krevetac do 12 meseci."},
-  {"id": "9m-sleep-09", "ageGroup": "9m", "category": "sleep", "text": "Ako se beba budi rano (pre 6 sati), možda je preumorna. Probaj ranije spavanje — suprotno intuiciji, to često dovodi do kasnijeg buđenja."},
-  {"id": "9m-sleep-10", "ageGroup": "9m", "category": "sleep", "text": "Drži rutinu pred spavanje kratkom i doslednom: 20-30 minuta je dovoljno. Kupanje, knjiga, pesma i u krevetac je pouzdana formula."},
-  {"id": "9m-sleep-11", "ageGroup": "9m", "category": "sleep", "text": "Ako se beba još budi da jede noću, možda joj kalorije u ovom uzrastu nisu neophodne. Postepeno smanjivanje noćnih hranjenja može pomoći da prespava celu noć."},
-  {"id": "9m-sleep-12", "ageGroup": "9m", "category": "sleep", "text": "Novi zubi — poput gornjih prednjih ili bočnih sekutića — mogu nicati oko ovog uzrasta i izazvati dodatnu nervozu pred spavanje. Ohlađena glodalica pre spavanja i dodatna pažnja mogu pomoći."},
-  {"id": "9m-sleep-13", "ageGroup": "9m", "category": "sleep", "text": "Izbegavaj ekrane blizu spavanja. Stimulacija može otežati bebi da se smiri, čak i ako sadržaj deluje mirno."},
-  {"id": "9m-sleep-14", "ageGroup": "9m", "category": "sleep", "text": "Ako dremke postaju kraće, pokušaj da malo produžiš periode budnosti. Ponekad dodatnih 15-20 minuta budnosti dovodi do boljih dremki."},
-  {"id": "9m-sleep-15", "ageGroup": "9m", "category": "sleep", "text": "Prelaz na letnje ili zimsko računanje vremena može biti težak. Pomeri vreme spavanja za 15 minuta svakog dana tokom 3-4 dana da olakšaš prelaz."},
-
-  {"id": "9m-feeding-01", "ageGroup": "9m", "category": "feeding", "text": "Čvrsta hrana je uzbudljiv novi svet za tvoju bebu. Počni sa pojedinačnim namirnicama i postepeno gradi ka raznolikosti voća, povrća, žitarica i proteina. Do 8-9 meseci, mnoge bebe uživaju u 2-3 mala obroka dnevno."},
-  {"id": "9m-feeding-02", "ageGroup": "9m", "category": "feeding", "text": "Podstakni samostalno hranjenje zalogajima. Meki, sitno iseckani komadi banane, avokada, slatkog krompira ili dobro kuvanog testa su odlični izbori."},
-  {"id": "9m-feeding-03", "ageGroup": "9m", "category": "feeding", "text": "Tvoja beba sada može da jede većinu onoga što porodica jede, samo isečeno na bezbedne veličine i bez dodate soli ili šećera. Ovo olakšava pripremu obroka!"},
-  {"id": "9m-feeding-04", "ageGroup": "9m", "category": "feeding", "text": "Ponudi raznolikost tekstura: pire, meke komade i zalogaje za ručno jedenje. Prelazak sa kašica pomaže razvoju veština žvakanja i sprečava odbojnost prema teksturama kasnije."},
-  {"id": "9m-feeding-05", "ageGroup": "9m", "category": "feeding", "text": "Majčino mleko ili formula su i dalje važni, ali čvrsta hrana preuzima veću ulogu u ishrani. Ponudi čvrstu hranu pre mleka za vreme obroka ako je beba zainteresovana."},
-  {"id": "9m-feeding-06", "ageGroup": "9m", "category": "feeding", "text": "Izbirljivost u ishrani može početi da se pojavljuje. Nastavi da nudiš raznolike namirnice bez pritiska. Tvoj posao je da ponudiš, bebin posao je da odluči koliko će pojesti."},
-  {"id": "9m-feeding-07", "ageGroup": "9m", "category": "feeding", "text": "Pusti bebu da vežba sa kašikom, čak i ako većina hrane završi na podu. Napuni kašiku unapred i daj joj je da gradi samostalnost."},
-  {"id": "9m-feeding-08", "ageGroup": "9m", "category": "feeding", "text": "Ponudi vodu uz obroke u otvorenoj čaši ili čaši sa slamčicom. Bebi su sada potrebni mali gutljaji vode jer je čvrsta hrana redovan deo ishrane."},
-  {"id": "9m-feeding-09", "ageGroup": "9m", "category": "feeding", "text": "Hrana bogata gvožđem ostaje važna. Redovno nudi meso, pasulj, sočivo, tofu i žitarice obogaćene gvožđem da podržiš bebin brzi rast."},
-  {"id": "9m-feeding-10", "ageGroup": "9m", "category": "feeding", "text": "Ako beba baca hranu na pod, možda je završila sa jelom, eksperimentiše sa gravitacijom ili ti govori da ne želi tu hranu. Sve je normalno."},
-  {"id": "9m-feeding-11", "ageGroup": "9m", "category": "feeding", "text": "Izbegavaj davanje soka bebi. Celo voće pruža više vlakana i manje šećera. Voda i mleko su najbolji izbori za piće."},
-  {"id": "9m-feeding-12", "ageGroup": "9m", "category": "feeding", "text": "Jogurt i sir su odlične namirnice bogate kalcijumom za bebe u ovom uzrastu. Biraj obične, punomasne varijante bez dodatog šećera."},
-  {"id": "9m-feeding-13", "ageGroup": "9m", "category": "feeding", "text": "Zajednički porodični obroci, čak i ako beba samo igra sa hranom, uče važne socijalne veštine i čine je spremnijom da proba ono što drugi jedu."},
-  {"id": "9m-feeding-14", "ageGroup": "9m", "category": "feeding", "text": "Ako dojiš, beba može početi manje da sisa kako jede više čvrste hrane. Ovo je prirodan prelaz i ne znači da treba da prestaneš da dojiš."},
-  {"id": "9m-feeding-15", "ageGroup": "9m", "category": "feeding", "text": "Zdrave masti su neophodne za razvoj mozga. Avokado, maslinovo ulje, maslac od orašastih plodova (tanko namazan) i punomasni mlečni proizvodi su odlični izvori."},
-
-  {"id": "9m-health-01", "ageGroup": "9m", "category": "health", "text": "Redovni razvojni pregledi su važni u ovoj fazi. Pedijatar će proceniti motoričke veštine, komunikaciju i socijalnu interakciju."},
-  {"id": "9m-health-02", "ageGroup": "9m", "category": "health", "text": "Kako beba postaje sve pokretljivija, udarci i manje povrede postaju češći. Većina je bezopasna, ali prati znake potresa mozga posle udaraca u glavu."},
-  {"id": "9m-health-03", "ageGroup": "9m", "category": "health", "text": "Nastavi da četkiš zube koji niču dva puta dnevno sa malom količinom paste za zube sa fluorom. Ovo sprečava rani karijes kod dece."},
-  {"id": "9m-health-04", "ageGroup": "9m", "category": "health", "text": "Ako beba ide u vrtić, očekuj više prehlada i manjih bolesti. Svaka od njih jača njen imuni sistem, čak i kad je teško gledati."},
-  {"id": "9m-health-05", "ageGroup": "9m", "category": "health", "text": "Bolest šaka, stopala i usta je česta kod beba i male dece. Traži plikove na šakama, stopalima i u ustima, uz povišenu temperaturu. Neprijatno je, ali se obično povuče samo od sebe."},
-  {"id": "9m-health-06", "ageGroup": "9m", "category": "health", "text": "Proveri sa pedijatrom da li je beba ažurna sa vakcinacijom. Poštovanje rasporeda pruža najbolju zaštitu, a nadoknadne doze su dostupne ako je neka propuštena."},
-  {"id": "9m-health-07", "ageGroup": "9m", "category": "health", "text": "Nicanje zuba može izazvati pojačano lučenje pljuvačke, nervozu i blago povišenu temperaturu, ali prava groznica (preko {{100.4°F|38°C}}) nije uzrokovana nicanjem zuba. Idi kod lekara ako je temperatura prisutna."},
-  {"id": "9m-health-08", "ageGroup": "9m", "category": "health", "text": "Izloženost olovu je briga kada bebe počnu da puze i sve stavljaju u usta. Ako živiš u staroj kući, pitaj za testiranje na olovo."},
-  {"id": "9m-health-09", "ageGroup": "9m", "category": "health", "text": "Bebin pedijatar može proveriti nivo gvožđa oko 9-12 meseci. Nedostatak gvožđa može uticati na razvoj, pa pomeni to ako te brine."},
-  {"id": "9m-health-10", "ageGroup": "9m", "category": "health", "text": "Rozeola je česta između 6-12 meseci: iznenadna visoka temperatura nekoliko dana, pa se osip pojavi kada temperatura spadne. Može izgledati zastrašujuće, ali je obično bezopasna."},
-  {"id": "9m-health-11", "ageGroup": "9m", "category": "health", "text": "Ako beba ne brblja, ne uspostavlja kontakt očima ili ne reaguje na svoje ime do 9 meseci, pomeni to pedijatru radi rane procene."},
-  {"id": "9m-health-12", "ageGroup": "9m", "category": "health", "text": "Zaštitna odeća od sunca i hlad su najbolja odbrana od UV oštećenja. Za izloženu kožu, krema za sunčanje je sada bezbedna za bebe od 6 meseci nadalje — biraj kremu širokog spektra sa zaštitnim faktorom 30 ili više."},
-  {"id": "9m-health-13", "ageGroup": "9m", "category": "health", "text": "Ujedi insekata su češći sada kad beba provodi vreme na podu i napolju. Repelensi na bazi DEET-a (do 30% koncentracije) su bezbedni u ovom uzrastu. Možeš koristiti i mreže protiv komaraca i oblačiti bebu u laganu odeću s dugim rukavima kad ste napolju."},
-  {"id": "9m-health-14", "ageGroup": "9m", "category": "health", "text": "Ako beba ima ponavljane infekcije uha, razgovaraj sa pedijatrom o tome da li bi trebalo razmotriti cevčice za uši."},
-  {"id": "9m-health-15", "ageGroup": "9m", "category": "health", "text": "Obuća nije potrebna dok beba ne počne redovno da hoda napolju. Za sada, bose noge ili čarape sa neklizajućom podlogom daju najbolji zahvat i senzornu povratnu informaciju za učenje stajanja."},
-
-  {"id": "9m-play-01", "ageGroup": "9m", "category": "play", "text": "Slaži kocke i pusti bebu da ih ruši. Kako postaje veštija, može početi sama da slaže jednu ili dve kocke oko 9-12 meseci."},
-  {"id": "9m-play-02", "ageGroup": "9m", "category": "play", "text": "Igraj \"jurku\" puzeći za bebom ili puštajući je da puzi za tobom. Ova aktivna igra razvija fizičke veštine i puna je smeha."},
-  {"id": "9m-play-03", "ageGroup": "9m", "category": "play", "text": "Ponudi posude sa poklopcima da beba vežba otvaranje i zatvaranje. Stavljanje igračke unutra daje joj motivaciju da smisli kako."},
-  {"id": "9m-play-04", "ageGroup": "9m", "category": "play", "text": "Čitaj knjige sa jednostavnim pričama i pusti bebu da okreće stranice. Kartonske knjige sa preklopcima za podizanje dodaju interaktivni element koji obožava."},
-  {"id": "9m-play-05", "ageGroup": "9m", "category": "play", "text": "Igraj igre \"stavi unutra, izvadi napolje\" sa kantom i lopticama ili kockama. Ovo ponavljanje unutra-napolje fascinira bebe i razvija fine motoričke veštine."},
-  {"id": "9m-play-06", "ageGroup": "9m", "category": "play", "text": "Probaj jednostavne aktivnosti sortiranja: ponudi kalup za mafine i različite predmete za stavljanje u svaku čašicu. Beba počinje da primećuje kategorije i razlike."},
-  {"id": "9m-play-07", "ageGroup": "9m", "category": "play", "text": "Igra sa vodom kod umivaonika ili u plitkom lavoru sa čašama, kašikama i levkovima je beskrajno zabavna i uči pojmove poput puno, prazno i sipanje."},
-  {"id": "9m-play-08", "ageGroup": "9m", "category": "play", "text": "Pevaj pesme sa pokretima poput \"Ruke gore, ruke dole\" ili \"Tapni, tapni\" sa pokretima ruku. Beba može početi da pokušava da radi pokrete sa tobom."},
-  {"id": "9m-play-09", "ageGroup": "9m", "category": "play", "text": "Napravi bezbedan prostor za penjanje sa velikim jastucima na podu. Bebe u ovom uzrastu obožavaju da se penju, a to gradi snagu, koordinaciju i samopouzdanje."},
-  {"id": "9m-play-10", "ageGroup": "9m", "category": "play", "text": "Igračke za guranje (koje beba gura dok hoda) su divne za bebe koje kruže. Pružaju podršku i motivaciju za prve korake."},
-  {"id": "9m-play-11", "ageGroup": "9m", "category": "play", "text": "Pred kraj ove faze, probaj da ponudiš veliku, netoksičnu bojicu i papir. Beba će je možda prvo lupati ili stavljati u usta, ali uz nadzor počinje da otkriva da alati mogu ostavljati tragove."},
-  {"id": "9m-play-12", "ageGroup": "9m", "category": "play", "text": "Igraj se sakrivanja tako što ćeš se sakriti iza vrata i zvati bebino ime. Njeno oduševljenje kad te pronađe jača pojam stalnosti predmeta."},
-  {"id": "9m-play-13", "ageGroup": "9m", "category": "play", "text": "Ponudi igračke sa pokretnim delovima: vrata koja se otvaraju, točkovi koji se vrte, dugmad koja klikću. Ovi izazovi za fine motoričke veštine su savršeni za ovaj uzrast."},
-  {"id": "9m-play-14", "ageGroup": "9m", "category": "play", "text": "Vodi bebu na igralište i pusti je da proba ljuljašku za bebe. Nežan pokret i novo okruženje su odlična senzorna iskustva."},
-  {"id": "9m-play-15", "ageGroup": "9m", "category": "play", "text": "Pusti bebu da \"pomaže\" sa jednostavnim zadacima poput stavljanja krpe u korpu za veš ili postavljanja čaše na sto. Obožava osećaj uključenosti."},
-
-  {"id": "9m-safety-01", "ageGroup": "9m", "category": "safety", "text": "Sada kad se beba podiže na sve, ponovo proveri da je sav nameštaj pričvršćen za zid. Komode i police za knjige su najčešće opasnosti od prevrtanja."},
-  {"id": "9m-safety-02", "ageGroup": "9m", "category": "safety", "text": "Drži vrata kupatila zatvorena ili koristi zaštite za kvake. Toalet, kada i ormarići u kupatilu predstavljaju rizik za radoznalu bebu koja puzi."},
-  {"id": "9m-safety-03", "ageGroup": "9m", "category": "safety", "text": "Zaštite za dugmad šporeta i brave za rernu su sada važne. Beba može dosegnuti više nego što očekuješ, a vruće površine izazivaju ozbiljne opekotine."},
-  {"id": "9m-safety-04", "ageGroup": "9m", "category": "safety", "text": "Nikada ne ostavljaj male predmete poput novčića, perli ili ispuhanih balona na mestu gde beba može da ih dohvati. Njen poboljšani hvat pincetom znači da može podići veoma sitne predmete."},
-  {"id": "9m-safety-05", "ageGroup": "9m", "category": "safety", "text": "Drži bebu okrenutu unazad u autosedištu što je duže moguće, dok ne dostigne maksimalnu visinu ili težinu dozvoljenu od proizvođača autosedišta. Položaj okrenut unazad je najbezbedniji."},
-  {"id": "9m-safety-06", "ageGroup": "9m", "category": "safety", "text": "Proveri da su sigurnosne ograde čvrsto postavljene. Odlučna beba može gurati slabo pričvršćenu ogradu i pomeriti je."},
-  {"id": "9m-safety-07", "ageGroup": "9m", "category": "safety", "text": "Postavi zaustavljače ili držače na vrata koja bi mogla da zalupi male prstiće. Povrede prstiju od zatvaranja vrata su veoma česte u ovom uzrastu."},
-  {"id": "9m-safety-08", "ageGroup": "9m", "category": "safety", "text": "Drži kante za smeće poklopljene ili u zaključanim ormarima. Bebe fascinira smeće i mogu pronaći opasne predmete poput oštrih poklopaca limenki ili sitne ambalaže."},
-  {"id": "9m-safety-09", "ageGroup": "9m", "category": "safety", "text": "Ako imaš posude za hranu ili vodu za ljubimca na podu, premesti ih tamo gde beba ne može da pristupi. Hrana za ljubimce je opasnost od gušenja, a posude sa vodom su rizik od utapanja."},
-  {"id": "9m-safety-10", "ageGroup": "9m", "category": "safety", "text": "Osiguraj kablove uređaja (toster, čajnik, lampa) da ih beba ne može da povuče. Uvijanje viška kabla i korišćenje zaštita za kablove pomaže."},
-  {"id": "9m-safety-11", "ageGroup": "9m", "category": "safety", "text": "Zaštite za prozore ili graničnici su neophodni, naročito iznad prizemlja. Sama mrežica neće sprečiti bebu da ispadne kroz otvoren prozor."},
-  {"id": "9m-safety-12", "ageGroup": "9m", "category": "safety", "text": "Pazi na igračke starije braće i sestara sa sitnim delovima. Lego kockice, klikeri i dodaci za lutke su opasnost od gušenja za bebu ovog uzrasta."},
-  {"id": "9m-safety-13", "ageGroup": "9m", "category": "safety", "text": "Čuvaj sve lekove, vitamine i suplemente u visokim, zaključanim ormarima. Poklopci otporni na decu usporavaju decu, ali ih ne zaustavljaju."},
-  {"id": "9m-safety-14", "ageGroup": "9m", "category": "safety", "text": "Ako se beba podiže na vrata mašine za sudove, koristi bravu za mašinu. Noževi, viljuške i kapsule deterdženta unutra su ozbiljne opasnosti."},
-  {"id": "9m-safety-15", "ageGroup": "9m", "category": "safety", "text": "Kada beba počne da kruži, proveri da su tepisoni osigurani neklizajućim podlošcima. Klizeći tepisi mogu izazvati padove na tvrdim podovima."},
-
-  {"id": "9m-development-16", "ageGroup": "9m", "category": "development", "text": "Tvoja beba može početi namerno da ispušta predmete i gleda gde padaju. Ovo nije nestašluk — to je naučni eksperiment o gravitaciji i uzroku i posledici."},
-  {"id": "9m-development-17", "ageGroup": "9m", "category": "development", "text": "Probaj da opisuješ svoje dnevne aktivnosti jednostavnim rečima. \"Sada ti oblačimo čarape\" gradi rečnik čak i pre nego što beba može da govori."},
-  {"id": "9m-development-18", "ageGroup": "9m", "category": "development", "text": "Tvoja beba može početi da gleda tamo gde pokazuješ umesto na tvoj prst. Ova zajednička pažnja je važna kognitivna prekretnica koja podržava razvoj govora."},
-  {"id": "9m-development-19", "ageGroup": "9m", "category": "development", "text": "Ponudi bebi dve igračke odjednom dok su joj ruke pune. Smišljanje kako da drži treći predmet ili da jedan spusti je pravo rešavanje problema na delu."},
-  {"id": "9m-development-20", "ageGroup": "9m", "category": "development", "text": "Bebino pamćenje brzo raste. Može zapamtiti gde se čuva omiljena igračka i puzati ka tom mestu, čak i ako je ne vidi."},
-
-  {"id": "9m-sleep-16", "ageGroup": "9m", "category": "sleep", "text": "Ako je beba počela da puzi u snu i budi se, daj joj dosta vežbe puzanja tokom dana da novitet prođe."},
-  {"id": "9m-sleep-17", "ageGroup": "9m", "category": "sleep", "text": "Dosledno vreme buđenja ujutru pomaže da se usidri bebin ceo dan. Pokušaj da dan počinješ u okviru od 30 minuta, čak i vikendom."},
-  {"id": "9m-sleep-18", "ageGroup": "9m", "category": "sleep", "text": "Ako se beba opire drugoj dremci, možda joj treba malo duži period budnosti pre nje. Pokušaj da dodaš 15 minuta budnosti i vidi da li pomaže."},
-  {"id": "9m-sleep-19", "ageGroup": "9m", "category": "sleep", "text": "Ponudi malo hranjenja ili užinu 30 minuta pre spavanja da beba spava ugodnije bez stvaranja asocijacije hranjenje-spavanje."},
-  {"id": "9m-sleep-20", "ageGroup": "9m", "category": "sleep", "text": "Ako beba drema samo 30 minuta, možda se budi između ciklusa sna. Daj joj par minuta pre nego što uđeš da joj pomogneš da nauči da poveže cikluse."},
-
-  {"id": "9m-feeding-16", "ageGroup": "9m", "category": "feeding", "text": "Probaj da ponudiš trakice meke hrane koje beba može da drži u pesnici i grize. Misli na kuvane štapiće šargarepe, kriške zrelog manga ili trakice tosta."},
-  {"id": "9m-feeding-17", "ageGroup": "9m", "category": "feeding", "text": "Ako beba ima gag refleks na nove teksture, ostani miran i daj joj vremena. Gag refleks je zaštitni mehanizam koji joj pomaže da nauči da upravlja hranom — nije isto što i gušenje."},
-  {"id": "9m-feeding-18", "ageGroup": "9m", "category": "feeding", "text": "Uvođenje začina i bilja poput cimeta, bosiljka i kumina je savršeno bezbedno i pomaže bebi da razvije raznolik ukus od malih nogu."},
-  {"id": "9m-feeding-19", "ageGroup": "9m", "category": "feeding", "text": "Ako beba odjednom odbije hranu koju je ranije volela, nastavi da je nudiš bez pritiska. Ukusne sklonosti se u ovom uzrastu često menjaju i obično se vrate."},
-  {"id": "9m-feeding-20", "ageGroup": "9m", "category": "feeding", "text": "Nuđenje hrane sa tvog tanjira (dok god je bezbedna i bez soli) može podstaći bebino interesovanje. Obožava da jede ono što ti jedeš."},
-
-  {"id": "9m-health-16", "ageGroup": "9m", "category": "health", "text": "Ako beba ima uporan kašalj noću, uključivanje ovlaživača sa hladnom maglom u sobi može doneti olakšanje. Nikada ne podiži niti naginji dušek krevetca — bebama je potrebna čvrsta, ravna površina. Idi kod pedijatra ako kašalj traje duže od nedelju dana."},
-  {"id": "9m-health-17", "ageGroup": "9m", "category": "health", "text": "Zatvor se može pojaviti kako beba jede više čvrste hrane. Nudi vodu između obroka i hranu bogatu vlaknima poput šljiva, krušaka i graška da sve teče kako treba."},
-  {"id": "9m-health-18", "ageGroup": "9m", "category": "health", "text": "Mlečna krasta se ponekad vrati ili pojavi po prvi put oko ovog uzrasta. Nežna masaža kože glave uljem i četkanje mekom četkicom obično reše problem."},
-  {"id": "9m-health-19", "ageGroup": "9m", "category": "health", "text": "Ako bebi nos stalno curi bez drugih simptoma, možda se radi o alergijama, a ne prehladi. Pomeni to na sledećoj poseti pedijatru."},
-  {"id": "9m-health-20", "ageGroup": "9m", "category": "health", "text": "Bebin brzi rast može izazvati blagu krivonogost. Ovo je potpuno normalno u ovom uzrastu i obično se samo ispravlja kako beba raste."},
-
-  {"id": "9m-play-16", "ageGroup": "9m", "category": "play", "text": "Probaj da daš bebi malu korpu sa maramica ili parčadima tkanine da ih vadi jedno po jedno. Boje i teksture čine ovo divnom senzornom aktivnošću."},
-  {"id": "9m-play-17", "ageGroup": "9m", "category": "play", "text": "Napravi jednostavnu zvečku stavljajući suvu testeninu ili pirinač u zatvorenu posudu. Beba će obožavati da je trese i otkriva zvukove koje može da napravi."},
-  {"id": "9m-play-18", "ageGroup": "9m", "category": "play", "text": "Probaj da igraš \"gde je muzika?\" sakrivajući malu muzičku igračku pod ćebe dok svira. Beba će koristiti sluh da je pronađe."},
-  {"id": "9m-play-19", "ageGroup": "9m", "category": "play", "text": "Zalepi veliki komad papira na pod i pusti bebu da istražuje slikanje prstima jogurtom ili bezbednom prehrambenom bojom. Prljavo je, ali divno za senzorni razvoj."},
-  {"id": "9m-play-20", "ageGroup": "9m", "category": "play", "text": "Ponudi bebi igračku telefon ili daljinski upravljač i pretvori se da vodite razgovor. Ova igra napred-nazad gradi rane komunikacione veštine."},
-
-  {"id": "9m-safety-16", "ageGroup": "9m", "category": "safety", "text": "Proveri da su kućne biljke van domašaja ili netoksične. Mnoge uobičajene biljke poput potosa i filodendrona mogu izazvati iritaciju ili bolest ako se žvaču."},
-  {"id": "9m-safety-17", "ageGroup": "9m", "category": "safety", "text": "Ne ostavljaj tašne i torbe na podu. Često sadrže sitne predmete poput novčića, balzama za usne, olovaka i lekova koji su opasni za radoznalu bebu."},
-  {"id": "9m-safety-18", "ageGroup": "9m", "category": "safety", "text": "Proveri da je dušek krevetca na najnižoj poziciji sada kad beba može da se podigne. Beba koja može da stoji možda može i da se popne preko previsokog dušeka i ograde."},
-  {"id": "9m-safety-19", "ageGroup": "9m", "category": "safety", "text": "Magneti na frižideru su skrivena opasnost — mali se mogu progutati. Premesti dekorativne magnete naviše ili ih ukloni dok beba ne poraste."},
-  {"id": "9m-safety-20", "ageGroup": "9m", "category": "safety", "text": "Ako koristiš stolnjak, pređi na podmetače za sada. Beba može povući stolnjak i oboriti vruću hranu, sudove ili teške predmete na sebe."}
+  {
+    "id": "9m-development-01",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba može početi da se podiže u stojeći položaj koristeći nameštaj. Proveri da je sve za šta se hvata dovoljno čvrsto da izdrži njenu težinu."
+  },
+  {
+    "id": "9m-development-02",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Bebin hvat postaje precizniji. Oko 8-9 meseci, hvat pincetom — podizanje malih predmeta između palca i kažiprsta — počinje da se javlja. Ponudi male, bezbedne zalogaje da podstakneš ovu veštinu."
+  },
+  {
+    "id": "9m-development-03",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba može početi da \"kruži\" — hoda držeći se za nameštaj. Rasporedi nameštaj dovoljno blizu da može da se kreće između komada."
+  },
+  {
+    "id": "9m-development-04",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Mahanje za ćao, tapšanje i pokazivanje su socijalni gestovi koji se javljaju oko ovog uzrasta. Često ih pokazuj i slavi kad beba počne da ih radi."
+  },
+  {
+    "id": "9m-development-05",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba razume više reči nego što može da izgovori. Može pogledati psa kada kažeš \"pas\" ili baciti pogled ka vratima kad čuje \"napolje\"."
+  },
+  {
+    "id": "9m-development-06",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Strah od razdvajanja često dostiže vrhunac oko 8-9 meseci. Kratki, smireni pozdravi funkcionišu bolje od dugih i razvučenih. Beba će se prilagoditi."
+  },
+  {
+    "id": "9m-development-07",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba može početi da udara predmete jedan o drugi, što pokazuje da uči da koristi obe ruke koordinisano. Ponudi kocke, kašike ili čaše za lupanje."
+  },
+  {
+    "id": "9m-development-08",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "\"Mama\" ili \"tata\" se mogu pojaviti otprilike sada, mada beba možda još ne koristi te reči konkretno za tebe. Odgovaraj oduševljeno svejedno!"
+  },
+  {
+    "id": "9m-development-09",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba može početi da razume jednostavne naloge poput \"daj mi loptu\" ili \"gde ti je čaša?\" Koristi kratke, jasne rečenice i često ponavljaj."
+  },
+  {
+    "id": "9m-development-10",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Stilovi puzanja se veoma razlikuju: klasično puzanje, puzanje na stomaku, klizanje na guzi ili čak kotrljanje. Svi su normalni načini kretanja."
+  },
+  {
+    "id": "9m-development-11",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba postaje mali rešavač problema. Može povući ćebe da dohvati igračku na njemu ili ukloniti prepreku sa svog puta."
+  },
+  {
+    "id": "9m-development-12",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Imitacija je u punom jeku. Beba te pažljivo posmatra i može pokušati da \"priča\" na telefon, češlja se ili briše površinu kao što je videla da ti radiš."
+  },
+  {
+    "id": "9m-development-13",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Neke bebe potpuno preskoče puzanje i idu direktno na podizanje i kruženje. Ako beba pronalazi svoj način kretanja, ide joj odlično."
+  },
+  {
+    "id": "9m-development-14",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba može početi da pokazuje prednost za jednu ruku nad drugom. Prava dominantnost ruke se razvija kasnije, ali rane prednosti su normalne."
+  },
+  {
+    "id": "9m-development-15",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Probaj da pokažeš bebi jednostavnu igračku uzroka i posledice, poput pritiskanja dugmeta da iskoči lik. Iznenađenje i ponavljanje su divni za učenje."
+  },
+  {
+    "id": "9m-sleep-01",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Većina beba u ovom uzrastu je na stabilnom rasporedu sa 2 dremke. Jutarnja i popodnevna dremka sa periodima budnosti od 2,5-3,5 sata dobro funkcionišu za mnoge porodice."
+  },
+  {
+    "id": "9m-sleep-02",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Beba može doživeti regresiju sna vezanu za velike razvojne skokove poput puzanja, podizanja i straha od razdvajanja. Proći će."
+  },
+  {
+    "id": "9m-sleep-03",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ako beba vežba stajanje u krevetcu umesto da spava, nežno je vrati u ležeći položaj bez pravljenja igre od toga. Uskoro će se snaći."
+  },
+  {
+    "id": "9m-sleep-04",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Beba se može opirati dremkama jer ima toliko toga da istraži. Mirna rutina smirivanja pre svake dremke signalizira da je vreme za odmor."
+  },
+  {
+    "id": "9m-sleep-05",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Noćna buđenja zbog straha od razdvajanja su sada česta. Kratka, tiha provera umiruje bebu bez potpunog buđenja."
+  },
+  {
+    "id": "9m-sleep-06",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ukupan san je obično 12-16 sati u 24 sata u ovom uzrastu, uključujući dremke. Ako beba spava na donjoj granici ali deluje odmorno i srećno, to je u redu."
+  },
+  {
+    "id": "9m-sleep-07",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ako odlazak na spavanje postaje borba, bebi možda treba malo kasniji odlazak na spavanje ili više aktivne igre tokom dana da potroši energiju."
+  },
+  {
+    "id": "9m-sleep-09",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ako se beba budi rano (pre 6 sati), možda je preumorna. Probaj ranije spavanje — suprotno intuiciji, to često dovodi do kasnijeg buđenja."
+  },
+  {
+    "id": "9m-sleep-10",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Drži rutinu pred spavanje kratkom i doslednom: 20-30 minuta je dovoljno. Kupanje, knjiga, pesma i u krevetac je pouzdana formula."
+  },
+  {
+    "id": "9m-sleep-12",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Novi zubi — poput gornjih prednjih ili bočnih sekutića — mogu nicati oko ovog uzrasta i izazvati dodatnu nervozu pred spavanje. Ohlađena glodalica pre spavanja i dodatna pažnja mogu pomoći."
+  },
+  {
+    "id": "9m-sleep-13",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Izbegavaj ekrane blizu spavanja. Stimulacija može otežati bebi da se smiri, čak i ako sadržaj deluje mirno."
+  },
+  {
+    "id": "9m-sleep-14",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ako dremke postaju kraće, pokušaj da malo produžiš periode budnosti. Ponekad dodatnih 15-20 minuta budnosti dovodi do boljih dremki."
+  },
+  {
+    "id": "9m-sleep-15",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Prelaz na letnje ili zimsko računanje vremena može biti težak. Pomeri vreme spavanja za 15 minuta svakog dana tokom 3-4 dana da olakšaš prelaz."
+  },
+  {
+    "id": "9m-feeding-01",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Čvrsta hrana je uzbudljiv novi svet za tvoju bebu. Počni sa pojedinačnim namirnicama i postepeno gradi ka raznolikosti voća, povrća, žitarica i proteina. Do 8-9 meseci, mnoge bebe uživaju u 2-3 mala obroka dnevno."
+  },
+  {
+    "id": "9m-feeding-02",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Podstakni samostalno hranjenje zalogajima. Meki, sitno iseckani komadi banane, avokada, slatkog krompira ili dobro kuvanog testa su odlični izbori."
+  },
+  {
+    "id": "9m-feeding-03",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Tvoja beba sada može da jede većinu onoga što porodica jede, samo isečeno na bezbedne veličine i bez dodate soli ili šećera. Ovo olakšava pripremu obroka!"
+  },
+  {
+    "id": "9m-feeding-04",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Ponudi raznolikost tekstura: pire, meke komade i zalogaje za ručno jedenje. Prelazak sa kašica pomaže razvoju veština žvakanja i sprečava odbojnost prema teksturama kasnije."
+  },
+  {
+    "id": "9m-feeding-06",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Izbirljivost u ishrani može početi da se pojavljuje. Nastavi da nudiš raznolike namirnice bez pritiska. Tvoj posao je da ponudiš, bebin posao je da odluči koliko će pojesti."
+  },
+  {
+    "id": "9m-feeding-07",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Pusti bebu da vežba sa kašikom, čak i ako većina hrane završi na podu. Napuni kašiku unapred i daj joj je da gradi samostalnost."
+  },
+  {
+    "id": "9m-feeding-08",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Ponudi vodu uz obroke u otvorenoj čaši ili čaši sa slamčicom. Bebi su sada potrebni mali gutljaji vode jer je čvrsta hrana redovan deo ishrane."
+  },
+  {
+    "id": "9m-feeding-09",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Hrana bogata gvožđem ostaje važna. Redovno nudi meso, pasulj, sočivo, tofu i žitarice obogaćene gvožđem da podržiš bebin brzi rast."
+  },
+  {
+    "id": "9m-feeding-10",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Ako beba baca hranu na pod, možda je završila sa jelom, eksperimentiše sa gravitacijom ili ti govori da ne želi tu hranu. Sve je normalno."
+  },
+  {
+    "id": "9m-feeding-11",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Izbegavaj davanje soka bebi. Celo voće pruža više vlakana i manje šećera. Voda i mleko su najbolji izbori za piće."
+  },
+  {
+    "id": "9m-feeding-12",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Jogurt i sir su odlične namirnice bogate kalcijumom za bebe u ovom uzrastu. Biraj obične, punomasne varijante bez dodatog šećera."
+  },
+  {
+    "id": "9m-feeding-13",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Zajednički porodični obroci, čak i ako beba samo igra sa hranom, uče važne socijalne veštine i čine je spremnijom da proba ono što drugi jedu."
+  },
+  {
+    "id": "9m-feeding-14",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Ako dojiš, beba može početi manje da sisa kako jede više čvrste hrane. Ovo je prirodan prelaz i ne znači da treba da prestaneš da dojiš."
+  },
+  {
+    "id": "9m-feeding-15",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Zdrave masti su neophodne za razvoj mozga. Avokado, maslinovo ulje, maslac od orašastih plodova (tanko namazan) i punomasni mlečni proizvodi su odlični izvori."
+  },
+  {
+    "id": "9m-health-01",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Redovni razvojni pregledi su važni u ovoj fazi. Pedijatar će proceniti motoričke veštine, komunikaciju i socijalnu interakciju."
+  },
+  {
+    "id": "9m-health-02",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Kako beba postaje sve pokretljivija, udarci i manje povrede postaju češći. Većina je bezopasna, ali prati znake potresa mozga posle udaraca u glavu."
+  },
+  {
+    "id": "9m-health-04",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Ako beba ide u vrtić, očekuj više prehlada i manjih bolesti. Svaka od njih jača njen imuni sistem, čak i kad je teško gledati."
+  },
+  {
+    "id": "9m-health-05",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Bolest šaka, stopala i usta je česta kod beba i male dece. Traži plikove na šakama, stopalima i u ustima, uz povišenu temperaturu. Neprijatno je, ali se obično povuče samo od sebe."
+  },
+  {
+    "id": "9m-health-06",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Proveri sa pedijatrom da li je beba ažurna sa vakcinacijom. Poštovanje rasporeda pruža najbolju zaštitu, a nadoknadne doze su dostupne ako je neka propuštena."
+  },
+  {
+    "id": "9m-health-07",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Nicanje zuba može izazvati pojačano lučenje pljuvačke, nervozu i blago povišenu temperaturu, ali prava groznica (preko {{100.4°F|38°C}}) nije uzrokovana nicanjem zuba. Idi kod lekara ako je temperatura prisutna."
+  },
+  {
+    "id": "9m-health-08",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Izloženost olovu je briga kada bebe počnu da puze i sve stavljaju u usta. Ako živiš u staroj kući, pitaj za testiranje na olovo."
+  },
+  {
+    "id": "9m-health-09",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Bebin pedijatar može proveriti nivo gvožđa oko 9-12 meseci. Nedostatak gvožđa može uticati na razvoj, pa pomeni to ako te brine."
+  },
+  {
+    "id": "9m-health-10",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Rozeola je česta između 6-12 meseci: iznenadna visoka temperatura nekoliko dana, pa se osip pojavi kada temperatura spadne. Može izgledati zastrašujuće, ali je obično bezopasna."
+  },
+  {
+    "id": "9m-health-11",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Ako beba ne brblja, ne uspostavlja kontakt očima ili ne reaguje na svoje ime do 9 meseci, pomeni to pedijatru radi rane procene."
+  },
+  {
+    "id": "9m-health-12",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Zaštitna odeća od sunca i hlad su najbolja odbrana od UV oštećenja. Za izloženu kožu, krema za sunčanje je sada bezbedna za bebe od 6 meseci nadalje — biraj kremu širokog spektra sa zaštitnim faktorom 30 ili više."
+  },
+  {
+    "id": "9m-health-14",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Ako beba ima ponavljane infekcije uha, razgovaraj sa pedijatrom o tome da li bi trebalo razmotriti cevčice za uši."
+  },
+  {
+    "id": "9m-health-15",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Obuća nije potrebna dok beba ne počne redovno da hoda napolju. Za sada, bose noge ili čarape sa neklizajućom podlogom daju najbolji zahvat i senzornu povratnu informaciju za učenje stajanja."
+  },
+  {
+    "id": "9m-play-01",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Slaži kocke i pusti bebu da ih ruši. Kako postaje veštija, može početi sama da slaže jednu ili dve kocke oko 9-12 meseci."
+  },
+  {
+    "id": "9m-play-02",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Igraj \"jurku\" puzeći za bebom ili puštajući je da puzi za tobom. Ova aktivna igra razvija fizičke veštine i puna je smeha."
+  },
+  {
+    "id": "9m-play-03",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Ponudi posude sa poklopcima da beba vežba otvaranje i zatvaranje. Stavljanje igračke unutra daje joj motivaciju da smisli kako."
+  },
+  {
+    "id": "9m-play-04",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Čitaj knjige sa jednostavnim pričama i pusti bebu da okreće stranice. Kartonske knjige sa preklopcima za podizanje dodaju interaktivni element koji obožava."
+  },
+  {
+    "id": "9m-play-05",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Igraj igre \"stavi unutra, izvadi napolje\" sa kantom i lopticama ili kockama. Ovo ponavljanje unutra-napolje fascinira bebe i razvija fine motoričke veštine."
+  },
+  {
+    "id": "9m-play-06",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Probaj jednostavne aktivnosti sortiranja: ponudi kalup za mafine i različite predmete za stavljanje u svaku čašicu. Beba počinje da primećuje kategorije i razlike."
+  },
+  {
+    "id": "9m-play-07",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Igra sa vodom kod umivaonika ili u plitkom lavoru sa čašama, kašikama i levkovima je beskrajno zabavna i uči pojmove poput puno, prazno i sipanje."
+  },
+  {
+    "id": "9m-play-08",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Pevaj pesme sa pokretima poput \"Ruke gore, ruke dole\" ili \"Tapni, tapni\" sa pokretima ruku. Beba može početi da pokušava da radi pokrete sa tobom."
+  },
+  {
+    "id": "9m-play-09",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Napravi bezbedan prostor za penjanje sa velikim jastucima na podu. Bebe u ovom uzrastu obožavaju da se penju, a to gradi snagu, koordinaciju i samopouzdanje."
+  },
+  {
+    "id": "9m-play-10",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Igračke za guranje (koje beba gura dok hoda) su divne za bebe koje kruže. Pružaju podršku i motivaciju za prve korake."
+  },
+  {
+    "id": "9m-play-11",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Pred kraj ove faze, probaj da ponudiš veliku, netoksičnu bojicu i papir. Beba će je možda prvo lupati ili stavljati u usta, ali uz nadzor počinje da otkriva da alati mogu ostavljati tragove."
+  },
+  {
+    "id": "9m-play-12",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Igraj se sakrivanja tako što ćeš se sakriti iza vrata i zvati bebino ime. Njeno oduševljenje kad te pronađe jača pojam stalnosti predmeta."
+  },
+  {
+    "id": "9m-play-13",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Ponudi igračke sa pokretnim delovima: vrata koja se otvaraju, točkovi koji se vrte, dugmad koja klikću. Ovi izazovi za fine motoričke veštine su savršeni za ovaj uzrast."
+  },
+  {
+    "id": "9m-play-14",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Vodi bebu na igralište i pusti je da proba ljuljašku za bebe. Nežan pokret i novo okruženje su odlična senzorna iskustva."
+  },
+  {
+    "id": "9m-play-15",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Pusti bebu da \"pomaže\" sa jednostavnim zadacima poput stavljanja krpe u korpu za veš ili postavljanja čaše na sto. Obožava osećaj uključenosti."
+  },
+  {
+    "id": "9m-safety-01",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Sada kad se beba podiže na sve, ponovo proveri da je sav nameštaj pričvršćen za zid. Komode i police za knjige su najčešće opasnosti od prevrtanja."
+  },
+  {
+    "id": "9m-safety-02",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Drži vrata kupatila zatvorena ili koristi zaštite za kvake. Toalet, kada i ormarići u kupatilu predstavljaju rizik za radoznalu bebu koja puzi."
+  },
+  {
+    "id": "9m-safety-03",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Zaštite za dugmad šporeta i brave za rernu su sada važne. Beba može dosegnuti više nego što očekuješ, a vruće površine izazivaju ozbiljne opekotine."
+  },
+  {
+    "id": "9m-safety-04",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Nikada ne ostavljaj male predmete poput novčića, perli ili ispuhanih balona na mestu gde beba može da ih dohvati. Njen poboljšani hvat pincetom znači da može podići veoma sitne predmete."
+  },
+  {
+    "id": "9m-safety-05",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Drži bebu okrenutu unazad u autosedištu što je duže moguće, dok ne dostigne maksimalnu visinu ili težinu dozvoljenu od proizvođača autosedišta. Položaj okrenut unazad je najbezbedniji."
+  },
+  {
+    "id": "9m-safety-06",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Proveri da su sigurnosne ograde čvrsto postavljene. Odlučna beba može gurati slabo pričvršćenu ogradu i pomeriti je."
+  },
+  {
+    "id": "9m-safety-07",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Postavi zaustavljače ili držače na vrata koja bi mogla da zalupi male prstiće. Povrede prstiju od zatvaranja vrata su veoma česte u ovom uzrastu."
+  },
+  {
+    "id": "9m-safety-08",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Drži kante za smeće poklopljene ili u zaključanim ormarima. Bebe fascinira smeće i mogu pronaći opasne predmete poput oštrih poklopaca limenki ili sitne ambalaže."
+  },
+  {
+    "id": "9m-safety-09",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Ako imaš posude za hranu ili vodu za ljubimca na podu, premesti ih tamo gde beba ne može da pristupi. Hrana za ljubimce je opasnost od gušenja, a posude sa vodom su rizik od utapanja."
+  },
+  {
+    "id": "9m-safety-10",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Osiguraj kablove uređaja (toster, čajnik, lampa) da ih beba ne može da povuče. Uvijanje viška kabla i korišćenje zaštita za kablove pomaže."
+  },
+  {
+    "id": "9m-safety-11",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Zaštite za prozore ili graničnici su neophodni, naročito iznad prizemlja. Sama mrežica neće sprečiti bebu da ispadne kroz otvoren prozor."
+  },
+  {
+    "id": "9m-safety-12",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Pazi na igračke starije braće i sestara sa sitnim delovima. Lego kockice, klikeri i dodaci za lutke su opasnost od gušenja za bebu ovog uzrasta."
+  },
+  {
+    "id": "9m-safety-13",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Čuvaj sve lekove, vitamine i suplemente u visokim, zaključanim ormarima. Poklopci otporni na decu usporavaju decu, ali ih ne zaustavljaju."
+  },
+  {
+    "id": "9m-safety-14",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Ako se beba podiže na vrata mašine za sudove, koristi bravu za mašinu. Noževi, viljuške i kapsule deterdženta unutra su ozbiljne opasnosti."
+  },
+  {
+    "id": "9m-safety-15",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Kada beba počne da kruži, proveri da su tepisoni osigurani neklizajućim podlošcima. Klizeći tepisi mogu izazvati padove na tvrdim podovima."
+  },
+  {
+    "id": "9m-development-16",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba može početi namerno da ispušta predmete i gleda gde padaju. Ovo nije nestašluk — to je naučni eksperiment o gravitaciji i uzroku i posledici."
+  },
+  {
+    "id": "9m-development-17",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Probaj da opisuješ svoje dnevne aktivnosti jednostavnim rečima. \"Sada ti oblačimo čarape\" gradi rečnik čak i pre nego što beba može da govori."
+  },
+  {
+    "id": "9m-development-18",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tvoja beba može početi da gleda tamo gde pokazuješ umesto na tvoj prst. Ova zajednička pažnja je važna kognitivna prekretnica koja podržava razvoj govora."
+  },
+  {
+    "id": "9m-development-19",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Ponudi bebi dve igračke odjednom dok su joj ruke pune. Smišljanje kako da drži treći predmet ili da jedan spusti je pravo rešavanje problema na delu."
+  },
+  {
+    "id": "9m-development-20",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Bebino pamćenje brzo raste. Može zapamtiti gde se čuva omiljena igračka i puzati ka tom mestu, čak i ako je ne vidi."
+  },
+  {
+    "id": "9m-sleep-16",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ako je beba počela da puzi u snu i budi se, daj joj dosta vežbe puzanja tokom dana da novitet prođe."
+  },
+  {
+    "id": "9m-sleep-17",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Dosledno vreme buđenja ujutru pomaže da se usidri bebin ceo dan. Pokušaj da dan počinješ u okviru od 30 minuta, čak i vikendom."
+  },
+  {
+    "id": "9m-sleep-18",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ako se beba opire drugoj dremci, možda joj treba malo duži period budnosti pre nje. Pokušaj da dodaš 15 minuta budnosti i vidi da li pomaže."
+  },
+  {
+    "id": "9m-sleep-19",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ponudi malo hranjenja ili užinu 30 minuta pre spavanja da beba spava ugodnije bez stvaranja asocijacije hranjenje-spavanje."
+  },
+  {
+    "id": "9m-sleep-20",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Ako beba drema samo 30 minuta, možda se budi između ciklusa sna. Daj joj par minuta pre nego što uđeš da joj pomogneš da nauči da poveže cikluse."
+  },
+  {
+    "id": "9m-feeding-16",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Probaj da ponudiš trakice meke hrane koje beba može da drži u pesnici i grize. Misli na kuvane štapiće šargarepe, kriške zrelog manga ili trakice tosta."
+  },
+  {
+    "id": "9m-feeding-17",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Ako beba ima gag refleks na nove teksture, ostani miran i daj joj vremena. Gag refleks je zaštitni mehanizam koji joj pomaže da nauči da upravlja hranom — nije isto što i gušenje."
+  },
+  {
+    "id": "9m-feeding-18",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Uvođenje začina i bilja poput cimeta, bosiljka i kumina je savršeno bezbedno i pomaže bebi da razvije raznolik ukus od malih nogu."
+  },
+  {
+    "id": "9m-feeding-19",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Ako beba odjednom odbije hranu koju je ranije volela, nastavi da je nudiš bez pritiska. Ukusne sklonosti se u ovom uzrastu često menjaju i obično se vrate."
+  },
+  {
+    "id": "9m-feeding-20",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Nuđenje hrane sa tvog tanjira (dok god je bezbedna i bez soli) može podstaći bebino interesovanje. Obožava da jede ono što ti jedeš."
+  },
+  {
+    "id": "9m-health-16",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Ako beba ima uporan kašalj noću, uključivanje ovlaživača sa hladnom maglom u sobi može doneti olakšanje. Nikada ne podiži niti naginji dušek krevetca — bebama je potrebna čvrsta, ravna površina. Idi kod pedijatra ako kašalj traje duže od nedelju dana."
+  },
+  {
+    "id": "9m-health-17",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Zatvor se može pojaviti kako beba jede više čvrste hrane. Nudi vodu između obroka i hranu bogatu vlaknima poput šljiva, krušaka i graška da sve teče kako treba."
+  },
+  {
+    "id": "9m-health-18",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Mlečna krasta se ponekad vrati ili pojavi po prvi put oko ovog uzrasta. Nežna masaža kože glave uljem i četkanje mekom četkicom obično reše problem."
+  },
+  {
+    "id": "9m-health-19",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Ako bebi nos stalno curi bez drugih simptoma, možda se radi o alergijama, a ne prehladi. Pomeni to na sledećoj poseti pedijatru."
+  },
+  {
+    "id": "9m-health-20",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Bebin brzi rast može izazvati blagu krivonogost. Ovo je potpuno normalno u ovom uzrastu i obično se samo ispravlja kako beba raste."
+  },
+  {
+    "id": "9m-play-16",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Probaj da daš bebi malu korpu sa maramica ili parčadima tkanine da ih vadi jedno po jedno. Boje i teksture čine ovo divnom senzornom aktivnošću."
+  },
+  {
+    "id": "9m-play-17",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Napravi jednostavnu zvečku stavljajući suvu testeninu ili pirinač u zatvorenu posudu. Beba će obožavati da je trese i otkriva zvukove koje može da napravi."
+  },
+  {
+    "id": "9m-play-18",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Probaj da igraš \"gde je muzika?\" sakrivajući malu muzičku igračku pod ćebe dok svira. Beba će koristiti sluh da je pronađe."
+  },
+  {
+    "id": "9m-play-19",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Zalepi veliki komad papira na pod i pusti bebu da istražuje slikanje prstima jogurtom ili bezbednom prehrambenom bojom. Prljavo je, ali divno za senzorni razvoj."
+  },
+  {
+    "id": "9m-play-20",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Ponudi bebi igračku telefon ili daljinski upravljač i pretvori se da vodite razgovor. Ova igra napred-nazad gradi rane komunikacione veštine."
+  },
+  {
+    "id": "9m-safety-16",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Proveri da su kućne biljke van domašaja ili netoksične. Mnoge uobičajene biljke poput potosa i filodendrona mogu izazvati iritaciju ili bolest ako se žvaču."
+  },
+  {
+    "id": "9m-safety-17",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Ne ostavljaj tašne i torbe na podu. Često sadrže sitne predmete poput novčića, balzama za usne, olovaka i lekova koji su opasni za radoznalu bebu."
+  },
+  {
+    "id": "9m-safety-18",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Proveri da je dušek krevetca na najnižoj poziciji sada kad beba može da se podigne. Beba koja može da stoji možda može i da se popne preko previsokog dušeka i ograde."
+  },
+  {
+    "id": "9m-safety-19",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Magneti na frižideru su skrivena opasnost — mali se mogu progutati. Premesti dekorativne magnete naviše ili ih ukloni dok beba ne poraste."
+  },
+  {
+    "id": "9m-safety-20",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Ako koristiš stolnjak, pređi na podmetače za sada. Beba može povući stolnjak i oboriti vruću hranu, sudove ili teške predmete na sebe."
+  }
 ]
