@@ -90,12 +90,6 @@
     "text": "Einige Babys machen ihre ersten Schritte um den 12. Monat, viele laufen aber erst später. Beides ist völlig normal."
   },
   {
-    "id": "1y-sleep-01",
-    "ageGroup": "1y",
-    "category": "sleep",
-    "text": "Die meisten Babys in diesem Alter brauchen 12-16 Stunden Gesamtschlaf pro Tag, einschließlich Nickerchen. Eine feste Schlafenszeit-Routine hilft dabei."
-  },
-  {
     "id": "1y-sleep-02",
     "ageGroup": "1y",
     "category": "sleep",
@@ -160,12 +154,6 @@
     "ageGroup": "1y",
     "category": "sleep",
     "text": "Reisen und Veränderungen im Tagesablauf können den Schlaf vorübergehend beeinträchtigen. Sei geduldig und kehre so schnell wie möglich zur gewohnten Routine zurück."
-  },
-  {
-    "id": "1y-sleep-13",
-    "ageGroup": "1y",
-    "category": "sleep",
-    "text": "Um den ersten Geburtstag herum kann ein kleines Kuscheltier oder Schmusetuch deinem Baby helfen, sich beim Einschlafen selbst zu beruhigen. Davor sollte das Gitterbett frei von allen weichen Gegenständen sein."
   },
   {
     "id": "1y-sleep-14",
@@ -282,12 +270,6 @@
     "text": "Sprich mit deinem Kinderarzt darüber, welche Impfungen in dieser Phase fällig sind. Das Einhalten des Impfplans ist wichtig, um deinen kleinen Entdecker zu schützen."
   },
   {
-    "id": "1y-health-03",
-    "ageGroup": "1y",
-    "category": "health",
-    "text": "Von Fieber spricht man ab {{100.4°F|38°C}}. Kontaktiere deinen Kinderarzt, wenn das Fieber deines Babys länger als zwei Tage anhält, es sehr unwohl wirkt oder du besorgt bist."
-  },
-  {
     "id": "1y-health-04",
     "ageGroup": "1y",
     "category": "health",
@@ -322,12 +304,6 @@
     "ageGroup": "1y",
     "category": "health",
     "text": "Wenn dein Baby eine leichte Erkältung bekommt, können Kochsalztropfen und ein Nasensauger helfen, die verstopfte Nase zu befreien. Ein Kaltnebel-Luftbefeuchter im Schlafzimmer hilft ebenfalls."
-  },
-  {
-    "id": "1y-health-10",
-    "ageGroup": "1y",
-    "category": "health",
-    "text": "Trage Sonnencreme mit Lichtschutzfaktor 30 oder höher auf alle unbedeckten Hautstellen auf und kleide dein Baby in einen breitkrempigen Hut und UV-Schutzkleidung."
   },
   {
     "id": "1y-health-11",
@@ -636,12 +612,6 @@
     "text": "Gelegentliches Zehenspitzengehen ist normal, wenn dein Baby mit der Bewegung experimentiert. Wenn es zur bevorzugten Gangart wird, erwähne es bei deinem Kinderarzt."
   },
   {
-    "id": "1y-health-17",
-    "ageGroup": "1y",
-    "category": "health",
-    "text": "Die große Fontanelle deines Babys ist noch offen und schließt sich normalerweise zwischen dem 9. und 18. Monat. Es ist ganz normal, dass sie leicht pulsiert -- das ist einfach der Blutfluss."
-  },
-  {
     "id": "1y-health-18",
     "ageGroup": "1y",
     "category": "health",
@@ -676,12 +646,6 @@
     "ageGroup": "1y",
     "category": "play",
     "text": "Dein Baby könnte anfangen, so zu tun als ob -- ein Kuscheltier füttern oder eine Puppe ins Bett legen. Mach mit und baue auf seinen Ideen auf, um die Fantasie zu fördern."
-  },
-  {
-    "id": "1y-play-19",
-    "ageGroup": "1y",
-    "category": "play",
-    "text": "Fülle eine flache Schale mit trockenen Haferflocken oder Reis und verstecke kleine Spielzeuge darin. Dieser Sinnestisch hält dein Baby beim Entdecken und fördert die Feinmotorik."
   },
   {
     "id": "1y-play-20",

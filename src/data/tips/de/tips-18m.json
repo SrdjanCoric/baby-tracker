@@ -144,12 +144,6 @@
     "text": "Eine Bildtafel für die Abendroutine, die jeden Schritt zeigt, kann deinem Kleinkind helfen zu verstehen, was als Nächstes kommt, und ihm mehr Sicherheit geben."
   },
   {
-    "id": "18m-sleep-10",
-    "ageGroup": "18m",
-    "category": "sleep",
-    "text": "Wenn dein Kleinkind das Gitterbett ablehnt, widerstehe dem Drang, zu früh auf ein Kinderbett umzusteigen. Die meisten Kinder sind erst mit 2,5-3 Jahren dafür bereit."
-  },
-  {
     "id": "18m-sleep-11",
     "ageGroup": "18m",
     "category": "sleep",
@@ -288,12 +282,6 @@
     "text": "Putze weiterhin die Zähne deines Kleinkindes zweimal täglich. Lass es zuerst selbst versuchen, dann machst du gründlich nach, um sicherzustellen, dass alle Flächen sauber sind."
   },
   {
-    "id": "18m-health-04",
-    "ageGroup": "18m",
-    "category": "health",
-    "text": "Wenn dein Kleinkind noch keine Wörter verwendet, besprich dies bei der 18-Monats-Untersuchung. Frühe Sprachtherapie kann einen großen Unterschied machen."
-  },
-  {
     "id": "18m-health-05",
     "ageGroup": "18m",
     "category": "health",
@@ -352,12 +340,6 @@
     "ageGroup": "18m",
     "category": "health",
     "text": "Eisenmangel ist der häufigste Nährstoffmangel bei Kleinkindern. Wenn dein Kleinkind ungewöhnlich müde oder blass wirkt, frage deinen Kinderarzt nach einer Blutuntersuchung."
-  },
-  {
-    "id": "18m-health-15",
-    "ageGroup": "18m",
-    "category": "health",
-    "text": "Kinderärzte empfehlen, Bildschirmmedien außer Videotelefonaten für Kinder unter 18 Monaten zu vermeiden. Setze auf echte Interaktion, denn nichts ersetzt persönliches Spielen für das Lernen in diesem Alter."
   },
   {
     "id": "18m-play-01",
@@ -478,12 +460,6 @@
     "ageGroup": "18m",
     "category": "safety",
     "text": "Bewahre alle Medikamente, Vitamine und Nahrungsergänzungsmittel in kindersicheren Behältern in einem abschließbaren Schrank auf. Kleinkinder können mehr Verschlüsse öffnen, als man denkt."
-  },
-  {
-    "id": "18m-safety-06",
-    "ageGroup": "18m",
-    "category": "safety",
-    "text": "Schneide Essen in Stücke, die nicht größer als {{ein halber Zoll|1,5 cm}} sind. Häufige Erstickungsgefahren sind ganze Weintrauben, Würstchen, rohe Karotten und Popcorn."
   },
   {
     "id": "18m-safety-07",

@@ -510,6 +510,14 @@ export default function TimelineScreen() {
 
   const hasMoreData = paginatedEntries.length < timelineEntries.length;
 
+  // When content is too short to scroll, onEndReached never fires.
+  // Auto-expand until enough entries are visible or all data is loaded.
+  useEffect(() => {
+    if (hasMoreData && paginatedEntries.length < 10) {
+      setDaysToShow(prev => prev + 14);
+    }
+  }, [hasMoreData, paginatedEntries.length, daysToShow]);
+
   const handleLoadMore = useCallback(() => {
     if (hasMoreData) {
       setDaysToShow(prev => prev + 14);
@@ -535,8 +543,19 @@ export default function TimelineScreen() {
 
   const pendingScrollDateRef = useRef<Date | null>(null);
 
+  const findNearestSectionBefore = useCallback((date: Date): number => {
+    for (let i = 0; i < sections.length; i++) {
+      if (sections[i].dateObj <= date) return i;
+    }
+    return -1;
+  }, [sections]);
+
   const scrollToDate = useCallback((date: Date) => {
-    const sectionIndex = dateToSectionIndex.get(date.toDateString());
+    let sectionIndex = dateToSectionIndex.get(date.toDateString());
+    if (sectionIndex === undefined) {
+      const nearest = findNearestSectionBefore(date);
+      if (nearest !== -1) sectionIndex = nearest;
+    }
     if (sectionIndex !== undefined && sectionIndex < sections.length) {
       try {
         sectionListRef.current?.scrollToLocation({
@@ -549,7 +568,7 @@ export default function TimelineScreen() {
       }
       pendingScrollDateRef.current = null;
     }
-  }, [dateToSectionIndex, sections.length]);
+  }, [dateToSectionIndex, sections.length, findNearestSectionBefore]);
 
   useEffect(() => {
     if (pendingScrollDateRef.current) {
@@ -563,7 +582,12 @@ export default function TimelineScreen() {
   }, [scrollToDate]);
 
   const handleSummaryDateChange = useCallback((date: Date) => {
-    const sectionIndex = dateToSectionIndex.get(date.toDateString());
+    let sectionIndex = dateToSectionIndex.get(date.toDateString());
+    if (sectionIndex === undefined) {
+      const nearest = findNearestSectionBefore(date);
+      if (nearest !== -1) sectionIndex = nearest;
+    }
+
     if (sectionIndex !== undefined && sectionIndex < sections.length) {
       try {
         sectionListRef.current?.scrollToLocation({
@@ -584,7 +608,7 @@ export default function TimelineScreen() {
         setDaysToShow(needed);
       }
     }
-  }, [dateToSectionIndex, daysToShow, sections.length]);
+  }, [dateToSectionIndex, daysToShow, sections.length, findNearestSectionBefore]);
 
   const hasEntries = paginatedEntries.length > 0;
 
@@ -626,7 +650,7 @@ export default function TimelineScreen() {
               title={activeFilter !== "all" ? section.header : undefined}
               date={section.dateLabel}
               dateObj={section.dateObj}
-              summaryLines={activeFilter !== "all" ? section.summaryLines : undefined}
+              summaryLines={undefined}
               filter={activeFilter}
             />
           )}
@@ -645,6 +669,7 @@ export default function TimelineScreen() {
           className="flex-1"
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
+
           ListFooterComponent={hasMoreData ? (
             <View className="py-4 items-center">
               <ActivityIndicator size="small" color={getActionColor("primary", colorScheme === "dark")} />

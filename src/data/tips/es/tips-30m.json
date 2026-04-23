@@ -66,12 +66,6 @@
     "text": "Subir escaleras agarrándose del pasamanos es un gran logro a esta edad. Déjalo practicar en tramos cortos y seguros."
   },
   {
-    "id": "30m-development-12",
-    "ageGroup": "30m",
-    "category": "development",
-    "text": "El vocabulario de tu pequeño está creciendo rápidamente y puede alcanzar de 200 a 300 palabras a los 30 meses. Leer juntos todos los días es la mejor manera de ampliarlo."
-  },
-  {
     "id": "30m-development-13",
     "ageGroup": "30m",
     "category": "development",
@@ -192,12 +186,6 @@
     "text": "Tu pequeño puede practicar usando tenedor y cuchara en la mayoría de las comidas. Espera desorden — así es como aprenden a comer solos."
   },
   {
-    "id": "30m-feeding-03",
-    "ageGroup": "30m",
-    "category": "feeding",
-    "text": "A esta edad puedes cambiar a leche baja en grasa o desnatada, aunque algunos pediatras prefieren la leche entera para los que comen poco. Pregúntale a tu doctor qué es lo mejor para tu hijo. Apunta a unas {{16 oz|475 ml}} de leche al día."
-  },
-  {
     "id": "30m-feeding-04",
     "ageGroup": "30m",
     "category": "feeding",
@@ -270,12 +258,6 @@
     "text": "Si tu pequeño tira la comida, puede que haya terminado de comer o esté experimentando con causa y efecto. Termina la comida con calma en vez de reaccionar de forma exagerada."
   },
   {
-    "id": "30m-health-01",
-    "ageGroup": "30m",
-    "category": "health",
-    "text": "Tu pequeño debe visitar al dentista cada seis meses. Usa una cantidad de pasta dental con flúor del tamaño de un grano de arroz hasta los 3 años, luego cambia a una del tamaño de un guisante."
-  },
-  {
     "id": "30m-health-02",
     "ageGroup": "30m",
     "category": "health",
@@ -292,12 +274,6 @@
     "ageGroup": "30m",
     "category": "health",
     "text": "Cepilla los dientes de tu pequeño dos veces al día — por la mañana y antes de dormir. Déjalo sostener un cepillo también, pero encárgate tú del cepillado real."
-  },
-  {
-    "id": "30m-health-05",
-    "ageGroup": "30m",
-    "category": "health",
-    "text": "Una fiebre por debajo de {{102°F|39°C}} en un niño pequeño generalmente no es una emergencia. Fíjate en cómo se comporta — si juega y bebe líquidos, eso es tranquilizador."
   },
   {
     "id": "30m-health-06",
@@ -334,12 +310,6 @@
     "ageGroup": "30m",
     "category": "health",
     "text": "Si tu pequeño se resfría con frecuencia, es completamente normal — de 8 a 10 resfriados al año es típico en niños pequeños que están fortaleciendo su sistema inmunológico."
-  },
-  {
-    "id": "30m-health-12",
-    "ageGroup": "30m",
-    "category": "health",
-    "text": "El repelente de insectos con hasta 30% de DEET es seguro para niños pequeños. Aplícalo en la ropa y la piel expuesta, evitando las manos y la cara para que no se lo lleven a los ojos o la boca."
   },
   {
     "id": "30m-health-13",

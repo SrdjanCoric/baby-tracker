@@ -1,97 +1,518 @@
 [
-  {"id": "18m-development-01", "ageGroup": "18m", "category": "development", "text": "Le vocabulaire de ton tout-petit grandit rapidement et il comprend bien plus de mots qu'il ne peut en dire. Parle-lui tout au long de la journée pour continuer à développer ses compétences langagières."},
-  {"id": "18m-development-02", "ageGroup": "18m", "category": "development", "text": "La course, bien qu'instable, apparaît souvent vers 18 mois. Donne à ton tout-petit beaucoup de temps en plein air pour s'exercer à se déplacer à différentes vitesses."},
-  {"id": "18m-development-03", "ageGroup": "18m", "category": "development", "text": "Ton tout-petit se prépare à combiner les mots, ce qui se produit généralement plus près de 2 ans. Pour l'instant, des mots simples avec des gestes comme pointer et dire « lait » sont une excellente forme de communication."},
-  {"id": "18m-development-04", "ageGroup": "18m", "category": "development", "text": "Le jeu de rôle s'épanouit. Ton tout-petit peut nourrir une poupée, parler dans un téléphone jouet ou faire semblant de cuisiner. Rejoins-le et suis ses envies."},
-  {"id": "18m-development-05", "ageGroup": "18m", "category": "development", "text": "Ton tout-petit peut probablement empiler 3-4 cubes maintenant. Essaie de construire ensemble et vois à quelle hauteur tu peux aller avant que tout s'écroule dans un éclat de rire."},
-  {"id": "18m-development-06", "ageGroup": "18m", "category": "development", "text": "Les crises de colère sont normales et atteignent un pic entre 18 mois et 3 ans. Ton tout-petit a des émotions intenses mais pas encore les mots pour les exprimer."},
-  {"id": "18m-development-07", "ageGroup": "18m", "category": "development", "text": "Ton tout-petit peut pointer les parties du corps quand tu les nommes. Fais-en un jeu pendant le bain ou en l'habillant."},
-  {"id": "18m-development-08", "ageGroup": "18m", "category": "development", "text": "Monter les escaliers en te tenant la main est un nouveau défi pour lequel ton tout-petit peut être prêt. Laisse-le mener et aller à son rythme."},
-  {"id": "18m-development-09", "ageGroup": "18m", "category": "development", "text": "Ton tout-petit peut commencer à dire « non » fréquemment. Ce n'est pas de la désobéissance mais une expression saine de son indépendance grandissante et de sa conscience de soi."},
-  {"id": "18m-development-10", "ageGroup": "18m", "category": "development", "text": "Essaie des activités simples de tri avec deux couleurs ou formes. Ton tout-petit commence à comprendre les catégories et les différences."},
-  {"id": "18m-development-11", "ageGroup": "18m", "category": "development", "text": "Ton tout-petit peut montrer de l'intérêt pour les autres enfants, bien que le vrai jeu coopératif ne se développe que plus tard. Le jeu en parallèle aux côtés des autres enfants est la norme pour le moment."},
-  {"id": "18m-development-12", "ageGroup": "18m", "category": "development", "text": "Donner un coup de pied dans un ballon est une étape que beaucoup de tout-petits atteignent vers 18 mois. Commence avec un grand ballon mou sur une surface plane."},
-  {"id": "18m-development-13", "ageGroup": "18m", "category": "development", "text": "Ton tout-petit peut essayer de se déshabiller, en commençant par les chaussures et les chaussettes. Encourage cette indépendance même quand cela prend plus de temps."},
-  {"id": "18m-development-14", "ageGroup": "18m", "category": "development", "text": "Lire des livres avec des histoires simples et pointer les objets familiers renforce la compréhension et le vocabulaire de ton tout-petit."},
-  {"id": "18m-development-15", "ageGroup": "18m", "category": "development", "text": "Ton tout-petit peut suivre des consignes simples comme « apporte-moi tes chaussures » sans avoir besoin de gestes. Cela montre une compréhension croissante, une étape clé à ce stade."},
-
-  {"id": "18m-sleep-01", "ageGroup": "18m", "category": "sleep", "text": "La plupart des tout-petits passent à une seule sieste entre 14 et 18 mois. Si ton tout-petit ne fait qu'une sieste, elle dure généralement 1,5 à 3 heures en début d'après-midi."},
-  {"id": "18m-sleep-02", "ageGroup": "18m", "category": "sleep", "text": "Ton tout-petit peut connaître une régression du sommeil vers cet âge, souvent liée au développement du langage, à l'anxiété de séparation et à l'indépendance nouvellement acquise. Reste constant dans ta routine."},
-  {"id": "18m-sleep-03", "ageGroup": "18m", "category": "sleep", "text": "Ton tout-petit a besoin d'environ 11 à 14 heures de sommeil total par jour, sieste comprise. Vise une heure de coucher qui permet suffisamment d'heures de sommeil nocturne."},
-  {"id": "18m-sleep-04", "ageGroup": "18m", "category": "sleep", "text": "Les tout-petits à cet âge peuvent commencer à gagner du temps au moment du coucher, en demandant encore un livre ou encore une gorgée d'eau. Fixe des limites claires et bienveillantes dans ta routine du coucher."},
-  {"id": "18m-sleep-05", "ageGroup": "18m", "category": "sleep", "text": "Si ton tout-petit escalade le berceau, assure-toi que le matelas est au réglage le plus bas. Le plus sûr est de le garder dans le berceau aussi longtemps que possible."},
-  {"id": "18m-sleep-06", "ageGroup": "18m", "category": "sleep", "text": "Propose des choix dans la routine du coucher pour donner à ton tout-petit un sentiment de contrôle : « Tu veux le pyjama bleu ou le vert ? »"},
-  {"id": "18m-sleep-07", "ageGroup": "18m", "category": "sleep", "text": "Les terreurs nocturnes sont les plus fréquentes entre 2 et 5 ans mais peuvent parfois commencer plus tôt. Elles semblent effrayantes mais ton tout-petit n'est pas éveillé et ne s'en souviendra pas. Évite de le réveiller pendant un épisode."},
-  {"id": "18m-sleep-08", "ageGroup": "18m", "category": "sleep", "text": "Garde un écart d'au moins 4 à 5 heures entre la fin de la sieste et l'heure du coucher. Une sieste tardive peut repousser le coucher et perturber tout le rythme."},
-  {"id": "18m-sleep-09", "ageGroup": "18m", "category": "sleep", "text": "Un tableau visuel du coucher montrant chaque étape de la routine peut aider ton tout-petit à comprendre ce qui vient ensuite et à se sentir plus autonome."},
-  {"id": "18m-sleep-10", "ageGroup": "18m", "category": "sleep", "text": "Si ton tout-petit résiste au berceau, résiste à l'envie de passer à un lit de grand trop tôt. La plupart des enfants ne sont pas prêts avant au moins 2,5 à 3 ans."},
-  {"id": "18m-sleep-11", "ageGroup": "18m", "category": "sleep", "text": "L'anxiété de séparation au moment du coucher peut resurgir vers 18 mois. Un rituel d'au revoir court et prévisible aide ton tout-petit à se sentir en sécurité."},
-  {"id": "18m-sleep-12", "ageGroup": "18m", "category": "sleep", "text": "Le jeu actif en plein air pendant la journée favorise un meilleur sommeil la nuit. Vise au moins 60 minutes d'activité physique réparties dans la journée."},
-  {"id": "18m-sleep-13", "ageGroup": "18m", "category": "sleep", "text": "Si ton tout-petit se réveille tôt et joue tranquillement dans le berceau, tu peux le laisser profiter de ce moment calme jusqu'à une heure de réveil raisonnable."},
-  {"id": "18m-sleep-14", "ageGroup": "18m", "category": "sleep", "text": "Supprimer la sieste n'est pas recommandé à 18 mois. Si ton tout-petit saute occasionnellement une sieste, avance l'heure du coucher ce soir-là."},
-  {"id": "18m-sleep-15", "ageGroup": "18m", "category": "sleep", "text": "Une heure de réveil régulière, même le week-end, aide à réguler l'horloge interne de ton tout-petit et rend les siestes et le coucher plus prévisibles."},
-
-  {"id": "18m-feeding-01", "ageGroup": "18m", "category": "feeding", "text": "Les recommandations pédiatriques conseillent le sevrage du biberon à ce stade. Si tu n'as pas encore commencé, remplace un biberon à la fois par une tasse."},
-  {"id": "18m-feeding-02", "ageGroup": "18m", "category": "feeding", "text": "La phase d'alimentation difficile bat son plein. Continue de proposer une variété d'aliments sans pression. Ton rôle est de décider quoi et quand ; ton tout-petit décide combien il mange."},
-  {"id": "18m-feeding-03", "ageGroup": "18m", "category": "feeding", "text": "Ton tout-petit a besoin d'environ 1 000 à 1 400 calories par jour, mais ne compte pas les calories. Propose des repas et des collations équilibrés et fais confiance à son appétit."},
-  {"id": "18m-feeding-04", "ageGroup": "18m", "category": "feeding", "text": "Propose du lait entier ou du lait végétal enrichi mais limite la quantité à {{16-24 ounces|475-710 ml}} par jour. Trop de lait peut remplir le ventre et réduire l'appétit pour les aliments solides."},
-  {"id": "18m-feeding-05", "ageGroup": "18m", "category": "feeding", "text": "Ton tout-petit peut vouloir manger seulement un ou deux aliments préférés. Continue de proposer d'autres options à côté des aliments préférés sans en faire une bataille."},
-  {"id": "18m-feeding-06", "ageGroup": "18m", "category": "feeding", "text": "Implique ton tout-petit dans la préparation des repas. Il peut laver les légumes, déchirer la laitue ou remuer les ingrédients. Les enfants qui aident à cuisiner sont plus enclins à manger ce qu'ils préparent."},
-  {"id": "18m-feeding-07", "ageGroup": "18m", "category": "feeding", "text": "Tremper les aliments peut rendre les repas plus amusants pour les tout-petits. Essaie le houmous, le yaourt ou la purée d'avocat comme accompagnements sains."},
-  {"id": "18m-feeding-08", "ageGroup": "18m", "category": "feeding", "text": "Le rythme de croissance de ton tout-petit ralentit considérablement la deuxième année, ce qui signifie que son appétit peut diminuer. C'est tout à fait normal."},
-  {"id": "18m-feeding-09", "ageGroup": "18m", "category": "feeding", "text": "Propose des aliments riches en fer chaque jour : viande, haricots, lentilles, céréales enrichies et légumes verts à feuilles foncées. Associe-les à des aliments riches en vitamine C pour améliorer l'absorption."},
-  {"id": "18m-feeding-10", "ageGroup": "18m", "category": "feeding", "text": "Le goûter est une excellente occasion de compléter la nutrition. Considère les collations comme des mini-repas avec des protéines, des bonnes graisses et des fibres plutôt que de simples biscuits salés."},
-  {"id": "18m-feeding-11", "ageGroup": "18m", "category": "feeding", "text": "Laisse ton tout-petit s'exercer avec une fourchette en piquant des aliments mous comme des morceaux de banane, des pâtes cuites ou des cubes de fromage. Pique quelques morceaux à l'avance pour l'aider à démarrer."},
-  {"id": "18m-feeding-12", "ageGroup": "18m", "category": "feeding", "text": "Si ton tout-petit refuse les légumes, essaie différentes préparations : rôtis, à la vapeur, en smoothie ou mélangés dans une sauce tomate. La persévérance finit par payer."},
-  {"id": "18m-feeding-13", "ageGroup": "18m", "category": "feeding", "text": "Manger à table ensemble sans distractions comme la télé ou les tablettes aide ton tout-petit à se concentrer sur le repas et à apprendre en observant la famille."},
-  {"id": "18m-feeding-14", "ageGroup": "18m", "category": "feeding", "text": "Les tout-petits mangent souvent mieux à certains repas qu'à d'autres. Si le petit-déjeuner est un succès mais pas le dîner, ne t'inquiète pas. Regarde l'apport sur l'ensemble de la semaine."},
-  {"id": "18m-feeding-15", "ageGroup": "18m", "category": "feeding", "text": "Évite d'utiliser la nourriture comme récompense ou réconfort. Des phrases comme « mange tes légumes et tu auras du dessert » peuvent créer une relation malsaine avec la nourriture."},
-
-  {"id": "18m-health-01", "ageGroup": "18m", "category": "health", "text": "Les visites de suivi pédiatrique à ce stade incluent le dépistage développemental, les contrôles de croissance et les vaccins prévus. Apporte ta liste de questions."},
-  {"id": "18m-health-02", "ageGroup": "18m", "category": "health", "text": "Les premières molaires de ton tout-petit sortent généralement entre 13 et 19 mois, ce qui peut causer un inconfort important. Un gant de toilette froid et un antidouleur adapté à son âge peuvent aider."},
-  {"id": "18m-health-03", "ageGroup": "18m", "category": "health", "text": "Continue de brosser les dents de ton tout-petit deux fois par jour. Laisse-le essayer d'abord, puis fais un brossage complet pour t'assurer que toutes les surfaces sont bien nettoyées."},
-  {"id": "18m-health-04", "ageGroup": "18m", "category": "health", "text": "Si ton tout-petit n'utilise pas encore de mots, discutes-en lors de la visite des 18 mois. Une prise en charge précoce en orthophonie peut faire une vraie différence."},
-  {"id": "18m-health-05", "ageGroup": "18m", "category": "health", "text": "La diarrhée du tout-petit due à un excès de jus ou de fruits est courante. Limite le jus à {{4 ounces|120 ml}} ou moins par jour et propose des fruits entiers à la place."},
-  {"id": "18m-health-06", "ageGroup": "18m", "category": "health", "text": "Les bosses, les éraflures et les bleus sur les tibias et le front font partie de la vie de tout-petit. Nettoie les petites plaies avec du savon et de l'eau et applique un pansement."},
-  {"id": "18m-health-07", "ageGroup": "18m", "category": "health", "text": "Applique un écran solaire à large spectre 15 minutes avant de sortir et réapplique toutes les 2 heures. N'oublie pas les oreilles, les pieds et l'arrière du cou."},
-  {"id": "18m-health-08", "ageGroup": "18m", "category": "health", "text": "Si ton tout-petit fait des crises fréquentes en se cognant la tête, c'est généralement une phase. Parles-en à ton pédiatre si cela devient très fréquent ou provoque des blessures."},
-  {"id": "18m-health-09", "ageGroup": "18m", "category": "health", "text": "Le VRS et la grippe sont plus fréquents pendant les mois froids. Apprends à ton tout-petit à tousser dans son coude et à se laver les mains régulièrement."},
-  {"id": "18m-health-10", "ageGroup": "18m", "category": "health", "text": "Vérifie que les chaussures de ton tout-petit sont bien ajustées avec environ la largeur d'un pouce d'espace au bout des orteils. Les pieds grandissent vite et les chaussures peuvent devoir être remplacées tous les quelques mois."},
-  {"id": "18m-health-11", "ageGroup": "18m", "category": "health", "text": "Des jambes légèrement arquées sont normales à cet âge et se redressent généralement vers 3 ans. Mentionne toute inquiétude lors de ta prochaine visite de suivi pédiatrique."},
-  {"id": "18m-health-12", "ageGroup": "18m", "category": "health", "text": "Si ton tout-petit marche sur la pointe des pieds de temps en temps, c'est généralement de l'exploration. Une marche sur la pointe des pieds persistante après 2 ans doit être discutée avec ton pédiatre."},
-  {"id": "18m-health-13", "ageGroup": "18m", "category": "health", "text": "Le dépistage de l'autisme est recommandé vers cet âge. Demande à ton pédiatre si cela n'a pas encore été fait. Une identification précoce permet les meilleurs résultats en matière d'intervention."},
-  {"id": "18m-health-14", "ageGroup": "18m", "category": "health", "text": "La carence en fer est la carence nutritionnelle la plus courante chez les tout-petits. Si ton tout-petit semble anormalement fatigué ou pâle, demande à ton pédiatre de faire un bilan."},
-  {"id": "18m-health-15", "ageGroup": "18m", "category": "health", "text": "Les experts en pédiatrie recommandent de limiter les écrans, à l'exception des appels vidéo, pour les enfants de moins de 18 mois. Privilégie les interactions dans le monde réel, car rien ne remplace le jeu en face à face pour l'apprentissage à cet âge."},
-
-  {"id": "18m-play-01", "ageGroup": "18m", "category": "play", "text": "Donne à ton tout-petit des crayons et une grande feuille de papier par terre. Le gribouillage évolue vers des traits plus intentionnels et prépare à l'écriture."},
-  {"id": "18m-play-02", "ageGroup": "18m", "category": "play", "text": "La pâte à modeler est une merveilleuse activité sensorielle à cet âge. Ton tout-petit peut la presser, la piquer, la rouler et l'aplatir, ce qui renforce la force des mains."},
-  {"id": "18m-play-03", "ageGroup": "18m", "category": "play", "text": "Organise une dinette ou un goûter imaginaire. Verser, remuer et servir développent la motricité fine et l'imagination sociale."},
-  {"id": "18m-play-04", "ageGroup": "18m", "category": "play", "text": "Fais une promenade dans la nature et ramasse des feuilles, des bâtons et des pommes de pin dans un sac. Les trier et les examiner ensuite prolonge l'apprentissage."},
-  {"id": "18m-play-05", "ageGroup": "18m", "category": "play", "text": "Les puzzles simples avec 3 à 5 grandes pièces à boutons aident ton tout-petit à développer la résolution de problèmes et le repérage dans l'espace."},
-  {"id": "18m-play-06", "ageGroup": "18m", "category": "play", "text": "Les fêtes dansantes sont parfaites pour cet âge. Mets de la musique et montre différents mouvements comme sauter, tourner et taper des mains."},
-  {"id": "18m-play-07", "ageGroup": "18m", "category": "play", "text": "Les jeux d'eau avec des tasses, des entonnoirs et des éponges sont infiniment fascinants. Installe un bac dehors ou utilise la baignoire sous surveillance étroite."},
-  {"id": "18m-play-08", "ageGroup": "18m", "category": "play", "text": "Cache des jouets dans la pièce et aide ton tout-petit à les trouver. Ce jeu de chasse au trésor développe la mémoire et le raisonnement spatial."},
-  {"id": "18m-play-09", "ageGroup": "18m", "category": "play", "text": "Ton tout-petit peut aimer jouer avec des poupées ou des peluches, les nourrir, les coucher ou leur faire des câlins. Ce jeu bienveillant développe l'empathie."},
-  {"id": "18m-play-10", "ageGroup": "18m", "category": "play", "text": "Laisse ton tout-petit grimper à l'aire de jeux sur les structures adaptées à son âge. L'escalade supervisée développe la confiance, la force et la coordination."},
-  {"id": "18m-play-11", "ageGroup": "18m", "category": "play", "text": "Essaie de dessiner des formes simples et vois si ton tout-petit essaie de les reproduire. Il n'y arrivera peut-être pas encore, mais c'est la tentative qui compte."},
-  {"id": "18m-play-12", "ageGroup": "18m", "category": "play", "text": "Propose un balai jouet, une pelle à poussière ou un arrosoir. Les tout-petits adorent imiter les tâches ménagères et cela leur donne le sentiment d'être utiles."},
-  {"id": "18m-play-13", "ageGroup": "18m", "category": "play", "text": "Chante des chansons avec des gestes comme « Tête, épaules, genoux et pieds ». Ton tout-petit commencera à anticiper les mouvements et à y participer."},
-  {"id": "18m-play-14", "ageGroup": "18m", "category": "play", "text": "Crée un coin bricolage avec des feutres lavables, des autocollants et du papier. Décoller et placer les autocollants est un excellent exercice de motricité fine."},
-  {"id": "18m-play-15", "ageGroup": "18m", "category": "play", "text": "Joue avec un ballon : tape dedans, fais-le rouler, lance-le. Ton tout-petit apprend à coordonner les mouvements de tout le corps avec une cible en mouvement."},
-
-  {"id": "18m-safety-01", "ageGroup": "18m", "category": "safety", "text": "Ton tout-petit devient un grimpeur. Fixe tous les meubles hauts au mur, retire les chaises près des comptoirs et vérifie régulièrement les nouveaux risques d'escalade."},
-  {"id": "18m-safety-02", "ageGroup": "18m", "category": "safety", "text": "Garde ton tout-petit dos à la route dans le siège auto aussi longtemps qu'il respecte les limites de taille et de poids du siège. Dos à la route est la position la plus sûre."},
-  {"id": "18m-safety-03", "ageGroup": "18m", "category": "safety", "text": "Apprends à ton tout-petit « chaud » et « on ne touche pas » près du four, de la cuisinière et de la cheminée. Il commence à comprendre ces avertissements."},
-  {"id": "18m-safety-04", "ageGroup": "18m", "category": "safety", "text": "Ne laisse jamais ton tout-petit sans surveillance dans l'eau ou à proximité, y compris les toilettes. Les tout-petits ont le haut du corps plus lourd et peuvent basculer dans les toilettes la tête la première."},
-  {"id": "18m-safety-05", "ageGroup": "18m", "category": "safety", "text": "Range tous les médicaments, vitamines et compléments dans des contenants sécurisés dans un placard verrouillé. Les tout-petits peuvent ouvrir plus de types de contenants que tu ne le penses."},
-  {"id": "18m-safety-06", "ageGroup": "18m", "category": "safety", "text": "Coupe la nourriture en morceaux pas plus gros que {{half an inch|1,5 cm}} pour ton tout-petit. Les risques d'étouffement courants incluent les raisins entiers, les saucisses, les carottes crues et le popcorn."},
-  {"id": "18m-safety-07", "ageGroup": "18m", "category": "safety", "text": "Utilise les brûleurs arrière quand tu cuisines et tourne les poignées des casseroles vers l'intérieur. Ton tout-petit peut maintenant atteindre les brûleurs avant en tirant ou en grimpant."},
-  {"id": "18m-safety-08", "ageGroup": "18m", "category": "safety", "text": "Si tu as une arme à feu à la maison, range-la déchargée dans un coffre-fort verrouillé avec les munitions verrouillées séparément. C'est une mesure de sécurité essentielle recommandée par les experts en pédiatrie."},
-  {"id": "18m-safety-09", "ageGroup": "18m", "category": "safety", "text": "Les chutes par la fenêtre sont un risque sérieux à cet âge. Installe des protections ou des butées de fenêtre qui empêchent l'ouverture de plus de {{4 inches|10 cm}}."},
-  {"id": "18m-safety-10", "ageGroup": "18m", "category": "safety", "text": "Supervise toujours ton tout-petit autour des animaux de compagnie, même les plus doux. Les tout-petits peuvent involontairement faire mal aux animaux, qui peuvent réagir de manière défensive."},
-  {"id": "18m-safety-11", "ageGroup": "18m", "category": "safety", "text": "Entraîne-toi à dire le nom complet de ton tout-petit, ton numéro de téléphone et ton adresse à haute voix devant lui. Il ne s'en souviendra pas encore, mais l'exposition précoce aide."},
-  {"id": "18m-safety-12", "ageGroup": "18m", "category": "safety", "text": "Vérifie ta maison pour les capsules de lessive et de lave-vaisselle, qui ressemblent à des bonbons pour les tout-petits. Range-les dans un placard en hauteur et verrouillé."},
-  {"id": "18m-safety-13", "ageGroup": "18m", "category": "safety", "text": "Ton tout-petit peut apprendre à ouvrir les portes. Installe des verrous en hauteur ou des cache-poignées sur les portes extérieures pour empêcher les sorties sans surveillance."},
-  {"id": "18m-safety-14", "ageGroup": "18m", "category": "safety", "text": "Assure-toi que ton tout-petit porte un gilet de sauvetage bien ajusté près de toute étendue d'eau, quelle que soit la profondeur. Les brassards ne sont pas un substitut."},
-  {"id": "18m-safety-15", "ageGroup": "18m", "category": "safety", "text": "Garde les piles bouton hors de portée et sécurise les compartiments à piles avec des vis. Une pile bouton avalée peut causer de graves brûlures internes en quelques heures."}
+  {
+    "id": "18m-development-01",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Le vocabulaire de ton tout-petit grandit rapidement et il comprend bien plus de mots qu'il ne peut en dire. Parle-lui tout au long de la journée pour continuer à développer ses compétences langagières."
+  },
+  {
+    "id": "18m-development-02",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "La course, bien qu'instable, apparaît souvent vers 18 mois. Donne à ton tout-petit beaucoup de temps en plein air pour s'exercer à se déplacer à différentes vitesses."
+  },
+  {
+    "id": "18m-development-03",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Ton tout-petit se prépare à combiner les mots, ce qui se produit généralement plus près de 2 ans. Pour l'instant, des mots simples avec des gestes comme pointer et dire « lait » sont une excellente forme de communication."
+  },
+  {
+    "id": "18m-development-04",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Le jeu de rôle s'épanouit. Ton tout-petit peut nourrir une poupée, parler dans un téléphone jouet ou faire semblant de cuisiner. Rejoins-le et suis ses envies."
+  },
+  {
+    "id": "18m-development-05",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Ton tout-petit peut probablement empiler 3-4 cubes maintenant. Essaie de construire ensemble et vois à quelle hauteur tu peux aller avant que tout s'écroule dans un éclat de rire."
+  },
+  {
+    "id": "18m-development-06",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Les crises de colère sont normales et atteignent un pic entre 18 mois et 3 ans. Ton tout-petit a des émotions intenses mais pas encore les mots pour les exprimer."
+  },
+  {
+    "id": "18m-development-07",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Ton tout-petit peut pointer les parties du corps quand tu les nommes. Fais-en un jeu pendant le bain ou en l'habillant."
+  },
+  {
+    "id": "18m-development-08",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Monter les escaliers en te tenant la main est un nouveau défi pour lequel ton tout-petit peut être prêt. Laisse-le mener et aller à son rythme."
+  },
+  {
+    "id": "18m-development-09",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Ton tout-petit peut commencer à dire « non » fréquemment. Ce n'est pas de la désobéissance mais une expression saine de son indépendance grandissante et de sa conscience de soi."
+  },
+  {
+    "id": "18m-development-10",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Essaie des activités simples de tri avec deux couleurs ou formes. Ton tout-petit commence à comprendre les catégories et les différences."
+  },
+  {
+    "id": "18m-development-11",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Ton tout-petit peut montrer de l'intérêt pour les autres enfants, bien que le vrai jeu coopératif ne se développe que plus tard. Le jeu en parallèle aux côtés des autres enfants est la norme pour le moment."
+  },
+  {
+    "id": "18m-development-12",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Donner un coup de pied dans un ballon est une étape que beaucoup de tout-petits atteignent vers 18 mois. Commence avec un grand ballon mou sur une surface plane."
+  },
+  {
+    "id": "18m-development-13",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Ton tout-petit peut essayer de se déshabiller, en commençant par les chaussures et les chaussettes. Encourage cette indépendance même quand cela prend plus de temps."
+  },
+  {
+    "id": "18m-development-14",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Lire des livres avec des histoires simples et pointer les objets familiers renforce la compréhension et le vocabulaire de ton tout-petit."
+  },
+  {
+    "id": "18m-development-15",
+    "ageGroup": "18m",
+    "category": "development",
+    "text": "Ton tout-petit peut suivre des consignes simples comme « apporte-moi tes chaussures » sans avoir besoin de gestes. Cela montre une compréhension croissante, une étape clé à ce stade."
+  },
+  {
+    "id": "18m-sleep-01",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "La plupart des tout-petits passent à une seule sieste entre 14 et 18 mois. Si ton tout-petit ne fait qu'une sieste, elle dure généralement 1,5 à 3 heures en début d'après-midi."
+  },
+  {
+    "id": "18m-sleep-02",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Ton tout-petit peut connaître une régression du sommeil vers cet âge, souvent liée au développement du langage, à l'anxiété de séparation et à l'indépendance nouvellement acquise. Reste constant dans ta routine."
+  },
+  {
+    "id": "18m-sleep-03",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Ton tout-petit a besoin d'environ 11 à 14 heures de sommeil total par jour, sieste comprise. Vise une heure de coucher qui permet suffisamment d'heures de sommeil nocturne."
+  },
+  {
+    "id": "18m-sleep-04",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Les tout-petits à cet âge peuvent commencer à gagner du temps au moment du coucher, en demandant encore un livre ou encore une gorgée d'eau. Fixe des limites claires et bienveillantes dans ta routine du coucher."
+  },
+  {
+    "id": "18m-sleep-05",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Si ton tout-petit escalade le berceau, assure-toi que le matelas est au réglage le plus bas. Le plus sûr est de le garder dans le berceau aussi longtemps que possible."
+  },
+  {
+    "id": "18m-sleep-06",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Propose des choix dans la routine du coucher pour donner à ton tout-petit un sentiment de contrôle : « Tu veux le pyjama bleu ou le vert ? »"
+  },
+  {
+    "id": "18m-sleep-07",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Les terreurs nocturnes sont les plus fréquentes entre 2 et 5 ans mais peuvent parfois commencer plus tôt. Elles semblent effrayantes mais ton tout-petit n'est pas éveillé et ne s'en souviendra pas. Évite de le réveiller pendant un épisode."
+  },
+  {
+    "id": "18m-sleep-08",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Garde un écart d'au moins 4 à 5 heures entre la fin de la sieste et l'heure du coucher. Une sieste tardive peut repousser le coucher et perturber tout le rythme."
+  },
+  {
+    "id": "18m-sleep-09",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Un tableau visuel du coucher montrant chaque étape de la routine peut aider ton tout-petit à comprendre ce qui vient ensuite et à se sentir plus autonome."
+  },
+  {
+    "id": "18m-sleep-11",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "L'anxiété de séparation au moment du coucher peut resurgir vers 18 mois. Un rituel d'au revoir court et prévisible aide ton tout-petit à se sentir en sécurité."
+  },
+  {
+    "id": "18m-sleep-12",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Le jeu actif en plein air pendant la journée favorise un meilleur sommeil la nuit. Vise au moins 60 minutes d'activité physique réparties dans la journée."
+  },
+  {
+    "id": "18m-sleep-13",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Si ton tout-petit se réveille tôt et joue tranquillement dans le berceau, tu peux le laisser profiter de ce moment calme jusqu'à une heure de réveil raisonnable."
+  },
+  {
+    "id": "18m-sleep-14",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Supprimer la sieste n'est pas recommandé à 18 mois. Si ton tout-petit saute occasionnellement une sieste, avance l'heure du coucher ce soir-là."
+  },
+  {
+    "id": "18m-sleep-15",
+    "ageGroup": "18m",
+    "category": "sleep",
+    "text": "Une heure de réveil régulière, même le week-end, aide à réguler l'horloge interne de ton tout-petit et rend les siestes et le coucher plus prévisibles."
+  },
+  {
+    "id": "18m-feeding-01",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Les recommandations pédiatriques conseillent le sevrage du biberon à ce stade. Si tu n'as pas encore commencé, remplace un biberon à la fois par une tasse."
+  },
+  {
+    "id": "18m-feeding-02",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "La phase d'alimentation difficile bat son plein. Continue de proposer une variété d'aliments sans pression. Ton rôle est de décider quoi et quand ; ton tout-petit décide combien il mange."
+  },
+  {
+    "id": "18m-feeding-03",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Ton tout-petit a besoin d'environ 1 000 à 1 400 calories par jour, mais ne compte pas les calories. Propose des repas et des collations équilibrés et fais confiance à son appétit."
+  },
+  {
+    "id": "18m-feeding-04",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Propose du lait entier ou du lait végétal enrichi mais limite la quantité à {{16-24 ounces|475-710 ml}} par jour. Trop de lait peut remplir le ventre et réduire l'appétit pour les aliments solides."
+  },
+  {
+    "id": "18m-feeding-05",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Ton tout-petit peut vouloir manger seulement un ou deux aliments préférés. Continue de proposer d'autres options à côté des aliments préférés sans en faire une bataille."
+  },
+  {
+    "id": "18m-feeding-06",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Implique ton tout-petit dans la préparation des repas. Il peut laver les légumes, déchirer la laitue ou remuer les ingrédients. Les enfants qui aident à cuisiner sont plus enclins à manger ce qu'ils préparent."
+  },
+  {
+    "id": "18m-feeding-07",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Tremper les aliments peut rendre les repas plus amusants pour les tout-petits. Essaie le houmous, le yaourt ou la purée d'avocat comme accompagnements sains."
+  },
+  {
+    "id": "18m-feeding-08",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Le rythme de croissance de ton tout-petit ralentit considérablement la deuxième année, ce qui signifie que son appétit peut diminuer. C'est tout à fait normal."
+  },
+  {
+    "id": "18m-feeding-09",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Propose des aliments riches en fer chaque jour : viande, haricots, lentilles, céréales enrichies et légumes verts à feuilles foncées. Associe-les à des aliments riches en vitamine C pour améliorer l'absorption."
+  },
+  {
+    "id": "18m-feeding-10",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Le goûter est une excellente occasion de compléter la nutrition. Considère les collations comme des mini-repas avec des protéines, des bonnes graisses et des fibres plutôt que de simples biscuits salés."
+  },
+  {
+    "id": "18m-feeding-11",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Laisse ton tout-petit s'exercer avec une fourchette en piquant des aliments mous comme des morceaux de banane, des pâtes cuites ou des cubes de fromage. Pique quelques morceaux à l'avance pour l'aider à démarrer."
+  },
+  {
+    "id": "18m-feeding-12",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Si ton tout-petit refuse les légumes, essaie différentes préparations : rôtis, à la vapeur, en smoothie ou mélangés dans une sauce tomate. La persévérance finit par payer."
+  },
+  {
+    "id": "18m-feeding-13",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Manger à table ensemble sans distractions comme la télé ou les tablettes aide ton tout-petit à se concentrer sur le repas et à apprendre en observant la famille."
+  },
+  {
+    "id": "18m-feeding-14",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Les tout-petits mangent souvent mieux à certains repas qu'à d'autres. Si le petit-déjeuner est un succès mais pas le dîner, ne t'inquiète pas. Regarde l'apport sur l'ensemble de la semaine."
+  },
+  {
+    "id": "18m-feeding-15",
+    "ageGroup": "18m",
+    "category": "feeding",
+    "text": "Évite d'utiliser la nourriture comme récompense ou réconfort. Des phrases comme « mange tes légumes et tu auras du dessert » peuvent créer une relation malsaine avec la nourriture."
+  },
+  {
+    "id": "18m-health-01",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Les visites de suivi pédiatrique à ce stade incluent le dépistage développemental, les contrôles de croissance et les vaccins prévus. Apporte ta liste de questions."
+  },
+  {
+    "id": "18m-health-02",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Les premières molaires de ton tout-petit sortent généralement entre 13 et 19 mois, ce qui peut causer un inconfort important. Un gant de toilette froid et un antidouleur adapté à son âge peuvent aider."
+  },
+  {
+    "id": "18m-health-03",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Continue de brosser les dents de ton tout-petit deux fois par jour. Laisse-le essayer d'abord, puis fais un brossage complet pour t'assurer que toutes les surfaces sont bien nettoyées."
+  },
+  {
+    "id": "18m-health-05",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "La diarrhée du tout-petit due à un excès de jus ou de fruits est courante. Limite le jus à {{4 ounces|120 ml}} ou moins par jour et propose des fruits entiers à la place."
+  },
+  {
+    "id": "18m-health-06",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Les bosses, les éraflures et les bleus sur les tibias et le front font partie de la vie de tout-petit. Nettoie les petites plaies avec du savon et de l'eau et applique un pansement."
+  },
+  {
+    "id": "18m-health-07",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Applique un écran solaire à large spectre 15 minutes avant de sortir et réapplique toutes les 2 heures. N'oublie pas les oreilles, les pieds et l'arrière du cou."
+  },
+  {
+    "id": "18m-health-08",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Si ton tout-petit fait des crises fréquentes en se cognant la tête, c'est généralement une phase. Parles-en à ton pédiatre si cela devient très fréquent ou provoque des blessures."
+  },
+  {
+    "id": "18m-health-09",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Le VRS et la grippe sont plus fréquents pendant les mois froids. Apprends à ton tout-petit à tousser dans son coude et à se laver les mains régulièrement."
+  },
+  {
+    "id": "18m-health-10",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Vérifie que les chaussures de ton tout-petit sont bien ajustées avec environ la largeur d'un pouce d'espace au bout des orteils. Les pieds grandissent vite et les chaussures peuvent devoir être remplacées tous les quelques mois."
+  },
+  {
+    "id": "18m-health-11",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Des jambes légèrement arquées sont normales à cet âge et se redressent généralement vers 3 ans. Mentionne toute inquiétude lors de ta prochaine visite de suivi pédiatrique."
+  },
+  {
+    "id": "18m-health-12",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Si ton tout-petit marche sur la pointe des pieds de temps en temps, c'est généralement de l'exploration. Une marche sur la pointe des pieds persistante après 2 ans doit être discutée avec ton pédiatre."
+  },
+  {
+    "id": "18m-health-13",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "Le dépistage de l'autisme est recommandé vers cet âge. Demande à ton pédiatre si cela n'a pas encore été fait. Une identification précoce permet les meilleurs résultats en matière d'intervention."
+  },
+  {
+    "id": "18m-health-14",
+    "ageGroup": "18m",
+    "category": "health",
+    "text": "La carence en fer est la carence nutritionnelle la plus courante chez les tout-petits. Si ton tout-petit semble anormalement fatigué ou pâle, demande à ton pédiatre de faire un bilan."
+  },
+  {
+    "id": "18m-play-01",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Donne à ton tout-petit des crayons et une grande feuille de papier par terre. Le gribouillage évolue vers des traits plus intentionnels et prépare à l'écriture."
+  },
+  {
+    "id": "18m-play-02",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "La pâte à modeler est une merveilleuse activité sensorielle à cet âge. Ton tout-petit peut la presser, la piquer, la rouler et l'aplatir, ce qui renforce la force des mains."
+  },
+  {
+    "id": "18m-play-03",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Organise une dinette ou un goûter imaginaire. Verser, remuer et servir développent la motricité fine et l'imagination sociale."
+  },
+  {
+    "id": "18m-play-04",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Fais une promenade dans la nature et ramasse des feuilles, des bâtons et des pommes de pin dans un sac. Les trier et les examiner ensuite prolonge l'apprentissage."
+  },
+  {
+    "id": "18m-play-05",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Les puzzles simples avec 3 à 5 grandes pièces à boutons aident ton tout-petit à développer la résolution de problèmes et le repérage dans l'espace."
+  },
+  {
+    "id": "18m-play-06",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Les fêtes dansantes sont parfaites pour cet âge. Mets de la musique et montre différents mouvements comme sauter, tourner et taper des mains."
+  },
+  {
+    "id": "18m-play-07",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Les jeux d'eau avec des tasses, des entonnoirs et des éponges sont infiniment fascinants. Installe un bac dehors ou utilise la baignoire sous surveillance étroite."
+  },
+  {
+    "id": "18m-play-08",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Cache des jouets dans la pièce et aide ton tout-petit à les trouver. Ce jeu de chasse au trésor développe la mémoire et le raisonnement spatial."
+  },
+  {
+    "id": "18m-play-09",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Ton tout-petit peut aimer jouer avec des poupées ou des peluches, les nourrir, les coucher ou leur faire des câlins. Ce jeu bienveillant développe l'empathie."
+  },
+  {
+    "id": "18m-play-10",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Laisse ton tout-petit grimper à l'aire de jeux sur les structures adaptées à son âge. L'escalade supervisée développe la confiance, la force et la coordination."
+  },
+  {
+    "id": "18m-play-11",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Essaie de dessiner des formes simples et vois si ton tout-petit essaie de les reproduire. Il n'y arrivera peut-être pas encore, mais c'est la tentative qui compte."
+  },
+  {
+    "id": "18m-play-12",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Propose un balai jouet, une pelle à poussière ou un arrosoir. Les tout-petits adorent imiter les tâches ménagères et cela leur donne le sentiment d'être utiles."
+  },
+  {
+    "id": "18m-play-13",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Chante des chansons avec des gestes comme « Tête, épaules, genoux et pieds ». Ton tout-petit commencera à anticiper les mouvements et à y participer."
+  },
+  {
+    "id": "18m-play-14",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Crée un coin bricolage avec des feutres lavables, des autocollants et du papier. Décoller et placer les autocollants est un excellent exercice de motricité fine."
+  },
+  {
+    "id": "18m-play-15",
+    "ageGroup": "18m",
+    "category": "play",
+    "text": "Joue avec un ballon : tape dedans, fais-le rouler, lance-le. Ton tout-petit apprend à coordonner les mouvements de tout le corps avec une cible en mouvement."
+  },
+  {
+    "id": "18m-safety-01",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Ton tout-petit devient un grimpeur. Fixe tous les meubles hauts au mur, retire les chaises près des comptoirs et vérifie régulièrement les nouveaux risques d'escalade."
+  },
+  {
+    "id": "18m-safety-02",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Garde ton tout-petit dos à la route dans le siège auto aussi longtemps qu'il respecte les limites de taille et de poids du siège. Dos à la route est la position la plus sûre."
+  },
+  {
+    "id": "18m-safety-03",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Apprends à ton tout-petit « chaud » et « on ne touche pas » près du four, de la cuisinière et de la cheminée. Il commence à comprendre ces avertissements."
+  },
+  {
+    "id": "18m-safety-04",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Ne laisse jamais ton tout-petit sans surveillance dans l'eau ou à proximité, y compris les toilettes. Les tout-petits ont le haut du corps plus lourd et peuvent basculer dans les toilettes la tête la première."
+  },
+  {
+    "id": "18m-safety-05",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Range tous les médicaments, vitamines et compléments dans des contenants sécurisés dans un placard verrouillé. Les tout-petits peuvent ouvrir plus de types de contenants que tu ne le penses."
+  },
+  {
+    "id": "18m-safety-07",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Utilise les brûleurs arrière quand tu cuisines et tourne les poignées des casseroles vers l'intérieur. Ton tout-petit peut maintenant atteindre les brûleurs avant en tirant ou en grimpant."
+  },
+  {
+    "id": "18m-safety-08",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Si tu as une arme à feu à la maison, range-la déchargée dans un coffre-fort verrouillé avec les munitions verrouillées séparément. C'est une mesure de sécurité essentielle recommandée par les experts en pédiatrie."
+  },
+  {
+    "id": "18m-safety-09",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Les chutes par la fenêtre sont un risque sérieux à cet âge. Installe des protections ou des butées de fenêtre qui empêchent l'ouverture de plus de {{4 inches|10 cm}}."
+  },
+  {
+    "id": "18m-safety-10",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Supervise toujours ton tout-petit autour des animaux de compagnie, même les plus doux. Les tout-petits peuvent involontairement faire mal aux animaux, qui peuvent réagir de manière défensive."
+  },
+  {
+    "id": "18m-safety-11",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Entraîne-toi à dire le nom complet de ton tout-petit, ton numéro de téléphone et ton adresse à haute voix devant lui. Il ne s'en souviendra pas encore, mais l'exposition précoce aide."
+  },
+  {
+    "id": "18m-safety-12",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Vérifie ta maison pour les capsules de lessive et de lave-vaisselle, qui ressemblent à des bonbons pour les tout-petits. Range-les dans un placard en hauteur et verrouillé."
+  },
+  {
+    "id": "18m-safety-13",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Ton tout-petit peut apprendre à ouvrir les portes. Installe des verrous en hauteur ou des cache-poignées sur les portes extérieures pour empêcher les sorties sans surveillance."
+  },
+  {
+    "id": "18m-safety-14",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Assure-toi que ton tout-petit porte un gilet de sauvetage bien ajusté près de toute étendue d'eau, quelle que soit la profondeur. Les brassards ne sont pas un substitut."
+  },
+  {
+    "id": "18m-safety-15",
+    "ageGroup": "18m",
+    "category": "safety",
+    "text": "Garde les piles bouton hors de portée et sécurise les compartiments à piles avec des vis. Une pile bouton avalée peut causer de graves brûlures internes en quelques heures."
+  }
 ]

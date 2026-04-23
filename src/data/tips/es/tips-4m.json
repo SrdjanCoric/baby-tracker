@@ -168,12 +168,6 @@
     "text": "La mayoría de bebés de esta edad toman 3-4 siestas al día. No te preocupes por un horario perfecto todavía; seguir las señales de sueño de tu bebé es más importante."
   },
   {
-    "id": "4m-sleep-04",
-    "ageGroup": "4m",
-    "category": "sleep",
-    "text": "Si tu bebé ya se voltea, es hora de dejar de envolverlo. Cámbialo a un saco de dormir que deje los brazos libres para que pueda moverse con seguridad."
-  },
-  {
     "id": "4m-sleep-05",
     "ageGroup": "4m",
     "category": "sleep",
@@ -264,12 +258,6 @@
     "text": "Intenta separar la última toma del día del momento en que tu bebé se duerme. Incluso un pequeño intervalo ayuda a reducir la asociación entre comer y dormir."
   },
   {
-    "id": "4m-sleep-20",
-    "ageGroup": "4m",
-    "category": "sleep",
-    "text": "Observa si tu bebé se frota los ojos, se tira de las orejas o se pone inquieto. Estas son señales tardías de sueño, así que intenta detectarlas antes de que se canse demasiado."
-  },
-  {
     "id": "4m-sleep-21",
     "ageGroup": "4m",
     "category": "sleep",
@@ -304,12 +292,6 @@
     "ageGroup": "4m",
     "category": "feeding",
     "text": "Tu bebé puede parecer más distraído durante las tomas, soltándose para mirar alrededor. Intenta alimentarlo en una habitación tranquila y con poca luz si esto se convierte en un problema."
-  },
-  {
-    "id": "4m-feeding-02",
-    "ageGroup": "4m",
-    "category": "feeding",
-    "text": "Los bebés amamantados pueden volverse más eficientes, terminando en 10-15 minutos por lado en lugar de las largas sesiones de los primeros meses."
   },
   {
     "id": "4m-feeding-03",
@@ -408,12 +390,6 @@
     "text": "Si tu bebé de repente quiere mamar más seguido, no significa que tu producción esté bajando. Los estirones de crecimiento y la lactancia por consuelo son muy comunes en este momento."
   },
   {
-    "id": "4m-feeding-19",
-    "ageGroup": "4m",
-    "category": "feeding",
-    "text": "Las regurgitaciones suelen alcanzar su punto máximo alrededor de los 3-4 meses y luego disminuyen gradualmente. Mientras tu bebé gane peso y no tenga dolor, generalmente es solo un problema de lavandería."
-  },
-  {
     "id": "4m-feeding-20",
     "ageGroup": "4m",
     "category": "feeding",
@@ -492,12 +468,6 @@
     "text": "Tu bebé ya debería seguir objetos con la mirada de forma fluida y hacer contacto visual. Si sus ojos parecen constantemente cruzados después de los 3 meses, coméntalo con tu médico."
   },
   {
-    "id": "4m-health-08",
-    "ageGroup": "4m",
-    "category": "health",
-    "text": "Aplica protector solar de amplio espectro en las pequeñas áreas expuestas si la ropa con protección solar y la sombra no son suficientes, incluso en bebés menores de 6 meses."
-  },
-  {
     "id": "4m-health-09",
     "ageGroup": "4m",
     "category": "health",
@@ -574,12 +544,6 @@
     "ageGroup": "4m",
     "category": "health",
     "text": "Si tu bebé tiene la nariz tapada y le cuesta comer, prueba a ponerle gotas de solución salina y usar un aspirador nasal unos minutos antes de la toma para despejarle las vías respiratorias."
-  },
-  {
-    "id": "4m-health-22",
-    "ageGroup": "4m",
-    "category": "health",
-    "text": "Evita los medicamentos para el resfriado de venta libre en bebés menores de 2 años. Las gotas de solución salina, un humidificador y abundantes líquidos son los remedios más seguros."
   },
   {
     "id": "4m-health-23",

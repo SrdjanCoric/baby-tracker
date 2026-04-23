@@ -1,157 +1,872 @@
 [
-  {"id": "2m-development-01", "ageGroup": "2m", "category": "development", "text": "Seu bebê pode começar a levantar brevemente a cabeça durante a hora da barriguinha. Mesmo que sejam poucos segundos, já é um grande progresso!"},
-  {"id": "2m-development-02", "ageGroup": "2m", "category": "development", "text": "Recém-nascidos enxergam melhor a uma distância de cerca de {{8-12 polegadas|20-30 cm}}, aproximadamente a distância do seu rosto durante a amamentação. Faça contato visual com frequência."},
-  {"id": "2m-development-03", "ageGroup": "2m", "category": "development", "text": "Os movimentos bruscos de braços e pernas do seu bebê vão ficando mais suaves nas próximas semanas, conforme o sistema nervoso amadurece."},
-  {"id": "2m-development-04", "ageGroup": "2m", "category": "development", "text": "Tente segurar uma imagem em preto e branco com alto contraste a cerca de {{10 polegadas|25 cm}} do rosto do seu bebê. Nessa fase, ele se sente atraído por padrões bem contrastantes."},
-  {"id": "2m-development-05", "ageGroup": "2m", "category": "development", "text": "Seu bebê já reconhece a sua voz desde o tempo no útero. Conversar e cantar para ele fortalece esse vínculo e estimula o desenvolvimento da linguagem."},
-  {"id": "2m-development-06", "ageGroup": "2m", "category": "development", "text": "Por volta de 6 a 8 semanas, você pode ver o primeiro sorriso social do seu bebê. Dessa vez não são gases — ele está realmente respondendo a você!"},
-  {"id": "2m-development-07", "ageGroup": "2m", "category": "development", "text": "Coloque delicadamente seu dedo na palma da mão do seu bebê e sinta o reflexo de preensão. Esse aperto involuntário vai evoluir para movimentos intencionais de alcançar nos próximos meses."},
-  {"id": "2m-development-08", "ageGroup": "2m", "category": "development", "text": "O cérebro do seu recém-nascido está formando mais de 1 milhão de novas conexões neurais a cada segundo. Cada abraço e conversa está ajudando a construir o cérebro dele."},
-  {"id": "2m-development-09", "ageGroup": "2m", "category": "development", "text": "Tente mover lentamente um brinquedo colorido em arco na frente do seu bebê. Por volta de 6 semanas, ele pode começar a acompanhar com os olhos."},
-  {"id": "2m-development-10", "ageGroup": "2m", "category": "development", "text": "Aqueles pequenos sons de \"gu\" que seu bebê faz são as primeiras tentativas de comunicação. Responda com os mesmos sons — vocês estão tendo as primeiras conversas!"},
-  {"id": "2m-development-11", "ageGroup": "2m", "category": "development", "text": "O contato pele a pele não é apenas aconchegante — ele regula a frequência cardíaca, a temperatura e a respiração do seu bebê, além de fortalecer o vínculo entre vocês."},
-  {"id": "2m-development-12", "ageGroup": "2m", "category": "development", "text": "Seu bebê consegue distinguir o seu cheiro do de outros adultos. Essa é uma das primeiras formas que ele tem de reconhecer você."},
-  {"id": "2m-development-13", "ageGroup": "2m", "category": "development", "text": "Se seu bebê se assusta com barulhos altos, é um reflexo saudável. A audição dele já está bem desenvolvida, mesmo que a visão ainda esteja amadurecendo."},
-  {"id": "2m-development-14", "ageGroup": "2m", "category": "development", "text": "Alterne o lado em que você segura seu bebê durante as mamadas e no colo. Isso estimula ele a virar a cabeça para os dois lados e fortalece o pescoço."},
-  {"id": "2m-development-15", "ageGroup": "2m", "category": "development", "text": "Seu bebê pode abrir brevemente as mãos e espalhar os dedinhos. Esse é um primeiro passo rumo ao controle das mãos que ele vai precisar para pegar brinquedos mais tarde."},
-  {"id": "2m-development-16", "ageGroup": "2m", "category": "development", "text": "Seu bebê pode começar a virar na direção de vozes conhecidas, especialmente a sua. Tente falar de diferentes lugares do quarto e observe ele procurar por você."},
-  {"id": "2m-development-17", "ageGroup": "2m", "category": "development", "text": "Quando seu bebê fica olhando fixo para o ventilador de teto ou uma luminária, ele está praticando foco e atenção visual. Esses momentos de observação são verdadeiros exercícios para o cérebro."},
-  {"id": "2m-development-18", "ageGroup": "2m", "category": "development", "text": "Por volta de 6 semanas, o choro do seu bebê começa a se diferenciar. Você pode começar a perceber um choro de fome diferente de um choro de cansaço ou desconforto."},
-  {"id": "2m-development-19", "ageGroup": "2m", "category": "development", "text": "Segure seu bebê na posição vertical encostado no seu ombro e deixe ele praticar levantar a cabecinha para olhar ao redor. Isso fortalece os músculos do pescoço numa posição diferente."},
-  {"id": "2m-development-20", "ageGroup": "2m", "category": "development", "text": "Seu bebê pode se acalmar brevemente quando vê o seu rosto ou ouve a sua voz. Essa autorregulação inicial é um sinal do vínculo forte que vocês estão construindo."},
-  {"id": "2m-development-21", "ageGroup": "2m", "category": "development", "text": "Toque delicadamente a bochecha do seu bebê e veja ele virar na direção da sua mão. Esse reflexo de busca ajuda a encontrar o peito, mas também mostra que os reflexos dele estão funcionando bem."},
-  {"id": "2m-development-22", "ageGroup": "2m", "category": "development", "text": "As perninhas do seu bebê podem esticar um pouco mais quando você o segura de pé. Ele ainda não consegue sustentar o peso, mas esses movimentos estão fortalecendo os músculos para os próximos marcos."},
-  {"id": "2m-development-23", "ageGroup": "2m", "category": "development", "text": "Se seu bebê parece preferir olhar para um lado, estimule delicadamente que ele vire para o outro lado posicionando você ou objetos interessantes do lado menos favorecido."},
-  {"id": "2m-development-24", "ageGroup": "2m", "category": "development", "text": "Repare como seu bebê fica quietinho e atento quando algo novo chama a atenção. Esses momentos de concentração são quando o aprendizado profundo acontece."},
-  {"id": "2m-development-25", "ageGroup": "2m", "category": "development", "text": "Seu bebê pode começar a emitir sons de vogais como \"ah\" e \"oh\" por volta de 6 a 8 semanas. Repita esses sons de volta para incentivar mais vocalização."},
-
-  {"id": "2m-sleep-01", "ageGroup": "2m", "category": "sleep", "text": "Recém-nascidos dormem de 14 a 17 horas por dia, mas em períodos curtos. É completamente normal que acordem a cada 2-3 horas, de dia e de noite."},
-  {"id": "2m-sleep-02", "ageGroup": "2m", "category": "sleep", "text": "Sempre coloque seu bebê de barriga para cima para dormir, em uma superfície firme e plana, sem cobertores soltos, almofadas ou bichinhos de pelúcia."},
-  {"id": "2m-sleep-03", "ageGroup": "2m", "category": "sleep", "text": "Seu bebê ainda não sabe a diferença entre dia e noite. Ajude-o a aprender mantendo o dia claro e com atividades, e a noite escura e calma."},
-  {"id": "2m-sleep-04", "ageGroup": "2m", "category": "sleep", "text": "Enfaixar pode ajudar seu recém-nascido a se sentir seguro e reduzir o reflexo de sobressalto que o acorda. Certifique-se de que o enfaixamento está firme no peito, mas permite movimento dos quadris."},
-  {"id": "2m-sleep-05", "ageGroup": "2m", "category": "sleep", "text": "Uma rotina simples na hora de dormir, mesmo agora — luzes baixas, voz suave, uma mamada — ajuda seu bebê a começar a associar sinais com a hora de dormir."},
-  {"id": "2m-sleep-06", "ageGroup": "2m", "category": "sleep", "text": "Ruído branco pode ser calmante porque imita os sons do útero. Mantenha o volume baixo (não mais alto que um chuveiro suave) e coloque o aparelho a pelo menos {{7 pés|2 metros}} do berço."},
-  {"id": "2m-sleep-07", "ageGroup": "2m", "category": "sleep", "text": "Dividir o quarto (mas não a cama) por pelo menos os primeiros 6 meses é recomendado por pediatras para reduzir o risco de morte súbita, mantendo seu bebê perto para as mamadas."},
-  {"id": "2m-sleep-08", "ageGroup": "2m", "category": "sleep", "text": "Se seu bebê adormecer na cadeirinha do carro, no balanço ou na cadeirinha de descanso, transfira para uma superfície firme e plana assim que possível."},
-  {"id": "2m-sleep-09", "ageGroup": "2m", "category": "sleep", "text": "As janelas de sono do recém-nascido são de 45 a 90 minutos, mais curtas nas primeiras semanas e aumentando aos poucos. Fique atento aos sinais de sono como bocejos e desvio de olhar antes que fiquem cansados demais."},
-  {"id": "2m-sleep-10", "ageGroup": "2m", "category": "sleep", "text": "É normal que recém-nascidos façam barulho ao dormir. Grunhidos, suspiros e pequenos movimentos nem sempre significam que precisam ser pegos no colo."},
-  {"id": "2m-sleep-11", "ageGroup": "2m", "category": "sleep", "text": "Se seu bebê resiste ao sono, tente os 5 S's: enfaixar, posição de lado/barriga (enquanto acordado), fazer \"shh\", balançar e sucção. Eles imitam o ambiente do útero."},
-  {"id": "2m-sleep-12", "ageGroup": "2m", "category": "sleep", "text": "Não se preocupe com \"maus hábitos\" nessa idade. Se amamentar, ninar ou segurar seu bebê para dormir funciona, é perfeitamente aceitável agora."},
-  {"id": "2m-sleep-13", "ageGroup": "2m", "category": "sleep", "text": "Mantenha as mamadas noturnas e trocas de fralda bem tranquilas. Use uma luz fraquinha, fale baixo e evite brincadeiras para ajudar seu bebê a entender que a noite é para dormir."},
-  {"id": "2m-sleep-14", "ageGroup": "2m", "category": "sleep", "text": "O período mais longo de sono do seu bebê pode ser de apenas 3-4 horas nessa idade, e isso é perfeitamente normal. Períodos mais longos virão com o tempo."},
-  {"id": "2m-sleep-15", "ageGroup": "2m", "category": "sleep", "text": "Vista seu bebê com uma camada a mais do que você usaria confortavelmente. Superaquecimento é um fator de risco para morte súbita, então verifique se ele está quentinho mas não suando no peitinho."},
-  {"id": "2m-sleep-16", "ageGroup": "2m", "category": "sleep", "text": "Oferecer uma chupeta na hora de dormir pode ajudar a reduzir o risco de morte súbita. Se estiver amamentando, considere esperar até que a amamentação esteja bem estabelecida antes de introduzir."},
-  {"id": "2m-sleep-17", "ageGroup": "2m", "category": "sleep", "text": "Seu bebê pode ter os dias e as noites trocados nas primeiras semanas. Exponha-o à luz natural durante os períodos em que está acordado para ajudar a regular o relógio biológico."},
-  {"id": "2m-sleep-18", "ageGroup": "2m", "category": "sleep", "text": "Se seu bebê só dorme no colo, tente aquecer o lençol do berço com uma bolsa térmica (retire antes de deitar o bebê) para que a superfície não cause um choque de frio."},
-  {"id": "2m-sleep-19", "ageGroup": "2m", "category": "sleep", "text": "Recém-nascidos passam cerca de metade do sono em REM (sono ativo), por isso tremem, sorriem e fazem caretas. Esse sono ativo é essencial para o desenvolvimento do cérebro."},
-  {"id": "2m-sleep-20", "ageGroup": "2m", "category": "sleep", "text": "Tudo bem acordar um recém-nascido para mamar se ele ficou mais de 3-4 horas dormindo, especialmente nas primeiras duas semanas para garantir o ganho de peso."},
-  {"id": "2m-sleep-21", "ageGroup": "2m", "category": "sleep", "text": "Tente colocar seu bebê no berço quando ele está sonolento, mas ainda acordado. Mesmo que não funcione sempre, isso vai introduzindo aos poucos a habilidade de adormecer sozinho."},
-  {"id": "2m-sleep-22", "ageGroup": "2m", "category": "sleep", "text": "Um ventilador no quarto do bebê ajuda na circulação de ar e já foi associado a um menor risco de morte súbita. Um ventilador de teto em velocidade baixa funciona bem."},
-  {"id": "2m-sleep-23", "ageGroup": "2m", "category": "sleep", "text": "\"Durma quando o bebê dormir\" é um conselho clássico por um bom motivo. Até um cochilo curto ajuda na recuperação, e a roupa suja pode esperar."},
-  {"id": "2m-sleep-24", "ageGroup": "2m", "category": "sleep", "text": "Se seu bebê acorda com frequência por causa do reflexo de Moro (sobressalto), enfaixar bem pode ajudar a conter esses movimentos involuntários dos braços e mantê-lo mais calmo."},
-  {"id": "2m-sleep-25", "ageGroup": "2m", "category": "sleep", "text": "Cada bebê tem necessidades de sono diferentes. Alguns recém-nascidos dormem cerca de 14 horas por dia enquanto outros dormem cerca de 17, e ambos podem ser perfeitamente normais."},
-
-  {"id": "2m-feeding-01", "ageGroup": "2m", "category": "feeding", "text": "Recém-nascidos normalmente mamam de 8 a 12 vezes por dia. A alimentação frequente é normal e ajuda a estabelecer a produção de leite se estiver amamentando."},
-  {"id": "2m-feeding-02", "ageGroup": "2m", "category": "feeding", "text": "Fique atento aos sinais de fome como o reflexo de busca, levar a mão à boca e estalar os lábios. Chorar é na verdade um sinal tardio de fome."},
-  {"id": "2m-feeding-03", "ageGroup": "2m", "category": "feeding", "text": "Se está amamentando, a pega correta não deve doer. Se sentir dor ou beliscão, interrompa delicadamente a pega com o dedo e tente novamente."},
-  {"id": "2m-feeding-04", "ageGroup": "2m", "category": "feeding", "text": "Mamadas em sequência — quando seu bebê quer mamar com muita frequência por várias horas seguidas — são normais, especialmente no fim do dia. Isso ajuda a aumentar a produção de leite."},
-  {"id": "2m-feeding-05", "ageGroup": "2m", "category": "feeding", "text": "Recém-nascidos que tomam fórmula normalmente aceitam {{2-3 onças|60-90 ml}} por mamada a cada 3-4 horas. Deixe seu bebê decidir a quantidade em vez de forçá-lo a terminar a mamadeira."},
-  {"id": "2m-feeding-06", "ageGroup": "2m", "category": "feeding", "text": "Conte as fraldas molhadas para saber se seu bebê está recebendo leite suficiente. A partir do 5º dia, espere pelo menos 6 fraldas molhadas em 24 horas."},
-  {"id": "2m-feeding-07", "ageGroup": "2m", "category": "feeding", "text": "Coloque seu bebê para arrotar no meio e depois de cada mamada. Tente segurá-lo na posição vertical encostado no ombro ou sentadinho com apoio no queixo."},
-  {"id": "2m-feeding-08", "ageGroup": "2m", "category": "feeding", "text": "Golfada é muito comum e geralmente não é motivo de preocupação. Se seu bebê está ganhando peso e parece confortável, golfar de vez em quando é normal."},
-  {"id": "2m-feeding-09", "ageGroup": "2m", "category": "feeding", "text": "Se está tirando leite com a bomba, o leite materno pode ficar em temperatura ambiente por até 4 horas, na geladeira por 4 dias, ou no congelador por 6 a 12 meses (ideal usar em até 6 meses)."},
-  {"id": "2m-feeding-10", "ageGroup": "2m", "category": "feeding", "text": "As fezes de bebês amamentados são normalmente amarelas, granuladas e pastosas. Isso é completamente normal e não é diarreia."},
-  {"id": "2m-feeding-11", "ageGroup": "2m", "category": "feeding", "text": "Picos de crescimento por volta de 2-3 semanas e 6 semanas podem fazer seu bebê querer mamar com mais frequência. Isso geralmente se normaliza em um ou dois dias."},
-  {"id": "2m-feeding-12", "ageGroup": "2m", "category": "feeding", "text": "Se amamentar parece muito difícil, saiba que até a amamentação parcial combinada com fórmula traz benefícios. O mais importante é que o bebê esteja bem alimentado."},
-  {"id": "2m-feeding-13", "ageGroup": "2m", "category": "feeding", "text": "Oferecer a mamadeira com ritmo — segurando mais na horizontal e fazendo pausas frequentes — ajuda a evitar que o bebê coma demais e facilita a digestão."},
-  {"id": "2m-feeding-14", "ageGroup": "2m", "category": "feeding", "text": "Gotas de vitamina D (400 UI por dia) são recomendadas para todos os bebês amamentados desde os primeiros dias de vida, já que o leite materno sozinho não fornece o suficiente."},
-  {"id": "2m-feeding-15", "ageGroup": "2m", "category": "feeding", "text": "O estômago do seu bebê é minúsculo — mais ou menos do tamanho de uma noz com 1 semana de vida. Mamadas pequenas e frequentes são exatamente o que ele precisa."},
-  {"id": "2m-feeding-16", "ageGroup": "2m", "category": "feeding", "text": "Se seu bebê fica irritado no peito à noite, não significa necessariamente pouco leite. O fluxo costuma ser mais lento à noite, mas o teor de gordura é maior."},
-  {"id": "2m-feeding-17", "ageGroup": "2m", "category": "feeding", "text": "O leite materno muda de composição ao longo do dia e até durante uma única mamada. O leite anterior é mais ralo e hidratante, enquanto o leite posterior é mais rico e mais saciante."},
-  {"id": "2m-feeding-18", "ageGroup": "2m", "category": "feeding", "text": "Se perceber que seu bebê engole rápido demais, se solta do peito ou engasga durante a descida do leite, tente amamentar reclinada para desacelerar o fluxo com a gravidade."},
-  {"id": "2m-feeding-19", "ageGroup": "2m", "category": "feeding", "text": "Bebês que tomam fórmula podem passar mais tempo entre as mamadas do que bebês amamentados, porque a fórmula demora mais para ser digerida. Os dois padrões são saudáveis."},
-  {"id": "2m-feeding-20", "ageGroup": "2m", "category": "feeding", "text": "Se vai voltar ao trabalho e pretende tirar leite, comece a praticar com a bomba algumas semanas antes para você e seu bebê se adaptarem à nova rotina."},
-  {"id": "2m-feeding-21", "ageGroup": "2m", "category": "feeding", "text": "Uma consultora de amamentação pode ajudar muito se a amamentação está sendo dolorosa ou frustrante. Verifique se esse tipo de apoio está disponível pelo seu plano de saúde."},
-  {"id": "2m-feeding-22", "ageGroup": "2m", "category": "feeding", "text": "O peso do seu bebê pode cair um pouquinho nos primeiros dias após o nascimento e depois se recuperar por volta de 10-14 dias. O pediatra vai acompanhar isso de perto."},
-  {"id": "2m-feeding-23", "ageGroup": "2m", "category": "feeding", "text": "Nunca aqueça leite materno ou fórmula no micro-ondas — isso cria pontos quentes que podem queimar a boca do bebê. Aqueça a mamadeira em uma tigela com água morna."},
-  {"id": "2m-feeding-24", "ageGroup": "2m", "category": "feeding", "text": "Se seu bebê parece com gases após as mamadas, tente mantê-lo na posição vertical por 10-15 minutos. Uma massagem suave na barriguinha no sentido horário também pode ajudar."},
-  {"id": "2m-feeding-25", "ageGroup": "2m", "category": "feeding", "text": "Alimentar seu bebê em livre demanda, em vez de seguir um horário rígido, é recomendado nas primeiras semanas. Seu bebê é o melhor juiz de quando está com fome."},
-
-  {"id": "2m-health-01", "ageGroup": "2m", "category": "health", "text": "Vacinas são uma das formas mais importantes de proteger seu bebê. Converse com o pediatra sobre o calendário de vacinação para que seu bebê fique em dia."},
-  {"id": "2m-health-02", "ageGroup": "2m", "category": "health", "text": "Para um recém-nascido com menos de 3 meses, uma temperatura retal de {{100.4°F|38°C}} ou mais é uma emergência. Ligue para o pediatra imediatamente."},
-  {"id": "2m-health-03", "ageGroup": "2m", "category": "health", "text": "Mantenha o coto do cordão umbilical do seu bebê limpo e seco. Ele geralmente cai em 1 a 3 semanas. Dobre a fralda abaixo do coto para deixar o ar circular."},
-  {"id": "2m-health-04", "ageGroup": "2m", "category": "health", "text": "Crosta láctea — casquinhas amareladas e descamativas no couro cabeludo do bebê — é inofensiva e muito comum. Escovar delicadamente com uma escova macia após o banho pode ajudar."},
-  {"id": "2m-health-05", "ageGroup": "2m", "category": "health", "text": "Acne neonatal, pequenos carocinhos brancos e manchas na pele são normais nas primeiras semanas. A pele do bebê está se adaptando à vida fora do útero."},
-  {"id": "2m-health-06", "ageGroup": "2m", "category": "health", "text": "Um termômetro retal é o mais preciso para bebês com menos de 3 meses. Tenha um no kit de cuidados do seu bebê."},
-  {"id": "2m-health-07", "ageGroup": "2m", "category": "health", "text": "Evite expor seu recém-nascido a aglomerações e visitantes doentes nos primeiros 2 meses, enquanto o sistema imunológico ainda está se desenvolvendo."},
-  {"id": "2m-health-08", "ageGroup": "2m", "category": "health", "text": "Icterícia neonatal (pele amarelada) é comum e geralmente se resolve sozinha. Se o amarelamento parecer se espalhar ou escurecer, avise o médico."},
-  {"id": "2m-health-09", "ageGroup": "2m", "category": "health", "text": "Anote as dúvidas que surgirem entre as consultas com o pediatra para não esquecer. Nenhuma pergunta é boba quando se trata da saúde do seu bebê."},
-  {"id": "2m-health-10", "ageGroup": "2m", "category": "health", "text": "A hora da barriguinha com o bebê acordado ajuda a prevenir achatamento na cabecinha. Se notar um achatamento persistente de um lado, comente na próxima consulta."},
-  {"id": "2m-health-11", "ageGroup": "2m", "category": "health", "text": "É normal recém-nascidos espirrarem bastante. Eles estão limpando as vias nasais, e não necessariamente ficando doentes."},
-  {"id": "2m-health-12", "ageGroup": "2m", "category": "health", "text": "Use um aspirador nasal com gotas de soro fisiológico para desobstruir delicadamente o narizinho entupido. Recém-nascidos respiram obrigatoriamente pelo nariz e podem ter dificuldade com a congestão."},
-  {"id": "2m-health-13", "ageGroup": "2m", "category": "health", "text": "Lave as mãos com frequência antes de pegar o bebê, e peça que os visitantes façam o mesmo. Essa é uma das melhores formas de prevenir doenças."},
-  {"id": "2m-health-14", "ageGroup": "2m", "category": "health", "text": "Um pouco de irritação após as vacinas é normal. Dê carinho e colo extras ao seu bebê, e pergunte ao pediatra sobre alívio da dor, se necessário."},
-  {"id": "2m-health-15", "ageGroup": "2m", "category": "health", "text": "Soluço é muito comum em recém-nascidos e não incomoda tanto quanto incomoda os adultos. Geralmente passa sozinho."},
-  {"id": "2m-health-16", "ageGroup": "2m", "category": "health", "text": "Recém-nascidos não precisam de banho todos os dias. Duas a três vezes por semana é suficiente, já que banhos frequentes podem ressecar a pele delicada."},
-  {"id": "2m-health-17", "ageGroup": "2m", "category": "health", "text": "Se seu bebê tem o canal lacrimal obstruído (olhinho lacrimejando ou com um pouco de remela), massageie delicadamente o cantinho interno do olho para baixo, algumas vezes ao dia. A maioria resolve até os 12 meses."},
-  {"id": "2m-health-18", "ageGroup": "2m", "category": "health", "text": "Corte as unhas do seu bebê enquanto ele estiver dormindo para evitar machucados. Use uma lixa de unhas de bebê ou uma tesourinha e corte reto para prevenir unhas encravadas."},
-  {"id": "2m-health-19", "ageGroup": "2m", "category": "health", "text": "Se seu bebê golfar com força ou parecer com dor após a mamada, avise o pediatra. Existe uma diferença entre golfada normal e refluxo que precisa de atenção."},
-  {"id": "2m-health-20", "ageGroup": "2m", "category": "health", "text": "Use sabão de lavar roupa sem fragrância e sem corante para as roupas e a roupa de cama do bebê. A pele dele é sensível e pode reagir facilmente a produtos químicos fortes."},
-  {"id": "2m-health-21", "ageGroup": "2m", "category": "health", "text": "A moleira do seu bebê (fontanela) é normal e segura de tocar com delicadeza. Pode pulsar levemente, o que é apenas o fluxo sanguíneo. Uma fontanela afundada ou saliente deve ser avaliada pelo médico."},
-  {"id": "2m-health-22", "ageGroup": "2m", "category": "health", "text": "Cólica — definida como chorar mais de 3 horas por dia, 3 dias por semana, por 3 semanas ou mais — normalmente tem o pico por volta de 6 semanas e melhora entre 3 e 4 meses. Não é culpa sua."},
-  {"id": "2m-health-23", "ageGroup": "2m", "category": "health", "text": "Peça que qualquer pessoa que terá contato com o recém-nascido esteja com as vacinas em dia, especialmente coqueluche e gripe. Esse \"casulo\" de proteção ajuda a manter o bebê seguro."},
-  {"id": "2m-health-24", "ageGroup": "2m", "category": "health", "text": "Pele seca e descamação nas primeiras semanas é normal, especialmente em bebês que nasceram após a data prevista. Um hidratante sem fragrância pode ajudar se parecer incomodar."},
-  {"id": "2m-health-25", "ageGroup": "2m", "category": "health", "text": "A respiração do seu bebê pode parecer irregular, com respirações rápidas seguidas de pausas de alguns segundos. Essa respiração periódica é normal para recém-nascidos, desde que não fiquem roxinhos."},
-
-  {"id": "2m-play-01", "ageGroup": "2m", "category": "play", "text": "A hora da barriguinha é o \"exercício\" mais importante para seu recém-nascido. Comece com 1-2 minutos algumas vezes por dia e vá aumentando conforme ele fica mais forte."},
-  {"id": "2m-play-02", "ageGroup": "2m", "category": "play", "text": "Se seu bebê não gosta da hora da barriguinha no chão, tente deitá-lo no seu peito enquanto você fica reclinada. A proximidade do seu rosto torna tudo mais gostoso."},
-  {"id": "2m-play-03", "ageGroup": "2m", "category": "play", "text": "Mova seu rosto lentamente de um lado para o outro enquanto seu bebê observa. Isso ajuda a fortalecer os músculos dos olhos e incentiva ele a virar a cabeça."},
-  {"id": "2m-play-04", "ageGroup": "2m", "category": "play", "text": "Narre o seu dia para o bebê: \"Agora vamos trocar a fralda. Olha a água morninha.\" Essa conversa constante constrói as bases da linguagem."},
-  {"id": "2m-play-05", "ageGroup": "2m", "category": "play", "text": "Faça o movimento de bicicleta com as perninhas do seu bebê enquanto ele fica de barriga para cima. É divertido para ele e também pode ajudar a soltar gases."},
-  {"id": "2m-play-06", "ageGroup": "2m", "category": "play", "text": "Coloque um espelhinho inquebrável perto do seu bebê durante a hora da barriguinha. Mesmo sem se reconhecer ainda, ele fica fascinado com rostos."},
-  {"id": "2m-play-07", "ageGroup": "2m", "category": "play", "text": "Cante cantigas de roda ou musiquinhas simples. O ritmo e a repetição são ótimos para o cérebro em desenvolvimento do bebê, e ele adora o som da sua voz."},
-  {"id": "2m-play-08", "ageGroup": "2m", "category": "play", "text": "Deixe seu bebê agarrar o seu dedo e puxe-o levemente em direção à posição sentada. Esse mini \"treino\" fortalece o tronco (sempre apoie a cabecinha)."},
-  {"id": "2m-play-09", "ageGroup": "2m", "category": "play", "text": "Experimente diferentes texturas — um cobertor macio, um lenço de seda, um tecido atoalhado — nas mãos e bochechas do seu bebê para uma exploração sensorial suave."},
-  {"id": "2m-play-10", "ageGroup": "2m", "category": "play", "text": "Leve seu bebê para passear ao ar livre. A luz natural, os sons e a brisa suave oferecem uma estimulação sensorial maravilhosa."},
-  {"id": "2m-play-11", "ageGroup": "2m", "category": "play", "text": "Pendure um móbile simples acima do trocador ou da área de brincar. Seu bebê vai adorar ficar olhando o movimento suave e as cores contrastantes."},
-  {"id": "2m-play-12", "ageGroup": "2m", "category": "play", "text": "Leia um livrinho de capa dura para seu bebê. Nunca é cedo demais! O som da sua voz e o contato próximo são o que mais importa agora."},
-  {"id": "2m-play-13", "ageGroup": "2m", "category": "play", "text": "Massageie delicadamente os braços, as perninhas e a barriguinha do seu bebê com um hidratante próprio para bebê. Esse toque carinhoso fortalece o vínculo e a consciência corporal."},
-  {"id": "2m-play-14", "ageGroup": "2m", "category": "play", "text": "Faça expressões faciais exageradas — sorrisão, olhos arregalados, boca bem aberta — pertinho do rosto do seu bebê. Ele é programado para observar e depois imitar rostos."},
-  {"id": "2m-play-15", "ageGroup": "2m", "category": "play", "text": "Durante a hora da barriguinha, coloque uma toalha enrolada sob o peito do bebê para dar um apoio extra. Essa elevação pode tornar a posição mais confortável."},
-  {"id": "2m-play-16", "ageGroup": "2m", "category": "play", "text": "Bata as mãozinhas do seu bebê uma na outra enquanto canta uma música com ritmo. Isso apresenta o movimento coordenado e a alegria do ritmo para ele."},
-  {"id": "2m-play-17", "ageGroup": "2m", "category": "play", "text": "Experimente segurar seu bebê em posições diferentes — de bruços no seu antebraço, na vertical no ombro ou aconchegado no colo. Cada posição dá a ele uma nova visão do mundo."},
-  {"id": "2m-play-18", "ageGroup": "2m", "category": "play", "text": "Balance suavemente um chocalho perto de uma orelha do seu bebê, depois da outra. Ele vai praticar virar na direção do som, fortalecendo os músculos do pescoço e a audição."},
-  {"id": "2m-play-19", "ageGroup": "2m", "category": "play", "text": "Coloque seu bebê de barriga para cima embaixo de um tapete de atividades com brinquedos pendurados. Mesmo antes de conseguir alcançá-los, ele vai gostar de olhar para as cores e o movimento."},
-  {"id": "2m-play-20", "ageGroup": "2m", "category": "play", "text": "Dance suavemente com seu bebê no colo ao som de diferentes tipos de música. Música calma pode acalmá-lo, enquanto músicas animadas podem deixá-lo mais atento e interessado."},
-  {"id": "2m-play-21", "ageGroup": "2m", "category": "play", "text": "Deixe seu bebê deitar num tapetinho que faz barulho ou com texturas diferentes. Os sons e sensações inesperadas ao mexer braços e pernas despertam a curiosidade."},
-  {"id": "2m-play-22", "ageGroup": "2m", "category": "play", "text": "Na hora do banho, despeje água morninha delicadamente sobre a barriguinha e as perninhas do bebê enquanto vai contando o que está fazendo. O banho é uma brincadeira sensorial maravilhosa."},
-  {"id": "2m-play-23", "ageGroup": "2m", "category": "play", "text": "Sussurre, depois fale normalmente, depois use uma voz cantarolada. Variar o tom e o volume ajuda o bebê a conhecer as diferentes formas da fala humana."},
-  {"id": "2m-play-24", "ageGroup": "2m", "category": "play", "text": "Experimente fazer a hora da barriguinha sobre uma bola de pilates, segurando o bebê com firmeza enquanto balança a bola suavemente. O movimento traz um desafio extra para fortalecer o pescoço."},
-  {"id": "2m-play-25", "ageGroup": "2m", "category": "play", "text": "Carregue seu bebê virado para você num canguru ou nos braços e vá descrevendo o que você vê ao redor. Ambientes novos, mesmo outro cômodo da casa, estimulam através da sua voz e da visão periférica dele."},
-
-  {"id": "2m-safety-01", "ageGroup": "2m", "category": "safety", "text": "Nunca deixe seu bebê sozinho no trocador, na cama ou no sofá — mesmo que ele ainda não consiga rolar. Pode acontecer pela primeira vez quando você menos espera."},
-  {"id": "2m-safety-02", "ageGroup": "2m", "category": "safety", "text": "Certifique-se de que o bebê-conforto está virado para trás e instalado no ângulo correto de inclinação. O cinto deve estar bem ajustado, com a presilha do peito na altura das axilas."},
-  {"id": "2m-safety-03", "ageGroup": "2m", "category": "safety", "text": "Mantenha o berço vazio: sem protetores, almofadas, cobertores ou bichinhos de pelúcia. Um lençol ajustado sobre um colchão firme é tudo que seu bebê precisa para dormir com segurança."},
-  {"id": "2m-safety-04", "ageGroup": "2m", "category": "safety", "text": "Teste a água do banho com a parte interna do pulso ou do cotovelo antes de colocar o bebê. A temperatura ideal é de cerca de {{98-100°F|37-38°C}}."},
-  {"id": "2m-safety-05", "ageGroup": "2m", "category": "safety", "text": "Nunca deixe seu bebê sozinho na água ou perto dela, nem por um instante. Bebês podem se afogar em apenas {{1 polegada|2,5 cm}} de água."},
-  {"id": "2m-safety-06", "ageGroup": "2m", "category": "safety", "text": "Evite colocar qualquer coisa ao redor do pescoço do bebê, como colares, prendedores de chupeta com cordão longo ou roupas com capuz que tenham cordões."},
-  {"id": "2m-safety-07", "ageGroup": "2m", "category": "safety", "text": "Retire o apoio de cabeça do bebê-conforto quando a cabecinha não ficar mais caindo para o lado, a menos que o apoio tenha vindo com o assento. Acessórios comprados à parte não são testados em colisão."},
-  {"id": "2m-safety-08", "ageGroup": "2m", "category": "safety", "text": "Se você tem animais de estimação, sempre supervisione quando estiverem perto do bebê. Até bichinhos dóceis podem machucar um recém-nascido sem querer."},
-  {"id": "2m-safety-09", "ageGroup": "2m", "category": "safety", "text": "Verifique se os detectores de fumaça e monóxido de carbono estão funcionando em todos os andares da casa, especialmente perto dos quartos."},
-  {"id": "2m-safety-10", "ageGroup": "2m", "category": "safety", "text": "Se alguém fuma, mantenha o bebê longe da fumaça e peça para a pessoa trocar de roupa antes de pegar o bebê no colo. A fumaça que fica nas roupas (fumaça de terceira mão) é uma preocupação real."},
-  {"id": "2m-safety-11", "ageGroup": "2m", "category": "safety", "text": "Não use posicionadores de sono, cunhas ou bercinhos inclinados. As orientações de sono seguro recomendam apenas uma superfície firme e plana."},
-  {"id": "2m-safety-12", "ageGroup": "2m", "category": "safety", "text": "Sempre apoie a cabeça e o pescoço do bebê ao pegá-lo ou segurá-lo. Os músculos do pescoço dele ainda não são fortes o suficiente para sustentar a cabecinha."},
-  {"id": "2m-safety-13", "ageGroup": "2m", "category": "safety", "text": "Ao usar um canguru ou sling, certifique-se de que o rosto do bebê está sempre visível e o queixo não está encostado no peito, para manter as vias aéreas livres."},
-  {"id": "2m-safety-14", "ageGroup": "2m", "category": "safety", "text": "Mantenha objetos pequenos, moedas e pilhas de botão fora do alcance. Comece a pensar em deixar a casa segura para o bebê agora — ele vai ficar se movimentando mais cedo do que você imagina."},
-  {"id": "2m-safety-15", "ageGroup": "2m", "category": "safety", "text": "Pare de enfaixar assim que o bebê mostrar sinais de tentar rolar, mesmo que seja antes dos 2 meses. Rolar enquanto enfaixado aumenta o risco de morte súbita."},
-  {"id": "2m-safety-16", "ageGroup": "2m", "category": "safety", "text": "Mantenha uma mão no bebê o tempo todo durante as trocas de fralda. Deixe tudo que precisa ao alcance da mão antes de começar, para não precisar se afastar."},
-  {"id": "2m-safety-17", "ageGroup": "2m", "category": "safety", "text": "Evite sol direto na pele do recém-nascido. Use sombra, a capota do carrinho ou roupas leves que cubram braços e pernas quando estiver ao ar livre."},
-  {"id": "2m-safety-18", "ageGroup": "2m", "category": "safety", "text": "Nunca aqueça a mamadeira do bebê no micro-ondas. O aquecimento desigual pode criar pontos quentes perigosos, mesmo que a parte de fora da mamadeira pareça fria."},
-  {"id": "2m-safety-19", "ageGroup": "2m", "category": "safety", "text": "Se seu bebê dorme num moisés, verifique o limite de peso regularmente. Muitos moisés têm um limite menor do que se espera, e o bebê cresce rápido."},
-  {"id": "2m-safety-20", "ageGroup": "2m", "category": "safety", "text": "Confira se as grades do berço têm no máximo {{2 3/8 polegadas|6 cm}} de distância entre elas, mais ou menos a largura de uma latinha de refrigerante. Espaços maiores representam risco de prender o bebê."},
-  {"id": "2m-safety-21", "ageGroup": "2m", "category": "safety", "text": "Não durma com o bebê no sofá, poltrona ou cadeira reclinável. Essas superfícies têm frestas onde o bebê pode ficar preso e sufocar."},
-  {"id": "2m-safety-22", "ageGroup": "2m", "category": "safety", "text": "Garanta que as roupas do bebê são do tamanho certo. Tecido folgado, cordões longos ou roupas muito grandes podem representar risco de sufocamento durante o sono."},
-  {"id": "2m-safety-23", "ageGroup": "2m", "category": "safety", "text": "Registre o bebê-conforto e o berço do seu bebê junto ao fabricante para receber avisos de recall diretamente."},
-  {"id": "2m-safety-24", "ageGroup": "2m", "category": "safety", "text": "Ao colocar o bebê no bebê-conforto, certifique-se de que as alças do cinto ficam na altura dos ombros ou abaixo (para assento virado para trás) e estão retas, sem torções."},
-  {"id": "2m-safety-25", "ageGroup": "2m", "category": "safety", "text": "Mantenha medicamentos, vitaminas e pomada de assadura guardados longe do berço e do trocador. Até pequenas quantidades de certos produtos podem ser prejudiciais se ingeridas."}
+  {
+    "id": "2m-development-01",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Seu bebê pode começar a levantar brevemente a cabeça durante a hora da barriguinha. Mesmo que sejam poucos segundos, já é um grande progresso!"
+  },
+  {
+    "id": "2m-development-02",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Recém-nascidos enxergam melhor a uma distância de cerca de {{8-12 polegadas|20-30 cm}}, aproximadamente a distância do seu rosto durante a amamentação. Faça contato visual com frequência."
+  },
+  {
+    "id": "2m-development-03",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Os movimentos bruscos de braços e pernas do seu bebê vão ficando mais suaves nas próximas semanas, conforme o sistema nervoso amadurece."
+  },
+  {
+    "id": "2m-development-04",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Tente segurar uma imagem em preto e branco com alto contraste a cerca de {{10 polegadas|25 cm}} do rosto do seu bebê. Nessa fase, ele se sente atraído por padrões bem contrastantes."
+  },
+  {
+    "id": "2m-development-05",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Seu bebê já reconhece a sua voz desde o tempo no útero. Conversar e cantar para ele fortalece esse vínculo e estimula o desenvolvimento da linguagem."
+  },
+  {
+    "id": "2m-development-06",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Por volta de 6 a 8 semanas, você pode ver o primeiro sorriso social do seu bebê. Dessa vez não são gases — ele está realmente respondendo a você!"
+  },
+  {
+    "id": "2m-development-07",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Coloque delicadamente seu dedo na palma da mão do seu bebê e sinta o reflexo de preensão. Esse aperto involuntário vai evoluir para movimentos intencionais de alcançar nos próximos meses."
+  },
+  {
+    "id": "2m-development-08",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "O cérebro do seu recém-nascido está formando mais de 1 milhão de novas conexões neurais a cada segundo. Cada abraço e conversa está ajudando a construir o cérebro dele."
+  },
+  {
+    "id": "2m-development-09",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Tente mover lentamente um brinquedo colorido em arco na frente do seu bebê. Por volta de 6 semanas, ele pode começar a acompanhar com os olhos."
+  },
+  {
+    "id": "2m-development-10",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Aqueles pequenos sons de \"gu\" que seu bebê faz são as primeiras tentativas de comunicação. Responda com os mesmos sons — vocês estão tendo as primeiras conversas!"
+  },
+  {
+    "id": "2m-development-11",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "O contato pele a pele não é apenas aconchegante — ele regula a frequência cardíaca, a temperatura e a respiração do seu bebê, além de fortalecer o vínculo entre vocês."
+  },
+  {
+    "id": "2m-development-12",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Seu bebê consegue distinguir o seu cheiro do de outros adultos. Essa é uma das primeiras formas que ele tem de reconhecer você."
+  },
+  {
+    "id": "2m-development-13",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Se seu bebê se assusta com barulhos altos, é um reflexo saudável. A audição dele já está bem desenvolvida, mesmo que a visão ainda esteja amadurecendo."
+  },
+  {
+    "id": "2m-development-14",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Alterne o lado em que você segura seu bebê durante as mamadas e no colo. Isso estimula ele a virar a cabeça para os dois lados e fortalece o pescoço."
+  },
+  {
+    "id": "2m-development-15",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Seu bebê pode abrir brevemente as mãos e espalhar os dedinhos. Esse é um primeiro passo rumo ao controle das mãos que ele vai precisar para pegar brinquedos mais tarde."
+  },
+  {
+    "id": "2m-development-16",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Seu bebê pode começar a virar na direção de vozes conhecidas, especialmente a sua. Tente falar de diferentes lugares do quarto e observe ele procurar por você."
+  },
+  {
+    "id": "2m-development-17",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Quando seu bebê fica olhando fixo para o ventilador de teto ou uma luminária, ele está praticando foco e atenção visual. Esses momentos de observação são verdadeiros exercícios para o cérebro."
+  },
+  {
+    "id": "2m-development-18",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Por volta de 6 semanas, o choro do seu bebê começa a se diferenciar. Você pode começar a perceber um choro de fome diferente de um choro de cansaço ou desconforto."
+  },
+  {
+    "id": "2m-development-19",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Segure seu bebê na posição vertical encostado no seu ombro e deixe ele praticar levantar a cabecinha para olhar ao redor. Isso fortalece os músculos do pescoço numa posição diferente."
+  },
+  {
+    "id": "2m-development-20",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Seu bebê pode se acalmar brevemente quando vê o seu rosto ou ouve a sua voz. Essa autorregulação inicial é um sinal do vínculo forte que vocês estão construindo."
+  },
+  {
+    "id": "2m-development-21",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Toque delicadamente a bochecha do seu bebê e veja ele virar na direção da sua mão. Esse reflexo de busca ajuda a encontrar o peito, mas também mostra que os reflexos dele estão funcionando bem."
+  },
+  {
+    "id": "2m-development-22",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "As perninhas do seu bebê podem esticar um pouco mais quando você o segura de pé. Ele ainda não consegue sustentar o peso, mas esses movimentos estão fortalecendo os músculos para os próximos marcos."
+  },
+  {
+    "id": "2m-development-23",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Se seu bebê parece preferir olhar para um lado, estimule delicadamente que ele vire para o outro lado posicionando você ou objetos interessantes do lado menos favorecido."
+  },
+  {
+    "id": "2m-development-24",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Repare como seu bebê fica quietinho e atento quando algo novo chama a atenção. Esses momentos de concentração são quando o aprendizado profundo acontece."
+  },
+  {
+    "id": "2m-development-25",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Seu bebê pode começar a emitir sons de vogais como \"ah\" e \"oh\" por volta de 6 a 8 semanas. Repita esses sons de volta para incentivar mais vocalização."
+  },
+  {
+    "id": "2m-sleep-01",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Recém-nascidos dormem de 14 a 17 horas por dia, mas em períodos curtos. É completamente normal que acordem a cada 2-3 horas, de dia e de noite."
+  },
+  {
+    "id": "2m-sleep-02",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Sempre coloque seu bebê de barriga para cima para dormir, em uma superfície firme e plana, sem cobertores soltos, almofadas ou bichinhos de pelúcia."
+  },
+  {
+    "id": "2m-sleep-03",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Seu bebê ainda não sabe a diferença entre dia e noite. Ajude-o a aprender mantendo o dia claro e com atividades, e a noite escura e calma."
+  },
+  {
+    "id": "2m-sleep-04",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Enfaixar pode ajudar seu recém-nascido a se sentir seguro e reduzir o reflexo de sobressalto que o acorda. Certifique-se de que o enfaixamento está firme no peito, mas permite movimento dos quadris."
+  },
+  {
+    "id": "2m-sleep-05",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Uma rotina simples na hora de dormir, mesmo agora — luzes baixas, voz suave, uma mamada — ajuda seu bebê a começar a associar sinais com a hora de dormir."
+  },
+  {
+    "id": "2m-sleep-08",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Se seu bebê adormecer na cadeirinha do carro, no balanço ou na cadeirinha de descanso, transfira para uma superfície firme e plana assim que possível."
+  },
+  {
+    "id": "2m-sleep-09",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "As janelas de sono do recém-nascido são de 45 a 90 minutos, mais curtas nas primeiras semanas e aumentando aos poucos. Fique atento aos sinais de sono como bocejos e desvio de olhar antes que fiquem cansados demais."
+  },
+  {
+    "id": "2m-sleep-10",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "É normal que recém-nascidos façam barulho ao dormir. Grunhidos, suspiros e pequenos movimentos nem sempre significam que precisam ser pegos no colo."
+  },
+  {
+    "id": "2m-sleep-11",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Se seu bebê resiste ao sono, tente os 5 S's: enfaixar, posição de lado/barriga (enquanto acordado), fazer \"shh\", balançar e sucção. Eles imitam o ambiente do útero."
+  },
+  {
+    "id": "2m-sleep-12",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Não se preocupe com \"maus hábitos\" nessa idade. Se amamentar, ninar ou segurar seu bebê para dormir funciona, é perfeitamente aceitável agora."
+  },
+  {
+    "id": "2m-sleep-13",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Mantenha as mamadas noturnas e trocas de fralda bem tranquilas. Use uma luz fraquinha, fale baixo e evite brincadeiras para ajudar seu bebê a entender que a noite é para dormir."
+  },
+  {
+    "id": "2m-sleep-14",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "O período mais longo de sono do seu bebê pode ser de apenas 3-4 horas nessa idade, e isso é perfeitamente normal. Períodos mais longos virão com o tempo."
+  },
+  {
+    "id": "2m-sleep-15",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Vista seu bebê com uma camada a mais do que você usaria confortavelmente. Superaquecimento é um fator de risco para morte súbita, então verifique se ele está quentinho mas não suando no peitinho."
+  },
+  {
+    "id": "2m-sleep-16",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Oferecer uma chupeta na hora de dormir pode ajudar a reduzir o risco de morte súbita. Se estiver amamentando, considere esperar até que a amamentação esteja bem estabelecida antes de introduzir."
+  },
+  {
+    "id": "2m-sleep-17",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Seu bebê pode ter os dias e as noites trocados nas primeiras semanas. Exponha-o à luz natural durante os períodos em que está acordado para ajudar a regular o relógio biológico."
+  },
+  {
+    "id": "2m-sleep-18",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Se seu bebê só dorme no colo, tente aquecer o lençol do berço com uma bolsa térmica (retire antes de deitar o bebê) para que a superfície não cause um choque de frio."
+  },
+  {
+    "id": "2m-sleep-19",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Recém-nascidos passam cerca de metade do sono em REM (sono ativo), por isso tremem, sorriem e fazem caretas. Esse sono ativo é essencial para o desenvolvimento do cérebro."
+  },
+  {
+    "id": "2m-sleep-20",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Tudo bem acordar um recém-nascido para mamar se ele ficou mais de 3-4 horas dormindo, especialmente nas primeiras duas semanas para garantir o ganho de peso."
+  },
+  {
+    "id": "2m-sleep-21",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Tente colocar seu bebê no berço quando ele está sonolento, mas ainda acordado. Mesmo que não funcione sempre, isso vai introduzindo aos poucos a habilidade de adormecer sozinho."
+  },
+  {
+    "id": "2m-sleep-22",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Um ventilador no quarto do bebê ajuda na circulação de ar e já foi associado a um menor risco de morte súbita. Um ventilador de teto em velocidade baixa funciona bem."
+  },
+  {
+    "id": "2m-sleep-23",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "\"Durma quando o bebê dormir\" é um conselho clássico por um bom motivo. Até um cochilo curto ajuda na recuperação, e a roupa suja pode esperar."
+  },
+  {
+    "id": "2m-sleep-24",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Se seu bebê acorda com frequência por causa do reflexo de Moro (sobressalto), enfaixar bem pode ajudar a conter esses movimentos involuntários dos braços e mantê-lo mais calmo."
+  },
+  {
+    "id": "2m-sleep-25",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Cada bebê tem necessidades de sono diferentes. Alguns recém-nascidos dormem cerca de 14 horas por dia enquanto outros dormem cerca de 17, e ambos podem ser perfeitamente normais."
+  },
+  {
+    "id": "2m-feeding-01",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Recém-nascidos normalmente mamam de 8 a 12 vezes por dia. A alimentação frequente é normal e ajuda a estabelecer a produção de leite se estiver amamentando."
+  },
+  {
+    "id": "2m-feeding-02",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Fique atento aos sinais de fome como o reflexo de busca, levar a mão à boca e estalar os lábios. Chorar é na verdade um sinal tardio de fome."
+  },
+  {
+    "id": "2m-feeding-03",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se está amamentando, a pega correta não deve doer. Se sentir dor ou beliscão, interrompa delicadamente a pega com o dedo e tente novamente."
+  },
+  {
+    "id": "2m-feeding-04",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Mamadas em sequência — quando seu bebê quer mamar com muita frequência por várias horas seguidas — são normais, especialmente no fim do dia. Isso ajuda a aumentar a produção de leite."
+  },
+  {
+    "id": "2m-feeding-05",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Recém-nascidos que tomam fórmula normalmente aceitam {{2-3 onças|60-90 ml}} por mamada a cada 3-4 horas. Deixe seu bebê decidir a quantidade em vez de forçá-lo a terminar a mamadeira."
+  },
+  {
+    "id": "2m-feeding-06",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Conte as fraldas molhadas para saber se seu bebê está recebendo leite suficiente. A partir do 5º dia, espere pelo menos 6 fraldas molhadas em 24 horas."
+  },
+  {
+    "id": "2m-feeding-07",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Coloque seu bebê para arrotar no meio e depois de cada mamada. Tente segurá-lo na posição vertical encostado no ombro ou sentadinho com apoio no queixo."
+  },
+  {
+    "id": "2m-feeding-08",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Golfada é muito comum e geralmente não é motivo de preocupação. Se seu bebê está ganhando peso e parece confortável, golfar de vez em quando é normal."
+  },
+  {
+    "id": "2m-feeding-10",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "As fezes de bebês amamentados são normalmente amarelas, granuladas e pastosas. Isso é completamente normal e não é diarreia."
+  },
+  {
+    "id": "2m-feeding-11",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Picos de crescimento por volta de 2-3 semanas e 6 semanas podem fazer seu bebê querer mamar com mais frequência. Isso geralmente se normaliza em um ou dois dias."
+  },
+  {
+    "id": "2m-feeding-12",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se amamentar parece muito difícil, saiba que até a amamentação parcial combinada com fórmula traz benefícios. O mais importante é que o bebê esteja bem alimentado."
+  },
+  {
+    "id": "2m-feeding-13",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Oferecer a mamadeira com ritmo — segurando mais na horizontal e fazendo pausas frequentes — ajuda a evitar que o bebê coma demais e facilita a digestão."
+  },
+  {
+    "id": "2m-feeding-14",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Gotas de vitamina D (400 UI por dia) são recomendadas para todos os bebês amamentados desde os primeiros dias de vida, já que o leite materno sozinho não fornece o suficiente."
+  },
+  {
+    "id": "2m-feeding-16",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se seu bebê fica irritado no peito à noite, não significa necessariamente pouco leite. O fluxo costuma ser mais lento à noite, mas o teor de gordura é maior."
+  },
+  {
+    "id": "2m-feeding-17",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "O leite materno muda de composição ao longo do dia e até durante uma única mamada. O leite anterior é mais ralo e hidratante, enquanto o leite posterior é mais rico e mais saciante."
+  },
+  {
+    "id": "2m-feeding-18",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se perceber que seu bebê engole rápido demais, se solta do peito ou engasga durante a descida do leite, tente amamentar reclinada para desacelerar o fluxo com a gravidade."
+  },
+  {
+    "id": "2m-feeding-19",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Bebês que tomam fórmula podem passar mais tempo entre as mamadas do que bebês amamentados, porque a fórmula demora mais para ser digerida. Os dois padrões são saudáveis."
+  },
+  {
+    "id": "2m-feeding-20",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se vai voltar ao trabalho e pretende tirar leite, comece a praticar com a bomba algumas semanas antes para você e seu bebê se adaptarem à nova rotina."
+  },
+  {
+    "id": "2m-feeding-21",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Uma consultora de amamentação pode ajudar muito se a amamentação está sendo dolorosa ou frustrante. Verifique se esse tipo de apoio está disponível pelo seu plano de saúde."
+  },
+  {
+    "id": "2m-feeding-22",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "O peso do seu bebê pode cair um pouquinho nos primeiros dias após o nascimento e depois se recuperar por volta de 10-14 dias. O pediatra vai acompanhar isso de perto."
+  },
+  {
+    "id": "2m-feeding-23",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Nunca aqueça leite materno ou fórmula no micro-ondas — isso cria pontos quentes que podem queimar a boca do bebê. Aqueça a mamadeira em uma tigela com água morna."
+  },
+  {
+    "id": "2m-feeding-24",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se seu bebê parece com gases após as mamadas, tente mantê-lo na posição vertical por 10-15 minutos. Uma massagem suave na barriguinha no sentido horário também pode ajudar."
+  },
+  {
+    "id": "2m-feeding-25",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Alimentar seu bebê em livre demanda, em vez de seguir um horário rígido, é recomendado nas primeiras semanas. Seu bebê é o melhor juiz de quando está com fome."
+  },
+  {
+    "id": "2m-health-01",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Vacinas são uma das formas mais importantes de proteger seu bebê. Converse com o pediatra sobre o calendário de vacinação para que seu bebê fique em dia."
+  },
+  {
+    "id": "2m-health-02",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Para um recém-nascido com menos de 3 meses, uma temperatura retal de {{100.4°F|38°C}} ou mais é uma emergência. Ligue para o pediatra imediatamente."
+  },
+  {
+    "id": "2m-health-03",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Mantenha o coto do cordão umbilical do seu bebê limpo e seco. Ele geralmente cai em 1 a 3 semanas. Dobre a fralda abaixo do coto para deixar o ar circular."
+  },
+  {
+    "id": "2m-health-04",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Crosta láctea — casquinhas amareladas e descamativas no couro cabeludo do bebê — é inofensiva e muito comum. Escovar delicadamente com uma escova macia após o banho pode ajudar."
+  },
+  {
+    "id": "2m-health-05",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Acne neonatal, pequenos carocinhos brancos e manchas na pele são normais nas primeiras semanas. A pele do bebê está se adaptando à vida fora do útero."
+  },
+  {
+    "id": "2m-health-06",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Um termômetro retal é o mais preciso para bebês com menos de 3 meses. Tenha um no kit de cuidados do seu bebê."
+  },
+  {
+    "id": "2m-health-07",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Evite expor seu recém-nascido a aglomerações e visitantes doentes nos primeiros 2 meses, enquanto o sistema imunológico ainda está se desenvolvendo."
+  },
+  {
+    "id": "2m-health-08",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Icterícia neonatal (pele amarelada) é comum e geralmente se resolve sozinha. Se o amarelamento parecer se espalhar ou escurecer, avise o médico."
+  },
+  {
+    "id": "2m-health-09",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Anote as dúvidas que surgirem entre as consultas com o pediatra para não esquecer. Nenhuma pergunta é boba quando se trata da saúde do seu bebê."
+  },
+  {
+    "id": "2m-health-10",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "A hora da barriguinha com o bebê acordado ajuda a prevenir achatamento na cabecinha. Se notar um achatamento persistente de um lado, comente na próxima consulta."
+  },
+  {
+    "id": "2m-health-11",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "É normal recém-nascidos espirrarem bastante. Eles estão limpando as vias nasais, e não necessariamente ficando doentes."
+  },
+  {
+    "id": "2m-health-12",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Use um aspirador nasal com gotas de soro fisiológico para desobstruir delicadamente o narizinho entupido. Recém-nascidos respiram obrigatoriamente pelo nariz e podem ter dificuldade com a congestão."
+  },
+  {
+    "id": "2m-health-13",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Lave as mãos com frequência antes de pegar o bebê, e peça que os visitantes façam o mesmo. Essa é uma das melhores formas de prevenir doenças."
+  },
+  {
+    "id": "2m-health-14",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Um pouco de irritação após as vacinas é normal. Dê carinho e colo extras ao seu bebê, e pergunte ao pediatra sobre alívio da dor, se necessário."
+  },
+  {
+    "id": "2m-health-15",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Soluço é muito comum em recém-nascidos e não incomoda tanto quanto incomoda os adultos. Geralmente passa sozinho."
+  },
+  {
+    "id": "2m-health-16",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Recém-nascidos não precisam de banho todos os dias. Duas a três vezes por semana é suficiente, já que banhos frequentes podem ressecar a pele delicada."
+  },
+  {
+    "id": "2m-health-17",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Se seu bebê tem o canal lacrimal obstruído (olhinho lacrimejando ou com um pouco de remela), massageie delicadamente o cantinho interno do olho para baixo, algumas vezes ao dia. A maioria resolve até os 12 meses."
+  },
+  {
+    "id": "2m-health-18",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Corte as unhas do seu bebê enquanto ele estiver dormindo para evitar machucados. Use uma lixa de unhas de bebê ou uma tesourinha e corte reto para prevenir unhas encravadas."
+  },
+  {
+    "id": "2m-health-19",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Se seu bebê golfar com força ou parecer com dor após a mamada, avise o pediatra. Existe uma diferença entre golfada normal e refluxo que precisa de atenção."
+  },
+  {
+    "id": "2m-health-20",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Use sabão de lavar roupa sem fragrância e sem corante para as roupas e a roupa de cama do bebê. A pele dele é sensível e pode reagir facilmente a produtos químicos fortes."
+  },
+  {
+    "id": "2m-health-21",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "A moleira do seu bebê (fontanela) é normal e segura de tocar com delicadeza. Pode pulsar levemente, o que é apenas o fluxo sanguíneo. Uma fontanela afundada ou saliente deve ser avaliada pelo médico."
+  },
+  {
+    "id": "2m-health-23",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Peça que qualquer pessoa que terá contato com o recém-nascido esteja com as vacinas em dia, especialmente coqueluche e gripe. Esse \"casulo\" de proteção ajuda a manter o bebê seguro."
+  },
+  {
+    "id": "2m-health-24",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Pele seca e descamação nas primeiras semanas é normal, especialmente em bebês que nasceram após a data prevista. Um hidratante sem fragrância pode ajudar se parecer incomodar."
+  },
+  {
+    "id": "2m-health-25",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "A respiração do seu bebê pode parecer irregular, com respirações rápidas seguidas de pausas de alguns segundos. Essa respiração periódica é normal para recém-nascidos, desde que não fiquem roxinhos."
+  },
+  {
+    "id": "2m-play-01",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "A hora da barriguinha é o \"exercício\" mais importante para seu recém-nascido. Comece com 1-2 minutos algumas vezes por dia e vá aumentando conforme ele fica mais forte."
+  },
+  {
+    "id": "2m-play-02",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Se seu bebê não gosta da hora da barriguinha no chão, tente deitá-lo no seu peito enquanto você fica reclinada. A proximidade do seu rosto torna tudo mais gostoso."
+  },
+  {
+    "id": "2m-play-03",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Mova seu rosto lentamente de um lado para o outro enquanto seu bebê observa. Isso ajuda a fortalecer os músculos dos olhos e incentiva ele a virar a cabeça."
+  },
+  {
+    "id": "2m-play-04",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Narre o seu dia para o bebê: \"Agora vamos trocar a fralda. Olha a água morninha.\" Essa conversa constante constrói as bases da linguagem."
+  },
+  {
+    "id": "2m-play-05",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Faça o movimento de bicicleta com as perninhas do seu bebê enquanto ele fica de barriga para cima. É divertido para ele e também pode ajudar a soltar gases."
+  },
+  {
+    "id": "2m-play-06",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Coloque um espelhinho inquebrável perto do seu bebê durante a hora da barriguinha. Mesmo sem se reconhecer ainda, ele fica fascinado com rostos."
+  },
+  {
+    "id": "2m-play-07",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Cante cantigas de roda ou musiquinhas simples. O ritmo e a repetição são ótimos para o cérebro em desenvolvimento do bebê, e ele adora o som da sua voz."
+  },
+  {
+    "id": "2m-play-08",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Deixe seu bebê agarrar o seu dedo e puxe-o levemente em direção à posição sentada. Esse mini \"treino\" fortalece o tronco (sempre apoie a cabecinha)."
+  },
+  {
+    "id": "2m-play-09",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Experimente diferentes texturas — um cobertor macio, um lenço de seda, um tecido atoalhado — nas mãos e bochechas do seu bebê para uma exploração sensorial suave."
+  },
+  {
+    "id": "2m-play-10",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Leve seu bebê para passear ao ar livre. A luz natural, os sons e a brisa suave oferecem uma estimulação sensorial maravilhosa."
+  },
+  {
+    "id": "2m-play-11",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Pendure um móbile simples acima do trocador ou da área de brincar. Seu bebê vai adorar ficar olhando o movimento suave e as cores contrastantes."
+  },
+  {
+    "id": "2m-play-12",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Leia um livrinho de capa dura para seu bebê. Nunca é cedo demais! O som da sua voz e o contato próximo são o que mais importa agora."
+  },
+  {
+    "id": "2m-play-13",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Massageie delicadamente os braços, as perninhas e a barriguinha do seu bebê com um hidratante próprio para bebê. Esse toque carinhoso fortalece o vínculo e a consciência corporal."
+  },
+  {
+    "id": "2m-play-14",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Faça expressões faciais exageradas — sorrisão, olhos arregalados, boca bem aberta — pertinho do rosto do seu bebê. Ele é programado para observar e depois imitar rostos."
+  },
+  {
+    "id": "2m-play-15",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Durante a hora da barriguinha, coloque uma toalha enrolada sob o peito do bebê para dar um apoio extra. Essa elevação pode tornar a posição mais confortável."
+  },
+  {
+    "id": "2m-play-16",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Bata as mãozinhas do seu bebê uma na outra enquanto canta uma música com ritmo. Isso apresenta o movimento coordenado e a alegria do ritmo para ele."
+  },
+  {
+    "id": "2m-play-17",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Experimente segurar seu bebê em posições diferentes — de bruços no seu antebraço, na vertical no ombro ou aconchegado no colo. Cada posição dá a ele uma nova visão do mundo."
+  },
+  {
+    "id": "2m-play-18",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Balance suavemente um chocalho perto de uma orelha do seu bebê, depois da outra. Ele vai praticar virar na direção do som, fortalecendo os músculos do pescoço e a audição."
+  },
+  {
+    "id": "2m-play-19",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Coloque seu bebê de barriga para cima embaixo de um tapete de atividades com brinquedos pendurados. Mesmo antes de conseguir alcançá-los, ele vai gostar de olhar para as cores e o movimento."
+  },
+  {
+    "id": "2m-play-20",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Dance suavemente com seu bebê no colo ao som de diferentes tipos de música. Música calma pode acalmá-lo, enquanto músicas animadas podem deixá-lo mais atento e interessado."
+  },
+  {
+    "id": "2m-play-21",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Deixe seu bebê deitar num tapetinho que faz barulho ou com texturas diferentes. Os sons e sensações inesperadas ao mexer braços e pernas despertam a curiosidade."
+  },
+  {
+    "id": "2m-play-22",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Na hora do banho, despeje água morninha delicadamente sobre a barriguinha e as perninhas do bebê enquanto vai contando o que está fazendo. O banho é uma brincadeira sensorial maravilhosa."
+  },
+  {
+    "id": "2m-play-23",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Sussurre, depois fale normalmente, depois use uma voz cantarolada. Variar o tom e o volume ajuda o bebê a conhecer as diferentes formas da fala humana."
+  },
+  {
+    "id": "2m-play-24",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Experimente fazer a hora da barriguinha sobre uma bola de pilates, segurando o bebê com firmeza enquanto balança a bola suavemente. O movimento traz um desafio extra para fortalecer o pescoço."
+  },
+  {
+    "id": "2m-play-25",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Carregue seu bebê virado para você num canguru ou nos braços e vá descrevendo o que você vê ao redor. Ambientes novos, mesmo outro cômodo da casa, estimulam através da sua voz e da visão periférica dele."
+  },
+  {
+    "id": "2m-safety-01",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Nunca deixe seu bebê sozinho no trocador, na cama ou no sofá — mesmo que ele ainda não consiga rolar. Pode acontecer pela primeira vez quando você menos espera."
+  },
+  {
+    "id": "2m-safety-02",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Certifique-se de que o bebê-conforto está virado para trás e instalado no ângulo correto de inclinação. O cinto deve estar bem ajustado, com a presilha do peito na altura das axilas."
+  },
+  {
+    "id": "2m-safety-03",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Mantenha o berço vazio: sem protetores, almofadas, cobertores ou bichinhos de pelúcia. Um lençol ajustado sobre um colchão firme é tudo que seu bebê precisa para dormir com segurança."
+  },
+  {
+    "id": "2m-safety-04",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Teste a água do banho com a parte interna do pulso ou do cotovelo antes de colocar o bebê. A temperatura ideal é de cerca de {{98-100°F|37-38°C}}."
+  },
+  {
+    "id": "2m-safety-05",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Nunca deixe seu bebê sozinho na água ou perto dela, nem por um instante. Bebês podem se afogar em apenas {{1 polegada|2,5 cm}} de água."
+  },
+  {
+    "id": "2m-safety-06",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Evite colocar qualquer coisa ao redor do pescoço do bebê, como colares, prendedores de chupeta com cordão longo ou roupas com capuz que tenham cordões."
+  },
+  {
+    "id": "2m-safety-07",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Retire o apoio de cabeça do bebê-conforto quando a cabecinha não ficar mais caindo para o lado, a menos que o apoio tenha vindo com o assento. Acessórios comprados à parte não são testados em colisão."
+  },
+  {
+    "id": "2m-safety-08",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Se você tem animais de estimação, sempre supervisione quando estiverem perto do bebê. Até bichinhos dóceis podem machucar um recém-nascido sem querer."
+  },
+  {
+    "id": "2m-safety-09",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Verifique se os detectores de fumaça e monóxido de carbono estão funcionando em todos os andares da casa, especialmente perto dos quartos."
+  },
+  {
+    "id": "2m-safety-10",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Se alguém fuma, mantenha o bebê longe da fumaça e peça para a pessoa trocar de roupa antes de pegar o bebê no colo. A fumaça que fica nas roupas (fumaça de terceira mão) é uma preocupação real."
+  },
+  {
+    "id": "2m-safety-11",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Não use posicionadores de sono, cunhas ou bercinhos inclinados. As orientações de sono seguro recomendam apenas uma superfície firme e plana."
+  },
+  {
+    "id": "2m-safety-12",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Sempre apoie a cabeça e o pescoço do bebê ao pegá-lo ou segurá-lo. Os músculos do pescoço dele ainda não são fortes o suficiente para sustentar a cabecinha."
+  },
+  {
+    "id": "2m-safety-13",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Ao usar um canguru ou sling, certifique-se de que o rosto do bebê está sempre visível e o queixo não está encostado no peito, para manter as vias aéreas livres."
+  },
+  {
+    "id": "2m-safety-14",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Mantenha objetos pequenos, moedas e pilhas de botão fora do alcance. Comece a pensar em deixar a casa segura para o bebê agora — ele vai ficar se movimentando mais cedo do que você imagina."
+  },
+  {
+    "id": "2m-safety-15",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Pare de enfaixar assim que o bebê mostrar sinais de tentar rolar, mesmo que seja antes dos 2 meses. Rolar enquanto enfaixado aumenta o risco de morte súbita."
+  },
+  {
+    "id": "2m-safety-16",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Mantenha uma mão no bebê o tempo todo durante as trocas de fralda. Deixe tudo que precisa ao alcance da mão antes de começar, para não precisar se afastar."
+  },
+  {
+    "id": "2m-safety-17",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Evite sol direto na pele do recém-nascido. Use sombra, a capota do carrinho ou roupas leves que cubram braços e pernas quando estiver ao ar livre."
+  },
+  {
+    "id": "2m-safety-18",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Nunca aqueça a mamadeira do bebê no micro-ondas. O aquecimento desigual pode criar pontos quentes perigosos, mesmo que a parte de fora da mamadeira pareça fria."
+  },
+  {
+    "id": "2m-safety-19",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Se seu bebê dorme num moisés, verifique o limite de peso regularmente. Muitos moisés têm um limite menor do que se espera, e o bebê cresce rápido."
+  },
+  {
+    "id": "2m-safety-20",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Confira se as grades do berço têm no máximo {{2 3/8 polegadas|6 cm}} de distância entre elas, mais ou menos a largura de uma latinha de refrigerante. Espaços maiores representam risco de prender o bebê."
+  },
+  {
+    "id": "2m-safety-21",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Não durma com o bebê no sofá, poltrona ou cadeira reclinável. Essas superfícies têm frestas onde o bebê pode ficar preso e sufocar."
+  },
+  {
+    "id": "2m-safety-22",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Garanta que as roupas do bebê são do tamanho certo. Tecido folgado, cordões longos ou roupas muito grandes podem representar risco de sufocamento durante o sono."
+  },
+  {
+    "id": "2m-safety-23",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Registre o bebê-conforto e o berço do seu bebê junto ao fabricante para receber avisos de recall diretamente."
+  },
+  {
+    "id": "2m-safety-24",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Ao colocar o bebê no bebê-conforto, certifique-se de que as alças do cinto ficam na altura dos ombros ou abaixo (para assento virado para trás) e estão retas, sem torções."
+  },
+  {
+    "id": "2m-safety-25",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Mantenha medicamentos, vitaminas e pomada de assadura guardados longe do berço e do trocador. Até pequenas quantidades de certos produtos podem ser prejudiciais se ingeridas."
+  }
 ]

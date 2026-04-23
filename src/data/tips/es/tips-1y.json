@@ -90,12 +90,6 @@
     "text": "Algunos bebés dan sus primeros pasos alrededor de los 12 meses, pero muchos no caminan hasta después. Ambos ritmos son completamente normales."
   },
   {
-    "id": "1y-sleep-01",
-    "ageGroup": "1y",
-    "category": "sleep",
-    "text": "La mayoría de los bebés a esta edad necesitan 12-16 horas de sueño total en 24 horas, incluyendo siestas. Una rutina consistente a la hora de dormir los ayuda a lograrlo."
-  },
-  {
     "id": "1y-sleep-02",
     "ageGroup": "1y",
     "category": "sleep",
@@ -160,12 +154,6 @@
     "ageGroup": "1y",
     "category": "sleep",
     "text": "Los viajes y cambios de horario pueden afectar temporalmente el sueño. Ten paciencia y vuelve a tu rutina normal lo antes posible."
-  },
-  {
-    "id": "1y-sleep-13",
-    "ageGroup": "1y",
-    "category": "sleep",
-    "text": "Alrededor de su primer cumpleaños, un pequeño objeto de apego puede ayudar a tu bebé a calmarse a la hora de dormir. Antes de eso, mantén la cuna libre de todos los objetos suaves para un sueño seguro."
   },
   {
     "id": "1y-sleep-14",
@@ -282,12 +270,6 @@
     "text": "Habla con tu pediatra sobre qué vacunas corresponden durante esta etapa. Mantener el calendario de vacunación al día es importante para proteger a tu pequeño explorador."
   },
   {
-    "id": "1y-health-03",
-    "ageGroup": "1y",
-    "category": "health",
-    "text": "Se considera fiebre a partir de {{100.4°F|38°C}} o más. Consulta con tu pediatra si la fiebre de tu bebé dura más de dos días, si parece muy incómodo, o si te preocupa."
-  },
-  {
     "id": "1y-health-04",
     "ageGroup": "1y",
     "category": "health",
@@ -322,12 +304,6 @@
     "ageGroup": "1y",
     "category": "health",
     "text": "Si tu bebé tiene un resfriado leve, las gotas de solución salina y una perilla de succión pueden ayudar a despejar la congestión nasal. Un humidificador de vapor frío en la habitación también ayuda."
-  },
-  {
-    "id": "1y-health-10",
-    "ageGroup": "1y",
-    "category": "health",
-    "text": "Aplica protector solar con SPF 30 o superior en cualquier piel expuesta cuando estén al aire libre, y viste a tu bebé con un sombrero de ala ancha y ropa con protección UV."
   },
   {
     "id": "1y-health-11",
@@ -636,12 +612,6 @@
     "text": "Caminar de puntitas de vez en cuando es normal mientras tu bebé experimenta con el movimiento. Si se convierte en su forma principal de caminar, menciónalo a tu pediatra."
   },
   {
-    "id": "1y-health-17",
-    "ageGroup": "1y",
-    "category": "health",
-    "text": "La mollera de tu bebé (fontanela anterior) todavía está abierta y normalmente se cierra entre los 9 y 18 meses. Es normal verla pulsar suavemente -- es simplemente el flujo sanguíneo."
-  },
-  {
     "id": "1y-health-18",
     "ageGroup": "1y",
     "category": "health",
@@ -676,12 +646,6 @@
     "ageGroup": "1y",
     "category": "play",
     "text": "Tu bebé podría empezar con el juego simbólico, como darle de comer a un peluche o acostar una muñeca. Únete y amplía sus ideas para fomentar la imaginación."
-  },
-  {
-    "id": "1y-play-19",
-    "ageGroup": "1y",
-    "category": "play",
-    "text": "Llena una bandeja poco profunda con avena seca o arroz y esconde pequeños juguetes adentro para que tu bebé los encuentre. Este contenedor sensorial lo mantiene explorando y desarrollando motricidad fina."
   },
   {
     "id": "1y-play-20",

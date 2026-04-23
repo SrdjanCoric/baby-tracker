@@ -1,157 +1,860 @@
 [
-  {"id": "6m-development-01", "ageGroup": "6m", "category": "development", "text": "Tvoja beba možda počinje da sedi uz podršku ili čak samostalno na nekoliko sekundi. Postavi jastuke oko nje za meka sletanja dok vežba."},
-  {"id": "6m-development-02", "ageGroup": "6m", "category": "development", "text": "Oko ovog uzrasta, mnoge bebe počinju da prebacuju predmete iz jedne ruke u drugu. Ponudi joj igračku i gledaj ovu impresivnu koordinaciju na delu."},
-  {"id": "6m-development-03", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može početi da reaguje na svoje ime okretanjem ka tebi. Koristi njeno ime često tokom igre i razgovora da ga pojačaš."},
-  {"id": "6m-development-04", "ageGroup": "6m", "category": "development", "text": "Brbljanje postaje složenije, sa nizovima suglasnika i samoglasnika poput \"bababa\" ili \"mamama\". Ovo još nisu reči, ali su temelj za njih."},
-  {"id": "6m-development-05", "ageGroup": "6m", "category": "development", "text": "Tvoja beba otkriva gravitaciju! Može obožavati da baca igračke sa krila ili površine i gleda kako padaju. Ovo ponavljanje je učenje o uzroku i posledici."},
-  {"id": "6m-development-06", "ageGroup": "6m", "category": "development", "text": "Strah od stranaca može početi oko 5-6 meseci. Ako se beba uznemiri oko nepoznatih lica, to je znak zdrave povezanosti sa negovateljima."},
-  {"id": "6m-development-07", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može početi da se ljulja na šakama i kolenima, što je preteča puzanja. Daj joj puno vremena na podu da istraži ovaj pokret."},
-  {"id": "6m-development-08", "ageGroup": "6m", "category": "development", "text": "Probaj jednostavne igre naizmeničnih redova: ti brbljaš, ona brblja; ti se nasmeješ, ona se nasmeje. Ovi uzajamni trenuci su temelj razgovora."},
-  {"id": "6m-development-09", "ageGroup": "6m", "category": "development", "text": "Percepcija dubine tvoje bebe se brzo poboljšava. Sada može tačnije da doseže predmete i bolje procenjuje rastojanja nego ranije."},
-  {"id": "6m-development-10", "ageGroup": "6m", "category": "development", "text": "Neke bebe u ovom uzrastu počinju da pokazuju sklonost ka određenim igračkama ili predmetima za utehu. Omiljena igračkica za mazenje može postati korisno sredstvo za samosmirivanje."},
-  {"id": "6m-development-11", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može koristiti grabljajući hvat — zahvatajući stvari svim prstima — da podiže predmete. Precizniji hvat sa dva prsta dolazi kasnije."},
-  {"id": "6m-development-12", "ageGroup": "6m", "category": "development", "text": "Strepnja od razdvajanja se može pojaviti. Ako beba plače kad napustiš sobu, to znači da razume da postojiš čak i kad te ne vidi."},
-  {"id": "6m-development-13", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može početi da poskakuje kad je držiš u stojećem položaju. Ova snaga i koordinacija nogu su važna priprema za stajanje i hodanje kasnije."},
-  {"id": "6m-development-14", "ageGroup": "6m", "category": "development", "text": "Pokazuj na stvari i imenuj ih bebi: \"Gledaj, ptica!\" Pokazivanje joj pomaže da nauči da prati tvoj pogled i gradi rečnik za kasnije."},
-  {"id": "6m-development-15", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može početi da jasnije pokazuje emocije — frustraciju kad joj se oduzme igračka, uzbuđenje kad vidi da se priprema hrana. Imenuj ta osećanja naglas."},
-  {"id": "6m-development-16", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može početi da puzi na stomaku ili se pomera klizeći pre nego što se podigne na šake i kolena. Svaka beba pronađe svoj način kretanja."},
-  {"id": "6m-development-17", "ageGroup": "6m", "category": "development", "text": "Probaj da ponudiš bebi dve igračke odjednom — po jednu u svaku ruku. Držanje dva predmeta istovremeno je velika kognitivna i motorička prekretnica."},
-  {"id": "6m-development-18", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može početi da razume jednostavne reči iako ih još ne može reći. Ako kažeš \"gde je pas?\" i ona pogleda okolo, to pokazuje rano razumevanje."},
-  {"id": "6m-development-19", "ageGroup": "6m", "category": "development", "text": "Ako beba udara predmetima o sto ili pod, eksperimentiše sa uzrokom i posledicom. Daj joj različite predmete da čuje raznolike zvukove."},
-  {"id": "6m-development-20", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može početi da traži igračku koja je ispala iz vidokruga umesto da zaboravi na nju. Ovo pokazuje da joj se jača pojam stalnosti predmeta."},
-  {"id": "6m-development-21", "ageGroup": "6m", "category": "development", "text": "Kako beba gradi snagu gornjeg dela tela, može početi da poseže naviše ka nameštaju ili tvojim rukama. Ponudi joj čvrste površine za koje može da se uhvati dok istražuje nove položaje."},
-  {"id": "6m-development-22", "ageGroup": "6m", "category": "development", "text": "Tvoja beba se može nagnuti napred iz sedećeg položaja da nešto zgrabi, pa se gurnuti nazad. Ovo oporavljanje ravnoteže pokazuje da joj se snaga trupa lepo razvija."},
-  {"id": "6m-development-23", "ageGroup": "6m", "category": "development", "text": "Često mahni bebi \"ćao\". Još neće uzvratiti, ali modelovanje gestova sada postavlja osnovu za imitaciju u narednim mesecima."},
-  {"id": "6m-development-24", "ageGroup": "6m", "category": "development", "text": "Tvoja beba može početi da pokazuje preference za određene osobe, pružajući ruke ka omiljenom negovatelju. Ova izbirljivost je normalan deo razvoja privrženosti."},
-  {"id": "6m-development-25", "ageGroup": "6m", "category": "development", "text": "Većina beba ne počinje da puzi do 7-10 meseci, a neke potpuno preskoče puzanje. Za sada, dosta vremena na podu pomaže bebi da izgradi snagu i koordinaciju koja će joj trebati kad bude spremna da se kreće."},
-
-  {"id": "6m-sleep-01", "ageGroup": "6m", "category": "sleep", "text": "Većina beba u ovom uzrastu može spavati 6-8 sati u komadu noću, mada se neke još bude za hranjenje. Oba obrasca su normalna."},
-  {"id": "6m-sleep-02", "ageGroup": "6m", "category": "sleep", "text": "Tvojoj bebi verovatno trebaju 2-3 dremke dnevno, sa periodima budnosti od 2-2,5 sata. Prati zevanje i trljanje očiju kao znake pospanosti."},
-  {"id": "6m-sleep-03", "ageGroup": "6m", "category": "sleep", "text": "Ako je beba upravo naučila da sedi ili radi na puzanju, san može biti poremećen dok vežba nove veštine u krevetcu. Ovo je privremeno."},
-  {"id": "6m-sleep-04", "ageGroup": "6m", "category": "sleep", "text": "Predvidljiva dnevna rutina (buđenje, hranjenje, igra, spavanje) može pomoći da dremke budu doslednije i manje stresne."},
-  {"id": "6m-sleep-05", "ageGroup": "6m", "category": "sleep", "text": "Ako beba počne da se podiže u krevetcu i ne može da se vrati, vežbajte sedanje iz stojećeg položaja tokom dana da nauči da to uradi noću. Ovo je češće u narednim mesecima."},
-  {"id": "6m-sleep-06", "ageGroup": "6m", "category": "sleep", "text": "Možeš početi da uvodiš omiljenu igračkicu za mazenje tokom budnog vremena i maženja da bi beba razvila privrženost ka njoj. Za bezbedan san, drži krevetac prazan do 12 meseci prema smernicama za bezbedan san."},
-  {"id": "6m-sleep-07", "ageGroup": "6m", "category": "sleep", "text": "Ako je beba spremna da pređe sa 3 dremke na 2, možda ćeš morati privremeno da pomeriš vreme spavanja ranije da bi sprečila preumor tokom prelaza."},
-  {"id": "6m-sleep-08", "ageGroup": "6m", "category": "sleep", "text": "Nicanje zuba može poremetiti san, ali najgore obično traje samo par dana po zubu. Dodatna uteha tokom tog perioda je potpuno u redu."},
-  {"id": "6m-sleep-09", "ageGroup": "6m", "category": "sleep", "text": "Ako započinješ sa čvrstom hranom, ponudi je ranije tokom dana a ne tik pred spavanje. Nova hrana ponekad može izazvati nelagodnost koja remeti san."},
-  {"id": "6m-sleep-10", "ageGroup": "6m", "category": "sleep", "text": "Tvoja beba je možda spremna za malo kasnije jutarnje buđenje. Držanje sobe tamnom i neulaženje na prvi zvuk može ovo podstaći."},
-  {"id": "6m-sleep-11", "ageGroup": "6m", "category": "sleep", "text": "Neke bebe u ovom uzrastu počinju da više vole da spavaju na stomaku. Dok god se mogu prevrnuti u oba smera, bezbedno je pustiti ih da nađu svoj omiljeni položaj."},
-  {"id": "6m-sleep-12", "ageGroup": "6m", "category": "sleep", "text": "Doslednost je tvoj najbolji saveznik kad je san u pitanju. Koji god pristup odabereš, drži ga se najmanje nedelju dana da bi imao najbolje šanse da uspe."},
-  {"id": "6m-sleep-13", "ageGroup": "6m", "category": "sleep", "text": "Putovanja i promene vremenskih zona mogu privremeno poremetiti san. Pokušaj da održiš uobičajenu rutinu pred spavanje čak i u nepoznatom okruženju."},
-  {"id": "6m-sleep-14", "ageGroup": "6m", "category": "sleep", "text": "Ako se noćna buđenja iznenada povećaju, razmisli da li beba dobija dovoljno kalorija tokom dana. Uvođenje čvrste hrane ponekad pomaže, ali ne uvek."},
-  {"id": "6m-sleep-15", "ageGroup": "6m", "category": "sleep", "text": "Ukupan san za ovaj uzrast je obično 12-16 sati u periodu od 24 sata. Ako beba deluje srećno i odmoreno, verovatno dobija dovoljno sna."},
-  {"id": "6m-sleep-16", "ageGroup": "6m", "category": "sleep", "text": "Ako beba brblja ili priča sama sebi u krevetcu pre nego što zaspi, pusti je. Ovo samosmirivanje brbljanjem je zdrav znak da može da se smiri samostalno."},
-  {"id": "6m-sleep-17", "ageGroup": "6m", "category": "sleep", "text": "Strepnja od razdvajanja može izazvati češća noćna buđenja u ovom uzrastu. Kratka, mirna poseta za utehu je u redu, ali pokušaj da ne uvodiš nove navike koje ćeš morati da ukidaš kasnije."},
-  {"id": "6m-sleep-18", "ageGroup": "6m", "category": "sleep", "text": "Kada beba prelazi sa 3 na 2 dremke, poslednja dremka u danu je obično ta koja se izbacuje. Ranije vreme za spavanje može premostiti razliku dok se prilagođava."},
-  {"id": "6m-sleep-19", "ageGroup": "6m", "category": "sleep", "text": "Tamna soba sa zavesama za zamračivanje može pomoći i dremkama i noćnom snu, naročito ako bebu lako stimuliše svetlost."},
-  {"id": "6m-sleep-20", "ageGroup": "6m", "category": "sleep", "text": "Ako se beba budi veoma rano ujutru (pre 6 sati), proveri da li je soba dovoljno tamna i razmisli da li treba malo pomeriti vreme spavanja."},
-  {"id": "6m-sleep-21", "ageGroup": "6m", "category": "sleep", "text": "Nekim bebama treba malo fizičke aktivnosti pre sna da potroše energiju. Kratko igranje pre rutine smirivanja može pomoći da brže zaspe."},
-  {"id": "6m-sleep-22", "ageGroup": "6m", "category": "sleep", "text": "Ako je beba počela da vežba prevrtanje, puzanje ili druge nove veštine u krevetcu pred spavanje, mirno je vrati u ležeći položaj bez pravljenja igre od toga. Na kraju će se smiriti."},
-  {"id": "6m-sleep-23", "ageGroup": "6m", "category": "sleep", "text": "Danima kad su dremke kratke ili preskočene, ne boj se da pomeriš spavanje ranije za 30-60 minuta. Preumorna beba teže zaspi."},
-  {"id": "6m-sleep-24", "ageGroup": "6m", "category": "sleep", "text": "Potrebe za snom tvoje bebe su jedinstvene za nju. Ako je srećna, raste i dostiže prekretnice, njen san je verovatno u redu čak i ako se ne poklapa sa onim što knjige kažu."},
-  {"id": "6m-sleep-25", "ageGroup": "6m", "category": "sleep", "text": "Ako ste delili krevet i želiš da pređete na krevetac, počni sa dremkama. Dnevna praksa pomaže bebi da se navikne na svoj prostor."},
-
-  {"id": "6m-feeding-01", "ageGroup": "6m", "category": "feeding", "text": "Oko 6 meseci je obično odlično vreme za uvođenje čvrste hrane! Traži znake spremnosti: sedenje uz podršku, dobra kontrola glave i interesovanje za hranu."},
-  {"id": "6m-feeding-02", "ageGroup": "6m", "category": "feeding", "text": "Bilo da biraš kašice ili bebi vođeno hranjenje, majčino mleko ili formula i dalje treba da budu primarni izvor ishrane. Čvrsta hrana u ovoj fazi je za istraživanje."},
-  {"id": "6m-feeding-03", "ageGroup": "6m", "category": "feeding", "text": "Kada uvodiš glavne alergene (kikiriki, jaje, mlečne proizvode itd.), ponudi jedan po jedan i sačekaj par dana pre sledećeg da pratiš reakcije. Za ostalu hranu, možeš slobodnije uvoditi nove namirnice."},
-  {"id": "6m-feeding-04", "ageGroup": "6m", "category": "feeding", "text": "Aktuelna istraživanja sugerišu uvođenje čestih alergena (kikiriki, jaje, mlečni proizvodi) rano, oko 4-6 meseci, umesto odlaganja. Razgovaraj sa pedijatrom o tome kada i kako početi."},
-  {"id": "6m-feeding-05", "ageGroup": "6m", "category": "feeding", "text": "Normalno je da beba u početku gura hranu jezikom napolje. Refleks guranja jezikom nestaje, i uči da pomera hranu ka zadnjem delu usta."},
-  {"id": "6m-feeding-06", "ageGroup": "6m", "category": "feeding", "text": "Nagon na povraćanje se razlikuje od gušenja i zapravo je zaštitni mehanizam. Nagon je glasan i uključuje kašljanje; gušenje je tiho. Nauči da razlikuješ jedno od drugog."},
-  {"id": "6m-feeding-07", "ageGroup": "6m", "category": "feeding", "text": "Dobre prve namirnice uključuju one bogate gvožđem poput kaše od mesa, žitarica obogaćenih gvožđem ili pire od sočiva. Bebine zalihe gvožđa od rođenja počinju da se troše oko 6 meseci."},
-  {"id": "6m-feeding-08", "ageGroup": "6m", "category": "feeding", "text": "Ponudi vodu u otvorenoj čaši ili čaši sa slamkom tokom obroka. Beba neće piti mnogo u početku, ali rana vežba gradi važne oralno-motoričke veštine."},
-  {"id": "6m-feeding-09", "ageGroup": "6m", "category": "feeding", "text": "Prljavo jedenje je učenje! Pusti bebu da dodiruje, gnječi i razmazuje hranu. Senzorno istraživanje je važan deo prihvatanja novih tekstura."},
-  {"id": "6m-feeding-10", "ageGroup": "6m", "category": "feeding", "text": "Ako primenjuješ bebi vođeno hranjenje, seci hranu u trakice veličine prsta koje beba može da drži u pesnici. Glodaće deo koji viri sa vrha."},
-  {"id": "6m-feeding-11", "ageGroup": "6m", "category": "feeding", "text": "Izbegavaj med do navršene prve godine zbog rizika od infantilnog botulizma. Takođe preskoči kravlje mleko kao glavni napitak, mada su male količine u kuvanju u redu."},
-  {"id": "6m-feeding-12", "ageGroup": "6m", "category": "feeding", "text": "Ne obeshrabruj se ako beba odbije neku hranu. Može trebati 10-15 izlaganja pre nego što prihvati nešto novo. Nastavi da nudiš bez pritiska."},
-  {"id": "6m-feeding-13", "ageGroup": "6m", "category": "feeding", "text": "Beba uvek treba da sedi uspravno u stolici za hranjenje tokom obroka, nikada nagnuta unazad. Ovaj položaj je najbezbedniji za gutanje."},
-  {"id": "6m-feeding-14", "ageGroup": "6m", "category": "feeding", "text": "Kombinuj hranu bogatu gvožđem sa izvorima vitamina C (poput pire od jagoda ili malo soka od citrusa) da poboljšaš apsorpciju gvožđa."},
-  {"id": "6m-feeding-15", "ageGroup": "6m", "category": "feeding", "text": "Pusti bebu da postavlja tempo tokom obroka. Kada se okrene, zatvori usta ili izgubi interesovanje, kaže ti da je završila."},
-  {"id": "6m-feeding-16", "ageGroup": "6m", "category": "feeding", "text": "Uvedi protein kikirikija rano mešajući glatki maslac od kikirikija u kašice ili ovsenu kašu. Celi kikiriki i maslac od kikirikija sa komadićima su opasnost od gušenja u ovom uzrastu."},
-  {"id": "6m-feeding-17", "ageGroup": "6m", "category": "feeding", "text": "Ponudi raznolikost boja na bebinom tanjiru. Različito obojeno voće i povrće obezbeđuju različite hranljive materije, a raznolikost sada podstiče spremnost da proba novu hranu kasnije."},
-  {"id": "6m-feeding-18", "ageGroup": "6m", "category": "feeding", "text": "Beba može pojesti puno jednog dana i jedva dotaći hranu sledećeg. Ova nedoslednost je potpuno normalna. Majčino mleko ili formula popunjava nutritivne praznine."},
-  {"id": "6m-feeding-19", "ageGroup": "6m", "category": "feeding", "text": "Probaj da ponudiš bebi već napunjenu kašičicu da je sama prinese ustima. Ova prljava vežba gradi samostalnost i fine motoričke veštine."},
-  {"id": "6m-feeding-20", "ageGroup": "6m", "category": "feeding", "text": "Izbegavaj dodavanje soli ili šećera u bebinu hranu. Njeni bubrezi još ne mogu da podnesu mnogo natrijuma, a počinjanje sa prirodnim ukusima joj pomaže da ceni pravi ukus hrane."},
-  {"id": "6m-feeding-21", "ageGroup": "6m", "category": "feeding", "text": "Ako beba dobije nagon na povraćanje od nove teksture, ostani mirno i pusti je da se snađe. Tvoja opuštena reakcija joj pomaže da se oseća sigurno dok istražuje različitu hranu."},
-  {"id": "6m-feeding-22", "ageGroup": "6m", "category": "feeding", "text": "Dojenje ili hranjenje formulom i dalje treba da se dešava pre obroka čvrste hrane u ovoj fazi. Mleko ostaje primarni izvor ishrane do bliže 12 meseci."},
-  {"id": "6m-feeding-23", "ageGroup": "6m", "category": "feeding", "text": "Ponudi meko kuvano povrće poput slatkog krompira, cvetova brokolija ili trakica tikvica kao odlične prve namirnice za ručno jedenje. Kuvaj ih dok se lako ne zgnječe između prstiju."},
-  {"id": "6m-feeding-24", "ageGroup": "6m", "category": "feeding", "text": "Zajednički porodični obroci, čak i u ovoj ranoj fazi, pomažu bebi da uči gledajući te. Oponašaće tvoje žvakanje i biti spremnija da proba ono što ti jedeš."},
-  {"id": "6m-feeding-25", "ageGroup": "6m", "category": "feeding", "text": "Ako beba deluje frustrirano sa kašicama, možda je spremna za malo gušće teksture ili meku hranu za ručno jedenje. Prati njen ritam i prilagođavaj se onome što ti pokazuje da može."},
-
-  {"id": "6m-health-01", "ageGroup": "6m", "category": "health", "text": "Redovni pregledi tokom ovog perioda su važni za praćenje razvoja. Pedijatar može takođe preporučiti dodatke fluora ako vaša voda nije fluorisana."},
-  {"id": "6m-health-02", "ageGroup": "6m", "category": "health", "text": "Bebin prvi zub se može pojaviti otprilike sada. Nežno ga briši mekom vlažnom krpom ili koristi malu količinu paste za zube sa fluorom na četkici za bebe."},
-  {"id": "6m-health-03", "ageGroup": "6m", "category": "health", "text": "Ako beba dobije temperaturu od {{100.4°F|38°C}} ili višu, pozovi pedijatra. U ovom uzrastu, povišena temperatura zahteva proveru da se isključi infekcija."},
-  {"id": "6m-health-04", "ageGroup": "6m", "category": "health", "text": "Infekcije uha su česte u ovom uzrastu. Vučenje za uši, nervoza i temperatura mogu biti znaci. Samo vučenje za uši je često samo nelagodnost od nicanja zuba, ali idi kod lekara ako sumnjaš na infekciju."},
-  {"id": "6m-health-05", "ageGroup": "6m", "category": "health", "text": "Tvoja beba može imati zatvor kad počne da jede čvrstu hranu. Ponudi male količine vode i probaj pire od šljiva, krušaka ili graška da pomogneš."},
-  {"id": "6m-health-06", "ageGroup": "6m", "category": "health", "text": "Sada je dobro vreme da zakažeš prvu posetu zubaru. Stručnjaci preporučuju posetu zubaru do prve godine ili u roku od 6 meseci od pojave prvog zuba."},
-  {"id": "6m-health-07", "ageGroup": "6m", "category": "health", "text": "Prati znake alergija na hranu prilikom uvođenja čvrste hrane: koprivnjaču, otoke, povraćanje ili otežano disanje. Blagi osip oko usta je obično samo iritacija kože."},
-  {"id": "6m-health-08", "ageGroup": "6m", "category": "health", "text": "Ako je sezona gripa i beba ima najmanje 6 meseci, može primiti vakcinu protiv gripa. Ovo je naročito važno jer majčina antitela slabe."},
-  {"id": "6m-health-09", "ageGroup": "6m", "category": "health", "text": "Bol od nicanja zuba je stvaran ali obično podnošljiv. Ohlađene glodalice za zube i nežna masaža desni čistim prstom mogu pružiti olakšanje."},
-  {"id": "6m-health-10", "ageGroup": "6m", "category": "health", "text": "Beba može razviti osetljivost na hranu dok proba nove namirnice. Nekoliko retkih stolica posle nove hrane nije uvek alergija — njen sistem za varenje se prilagođava."},
-  {"id": "6m-health-11", "ageGroup": "6m", "category": "health", "text": "Bebe u ovom uzrastu su sve pokretnije i obožavaju da istražuju ustima. Svakodnevno pregledaj pod tražeći male predmete koji bi mogli biti opasnost od gušenja."},
-  {"id": "6m-health-12", "ageGroup": "6m", "category": "health", "text": "Ako beba ima uporan zapušen nos, možda je povezano sa novim namirnicama ili alergenima iz okoline. Pomeni to na sledećoj poseti."},
-  {"id": "6m-health-13", "ageGroup": "6m", "category": "health", "text": "Ćilibarske ogrlice za zube se ne preporučuju — predstavljaju rizik od davljenja i gušenja bez dokazane koristi. Drži se bezbednih alternativa za nicanje zuba."},
-  {"id": "6m-health-14", "ageGroup": "6m", "category": "health", "text": "Bebina stolica će se promeniti po boji i konzistenciji kad počne da jede čvrstu hranu. Zelena, narandžasta i braon su sve normalne boje. Crvenu ili crnu stolicu prijavi lekaru."},
-  {"id": "6m-health-15", "ageGroup": "6m", "category": "health", "text": "Kada beba napuni 6 meseci, koristi kremu za sunčanje (SPF 30+) na izloženu kožu kad izlazite. Pre 6 meseci, oslanjaj se na hlad, kape i laganu odeću za zaštitu od sunca."},
-  {"id": "6m-health-16", "ageGroup": "6m", "category": "health", "text": "Nastavi da četkaš bebine nove zube dva puta dnevno sa količinom paste za zube veličine zrna pirinča. Uspostavljanje ove rutine sada olakšava stvari kako budu nicali novi zubi."},
-  {"id": "6m-health-17", "ageGroup": "6m", "category": "health", "text": "Ako beba dobije udarac ili modricu od nove pokretljivosti, hladan oblog i uteha su obično dovoljni. Pozovi lekara za povrede glave praćene povraćanjem ili neuobičajenom pospanošću."},
-  {"id": "6m-health-18", "ageGroup": "6m", "category": "health", "text": "Bolest šaka, stopala i usta je česta kod beba i male dece. Traži male plikove na šakama, stopalima i u ustima. Neprijatno je ali se obično povuče za oko nedelju dana."},
-  {"id": "6m-health-19", "ageGroup": "6m", "category": "health", "text": "Bebine potrebe za gvožđem se značajno povećavaju oko 6 meseci. Ako je beba bila prevremeno rođena ili isključivo dojena, pitaj pedijatra da li je potreban dodatak gvožđa."},
-  {"id": "6m-health-20", "ageGroup": "6m", "category": "health", "text": "Krup, lavežni kašalj koji zvuči kao foka, je čest kod beba. Svež noćni vazduh ili parno kupatilo mogu pomoći, ali pozovi lekara ako beba teško diše."},
-  {"id": "6m-health-21", "ageGroup": "6m", "category": "health", "text": "Ako beba dobije osip posle nove hrane, slikaj ga i zapiši hranu i vreme. Ove informacije su veoma korisne za pedijatra."},
-  {"id": "6m-health-22", "ageGroup": "6m", "category": "health", "text": "Nicanje zuba može izazvati blagi porast temperature, ali prava temperatura od {{100.4°F|38°C}} ili viša nije izazvana nicanjem zuba. Ako beba ima temperaturu dok joj niču zubi, proveri kod lekara da isključiš druge uzroke."},
-  {"id": "6m-health-23", "ageGroup": "6m", "category": "health", "text": "Sa povećanom pokretljivošću dolazi do više padova i udaraca. Obezbeđivanje oštrih ivica i tvrdih površina pomaže, ali su neki padovi normalan deo učenja kretanja."},
-  {"id": "6m-health-24", "ageGroup": "6m", "category": "health", "text": "Ako se bebin ekcem pogorša posle uvođenja čvrste hrane, vodi dnevnik hrane da pratiš potencijalne okidače. Česti krivci su mlečni proizvodi, jaja i pšenica."},
-  {"id": "6m-health-25", "ageGroup": "6m", "category": "health", "text": "Sezona RSV-a može biti naročito zabrinjavajuća za bebe mlađe od 12 meseci. Često pranje ruku i izbegavanje kontakta sa bolesnim osobama su najbolje mere prevencije."},
-
-  {"id": "6m-play-01", "ageGroup": "6m", "category": "play", "text": "Ponudi čaše za slaganje ili igračke za umetanje. Beba ih još neće slagati, ali će obožavati da ruši kule koje gradiš i da istražuje različite veličine."},
-  {"id": "6m-play-02", "ageGroup": "6m", "category": "play", "text": "Napuni malu korpu bezbednim kućnim predmetima (drvena kašika, silikonska mutilica, parčad tkanine) i pusti bebu da istražuje. Ova \"korpa sa blagom\" podstiče samostalnu igru."},
-  {"id": "6m-play-03", "ageGroup": "6m", "category": "play", "text": "Igraj \"gde je otišlo?\" delimično skrivajući igračku pod krpom. Beba uči pojam stalnosti predmeta i obožavaće da traži."},
-  {"id": "6m-play-04", "ageGroup": "6m", "category": "play", "text": "Prskanje u kadi je odlična senzorna igra! Daj bebi čaše za sipanje i igračke koje plutaju. Uvek nadgledaj — nikad je ne ostavljaj samu sa vodom."},
-  {"id": "6m-play-05", "ageGroup": "6m", "category": "play", "text": "Posadi bebu ispred ogledala i pravite grimase zajedno. U ovom uzrastu, smejaće se, kikotati i posezati da dodirne svoj odraz."},
-  {"id": "6m-play-06", "ageGroup": "6m", "category": "play", "text": "Probaj nežnu fizičku igru — poskakivanje na kolenu, nežno ljuljanje kroz vazduh ili smešne zvukove. Ove fizičke igre grade poverenje i svest o telu."},
-  {"id": "6m-play-07", "ageGroup": "6m", "category": "play", "text": "Uvedi jednostavne muzičke instrumente poput bubnja, zvečke ili ksilofona. Beba će obožavati da pravi buku i otkriva da može da stvara zvukove."},
-  {"id": "6m-play-08", "ageGroup": "6m", "category": "play", "text": "Napravi poligon od jastuka i smotanih ćebadi za bebu da puzi preko i oko njih. Ovo gradi veštine rešavanja problema uz fizičku snagu."},
-  {"id": "6m-play-09", "ageGroup": "6m", "category": "play", "text": "Čitaj knjige sa različitim teksturama (dodirni i oseti knjige). Beba će obožavati da prelazi prstima preko krznenih, kvrgavih i glatkih površina."},
-  {"id": "6m-play-10", "ageGroup": "6m", "category": "play", "text": "Pusti bebu da se igra bezbednim igračkama za vodu u plitkom lavoru. Sipanje, prskanje i osećanje toka vode uči je o fizičkom svetu."},
-  {"id": "6m-play-11", "ageGroup": "6m", "category": "play", "text": "Puštaj muziku različitih žanrova i gledaj kako beba reaguje. Može poskakivati, šutirati ili mahati rukama. Zajedničko plesanje je divno za zbližavanje."},
-  {"id": "6m-play-12", "ageGroup": "6m", "category": "play", "text": "Ponudi bebi kašiku da drži tokom igranja za vreme obroka. Lupanje po tacni je prljavo i bučno, ali gradi fine motoričke veštine i koordinaciju oka i ruke."},
-  {"id": "6m-play-13", "ageGroup": "6m", "category": "play", "text": "Probaj da duvneš bebi na stomačić da napraviš zvuk tokom presvlačenja. Ovi razigrani trenuci pretvaraju rutinske zadatke u prilike za zbližavanje."},
-  {"id": "6m-play-14", "ageGroup": "6m", "category": "play", "text": "Provedi vreme na podu sa bebom na njenom nivou. Legni na stomak tokom vremena na stomaku ili sedi licem u lice. Beba se više angažuje kada ste u nivou očiju."},
-  {"id": "6m-play-15", "ageGroup": "6m", "category": "play", "text": "Stavi igračke u kalup za mafine da ih beba vadi i istražuje. Ova jednostavna aktivnost izaziva njene veštine hvatanja i drži je zainteresovanom."},
-  {"id": "6m-play-16", "ageGroup": "6m", "category": "play", "text": "Probaj da staviš igračku u providnu kutiju i pustiš bebu da smisli kako da je izvadi. Ovo rano rešavanje problema gradi veštine kritičkog mišljenja."},
-  {"id": "6m-play-17", "ageGroup": "6m", "category": "play", "text": "Ponudi bebi kartonsku kutiju da istraži. Može je gurati, sedeti u njoj ili lupati po njoj. Jednostavne igračke otvorenog tipa pokreću najviše kreativnosti."},
-  {"id": "6m-play-18", "ageGroup": "6m", "category": "play", "text": "Igraj igre sa tapšanjem sa bebom. Vodi joj ruke kroz pokrete i uživaj u njenim reakcijama. Vremenom će početi sama da se pridružuje."},
-  {"id": "6m-play-19", "ageGroup": "6m", "category": "play", "text": "Pusti bebu da istražuje bezbednu hranu tokom igre, ne samo za vreme obroka. Osećanje teksture banane ili gnječenje parčeta avokada je divno senzorno učenje."},
-  {"id": "6m-play-20", "ageGroup": "6m", "category": "play", "text": "Napravi senzornu kutiju sa velikim, bezbednim predmetima poput mekih loptica, drvenih prstenova i parčadi tkanine. Nadgledana senzorna igra drži bebu angažovanom i stimuliše učenje."},
-  {"id": "6m-play-21", "ageGroup": "6m", "category": "play", "text": "Kotrljaj loptu napred-nazad sa bebom dok sedi. Ova jednostavna igra uči naizmenično igranje i pomaže joj da vežba praćenje pokretnih predmeta."},
-  {"id": "6m-play-22", "ageGroup": "6m", "category": "play", "text": "Pusti bebu da cepa papir (veliki komadi, pod nadzorom). Zvuk i pokret su fascinantni, a cepanje gradi snagu ruku i koordinaciju."},
-  {"id": "6m-play-23", "ageGroup": "6m", "category": "play", "text": "Uvedi knjige sa preklopima i pusti bebu da sama pokušava da ih otvori. Ovo kombinuje vežbu fine motorike sa uzbuđenjem iznenađenja."},
-  {"id": "6m-play-24", "ageGroup": "6m", "category": "play", "text": "Pevaj pesme sa pokretima ruku poput \"Čičak, čičak\" ili \"Točkovi autobusa\". Beba će početi da predviđa pokrete i na kraju pokušati da ih kopira."},
-  {"id": "6m-play-25", "ageGroup": "6m", "category": "play", "text": "Vodi bebu na \"šetnju tekstura\" po kući, puštajući je da dodirne bezbedne površine poput glatke radne ploče, mekog jastuka, hladnog prozora i čupavog tepiha."},
-
-  {"id": "6m-safety-01", "ageGroup": "6m", "category": "safety", "text": "Sada kad beba postaje pokretna, instaliraj sigurnosne ograde na vrhu i dnu stepenica. Ograde na pritisak su u redu za dno; koristi one pričvršćene za zid na vrhu."},
-  {"id": "6m-safety-02", "ageGroup": "6m", "category": "safety", "text": "Spusti dušek krevetca na najnižu poziciju pre nego što beba može da se podigne u stojeći položaj. Jača je nego što misliš i iznenadiće te."},
-  {"id": "6m-safety-03", "ageGroup": "6m", "category": "safety", "text": "Zaključaj ormare koji sadrže sredstva za čišćenje, lekove i oštre predmete. Magnetne ili lepljive brave za ormare su efikasne i lako se postavljaju."},
-  {"id": "6m-safety-04", "ageGroup": "6m", "category": "safety", "text": "Svu hranu seci na bezbedne veličine tokom obroka. Okruglu, čvrstu hranu poput grožđa, čeri paradajza i viršli treba seći na četvrtine po dužini."},
-  {"id": "6m-safety-05", "ageGroup": "6m", "category": "safety", "text": "Nikada ne ostavljaj bebu samu u stolici za hranjenje. Uvek koristi sigurnosne kaiše i pomeri stolicu od stolova i površina od kojih bi mogla da se odgurne."},
-  {"id": "6m-safety-06", "ageGroup": "6m", "category": "safety", "text": "Pokrij oštre ivice i uglove nameštaja zaštitnim jastučićima. Bebina glava je na visini stola kada počne da se podiže, a udarci su neizbežni."},
-  {"id": "6m-safety-07", "ageGroup": "6m", "category": "safety", "text": "Drži kablove od roletni, zavesa i elektronike van domašaja. Davljenje kablovima je ozbiljan rizik za radoznale bebe koje sve hvataju."},
-  {"id": "6m-safety-08", "ageGroup": "6m", "category": "safety", "text": "Uvek nadgledaj bebu blizu vode, uključujući kade, dečje bazene i kofe. Utapanje se može desiti brzo i tiho."},
-  {"id": "6m-safety-09", "ageGroup": "6m", "category": "safety", "text": "Proveri da su kućne biljke netoksične i van domašaja. Mnoge uobičajene biljke su otrovne ako se progutaju. Kad si u nedoumici, premesti biljke visoko."},
-  {"id": "6m-safety-10", "ageGroup": "6m", "category": "safety", "text": "Proveri da bebina stolica za hranjenje ima široku, stabilnu bazu i pregradu između nogu da spreči klizanje. Pravilno naleganje je drži bezbednom tokom obroka."},
-  {"id": "6m-safety-11", "ageGroup": "6m", "category": "safety", "text": "Ukloni stolnjake ili podmetače koje beba može da povuče, obarajući sudove i vruću hranu na sebe."},
-  {"id": "6m-safety-12", "ageGroup": "6m", "category": "safety", "text": "Sačuvaj broj centra za trovanje u telefonu. Brz pristup je bitan ako beba ikad dođe do nečega što ne bi smela."},
-  {"id": "6m-safety-13", "ageGroup": "6m", "category": "safety", "text": "Ako imaš posudicu za vodu ili hranu za ljubimca, drži je van domašaja. Bebe privlači voda i mogu se udaviti čak i u veoma plitkim posudama."},
-  {"id": "6m-safety-14", "ageGroup": "6m", "category": "safety", "text": "Izbegavaj hodalice na točkiće. Stručnjaci za bezbednost beba upozoravaju na njih zbog ozbiljnog rizika od povreda, naročito padova niz stepenice. Stacionarni stolovi za igru su bezbednija alternativa."},
-  {"id": "6m-safety-15", "ageGroup": "6m", "category": "safety", "text": "Drži torbu za pelene sa svim lekovima daleko od bebinog domašaja. Čak ni poklopci otporni na decu nisu potpuno sigurni."},
-  {"id": "6m-safety-16", "ageGroup": "6m", "category": "safety", "text": "Osiguraj poklopac WC šolje bravom. Pokretne bebe su teže u gornjem delu tela i mogu pasti glavom napred u otvoren WC, što predstavlja rizik od utapanja."},
-  {"id": "6m-safety-17", "ageGroup": "6m", "category": "safety", "text": "Drži tašne i torbe sa poda i van domašaja. Često sadrže lekove, novčiće, opasnosti od gušenja i sitne predmete opasne za bebe."},
-  {"id": "6m-safety-18", "ageGroup": "6m", "category": "safety", "text": "Pričvrsti televizore i teške uređaje za zid. Čak i pre nego što beba bude pokretna, udarac ili povučen kabl može izazvati opasno prevrtanje."},
-  {"id": "6m-safety-19", "ageGroup": "6m", "category": "safety", "text": "Koristi zaustavljače za vrata da sprečiš bebu da zaglavi prste u vratima koja se zatvaraju. Njeni mali prstići mogu da se provuku u pukotine brže nego što očekuješ."},
-  {"id": "6m-safety-20", "ageGroup": "6m", "category": "safety", "text": "Ukloni magnete sa frižidera koji su dovoljno mali da se progutaju. Progutani magneti mogu biti izuzetno opasni ako se proguta više od jednog."},
-  {"id": "6m-safety-21", "ageGroup": "6m", "category": "safety", "text": "Nikada ne ostavljaj bebu bez nadzora na krevetu, čak ni okruženu jastucima. U ovom uzrastu može da se prevrće, pomera i mrda do ivice iznenađujuće brzo."},
-  {"id": "6m-safety-22", "ageGroup": "6m", "category": "safety", "text": "Kako beba postaje pokretljivija, proveri da su police za knjige, komode i visok nameštaj pričvršćeni za zid trakama protiv prevrtanja. Najbolje je to uraditi pre nego što počne da se podiže."},
-  {"id": "6m-safety-23", "ageGroup": "6m", "category": "safety", "text": "Drži podove čiste od sitnih predmeta poput poklopaca za olovke, spajalica i gumica. Navikni se da redovno pregledaš pod na nivou bebinih očiju."},
-  {"id": "6m-safety-24", "ageGroup": "6m", "category": "safety", "text": "Koristi poklopce za dugmiće šporeta da sprečiš bebu da uključi ringlu. Čak i iz stolice za hranjenje u blizini, radoznala beba može dosegnuti dalje nego što misliš."},
-  {"id": "6m-safety-25", "ageGroup": "6m", "category": "safety", "text": "Uvek budi nadohvat ruke dok beba jede čvrstu hranu. Gušenje se može desiti tiho, a brza reakcija je ključna."}
+  {
+    "id": "6m-development-01",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba možda počinje da sedi uz podršku ili čak samostalno na nekoliko sekundi. Postavi jastuke oko nje za meka sletanja dok vežba."
+  },
+  {
+    "id": "6m-development-02",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Oko ovog uzrasta, mnoge bebe počinju da prebacuju predmete iz jedne ruke u drugu. Ponudi joj igračku i gledaj ovu impresivnu koordinaciju na delu."
+  },
+  {
+    "id": "6m-development-03",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može početi da reaguje na svoje ime okretanjem ka tebi. Koristi njeno ime često tokom igre i razgovora da ga pojačaš."
+  },
+  {
+    "id": "6m-development-04",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Brbljanje postaje složenije, sa nizovima suglasnika i samoglasnika poput \"bababa\" ili \"mamama\". Ovo još nisu reči, ali su temelj za njih."
+  },
+  {
+    "id": "6m-development-05",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba otkriva gravitaciju! Može obožavati da baca igračke sa krila ili površine i gleda kako padaju. Ovo ponavljanje je učenje o uzroku i posledici."
+  },
+  {
+    "id": "6m-development-07",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može početi da se ljulja na šakama i kolenima, što je preteča puzanja. Daj joj puno vremena na podu da istraži ovaj pokret."
+  },
+  {
+    "id": "6m-development-08",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Probaj jednostavne igre naizmeničnih redova: ti brbljaš, ona brblja; ti se nasmeješ, ona se nasmeje. Ovi uzajamni trenuci su temelj razgovora."
+  },
+  {
+    "id": "6m-development-09",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Percepcija dubine tvoje bebe se brzo poboljšava. Sada može tačnije da doseže predmete i bolje procenjuje rastojanja nego ranije."
+  },
+  {
+    "id": "6m-development-10",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Neke bebe u ovom uzrastu počinju da pokazuju sklonost ka određenim igračkama ili predmetima za utehu. Omiljena igračkica za mazenje može postati korisno sredstvo za samosmirivanje."
+  },
+  {
+    "id": "6m-development-11",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može koristiti grabljajući hvat — zahvatajući stvari svim prstima — da podiže predmete. Precizniji hvat sa dva prsta dolazi kasnije."
+  },
+  {
+    "id": "6m-development-12",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Strepnja od razdvajanja se može pojaviti. Ako beba plače kad napustiš sobu, to znači da razume da postojiš čak i kad te ne vidi."
+  },
+  {
+    "id": "6m-development-13",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može početi da poskakuje kad je držiš u stojećem položaju. Ova snaga i koordinacija nogu su važna priprema za stajanje i hodanje kasnije."
+  },
+  {
+    "id": "6m-development-14",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Pokazuj na stvari i imenuj ih bebi: \"Gledaj, ptica!\" Pokazivanje joj pomaže da nauči da prati tvoj pogled i gradi rečnik za kasnije."
+  },
+  {
+    "id": "6m-development-15",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može početi da jasnije pokazuje emocije — frustraciju kad joj se oduzme igračka, uzbuđenje kad vidi da se priprema hrana. Imenuj ta osećanja naglas."
+  },
+  {
+    "id": "6m-development-16",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može početi da puzi na stomaku ili se pomera klizeći pre nego što se podigne na šake i kolena. Svaka beba pronađe svoj način kretanja."
+  },
+  {
+    "id": "6m-development-17",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Probaj da ponudiš bebi dve igračke odjednom — po jednu u svaku ruku. Držanje dva predmeta istovremeno je velika kognitivna i motorička prekretnica."
+  },
+  {
+    "id": "6m-development-18",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može početi da razume jednostavne reči iako ih još ne može reći. Ako kažeš \"gde je pas?\" i ona pogleda okolo, to pokazuje rano razumevanje."
+  },
+  {
+    "id": "6m-development-19",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ako beba udara predmetima o sto ili pod, eksperimentiše sa uzrokom i posledicom. Daj joj različite predmete da čuje raznolike zvukove."
+  },
+  {
+    "id": "6m-development-20",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može početi da traži igračku koja je ispala iz vidokruga umesto da zaboravi na nju. Ovo pokazuje da joj se jača pojam stalnosti predmeta."
+  },
+  {
+    "id": "6m-development-21",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Kako beba gradi snagu gornjeg dela tela, može početi da poseže naviše ka nameštaju ili tvojim rukama. Ponudi joj čvrste površine za koje može da se uhvati dok istražuje nove položaje."
+  },
+  {
+    "id": "6m-development-22",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba se može nagnuti napred iz sedećeg položaja da nešto zgrabi, pa se gurnuti nazad. Ovo oporavljanje ravnoteže pokazuje da joj se snaga trupa lepo razvija."
+  },
+  {
+    "id": "6m-development-23",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Često mahni bebi \"ćao\". Još neće uzvratiti, ali modelovanje gestova sada postavlja osnovu za imitaciju u narednim mesecima."
+  },
+  {
+    "id": "6m-development-24",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tvoja beba može početi da pokazuje preference za određene osobe, pružajući ruke ka omiljenom negovatelju. Ova izbirljivost je normalan deo razvoja privrženosti."
+  },
+  {
+    "id": "6m-development-25",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Većina beba ne počinje da puzi do 7-10 meseci, a neke potpuno preskoče puzanje. Za sada, dosta vremena na podu pomaže bebi da izgradi snagu i koordinaciju koja će joj trebati kad bude spremna da se kreće."
+  },
+  {
+    "id": "6m-sleep-01",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Većina beba u ovom uzrastu može spavati 6-8 sati u komadu noću, mada se neke još bude za hranjenje. Oba obrasca su normalna."
+  },
+  {
+    "id": "6m-sleep-02",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Tvojoj bebi verovatno trebaju 2-3 dremke dnevno, sa periodima budnosti od 2-2,5 sata. Prati zevanje i trljanje očiju kao znake pospanosti."
+  },
+  {
+    "id": "6m-sleep-03",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako je beba upravo naučila da sedi ili radi na puzanju, san može biti poremećen dok vežba nove veštine u krevetcu. Ovo je privremeno."
+  },
+  {
+    "id": "6m-sleep-04",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Predvidljiva dnevna rutina (buđenje, hranjenje, igra, spavanje) može pomoći da dremke budu doslednije i manje stresne."
+  },
+  {
+    "id": "6m-sleep-05",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako beba počne da se podiže u krevetcu i ne može da se vrati, vežbajte sedanje iz stojećeg položaja tokom dana da nauči da to uradi noću. Ovo je češće u narednim mesecima."
+  },
+  {
+    "id": "6m-sleep-06",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Možeš početi da uvodiš omiljenu igračkicu za mazenje tokom budnog vremena i maženja da bi beba razvila privrženost ka njoj. Za bezbedan san, drži krevetac prazan do 12 meseci prema smernicama za bezbedan san."
+  },
+  {
+    "id": "6m-sleep-07",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako je beba spremna da pređe sa 3 dremke na 2, možda ćeš morati privremeno da pomeriš vreme spavanja ranije da bi sprečila preumor tokom prelaza."
+  },
+  {
+    "id": "6m-sleep-08",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Nicanje zuba može poremetiti san, ali najgore obično traje samo par dana po zubu. Dodatna uteha tokom tog perioda je potpuno u redu."
+  },
+  {
+    "id": "6m-sleep-09",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako započinješ sa čvrstom hranom, ponudi je ranije tokom dana a ne tik pred spavanje. Nova hrana ponekad može izazvati nelagodnost koja remeti san."
+  },
+  {
+    "id": "6m-sleep-10",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Tvoja beba je možda spremna za malo kasnije jutarnje buđenje. Držanje sobe tamnom i neulaženje na prvi zvuk može ovo podstaći."
+  },
+  {
+    "id": "6m-sleep-11",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Neke bebe u ovom uzrastu počinju da više vole da spavaju na stomaku. Dok god se mogu prevrnuti u oba smera, bezbedno je pustiti ih da nađu svoj omiljeni položaj."
+  },
+  {
+    "id": "6m-sleep-12",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Doslednost je tvoj najbolji saveznik kad je san u pitanju. Koji god pristup odabereš, drži ga se najmanje nedelju dana da bi imao najbolje šanse da uspe."
+  },
+  {
+    "id": "6m-sleep-13",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Putovanja i promene vremenskih zona mogu privremeno poremetiti san. Pokušaj da održiš uobičajenu rutinu pred spavanje čak i u nepoznatom okruženju."
+  },
+  {
+    "id": "6m-sleep-14",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako se noćna buđenja iznenada povećaju, razmisli da li beba dobija dovoljno kalorija tokom dana. Uvođenje čvrste hrane ponekad pomaže, ali ne uvek."
+  },
+  {
+    "id": "6m-sleep-15",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ukupan san za ovaj uzrast je obično 12-16 sati u periodu od 24 sata. Ako beba deluje srećno i odmoreno, verovatno dobija dovoljno sna."
+  },
+  {
+    "id": "6m-sleep-16",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako beba brblja ili priča sama sebi u krevetcu pre nego što zaspi, pusti je. Ovo samosmirivanje brbljanjem je zdrav znak da može da se smiri samostalno."
+  },
+  {
+    "id": "6m-sleep-17",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Strepnja od razdvajanja može izazvati češća noćna buđenja u ovom uzrastu. Kratka, mirna poseta za utehu je u redu, ali pokušaj da ne uvodiš nove navike koje ćeš morati da ukidaš kasnije."
+  },
+  {
+    "id": "6m-sleep-18",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Kada beba prelazi sa 3 na 2 dremke, poslednja dremka u danu je obično ta koja se izbacuje. Ranije vreme za spavanje može premostiti razliku dok se prilagođava."
+  },
+  {
+    "id": "6m-sleep-19",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Tamna soba sa zavesama za zamračivanje može pomoći i dremkama i noćnom snu, naročito ako bebu lako stimuliše svetlost."
+  },
+  {
+    "id": "6m-sleep-20",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako se beba budi veoma rano ujutru (pre 6 sati), proveri da li je soba dovoljno tamna i razmisli da li treba malo pomeriti vreme spavanja."
+  },
+  {
+    "id": "6m-sleep-21",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Nekim bebama treba malo fizičke aktivnosti pre sna da potroše energiju. Kratko igranje pre rutine smirivanja može pomoći da brže zaspe."
+  },
+  {
+    "id": "6m-sleep-22",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako je beba počela da vežba prevrtanje, puzanje ili druge nove veštine u krevetcu pred spavanje, mirno je vrati u ležeći položaj bez pravljenja igre od toga. Na kraju će se smiriti."
+  },
+  {
+    "id": "6m-sleep-23",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Danima kad su dremke kratke ili preskočene, ne boj se da pomeriš spavanje ranije za 30-60 minuta. Preumorna beba teže zaspi."
+  },
+  {
+    "id": "6m-sleep-24",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Potrebe za snom tvoje bebe su jedinstvene za nju. Ako je srećna, raste i dostiže prekretnice, njen san je verovatno u redu čak i ako se ne poklapa sa onim što knjige kažu."
+  },
+  {
+    "id": "6m-sleep-25",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ako ste delili krevet i želiš da pređete na krevetac, počni sa dremkama. Dnevna praksa pomaže bebi da se navikne na svoj prostor."
+  },
+  {
+    "id": "6m-feeding-01",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Oko 6 meseci je obično odlično vreme za uvođenje čvrste hrane! Traži znake spremnosti: sedenje uz podršku, dobra kontrola glave i interesovanje za hranu."
+  },
+  {
+    "id": "6m-feeding-02",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Bilo da biraš kašice ili bebi vođeno hranjenje, majčino mleko ili formula i dalje treba da budu primarni izvor ishrane. Čvrsta hrana u ovoj fazi je za istraživanje."
+  },
+  {
+    "id": "6m-feeding-05",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Normalno je da beba u početku gura hranu jezikom napolje. Refleks guranja jezikom nestaje, i uči da pomera hranu ka zadnjem delu usta."
+  },
+  {
+    "id": "6m-feeding-06",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Nagon na povraćanje se razlikuje od gušenja i zapravo je zaštitni mehanizam. Nagon je glasan i uključuje kašljanje; gušenje je tiho. Nauči da razlikuješ jedno od drugog."
+  },
+  {
+    "id": "6m-feeding-07",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Dobre prve namirnice uključuju one bogate gvožđem poput kaše od mesa, žitarica obogaćenih gvožđem ili pire od sočiva. Bebine zalihe gvožđa od rođenja počinju da se troše oko 6 meseci."
+  },
+  {
+    "id": "6m-feeding-08",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ponudi vodu u otvorenoj čaši ili čaši sa slamkom tokom obroka. Beba neće piti mnogo u početku, ali rana vežba gradi važne oralno-motoričke veštine."
+  },
+  {
+    "id": "6m-feeding-09",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Prljavo jedenje je učenje! Pusti bebu da dodiruje, gnječi i razmazuje hranu. Senzorno istraživanje je važan deo prihvatanja novih tekstura."
+  },
+  {
+    "id": "6m-feeding-10",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ako primenjuješ bebi vođeno hranjenje, seci hranu u trakice veličine prsta koje beba može da drži u pesnici. Glodaće deo koji viri sa vrha."
+  },
+  {
+    "id": "6m-feeding-11",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Izbegavaj med do navršene prve godine zbog rizika od infantilnog botulizma. Takođe preskoči kravlje mleko kao glavni napitak, mada su male količine u kuvanju u redu."
+  },
+  {
+    "id": "6m-feeding-12",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ne obeshrabruj se ako beba odbije neku hranu. Može trebati 10-15 izlaganja pre nego što prihvati nešto novo. Nastavi da nudiš bez pritiska."
+  },
+  {
+    "id": "6m-feeding-13",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Beba uvek treba da sedi uspravno u stolici za hranjenje tokom obroka, nikada nagnuta unazad. Ovaj položaj je najbezbedniji za gutanje."
+  },
+  {
+    "id": "6m-feeding-14",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Kombinuj hranu bogatu gvožđem sa izvorima vitamina C (poput pire od jagoda ili malo soka od citrusa) da poboljšaš apsorpciju gvožđa."
+  },
+  {
+    "id": "6m-feeding-15",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Pusti bebu da postavlja tempo tokom obroka. Kada se okrene, zatvori usta ili izgubi interesovanje, kaže ti da je završila."
+  },
+  {
+    "id": "6m-feeding-16",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Uvedi protein kikirikija rano mešajući glatki maslac od kikirikija u kašice ili ovsenu kašu. Celi kikiriki i maslac od kikirikija sa komadićima su opasnost od gušenja u ovom uzrastu."
+  },
+  {
+    "id": "6m-feeding-17",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ponudi raznolikost boja na bebinom tanjiru. Različito obojeno voće i povrće obezbeđuju različite hranljive materije, a raznolikost sada podstiče spremnost da proba novu hranu kasnije."
+  },
+  {
+    "id": "6m-feeding-18",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Beba može pojesti puno jednog dana i jedva dotaći hranu sledećeg. Ova nedoslednost je potpuno normalna. Majčino mleko ili formula popunjava nutritivne praznine."
+  },
+  {
+    "id": "6m-feeding-19",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Probaj da ponudiš bebi već napunjenu kašičicu da je sama prinese ustima. Ova prljava vežba gradi samostalnost i fine motoričke veštine."
+  },
+  {
+    "id": "6m-feeding-20",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Izbegavaj dodavanje soli ili šećera u bebinu hranu. Njeni bubrezi još ne mogu da podnesu mnogo natrijuma, a počinjanje sa prirodnim ukusima joj pomaže da ceni pravi ukus hrane."
+  },
+  {
+    "id": "6m-feeding-21",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ako beba dobije nagon na povraćanje od nove teksture, ostani mirno i pusti je da se snađe. Tvoja opuštena reakcija joj pomaže da se oseća sigurno dok istražuje različitu hranu."
+  },
+  {
+    "id": "6m-feeding-22",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Dojenje ili hranjenje formulom i dalje treba da se dešava pre obroka čvrste hrane u ovoj fazi. Mleko ostaje primarni izvor ishrane do bliže 12 meseci."
+  },
+  {
+    "id": "6m-feeding-23",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ponudi meko kuvano povrće poput slatkog krompira, cvetova brokolija ili trakica tikvica kao odlične prve namirnice za ručno jedenje. Kuvaj ih dok se lako ne zgnječe između prstiju."
+  },
+  {
+    "id": "6m-feeding-24",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Zajednički porodični obroci, čak i u ovoj ranoj fazi, pomažu bebi da uči gledajući te. Oponašaće tvoje žvakanje i biti spremnija da proba ono što ti jedeš."
+  },
+  {
+    "id": "6m-feeding-25",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ako beba deluje frustrirano sa kašicama, možda je spremna za malo gušće teksture ili meku hranu za ručno jedenje. Prati njen ritam i prilagođavaj se onome što ti pokazuje da može."
+  },
+  {
+    "id": "6m-health-01",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Redovni pregledi tokom ovog perioda su važni za praćenje razvoja. Pedijatar može takođe preporučiti dodatke fluora ako vaša voda nije fluorisana."
+  },
+  {
+    "id": "6m-health-03",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ako beba dobije temperaturu od {{100.4°F|38°C}} ili višu, pozovi pedijatra. U ovom uzrastu, povišena temperatura zahteva proveru da se isključi infekcija."
+  },
+  {
+    "id": "6m-health-04",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Infekcije uha su česte u ovom uzrastu. Vučenje za uši, nervoza i temperatura mogu biti znaci. Samo vučenje za uši je često samo nelagodnost od nicanja zuba, ali idi kod lekara ako sumnjaš na infekciju."
+  },
+  {
+    "id": "6m-health-06",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Sada je dobro vreme da zakažeš prvu posetu zubaru. Stručnjaci preporučuju posetu zubaru do prve godine ili u roku od 6 meseci od pojave prvog zuba."
+  },
+  {
+    "id": "6m-health-07",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Prati znake alergija na hranu prilikom uvođenja čvrste hrane: koprivnjaču, otoke, povraćanje ili otežano disanje. Blagi osip oko usta je obično samo iritacija kože."
+  },
+  {
+    "id": "6m-health-08",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ako je sezona gripa i beba ima najmanje 6 meseci, može primiti vakcinu protiv gripa. Ovo je naročito važno jer majčina antitela slabe."
+  },
+  {
+    "id": "6m-health-09",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Bol od nicanja zuba je stvaran ali obično podnošljiv. Ohlađene glodalice za zube i nežna masaža desni čistim prstom mogu pružiti olakšanje."
+  },
+  {
+    "id": "6m-health-10",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Beba može razviti osetljivost na hranu dok proba nove namirnice. Nekoliko retkih stolica posle nove hrane nije uvek alergija — njen sistem za varenje se prilagođava."
+  },
+  {
+    "id": "6m-health-11",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Bebe u ovom uzrastu su sve pokretnije i obožavaju da istražuju ustima. Svakodnevno pregledaj pod tražeći male predmete koji bi mogli biti opasnost od gušenja."
+  },
+  {
+    "id": "6m-health-12",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ako beba ima uporan zapušen nos, možda je povezano sa novim namirnicama ili alergenima iz okoline. Pomeni to na sledećoj poseti."
+  },
+  {
+    "id": "6m-health-13",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ćilibarske ogrlice za zube se ne preporučuju — predstavljaju rizik od davljenja i gušenja bez dokazane koristi. Drži se bezbednih alternativa za nicanje zuba."
+  },
+  {
+    "id": "6m-health-14",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Bebina stolica će se promeniti po boji i konzistenciji kad počne da jede čvrstu hranu. Zelena, narandžasta i braon su sve normalne boje. Crvenu ili crnu stolicu prijavi lekaru."
+  },
+  {
+    "id": "6m-health-15",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Kada beba napuni 6 meseci, koristi kremu za sunčanje (SPF 30+) na izloženu kožu kad izlazite. Pre 6 meseci, oslanjaj se na hlad, kape i laganu odeću za zaštitu od sunca."
+  },
+  {
+    "id": "6m-health-16",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Nastavi da četkaš bebine nove zube dva puta dnevno sa količinom paste za zube veličine zrna pirinča. Uspostavljanje ove rutine sada olakšava stvari kako budu nicali novi zubi."
+  },
+  {
+    "id": "6m-health-17",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ako beba dobije udarac ili modricu od nove pokretljivosti, hladan oblog i uteha su obično dovoljni. Pozovi lekara za povrede glave praćene povraćanjem ili neuobičajenom pospanošću."
+  },
+  {
+    "id": "6m-health-18",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Bolest šaka, stopala i usta je česta kod beba i male dece. Traži male plikove na šakama, stopalima i u ustima. Neprijatno je ali se obično povuče za oko nedelju dana."
+  },
+  {
+    "id": "6m-health-19",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Bebine potrebe za gvožđem se značajno povećavaju oko 6 meseci. Ako je beba bila prevremeno rođena ili isključivo dojena, pitaj pedijatra da li je potreban dodatak gvožđa."
+  },
+  {
+    "id": "6m-health-21",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ako beba dobije osip posle nove hrane, slikaj ga i zapiši hranu i vreme. Ove informacije su veoma korisne za pedijatra."
+  },
+  {
+    "id": "6m-health-22",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Nicanje zuba može izazvati blagi porast temperature, ali prava temperatura od {{100.4°F|38°C}} ili viša nije izazvana nicanjem zuba. Ako beba ima temperaturu dok joj niču zubi, proveri kod lekara da isključiš druge uzroke."
+  },
+  {
+    "id": "6m-health-23",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Sa povećanom pokretljivošću dolazi do više padova i udaraca. Obezbeđivanje oštrih ivica i tvrdih površina pomaže, ali su neki padovi normalan deo učenja kretanja."
+  },
+  {
+    "id": "6m-health-24",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ako se bebin ekcem pogorša posle uvođenja čvrste hrane, vodi dnevnik hrane da pratiš potencijalne okidače. Česti krivci su mlečni proizvodi, jaja i pšenica."
+  },
+  {
+    "id": "6m-health-25",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Sezona RSV-a može biti naročito zabrinjavajuća za bebe mlađe od 12 meseci. Često pranje ruku i izbegavanje kontakta sa bolesnim osobama su najbolje mere prevencije."
+  },
+  {
+    "id": "6m-play-01",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Ponudi čaše za slaganje ili igračke za umetanje. Beba ih još neće slagati, ali će obožavati da ruši kule koje gradiš i da istražuje različite veličine."
+  },
+  {
+    "id": "6m-play-02",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Napuni malu korpu bezbednim kućnim predmetima (drvena kašika, silikonska mutilica, parčad tkanine) i pusti bebu da istražuje. Ova \"korpa sa blagom\" podstiče samostalnu igru."
+  },
+  {
+    "id": "6m-play-03",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Igraj \"gde je otišlo?\" delimično skrivajući igračku pod krpom. Beba uči pojam stalnosti predmeta i obožavaće da traži."
+  },
+  {
+    "id": "6m-play-04",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Prskanje u kadi je odlična senzorna igra! Daj bebi čaše za sipanje i igračke koje plutaju. Uvek nadgledaj — nikad je ne ostavljaj samu sa vodom."
+  },
+  {
+    "id": "6m-play-05",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Posadi bebu ispred ogledala i pravite grimase zajedno. U ovom uzrastu, smejaće se, kikotati i posezati da dodirne svoj odraz."
+  },
+  {
+    "id": "6m-play-06",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Probaj nežnu fizičku igru — poskakivanje na kolenu, nežno ljuljanje kroz vazduh ili smešne zvukove. Ove fizičke igre grade poverenje i svest o telu."
+  },
+  {
+    "id": "6m-play-07",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Uvedi jednostavne muzičke instrumente poput bubnja, zvečke ili ksilofona. Beba će obožavati da pravi buku i otkriva da može da stvara zvukove."
+  },
+  {
+    "id": "6m-play-08",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Napravi poligon od jastuka i smotanih ćebadi za bebu da puzi preko i oko njih. Ovo gradi veštine rešavanja problema uz fizičku snagu."
+  },
+  {
+    "id": "6m-play-09",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Čitaj knjige sa različitim teksturama (dodirni i oseti knjige). Beba će obožavati da prelazi prstima preko krznenih, kvrgavih i glatkih površina."
+  },
+  {
+    "id": "6m-play-10",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Pusti bebu da se igra bezbednim igračkama za vodu u plitkom lavoru. Sipanje, prskanje i osećanje toka vode uči je o fizičkom svetu."
+  },
+  {
+    "id": "6m-play-11",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Puštaj muziku različitih žanrova i gledaj kako beba reaguje. Može poskakivati, šutirati ili mahati rukama. Zajedničko plesanje je divno za zbližavanje."
+  },
+  {
+    "id": "6m-play-12",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Ponudi bebi kašiku da drži tokom igranja za vreme obroka. Lupanje po tacni je prljavo i bučno, ali gradi fine motoričke veštine i koordinaciju oka i ruke."
+  },
+  {
+    "id": "6m-play-13",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Probaj da duvneš bebi na stomačić da napraviš zvuk tokom presvlačenja. Ovi razigrani trenuci pretvaraju rutinske zadatke u prilike za zbližavanje."
+  },
+  {
+    "id": "6m-play-14",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Provedi vreme na podu sa bebom na njenom nivou. Legni na stomak tokom vremena na stomaku ili sedi licem u lice. Beba se više angažuje kada ste u nivou očiju."
+  },
+  {
+    "id": "6m-play-15",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Stavi igračke u kalup za mafine da ih beba vadi i istražuje. Ova jednostavna aktivnost izaziva njene veštine hvatanja i drži je zainteresovanom."
+  },
+  {
+    "id": "6m-play-16",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Probaj da staviš igračku u providnu kutiju i pustiš bebu da smisli kako da je izvadi. Ovo rano rešavanje problema gradi veštine kritičkog mišljenja."
+  },
+  {
+    "id": "6m-play-17",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Ponudi bebi kartonsku kutiju da istraži. Može je gurati, sedeti u njoj ili lupati po njoj. Jednostavne igračke otvorenog tipa pokreću najviše kreativnosti."
+  },
+  {
+    "id": "6m-play-18",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Igraj igre sa tapšanjem sa bebom. Vodi joj ruke kroz pokrete i uživaj u njenim reakcijama. Vremenom će početi sama da se pridružuje."
+  },
+  {
+    "id": "6m-play-19",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Pusti bebu da istražuje bezbednu hranu tokom igre, ne samo za vreme obroka. Osećanje teksture banane ili gnječenje parčeta avokada je divno senzorno učenje."
+  },
+  {
+    "id": "6m-play-20",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Napravi senzornu kutiju sa velikim, bezbednim predmetima poput mekih loptica, drvenih prstenova i parčadi tkanine. Nadgledana senzorna igra drži bebu angažovanom i stimuliše učenje."
+  },
+  {
+    "id": "6m-play-21",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Kotrljaj loptu napred-nazad sa bebom dok sedi. Ova jednostavna igra uči naizmenično igranje i pomaže joj da vežba praćenje pokretnih predmeta."
+  },
+  {
+    "id": "6m-play-22",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Pusti bebu da cepa papir (veliki komadi, pod nadzorom). Zvuk i pokret su fascinantni, a cepanje gradi snagu ruku i koordinaciju."
+  },
+  {
+    "id": "6m-play-23",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Uvedi knjige sa preklopima i pusti bebu da sama pokušava da ih otvori. Ovo kombinuje vežbu fine motorike sa uzbuđenjem iznenađenja."
+  },
+  {
+    "id": "6m-play-24",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Pevaj pesme sa pokretima ruku poput \"Čičak, čičak\" ili \"Točkovi autobusa\". Beba će početi da predviđa pokrete i na kraju pokušati da ih kopira."
+  },
+  {
+    "id": "6m-play-25",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Vodi bebu na \"šetnju tekstura\" po kući, puštajući je da dodirne bezbedne površine poput glatke radne ploče, mekog jastuka, hladnog prozora i čupavog tepiha."
+  },
+  {
+    "id": "6m-safety-01",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Sada kad beba postaje pokretna, instaliraj sigurnosne ograde na vrhu i dnu stepenica. Ograde na pritisak su u redu za dno; koristi one pričvršćene za zid na vrhu."
+  },
+  {
+    "id": "6m-safety-02",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Spusti dušek krevetca na najnižu poziciju pre nego što beba može da se podigne u stojeći položaj. Jača je nego što misliš i iznenadiće te."
+  },
+  {
+    "id": "6m-safety-03",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Zaključaj ormare koji sadrže sredstva za čišćenje, lekove i oštre predmete. Magnetne ili lepljive brave za ormare su efikasne i lako se postavljaju."
+  },
+  {
+    "id": "6m-safety-05",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Nikada ne ostavljaj bebu samu u stolici za hranjenje. Uvek koristi sigurnosne kaiše i pomeri stolicu od stolova i površina od kojih bi mogla da se odgurne."
+  },
+  {
+    "id": "6m-safety-06",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Pokrij oštre ivice i uglove nameštaja zaštitnim jastučićima. Bebina glava je na visini stola kada počne da se podiže, a udarci su neizbežni."
+  },
+  {
+    "id": "6m-safety-07",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Drži kablove od roletni, zavesa i elektronike van domašaja. Davljenje kablovima je ozbiljan rizik za radoznale bebe koje sve hvataju."
+  },
+  {
+    "id": "6m-safety-08",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Uvek nadgledaj bebu blizu vode, uključujući kade, dečje bazene i kofe. Utapanje se može desiti brzo i tiho."
+  },
+  {
+    "id": "6m-safety-09",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Proveri da su kućne biljke netoksične i van domašaja. Mnoge uobičajene biljke su otrovne ako se progutaju. Kad si u nedoumici, premesti biljke visoko."
+  },
+  {
+    "id": "6m-safety-10",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Proveri da bebina stolica za hranjenje ima široku, stabilnu bazu i pregradu između nogu da spreči klizanje. Pravilno naleganje je drži bezbednom tokom obroka."
+  },
+  {
+    "id": "6m-safety-11",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Ukloni stolnjake ili podmetače koje beba može da povuče, obarajući sudove i vruću hranu na sebe."
+  },
+  {
+    "id": "6m-safety-12",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Sačuvaj broj centra za trovanje u telefonu. Brz pristup je bitan ako beba ikad dođe do nečega što ne bi smela."
+  },
+  {
+    "id": "6m-safety-13",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Ako imaš posudicu za vodu ili hranu za ljubimca, drži je van domašaja. Bebe privlači voda i mogu se udaviti čak i u veoma plitkim posudama."
+  },
+  {
+    "id": "6m-safety-14",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Izbegavaj hodalice na točkiće. Stručnjaci za bezbednost beba upozoravaju na njih zbog ozbiljnog rizika od povreda, naročito padova niz stepenice. Stacionarni stolovi za igru su bezbednija alternativa."
+  },
+  {
+    "id": "6m-safety-15",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Drži torbu za pelene sa svim lekovima daleko od bebinog domašaja. Čak ni poklopci otporni na decu nisu potpuno sigurni."
+  },
+  {
+    "id": "6m-safety-16",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Osiguraj poklopac WC šolje bravom. Pokretne bebe su teže u gornjem delu tela i mogu pasti glavom napred u otvoren WC, što predstavlja rizik od utapanja."
+  },
+  {
+    "id": "6m-safety-17",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Drži tašne i torbe sa poda i van domašaja. Često sadrže lekove, novčiće, opasnosti od gušenja i sitne predmete opasne za bebe."
+  },
+  {
+    "id": "6m-safety-18",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Pričvrsti televizore i teške uređaje za zid. Čak i pre nego što beba bude pokretna, udarac ili povučen kabl može izazvati opasno prevrtanje."
+  },
+  {
+    "id": "6m-safety-19",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Koristi zaustavljače za vrata da sprečiš bebu da zaglavi prste u vratima koja se zatvaraju. Njeni mali prstići mogu da se provuku u pukotine brže nego što očekuješ."
+  },
+  {
+    "id": "6m-safety-20",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Ukloni magnete sa frižidera koji su dovoljno mali da se progutaju. Progutani magneti mogu biti izuzetno opasni ako se proguta više od jednog."
+  },
+  {
+    "id": "6m-safety-21",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Nikada ne ostavljaj bebu bez nadzora na krevetu, čak ni okruženu jastucima. U ovom uzrastu može da se prevrće, pomera i mrda do ivice iznenađujuće brzo."
+  },
+  {
+    "id": "6m-safety-22",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Kako beba postaje pokretljivija, proveri da su police za knjige, komode i visok nameštaj pričvršćeni za zid trakama protiv prevrtanja. Najbolje je to uraditi pre nego što počne da se podiže."
+  },
+  {
+    "id": "6m-safety-23",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Drži podove čiste od sitnih predmeta poput poklopaca za olovke, spajalica i gumica. Navikni se da redovno pregledaš pod na nivou bebinih očiju."
+  },
+  {
+    "id": "6m-safety-24",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Koristi poklopce za dugmiće šporeta da sprečiš bebu da uključi ringlu. Čak i iz stolice za hranjenje u blizini, radoznala beba može dosegnuti dalje nego što misliš."
+  },
+  {
+    "id": "6m-safety-25",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Uvek budi nadohvat ruke dok beba jede čvrstu hranu. Gušenje se može desiti tiho, a brza reakcija je ključna."
+  }
 ]

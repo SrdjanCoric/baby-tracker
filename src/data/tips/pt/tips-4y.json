@@ -1,97 +1,512 @@
 [
-  {"id": "4y-development-01", "ageGroup": "4y", "category": "development", "text": "Sua criança provavelmente consegue contar histórias simples com começo, meio e fim. Faça perguntas abertas como \"O que aconteceu depois?\" para estimular habilidades narrativas."},
-  {"id": "4y-development-02", "ageGroup": "4y", "category": "development", "text": "Sua criança pode começar a mostrar interesse em escrever letras ou o próprio nome. Deixe-a praticar em papel grande com giz de cera grosso ou canetinhas — rabiscos e tentativas fazem parte do aprendizado."},
-  {"id": "4y-development-03", "ageGroup": "4y", "category": "development", "text": "Sua criança está desenvolvendo senso de humor e pode adorar piadas bobas e trocadilhos. Rir junto fortalece o vínculo entre vocês e desenvolve habilidades de linguagem."},
-  {"id": "4y-development-04", "ageGroup": "4y", "category": "development", "text": "Pular, saltar e galopar mostram que a coordenação motora grossa está amadurecendo. Pratique esses movimentos por meio de brincadeiras em vez de exercícios repetitivos."},
-  {"id": "4y-development-05", "ageGroup": "4y", "category": "development", "text": "Sua criança pode ter um amigo imaginário. Isso é saudável e demonstra desenvolvimento cognitivo avançado, criatividade e processamento emocional."},
-  {"id": "4y-development-06", "ageGroup": "4y", "category": "development", "text": "Contar até 10 ou mais, reconhecer alguns números e entender \"mais\" e \"menos\" são habilidades matemáticas típicas nesta idade."},
-  {"id": "4y-development-07", "ageGroup": "4y", "category": "development", "text": "Sua criança está aprendendo a desenhar pessoas e pode incluir cabeça, corpo, braços e pernas. No quarto aniversário, desenhar uma pessoa com 3 ou mais partes do corpo é um marco comum."},
-  {"id": "4y-development-08", "ageGroup": "4y", "category": "development", "text": "As amizades se tornam mais significativas agora. Sua criança pode ter um amigo preferido e começar a lidar com a complexidade dos relacionamentos sociais."},
-  {"id": "4y-development-09", "ageGroup": "4y", "category": "development", "text": "Sua criança entende regras básicas e o conceito de justiça. Use jogos e atividades em família para reforçar que as regras valem para todos igualmente."},
-  {"id": "4y-development-10", "ageGroup": "4y", "category": "development", "text": "Cortar ao longo de uma linha com tesoura, abotoar a camisa e usar um zíper mostram que as habilidades motoras finas estão amadurecendo. Celebre o esforço."},
-  {"id": "4y-development-11", "ageGroup": "4y", "category": "development", "text": "Sua criança pode às vezes confundir fantasia com realidade. Ajude-a com delicadeza a distinguir entre o faz de conta e o real, sem desencorajar a imaginação."},
-  {"id": "4y-development-12", "ageGroup": "4y", "category": "development", "text": "Incentive sua criança a resolver pequenos problemas sozinha antes de você intervir. \"O que você acha que a gente deveria tentar?\" desenvolve confiança e pensamento crítico."},
-  {"id": "4y-development-13", "ageGroup": "4y", "category": "development", "text": "Sua criança provavelmente consegue classificar objetos por vários atributos — cor E tamanho, por exemplo. Separar roupas ou brinquedos juntos torna isso divertido e prático."},
-  {"id": "4y-development-14", "ageGroup": "4y", "category": "development", "text": "A autorregulação emocional ainda está se desenvolvendo. Ajude sua criança a dar nome a sentimentos complexos como \"desapontada\" ou \"com ciúmes\" — um vocabulário emocional rico ajuda a lidar com as emoções."},
-  {"id": "4y-development-15", "ageGroup": "4y", "category": "development", "text": "Sua criança pode mostrar interesse em letras e leitura inicial. Siga o ritmo dela — aponte palavras em placas e deixe-a \"ler\" livros conhecidos para você."},
-
-  {"id": "4y-sleep-01", "ageGroup": "4y", "category": "sleep", "text": "Muitas crianças abandonam o cochilo entre 3 e 5 anos, embora algumas ainda precisem. Se sua criança não cochila mais, estabeleça um horário de dormir cedo o suficiente para garantir 10 a 13 horas de sono noturno."},
-  {"id": "4y-sleep-02", "ageGroup": "4y", "category": "sleep", "text": "Sua criança pode tentar negociar a hora de dormir infinitamente. Estabeleça uma rotina previsível e mantenha-a com carinho — \"A gente lê dois livros, depois apaga a luz\" dá clareza."},
-  {"id": "4y-sleep-03", "ageGroup": "4y", "category": "sleep", "text": "Os pesadelos podem ser mais vívidos nesta idade conforme a imaginação se expande. Conforte sua criança e converse brevemente sobre o sonho, sem se deter nele."},
-  {"id": "4y-sleep-04", "ageGroup": "4y", "category": "sleep", "text": "Se sua criança tem medo do escuro, pensem em soluções juntos — uma luz noturna especial, um bichinho de pelúcia \"corajoso\" ou uma verificação rápida do quarto podem ajudar."},
-  {"id": "4y-sleep-05", "ageGroup": "4y", "category": "sleep", "text": "Um momento tranquilo antes de dormir é tão importante quanto o próprio sono. Leitura, alongamento suave ou conversa tranquila ajudam o cérebro a fazer a transição para o descanso."},
-  {"id": "4y-sleep-06", "ageGroup": "4y", "category": "sleep", "text": "Se sua criança acorda frequentemente à noite, verifique primeiro as causas ambientais — temperatura do quarto, barulho, luz ou colchão desconfortável."},
-  {"id": "4y-sleep-07", "ageGroup": "4y", "category": "sleep", "text": "Um horário consistente para acordar é tão importante quanto um horário consistente para dormir. Tente manter o despertar da manhã dentro de 30 minutos do mesmo horário todos os dias."},
-  {"id": "4y-sleep-08", "ageGroup": "4y", "category": "sleep", "text": "Sua criança pode começar a resistir à hora de dormir dizendo que não está cansada. Uma rotina calmante ajuda o corpo a relaxar mesmo quando a mente parece alerta."},
-  {"id": "4y-sleep-09", "ageGroup": "4y", "category": "sleep", "text": "Fazer xixi na cama é completamente normal nesta idade. Use um protetor de colchão impermeável e evite fazer disso um problema — a maioria das crianças supera isso aos 5-6 anos."},
-  {"id": "4y-sleep-10", "ageGroup": "4y", "category": "sleep", "text": "Se sua criança parou de cochilar recentemente, você pode notar irritabilidade no final da tarde. Um breve momento de descanso com um livro pode ajudar a preencher essa lacuna."},
-  {"id": "4y-sleep-11", "ageGroup": "4y", "category": "sleep", "text": "Exercícios de respiração profunda antes de dormir podem ajudar sua criança a aprender a se acalmar sozinha. Tente \"cheire a flor, sopre a vela\" como uma técnica simples."},
-  {"id": "4y-sleep-12", "ageGroup": "4y", "category": "sleep", "text": "Evite lanches açucarados perto da hora de dormir. Se sua criança precisa de um lanche antes de deitar, escolha algo leve como uma banana ou um punhado pequeno de biscoitos."},
-  {"id": "4y-sleep-13", "ageGroup": "4y", "category": "sleep", "text": "Sua criança pode enrolar pedindo mais água ou idas ao banheiro. Permita uma ida ao banheiro e um copinho de água antes de deitar, depois mantenha o limite com gentileza."},
-  {"id": "4y-sleep-14", "ageGroup": "4y", "category": "sleep", "text": "Compartilhar a \"melhor parte do dia\" na hora de dormir dá à sua criança algo positivo para pensar enquanto adormece e fortalece a conexão entre vocês."},
-  {"id": "4y-sleep-15", "ageGroup": "4y", "category": "sleep", "text": "Se sua criança sempre resiste à hora de dormir, pode ser que não esteja cansada o suficiente. Garanta que ela tenha bastante atividade física durante o dia."},
-
-  {"id": "4y-feeding-01", "ageGroup": "4y", "category": "feeding", "text": "Sua criança já consegue usar uma faca sem ponta para espalhar alimentos macios e ajudar a cortar itens tenros. Essas habilidades na cozinha desenvolvem confiança e coordenação motora fina."},
-  {"id": "4y-feeding-02", "ageGroup": "4y", "category": "feeding", "text": "Fale sobre comida em termos do que ela faz pelo corpo — \"Cenoura faz bem para os olhos\" ou \"Proteína deixa os músculos fortes\" — para desenvolver conhecimento alimentar."},
-  {"id": "4y-feeding-03", "ageGroup": "4y", "category": "feeding", "text": "Se sua criança recusa um grupo alimentar inteiro, encontre alternativas criativas. Não come legumes e verduras? Tente colocá-los em vitaminas, bolinhos ou em um prato com molhinhos para mergulhar."},
-  {"id": "4y-feeding-04", "ageGroup": "4y", "category": "feeding", "text": "Sua criança já consegue ajudar com tarefas de cozinha mais complexas — mexer massa, quebrar ovos com ajuda ou polvilhar coberturas. Cozinhar junto desperta entusiasmo para comer."},
-  {"id": "4y-feeding-05", "ageGroup": "4y", "category": "feeding", "text": "Dê o exemplo dos hábitos alimentares que deseja que sua criança desenvolva. Ela percebe e imita como você fala sobre comida e o que escolhe comer."},
-  {"id": "4y-feeding-06", "ageGroup": "4y", "category": "feeding", "text": "Fibra é importante para a digestão. Ofereça pão integral, aveia, frutas vermelhas e feijão regularmente para manter o intestino funcionando bem."},
-  {"id": "4y-feeding-07", "ageGroup": "4y", "category": "feeding", "text": "Ensine sua criança a reconhecer sinais de fome e saciedade. \"Sua barriguinha ainda está com fome?\" é melhor que \"Termine seu prato\"."},
-  {"id": "4y-feeding-08", "ageGroup": "4y", "category": "feeding", "text": "Cultivar uma pequena horta de temperos ou germinar sementes ensina sua criança de onde vem a comida. As crianças adoram comer o que elas mesmas cultivaram."},
-  {"id": "4y-feeding-09", "ageGroup": "4y", "category": "feeding", "text": "Tente \"pontes alimentares\" — se sua criança gosta de batata frita, apresente palitinhos de batata-doce assada. Use alimentos de que ela gosta como ponte para novos alimentos parecidos."},
-  {"id": "4y-feeding-10", "ageGroup": "4y", "category": "feeding", "text": "Sua criança precisa de cerca de 2 a 2,5 xícaras de laticínios ou equivalente em cálcio por dia. Se não gosta de leite, iogurte, queijo e alimentos enriquecidos com cálcio também contam."},
-  {"id": "4y-feeding-11", "ageGroup": "4y", "category": "feeding", "text": "As refeições devem durar cerca de 20 a 30 minutos. Se sua criança não comeu depois disso, encerre a refeição com calma. Ela comerá na próxima oportunidade."},
-  {"id": "4y-feeding-12", "ageGroup": "4y", "category": "feeding", "text": "Incentive sua criança a experimentar uma mordidinha de alimentos novos sem forçar. Com o tempo, essa abordagem de exposição gradual funciona melhor que pressão."},
-  {"id": "4y-feeding-13", "ageGroup": "4y", "category": "feeding", "text": "Ácidos graxos ômega-3 contribuem para o desenvolvimento cerebral. Inclua peixe, nozes, sementes de chia ou linhaça na dieta da sua criança quando possível."},
-  {"id": "4y-feeding-14", "ageGroup": "4y", "category": "feeding", "text": "Evite usar comida como consolo ou recompensa. Em vez disso, ensine sua criança outras formas de comemorar ou se sentir melhor — um abraço, uma brincadeira ou um tempo juntos."},
-  {"id": "4y-feeding-15", "ageGroup": "4y", "category": "feeding", "text": "Sua criança já consegue beber de um copo aberto com habilidade. Ofereça água ao longo do dia e deixe bebidas açucaradas apenas para ocasiões especiais."},
-
-  {"id": "4y-health-01", "ageGroup": "4y", "category": "health", "text": "Sua criança pode precisar de importantes doses de reforço de vacinas nesta fase. Converse com o pediatra para garantir que as vacinas estejam em dia."},
-  {"id": "4y-health-02", "ageGroup": "4y", "category": "health", "text": "Sua criança deve escovar os dentes duas vezes ao dia com uma quantidade de pasta com flúor do tamanho de uma ervilha. Ajude-a a escovar até que consiga amarrar os próprios sapatos — por volta dos 6-7 anos."},
-  {"id": "4y-health-03", "ageGroup": "4y", "category": "health", "text": "O exame de vista é recomendado anualmente entre 3 e 5 anos. Detectar condições como ambliopia (olho preguiçoso) cedo oferece a melhor chance de sucesso no tratamento."},
-  {"id": "4y-health-04", "ageGroup": "4y", "category": "health", "text": "Se sua criança reclama de dores de crescimento nas pernas à noite, uma massagem suave e uma compressa morna geralmente ajudam. Essas dores são normais e temporárias."},
-  {"id": "4y-health-05", "ageGroup": "4y", "category": "health", "text": "Ensine sua criança a lavar as mãos corretamente: molhe, passe sabão, esfregue por 20 segundos, enxágue e seque. Isso é especialmente importante antes das refeições e depois de ir ao banheiro."},
-  {"id": "4y-health-06", "ageGroup": "4y", "category": "health", "text": "Os primeiros molares permanentes da sua criança vão aparecer por volta dos 6 anos. Quando chegarem, pergunte ao dentista sobre selantes dentários para protegê-los de cáries."},
-  {"id": "4y-health-07", "ageGroup": "4y", "category": "health", "text": "Sua criança pode começar a apresentar alergias sazonais. Nariz escorrendo com muco claro, espirros e olhos coçando que persistem são sinais que merecem uma conversa com o médico."},
-  {"id": "4y-health-08", "ageGroup": "4y", "category": "health", "text": "Conjuntivite se espalha facilmente entre crianças. Ensine sua criança a não coçar os olhos e a usar sua própria toalha."},
-  {"id": "4y-health-09", "ageGroup": "4y", "category": "health", "text": "Se sua criança tem asma, trabalhe com o pediatra em um plano de ação. Saiba a diferença entre a medicação de controle diário e a bombinha de resgate."},
-  {"id": "4y-health-10", "ageGroup": "4y", "category": "health", "text": "Observe a postura da sua criança durante as atividades. Uma cadeira e mesa resistentes, de tamanho infantil, ajudam a evitar que ela fique curvada ao desenhar ou comer."},
-  {"id": "4y-health-11", "ageGroup": "4y", "category": "health", "text": "Piolho é comum em ambientes coletivos e não tem nada a ver com higiene. Ensine sua criança a não compartilhar bonés, escovas ou acessórios de cabelo."},
-  {"id": "4y-health-12", "ageGroup": "4y", "category": "health", "text": "Sua criança já pode aprender a assoar o nariz direito. Pratique usar lenços de papel e descartá-los — é uma habilidade para a vida que ajuda a reduzir a transmissão de germes."},
-  {"id": "4y-health-13", "ageGroup": "4y", "category": "health", "text": "Garanta que sua criança passe tempo suficiente ao ar livre. A luz natural do sol contribui para a produção de vitamina D, regulação do humor e ciclos de sono saudáveis."},
-  {"id": "4y-health-14", "ageGroup": "4y", "category": "health", "text": "Se sua criança range os dentes à noite, mencione na próxima consulta com o dentista. Geralmente é inofensivo, mas vale a pena acompanhar."},
-  {"id": "4y-health-15", "ageGroup": "4y", "category": "health", "text": "Mantenha a vacina da gripe em dia anualmente. Crianças que frequentam ambientes coletivos são especialmente vulneráveis durante a temporada de gripe."},
-
-  {"id": "4y-play-01", "ageGroup": "4y", "category": "play", "text": "Sua criança já consegue lidar com projetos de construção mais complexos. Montar com peças de encaixe ou blocos seguindo instruções simples desenvolve raciocínio espacial e paciência."},
-  {"id": "4y-play-02", "ageGroup": "4y", "category": "play", "text": "Apresente jogos de cartas simples como \"Pesque\" ou jogos da memória. Eles ensinam reconhecimento de números, estratégia e habilidades sociais ao mesmo tempo."},
-  {"id": "4y-play-03", "ageGroup": "4y", "category": "play", "text": "Brincar ao ar livre é essencial — escalar, correr e balançar desenvolvem força, coordenação e avaliação de risco. Crianças em idade pré-escolar se beneficiam de estar ativas ao longo do dia, então proporcione bastante movimento."},
-  {"id": "4y-play-04", "ageGroup": "4y", "category": "play", "text": "Sua criança pode gostar de fazer \"apresentações\" ou teatrinhos com fantoches. Essa brincadeira dramática desenvolve confiança, habilidades de linguagem e expressão emocional."},
-  {"id": "4y-play-05", "ageGroup": "4y", "category": "play", "text": "Experimentos científicos simples — misturar bicarbonato de sódio e vinagre, germinar sementes ou explorar ímãs — despertam curiosidade e ensinam causa e efeito."},
-  {"id": "4y-play-06", "ageGroup": "4y", "category": "play", "text": "Incentive sua criança a desenhar ou pintar seus sentimentos. A arte é uma forma poderosa de expressar emoções para as quais ela talvez ainda não tenha palavras."},
-  {"id": "4y-play-07", "ageGroup": "4y", "category": "play", "text": "Sua criança está pronta para jogos com regras simples como Mestre Mandou ou Estátua. Eles desenvolvem habilidades de escuta e controle de impulso."},
-  {"id": "4y-play-08", "ageGroup": "4y", "category": "play", "text": "Brincar com copos de medida, colheres e água ensina conceitos matemáticos iniciais como volume, mais/menos e estimativa de forma prática."},
-  {"id": "4y-play-09", "ageGroup": "4y", "category": "play", "text": "Sua criança pode adorar criar com materiais reciclados — tubos de papelão, caixas de ovos, tampinhas de garrafa. Essa brincadeira livre desperta criatividade e engenhosidade."},
-  {"id": "4y-play-10", "ageGroup": "4y", "category": "play", "text": "Andar de bicicleta de equilíbrio ou de bicicleta com rodinhas desenvolve coordenação e confiança que vão ajudar na hora de pedalar sem apoio depois."},
-  {"id": "4y-play-11", "ageGroup": "4y", "category": "play", "text": "Brinque de \"Eu Espio\" durante viagens de carro ou passeios. Aguça a observação e o vocabulário enquanto mantém sua criança entretida."},
-  {"id": "4y-play-12", "ageGroup": "4y", "category": "play", "text": "Plantar sementes e acompanhar o crescimento ensina paciência, responsabilidade e ciência básica. Deixe sua criança regar a plantinha todos os dias."},
-  {"id": "4y-play-13", "ageGroup": "4y", "category": "play", "text": "Atividades de alinhavo e de enfiar contas desenvolvem a precisão motora fina que sua criança vai precisar para a escrita. Torne divertido com materiais bem coloridos."},
-  {"id": "4y-play-14", "ageGroup": "4y", "category": "play", "text": "Crie um mapa do tesouro do quintal ou da casa. Seguir um mapa apresenta conceitos espaciais como esquerda, direita, perto e longe."},
-  {"id": "4y-play-15", "ageGroup": "4y", "category": "play", "text": "Jogos cooperativos em que todos trabalham por um objetivo em comum ensinam trabalho em equipe e reduzem o estresse da competição para crianças que ainda estão aprendendo a perder com tranquilidade."},
-
-  {"id": "4y-safety-01", "ageGroup": "4y", "category": "safety", "text": "Mantenha sua criança na cadeirinha voltada para frente com cinto de segurança pelo maior tempo possível, até os limites máximos de altura e peso da cadeirinha. A maioria das crianças nesta idade ainda não ultrapassou esses limites."},
-  {"id": "4y-safety-02", "ageGroup": "4y", "category": "safety", "text": "Ensine sua criança a sempre pedir permissão a um adulto antes de ir perto da água. Mesmo crianças que sabem nadar nunca devem estar na água ou perto dela sem supervisão."},
-  {"id": "4y-safety-03", "ageGroup": "4y", "category": "safety", "text": "Pratique o que fazer se sua criança se perder de você em uma loja: ficar parada onde está, procurar um funcionário da loja e nunca sair do prédio."},
-  {"id": "4y-safety-04", "ageGroup": "4y", "category": "safety", "text": "Sua criança já pode começar a aprender o endereço de casa. Pratique regularmente como uma musiquinha ou rima para fixar na memória."},
-  {"id": "4y-safety-05", "ageGroup": "4y", "category": "safety", "text": "Ensine sua criança o conceito de \"adultos de confiança\" — pais, professores, policiais — a quem ela pode pedir ajuda. Evite o conceito vago de \"não fale com estranhos\"."},
-  {"id": "4y-safety-06", "ageGroup": "4y", "category": "safety", "text": "Sua criança deve sempre usar capacete para andar de bicicleta, patinete e patins. Deixe-a ajudar a escolher um que goste para que fique mais disposta a usá-lo."},
-  {"id": "4y-safety-07", "ageGroup": "4y", "category": "safety", "text": "A consciência de segurança na cozinha cresce nesta idade. Ensine sua criança que o fogão, o forno e objetos cortantes são para adultos, e dê o exemplo de comportamento seguro na cozinha."},
-  {"id": "4y-safety-08", "ageGroup": "4y", "category": "safety", "text": "Certifique-se de que sua criança saiba que não deve abrir a porta da frente sem um adulto presente. Uma tranca alta ou corrente serve como barreira física extra."},
-  {"id": "4y-safety-09", "ageGroup": "4y", "category": "safety", "text": "Revise as regras do parquinho: descer no escorregador com os pés primeiro, esperar a vez nos balanços e manter distância segura de quem está balançando."},
-  {"id": "4y-safety-10", "ageGroup": "4y", "category": "safety", "text": "Se sua criança usa tablet ou outro dispositivo, configure o controle parental e mantenha as telas em espaços compartilhados. Ensine-a a nunca compartilhar informações pessoais na internet."},
-  {"id": "4y-safety-11", "ageGroup": "4y", "category": "safety", "text": "Ensine sua criança sobre segurança corporal usando os nomes anatômicos corretos. Crianças que conhecem as palavras certas são mais capazes de se comunicar se algo estiver errado."},
-  {"id": "4y-safety-12", "ageGroup": "4y", "category": "safety", "text": "Sua criança já tem idade para praticar ligar para o serviço de emergência e saber o que dizer: o nome dela, que precisa de ajuda e o endereço de casa."},
-  {"id": "4y-safety-13", "ageGroup": "4y", "category": "safety", "text": "Portões de garagem, ferramentas elétricas e áreas de oficina devem estar sempre fora do alcance sem supervisão de um adulto. Use travas ou alarmes se necessário."},
-  {"id": "4y-safety-14", "ageGroup": "4y", "category": "safety", "text": "Ao andar de carro, sua criança deve estar sempre no banco de trás. O banco traseiro é o lugar mais seguro para todas as crianças menores de 13 anos."},
-  {"id": "4y-safety-15", "ageGroup": "4y", "category": "safety", "text": "Ensine sua criança a parar na beira de cada entrada de garagem e calçada. Pratiquem olhar para a esquerda, para a direita e para a esquerda novamente antes de atravessar juntos."}
+  {
+    "id": "4y-development-01",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança provavelmente consegue contar histórias simples com começo, meio e fim. Faça perguntas abertas como \"O que aconteceu depois?\" para estimular habilidades narrativas."
+  },
+  {
+    "id": "4y-development-02",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança pode começar a mostrar interesse em escrever letras ou o próprio nome. Deixe-a praticar em papel grande com giz de cera grosso ou canetinhas — rabiscos e tentativas fazem parte do aprendizado."
+  },
+  {
+    "id": "4y-development-03",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança está desenvolvendo senso de humor e pode adorar piadas bobas e trocadilhos. Rir junto fortalece o vínculo entre vocês e desenvolve habilidades de linguagem."
+  },
+  {
+    "id": "4y-development-05",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança pode ter um amigo imaginário. Isso é saudável e demonstra desenvolvimento cognitivo avançado, criatividade e processamento emocional."
+  },
+  {
+    "id": "4y-development-06",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Contar até 10 ou mais, reconhecer alguns números e entender \"mais\" e \"menos\" são habilidades matemáticas típicas nesta idade."
+  },
+  {
+    "id": "4y-development-07",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança está aprendendo a desenhar pessoas e pode incluir cabeça, corpo, braços e pernas. No quarto aniversário, desenhar uma pessoa com 3 ou mais partes do corpo é um marco comum."
+  },
+  {
+    "id": "4y-development-08",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "As amizades se tornam mais significativas agora. Sua criança pode ter um amigo preferido e começar a lidar com a complexidade dos relacionamentos sociais."
+  },
+  {
+    "id": "4y-development-09",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança entende regras básicas e o conceito de justiça. Use jogos e atividades em família para reforçar que as regras valem para todos igualmente."
+  },
+  {
+    "id": "4y-development-10",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Cortar ao longo de uma linha com tesoura, abotoar a camisa e usar um zíper mostram que as habilidades motoras finas estão amadurecendo. Celebre o esforço."
+  },
+  {
+    "id": "4y-development-11",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança pode às vezes confundir fantasia com realidade. Ajude-a com delicadeza a distinguir entre o faz de conta e o real, sem desencorajar a imaginação."
+  },
+  {
+    "id": "4y-development-12",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Incentive sua criança a resolver pequenos problemas sozinha antes de você intervir. \"O que você acha que a gente deveria tentar?\" desenvolve confiança e pensamento crítico."
+  },
+  {
+    "id": "4y-development-13",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança provavelmente consegue classificar objetos por vários atributos — cor E tamanho, por exemplo. Separar roupas ou brinquedos juntos torna isso divertido e prático."
+  },
+  {
+    "id": "4y-development-14",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "A autorregulação emocional ainda está se desenvolvendo. Ajude sua criança a dar nome a sentimentos complexos como \"desapontada\" ou \"com ciúmes\" — um vocabulário emocional rico ajuda a lidar com as emoções."
+  },
+  {
+    "id": "4y-development-15",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Sua criança pode mostrar interesse em letras e leitura inicial. Siga o ritmo dela — aponte palavras em placas e deixe-a \"ler\" livros conhecidos para você."
+  },
+  {
+    "id": "4y-sleep-02",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Sua criança pode tentar negociar a hora de dormir infinitamente. Estabeleça uma rotina previsível e mantenha-a com carinho — \"A gente lê dois livros, depois apaga a luz\" dá clareza."
+  },
+  {
+    "id": "4y-sleep-03",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Os pesadelos podem ser mais vívidos nesta idade conforme a imaginação se expande. Conforte sua criança e converse brevemente sobre o sonho, sem se deter nele."
+  },
+  {
+    "id": "4y-sleep-04",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Se sua criança tem medo do escuro, pensem em soluções juntos — uma luz noturna especial, um bichinho de pelúcia \"corajoso\" ou uma verificação rápida do quarto podem ajudar."
+  },
+  {
+    "id": "4y-sleep-05",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Um momento tranquilo antes de dormir é tão importante quanto o próprio sono. Leitura, alongamento suave ou conversa tranquila ajudam o cérebro a fazer a transição para o descanso."
+  },
+  {
+    "id": "4y-sleep-06",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Se sua criança acorda frequentemente à noite, verifique primeiro as causas ambientais — temperatura do quarto, barulho, luz ou colchão desconfortável."
+  },
+  {
+    "id": "4y-sleep-07",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Um horário consistente para acordar é tão importante quanto um horário consistente para dormir. Tente manter o despertar da manhã dentro de 30 minutos do mesmo horário todos os dias."
+  },
+  {
+    "id": "4y-sleep-08",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Sua criança pode começar a resistir à hora de dormir dizendo que não está cansada. Uma rotina calmante ajuda o corpo a relaxar mesmo quando a mente parece alerta."
+  },
+  {
+    "id": "4y-sleep-10",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Se sua criança parou de cochilar recentemente, você pode notar irritabilidade no final da tarde. Um breve momento de descanso com um livro pode ajudar a preencher essa lacuna."
+  },
+  {
+    "id": "4y-sleep-11",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Exercícios de respiração profunda antes de dormir podem ajudar sua criança a aprender a se acalmar sozinha. Tente \"cheire a flor, sopre a vela\" como uma técnica simples."
+  },
+  {
+    "id": "4y-sleep-12",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Evite lanches açucarados perto da hora de dormir. Se sua criança precisa de um lanche antes de deitar, escolha algo leve como uma banana ou um punhado pequeno de biscoitos."
+  },
+  {
+    "id": "4y-sleep-13",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Sua criança pode enrolar pedindo mais água ou idas ao banheiro. Permita uma ida ao banheiro e um copinho de água antes de deitar, depois mantenha o limite com gentileza."
+  },
+  {
+    "id": "4y-sleep-14",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Compartilhar a \"melhor parte do dia\" na hora de dormir dá à sua criança algo positivo para pensar enquanto adormece e fortalece a conexão entre vocês."
+  },
+  {
+    "id": "4y-sleep-15",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Se sua criança sempre resiste à hora de dormir, pode ser que não esteja cansada o suficiente. Garanta que ela tenha bastante atividade física durante o dia."
+  },
+  {
+    "id": "4y-feeding-01",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Sua criança já consegue usar uma faca sem ponta para espalhar alimentos macios e ajudar a cortar itens tenros. Essas habilidades na cozinha desenvolvem confiança e coordenação motora fina."
+  },
+  {
+    "id": "4y-feeding-02",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Fale sobre comida em termos do que ela faz pelo corpo — \"Cenoura faz bem para os olhos\" ou \"Proteína deixa os músculos fortes\" — para desenvolver conhecimento alimentar."
+  },
+  {
+    "id": "4y-feeding-03",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Se sua criança recusa um grupo alimentar inteiro, encontre alternativas criativas. Não come legumes e verduras? Tente colocá-los em vitaminas, bolinhos ou em um prato com molhinhos para mergulhar."
+  },
+  {
+    "id": "4y-feeding-04",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Sua criança já consegue ajudar com tarefas de cozinha mais complexas — mexer massa, quebrar ovos com ajuda ou polvilhar coberturas. Cozinhar junto desperta entusiasmo para comer."
+  },
+  {
+    "id": "4y-feeding-05",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Dê o exemplo dos hábitos alimentares que deseja que sua criança desenvolva. Ela percebe e imita como você fala sobre comida e o que escolhe comer."
+  },
+  {
+    "id": "4y-feeding-06",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Fibra é importante para a digestão. Ofereça pão integral, aveia, frutas vermelhas e feijão regularmente para manter o intestino funcionando bem."
+  },
+  {
+    "id": "4y-feeding-07",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Ensine sua criança a reconhecer sinais de fome e saciedade. \"Sua barriguinha ainda está com fome?\" é melhor que \"Termine seu prato\"."
+  },
+  {
+    "id": "4y-feeding-08",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Cultivar uma pequena horta de temperos ou germinar sementes ensina sua criança de onde vem a comida. As crianças adoram comer o que elas mesmas cultivaram."
+  },
+  {
+    "id": "4y-feeding-09",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Tente \"pontes alimentares\" — se sua criança gosta de batata frita, apresente palitinhos de batata-doce assada. Use alimentos de que ela gosta como ponte para novos alimentos parecidos."
+  },
+  {
+    "id": "4y-feeding-10",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Sua criança precisa de cerca de 2 a 2,5 xícaras de laticínios ou equivalente em cálcio por dia. Se não gosta de leite, iogurte, queijo e alimentos enriquecidos com cálcio também contam."
+  },
+  {
+    "id": "4y-feeding-11",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "As refeições devem durar cerca de 20 a 30 minutos. Se sua criança não comeu depois disso, encerre a refeição com calma. Ela comerá na próxima oportunidade."
+  },
+  {
+    "id": "4y-feeding-12",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Incentive sua criança a experimentar uma mordidinha de alimentos novos sem forçar. Com o tempo, essa abordagem de exposição gradual funciona melhor que pressão."
+  },
+  {
+    "id": "4y-feeding-13",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Ácidos graxos ômega-3 contribuem para o desenvolvimento cerebral. Inclua peixe, nozes, sementes de chia ou linhaça na dieta da sua criança quando possível."
+  },
+  {
+    "id": "4y-feeding-14",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Evite usar comida como consolo ou recompensa. Em vez disso, ensine sua criança outras formas de comemorar ou se sentir melhor — um abraço, uma brincadeira ou um tempo juntos."
+  },
+  {
+    "id": "4y-feeding-15",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Sua criança já consegue beber de um copo aberto com habilidade. Ofereça água ao longo do dia e deixe bebidas açucaradas apenas para ocasiões especiais."
+  },
+  {
+    "id": "4y-health-01",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Sua criança pode precisar de importantes doses de reforço de vacinas nesta fase. Converse com o pediatra para garantir que as vacinas estejam em dia."
+  },
+  {
+    "id": "4y-health-04",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Se sua criança reclama de dores de crescimento nas pernas à noite, uma massagem suave e uma compressa morna geralmente ajudam. Essas dores são normais e temporárias."
+  },
+  {
+    "id": "4y-health-05",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Ensine sua criança a lavar as mãos corretamente: molhe, passe sabão, esfregue por 20 segundos, enxágue e seque. Isso é especialmente importante antes das refeições e depois de ir ao banheiro."
+  },
+  {
+    "id": "4y-health-06",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Os primeiros molares permanentes da sua criança vão aparecer por volta dos 6 anos. Quando chegarem, pergunte ao dentista sobre selantes dentários para protegê-los de cáries."
+  },
+  {
+    "id": "4y-health-07",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Sua criança pode começar a apresentar alergias sazonais. Nariz escorrendo com muco claro, espirros e olhos coçando que persistem são sinais que merecem uma conversa com o médico."
+  },
+  {
+    "id": "4y-health-08",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Conjuntivite se espalha facilmente entre crianças. Ensine sua criança a não coçar os olhos e a usar sua própria toalha."
+  },
+  {
+    "id": "4y-health-09",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Se sua criança tem asma, trabalhe com o pediatra em um plano de ação. Saiba a diferença entre a medicação de controle diário e a bombinha de resgate."
+  },
+  {
+    "id": "4y-health-10",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Observe a postura da sua criança durante as atividades. Uma cadeira e mesa resistentes, de tamanho infantil, ajudam a evitar que ela fique curvada ao desenhar ou comer."
+  },
+  {
+    "id": "4y-health-11",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Piolho é comum em ambientes coletivos e não tem nada a ver com higiene. Ensine sua criança a não compartilhar bonés, escovas ou acessórios de cabelo."
+  },
+  {
+    "id": "4y-health-12",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Sua criança já pode aprender a assoar o nariz direito. Pratique usar lenços de papel e descartá-los — é uma habilidade para a vida que ajuda a reduzir a transmissão de germes."
+  },
+  {
+    "id": "4y-health-13",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Garanta que sua criança passe tempo suficiente ao ar livre. A luz natural do sol contribui para a produção de vitamina D, regulação do humor e ciclos de sono saudáveis."
+  },
+  {
+    "id": "4y-health-14",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Se sua criança range os dentes à noite, mencione na próxima consulta com o dentista. Geralmente é inofensivo, mas vale a pena acompanhar."
+  },
+  {
+    "id": "4y-health-15",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Mantenha a vacina da gripe em dia anualmente. Crianças que frequentam ambientes coletivos são especialmente vulneráveis durante a temporada de gripe."
+  },
+  {
+    "id": "4y-play-01",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Sua criança já consegue lidar com projetos de construção mais complexos. Montar com peças de encaixe ou blocos seguindo instruções simples desenvolve raciocínio espacial e paciência."
+  },
+  {
+    "id": "4y-play-02",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Apresente jogos de cartas simples como \"Pesque\" ou jogos da memória. Eles ensinam reconhecimento de números, estratégia e habilidades sociais ao mesmo tempo."
+  },
+  {
+    "id": "4y-play-03",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Brincar ao ar livre é essencial — escalar, correr e balançar desenvolvem força, coordenação e avaliação de risco. Crianças em idade pré-escolar se beneficiam de estar ativas ao longo do dia, então proporcione bastante movimento."
+  },
+  {
+    "id": "4y-play-04",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Sua criança pode gostar de fazer \"apresentações\" ou teatrinhos com fantoches. Essa brincadeira dramática desenvolve confiança, habilidades de linguagem e expressão emocional."
+  },
+  {
+    "id": "4y-play-05",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Experimentos científicos simples — misturar bicarbonato de sódio e vinagre, germinar sementes ou explorar ímãs — despertam curiosidade e ensinam causa e efeito."
+  },
+  {
+    "id": "4y-play-06",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Incentive sua criança a desenhar ou pintar seus sentimentos. A arte é uma forma poderosa de expressar emoções para as quais ela talvez ainda não tenha palavras."
+  },
+  {
+    "id": "4y-play-07",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Sua criança está pronta para jogos com regras simples como Mestre Mandou ou Estátua. Eles desenvolvem habilidades de escuta e controle de impulso."
+  },
+  {
+    "id": "4y-play-08",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Brincar com copos de medida, colheres e água ensina conceitos matemáticos iniciais como volume, mais/menos e estimativa de forma prática."
+  },
+  {
+    "id": "4y-play-09",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Sua criança pode adorar criar com materiais reciclados — tubos de papelão, caixas de ovos, tampinhas de garrafa. Essa brincadeira livre desperta criatividade e engenhosidade."
+  },
+  {
+    "id": "4y-play-10",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Andar de bicicleta de equilíbrio ou de bicicleta com rodinhas desenvolve coordenação e confiança que vão ajudar na hora de pedalar sem apoio depois."
+  },
+  {
+    "id": "4y-play-11",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Brinque de \"Eu Espio\" durante viagens de carro ou passeios. Aguça a observação e o vocabulário enquanto mantém sua criança entretida."
+  },
+  {
+    "id": "4y-play-12",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Plantar sementes e acompanhar o crescimento ensina paciência, responsabilidade e ciência básica. Deixe sua criança regar a plantinha todos os dias."
+  },
+  {
+    "id": "4y-play-13",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Atividades de alinhavo e de enfiar contas desenvolvem a precisão motora fina que sua criança vai precisar para a escrita. Torne divertido com materiais bem coloridos."
+  },
+  {
+    "id": "4y-play-14",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Crie um mapa do tesouro do quintal ou da casa. Seguir um mapa apresenta conceitos espaciais como esquerda, direita, perto e longe."
+  },
+  {
+    "id": "4y-play-15",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Jogos cooperativos em que todos trabalham por um objetivo em comum ensinam trabalho em equipe e reduzem o estresse da competição para crianças que ainda estão aprendendo a perder com tranquilidade."
+  },
+  {
+    "id": "4y-safety-01",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Mantenha sua criança na cadeirinha voltada para frente com cinto de segurança pelo maior tempo possível, até os limites máximos de altura e peso da cadeirinha. A maioria das crianças nesta idade ainda não ultrapassou esses limites."
+  },
+  {
+    "id": "4y-safety-02",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Ensine sua criança a sempre pedir permissão a um adulto antes de ir perto da água. Mesmo crianças que sabem nadar nunca devem estar na água ou perto dela sem supervisão."
+  },
+  {
+    "id": "4y-safety-03",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Pratique o que fazer se sua criança se perder de você em uma loja: ficar parada onde está, procurar um funcionário da loja e nunca sair do prédio."
+  },
+  {
+    "id": "4y-safety-04",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Sua criança já pode começar a aprender o endereço de casa. Pratique regularmente como uma musiquinha ou rima para fixar na memória."
+  },
+  {
+    "id": "4y-safety-05",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Ensine sua criança o conceito de \"adultos de confiança\" — pais, professores, policiais — a quem ela pode pedir ajuda. Evite o conceito vago de \"não fale com estranhos\"."
+  },
+  {
+    "id": "4y-safety-06",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Sua criança deve sempre usar capacete para andar de bicicleta, patinete e patins. Deixe-a ajudar a escolher um que goste para que fique mais disposta a usá-lo."
+  },
+  {
+    "id": "4y-safety-07",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "A consciência de segurança na cozinha cresce nesta idade. Ensine sua criança que o fogão, o forno e objetos cortantes são para adultos, e dê o exemplo de comportamento seguro na cozinha."
+  },
+  {
+    "id": "4y-safety-08",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Certifique-se de que sua criança saiba que não deve abrir a porta da frente sem um adulto presente. Uma tranca alta ou corrente serve como barreira física extra."
+  },
+  {
+    "id": "4y-safety-09",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Revise as regras do parquinho: descer no escorregador com os pés primeiro, esperar a vez nos balanços e manter distância segura de quem está balançando."
+  },
+  {
+    "id": "4y-safety-10",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Se sua criança usa tablet ou outro dispositivo, configure o controle parental e mantenha as telas em espaços compartilhados. Ensine-a a nunca compartilhar informações pessoais na internet."
+  },
+  {
+    "id": "4y-safety-11",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Ensine sua criança sobre segurança corporal usando os nomes anatômicos corretos. Crianças que conhecem as palavras certas são mais capazes de se comunicar se algo estiver errado."
+  },
+  {
+    "id": "4y-safety-12",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Sua criança já tem idade para praticar ligar para o serviço de emergência e saber o que dizer: o nome dela, que precisa de ajuda e o endereço de casa."
+  },
+  {
+    "id": "4y-safety-13",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Portões de garagem, ferramentas elétricas e áreas de oficina devem estar sempre fora do alcance sem supervisão de um adulto. Use travas ou alarmes se necessário."
+  },
+  {
+    "id": "4y-safety-14",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Ao andar de carro, sua criança deve estar sempre no banco de trás. O banco traseiro é o lugar mais seguro para todas as crianças menores de 13 anos."
+  },
+  {
+    "id": "4y-safety-15",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Ensine sua criança a parar na beira de cada entrada de garagem e calçada. Pratiquem olhar para a esquerda, para a direita e para a esquerda novamente antes de atravessar juntos."
+  }
 ]

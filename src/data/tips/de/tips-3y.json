@@ -1,11 +1,5 @@
 [
   {
-    "id": "3y-development-01",
-    "ageGroup": "3y",
-    "category": "development",
-    "text": "Dein Kind spricht wahrscheinlich jetzt in 3-5-Wort-Sätzen. Erweitere, was es sagt — wenn es \"Hund läuft\" sagt, antworte mit \"Ja, der große Hund läuft schnell!\""
-  },
-  {
     "id": "3y-development-02",
     "ageGroup": "3y",
     "category": "development",
@@ -94,12 +88,6 @@
     "ageGroup": "3y",
     "category": "sleep",
     "text": "Viele Kinder in diesem Alter brauchen noch einen Mittagsschlaf, aber manche lassen ihn weg. Wenn sie auf den Mittagsschlaf verzichten, versuche stattdessen eine ruhige Zeit mit Büchern."
-  },
-  {
-    "id": "3y-sleep-02",
-    "ageGroup": "3y",
-    "category": "sleep",
-    "text": "Dein Kind braucht 11-14 Stunden Schlaf in 24 Stunden. Wenn es den Mittagsschlaf weglässt, sollte die Schlafenszeit nach vorne verlegt werden, um das auszugleichen."
   },
   {
     "id": "3y-sleep-03",
@@ -312,12 +300,6 @@
     "text": "Manche Kinder brauchen noch Nachholimpfungen. Die nächste Vorsorgeuntersuchung ist ein guter Zeitpunkt, um den Impfplan mit deinem Kinderarzt durchzugehen."
   },
   {
-    "id": "3y-health-08",
-    "ageGroup": "3y",
-    "category": "health",
-    "text": "Pseudokrupp mit seinem bellenden Husten ist in dieser Altersgruppe häufig und klingt meist schlimmer, als er ist. Kühle feuchte Luft oder kurz nach draußen gehen kann helfen."
-  },
-  {
     "id": "3y-health-09",
     "ageGroup": "3y",
     "category": "health",
@@ -366,12 +348,6 @@
     "text": "Verkleiden ist in diesem Alter wunderbar. Alte Hüte, Schals und übergroße Hemden lassen dein Kind verschiedene Rollen und Geschichten erkunden."
   },
   {
-    "id": "3y-play-02",
-    "ageGroup": "3y",
-    "category": "play",
-    "text": "Dein Kind schafft jetzt Puzzles mit 12-24 Teilen. Puzzles fördern Geduld, räumliches Denken und das befriedigende Gefühl, eine Herausforderung gemeistert zu haben."
-  },
-  {
     "id": "3y-play-03",
     "ageGroup": "3y",
     "category": "play",
@@ -414,12 +390,6 @@
     "text": "Dein Kind kann anfangen, einen großen, weichen Ball zu fangen, der sanft aus kurzer Entfernung zugeworfen wird. Das fördert die Hand-Augen-Koordination und die Reaktionsfähigkeit."
   },
   {
-    "id": "3y-play-10",
-    "ageGroup": "3y",
-    "category": "play",
-    "text": "Stelle eine Fühlkiste mit getrockneten Bohnen, Schaufeln und kleinen Behältern zusammen. Schütten und Schaufeln fördert die Feinmotorik und hält Kinder lange beschäftigt."
-  },
-  {
     "id": "3y-play-11",
     "ageGroup": "3y",
     "category": "play",
@@ -460,12 +430,6 @@
     "ageGroup": "3y",
     "category": "safety",
     "text": "Übe den Brandschutz-Fluchtplan mit deinem Kind. Bringe ihm bei, sich niedrig zu halten und zum Treffpunkt zu gehen — halte es einfach und nicht beängstigend."
-  },
-  {
-    "id": "3y-safety-03",
-    "ageGroup": "3y",
-    "category": "safety",
-    "text": "Dein Kind sollte in einem Kindersitz mit Gurt sitzen — rückwärtsgerichtet so lange wie möglich, dann vorwärtsgerichtet. Halte es angeschnallt, bis es die maximale Größe oder das Gewichtslimit des Sitzes erreicht."
   },
   {
     "id": "3y-safety-04",

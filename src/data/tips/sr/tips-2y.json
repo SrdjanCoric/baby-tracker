@@ -1,97 +1,512 @@
 [
-  {"id": "2y-development-01", "ageGroup": "2y", "category": "development", "text": "Rečnik tvog deteta eksplozivno raste i može naučiti nekoliko novih reči svake nedelje. Čitaj sa detetom svakodnevno i imenuj sve što vidite."},
-  {"id": "2y-development-02", "ageGroup": "2y", "category": "development", "text": "Fraze od dve reči poput \"veliki kamion\" ili \"hoću kolač\" tipične su u ovom uzrastu. Proširi detetove reči govoreći \"Da, to je veliki crveni kamion!\""},
-  {"id": "2y-development-03", "ageGroup": "2y", "category": "development", "text": "Tvoje dete može početi da pokazuje interesovanje za učenje korišćenja noše. Prati znake spremnosti poput dužeg ostajanja suvim ili javljanja kada je pelena mokra."},
-  {"id": "2y-development-04", "ageGroup": "2y", "category": "development", "text": "Skakanje sa obe noge od tla je prekretnica između 18 i 24 meseca. Probaj da skačete zajedno na mekoj podlozi za vežbu."},
-  {"id": "2y-development-05", "ageGroup": "2y", "category": "development", "text": "Tvoje dete može redati igračke, sortirati predmete po boji ili grupisati slične stvari. Ove rane matematičke veštine se prirodno grade kroz igru."},
-  {"id": "2y-development-06", "ageGroup": "2y", "category": "development", "text": "Paralelna igra, gde se tvoje dete igra pored, ali ne direktno sa drugom decom, normalna je socijalna faza u ovom uzrastu."},
-  {"id": "2y-development-07", "ageGroup": "2y", "category": "development", "text": "Tvoje dete može pratiti jednostavna uputstva u jednom koraku i možda počinje da razume uputstva u dva koraka poput \"podigni loptu i donesi mi je\". Vežbaj tokom svakodnevnih rutina."},
-  {"id": "2y-development-08", "ageGroup": "2y", "category": "development", "text": "Maštovita igra postaje sve složenija. Dete može smišljati scenarije sa igračkama, glumiti priče ili dodeljivati uloge tokom igre."},
-  {"id": "2y-development-09", "ageGroup": "2y", "category": "development", "text": "Tvoje dete može pokazati sklonost ka jednoj ruci oko ovog uzrasta, mada je normalno da nastavlja da ih menja do treće godine ili kasnije."},
-  {"id": "2y-development-10", "ageGroup": "2y", "category": "development", "text": "Izlivi besa mogu se pojačati dok se dete bori sa željom za nezavisnošću, a još nema veštine da sve uradi samo. Ostani smiren i potvrdi mu osećanja."},
-  {"id": "2y-development-11", "ageGroup": "2y", "category": "development", "text": "Tvoje dete može početi da se prepoznaje na fotografijama i u ogledalu i koristi reči \"ja\" i \"moje\". Ova samosvest je veliki kognitivni napredak."},
-  {"id": "2y-development-12", "ageGroup": "2y", "category": "development", "text": "Hodanje uz i niz stepenice uz držanje za ogradu je veština u razvoju. Vežbajte zajedno i slavite rastuće samopouzdanje."},
-  {"id": "2y-development-13", "ageGroup": "2y", "category": "development", "text": "Tvoje dete može početi da pokazuje empatiju, tešeći prijatelja koji plače ili nudeći igračku nekome ko je tužan. Prepoznaj i podstakni ovu toplinu."},
-  {"id": "2y-development-14", "ageGroup": "2y", "category": "development", "text": "Jednostavne slagalice oblika sa 4-6 komada izazivaju veštine rešavanja problema. Pokaži detetu kako da okreće komade da pronađe pravi oblik."},
-  {"id": "2y-development-15", "ageGroup": "2y", "category": "development", "text": "Tvoje dete verovatno može da prepozna nekoliko delova tela i može početi da broji predmete, čak i ako brojevi nisu uvek u pravom redosledu."},
-
-  {"id": "2y-sleep-01", "ageGroup": "2y", "category": "sleep", "text": "Tvoje dete i dalje treba jednu dremku dnevno, obično 1-2,5 sata posle ručka. Većina dece ima koristi od zadržavanja ove dremke do najmanje treće godine."},
-  {"id": "2y-sleep-02", "ageGroup": "2y", "category": "sleep", "text": "Maloj deci treba oko 11-14 sati ukupnog sna dnevno. Ako su borbe pred spavanje česte, proceni da li raspored treba da se prilagodi."},
-  {"id": "2y-sleep-03", "ageGroup": "2y", "category": "sleep", "text": "Taktike odugovlačenja pred spavanje postaju sve kreativnije. Postavi jasnu rutinu sa definisanim krajem, poput \"posle dve knjige, vreme je za san\"."},
-  {"id": "2y-sleep-04", "ageGroup": "2y", "category": "sleep", "text": "Ako dete počne da ima noćne more, uteši ga mirno i uveri ga da je na sigurnom. Noćne more su normalan deo kognitivnog razvoja."},
-  {"id": "2y-sleep-05", "ageGroup": "2y", "category": "sleep", "text": "Sat za malu decu koji menja boju u vreme buđenja može pomoći detetu da razume kada je u redu da ustane iz kreveta."},
-  {"id": "2y-sleep-06", "ageGroup": "2y", "category": "sleep", "text": "Zadrži krevetac dokle god se dete ne penje iz njega. Prelaz na dečji krevet prerano često dovodi do više noćnih buđenja i otpora pred spavanje."},
-  {"id": "2y-sleep-07", "ageGroup": "2y", "category": "sleep", "text": "Ako dete preskoči dremku, pomeri spavanje 30-60 minuta ranije da sprečiš preumor koji se pretvara u tešku noć."},
-  {"id": "2y-sleep-08", "ageGroup": "2y", "category": "sleep", "text": "Doslednost u tvom odgovoru pred spavanje važnija je od konkretne metode. Izaberi pristup koji možeš da održiš i drži ga se."},
-  {"id": "2y-sleep-09", "ageGroup": "2y", "category": "sleep", "text": "Predvidljiv dnevni raspored sa obrocima, dremkom i spavanjem u otprilike isto vreme pomaže regulaciji detetovog biološkog sata."},
-  {"id": "2y-sleep-10", "ageGroup": "2y", "category": "sleep", "text": "Velike promene poput novog brata ili sestre, selidbe ili početka vrtića mogu privremeno poremetiti san. Dodatna uteha i doslednost rutine pomažu."},
-  {"id": "2y-sleep-11", "ageGroup": "2y", "category": "sleep", "text": "Ako se dete plaši mraka, slabo crveno ili toplo noćno svetlo može pružiti utehu bez ometanja lučenja melatonina."},
-  {"id": "2y-sleep-12", "ageGroup": "2y", "category": "sleep", "text": "Regresija sna oko ovog uzrasta se često poklapa sa eksplozijom govora, učenjem korišćenja noše ili dolaskom novog brata ili sestre. Obično se reši za 2-6 nedelja."},
-  {"id": "2y-sleep-13", "ageGroup": "2y", "category": "sleep", "text": "Aktivna igra i vreme napolju tokom dana zaista poboljšavaju kvalitet sna noću. Umorno telo vodi ka dubljem, obnavljajućem snu."},
-  {"id": "2y-sleep-14", "ageGroup": "2y", "category": "sleep", "text": "Izbegavaj korišćenje kreveta ili spavaće sobe kao mesta za kaznu. Želiš da dete prostor za spavanje povezuje sa udobnošću i sigurnošću."},
-  {"id": "2y-sleep-15", "ageGroup": "2y", "category": "sleep", "text": "Ako je dete prešlo u krevet i stalno ustaje, mirno ga vrati svaki put sa minimalnom interakcijom. Doslednost je ključna."},
-
-  {"id": "2y-feeding-01", "ageGroup": "2y", "category": "feeding", "text": "Tvoje dete sada može jesti većinu onoga što porodica jede. Služi iste obroke u porcijama primerenim za malu decu i dozvoli mu da izabere koliko će pojesti."},
-  {"id": "2y-feeding-02", "ageGroup": "2y", "category": "feeding", "text": "Unos mleka treba da bude oko {{16-24 ounces|475-710 ml}} (2-3 čaše) dnevno. Previše mleka puni stomak i smanjuje apetit za hranljivu čvrstu hranu."},
-  {"id": "2y-feeding-03", "ageGroup": "2y", "category": "feeding", "text": "Punomasno mleko se preporučuje za mlađu decu jer masti podržavaju razvoj mozga. Kako dete raste, pedijatar može predložiti prelaz na mleko sa manje masti kad dođe vreme."},
-  {"id": "2y-feeding-04", "ageGroup": "2y", "category": "feeding", "text": "Nudi tri obroka i 2-3 strukturirane užine dnevno. Neprestano grickanje tokom dana može smanjiti glad za vreme obroka i učiniti ishranu manje uravnoteženom."},
-  {"id": "2y-feeding-05", "ageGroup": "2y", "category": "feeding", "text": "Tvoje dete može ući u fazu jedenja samo jedne namirnice danima. Nastavi da nudiš raznolikost na svakom obroku i nemoj posebno kuvati samo za njega."},
-  {"id": "2y-feeding-06", "ageGroup": "2y", "category": "feeding", "text": "Učini hranu zabavnom koristeći kalupe za kolače na sendvičima, raspoređujući hranu u šarenim oblicima ili služeći obroke na posebnom tanjiru."},
-  {"id": "2y-feeding-07", "ageGroup": "2y", "category": "feeding", "text": "Tvoje dete sve veštije koristi viljušku i kašiku. Očekuj neka prosipanja, ali hvali trud i rastuću samostalnost."},
-  {"id": "2y-feeding-08", "ageGroup": "2y", "category": "feeding", "text": "Omega-3 masne kiseline podržavaju razvoj mozga. Uključi namirnice poput lososa, čia semenki, oraha ili obogaćenih jaja u ishranu deteta."},
-  {"id": "2y-feeding-09", "ageGroup": "2y", "category": "feeding", "text": "Podstakni dete da pije vodu tokom dana, naročito tokom aktivne igre. Mala čaša koju lako drži olakšava samostalno pijenje."},
-  {"id": "2y-feeding-10", "ageGroup": "2y", "category": "feeding", "text": "Ako dete još doji, SZO podržava nastavak dojenja do 2 godine i duže. Nema potrebe da prestaneš ako funkcioniše za oboje."},
-  {"id": "2y-feeding-11", "ageGroup": "2y", "category": "feeding", "text": "Izbegavaj etiketiranje hrane kao \"dobre\" ili \"loše\" pred detetom. Koristi neutralan jezik poput \"ova hrana nam daje energiju\" ili \"ovo je hrana za ponekad\"."},
-  {"id": "2y-feeding-12", "ageGroup": "2y", "category": "feeding", "text": "Pusti dete da pomogne da postavi sto, sipa vodu iz malog bokala ili bira između dve zdrave opcije. Uključenost podstiče bolju ishranu."},
-  {"id": "2y-feeding-13", "ageGroup": "2y", "category": "feeding", "text": "Ne odustaj od odbijene hrane. Istraživanja pokazuju da može trebati 15-20 izlaganja pre nego što dete prihvati novu hranu. Nastavi da nudiš bez pritiska."},
-  {"id": "2y-feeding-14", "ageGroup": "2y", "category": "feeding", "text": "Ako dete pije sok, ograniči ga na {{4 ounces|120 ml}} dnevno 100% voćnog soka. Još bolje, ponudi celo voće i vodu umesto toga."},
-  {"id": "2y-feeding-15", "ageGroup": "2y", "category": "feeding", "text": "Vlakna iz voća, povrća, integralnih žitarica i pasulja pomažu u sprečavanju zatvora, koji je čest kod male dece. Cilj je oko 19 grama dnevno."},
-
-  {"id": "2y-health-01", "ageGroup": "2y", "category": "health", "text": "Preventivni pregledi u ovoj fazi uključuju merenja rasta, razvojni skrining i eventualne analize krvi koje pedijatar preporuči na osnovu potreba deteta."},
-  {"id": "2y-health-02", "ageGroup": "2y", "category": "health", "text": "Tvoje dete treba da ide na kontrolu kod zubara svakih šest meseci. Zubar može naneti fluoridni lak za zaštitu zuba koji se razvijaju."},
-  {"id": "2y-health-03", "ageGroup": "2y", "category": "health", "text": "Peri detetu zube dva puta dnevno sa tankim slojem (veličine zrna pirinča) paste sa fluorom do treće godine, pa povećaj na veličinu zrna graška."},
-  {"id": "2y-health-04", "ageGroup": "2y", "category": "health", "text": "Ako dete ne spaja dve reči do druge godine, razgovaraj sa pedijatrom o logopedskoj proceni. Rana intervencija je najefikasnija."},
-  {"id": "2y-health-05", "ageGroup": "2y", "category": "health", "text": "Godišnja vakcina protiv gripa preporučuje se za svu decu stariju od 6 meseci. Vakcinacija pomaže u zaštiti deteta i onih oko njega."},
-  {"id": "2y-health-06", "ageGroup": "2y", "category": "health", "text": "Deca u grupnom boravku mogu dobiti 8-12 prehlada godišnje. Svaka prehlada jača imuni sistem. Kontaktiraj pedijatra kod visoke temperature ili simptoma koji traju duže od 10 dana."},
-  {"id": "2y-health-07", "ageGroup": "2y", "category": "health", "text": "Očnjaci i drugi kutnjaci obično niču između 16 i 33 meseca. Nudi hladnu hranu i glodalice za utehu tokom ovog perioda."},
-  {"id": "2y-health-08", "ageGroup": "2y", "category": "health", "text": "Ako uvodiš vreme ispred ekrana, biraj kvalitetan sadržaj i gledaj zajedno sa detetom. Zajedničko gledanje mu pomaže da razume ono što vidi."},
-  {"id": "2y-health-09", "ageGroup": "2y", "category": "health", "text": "Pomozi detetu da nauči da pere ruke sapunom 20 sekundi, naročito pre obroka i posle korišćenja toaleta ili igranja napolju."},
-  {"id": "2y-health-10", "ageGroup": "2y", "category": "health", "text": "Ako dete glasno hrče svake noći ili deluje kao da prestaje da diše tokom sna, pomeni to pedijatru. To može ukazivati na uvećane adenoide."},
-  {"id": "2y-health-11", "ageGroup": "2y", "category": "health", "text": "Oči tvog deteta bi trebalo da budu pravilno poravnate do sada. Ako primetiš da jedno oko skreće prema unutra ili prema spolja, odmah zakaži pregled kod oftalmologa."},
-  {"id": "2y-health-12", "ageGroup": "2y", "category": "health", "text": "Zaštiti detetovu kožu kremom za sunčanje sa SPF 30+, šeširom i odećom sa UV zaštitom kada ste napolju. Ponovi nanošenje kreme svakih 2 sata."},
-  {"id": "2y-health-13", "ageGroup": "2y", "category": "health", "text": "Mucanje ili ponavljanje reči uobičajeno je između 2 i 5 godina jer se govor razvija brže nego što mišići usta mogu da isprate. Obično se reši samo, ali pomeni pedijatru ako traje duže od 6 meseci."},
-  {"id": "2y-health-14", "ageGroup": "2y", "category": "health", "text": "Ako učenje korišćenja noše izazove zatvor, povećaj unos vlakana i tečnosti i izbegavaj pritisak na dete. Zadržavanje stolice je česta pojava tokom ove faze."},
-  {"id": "2y-health-15", "ageGroup": "2y", "category": "health", "text": "Proveri da dete dobija 600 IJ vitamina D dnevno kroz ishranu, obogaćeno mleko ili suplement. Mnoga mala deca ne dobijaju dovoljno samo iz hrane."},
-
-  {"id": "2y-play-01", "ageGroup": "2y", "category": "play", "text": "Podstakni dete da crta krugove i linije na papiru. Ovo su temelji za formiranje slova i razvijaju kontrolu ruku."},
-  {"id": "2y-play-02", "ageGroup": "2y", "category": "play", "text": "Gradi sa većim kockama koje se spajaju. Dete može praviti kule, mostove i konstrukcije, razvijajući prostorno razmišljanje i veštine planiranja."},
-  {"id": "2y-play-03", "ageGroup": "2y", "category": "play", "text": "Igraj se pretvaranja — prodavnica, restoran ili doktor. Ova igra uloga razvija govor, socijalne veštine i emocionalno razumevanje."},
-  {"id": "2y-play-04", "ageGroup": "2y", "category": "play", "text": "Prskaj se u baricama, trči kroz prskalice ili se igraj u pesku. Prljava, senzorno bogata igra napolju neophodna je za zdrav razvoj."},
-  {"id": "2y-play-05", "ageGroup": "2y", "category": "play", "text": "Cepanje papira i igranje plastelinom grade snagu ruku potrebnu za buduće korišćenje makaza. Bliže drugoj godini možeš uvesti bezbedne dečje makaze za prvu vežbu sečenja."},
-  {"id": "2y-play-06", "ageGroup": "2y", "category": "play", "text": "Čitaj knjige sa jednostavnim pričama i postavljaj detetu pitanja: \"Šta misliš da se dešava dalje?\" ili \"Možeš li da nađeš mačku?\""},
-  {"id": "2y-play-07", "ageGroup": "2y", "category": "play", "text": "Muzički instrumenti poput bubnjeva, zvečki i ksilofona uče ritam, uzrok i posledicu i kreativno izražavanje."},
-  {"id": "2y-play-08", "ageGroup": "2y", "category": "play", "text": "Napravi jednostavan poligon prepreka: provuci se ispod stola, preskoči jastuk, hodaj po traci na podu. Ovo gradi veštine planiranja i krupnu motoriku."},
-  {"id": "2y-play-09", "ageGroup": "2y", "category": "play", "text": "Igraj igre uparivanja sa slikama ili bojama. Počni sa samo 3-4 para i povećavaj kako detetovo pamćenje raste."},
-  {"id": "2y-play-10", "ageGroup": "2y", "category": "play", "text": "Slikanje četkicama, sunđerima ili prstima omogućava detetu da eksperimentiše sa bojom i teksturom. Fokusiraj se na proces, ne na rezultat."},
-  {"id": "2y-play-11", "ageGroup": "2y", "category": "play", "text": "Podstakni penjanje na igralištu. Penjanje na merdevine, prelaženje mostića i spuštanje niz tobogan razvija hrabrost, koordinaciju i procenu rizika."},
-  {"id": "2y-play-12", "ageGroup": "2y", "category": "play", "text": "Igraj žmurke po kući. Dete će vrištati od oduševljenja i vežbati prostorno pamćenje, veštine slušanja i samokontrolu."},
-  {"id": "2y-play-13", "ageGroup": "2y", "category": "play", "text": "Uvedi brojanje u svakodnevne aktivnosti: broji stepenice dok se penjete, krekere na tanjiru ili igračke dok ih sklanjate."},
-  {"id": "2y-play-14", "ageGroup": "2y", "category": "play", "text": "Pusti dete da pomogne u bašti. Kopanje, zalivanje i gledanje kako biljke rastu uče strpljenju, odgovornosti i povezanosti sa prirodom."},
-  {"id": "2y-play-15", "ageGroup": "2y", "category": "play", "text": "Podstakni dete da ti priča o svojim crtežima, čak i ako ti izgledaju kao švrljotine. Pitanje \"pričaj mi o svojoj slici\" gradi veštine pripovedanja."},
-
-  {"id": "2y-safety-01", "ageGroup": "2y", "category": "safety", "text": "Tvoje dete se može popeti više i dosegnuti dalje nego ikad. Redovno procenjuj kuću za nove opasnosti iz detetove perspektive."},
-  {"id": "2y-safety-02", "ageGroup": "2y", "category": "safety", "text": "Drži dete okrenuto unazad u autosedištu što je duže moguće, idealno dok ne dostigne maksimalnu težinu ili visinu sedišta. Položaj okrenut unazad najbezbedniji je za malu decu."},
-  {"id": "2y-safety-03", "ageGroup": "2y", "category": "safety", "text": "Uči dete osnovna pravila bezbednosti oko vode: nikada ne prilaziš vodi bez odrasle osobe i uvek nosi prsluk za spasavanje blizu otvorene vode."},
-  {"id": "2y-safety-04", "ageGroup": "2y", "category": "safety", "text": "Kokice, celi orašasti plodovi, tvrdi bomboni i komadi sirovog povrća i dalje su ozbiljne opasnosti od gušenja za malu decu. Nastavi da sečeš hranu na male komade."},
-  {"id": "2y-safety-05", "ageGroup": "2y", "category": "safety", "text": "Vežbaj plan evakuacije iz kuće u slučaju požara sa porodicom. Pokaži detetu kako da puzi nisko i ode na određeno mesto okupljanja napolju."},
-  {"id": "2y-safety-06", "ageGroup": "2y", "category": "safety", "text": "Ako dete može da otvori ulazna vrata, dodaj visoku bravu sa lancem ili rezu koju ne može da dosegne. Deca mogu izaći napolje bez nadzora u trenu."},
-  {"id": "2y-safety-07", "ageGroup": "2y", "category": "safety", "text": "Uči dete puno ime i počni da ga učiš tvom broju telefona. Koristi pesme ili ponavljanje da bude zabavno i lako za pamćenje."},
-  {"id": "2y-safety-08", "ageGroup": "2y", "category": "safety", "text": "Uvek proveri da je oprema na igralištu primerena uzrastu i dobro održavana. Traži otvore koji bi mogli da zarobe detetovu glavu ili prste."},
-  {"id": "2y-safety-09", "ageGroup": "2y", "category": "safety", "text": "Drži vrata kupatila zatvorena ili koristi bravu za toalet. Malu decu fascinira voda, a toalet predstavlja rizik od utapanja jer su deca teža u gornjem delu tela."},
-  {"id": "2y-safety-10", "ageGroup": "2y", "category": "safety", "text": "Redovno proveravaj postavljenost autosedišta. Proveri da su pojasevi čvrsti, da je kopča na grudima na nivou pazuha i da nema debelih zimskih jakni ispod pojaseva."},
-  {"id": "2y-safety-11", "ageGroup": "2y", "category": "safety", "text": "Uči dete da sedi dok jede. Trčanje ili igranje sa hranom u ustima značajno povećava rizik od gušenja."},
-  {"id": "2y-safety-12", "ageGroup": "2y", "category": "safety", "text": "Čuvaj oštre kuhinjske alate poput noževa, ljuštilica i makaza u visokoj fioci sa bravom. Dete sada može otvoriti mnoge niže fioke i ormare."},
-  {"id": "2y-safety-13", "ageGroup": "2y", "category": "safety", "text": "Ako dete prelazi u krevet, postavi dušek nisko na pod i koristi zaštitnu ogradu. Ukloni opasnosti iz sobe kojima bi moglo da pristupi noću."},
-  {"id": "2y-safety-14", "ageGroup": "2y", "category": "safety", "text": "Bezbednost na prilazu i parkingu je izuzetno važna. Uvek drži dete za ruku i proveri iza vozila pre nego što kreneš u rikverc. Dete je suviše nisko da bi ga vozač video."},
-  {"id": "2y-safety-15", "ageGroup": "2y", "category": "safety", "text": "Proveravaj detektore dima i ugljen-monoksida mesečno i menjaj baterije najmanje jednom godišnje. Ispravan detektor je jedan od najjednostavnijih načina zaštite porodice."}
+  {
+    "id": "2y-development-01",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Rečnik tvog deteta eksplozivno raste i može naučiti nekoliko novih reči svake nedelje. Čitaj sa detetom svakodnevno i imenuj sve što vidite."
+  },
+  {
+    "id": "2y-development-02",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Fraze od dve reči poput \"veliki kamion\" ili \"hoću kolač\" tipične su u ovom uzrastu. Proširi detetove reči govoreći \"Da, to je veliki crveni kamion!\""
+  },
+  {
+    "id": "2y-development-03",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tvoje dete može početi da pokazuje interesovanje za učenje korišćenja noše. Prati znake spremnosti poput dužeg ostajanja suvim ili javljanja kada je pelena mokra."
+  },
+  {
+    "id": "2y-development-04",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Skakanje sa obe noge od tla je prekretnica između 18 i 24 meseca. Probaj da skačete zajedno na mekoj podlozi za vežbu."
+  },
+  {
+    "id": "2y-development-05",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tvoje dete može redati igračke, sortirati predmete po boji ili grupisati slične stvari. Ove rane matematičke veštine se prirodno grade kroz igru."
+  },
+  {
+    "id": "2y-development-06",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Paralelna igra, gde se tvoje dete igra pored, ali ne direktno sa drugom decom, normalna je socijalna faza u ovom uzrastu."
+  },
+  {
+    "id": "2y-development-07",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tvoje dete može pratiti jednostavna uputstva u jednom koraku i možda počinje da razume uputstva u dva koraka poput \"podigni loptu i donesi mi je\". Vežbaj tokom svakodnevnih rutina."
+  },
+  {
+    "id": "2y-development-08",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Maštovita igra postaje sve složenija. Dete može smišljati scenarije sa igračkama, glumiti priče ili dodeljivati uloge tokom igre."
+  },
+  {
+    "id": "2y-development-09",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tvoje dete može pokazati sklonost ka jednoj ruci oko ovog uzrasta, mada je normalno da nastavlja da ih menja do treće godine ili kasnije."
+  },
+  {
+    "id": "2y-development-10",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Izlivi besa mogu se pojačati dok se dete bori sa željom za nezavisnošću, a još nema veštine da sve uradi samo. Ostani smiren i potvrdi mu osećanja."
+  },
+  {
+    "id": "2y-development-11",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tvoje dete može početi da se prepoznaje na fotografijama i u ogledalu i koristi reči \"ja\" i \"moje\". Ova samosvest je veliki kognitivni napredak."
+  },
+  {
+    "id": "2y-development-12",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Hodanje uz i niz stepenice uz držanje za ogradu je veština u razvoju. Vežbajte zajedno i slavite rastuće samopouzdanje."
+  },
+  {
+    "id": "2y-development-13",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tvoje dete može početi da pokazuje empatiju, tešeći prijatelja koji plače ili nudeći igračku nekome ko je tužan. Prepoznaj i podstakni ovu toplinu."
+  },
+  {
+    "id": "2y-development-14",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Jednostavne slagalice oblika sa 4-6 komada izazivaju veštine rešavanja problema. Pokaži detetu kako da okreće komade da pronađe pravi oblik."
+  },
+  {
+    "id": "2y-development-15",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tvoje dete verovatno može da prepozna nekoliko delova tela i može početi da broji predmete, čak i ako brojevi nisu uvek u pravom redosledu."
+  },
+  {
+    "id": "2y-sleep-01",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Tvoje dete i dalje treba jednu dremku dnevno, obično 1-2,5 sata posle ručka. Većina dece ima koristi od zadržavanja ove dremke do najmanje treće godine."
+  },
+  {
+    "id": "2y-sleep-02",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Maloj deci treba oko 11-14 sati ukupnog sna dnevno. Ako su borbe pred spavanje česte, proceni da li raspored treba da se prilagodi."
+  },
+  {
+    "id": "2y-sleep-03",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Taktike odugovlačenja pred spavanje postaju sve kreativnije. Postavi jasnu rutinu sa definisanim krajem, poput \"posle dve knjige, vreme je za san\"."
+  },
+  {
+    "id": "2y-sleep-04",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Ako dete počne da ima noćne more, uteši ga mirno i uveri ga da je na sigurnom. Noćne more su normalan deo kognitivnog razvoja."
+  },
+  {
+    "id": "2y-sleep-05",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Sat za malu decu koji menja boju u vreme buđenja može pomoći detetu da razume kada je u redu da ustane iz kreveta."
+  },
+  {
+    "id": "2y-sleep-06",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Zadrži krevetac dokle god se dete ne penje iz njega. Prelaz na dečji krevet prerano često dovodi do više noćnih buđenja i otpora pred spavanje."
+  },
+  {
+    "id": "2y-sleep-07",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Ako dete preskoči dremku, pomeri spavanje 30-60 minuta ranije da sprečiš preumor koji se pretvara u tešku noć."
+  },
+  {
+    "id": "2y-sleep-08",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Doslednost u tvom odgovoru pred spavanje važnija je od konkretne metode. Izaberi pristup koji možeš da održiš i drži ga se."
+  },
+  {
+    "id": "2y-sleep-09",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Predvidljiv dnevni raspored sa obrocima, dremkom i spavanjem u otprilike isto vreme pomaže regulaciji detetovog biološkog sata."
+  },
+  {
+    "id": "2y-sleep-10",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Velike promene poput novog brata ili sestre, selidbe ili početka vrtića mogu privremeno poremetiti san. Dodatna uteha i doslednost rutine pomažu."
+  },
+  {
+    "id": "2y-sleep-11",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Ako se dete plaši mraka, slabo crveno ili toplo noćno svetlo može pružiti utehu bez ometanja lučenja melatonina."
+  },
+  {
+    "id": "2y-sleep-12",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Regresija sna oko ovog uzrasta se često poklapa sa eksplozijom govora, učenjem korišćenja noše ili dolaskom novog brata ili sestre. Obično se reši za 2-6 nedelja."
+  },
+  {
+    "id": "2y-sleep-13",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Aktivna igra i vreme napolju tokom dana zaista poboljšavaju kvalitet sna noću. Umorno telo vodi ka dubljem, obnavljajućem snu."
+  },
+  {
+    "id": "2y-sleep-14",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Izbegavaj korišćenje kreveta ili spavaće sobe kao mesta za kaznu. Želiš da dete prostor za spavanje povezuje sa udobnošću i sigurnošću."
+  },
+  {
+    "id": "2y-sleep-15",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Ako je dete prešlo u krevet i stalno ustaje, mirno ga vrati svaki put sa minimalnom interakcijom. Doslednost je ključna."
+  },
+  {
+    "id": "2y-feeding-01",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Tvoje dete sada može jesti većinu onoga što porodica jede. Služi iste obroke u porcijama primerenim za malu decu i dozvoli mu da izabere koliko će pojesti."
+  },
+  {
+    "id": "2y-feeding-02",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Unos mleka treba da bude oko {{16-24 ounces|475-710 ml}} (2-3 čaše) dnevno. Previše mleka puni stomak i smanjuje apetit za hranljivu čvrstu hranu."
+  },
+  {
+    "id": "2y-feeding-04",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Nudi tri obroka i 2-3 strukturirane užine dnevno. Neprestano grickanje tokom dana može smanjiti glad za vreme obroka i učiniti ishranu manje uravnoteženom."
+  },
+  {
+    "id": "2y-feeding-05",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Tvoje dete može ući u fazu jedenja samo jedne namirnice danima. Nastavi da nudiš raznolikost na svakom obroku i nemoj posebno kuvati samo za njega."
+  },
+  {
+    "id": "2y-feeding-06",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Učini hranu zabavnom koristeći kalupe za kolače na sendvičima, raspoređujući hranu u šarenim oblicima ili služeći obroke na posebnom tanjiru."
+  },
+  {
+    "id": "2y-feeding-07",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Tvoje dete sve veštije koristi viljušku i kašiku. Očekuj neka prosipanja, ali hvali trud i rastuću samostalnost."
+  },
+  {
+    "id": "2y-feeding-08",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Omega-3 masne kiseline podržavaju razvoj mozga. Uključi namirnice poput lososa, čia semenki, oraha ili obogaćenih jaja u ishranu deteta."
+  },
+  {
+    "id": "2y-feeding-09",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Podstakni dete da pije vodu tokom dana, naročito tokom aktivne igre. Mala čaša koju lako drži olakšava samostalno pijenje."
+  },
+  {
+    "id": "2y-feeding-10",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Ako dete još doji, SZO podržava nastavak dojenja do 2 godine i duže. Nema potrebe da prestaneš ako funkcioniše za oboje."
+  },
+  {
+    "id": "2y-feeding-11",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Izbegavaj etiketiranje hrane kao \"dobre\" ili \"loše\" pred detetom. Koristi neutralan jezik poput \"ova hrana nam daje energiju\" ili \"ovo je hrana za ponekad\"."
+  },
+  {
+    "id": "2y-feeding-12",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Pusti dete da pomogne da postavi sto, sipa vodu iz malog bokala ili bira između dve zdrave opcije. Uključenost podstiče bolju ishranu."
+  },
+  {
+    "id": "2y-feeding-14",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Ako dete pije sok, ograniči ga na {{4 ounces|120 ml}} dnevno 100% voćnog soka. Još bolje, ponudi celo voće i vodu umesto toga."
+  },
+  {
+    "id": "2y-health-01",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Preventivni pregledi u ovoj fazi uključuju merenja rasta, razvojni skrining i eventualne analize krvi koje pedijatar preporuči na osnovu potreba deteta."
+  },
+  {
+    "id": "2y-health-02",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Tvoje dete treba da ide na kontrolu kod zubara svakih šest meseci. Zubar može naneti fluoridni lak za zaštitu zuba koji se razvijaju."
+  },
+  {
+    "id": "2y-health-03",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Peri detetu zube dva puta dnevno sa tankim slojem (veličine zrna pirinča) paste sa fluorom do treće godine, pa povećaj na veličinu zrna graška."
+  },
+  {
+    "id": "2y-health-04",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Ako dete ne spaja dve reči do druge godine, razgovaraj sa pedijatrom o logopedskoj proceni. Rana intervencija je najefikasnija."
+  },
+  {
+    "id": "2y-health-05",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Godišnja vakcina protiv gripa preporučuje se za svu decu stariju od 6 meseci. Vakcinacija pomaže u zaštiti deteta i onih oko njega."
+  },
+  {
+    "id": "2y-health-06",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Deca u grupnom boravku mogu dobiti 8-12 prehlada godišnje. Svaka prehlada jača imuni sistem. Kontaktiraj pedijatra kod visoke temperature ili simptoma koji traju duže od 10 dana."
+  },
+  {
+    "id": "2y-health-07",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Očnjaci i drugi kutnjaci obično niču između 16 i 33 meseca. Nudi hladnu hranu i glodalice za utehu tokom ovog perioda."
+  },
+  {
+    "id": "2y-health-08",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Ako uvodiš vreme ispred ekrana, biraj kvalitetan sadržaj i gledaj zajedno sa detetom. Zajedničko gledanje mu pomaže da razume ono što vidi."
+  },
+  {
+    "id": "2y-health-09",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Pomozi detetu da nauči da pere ruke sapunom 20 sekundi, naročito pre obroka i posle korišćenja toaleta ili igranja napolju."
+  },
+  {
+    "id": "2y-health-10",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Ako dete glasno hrče svake noći ili deluje kao da prestaje da diše tokom sna, pomeni to pedijatru. To može ukazivati na uvećane adenoide."
+  },
+  {
+    "id": "2y-health-11",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Oči tvog deteta bi trebalo da budu pravilno poravnate do sada. Ako primetiš da jedno oko skreće prema unutra ili prema spolja, odmah zakaži pregled kod oftalmologa."
+  },
+  {
+    "id": "2y-health-14",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Ako učenje korišćenja noše izazove zatvor, povećaj unos vlakana i tečnosti i izbegavaj pritisak na dete. Zadržavanje stolice je česta pojava tokom ove faze."
+  },
+  {
+    "id": "2y-health-15",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Proveri da dete dobija 600 IJ vitamina D dnevno kroz ishranu, obogaćeno mleko ili suplement. Mnoga mala deca ne dobijaju dovoljno samo iz hrane."
+  },
+  {
+    "id": "2y-play-01",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Podstakni dete da crta krugove i linije na papiru. Ovo su temelji za formiranje slova i razvijaju kontrolu ruku."
+  },
+  {
+    "id": "2y-play-02",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Gradi sa većim kockama koje se spajaju. Dete može praviti kule, mostove i konstrukcije, razvijajući prostorno razmišljanje i veštine planiranja."
+  },
+  {
+    "id": "2y-play-03",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Igraj se pretvaranja — prodavnica, restoran ili doktor. Ova igra uloga razvija govor, socijalne veštine i emocionalno razumevanje."
+  },
+  {
+    "id": "2y-play-04",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Prskaj se u baricama, trči kroz prskalice ili se igraj u pesku. Prljava, senzorno bogata igra napolju neophodna je za zdrav razvoj."
+  },
+  {
+    "id": "2y-play-05",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Cepanje papira i igranje plastelinom grade snagu ruku potrebnu za buduće korišćenje makaza. Bliže drugoj godini možeš uvesti bezbedne dečje makaze za prvu vežbu sečenja."
+  },
+  {
+    "id": "2y-play-06",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Čitaj knjige sa jednostavnim pričama i postavljaj detetu pitanja: \"Šta misliš da se dešava dalje?\" ili \"Možeš li da nađeš mačku?\""
+  },
+  {
+    "id": "2y-play-07",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Muzički instrumenti poput bubnjeva, zvečki i ksilofona uče ritam, uzrok i posledicu i kreativno izražavanje."
+  },
+  {
+    "id": "2y-play-08",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Napravi jednostavan poligon prepreka: provuci se ispod stola, preskoči jastuk, hodaj po traci na podu. Ovo gradi veštine planiranja i krupnu motoriku."
+  },
+  {
+    "id": "2y-play-09",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Igraj igre uparivanja sa slikama ili bojama. Počni sa samo 3-4 para i povećavaj kako detetovo pamćenje raste."
+  },
+  {
+    "id": "2y-play-10",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Slikanje četkicama, sunđerima ili prstima omogućava detetu da eksperimentiše sa bojom i teksturom. Fokusiraj se na proces, ne na rezultat."
+  },
+  {
+    "id": "2y-play-11",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Podstakni penjanje na igralištu. Penjanje na merdevine, prelaženje mostića i spuštanje niz tobogan razvija hrabrost, koordinaciju i procenu rizika."
+  },
+  {
+    "id": "2y-play-12",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Igraj žmurke po kući. Dete će vrištati od oduševljenja i vežbati prostorno pamćenje, veštine slušanja i samokontrolu."
+  },
+  {
+    "id": "2y-play-13",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Uvedi brojanje u svakodnevne aktivnosti: broji stepenice dok se penjete, krekere na tanjiru ili igračke dok ih sklanjate."
+  },
+  {
+    "id": "2y-play-14",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Pusti dete da pomogne u bašti. Kopanje, zalivanje i gledanje kako biljke rastu uče strpljenju, odgovornosti i povezanosti sa prirodom."
+  },
+  {
+    "id": "2y-play-15",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Podstakni dete da ti priča o svojim crtežima, čak i ako ti izgledaju kao švrljotine. Pitanje \"pričaj mi o svojoj slici\" gradi veštine pripovedanja."
+  },
+  {
+    "id": "2y-safety-01",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Tvoje dete se može popeti više i dosegnuti dalje nego ikad. Redovno procenjuj kuću za nove opasnosti iz detetove perspektive."
+  },
+  {
+    "id": "2y-safety-02",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Drži dete okrenuto unazad u autosedištu što je duže moguće, idealno dok ne dostigne maksimalnu težinu ili visinu sedišta. Položaj okrenut unazad najbezbedniji je za malu decu."
+  },
+  {
+    "id": "2y-safety-03",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Uči dete osnovna pravila bezbednosti oko vode: nikada ne prilaziš vodi bez odrasle osobe i uvek nosi prsluk za spasavanje blizu otvorene vode."
+  },
+  {
+    "id": "2y-safety-04",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Kokice, celi orašasti plodovi, tvrdi bomboni i komadi sirovog povrća i dalje su ozbiljne opasnosti od gušenja za malu decu. Nastavi da sečeš hranu na male komade."
+  },
+  {
+    "id": "2y-safety-05",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Vežbaj plan evakuacije iz kuće u slučaju požara sa porodicom. Pokaži detetu kako da puzi nisko i ode na određeno mesto okupljanja napolju."
+  },
+  {
+    "id": "2y-safety-06",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Ako dete može da otvori ulazna vrata, dodaj visoku bravu sa lancem ili rezu koju ne može da dosegne. Deca mogu izaći napolje bez nadzora u trenu."
+  },
+  {
+    "id": "2y-safety-07",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Uči dete puno ime i počni da ga učiš tvom broju telefona. Koristi pesme ili ponavljanje da bude zabavno i lako za pamćenje."
+  },
+  {
+    "id": "2y-safety-08",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Uvek proveri da je oprema na igralištu primerena uzrastu i dobro održavana. Traži otvore koji bi mogli da zarobe detetovu glavu ili prste."
+  },
+  {
+    "id": "2y-safety-09",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Drži vrata kupatila zatvorena ili koristi bravu za toalet. Malu decu fascinira voda, a toalet predstavlja rizik od utapanja jer su deca teža u gornjem delu tela."
+  },
+  {
+    "id": "2y-safety-10",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Redovno proveravaj postavljenost autosedišta. Proveri da su pojasevi čvrsti, da je kopča na grudima na nivou pazuha i da nema debelih zimskih jakni ispod pojaseva."
+  },
+  {
+    "id": "2y-safety-11",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Uči dete da sedi dok jede. Trčanje ili igranje sa hranom u ustima značajno povećava rizik od gušenja."
+  },
+  {
+    "id": "2y-safety-12",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Čuvaj oštre kuhinjske alate poput noževa, ljuštilica i makaza u visokoj fioci sa bravom. Dete sada može otvoriti mnoge niže fioke i ormare."
+  },
+  {
+    "id": "2y-safety-13",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Ako dete prelazi u krevet, postavi dušek nisko na pod i koristi zaštitnu ogradu. Ukloni opasnosti iz sobe kojima bi moglo da pristupi noću."
+  },
+  {
+    "id": "2y-safety-14",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Bezbednost na prilazu i parkingu je izuzetno važna. Uvek drži dete za ruku i proveri iza vozila pre nego što kreneš u rikverc. Dete je suviše nisko da bi ga vozač video."
+  },
+  {
+    "id": "2y-safety-15",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Proveravaj detektore dima i ugljen-monoksida mesečno i menjaj baterije najmanje jednom godišnje. Ispravan detektor je jedan od najjednostavnijih načina zaštite porodice."
+  }
 ]

@@ -180,18 +180,6 @@
     "text": "Una rutina sencilla para la hora de dormir, incluso ahora (luces tenues, voz suave, una toma), ayuda a tu bebé a asociar estas señales con la hora de dormir."
   },
   {
-    "id": "2m-sleep-06",
-    "ageGroup": "2m",
-    "category": "sleep",
-    "text": "El ruido blanco puede ser reconfortante porque imita los sonidos del útero. Mantén el volumen bajo (no más fuerte que una ducha suave) y coloca la máquina al menos a {{7 feet|2 metros}} de la cuna."
-  },
-  {
-    "id": "2m-sleep-07",
-    "ageGroup": "2m",
-    "category": "sleep",
-    "text": "Compartir habitación (no cama) durante al menos los primeros 6 meses es la recomendación de los expertos en pediatría para reducir el riesgo de SMSL y tener al bebé cerca para las tomas."
-  },
-  {
     "id": "2m-sleep-08",
     "ageGroup": "2m",
     "category": "sleep",
@@ -348,12 +336,6 @@
     "text": "Las regurgitaciones son muy comunes y normalmente no son preocupantes. Si tu bebé gana peso bien y parece cómodo, regurgitar de vez en cuando es normal."
   },
   {
-    "id": "2m-feeding-09",
-    "ageGroup": "2m",
-    "category": "feeding",
-    "text": "Si te extraes leche, esta se puede conservar a temperatura ambiente hasta 4 horas, en el refrigerador 4 días, o en el congelador de 6 a 12 meses (lo ideal es antes de los 6 meses)."
-  },
-  {
     "id": "2m-feeding-10",
     "ageGroup": "2m",
     "category": "feeding",
@@ -382,12 +364,6 @@
     "ageGroup": "2m",
     "category": "feeding",
     "text": "Se recomienda dar gotas de vitamina D (400 UI diarias) a todos los bebés amamantados desde los primeros días de vida, ya que la leche materna sola no aporta suficiente."
-  },
-  {
-    "id": "2m-feeding-15",
-    "ageGroup": "2m",
-    "category": "feeding",
-    "text": "El estómago de tu bebé es diminuto: aproximadamente del tamaño de una nuez a la semana de vida. Las tomas pequeñas y frecuentes son justo lo que necesita."
   },
   {
     "id": "2m-feeding-16",
@@ -574,12 +550,6 @@
     "ageGroup": "2m",
     "category": "health",
     "text": "La mollera de tu bebé (fontanela) es normal y se puede tocar con suavidad. Puede latir ligeramente, que es solo el flujo de sangre debajo. Si la notas hundida o abultada, consulta con tu médico."
-  },
-  {
-    "id": "2m-health-22",
-    "ageGroup": "2m",
-    "category": "health",
-    "text": "Los cólicos (definidos como llorar más de 3 horas al día, 3 días a la semana, durante 3 semanas o más) suelen alcanzar su pico alrededor de las 6 semanas y mejorar entre los 3 y 4 meses. No es culpa tuya."
   },
   {
     "id": "2m-health-23",

@@ -120,12 +120,6 @@
     "text": "Tu hijo puede comenzar a hacerse cargo de partes de su rutina para dormir — elegir pijama, cepillarse los dientes, escoger un libro. La independencia fomenta la cooperación."
   },
   {
-    "id": "5y-sleep-06",
-    "ageGroup": "5y",
-    "category": "sleep",
-    "text": "Mojar la cama a los 5 años aún es normal y afecta aproximadamente al 15% de los niños. Ten paciencia, usa protección y evita el castigo — lo superará."
-  },
-  {
     "id": "5y-sleep-07",
     "ageGroup": "5y",
     "category": "sleep",
@@ -276,12 +270,6 @@
     "text": "Una consulta de niño sano durante esta etapa es importante. Tu pediatra revisará la visión, la audición, el crecimiento y el desarrollo, y puede proporcionar cualquier documentación necesaria para el ingreso a la escuela."
   },
   {
-    "id": "5y-health-02",
-    "ageGroup": "5y",
-    "category": "health",
-    "text": "Tu hijo debe cepillarse los dientes dos veces al día, pero aún necesitas supervisar y hacer un cepillado de repaso hasta alrededor de los 7 años."
-  },
-  {
     "id": "5y-health-03",
     "ageGroup": "5y",
     "category": "health",
@@ -354,12 +342,6 @@
     "text": "Enséñale a tu hijo hábitos básicos de higiene — cubrirse al toser, lavarse las manos, usar pañuelos desechables. Estas habilidades lo ayudan a mantenerse sano en entornos grupales."
   },
   {
-    "id": "5y-health-15",
-    "ageGroup": "5y",
-    "category": "health",
-    "text": "Si tu hijo rechina los dientes o tiene dolor de mandíbula, menciónalo en tu próxima cita dental. Se pueden recetar protectores nocturnos si es necesario."
-  },
-  {
     "id": "5y-play-01",
     "ageGroup": "5y",
     "category": "play",
@@ -414,12 +396,6 @@
     "text": "Los circuitos de obstáculos que incluyen arrastrarse, saltar, equilibrarse y lanzar desafían múltiples habilidades físicas y se pueden armar con artículos del hogar."
   },
   {
-    "id": "5y-play-10",
-    "ageGroup": "5y",
-    "category": "play",
-    "text": "Tu hijo puede comenzar a armar rompecabezas simples de 48-100 piezas. Los rompecabezas desarrollan el razonamiento espacial, la paciencia y la sensación de logro."
-  },
-  {
     "id": "5y-play-11",
     "ageGroup": "5y",
     "category": "play",
@@ -466,12 +442,6 @@
     "ageGroup": "5y",
     "category": "safety",
     "text": "Tu hijo debe permanecer en un asiento de auto o elevador hasta que mida al menos {{4 feet 9 inches|145 cm}}, lo que típicamente no ocurre hasta los 8-12 años."
-  },
-  {
-    "id": "5y-safety-04",
-    "ageGroup": "5y",
-    "category": "safety",
-    "text": "Las clases de natación son muy recomendables a esta edad. La mayoría de los niños pueden aprender habilidades básicas de supervivencia acuática alrededor de los 4-5 años, y las clases formales pueden comenzar incluso antes."
   },
   {
     "id": "5y-safety-05",

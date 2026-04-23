@@ -192,12 +192,6 @@
     "text": "Die Milchaufnahme sollte etwa {{16-24 Unzen|475-710 ml}} (2-3 Tassen) pro Tag betragen. Zu viel Milch füllt den Magen und verringert den Appetit auf nährstoffreiche feste Nahrung."
   },
   {
-    "id": "2y-feeding-03",
-    "ageGroup": "2y",
-    "category": "feeding",
-    "text": "Vollmilch wird für jüngere Kleinkinder empfohlen, weil das Fett die Gehirnentwicklung unterstützt. Wenn dein Kind wächst, kann dein Kinderarzt vorschlagen, wann der richtige Zeitpunkt für den Wechsel zu fettarmer Milch ist."
-  },
-  {
     "id": "2y-feeding-04",
     "ageGroup": "2y",
     "category": "feeding",
@@ -252,22 +246,10 @@
     "text": "Lass dein Kleinkind beim Tischdecken helfen, Wasser aus einer kleinen Kanne gießen oder zwischen zwei gesunden Optionen wählen. Beteiligung fördert besseres Essverhalten."
   },
   {
-    "id": "2y-feeding-13",
-    "ageGroup": "2y",
-    "category": "feeding",
-    "text": "Gib bei abgelehnten Lebensmitteln nicht auf. Studien zeigen, dass es 15-20 Versuche brauchen kann, bevor ein Kleinkind ein neues Essen akzeptiert. Biete es weiterhin ohne Druck an."
-  },
-  {
     "id": "2y-feeding-14",
     "ageGroup": "2y",
     "category": "feeding",
     "text": "Wenn dein Kleinkind Saft trinkt, begrenze ihn auf {{4 Unzen|120 ml}} pro Tag von 100% Fruchtsaft. Noch besser: Biete ganzes Obst und Wasser stattdessen an."
-  },
-  {
-    "id": "2y-feeding-15",
-    "ageGroup": "2y",
-    "category": "feeding",
-    "text": "Ballaststoffe aus Obst, Gemüse, Vollkornprodukten und Hülsenfrüchten helfen, Verstopfung vorzubeugen, die bei Kleinkindern häufig vorkommt. Strebe etwa 19 Gramm pro Tag an."
   },
   {
     "id": "2y-health-01",
@@ -334,18 +316,6 @@
     "ageGroup": "2y",
     "category": "health",
     "text": "Die Augen deines Kleinkindes sollten jetzt gerade stehen. Wenn du bemerkst, dass ein Auge nach innen schielt oder nach außen abweicht, vereinbare zeitnah einen Augenarzttermin."
-  },
-  {
-    "id": "2y-health-12",
-    "ageGroup": "2y",
-    "category": "health",
-    "text": "Schütze die Haut deines Kleinkindes mit Sonnencreme LSF 30+, einem Hut und UV-schützender Kleidung bei Aufenthalt im Freien. Trage die Sonnencreme alle 2 Stunden erneut auf."
-  },
-  {
-    "id": "2y-health-13",
-    "ageGroup": "2y",
-    "category": "health",
-    "text": "Stottern oder das Wiederholen von Wörtern ist zwischen 2 und 5 Jahren häufig, wenn sich die Sprache schneller entwickelt, als die Sprechmuskeln mithalten können. Es löst sich meist von selbst, aber erwähne es beim Kinderarzt, wenn es länger als 6 Monate anhält."
   },
   {
     "id": "2y-health-14",

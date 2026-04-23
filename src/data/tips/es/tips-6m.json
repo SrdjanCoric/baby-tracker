@@ -30,12 +30,6 @@
     "text": "¡Tu bebé está descubriendo la gravedad! Puede encantarle tirar juguetes desde su regazo o una superficie y verlos caer. Esta repetición le ayuda a aprender sobre causa y efecto."
   },
   {
-    "id": "6m-development-06",
-    "ageGroup": "6m",
-    "category": "development",
-    "text": "La ansiedad ante extraños puede comenzar alrededor de los 5-6 meses. Si tu bebé se altera con caras desconocidas, es una señal de apego saludable hacia sus cuidadores."
-  },
-  {
     "id": "6m-development-07",
     "ageGroup": "6m",
     "category": "development",
@@ -312,18 +306,6 @@
     "text": "Ya sea que elijas purés o alimentación complementaria guiada por el bebé, la leche materna o fórmula debe seguir siendo la fuente principal de nutrición. Los sólidos en esta etapa son para explorar."
   },
   {
-    "id": "6m-feeding-03",
-    "ageGroup": "6m",
-    "category": "feeding",
-    "text": "Cuando introduzcas los alérgenos principales (cacahuate, huevo, lácteos, etc.), ofrece uno a la vez y espera un par de días antes del siguiente para observar reacciones. Para otros alimentos, puedes introducirlos con más libertad."
-  },
-  {
-    "id": "6m-feeding-04",
-    "ageGroup": "6m",
-    "category": "feeding",
-    "text": "Las investigaciones actuales sugieren introducir los alérgenos comunes (cacahuate, huevo, lácteos) temprano, alrededor de los 4-6 meses, en lugar de retrasarlos. Habla con tu pediatra sobre cuándo y cómo empezar."
-  },
-  {
     "id": "6m-feeding-05",
     "ageGroup": "6m",
     "category": "feeding",
@@ -456,12 +438,6 @@
     "text": "Los chequeos regulares durante este período son importantes para el seguimiento del desarrollo. Tu pediatra también puede recomendar suplementos de flúor si el agua de tu zona no está fluorada."
   },
   {
-    "id": "6m-health-02",
-    "ageGroup": "6m",
-    "category": "health",
-    "text": "El primer diente de tu bebé puede aparecer alrededor de ahora. Límpialo suavemente con un paño húmedo suave o usa una cantidad mínima de pasta dental con flúor en un cepillo infantil."
-  },
-  {
     "id": "6m-health-03",
     "ageGroup": "6m",
     "category": "health",
@@ -472,12 +448,6 @@
     "ageGroup": "6m",
     "category": "health",
     "text": "Las infecciones de oído son comunes a esta edad. Tirarse de las orejas, irritabilidad y fiebre pueden ser señales. Ten en cuenta que tirarse de las orejas solo a menudo es solo molestia por la dentición, pero consulta a tu médico si sospechas infección."
-  },
-  {
-    "id": "6m-health-05",
-    "ageGroup": "6m",
-    "category": "health",
-    "text": "Tu bebé puede experimentar algo de estreñimiento al comenzar con los sólidos. Ofrece pequeñas cantidades de agua e intenta con purés de ciruelas, peras o guisantes para ayudar."
   },
   {
     "id": "6m-health-06",
@@ -562,12 +532,6 @@
     "ageGroup": "6m",
     "category": "health",
     "text": "Las necesidades de hierro de tu bebé aumentan significativamente alrededor de los 6 meses. Si tu bebé fue prematuro o fue amamantado exclusivamente, pregunta a tu pediatra si necesita un suplemento de hierro."
-  },
-  {
-    "id": "6m-health-20",
-    "ageGroup": "6m",
-    "category": "health",
-    "text": "El crup, una tos perruna que suena como una foca, es común en bebés. El aire nocturno fresco o un baño con vapor pueden ayudar, pero llama a tu médico si tu bebé tiene dificultad para respirar."
   },
   {
     "id": "6m-health-21",
@@ -766,12 +730,6 @@
     "ageGroup": "6m",
     "category": "safety",
     "text": "Bloquea los armarios que contengan productos de limpieza, medicamentos y objetos afilados. Las cerraduras magnéticas o adhesivas para armarios son efectivas y fáciles de instalar."
-  },
-  {
-    "id": "6m-safety-04",
-    "ageGroup": "6m",
-    "category": "safety",
-    "text": "Mantén todos los alimentos cortados en tamaños seguros durante las comidas. Los alimentos redondos y firmes como uvas, tomates cherry y salchichas deben cortarse en cuartos a lo largo."
   },
   {
     "id": "6m-safety-05",

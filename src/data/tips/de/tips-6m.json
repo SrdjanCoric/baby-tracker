@@ -1,152 +1,860 @@
 [
-  {"id": "6m-development-01", "ageGroup": "6m", "category": "development", "text": "Dein Baby fängt vielleicht an, mit Unterstützung zu sitzen oder sogar für ein paar Sekunden alleine. Lege Kissen drumherum, damit es weich landet, wenn es umkippt."},
-  {"id": "6m-development-02", "ageGroup": "6m", "category": "development", "text": "In diesem Alter fangen viele Babys an, Gegenstände von einer Hand in die andere zu geben. Biete ein Spielzeug an und beobachte diese beeindruckende Koordination."},
-  {"id": "6m-development-03", "ageGroup": "6m", "category": "development", "text": "Dein Baby reagiert vielleicht schon auf seinen Namen und dreht sich zu dir um. Verwende seinen Namen oft beim Spielen und Reden, um das zu festigen."},
-  {"id": "6m-development-04", "ageGroup": "6m", "category": "development", "text": "Das Lallen wird komplexer, mit Silbenketten wie \"bababa\" oder \"mamama\". Das sind noch keine Wörter, aber die Grundbausteine dafür."},
-  {"id": "6m-development-05", "ageGroup": "6m", "category": "development", "text": "Dein Baby entdeckt die Schwerkraft! Es lässt vielleicht gerne Spielzeug vom Schoß oder vom Tisch fallen und schaut zu, wie es runterfällt. Durch diese Wiederholung lernt es Ursache und Wirkung."},
-  {"id": "6m-development-06", "ageGroup": "6m", "category": "development", "text": "Fremdenangst kann um den 5.–6. Monat beginnen. Wenn dein Baby bei unbekannten Gesichtern weint, ist das ein Zeichen gesunder Bindung zu seinen Bezugspersonen."},
-  {"id": "6m-development-07", "ageGroup": "6m", "category": "development", "text": "Dein Baby fängt vielleicht an, sich auf Händen und Knien zu wiegen – eine Vorstufe zum Krabbeln. Gib ihm viel Zeit auf dem Boden, um diese Bewegung zu erkunden."},
-  {"id": "6m-development-08", "ageGroup": "6m", "category": "development", "text": "Probiere einfache Wechselspiele aus: Du lallst, es lallt; du lächelst, es lächelt. Dieses Hin und Her ist die Grundlage für spätere Gespräche."},
-  {"id": "6m-development-09", "ageGroup": "6m", "category": "development", "text": "Die Tiefenwahrnehmung deines Babys verbessert sich schnell. Es greift jetzt vielleicht gezielter nach Gegenständen und schätzt Entfernungen besser ein als zuvor."},
-  {"id": "6m-development-10", "ageGroup": "6m", "category": "development", "text": "Manche Babys in diesem Alter zeigen eine Vorliebe für bestimmte Spielzeuge oder Schmusetücher. Ein vertrautes Kuscheltier oder Schmusetuch kann zu einem hilfreichen Beruhigungsmittel werden."},
-  {"id": "6m-development-11", "ageGroup": "6m", "category": "development", "text": "Dein Baby greift vielleicht noch mit der ganzen Hand – es schaufelt Dinge mit allen Fingern zusammen. Der feinere Pinzettengriff kommt später."},
-  {"id": "6m-development-12", "ageGroup": "6m", "category": "development", "text": "Trennungsangst könnte jetzt beginnen. Wenn dein Baby weint, sobald du den Raum verlässt, zeigt das, dass es versteht, dass du auch dann noch da bist, wenn es dich nicht sehen kann."},
-  {"id": "6m-development-13", "ageGroup": "6m", "category": "development", "text": "Dein Baby fängt vielleicht an zu hüpfen, wenn du es in Stehposition hältst. Diese Beinkraft und Koordination sind eine wichtige Vorbereitung für späteres Stehen und Laufen."},
-  {"id": "6m-development-14", "ageGroup": "6m", "category": "development", "text": "Zeige auf Dinge und benenne sie: \"Schau, ein Vogel!\" Das Zeigen hilft deinem Baby, deinem Blick zu folgen, und baut Wortschatz für später auf."},
-  {"id": "6m-development-15", "ageGroup": "6m", "category": "development", "text": "Dein Baby zeigt Gefühle vielleicht deutlicher – Frustration, wenn ein Spielzeug weggenommen wird, Vorfreude, wenn es sieht, dass Essen zubereitet wird. Benenne diese Gefühle laut."},
-  {"id": "6m-development-16", "ageGroup": "6m", "category": "development", "text": "Dein Baby fängt vielleicht an, auf dem Bauch zu robben, bevor es sich auf Hände und Knie begibt. Jedes Baby findet seinen eigenen Weg, sich fortzubewegen."},
-  {"id": "6m-development-17", "ageGroup": "6m", "category": "development", "text": "Biete deinem Baby zwei Spielzeuge gleichzeitig an – eins in jede Hand. Zwei Gegenstände gleichzeitig zu halten ist ein großer kognitiver und motorischer Meilenstein."},
-  {"id": "6m-development-18", "ageGroup": "6m", "category": "development", "text": "Dein Baby versteht vielleicht schon einfache Wörter, auch wenn es sie noch nicht sagen kann. Wenn du fragst \"Wo ist der Hund?\" und es sich umschaut, zeigt das frühes Sprachverständnis."},
-  {"id": "6m-development-19", "ageGroup": "6m", "category": "development", "text": "Wenn dein Baby Gegenstände auf den Tisch oder Boden schlägt, experimentiert es mit Ursache und Wirkung. Gib ihm verschiedene Dinge, damit es unterschiedliche Geräusche hören kann."},
-  {"id": "6m-development-20", "ageGroup": "6m", "category": "development", "text": "Dein Baby sucht vielleicht schon nach einem Spielzeug, das aus seinem Blickfeld gefallen ist, statt es zu vergessen. Das zeigt, dass sich die Objektpermanenz entwickelt."},
-  {"id": "6m-development-21", "ageGroup": "6m", "category": "development", "text": "Wenn dein Baby Oberkörperkraft aufbaut, versucht es vielleicht, sich an Möbeln oder deinen Händen hochzuziehen. Biete stabile Flächen zum Festhalten an, während es neue Positionen erkundet."},
-  {"id": "6m-development-22", "ageGroup": "6m", "category": "development", "text": "Dein Baby lehnt sich vielleicht aus dem Sitzen nach vorne, um etwas zu greifen, und richtet sich dann wieder auf. Diese Balance-Korrektur zeigt, dass die Rumpfmuskulatur schön wächst."},
-  {"id": "6m-development-23", "ageGroup": "6m", "category": "development", "text": "Winke deinem Baby oft zum Abschied. Es wird noch nicht zurückwinken, aber das Vormachen von Gesten legt jetzt den Grundstein für späteres Nachahmen."},
-  {"id": "6m-development-24", "ageGroup": "6m", "category": "development", "text": "Dein Baby zeigt vielleicht Vorlieben für bestimmte Personen und streckt die Arme nach einer bevorzugten Bezugsperson aus. Diese Auswahl ist ein normaler Teil der Bindungsentwicklung."},
-  {"id": "6m-development-25", "ageGroup": "6m", "category": "development", "text": "Die meisten Babys krabbeln erst mit 7–10 Monaten, und manche überspringen es ganz. Viel Bodenzeit hilft deinem Baby jetzt, die Kraft und Koordination aufzubauen, die es braucht, wenn es soweit ist."},
-  {"id": "6m-sleep-01", "ageGroup": "6m", "category": "sleep", "text": "Die meisten Babys in diesem Alter können 6–8 Stunden am Stück nachts schlafen, obwohl manche noch zum Füttern aufwachen. Beides ist normal."},
-  {"id": "6m-sleep-02", "ageGroup": "6m", "category": "sleep", "text": "Dein Baby braucht wahrscheinlich noch 2–3 Schläfchen am Tag mit Wachphasen von 2–2,5 Stunden. Achte auf Gähnen und Augenreiben als Müdigkeitszeichen."},
-  {"id": "6m-sleep-03", "ageGroup": "6m", "category": "sleep", "text": "Wenn dein Baby gerade sitzen gelernt hat oder am Krabbeln arbeitet, kann der Schlaf gestört sein, weil es neue Fähigkeiten im Bettchen übt. Das ist vorübergehend."},
-  {"id": "6m-sleep-04", "ageGroup": "6m", "category": "sleep", "text": "Ein vorhersehbarer Tagesablauf (Aufwachen, Essen, Spielen, Schlafen) kann helfen, die Schläfchen regelmäßiger und weniger stressig zu machen."},
-  {"id": "6m-sleep-05", "ageGroup": "6m", "category": "sleep", "text": "Wenn dein Baby anfängt, sich im Bettchen hochzuziehen und nicht wieder runterkommt, übe tagsüber das Hinsetzen aus dem Stehen. Das wird in den nächsten Monaten häufiger vorkommen."},
-  {"id": "6m-sleep-06", "ageGroup": "6m", "category": "sleep", "text": "Du kannst anfangen, ein Kuscheltier in Wachphasen und beim Kuscheln einzuführen, damit dein Baby eine Bindung dazu aufbaut. Für sicheren Schlaf sollte das Bettchen bis 12 Monate leer bleiben."},
-  {"id": "6m-sleep-07", "ageGroup": "6m", "category": "sleep", "text": "Wenn dein Baby bereit ist, von 3 auf 2 Schläfchen zu wechseln, kannst du die Schlafenszeit vorübergehend etwas vorziehen, um Übermüdung während der Umstellung zu vermeiden."},
-  {"id": "6m-sleep-08", "ageGroup": "6m", "category": "sleep", "text": "Zahnen kann den Schlaf stören, aber das Schlimmste dauert meist nur ein paar Tage pro Zahn. Zusätzlicher Trost in dieser Zeit ist völlig in Ordnung."},
-  {"id": "6m-sleep-09", "ageGroup": "6m", "category": "sleep", "text": "Wenn du mit Beikost anfängst, biete sie lieber früher am Tag an statt kurz vor dem Schlafengehen. Neue Lebensmittel können manchmal Bauchweh verursachen, das den Schlaf stört."},
-  {"id": "6m-sleep-10", "ageGroup": "6m", "category": "sleep", "text": "Dein Baby ist vielleicht bereit, morgens etwas später aufzuwachen. Den Raum dunkel halten und beim ersten Geräusch nicht sofort reinlaufen kann das fördern."},
-  {"id": "6m-sleep-11", "ageGroup": "6m", "category": "sleep", "text": "Manche Babys in diesem Alter schlafen am liebsten auf dem Bauch. Solange sich dein Baby in beide Richtungen drehen kann, ist es sicher, es seine bevorzugte Position finden zu lassen."},
-  {"id": "6m-sleep-12", "ageGroup": "6m", "category": "sleep", "text": "Beständigkeit ist beim Thema Schlaf dein bester Freund. Egal welchen Ansatz du wählst – halte ihn mindestens eine Woche durch, damit er die beste Chance hat zu wirken."},
-  {"id": "6m-sleep-13", "ageGroup": "6m", "category": "sleep", "text": "Reisen und Zeitumstellungen können den Schlaf vorübergehend durcheinanderbringen. Versuche, die gewohnte Abendroutine auch in fremder Umgebung beizubehalten."},
-  {"id": "6m-sleep-14", "ageGroup": "6m", "category": "sleep", "text": "Wenn die nächtlichen Wachphasen plötzlich zunehmen, überlege, ob dein Baby tagsüber genug Kalorien bekommt. Beikost hilft manchmal, aber nicht immer."},
-  {"id": "6m-sleep-15", "ageGroup": "6m", "category": "sleep", "text": "Der Gesamtschlaf liegt in diesem Alter typischerweise bei 12–16 Stunden pro Tag. Wenn dein Baby fröhlich und ausgeruht wirkt, bekommt es wahrscheinlich genug Schlaf."},
-  {"id": "6m-sleep-16", "ageGroup": "6m", "category": "sleep", "text": "Wenn dein Baby vor dem Einschlafen im Bettchen lallt oder vor sich hin plappert, lass es. Dieses Geplapper ist ein gesundes Zeichen, dass es alleine einschlafen kann."},
-  {"id": "6m-sleep-17", "ageGroup": "6m", "category": "sleep", "text": "Trennungsangst kann in diesem Alter zu vermehrtem nächtlichen Aufwachen führen. Ein kurzer, ruhiger Besuch zur Beruhigung ist in Ordnung, aber versuche, keine neuen Gewohnheiten aufzubauen, die du später wieder abgewöhnen musst."},
-  {"id": "6m-sleep-18", "ageGroup": "6m", "category": "sleep", "text": "Wenn dein Baby von 3 auf 2 Schläfchen wechselt, fällt meist das letzte Schläfchen des Tages weg. Eine frühere Schlafenszeit kann die Lücke überbrücken, während es sich anpasst."},
-  {"id": "6m-sleep-19", "ageGroup": "6m", "category": "sleep", "text": "Ein dunkler Raum mit Verdunkelungsvorhängen kann sowohl bei Schläfchen als auch beim Nachtschlaf helfen, besonders wenn dein Baby leicht durch Licht stimuliert wird."},
-  {"id": "6m-sleep-20", "ageGroup": "6m", "category": "sleep", "text": "Wenn dein Baby morgens sehr früh aufwacht (vor 6 Uhr), prüfe, ob der Raum dunkel genug ist, und überlege, ob die Schlafenszeit etwas nach hinten verschoben werden sollte."},
-  {"id": "6m-sleep-21", "ageGroup": "6m", "category": "sleep", "text": "Manche Babys brauchen vor dem Schlafen etwas Bewegung, um Energie abzubauen. Eine kurze Spielrunde vor der Einschlafroutine kann helfen, schneller zur Ruhe zu kommen."},
-  {"id": "6m-sleep-22", "ageGroup": "6m", "category": "sleep", "text": "Wenn dein Baby beim Schlafengehen im Bettchen anfängt zu rollen, zu krabbeln oder andere neue Fähigkeiten zu üben, lege es ruhig wieder hin, ohne ein Spiel daraus zu machen. Es wird sich irgendwann beruhigen."},
-  {"id": "6m-sleep-23", "ageGroup": "6m", "category": "sleep", "text": "An Tagen mit kurzen oder ausgefallenen Schläfchen scheue dich nicht, die Schlafenszeit um 30–60 Minuten vorzuziehen. Ein übermüdetes Baby wehrt sich stärker gegen das Einschlafen."},
-  {"id": "6m-sleep-24", "ageGroup": "6m", "category": "sleep", "text": "Die Schlafbedürfnisse deines Babys sind ganz individuell. Wenn es fröhlich ist, gut wächst und Meilensteine erreicht, ist sein Schlaf wahrscheinlich ausreichend, auch wenn er nicht dem Lehrbuch entspricht."},
-  {"id": "6m-sleep-25", "ageGroup": "6m", "category": "sleep", "text": "Wenn du bisher das Bett mit deinem Baby geteilt hast und zum Bettchen wechseln möchtest, fang mit den Schläfchen tagsüber an. Tagsüber üben hilft deinem Baby, sich im eigenen Bettchen wohlzufühlen."},
-  {"id": "6m-feeding-01", "ageGroup": "6m", "category": "feeding", "text": "Mit etwa 6 Monaten ist normalerweise ein guter Zeitpunkt, um mit Beikost zu starten! Achte auf Zeichen der Bereitschaft: Sitzen mit Unterstützung, gute Kopfkontrolle und Interesse am Essen."},
-  {"id": "6m-feeding-02", "ageGroup": "6m", "category": "feeding", "text": "Ob du Brei oder Baby-Led Weaning wählst – Muttermilch oder Säuglingsnahrung sollten weiterhin die Hauptnahrungsquelle sein. Beikost dient in diesem Stadium der Erkundung."},
-  {"id": "6m-feeding-03", "ageGroup": "6m", "category": "feeding", "text": "Wenn du häufige Allergene (Erdnuss, Ei, Milchprodukte usw.) einführst, biete eines nach dem anderen an und warte ein paar Tage, bevor du das nächste ausprobierst, um auf Reaktionen zu achten. Andere Lebensmittel kannst du freier einführen."},
-  {"id": "6m-feeding-04", "ageGroup": "6m", "category": "feeding", "text": "Aktuelle Studien empfehlen, häufige Allergene (Erdnuss, Ei, Milchprodukte) früh einzuführen, etwa im 4.–6. Monat, statt sie hinauszuzögern. Sprich mit deinem Kinderarzt darüber, wann und wie du anfangen solltest."},
-  {"id": "6m-feeding-05", "ageGroup": "6m", "category": "feeding", "text": "Es ist normal, dass dein Baby anfangs Essen mit der Zunge wieder herausschiebt. Der Zungenstreckreflex lässt nach, und es lernt, Essen nach hinten in den Mund zu bewegen."},
-  {"id": "6m-feeding-06", "ageGroup": "6m", "category": "feeding", "text": "Würgen ist etwas anderes als Verschlucken und ist eigentlich ein Schutzmechanismus. Würgen ist laut und geht mit Husten einher; Verschlucken ist lautlos. Lerne, den Unterschied zu erkennen."},
-  {"id": "6m-feeding-07", "ageGroup": "6m", "category": "feeding", "text": "Gute erste Lebensmittel sind eisenreiche Optionen wie püriertes Fleisch, mit Eisen angereicherter Getreidebrei oder zerdrückte Linsen. Die Eisenspeicher deines Babys aus der Geburt gehen um den 6. Monat zur Neige."},
-  {"id": "6m-feeding-08", "ageGroup": "6m", "category": "feeding", "text": "Biete beim Essen Wasser in einem offenen Becher oder Trinklernbecher an. Dein Baby wird anfangs nicht viel trinken, aber frühes Üben fördert wichtige mundmotorische Fähigkeiten."},
-  {"id": "6m-feeding-09", "ageGroup": "6m", "category": "feeding", "text": "Beim Essen kleckern ist Lernen! Lass dein Baby sein Essen anfassen, matschen und verschmieren. Sensorisches Erkunden ist ein wichtiger Schritt, um neue Konsistenzen zu akzeptieren."},
-  {"id": "6m-feeding-10", "ageGroup": "6m", "category": "feeding", "text": "Wenn du Baby-Led Weaning machst, schneide Lebensmittel in fingergroße Streifen, die dein Baby in der Faust halten kann. Es wird an dem Teil kauen, der oben herausschaut."},
-  {"id": "6m-feeding-11", "ageGroup": "6m", "category": "feeding", "text": "Vermeide Honig bis zum 1. Geburtstag wegen der Gefahr von Säuglingsbotulismus. Kuhmilch als Hauptgetränk ist ebenfalls tabu, kleine Mengen beim Kochen sind aber in Ordnung."},
-  {"id": "6m-feeding-12", "ageGroup": "6m", "category": "feeding", "text": "Sei nicht entmutigt, wenn dein Baby ein Lebensmittel ablehnt. Es kann 10–15 Versuche dauern, bis es etwas Neues akzeptiert. Biete es immer wieder an, ohne Druck auszuüben."},
-  {"id": "6m-feeding-13", "ageGroup": "6m", "category": "feeding", "text": "Dein Baby sollte beim Essen immer aufrecht im Hochstuhl sitzen, nie zurückgelehnt. Diese Position ist am sichersten zum Schlucken."},
-  {"id": "6m-feeding-14", "ageGroup": "6m", "category": "feeding", "text": "Kombiniere eisenreiche Lebensmittel mit Vitamin-C-Quellen (wie zerdrückte Erdbeeren oder etwas Zitronensaft), um die Eisenaufnahme zu verbessern."},
-  {"id": "6m-feeding-15", "ageGroup": "6m", "category": "feeding", "text": "Lass dein Baby beim Essen das Tempo bestimmen. Wenn es sich abwendet, den Mund zumacht oder das Interesse verliert, sagt es dir, dass es satt ist."},
-  {"id": "6m-feeding-16", "ageGroup": "6m", "category": "feeding", "text": "Führe Erdnussprotein früh ein, indem du glatte Erdnussbutter in Brei oder Haferflocken mischst. Ganze Erdnüsse und stückige Erdnussbutter sind in diesem Alter Erstickungsgefahren."},
-  {"id": "6m-feeding-17", "ageGroup": "6m", "category": "feeding", "text": "Biete eine bunte Vielfalt auf dem Teller an. Verschiedenfarbiges Obst und Gemüse liefert unterschiedliche Nährstoffe, und Abwechslung jetzt fördert abenteuerliches Essen später."},
-  {"id": "6m-feeding-18", "ageGroup": "6m", "category": "feeding", "text": "Dein Baby isst vielleicht an einem Tag viel und rührt am nächsten kaum etwas an. Das ist völlig normal. Muttermilch oder Säuglingsnahrung füllt die Nährstofflücken."},
-  {"id": "6m-feeding-19", "ageGroup": "6m", "category": "feeding", "text": "Versuche, deinem Baby einen vorgefüllten Löffel zu geben, den es selbst zum Mund führen kann. Das ist zwar eine Kleckerei, aber fördert Selbstständigkeit und Feinmotorik."},
-  {"id": "6m-feeding-20", "ageGroup": "6m", "category": "feeding", "text": "Vermeide es, Salz oder Zucker zum Essen deines Babys hinzuzufügen. Seine Nieren können noch nicht viel Natrium verarbeiten, und natürliche Geschmäcker helfen ihm, echte Lebensmittel zu schätzen."},
-  {"id": "6m-feeding-21", "ageGroup": "6m", "category": "feeding", "text": "Wenn dein Baby bei einer neuen Konsistenz würgt, bleib ruhig und lass es das alleine bewältigen. Deine gelassene Reaktion hilft ihm, sich beim Erkunden neuer Lebensmittel sicher zu fühlen."},
-  {"id": "6m-feeding-22", "ageGroup": "6m", "category": "feeding", "text": "Stillen oder Fläschchen sollten in diesem Stadium noch vor den Beikostmahlzeiten stattfinden. Milch bleibt die Hauptnahrungsquelle bis ungefähr zum 12. Monat."},
-  {"id": "6m-feeding-23", "ageGroup": "6m", "category": "feeding", "text": "Biete weich gekochtes Gemüse wie Süßkartoffel, Brokkoliröschen oder Zucchinistreifen als erstes Fingerfood an. Koche es, bis du es leicht zwischen den Fingern zerdrücken kannst."},
-  {"id": "6m-feeding-24", "ageGroup": "6m", "category": "feeding", "text": "Gemeinsam als Familie essen, selbst in dieser frühen Phase, hilft deinem Baby durch Zuschauen zu lernen. Es wird dein Kauen nachahmen und eher bereit sein, das zu probieren, was du isst."},
-  {"id": "6m-feeding-25", "ageGroup": "6m", "category": "feeding", "text": "Wenn dein Baby mit Brei frustriert wirkt, ist es vielleicht bereit für etwas festere Konsistenzen oder weiches Fingerfood. Folge seinem Tempo und passe an, was es schafft."},
-  {"id": "6m-health-01", "ageGroup": "6m", "category": "health", "text": "Regelmäßige Vorsorgeuntersuchungen sind in dieser Phase wichtig, um die Entwicklung zu beobachten. Dein Kinderarzt empfiehlt vielleicht auch Fluorid-Ergänzungen, wenn euer Leitungswasser nicht fluoridiert ist."},
-  {"id": "6m-health-02", "ageGroup": "6m", "category": "health", "text": "Der erste Zahn deines Babys könnte jetzt durchbrechen. Wische ihn sanft mit einem feuchten Tuch ab oder verwende eine winzige Menge Fluorid-Zahnpasta auf einer Säuglingszahnbürste."},
-  {"id": "6m-health-03", "ageGroup": "6m", "category": "health", "text": "Wenn dein Baby Fieber von {{100.4°F|38°C}} oder höher hat, ruf deinen Kinderarzt an. In diesem Alter sollte Fieber abgeklärt werden, um eine Infektion auszuschließen."},
-  {"id": "6m-health-04", "ageGroup": "6m", "category": "health", "text": "Mittelohrentzündungen sind in diesem Alter häufig. Am Ohr ziehen, Quengeln und Fieber können Anzeichen sein. Allerdings ist Ohrenziehen allein oft nur Zahnungsbeschwerden – geh zum Arzt, wenn du eine Infektion vermutest."},
-  {"id": "6m-health-05", "ageGroup": "6m", "category": "health", "text": "Dein Baby kann Verstopfung bekommen, wenn es mit Beikost anfängt. Biete kleine Mengen Wasser an und versuche pürierte Pflaumen, Birnen oder Erbsen zur Linderung."},
-  {"id": "6m-health-06", "ageGroup": "6m", "category": "health", "text": "Jetzt ist ein guter Zeitpunkt, den ersten Zahnarztbesuch deines Babys zu planen. Experten empfehlen einen Zahnarztbesuch bis zum 1. Geburtstag oder innerhalb von 6 Monaten nach dem ersten Zahn."},
-  {"id": "6m-health-07", "ageGroup": "6m", "category": "health", "text": "Achte beim Einführen von Beikost auf Anzeichen von Lebensmittelallergien: Nesselsucht, Schwellungen, Erbrechen oder Atembeschwerden. Leichte Rötungen um den Mund sind meist nur Hautreizungen."},
-  {"id": "6m-health-08", "ageGroup": "6m", "category": "health", "text": "Wenn Grippesaison ist und dein Baby mindestens 6 Monate alt ist, kann es die Grippeimpfung erhalten. Das ist besonders wichtig, da der mütterliche Nestschutz nachlässt."},
-  {"id": "6m-health-09", "ageGroup": "6m", "category": "health", "text": "Zahnungsschmerzen sind echt, aber meist gut zu bewältigen. Gekühlte Beißringe und eine sanfte Zahnfleischmassage mit einem sauberen Finger können Linderung bringen."},
-  {"id": "6m-health-10", "ageGroup": "6m", "category": "health", "text": "Dein Baby kann Lebensmittelunverträglichkeiten entwickeln, wenn es Neues ausprobiert. Ein paar weiche Stühle nach einem neuen Lebensmittel sind nicht immer eine Allergie – das Verdauungssystem passt sich an."},
-  {"id": "6m-health-11", "ageGroup": "6m", "category": "health", "text": "Babys in diesem Alter werden immer mobiler und erkunden gerne alles mit dem Mund. Schau täglich den Boden nach kleinen Gegenständen ab, die Erstickungsgefahren sein könnten."},
-  {"id": "6m-health-12", "ageGroup": "6m", "category": "health", "text": "Wenn dein Baby dauerhaft verschnupft zu sein scheint, könnte das mit neuen Lebensmitteln oder Umweltallergenen zusammenhängen. Erwähne es beim nächsten Arztbesuch."},
-  {"id": "6m-health-13", "ageGroup": "6m", "category": "health", "text": "Bernsteinketten zum Zahnen werden nicht empfohlen – sie bergen Strangulations- und Erstickungsgefahr ohne nachgewiesenen Nutzen. Greife lieber zu sicheren Zahnungshilfen."},
-  {"id": "6m-health-14", "ageGroup": "6m", "category": "health", "text": "Der Stuhl deines Babys ändert Farbe und Konsistenz, wenn es mit Beikost anfängt. Grün, Orange und Braun sind alle normal. Rote oder schwarze Stühle solltest du dem Arzt melden."},
-  {"id": "6m-health-15", "ageGroup": "6m", "category": "health", "text": "Ab 6 Monaten kannst du Sonnencreme (LSF 30+) auf unbedeckte Hautstellen auftragen. Unter 6 Monaten setze auf Schatten, Hüte und leichte Kleidung als Sonnenschutz."},
-  {"id": "6m-health-16", "ageGroup": "6m", "category": "health", "text": "Putze die neuen Zähne deines Babys zweimal täglich mit einer reiskorngroßen Menge Fluorid-Zahnpasta. Diese Routine jetzt einzuführen macht es leichter, wenn mehr Zähne kommen."},
-  {"id": "6m-health-17", "ageGroup": "6m", "category": "health", "text": "Wenn sich dein Baby durch seine neue Mobilität eine Beule oder einen blauen Fleck holt, reichen meist eine kühle Kompresse und etwas Trost. Ruf den Arzt an bei Kopfverletzungen mit Erbrechen oder ungewöhnlicher Schläfrigkeit."},
-  {"id": "6m-health-18", "ageGroup": "6m", "category": "health", "text": "Die Hand-Fuß-Mund-Krankheit ist bei Babys und Kleinkindern häufig. Achte auf kleine Bläschen an Händen, Füßen und im Mund. Es ist unangenehm, heilt aber meist innerhalb einer Woche ab."},
-  {"id": "6m-health-19", "ageGroup": "6m", "category": "health", "text": "Der Eisenbedarf deines Babys steigt um den 6. Monat deutlich an. Wenn dein Baby ein Frühchen war oder ausschließlich gestillt wird, frag deinen Kinderarzt, ob ein Eisenpräparat nötig ist."},
-  {"id": "6m-health-20", "ageGroup": "6m", "category": "health", "text": "Pseudokrupp, ein bellender Husten, der wie eine Robbe klingt, kommt bei Babys häufig vor. Kühle Nachtluft oder ein dampfiges Badezimmer können helfen, aber ruf den Arzt an, wenn dein Baby Atemnot hat."},
-  {"id": "6m-health-21", "ageGroup": "6m", "category": "health", "text": "Wenn dein Baby nach dem Probieren eines neuen Lebensmittels einen Ausschlag bekommt, mach ein Foto und notiere das Lebensmittel und den Zeitpunkt. Diese Informationen sind sehr hilfreich für deinen Kinderarzt."},
-  {"id": "6m-health-22", "ageGroup": "6m", "category": "health", "text": "Zahnen kann eine leichte Temperaturerhöhung verursachen, aber echtes Fieber von {{100.4°F|38°C}} oder höher kommt nicht vom Zahnen. Wenn dein Baby beim Zahnen Fieber hat, lass andere Ursachen ärztlich abklären."},
-  {"id": "6m-health-23", "ageGroup": "6m", "category": "health", "text": "Mit zunehmender Mobilität kommen auch mehr Stürze und Beulen. Scharfe Kanten und harte Oberflächen abzusichern hilft, aber ein paar Stolperer gehören zum Bewegenlernen dazu."},
-  {"id": "6m-health-24", "ageGroup": "6m", "category": "health", "text": "Wenn sich das Ekzem deines Babys nach Beikoststart verschlechtert, führe ein Ernährungstagebuch, um mögliche Auslöser zu finden. Häufige Übeltäter sind Milchprodukte, Eier und Weizen."},
-  {"id": "6m-health-25", "ageGroup": "6m", "category": "health", "text": "Die RSV-Saison kann besonders für Babys unter 12 Monaten besorgniserregend sein. Häufiges Händewaschen und Kontakt mit Kranken zu meiden sind die besten Vorsorgemaßnahmen."},
-  {"id": "6m-play-01", "ageGroup": "6m", "category": "play", "text": "Biete Stapelbecher oder Steckspielzeug an. Dein Baby wird noch nicht stapeln, aber es wird lieben, Türme umzuwerfen, die du baust, und die verschiedenen Größen zu erkunden."},
-  {"id": "6m-play-02", "ageGroup": "6m", "category": "play", "text": "Fülle einen kleinen Korb mit sicheren Haushaltsgegenständen (Holzlöffel, Silikonschneebesen, Stoffreste) und lass dein Baby alles erkunden. So ein Entdeckerkorb fördert eigenständiges Spielen."},
-  {"id": "6m-play-03", "ageGroup": "6m", "category": "play", "text": "Spiele \"Wo ist es hin?\" und verstecke ein Spielzeug halb unter einem Tuch. Dein Baby lernt gerade Objektpermanenz und wird es lieben, danach zu suchen."},
-  {"id": "6m-play-04", "ageGroup": "6m", "category": "play", "text": "Planschen in der Badewanne ist tolles Sinnesspiel! Gib deinem Baby Becher zum Gießen und schwimmendes Spielzeug. Lass es dabei nie unbeaufsichtigt – niemals alleine mit Wasser."},
-  {"id": "6m-play-05", "ageGroup": "6m", "category": "play", "text": "Setze dein Baby vor einen Spiegel und schneide Grimassen. In diesem Alter wird es lächeln, lachen und nach seinem Spiegelbild greifen."},
-  {"id": "6m-play-06", "ageGroup": "6m", "category": "play", "text": "Probiere sanftes Toben aus – auf deinem Knie hüpfen, vorsichtig durch die Luft schwingen oder lustige Geräusche machen. Diese Bewegungsspiele stärken Vertrauen und Körpergefühl."},
-  {"id": "6m-play-07", "ageGroup": "6m", "category": "play", "text": "Führe einfache Musikinstrumente ein, wie eine Trommel, eine Rassel oder ein Xylophon. Dein Baby wird es lieben, Lärm zu machen und zu entdecken, dass es selbst Geräusche erzeugen kann."},
-  {"id": "6m-play-08", "ageGroup": "6m", "category": "play", "text": "Baue einen kleinen Hindernisparcours aus Kissen und zusammengerollten Decken, über den dein Baby krabbeln und drumherum robben kann. Das fördert Problemlösen und Körperkraft."},
-  {"id": "6m-play-09", "ageGroup": "6m", "category": "play", "text": "Lies Bücher mit verschiedenen Oberflächen zum Anfassen (Fühlbücher). Dein Baby wird es lieben, mit den Fingern über pelzige, raue und glatte Flächen zu streichen."},
-  {"id": "6m-play-10", "ageGroup": "6m", "category": "play", "text": "Lass dein Baby mit sicherem Wasserspielzeug in einer flachen Schüssel spielen. Gießen, Planschen und das Fließen von Wasser spüren lehrt es etwas über die physische Welt."},
-  {"id": "6m-play-11", "ageGroup": "6m", "category": "play", "text": "Spiele Musik aus verschiedenen Genres und beobachte, wie dein Baby reagiert. Es wird vielleicht wippen, strampeln oder mit den Armen wedeln. Gemeinsam Tanzen ist wunderbar für die Bindung."},
-  {"id": "6m-play-12", "ageGroup": "6m", "category": "play", "text": "Gib deinem Baby beim Essen einen Löffel zum Festhalten. Damit aufs Tablett zu klopfen ist laut und kleckert, aber es fördert Feinmotorik und Hand-Auge-Koordination."},
-  {"id": "6m-play-13", "ageGroup": "6m", "category": "play", "text": "Puste deinem Baby beim Wickeln auf den Bauch und mach dabei ein prutschendes Geräusch. Diese spielerischen Momente verwandeln Routineaufgaben in Bindungszeit."},
-  {"id": "6m-play-14", "ageGroup": "6m", "category": "play", "text": "Verbringe Zeit mit deinem Baby auf dem Boden, auf seiner Augenhöhe. Leg dich bei der Bauchlage auf den Bauch oder sitz ihm gegenüber. Es ist viel aufmerksamer, wenn du auf Augenhöhe bist."},
-  {"id": "6m-play-15", "ageGroup": "6m", "category": "play", "text": "Lege Spielzeug in eine Muffinform, aus der dein Baby es herausnehmen und erkunden kann. Diese einfache Aktivität fordert die Greiffähigkeit und hält es bei Laune."},
-  {"id": "6m-play-16", "ageGroup": "6m", "category": "play", "text": "Stecke ein Spielzeug in einen durchsichtigen Behälter und lass dein Baby herausfinden, wie es drankommt. Dieses frühe Problemlösen fördert das Denkvermögen."},
-  {"id": "6m-play-17", "ageGroup": "6m", "category": "play", "text": "Gib deinem Baby einen Karton zum Erkunden. Es kann ihn schieben, sich reinsetzen oder draufklopfen. Einfache, offene Spielsachen regen die meiste Kreativität an."},
-  {"id": "6m-play-18", "ageGroup": "6m", "category": "play", "text": "Spiele Klatschspiele wie \"Backe backe Kuchen\" mit deinem Baby. Führe seine Hände durch die Bewegungen und freu dich über seine Reaktionen. Mit der Zeit wird es von alleine mitmachen."},
-  {"id": "6m-play-19", "ageGroup": "6m", "category": "play", "text": "Lass dein Baby auch außerhalb der Mahlzeiten sichere Lebensmittel erkunden. Die Textur einer Banane zu erspüren oder ein Stück Avocado zu zerdrücken ist wunderbares Sinneslernen."},
-  {"id": "6m-play-20", "ageGroup": "6m", "category": "play", "text": "Stelle eine Sinneskiste mit großen, sicheren Gegenständen zusammen, wie weiche Bälle, Holzringe und Stoffstücke. Beaufsichtigtes Sinnesspiel hält dein Baby beschäftigt und fördert das Lernen."},
-  {"id": "6m-play-21", "ageGroup": "6m", "category": "play", "text": "Rolle einen Ball hin und her mit deinem Baby, während es sitzt. Dieses einfache Spiel übt das Abwechseln und hilft ihm, bewegte Gegenstände mit den Augen zu verfolgen."},
-  {"id": "6m-play-22", "ageGroup": "6m", "category": "play", "text": "Lass dein Baby unter Aufsicht Papier zerreißen (große Stücke). Das Geräusch und die Bewegung sind faszinierend, und Zerreißen stärkt die Handkraft und Koordination."},
-  {"id": "6m-play-23", "ageGroup": "6m", "category": "play", "text": "Führ Klappenbücher ein und lass dein Baby versuchen, die Klappen selbst zu öffnen. Das verbindet Feinmotorik-Übung mit dem Spaß an der Überraschung."},
-  {"id": "6m-play-24", "ageGroup": "6m", "category": "play", "text": "Singe Lieder mit Handbewegungen wie \"Alle meine Entchen\" oder \"Das ist der Daumen\". Dein Baby wird die Bewegungen bald erwarten und irgendwann versuchen, sie nachzumachen."},
-  {"id": "6m-play-25", "ageGroup": "6m", "category": "play", "text": "Mach mit deinem Baby einen Fühl-Spaziergang durch die Wohnung und lass es sichere Oberflächen berühren: eine glatte Arbeitsplatte, ein weiches Kissen, ein kühles Fenster und einen flauschigen Teppich."},
-  {"id": "6m-safety-01", "ageGroup": "6m", "category": "safety", "text": "Jetzt, wo dein Baby mobiler wird, montiere Treppenschutzgitter oben und unten an der Treppe. Klemmgitter sind unten ausreichend; oben verwende fest verschraubte Gitter."},
-  {"id": "6m-safety-02", "ageGroup": "6m", "category": "safety", "text": "Stelle die Bettmatratze auf die niedrigste Stufe, bevor dein Baby sich zum Stehen hochziehen kann. Es ist stärker, als du denkst, und wird dich überraschen."},
-  {"id": "6m-safety-03", "ageGroup": "6m", "category": "safety", "text": "Sichere Schränke mit Reinigungsmitteln, Medikamenten und scharfen Gegenständen mit Kindersicherungen. Magnetische oder selbstklebende Schranksicherungen sind wirksam und einfach anzubringen."},
-  {"id": "6m-safety-04", "ageGroup": "6m", "category": "safety", "text": "Schneide alle Lebensmittel bei Mahlzeiten in sichere Größen. Runde, feste Lebensmittel wie Weintrauben, Kirschtomaten und Würstchen sollten längs geviertelt werden."},
-  {"id": "6m-safety-05", "ageGroup": "6m", "category": "safety", "text": "Lass dein Baby nie alleine im Hochstuhl. Verwende immer den Sicherheitsgurt und schiebe den Stuhl weg von Tischen und Arbeitsflächen, von denen es sich abstoßen könnte."},
-  {"id": "6m-safety-06", "ageGroup": "6m", "category": "safety", "text": "Bringe Kantenschutz an scharfen Möbelkanten an. Der Kopf deines Babys ist auf Tischhöhe, wenn es anfängt, sich hochzuziehen, und Zusammenstöße sind unvermeidlich."},
-  {"id": "6m-safety-07", "ageGroup": "6m", "category": "safety", "text": "Halte Schnüre von Jalousien, Vorhängen und Elektrogeräten außer Reichweite. Strangulation durch Schnüre ist eine ernste Gefahr für neugierige, greiffreudige Babys."},
-  {"id": "6m-safety-08", "ageGroup": "6m", "category": "safety", "text": "Beaufsichtige dein Baby immer in der Nähe von Wasser – auch in der Badewanne, im Planschbecken und bei Eimern. Ertrinken kann schnell und lautlos passieren."},
-  {"id": "6m-safety-09", "ageGroup": "6m", "category": "safety", "text": "Prüfe, ob Zimmerpflanzen ungiftig und außer Reichweite sind. Viele verbreitete Pflanzen sind giftig, wenn sie verschluckt werden. Im Zweifel stelle sie hoch."},
-  {"id": "6m-safety-10", "ageGroup": "6m", "category": "safety", "text": "Achte darauf, dass der Hochstuhl deines Babys eine breite, stabile Basis und einen Schrittgurt hat, damit es nicht durchrutschen kann. Eine gute Passform hält es beim Essen sicher."},
-  {"id": "6m-safety-11", "ageGroup": "6m", "category": "safety", "text": "Entferne Tischdecken oder Platzsets, an denen dein Baby ziehen und sich Geschirr oder heißes Essen herunterreißen könnte."},
-  {"id": "6m-safety-12", "ageGroup": "6m", "category": "safety", "text": "Speichere die Nummer der Giftnotrufzentrale in deinem Telefon. Schneller Zugriff ist entscheidend, wenn dein Baby mal an etwas gerät, das es nicht sollte."},
-  {"id": "6m-safety-13", "ageGroup": "6m", "category": "safety", "text": "Wenn du ein Haustier mit Wassernapf hast, stelle ihn außer Reichweite. Babys fühlen sich von Wasser angezogen und können selbst in sehr flachen Behältern ertrinken."},
-  {"id": "6m-safety-14", "ageGroup": "6m", "category": "safety", "text": "Vermeide Lauflernhilfen auf Rädern. Kinderärzte warnen vor ihnen wegen der hohen Verletzungsgefahr, besonders durch Treppenstürze. Stationäre Spielcenter sind eine sicherere Alternative."},
-  {"id": "6m-safety-15", "ageGroup": "6m", "category": "safety", "text": "Bewahre Medikamente in deiner Wickeltasche immer außer Reichweite deines Babys auf. Auch kindersichere Verschlüsse sind nicht hundertprozentig sicher."},
-  {"id": "6m-safety-16", "ageGroup": "6m", "category": "safety", "text": "Sichere den Toilettendeckel mit einer Kindersicherung. Mobile Babys sind kopflastig und können kopfüber in eine offene Toilette fallen – eine Ertrinkungsgefahr."},
-  {"id": "6m-safety-17", "ageGroup": "6m", "category": "safety", "text": "Lege Handtaschen und Taschen nicht auf den Boden und halte sie außer Reichweite. Sie enthalten oft Medikamente, Münzen, Erstickungsgefahren und andere für Babys gefährliche Kleinteile."},
-  {"id": "6m-safety-18", "ageGroup": "6m", "category": "safety", "text": "Befestige Fernseher und schwere Geräte an der Wand. Noch bevor dein Baby mobil ist, kann ein Stoß oder ein gezogenes Kabel ein gefährliches Umkippen verursachen."},
-  {"id": "6m-safety-19", "ageGroup": "6m", "category": "safety", "text": "Verwende Türstopper oder Türfeststeller, damit dein Baby sich nicht die Finger in zuschlagenden Türen einklemmt. Kleine Finger können schneller in Spalten geraten, als du denkst."},
-  {"id": "6m-safety-20", "ageGroup": "6m", "category": "safety", "text": "Entferne Kühlschrankmagnete, die klein genug zum Verschlucken sind. Verschluckte Magnete können extrem gefährlich sein, wenn mehr als einer geschluckt wird."},
-  {"id": "6m-safety-21", "ageGroup": "6m", "category": "safety", "text": "Lass dein Baby nie unbeaufsichtigt auf einem Bett, selbst wenn es von Kissen umgeben ist. In diesem Alter kann es sich überraschend schnell an den Rand rollen und rutschen."},
-  {"id": "6m-safety-22", "ageGroup": "6m", "category": "safety", "text": "Wenn dein Baby mobiler wird, achte darauf, dass Bücherregale, Kommoden und hohe Möbel mit Kippsicherungen an der Wand befestigt sind. Am besten machst du das, bevor es anfängt, sich hochzuziehen."},
-  {"id": "6m-safety-23", "ageGroup": "6m", "category": "safety", "text": "Halte den Boden frei von kleinen Gegenständen wie Stiftkappen, Büroklammern und Gummiringen. Gewöhne dir an, den Boden regelmäßig auf Augenhöhe deines Babys abzusuchen."},
-  {"id": "6m-safety-24", "ageGroup": "6m", "category": "safety", "text": "Verwende Herdknopfabdeckungen, damit dein Baby keine Herdplatten einschalten kann. Selbst aus dem Hochstuhl heraus kann ein neugieriges Baby weiter greifen, als du denkst."},
-  {"id": "6m-safety-25", "ageGroup": "6m", "category": "safety", "text": "Bleibe immer in Armreichweite, wenn dein Baby feste Nahrung isst. Verschlucken kann lautlos passieren, und schnelles Handeln ist entscheidend."}
+  {
+    "id": "6m-development-01",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, mit Unterstützung zu sitzen oder sogar für ein paar Sekunden alleine. Lege Kissen drumherum, damit es weich landet, wenn es umkippt."
+  },
+  {
+    "id": "6m-development-02",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "In diesem Alter fangen viele Babys an, Gegenstände von einer Hand in die andere zu geben. Biete ein Spielzeug an und beobachte diese beeindruckende Koordination."
+  },
+  {
+    "id": "6m-development-03",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby reagiert vielleicht schon auf seinen Namen und dreht sich zu dir um. Verwende seinen Namen oft beim Spielen und Reden, um das zu festigen."
+  },
+  {
+    "id": "6m-development-04",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Das Lallen wird komplexer, mit Silbenketten wie \"bababa\" oder \"mamama\". Das sind noch keine Wörter, aber die Grundbausteine dafür."
+  },
+  {
+    "id": "6m-development-05",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby entdeckt die Schwerkraft! Es lässt vielleicht gerne Spielzeug vom Schoß oder vom Tisch fallen und schaut zu, wie es runterfällt. Durch diese Wiederholung lernt es Ursache und Wirkung."
+  },
+  {
+    "id": "6m-development-07",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, sich auf Händen und Knien zu wiegen – eine Vorstufe zum Krabbeln. Gib ihm viel Zeit auf dem Boden, um diese Bewegung zu erkunden."
+  },
+  {
+    "id": "6m-development-08",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Probiere einfache Wechselspiele aus: Du lallst, es lallt; du lächelst, es lächelt. Dieses Hin und Her ist die Grundlage für spätere Gespräche."
+  },
+  {
+    "id": "6m-development-09",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Die Tiefenwahrnehmung deines Babys verbessert sich schnell. Es greift jetzt vielleicht gezielter nach Gegenständen und schätzt Entfernungen besser ein als zuvor."
+  },
+  {
+    "id": "6m-development-10",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Manche Babys in diesem Alter zeigen eine Vorliebe für bestimmte Spielzeuge oder Schmusetücher. Ein vertrautes Kuscheltier oder Schmusetuch kann zu einem hilfreichen Beruhigungsmittel werden."
+  },
+  {
+    "id": "6m-development-11",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby greift vielleicht noch mit der ganzen Hand – es schaufelt Dinge mit allen Fingern zusammen. Der feinere Pinzettengriff kommt später."
+  },
+  {
+    "id": "6m-development-12",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Trennungsangst könnte jetzt beginnen. Wenn dein Baby weint, sobald du den Raum verlässt, zeigt das, dass es versteht, dass du auch dann noch da bist, wenn es dich nicht sehen kann."
+  },
+  {
+    "id": "6m-development-13",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an zu hüpfen, wenn du es in Stehposition hältst. Diese Beinkraft und Koordination sind eine wichtige Vorbereitung für späteres Stehen und Laufen."
+  },
+  {
+    "id": "6m-development-14",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Zeige auf Dinge und benenne sie: \"Schau, ein Vogel!\" Das Zeigen hilft deinem Baby, deinem Blick zu folgen, und baut Wortschatz für später auf."
+  },
+  {
+    "id": "6m-development-15",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby zeigt Gefühle vielleicht deutlicher – Frustration, wenn ein Spielzeug weggenommen wird, Vorfreude, wenn es sieht, dass Essen zubereitet wird. Benenne diese Gefühle laut."
+  },
+  {
+    "id": "6m-development-16",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, auf dem Bauch zu robben, bevor es sich auf Hände und Knie begibt. Jedes Baby findet seinen eigenen Weg, sich fortzubewegen."
+  },
+  {
+    "id": "6m-development-17",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Biete deinem Baby zwei Spielzeuge gleichzeitig an – eins in jede Hand. Zwei Gegenstände gleichzeitig zu halten ist ein großer kognitiver und motorischer Meilenstein."
+  },
+  {
+    "id": "6m-development-18",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby versteht vielleicht schon einfache Wörter, auch wenn es sie noch nicht sagen kann. Wenn du fragst \"Wo ist der Hund?\" und es sich umschaut, zeigt das frühes Sprachverständnis."
+  },
+  {
+    "id": "6m-development-19",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Wenn dein Baby Gegenstände auf den Tisch oder Boden schlägt, experimentiert es mit Ursache und Wirkung. Gib ihm verschiedene Dinge, damit es unterschiedliche Geräusche hören kann."
+  },
+  {
+    "id": "6m-development-20",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby sucht vielleicht schon nach einem Spielzeug, das aus seinem Blickfeld gefallen ist, statt es zu vergessen. Das zeigt, dass sich die Objektpermanenz entwickelt."
+  },
+  {
+    "id": "6m-development-21",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Wenn dein Baby Oberkörperkraft aufbaut, versucht es vielleicht, sich an Möbeln oder deinen Händen hochzuziehen. Biete stabile Flächen zum Festhalten an, während es neue Positionen erkundet."
+  },
+  {
+    "id": "6m-development-22",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby lehnt sich vielleicht aus dem Sitzen nach vorne, um etwas zu greifen, und richtet sich dann wieder auf. Diese Balance-Korrektur zeigt, dass die Rumpfmuskulatur schön wächst."
+  },
+  {
+    "id": "6m-development-23",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Winke deinem Baby oft zum Abschied. Es wird noch nicht zurückwinken, aber das Vormachen von Gesten legt jetzt den Grundstein für späteres Nachahmen."
+  },
+  {
+    "id": "6m-development-24",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Dein Baby zeigt vielleicht Vorlieben für bestimmte Personen und streckt die Arme nach einer bevorzugten Bezugsperson aus. Diese Auswahl ist ein normaler Teil der Bindungsentwicklung."
+  },
+  {
+    "id": "6m-development-25",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Die meisten Babys krabbeln erst mit 7–10 Monaten, und manche überspringen es ganz. Viel Bodenzeit hilft deinem Baby jetzt, die Kraft und Koordination aufzubauen, die es braucht, wenn es soweit ist."
+  },
+  {
+    "id": "6m-sleep-01",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Die meisten Babys in diesem Alter können 6–8 Stunden am Stück nachts schlafen, obwohl manche noch zum Füttern aufwachen. Beides ist normal."
+  },
+  {
+    "id": "6m-sleep-02",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Dein Baby braucht wahrscheinlich noch 2–3 Schläfchen am Tag mit Wachphasen von 2–2,5 Stunden. Achte auf Gähnen und Augenreiben als Müdigkeitszeichen."
+  },
+  {
+    "id": "6m-sleep-03",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn dein Baby gerade sitzen gelernt hat oder am Krabbeln arbeitet, kann der Schlaf gestört sein, weil es neue Fähigkeiten im Bettchen übt. Das ist vorübergehend."
+  },
+  {
+    "id": "6m-sleep-04",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ein vorhersehbarer Tagesablauf (Aufwachen, Essen, Spielen, Schlafen) kann helfen, die Schläfchen regelmäßiger und weniger stressig zu machen."
+  },
+  {
+    "id": "6m-sleep-05",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn dein Baby anfängt, sich im Bettchen hochzuziehen und nicht wieder runterkommt, übe tagsüber das Hinsetzen aus dem Stehen. Das wird in den nächsten Monaten häufiger vorkommen."
+  },
+  {
+    "id": "6m-sleep-06",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Du kannst anfangen, ein Kuscheltier in Wachphasen und beim Kuscheln einzuführen, damit dein Baby eine Bindung dazu aufbaut. Für sicheren Schlaf sollte das Bettchen bis 12 Monate leer bleiben."
+  },
+  {
+    "id": "6m-sleep-07",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn dein Baby bereit ist, von 3 auf 2 Schläfchen zu wechseln, kannst du die Schlafenszeit vorübergehend etwas vorziehen, um Übermüdung während der Umstellung zu vermeiden."
+  },
+  {
+    "id": "6m-sleep-08",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Zahnen kann den Schlaf stören, aber das Schlimmste dauert meist nur ein paar Tage pro Zahn. Zusätzlicher Trost in dieser Zeit ist völlig in Ordnung."
+  },
+  {
+    "id": "6m-sleep-09",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn du mit Beikost anfängst, biete sie lieber früher am Tag an statt kurz vor dem Schlafengehen. Neue Lebensmittel können manchmal Bauchweh verursachen, das den Schlaf stört."
+  },
+  {
+    "id": "6m-sleep-10",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Dein Baby ist vielleicht bereit, morgens etwas später aufzuwachen. Den Raum dunkel halten und beim ersten Geräusch nicht sofort reinlaufen kann das fördern."
+  },
+  {
+    "id": "6m-sleep-11",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Manche Babys in diesem Alter schlafen am liebsten auf dem Bauch. Solange sich dein Baby in beide Richtungen drehen kann, ist es sicher, es seine bevorzugte Position finden zu lassen."
+  },
+  {
+    "id": "6m-sleep-12",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Beständigkeit ist beim Thema Schlaf dein bester Freund. Egal welchen Ansatz du wählst – halte ihn mindestens eine Woche durch, damit er die beste Chance hat zu wirken."
+  },
+  {
+    "id": "6m-sleep-13",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Reisen und Zeitumstellungen können den Schlaf vorübergehend durcheinanderbringen. Versuche, die gewohnte Abendroutine auch in fremder Umgebung beizubehalten."
+  },
+  {
+    "id": "6m-sleep-14",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn die nächtlichen Wachphasen plötzlich zunehmen, überlege, ob dein Baby tagsüber genug Kalorien bekommt. Beikost hilft manchmal, aber nicht immer."
+  },
+  {
+    "id": "6m-sleep-15",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Der Gesamtschlaf liegt in diesem Alter typischerweise bei 12–16 Stunden pro Tag. Wenn dein Baby fröhlich und ausgeruht wirkt, bekommt es wahrscheinlich genug Schlaf."
+  },
+  {
+    "id": "6m-sleep-16",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn dein Baby vor dem Einschlafen im Bettchen lallt oder vor sich hin plappert, lass es. Dieses Geplapper ist ein gesundes Zeichen, dass es alleine einschlafen kann."
+  },
+  {
+    "id": "6m-sleep-17",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Trennungsangst kann in diesem Alter zu vermehrtem nächtlichen Aufwachen führen. Ein kurzer, ruhiger Besuch zur Beruhigung ist in Ordnung, aber versuche, keine neuen Gewohnheiten aufzubauen, die du später wieder abgewöhnen musst."
+  },
+  {
+    "id": "6m-sleep-18",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn dein Baby von 3 auf 2 Schläfchen wechselt, fällt meist das letzte Schläfchen des Tages weg. Eine frühere Schlafenszeit kann die Lücke überbrücken, während es sich anpasst."
+  },
+  {
+    "id": "6m-sleep-19",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ein dunkler Raum mit Verdunkelungsvorhängen kann sowohl bei Schläfchen als auch beim Nachtschlaf helfen, besonders wenn dein Baby leicht durch Licht stimuliert wird."
+  },
+  {
+    "id": "6m-sleep-20",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn dein Baby morgens sehr früh aufwacht (vor 6 Uhr), prüfe, ob der Raum dunkel genug ist, und überlege, ob die Schlafenszeit etwas nach hinten verschoben werden sollte."
+  },
+  {
+    "id": "6m-sleep-21",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Manche Babys brauchen vor dem Schlafen etwas Bewegung, um Energie abzubauen. Eine kurze Spielrunde vor der Einschlafroutine kann helfen, schneller zur Ruhe zu kommen."
+  },
+  {
+    "id": "6m-sleep-22",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn dein Baby beim Schlafengehen im Bettchen anfängt zu rollen, zu krabbeln oder andere neue Fähigkeiten zu üben, lege es ruhig wieder hin, ohne ein Spiel daraus zu machen. Es wird sich irgendwann beruhigen."
+  },
+  {
+    "id": "6m-sleep-23",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "An Tagen mit kurzen oder ausgefallenen Schläfchen scheue dich nicht, die Schlafenszeit um 30–60 Minuten vorzuziehen. Ein übermüdetes Baby wehrt sich stärker gegen das Einschlafen."
+  },
+  {
+    "id": "6m-sleep-24",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Die Schlafbedürfnisse deines Babys sind ganz individuell. Wenn es fröhlich ist, gut wächst und Meilensteine erreicht, ist sein Schlaf wahrscheinlich ausreichend, auch wenn er nicht dem Lehrbuch entspricht."
+  },
+  {
+    "id": "6m-sleep-25",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Wenn du bisher das Bett mit deinem Baby geteilt hast und zum Bettchen wechseln möchtest, fang mit den Schläfchen tagsüber an. Tagsüber üben hilft deinem Baby, sich im eigenen Bettchen wohlzufühlen."
+  },
+  {
+    "id": "6m-feeding-01",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Mit etwa 6 Monaten ist normalerweise ein guter Zeitpunkt, um mit Beikost zu starten! Achte auf Zeichen der Bereitschaft: Sitzen mit Unterstützung, gute Kopfkontrolle und Interesse am Essen."
+  },
+  {
+    "id": "6m-feeding-02",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ob du Brei oder Baby-Led Weaning wählst – Muttermilch oder Säuglingsnahrung sollten weiterhin die Hauptnahrungsquelle sein. Beikost dient in diesem Stadium der Erkundung."
+  },
+  {
+    "id": "6m-feeding-05",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Es ist normal, dass dein Baby anfangs Essen mit der Zunge wieder herausschiebt. Der Zungenstreckreflex lässt nach, und es lernt, Essen nach hinten in den Mund zu bewegen."
+  },
+  {
+    "id": "6m-feeding-06",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Würgen ist etwas anderes als Verschlucken und ist eigentlich ein Schutzmechanismus. Würgen ist laut und geht mit Husten einher; Verschlucken ist lautlos. Lerne, den Unterschied zu erkennen."
+  },
+  {
+    "id": "6m-feeding-07",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Gute erste Lebensmittel sind eisenreiche Optionen wie püriertes Fleisch, mit Eisen angereicherter Getreidebrei oder zerdrückte Linsen. Die Eisenspeicher deines Babys aus der Geburt gehen um den 6. Monat zur Neige."
+  },
+  {
+    "id": "6m-feeding-08",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Biete beim Essen Wasser in einem offenen Becher oder Trinklernbecher an. Dein Baby wird anfangs nicht viel trinken, aber frühes Üben fördert wichtige mundmotorische Fähigkeiten."
+  },
+  {
+    "id": "6m-feeding-09",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Beim Essen kleckern ist Lernen! Lass dein Baby sein Essen anfassen, matschen und verschmieren. Sensorisches Erkunden ist ein wichtiger Schritt, um neue Konsistenzen zu akzeptieren."
+  },
+  {
+    "id": "6m-feeding-10",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Wenn du Baby-Led Weaning machst, schneide Lebensmittel in fingergroße Streifen, die dein Baby in der Faust halten kann. Es wird an dem Teil kauen, der oben herausschaut."
+  },
+  {
+    "id": "6m-feeding-11",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Vermeide Honig bis zum 1. Geburtstag wegen der Gefahr von Säuglingsbotulismus. Kuhmilch als Hauptgetränk ist ebenfalls tabu, kleine Mengen beim Kochen sind aber in Ordnung."
+  },
+  {
+    "id": "6m-feeding-12",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Sei nicht entmutigt, wenn dein Baby ein Lebensmittel ablehnt. Es kann 10–15 Versuche dauern, bis es etwas Neues akzeptiert. Biete es immer wieder an, ohne Druck auszuüben."
+  },
+  {
+    "id": "6m-feeding-13",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Dein Baby sollte beim Essen immer aufrecht im Hochstuhl sitzen, nie zurückgelehnt. Diese Position ist am sichersten zum Schlucken."
+  },
+  {
+    "id": "6m-feeding-14",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Kombiniere eisenreiche Lebensmittel mit Vitamin-C-Quellen (wie zerdrückte Erdbeeren oder etwas Zitronensaft), um die Eisenaufnahme zu verbessern."
+  },
+  {
+    "id": "6m-feeding-15",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Lass dein Baby beim Essen das Tempo bestimmen. Wenn es sich abwendet, den Mund zumacht oder das Interesse verliert, sagt es dir, dass es satt ist."
+  },
+  {
+    "id": "6m-feeding-16",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Führe Erdnussprotein früh ein, indem du glatte Erdnussbutter in Brei oder Haferflocken mischst. Ganze Erdnüsse und stückige Erdnussbutter sind in diesem Alter Erstickungsgefahren."
+  },
+  {
+    "id": "6m-feeding-17",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Biete eine bunte Vielfalt auf dem Teller an. Verschiedenfarbiges Obst und Gemüse liefert unterschiedliche Nährstoffe, und Abwechslung jetzt fördert abenteuerliches Essen später."
+  },
+  {
+    "id": "6m-feeding-18",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Dein Baby isst vielleicht an einem Tag viel und rührt am nächsten kaum etwas an. Das ist völlig normal. Muttermilch oder Säuglingsnahrung füllt die Nährstofflücken."
+  },
+  {
+    "id": "6m-feeding-19",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Versuche, deinem Baby einen vorgefüllten Löffel zu geben, den es selbst zum Mund führen kann. Das ist zwar eine Kleckerei, aber fördert Selbstständigkeit und Feinmotorik."
+  },
+  {
+    "id": "6m-feeding-20",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Vermeide es, Salz oder Zucker zum Essen deines Babys hinzuzufügen. Seine Nieren können noch nicht viel Natrium verarbeiten, und natürliche Geschmäcker helfen ihm, echte Lebensmittel zu schätzen."
+  },
+  {
+    "id": "6m-feeding-21",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Wenn dein Baby bei einer neuen Konsistenz würgt, bleib ruhig und lass es das alleine bewältigen. Deine gelassene Reaktion hilft ihm, sich beim Erkunden neuer Lebensmittel sicher zu fühlen."
+  },
+  {
+    "id": "6m-feeding-22",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Stillen oder Fläschchen sollten in diesem Stadium noch vor den Beikostmahlzeiten stattfinden. Milch bleibt die Hauptnahrungsquelle bis ungefähr zum 12. Monat."
+  },
+  {
+    "id": "6m-feeding-23",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Biete weich gekochtes Gemüse wie Süßkartoffel, Brokkoliröschen oder Zucchinistreifen als erstes Fingerfood an. Koche es, bis du es leicht zwischen den Fingern zerdrücken kannst."
+  },
+  {
+    "id": "6m-feeding-24",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Gemeinsam als Familie essen, selbst in dieser frühen Phase, hilft deinem Baby durch Zuschauen zu lernen. Es wird dein Kauen nachahmen und eher bereit sein, das zu probieren, was du isst."
+  },
+  {
+    "id": "6m-feeding-25",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Wenn dein Baby mit Brei frustriert wirkt, ist es vielleicht bereit für etwas festere Konsistenzen oder weiches Fingerfood. Folge seinem Tempo und passe an, was es schafft."
+  },
+  {
+    "id": "6m-health-01",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Regelmäßige Vorsorgeuntersuchungen sind in dieser Phase wichtig, um die Entwicklung zu beobachten. Dein Kinderarzt empfiehlt vielleicht auch Fluorid-Ergänzungen, wenn euer Leitungswasser nicht fluoridiert ist."
+  },
+  {
+    "id": "6m-health-03",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Wenn dein Baby Fieber von {{100.4°F|38°C}} oder höher hat, ruf deinen Kinderarzt an. In diesem Alter sollte Fieber abgeklärt werden, um eine Infektion auszuschließen."
+  },
+  {
+    "id": "6m-health-04",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Mittelohrentzündungen sind in diesem Alter häufig. Am Ohr ziehen, Quengeln und Fieber können Anzeichen sein. Allerdings ist Ohrenziehen allein oft nur Zahnungsbeschwerden – geh zum Arzt, wenn du eine Infektion vermutest."
+  },
+  {
+    "id": "6m-health-06",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Jetzt ist ein guter Zeitpunkt, den ersten Zahnarztbesuch deines Babys zu planen. Experten empfehlen einen Zahnarztbesuch bis zum 1. Geburtstag oder innerhalb von 6 Monaten nach dem ersten Zahn."
+  },
+  {
+    "id": "6m-health-07",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Achte beim Einführen von Beikost auf Anzeichen von Lebensmittelallergien: Nesselsucht, Schwellungen, Erbrechen oder Atembeschwerden. Leichte Rötungen um den Mund sind meist nur Hautreizungen."
+  },
+  {
+    "id": "6m-health-08",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Wenn Grippesaison ist und dein Baby mindestens 6 Monate alt ist, kann es die Grippeimpfung erhalten. Das ist besonders wichtig, da der mütterliche Nestschutz nachlässt."
+  },
+  {
+    "id": "6m-health-09",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Zahnungsschmerzen sind echt, aber meist gut zu bewältigen. Gekühlte Beißringe und eine sanfte Zahnfleischmassage mit einem sauberen Finger können Linderung bringen."
+  },
+  {
+    "id": "6m-health-10",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Dein Baby kann Lebensmittelunverträglichkeiten entwickeln, wenn es Neues ausprobiert. Ein paar weiche Stühle nach einem neuen Lebensmittel sind nicht immer eine Allergie – das Verdauungssystem passt sich an."
+  },
+  {
+    "id": "6m-health-11",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Babys in diesem Alter werden immer mobiler und erkunden gerne alles mit dem Mund. Schau täglich den Boden nach kleinen Gegenständen ab, die Erstickungsgefahren sein könnten."
+  },
+  {
+    "id": "6m-health-12",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Wenn dein Baby dauerhaft verschnupft zu sein scheint, könnte das mit neuen Lebensmitteln oder Umweltallergenen zusammenhängen. Erwähne es beim nächsten Arztbesuch."
+  },
+  {
+    "id": "6m-health-13",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Bernsteinketten zum Zahnen werden nicht empfohlen – sie bergen Strangulations- und Erstickungsgefahr ohne nachgewiesenen Nutzen. Greife lieber zu sicheren Zahnungshilfen."
+  },
+  {
+    "id": "6m-health-14",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Der Stuhl deines Babys ändert Farbe und Konsistenz, wenn es mit Beikost anfängt. Grün, Orange und Braun sind alle normal. Rote oder schwarze Stühle solltest du dem Arzt melden."
+  },
+  {
+    "id": "6m-health-15",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ab 6 Monaten kannst du Sonnencreme (LSF 30+) auf unbedeckte Hautstellen auftragen. Unter 6 Monaten setze auf Schatten, Hüte und leichte Kleidung als Sonnenschutz."
+  },
+  {
+    "id": "6m-health-16",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Putze die neuen Zähne deines Babys zweimal täglich mit einer reiskorngroßen Menge Fluorid-Zahnpasta. Diese Routine jetzt einzuführen macht es leichter, wenn mehr Zähne kommen."
+  },
+  {
+    "id": "6m-health-17",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Wenn sich dein Baby durch seine neue Mobilität eine Beule oder einen blauen Fleck holt, reichen meist eine kühle Kompresse und etwas Trost. Ruf den Arzt an bei Kopfverletzungen mit Erbrechen oder ungewöhnlicher Schläfrigkeit."
+  },
+  {
+    "id": "6m-health-18",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Die Hand-Fuß-Mund-Krankheit ist bei Babys und Kleinkindern häufig. Achte auf kleine Bläschen an Händen, Füßen und im Mund. Es ist unangenehm, heilt aber meist innerhalb einer Woche ab."
+  },
+  {
+    "id": "6m-health-19",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Der Eisenbedarf deines Babys steigt um den 6. Monat deutlich an. Wenn dein Baby ein Frühchen war oder ausschließlich gestillt wird, frag deinen Kinderarzt, ob ein Eisenpräparat nötig ist."
+  },
+  {
+    "id": "6m-health-21",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Wenn dein Baby nach dem Probieren eines neuen Lebensmittels einen Ausschlag bekommt, mach ein Foto und notiere das Lebensmittel und den Zeitpunkt. Diese Informationen sind sehr hilfreich für deinen Kinderarzt."
+  },
+  {
+    "id": "6m-health-22",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Zahnen kann eine leichte Temperaturerhöhung verursachen, aber echtes Fieber von {{100.4°F|38°C}} oder höher kommt nicht vom Zahnen. Wenn dein Baby beim Zahnen Fieber hat, lass andere Ursachen ärztlich abklären."
+  },
+  {
+    "id": "6m-health-23",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Mit zunehmender Mobilität kommen auch mehr Stürze und Beulen. Scharfe Kanten und harte Oberflächen abzusichern hilft, aber ein paar Stolperer gehören zum Bewegenlernen dazu."
+  },
+  {
+    "id": "6m-health-24",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Wenn sich das Ekzem deines Babys nach Beikoststart verschlechtert, führe ein Ernährungstagebuch, um mögliche Auslöser zu finden. Häufige Übeltäter sind Milchprodukte, Eier und Weizen."
+  },
+  {
+    "id": "6m-health-25",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Die RSV-Saison kann besonders für Babys unter 12 Monaten besorgniserregend sein. Häufiges Händewaschen und Kontakt mit Kranken zu meiden sind die besten Vorsorgemaßnahmen."
+  },
+  {
+    "id": "6m-play-01",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Biete Stapelbecher oder Steckspielzeug an. Dein Baby wird noch nicht stapeln, aber es wird lieben, Türme umzuwerfen, die du baust, und die verschiedenen Größen zu erkunden."
+  },
+  {
+    "id": "6m-play-02",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Fülle einen kleinen Korb mit sicheren Haushaltsgegenständen (Holzlöffel, Silikonschneebesen, Stoffreste) und lass dein Baby alles erkunden. So ein Entdeckerkorb fördert eigenständiges Spielen."
+  },
+  {
+    "id": "6m-play-03",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Spiele \"Wo ist es hin?\" und verstecke ein Spielzeug halb unter einem Tuch. Dein Baby lernt gerade Objektpermanenz und wird es lieben, danach zu suchen."
+  },
+  {
+    "id": "6m-play-04",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Planschen in der Badewanne ist tolles Sinnesspiel! Gib deinem Baby Becher zum Gießen und schwimmendes Spielzeug. Lass es dabei nie unbeaufsichtigt – niemals alleine mit Wasser."
+  },
+  {
+    "id": "6m-play-05",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Setze dein Baby vor einen Spiegel und schneide Grimassen. In diesem Alter wird es lächeln, lachen und nach seinem Spiegelbild greifen."
+  },
+  {
+    "id": "6m-play-06",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Probiere sanftes Toben aus – auf deinem Knie hüpfen, vorsichtig durch die Luft schwingen oder lustige Geräusche machen. Diese Bewegungsspiele stärken Vertrauen und Körpergefühl."
+  },
+  {
+    "id": "6m-play-07",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Führe einfache Musikinstrumente ein, wie eine Trommel, eine Rassel oder ein Xylophon. Dein Baby wird es lieben, Lärm zu machen und zu entdecken, dass es selbst Geräusche erzeugen kann."
+  },
+  {
+    "id": "6m-play-08",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Baue einen kleinen Hindernisparcours aus Kissen und zusammengerollten Decken, über den dein Baby krabbeln und drumherum robben kann. Das fördert Problemlösen und Körperkraft."
+  },
+  {
+    "id": "6m-play-09",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Lies Bücher mit verschiedenen Oberflächen zum Anfassen (Fühlbücher). Dein Baby wird es lieben, mit den Fingern über pelzige, raue und glatte Flächen zu streichen."
+  },
+  {
+    "id": "6m-play-10",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Lass dein Baby mit sicherem Wasserspielzeug in einer flachen Schüssel spielen. Gießen, Planschen und das Fließen von Wasser spüren lehrt es etwas über die physische Welt."
+  },
+  {
+    "id": "6m-play-11",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Spiele Musik aus verschiedenen Genres und beobachte, wie dein Baby reagiert. Es wird vielleicht wippen, strampeln oder mit den Armen wedeln. Gemeinsam Tanzen ist wunderbar für die Bindung."
+  },
+  {
+    "id": "6m-play-12",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Gib deinem Baby beim Essen einen Löffel zum Festhalten. Damit aufs Tablett zu klopfen ist laut und kleckert, aber es fördert Feinmotorik und Hand-Auge-Koordination."
+  },
+  {
+    "id": "6m-play-13",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Puste deinem Baby beim Wickeln auf den Bauch und mach dabei ein prutschendes Geräusch. Diese spielerischen Momente verwandeln Routineaufgaben in Bindungszeit."
+  },
+  {
+    "id": "6m-play-14",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Verbringe Zeit mit deinem Baby auf dem Boden, auf seiner Augenhöhe. Leg dich bei der Bauchlage auf den Bauch oder sitz ihm gegenüber. Es ist viel aufmerksamer, wenn du auf Augenhöhe bist."
+  },
+  {
+    "id": "6m-play-15",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Lege Spielzeug in eine Muffinform, aus der dein Baby es herausnehmen und erkunden kann. Diese einfache Aktivität fordert die Greiffähigkeit und hält es bei Laune."
+  },
+  {
+    "id": "6m-play-16",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Stecke ein Spielzeug in einen durchsichtigen Behälter und lass dein Baby herausfinden, wie es drankommt. Dieses frühe Problemlösen fördert das Denkvermögen."
+  },
+  {
+    "id": "6m-play-17",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Gib deinem Baby einen Karton zum Erkunden. Es kann ihn schieben, sich reinsetzen oder draufklopfen. Einfache, offene Spielsachen regen die meiste Kreativität an."
+  },
+  {
+    "id": "6m-play-18",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Spiele Klatschspiele wie \"Backe backe Kuchen\" mit deinem Baby. Führe seine Hände durch die Bewegungen und freu dich über seine Reaktionen. Mit der Zeit wird es von alleine mitmachen."
+  },
+  {
+    "id": "6m-play-19",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Lass dein Baby auch außerhalb der Mahlzeiten sichere Lebensmittel erkunden. Die Textur einer Banane zu erspüren oder ein Stück Avocado zu zerdrücken ist wunderbares Sinneslernen."
+  },
+  {
+    "id": "6m-play-20",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Stelle eine Sinneskiste mit großen, sicheren Gegenständen zusammen, wie weiche Bälle, Holzringe und Stoffstücke. Beaufsichtigtes Sinnesspiel hält dein Baby beschäftigt und fördert das Lernen."
+  },
+  {
+    "id": "6m-play-21",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Rolle einen Ball hin und her mit deinem Baby, während es sitzt. Dieses einfache Spiel übt das Abwechseln und hilft ihm, bewegte Gegenstände mit den Augen zu verfolgen."
+  },
+  {
+    "id": "6m-play-22",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Lass dein Baby unter Aufsicht Papier zerreißen (große Stücke). Das Geräusch und die Bewegung sind faszinierend, und Zerreißen stärkt die Handkraft und Koordination."
+  },
+  {
+    "id": "6m-play-23",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Führ Klappenbücher ein und lass dein Baby versuchen, die Klappen selbst zu öffnen. Das verbindet Feinmotorik-Übung mit dem Spaß an der Überraschung."
+  },
+  {
+    "id": "6m-play-24",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Singe Lieder mit Handbewegungen wie \"Alle meine Entchen\" oder \"Das ist der Daumen\". Dein Baby wird die Bewegungen bald erwarten und irgendwann versuchen, sie nachzumachen."
+  },
+  {
+    "id": "6m-play-25",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Mach mit deinem Baby einen Fühl-Spaziergang durch die Wohnung und lass es sichere Oberflächen berühren: eine glatte Arbeitsplatte, ein weiches Kissen, ein kühles Fenster und einen flauschigen Teppich."
+  },
+  {
+    "id": "6m-safety-01",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Jetzt, wo dein Baby mobiler wird, montiere Treppenschutzgitter oben und unten an der Treppe. Klemmgitter sind unten ausreichend; oben verwende fest verschraubte Gitter."
+  },
+  {
+    "id": "6m-safety-02",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Stelle die Bettmatratze auf die niedrigste Stufe, bevor dein Baby sich zum Stehen hochziehen kann. Es ist stärker, als du denkst, und wird dich überraschen."
+  },
+  {
+    "id": "6m-safety-03",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Sichere Schränke mit Reinigungsmitteln, Medikamenten und scharfen Gegenständen mit Kindersicherungen. Magnetische oder selbstklebende Schranksicherungen sind wirksam und einfach anzubringen."
+  },
+  {
+    "id": "6m-safety-05",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Lass dein Baby nie alleine im Hochstuhl. Verwende immer den Sicherheitsgurt und schiebe den Stuhl weg von Tischen und Arbeitsflächen, von denen es sich abstoßen könnte."
+  },
+  {
+    "id": "6m-safety-06",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Bringe Kantenschutz an scharfen Möbelkanten an. Der Kopf deines Babys ist auf Tischhöhe, wenn es anfängt, sich hochzuziehen, und Zusammenstöße sind unvermeidlich."
+  },
+  {
+    "id": "6m-safety-07",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Halte Schnüre von Jalousien, Vorhängen und Elektrogeräten außer Reichweite. Strangulation durch Schnüre ist eine ernste Gefahr für neugierige, greiffreudige Babys."
+  },
+  {
+    "id": "6m-safety-08",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Beaufsichtige dein Baby immer in der Nähe von Wasser – auch in der Badewanne, im Planschbecken und bei Eimern. Ertrinken kann schnell und lautlos passieren."
+  },
+  {
+    "id": "6m-safety-09",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Prüfe, ob Zimmerpflanzen ungiftig und außer Reichweite sind. Viele verbreitete Pflanzen sind giftig, wenn sie verschluckt werden. Im Zweifel stelle sie hoch."
+  },
+  {
+    "id": "6m-safety-10",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Achte darauf, dass der Hochstuhl deines Babys eine breite, stabile Basis und einen Schrittgurt hat, damit es nicht durchrutschen kann. Eine gute Passform hält es beim Essen sicher."
+  },
+  {
+    "id": "6m-safety-11",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Entferne Tischdecken oder Platzsets, an denen dein Baby ziehen und sich Geschirr oder heißes Essen herunterreißen könnte."
+  },
+  {
+    "id": "6m-safety-12",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Speichere die Nummer der Giftnotrufzentrale in deinem Telefon. Schneller Zugriff ist entscheidend, wenn dein Baby mal an etwas gerät, das es nicht sollte."
+  },
+  {
+    "id": "6m-safety-13",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Wenn du ein Haustier mit Wassernapf hast, stelle ihn außer Reichweite. Babys fühlen sich von Wasser angezogen und können selbst in sehr flachen Behältern ertrinken."
+  },
+  {
+    "id": "6m-safety-14",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Vermeide Lauflernhilfen auf Rädern. Kinderärzte warnen vor ihnen wegen der hohen Verletzungsgefahr, besonders durch Treppenstürze. Stationäre Spielcenter sind eine sicherere Alternative."
+  },
+  {
+    "id": "6m-safety-15",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Bewahre Medikamente in deiner Wickeltasche immer außer Reichweite deines Babys auf. Auch kindersichere Verschlüsse sind nicht hundertprozentig sicher."
+  },
+  {
+    "id": "6m-safety-16",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Sichere den Toilettendeckel mit einer Kindersicherung. Mobile Babys sind kopflastig und können kopfüber in eine offene Toilette fallen – eine Ertrinkungsgefahr."
+  },
+  {
+    "id": "6m-safety-17",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Lege Handtaschen und Taschen nicht auf den Boden und halte sie außer Reichweite. Sie enthalten oft Medikamente, Münzen, Erstickungsgefahren und andere für Babys gefährliche Kleinteile."
+  },
+  {
+    "id": "6m-safety-18",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Befestige Fernseher und schwere Geräte an der Wand. Noch bevor dein Baby mobil ist, kann ein Stoß oder ein gezogenes Kabel ein gefährliches Umkippen verursachen."
+  },
+  {
+    "id": "6m-safety-19",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Verwende Türstopper oder Türfeststeller, damit dein Baby sich nicht die Finger in zuschlagenden Türen einklemmt. Kleine Finger können schneller in Spalten geraten, als du denkst."
+  },
+  {
+    "id": "6m-safety-20",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Entferne Kühlschrankmagnete, die klein genug zum Verschlucken sind. Verschluckte Magnete können extrem gefährlich sein, wenn mehr als einer geschluckt wird."
+  },
+  {
+    "id": "6m-safety-21",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Lass dein Baby nie unbeaufsichtigt auf einem Bett, selbst wenn es von Kissen umgeben ist. In diesem Alter kann es sich überraschend schnell an den Rand rollen und rutschen."
+  },
+  {
+    "id": "6m-safety-22",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Wenn dein Baby mobiler wird, achte darauf, dass Bücherregale, Kommoden und hohe Möbel mit Kippsicherungen an der Wand befestigt sind. Am besten machst du das, bevor es anfängt, sich hochzuziehen."
+  },
+  {
+    "id": "6m-safety-23",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Halte den Boden frei von kleinen Gegenständen wie Stiftkappen, Büroklammern und Gummiringen. Gewöhne dir an, den Boden regelmäßig auf Augenhöhe deines Babys abzusuchen."
+  },
+  {
+    "id": "6m-safety-24",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Verwende Herdknopfabdeckungen, damit dein Baby keine Herdplatten einschalten kann. Selbst aus dem Hochstuhl heraus kann ein neugieriges Baby weiter greifen, als du denkst."
+  },
+  {
+    "id": "6m-safety-25",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Bleibe immer in Armreichweite, wenn dein Baby feste Nahrung isst. Verschlucken kann lautlos passieren, und schnelles Handeln ist entscheidend."
+  }
 ]
