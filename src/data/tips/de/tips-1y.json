@@ -1,0 +1,686 @@
+[
+  {
+    "id": "1y-development-01",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby könnte beginnen, sich an Möbeln hochzuziehen und zu stehen. Stelle stabile Gegenstände in der Nähe auf, damit es sicher üben kann."
+  },
+  {
+    "id": "1y-development-02",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Winken, Klatschen und Zeigen sind Anzeichen dafür, dass dein Baby wichtige soziale Kommunikationsfähigkeiten entwickelt."
+  },
+  {
+    "id": "1y-development-03",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Versuche, zwei oder drei Bausteine übereinander zu stapeln, und lass dein Baby sie umwerfen. Das lehrt Ursache und Wirkung und fördert die Hand-Auge-Koordination."
+  },
+  {
+    "id": "1y-development-04",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby könnte zwischen 9 und 12 Monaten anfangen, sich an Möbeln entlangzuhangeln. Stelle Sitzmöbel so auf, dass es von einem Stück zum nächsten gehen kann."
+  },
+  {
+    "id": "1y-development-05",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Zuverlässig auf den eigenen Namen zu reagieren ist in diesem Alter ein Meilenstein. Verwende den Namen deines Babys oft beim Spielen und bei den Mahlzeiten."
+  },
+  {
+    "id": "1y-development-06",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby lernt die Objektpermanenz. Spiele Guckuck oder verstecke ein Spielzeug unter einer Decke und beobachte, wie es danach sucht."
+  },
+  {
+    "id": "1y-development-07",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Brabbeln mit Konsonantenlauten wie \"Mama\" und \"Papa\" zeigt, dass dein Baby mit Sprache experimentiert. Wiederhole seine Laute, um es zu ermutigen."
+  },
+  {
+    "id": "1y-development-08",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Lass dein Baby üben, kleine, sichere Lebensmittel mit dem Pinzettengriff aufzunehmen. Diese Feinmotorik entwickelt sich zwischen 9 und 12 Monaten besonders schnell."
+  },
+  {
+    "id": "1y-development-09",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby könnte anfangen, einfache Anweisungen wie \"Gib mir den Ball\" zu verstehen. Verwende kurze, klare Sätze zusammen mit sanften Gesten."
+  },
+  {
+    "id": "1y-development-10",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Zwei Gegenstände zusammenzuschlagen ist ein Zeichen wachsender Koordination und Neugier. Biete Holzlöffel, Becher oder weiche Bauklötze dafür an."
+  },
+  {
+    "id": "1y-development-11",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby könnte in diesem Alter Fremdenangst zeigen. Das ist ein gesundes Zeichen einer starken Bindung zu dir."
+  },
+  {
+    "id": "1y-development-12",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Versuche, zusammen Pappbilderbücher zu lesen, und lass dein Baby die Seiten umblättern. Es baut schon frühe Lesefähigkeiten auf, noch bevor es die Worte versteht."
+  },
+  {
+    "id": "1y-development-13",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Auf Gegenstände zu zeigen, die es haben möchte, ist eine der ersten bewussten Kommunikationsgesten. Benenne das, worauf dein Baby zeigt."
+  },
+  {
+    "id": "1y-development-14",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby könnte anfangen, einfache Handlungen wie Umrühren mit einem Löffel oder Haare bürsten nachzuahmen. Durch dieses Nachahmungsspiel lernt es den Alltag kennen."
+  },
+  {
+    "id": "1y-development-15",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Einige Babys machen ihre ersten Schritte um den 12. Monat, viele laufen aber erst später. Beides ist völlig normal."
+  },
+  {
+    "id": "1y-sleep-02",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Gegen 12 Monate beginnen einige Babys, das Vormittagsschläfchen zu verweigern. Wenn das regelmäßig passiert, versuche, es schrittweise nach hinten zu verschieben, anstatt es sofort wegzulassen."
+  },
+  {
+    "id": "1y-sleep-03",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Trennungsangst kann um den 9.-10. Monat zu nächtlichem Aufwachen führen. Ein kurzer, ruhiger Besuch zur Beruhigung ist hilfreicher, als die ganze Routine zu ändern."
+  },
+  {
+    "id": "1y-sleep-04",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Halte die Schlafumgebung dunkel, kühl und ruhig. Ein Weißrauschgerät in moderater Lautstärke kann deinem Baby helfen, besser zu schlafen."
+  },
+  {
+    "id": "1y-sleep-05",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Eine kurze, vorhersehbare Schlafenszeit-Routine von 15-20 Minuten signalisiert deinem Baby, dass es Zeit zum Schlafen ist. Bad, Buch, Lied und Bett funktioniert gut."
+  },
+  {
+    "id": "1y-sleep-06",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Dein Baby sollte weiterhin auf dem Rücken auf einer festen, ebenen Fläche schlafen. Entferne alle losen Decken, Kissen und Kuscheltiere aus dem Gitterbett."
+  },
+  {
+    "id": "1y-sleep-07",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Das nächtliche Abstillen passiert oft von allein zwischen 9 und 12 Monaten, wenn dein Baby tagsüber mehr Beikost isst. Sprich mit deinem Kinderarzt, wenn du unsicher bist."
+  },
+  {
+    "id": "1y-sleep-08",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Wenn dein Baby sich im Gitterbett hochzieht und weint, braucht es vielleicht Hilfe, um sich wieder hinzusetzen. Übe das tagsüber beim Spielen."
+  },
+  {
+    "id": "1y-sleep-09",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Strebe Wachphasen von 2,5-3,5 Stunden zwischen den Schläfchen an. Übermüdete Babys haben oft mehr Schwierigkeiten beim Einschlafen."
+  },
+  {
+    "id": "1y-sleep-10",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Frühes Aufwachen vor 6 Uhr ist in diesem Alter häufig. Stelle sicher, dass der Raum sehr dunkel ist, und vermeide anregende Aktivitäten, wenn dein Baby zu früh aufwacht."
+  },
+  {
+    "id": "1y-sleep-11",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Zahnungsbeschwerden können den Schlaf stören. Wenn dein Baby Schmerzen zu haben scheint, frage deinen Kinderarzt nach altersgerechter Schmerzlinderung vor dem Schlafengehen."
+  },
+  {
+    "id": "1y-sleep-12",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Reisen und Veränderungen im Tagesablauf können den Schlaf vorübergehend beeinträchtigen. Sei geduldig und kehre so schnell wie möglich zur gewohnten Routine zurück."
+  },
+  {
+    "id": "1y-sleep-14",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Wenn dein Baby zwei Schläfchen macht, ist das erste normalerweise gegen 9-10 Uhr und das zweite gegen 13-14 Uhr. Passe die Zeiten anhand der Müdigkeitszeichen deines Babys an."
+  },
+  {
+    "id": "1y-sleep-15",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Einige Babys erleben eine Schlafregression um den 10.-12. Monat, die mit Entwicklungssprüngen wie Stehen und Entlanghangeln verbunden ist. Das geht normalerweise innerhalb von 2-4 Wochen vorbei."
+  },
+  {
+    "id": "1y-feeding-01",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Mit 9-12 Monaten kann dein Baby eine große Vielfalt an weichem Fingerfood genießen. Schneide alles in kleine, handliche Stücke, etwa in Erbsengröße."
+  },
+  {
+    "id": "1y-feeding-02",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Biete Wasser in einem offenen Becher oder einem Becher mit Strohhalm bei den Mahlzeiten an. Das Üben jetzt erleichtert den Übergang weg von der Flasche mit 12-15 Monaten."
+  },
+  {
+    "id": "1y-feeding-03",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Dein Baby braucht bis zum 12. Monat weiterhin Muttermilch oder Säuglingsnahrung als Hauptnahrungsquelle. Beikost ist in dieser Phase eine Ergänzung."
+  },
+  {
+    "id": "1y-feeding-04",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Es kann 10-15 Versuche brauchen, bis ein Baby ein neues Lebensmittel akzeptiert. Biete es ohne Druck weiter an, wenn dein Baby es ablehnt."
+  },
+  {
+    "id": "1y-feeding-05",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Eisenreiche Lebensmittel wie angereichertes Getreide, Fleischbrei, Bohnen und Linsen sind zwischen 9 und 12 Monaten besonders wichtig, da die Eisenreserven aus der Geburt zur Neige gehen."
+  },
+  {
+    "id": "1y-feeding-06",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Lass dein Baby so viel wie möglich selbst essen. Die Kleckerei lohnt sich, denn sie fördert Selbstständigkeit und Feinmotorik."
+  },
+  {
+    "id": "1y-feeding-07",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Vermeide Honig bis nach dem 12. Monat wegen der Gefahr von Säuglingsbotulismus. Das gilt für alle Formen, auch für Backwaren mit Honig."
+  },
+  {
+    "id": "1y-feeding-08",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Würgen ist nicht dasselbe wie Ersticken und ist ein normaler Schutzreflex, während dein Baby neue Konsistenzen kennenlernt. Bleibe ruhig und lass es selbst damit umgehen."
+  },
+  {
+    "id": "1y-feeding-09",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Biete drei Mahlzeiten und 1-2 Zwischenmahlzeiten pro Tag neben Muttermilch oder Säuglingsnahrung an. Achte auf die Hunger- und Sättigungssignale deines Babys."
+  },
+  {
+    "id": "1y-feeding-10",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Führe häufige Allergene wie Erdnussbutter (verdünnt oder als Puffs), Ei und Milchprodukte früh und regelmäßig ein. Studien zeigen, dass dies das Allergierisiko senken kann."
+  },
+  {
+    "id": "1y-feeding-11",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Vermeide zugesetzten Zucker und Salz in der Nahrung deines Babys. Nieren und Geschmacksknospen entwickeln sich noch, und unverarbeitete Lebensmittel liefern alles, was es braucht."
+  },
+  {
+    "id": "1y-feeding-12",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Wenn dein Baby den Kopf wegdreht oder den Mund schließt, sagt es dir, dass es satt ist. Respektiere diese Sättigungssignale, um eine gesunde Beziehung zum Essen aufzubauen."
+  },
+  {
+    "id": "1y-feeding-13",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Gemeinsam als Familie zu essen hilft deinem Baby beim Lernen. Es probiert eher neue Lebensmittel, wenn es sieht, dass du sie mit Genuss isst."
+  },
+  {
+    "id": "1y-feeding-14",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Weiche Früchte wie Banane, reife Avocado und gedünstete Birne sind tolles erstes Fingerfood. Zerdrücke sie leicht oder schneide sie in kleine Streifen."
+  },
+  {
+    "id": "1y-feeding-15",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Wenn du vom Stillen abstillen möchtest, ist es sanfter für dich und dein Baby, über mehrere Wochen hinweg eine Stillmahlzeit nach der anderen wegzulassen."
+  },
+  {
+    "id": "1y-health-01",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Regelmäßige Vorsorgeuntersuchungen umfassen ein Entwicklungsscreening und eine Überprüfung des Wachstums. Bringe alle Fragen mit, die du dir aufgeschrieben hast."
+  },
+  {
+    "id": "1y-health-02",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Sprich mit deinem Kinderarzt darüber, welche Impfungen in dieser Phase fällig sind. Das Einhalten des Impfplans ist wichtig, um deinen kleinen Entdecker zu schützen."
+  },
+  {
+    "id": "1y-health-04",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Das Zahnen wird zwischen 9 und 12 Monaten oft stärker, wenn weitere Zähne durchbrechen. Ein gekühlter (nicht gefrorener) Beißring kann Linderung verschaffen."
+  },
+  {
+    "id": "1y-health-05",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Der erste Zahnarztbesuch deines Babys sollte bis zum ersten Geburtstag oder innerhalb von sechs Monaten nach dem Durchbruch des ersten Zahns stattfinden."
+  },
+  {
+    "id": "1y-health-06",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Mittelohrentzündungen sind in diesem Alter häufig. Achte auf Ohrenziehen, Quengeligkeit, Schlafprobleme oder Fieber und kontaktiere deinen Kinderarzt, wenn du eine vermutest."
+  },
+  {
+    "id": "1y-health-07",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Sobald Zähne da sind, putze sie zweimal täglich mit einer reiskorngroßen Menge Fluorid-Zahnpasta und einer weichen Babyzahnbürste."
+  },
+  {
+    "id": "1y-health-08",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Häufiges Händewaschen ist eine der besten Maßnahmen gegen Krankheiten, besonders jetzt, wo dein Baby immer mehr Oberflächen und Gegenstände erkundet."
+  },
+  {
+    "id": "1y-health-09",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Wenn dein Baby eine leichte Erkältung bekommt, können Kochsalztropfen und ein Nasensauger helfen, die verstopfte Nase zu befreien. Ein Kaltnebel-Luftbefeuchter im Schlafzimmer hilft ebenfalls."
+  },
+  {
+    "id": "1y-health-11",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Bewahre den Impfpass deines Babys an einem festen Ort auf. Du wirst ihn für die Kita-Anmeldung und zukünftige Arztbesuche brauchen."
+  },
+  {
+    "id": "1y-health-12",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Leichte Nebenwirkungen nach Impfungen, wie leichtes Fieber oder Quengeligkeit für ein bis zwei Tage, sind normal und zeigen, dass das Immunsystem reagiert."
+  },
+  {
+    "id": "1y-health-13",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Plattfüße sind in diesem Alter völlig normal. Das Fußgewölbe entwickelt sich in den ersten Lebensjahren und braucht in der Regel keine Behandlung."
+  },
+  {
+    "id": "1y-health-14",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Wenn dein Baby einen hartnäckigen Windelausschlag hat, der sich mit Wundschutzcreme nicht bessert, könnte es sich um eine Pilzinfektion handeln. Frage deinen Kinderarzt nach einer Behandlung."
+  },
+  {
+    "id": "1y-health-15",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Die Grippeimpfung wird jährlich ab dem 6. Monat empfohlen. Wenn dein Baby noch keine bekommen hat, ist es nicht zu spät, sie nachzuholen."
+  },
+  {
+    "id": "1y-play-01",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Fülle einen Behälter mit großen, weichen Gegenständen und lass dein Baby üben, Dinge herauszunehmen und wieder hineinzulegen. Das fördert die Problemlösungsfähigkeit."
+  },
+  {
+    "id": "1y-play-02",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Stelle einen Entdeckerkorb mit sicheren Haushaltsgegenständen verschiedener Texturen, Formen und Gewichte zusammen. Dein Baby wird es lieben, jeden einzelnen zu erkunden."
+  },
+  {
+    "id": "1y-play-03",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Rolle einen Ball mit deinem Baby hin und her. Dieses frühe Wechselspiel fördert soziale Interaktion und das Verfolgen bewegter Gegenstände."
+  },
+  {
+    "id": "1y-play-04",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Lass dein Baby beim Baden mit Wasser spielen und dabei Becher und Behälter zum Umschütten verwenden. Beaufsichtigtes Wasserspiel ist wunderbar für die sensorische Entwicklung."
+  },
+  {
+    "id": "1y-play-05",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Baue einen einfachen Hindernisparcours mit Sofakissen auf dem Boden. Darüber und darum herum zu krabbeln stärkt die Rumpfmuskulatur und das Raumgefühl."
+  },
+  {
+    "id": "1y-play-06",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Singe Lieder mit Handbewegungen wie \"Backe, backe Kuchen\" oder \"Alle meine Entchen\". Dein Baby lernt dabei, Worte mit Bewegungen zu verbinden."
+  },
+  {
+    "id": "1y-play-07",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Biete dicke Wachsmalstifte und Papier für erste Kritzelerfahrungen an. Halte den Stift mit, wenn nötig, und feiere jede Spur, die dein Baby hinterlässt."
+  },
+  {
+    "id": "1y-play-08",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Spiele Musik und tanzt zusammen. Sich im Rhythmus zu bewegen fördert die motorische Entwicklung und ist ein wunderbares gemeinsames Erlebnis."
+  },
+  {
+    "id": "1y-play-09",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Nimm dein Baby mit nach draußen, um Gras, Blätter und Sand zu fühlen. Sinneserfahrungen in der Natur bieten wertvolle Lernmöglichkeiten."
+  },
+  {
+    "id": "1y-play-10",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Stapelbecher oder Stapelringe bringen deinem Baby Größenverhältnisse bei. Zeige ihm, wie man stapelt, und lass es dann selbst ausprobieren."
+  },
+  {
+    "id": "1y-play-11",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Spiele \"Wo ist es hin?\", indem du ein Spielzeug unter einem von zwei Bechern versteckst. Das stärkt Gedächtnis und Problemlösungsfähigkeiten."
+  },
+  {
+    "id": "1y-play-12",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Lass dein Baby auf Töpfen, Pfannen und mit Holzlöffeln trommeln. Krach machen lehrt Ursache und Wirkung und ist endlos unterhaltsam."
+  },
+  {
+    "id": "1y-play-13",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Erzähle den ganzen Tag über, was du gerade tust. \"Jetzt waschen wir deine Hände\" baut den Wortschatz auf, noch bevor dein Baby selbst spricht."
+  },
+  {
+    "id": "1y-play-14",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Versuche beaufsichtigtes Spielen mit sicheren Küchenutensilien wie Messbechern, Silikonspachteln und Plastikschüsseln. Echte Gegenstände faszinieren Babys in diesem Alter."
+  },
+  {
+    "id": "1y-play-15",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Schiebespielzeug mit Griffen motiviert zum Laufenüben und stärkt das Selbstvertrauen kleiner Laufanfänger. Lass dein Baby in seinem eigenen Tempo schieben."
+  },
+  {
+    "id": "1y-safety-01",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Jetzt, wo dein Baby mobil ist, sichere alle Möbel mit Kippschutz an der Wand. Kommoden und Bücherregale sind die häufigsten Kippgefahren."
+  },
+  {
+    "id": "1y-safety-02",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Halte alle kleinen Gegenstände, Münzen und Knopfbatterien außer Reichweite. Alles, was durch eine Toilettenpapierrolle passt, ist eine Erstickungsgefahr."
+  },
+  {
+    "id": "1y-safety-03",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Installiere Schutzgitter oben und unten an Treppen. Klemmbare Gitter reichen unten, aber oben solltest du fest verschraubte Gitter verwenden."
+  },
+  {
+    "id": "1y-safety-04",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Überprüfe, dass der Autositz deines Babys rückwärtsgerichtet und richtig eingebaut ist. Sicherheitsexperten empfehlen, Kinder so lange wie möglich rückwärts fahren zu lassen, bis sie die maximale Größen- oder Gewichtsgrenze des Sitzes erreichen."
+  },
+  {
+    "id": "1y-safety-05",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Lass dein Baby nie unbeaufsichtigt in der Nähe von Wasser, auch nicht für einen Moment. Ertrinken kann schon in {{1 inch|2,5 cm}} Wassertiefe passieren."
+  },
+  {
+    "id": "1y-safety-06",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Decke alle Steckdosen mit Kindersicherungen ab. Krabbelnde Babys werden von Steckdosen auf ihrer Augenhöhe magisch angezogen."
+  },
+  {
+    "id": "1y-safety-07",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Bewahre Reinigungsmittel, Medikamente und Chemikalien in hohen, verschlossenen Schränken auf. Verwende Kindersicherungen an allen niedrigen Schränken, die Gefahrstoffe enthalten."
+  },
+  {
+    "id": "1y-safety-08",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Schneide runde Lebensmittel wie Weintrauben, Kirschtomaten und Würstchen der Länge nach in kleine Stücke. Runde Formen sind die häufigste Erstickungsgefahr für Babys."
+  },
+  {
+    "id": "1y-safety-09",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Stelle deinen Warmwasserbereiter auf {{120°F|49°C}} oder niedriger ein, um Verbrühungen zu vermeiden. Teste das Badewasser immer mit dem Handgelenk oder Ellbogen, bevor du dein Baby hineinlegst."
+  },
+  {
+    "id": "1y-safety-10",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Halte Jalousie- und Vorhangschnüre außer Reichweite oder wechsle zu schnurlosen Fensterabdeckungen. Diese sind eine ernsthafte Strangulationsgefahr."
+  },
+  {
+    "id": "1y-safety-11",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Stelle die Gitterbettmatratze auf die niedrigste Stufe, sobald sich dein Baby hochziehen kann. So wird verhindert, dass es herausklettern oder herausfallen kann."
+  },
+  {
+    "id": "1y-safety-12",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Speichere die Nummer des Giftnotrufs in deinem Telefon. Schneller Zugang ist im Notfall entscheidend."
+  },
+  {
+    "id": "1y-safety-13",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Vermeide Lauflernhilfen mit Rollen, da Sicherheitsexperten davor warnen, dass sie zu Verletzungen beitragen und Babys nicht beim Laufenlernen helfen."
+  },
+  {
+    "id": "1y-safety-14",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Bringe Eckenschützer an scharfen Möbelkanten wie Couchtischen und Kaminsimsen an. Kleine Laufanfänger fallen häufig und treffen dabei oft den Kopf."
+  },
+  {
+    "id": "1y-safety-15",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Beaufsichtige dein Baby immer beim Essen. Bleibe in Armreichweite und lerne Erste Hilfe am Säugling, damit du im Falle eines Erstickens vorbereitet bist."
+  },
+  {
+    "id": "1y-development-16",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby könnte in diesem Alter anfangen, ein oder zwei echte Wörter mit Bedeutung zu verwenden. Feiere jeden Kommunikationsversuch, auch wenn das Wort noch nicht ganz richtig ist."
+  },
+  {
+    "id": "1y-development-17",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Biete deinem Baby einen Formensortierer oder ein Puzzle mit großen Griffen an. Es lernt dabei durch Ausprobieren etwas über Formen und räumliche Zusammenhänge."
+  },
+  {
+    "id": "1y-development-18",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby könnte dir ein Buch bringen, wenn es vorgelesen bekommen möchte. Folge seinem Interesse und lies, was es sich wünscht, um eine lebenslange Liebe zu Büchern aufzubauen."
+  },
+  {
+    "id": "1y-development-19",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Versuche, einfache Einschritt-Anweisungen mit einer Geste zu geben, etwa die Hand auszustrecken und zu sagen: \"Gib mir den Ball.\" Dein Baby lernt, deine Worte mit Handlungen zu verknüpfen."
+  },
+  {
+    "id": "1y-development-20",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dein Baby beginnt zu verstehen, dass Gegenstände Namen haben. Benenne alles um euch herum -- \"Das ist ein Baum\", \"Da ist ein Vogel\" -- das fördert seinen wachsenden Wortschatz."
+  },
+  {
+    "id": "1y-sleep-16",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Um den 12. Monat oder später beginnen manche Babys, von zwei Schläfchen auf eins umzustellen. Erwarte dabei einige Wochen, in denen es an manchen Tagen zwei und an anderen nur eines braucht."
+  },
+  {
+    "id": "1y-sleep-17",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Wenn dein Baby um den 12. Monat auf ein Schläfchen wechselt, lege es am besten gegen 12-13 Uhr hin. Ein früheres Zubettgehen kann die Umstellung überbrücken."
+  },
+  {
+    "id": "1y-sleep-18",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Wenn dein Baby angefangen hat, aus dem Gitterbett zu klettern, stelle die Matratze auf die niedrigste Stufe und entferne alles, was als Tritthilfe dienen könnte."
+  },
+  {
+    "id": "1y-sleep-19",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Widerstehe der Versuchung, Schläfchen für Ausflüge ausfallen zu lassen. Regelmäßiger Tagschlaf führt tatsächlich zu besserem Nachtschlaf und einem zufriedeneren Baby."
+  },
+  {
+    "id": "1y-sleep-20",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Wenn Schlafenszeit-Wutanfälle auftreten, kann eine einfache Countdown-Routine helfen. \"Noch zwei Minuten spielen, dann putzen wir Zähne\" gibt deinem Baby ein Gefühl dafür, was als Nächstes kommt."
+  },
+  {
+    "id": "1y-feeding-16",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Wenn sich dein Baby dem ersten Geburtstag nähert, kannst du anfangen, Vollmilch als Getränk einzuführen. Strebe etwa {{16-24 ounces|475-710 ml}} pro Tag an -- zu viel kann sättigen und die Beikost verdrängen."
+  },
+  {
+    "id": "1y-feeding-17",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Versuche, einen Dip wie Hummus oder Joghurt zum Fingerfood anzubieten. Eintunken macht Spaß und kann unbekannte Lebensmittel ansprechender machen."
+  },
+  {
+    "id": "1y-feeding-18",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Wenn dein Baby darauf besteht, selbst zu essen, lass es. Biete einen vorbeladenen Löffel zum Üben an und iss gemeinsam mit ihm, um zu zeigen, wie es geht."
+  },
+  {
+    "id": "1y-feeding-19",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Wenn es sich richtig anfühlt, beginne mit der Entwöhnung von der Flasche. Milch im Becher zu den Mahlzeiten und Wasser zwischendurch anzubieten erleichtert den Übergang."
+  },
+  {
+    "id": "1y-feeding-20",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Mache dir keine Sorgen, wenn der Appetit deines Babys von Tag zu Tag schwankt. Wachstumsschübe, Zahnen und Aktivität beeinflussen den Hunger. Vertraue seinen Signalen."
+  },
+  {
+    "id": "1y-health-16",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Gelegentliches Zehenspitzengehen ist normal, wenn dein Baby mit der Bewegung experimentiert. Wenn es zur bevorzugten Gangart wird, erwähne es bei deinem Kinderarzt."
+  },
+  {
+    "id": "1y-health-18",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Wenn dein Baby nach dem Probieren eines neuen Lebensmittels einen Ausschlag entwickelt, notiere, was es gegessen hat und wann der Ausschlag aufgetreten ist. Teile das deinem Kinderarzt mit, um mögliche Nahrungsmittelunverträglichkeiten zu erkennen."
+  },
+  {
+    "id": "1y-health-19",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Durchfall durch Magen-Darm-Infekte kann Babys schnell austrocknen. Gib kleine, häufige Schlucke einer oralen Rehydrationslösung und kontaktiere deinen Kinderarzt, wenn es länger als einen Tag anhält."
+  },
+  {
+    "id": "1y-health-20",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Wenn dein Baby anfängt zu laufen, rechne mit blauen Flecken an Schienbeinen und Stirn. Das gehört zum Laufenlernen dazu, aber schließe nach härteren Stürzen immer eine Kopfverletzung aus."
+  },
+  {
+    "id": "1y-play-16",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Gib deinem Baby ein Spielzeug mit Türchen, Riegeln oder Reißverschlüssen zum Öffnen und Schließen. Solche feinmotorischen Herausforderungen halten es beschäftigt und fördern die Geschicklichkeit."
+  },
+  {
+    "id": "1y-play-17",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Richte ein niedriges Regal mit einigen wenigen, wechselnden Spielzeugen ein statt einer großen Spielzeugkiste. Weniger Auswahl auf einmal hilft deinem Baby, sich zu konzentrieren und intensiver mit jedem Spielzeug zu spielen."
+  },
+  {
+    "id": "1y-play-18",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Dein Baby könnte anfangen, so zu tun als ob -- ein Kuscheltier füttern oder eine Puppe ins Bett legen. Mach mit und baue auf seinen Ideen auf, um die Fantasie zu fördern."
+  },
+  {
+    "id": "1y-play-20",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Puste Seifenblasen und lass dein Baby sie fangen und zerplatzen. Das fördert die visuelle Verfolgung, das Greifen und bringt kleine Laufanfänger in Bewegung."
+  },
+  {
+    "id": "1y-safety-16",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Wenn dein Baby anfängt zu laufen, schützen Schuhe mit flexiblen, rutschfesten Sohlen seine Füße draußen. Drinnen sind Barfußlaufen oder Stoppersocken am besten fürs Gleichgewicht."
+  },
+  {
+    "id": "1y-safety-17",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Bewahre Waschmittel-Pods sicher verschlossen auf. Ihre bunten Farben ziehen Babys an, und ein Biss hinein kann schwere Verätzungen in Mund und Rachen verursachen."
+  },
+  {
+    "id": "1y-safety-18",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Überprüfe, ob die Spielzeuge deines Babys keine Kleinteile haben, die sich lösen können. Kontrolliere Spielzeug regelmäßig auf Risse, lockere Teile oder abblätternde Farbe."
+  },
+  {
+    "id": "1y-safety-19",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Wenn du einen Kamin oder Heizstrahler hast, verwende ein Schutzgitter oder eine Absperrung. Selbst warme Oberflächen können die empfindliche Babyhaut bei Berührung verbrennen."
+  },
+  {
+    "id": "1y-safety-20",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Achte darauf, dass Snacks älterer Kinder nicht in die Reichweite deines Babys gelangen. Popcorn, Nüsse, harte Bonbons und Kaugummi sind Erstickungsgefahren, die leicht übersehen werden, wenn Geschwister teilen."
+  }
+]

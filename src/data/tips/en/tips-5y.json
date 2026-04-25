@@ -1,0 +1,512 @@
+[
+  {
+    "id": "5y-development-01",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child can likely count to 20 or beyond and may start understanding simple addition. Use real objects — \"You have 3 grapes, I'll give you 2 more\" — to make math tangible."
+  },
+  {
+    "id": "5y-development-02",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Writing letters and their name with growing control is a big accomplishment. Offer lined paper and celebrate progress rather than perfection."
+  },
+  {
+    "id": "5y-development-03",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child is developing empathy and can recognize when others are sad or upset. Talk about feelings in books and real life to strengthen this skill."
+  },
+  {
+    "id": "5y-development-04",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Skipping, climbing confidently, and throwing a ball overhand show that gross motor skills are well-developed. Keep offering varied physical challenges."
+  },
+  {
+    "id": "5y-development-05",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child may start to understand the concept of time — today, tomorrow, yesterday. A simple calendar can help them grasp days, weeks, and upcoming events."
+  },
+  {
+    "id": "5y-development-06",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child can follow multi-step instructions and remember rules. Give them small responsibilities like setting the table to build confidence."
+  },
+  {
+    "id": "5y-development-07",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Friendships are becoming more stable and meaningful. Your child may have a best friend and start navigating conflicts more independently."
+  },
+  {
+    "id": "5y-development-08",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child may start sounding out simple words or recognizing sight words. Reading together nightly remains the single best literacy activity."
+  },
+  {
+    "id": "5y-development-09",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child can draw recognizable pictures with details like houses with windows and people with fingers. These drawings reflect how they understand their world."
+  },
+  {
+    "id": "5y-development-10",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Attention span is growing — your child can focus on a single activity for 10-15 minutes. Provide opportunities for sustained focus without interruption."
+  },
+  {
+    "id": "5y-development-11",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child may start comparing themselves to peers. Emphasize effort over outcome and celebrate individual strengths to build healthy self-esteem."
+  },
+  {
+    "id": "5y-development-12",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Rhyming, clapping syllables, and identifying beginning sounds are pre-reading skills developing now. Play word games to reinforce them naturally."
+  },
+  {
+    "id": "5y-development-13",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child is learning to take turns in conversation — listening, then responding. Model this by giving them your full attention when they speak."
+  },
+  {
+    "id": "5y-development-14",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Problem-solving becomes more sophisticated. When your child faces a challenge, guide them through thinking of solutions rather than solving it for them."
+  },
+  {
+    "id": "5y-development-15",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Your child can understand and tell simple jokes. Humor is a complex cognitive skill that involves surprise, wordplay, and social awareness."
+  },
+  {
+    "id": "5y-sleep-01",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Your child needs 10-13 hours of sleep per 24 hours. Most children this age have dropped naps, but some 4-year-olds may still need one. Protect bedtime even on busy days."
+  },
+  {
+    "id": "5y-sleep-02",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "A winding-down period of 30 minutes before bed — reading, quiet talk, gentle stretching — helps your child's brain shift from active to sleep mode."
+  },
+  {
+    "id": "5y-sleep-03",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "If your child is starting school, consistent sleep becomes even more critical. Tired children have difficulty concentrating, learning, and managing emotions."
+  },
+  {
+    "id": "5y-sleep-04",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Nightmares may still happen and often involve themes from daily life. Talk about the dream briefly, offer comfort, and help them feel safe."
+  },
+  {
+    "id": "5y-sleep-05",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Your child can start taking ownership of parts of their bedtime routine — choosing pajamas, brushing teeth, picking a book. Independence builds cooperation."
+  },
+  {
+    "id": "5y-sleep-07",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "If your child resists bedtime because they want more time with you, try building in 10 minutes of special one-on-one time before the routine starts."
+  },
+  {
+    "id": "5y-sleep-08",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Keep the bedroom cool, dark, and quiet. Your child may want to help arrange their room for sleep — choosing where the nightlight goes or how pillows are placed."
+  },
+  {
+    "id": "5y-sleep-09",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Avoid screens for at least one hour before bedtime. The stimulation and blue light make it harder for your child's brain to prepare for sleep."
+  },
+  {
+    "id": "5y-sleep-10",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "If your child wakes early and can't fall back asleep, teach them to look at books quietly in bed until it's time to get up."
+  },
+  {
+    "id": "5y-sleep-11",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Big life transitions — starting school, a new sibling, or moving — can temporarily disrupt sleep. Extra comfort and routine consistency help them adjust."
+  },
+  {
+    "id": "5y-sleep-12",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "A gratitude practice at bedtime — naming three things they're thankful for — can help your child fall asleep with a positive mindset."
+  },
+  {
+    "id": "5y-sleep-13",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "If your child snores regularly or pauses breathing during sleep, mention it to your pediatrician. It could indicate sleep apnea, which is treatable."
+  },
+  {
+    "id": "5y-sleep-14",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Weekend bedtimes shouldn't differ by more than an hour from weeknights. Large shifts in schedule make Monday mornings much harder."
+  },
+  {
+    "id": "5y-sleep-15",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Physical activity during the day significantly improves sleep quality. Even on rainy days, find ways for your child to move — dancing, indoor obstacle courses, or yoga."
+  },
+  {
+    "id": "5y-feeding-01",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Your child can use a knife and fork together with increasing skill. Let them practice cutting soft foods like bananas or pancakes at meals."
+  },
+  {
+    "id": "5y-feeding-02",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "If your child is starting school, involve them in packing their lunch. Children eat better when they've helped choose and prepare their food."
+  },
+  {
+    "id": "5y-feeding-03",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Teach your child about food groups in simple terms — \"grow foods\" (protein), \"go foods\" (carbs), \"glow foods\" (fruits and vegetables) — to build nutrition awareness."
+  },
+  {
+    "id": "5y-feeding-04",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Your child needs about 1,200-1,600 calories per day. Portion sizes should be roughly a quarter to a third of adult servings."
+  },
+  {
+    "id": "5y-feeding-05",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Picky eating often improves around age 5 as children become more willing to try new foods. Continue offering variety without pressure."
+  },
+  {
+    "id": "5y-feeding-06",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Your child can help with real cooking tasks — measuring ingredients, cracking eggs, mixing batter. These skills build math concepts and independence."
+  },
+  {
+    "id": "5y-feeding-07",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "If your child eats lunch at school, talk about what they ate and what they liked. This keeps you connected to their nutrition and builds conversation skills."
+  },
+  {
+    "id": "5y-feeding-08",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Iron needs remain important at this age. Lean meats, beans, spinach, and iron-fortified cereals help prevent deficiency, which can affect energy and focus."
+  },
+  {
+    "id": "5y-feeding-09",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Peer influence on eating starts now. Your child may want to try foods they see friends eating — use this as an opportunity to introduce new things."
+  },
+  {
+    "id": "5y-feeding-10",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Teach your child to drink water when thirsty rather than reaching for juice or flavored drinks. Good hydration habits formed now last a lifetime."
+  },
+  {
+    "id": "5y-feeding-11",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Family meals together — even 3-4 times a week — are linked to better nutrition, stronger vocabulary, and closer family relationships."
+  },
+  {
+    "id": "5y-feeding-12",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Talk about food positively. Avoid labeling foods as \"good\" or \"bad\" — instead, explain that some foods are for everyday eating and some are for special occasions."
+  },
+  {
+    "id": "5y-feeding-13",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Your child can start understanding food safety basics like washing produce, not eating food that fell on the floor outside, and checking with adults about unfamiliar foods."
+  },
+  {
+    "id": "5y-feeding-14",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "If your child is a slow eater, allow adequate time at meals without rushing them. Pressuring them to eat faster can create anxiety around mealtimes."
+  },
+  {
+    "id": "5y-feeding-15",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Protein at breakfast — eggs, yogurt, nut butter on toast — helps your child stay focused and energized through the morning, especially on school days."
+  },
+  {
+    "id": "5y-health-01",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "A well-child visit during this stage is important. Your pediatrician will check vision, hearing, growth, and developmental readiness, and can provide any documentation needed for school entry."
+  },
+  {
+    "id": "5y-health-03",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "If your child wears glasses, make sure they actually wear them consistently. Children adapt quickly and their vision development depends on proper correction."
+  },
+  {
+    "id": "5y-health-04",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Your child may start losing baby teeth soon. Explain that this is a normal and exciting part of growing up to ease any worry."
+  },
+  {
+    "id": "5y-health-05",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Hand washing before meals, after bathroom use, and after playing outside is a habit that dramatically reduces illness. Make sure your child does it consistently."
+  },
+  {
+    "id": "5y-health-06",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "If your child has anxiety about starting school or new activities, validate their feelings and practice the new situation through role play or visiting beforehand."
+  },
+  {
+    "id": "5y-health-07",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Check with your pediatrician to make sure your child's immunizations are up to date. Some vaccines may be required before starting school."
+  },
+  {
+    "id": "5y-health-08",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Head lice can spread in school settings. Check your child's hair weekly, especially behind the ears and at the nape of the neck."
+  },
+  {
+    "id": "5y-health-09",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Establish a daily flossing routine. Your child's teeth are likely close together now, and flossing prevents cavities between teeth."
+  },
+  {
+    "id": "5y-health-10",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Encourage your child to tell you when something hurts or doesn't feel right. At this age, they can start describing symptoms, which helps you respond appropriately."
+  },
+  {
+    "id": "5y-health-11",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Warts are common in school-age children and are caused by a virus. They're harmless but can be treated if they bother your child."
+  },
+  {
+    "id": "5y-health-12",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "If your child frequently complains of headaches or squints at books and screens, schedule an eye exam. Vision needs can change rapidly at this age."
+  },
+  {
+    "id": "5y-health-13",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Physical activity protects your child's mental health as well as their body. Active children show lower rates of anxiety and better emotional regulation."
+  },
+  {
+    "id": "5y-health-14",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Teach your child basic hygiene independence — covering coughs, washing hands, using tissues. These skills help them stay healthy in group settings."
+  },
+  {
+    "id": "5y-play-01",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Board games with simple strategy — like memory, dominoes, or checkers — build critical thinking, patience, and good sportsmanship."
+  },
+  {
+    "id": "5y-play-02",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Your child may be ready to learn to ride a bicycle without training wheels. Start on a flat, soft surface and let them build confidence at their own pace."
+  },
+  {
+    "id": "5y-play-03",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Encourage your child to create their own stories — drawn, dictated, or written. Storytelling develops literacy, creativity, and emotional processing."
+  },
+  {
+    "id": "5y-play-04",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Group sports or movement classes can introduce teamwork and physical fitness. Focus on fun and participation rather than competition at this age."
+  },
+  {
+    "id": "5y-play-05",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Building elaborate structures with blocks, boxes, or construction sets teaches engineering concepts, planning, and persistence."
+  },
+  {
+    "id": "5y-play-06",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Your child may enjoy simple cooking projects. Making a smoothie, assembling a sandwich, or decorating cookies combines math, reading, and fine motor skills."
+  },
+  {
+    "id": "5y-play-07",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Nature exploration — collecting rocks, identifying birds, or examining insects — nurtures curiosity and scientific thinking."
+  },
+  {
+    "id": "5y-play-08",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Musical instruments or rhythm activities develop coordination, math skills, and self-expression. Even a simple drum or xylophone offers rich learning."
+  },
+  {
+    "id": "5y-play-09",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Obstacle courses that include crawling, jumping, balancing, and throwing challenge multiple physical skills and can be set up with household items."
+  },
+  {
+    "id": "5y-play-11",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Role play with themes like doctor, teacher, or firefighter helps your child process real-world experiences and practice social scenarios."
+  },
+  {
+    "id": "5y-play-12",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Letter and number games — hopscotch with letters, counting jumping jacks — make early academics physical and fun."
+  },
+  {
+    "id": "5y-play-13",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Give your child a magnifying glass and let them explore the backyard up close. Observation skills developed through play translate to science and reading readiness."
+  },
+  {
+    "id": "5y-play-14",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Encourage your child to play with children of different ages. Younger kids help them practice leadership; older kids challenge them to grow."
+  },
+  {
+    "id": "5y-play-15",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Free, unstructured play remains essential even as scheduled activities increase. Protect daily time for your child to play however they choose."
+  },
+  {
+    "id": "5y-safety-01",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Your child should know their full name, your phone number, and their home address. Practice regularly until they can recite all three from memory."
+  },
+  {
+    "id": "5y-safety-02",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Teach pedestrian safety: stop at every curb, look left-right-left, and walk (don't run) across streets. Practice together on every outing."
+  },
+  {
+    "id": "5y-safety-03",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Your child should remain in a car seat or booster until they're at least {{4 feet 9 inches|145 cm}} tall, which is typically not until age 8-12."
+  },
+  {
+    "id": "5y-safety-05",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Teach your child the difference between a secret and a surprise. Secrets that make them feel uncomfortable should always be told to a trusted adult."
+  },
+  {
+    "id": "5y-safety-06",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "If your child walks to school or a bus stop, walk the route together multiple times. Identify safe spots and practice what to do if they feel unsafe."
+  },
+  {
+    "id": "5y-safety-07",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Helmets are non-negotiable for biking, skating, and scootering. Your child should see you wearing one too — modeling matters more than rules."
+  },
+  {
+    "id": "5y-safety-08",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Begin simple internet safety conversations. Even if they're not online alone, teach that personal information is private and screens are used in shared spaces."
+  },
+  {
+    "id": "5y-safety-09",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Teach your child what to do in an emergency: call emergency services, state their name and address, and stay on the line. Practice with a play phone."
+  },
+  {
+    "id": "5y-safety-10",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Your child can learn basic fire safety — stop, drop, and roll; stay low in smoke; meet at the family meeting point. Practice your home escape plan twice a year."
+  },
+  {
+    "id": "5y-safety-11",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "When visiting other homes, teach your child to ask before touching things or going into unfamiliar rooms. This builds respect and keeps them safe."
+  },
+  {
+    "id": "5y-safety-12",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Ensure your child understands that no adult should ask them to keep a secret from their parents. Open communication is the best protection."
+  },
+  {
+    "id": "5y-safety-13",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Review playground rules: no pushing, wait your turn, and tell an adult if someone is being unsafe. Your child can start self-advocating in these situations."
+  },
+  {
+    "id": "5y-safety-14",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "If your child plays outside independently, set clear boundaries for how far they can go and check in regularly. Gradually expand independence as they demonstrate responsibility."
+  },
+  {
+    "id": "5y-safety-15",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Keep an updated photo of your child on your phone. In the unlikely event they get lost in a crowd, a current photo helps others help you find them quickly."
+  }
+]

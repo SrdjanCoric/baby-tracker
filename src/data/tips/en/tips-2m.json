@@ -1,0 +1,872 @@
+[
+  {
+    "id": "2m-development-01",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby may start briefly lifting their head during tummy time. Even a few seconds counts as great progress!"
+  },
+  {
+    "id": "2m-development-02",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Newborns can see best at about {{8-12 inches|20-30 cm}} away, roughly the distance to your face during feeding. Make eye contact often."
+  },
+  {
+    "id": "2m-development-03",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby's jerky arm and leg movements will gradually become smoother over the next few weeks as their nervous system matures."
+  },
+  {
+    "id": "2m-development-04",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Try holding a high-contrast black and white image about {{10 inches|25 cm}} from your baby's face. They're drawn to bold patterns right now."
+  },
+  {
+    "id": "2m-development-05",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby already recognizes your voice from their time in the womb. Talking and singing to them strengthens that bond and supports language development."
+  },
+  {
+    "id": "2m-development-06",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Around 6-8 weeks, you might see your baby's first real social smile. It's not gas this time — they're genuinely responding to you!"
+  },
+  {
+    "id": "2m-development-07",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Gently place your finger in your baby's palm and feel their grasp reflex. This involuntary grip will evolve into intentional reaching in the coming months."
+  },
+  {
+    "id": "2m-development-08",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your newborn's brain is forming over 1 million new neural connections every second. Every cuddle and conversation is building their brain."
+  },
+  {
+    "id": "2m-development-09",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Try slowly moving a colorful toy in an arc in front of your baby. Around 6 weeks, they may start tracking it with their eyes."
+  },
+  {
+    "id": "2m-development-10",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Those little cooing sounds your baby makes are their first attempts at communication. Coo back — you're having your first conversations!"
+  },
+  {
+    "id": "2m-development-11",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Skin-to-skin contact isn't just comforting — it regulates your baby's heart rate, temperature, and breathing while promoting bonding."
+  },
+  {
+    "id": "2m-development-12",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby can distinguish your smell from other adults. This is one of their first ways of recognizing you."
+  },
+  {
+    "id": "2m-development-13",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "If your baby seems startled by loud noises, that's a healthy reflex. Their hearing is well-developed, even if their vision is still catching up."
+  },
+  {
+    "id": "2m-development-14",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Alternate which side you hold your baby on during feeding and carrying. This encourages them to turn their head both ways and supports neck strength."
+  },
+  {
+    "id": "2m-development-15",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby may briefly open their hands and spread their fingers. This is an early step toward the hand control they'll need later for grasping toys."
+  },
+  {
+    "id": "2m-development-16",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby may start turning toward familiar voices, especially yours. Try speaking from different spots in the room and watch them search for you."
+  },
+  {
+    "id": "2m-development-17",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "When your baby stares at the ceiling fan or a light fixture, they're practicing focus and visual attention. These early gazing moments are real brain work."
+  },
+  {
+    "id": "2m-development-18",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Around 6 weeks, your baby's cry starts to differentiate. You may begin to notice a distinct hungry cry versus a tired or uncomfortable cry."
+  },
+  {
+    "id": "2m-development-19",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Hold your baby upright against your shoulder and let them practice lifting their head to look around. This builds neck muscles in a new position."
+  },
+  {
+    "id": "2m-development-20",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby may briefly calm down when they see your face or hear your voice. This early self-regulation is a sign of the strong bond you're building."
+  },
+  {
+    "id": "2m-development-21",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Try gently touching your baby's cheek and watch them turn toward your hand. This rooting reflex helps them find the breast, but it also shows their reflexes are working well."
+  },
+  {
+    "id": "2m-development-22",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby's legs may straighten a bit more when you hold them upright. They can't bear weight yet, but these leg movements are strengthening for later milestones."
+  },
+  {
+    "id": "2m-development-23",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "If your baby seems to prefer looking to one side, gently encourage them to turn the other way by placing yourself or interesting things on their less-favored side."
+  },
+  {
+    "id": "2m-development-24",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Notice how your baby gets quiet and alert when something new catches their attention. These focused moments are when deep learning is happening."
+  },
+  {
+    "id": "2m-development-25",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Your baby may start making vowel-like sounds such as \"ah\" and \"oh\" around 6-8 weeks. Repeat these sounds back to encourage more vocalization."
+  },
+  {
+    "id": "2m-sleep-01",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Newborns sleep 14-17 hours a day but in short bursts. It's completely normal for them to wake every 2-3 hours around the clock."
+  },
+  {
+    "id": "2m-sleep-02",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Always place your baby on their back to sleep, on a firm, flat surface with no loose blankets, pillows, or stuffed animals."
+  },
+  {
+    "id": "2m-sleep-03",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Your baby doesn't know the difference between day and night yet. Help them learn by keeping daytime bright and active, and nighttime dark and calm."
+  },
+  {
+    "id": "2m-sleep-04",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Swaddling can help your newborn feel secure and reduce the startle reflex that wakes them. Make sure the swaddle is snug around the chest but allows hip movement."
+  },
+  {
+    "id": "2m-sleep-05",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "A simple bedtime routine even now — dim lights, quiet voice, a feeding — helps your baby start associating cues with sleep time."
+  },
+  {
+    "id": "2m-sleep-08",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "If your baby falls asleep in a car seat, swing, or bouncer, move them to a firm, flat sleep surface as soon as possible."
+  },
+  {
+    "id": "2m-sleep-09",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Newborn wake windows are typically 45-90 minutes, shorter in the early weeks and gradually lengthening. Watch for sleepy cues like yawning and looking away before they get overtired."
+  },
+  {
+    "id": "2m-sleep-10",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "It's normal for newborns to be noisy sleepers. Grunting, sighing, and brief stirring don't always mean they need to be picked up."
+  },
+  {
+    "id": "2m-sleep-11",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "If your baby fights sleep, try the 5 S's: swaddle, side/stomach hold (while awake), shush, swing, and suck. These mimic the womb environment."
+  },
+  {
+    "id": "2m-sleep-12",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Don't worry about \"bad habits\" at this age. If nursing, rocking, or holding your baby to sleep works, it's perfectly fine right now."
+  },
+  {
+    "id": "2m-sleep-13",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Keep nighttime feedings and diaper changes low-key. Use dim light, speak softly, and avoid stimulating play to help your baby learn that night is for sleeping."
+  },
+  {
+    "id": "2m-sleep-14",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Your baby's longest stretch of sleep may only be 3-4 hours at this age, and that's perfectly normal. Longer stretches will come."
+  },
+  {
+    "id": "2m-sleep-15",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Dress your baby in one layer more than you'd wear comfortably. Overheating is a SIDS risk factor, so check that they feel warm but not sweaty at the chest."
+  },
+  {
+    "id": "2m-sleep-16",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "A pacifier offered at sleep time may help reduce SIDS risk. If breastfeeding, consider waiting until nursing is well established before introducing one."
+  },
+  {
+    "id": "2m-sleep-17",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Your baby may have their days and nights mixed up in the early weeks. Expose them to natural daylight during awake periods to help reset their internal clock."
+  },
+  {
+    "id": "2m-sleep-18",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "If your baby only sleeps when held, try warming the crib sheet with a heating pad (removed before placing baby) so the surface isn't a cold shock."
+  },
+  {
+    "id": "2m-sleep-19",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Newborns spend about half their sleep in REM (active sleep), which is why they twitch, smile, and make faces. This active sleep is essential for brain development."
+  },
+  {
+    "id": "2m-sleep-20",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "It's okay to wake a sleeping newborn for a feeding if they've gone more than 3-4 hours, especially in the first two weeks while establishing weight gain."
+  },
+  {
+    "id": "2m-sleep-21",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Try laying your baby down when they're drowsy rather than fully asleep. Even if it doesn't work every time, it gently introduces the skill of falling asleep in their crib."
+  },
+  {
+    "id": "2m-sleep-22",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Fans in the nursery can help with air circulation and have been associated with a lower risk of SIDS. A gentle ceiling fan on low works well."
+  },
+  {
+    "id": "2m-sleep-23",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Sleep when your baby sleeps is classic advice for a reason. Even short naps help you recover, and the laundry really can wait."
+  },
+  {
+    "id": "2m-sleep-24",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "If your baby wakes frequently from the Moro (startle) reflex, a snug swaddle can help contain those involuntary arm movements and keep them settled."
+  },
+  {
+    "id": "2m-sleep-25",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Every baby has different sleep needs. Some newborns sleep closer to 14 hours a day while others sleep closer to 17, and both can be perfectly normal."
+  },
+  {
+    "id": "2m-feeding-01",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Newborns typically feed 8-12 times per day. Frequent feeding is normal and helps establish your milk supply if breastfeeding."
+  },
+  {
+    "id": "2m-feeding-02",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Watch for hunger cues like rooting, hand-to-mouth movements, and lip smacking. Crying is actually a late hunger signal."
+  },
+  {
+    "id": "2m-feeding-03",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "If breastfeeding, a good latch shouldn't hurt. If you feel pinching or pain, gently break the latch with your finger and try again."
+  },
+  {
+    "id": "2m-feeding-04",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Cluster feeding — when your baby wants to eat very frequently for several hours — is normal, especially in the evenings. It helps boost your milk supply."
+  },
+  {
+    "id": "2m-feeding-05",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Formula-fed newborns typically take {{2-3 ounces|60-90 ml}} per feeding every 3-4 hours. Let your baby guide the amount rather than forcing them to finish a bottle."
+  },
+  {
+    "id": "2m-feeding-06",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Count wet diapers to know if your baby is getting enough milk. By day 5, expect at least 6 wet diapers in 24 hours."
+  },
+  {
+    "id": "2m-feeding-07",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Burp your baby midway through and after each feeding. Try holding them upright against your shoulder or sitting them up with chin support."
+  },
+  {
+    "id": "2m-feeding-08",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Spit-up is very common and usually not a concern. If your baby is gaining weight well and seems comfortable, occasional spit-up is normal."
+  },
+  {
+    "id": "2m-feeding-10",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Breastfed babies' stools are typically yellow, seedy, and loose. This is completely normal and not diarrhea."
+  },
+  {
+    "id": "2m-feeding-11",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Growth spurts around 2-3 weeks and 6 weeks may make your baby want to feed more often. This usually settles in a day or two."
+  },
+  {
+    "id": "2m-feeding-12",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "If breastfeeding feels overwhelming, even partial breastfeeding combined with formula provides benefits. Fed is best."
+  },
+  {
+    "id": "2m-feeding-13",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Paced bottle feeding — holding the bottle more horizontally and pausing frequently — helps prevent overfeeding and is easier on your baby's digestion."
+  },
+  {
+    "id": "2m-feeding-14",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Vitamin D drops (400 IU daily) are recommended for all breastfed babies starting in the first few days of life, since breast milk alone doesn't provide enough."
+  },
+  {
+    "id": "2m-feeding-16",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "If your baby gets fussy at the breast in the evening, it doesn't necessarily mean low supply. Milk flow is often slower at night, but the fat content is higher."
+  },
+  {
+    "id": "2m-feeding-17",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Breast milk changes composition throughout the day and even during a single feeding. Foremilk is thinner and hydrating, while hindmilk is richer and more filling."
+  },
+  {
+    "id": "2m-feeding-18",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "If you notice your baby gulping, pulling off the breast, or choking during letdown, try reclining while nursing to slow the flow with gravity."
+  },
+  {
+    "id": "2m-feeding-19",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Formula-fed babies may go longer between feedings than breastfed babies because formula takes longer to digest. Both patterns are healthy."
+  },
+  {
+    "id": "2m-feeding-20",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "If you're returning to work and plan to pump, start practicing with a pump a few weeks beforehand so you and your baby can adjust to the routine."
+  },
+  {
+    "id": "2m-feeding-21",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "A lactation consultant can be incredibly helpful if breastfeeding is painful or frustrating. Check whether this support is available through your healthcare provider."
+  },
+  {
+    "id": "2m-feeding-22",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Your baby's weight may dip slightly in the first few days after birth, then recover by about 10-14 days. Your pediatrician will monitor this closely."
+  },
+  {
+    "id": "2m-feeding-23",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Never microwave breast milk or formula — it creates hot spots that can burn your baby's mouth. Warm bottles in a bowl of warm water instead."
+  },
+  {
+    "id": "2m-feeding-24",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "If your baby seems gassy after feedings, try keeping them upright for 10-15 minutes afterward. Gentle tummy massage in a clockwise motion can also help."
+  },
+  {
+    "id": "2m-feeding-25",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Feeding your baby on demand rather than on a strict schedule is recommended in the early weeks. Your baby is the best judge of when they're hungry."
+  },
+  {
+    "id": "2m-health-01",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Vaccinations are one of the most important ways to protect your baby. Talk to your pediatrician about the recommended schedule so your baby stays on track."
+  },
+  {
+    "id": "2m-health-02",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "For a newborn under 3 months, a rectal temperature of {{100.4°F|38°C}} or higher is an emergency. Call your pediatrician immediately."
+  },
+  {
+    "id": "2m-health-03",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Keep your baby's umbilical cord stump clean and dry. It usually falls off within 1-3 weeks. Fold the diaper below it to let air circulate."
+  },
+  {
+    "id": "2m-health-04",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Cradle cap — flaky, yellowish patches on your baby's scalp — is harmless and common. Gently brushing with a soft brush after bath time can help."
+  },
+  {
+    "id": "2m-health-05",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Baby acne, tiny white bumps, and blotchy skin are all normal in the first weeks. Your baby's skin is adjusting to life outside the womb."
+  },
+  {
+    "id": "2m-health-06",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "A rectal thermometer gives the most accurate reading for babies under 3 months. Keep one in your baby care kit."
+  },
+  {
+    "id": "2m-health-07",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Limit your newborn's exposure to crowds and sick visitors in the first 2 months while their immune system is still developing."
+  },
+  {
+    "id": "2m-health-08",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Newborn jaundice (yellowish skin) is common and usually resolves on its own. If the yellowing seems to spread or deepen, let your doctor know."
+  },
+  {
+    "id": "2m-health-09",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Write down any questions you have for your pediatrician between visits so you don't forget them. No question is too small when it comes to your baby's health."
+  },
+  {
+    "id": "2m-health-10",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Tummy time while awake helps prevent flat spots on your baby's head. If you notice persistent flattening on one side, mention it at your next checkup."
+  },
+  {
+    "id": "2m-health-11",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "It's normal for newborns to sneeze frequently. They're clearing their tiny nasal passages, not necessarily getting sick."
+  },
+  {
+    "id": "2m-health-12",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Use a bulb syringe or nasal aspirator with saline drops to gently clear a stuffy nose. Newborns are obligate nose breathers and can struggle with congestion."
+  },
+  {
+    "id": "2m-health-13",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Wash your hands frequently before handling your baby, and ask visitors to do the same. This is one of the best ways to prevent illness."
+  },
+  {
+    "id": "2m-health-14",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Mild fussiness after vaccines is normal. Comfort your baby with extra cuddles, and ask your pediatrician about infant pain relief if needed."
+  },
+  {
+    "id": "2m-health-15",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Hiccups are very common in newborns and don't bother them the way they bother adults. They usually go away on their own."
+  },
+  {
+    "id": "2m-health-16",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Newborns don't need daily baths. Two to three times a week is plenty, as frequent bathing can dry out their delicate skin."
+  },
+  {
+    "id": "2m-health-17",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "If your baby has a blocked tear duct (watery or slightly crusty eye), gently massage the inner corner of the eye downward a few times a day. Most clear up by 12 months."
+  },
+  {
+    "id": "2m-health-18",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Trim your baby's fingernails while they're sleeping to avoid nicks. Use a baby nail file or small clippers and cut straight across to prevent ingrown nails."
+  },
+  {
+    "id": "2m-health-19",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "If your baby spits up forcefully or seems in pain after feeding, mention it to your pediatrician. There's a difference between normal spit-up and reflux that needs attention."
+  },
+  {
+    "id": "2m-health-20",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Use fragrance-free, dye-free laundry detergent for your baby's clothes and bedding. Their skin is sensitive and can easily react to harsh chemicals."
+  },
+  {
+    "id": "2m-health-21",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Your baby's soft spot (fontanelle) is normal and safe to gently touch. It may pulse slightly, which is just the blood flow beneath. A sunken or bulging fontanelle should be checked by your doctor."
+  },
+  {
+    "id": "2m-health-23",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Ask anyone who will be around your newborn to make sure their vaccinations are up to date, especially whooping cough and flu. This \"cocoon\" of protection helps keep your baby safe."
+  },
+  {
+    "id": "2m-health-24",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Dry skin and peeling in the first few weeks is normal, especially for babies born past their due date. A fragrance-free moisturizer can help if it seems bothersome."
+  },
+  {
+    "id": "2m-health-25",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Your baby's breathing may seem irregular, with fast breaths followed by pauses of a few seconds. This periodic breathing is normal for newborns as long as they don't turn blue."
+  },
+  {
+    "id": "2m-play-01",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Tummy time is the most important \"exercise\" for your newborn. Start with 1-2 minutes a few times a day and gradually increase as they get stronger."
+  },
+  {
+    "id": "2m-play-02",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "If your baby doesn't love tummy time on the floor, try laying them on your chest while you recline. The closeness to your face makes it more enjoyable."
+  },
+  {
+    "id": "2m-play-03",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Slowly move your face from side to side while your baby watches. This helps strengthen their eye muscles and encourages head turning."
+  },
+  {
+    "id": "2m-play-04",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Narrate your day to your baby: \"Now we're changing your diaper. Here's the warm water.\" This constant talking builds early language foundations."
+  },
+  {
+    "id": "2m-play-05",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Gently bicycle your baby's legs while they lie on their back. This is fun for them and can also help relieve gas."
+  },
+  {
+    "id": "2m-play-06",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Place a small unbreakable mirror near your baby during tummy time. Even though they don't recognize themselves yet, faces are fascinating to them."
+  },
+  {
+    "id": "2m-play-07",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Sing nursery rhymes or simple songs. The rhythm and repetition are wonderful for your baby's developing brain, and they love the sound of your voice."
+  },
+  {
+    "id": "2m-play-08",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Let your baby grasp your finger and gently pull them slightly toward sitting. This mini \"workout\" builds core strength (always support their head)."
+  },
+  {
+    "id": "2m-play-09",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Try different textures — a soft blanket, a silky scarf, a terry cloth — against your baby's hands and cheeks for gentle sensory exploration."
+  },
+  {
+    "id": "2m-play-10",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Take your baby outside for fresh air and a change of scenery. The natural light, sounds, and gentle breeze provide wonderful sensory stimulation."
+  },
+  {
+    "id": "2m-play-11",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Hang a simple mobile above the changing table or play area. Your baby will enjoy gazing up at the gentle movement and contrasting colors."
+  },
+  {
+    "id": "2m-play-12",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Read a board book to your baby. It's never too early! The sound of your voice and the close contact are what matter most right now."
+  },
+  {
+    "id": "2m-play-13",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Gently massage your baby's arms, legs, and tummy with a baby-safe lotion. This soothing touch supports body awareness and bonding."
+  },
+  {
+    "id": "2m-play-14",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Make exaggerated facial expressions — big smiles, wide eyes, open mouth — close to your baby's face. They're wired to study and eventually imitate faces."
+  },
+  {
+    "id": "2m-play-15",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "During tummy time, place a rolled-up towel under your baby's chest for extra support. This slight boost can make the position more comfortable."
+  },
+  {
+    "id": "2m-play-16",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Gently clap your baby's hands together while singing a rhythmic song. This introduces them to coordinated movement and the joy of rhythm."
+  },
+  {
+    "id": "2m-play-17",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Try holding your baby in different positions — over your forearm face-down, upright on your shoulder, or cradled in your lap. Each gives them a new perspective on the world."
+  },
+  {
+    "id": "2m-play-18",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Softly shake a rattle near one of your baby's ears, then the other. They'll practice turning toward the sound, which strengthens both neck muscles and listening skills."
+  },
+  {
+    "id": "2m-play-19",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Place your baby on their back under a play gym with dangling toys. Even before they can reach them, they'll enjoy looking up at the colors and movement."
+  },
+  {
+    "id": "2m-play-20",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Try gently swaying with your baby in your arms to different types of music. Slow, calm music can soothe them while upbeat tunes may make them more alert and engaged."
+  },
+  {
+    "id": "2m-play-21",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Let your baby lie on a crinkly blanket or textured mat. The unexpected sounds and sensations when they move their arms and legs keep them curious."
+  },
+  {
+    "id": "2m-play-22",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "During bath time, gently pour warm water over your baby's tummy and legs while narrating what you're doing. Bath time is wonderful sensory play."
+  },
+  {
+    "id": "2m-play-23",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Whisper, then talk normally, then use a gentle singsong voice. Varying your tone and volume helps your baby learn about the range of human speech."
+  },
+  {
+    "id": "2m-play-24",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Try brief tummy time on a yoga ball, holding your baby securely while gently rocking the ball. The movement adds a fun challenge to building neck strength."
+  },
+  {
+    "id": "2m-play-25",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Carry your baby facing inward in a carrier or in your arms and narrate what you see around you. New environments, even just a different room, provide wonderful stimulation through your voice and their peripheral vision."
+  },
+  {
+    "id": "2m-safety-01",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Never leave your baby unattended on a changing table, bed, or couch — even if they can't roll yet. It can happen for the first time when you least expect it."
+  },
+  {
+    "id": "2m-safety-02",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Make sure your baby's car seat is rear-facing and installed at the correct recline angle. The harness should be snug with the chest clip at armpit level."
+  },
+  {
+    "id": "2m-safety-03",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Keep the crib bare: no bumpers, pillows, blankets, or stuffed animals. A fitted sheet on a firm mattress is all your baby needs for safe sleep."
+  },
+  {
+    "id": "2m-safety-04",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Test bath water with the inside of your wrist or elbow before placing your baby in it. The ideal temperature is around {{98-100°F|37-38°C}}."
+  },
+  {
+    "id": "2m-safety-05",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Never leave your baby alone in or near water, even for a moment. Babies can drown in as little as {{1 inch|2.5 cm}} of water."
+  },
+  {
+    "id": "2m-safety-06",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Avoid placing anything around your baby's neck, including necklaces, pacifier clips with long cords, or hooded clothing with drawstrings."
+  },
+  {
+    "id": "2m-safety-07",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Remove car seat head inserts once your baby's head no longer flops to the side, unless the insert came with the seat. Aftermarket inserts aren't crash-tested."
+  },
+  {
+    "id": "2m-safety-08",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "If you have pets, always supervise them around your baby. Even gentle animals can accidentally harm a newborn."
+  },
+  {
+    "id": "2m-safety-09",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Make sure smoke and carbon monoxide detectors are working on every level of your home, especially near sleeping areas."
+  },
+  {
+    "id": "2m-safety-10",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "If someone is smoking, keep your baby away from the smoke and ask smokers to change clothes before holding the baby. Thirdhand smoke is a real concern."
+  },
+  {
+    "id": "2m-safety-11",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Don't use sleep positioners, wedges, or inclined sleepers. Safe sleep guidelines recommend only a firm, flat surface."
+  },
+  {
+    "id": "2m-safety-12",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Always support your baby's head and neck when picking them up or holding them. Their neck muscles aren't strong enough yet to hold their head steady."
+  },
+  {
+    "id": "2m-safety-13",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "When using a baby carrier or wrap, make sure your baby's face is always visible and their chin is off their chest to keep airways clear."
+  },
+  {
+    "id": "2m-safety-14",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Keep small objects, coins, and button batteries out of reach. Start thinking about babyproofing now — your baby will be mobile sooner than you think."
+  },
+  {
+    "id": "2m-safety-15",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Stop swaddling as soon as your baby shows signs of trying to roll over, even if it happens before 2 months. Rolling while swaddled increases SIDS risk."
+  },
+  {
+    "id": "2m-safety-16",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Keep one hand on your baby at all times during diaper changes. Have everything you need within arm's reach before you start so you never need to step away."
+  },
+  {
+    "id": "2m-safety-17",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Avoid direct sunlight on your newborn's skin. Use shade, a stroller canopy, or light clothing that covers arms and legs when outdoors."
+  },
+  {
+    "id": "2m-safety-18",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Never warm a baby's bottle in the microwave. Uneven heating can create dangerous hot spots even when the outside of the bottle feels cool."
+  },
+  {
+    "id": "2m-safety-19",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "If your baby sleeps in a bassinet, check the weight limit regularly. Many bassinets have a lower limit than you'd expect, and your baby is growing fast."
+  },
+  {
+    "id": "2m-safety-20",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Check that all crib slats are no more than {{2 3/8 inches|6 cm}} apart, roughly the width of a soda can. Wider gaps pose an entrapment risk."
+  },
+  {
+    "id": "2m-safety-21",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Don't fall asleep with your baby on a couch, armchair, or recliner. These surfaces have crevices where a baby can become trapped and suffocate."
+  },
+  {
+    "id": "2m-safety-22",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Make sure your baby's clothing fits properly. Loose fabric, long strings, or oversized outfits can become a suffocation hazard during sleep."
+  },
+  {
+    "id": "2m-safety-23",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Register your baby's car seat and crib with the manufacturer so you receive any recall notices directly."
+  },
+  {
+    "id": "2m-safety-24",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "When placing your baby in a car seat, make sure the harness straps sit at or below shoulder level for a rear-facing seat and lie flat without twists."
+  },
+  {
+    "id": "2m-safety-25",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Keep medications, vitamins, and diaper cream stored away from the crib and changing area. Even small amounts of certain products can be harmful if ingested."
+  }
+]

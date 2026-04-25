@@ -1,0 +1,866 @@
+[
+  {
+    "id": "4m-development-01",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé est probablement en train de saisir et de frapper les objets maintenant. Accroche un jouet à sa portée et regarde-le s'entraîner à viser."
+  },
+  {
+    "id": "4m-development-02",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à rire à haute voix ! Ces petits rires sont un merveilleux signe du développement social et émotionnel."
+  },
+  {
+    "id": "4m-development-03",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Vers 3-4 mois, ton bébé peut commencer à amener les objets à sa bouche. C'est comme ça qu'il explore le monde, pas un signe de faim."
+  },
+  {
+    "id": "4m-development-04",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé peut maintenant mieux voir les couleurs et peut montrer une préférence pour les teintes vives et saturées. Essaie d'offrir des jouets aux couleurs vives à explorer."
+  },
+  {
+    "id": "4m-development-05",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé fait probablement des gazouillements et des sons qui ressemblent à des voyelles comme « ouh » et « aah ». Réponds avec enthousiasme pour encourager plus de vocalisations — ces sons sont les fondations du babillage à venir."
+  },
+  {
+    "id": "4m-development-06",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé s'améliore dans sa capacité à tenir sa tête stable et peut même se pousser sur les avant-bras pendant le temps sur le ventre. Cette force du haut du corps prépare le terrain pour se retourner."
+  },
+  {
+    "id": "4m-development-07",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Remarque comme ton bébé regarde ta bouche quand tu parles ? Il étudie comment les sons sont produits. Continue à parler, chanter et lire."
+  },
+  {
+    "id": "4m-development-08",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à remarquer la cause et l'effet. Secoue un hochet et regarde ses yeux s'illuminer en commençant à relier les actions aux sons."
+  },
+  {
+    "id": "4m-development-09",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Vers cet âge, ton bébé peut commencer à se retourner du ventre sur le dos. Donne-lui beaucoup de temps au sol sous supervision pour pratiquer cette nouvelle compétence."
+  },
+  {
+    "id": "4m-development-10",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé reconnaît les visages familiers et peut devenir plus animé quand il te voit, un frère/sœur ou un autre soignant. C'est l'attachement sécurisé qui se forme."
+  },
+  {
+    "id": "4m-development-11",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Essaie de placer un jouet légèrement hors de portée pendant le temps sur le ventre. Ton bébé peut commencer à s'étirer et à pivoter pour l'obtenir, construisant les muscles du tronc."
+  },
+  {
+    "id": "4m-development-12",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "La coordination main-œil de ton bébé s'améliore. Il peut saisir un jouet que tu offres et le tenir plusieurs secondes avant de le lâcher."
+  },
+  {
+    "id": "4m-development-13",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Faire des bruits de bouche est une nouvelle activité préférée pour beaucoup de bébés à cet âge. C'est ludique mais aussi une étape importante dans l'apprentissage du contrôle de la bouche pour la parole."
+  },
+  {
+    "id": "4m-development-14",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à montrer de l'intérêt pour son propre reflet. Tiens-le devant un miroir et apprécie sa curiosité !"
+  },
+  {
+    "id": "4m-development-15",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Les bébés se développent à leur propre rythme. Si ton bébé ne fait pas encore tout ce qui est listé dans les tableaux des étapes de développement, c'est généralement bien. Parle à ton pédiatre si tu as des préoccupations."
+  },
+  {
+    "id": "4m-development-16",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à supporter un peu de poids sur ses jambes quand tu le tiens en position debout. Ce n'est pas encore de l'entraînement à la marche, mais c'est un super renforcement."
+  },
+  {
+    "id": "4m-development-17",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Regarde comme ton bébé étudie ses propres mains, les tournant et les réunissant. Cette observation des mains est une étape fascinante de la conscience corporelle."
+  },
+  {
+    "id": "4m-development-18",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à montrer des pleurs ou des vocalises différents pour des besoins différents. Répondre à ces indices lui apprend que la communication fonctionne."
+  },
+  {
+    "id": "4m-development-19",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Essaie de tenir un jouet devant ton bébé et vois s'il le saisit. Atteindre avec intention est un merveilleux signe d'une coordination main-œil croissante."
+  },
+  {
+    "id": "4m-development-20",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "La vision de ton bébé s'étend maintenant à travers la pièce. Il peut suivre les gens qui passent ou suivre un animal domestique du regard. Cette vision de distance est un grand bond par rapport aux premières semaines de nouveau-né."
+  },
+  {
+    "id": "4m-development-21",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Si ton bébé saisit un jouet à deux mains et l'amène à sa bouche, il coordonne plusieurs groupes musculaires à la fois. C'est une compétence complexe en action."
+  },
+  {
+    "id": "4m-development-22",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à crier de joie ou à faire des sons joyeux aigus. Ces expressions de joie montrent que sa gamme émotionnelle s'élargit."
+  },
+  {
+    "id": "4m-development-23",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé peut maintenant suivre un jouet en mouvement avec ses yeux d'un côté à l'autre. Ce suivi visuel fluide est un grand pas en avant par rapport aux mouvements oculaires saccadés des premières semaines."
+  },
+  {
+    "id": "4m-development-24",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Ton bébé devient plus social et peut « parler » aux jouets, son reflet ou même aux images de visages. Encourage cela en rejoignant la conversation."
+  },
+  {
+    "id": "4m-development-25",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Essaie de coucher ton bébé sur le côté pendant le jeu avec un jouet devant lui. Cette position encourage le mouvement de rotation et l'aide à découvrir de nouvelles façons de bouger."
+  },
+  {
+    "id": "4m-sleep-01",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Ton bébé peut connaître des changements dans les habitudes de sommeil à mesure que ses cycles de sommeil mûrissent. Cela peut temporairement perturber son sommeil, mais c'est une partie normale du développement. Tiens bon !"
+  },
+  {
+    "id": "4m-sleep-02",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Ton bébé peut commencer à consolider le sommeil nocturne en périodes plus longues de 5-6 heures. Célèbre ces victoires et sache que les réveils nocturnes sont aussi normaux."
+  },
+  {
+    "id": "4m-sleep-03",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "La plupart des bébés de cet âge font 3-4 siestes par jour. Ne t'inquiète pas pour un horaire parfait pour l'instant — suivre les indices de sommeil de ton bébé est plus important."
+  },
+  {
+    "id": "4m-sleep-05",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Les périodes d'éveil sont généralement de 1,5-2 heures à cet âge. Mettre ton bébé au lit avant qu'il soit trop fatigué rend l'endormissement plus facile."
+  },
+  {
+    "id": "4m-sleep-06",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Une routine régulière avant le sommeil (ex. : lumières tamisées, histoire, chanson, berceau) aide à signaler à ton bébé que le moment du sommeil arrive. La répétition est la clé."
+  },
+  {
+    "id": "4m-sleep-07",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Les courtes siestes de 30-45 minutes sont très courantes à cet âge à mesure que les cycles de sommeil mûrissent. Si ton bébé se réveille content, la sieste était probablement suffisante."
+  },
+  {
+    "id": "4m-sleep-08",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Si ton bébé se retourne sur le ventre pendant le sommeil mais peut aussi se retourner sur le dos, c'est bien de le laisser. Commence-le toujours sur le dos."
+  },
+  {
+    "id": "4m-sleep-09",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Si le sommeil de ton bébé est perturbé par une étape de développement, essaie de rester cohérent avec ton approche plutôt que d'introduire beaucoup de nouvelles stratégies de sommeil à la fois."
+  },
+  {
+    "id": "4m-sleep-10",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Les siestes diurnes n'ont pas besoin d'être dans une pièce complètement noire. Un peu de lumière ambiante est bien et aide ton bébé à apprendre la différence entre les siestes et le sommeil de nuit."
+  },
+  {
+    "id": "4m-sleep-11",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Si tu envisages l'entraînement au sommeil, la plupart des pédiatres recommandent d'attendre que ton bébé soit prêt sur le plan développemental, ce qui varie pour chaque enfant. Parle à ton médecin du bon moment."
+  },
+  {
+    "id": "4m-sleep-12",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Ton bébé peut commencer à combattre la dernière sieste de la journée. C'est courant — une brève sieste en fin d'après-midi peut aider à combler le fossé jusqu'à l'heure du coucher."
+  },
+  {
+    "id": "4m-sleep-13",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Essaie de coucher ton bébé somnolent mais éveillé pour au moins une sieste par jour. Cela l'aide doucement à commencer à apprendre à s'endormir de manière indépendante."
+  },
+  {
+    "id": "4m-sleep-14",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Une heure de coucher précoce entre 18h30-20h fonctionne souvent bien à cet âge. Les bébés trop fatigués ont en réalité plus de mal à s'endormir et à rester endormis."
+  },
+  {
+    "id": "4m-sleep-15",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Garde l'environnement de sommeil frais ({{68-72°F|20-22°C}}). Les bébés dorment mieux quand ils n'ont pas trop chaud."
+  },
+  {
+    "id": "4m-sleep-16",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Si ton bébé se réveille exactement 30-45 minutes après le début d'une sieste, il peut avoir du mal à passer d'un cycle de sommeil à l'autre. Donne-lui quelques minutes pour voir s'il se rendort de lui-même."
+  },
+  {
+    "id": "4m-sleep-17",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Un sac de sommeil est une alternative sûre aux couvertures et peut devenir une partie de la routine du coucher de ton bébé. L'acte de le fermer à la glissière signale que c'est l'heure du sommeil."
+  },
+  {
+    "id": "4m-sleep-18",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Si ton bébé était un super dormeur et soudainement ne l'est plus, une régression de sommeil développementale peut en être la cause. C'est un changement permanent dans l'architecture du sommeil, et il s'adaptera."
+  },
+  {
+    "id": "4m-sleep-19",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Essaie de séparer le dernier repas de la journée du moment où ton bébé s'endort. Même un petit écart aide à réduire l'association alimentation-sommeil."
+  },
+  {
+    "id": "4m-sleep-21",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Si les siestes sont difficiles, essaie de raccourcir ta routine avant la sieste à 5 minutes seulement. Une détente rapide suffit souvent pendant la journée."
+  },
+  {
+    "id": "4m-sleep-22",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Les siestes en mouvement dans la poussette ou la voiture sont bien parfois, mais essaie d'offrir au moins une sieste par jour au berceau pour que ton bébé pratique le sommeil dans un environnement immobile."
+  },
+  {
+    "id": "4m-sleep-23",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Le rythme circadien de ton bébé est plus établi maintenant. Une heure de réveil cohérente le matin peut aider à ancrer le reste de l'horaire de la journée."
+  },
+  {
+    "id": "4m-sleep-24",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Si ton bébé a l'habitude d'être bercé pour s'endormir, essaie de réduire progressivement le bercement plutôt que de l'arrêter d'un coup. Les transitions en douceur fonctionnent mieux."
+  },
+  {
+    "id": "4m-sleep-25",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Ne compare pas le sommeil de ton bébé à celui des autres. Certains bébés dorment naturellement de longues périodes plus tôt, d'autres mettent plus de temps. Les deux sont dans la norme."
+  },
+  {
+    "id": "4m-feeding-01",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Ton bébé peut sembler plus distrait pendant les tétées, se détachant pour regarder autour de lui. Essaie de le nourrir dans un endroit calme et tamisé si cela devient un problème."
+  },
+  {
+    "id": "4m-feeding-03",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Les bébés nourris au lait infantile prennent généralement environ {{4-6 ounces|120-180 ml}} par repas, 4 à 6 fois par jour. Mais chaque bébé est différent — suis ses signaux."
+  },
+  {
+    "id": "4m-feeding-04",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Même si ton bébé semble intéressé par ta nourriture, la plupart des recommandations pédiatriques conseillent d'attendre environ 6 mois pour introduire les solides dans la majorité des cas."
+  },
+  {
+    "id": "4m-feeding-05",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "La bave et le fait de mâchouiller ses mains à cet âge sont généralement liés au développement, pas nécessairement un signe que ton bébé a besoin de nourriture solide."
+  },
+  {
+    "id": "4m-feeding-06",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Si tu allaites, tu n'as pas besoin de tirer et jeter ton lait après un verre de vin. Les experts recommandent d'attendre au moins 2 heures après un seul verre avant d'allaiter, car l'alcool quitte le lait maternel en même temps que le sang."
+  },
+  {
+    "id": "4m-feeding-07",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Une poussée de croissance vers 3-4 mois peut entraîner des journées de plus grand appétit. Fais confiance à l'appétit de ton bébé et nourris-le à la demande."
+  },
+  {
+    "id": "4m-feeding-08",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Si tu tires ton lait au travail, essaie de tirer aussi souvent que ton bébé téterait pour maintenir ta production. La plupart des mamans tirent toutes les 3-4 heures."
+  },
+  {
+    "id": "4m-feeding-09",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Il est normal que les bébés allaités refusent le biberon au début. Essaie de faire proposer le biberon par quelqu'un d'autre que la personne qui allaite, et teste différents débits de tétine."
+  },
+  {
+    "id": "4m-feeding-10",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Ton bébé allaité n'a pas besoin d'eau à cet âge. Le lait maternel (ou le lait infantile) fournit toute l'hydratation nécessaire, même par temps chaud."
+  },
+  {
+    "id": "4m-feeding-11",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Si ton bébé a du reflux, le maintenir en position verticale 20-30 minutes après les repas et proposer des repas plus petits et plus fréquents peut aider."
+  },
+  {
+    "id": "4m-feeding-12",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "La confusion sein-tétine est moins préoccupante à cet âge. Si tu hésitais à introduire un biberon ou une sucette, c'est généralement sans risque d'essayer maintenant."
+  },
+  {
+    "id": "4m-feeding-13",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "N'ajoute pas de céréales dans le biberon de ton bébé. C'est un risque d'étouffement et cela n'aide pas les bébés à dormir plus longtemps, contrairement au mythe répandu."
+  },
+  {
+    "id": "4m-feeding-14",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Continue de donner des gouttes de vitamine D quotidiennement (400 UI) si tu allaites. Les bébés nourris au lait infantile n'en ont peut-être pas besoin s'ils boivent suffisamment de lait enrichi."
+  },
+  {
+    "id": "4m-feeding-15",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Les habitudes alimentaires de ton bébé peuvent devenir plus prévisibles, s'installant dans un rythme approximatif. Cela rend l'organisation de ta journée un peu plus facile."
+  },
+  {
+    "id": "4m-feeding-16",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Si ta production de lait semble plus faible l'après-midi, essaie le tirage intensif (tire 20 min, repos 10, tire 10, repos 10, tire 10) pour stimuler la production."
+  },
+  {
+    "id": "4m-feeding-17",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Ton bébé peut commencer à attraper le biberon ou le sein pendant les repas. Laisse-le poser ses mains sur le biberon pour encourager les premières compétences d'auto-alimentation."
+  },
+  {
+    "id": "4m-feeding-18",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Si ton bébé veut soudainement téter plus souvent, cela ne signifie pas que ta production baisse. Les pics de croissance et la tétée de réconfort sont tous les deux courants en ce moment."
+  },
+  {
+    "id": "4m-feeding-20",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Si tu combines lait maternel et lait infantile, c'est une approche tout à fait valable. Toute quantité de lait maternel apporte des bienfaits."
+  },
+  {
+    "id": "4m-feeding-21",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Essaie une tétine à débit plus lent si ton bébé avale goulûment, tousse ou semble submergé pendant le biberon. Un débit plus lent lui permet de mieux contrôler le rythme."
+  },
+  {
+    "id": "4m-feeding-22",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "L'apport quotidien total de lait maternel ou infantile de ton bébé est généralement d'environ {{24-32 ounces|710-950 ml}} à cet âge. Les quantités par repas peuvent varier, et c'est tout à fait normal."
+  },
+  {
+    "id": "4m-feeding-23",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Les repas nocturnes peuvent naturellement diminuer à mesure que ton bébé mange davantage pendant la journée. Suis son rythme plutôt que de forcer un changement d'horaire."
+  },
+  {
+    "id": "4m-feeding-24",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Si tu remarques que ton bébé se détourne ou repousse le biberon en plein repas, respecte son signal. Il apprend à autoréguler son appétit."
+  },
+  {
+    "id": "4m-feeding-25",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Le lait maternel congelé peut avoir une odeur ou un goût légèrement différent une fois décongelé à cause de l'activité de la lipase. Il reste sûr et nutritif, même si ton bébé hésite au début."
+  },
+  {
+    "id": "4m-health-01",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Respecter le calendrier vaccinal de ton bébé le protège pendant ses mois les plus vulnérables. Parle à ton pédiatre des vaccins à prévoir."
+  },
+  {
+    "id": "4m-health-02",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "La poussée dentaire peut commencer dès 3 mois, même si les dents apparaissent généralement vers 6 mois. Le gonflement des gencives et la bave excessive sont des signes précoces."
+  },
+  {
+    "id": "4m-health-03",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Un anneau de dentition réfrigéré (pas congelé) ou un gant de toilette humide et propre peut soulager les gencives douloureuses. Évite les gels de dentition contenant de la benzocaïne, qui ne sont pas sûrs pour les jeunes bébés."
+  },
+  {
+    "id": "4m-health-04",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Le système immunitaire de ton bébé se renforce mais se développe encore. Il peut attraper son premier rhume vers cet âge, surtout s'il a des frères et sœurs plus grands."
+  },
+  {
+    "id": "4m-health-05",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Pour une légère fièvre après les vaccins, du réconfort supplémentaire et des liquides suffisent généralement. Demande à ton pédiatre quels antipyrétiques et dosages sont appropriés."
+  },
+  {
+    "id": "4m-health-06",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "L'eczéma apparaît souvent entre 2 et 4 mois. Garde la peau hydratée avec une crème épaisse sans parfum et utilise des produits doux et non parfumés pour bébé."
+  },
+  {
+    "id": "4m-health-07",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Ton bébé devrait suivre les objets avec fluidité et faire du contact visuel maintenant. Si ses yeux semblent constamment croisés après 3 mois, parles-en à ton médecin."
+  },
+  {
+    "id": "4m-health-09",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Si ton bébé a une toux ou un rhume, un humidificateur à brume fraîche dans sa chambre et des gouttes nasales salines peuvent l'aider à mieux respirer."
+  },
+  {
+    "id": "4m-health-10",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Suis la courbe de croissance de ton bébé plutôt que les mesures individuelles. Une croissance constante le long de son propre percentile est plus importante que le chiffre exact."
+  },
+  {
+    "id": "4m-health-11",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "L'érythème fessier est courant à cet âge. Change les couches rapidement, laisse la zone sécher à l'air quand c'est possible et utilise une crème à l'oxyde de zinc comme barrière."
+  },
+  {
+    "id": "4m-health-12",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Les bébés de cet âge mettent tout à la bouche. Nettoie régulièrement les jouets et les anneaux de dentition, mais pas besoin de tout stériliser — un peu d'exposition aux germes est sain."
+  },
+  {
+    "id": "4m-health-13",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Contacte ton médecin si ton bébé semble anormalement mou, raide ou ne réagit pas aux sons. L'intervention précoce fait une grande différence."
+  },
+  {
+    "id": "4m-health-14",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Si tu remarques que ton bébé penche constamment la tête d'un côté, parles-en à ton pédiatre. De simples exercices d'étirement peuvent souvent corriger le torticolis."
+  },
+  {
+    "id": "4m-health-15",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Ton bébé peut commencer à beaucoup baver, ce qui peut provoquer une irritation autour du menton et du cou. Garde la zone sèche et applique une crème protectrice douce."
+  },
+  {
+    "id": "4m-health-16",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Si ton bébé se gratte les oreilles ou le visage, garde ses ongles coupés courts. Les moufles ne sont plus recommandées à cet âge car elles limitent l'exploration des mains."
+  },
+  {
+    "id": "4m-health-17",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Le système immunitaire de ton bébé produit des anticorps à chaque dose de vaccin. Des effets secondaires légers comme une petite fièvre ou de l'irritabilité pendant un jour ou deux montrent que son système immunitaire réagit."
+  },
+  {
+    "id": "4m-health-18",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Si ton bébé a de l'eczéma, essaie de le baigner dans de l'eau tiède pendant 10 minutes maximum, puis applique la crème hydratante immédiatement pendant que la peau est encore humide."
+  },
+  {
+    "id": "4m-health-19",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Les zones plates à l'arrière de la tête (plagiocéphalie positionnelle) sont courantes mais s'améliorent généralement à mesure que ton bébé passe plus de temps sur le ventre et en position verticale."
+  },
+  {
+    "id": "4m-health-20",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Guette les signes de difficulté auditive, comme ne pas sursauter aux bruits forts ou ne pas se tourner vers les voix. Mentionne toute inquiétude lors de ta prochaine visite."
+  },
+  {
+    "id": "4m-health-21",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Si ton bébé a le nez bouché et a du mal à manger, essaie d'utiliser des gouttes salines et un mouche-bébé quelques minutes avant le repas pour dégager ses voies respiratoires."
+  },
+  {
+    "id": "4m-health-23",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Ton bébé peut régurgiter moins à mesure que son système digestif mûrit. Si le reflux s'aggrave soudainement au lieu de s'améliorer, parles-en à ton pédiatre."
+  },
+  {
+    "id": "4m-health-24",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Programme du temps sur le ventre tout au long de la journée, pas seulement pour le jeu mais aussi pour soulager les gaz et aider la digestion. Attends au moins 20-30 minutes après le repas avant de le mettre sur le ventre."
+  },
+  {
+    "id": "4m-health-25",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Si ton bébé développe un érythème fessier à levures (rouge vif avec de petites taches satellites), la crème pour le change classique ne fonctionnera pas. Demande à ton pédiatre un traitement antifongique."
+  },
+  {
+    "id": "4m-play-01",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Joue à coucou ! Ton bébé adore la surprise de voir ton visage apparaître et disparaître. Ce jeu social renforce l'anticipation et le récompense par la connexion."
+  },
+  {
+    "id": "4m-play-02",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Offre des hochets, des jouets qui crissent et des blocs mous pour que ton bébé les saisisse, les secoue et les mette en bouche. Les différentes textures et sons sont super pour le développement sensoriel."
+  },
+  {
+    "id": "4m-play-03",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Place ton bébé sur un tapis de jeu et laisse-le donner des coups de pied librement. Cela renforce les muscles des jambes dont il aura besoin pour se retourner et plus tard ramper."
+  },
+  {
+    "id": "4m-play-04",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Essaie « l'avion » en t'allongeant sur le dos avec ton bébé sur tes tibias, en lui tenant les mains. Cela renforce ses muscles du tronc et provoque généralement de grands éclats de rire."
+  },
+  {
+    "id": "4m-play-05",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Souffle des bulles doucement près de ton bébé pendant le jeu. Il adorera suivre les mouvements flottants, ce qui renforce les compétences de suivi visuel."
+  },
+  {
+    "id": "4m-play-06",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Tiens ton bébé en position debout sur tes genoux et laisse-le rebondir. Il adorera pousser avec ses jambes et sentir sa propre force."
+  },
+  {
+    "id": "4m-play-07",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Présente des livres cartonnés avec des images simples, à fort contraste et des pages épaisses. Ton bébé peut essayer d'attraper les pages, ce qui est un super exercice de motricité fine."
+  },
+  {
+    "id": "4m-play-08",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Joue à « si grand ! » en étirant les bras de ton bébé vers le haut en le disant. Les jeux répétitifs comme celui-ci apprennent à ton bébé à anticiper et participer."
+  },
+  {
+    "id": "4m-play-09",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Emmène ton bébé en promenade en poussette ou en porte-bébé. Montre-lui les arbres, les chiens, les voitures — tout est nouveau et fascinant pour lui."
+  },
+  {
+    "id": "4m-play-10",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Couche ton bébé sur le dos et tiens un jouet au-dessus de lui pour l'encourager à tendre les bras. Cela renforce la force des bras et la coordination."
+  },
+  {
+    "id": "4m-play-11",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Essaie de faire différents bruits d'animaux et observe la réaction de ton bébé. Varier la hauteur et le ton de ta voix capte son attention et soutient ses compétences d'écoute."
+  },
+  {
+    "id": "4m-play-12",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Place ton bébé sur une couverture dans l'herbe pour du temps sur le ventre en plein air. Les nouvelles textures et odeurs offrent une riche exploration sensorielle."
+  },
+  {
+    "id": "4m-play-13",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Rebondis ou balance doucement en tenant ton bébé et en chantant. Le mouvement combiné à la musique est merveilleux pour le développement de son système vestibulaire."
+  },
+  {
+    "id": "4m-play-14",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Laisse ton bébé jouer avec des objets ménagers sans danger comme des cuillères en bois ou des tasses à mesurer. Parfois les objets simples sont plus intéressants que les jouets sophistiqués."
+  },
+  {
+    "id": "4m-play-15",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Pratique la position assise assistée en calant ton bébé avec des coussins ou en le tenant sur tes genoux face vers l'extérieur. Cette nouvelle perspective l'enthousiasme et renforce les muscles du tronc."
+  },
+  {
+    "id": "4m-play-16",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Essaie un jeu d'imitation où tu copies les sons et expressions de ton bébé. Quand il te voit le refléter, cela l'encourage à communiquer davantage."
+  },
+  {
+    "id": "4m-play-17",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Présente une balle souple que ton bébé peut saisir. La faire rouler vers lui pendant le temps sur le ventre l'encourage à tendre les bras et renforce la force des bras."
+  },
+  {
+    "id": "4m-play-18",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Place des jouets en cercle autour de ton bébé pendant le temps sur le ventre pour l'encourager à pivoter. Il tournera son corps pour atteindre les différents objets, renforçant les muscles du tronc."
+  },
+  {
+    "id": "4m-play-19",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Laisse ton bébé éclabousser doucement pendant le bain. Les jeux de cause et effet comme celui-ci sont excitants pour lui et renforcent la coordination des mains."
+  },
+  {
+    "id": "4m-play-20",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Essaie de jouer avec un foulard léger en le laissant flotter au-dessus de ton bébé. Il adorera tendre les mains pour l'attraper en descendant, pratiquant son timing et sa prise."
+  },
+  {
+    "id": "4m-play-21",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Place ton bébé devant une fenêtre et laisse-le observer le monde dehors. Le mouvement, la lumière et les ombres sont infiniment intéressants à cet âge."
+  },
+  {
+    "id": "4m-play-22",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Offre un jouet qui fait du bruit quand on le secoue ou qu'on le presse. Ton bébé apprend que ses actions produisent des résultats, et ce sentiment de pouvoir agir sur les choses le ravit."
+  },
+  {
+    "id": "4m-play-23",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Lis le même livre préféré encore et encore. Les bébés de cet âge adorent la répétition, et entendre les mêmes mots renforce les connexions linguistiques dans leur cerveau."
+  },
+  {
+    "id": "4m-play-24",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Laisse ton bébé toucher des objets sans danger à différentes températures, comme une cuillère fraîche ou un gant de toilette tiède (pas chaud). La température est une autre riche expérience sensorielle."
+  },
+  {
+    "id": "4m-play-25",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Essaie de tenir ton bébé bien et de le pencher doucement d'un côté à l'autre. Cette stimulation vestibulaire aide à développer l'équilibre et provoque généralement des rires."
+  },
+  {
+    "id": "4m-safety-01",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Ton bébé peut bientôt commencer à se retourner, alors ne le laisse jamais sans surveillance sur des surfaces en hauteur. Utilise les sangles de sécurité sur les tables à langer."
+  },
+  {
+    "id": "4m-safety-02",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Vérifie que tous les jouets sont trop grands pour entrer entièrement dans la bouche de ton bébé. Comme il commence à tout mettre en bouche, les risques d'étouffement deviennent une plus grande préoccupation."
+  },
+  {
+    "id": "4m-safety-03",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Le siège auto de ton bébé doit toujours être dos à la route. Garde-le dos à la route jusqu'à ce qu'il atteigne la taille ou le poids maximum pour son siège."
+  },
+  {
+    "id": "4m-safety-04",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Commence à sécuriser la maison maintenant, avant que ton bébé ne soit mobile. Mets-toi à quatre pattes au niveau du bébé et cherche les dangers que tu ne remarquerais pas debout."
+  },
+  {
+    "id": "4m-safety-05",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Si ton bébé est dans un transat ou une balancelle, utilise toujours le harnais de sécurité et place-le au sol, jamais sur une table ou un plan de travail."
+  },
+  {
+    "id": "4m-safety-06",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Fixe les meubles au mur avec des attaches anti-basculement. Cela peut sembler tôt, mais une fois que ton bébé sera mobile, les meubles non fixés représentent un risque sérieux."
+  },
+  {
+    "id": "4m-safety-07",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Couvre les prises électriques avec des cache-prises ou des couvercles de sécurité. Ton bébé atteindra et attrapera tout ce qui est à sa portée dans quelques mois."
+  },
+  {
+    "id": "4m-safety-08",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Vérifie le lit de ton bébé : le matelas doit être bien ajusté sans espace de plus de deux doigts entre le matelas et le cadre."
+  },
+  {
+    "id": "4m-safety-09",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Garde les boissons chaudes bien hors de portée quand tu tiens ton bébé. Une tasse de café renversée peut causer de graves brûlures sur la peau délicate d'un bébé."
+  },
+  {
+    "id": "4m-safety-10",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Ne secoue jamais ton bébé, même en jouant. Si tu te sens dépassé, pose ton bébé dans un endroit sûr et éloigne-toi un moment pour te reprendre."
+  },
+  {
+    "id": "4m-safety-11",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Règle ton chauffe-eau à {{120°F|49°C}} ou moins pour éviter les brûlures accidentelles pendant le bain."
+  },
+  {
+    "id": "4m-safety-12",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Quand tu utilises un centre d'activités ou un siège au sol, assure-toi que ton bébé est prêt sur le plan du développement (bon maintien de la tête) et limite le temps à de courtes sessions."
+  },
+  {
+    "id": "4m-safety-13",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Garde les petites piles, surtout les piles boutons, complètement hors de portée. Si elles sont avalées, elles peuvent causer de graves brûlures internes en quelques heures."
+  },
+  {
+    "id": "4m-safety-14",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Envisage de suivre un cours de secourisme pour nourrisson. Savoir quoi faire en cas d'urgence te donne confiance et pourrait sauver la vie de ton bébé."
+  },
+  {
+    "id": "4m-safety-15",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Si ton bébé a commencé à se retourner, retire les mobiles ou les jouets suspendus du lit qu'il pourrait atteindre, tirer et dans lesquels il pourrait s'emmêler."
+  },
+  {
+    "id": "4m-safety-16",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Garde les sacs en plastique, les emballages et les matériaux d'emballage loin de ton bébé. Ce sont des risques d'étouffement même quand ton bébé semble trop jeune pour les attraper."
+  },
+  {
+    "id": "4m-safety-17",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Assure-toi que tous les soignants et baby-sitters connaissent les règles de sommeil sécuritaire de ton bébé : sur le dos, surface ferme et plate, rien dans le lit."
+  },
+  {
+    "id": "4m-safety-18",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Si ton bébé peut atteindre les côtés de son berceau en étant couché, il est peut-être temps de passer à un lit de taille standard pour plus d'espace pour bouger en toute sécurité."
+  },
+  {
+    "id": "4m-safety-19",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Évite de caler un biberon pour que ton bébé mange sans surveillance. Les biberons calés peuvent provoquer des étouffements, des otites et des caries dentaires."
+  },
+  {
+    "id": "4m-safety-20",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Quand tu portes ton bébé en porte-bébé, évite de cuisiner, de boire des liquides chauds ou de te tenir près de sources de chaleur. Ton bébé est plus proche des dangers que tu ne le penses."
+  },
+  {
+    "id": "4m-safety-21",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Vérifie la liste des rappels pour tout équipement de puériculture que tu possèdes ou reçois d'occasion. Les anciens produits peuvent ne pas respecter les normes de sécurité actuelles."
+  },
+  {
+    "id": "4m-safety-22",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Garde le volume de ton téléphone activé quand ton bébé dort pour entendre les alertes du babyphone. Mais résiste à l'envie de vérifier la vidéo à chaque bruit — certains sons sont normaux."
+  },
+  {
+    "id": "4m-safety-23",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Évite de laisser ton bébé dans un siège auto pendant de longues périodes en dehors de la voiture. L'angle semi-incliné peut restreindre la respiration, surtout chez les plus jeunes nourrissons."
+  },
+  {
+    "id": "4m-safety-24",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Maintenant que ton bébé attrape tout, fais attention aux bijoux pendants, aux lunettes et aux cheveux quand tu le portes. La prise d'un bébé peut tirer étonnamment fort."
+  },
+  {
+    "id": "4m-safety-25",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Range les produits ménagers, les capsules de lessive et les tablettes de lave-vaisselle dans des placards verrouillés. Leurs couleurs vives et leurs textures molles les rendent dangereusement attractifs pour les bébés."
+  }
+]

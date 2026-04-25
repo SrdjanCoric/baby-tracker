@@ -16,12 +16,12 @@ const SURFACE = {
     input: "#FFFFFF",
   },
   dark: {
-    background: "#1E1B19",
-    secondary: "#252220",
-    card: "#2D2A28",
-    cardElevated: "#363330",
-    muted: "#201D1B",
-    input: "#282523",
+    background: "#121110",
+    secondary: "#1A1918",
+    card: "#2A2725",
+    cardElevated: "#322E2B",
+    muted: "#161514",
+    input: "#2A2725",
   },
 };
 

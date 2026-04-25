@@ -1,0 +1,686 @@
+[
+  {
+    "id": "1y-development-01",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba može početi da se podiže u stojeći položaj koristeći nameštaj. Postavi čvrste predmete u blizini da može bezbedno da vežba."
+  },
+  {
+    "id": "1y-development-02",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Mahanje za pozdrav, tapšanje i pokazivanje su znaci da tvoja beba razvija važne veštine socijalne komunikacije."
+  },
+  {
+    "id": "1y-development-03",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Probaj da složiš dva ili tri bloka i pustiš bebu da ih obori. Ovo uči uzrok i posledicu dok gradi koordinaciju oka i ruke."
+  },
+  {
+    "id": "1y-development-04",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba može početi da se pridržava i hoda duž nameštaja između 9 i 12 meseci. Rasporedi nameštaj tako da može da se premešta od jednog komada do drugog."
+  },
+  {
+    "id": "1y-development-05",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dosledno reagovanje na sopstveno ime je prekretnica oko ovog uzrasta. Koristi bebino ime često tokom igre i obroka."
+  },
+  {
+    "id": "1y-development-06",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba uči pojam stalnosti predmeta. Igraj žmurke ili sakrij igračku ispod ćebeta i gledaj kako je traži."
+  },
+  {
+    "id": "1y-development-07",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Brbljanje sa suglasnicima poput \"mama\" i \"tata\" je bebino eksperimentisanje sa jezikom. Ponavljaj njene zvukove da podstakneš više."
+  },
+  {
+    "id": "1y-development-08",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Dozvoli bebi da vežba podizanje malih, bezbednih zalogaja hvatom pincetom. Ova fina motorička veština se brzo razvija između 9 i 12 meseci."
+  },
+  {
+    "id": "1y-development-09",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba može početi da razume jednostavna uputstva poput \"daj mi loptu\". Koristi kratke, jasne fraze i nežne gestove zajedno."
+  },
+  {
+    "id": "1y-development-10",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Lupanje dva predmeta jednim o drugi je znak rastuće koordinacije i radoznalosti. Ponudi drvene kašike, čaše ili meke blokove za to."
+  },
+  {
+    "id": "1y-development-11",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba može pokazati strah od stranaca oko ovog uzrasta. Ovo je zdrav znak jake privrženosti tebi."
+  },
+  {
+    "id": "1y-development-12",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Probaj da čitate kartonske knjige zajedno i pustiš bebu da okreće stranice. Gradi rane veštine čitanja čak i pre nego što razume reči."
+  },
+  {
+    "id": "1y-development-13",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Pokazivanje na predmete koje želi je jedan od prvih namernih komunikacionih gestova. Reaguj na ono što pokazuje imenujući to."
+  },
+  {
+    "id": "1y-development-14",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba može početi da oponaša jednostavne radnje poput mešanja kašikom ili češljanja kose. Ova igra imitacije je način na koji uči o svakodnevnom životu."
+  },
+  {
+    "id": "1y-development-15",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Neke bebe naprave prve korake oko 12 meseci, ali mnoge ne hodaju do kasnije. Oba roka su potpuno normalna."
+  },
+  {
+    "id": "1y-sleep-02",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Bliže 12 meseci, neke bebe počinju da se opiru jutarnjoj dremci. Ako se to dosledno dešava, pokušaj postepeno da pomeriš jutarnju dremku umesto da je odmah izbacuješ."
+  },
+  {
+    "id": "1y-sleep-03",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Strepnja od razdvajanja može izazvati noćna buđenja oko 9-10 meseci. Kratka, mirna poseta za utehu je korisnija od menjanja cele rutine."
+  },
+  {
+    "id": "1y-sleep-04",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Drži okruženje za spavanje tamno, hladno i tiho. Mašina za beli šum na umerenoj jačini može pomoći bebi da spava mirnije."
+  },
+  {
+    "id": "1y-sleep-05",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Kratka, predvidljiva rutina pred spavanje od 15-20 minuta signalizira bebi da dolazi vreme za san. Kupanje, knjiga, pesma i krevetac dobro funkcioniše."
+  },
+  {
+    "id": "1y-sleep-06",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Tvoja beba i dalje treba da spava na leđima na čvrstoj, ravnoj površini. Ukloni sve ćebadi, jastuke i plišane igračke iz krevetca."
+  },
+  {
+    "id": "1y-sleep-07",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Noćno odvikavanje od dojenja se često dešava prirodno između 9-12 meseci kako beba jede više čvrste hrane tokom dana. Razgovaraj sa pedijatrom ako nisi sigurna."
+  },
+  {
+    "id": "1y-sleep-08",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Ako se beba podiže u krevetcu i plače, možda joj treba pomoć da nauči kako da sedne. Vežbaj tu veštinu tokom dnevne igre."
+  },
+  {
+    "id": "1y-sleep-09",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Cilj je period budnosti od 2,5-3,5 sata između dremki u ovom uzrastu. Preumorne bebe često teže zaspu."
+  },
+  {
+    "id": "1y-sleep-10",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Rano buđenje pre 6 ujutru je često u ovom uzrastu. Proveri da je soba veoma tamna i izbegavaj stimulativne aktivnosti ako se beba prerano probudi."
+  },
+  {
+    "id": "1y-sleep-11",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Nelagodnost od nicanja zuba može poremetiti san. Ako beba deluje da je boli, pitaj pedijatra za odgovarajući lek protiv bolova pred spavanje."
+  },
+  {
+    "id": "1y-sleep-12",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Putovanja i promene rasporeda mogu privremeno uticati na san. Budi strpljiva i vrati se na normalan raspored što je pre moguće."
+  },
+  {
+    "id": "1y-sleep-14",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Ako je beba na dve dremke, prva je obično oko 9-10 sati a druga oko 13-14 sati. Prilagodi na osnovu bebinih znakova pospanosti."
+  },
+  {
+    "id": "1y-sleep-15",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Neke bebe doživljavaju regresiju sna oko 10-12 meseci vezanu za razvojne skokove poput stajanja i hodanja uz pridržavanje. Obično prođe za 2-4 nedelje."
+  },
+  {
+    "id": "1y-feeding-01",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Do 9-12 meseci, beba može uživati u raznovrsnoj mekoj hrani za ručno jedenje. Seci sve na male, lako uhvatljive komade otprilike veličine graška."
+  },
+  {
+    "id": "1y-feeding-02",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Ponudi vodu u otvorenoj čaši ili čaši sa slamkom tokom obroka. Vežbanje sada pomaže u prelazu sa flašica do 12-15 meseci."
+  },
+  {
+    "id": "1y-feeding-03",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Tvojoj bebi i dalje treba majčino mleko ili formula kao primarna ishrana do 12 meseci. Čvrsta hrana je dopuna u ovoj fazi."
+  },
+  {
+    "id": "1y-feeding-04",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Može trebati 10-15 izlaganja novoj hrani pre nego što je beba prihvati. Nastavi da nudiš bez pritiska ako je odbije."
+  },
+  {
+    "id": "1y-feeding-05",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Hrana bogata gvožđem poput obogaćenih žitarica, pirea od mesa, pasulja i sočiva je naročito važna između 9 i 12 meseci jer se zalihe gvožđa od rođenja troše."
+  },
+  {
+    "id": "1y-feeding-06",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Dozvoli bebi da se sama hrani koliko god je moguće. Nered se isplati za razvoj samostalnosti i finih motoričkih veština."
+  },
+  {
+    "id": "1y-feeding-07",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Izbegavaj med do posle 12 meseci zbog rizika od botulizma kod beba. Ovo važi za sve oblike uključujući pečene proizvode sa medom."
+  },
+  {
+    "id": "1y-feeding-08",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Refleks grcanja se razlikuje od gušenja i normalan je zaštitni refleks dok beba uči da upravlja novim teksturama. Ostani mirna i pusti je da se snađe."
+  },
+  {
+    "id": "1y-feeding-09",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Ponudi tri obroka i 1-2 užine dnevno uz majčino mleko ili formulu. Prati bebine znake gladi i sitosti."
+  },
+  {
+    "id": "1y-feeding-10",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Uvedi česte alergene poput maslaca od kikirikija (razređenog ili u puficama), jaja i mlečnih proizvoda rano i često. Istraživanja pokazuju da ovo može smanjiti rizik od alergije."
+  },
+  {
+    "id": "1y-feeding-11",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Izbegavaj dodat šećer i so u bebinoj hrani. Njeni bubrezi i čulo ukusa su još u razvoju, a prirodna hrana pruža sve što joj treba."
+  },
+  {
+    "id": "1y-feeding-12",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Ako beba okrene glavu ili zatvori usta, kaže ti da je sita. Poštuj znake sitosti da bi izgradila zdrav odnos sa hranom."
+  },
+  {
+    "id": "1y-feeding-13",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Jedenje zajedno kao porodica pomaže bebi da uči gledajući te. Veća je šansa da proba novu hranu kada vidi da ti u njoj uživaš."
+  },
+  {
+    "id": "1y-feeding-14",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Meko voće poput banane, zrelog avokada i kruške kuvane na pari su odlični zalogaji za ručno jedenje. Blago ih izgnječi ili iseci na male trakice."
+  },
+  {
+    "id": "1y-feeding-15",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Ako planiraš prestanak dojenja, izbacivanje po jednog hranjenja tokom više nedelja je blaže i za tebe i za bebu."
+  },
+  {
+    "id": "1y-health-01",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Redovni pregledi uključuju razvojni pregled i proveru rasta. Donesi sva pitanja koja si sakupila."
+  },
+  {
+    "id": "1y-health-02",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Razgovaraj sa pedijatrom o tome koje su vakcine na redu u ovoj fazi. Poštovanje rasporeda imunizacije je važno za zaštitu tvog rastućeg istraživača."
+  },
+  {
+    "id": "1y-health-04",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Nicanje zuba se često pojačava između 9 i 12 meseci kako niče više zuba. Ohlađena (ne zamrznuta) glodalica može pružiti umirujuće olakšanje."
+  },
+  {
+    "id": "1y-health-05",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Prva poseta zubaru treba da bude do prvog rođendana ili u roku od šest meseci od pojave prvog zuba."
+  },
+  {
+    "id": "1y-health-06",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Infekcije uha su česte u ovom uzrastu. Prati vučenje za uši, nervozu, problem sa spavanjem ili temperaturu i kontaktiraj pedijatra ako sumnjaš."
+  },
+  {
+    "id": "1y-health-07",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Kad se pojave zubi, peri ih dva puta dnevno sa količinom paste sa fluorom veličine zrna pirinča i mekom dečjom četkicom."
+  },
+  {
+    "id": "1y-health-08",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Često pranje ruku je jedan od najboljih načina za sprečavanje bolesti dok beba istražuje više površina i predmeta."
+  },
+  {
+    "id": "1y-health-09",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Ako beba dobije blagu prehladu, fiziološke kapi i aspirator za nos mogu pomoći da se očisti zapušenost. Ovlaživač sa hladnom maglom u spavaćoj sobi takođe pomaže."
+  },
+  {
+    "id": "1y-health-11",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Čuvaj bebine kartone o vakcinaciji na jednom mestu. Trebaće ti za upis u vrtić i buduće posete lekaru."
+  },
+  {
+    "id": "1y-health-12",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Blagi neželjeni efekti posle vakcine, poput niske temperature ili nervoze dan-dva, su normalni i znak da imuni sistem reaguje."
+  },
+  {
+    "id": "1y-health-13",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Ravna stopala su potpuno normalna u ovom uzrastu. Svod se razvija tokom prvih nekoliko godina i obično ne zahteva nikakvu intervenciju."
+  },
+  {
+    "id": "1y-health-14",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Ako beba ima uporan pelenski osip koji se ne poboljšava sa zaštitnom kremom, moglo bi se raditi o gljivičnoj infekciji. Pitaj pedijatra za lečenje."
+  },
+  {
+    "id": "1y-health-15",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Vakcina protiv gripa se preporučuje godišnje počevši od 6 meseci. Ako beba još nije primila, nije kasno da se nadoknadi."
+  },
+  {
+    "id": "1y-play-01",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Napuni posudu velikim, mekim predmetima i pusti bebu da vežba vađenje i vraćanje. Ovo gradi veštine rešavanja problema."
+  },
+  {
+    "id": "1y-play-02",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Probaj jednostavnu korpu sa raznim bezbednim kućnim predmetima različitih tekstura, oblika i težina. Beba će obožavati da istražuje svaki od njih."
+  },
+  {
+    "id": "1y-play-03",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Kotrljaj loptu napred-nazad sa bebom. Ova rana igra naizmeničnog igranja uči socijalnu interakciju i praćenje pokretnih predmeta."
+  },
+  {
+    "id": "1y-play-04",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Pusti bebu da se igra vodom tokom kupanja koristeći čaše i posude za sipanje. Nadgledana igra sa vodom je odlična za senzorni razvoj."
+  },
+  {
+    "id": "1y-play-05",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Napravi jednostavan poligon sa jastucima sa kauča na podu. Puzanje preko i oko njih gradi snagu trupa i prostornu svest."
+  },
+  {
+    "id": "1y-play-06",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Pevaj pesme sa pokretima ruku poput \"Ide maca oko tebe\" ili \"Ringe ringe raja\". Beba uči da povezuje reči sa radnjama."
+  },
+  {
+    "id": "1y-play-07",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Ponudi velike voskovice i papir za prva iskustva švrljanja. Drži bojicu zajedno sa njom ako je potrebno i slavi svaki trag koji napravi."
+  },
+  {
+    "id": "1y-play-08",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Puštaj muziku i plešite zajedno. Kretanje uz ritam podržava motorički razvoj i divno je iskustvo zbližavanja."
+  },
+  {
+    "id": "1y-play-09",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Izvedi bebu napolje da oseti travu, lišće i pesak. Senzorna iskustva napolju su bogate prilike za učenje."
+  },
+  {
+    "id": "1y-play-10",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Čaše za umetanje ili prstenovi za slaganje uče bebu o odnosima veličina. Pokaži joj kako se slažu, pa je pusti da sama istraži."
+  },
+  {
+    "id": "1y-play-11",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Igraj \"Gde je otišlo?\" sakrivajući igračku ispod jedne od dve čaše. Ovo jača memoriju i sposobnost rešavanja problema."
+  },
+  {
+    "id": "1y-play-12",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Pusti bebu da lupa po šerpama, tepsijama i drvenim kašikama. Pravljenje buke uči uzrok i posledicu i beskrajno im je zabavno."
+  },
+  {
+    "id": "1y-play-13",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Opisuj šta radiš tokom dana. \"Sada ti peremo ruke\" gradi rečnik čak i pre nego što beba govori."
+  },
+  {
+    "id": "1y-play-14",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Probaj nadgledanu igru sa bezbednim kuhinjskim predmetima poput mernih šolja, silikonskih lopatica i plastičnih činija. Pravi predmeti fasciniraju bebe u ovom uzrastu."
+  },
+  {
+    "id": "1y-play-15",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Igračke za guranje sa ručkama podstiču vežbanje hodanja i grade samopouzdanje kod novih hodača. Pusti bebu da gura svojim tempom."
+  },
+  {
+    "id": "1y-safety-01",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Sada kad je beba pokretna, pričvrsti sav nameštaj za zid protivprevrtačkim držačima. Komode i police za knjige su najčešće opasnosti od prevrtanja."
+  },
+  {
+    "id": "1y-safety-02",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Drži sve sitne predmete, novčiće i dugmaste baterije van domašaja. Sve što stane kroz rolnu toalet papira je opasnost od gušenja."
+  },
+  {
+    "id": "1y-safety-03",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Instaliraj sigurnosne ograde na vrhu i dnu stepenica. Ograde na pritisak su u redu za dno, ali koristi one pričvršćene za zid na vrhu."
+  },
+  {
+    "id": "1y-safety-04",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Proveri da je bebino autosedište okrenuto unazad i pravilno postavljeno. Stručnjaci za bezbednost preporučuju da držiš dete okrenuto unazad što je duže moguće, dok ne dostigne maksimalnu visinu ili težinu sedišta."
+  },
+  {
+    "id": "1y-safety-05",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Nikada ne ostavljaj bebu bez nadzora blizu vode, čak ni na trenutak. Utapanje se može desiti u samo {{1 inch|2.5 cm}} vode."
+  },
+  {
+    "id": "1y-safety-06",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Pokrij sve električne utičnice zaštitnim poklopcima ili pločicama. Bebe koje puze su prirodno privučene utičnicama na nivou njihovih očiju."
+  },
+  {
+    "id": "1y-safety-07",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Premesti sredstva za čišćenje, lekove i hemikalije u visoke, zaključane ormare. Koristi brave otporne na decu na svim niskim ormarima koji sadrže opasnosti."
+  },
+  {
+    "id": "1y-safety-08",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Seci okruglu hranu poput grožđa, čeri paradajza i viršli na male komade po dužini. Okrugli oblici su najčešća opasnost od gušenja za bebe."
+  },
+  {
+    "id": "1y-safety-09",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Podesi bojler na {{120°F|49°C}} ili niže da sprečiš opekotine. Uvek testiraj vodu za kupanje zglobom ili laktom pre nego što staviš bebu."
+  },
+  {
+    "id": "1y-safety-10",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Drži kablove od roletni i vrpce od zavesa van domašaja ili pređi na bezbedne roletne bez kablova. Ovo su ozbiljne opasnosti od gušenja."
+  },
+  {
+    "id": "1y-safety-11",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Spusti dušek krevetca na najnižu poziciju čim beba može da se podigne u stojeći položaj. Ovo sprečava penjanje ili pad iz krevetca."
+  },
+  {
+    "id": "1y-safety-12",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Sačuvaj broj centra za trovanje u telefonu. Brz pristup je važan u hitnom slučaju."
+  },
+  {
+    "id": "1y-safety-13",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Izbegavaj hodalice sa točkićima, jer stručnjaci za bezbednost dece upozoravaju da doprinose povredama i ne pomažu bebama da nauče da hodaju."
+  },
+  {
+    "id": "1y-safety-14",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Koristi zaštitne jastučiće za oštre ivice nameštaja poput stolova za kafu i kamina. Bebe koje počinju da hodaju često padaju i to na visini glave."
+  },
+  {
+    "id": "1y-safety-15",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Uvek nadgledaj bebu dok jede. Ostani nadohvat ruke i nauči kardiopulmonalnu reanimaciju (KPR) za bebe da budeš spremna ako dođe do gušenja."
+  },
+  {
+    "id": "1y-development-16",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba može početi da koristi jednu ili dve prave reči sa značenjem oko ovog uzrasta. Slavi svaki pokušaj komunikacije, čak i ako reč nije baš tačna."
+  },
+  {
+    "id": "1y-development-17",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Nuđenje slagalice oblika ili slagalice sa velikim dugmićima pomaže bebi da uči o podudaranju i prostornim odnosima kroz pokušaj i grešku."
+  },
+  {
+    "id": "1y-development-18",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba ti može dodati knjigu kada želi da joj čitaš. Praćenje njenog vođstva i čitanje onoga što je zanima gradi doživotnu ljubav prema knjigama."
+  },
+  {
+    "id": "1y-development-19",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Probaj da daješ jednostavna uputstva u jednom koraku sa gestom, poput pružanja ruke i izgovaranja \"daj mi loptu\". Beba uči da povezuje tvoje reči sa radnjama."
+  },
+  {
+    "id": "1y-development-20",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tvoja beba počinje da razume da predmeti imaju imena. Imenovanje svega oko nje — \"to je drvo\", \"eno ptice\" — podstiče njen rastući rečnik."
+  },
+  {
+    "id": "1y-sleep-16",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Oko 12 meseci ili kasnije, neke bebe počinju prelaz sa dve dremke na jednu. Ako se to desi, očekuj par nedelja nedoslednosti gde neki dani zahtevaju dve dremke a drugi samo jednu."
+  },
+  {
+    "id": "1y-sleep-17",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Ako beba prelazi na jednu dremku oko 12 meseci ili kasnije, cilj je dremka između 12 i 13 sati. Ranije spavanje može premostiti razliku dok se prilagođava."
+  },
+  {
+    "id": "1y-sleep-18",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Ako je beba počela da se penje iz krevetca, spusti dušek na najnižu poziciju i ukloni sve što bi mogla koristiti kao stepenik."
+  },
+  {
+    "id": "1y-sleep-19",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Odolej porivu da preskočiš dremke zbog izlazaka. Dosledan dnevni san zapravo vodi ka boljem noćnom snu i srećnijoj bebi ukupno."
+  },
+  {
+    "id": "1y-sleep-20",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Ako počnu ispadi besa pred spavanje, jednostavno odbrojavanje može pomoći. \"Još dva minuta igre, pa peremo zube\" daje bebi osećaj šta dolazi."
+  },
+  {
+    "id": "1y-feeding-16",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Kako se bebi bliži prvi rođendan, možeš početi da uvodiš puno kravlje mleko kao napitak. Cilj je oko {{16-24 ounces|475-710 ml}} dnevno — previše može napuniti bebu i potisnuti čvrstu hranu."
+  },
+  {
+    "id": "1y-feeding-17",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Probaj da ponudiš sos za umakanje poput humusa ili jogurta uz zalogaje. Umakanje je zabavno za bebu i može učiniti nepoznatu hranu privlačnijom."
+  },
+  {
+    "id": "1y-feeding-18",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Ako beba insistira da se sama hrani, dozvoli joj. Ponudi već napunjenu kašičicu da vežba, i jedi pored nje da pokažeš kako se radi."
+  },
+  {
+    "id": "1y-feeding-19",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Kad ti se učini da je vreme, počni prelaz sa flašica. Nuđenje mleka u čaši tokom obroka i vode između obroka olakšava prelaz."
+  },
+  {
+    "id": "1y-feeding-20",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Ne brini ako bebin apetit varira iz dana u dan. Skokovi u rastu, nicanje zuba i nivo aktivnosti svi utiču na glad. Veruj njenim signalima."
+  },
+  {
+    "id": "1y-health-16",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Povremeno hodanje na prstima je uobičajeno dok beba eksperimentiše sa kretanjem. Ako to postane njen primarni način hodanja, pomeni to pedijatru."
+  },
+  {
+    "id": "1y-health-18",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Ako beba dobije osip posle nove hrane, zapiši šta je jela i kada se osip pojavio. Podeli to sa pedijatrom da pomogneš u identifikaciji bilo kakve osetljivosti na hranu."
+  },
+  {
+    "id": "1y-health-19",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Proliv od stomačnog virusa može brzo dehidrirati bebe. Nudi male, česte gutljaje rastvora za rehidrataciju i kontaktiraj pedijatra ako traje duže od jednog dana."
+  },
+  {
+    "id": "1y-health-20",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Kad beba počne da hoda, očekuj modrice na golenjačama i čelu od padova. Ovo je normalan deo učenja, ali uvek isključi povrede glave posle jačih padova."
+  },
+  {
+    "id": "1y-play-16",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Probaj da daš bebi igračku sa vratancima, kopčama ili rajsferšlusima za otvaranje i zatvaranje. Ovi izazovi za fine motoričke veštine drže je angažovanom i grade spretnost."
+  },
+  {
+    "id": "1y-play-17",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Postavi nisku policu sa par rotirajućih igračaka umesto velike kutije za igračke. Manje izbora odjednom pomaže bebi da se fokusira i dublje igra sa svakom igračkom."
+  },
+  {
+    "id": "1y-play-18",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Tvoja beba može početi sa igrom pretvaranja, poput hranjenja plišane igračke ili stavljanja lutke na spavanje. Pridruži se i proširi njene ideje da podstakneš maštu."
+  },
+  {
+    "id": "1y-play-20",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Probaj da duvaš mehuriće i pustiš bebu da ih juri i puca. Odlično je za vizuelno praćenje, posezanje i pokretanje novih hodača."
+  },
+  {
+    "id": "1y-safety-16",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Kad beba počne da hoda, cipele sa fleksibilnim, neklizajućim đonovima štite njena stopala napolju. U kući su bose noge ili čarape sa neklizajućom podlogom najbolje za ravnotežu."
+  },
+  {
+    "id": "1y-safety-17",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Čuvaj kapsule za deterdžent pod ključem. Njihove jarke boje privlače bebe, a ujed u jednu može izazvati ozbiljne hemijske opekotine usta i grla."
+  },
+  {
+    "id": "1y-safety-18",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Proveri da bebine igračke nemaju male delove koji se mogu odlomiti. Redovno pregledaj igračke na pukotine, labave delove ili ljuštenje boje."
+  },
+  {
+    "id": "1y-safety-19",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Ako imaš kamin ili grejalicu, koristi zaštitnu mrežu ili barijeru. Čak i tople površine mogu opeći osetljivu bebinu kožu na dodir."
+  },
+  {
+    "id": "1y-safety-20",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Pazi na užine starije dece oko tvoje bebe. Kokice, orašasti plodovi, tvrdi bomboni i žvake su opasnosti od gušenja koje se lako previde kad braća i sestre dele."
+  }
+]

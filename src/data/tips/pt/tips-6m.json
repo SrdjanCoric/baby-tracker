@@ -1,0 +1,860 @@
+[
+  {
+    "id": "6m-development-01",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a sentar com apoio ou até de forma independente por alguns segundos. Coloque almofadas ao redor dele para amortecer as quedas enquanto pratica."
+  },
+  {
+    "id": "6m-development-02",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Por volta dessa idade, muitos bebês começam a passar objetos de uma mão para a outra. Ofereça um brinquedo e veja essa coordenação impressionante em ação."
+  },
+  {
+    "id": "6m-development-03",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a responder ao próprio nome virando para olhar para você. Use o nome dele com frequência durante brincadeiras e conversas para reforçar."
+  },
+  {
+    "id": "6m-development-04",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "O balbucio está ficando mais complexo, com sequências de consoantes e vogais como \"bababa\" ou \"mamama\". Ainda não são palavras, mas são a base da fala."
+  },
+  {
+    "id": "6m-development-05",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê está descobrindo a gravidade! Ele pode adorar deixar cair brinquedos do colo ou de uma superfície e observar a queda. Essa repetição é ele aprendendo sobre causa e efeito."
+  },
+  {
+    "id": "6m-development-07",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a se balançar apoiado nas mãos e nos joelhos, que é o passo anterior ao engatinhar. Dê bastante tempo no chão para ele explorar esse movimento."
+  },
+  {
+    "id": "6m-development-08",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tente brincar de revezar: você balbucia, ele balbucia; você sorri, ele sorri. Essas trocas são a base da conversação."
+  },
+  {
+    "id": "6m-development-09",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "A percepção de profundidade do seu bebê está melhorando rapidamente. Ele agora consegue alcançar objetos com mais precisão e avaliar distâncias melhor do que antes."
+  },
+  {
+    "id": "6m-development-10",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Alguns bebês nessa idade começam a mostrar preferência por certos brinquedos ou objetos de conforto. Ter uma naninha ou paninho de apego pode se tornar uma ferramenta útil de autoconsolo."
+  },
+  {
+    "id": "6m-development-11",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode usar uma preensão palmar — pegando coisas com todos os dedos — para pegar objetos. A preensão de pinça mais refinada vem depois."
+  },
+  {
+    "id": "6m-development-12",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "A ansiedade de separação pode começar a aparecer. Se seu bebê chora quando você sai do quarto, significa que ele entende que você existe mesmo quando não consegue vê-lo."
+  },
+  {
+    "id": "6m-development-13",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a pular quando segurado em pé. Essa força nas pernas e coordenação são uma preparação importante para ficar em pé e andar mais tarde."
+  },
+  {
+    "id": "6m-development-14",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Aponte para as coisas e nomeie-as para seu bebê: \"Olha, um passarinho!\" Apontar ajuda ele a aprender a seguir seu olhar e constrói vocabulário para o futuro."
+  },
+  {
+    "id": "6m-development-15",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a demonstrar emoções com mais clareza — frustração quando um brinquedo é tirado, animação quando vê a comida sendo preparada. Reconheça esses sentimentos em voz alta."
+  },
+  {
+    "id": "6m-development-16",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a se arrastar ou se mover na barriga antes de ficar sobre as mãos e os joelhos. Cada bebê encontra sua própria forma de se locomover."
+  },
+  {
+    "id": "6m-development-17",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Tente oferecer ao seu bebê dois brinquedos ao mesmo tempo — um em cada mão. Segurar dois objetos simultaneamente é um grande marco cognitivo e motor."
+  },
+  {
+    "id": "6m-development-18",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a entender palavras simples mesmo sem conseguir dizê-las ainda. Perguntar \"cadê o cachorro?\" e vê-lo olhar ao redor mostra compreensão inicial."
+  },
+  {
+    "id": "6m-development-19",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Se seu bebê bate objetos na mesa ou no chão, ele está experimentando causa e efeito. Tente dar itens diferentes para ele ouvir a variedade de sons."
+  },
+  {
+    "id": "6m-development-20",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a procurar um brinquedo que caiu fora do campo de visão em vez de esquecê-lo. Isso mostra que a noção de permanência do objeto está ficando mais forte."
+  },
+  {
+    "id": "6m-development-21",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Conforme seu bebê desenvolve a força da parte superior do corpo, ele pode começar a se esticar em direção a móveis ou às suas mãos. Ofereça superfícies firmes para ele se apoiar enquanto explora novas posições."
+  },
+  {
+    "id": "6m-development-22",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode se inclinar para frente da posição sentada para pegar algo e depois voltar. Essa recuperação de equilíbrio mostra que a força do tronco está se desenvolvendo bem."
+  },
+  {
+    "id": "6m-development-23",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Acene tchau para seu bebê com frequência. Ele não vai acenar de volta ainda, mas mostrar gestos agora prepara o caminho para a imitação nos próximos meses."
+  },
+  {
+    "id": "6m-development-24",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Seu bebê pode começar a mostrar preferência por pessoas específicas, estendendo os braços para um cuidador favorito. Essa seletividade é uma parte normal do desenvolvimento do apego."
+  },
+  {
+    "id": "6m-development-25",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "A maioria dos bebês não engatinha até 7-10 meses, e alguns pulam essa fase completamente. Por enquanto, bastante tempo no chão ajuda seu bebê a desenvolver a força e a coordenação de que vai precisar quando estiver pronto para se mover."
+  },
+  {
+    "id": "6m-sleep-01",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "A maioria dos bebês nessa idade consegue dormir 6-8 horas seguidas à noite, embora alguns ainda acordem para mamar. Os dois padrões são normais."
+  },
+  {
+    "id": "6m-sleep-02",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Seu bebê provavelmente precisa de cerca de 2-3 sonecas por dia agora, com janelas de vigília de 2 a 2,5 horas. Fique atento a bocejos e esfregação dos olhos como sinais de sono."
+  },
+  {
+    "id": "6m-sleep-03",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se seu bebê acabou de aprender a sentar ou está tentando engatinhar, o sono pode ser interrompido enquanto ele pratica novas habilidades no berço. Isso é temporário."
+  },
+  {
+    "id": "6m-sleep-04",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Uma rotina diurna previsível (acordar, comer, brincar, dormir) pode ajudar a tornar os horários de soneca mais consistentes e menos difíceis."
+  },
+  {
+    "id": "6m-sleep-05",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se seu bebê começa a se puxar para ficar em pé no berço e não consegue voltar, pratique sentar a partir da posição em pé durante o dia para que ele aprenda a fazer isso à noite. Isso é mais comum nos próximos meses."
+  },
+  {
+    "id": "6m-sleep-06",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Você pode começar a apresentar uma naninha ou paninho de apego durante os momentos acordado e de carinho para que seu bebê crie apego a ele. Para sono seguro, mantenha o berço vazio até 12 meses conforme as diretrizes de sono seguro."
+  },
+  {
+    "id": "6m-sleep-07",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se seu bebê está pronto para passar de 3 sonecas para 2, talvez seja necessário antecipar temporariamente a hora de dormir para evitar cansaço excessivo durante a transição."
+  },
+  {
+    "id": "6m-sleep-08",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "A dentição pode atrapalhar o sono, mas o pior geralmente dura apenas alguns dias por dente. Dar conforto extra durante esse período é perfeitamente normal."
+  },
+  {
+    "id": "6m-sleep-09",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se está introduzindo alimentos sólidos, ofereça-os mais cedo no dia em vez de perto da hora de dormir. Alimentos novos às vezes podem causar desconforto que atrapalha o sono."
+  },
+  {
+    "id": "6m-sleep-10",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Seu bebê pode estar pronto para acordar um pouco mais tarde de manhã. Manter o quarto escuro e não correr ao primeiro som pode ajudar nisso."
+  },
+  {
+    "id": "6m-sleep-11",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Alguns bebês nessa idade começam a preferir dormir de barriga para baixo. Desde que consigam rolar para os dois lados, é seguro deixá-los encontrar a posição preferida."
+  },
+  {
+    "id": "6m-sleep-12",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Consistência é sua melhor aliada com o sono. Qualquer que seja a abordagem, manter por pelo menos uma semana dá a melhor chance de funcionar."
+  },
+  {
+    "id": "6m-sleep-13",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Viagens e mudanças de fuso horário podem atrapalhar o sono temporariamente. Tente manter a rotina habitual de dormir mesmo em ambientes diferentes."
+  },
+  {
+    "id": "6m-sleep-14",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se os despertares noturnos aumentam de repente, considere se seu bebê está recebendo calorias suficientes durante o dia. Começar sólidos às vezes ajuda, mas nem sempre."
+  },
+  {
+    "id": "6m-sleep-15",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "O total de sono para essa idade é tipicamente 12-16 horas em um período de 24 horas. Se seu bebê parece feliz e bem descansado, provavelmente está dormindo o suficiente."
+  },
+  {
+    "id": "6m-sleep-16",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se seu bebê balbucia ou fala sozinho no berço antes de adormecer, deixe-o. Essa conversa consigo mesmo é um sinal saudável de que ele consegue se acalmar sozinho."
+  },
+  {
+    "id": "6m-sleep-17",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "A ansiedade de separação pode causar mais despertares noturnos por volta dessa idade. Uma visita breve e calma para tranquilizar é aceitável, mas tente evitar criar novos hábitos que precisará desfazer depois."
+  },
+  {
+    "id": "6m-sleep-18",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Conforme seu bebê faz a transição de 3 sonecas para 2, a última soneca do dia geralmente é a que é eliminada. Antecipar a hora de dormir pode ajudar enquanto ele se ajusta."
+  },
+  {
+    "id": "6m-sleep-19",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Um quarto escuro com cortinas blackout pode ajudar tanto nas sonecas quanto no sono noturno, especialmente se seu bebê é facilmente estimulado pela luz."
+  },
+  {
+    "id": "6m-sleep-20",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se seu bebê acorda muito cedo de manhã (antes das 6h), verifique se o quarto está escuro o suficiente e considere se a hora de dormir precisa ser ajustada um pouco mais tarde."
+  },
+  {
+    "id": "6m-sleep-21",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Alguns bebês precisam de um pouco de atividade física antes de dormir para gastar energia. Uma breve sessão de brincadeira antes da rotina de relaxamento pode ajudá-los a pegar no sono mais rápido."
+  },
+  {
+    "id": "6m-sleep-22",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se seu bebê começou a praticar rolar, engatinhar ou outras habilidades novas no berço na hora de dormir, deite-o de volta calmamente sem transformar em brincadeira. Ele vai acabar se acalmando."
+  },
+  {
+    "id": "6m-sleep-23",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Em dias em que as sonecas são curtas ou não acontecem, não hesite em antecipar a hora de dormir em 30-60 minutos. Um bebê muito cansado luta mais contra o sono."
+  },
+  {
+    "id": "6m-sleep-24",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "As necessidades de sono do seu bebê são únicas. Se ele está feliz, crescendo e atingindo os marcos de desenvolvimento, o sono dele provavelmente está bem mesmo que não corresponda ao que os livros dizem."
+  },
+  {
+    "id": "6m-sleep-25",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Se você está fazendo cama compartilhada e quer fazer a transição para o berço, comece pelas sonecas. A prática durante o dia ajuda seu bebê a se sentir confortável no próprio espaço."
+  },
+  {
+    "id": "6m-feeding-01",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Por volta dos 6 meses costuma ser um ótimo momento para começar a introdução alimentar! Procure sinais de prontidão: sentar com apoio, bom controle de cabeça e interesse pela comida."
+  },
+  {
+    "id": "6m-feeding-02",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Seja com purês ou com o método BLW (alimentação guiada pelo bebê), o leite materno ou a fórmula ainda devem ser a principal fonte de nutrição. Os sólidos nessa fase são para exploração."
+  },
+  {
+    "id": "6m-feeding-05",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "É normal seu bebê empurrar a comida para fora com a língua no início. O reflexo de protrusão da língua está desaparecendo, e ele está aprendendo a mover a comida para o fundo da boca."
+  },
+  {
+    "id": "6m-feeding-06",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "O reflexo de engasgo é diferente de um engasgo de verdade e na verdade é um mecanismo de segurança. O reflexo de engasgo é barulhento e envolve tosse; o engasgo de verdade é silencioso. Aprenda a distinguir a diferença."
+  },
+  {
+    "id": "6m-feeding-07",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Boas primeiras comidas incluem opções ricas em ferro como carnes em purê, cereal fortificado com ferro ou lentilhas amassadas. As reservas de ferro do bebê desde o nascimento começam a se esgotar por volta dos 6 meses."
+  },
+  {
+    "id": "6m-feeding-08",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ofereça água em um copinho aberto ou com canudo durante as refeições. Seu bebê não vai beber muito no início, mas a prática precoce desenvolve habilidades importantes de motricidade oral."
+  },
+  {
+    "id": "6m-feeding-09",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Comer fazendo bagunça faz parte do aprendizado! Deixe seu bebê tocar, apertar e espalhar a comida. A exploração sensorial é uma parte importante de aceitar novas texturas."
+  },
+  {
+    "id": "6m-feeding-10",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Se faz BLW, corte os alimentos em tiras do tamanho de um dedo que seu bebê consiga segurar no punho. Ele vai roer a parte que sobra para fora."
+  },
+  {
+    "id": "6m-feeding-11",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Evite mel até 1 ano devido ao risco de botulismo infantil. Também evite leite de vaca como bebida principal, embora pequenas quantidades na comida estejam liberadas."
+  },
+  {
+    "id": "6m-feeding-12",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Não desanime se seu bebê rejeitar um alimento. Pode levar 10-15 tentativas antes que ele aceite algo novo. Continue oferecendo sem pressão."
+  },
+  {
+    "id": "6m-feeding-13",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Seu bebê deve estar sempre sentado na posição vertical no cadeirão durante as refeições, nunca reclinado. Essa posição é a mais segura para engolir."
+  },
+  {
+    "id": "6m-feeding-14",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Combine alimentos ricos em ferro com fontes de vitamina C (como morangos amassados ou um pouco de suco de laranja) para aumentar a absorção de ferro."
+  },
+  {
+    "id": "6m-feeding-15",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Deixe seu bebê ditar o ritmo durante as refeições. Quando ele vira a cabeça, fecha a boca ou perde o interesse, está dizendo que terminou."
+  },
+  {
+    "id": "6m-feeding-16",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Introduza a proteína do amendoim cedo misturando pasta de amendoim lisa em purês ou mingau. Amendoins inteiros e pasta de amendoim com pedaços são riscos de engasgo nessa idade."
+  },
+  {
+    "id": "6m-feeding-17",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ofereça uma variedade de cores no prato do seu bebê. Frutas e legumes de cores diferentes fornecem nutrientes diferentes, e a variedade agora incentiva uma alimentação mais diversificada no futuro."
+  },
+  {
+    "id": "6m-feeding-18",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Seu bebê pode comer bastante em um dia e mal tocar na comida no seguinte. Essa inconsistência é completamente normal. O leite materno ou a fórmula preenche as lacunas nutricionais."
+  },
+  {
+    "id": "6m-feeding-19",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Tente oferecer ao seu bebê uma colher já com comida para ele levar à própria boca. Essa prática bagunçada desenvolve independência e habilidades de motricidade fina."
+  },
+  {
+    "id": "6m-feeding-20",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Evite adicionar sal ou açúcar à comida do seu bebê. Os rins dele ainda não conseguem lidar com muito sódio, e começar com sabores naturais ajuda a apreciar o gosto real dos alimentos."
+  },
+  {
+    "id": "6m-feeding-21",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Se seu bebê tem reflexo de engasgo com uma nova textura, fique calmo e deixe-o resolver sozinho. Sua reação tranquila ajuda ele a se sentir seguro explorando diferentes alimentos."
+  },
+  {
+    "id": "6m-feeding-22",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "As mamadas ou mamadeiras ainda devem acontecer antes das refeições com sólidos nessa fase. O leite continua sendo a principal fonte de nutrição até perto dos 12 meses."
+  },
+  {
+    "id": "6m-feeding-23",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ofereça legumes cozidos e macios como batata-doce, floretes de brócolis ou tiras de abobrinha como ótimos primeiros alimentos para pegar com os dedos. Cozinhe até que esmaguem facilmente entre os dedos."
+  },
+  {
+    "id": "6m-feeding-24",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Comer junto como família, mesmo nessa fase inicial, ajuda seu bebê a aprender observando você. Ele vai imitar sua mastigação e ficar mais disposto a experimentar o que você está comendo."
+  },
+  {
+    "id": "6m-feeding-25",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Se seu bebê parece frustrado com purês, ele pode estar pronto para texturas um pouco mais grossas ou alimentos macios para pegar com os dedos. Siga o ritmo dele e ajuste conforme ele mostrar o que consegue lidar."
+  },
+  {
+    "id": "6m-health-01",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Consultas regulares durante esse período são importantes para acompanhar o desenvolvimento. Seu pediatra também pode recomendar suplementos de flúor se a água da sua região não for fluoretada."
+  },
+  {
+    "id": "6m-health-03",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Se seu bebê tiver febre de {{100.4°F|38°C}} ou mais, ligue para seu pediatra. Nessa idade, uma febre justifica uma consulta para descartar infecção."
+  },
+  {
+    "id": "6m-health-04",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Infecções de ouvido são comuns nessa idade. Puxar as orelhas, irritabilidade e febre podem ser sinais. Note que apenas puxar as orelhas frequentemente é só desconforto da dentição, mas procure o médico se suspeitar de infecção."
+  },
+  {
+    "id": "6m-health-06",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Agora é um bom momento para agendar a primeira visita ao dentista do seu bebê. Especialistas recomendam ir ao dentista até 1 ano de idade ou dentro de 6 meses após o primeiro dente."
+  },
+  {
+    "id": "6m-health-07",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Fique atento a sinais de alergias alimentares ao introduzir sólidos: urticária, inchaço, vômito ou dificuldade para respirar. Erupções leves ao redor da boca geralmente são apenas irritação da pele."
+  },
+  {
+    "id": "6m-health-08",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Se é época de gripe e seu bebê tem pelo menos 6 meses, ele pode receber a vacina da gripe. Isso é especialmente importante porque os anticorpos maternos estão diminuindo."
+  },
+  {
+    "id": "6m-health-09",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "A dor da dentição é real, mas geralmente controlável. Mordedores resfriados e massagem suave na gengiva com um dedo limpo podem aliviar."
+  },
+  {
+    "id": "6m-health-10",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Seu bebê pode desenvolver sensibilidades alimentares ao experimentar coisas novas. Algumas fezes amolecidas após um alimento novo nem sempre significam alergia — o sistema digestivo dele está se adaptando."
+  },
+  {
+    "id": "6m-health-11",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Bebês nessa idade estão cada vez mais ativos e adoram explorar com a boca. Faça uma varredura diária no chão em busca de objetos pequenos que possam ser riscos de engasgo."
+  },
+  {
+    "id": "6m-health-12",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Se seu bebê parece ter congestão persistente, pode estar relacionado aos novos alimentos ou a alérgenos ambientais. Mencione na próxima consulta."
+  },
+  {
+    "id": "6m-health-13",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Colares de âmbar para dentição não são recomendados — apresentam riscos de estrangulamento e engasgo sem benefício comprovado. Prefira alternativas seguras para a dentição."
+  },
+  {
+    "id": "6m-health-14",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "As fezes do seu bebê vão mudar de cor e consistência conforme ele começa a comer sólidos. Verde, laranja e marrom são normais. Fezes vermelhas ou pretas devem ser informadas ao médico."
+  },
+  {
+    "id": "6m-health-15",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "A partir dos 6 meses, use protetor solar (FPS 30+) na pele exposta ao sair de casa. Antes dos 6 meses, conte com sombra, chapéus e roupas leves para proteção solar."
+  },
+  {
+    "id": "6m-health-16",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Continue escovando os dentes novos do seu bebê duas vezes ao dia com uma quantidade do tamanho de um grão de arroz de creme dental com flúor. Criar essa rotina agora facilita quando mais dentes aparecerem."
+  },
+  {
+    "id": "6m-health-17",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Se seu bebê se machucar ou ficar com um roxo por causa da nova mobilidade, compressa fria e carinho geralmente são suficientes. Ligue para o médico em caso de pancadas na cabeça com vômito ou sonolência incomum."
+  },
+  {
+    "id": "6m-health-18",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "A doença mão-pé-boca é comum em bebês e crianças pequenas. Fique atento a pequenas bolhas nas mãos, pés e boca. É desconfortável, mas geralmente se resolve em cerca de uma semana."
+  },
+  {
+    "id": "6m-health-19",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "As necessidades de ferro do seu bebê aumentam significativamente por volta dos 6 meses. Se seu bebê foi prematuro ou amamentado exclusivamente, pergunte ao pediatra se um suplemento de ferro é necessário."
+  },
+  {
+    "id": "6m-health-21",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Se seu bebê desenvolve uma erupção após experimentar um alimento novo, tire uma foto e anote o alimento e o horário. Essa informação é muito útil para o pediatra."
+  },
+  {
+    "id": "6m-health-22",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "A dentição pode causar um leve aumento de temperatura, mas febre real de {{100.4°F|38°C}} ou mais não é causada pela dentição. Se seu bebê tem febre enquanto os dentes estão nascendo, consulte o médico para descartar outras causas."
+  },
+  {
+    "id": "6m-health-23",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Com mais mobilidade vêm mais quedas e tombos. Proteger quinas e superfícies duras ajuda, mas alguns tombos são parte normal de aprender a se mover."
+  },
+  {
+    "id": "6m-health-24",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Se o eczema do seu bebê piora depois de começar os sólidos, mantenha um diário alimentar para rastrear possíveis gatilhos. Os mais comuns incluem laticínios, ovos e trigo."
+  },
+  {
+    "id": "6m-health-25",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "A temporada de VSR pode ser especialmente preocupante para bebês com menos de 12 meses. Lavar as mãos com frequência e evitar contato com pessoas doentes são as melhores estratégias de prevenção."
+  },
+  {
+    "id": "6m-play-01",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Ofereça copinhos de empilhar ou brinquedos de encaixe. Seu bebê ainda não vai empilhá-los, mas vai adorar derrubar as torres que você constrói e explorar os diferentes tamanhos."
+  },
+  {
+    "id": "6m-play-02",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Encha uma cestinha com itens domésticos seguros (colher de pau, espátula de silicone, retalhos de tecido) e deixe seu bebê explorar. Um \"cesto de tesouros\" incentiva a brincadeira independente."
+  },
+  {
+    "id": "6m-play-03",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Brinque de \"cadê?\" escondendo parcialmente um brinquedo sob um pano. Seu bebê está aprendendo sobre a permanência dos objetos e vai adorar procurá-lo."
+  },
+  {
+    "id": "6m-play-04",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "A hora do banho é uma ótima brincadeira sensorial! Dê ao seu bebê copinhos para despejar e brinquedos que flutuam. Sempre supervisione — nunca o deixe sozinho perto da água."
+  },
+  {
+    "id": "6m-play-05",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Sente seu bebê na frente de um espelho e façam caretas juntos. Nessa idade, ele vai sorrir, rir e estender a mão para tocar o reflexo."
+  },
+  {
+    "id": "6m-play-06",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Experimente brincadeiras mais agitadas — pular no seu joelho, balançar suavemente no ar ou fazer sons engraçados. Essas brincadeiras físicas constroem confiança e consciência corporal."
+  },
+  {
+    "id": "6m-play-07",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Apresente instrumentos musicais simples como um tamborzinho, chocalho ou xilofone. Seu bebê vai adorar fazer barulho e descobrir que consegue criar sons."
+  },
+  {
+    "id": "6m-play-08",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Monte um circuito de obstáculos com almofadas e cobertores enrolados para seu bebê passar por cima e ao redor. Isso desenvolve habilidades de resolução de problemas junto com força física."
+  },
+  {
+    "id": "6m-play-09",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Leia livros com diferentes texturas (livros de toque). Seu bebê vai adorar passar os dedos por superfícies fofinhas, ásperas e lisas."
+  },
+  {
+    "id": "6m-play-10",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Deixe seu bebê brincar com brinquedos de água seguros em uma bacia rasa. Despejar, espirrar e sentir a água escorrer ensinam sobre o mundo físico."
+  },
+  {
+    "id": "6m-play-11",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Coloque músicas de diferentes estilos e observe a reação do seu bebê. Ele pode pular, chutar ou balançar os braços. Dançar juntos é um momento de conexão maravilhoso."
+  },
+  {
+    "id": "6m-play-12",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Ofereça ao seu bebê uma colher para segurar durante a refeição. Bater na bandeja é bagunçado e barulhento, mas desenvolve a motricidade fina e a coordenação olho-mão."
+  },
+  {
+    "id": "6m-play-13",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Experimente fazer barulho de peido com a boca na barriguinha do bebê durante as trocas de fralda. Esses momentos divertidos transformam tarefas rotineiras em oportunidades de conexão."
+  },
+  {
+    "id": "6m-play-14",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Passe tempo no chão com seu bebê, no nível dele. Deite-se de barriga durante o tempo de bruços ou sente-se de frente para ele. Ele se engaja mais quando você está no nível dos olhos dele."
+  },
+  {
+    "id": "6m-play-15",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Coloque brinquedos em uma forma de cupcake para seu bebê tirar e explorar. Essa atividade simples desafia a habilidade de preensão e mantém o bebê entretido."
+  },
+  {
+    "id": "6m-play-16",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Experimente colocar um brinquedo dentro de um pote transparente e deixar seu bebê descobrir como tirá-lo. Essa resolução de problemas precoce desenvolve o raciocínio."
+  },
+  {
+    "id": "6m-play-17",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Ofereça uma caixa de papelão para seu bebê explorar. Ele pode empurrá-la, sentar nela ou bater nela. Brinquedos simples e sem regras estimulam mais a criatividade."
+  },
+  {
+    "id": "6m-play-18",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Brinque de bater palminhas com seu bebê. Guie as mãozinhas dele nos movimentos e curta as reações. Com o tempo, ele vai começar a participar sozinho."
+  },
+  {
+    "id": "6m-play-19",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Deixe seu bebê explorar alimentos seguros durante a brincadeira, não só na refeição. Sentir a textura de uma banana ou amassar um pedaço de abacate é um aprendizado sensorial maravilhoso."
+  },
+  {
+    "id": "6m-play-20",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Monte um cesto sensorial com objetos grandes e seguros como bolas macias, argolas de madeira e retalhos de tecido. A brincadeira sensorial supervisionada mantém seu bebê entretido e aprendendo."
+  },
+  {
+    "id": "6m-play-21",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Role uma bola de um lado para o outro com seu bebê enquanto ele está sentado. Esse jogo simples ensina a revezar e ajuda a praticar o acompanhamento de objetos em movimento."
+  },
+  {
+    "id": "6m-play-22",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Deixe seu bebê rasgar papel (pedaços grandes, supervisionado). O som e o movimento são fascinantes, e rasgar fortalece as mãos e a coordenação."
+  },
+  {
+    "id": "6m-play-23",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Apresente livros com abas de levantar e deixe seu bebê tentar abrir as abas sozinho. Isso combina prática de motricidade fina com a alegria da surpresa."
+  },
+  {
+    "id": "6m-play-24",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Cante canções com movimentos de mão como \"A Dona Aranha\" ou \"Seu Lobato\". Seu bebê vai começar a antecipar os movimentos e com o tempo vai tentar imitá-los."
+  },
+  {
+    "id": "6m-play-25",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Leve seu bebê em um \"passeio de texturas\" pela casa, deixando-o tocar superfícies seguras como o balcão liso, uma almofada macia, a janela fria e o tapete felpudo."
+  },
+  {
+    "id": "6m-safety-01",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Agora que seu bebê está ficando mais ativo, instale portões de segurança no topo e na base das escadas. Portões de pressão servem para a base; no topo, use os fixados na parede."
+  },
+  {
+    "id": "6m-safety-02",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Abaixe o colchão do berço para a posição mais baixa antes que seu bebê consiga se puxar para ficar em pé. Eles são mais fortes do que você imagina e vão surpreendê-lo."
+  },
+  {
+    "id": "6m-safety-03",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Tranque os armários que contêm produtos de limpeza, medicamentos e objetos cortantes. Travas magnéticas ou adesivas para armários são eficazes e fáceis de instalar."
+  },
+  {
+    "id": "6m-safety-05",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Nunca deixe seu bebê sozinho no cadeirão. Sempre use o cinto de segurança e afaste a cadeira de mesas e bancadas das quais ele possa se empurrar."
+  },
+  {
+    "id": "6m-safety-06",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Cubra quinas e bordas de móveis com protetores de canto. A cabeça do seu bebê fica na altura da mesa quando ele começa a se puxar para cima, e batidas são inevitáveis."
+  },
+  {
+    "id": "6m-safety-07",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Mantenha cordões de persianas, cortinas e eletrônicos fora do alcance. Estrangulamento por cordões é um risco sério para bebês curiosos que agarram tudo."
+  },
+  {
+    "id": "6m-safety-08",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Sempre supervisione seu bebê perto de água, incluindo banhos, piscinas infantis e baldes. Afogamento pode acontecer rapidamente e de forma silenciosa."
+  },
+  {
+    "id": "6m-safety-09",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Verifique se as plantas de casa são atóxicas e estão fora do alcance. Muitas plantas comuns são venenosas se ingeridas. Na dúvida, coloque as plantas no alto."
+  },
+  {
+    "id": "6m-safety-10",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Certifique-se de que o cadeirão do seu bebê tem uma base ampla e estável e uma trava entre as pernas para evitar que ele escorregue. Um ajuste adequado mantém a segurança durante as refeições."
+  },
+  {
+    "id": "6m-safety-11",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Retire toalhas de mesa ou jogos americanos que seu bebê possa puxar, derrubando pratos e comida quente sobre si mesmo."
+  },
+  {
+    "id": "6m-safety-12",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Salve o número do centro de intoxicações da sua região no celular. Acesso rápido é essencial se seu bebê entrar em contato com algo que não deveria."
+  },
+  {
+    "id": "6m-safety-13",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Se você tem uma tigela de água do pet, mantenha-a fora do alcance. Bebês são atraídos por água e podem se afogar até em recipientes bem rasos."
+  },
+  {
+    "id": "6m-safety-14",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Evite andadores com rodinhas. Especialistas em segurança pediátrica desaconselham seu uso devido ao risco grave de lesão, especialmente quedas nas escadas. Centros de atividades fixos são uma alternativa mais segura."
+  },
+  {
+    "id": "6m-safety-15",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Mantenha a bolsa de fraldas com quaisquer medicamentos bem fora do alcance do bebê. Até mesmo tampas à prova de crianças não são totalmente seguras."
+  },
+  {
+    "id": "6m-safety-16",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Instale uma trava na tampa do vaso sanitário. Bebês que já se movimentam são pesados na parte de cima e podem cair de cabeça dentro de um vaso aberto, o que representa risco de afogamento."
+  },
+  {
+    "id": "6m-safety-17",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Mantenha bolsas e mochilas fora do chão e do alcance do bebê. Elas frequentemente contêm medicamentos, moedas, riscos de engasgo e itens pequenos perigosos para bebês."
+  },
+  {
+    "id": "6m-safety-18",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Fixe televisões e eletrodomésticos pesados na parede. Mesmo antes de seu bebê se mover, um esbarrão ou um cabo puxado pode causar um tombamento perigoso."
+  },
+  {
+    "id": "6m-safety-19",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Use protetores de porta para evitar que seu bebê prenda os dedos em portas que se fecham. Os dedinhos dele podem entrar nas frestas mais rápido do que você imagina."
+  },
+  {
+    "id": "6m-safety-20",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Retire imãs de geladeira que sejam pequenos o suficiente para engolir. Imãs ingeridos podem ser extremamente perigosos se mais de um for engolido."
+  },
+  {
+    "id": "6m-safety-21",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Nunca deixe seu bebê sozinho em uma cama, mesmo cercado por almofadas. Nessa idade eles conseguem rolar, se arrastar e chegar à borda surpreendentemente rápido."
+  },
+  {
+    "id": "6m-safety-22",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Conforme seu bebê fica mais ativo, certifique-se de que estantes, cômodas e móveis altos estejam fixados na parede com fitas anti-tombamento. É melhor fazer isso antes que ele comece a se puxar para cima."
+  },
+  {
+    "id": "6m-safety-23",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Mantenha o chão livre de itens pequenos como tampas de caneta, clipes de papel e elásticos. Crie o hábito de verificar regularmente o chão no nível dos olhos do seu bebê."
+  },
+  {
+    "id": "6m-safety-24",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Use protetores de botão de fogão para evitar que seu bebê ligue as bocas. Mesmo de um cadeirão por perto, um bebê curioso consegue alcançar mais longe do que você imagina."
+  },
+  {
+    "id": "6m-safety-25",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Sempre fique ao alcance do braço quando seu bebê estiver comendo alimentos sólidos. O engasgo pode acontecer de forma silenciosa, e agir rápido é essencial."
+  }
+]

@@ -1,0 +1,860 @@
+[
+  {
+    "id": "6m-development-01",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à s'asseoir avec soutien ou même seul pendant quelques secondes. Place des coussins autour de lui pour amortir les chutes pendant qu'il s'exerce."
+  },
+  {
+    "id": "6m-development-02",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Vers cet âge, beaucoup de bébés commencent à passer les objets d'une main à l'autre. Offre-lui un jouet et observe cette coordination impressionnante en action."
+  },
+  {
+    "id": "6m-development-03",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à réagir à son prénom en se tournant vers toi. Utilise son prénom souvent pendant le jeu et la conversation pour renforcer cette habitude."
+  },
+  {
+    "id": "6m-development-04",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Le babillage devient plus complexe, avec des chaînes de consonnes et de voyelles comme « bababa » ou « mamama ». Ce ne sont pas encore des mots, mais ce sont les prémices du langage."
+  },
+  {
+    "id": "6m-development-05",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé découvre la gravité ! Il adore peut-être laisser tomber les jouets de ses genoux ou d'une surface et les regarder tomber. Cette répétition lui apprend la relation de cause à effet."
+  },
+  {
+    "id": "6m-development-07",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à se balancer sur ses mains et ses genoux, ce qui est le précurseur du quatre-pattes. Offre-lui beaucoup de temps au sol pour explorer ce mouvement."
+  },
+  {
+    "id": "6m-development-08",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Essaie des jeux simples de tour de rôle : tu babilles, il babille ; tu souris, il sourit. Ces échanges sont les fondations de la conversation."
+  },
+  {
+    "id": "6m-development-09",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "La perception des profondeurs de ton bébé s'améliore rapidement. Il peut maintenant attraper les objets plus précisément et mieux évaluer les distances qu'avant."
+  },
+  {
+    "id": "6m-development-10",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Certains bébés de cet âge commencent à montrer une préférence pour certains jouets ou objets de réconfort. Avoir un doudou attitré peut devenir un outil précieux pour s'auto-apaiser."
+  },
+  {
+    "id": "6m-development-11",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé utilise peut-être la préhension en râteau — il balaye les objets avec tous ses doigts — pour les attraper. La pince fine plus précise viendra plus tard."
+  },
+  {
+    "id": "6m-development-12",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "L'anxiété de séparation peut commencer à apparaître. Si ton bébé pleure quand tu quittes la pièce, cela signifie qu'il comprend que tu existes même quand il ne te voit pas."
+  },
+  {
+    "id": "6m-development-13",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à sautiller quand on le tient debout. Cette force dans les jambes et cette coordination sont une préparation importante pour se tenir debout et marcher plus tard."
+  },
+  {
+    "id": "6m-development-14",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Montre les choses du doigt et nomme-les pour ton bébé : « Regarde, un oiseau ! » Le pointage l'aide à apprendre à suivre ton regard et enrichit son vocabulaire pour plus tard."
+  },
+  {
+    "id": "6m-development-15",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à exprimer ses émotions plus clairement — de la frustration quand on lui prend un jouet, de l'excitation quand il voit la nourriture se préparer. Reconnais ces sentiments à voix haute."
+  },
+  {
+    "id": "6m-development-16",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à ramper sur le ventre ou à se propulser avant de se mettre à quatre pattes. Chaque bébé trouve sa propre façon de se déplacer."
+  },
+  {
+    "id": "6m-development-17",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Essaie d'offrir à ton bébé deux jouets à la fois — un dans chaque main. Tenir deux objets simultanément est une étape cognitive et motrice importante."
+  },
+  {
+    "id": "6m-development-18",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à comprendre des mots simples même s'il ne peut pas encore les prononcer. Dire « où est le chien ? » et le voir regarder autour de lui montre une compréhension précoce."
+  },
+  {
+    "id": "6m-development-19",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Si ton bébé frappe des objets sur la table ou le sol, il expérimente la relation de cause à effet. Essaie de lui donner différents objets pour qu'il entende la variété des sons."
+  },
+  {
+    "id": "6m-development-20",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à chercher un jouet qui est tombé hors de sa vue plutôt que de l'oublier. Cela montre que sa permanence de l'objet progresse."
+  },
+  {
+    "id": "6m-development-21",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "À mesure que ton bébé renforce le haut de son corps, il peut commencer à tendre les bras vers les meubles ou tes mains. Offre-lui des surfaces solides qu'il peut agripper en explorant de nouvelles positions."
+  },
+  {
+    "id": "6m-development-22",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut se pencher en avant depuis la position assise pour attraper quelque chose, puis se redresser. Ce rétablissement de l'équilibre montre que sa musculature du tronc se développe bien."
+  },
+  {
+    "id": "6m-development-23",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Fais « au revoir » de la main à ton bébé régulièrement. Il ne te rendra pas encore le geste, mais lui montrer l'exemple maintenant pose les bases de l'imitation dans les mois à venir."
+  },
+  {
+    "id": "6m-development-24",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "Ton bébé peut commencer à montrer des préférences pour certaines personnes, en tendant les bras vers un parent favori. Cette sélectivité fait partie du développement normal de l'attachement."
+  },
+  {
+    "id": "6m-development-25",
+    "ageGroup": "6m",
+    "category": "development",
+    "text": "La plupart des bébés ne font pas de quatre-pattes avant 7-10 mois, et certains sautent cette étape. Beaucoup de temps au sol maintenant aide ton bébé à développer la force et la coordination dont il aura besoin quand il sera prêt à se déplacer."
+  },
+  {
+    "id": "6m-sleep-01",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "La plupart des bébés de cet âge peuvent dormir 6-8 heures d'affilée la nuit, bien que certains se réveillent encore pour un repas. Les deux cas de figure sont normaux."
+  },
+  {
+    "id": "6m-sleep-02",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ton bébé a probablement besoin d'environ 2-3 siestes par jour maintenant, avec des périodes d'éveil de 2 à 2,5 heures. Guette les bâillements et le frottement des yeux comme signes de fatigue."
+  },
+  {
+    "id": "6m-sleep-03",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si ton bébé vient d'apprendre à s'asseoir ou travaille le quatre-pattes, le sommeil peut être perturbé car il pratique ses nouvelles compétences dans le lit. C'est temporaire."
+  },
+  {
+    "id": "6m-sleep-04",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Une routine de journée prévisible (réveil, repas, jeu, sieste) peut aider les siestes à être plus régulières et moins conflictuelles."
+  },
+  {
+    "id": "6m-sleep-05",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si ton bébé se met debout dans le lit et n'arrive pas à se rasseoir, entraîne-le à s'asseoir depuis la position debout pendant la journée pour qu'il y arrive aussi la nuit. C'est plus fréquent dans les mois à venir."
+  },
+  {
+    "id": "6m-sleep-06",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Tu peux commencer à présenter un doudou pendant les moments d'éveil et de câlins pour que ton bébé s'y attache. Pour un sommeil sûr, garde le lit vide jusqu'à 12 mois selon les recommandations de sécurité."
+  },
+  {
+    "id": "6m-sleep-07",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si ton bébé est prêt à passer de 3 siestes à 2, tu devras peut-être temporairement avancer l'heure du coucher pour éviter la fatigue excessive pendant la transition."
+  },
+  {
+    "id": "6m-sleep-08",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Les poussées dentaires peuvent perturber le sommeil, mais les pires perturbations ne durent généralement que quelques jours par dent. Le réconfort supplémentaire pendant cette période est tout à fait normal."
+  },
+  {
+    "id": "6m-sleep-09",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si tu commences la diversification alimentaire, propose les aliments plus tôt dans la journée plutôt que juste avant le coucher. Les nouveaux aliments peuvent parfois causer un inconfort qui perturbe le sommeil."
+  },
+  {
+    "id": "6m-sleep-10",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Ton bébé est peut-être prêt pour un réveil matinal un peu plus tardif. Garder la pièce sombre et ne pas se précipiter au premier bruit peut l'encourager."
+  },
+  {
+    "id": "6m-sleep-11",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Certains bébés de cet âge commencent à préférer dormir sur le ventre. Tant qu'ils peuvent se retourner dans les deux sens, tu peux les laisser trouver leur position préférée en toute sécurité."
+  },
+  {
+    "id": "6m-sleep-12",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "La régularité est ta meilleure alliée pour le sommeil. Quelle que soit l'approche que tu choisis, la maintenir pendant au moins une semaine lui donne les meilleures chances de fonctionner."
+  },
+  {
+    "id": "6m-sleep-13",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Les voyages et les changements d'heure peuvent temporairement perturber le sommeil. Essaie de maintenir ta routine habituelle du coucher même dans un environnement inhabituel."
+  },
+  {
+    "id": "6m-sleep-14",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si les réveils nocturnes augmentent soudainement, demande-toi si ton bébé reçoit assez de calories pendant la journée. Commencer la diversification aide parfois, mais pas toujours."
+  },
+  {
+    "id": "6m-sleep-15",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Le sommeil total à cet âge est généralement de 12-16 heures sur 24 heures. Si ton bébé a l'air heureux et bien reposé, il dort probablement assez."
+  },
+  {
+    "id": "6m-sleep-16",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si ton bébé babille ou se parle à lui-même dans le lit avant de s'endormir, laisse-le faire. Ce bavardage apaisant est un signe sain qu'il arrive à se calmer tout seul."
+  },
+  {
+    "id": "6m-sleep-17",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "L'anxiété de séparation peut provoquer des réveils nocturnes plus fréquents vers cet âge. Une brève visite rassurante et calme est acceptable, mais essaie d'éviter de créer de nouvelles habitudes que tu devras corriger plus tard."
+  },
+  {
+    "id": "6m-sleep-18",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Quand ton bébé passe de 3 siestes à 2, c'est généralement la dernière sieste de la journée qui disparaît. Un coucher plus tôt peut compenser pendant qu'il s'adapte."
+  },
+  {
+    "id": "6m-sleep-19",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Une pièce sombre avec des rideaux occultants peut améliorer les siestes et le sommeil de nuit, surtout si ton bébé est facilement distrait par la lumière."
+  },
+  {
+    "id": "6m-sleep-20",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si ton bébé se réveille très tôt le matin (avant 6 h), vérifie que la pièce est assez sombre et demande-toi si l'heure du coucher doit être décalée un peu plus tard."
+  },
+  {
+    "id": "6m-sleep-21",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Certains bébés ont besoin d'un peu d'activité physique avant le sommeil pour dépenser leur énergie. Une courte séance de jeu avant la routine de détente peut l'aider à se calmer plus vite."
+  },
+  {
+    "id": "6m-sleep-22",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si ton bébé s'est mis à pratiquer les retournements, le quatre-pattes ou d'autres nouvelles compétences dans le lit à l'heure du coucher, recouche-le calmement sans en faire un jeu. Il finira par se calmer."
+  },
+  {
+    "id": "6m-sleep-23",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Les jours où les siestes sont courtes ou sautées, n'hésite pas à avancer l'heure du coucher de 30 à 60 minutes. Un bébé trop fatigué résiste davantage au sommeil."
+  },
+  {
+    "id": "6m-sleep-24",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Les besoins de sommeil de ton bébé lui sont propres. S'il est heureux, grandit bien et atteint ses étapes de développement, son sommeil est probablement suffisant même s'il ne correspond pas à ce que disent les livres."
+  },
+  {
+    "id": "6m-sleep-25",
+    "ageGroup": "6m",
+    "category": "sleep",
+    "text": "Si tu pratiques le cododo et souhaites faire la transition vers le lit, commence par les siestes. S'entraîner en journée aide ton bébé à s'habituer à son propre espace."
+  },
+  {
+    "id": "6m-feeding-01",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Vers 6 mois, c'est généralement le bon moment pour commencer la diversification alimentaire ! Cherche les signes de maturité : se tient assis avec soutien, bon maintien de la tête et intérêt pour la nourriture."
+  },
+  {
+    "id": "6m-feeding-02",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Que tu choisisses les purées ou la diversification menée par l'enfant (DME), le lait maternel ou le lait infantile reste la source principale de nutrition. Les aliments solides à ce stade servent à explorer."
+  },
+  {
+    "id": "6m-feeding-05",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "C'est normal que ton bébé repousse la nourriture avec la langue au début. Le réflexe d'extrusion s'estompe, et il apprend à déplacer la nourriture vers l'arrière de sa bouche."
+  },
+  {
+    "id": "6m-feeding-06",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Le réflexe nauséeux est différent de l'étouffement et c'est en fait un mécanisme de sécurité. Le réflexe nauséeux est bruyant et s'accompagne de toux ; l'étouffement est silencieux. Apprends à faire la différence."
+  },
+  {
+    "id": "6m-feeding-07",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Les bons premiers aliments incluent les options riches en fer comme les viandes en purée, les céréales enrichies en fer ou les lentilles écrasées. Les réserves de fer de la naissance commencent à s'épuiser vers 6 mois."
+  },
+  {
+    "id": "6m-feeding-08",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Propose de l'eau dans un verre ouvert ou un gobelet à paille pendant les repas. Ton bébé ne boira pas beaucoup au début, mais cette pratique précoce développe la motricité buccale."
+  },
+  {
+    "id": "6m-feeding-09",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Manger salement, c'est apprendre ! Laisse ton bébé toucher, écraser et étaler sa nourriture. L'exploration sensorielle est essentielle pour accepter de nouvelles textures."
+  },
+  {
+    "id": "6m-feeding-10",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Si tu fais la DME, coupe les aliments en bâtonnets de la taille d'un doigt que ton bébé peut saisir dans son poing. Il grignotera la partie qui dépasse."
+  },
+  {
+    "id": "6m-feeding-11",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Évite le miel jusqu'à 1 an en raison du risque de botulisme infantile. Évite aussi le lait de vache comme boisson principale, bien que de petites quantités en cuisine soient acceptables."
+  },
+  {
+    "id": "6m-feeding-12",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ne te décourage pas si ton bébé refuse un aliment. Il faut parfois 10-15 expositions avant qu'il accepte quelque chose de nouveau. Continue à proposer sans forcer."
+  },
+  {
+    "id": "6m-feeding-13",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ton bébé doit toujours être assis bien droit dans une chaise haute pendant les repas, jamais incliné. Cette position est la plus sûre pour avaler."
+  },
+  {
+    "id": "6m-feeding-14",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Associe les aliments riches en fer à des sources de vitamine C (comme des fraises écrasées ou un peu de jus d'agrumes) pour favoriser l'absorption du fer."
+  },
+  {
+    "id": "6m-feeding-15",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Laisse ton bébé donner le rythme pendant les repas. Quand il détourne la tête, ferme la bouche ou perd tout intérêt, il te dit qu'il a fini."
+  },
+  {
+    "id": "6m-feeding-16",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Introduis les protéines d'arachide tôt en mélangeant du beurre de cacahuète lisse dans des purées ou des céréales. Les cacahuètes entières et le beurre de cacahuète avec morceaux présentent un risque d'étouffement à cet âge."
+  },
+  {
+    "id": "6m-feeding-17",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Propose une variété de couleurs dans l'assiette de ton bébé. Les fruits et légumes de différentes couleurs apportent différents nutriments, et la variété maintenant encourage une alimentation plus aventureuse plus tard."
+  },
+  {
+    "id": "6m-feeding-18",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Ton bébé peut manger beaucoup un jour et à peine toucher à la nourriture le lendemain. Cette irrégularité est tout à fait normale. Le lait maternel ou infantile comble les lacunes nutritionnelles."
+  },
+  {
+    "id": "6m-feeding-19",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Essaie de proposer à ton bébé une cuillère pré-remplie qu'il portera lui-même à sa bouche. C'est salissant, mais cela développe l'autonomie et la motricité fine."
+  },
+  {
+    "id": "6m-feeding-20",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Évite d'ajouter du sel ou du sucre à la nourriture de ton bébé. Ses reins ne peuvent pas encore gérer beaucoup de sodium, et commencer avec des saveurs naturelles l'aide à apprécier le vrai goût des aliments."
+  },
+  {
+    "id": "6m-feeding-21",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Si ton bébé a un réflexe nauséeux face à une nouvelle texture, reste calme et laisse-le gérer. Ta réaction détendue l'aide à se sentir en sécurité pour explorer différents aliments."
+  },
+  {
+    "id": "6m-feeding-22",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "L'allaitement ou le biberon devrait toujours précéder les repas solides à ce stade. Le lait reste la source de nutrition principale jusqu'à environ 12 mois."
+  },
+  {
+    "id": "6m-feeding-23",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Propose des légumes cuits tendres comme la patate douce, les bouquets de brocoli ou les bâtonnets de courgette comme premiers aliments à manger avec les doigts. Cuis-les jusqu'à ce qu'ils s'écrasent facilement entre tes doigts."
+  },
+  {
+    "id": "6m-feeding-24",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Manger ensemble en famille, même à ce stade précoce, aide ton bébé à apprendre en t'observant. Il imitera ta façon de mâcher et sera plus enclin à goûter ce que tu manges."
+  },
+  {
+    "id": "6m-feeding-25",
+    "ageGroup": "6m",
+    "category": "feeding",
+    "text": "Si ton bébé semble frustré par les purées, il est peut-être prêt pour des textures un peu plus épaisses ou des aliments tendres à manger avec les doigts. Suis son rythme et adapte-toi à ce qu'il te montre qu'il peut gérer."
+  },
+  {
+    "id": "6m-health-01",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Les visites de contrôle régulières pendant cette période sont importantes pour suivre le développement. Ton pédiatre peut aussi recommander des suppléments de fluor si ton eau n'est pas fluorée."
+  },
+  {
+    "id": "6m-health-03",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Si ton bébé a de la fièvre à {{100.4°F|38°C}} ou plus, appelle ton pédiatre. À cet âge, une fièvre justifie un examen pour écarter une infection."
+  },
+  {
+    "id": "6m-health-04",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Les otites sont fréquentes à cet âge. Le fait de tirer sur les oreilles, l'irritabilité et la fièvre peuvent en être des signes. Le fait de tirer les oreilles seul est souvent dû aux poussées dentaires, mais consulte ton médecin si tu suspectes une infection."
+  },
+  {
+    "id": "6m-health-06",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "C'est le bon moment pour programmer la première visite chez le dentiste de ton bébé. Les experts recommandent de consulter un dentiste avant l'âge de 1 an ou dans les 6 mois suivant l'apparition de la première dent."
+  },
+  {
+    "id": "6m-health-07",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Surveille les signes d'allergie alimentaire lors de l'introduction des solides : urticaire, gonflement, vomissements ou difficulté à respirer. De légères rougeurs autour de la bouche sont généralement une simple irritation cutanée."
+  },
+  {
+    "id": "6m-health-08",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Si c'est la saison de la grippe et que ton bébé a au moins 6 mois, il peut recevoir le vaccin antigrippal. C'est particulièrement important car les anticorps maternels diminuent."
+  },
+  {
+    "id": "6m-health-09",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "La douleur des poussées dentaires est réelle mais généralement gérable. Les anneaux de dentition réfrigérés et un massage doux des gencives avec un doigt propre peuvent soulager."
+  },
+  {
+    "id": "6m-health-10",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Ton bébé peut développer des sensibilités alimentaires en découvrant de nouveaux aliments. Quelques selles molles après un nouvel aliment ne signifient pas forcément une allergie — son système digestif s'adapte."
+  },
+  {
+    "id": "6m-health-11",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Les bébés de cet âge sont de plus en plus mobiles et adorent tout explorer avec la bouche. Fais un tour quotidien au sol pour repérer les petits objets qui pourraient présenter un risque d'étouffement."
+  },
+  {
+    "id": "6m-health-12",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Si ton bébé semble avoir le nez bouché en permanence, cela peut être lié aux nouveaux aliments qu'il mange ou à des allergènes dans l'environnement. Signale-le lors de ta prochaine consultation."
+  },
+  {
+    "id": "6m-health-13",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Les colliers d'ambre pour les dents ne sont pas recommandés — ils présentent des risques de strangulation et d'étouffement sans bénéfice prouvé. Opte pour des alternatives sûres pour les poussées dentaires."
+  },
+  {
+    "id": "6m-health-14",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Les selles de ton bébé vont changer de couleur et de consistance avec la diversification alimentaire. Le vert, l'orange et le marron sont normaux. Des selles rouges ou noires doivent être signalées à ton médecin."
+  },
+  {
+    "id": "6m-health-15",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Une fois que ton bébé a 6 mois, applique un écran solaire (SPF 30+) sur la peau exposée en sortant. Avant 6 mois, privilégie l'ombre, les chapeaux et les vêtements légers pour la protection solaire."
+  },
+  {
+    "id": "6m-health-16",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Continue de brosser les nouvelles dents de ton bébé deux fois par jour avec une quantité de dentifrice fluoré de la taille d'un grain de riz. Instaurer cette routine maintenant facilite les choses quand d'autres dents arrivent."
+  },
+  {
+    "id": "6m-health-17",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Si ton bébé se cogne ou se fait un bleu avec sa nouvelle mobilité, une compresse froide et des câlins suffisent généralement. Appelle ton médecin en cas de choc à la tête accompagné de vomissements ou d'une somnolence inhabituelle."
+  },
+  {
+    "id": "6m-health-18",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Le syndrome pieds-mains-bouche est fréquent chez les bébés et les tout-petits. Cherche de petites vésicules sur les mains, les pieds et dans la bouche. C'est inconfortable mais se résout généralement en une semaine environ."
+  },
+  {
+    "id": "6m-health-19",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Les besoins en fer de ton bébé augmentent considérablement vers 6 mois. Si ton bébé est né prématuré ou est allaité exclusivement, demande à ton pédiatre si un supplément de fer est nécessaire."
+  },
+  {
+    "id": "6m-health-21",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Si ton bébé développe une éruption cutanée après avoir essayé un nouvel aliment, prends une photo et note l'aliment et le moment. Ces informations sont très utiles pour ton pédiatre."
+  },
+  {
+    "id": "6m-health-22",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Les poussées dentaires peuvent provoquer une légère augmentation de la température, mais une vraie fièvre de {{100.4°F|38°C}} ou plus n'est pas causée par les dents. Si ton bébé a de la fièvre pendant une poussée dentaire, consulte ton médecin pour écarter d'autres causes."
+  },
+  {
+    "id": "6m-health-23",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Avec la mobilité accrue viennent davantage de chutes et de bosses. Sécuriser les bords tranchants et les surfaces dures aide, mais quelques chutes font partie de l'apprentissage du mouvement."
+  },
+  {
+    "id": "6m-health-24",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "Si l'eczéma de ton bébé s'aggrave après le début de la diversification, tiens un journal alimentaire pour identifier les déclencheurs potentiels. Les coupables fréquents sont les produits laitiers, les œufs et le blé."
+  },
+  {
+    "id": "6m-health-25",
+    "ageGroup": "6m",
+    "category": "health",
+    "text": "La saison du VRS (virus respiratoire syncytial) peut être particulièrement préoccupante pour les bébés de moins de 12 mois. Le lavage fréquent des mains et l'évitement des personnes malades sont les meilleures stratégies de prévention."
+  },
+  {
+    "id": "6m-play-01",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Propose des gobelets empilables ou des jouets gigognes. Ton bébé ne les empilera pas encore, mais il adorera faire tomber les tours que tu construis et explorer les différentes tailles."
+  },
+  {
+    "id": "6m-play-02",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Remplis un petit panier d'objets du quotidien sans danger (cuillère en bois, fouet en silicone, morceaux de tissu) et laisse ton bébé explorer. Un « panier à trésors » encourage le jeu autonome."
+  },
+  {
+    "id": "6m-play-03",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Joue à « où est-il passé ? » en cachant partiellement un jouet sous un tissu. Ton bébé apprend la permanence de l'objet et adorera le chercher."
+  },
+  {
+    "id": "6m-play-04",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Les éclaboussures dans le bain sont une excellente activité sensorielle ! Donne à ton bébé des gobelets pour verser et des jouets qui flottent. Surveille-le toujours — ne le laisse jamais seul avec de l'eau."
+  },
+  {
+    "id": "6m-play-05",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Assieds ton bébé devant un miroir et faites des grimaces ensemble. À cet âge, il va sourire, rire et tendre la main pour toucher son reflet."
+  },
+  {
+    "id": "6m-play-06",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Essaie les jeux un peu plus toniques — le faire sauter sur tes genoux, le balancer doucement dans les airs ou faire des bruits rigolos. Ces jeux physiques renforcent la confiance et la conscience corporelle."
+  },
+  {
+    "id": "6m-play-07",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Propose des instruments de musique simples comme un tambourin, des maracas ou un xylophone. Ton bébé adorera faire du bruit et découvrir qu'il peut créer des sons."
+  },
+  {
+    "id": "6m-play-08",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Crée un parcours de motricité avec des coussins et des couvertures roulées que ton bébé peut escalader et contourner. Cela développe la résolution de problèmes en même temps que la force physique."
+  },
+  {
+    "id": "6m-play-09",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Lis des livres avec différentes textures (livres à toucher). Ton bébé adorera passer ses doigts sur les surfaces douces, rugueuses et lisses."
+  },
+  {
+    "id": "6m-play-10",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Laisse ton bébé jouer avec des jouets d'eau dans une bassine peu profonde. Verser, éclabousser et sentir l'eau couler lui apprend la physique du monde qui l'entoure."
+  },
+  {
+    "id": "6m-play-11",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Mets de la musique de styles différents et observe la réaction de ton bébé. Il peut se dandiner, donner des coups de pied ou agiter les bras. Danser ensemble est un merveilleux moment de complicité."
+  },
+  {
+    "id": "6m-play-12",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Propose une cuillère à ton bébé pendant le repas. La taper sur le plateau est salissant et bruyant, mais cela développe la motricité fine et la coordination main-œil."
+  },
+  {
+    "id": "6m-play-13",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Essaie de souffler des bisous sonores sur le ventre de ton bébé pendant le change. Ces moments de jeu transforment les tâches de routine en occasions de complicité."
+  },
+  {
+    "id": "6m-play-14",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Passe du temps au sol avec ton bébé, à sa hauteur. Mets-toi sur le ventre pendant le temps sur le ventre ou assieds-toi face à face. Il s'engage davantage quand tu es à hauteur de ses yeux."
+  },
+  {
+    "id": "6m-play-15",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Place des jouets dans un moule à muffins pour que ton bébé les retire et les explore. Cette activité toute simple stimule sa préhension et le maintient concentré."
+  },
+  {
+    "id": "6m-play-16",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Essaie de mettre un jouet dans un récipient transparent et laisse ton bébé trouver comment l'en sortir. Cette résolution de problèmes précoce développe l'esprit critique."
+  },
+  {
+    "id": "6m-play-17",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Offre à ton bébé un carton à explorer. Il peut le pousser, s'asseoir dedans ou taper dessus. Les jouets simples et ouverts stimulent le plus la créativité."
+  },
+  {
+    "id": "6m-play-18",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Joue à des jeux de mains comme « tape tape tape petites mains » avec ton bébé. Guide ses mains dans les mouvements et profite de ses réactions. Avec le temps, il commencera à participer tout seul."
+  },
+  {
+    "id": "6m-play-19",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Laisse ton bébé explorer des aliments sans danger pendant le jeu, pas seulement au repas. Sentir la texture d'une banane ou écraser un morceau d'avocat est un merveilleux apprentissage sensoriel."
+  },
+  {
+    "id": "6m-play-20",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Crée un bac sensoriel avec de gros objets sans danger comme des balles souples, des anneaux en bois et des morceaux de tissu. Le jeu sensoriel supervisé maintient ton bébé engagé et stimulé."
+  },
+  {
+    "id": "6m-play-21",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Fais rouler une balle avec ton bébé pendant qu'il est assis. Ce jeu tout simple enseigne le tour de rôle et l'aide à suivre les objets en mouvement."
+  },
+  {
+    "id": "6m-play-22",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Laisse ton bébé déchirer du papier (de grands morceaux, sous surveillance). Le son et le geste le fascinent, et déchirer renforce la force des mains et la coordination."
+  },
+  {
+    "id": "6m-play-23",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Propose des livres à volets et laisse ton bébé essayer de soulever les volets lui-même. Cela combine la motricité fine avec le plaisir de la surprise."
+  },
+  {
+    "id": "6m-play-24",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Chante des comptines avec des gestes comme « Ainsi font font font » ou « Les petits poissons ». Ton bébé commencera à anticiper les mouvements et finira par essayer de les reproduire."
+  },
+  {
+    "id": "6m-play-25",
+    "ageGroup": "6m",
+    "category": "play",
+    "text": "Fais une « promenade des textures » dans la maison en laissant ton bébé toucher des surfaces sans danger : un plan de travail lisse, un coussin moelleux, une vitre fraîche et un tapis duveteux."
+  },
+  {
+    "id": "6m-safety-01",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Maintenant que ton bébé devient mobile, installe des barrières de sécurité en haut et en bas des escaliers. Les barrières à pression conviennent pour le bas ; utilise des barrières fixées au mur pour le haut."
+  },
+  {
+    "id": "6m-safety-02",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Abaisse le matelas du lit à bébé à son niveau le plus bas avant qu'il puisse se mettre debout. Il est plus fort que tu ne le penses et te surprendra."
+  },
+  {
+    "id": "6m-safety-03",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Verrouille les placards contenant les produits ménagers, les médicaments et les objets tranchants. Les verrous magnétiques ou adhésifs sont efficaces et faciles à installer."
+  },
+  {
+    "id": "6m-safety-05",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Ne laisse jamais ton bébé seul dans une chaise haute. Utilise toujours les sangles de sécurité et éloigne la chaise des tables et plans de travail contre lesquels il pourrait prendre appui."
+  },
+  {
+    "id": "6m-safety-06",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Protège les coins et arêtes des meubles avec des protège-coins. La tête de ton bébé est à hauteur de table quand il commence à se mettre debout, et les chocs sont inévitables."
+  },
+  {
+    "id": "6m-safety-07",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Garde les cordons de stores, de rideaux et d'appareils électroniques hors de portée. La strangulation par les cordons est un risque sérieux pour les bébés curieux qui attrapent tout."
+  },
+  {
+    "id": "6m-safety-08",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Surveille toujours ton bébé près de l'eau, que ce soit le bain, les pataugeoires ou les seaux. La noyade peut survenir rapidement et silencieusement."
+  },
+  {
+    "id": "6m-safety-09",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Vérifie que tes plantes d'intérieur ne sont pas toxiques et qu'elles sont hors de portée. Beaucoup de plantes courantes sont vénéneuses si elles sont ingérées. En cas de doute, mets les plantes en hauteur."
+  },
+  {
+    "id": "6m-safety-10",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Assure-toi que la chaise haute de ton bébé a une base large et stable et un entrejambe pour éviter qu'il ne glisse. Un bon ajustement le garde en sécurité pendant les repas."
+  },
+  {
+    "id": "6m-safety-11",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Retire les nappes ou sets de table que ton bébé pourrait tirer, faisant tomber la vaisselle et les aliments chauds sur lui."
+  },
+  {
+    "id": "6m-safety-12",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Enregistre le numéro du centre antipoison dans ton téléphone. Un accès rapide est essentiel si ton bébé avale quelque chose qu'il ne devrait pas."
+  },
+  {
+    "id": "6m-safety-13",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Si tu as une gamelle d'eau pour un animal, garde-la hors de portée. Les bébés sont attirés par l'eau et peuvent se noyer même dans des récipients très peu profonds."
+  },
+  {
+    "id": "6m-safety-14",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Évite les trotteurs à roulettes. Les experts en sécurité pédiatrique les déconseillent en raison du risque élevé de blessure grave, notamment les chutes dans les escaliers. Les centres d'activités fixes sont une alternative plus sûre."
+  },
+  {
+    "id": "6m-safety-15",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Range les médicaments de ton sac à langer bien hors de portée de bébé. Même les bouchons de sécurité ne sont pas totalement inviolables."
+  },
+  {
+    "id": "6m-safety-16",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Sécurise le couvercle de tes toilettes avec un verrou. Les bébés mobiles ont la tête lourde et peuvent basculer la tête la première dans des toilettes ouvertes, ce qui est un risque de noyade."
+  },
+  {
+    "id": "6m-safety-17",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Garde les sacs à main et les sacs hors du sol et hors de portée. Ils contiennent souvent des médicaments, des pièces de monnaie, des petits objets présentant un risque d'étouffement et d'autres choses dangereuses pour les bébés."
+  },
+  {
+    "id": "6m-safety-18",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Fixe les téléviseurs et les gros appareils au mur. Même avant que ton bébé soit mobile, un choc ou un cordon tiré peut provoquer un basculement dangereux."
+  },
+  {
+    "id": "6m-safety-19",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Utilise des bloque-portes ou des cale-portes pour empêcher ton bébé de se coincer les doigts dans les portes qui se ferment. Ses petits doigts peuvent se glisser dans les interstices plus vite que tu ne le penses."
+  },
+  {
+    "id": "6m-safety-20",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Retire les aimants décoratifs du réfrigérateur assez petits pour être avalés. Les aimants ingérés peuvent être extrêmement dangereux si plus d'un est avalé."
+  },
+  {
+    "id": "6m-safety-21",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Ne laisse jamais ton bébé sans surveillance sur un lit, même entouré de coussins. À cet âge, il peut rouler, glisser et se tortiller jusqu'au bord en un clin d'œil."
+  },
+  {
+    "id": "6m-safety-22",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "À mesure que ton bébé devient plus mobile, assure-toi que les bibliothèques, commodes et meubles hauts sont fixés au mur avec des sangles anti-basculement. Mieux vaut le faire avant qu'il commence à se mettre debout."
+  },
+  {
+    "id": "6m-safety-23",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Garde les sols dégagés de petits objets comme les capuchons de stylo, les trombones et les élastiques. Prends l'habitude de balayer le sol du regard régulièrement à hauteur des yeux de ton bébé."
+  },
+  {
+    "id": "6m-safety-24",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Utilise des protège-boutons de cuisinière pour empêcher ton bébé d'allumer les brûleurs. Même depuis une chaise haute à proximité, un bébé curieux peut atteindre plus loin que tu ne le crois."
+  },
+  {
+    "id": "6m-safety-25",
+    "ageGroup": "6m",
+    "category": "safety",
+    "text": "Reste toujours à portée de bras quand ton bébé mange des aliments solides. L'étouffement peut survenir silencieusement, et une réaction rapide est vitale."
+  }
+]
