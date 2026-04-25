@@ -1,0 +1,506 @@
+[
+  {
+    "id": "3y-development-02",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Pedaling a tricycle is a major milestone that combines coordination, strength, and balance. Give your child plenty of opportunities to practice."
+  },
+  {
+    "id": "3y-development-03",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Your child may start to understand the concept of \"mine\" and \"theirs.\" Simple board games and sharing activities help build this social skill."
+  },
+  {
+    "id": "3y-development-04",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Drawing circles and attempting to copy lines shows growing fine motor control. Display their artwork proudly — it motivates more practice."
+  },
+  {
+    "id": "3y-development-05",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Your child can likely count to three or higher. Count everything together — stairs, snacks, toys — to make numbers part of daily life."
+  },
+  {
+    "id": "3y-development-06",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Cooperative play is emerging. Your child may start playing simple games with other kids rather than just alongside them."
+  },
+  {
+    "id": "3y-development-07",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Your child can likely dress themselves with some help. Let them choose between two outfits to build decision-making skills and independence."
+  },
+  {
+    "id": "3y-development-08",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Imaginative play becomes more complex now — expect elaborate stories with stuffed animals and dolls. This is crucial for cognitive and emotional development."
+  },
+  {
+    "id": "3y-development-09",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Your child may start asking \"why\" constantly. This is exciting — they're building logical thinking. Answer simply and honestly, even when it's the 50th why."
+  },
+  {
+    "id": "3y-development-10",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Your child may start trying to balance on one foot briefly. Games like \"flamingo stance\" help build the leg strength and coordination needed for hopping, which develops closer to age 4."
+  },
+  {
+    "id": "3y-development-11",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Your child is beginning to understand the concept of time — \"after lunch\" or \"before bed.\" Use these phrases to help them anticipate daily events."
+  },
+  {
+    "id": "3y-development-12",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Tantrums may still be frequent, but your child is gaining more emotional regulation. Validate their feelings first, then guide them toward solutions."
+  },
+  {
+    "id": "3y-development-13",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Using scissors with supervision is a wonderful fine motor activity. Start with thick paper and child-safe scissors to build hand strength."
+  },
+  {
+    "id": "3y-development-14",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Your child may begin recognizing some letters, especially the first letter of their name. Point out letters in everyday settings like signs and books."
+  },
+  {
+    "id": "3y-development-15",
+    "ageGroup": "3y",
+    "category": "development",
+    "text": "Toilet training readiness varies widely. If your child shows interest, stays dry for two hours, and can follow simple directions, they may be ready."
+  },
+  {
+    "id": "3y-sleep-01",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Many children this age still need a daytime nap, but some start to drop it. If they skip the nap, try a quiet rest time with books instead."
+  },
+  {
+    "id": "3y-sleep-03",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Night terrors can appear around age 3. They look scary, but your child won't remember them. Keep them safe and avoid waking them during an episode."
+  },
+  {
+    "id": "3y-sleep-04",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "If your child keeps getting out of bed, calmly walk them back each time with minimal interaction. Consistency is key — it usually resolves within a week."
+  },
+  {
+    "id": "3y-sleep-05",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "A visual bedtime routine chart with pictures can help your child feel in control of the process and reduce bedtime resistance."
+  },
+  {
+    "id": "3y-sleep-06",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Your child's growing imagination may lead to bedtime fears about monsters or the dark. Take their feelings seriously and create a simple \"monster spray\" or check ritual together."
+  },
+  {
+    "id": "3y-sleep-07",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "If your child naps at daycare but fights bedtime at home, the nap may be too long. Talk to the daycare about capping nap length."
+  },
+  {
+    "id": "3y-sleep-08",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "A toddler clock that changes color at wake-up time can teach your child when it's okay to get up. It gives them a visual cue they can understand."
+  },
+  {
+    "id": "3y-sleep-09",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Active outdoor play in the afternoon helps your child fall asleep more easily. Avoid vigorous activity within an hour of bedtime though."
+  },
+  {
+    "id": "3y-sleep-10",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Transition away from a sleep sack if your child is in a toddler bed. Light, well-fitted pajamas are the safest option."
+  },
+  {
+    "id": "3y-sleep-11",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "If your child is waking to use the bathroom at night, limit drinks 1-2 hours before bed and make the bathroom path easy to navigate with a dim nightlight."
+  },
+  {
+    "id": "3y-sleep-12",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Some children this age resist napping but become overtired and cranky by dinner. Even 30 minutes of quiet rest can help reset their mood."
+  },
+  {
+    "id": "3y-sleep-13",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Keeping bedtime within the same 30-minute window every night — even on weekends — helps regulate your child's internal clock."
+  },
+  {
+    "id": "3y-sleep-14",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "Let your child pick their pajamas or bedtime book. Small choices give them a sense of control that reduces power struggles around sleep."
+  },
+  {
+    "id": "3y-sleep-15",
+    "ageGroup": "3y",
+    "category": "sleep",
+    "text": "If your child has started sleepwalking, make sure the sleep environment is safe with gates at stairs and locked exterior doors."
+  },
+  {
+    "id": "3y-feeding-01",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Your child can now use a fork to spear soft foods and a spoon with minimal spilling. Praise their effort to encourage continued practice."
+  },
+  {
+    "id": "3y-feeding-02",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Offer new foods alongside familiar favorites. It can take 15-20 exposures before a child accepts a new food, so patience pays off."
+  },
+  {
+    "id": "3y-feeding-03",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Your child needs about 1,000-1,400 calories per day, but appetite varies meal to meal. Trust their hunger cues rather than pushing them to finish."
+  },
+  {
+    "id": "3y-feeding-04",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Try serving meals \"family style\" where your child can serve themselves small portions. This builds independence and reduces food battles."
+  },
+  {
+    "id": "3y-feeding-05",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Limit grazing between meals. Structured snack times help your child arrive at meals hungry enough to try different foods."
+  },
+  {
+    "id": "3y-feeding-06",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Your child may eat a lot one day and barely eat the next. This is normal — look at nutrition over a whole week rather than a single day."
+  },
+  {
+    "id": "3y-feeding-07",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Involve your child in grocery shopping by letting them choose a fruit or vegetable. Kids are more invested in food they helped select."
+  },
+  {
+    "id": "3y-feeding-08",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Whole grains, lean protein, fruits, vegetables, and dairy form a balanced plate. Aim for variety across the week, not perfection at every meal."
+  },
+  {
+    "id": "3y-feeding-09",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Dipping is magic at this age. Offer hummus, yogurt, or nut butter as dips — children are more likely to eat vegetables and fruits they can dip."
+  },
+  {
+    "id": "3y-feeding-10",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Avoid labeling your child a \"picky eater\" in front of them. Children internalize these labels, which can make the behavior stick longer."
+  },
+  {
+    "id": "3y-feeding-11",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Your child can start learning to pour from a small pitcher into their cup. It builds fine motor control and makes them feel capable."
+  },
+  {
+    "id": "3y-feeding-12",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Calcium and vitamin D are critical for bone growth. If your child doesn't drink much milk, yogurt, cheese, and fortified foods can fill the gap."
+  },
+  {
+    "id": "3y-feeding-13",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Make mealtimes pleasant and pressure-free. Avoid bribing, coercing, or forcing your child to eat — it backfires in the long run."
+  },
+  {
+    "id": "3y-feeding-14",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "Healthy fats from avocado, olive oil, nut butters, and fish support your child's brain development. Include them regularly."
+  },
+  {
+    "id": "3y-feeding-15",
+    "ageGroup": "3y",
+    "category": "feeding",
+    "text": "If your child only wants white/beige foods, try introducing color gradually — a single blueberry on the plate, a small broccoli floret beside their pasta."
+  },
+  {
+    "id": "3y-health-01",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Your child's upcoming well visit is an important check. The pediatrician will assess speech, vision, hearing, and developmental milestones."
+  },
+  {
+    "id": "3y-health-02",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Use a pea-sized amount of fluoride toothpaste now. Teach your child to spit rather than swallow, but don't worry if they occasionally forget."
+  },
+  {
+    "id": "3y-health-03",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Allergies often become more apparent around this age. If your child has persistent sneezing, itchy eyes, or skin rashes, discuss allergy testing with your doctor."
+  },
+  {
+    "id": "3y-health-04",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Ask about a vision screening at your child's next well visit. Early detection of issues like lazy eye leads to much better outcomes."
+  },
+  {
+    "id": "3y-health-05",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Stomach bugs spread fast in group settings. Teach your child to wash hands with soap for 20 seconds — singing a short song makes it fun."
+  },
+  {
+    "id": "3y-health-06",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "If your child gets a minor cut or scrape, clean it with water and apply a bandage. This is also a chance to teach them basic wound care."
+  },
+  {
+    "id": "3y-health-07",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Some children may still need catch-up vaccines. Your next well visit is a good time to review the immunization schedule with your pediatrician."
+  },
+  {
+    "id": "3y-health-09",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Establish a dentist routine your child isn't afraid of. Let them watch you brush, count their teeth, and praise their bravery during visits."
+  },
+  {
+    "id": "3y-health-10",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "If your child hasn't had a hearing screen recently, ask for one. Undetected hearing issues can affect speech and language development."
+  },
+  {
+    "id": "3y-health-11",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Teach your child to cough or sneeze into their elbow rather than their hands. Model this behavior yourself — kids learn by watching."
+  },
+  {
+    "id": "3y-health-12",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "If your child has eczema, a gentle daily moisturizing routine after bath can prevent flare-ups. Use fragrance-free products."
+  },
+  {
+    "id": "3y-health-13",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Your child's feet are still developing. Choose shoes that are flexible and well-fitting rather than stiff \"supportive\" styles."
+  },
+  {
+    "id": "3y-health-14",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "If your child stutters when excited or rushing to speak, be patient and give them time. Mild stuttering is common around age 3 and often resolves."
+  },
+  {
+    "id": "3y-health-15",
+    "ageGroup": "3y",
+    "category": "health",
+    "text": "Focus on high-quality, age-appropriate content when your child uses screens. Watch together when possible so you can talk about what they're seeing and make it interactive."
+  },
+  {
+    "id": "3y-play-01",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Dress-up play is wonderful at this age. Old hats, scarves, and oversized shirts let your child explore different roles and narratives."
+  },
+  {
+    "id": "3y-play-03",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Set up a simple scavenger hunt around the house or yard. It builds observation skills and gets your child moving with purpose."
+  },
+  {
+    "id": "3y-play-04",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Building with blocks or magnetic tiles encourages engineering thinking. Ask your child to describe what they're building to add a language component."
+  },
+  {
+    "id": "3y-play-05",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Your child may enjoy playing \"store\" or \"restaurant.\" These pretend scenarios teach counting, social roles, and conversational skills."
+  },
+  {
+    "id": "3y-play-06",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Painting with different tools — sponges, cotton balls, leaves — keeps art fresh and teaches your child that creativity has no rules."
+  },
+  {
+    "id": "3y-play-07",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Freeze dance is a fantastic activity at this age. It teaches listening skills, body control, and is guaranteed to produce giggles."
+  },
+  {
+    "id": "3y-play-08",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Start simple board games that involve colors or spinning, not complex strategy. They teach turn-taking and how to handle winning and losing."
+  },
+  {
+    "id": "3y-play-09",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Your child can start learning to catch a large, soft ball thrown gently from a short distance. It builds hand-eye coordination and reaction time."
+  },
+  {
+    "id": "3y-play-11",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Storytelling time where you start a story and your child adds what happens next builds creativity, language, and narrative thinking."
+  },
+  {
+    "id": "3y-play-12",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Balancing on a low beam, curb, or line of tape on the floor is great practice for core strength and coordination."
+  },
+  {
+    "id": "3y-play-13",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Give your child old magazines to cut with safety scissors. Cutting practice builds the hand muscles needed for writing."
+  },
+  {
+    "id": "3y-play-14",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Matching games with picture cards develop memory and concentration. Start with a small number of pairs and increase as they improve."
+  },
+  {
+    "id": "3y-play-15",
+    "ageGroup": "3y",
+    "category": "play",
+    "text": "Let your child get bored sometimes. Unstructured free time teaches them to entertain themselves and sparks creative problem-solving."
+  },
+  {
+    "id": "3y-safety-01",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Your child is becoming a climber. Secure all tall furniture, TVs, and bookshelves to the wall — tip-overs are a serious risk at this age."
+  },
+  {
+    "id": "3y-safety-02",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Practice your home fire escape plan with your child. Teach them to get low and go to the meeting spot — keep it simple and not scary."
+  },
+  {
+    "id": "3y-safety-04",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Teach your child that medicine is not candy. Always store medications in child-resistant containers and out of reach."
+  },
+  {
+    "id": "3y-safety-05",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "At the playground, make sure equipment is age-appropriate. Platforms higher than {{4 feet|1.2 meters}} are designed for older children."
+  },
+  {
+    "id": "3y-safety-06",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Begin teaching your child about body autonomy — they can say no to unwanted touches, even from family members offering hugs."
+  },
+  {
+    "id": "3y-safety-07",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Keep your child within arm's reach near any body of water, including wading pools. Swimming lessons can start now but don't replace supervision."
+  },
+  {
+    "id": "3y-safety-08",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Teach your child to ask before petting any dog, and to let the dog sniff their hand first. Model calm, gentle behavior around animals."
+  },
+  {
+    "id": "3y-safety-09",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Make sure small items like coins, marbles, and deflated balloons are kept away. Choking remains a risk through the preschool years."
+  },
+  {
+    "id": "3y-safety-10",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "When walking near roads, always hold your child's hand. They don't yet have the judgment to assess traffic speed or distance."
+  },
+  {
+    "id": "3y-safety-11",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Check that your smoke detectors and carbon monoxide detectors have working batteries. Test them monthly — your child can help press the button."
+  },
+  {
+    "id": "3y-safety-12",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Teach your child their full name and your first and last name. Practice it regularly so they can share it if they ever get separated from you."
+  },
+  {
+    "id": "3y-safety-13",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Keep sharp objects — knives, scissors, razors — stored in latched drawers or up high. Your child's curiosity and reach are both growing fast."
+  },
+  {
+    "id": "3y-safety-14",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "Ensure your child always wears a helmet when riding a tricycle or scooter. A properly fitted helmet sits level and doesn't rock side to side."
+  },
+  {
+    "id": "3y-safety-15",
+    "ageGroup": "3y",
+    "category": "safety",
+    "text": "If you have guns in the home, store them unloaded in a locked safe with ammunition stored separately. Curious children can find hidden items."
+  }
+]

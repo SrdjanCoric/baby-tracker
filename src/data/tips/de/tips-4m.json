@@ -1,0 +1,866 @@
+[
+  {
+    "id": "4m-development-01",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby greift jetzt wahrscheinlich nach Gegenständen und versucht, sie zu treffen. Häng ein Spielzeug in Reichweite auf und schau zu, wie es seine Zielgenauigkeit übt."
+  },
+  {
+    "id": "4m-development-02",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, laut zu lachen! Dieses Kichern ist ein wunderbares Zeichen sozialer und emotionaler Entwicklung."
+  },
+  {
+    "id": "4m-development-03",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Mit 3–4 Monaten fängt dein Baby vielleicht an, Gegenstände zum Mund zu führen. So erkundet es die Welt – das ist kein Zeichen von Hunger."
+  },
+  {
+    "id": "4m-development-04",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby kann Farben jetzt viel besser sehen und zeigt vielleicht eine Vorliebe für kräftige, leuchtende Farbtöne. Biete ihm bunt gefärbte Spielzeuge zum Entdecken an."
+  },
+  {
+    "id": "4m-development-05",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby gurrt wahrscheinlich und macht vokalähnliche Laute wie \"ooh\" und \"aah\". Reagiere begeistert, um es zum Weitermachen zu ermutigen – diese Laute sind die Bausteine für späteres Brabbeln."
+  },
+  {
+    "id": "4m-development-06",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby kann seinen Kopf immer besser halten und drückt sich in der Bauchlage vielleicht schon auf den Unterarmen hoch. Diese Oberkörperkraft ist die Vorbereitung aufs Drehen."
+  },
+  {
+    "id": "4m-development-07",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Fällt dir auf, wie dein Baby deinen Mund beobachtet, wenn du sprichst? Es studiert, wie Laute entstehen. Sprich, sing und lies ihm weiter vor."
+  },
+  {
+    "id": "4m-development-08",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, Ursache und Wirkung zu begreifen. Schüttle eine Rassel und beobachte, wie seine Augen aufleuchten, wenn es Handlungen mit Geräuschen verbindet."
+  },
+  {
+    "id": "4m-development-09",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "In diesem Alter fängt dein Baby vielleicht an, sich vom Bauch auf den Rücken zu drehen. Gib ihm viel beaufsichtigte Bodenzeit, um diese neue Fähigkeit zu üben."
+  },
+  {
+    "id": "4m-development-10",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby erkennt vertraute Gesichter und wird vielleicht lebhafter, wenn es dich, ein Geschwisterchen oder eine andere Bezugsperson sieht. So entsteht eine sichere Bindung."
+  },
+  {
+    "id": "4m-development-11",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Leg während der Bauchlage ein Spielzeug etwas außer Reichweite. Dein Baby fängt vielleicht an, sich zu strecken und zu drehen, um es zu erreichen – das stärkt die Rumpfmuskulatur."
+  },
+  {
+    "id": "4m-development-12",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Die Hand-Auge-Koordination deines Babys wird besser. Es greift vielleicht nach einem angebotenen Spielzeug und hält es einige Sekunden fest, bevor es es fallen lässt."
+  },
+  {
+    "id": "4m-development-13",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Brabbeln und Spuckelaute machen ist bei vielen Babys in diesem Alter eine Lieblingsbeschäftigung. Es ist verspielt, aber auch ein wichtiger Schritt beim Erlernen der Mundkontrolle für die Sprache."
+  },
+  {
+    "id": "4m-development-14",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby zeigt vielleicht Interesse an seinem eigenen Spiegelbild. Halte es vor einen Spiegel und genieße seine Neugier!"
+  },
+  {
+    "id": "4m-development-15",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Babys entwickeln sich in ihrem eigenen Tempo. Wenn dein Baby noch nicht alles kann, was in Meilensteintabellen steht, ist das meistens völlig normal. Sprich mit deinem Kinderarzt, wenn du dir Sorgen machst."
+  },
+  {
+    "id": "4m-development-16",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, etwas Gewicht auf seinen Beinen zu tragen, wenn du es aufrecht hältst. Das ist noch kein Lauftraining, aber ein toller Kraftaufbau."
+  },
+  {
+    "id": "4m-development-17",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Schau, wie dein Baby seine eigenen Hände betrachtet, sie dreht und zusammenführt. Dieses Händestudieren ist ein faszinierender Schritt in der Körperwahrnehmung."
+  },
+  {
+    "id": "4m-development-18",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, für verschiedene Bedürfnisse unterschiedlich zu weinen oder zu lautieren. Wenn du darauf eingehst, lernt es, dass Kommunikation funktioniert."
+  },
+  {
+    "id": "4m-development-19",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Halte ein Spielzeug vor dein Baby und schau, ob es danach greift. Gezieltes Greifen ist ein wunderbares Zeichen wachsender Hand-Auge-Koordination."
+  },
+  {
+    "id": "4m-development-20",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Die Sehkraft deines Babys reicht jetzt quer durch den Raum. Es verfolgt vielleicht vorbeigehende Menschen oder ein Haustier mit den Augen. Dieses Fernsehen ist ein großer Sprung gegenüber den Neugeborenenwochen."
+  },
+  {
+    "id": "4m-development-21",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Wenn dein Baby ein Spielzeug mit beiden Händen greift und zum Mund führt, koordiniert es mehrere Muskelgruppen gleichzeitig. Das ist eine komplexe Fähigkeit in Aktion."
+  },
+  {
+    "id": "4m-development-22",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby fängt vielleicht an, vor Freude zu quietschen oder hohe, fröhliche Laute von sich zu geben. Diese Freudenausbrüche zeigen, dass sich sein emotionales Spektrum erweitert."
+  },
+  {
+    "id": "4m-development-23",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby kann jetzt ein bewegtes Spielzeug mit den Augen von einer Seite zur anderen verfolgen. Dieses fließende visuelle Verfolgen ist ein großer Fortschritt gegenüber den ruckartigen Augenbewegungen der Neugeborenenzeit."
+  },
+  {
+    "id": "4m-development-24",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Dein Baby wird immer geselliger und \"unterhält\" sich vielleicht mit Spielzeug, seinem Spiegelbild oder sogar Bildern von Gesichtern. Ermutige es, indem du dich an der Unterhaltung beteiligst."
+  },
+  {
+    "id": "4m-development-25",
+    "ageGroup": "4m",
+    "category": "development",
+    "text": "Leg dein Baby beim Spielen auf die Seite, mit einem Spielzeug davor. Diese Position fördert die Drehbewegung und hilft ihm, neue Bewegungsmöglichkeiten zu entdecken."
+  },
+  {
+    "id": "4m-sleep-01",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Dein Baby erlebt vielleicht Veränderungen im Schlafverhalten, weil seine Schlafzyklen reifen. Das kann den Schlaf vorübergehend stören, ist aber ein normaler Teil der Entwicklung. Halte durch!"
+  },
+  {
+    "id": "4m-sleep-02",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Dein Baby fängt vielleicht an, nachts längere Abschnitte von 5–6 Stunden am Stück zu schlafen. Feiere diese Erfolge – und wisse, dass nächtliches Aufwachen trotzdem noch normal ist."
+  },
+  {
+    "id": "4m-sleep-03",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Die meisten Babys in diesem Alter machen 3–4 Schläfchen pro Tag. Mach dir keine Sorgen wegen eines perfekten Zeitplans – den Müdigkeitszeichen deines Babys zu folgen ist wichtiger."
+  },
+  {
+    "id": "4m-sleep-05",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Wachphasen betragen in diesem Alter typischerweise 1,5–2 Stunden. Dein Baby hinzulegen, bevor es übermüdet ist, erleichtert das Einschlafen."
+  },
+  {
+    "id": "4m-sleep-06",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Eine feste Einschlafroutine (z.B. Licht dimmen, Buch, Lied, Bettchen) signalisiert deinem Baby, dass Schlafenszeit ist. Wiederholung ist der Schlüssel."
+  },
+  {
+    "id": "4m-sleep-07",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Kurze Schläfchen von 30–45 Minuten sind in diesem Alter ganz normal, weil die Schlafzyklen reifen. Wenn dein Baby fröhlich aufwacht, war das Schläfchen wahrscheinlich ausreichend."
+  },
+  {
+    "id": "4m-sleep-08",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Wenn dein Baby sich im Schlaf auf den Bauch dreht, aber auch zurückdrehen kann, ist es okay, es so liegen zu lassen. Lege es aber immer auf den Rücken hin."
+  },
+  {
+    "id": "4m-sleep-09",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Wenn der Schlaf deines Babys durch einen Entwicklungsschub gestört wird, bleibe bei deinem Ansatz, anstatt viele neue Schlafstrategien gleichzeitig einzuführen."
+  },
+  {
+    "id": "4m-sleep-10",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Tagsüber muss es beim Schläfchen nicht stockdunkel sein. Etwas Umgebungslicht ist in Ordnung und hilft deinem Baby, zwischen Schläfchen und Nachtschlaf zu unterscheiden."
+  },
+  {
+    "id": "4m-sleep-11",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Wenn du über Schlaftraining nachdenkst: Die meisten Kinderärzte empfehlen, zu warten, bis dein Baby entwicklungsmäßig bereit ist – und das ist bei jedem Kind anders. Sprich mit deinem Arzt über den richtigen Zeitpunkt."
+  },
+  {
+    "id": "4m-sleep-12",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Dein Baby wehrt sich vielleicht gegen das letzte Schläfchen des Tages. Das ist häufig – ein kurzes Nickerchen am späten Nachmittag kann die Zeit bis zum Schlafengehen überbrücken."
+  },
+  {
+    "id": "4m-sleep-13",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Versuche, dein Baby bei mindestens einem Schläfchen am Tag müde, aber wach hinzulegen. Das hilft ihm sanft, das eigenständige Einschlafen zu lernen."
+  },
+  {
+    "id": "4m-sleep-14",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Eine frühe Schlafenszeit zwischen 18:30 und 20:00 Uhr funktioniert in diesem Alter oft gut. Übermüdete Babys haben tatsächlich mehr Schwierigkeiten, ein- und durchzuschlafen."
+  },
+  {
+    "id": "4m-sleep-15",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Halte die Schlafumgebung kühl ({{68-72°F|20-22°C}}). Babys schlafen besser, wenn ihnen nicht zu warm ist."
+  },
+  {
+    "id": "4m-sleep-16",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Wenn dein Baby genau 30–45 Minuten nach dem Einschlafen aufwacht, hat es vielleicht Schwierigkeiten, zwischen Schlafzyklen zu wechseln. Warte ein paar Minuten und schau, ob es von alleine wieder einschläft."
+  },
+  {
+    "id": "4m-sleep-17",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Ein Schlafsack ist eine sichere Alternative zu Decken und kann Teil der Schlafroutine deines Babys werden. Das Zuziehen des Reißverschlusses signalisiert: Jetzt ist Schlafenszeit."
+  },
+  {
+    "id": "4m-sleep-18",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Wenn dein Baby bisher gut geschlafen hat und plötzlich nicht mehr, könnte eine Schlafregression die Ursache sein. Das ist eine dauerhafte Veränderung der Schlafarchitektur – es wird sich anpassen."
+  },
+  {
+    "id": "4m-sleep-19",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Versuche, die letzte Mahlzeit des Tages vom Einschlafen zu trennen. Schon eine kurze Pause dazwischen hilft, die Verknüpfung von Füttern und Einschlafen zu verringern."
+  },
+  {
+    "id": "4m-sleep-21",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Wenn Schläfchen ein Kampf sind, kürze deine Vor-Schlaf-Routine auf nur 5 Minuten. Tagsüber reicht eine kurze Beruhigungsphase oft aus."
+  },
+  {
+    "id": "4m-sleep-22",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Schläfchen im Kinderwagen oder Auto sind manchmal in Ordnung, aber biete mindestens ein Schläfchen am Tag im Bettchen an, damit dein Baby übt, in einer ruhigen Umgebung zu schlafen."
+  },
+  {
+    "id": "4m-sleep-23",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Der Tag-Nacht-Rhythmus deines Babys ist jetzt stärker ausgeprägt. Eine feste Aufwachzeit am Morgen kann den Rest des Tagesablaufs verankern."
+  },
+  {
+    "id": "4m-sleep-24",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Wenn dein Baby es gewohnt ist, in den Schlaf geschaukelt zu werden, reduziere das Schaukeln schrittweise, statt es plötzlich zu stoppen. Sanfte Übergänge funktionieren am besten."
+  },
+  {
+    "id": "4m-sleep-25",
+    "ageGroup": "4m",
+    "category": "sleep",
+    "text": "Vergleiche den Schlaf deines Babys nicht mit dem anderer Babys. Manche schlafen von Natur aus früher längere Abschnitte, andere brauchen mehr Zeit. Beides ist völlig normal."
+  },
+  {
+    "id": "4m-feeding-01",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Dein Baby lässt sich beim Trinken vielleicht leichter ablenken und dreht sich weg, um sich umzuschauen. Versuche, in einem ruhigen, abgedunkelten Raum zu füttern, wenn das zum Problem wird."
+  },
+  {
+    "id": "4m-feeding-03",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Flaschenernährte Babys trinken in der Regel etwa {{4-6 ounces|120-180 ml}} pro Mahlzeit, 4–6 Mal am Tag. Aber jedes Baby ist anders – folge seinen Signalen."
+  },
+  {
+    "id": "4m-feeding-04",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Auch wenn dein Baby interessiert an deinem Essen wirkt, empfehlen die meisten kinderärztlichen Leitlinien, mit Beikost bis etwa 6 Monate zu warten."
+  },
+  {
+    "id": "4m-feeding-05",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Vermehrtes Sabbern und Auf-den-Händen-Kauen in diesem Alter sind meistens entwicklungsbedingt und nicht unbedingt ein Zeichen, dass dein Baby Beikost braucht."
+  },
+  {
+    "id": "4m-feeding-06",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Wenn du stillst, musst du nach einem Glas Wein nicht abpumpen und wegschütten. Experten empfehlen, nach einem einzelnen Getränk mindestens 2 Stunden zu warten, bevor du stillst, da der Alkohol die Muttermilch verlässt, sobald er dein Blut verlässt."
+  },
+  {
+    "id": "4m-feeding-07",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Ein Wachstumsschub um die 3–4 Monate kann bedeuten, dass dein Baby an manchen Tagen mehr Hunger hat. Vertraue seinem Appetit und füttere nach Bedarf."
+  },
+  {
+    "id": "4m-feeding-08",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Wenn du auf der Arbeit abpumpst, versuche, so oft zu pumpen, wie dein Baby trinken würde, um die Milchbildung aufrechtzuerhalten. Die meisten Mütter pumpen alle 3–4 Stunden."
+  },
+  {
+    "id": "4m-feeding-09",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Es ist normal, dass gestillte Babys die Flasche anfangs ablehnen. Lass eine andere Person als den stillenden Elternteil sie anbieten und probiere verschiedene Saugergrößen aus."
+  },
+  {
+    "id": "4m-feeding-10",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Dein gestilltes Baby braucht in diesem Alter kein Wasser. Muttermilch (oder Säuglingsnahrung) liefert die gesamte Flüssigkeit, die es braucht, auch bei heißem Wetter."
+  },
+  {
+    "id": "4m-feeding-11",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Wenn dein Baby Reflux hat, kann es helfen, es nach dem Füttern 20–30 Minuten aufrecht zu halten und kleinere, häufigere Mahlzeiten anzubieten."
+  },
+  {
+    "id": "4m-feeding-12",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Saugverwirrung ist in diesem Alter weniger ein Thema. Wenn du bisher gezögert hast, eine Flasche oder einen Schnuller einzuführen, ist jetzt ein guter Zeitpunkt, es zu versuchen."
+  },
+  {
+    "id": "4m-feeding-13",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Gib keinen Brei in die Flasche deines Babys. Es ist ein Erstickungsrisiko und hilft Babys entgegen dem verbreiteten Mythos nicht, länger zu schlafen."
+  },
+  {
+    "id": "4m-feeding-14",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Gib weiterhin täglich Vitamin-D-Tropfen (400 I.E.), wenn du stillst. Flaschenernährte Babys brauchen sie möglicherweise nicht, wenn sie genug angereicherte Säuglingsnahrung trinken."
+  },
+  {
+    "id": "4m-feeding-15",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Die Trinkzeiten deines Babys werden vielleicht regelmäßiger und pendeln sich in einen groben Rhythmus ein. Das macht die Tagesplanung etwas leichter."
+  },
+  {
+    "id": "4m-feeding-16",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Wenn deine Milchmenge am Nachmittag geringer zu sein scheint, probiere Power-Pumping (20 Min. pumpen, 10 Min. Pause, 10 Min. pumpen, 10 Min. Pause, 10 Min. pumpen), um die Produktion anzukurbeln."
+  },
+  {
+    "id": "4m-feeding-17",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Dein Baby fängt vielleicht an, beim Füttern nach der Flasche oder Brust zu greifen. Lass es seine Hände auf die Flasche legen, um frühe Selbstfütterungsfähigkeiten zu fördern."
+  },
+  {
+    "id": "4m-feeding-18",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Wenn dein Baby plötzlich öfter stillen will, heißt das nicht, dass deine Milchmenge sinkt. Wachstumsschübe und Trost-Stillen sind gerade beide häufig."
+  },
+  {
+    "id": "4m-feeding-20",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Wenn du mit Muttermilch und Säuglingsnahrung kombiniert fütterst, ist das ein absolut gültiger Ansatz. Jede Menge Muttermilch bringt Vorteile."
+  },
+  {
+    "id": "4m-feeding-21",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Probiere einen langsameren Sauger, wenn dein Baby hastig schluckt, hustet oder beim Flaschentrinken überfordert wirkt. Ein langsamerer Fluss lässt es das Tempo besser kontrollieren."
+  },
+  {
+    "id": "4m-feeding-22",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Die gesamte Tagesmenge an Muttermilch oder Säuglingsnahrung beträgt in diesem Alter typischerweise {{24-32 ounces|710-950 ml}}. Einzelne Mahlzeiten können variieren, und das ist völlig in Ordnung."
+  },
+  {
+    "id": "4m-feeding-23",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Nachtmahlzeiten nehmen vielleicht von selbst ab, wenn dein Baby tagsüber mehr trinkt. Folge seinem Rhythmus, anstatt eine Änderung zu erzwingen."
+  },
+  {
+    "id": "4m-feeding-24",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Wenn dein Baby sich mitten beim Trinken abwendet oder die Flasche wegschiebt, respektiere sein Signal. Es lernt, seinen Appetit selbst zu regulieren."
+  },
+  {
+    "id": "4m-feeding-25",
+    "ageGroup": "4m",
+    "category": "feeding",
+    "text": "Eingefrorene Muttermilch kann beim Auftauen durch Lipase-Aktivität etwas anders riechen oder schmecken. Sie ist trotzdem sicher und nahrhaft, auch wenn dein Baby anfangs zögert."
+  },
+  {
+    "id": "4m-health-01",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Den Impfplan deines Babys einzuhalten schützt es in seinen verletzlichsten Monaten. Sprich mit deinem Kinderarzt darüber, welche Impfungen anstehen."
+  },
+  {
+    "id": "4m-health-02",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Zahnen kann schon ab 3 Monaten beginnen, auch wenn die ersten Zähne meist um den 6. Monat durchbrechen. Geschwollenes Zahnfleisch und verstärktes Sabbern sind frühe Anzeichen."
+  },
+  {
+    "id": "4m-health-03",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Ein gekühlter (nicht gefrorener) Beißring oder ein sauberer, feuchter Waschlappen kann wundes Zahnfleisch beruhigen. Vermeide Zahnungsgele mit Benzocain – sie sind für kleine Babys nicht sicher."
+  },
+  {
+    "id": "4m-health-04",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Das Immunsystem deines Babys wird stärker, ist aber noch in der Entwicklung. Es könnte sich in diesem Alter die erste Erkältung einfangen, besonders wenn es ältere Geschwister hat."
+  },
+  {
+    "id": "4m-health-05",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Bei leichtem Fieber nach Impfungen reichen meist zusätzliches Kuscheln und viel Flüssigkeit. Frag deinen Kinderarzt nach geeigneten fiebersenkenden Mitteln und der richtigen Dosierung."
+  },
+  {
+    "id": "4m-health-06",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Ekzeme treten häufig zwischen dem 2. und 4. Monat auf. Halte die Haut mit einer reichhaltigen, parfümfreien Creme feucht und verwende sanfte, unparfümierte Babyprodukte."
+  },
+  {
+    "id": "4m-health-07",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Dein Baby sollte inzwischen Gegenstände fließend mit den Augen verfolgen und Blickkontakt herstellen. Wenn seine Augen nach 3 Monaten immer noch dauerhaft schielen, sprich deinen Arzt darauf an."
+  },
+  {
+    "id": "4m-health-09",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Wenn dein Baby Husten oder Schnupfen hat, können ein Kaltnebel-Luftbefeuchter im Zimmer und Kochsalz-Nasentropfen ihm das Atmen erleichtern."
+  },
+  {
+    "id": "4m-health-10",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Beobachte die Wachstumskurve deines Babys statt einzelner Messwerte. Gleichmäßiges Wachstum entlang seiner eigenen Perzentilenlinie ist wichtiger als die konkrete Zahl."
+  },
+  {
+    "id": "4m-health-11",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Windeldermatitis ist in diesem Alter häufig. Wechsle die Windel zügig, lass den Bereich an der Luft trocknen, wenn möglich, und verwende eine Zinkcreme als Schutzschicht."
+  },
+  {
+    "id": "4m-health-12",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Babys in diesem Alter stecken alles in den Mund. Reinige Spielzeug und Beißringe regelmäßig, aber du musst nicht alles sterilisieren – etwas Kontakt mit Keimen ist sogar gesund."
+  },
+  {
+    "id": "4m-health-13",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Wende dich an deinen Arzt, wenn dein Baby ungewöhnlich schlaff oder steif wirkt oder nicht auf Geräusche reagiert. Frühzeitige Förderung macht einen großen Unterschied."
+  },
+  {
+    "id": "4m-health-14",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Wenn dein Baby den Kopf ständig zur gleichen Seite neigt, erwähne es bei deinem Kinderarzt. Einfache Dehnübungen können einen Schiefhals oft korrigieren."
+  },
+  {
+    "id": "4m-health-15",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Dein Baby fängt vielleicht an, stark zu sabbern, was einen Ausschlag am Kinn und Hals verursachen kann. Halte die Stelle trocken und trage eine sanfte Schutzcreme auf."
+  },
+  {
+    "id": "4m-health-16",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Wenn dein Baby sich an Ohren oder Gesicht kratzt, halte seine Nägel kurz geschnitten. Fäustlinge werden in diesem Alter nicht mehr empfohlen, da sie die Hände am Erkunden hindern."
+  },
+  {
+    "id": "4m-health-17",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Das Immunsystem deines Babys bildet mit jeder Impfdosis Antikörper. Leichte Nebenwirkungen wie etwas Fieber oder Quengeligkeit für ein bis zwei Tage zeigen, dass sein Immunsystem reagiert."
+  },
+  {
+    "id": "4m-health-18",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Wenn dein Baby ein Ekzem hat, bade es in lauwarmem Wasser nicht länger als 10 Minuten und creme es danach sofort ein, solange die Haut noch feucht ist."
+  },
+  {
+    "id": "4m-health-19",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Flache Stellen am Hinterkopf (Lagerungsplagiozephalie) sind häufig, bessern sich aber meistens, wenn dein Baby mehr Zeit aufrecht und in der Bauchlage verbringt."
+  },
+  {
+    "id": "4m-health-20",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Achte auf Anzeichen von Hörproblemen, etwa wenn dein Baby bei lauten Geräuschen nicht zusammenzuckt oder sich nicht zu Stimmen hindreht. Sprich eventuelle Bedenken beim nächsten Arztbesuch an."
+  },
+  {
+    "id": "4m-health-21",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Wenn eine verstopfte Nase das Trinken erschwert, versuche ein paar Minuten vor der Mahlzeit Kochsalztropfen und einen Nasensauger zu benutzen, um die Atemwege freizumachen."
+  },
+  {
+    "id": "4m-health-23",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Dein Baby spuckt vielleicht weniger, je reifer sein Verdauungssystem wird. Wenn der Reflux plötzlich schlimmer statt besser wird, sprich deinen Kinderarzt darauf an."
+  },
+  {
+    "id": "4m-health-24",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Plane die Bauchlage mehrmals täglich ein – nicht nur zum Spielen, sondern auch um Blähungen zu lindern und die Verdauung zu unterstützen. Warte nach dem Füttern mindestens 20–30 Minuten, bevor du dein Baby auf den Bauch legst."
+  },
+  {
+    "id": "4m-health-25",
+    "ageGroup": "4m",
+    "category": "health",
+    "text": "Wenn dein Baby einen Pilz-Windelausschlag entwickelt (kräftig rot mit kleinen Satellitenflecken), hilft normale Windelcreme nicht. Frag deinen Kinderarzt nach einer Antipilz-Behandlung."
+  },
+  {
+    "id": "4m-play-01",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Spiel Kuckuck! Dein Baby liebt es, wenn dein Gesicht verschwindet und wieder auftaucht. Dieses Spiel baut Vorfreude auf und belohnt es mit Nähe und Verbindung."
+  },
+  {
+    "id": "4m-play-02",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Biete Rasseln, Knisterspielzeug und weiche Bauklötze an, die dein Baby greifen, schütteln und in den Mund nehmen kann. Verschiedene Texturen und Geräusche sind toll für die sensorische Entwicklung."
+  },
+  {
+    "id": "4m-play-03",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Leg dein Baby auf eine Spielmatte und lass es frei strampeln. Das stärkt die Beinmuskeln, die es zum Drehen und später zum Krabbeln braucht."
+  },
+  {
+    "id": "4m-play-04",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Probier das \"Flieger\"-Spiel: Leg dich auf den Rücken und halte dein Baby auf deinen Schienbeinen, während du seine Hände hältst. Das stärkt seine Rumpfmuskulatur und sorgt meist für viel Gelächter."
+  },
+  {
+    "id": "4m-play-05",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Puste beim Spielen sanft Seifenblasen in der Nähe deines Babys. Es wird es lieben, den schwebenden Blasen nachzuschauen – das stärkt die visuelle Verfolgung."
+  },
+  {
+    "id": "4m-play-06",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Halte dein Baby auf deinem Schoß in aufrechter Position und lass es mit den Beinen wippen. Es wird es lieben, sich abzudrücken und seine eigene Kraft zu spüren."
+  },
+  {
+    "id": "4m-play-07",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Führe Pappbilderbücher mit einfachen, kontrastreichen Bildern und dicken Seiten ein. Dein Baby wird vielleicht nach den Seiten greifen – das ist tolle Feinmotorik-Übung."
+  },
+  {
+    "id": "4m-play-08",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Spiel \"Sooo groß!\" und strecke dabei die Arme deines Babys nach oben. Solche Wiederholungsspiele bringen deinem Baby bei, vorauszuahnen und mitzumachen."
+  },
+  {
+    "id": "4m-play-09",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Geh mit deinem Baby im Kinderwagen oder in der Trage spazieren. Zeig auf Bäume, Hunde, Autos – alles ist neu und faszinierend für es."
+  },
+  {
+    "id": "4m-play-10",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Leg dein Baby auf den Rücken und halte ein Spielzeug darüber, um es zum Hochgreifen zu ermutigen. Das stärkt die Armkraft und die Koordination."
+  },
+  {
+    "id": "4m-play-11",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Mach verschiedene Tiergeräusche und beobachte die Reaktion deines Babys. Unterschiedliche Tonhöhen und Lautstärken halten seine Aufmerksamkeit und fördern das Hören."
+  },
+  {
+    "id": "4m-play-12",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Leg dein Baby auf eine Decke im Gras für Bauchlage im Freien. Die neuen Texturen und Gerüche bieten eine wunderbare Sinneserfahrung."
+  },
+  {
+    "id": "4m-play-13",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Wipp oder schwing sanft mit deinem Baby auf dem Arm, während du singst. Bewegung kombiniert mit Musik ist wunderbar für sein sich entwickelndes Gleichgewichtssystem."
+  },
+  {
+    "id": "4m-play-14",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Lass dein Baby mit sicheren Haushaltsgegenständen spielen, wie Holzlöffeln oder Messbechern. Manchmal sind einfache Dinge interessanter als teures Spielzeug."
+  },
+  {
+    "id": "4m-play-15",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Übe unterstütztes Sitzen, indem du dein Baby mit Kissen stützt oder es auf deinem Schoß nach vorne schauend hältst. Diese neue Perspektive begeistert es und stärkt die Rumpfmuskulatur."
+  },
+  {
+    "id": "4m-play-16",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Spiel \"Nachmachen\": Imitiere die Laute und Gesichtsausdrücke deines Babys. Wenn es sieht, dass du es nachahmst, wird es zu mehr Kommunikation ermutigt."
+  },
+  {
+    "id": "4m-play-17",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Gib deinem Baby einen weichen Ball zum Greifen. Ihn während der Bauchlage zu rollen ermutigt es, nach vorne zu greifen und stärkt die Arme."
+  },
+  {
+    "id": "4m-play-18",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Leg Spielzeuge in einem Kreis um dein Baby während der Bauchlage, um es zum Drehen zu animieren. Es wird seinen Körper bewegen, um die verschiedenen Sachen zu erreichen, und baut dabei Rumpfmuskulatur auf."
+  },
+  {
+    "id": "4m-play-19",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Lass dein Baby beim Baden sanft planschen. Solches Ursache-Wirkung-Spiel ist aufregend für es und fördert die Handkoordination."
+  },
+  {
+    "id": "4m-play-20",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Spiel mit einem leichten Tuch, das du über dein Baby schweben lässt. Es wird Spaß daran haben, danach zu greifen, wenn es heruntergleitet – das übt Timing und Greifvermögen."
+  },
+  {
+    "id": "4m-play-21",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Setz dein Baby vor ein Fenster und lass es die Welt draußen beobachten. Bewegung, Licht und Schatten sind in diesem Alter endlos faszinierend."
+  },
+  {
+    "id": "4m-play-22",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Biete ein Spielzeug an, das beim Schütteln oder Drücken Geräusche macht. Dein Baby lernt, dass seine Handlungen etwas bewirken, und dieses Gefühl von Selbstwirksamkeit begeistert es."
+  },
+  {
+    "id": "4m-play-23",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Lies dasselbe Lieblingsbuch immer wieder vor. Babys in diesem Alter lieben Wiederholung, und dieselben Wörter immer wieder zu hören stärkt die Sprachverarbeitung im Gehirn."
+  },
+  {
+    "id": "4m-play-24",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Lass dein Baby sichere Gegenstände mit verschiedenen Temperaturen fühlen, z.B. einen kühlen Löffel oder einen warmen (nicht heißen) Waschlappen. Temperatur ist eine weitere wertvolle Sinneserfahrung."
+  },
+  {
+    "id": "4m-play-25",
+    "ageGroup": "4m",
+    "category": "play",
+    "text": "Halte dein Baby sicher und neige es sanft von Seite zu Seite. Diese Gleichgewichtsstimulation fördert den Gleichgewichtssinn und wird meistens mit Kichern belohnt."
+  },
+  {
+    "id": "4m-safety-01",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Dein Baby fängt vielleicht bald an, sich zu drehen – lass es also nie unbeaufsichtigt auf erhöhten Flächen liegen. Benutze die Sicherheitsgurte am Wickeltisch."
+  },
+  {
+    "id": "4m-safety-02",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Achte darauf, dass alle Spielzeuge zu groß sind, um vollständig in den Mund deines Babys zu passen. Sobald es anfängt, alles in den Mund zu stecken, wird Erstickungsgefahr ein größeres Thema."
+  },
+  {
+    "id": "4m-safety-03",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Der Autositz deines Babys sollte weiterhin rückwärtsgerichtet sein. Lass es rückwärtsgerichtet sitzen, bis es die maximale Größe oder das Gewicht für seinen Sitz erreicht hat."
+  },
+  {
+    "id": "4m-safety-04",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Fang jetzt mit der Kindersicherung an, bevor dein Baby mobil wird. Geh auf Babyhöhe auf den Boden und schau nach Gefahren, die dir aus Stehhöhe vielleicht nicht auffallen."
+  },
+  {
+    "id": "4m-safety-05",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Wenn dein Baby in einer Wippe oder Schaukel sitzt, benutze immer den Sicherheitsgurt und stelle sie auf den Boden – nie auf einen Tisch oder eine Arbeitsfläche."
+  },
+  {
+    "id": "4m-safety-06",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Sichere Möbel mit Kippschutz an der Wand. Das mag früh erscheinen, aber sobald dein Baby mobil ist, sind ungesicherte Möbel ein ernstes Risiko."
+  },
+  {
+    "id": "4m-safety-07",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Sichere Steckdosen mit Kindersicherungen oder Steckdosenabdeckungen. In ein paar Monaten wird dein Baby nach allem greifen, was es erreichen kann."
+  },
+  {
+    "id": "4m-safety-08",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Überprüfe das Babybett: Die Matratze sollte fest sitzen, ohne Lücken von mehr als zwei Fingern zwischen Matratze und Rahmen."
+  },
+  {
+    "id": "4m-safety-09",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Halte heiße Getränke weit weg, wenn du dein Baby auf dem Arm hast. Eine verschüttete Tasse Kaffee kann schwere Verbrennungen auf empfindlicher Babyhaut verursachen."
+  },
+  {
+    "id": "4m-safety-10",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Schüttle dein Baby niemals, auch nicht im Spiel. Wenn du dich überfordert fühlst, leg dein Baby an einen sicheren Ort und tritt einen Moment zur Seite, um durchzuatmen."
+  },
+  {
+    "id": "4m-safety-11",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Stelle deinen Warmwasserbereiter auf {{120°F|49°C}} oder niedriger ein, um Verbrühungen beim Baden zu vermeiden."
+  },
+  {
+    "id": "4m-safety-12",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Wenn du ein Aktivitätscenter oder einen Bodensitz verwendest, stelle sicher, dass dein Baby entwicklungsmäßig bereit ist (gute Kopfkontrolle) und begrenze die Zeit auf kurze Einheiten."
+  },
+  {
+    "id": "4m-safety-13",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Halte kleine Batterien, besonders Knopfzellen, komplett außer Reichweite. Wenn sie verschluckt werden, können sie innerhalb von Stunden schwere innere Verbrennungen verursachen."
+  },
+  {
+    "id": "4m-safety-14",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Erwäge, einen Erste-Hilfe-Kurs für Säuglinge zu machen. Zu wissen, was im Notfall zu tun ist, gibt dir Sicherheit und könnte das Leben deines Babys retten."
+  },
+  {
+    "id": "4m-safety-15",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Wenn dein Baby angefangen hat, sich zu drehen, entferne alle Mobiles oder hängenden Spielzeuge aus dem Bettchen, die es greifen, herunterziehen und in denen es sich verheddern könnte."
+  },
+  {
+    "id": "4m-safety-16",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Halte Plastiktüten, Folien und Verpackungsmaterial von deinem Baby fern. Sie können eine Erstickungsgefahr darstellen, auch wenn dein Baby noch zu jung scheint, um danach zu greifen."
+  },
+  {
+    "id": "4m-safety-17",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Stelle sicher, dass alle Betreuungspersonen und Babysitter deine Regeln für sicheren Schlaf kennen: auf den Rücken legen, feste und flache Unterlage, nichts im Bettchen."
+  },
+  {
+    "id": "4m-safety-18",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Wenn dein Baby im Liegen die Seiten seiner Wiege oder seines Beistellbetts erreichen kann, ist es vielleicht Zeit, auf ein normales Babybett umzusteigen, damit es mehr Platz hat."
+  },
+  {
+    "id": "4m-safety-19",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Stütze keine Flasche auf, damit dein Baby unbeaufsichtigt trinken kann. Aufgestützte Flaschen können zu Verschlucken, Ohrenentzündungen und Karies führen."
+  },
+  {
+    "id": "4m-safety-20",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Wenn du dein Baby in einer Trage trägst, vermeide es zu kochen, heiße Getränke zu trinken oder in der Nähe von Hitzequellen zu stehen. Dein Baby ist Gefahren näher, als du denkst."
+  },
+  {
+    "id": "4m-safety-21",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Prüfe die Rückrufliste für alle Babyprodukte, die du besitzt oder gebraucht erhalten hast. Ältere Produkte erfüllen möglicherweise nicht mehr die aktuellen Sicherheitsstandards."
+  },
+  {
+    "id": "4m-safety-22",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Lass dein Handy auf laut, wenn dein Baby schläft, damit du den Babyphone-Alarm hörst. Aber widerstehe dem Drang, bei jedem Geräusch aufs Video zu schauen – manche Geräusche sind normal."
+  },
+  {
+    "id": "4m-safety-23",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Lass dein Baby außerhalb des Autos nicht längere Zeit in der Babyschale sitzen. Der halbaufrechte Winkel kann die Atmung einschränken, besonders bei jüngeren Säuglingen."
+  },
+  {
+    "id": "4m-safety-24",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Jetzt, da dein Baby nach allem greift, achte auf hängenden Schmuck, Brillen und Haare, wenn du es auf dem Arm hast. Ein kräftiger Babygriff kann überraschend fest zupacken."
+  },
+  {
+    "id": "4m-safety-25",
+    "ageGroup": "4m",
+    "category": "safety",
+    "text": "Bewahre Reinigungsmittel, Waschmittel-Pods und Spülmaschinen-Tabs in verschlossenen Schränken auf. Ihre bunten Farben und die weiche Textur machen sie für Babys gefährlich verlockend."
+  }
+]

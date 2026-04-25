@@ -1,0 +1,686 @@
+[
+  {
+    "id": "1y-development-01",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé peut commencer à se hisser debout en s'agrippant aux meubles. Place des objets stables à proximité pour qu'il puisse s'exercer en toute sécurité."
+  },
+  {
+    "id": "1y-development-02",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Faire coucou, applaudir et pointer du doigt sont autant de signes que ton bébé développe d'importantes compétences en communication sociale."
+  },
+  {
+    "id": "1y-development-03",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Essaie d'empiler deux ou trois blocs et laisse ton bébé les renverser. Cela lui apprend la relation de cause à effet tout en renforçant sa coordination oeil-main."
+  },
+  {
+    "id": "1y-development-04",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé peut commencer à se déplacer le long des meubles entre 9 et 12 mois. Réorganise les sièges pour qu'il puisse passer d'un meuble à l'autre."
+  },
+  {
+    "id": "1y-development-05",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Répondre à son prénom de manière régulière est une étape importante vers cet âge. Utilise son prénom souvent pendant le jeu et les repas."
+  },
+  {
+    "id": "1y-development-06",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé apprend la permanence de l'objet. Joue à coucou ou cache un jouet sous une couverture et regarde-le le chercher."
+  },
+  {
+    "id": "1y-development-07",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Le babillage avec des consonnes comme \"mama\" et \"papa\" montre que ton bébé expérimente le langage. Répète ses sons pour l'encourager à en produire davantage."
+  },
+  {
+    "id": "1y-development-08",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Laisse ton bébé s'exercer à attraper de petits aliments avec la pince pouce-index. Cette compétence de motricité fine se développe rapidement entre 9 et 12 mois."
+  },
+  {
+    "id": "1y-development-09",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé peut commencer à comprendre des consignes simples comme \"donne-moi le ballon\". Utilise des phrases courtes et claires accompagnées de gestes."
+  },
+  {
+    "id": "1y-development-10",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Frapper deux objets l'un contre l'autre est un signe de coordination croissante et de curiosité. Propose-lui des cuillères en bois, des gobelets ou des blocs souples."
+  },
+  {
+    "id": "1y-development-11",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé peut montrer de l'anxiété face aux inconnus vers cet âge. C'est un signe sain d'un attachement fort envers toi."
+  },
+  {
+    "id": "1y-development-12",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Essaie de lire des livres cartonnés ensemble et laisse ton bébé tourner les pages. Il développe des compétences de pré-lecture bien avant de comprendre les mots."
+  },
+  {
+    "id": "1y-development-13",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Pointer les objets qu'il veut est l'un des premiers gestes de communication intentionnelle. Reconnais ce qu'il montre en le nommant."
+  },
+  {
+    "id": "1y-development-14",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé peut commencer à imiter des gestes simples comme remuer une cuillère ou se brosser les cheveux. Ce jeu d'imitation est sa manière d'apprendre la vie quotidienne."
+  },
+  {
+    "id": "1y-development-15",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Certains bébés font leurs premiers pas vers 12 mois, mais beaucoup ne marchent pas avant plus tard. Les deux rythmes sont parfaitement normaux."
+  },
+  {
+    "id": "1y-sleep-02",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Vers 12 mois, certains bébés commencent à résister à leur sieste du matin. Si cela se produit régulièrement, essaie de décaler progressivement la sieste plus tard plutôt que de la supprimer d'un coup."
+  },
+  {
+    "id": "1y-sleep-03",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "L'anxiété de séparation peut provoquer des réveils nocturnes vers 9-10 mois. Une brève visite calme et rassurante est plus utile que de bouleverser toute la routine."
+  },
+  {
+    "id": "1y-sleep-04",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Garde l'environnement de sommeil sombre, frais et silencieux. Une machine à bruit blanc à volume modéré peut aider ton bébé à dormir plus profondément."
+  },
+  {
+    "id": "1y-sleep-05",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Une routine de coucher courte et prévisible de 15 à 20 minutes signale à ton bébé que le sommeil approche. Bain, livre, chanson et dodo, ça fonctionne bien."
+  },
+  {
+    "id": "1y-sleep-06",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Ton bébé devrait toujours dormir sur le dos, sur une surface ferme et plate. Retire toutes les couvertures, oreillers et peluches du lit."
+  },
+  {
+    "id": "1y-sleep-07",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Le sevrage nocturne se fait souvent naturellement entre 9 et 12 mois, au fur et à mesure que ton bébé mange plus de solides en journée. Parles-en à ton pédiatre si tu n'es pas sûr."
+  },
+  {
+    "id": "1y-sleep-08",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Si ton bébé se met debout dans son lit et pleure, il a peut-être besoin d'aide pour apprendre à se rasseoir. Exerce cette compétence pendant le jeu en journée."
+  },
+  {
+    "id": "1y-sleep-09",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Vise des temps d'éveil de 2,5 à 3,5 heures entre les siestes à cet âge. Les bébés trop fatigués ont souvent plus de mal à s'endormir."
+  },
+  {
+    "id": "1y-sleep-10",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Le réveil matinal avant 6 h est courant à cet âge. Assure-toi que la chambre est bien sombre et évite les activités stimulantes s'il se réveille trop tôt."
+  },
+  {
+    "id": "1y-sleep-11",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "L'inconfort lié à la poussée dentaire peut perturber le sommeil. Si ton bébé semble souffrir, demande à ton pédiatre un antidouleur adapté à son âge avant le coucher."
+  },
+  {
+    "id": "1y-sleep-12",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Les voyages et les changements d'horaire peuvent temporairement affecter le sommeil. Sois patient et reprends ta routine normale dès que possible."
+  },
+  {
+    "id": "1y-sleep-14",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Si ton bébé fait deux siestes, la première est généralement vers 9-10 h et la seconde vers 13-14 h. Ajuste en fonction des signes de fatigue de ton bébé."
+  },
+  {
+    "id": "1y-sleep-15",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Certains bébés connaissent une régression du sommeil vers 10-12 mois, liée aux progrès comme se mettre debout et se déplacer. Cela passe généralement en 2 à 4 semaines."
+  },
+  {
+    "id": "1y-feeding-01",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Entre 9 et 12 mois, ton bébé peut profiter d'une grande variété d'aliments mous à manger avec les doigts. Coupe tout en petits morceaux de la taille d'un pois."
+  },
+  {
+    "id": "1y-feeding-02",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Propose de l'eau dans un verre ouvert ou une tasse à paille pendant les repas. S'exercer maintenant facilite la transition hors du biberon vers 12-15 mois."
+  },
+  {
+    "id": "1y-feeding-03",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Ton bébé a encore besoin du lait maternel ou du lait infantile comme alimentation principale jusqu'à 12 mois. Les solides sont complémentaires à ce stade."
+  },
+  {
+    "id": "1y-feeding-04",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Il faut parfois 10 à 15 présentations d'un nouvel aliment avant qu'un bébé l'accepte. Continue à le proposer sans forcer s'il le refuse."
+  },
+  {
+    "id": "1y-feeding-05",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Les aliments riches en fer comme les céréales enrichies, les viandes en purée, les haricots et les lentilles sont particulièrement importants entre 9 et 12 mois, car les réserves de fer de la naissance s'épuisent."
+  },
+  {
+    "id": "1y-feeding-06",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Laisse ton bébé manger seul autant que possible. Les dégâts en valent la peine pour développer son autonomie et sa motricité fine."
+  },
+  {
+    "id": "1y-feeding-07",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Évite le miel avant 12 mois en raison du risque de botulisme infantile. Cela vaut pour toutes les formes, y compris les pâtisseries préparées avec du miel."
+  },
+  {
+    "id": "1y-feeding-08",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Le réflexe nauséeux est différent de l'étouffement : c'est un réflexe protecteur normal quand ton bébé apprend à gérer de nouvelles textures. Reste calme et laisse-le s'en sortir."
+  },
+  {
+    "id": "1y-feeding-09",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Propose trois repas et 1 à 2 collations par jour en complément du lait maternel ou du lait infantile. Suis les signaux de faim et de satiété de ton bébé."
+  },
+  {
+    "id": "1y-feeding-10",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Introduis tôt et régulièrement les allergènes courants comme le beurre de cacahuète (dilué ou en biscuits soufflés), l'oeuf et les produits laitiers. La recherche montre que cela peut réduire le risque d'allergie."
+  },
+  {
+    "id": "1y-feeding-11",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Évite le sucre et le sel ajoutés dans l'alimentation de ton bébé. Ses reins et ses papilles gustatives sont encore en développement, et les aliments naturels lui apportent tout ce dont il a besoin."
+  },
+  {
+    "id": "1y-feeding-12",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Si ton bébé détourne la tête ou ferme la bouche, il te dit qu'il n'a plus faim. Respecte ces signaux de satiété pour construire une relation saine avec la nourriture."
+  },
+  {
+    "id": "1y-feeding-13",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Manger ensemble en famille aide ton bébé à apprendre en t'observant. Il est plus enclin à goûter de nouveaux aliments quand il te voit les apprécier."
+  },
+  {
+    "id": "1y-feeding-14",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Les fruits mous comme la banane, l'avocat bien mûr et la poire cuite à la vapeur sont d'excellents premiers aliments à manger avec les doigts. Écrase-les légèrement ou coupe-les en petites lamelles."
+  },
+  {
+    "id": "1y-feeding-15",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Si tu envisages le sevrage, supprimer une tétée à la fois sur plusieurs semaines est plus doux pour toi comme pour ton bébé."
+  },
+  {
+    "id": "1y-health-01",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Les visites de suivi régulières comprennent un bilan du développement et un contrôle de la croissance. Apporte toutes les questions que tu as accumulées."
+  },
+  {
+    "id": "1y-health-02",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Parle à ton pédiatre des vaccins prévus à ce stade. Rester à jour dans les vaccinations est important pour protéger ton petit explorateur."
+  },
+  {
+    "id": "1y-health-04",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "L'inconfort des poussées dentaires s'intensifie souvent entre 9 et 12 mois avec l'arrivée de nouvelles dents. Un anneau de dentition réfrigéré (pas congelé) peut apporter un soulagement apaisant."
+  },
+  {
+    "id": "1y-health-05",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "La première visite chez le dentiste de ton bébé devrait avoir lieu avant son premier anniversaire ou dans les six mois suivant l'apparition de sa première dent."
+  },
+  {
+    "id": "1y-health-06",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Les otites sont fréquentes à cet âge. Surveille si ton bébé se tire l'oreille, s'il est grognon, dort mal ou a de la fièvre, et contacte ton pédiatre si tu en soupçonnes une."
+  },
+  {
+    "id": "1y-health-07",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Dès l'apparition des dents, brosse-les deux fois par jour avec une quantité de dentifrice fluoré de la taille d'un grain de riz et une brosse à dents souple pour bébé."
+  },
+  {
+    "id": "1y-health-08",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Le lavage fréquent des mains est l'un des meilleurs moyens de prévenir les maladies, surtout quand ton bébé explore de plus en plus de surfaces et d'objets."
+  },
+  {
+    "id": "1y-health-09",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Si ton bébé attrape un léger rhume, des gouttes de sérum physiologique et une poire nasale peuvent aider à dégager le nez. Un humidificateur à vapeur froide dans la chambre aide aussi."
+  },
+  {
+    "id": "1y-health-11",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Conserve le carnet de vaccination de ton bébé en un seul endroit. Tu en auras besoin pour l'inscription en crèche et les futures visites chez le médecin."
+  },
+  {
+    "id": "1y-health-12",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "De légers effets secondaires après les vaccins, comme une petite fièvre ou de l'irritabilité pendant un jour ou deux, sont normaux et montrent que le système immunitaire réagit."
+  },
+  {
+    "id": "1y-health-13",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Les pieds plats sont tout à fait normaux à cet âge. La voûte plantaire se forme au cours des premières années et ne nécessite généralement aucune intervention."
+  },
+  {
+    "id": "1y-health-14",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Si ton bébé a un érythème fessier persistant qui ne s'améliore pas avec la crème protectrice, il pourrait s'agir d'une mycose. Demande à ton pédiatre quel traitement utiliser."
+  },
+  {
+    "id": "1y-health-15",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Le vaccin contre la grippe est recommandé chaque année à partir de 6 mois. Si ton bébé ne l'a pas encore reçu, il n'est pas trop tard pour le faire."
+  },
+  {
+    "id": "1y-play-01",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Remplis un contenant avec de gros objets mous et laisse ton bébé s'exercer à les sortir et les remettre. Cela développe ses capacités de résolution de problèmes."
+  },
+  {
+    "id": "1y-play-02",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Essaie un panier à trésors rempli d'objets du quotidien de différentes textures, formes et poids. Ton bébé adorera les explorer un par un."
+  },
+  {
+    "id": "1y-play-03",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Fais rouler une balle entre toi et ton bébé. Ce jeu de tour de rôle lui apprend l'interaction sociale et le suivi des objets en mouvement."
+  },
+  {
+    "id": "1y-play-04",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Laisse ton bébé jouer avec l'eau pendant le bain à l'aide de gobelets et de récipients pour transvaser. Les jeux d'eau supervisés sont excellents pour le développement sensoriel."
+  },
+  {
+    "id": "1y-play-05",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Crée un petit parcours d'obstacles avec des coussins de canapé au sol. Ramper par-dessus et autour renforce la musculature et la conscience spatiale."
+  },
+  {
+    "id": "1y-play-06",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Chante des comptines avec des gestes comme \"Ainsi font font font\" ou \"Les petites marionnettes\". Ton bébé apprend à associer les mots aux actions."
+  },
+  {
+    "id": "1y-play-07",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Propose de gros crayons et du papier pour les premières expériences de gribouillage. Tiens le crayon avec lui si besoin et félicite chaque trace qu'il fait."
+  },
+  {
+    "id": "1y-play-08",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Mets de la musique et dansez ensemble. Bouger en rythme stimule le développement moteur et crée un moment de complicité joyeux."
+  },
+  {
+    "id": "1y-play-09",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Emmène ton bébé dehors pour toucher l'herbe, les feuilles et le sable. Les expériences sensorielles en plein air sont de formidables occasions d'apprentissage."
+  },
+  {
+    "id": "1y-play-10",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Les gobelets gigognes ou les anneaux à empiler apprennent à ton bébé les notions de taille. Montre-lui comment empiler, puis laisse-le explorer seul."
+  },
+  {
+    "id": "1y-play-11",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Joue à \"Où est-il passé ?\" en cachant un jouet sous l'un de deux gobelets. Cela renforce la mémoire et les capacités de résolution de problèmes."
+  },
+  {
+    "id": "1y-play-12",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Laisse ton bébé taper sur des casseroles et des cuillères en bois. Faire du bruit lui apprend la relation de cause à effet et l'amuse sans fin."
+  },
+  {
+    "id": "1y-play-13",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Décris à voix haute ce que tu fais tout au long de la journée. \"On lave tes petites mains\" enrichit son vocabulaire même avant qu'il ne parle."
+  },
+  {
+    "id": "1y-play-14",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Propose du jeu supervisé avec des objets de cuisine comme des tasses à mesurer, des spatules en silicone et des bols en plastique. Les vrais objets fascinent les bébés à cet âge."
+  },
+  {
+    "id": "1y-play-15",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Les jouets à pousser avec poignée encouragent la pratique de la marche et renforcent la confiance des nouveaux marcheurs. Laisse ton bébé avancer à son rythme."
+  },
+  {
+    "id": "1y-safety-01",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Maintenant que ton bébé est mobile, fixe tous les meubles au mur avec des dispositifs anti-basculement. Les commodes et les bibliothèques sont les plus à risque de renversement."
+  },
+  {
+    "id": "1y-safety-02",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Garde tous les petits objets, les pièces de monnaie et les piles bouton hors de portée. Tout ce qui passe dans un rouleau de papier toilette présente un risque d'étouffement."
+  },
+  {
+    "id": "1y-safety-03",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Installe des barrières de sécurité en haut et en bas des escaliers. Les barrières à pression conviennent en bas, mais utilise des barrières fixées au mur en haut."
+  },
+  {
+    "id": "1y-safety-04",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Vérifie que le siège auto de ton bébé est dos à la route et correctement installé. Les experts en sécurité recommandent de garder les enfants dos à la route le plus longtemps possible, jusqu'à la limite maximale de taille ou de poids du siège."
+  },
+  {
+    "id": "1y-safety-05",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Ne laisse jamais ton bébé sans surveillance près de l'eau, même un instant. La noyade peut survenir dans à peine {{1 inch|2,5 cm}} d'eau."
+  },
+  {
+    "id": "1y-safety-06",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Couvre toutes les prises électriques avec des cache-prises. Les bébés qui rampent sont naturellement attirés par les prises situées à hauteur de leurs yeux."
+  },
+  {
+    "id": "1y-safety-07",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Range les produits ménagers, les médicaments et les produits chimiques dans des placards en hauteur et verrouillés. Utilise des verrous de sécurité sur les placards bas contenant des produits dangereux."
+  },
+  {
+    "id": "1y-safety-08",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Coupe les aliments ronds comme les raisins, les tomates cerises et les saucisses en petits morceaux dans la longueur. Les formes rondes sont le risque d'étouffement le plus courant chez les bébés."
+  },
+  {
+    "id": "1y-safety-09",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Règle ton chauffe-eau à {{120°F|49°C}} ou moins pour éviter les brûlures. Teste toujours l'eau du bain avec ton poignet ou ton coude avant d'y mettre ton bébé."
+  },
+  {
+    "id": "1y-safety-10",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Garde les cordons de stores et de rideaux hors de portée ou opte pour des habillages de fenêtre sans cordon. Ce sont de graves risques d'étranglement."
+  },
+  {
+    "id": "1y-safety-11",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Abaisse le matelas du lit à son réglage le plus bas dès que ton bébé peut se mettre debout. Cela l'empêche d'escalader ou de tomber."
+  },
+  {
+    "id": "1y-safety-12",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Enregistre le numéro du centre antipoison dans ton téléphone. Un accès rapide est crucial en cas d'urgence."
+  },
+  {
+    "id": "1y-safety-13",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Évite les trotteurs à roulettes : les experts en sécurité pédiatrique préviennent qu'ils contribuent aux accidents et n'aident pas les bébés à apprendre à marcher."
+  },
+  {
+    "id": "1y-safety-14",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Installe des protège-coins sur les bords de meubles pointus comme les tables basses et les rebords de cheminée. Les bébés qui commencent à se déplacer tombent souvent à hauteur de tête."
+  },
+  {
+    "id": "1y-safety-15",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Surveille toujours ton bébé quand il mange. Reste à portée de bras et apprends les gestes de premiers secours en cas d'étouffement."
+  },
+  {
+    "id": "1y-development-16",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé peut commencer à utiliser un ou deux vrais mots avec un sens vers cet âge. Félicite chaque tentative de communication, même si le mot n'est pas tout à fait juste."
+  },
+  {
+    "id": "1y-development-17",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Proposer à ton bébé un trieur de formes ou un puzzle avec de grosses poignées l'aide à comprendre les correspondances et les relations spatiales par essais et erreurs."
+  },
+  {
+    "id": "1y-development-18",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé peut te tendre un livre quand il veut qu'on lui lise une histoire. Suis ses envies et lis ce qui l'intéresse pour nourrir son amour des livres."
+  },
+  {
+    "id": "1y-development-19",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Essaie de donner des consignes simples en une étape accompagnées d'un geste, comme tendre la main en disant \"donne-moi le ballon\". Ton bébé apprend à relier tes mots aux actions."
+  },
+  {
+    "id": "1y-development-20",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Ton bébé commence à comprendre que les objets ont des noms. Nomme tout ce qui l'entoure -- \"c'est un arbre\", \"regarde, un oiseau\" -- pour alimenter son vocabulaire grandissant."
+  },
+  {
+    "id": "1y-sleep-16",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Vers 12 mois ou un peu plus tard, certains bébés commencent la transition de deux siestes à une seule. Si c'est le cas, attends-toi à quelques semaines d'inconstance, certains jours nécessitant deux siestes et d'autres une seule."
+  },
+  {
+    "id": "1y-sleep-17",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Si ton bébé passe à une seule sieste vers 12 mois ou plus tard, vise une sieste en milieu de journée vers 12-13 h. Un coucher plus tôt peut combler le manque pendant l'ajustement."
+  },
+  {
+    "id": "1y-sleep-18",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Si ton bébé a commencé à escalader son lit, abaisse le matelas au réglage le plus bas et retire tout ce qui pourrait lui servir de marchepied."
+  },
+  {
+    "id": "1y-sleep-19",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Résiste à l'envie de sauter les siestes pour les sorties. Un sommeil de jour régulier mène en fait à un meilleur sommeil la nuit et un bébé globalement plus heureux."
+  },
+  {
+    "id": "1y-sleep-20",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Si les crises au moment du coucher apparaissent, un compte à rebours peut aider. \"Encore deux minutes de jeu, puis on se brosse les dents\" donne à ton bébé une idée de ce qui va suivre."
+  },
+  {
+    "id": "1y-feeding-16",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Quand ton bébé approche de son premier anniversaire, tu peux commencer à introduire le lait de vache entier comme boisson. Vise environ {{16-24 ounces|475-710 ml}} par jour -- trop peut le rassasier et prendre la place des aliments solides."
+  },
+  {
+    "id": "1y-feeding-17",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Essaie de proposer une sauce pour tremper comme du houmous ou du yaourt avec les aliments à manger avec les doigts. Tremper est amusant pour ton bébé et peut rendre les aliments nouveaux plus attrayants."
+  },
+  {
+    "id": "1y-feeding-18",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Si ton bébé insiste pour manger seul, laisse-le faire. Propose-lui une cuillère pré-remplie pour qu'il s'exerce, et mange à ses côtés pour lui montrer comment faire."
+  },
+  {
+    "id": "1y-feeding-19",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Quand le moment te semble opportun, commence à abandonner le biberon. Proposer le lait dans un gobelet aux repas et de l'eau entre les repas facilite la transition."
+  },
+  {
+    "id": "1y-feeding-20",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Ne t'inquiète pas si l'appétit de ton bébé varie d'un jour à l'autre. Les poussées de croissance, les dents qui percent et le niveau d'activité influencent tous la faim. Fais confiance à ses signaux."
+  },
+  {
+    "id": "1y-health-16",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Marcher sur la pointe des pieds de temps en temps est courant quand ton bébé expérimente la marche. Si cela devient sa façon principale de marcher, signale-le à ton pédiatre."
+  },
+  {
+    "id": "1y-health-18",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Si ton bébé développe une éruption cutanée après avoir goûté un nouvel aliment, note ce qu'il a mangé et quand l'éruption est apparue. Partage ces informations avec ton pédiatre pour aider à identifier d'éventuelles sensibilités alimentaires."
+  },
+  {
+    "id": "1y-health-19",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "La diarrhée due à une gastro-entérite peut déshydrater les bébés rapidement. Propose de petites gorgées fréquentes d'une solution de réhydratation orale et contacte ton pédiatre si cela dure plus d'un jour."
+  },
+  {
+    "id": "1y-health-20",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Quand ton bébé commence à marcher, attends-toi à des bleus sur les tibias et le front. C'est normal dans l'apprentissage, mais vérifie toujours l'absence de traumatisme crânien après les chutes plus importantes."
+  },
+  {
+    "id": "1y-play-16",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Essaie de donner à ton bébé un jouet avec des portes, des loquets ou des fermetures éclair à ouvrir et fermer. Ces défis de motricité fine le gardent concentré et développent sa dextérité."
+  },
+  {
+    "id": "1y-play-17",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Installe une étagère basse avec quelques jouets en rotation plutôt qu'un grand coffre à jouets. Moins de choix à la fois aide ton bébé à se concentrer et à jouer plus en profondeur avec chaque jouet."
+  },
+  {
+    "id": "1y-play-18",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Ton bébé peut commencer le jeu de faire semblant, comme donner à manger à une peluche ou mettre une poupée au lit. Participe et enrichis ses idées pour stimuler son imagination."
+  },
+  {
+    "id": "1y-play-20",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Essaie de souffler des bulles et de laisser ton bébé les attraper et les éclater. C'est excellent pour le suivi visuel et pour faire bouger les petits marcheurs."
+  },
+  {
+    "id": "1y-safety-16",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Quand ton bébé commence à marcher, des chaussures à semelles souples et antidérapantes protègent ses pieds en extérieur. En intérieur, les pieds nus ou les chaussettes antidérapantes sont préférables pour l'équilibre."
+  },
+  {
+    "id": "1y-safety-17",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Garde les capsules de lessive sous clé. Leurs couleurs vives attirent les bébés, et en mordre une peut causer de graves brûlures chimiques à la bouche et à la gorge."
+  },
+  {
+    "id": "1y-safety-18",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Vérifie que les jouets de ton bébé n'ont pas de petites pièces qui pourraient se détacher. Inspecte régulièrement les jouets pour repérer les fissures, les pièces mal fixées ou la peinture qui s'écaille."
+  },
+  {
+    "id": "1y-safety-19",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Si tu as une cheminée ou un chauffage d'appoint, utilise un pare-feu ou une barrière de protection. Même les surfaces tièdes peuvent brûler la peau sensible d'un bébé au contact."
+  },
+  {
+    "id": "1y-safety-20",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Surveille les goûters des enfants plus grands autour de ton bébé. Le maïs soufflé, les noix, les bonbons durs et les chewing-gums sont des risques d'étouffement faciles à oublier quand les frères et soeurs partagent."
+  }
+]

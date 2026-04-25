@@ -703,7 +703,23 @@
     "resetDashboardConfirm": "This will reset all cards to their default order and visibility. Continue?",
     "resetToDefault": "Reset to Default",
     "widgets": "Widgets",
-    "widgetsDescription": "Configure iOS widgets and Apple Watch"
+    "widgetsDescription": "Configure iOS widgets and Apple Watch",
+    "dailyTips": "Daily Tips",
+    "on": "On",
+    "off": "Off"
+  },
+  "tips": {
+    "swipeForMore": "Swipe for more →",
+    "tipCount": "{{current}} of {{total}}",
+    "todaysTip": "Today's tip",
+    "category": {
+      "development": "Development",
+      "sleep": "Sleep",
+      "feeding": "Feeding",
+      "health": "Health",
+      "play": "Play",
+      "safety": "Safety"
+    }
   },
   "widget": {
     "title": "Widget Configuration",

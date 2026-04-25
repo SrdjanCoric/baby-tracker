@@ -1,0 +1,512 @@
+[
+  {
+    "id": "4y-development-01",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child can likely tell simple stories with a beginning, middle, and end. Ask open-ended questions like \"What happened next?\" to encourage narrative skills."
+  },
+  {
+    "id": "4y-development-02",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child may start showing interest in writing letters or their name. Let them practice on large paper with thick crayons or markers — scribbles and attempts are all part of learning."
+  },
+  {
+    "id": "4y-development-03",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child is developing a sense of humor and may love silly jokes and wordplay. Laughing together strengthens your bond and builds language skills."
+  },
+  {
+    "id": "4y-development-05",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child may have an imaginary friend. This is healthy and shows advanced cognitive development, creativity, and emotional processing."
+  },
+  {
+    "id": "4y-development-06",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Counting to 10 or beyond, recognizing some numbers, and understanding \"more\" and \"less\" are typical math skills at this age."
+  },
+  {
+    "id": "4y-development-07",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child is learning to draw people and may include a head, body, arms, or legs. By their fourth birthday, drawing a person with 3 or more body parts is a common milestone."
+  },
+  {
+    "id": "4y-development-08",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Friendships become more meaningful now. Your child may have a preferred friend and start navigating the complexity of social relationships."
+  },
+  {
+    "id": "4y-development-09",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child understands basic rules and fairness. Use games and family activities to reinforce that rules apply to everyone equally."
+  },
+  {
+    "id": "4y-development-10",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Cutting along a line with scissors, buttoning their shirt, and using a zipper all show fine motor skills are maturing. Celebrate the effort."
+  },
+  {
+    "id": "4y-development-11",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child may mix up fantasy and reality sometimes. Gently help them distinguish between pretend and real without discouraging imagination."
+  },
+  {
+    "id": "4y-development-12",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Encourage your child to solve small problems independently before jumping in. \"What do you think we should try?\" builds confidence and critical thinking."
+  },
+  {
+    "id": "4y-development-13",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child can likely sort objects by multiple attributes — color AND size, for example. Sorting laundry or toys together makes this fun and practical."
+  },
+  {
+    "id": "4y-development-14",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Emotional regulation is still developing. Help your child name complex feelings like \"disappointed\" or \"jealous\" — a rich emotional vocabulary helps them cope."
+  },
+  {
+    "id": "4y-development-15",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Your child may show interest in letters and early reading. Follow their lead — point out words on signs and let them \"read\" familiar books to you."
+  },
+  {
+    "id": "4y-sleep-02",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Your child may try to negotiate bedtime endlessly. Set a predictable routine and stick to it lovingly — \"We read two books, then lights out\" provides clarity."
+  },
+  {
+    "id": "4y-sleep-03",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Nightmares can be more vivid at this age as imagination expands. Comfort your child and talk through the dream briefly without dwelling on it."
+  },
+  {
+    "id": "4y-sleep-04",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "If your child is afraid of the dark, brainstorm solutions together — a special nightlight, a \"brave buddy\" stuffed animal, or a quick room check can help."
+  },
+  {
+    "id": "4y-sleep-05",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Quiet time before bed is just as important as the sleep itself. Reading, gentle stretching, or quiet conversation helps the brain transition to rest."
+  },
+  {
+    "id": "4y-sleep-06",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "If your child wakes frequently at night, check for environmental causes first — room temperature, noise, light, or an uncomfortable mattress."
+  },
+  {
+    "id": "4y-sleep-07",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "A consistent wake time matters as much as a consistent bedtime. Try to keep morning wake-ups within 30 minutes of the same time daily."
+  },
+  {
+    "id": "4y-sleep-08",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Your child may start resisting bedtime by saying they're not tired. A calming routine helps the body wind down even when the mind feels alert."
+  },
+  {
+    "id": "4y-sleep-10",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "If your child has dropped the nap recently, you might notice crankiness in the late afternoon. A brief rest period with a book can help bridge the gap."
+  },
+  {
+    "id": "4y-sleep-11",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Deep breathing exercises before bed can help your child learn to self-soothe. Try \"smell the flower, blow out the candle\" as a simple technique."
+  },
+  {
+    "id": "4y-sleep-12",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Avoid sugary snacks close to bedtime. If your child needs a pre-bed snack, choose something light like a banana or a small handful of crackers."
+  },
+  {
+    "id": "4y-sleep-13",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Your child may stall by asking for more water or bathroom trips. Allow one pre-bed trip and one small cup of water, then hold the boundary gently."
+  },
+  {
+    "id": "4y-sleep-14",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Sharing a \"best part of the day\" at bedtime gives your child something positive to think about as they fall asleep and strengthens your connection."
+  },
+  {
+    "id": "4y-sleep-15",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "If your child consistently fights bedtime, they may not be tired enough. Ensure they're getting plenty of physical activity during the day."
+  },
+  {
+    "id": "4y-feeding-01",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Your child can use a butter knife to spread soft foods and help cut tender items. These kitchen skills build confidence and fine motor control."
+  },
+  {
+    "id": "4y-feeding-02",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Talk about food in terms of what it does for the body — \"Carrots help your eyes\" or \"Protein makes your muscles strong\" — to build food literacy."
+  },
+  {
+    "id": "4y-feeding-03",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "If your child refuses an entire food group, find creative alternatives. Won't eat vegetables? Try them in smoothies, muffins, or as part of a dipping plate."
+  },
+  {
+    "id": "4y-feeding-04",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Your child can help with more complex cooking tasks now — stirring batter, cracking eggs with help, or sprinkling toppings. Cooking together builds enthusiasm for eating."
+  },
+  {
+    "id": "4y-feeding-05",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Model the eating habits you want your child to develop. They notice and mimic how you talk about food and what you choose to eat."
+  },
+  {
+    "id": "4y-feeding-06",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Fiber is important for digestion. Offer whole grain bread, oatmeal, berries, and beans regularly to keep things running smoothly."
+  },
+  {
+    "id": "4y-feeding-07",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Teach your child to recognize hunger and fullness signals. \"Is your tummy still hungry?\" is better than \"Finish your plate.\""
+  },
+  {
+    "id": "4y-feeding-08",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Growing a small herb garden or sprouting seeds teaches your child where food comes from. Kids love eating things they grew themselves."
+  },
+  {
+    "id": "4y-feeding-09",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Try \"food bridges\" — if your child likes french fries, introduce baked sweet potato fries. Use foods they enjoy as a bridge to similar new foods."
+  },
+  {
+    "id": "4y-feeding-10",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Your child needs about 2 to 2.5 cups of dairy or calcium-equivalent per day. If they don't like milk, yogurt, cheese, and calcium-fortified foods count too."
+  },
+  {
+    "id": "4y-feeding-11",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Mealtimes should last about 20-30 minutes. If your child hasn't eaten after that, calmly end the meal. They'll eat at the next opportunity."
+  },
+  {
+    "id": "4y-feeding-12",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Encourage your child to try one bite of new foods without forcing. Over time, this gentle exposure approach works better than pressure."
+  },
+  {
+    "id": "4y-feeding-13",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Omega-3 fatty acids support brain development. Include fish, walnuts, chia seeds, or flaxseed in your child's diet when possible."
+  },
+  {
+    "id": "4y-feeding-14",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Avoid using food as a comfort or reward. Instead, teach your child other ways to celebrate or feel better — a hug, a game, or time together."
+  },
+  {
+    "id": "4y-feeding-15",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Your child can drink from an open cup skillfully now. Offer water throughout the day and keep sugary drinks as occasional treats."
+  },
+  {
+    "id": "4y-health-01",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Your child may be due for important vaccine boosters during this stage. Talk to your pediatrician to make sure immunizations are up to date."
+  },
+  {
+    "id": "4y-health-04",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "If your child complains of growing pains in their legs at night, gentle massage and a warm compress usually help. These pains are normal and temporary."
+  },
+  {
+    "id": "4y-health-05",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Teach your child to wash their hands properly: wet, lather, scrub for 20 seconds, rinse, dry. This is especially important before meals and after the bathroom."
+  },
+  {
+    "id": "4y-health-06",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Your child's first permanent molars will arrive around age 6. When they do, ask your dentist about dental sealants to protect them from cavities."
+  },
+  {
+    "id": "4y-health-07",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Your child may start to experience seasonal allergies. A runny nose with clear mucus, sneezing, and itchy eyes that persist are signs worth discussing with your doctor."
+  },
+  {
+    "id": "4y-health-08",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Pink eye (conjunctivitis) spreads easily among children. Teach your child not to touch their eyes and to use their own towel."
+  },
+  {
+    "id": "4y-health-09",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "If your child has asthma, work with your pediatrician on an action plan. Know the difference between daily controller medication and rescue inhalers."
+  },
+  {
+    "id": "4y-health-10",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Check your child's posture during activities. A sturdy, child-sized chair and table help prevent slouching during drawing or eating."
+  },
+  {
+    "id": "4y-health-11",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Lice are common in group settings and have nothing to do with hygiene. Teach your child not to share hats, brushes, or hair accessories."
+  },
+  {
+    "id": "4y-health-12",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Your child can start learning to blow their nose effectively. Practice using tissues and disposing of them — it's a life skill that reduces germ spread."
+  },
+  {
+    "id": "4y-health-13",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Make sure your child gets enough outdoor time. Natural sunlight supports vitamin D production, mood regulation, and healthy sleep cycles."
+  },
+  {
+    "id": "4y-health-14",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "If your child grinds their teeth at night, mention it at your next dental visit. It's usually harmless but worth monitoring."
+  },
+  {
+    "id": "4y-health-15",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Stay up to date on the annual flu vaccine. Children in group care settings are especially vulnerable during flu season."
+  },
+  {
+    "id": "4y-play-01",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Your child can handle more complex construction projects now. Building with interlocking bricks or blocks following simple instructions develops spatial reasoning and patience."
+  },
+  {
+    "id": "4y-play-02",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Introduce simple card games like \"Go Fish\" or matching games. They teach number recognition, strategy, and social skills all at once."
+  },
+  {
+    "id": "4y-play-03",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Outdoor play is essential — climbing, running, and swinging develop strength, coordination, and risk assessment. Preschoolers benefit from being active throughout the day, so aim for plenty of movement."
+  },
+  {
+    "id": "4y-play-04",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Your child may enjoy putting on \"shows\" or puppet performances. This dramatic play builds confidence, language skills, and emotional expression."
+  },
+  {
+    "id": "4y-play-05",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Simple science experiments — mixing baking soda and vinegar, growing seeds, or exploring magnets — spark curiosity and teach cause and effect."
+  },
+  {
+    "id": "4y-play-06",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Encourage your child to draw or paint their feelings. Art is a powerful outlet for emotions they may not yet have words for."
+  },
+  {
+    "id": "4y-play-07",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Your child is ready for games with simple rules like Simon Says or Red Light Green Light. These build listening skills and impulse control."
+  },
+  {
+    "id": "4y-play-08",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Playing with measuring cups, spoons, and water teaches early math concepts like volume, more/less, and estimation in a hands-on way."
+  },
+  {
+    "id": "4y-play-09",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Your child may enjoy creating with recycled materials — cardboard tubes, egg cartons, bottle caps. This open-ended play sparks creativity and resourcefulness."
+  },
+  {
+    "id": "4y-play-10",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Riding a balance bike or a bicycle with training wheels builds coordination and confidence that will transfer to riding without support later."
+  },
+  {
+    "id": "4y-play-11",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Play \"I Spy\" during car rides or walks. It sharpens observation skills and vocabulary while keeping your child engaged."
+  },
+  {
+    "id": "4y-play-12",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Planting seeds and watching them grow teaches patience, responsibility, and basic science. Let your child water their plant daily."
+  },
+  {
+    "id": "4y-play-13",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Lacing cards and bead-stringing activities build the fine motor precision your child will need for writing. Make it fun with colorful materials."
+  },
+  {
+    "id": "4y-play-14",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Create a treasure map of your backyard or home. Following a map introduces spatial concepts like left, right, near, and far."
+  },
+  {
+    "id": "4y-play-15",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Cooperative games where everyone works toward a shared goal teach teamwork and reduce the stress of competition for children still learning to lose gracefully."
+  },
+  {
+    "id": "4y-safety-01",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Keep your child in a forward-facing car seat with a harness for as long as possible, up to the seat's maximum height and weight limits. Most children this age have not yet outgrown the harness."
+  },
+  {
+    "id": "4y-safety-02",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Teach your child to always ask an adult before going near water. Even children who can swim should never be in or near water without supervision."
+  },
+  {
+    "id": "4y-safety-03",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Practice what to do if your child gets separated from you in a store: stay where they are, look for a store worker, and never leave the building."
+  },
+  {
+    "id": "4y-safety-04",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Your child can start learning their home address. Practice it regularly like a song or rhyme to help it stick."
+  },
+  {
+    "id": "4y-safety-05",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Teach your child the concept of \"safe adults\" — parents, teachers, police officers — who they can go to for help. Avoid the vague term \"stranger danger.\""
+  },
+  {
+    "id": "4y-safety-06",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Your child should always wear a helmet for biking, scootering, and skating. Let them help choose one they like so they're more willing to wear it."
+  },
+  {
+    "id": "4y-safety-07",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Kitchen safety awareness grows at this age. Teach your child that the stove, oven, and sharp objects are for adults, and model safe kitchen behavior."
+  },
+  {
+    "id": "4y-safety-08",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Make sure your child knows not to open the front door without an adult present. A high deadbolt or chain lock adds a physical barrier."
+  },
+  {
+    "id": "4y-safety-09",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Review playground rules: go down slides feet-first, wait your turn on the swings, and keep a safe distance from children who are swinging."
+  },
+  {
+    "id": "4y-safety-10",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "If your child uses a tablet or device, set up parental controls and keep screens in shared spaces. Teach them never to share personal information online."
+  },
+  {
+    "id": "4y-safety-11",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Teach your child about body safety using proper anatomical names. Kids who know the correct words are better able to communicate if something is wrong."
+  },
+  {
+    "id": "4y-safety-12",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Your child is old enough to practice calling emergency services on a phone and knowing what to say: their name, that they need help, and their address."
+  },
+  {
+    "id": "4y-safety-13",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Garage doors, power tools, and workshop areas should always be off-limits without adult supervision. Use locks or alarms if needed."
+  },
+  {
+    "id": "4y-safety-14",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "When riding in the car, your child should always be in the back seat. The back seat is the safest spot for all children under 13."
+  },
+  {
+    "id": "4y-safety-15",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Teach your child to stop at the edge of every driveway and sidewalk. Practice looking left, right, then left again before crossing together."
+  }
+]

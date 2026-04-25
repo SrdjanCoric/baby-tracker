@@ -1,0 +1,512 @@
+[
+  {
+    "id": "30m-development-01",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Tu pequeño está formando oraciones de dos a tres palabras como \"quiero más leche\" o \"papá va trabajo\". Repítele sus frases en oraciones completas para fomentar el desarrollo del lenguaje."
+  },
+  {
+    "id": "30m-development-02",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Apilar seis o más bloques es un gran logro a esta edad. Celebra la torre — y el derrumbe — por igual."
+  },
+  {
+    "id": "30m-development-03",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Tu pequeño está empezando a clasificar objetos por forma y color. Prueba un juego sencillo de clasificar calcetines o animales de juguete."
+  },
+  {
+    "id": "30m-development-04",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "El juego paralelo — jugar junto a otros niños pero no con ellos — es completamente normal a esta edad. El juego cooperativo se desarrolla gradualmente durante el próximo año."
+  },
+  {
+    "id": "30m-development-05",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Anima a tu pequeño a girar las perillas de las puertas y desenroscar tapas. Estos desafíos de motricidad fina fortalecen las manos y mejoran la coordinación."
+  },
+  {
+    "id": "30m-development-06",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Tu pequeño puede empezar a mostrar preferencia por una mano sobre la otra. Es una parte natural del desarrollo cerebral — no hace falta fomentar ninguna de las dos."
+  },
+  {
+    "id": "30m-development-07",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "El juego simbólico sencillo — como darle de comer a un muñeco o hablar por un teléfono de juguete — demuestra que tu pequeño está desarrollando el pensamiento simbólico, un salto cognitivo clave."
+  },
+  {
+    "id": "30m-development-08",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Tu pequeño probablemente puede seguir instrucciones de dos pasos como \"recoge la pelota y tráemela\". Practica con tareas divertidas durante las rutinas diarias."
+  },
+  {
+    "id": "30m-development-09",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Garabatear es preescritura. Dale a tu pequeño crayones grandes y papel grande — puede que empiece a hacer líneas verticales y horizontales con intención."
+  },
+  {
+    "id": "30m-development-10",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Si tu pequeño se frustra fácilmente, es porque sus deseos superan sus habilidades. Ponerle nombre a sus emociones — \"¡Estás frustrado!\" — le ayuda a desarrollar el vocabulario emocional."
+  },
+  {
+    "id": "30m-development-11",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Subir escaleras agarrándose del pasamanos es un gran logro a esta edad. Déjalo practicar en tramos cortos y seguros."
+  },
+  {
+    "id": "30m-development-13",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "A esta edad les encanta imitar las tareas del hogar. Dejarlos \"ayudar\" a barrer o limpiar desarrolla su confianza y sus habilidades motoras."
+  },
+  {
+    "id": "30m-development-14",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Tu pequeño puede empezar a reconocerse en fotos y espejos. Esta autoconciencia es un hito cognitivo importante."
+  },
+  {
+    "id": "30m-development-15",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Saltar con ambos pies despegados del suelo suele aparecer alrededor de esta edad. Anímalo a hacerlo en superficies blandas — desarrolla la fuerza central y el equilibrio."
+  },
+  {
+    "id": "30m-sleep-01",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "La mayoría de los niños a esta edad necesitan de 11 a 14 horas de sueño total por día, incluyendo una siesta. Si la hora de dormir es una batalla, puede que la siesta necesite acortarse o adelantarse."
+  },
+  {
+    "id": "30m-sleep-02",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Una rutina de sueño consistente — baño, libro, canción, dormir — le indica al cerebro de tu pequeño que es hora de relajarse. Que no dure más de 30 minutos."
+  },
+  {
+    "id": "30m-sleep-03",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Los despertares nocturnos pueden resurgir alrededor de esta edad por nuevos miedos o saltos en el desarrollo. Ofrece consuelo breve y tranquilo sin crear nuevos hábitos."
+  },
+  {
+    "id": "30m-sleep-04",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Si tu pequeño se está escapando de la cuna, puede ser hora de pasar a una cama infantil. Coloca el colchón bajo y usa barandillas de seguridad."
+  },
+  {
+    "id": "30m-sleep-05",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "La ansiedad por separación a la hora de dormir sigue siendo común. Un muñeco de apego o una mantita pequeña pueden dar consuelo y facilitar la transición al sueño."
+  },
+  {
+    "id": "30m-sleep-06",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Evita las pantallas al menos una hora antes de acostarse. La luz azul suprime la melatonina y dificulta que los niños pequeños concilien el sueño."
+  },
+  {
+    "id": "30m-sleep-07",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Tu pequeño puede empezar a alargar la hora de dormir — pidiendo agua, otro cuento, un abrazo más. Establece límites claros con cariño: un libro, un abrazo y luego buenas noches."
+  },
+  {
+    "id": "30m-sleep-08",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Si la hora de la siesta se está complicando, intenta limitarla a 90 minutos y que termine antes de las 3 PM para proteger el sueño nocturno."
+  },
+  {
+    "id": "30m-sleep-09",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Una habitación oscura y fresca con ruido blanco puede marcar una gran diferencia en el sueño de tu pequeño. Procura una temperatura de {{68-72°F|20-22°C}}."
+  },
+  {
+    "id": "30m-sleep-10",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Algunos niños desarrollan miedo a la oscuridad alrededor de esta edad. Una luz nocturna muy tenue puede ayudar sin alterar la producción de melatonina."
+  },
+  {
+    "id": "30m-sleep-11",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Despertarse muy temprano antes de las 6 AM suele deberse a cansancio excesivo. Intenta adelantar la hora de dormir 15-30 minutos durante una semana."
+  },
+  {
+    "id": "30m-sleep-12",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "La siesta de tu pequeño puede desplazarse naturalmente más tarde. Mientras tenga un buen descanso a mediodía, el horario exacto puede ser flexible."
+  },
+  {
+    "id": "30m-sleep-13",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Si tu pequeño se despierta llorando por una pesadilla, consuélalo con calma. Las pesadillas pueden comenzar alrededor de esta edad a medida que se desarrolla la imaginación."
+  },
+  {
+    "id": "30m-sleep-14",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "¿Cambiando a una cama grande? Mantén el resto de la rutina de sueño igual. Cambiar solo una cosa a la vez ayuda a tu pequeño a adaptarse."
+  },
+  {
+    "id": "30m-sleep-15",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "La actividad física durante el día ayuda a tu pequeño a dormir mejor por la noche. Procura al menos una hora de juego activo, idealmente al aire libre."
+  },
+  {
+    "id": "30m-feeding-01",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "La etapa de comer con caprichos suele alcanzar su punto máximo entre los 2 y 3 años. Sigue ofreciendo variedad de alimentos sin presión — la exposición repetida funciona con el tiempo."
+  },
+  {
+    "id": "30m-feeding-02",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Tu pequeño puede practicar usando tenedor y cuchara en la mayoría de las comidas. Espera desorden — así es como aprenden a comer solos."
+  },
+  {
+    "id": "30m-feeding-04",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Los niños pequeños tienen estómagos pequeños. Tres comidas más dos refrigerios al día suele ser el ritmo adecuado — no te preocupes si las comidas individuales parecen pequeñas."
+  },
+  {
+    "id": "30m-feeding-05",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Las arcadas con nuevas texturas son diferentes de atragantarse y son bastante normales. Mantén la calma y deja que tu pequeño lo resuelva solo."
+  },
+  {
+    "id": "30m-feeding-06",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Deja que tu pequeño ayude con la preparación sencilla de comidas — lavar frutas, romper hojas de lechuga, revolver. Es más probable que los niños coman lo que ayudaron a preparar."
+  },
+  {
+    "id": "30m-feeding-07",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Evita usar el postre como recompensa por terminar la cena. Esto les enseña a los niños que los dulces son más valiosos que otros alimentos."
+  },
+  {
+    "id": "30m-feeding-08",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Si tu pequeño rechaza las verduras, intenta servirlas al inicio de la comida cuando tiene más hambre, o mézclalas en salsas y sopas."
+  },
+  {
+    "id": "30m-feeding-09",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "El agua y la leche son las mejores bebidas para los niños pequeños. Limita el jugo a no más de {{4 oz|120 ml}} al día, y siempre sírvelo con una comida."
+  },
+  {
+    "id": "30m-feeding-10",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Comer juntos en familia, incluso a esta edad, ayuda a tu pequeño a aprender modales en la mesa y a desarrollar una relación saludable con la comida."
+  },
+  {
+    "id": "30m-feeding-11",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Las manías con la comida — querer lo mismo todos los días — son normales. Sigue ofreciendo otras opciones junto a su favorita sin convertirlo en una batalla."
+  },
+  {
+    "id": "30m-feeding-12",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Los alimentos ricos en hierro como frijoles, cereales fortificados y carnes magras son importantes a esta edad. Combínalos con alimentos ricos en vitamina C para mejorar la absorción."
+  },
+  {
+    "id": "30m-feeding-13",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Tu pequeño puede querer servirse su propia bebida o ponerse comida solo. Usa jarras pequeñas y ligeras para fomentar esta independencia de forma segura."
+  },
+  {
+    "id": "30m-feeding-14",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Prueba el enfoque de \"división de responsabilidades\": tú decides qué, cuándo y dónde se come. Tu pequeño decide si come y cuánto."
+  },
+  {
+    "id": "30m-feeding-15",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Si tu pequeño tira la comida, puede que haya terminado de comer o esté experimentando con causa y efecto. Termina la comida con calma en vez de reaccionar de forma exagerada."
+  },
+  {
+    "id": "30m-health-02",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Consulta con tu pediatra para asegurarte de que las vacunas de tu pequeño estén al día. Algunas vacunas requieren dosis de refuerzo que pueden corresponder alrededor de esta edad."
+  },
+  {
+    "id": "30m-health-03",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "La enfermedad de mano, pie y boca es común en niños pequeños y generalmente se resuelve en 7-10 días. Enfócate en la hidratación y el alivio del dolor según indique tu pediatra."
+  },
+  {
+    "id": "30m-health-04",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Cepilla los dientes de tu pequeño dos veces al día — por la mañana y antes de dormir. Déjalo sostener un cepillo también, pero encárgate tú del cepillado real."
+  },
+  {
+    "id": "30m-health-06",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Las infecciones de oído siguen siendo comunes a esta edad. Observa si se jala la oreja, está irritable o tiene problemas para dormir, y consulta a tu pediatra."
+  },
+  {
+    "id": "30m-health-07",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Aplica protector solar de amplio espectro SPF 30+ quince minutos antes de jugar al aire libre. Vuelve a aplicar cada dos horas, especialmente después de jugar con agua."
+  },
+  {
+    "id": "30m-health-08",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "La vacuna anual contra la gripe se recomienda para todos los niños mayores de 6 meses. Es una de las mejores formas de proteger a tu pequeño durante la temporada de gripe."
+  },
+  {
+    "id": "30m-health-09",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "El estreñimiento es común en los niños pequeños. Aumenta la fibra con frutas, verduras y granos integrales, y asegúrate de que tome suficiente agua."
+  },
+  {
+    "id": "30m-health-10",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Las visitas regulares de control en esta etapa son excelentes oportunidades para hablar sobre el desarrollo del lenguaje, el comportamiento y cualquier preocupación sobre el crecimiento."
+  },
+  {
+    "id": "30m-health-11",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Si tu pequeño se resfría con frecuencia, es completamente normal — de 8 a 10 resfriados al año es típico en niños pequeños que están fortaleciendo su sistema inmunológico."
+  },
+  {
+    "id": "30m-health-13",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Empieza a enseñarle a tu pequeño a sonarse la nariz practicando soplar aire por las fosas nasales. Lleva tiempo, pero ayuda con la congestión."
+  },
+  {
+    "id": "30m-health-14",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Ten un botiquín de primeros auxilios infantil accesible en casa con vendas, gotas de solución salina, un termómetro y cualquier medicamento que tu pediatra recomiende."
+  },
+  {
+    "id": "30m-health-15",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Si tu pequeño todavía usa chupete, ahora es buen momento para empezar a dejarlo. El uso prolongado después de los 2 años puede afectar la alineación dental."
+  },
+  {
+    "id": "30m-play-01",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Jugar con agua — verter, salpicar, llenar recipientes — es infinitamente entretenido y enseña conceptos tempranos de volumen y causa y efecto."
+  },
+  {
+    "id": "30m-play-02",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "La plastilina fortalece los músculos de las manos necesarios para la futura escritura. Déjalo apretar, enrollar y pinchar todo lo que quiera."
+  },
+  {
+    "id": "30m-play-03",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Los rompecabezas sencillos de 4 a 6 piezas grandes son perfectos a esta edad. Desarrollan la conciencia espacial y las habilidades de resolución de problemas."
+  },
+  {
+    "id": "30m-play-04",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Canta canciones con movimientos como \"La araña pequeñita\" o \"Cabeza, hombros, rodillas y pies\". Desarrollan vocabulario, ritmo y conciencia corporal a la vez."
+  },
+  {
+    "id": "30m-play-05",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Deja que tu pequeño juegue en un arenero o en la tierra. Cavar y recoger son excelentes para el desarrollo sensorial y las habilidades motoras."
+  },
+  {
+    "id": "30m-play-06",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Arma un circuito de obstáculos con cojines, cajas y túneles. Trepar por encima y pasar a través de objetos desarrolla la motricidad gruesa y la conciencia espacial."
+  },
+  {
+    "id": "30m-play-07",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Tu pequeño puede disfrutar del juego de simulación con una cocinita de juguete o herramientas. Únete y sigue su ejemplo — esto desarrolla la imaginación y las habilidades sociales."
+  },
+  {
+    "id": "30m-play-08",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Bailar con música ayuda a tu pequeño a desarrollar ritmo, equilibrio y coordinación. Pon diferentes ritmos y observa cómo se mueve."
+  },
+  {
+    "id": "30m-play-09",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Leer el mismo libro una y otra vez es en realidad muy beneficioso. La repetición ayuda a los niños a aprender palabras nuevas y a entender la estructura de las historias."
+  },
+  {
+    "id": "30m-play-10",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Prueba la pintura con los dedos usando pinturas lavables. La experiencia sensorial es valiosa aunque el resultado sea solo una hermosa mancha de colores."
+  },
+  {
+    "id": "30m-play-11",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Los juegos sencillos de pelota — rodar, patear, lanzar por debajo — ayudan a desarrollar la coordinación y enseñan lo básico de turnarse."
+  },
+  {
+    "id": "30m-play-12",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Llena un recipiente con arroz seco o pasta y esconde juguetes pequeños dentro. Esta \"búsqueda del tesoro\" desarrolla la motricidad fina y mantiene a los niños entretenidos."
+  },
+  {
+    "id": "30m-play-13",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Soplar burbujas ayuda a tu pequeño a practicar el control de la boca, el seguimiento visual y el alcance — además es pura diversión."
+  },
+  {
+    "id": "30m-play-14",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Dale a tu pequeño cajas vacías y observa su creatividad. Una caja puede convertirse en un auto, una casa o un barco — eso es pensamiento abstracto en acción."
+  },
+  {
+    "id": "30m-play-15",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Los paseos por la naturaleza donde tu pequeño recoge hojas, piedras y palitos combinan actividad física con exploración sensorial y desarrollo del lenguaje."
+  },
+  {
+    "id": "30m-safety-01",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Tu pequeño ahora puede alcanzar más alto de lo que imaginas. Asegura los muebles a las paredes y mueve los objetos peligrosos a lugares verdaderamente inaccesibles."
+  },
+  {
+    "id": "30m-safety-02",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Nunca dejes a tu pequeño sin supervisión cerca del agua — incluso unos pocos centímetros en una bañera o cubeta pueden ser peligrosos. El ahogamiento es silencioso y rápido."
+  },
+  {
+    "id": "30m-safety-03",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Tu pequeño debe seguir viajando mirando hacia atrás en su silla de auto hasta que alcance el límite máximo de altura o peso para esa posición."
+  },
+  {
+    "id": "30m-safety-04",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Mantén todos los medicamentos, vitaminas y productos de limpieza bajo llave o fuera del alcance. Los niños a esta edad son curiosos y rápidos."
+  },
+  {
+    "id": "30m-safety-05",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Practica tomarse de las manos en estacionamientos y cerca de las calles. Empieza a enseñar el concepto de \"nos detenemos y miramos\" antes de cruzar."
+  },
+  {
+    "id": "30m-safety-06",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Revisa los juegos del parque infantil en busca de superficies calientes en verano — los toboganes y plataformas de metal pueden causar quemaduras bajo el sol directo."
+  },
+  {
+    "id": "30m-safety-07",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Las pilas de botón son extremadamente peligrosas si se tragan. Mantén los controles remotos y dispositivos con pilas pequeñas fuera del alcance de tu pequeño."
+  },
+  {
+    "id": "30m-safety-08",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Los alimentos que representan riesgo de atragantamiento a esta edad incluyen uvas enteras, salchichas, palomitas de maíz y caramelos duros. Corta los alimentos redondos en trozos pequeños."
+  },
+  {
+    "id": "30m-safety-09",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Si tienes una piscina o estanque, instala una cerca de cuatro lados con puerta de cierre automático. Las cubiertas de piscina solas no sustituyen el cercado."
+  },
+  {
+    "id": "30m-safety-10",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Asegúrate de que tu pequeño use un casco bien ajustado cuando ande en triciclo o vaya en un asiento de bicicleta."
+  },
+  {
+    "id": "30m-safety-11",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Los cordones de persianas y cortinas son peligros de estrangulación. Cambia a cubiertas de ventanas sin cordones o mantenlos enrollados fuera del alcance."
+  },
+  {
+    "id": "30m-safety-12",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Enséñale a tu pequeño su nombre y empieza a practicar el apellido de la familia. Es una de las habilidades de seguridad más tempranas que puede aprender."
+  },
+  {
+    "id": "30m-safety-13",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Las cubiertas para las perillas de la estufa son esenciales a esta edad. Tu pequeño puede ser lo suficientemente alto para alcanzarlas antes de que te des cuenta."
+  },
+  {
+    "id": "30m-safety-14",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Ten una lista de números de emergencia en el refrigerador y en tu teléfono, incluyendo el centro local de control de intoxicaciones. Puede que los necesites de un momento a otro."
+  },
+  {
+    "id": "30m-safety-15",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Siempre supervisa a tu pequeño cerca de mascotas, incluso las de la familia que conoce bien. Los niños pequeños se mueven de forma impredecible y pueden asustar a los animales."
+  }
+]

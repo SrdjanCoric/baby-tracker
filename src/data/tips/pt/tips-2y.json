@@ -1,0 +1,512 @@
+[
+  {
+    "id": "2y-development-01",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "O vocabulário do seu pequeno está explodindo e ele pode aprender várias palavras novas a cada semana. Leiam juntos todos os dias e nomeie tudo o que vocês veem."
+  },
+  {
+    "id": "2y-development-02",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Frases de duas palavras como \"caminhão grande\" ou \"quer biscoito\" são típicas nesta idade. Amplie o que ele diz respondendo \"Sim, aquele é um caminhão grande e vermelho!\""
+  },
+  {
+    "id": "2y-development-03",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Seu pequeno pode começar a mostrar interesse no desfralde. Fique atento a sinais de prontidão como ficar seco por períodos mais longos ou avisar quando a fralda está molhada."
+  },
+  {
+    "id": "2y-development-04",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Pular com os dois pés saindo do chão é um marco entre 18 e 24 meses. Tente pular junto com ele em uma superfície macia para praticar."
+  },
+  {
+    "id": "2y-development-05",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Seu pequeno pode alinhar brinquedos, separar objetos por cor ou agrupar itens parecidos. Essas habilidades matemáticas iniciais se desenvolvem naturalmente através da brincadeira."
+  },
+  {
+    "id": "2y-development-06",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "A brincadeira paralela, em que seu pequeno brinca ao lado de outras crianças mas não diretamente com elas, é o estágio social normal nesta idade."
+  },
+  {
+    "id": "2y-development-07",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Seu pequeno consegue seguir instruções simples de uma etapa e pode estar começando a entender comandos de duas etapas como \"pegue a bola e traga para mim\". Pratique durante as rotinas do dia a dia."
+  },
+  {
+    "id": "2y-development-08",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "A brincadeira de faz de conta está ficando mais elaborada. Seu pequeno pode criar cenários com bonecos, encenar histórias ou distribuir papéis durante a brincadeira."
+  },
+  {
+    "id": "2y-development-09",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Seu pequeno pode mostrar preferência por uma das mãos nesta idade, embora seja normal continuar alternando até os 3 anos ou mais."
+  },
+  {
+    "id": "2y-development-10",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "As birras podem aumentar conforme seu pequeno quer independência mas ainda não tem as habilidades para fazer tudo sozinho. Mantenha a calma e valide os sentimentos dele."
+  },
+  {
+    "id": "2y-development-11",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Seu pequeno pode começar a se reconhecer em fotos e espelhos e usar \"eu\" e \"meu\". Essa autoconsciência é um grande salto cognitivo."
+  },
+  {
+    "id": "2y-development-12",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Subir e descer escadas segurando o corrimão é uma habilidade em desenvolvimento. Pratiquem juntos e comemore a confiança crescente dele."
+  },
+  {
+    "id": "2y-development-13",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Seu pequeno pode começar a demonstrar empatia, consolando um amigo que está chorando ou oferecendo um brinquedo para alguém triste. Reconheça e incentive essa gentileza."
+  },
+  {
+    "id": "2y-development-14",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Quebra-cabeças simples de formas com 4 a 6 peças desafiam a capacidade de resolver problemas. Mostre ao seu pequeno como girar as peças para encontrar o encaixe certo."
+  },
+  {
+    "id": "2y-development-15",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Seu pequeno provavelmente consegue identificar várias partes do corpo e pode começar a contar objetos, mesmo que os números nem sempre estejam na ordem certa."
+  },
+  {
+    "id": "2y-sleep-01",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Seu pequeno ainda precisa de um cochilo por dia, geralmente de 1 a 2,5 horas após o almoço. A maioria das crianças se beneficia de manter esse cochilo até pelo menos os 3 anos."
+  },
+  {
+    "id": "2y-sleep-02",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Crianças pequenas precisam de cerca de 11 a 14 horas de sono total por dia. Se as batalhas na hora de dormir são frequentes, avalie se a rotina precisa de ajustes."
+  },
+  {
+    "id": "2y-sleep-03",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "As táticas de enrolação na hora de dormir ficam mais criativas agora. Estabeleça uma rotina clara com um ponto final definido, como \"depois de dois livros, é hora de dormir\"."
+  },
+  {
+    "id": "2y-sleep-04",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Se seu pequeno começar a ter pesadelos, conforte-o com calma e garanta que ele está seguro. Pesadelos são uma parte normal do desenvolvimento cognitivo."
+  },
+  {
+    "id": "2y-sleep-05",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Um relógio infantil que muda de cor na hora de acordar pode ajudar sua criança a entender quando pode sair da cama."
+  },
+  {
+    "id": "2y-sleep-06",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Mantenha o berço enquanto seu pequeno não estiver escalando para sair. Fazer a transição para uma cama de criança cedo demais geralmente resulta em mais despertares noturnos e resistência na hora de dormir."
+  },
+  {
+    "id": "2y-sleep-07",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Se seu pequeno pular um cochilo, antecipe a hora de dormir em 30 a 60 minutos para evitar que o cansaço excessivo se transforme em uma noite difícil."
+  },
+  {
+    "id": "2y-sleep-08",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "A consistência na sua resposta na hora de dormir importa mais do que o método específico que você usa. Escolha uma abordagem que consiga manter e siga com ela."
+  },
+  {
+    "id": "2y-sleep-09",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Uma rotina diária previsível com refeições, cochilo e hora de dormir aproximadamente nos mesmos horários ajuda o relógio biológico do seu pequeno a se manter regulado."
+  },
+  {
+    "id": "2y-sleep-10",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Grandes mudanças como a chegada de um irmão, uma mudança de casa ou o início da escolinha podem atrapalhar o sono temporariamente. Conforto extra e consistência na rotina ajudam."
+  },
+  {
+    "id": "2y-sleep-11",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Se seu pequeno tem medo do escuro, uma luz noturna vermelha fraca ou de tom quente pode trazer conforto sem atrapalhar a produção de melatonina."
+  },
+  {
+    "id": "2y-sleep-12",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Uma regressão de sono nesta idade frequentemente coincide com explosões de linguagem, desfralde ou a chegada de um novo irmão. Geralmente se resolve em 2 a 6 semanas."
+  },
+  {
+    "id": "2y-sleep-13",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Brincadeiras ativas e tempo ao ar livre durante o dia realmente melhoram a qualidade do sono à noite. Um corpo cansado leva a um sono mais profundo e restaurador."
+  },
+  {
+    "id": "2y-sleep-14",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Evite usar a cama ou o quarto como lugar de castigo. Você quer que seu pequeno associe o espaço de dormir com conforto e segurança."
+  },
+  {
+    "id": "2y-sleep-15",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Se seu pequeno fez a transição para uma cama e continua levantando, leve-o de volta com calma a cada vez, com o mínimo de interação. A consistência é fundamental."
+  },
+  {
+    "id": "2y-feeding-01",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Seu pequeno já consegue comer a maior parte do que a família come. Sirva as mesmas refeições em porções adequadas para criança e deixe ele escolher o quanto comer."
+  },
+  {
+    "id": "2y-feeding-02",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "A ingestão de leite deve ser cerca de {{16-24 onças|475-710 ml}} (2 a 3 copos) por dia. Leite demais enche o estômago e reduz o apetite por alimentos sólidos ricos em nutrientes."
+  },
+  {
+    "id": "2y-feeding-04",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Ofereça três refeições e 2 a 3 lanches em horários fixos ao longo do dia. Beliscar o dia inteiro pode reduzir a fome nas refeições e deixar a alimentação menos equilibrada."
+  },
+  {
+    "id": "2y-feeding-05",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Seu pequeno pode entrar em fases alimentares, comendo apenas um alimento por dias seguidos. Continue oferecendo variedade em cada refeição e não prepare pratos separados."
+  },
+  {
+    "id": "2y-feeding-06",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Torne a comida divertida usando cortadores de biscoito nos sanduíches, organizando os alimentos em padrões coloridos ou servindo as refeições em um prato especial."
+  },
+  {
+    "id": "2y-feeding-07",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Seu pequeno está aprendendo a usar garfo e colher com mais habilidade agora. Espere alguns respingos, mas elogie o esforço e a independência crescente."
+  },
+  {
+    "id": "2y-feeding-08",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Ácidos graxos ômega-3 auxiliam o desenvolvimento cerebral. Inclua alimentos como salmão, sementes de chia, nozes ou ovos enriquecidos na dieta do seu pequeno."
+  },
+  {
+    "id": "2y-feeding-09",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Incentive seu pequeno a beber água ao longo do dia, especialmente durante brincadeiras ativas. Um copo pequeno e fácil de segurar facilita que ele beba sozinho."
+  },
+  {
+    "id": "2y-feeding-10",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Se seu pequeno ainda está mamando, a OMS apoia a amamentação continuada até os 2 anos e além. Não há necessidade de parar se funciona para vocês dois."
+  },
+  {
+    "id": "2y-feeding-11",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Evite rotular alimentos como \"bons\" ou \"ruins\" perto do seu pequeno. Use uma linguagem neutra como \"esse alimento nos dá energia\" ou \"esse é um alimento de vez em quando\"."
+  },
+  {
+    "id": "2y-feeding-12",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Deixe seu pequeno ajudar a pôr a mesa, servir água de uma jarinha ou escolher entre duas opções saudáveis. Participar incentiva uma alimentação melhor."
+  },
+  {
+    "id": "2y-feeding-14",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Se seu pequeno bebe suco, limite a {{4 onças|120 ml}} por dia de suco 100% fruta. Melhor ainda, ofereça fruta inteira e água."
+  },
+  {
+    "id": "2y-health-01",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "As consultas de rotina nesta fase incluem medições de crescimento, triagem de desenvolvimento e possivelmente exames de sangue que o pediatra recomenda de acordo com as necessidades da criança."
+  },
+  {
+    "id": "2y-health-02",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Seu pequeno deve ir ao dentista a cada seis meses. O dentista pode aplicar verniz de flúor para proteger os dentes em formação."
+  },
+  {
+    "id": "2y-health-03",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Escove os dentes do seu pequeno duas vezes ao dia com uma camada fina (do tamanho de um grão de arroz) de pasta com flúor até os 3 anos, depois aumente para uma quantidade do tamanho de uma ervilha."
+  },
+  {
+    "id": "2y-health-04",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se seu pequeno ainda não está juntando duas palavras aos 2 anos, converse com o pediatra sobre uma avaliação de fala. A intervenção precoce é mais eficaz."
+  },
+  {
+    "id": "2y-health-05",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "A vacina anual contra gripe é recomendada para todas as crianças com mais de 6 meses. Tomar a vacina ajuda a proteger seu pequeno e as pessoas ao redor."
+  },
+  {
+    "id": "2y-health-06",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Crianças em creche podem pegar de 8 a 12 resfriados por ano. Cada resfriado fortalece o sistema imunológico. Procure o pediatra em caso de febre alta ou sintomas que durem mais de 10 dias."
+  },
+  {
+    "id": "2y-health-07",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Os dentes caninos e os segundos molares geralmente nascem entre 16 e 33 meses. Ofereça alimentos frios e mordedores para aliviar o desconforto nesse período."
+  },
+  {
+    "id": "2y-health-08",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se você introduzir tempo de tela, escolha programas de boa qualidade e assista junto com seu pequeno. Assistir junto ajuda a criança a entender o que está vendo."
+  },
+  {
+    "id": "2y-health-09",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Ajude seu pequeno a aprender a lavar as mãos com sabão por 20 segundos, especialmente antes das refeições e depois de usar o banheiro ou brincar ao ar livre."
+  },
+  {
+    "id": "2y-health-10",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se seu pequeno ronca alto todas as noites ou parece parar de respirar durante o sono, mencione ao pediatra. Pode ser sinal de adenoides aumentadas."
+  },
+  {
+    "id": "2y-health-11",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Os olhos do seu pequeno devem estar alinhados a esta altura. Se você notar um olho desviando para dentro ou para fora, agende um exame oftalmológico o quanto antes."
+  },
+  {
+    "id": "2y-health-14",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se o desfralde causar constipação, aumente a ingestão de fibras e líquidos e evite pressionar seu pequeno. A retenção de fezes é comum durante essa transição."
+  },
+  {
+    "id": "2y-health-15",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Garanta que seu pequeno receba 600 UI de vitamina D por dia, seja pela alimentação, leite enriquecido ou suplemento. Muitas crianças não recebem o suficiente apenas pela comida."
+  },
+  {
+    "id": "2y-play-01",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Incentive seu pequeno a desenhar círculos e linhas no papel. Esses são os primeiros passos para a formação das letras e desenvolvem o controle das mãos."
+  },
+  {
+    "id": "2y-play-02",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Construa com blocos maiores de encaixe. Seu pequeno pode criar torres, pontes e estruturas, desenvolvendo o pensamento espacial e a capacidade de planejamento."
+  },
+  {
+    "id": "2y-play-03",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Brinque de lojinha, restaurante ou médico. Esse tipo de brincadeira de faz de conta desenvolve a linguagem, as habilidades sociais e a compreensão emocional."
+  },
+  {
+    "id": "2y-play-04",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Pule em poças, corra pelos aspersores ou brinque na caixa de areia. Brincadeiras ao ar livre, bagunçadas e ricas em estímulos sensoriais, são essenciais para o desenvolvimento saudável."
+  },
+  {
+    "id": "2y-play-05",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Rasgar papel e brincar com massinha desenvolvem a força das mãos necessária para o uso futuro da tesoura. Perto dos 2 anos, você pode apresentar uma tesoura sem ponta para as primeiras práticas de corte."
+  },
+  {
+    "id": "2y-play-06",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Leia livros com histórias simples e faça perguntas ao seu pequeno: \"O que você acha que acontece depois?\" ou \"Você consegue encontrar o gato?\""
+  },
+  {
+    "id": "2y-play-07",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Instrumentos musicais como tambores, chocalhos e xilofones ensinam ritmo, causa e efeito, e expressão criativa."
+  },
+  {
+    "id": "2y-play-08",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Monte um circuito de obstáculos simples: rastejar por baixo da mesa, pular sobre uma almofada, caminhar sobre uma linha de fita no chão. Isso desenvolve o planejamento e a coordenação motora grossa."
+  },
+  {
+    "id": "2y-play-09",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Brinque de jogos de correspondência com figuras ou cores. Comece com apenas 3 a 4 pares e aumente conforme a memória do seu pequeno se desenvolve."
+  },
+  {
+    "id": "2y-play-10",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Pintar com pincéis, esponjas ou os dedos permite ao seu pequeno explorar cores e texturas. Foque no processo, não no resultado."
+  },
+  {
+    "id": "2y-play-11",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Incentive a escalada no parquinho. Subir escadas, atravessar pontes e descer pelo escorregador desenvolve coragem, coordenação e avaliação de risco."
+  },
+  {
+    "id": "2y-play-12",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Brinque de esconde-esconde pela casa. Seu pequeno vai se divertir muito e praticar memória espacial, habilidades de escuta e autocontrole."
+  },
+  {
+    "id": "2y-play-13",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Introduza a contagem nas atividades do dia a dia: conte os degraus ao subir, os biscoitos no prato ou os brinquedos ao guardá-los."
+  },
+  {
+    "id": "2y-play-14",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Deixe seu pequeno ajudar na jardinagem. Cavar, regar e ver as plantas crescerem ensina paciência, responsabilidade e conexão com a natureza."
+  },
+  {
+    "id": "2y-play-15",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Incentive seu pequeno a falar sobre os desenhos dele, mesmo que pareçam rabiscos para você. Perguntar \"me conta sobre o seu desenho\" desenvolve habilidades narrativas."
+  },
+  {
+    "id": "2y-safety-01",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Seu pequeno consegue escalar mais alto e alcançar mais longe do que nunca. Reavalie sua casa regularmente em busca de novos perigos sob a perspectiva dele."
+  },
+  {
+    "id": "2y-safety-02",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Mantenha seu pequeno virado de costas na cadeirinha do carro pelo maior tempo possível, de preferência até atingir o limite máximo de peso ou altura do assento. Virado de costas é a posição mais segura para crianças pequenas."
+  },
+  {
+    "id": "2y-safety-03",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Ensine ao seu pequeno regras básicas de segurança na água: nunca ir perto da água sem um adulto e sempre usar colete salva-vidas perto de águas abertas."
+  },
+  {
+    "id": "2y-safety-04",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Pipoca, nozes inteiras, balas duras e pedaços de vegetais crus continuam sendo sérios riscos de engasgo para crianças pequenas. Continue cortando a comida em pedaços pequenos."
+  },
+  {
+    "id": "2y-safety-05",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Pratique rotas de fuga em caso de incêndio com sua família. Mostre ao seu pequeno como rastejar rente ao chão e ir até um ponto de encontro do lado de fora."
+  },
+  {
+    "id": "2y-safety-06",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Se seu pequeno consegue abrir a porta da frente, instale uma corrente ou tranca alta que ele não alcance. Crianças pequenas podem sair sozinhas em questão de segundos."
+  },
+  {
+    "id": "2y-safety-07",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Ensine ao seu pequeno o nome completo dele e comece a trabalhar o seu número de telefone. Use músicas ou repetição para tornar divertido e fácil de memorizar."
+  },
+  {
+    "id": "2y-safety-08",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Sempre verifique se os equipamentos do parquinho são adequados para a idade e estão bem conservados. Procure por aberturas que possam prender a cabeça ou os dedos da criança."
+  },
+  {
+    "id": "2y-safety-09",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Mantenha as portas do banheiro fechadas ou use uma trava no vaso sanitário. Crianças pequenas são fascinadas por água, e o vaso representa risco de afogamento por causa da proporção da cabeça."
+  },
+  {
+    "id": "2y-safety-10",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Verifique a instalação da cadeirinha do carro regularmente. Certifique-se de que o cinto esteja firme, com a presilha no nível das axilas, e sem casacos grossos de inverno por baixo das faixas."
+  },
+  {
+    "id": "2y-safety-11",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Ensine seu pequeno a sentar enquanto come. Correr ou brincar com comida na boca aumenta muito o risco de engasgo."
+  },
+  {
+    "id": "2y-safety-12",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Guarde objetos cortantes de cozinha como facas, descascadores e tesouras em uma gaveta alta com trava de segurança. Seu pequeno agora consegue abrir muitas gavetas e armários baixos."
+  },
+  {
+    "id": "2y-safety-13",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Se seu pequeno está fazendo a transição para uma cama, coloque o colchão baixo, rente ao chão, e use uma grade de proteção. Remova do quarto qualquer perigo que ele possa alcançar durante a noite."
+  },
+  {
+    "id": "2y-safety-14",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "A segurança na garagem e no estacionamento é fundamental. Sempre segure a mão do seu pequeno e verifique atrás do veículo antes de dar ré. Ele é baixo demais para ser visto."
+  },
+  {
+    "id": "2y-safety-15",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Verifique os detectores de fumaça e de monóxido de carbono mensalmente e troque as pilhas pelo menos uma vez ao ano. Um detector funcionando é uma das formas mais simples de proteger sua família."
+  }
+]

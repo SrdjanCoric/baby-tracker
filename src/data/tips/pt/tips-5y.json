@@ -1,0 +1,512 @@
+[
+  {
+    "id": "5y-development-01",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança provavelmente consegue contar até 20 ou além e pode começar a entender adição simples. Use objetos reais — \"Você tem 3 uvas, vou dar mais 2\" — para tornar a matemática tangível."
+  },
+  {
+    "id": "5y-development-02",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Escrever letras e o próprio nome com controle crescente é uma grande conquista. Ofereça papel pautado e celebre o progresso em vez da perfeição."
+  },
+  {
+    "id": "5y-development-03",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança está desenvolvendo empatia e consegue reconhecer quando outros estão tristes ou chateados. Fale sobre sentimentos em livros e na vida real para fortalecer essa habilidade."
+  },
+  {
+    "id": "5y-development-04",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Pular, escalar com confiança e arremessar uma bola por cima do ombro mostram que as habilidades motoras grossas estão bem desenvolvidas. Continue oferecendo desafios físicos variados."
+  },
+  {
+    "id": "5y-development-05",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança pode começar a entender o conceito de tempo — hoje, amanhã, ontem. Um calendário simples pode ajudá-la a compreender dias, semanas e eventos próximos."
+  },
+  {
+    "id": "5y-development-06",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança consegue seguir instruções de múltiplas etapas e lembrar regras. Dê a ela pequenas responsabilidades como pôr a mesa para desenvolver confiança."
+  },
+  {
+    "id": "5y-development-07",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "As amizades estão se tornando mais estáveis e significativas. Sua criança pode ter um melhor amigo e começar a resolver conflitos de forma mais independente."
+  },
+  {
+    "id": "5y-development-08",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança pode começar a soletrar palavras simples ou reconhecer palavras de uso frequente. Ler junto à noite continua sendo a melhor atividade para a alfabetização."
+  },
+  {
+    "id": "5y-development-09",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança consegue fazer desenhos reconhecíveis com detalhes como casas com janelas e pessoas com dedos. Esses desenhos refletem como ela entende o mundo."
+  },
+  {
+    "id": "5y-development-10",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "O tempo de atenção está crescendo — sua criança consegue focar em uma única atividade por 10-15 minutos. Ofereça oportunidades para concentração prolongada sem interrupção."
+  },
+  {
+    "id": "5y-development-11",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança pode começar a se comparar com colegas. Enfatize o esforço em vez do resultado e celebre as qualidades individuais para desenvolver uma autoestima saudável."
+  },
+  {
+    "id": "5y-development-12",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Rimar, bater palmas nas sílabas e identificar sons iniciais são habilidades pré-leitura que estão se desenvolvendo agora. Brinque com jogos de palavras para reforçá-las naturalmente."
+  },
+  {
+    "id": "5y-development-13",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança está aprendendo a esperar a vez na conversa — escutar, depois responder. Demonstre isso dando a ela toda a sua atenção quando fala."
+  },
+  {
+    "id": "5y-development-14",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "A resolução de problemas se torna mais sofisticada. Quando sua criança enfrenta um desafio, oriente-a a pensar em soluções em vez de resolver por ela."
+  },
+  {
+    "id": "5y-development-15",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Sua criança consegue entender e contar piadas simples. O humor é uma habilidade cognitiva complexa que envolve surpresa, jogos de palavras e consciência social."
+  },
+  {
+    "id": "5y-sleep-01",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Sua criança precisa de 10-13 horas de sono por dia. A maioria das crianças nesta idade já abandonou os cochilos, mas algumas de 4 anos ainda podem precisar de um. Proteja a hora de dormir mesmo em dias corridos."
+  },
+  {
+    "id": "5y-sleep-02",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Um período de relaxamento de 30 minutos antes de dormir — leitura, conversa tranquila, alongamento suave — ajuda o cérebro da sua criança a mudar do modo ativo para o modo de sono."
+  },
+  {
+    "id": "5y-sleep-03",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Se sua criança está começando a escola, o sono consistente se torna ainda mais importante. Crianças cansadas têm dificuldade para se concentrar, aprender e gerenciar emoções."
+  },
+  {
+    "id": "5y-sleep-04",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Pesadelos ainda podem acontecer e frequentemente envolvem temas da vida diária. Converse brevemente sobre o sonho, ofereça conforto e ajude-a a se sentir segura."
+  },
+  {
+    "id": "5y-sleep-05",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Sua criança pode começar a assumir partes da rotina de dormir — escolher o pijama, escovar os dentes, escolher um livro. A independência promove a cooperação."
+  },
+  {
+    "id": "5y-sleep-07",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Se sua criança resiste à hora de dormir porque quer mais tempo com você, tente incluir 10 minutos de tempo especial a sós antes da rotina começar."
+  },
+  {
+    "id": "5y-sleep-08",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Mantenha o quarto fresco, escuro e silencioso. Sua criança pode querer ajudar a organizar o quarto para dormir — escolhendo onde a luz noturna fica ou como os travesseiros são colocados."
+  },
+  {
+    "id": "5y-sleep-09",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Evite telas por pelo menos uma hora antes de dormir. A estimulação e a luz azul dificultam a preparação do cérebro da sua criança para o sono."
+  },
+  {
+    "id": "5y-sleep-10",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Se sua criança acorda cedo e não consegue voltar a dormir, ensine-a a folhear livros tranquilamente na cama até ser hora de levantar."
+  },
+  {
+    "id": "5y-sleep-11",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Grandes transições de vida — começar a escola, um novo irmão ou uma mudança — podem temporariamente atrapalhar o sono. Conforto extra e consistência na rotina ajudam na adaptação."
+  },
+  {
+    "id": "5y-sleep-12",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Uma prática de gratidão na hora de dormir — dizer três coisas pelas quais é grata — pode ajudar sua criança a adormecer com uma mentalidade positiva."
+  },
+  {
+    "id": "5y-sleep-13",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Se sua criança ronca regularmente ou tem pausas na respiração durante o sono, mencione ao pediatra. Pode indicar apneia do sono, que é tratável."
+  },
+  {
+    "id": "5y-sleep-14",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Horários de dormir no fim de semana não devem diferir em mais de uma hora dos dias de semana. Grandes mudanças no horário tornam as manhãs de segunda muito mais difíceis."
+  },
+  {
+    "id": "5y-sleep-15",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Atividade física durante o dia melhora significativamente a qualidade do sono. Mesmo em dias chuvosos, encontre maneiras para sua criança se movimentar — dançar, circuitos de obstáculos dentro de casa ou yoga."
+  },
+  {
+    "id": "5y-feeding-01",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Sua criança consegue usar faca e garfo juntos com habilidade crescente. Deixe-a praticar cortando alimentos macios como bananas ou panquecas nas refeições."
+  },
+  {
+    "id": "5y-feeding-02",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Se sua criança está começando a escola, envolva-a na preparação da lancheira. Crianças comem melhor quando ajudam a escolher e preparar sua comida."
+  },
+  {
+    "id": "5y-feeding-03",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Ensine sua criança sobre grupos alimentares em termos simples — \"alimentos que fazem crescer\" (proteína), \"alimentos que dão energia\" (carboidratos), \"alimentos coloridos\" (frutas e verduras) — para desenvolver consciência nutricional."
+  },
+  {
+    "id": "5y-feeding-04",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Sua criança precisa de cerca de 1.200-1.600 calorias por dia. Os tamanhos das porções devem ser aproximadamente um quarto a um terço das porções de adulto."
+  },
+  {
+    "id": "5y-feeding-05",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "A seletividade alimentar frequentemente melhora por volta dos 5 anos, conforme as crianças se tornam mais dispostas a experimentar alimentos novos. Continue oferecendo variedade sem pressão."
+  },
+  {
+    "id": "5y-feeding-06",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Sua criança consegue ajudar com tarefas reais na cozinha — medir ingredientes, quebrar ovos, misturar massa. Essas habilidades desenvolvem conceitos matemáticos e independência."
+  },
+  {
+    "id": "5y-feeding-07",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Se sua criança almoça na escola, converse sobre o que comeu e do que gostou. Isso mantém você conectado(a) com a nutrição dela e desenvolve habilidades de conversação."
+  },
+  {
+    "id": "5y-feeding-08",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "As necessidades de ferro continuam importantes nesta idade. Carnes magras, feijões, espinafre e cereais enriquecidos com ferro ajudam a prevenir deficiência, que pode afetar energia e concentração."
+  },
+  {
+    "id": "5y-feeding-09",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "A influência dos colegas na alimentação começa agora. Sua criança pode querer experimentar alimentos que vê os amigos comendo — use isso como oportunidade para introduzir coisas novas."
+  },
+  {
+    "id": "5y-feeding-10",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Ensine sua criança a beber água quando tem sede em vez de pegar suco ou bebidas com sabor. Bons hábitos de hidratação formados agora duram a vida toda."
+  },
+  {
+    "id": "5y-feeding-11",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Refeições em família — mesmo que 3-4 vezes por semana — estão ligadas a melhor nutrição, vocabulário mais amplo e relacionamentos familiares mais próximos."
+  },
+  {
+    "id": "5y-feeding-12",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Fale sobre comida de forma positiva. Evite rotular alimentos como \"bons\" ou \"ruins\" — em vez disso, explique que alguns alimentos são para o dia a dia e outros para ocasiões especiais."
+  },
+  {
+    "id": "5y-feeding-13",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Sua criança pode começar a entender noções básicas de segurança alimentar, como lavar frutas e verduras, não comer comida que caiu no chão e verificar com adultos sobre alimentos desconhecidos."
+  },
+  {
+    "id": "5y-feeding-14",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Se sua criança come devagar, permita tempo adequado nas refeições sem apressá-la. Pressionar para comer mais rápido pode criar ansiedade em relação às refeições."
+  },
+  {
+    "id": "5y-feeding-15",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Proteína no café da manhã — ovos, iogurte, pasta de amendoim no pão — ajuda sua criança a permanecer concentrada e com energia pela manhã, especialmente em dias de escola."
+  },
+  {
+    "id": "5y-health-01",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Uma consulta de rotina nesta fase é importante. O pediatra verificará visão, audição, crescimento e prontidão para o desenvolvimento, e pode fornecer qualquer documentação necessária para a entrada na escola."
+  },
+  {
+    "id": "5y-health-03",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Se sua criança usa óculos, garanta que ela realmente os use de forma consistente. Crianças se adaptam rapidamente e o desenvolvimento da visão depende da correção adequada."
+  },
+  {
+    "id": "5y-health-04",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Sua criança pode começar a perder os dentes de leite em breve. Explique que isso é uma parte normal e empolgante do crescimento para aliviar qualquer preocupação."
+  },
+  {
+    "id": "5y-health-05",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Lavar as mãos antes das refeições, depois de usar o banheiro e depois de brincar ao ar livre é um hábito que reduz significativamente as doenças. Garanta que sua criança faça isso de forma consistente."
+  },
+  {
+    "id": "5y-health-06",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Se sua criança tem ansiedade sobre começar a escola ou atividades novas, valide os sentimentos dela e pratique a nova situação através de encenação ou uma visita prévia."
+  },
+  {
+    "id": "5y-health-07",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Verifique com o pediatra para garantir que as vacinas da sua criança estão em dia. Algumas vacinas podem ser exigidas antes de começar a escola."
+  },
+  {
+    "id": "5y-health-08",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Piolhos podem se espalhar em ambientes escolares. Verifique o cabelo da sua criança semanalmente, especialmente atrás das orelhas e na nuca."
+  },
+  {
+    "id": "5y-health-09",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Estabeleça uma rotina diária de usar fio dental. Os dentes da sua criança provavelmente estão juntos agora, e o fio dental previne cáries entre os dentes."
+  },
+  {
+    "id": "5y-health-10",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Incentive sua criança a contar quando algo dói ou não parece certo. Nesta idade, ela consegue começar a descrever sintomas, o que ajuda você a responder adequadamente."
+  },
+  {
+    "id": "5y-health-11",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Verrugas são comuns em crianças em idade escolar e são causadas por um vírus. São inofensivas, mas podem ser tratadas se incomodam sua criança."
+  },
+  {
+    "id": "5y-health-12",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Se sua criança frequentemente reclama de dores de cabeça ou aperta os olhos para ver livros e telas, agende um exame de vista. A visão pode mudar rapidamente nesta idade."
+  },
+  {
+    "id": "5y-health-13",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Atividade física protege a saúde mental da sua criança assim como o corpo. Crianças ativas apresentam taxas mais baixas de ansiedade e melhor regulação emocional."
+  },
+  {
+    "id": "5y-health-14",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Ensine sua criança independência básica de higiene — cobrir a tosse, lavar as mãos, usar lenços de papel. Essas habilidades ajudam a se manter saudável em ambientes coletivos."
+  },
+  {
+    "id": "5y-play-01",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Jogos de tabuleiro com estratégia simples — como jogo da memória, dominó ou damas — desenvolvem pensamento crítico, paciência e bom espírito esportivo."
+  },
+  {
+    "id": "5y-play-02",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Sua criança pode estar pronta para aprender a andar de bicicleta sem rodinhas. Comece em uma superfície plana e macia e deixe-a ganhar confiança no próprio ritmo."
+  },
+  {
+    "id": "5y-play-03",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Incentive sua criança a criar suas próprias histórias — desenhadas, ditadas ou escritas. Contar histórias desenvolve alfabetização, criatividade e processamento emocional."
+  },
+  {
+    "id": "5y-play-04",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Esportes coletivos ou aulas de movimento podem introduzir o trabalho em equipe e a aptidão física. Foque em diversão e participação em vez de competição nesta idade."
+  },
+  {
+    "id": "5y-play-05",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Construir estruturas elaboradas com blocos, caixas ou conjuntos de montagem ensina conceitos de engenharia, planejamento e persistência."
+  },
+  {
+    "id": "5y-play-06",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Sua criança pode gostar de projetos simples na cozinha. Fazer um vitamina, montar um sanduíche ou decorar biscoitos combina matemática, leitura e habilidades motoras finas."
+  },
+  {
+    "id": "5y-play-07",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Exploração da natureza — colecionar pedras, identificar pássaros ou examinar insetos — nutre a curiosidade e o pensamento científico."
+  },
+  {
+    "id": "5y-play-08",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Instrumentos musicais ou atividades de ritmo desenvolvem coordenação, habilidades matemáticas e autoexpressão. Até um simples tambor ou xilofone oferece aprendizado rico."
+  },
+  {
+    "id": "5y-play-09",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Circuitos de obstáculos que incluem rastejar, pular, se equilibrar e arremessar desafiam múltiplas habilidades físicas e podem ser montados com itens da casa."
+  },
+  {
+    "id": "5y-play-11",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Brincadeiras de faz de conta com temas como médico, professor ou bombeiro ajudam sua criança a processar experiências do mundo real e praticar situações sociais."
+  },
+  {
+    "id": "5y-play-12",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Jogos com letras e números — amarelinha com letras, contar polichinelos — tornam o aprendizado inicial algo físico e divertido."
+  },
+  {
+    "id": "5y-play-13",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Dê uma lupa para sua criança e deixe-a explorar o quintal de perto. Habilidades de observação desenvolvidas na brincadeira se traduzem em prontidão para ciência e leitura."
+  },
+  {
+    "id": "5y-play-14",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Incentive sua criança a brincar com crianças de diferentes idades. As mais novas ajudam a praticar liderança; as mais velhas a desafiam a crescer."
+  },
+  {
+    "id": "5y-play-15",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Brincadeira livre e sem estrutura continua essencial mesmo quando as atividades programadas aumentam. Reserve tempo diário para sua criança brincar como quiser."
+  },
+  {
+    "id": "5y-safety-01",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Sua criança deveria saber o nome completo, seu número de telefone e o endereço de casa. Pratique regularmente até ela conseguir recitar os três de memória."
+  },
+  {
+    "id": "5y-safety-02",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Ensine segurança de pedestre: parar em cada meio-fio, olhar para esquerda-direita-esquerda e caminhar (não correr) ao atravessar ruas. Pratique junto em cada passeio."
+  },
+  {
+    "id": "5y-safety-03",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Sua criança deve permanecer na cadeirinha ou assento de elevação até ter pelo menos {{4 feet 9 inches|145 cm}} de altura, o que geralmente não acontece até os 8-12 anos."
+  },
+  {
+    "id": "5y-safety-05",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Ensine sua criança a diferença entre um segredo e uma surpresa. Segredos que a fazem se sentir desconfortável devem sempre ser contados a um adulto de confiança."
+  },
+  {
+    "id": "5y-safety-06",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Se sua criança caminha até a escola ou ponto de ônibus, percorra o caminho junto várias vezes. Identifique pontos seguros e pratique o que fazer se ela se sentir insegura."
+  },
+  {
+    "id": "5y-safety-07",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Capacetes são obrigatórios para andar de bicicleta, patins e patinete. Sua criança deve ver você usando um também — o exemplo vale mais que as regras."
+  },
+  {
+    "id": "5y-safety-08",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Comece conversas simples sobre segurança na internet. Mesmo que ela não esteja online sozinha, ensine que informações pessoais são privadas e telas são usadas em espaços compartilhados."
+  },
+  {
+    "id": "5y-safety-09",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Ensine sua criança o que fazer em uma emergência: ligar para os serviços de emergência, dizer seu nome e endereço e ficar na linha. Pratique com um telefone de brinquedo."
+  },
+  {
+    "id": "5y-safety-10",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Sua criança pode aprender segurança básica contra incêndio — parar, deitar e rolar; ficar abaixado na fumaça; encontrar-se no ponto de encontro da família. Pratique o plano de fuga da casa duas vezes por ano."
+  },
+  {
+    "id": "5y-safety-11",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Ao visitar outras casas, ensine sua criança a pedir antes de tocar nas coisas ou entrar em cômodos desconhecidos. Isso desenvolve respeito e a mantém segura."
+  },
+  {
+    "id": "5y-safety-12",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Garanta que sua criança entenda que nenhum adulto deveria pedir para ela guardar um segredo dos pais. Comunicação aberta é a melhor proteção."
+  },
+  {
+    "id": "5y-safety-13",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Revise as regras do parquinho: não empurrar, esperar a vez e avisar um adulto se alguém está sendo perigoso. Sua criança pode começar a se posicionar nessas situações."
+  },
+  {
+    "id": "5y-safety-14",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Se sua criança brinca ao ar livre sozinha, estabeleça limites claros de até onde pode ir e confira regularmente. Amplie a independência gradualmente conforme ela demonstra responsabilidade."
+  },
+  {
+    "id": "5y-safety-15",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Mantenha uma foto atualizada da sua criança no celular. No caso improvável de ela se perder em uma multidão, uma foto recente ajuda as pessoas a encontrá-la rapidamente."
+  }
+]
