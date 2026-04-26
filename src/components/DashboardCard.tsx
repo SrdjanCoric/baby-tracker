@@ -19,41 +19,6 @@ import { formatDuration } from "@/utils/time";
 const CARD_MIN_HEIGHT = Platform.OS === "android" ? 150 : 160;
 const CARD_BORDER_RADIUS = 20;
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-    : { r: 0, g: 0, b: 0 };
-}
-
-function generateSmoothGradient(
-  accentHex: string,
-  cardHex: string,
-  pageBgHex: string,
-  blendAmount: number = 0.06,
-  steps: number = 6
-): { colors: [string, string, ...string[]]; locations: [number, number, ...number[]] } {
-  const accent = hexToRgb(accentHex);
-  const pageBg = hexToRgb(pageBgHex);
-  const card = hexToRgb(cardHex);
-  const startR = Math.round(accent.r * blendAmount + pageBg.r * (1 - blendAmount));
-  const startG = Math.round(accent.g * blendAmount + pageBg.g * (1 - blendAmount));
-  const startB = Math.round(accent.b * blendAmount + pageBg.b * (1 - blendAmount));
-  const colors: string[] = [];
-  const locations: number[] = [];
-
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1);
-    const r = Math.round(startR + (card.r - startR) * t);
-    const g = Math.round(startG + (card.g - startG) * t);
-    const b = Math.round(startB + (card.b - startB) * t);
-    colors.push(`rgb(${r},${g},${b})`);
-    locations.push(t * 0.6);
-  }
-
-  return { colors, locations } as { colors: [string, string, ...string[]]; locations: [number, number, ...number[]] };
-}
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const SPRING_CONFIG = {
@@ -242,8 +207,9 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
     const lockedBgColor = isDark ? `${accentColor}15` : `${accentColor}08`;
     const lockedBorderColor = isDark ? `${accentColor}40` : `${accentColor}30`;
 
-    const pageBgColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
-    const smoothGradient = generateSmoothGradient(accentColor, bgColor, pageBgColor, 0.06, 6);
+    const tintColor = isDark ? activityColors.cardTintDark : activityColors.cardTintLight;
+    const gradientColors: [string, string] = [tintColor, bgColor];
+    const gradientLocations: [number, number] = [0, 0.6];
 
     return (
       <AnimatedPressable
@@ -273,8 +239,8 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
         }
       >
         <LinearGradient
-          colors={isLockedByOther ? [lockedBgColor, lockedBgColor] : smoothGradient.colors}
-          locations={isLockedByOther ? [0, 1] : smoothGradient.locations}
+          colors={isLockedByOther ? [lockedBgColor, lockedBgColor] : gradientColors}
+          locations={isLockedByOther ? [0, 1] : gradientLocations}
           start={{ x: 0, y: 0 }}
           end={{ x: 0.8, y: 1 }}
           style={{
