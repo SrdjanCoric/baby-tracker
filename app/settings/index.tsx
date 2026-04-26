@@ -2,9 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
 import { useTheme, useUnits, useTimeFormat, useAuth, useLanguage } from "@/contexts";
-import { getTipsEnabled, setTipsEnabled } from "@/services/tip-storage";
 
 interface SettingsRowProps {
   icon: string;
@@ -96,18 +94,6 @@ export default function SettingsScreen() {
   const { timeFormat } = useTimeFormat();
   const { language } = useLanguage();
   const { isAuthenticated, user, signOut } = useAuth();
-  const [tipsEnabled, setTipsEnabledState] = useState(true);
-
-  useEffect(() => {
-    getTipsEnabled().then(setTipsEnabledState);
-  }, []);
-
-  const handleToggleTips = async () => {
-    const newValue = !tipsEnabled;
-    await setTipsEnabled(newValue);
-    setTipsEnabledState(newValue);
-  };
-
   const handleSignOut = async () => {
     Alert.alert(
       t("settings.signOut"),
@@ -175,13 +161,6 @@ export default function SettingsScreen() {
           />
           <SettingsDivider />
           <SettingsRow
-            icon="📱"
-            label={t("settings.customizeDashboard")}
-            onPress={() => router.push("/settings/dashboard")}
-            testID="dashboard-config"
-          />
-          <SettingsDivider />
-          <SettingsRow
             icon="⌚"
             label={t("settings.widgets")}
             onPress={() => router.push("/settings/widget-config")}
@@ -192,14 +171,6 @@ export default function SettingsScreen() {
             icon="🔔"
             label={t("settings.notifications")}
             onPress={() => router.push("/settings/notifications")}
-          />
-          <SettingsDivider />
-          <SettingsRow
-            icon="💡"
-            label={t("settings.dailyTips")}
-            value={tipsEnabled ? t("settings.on") : t("settings.off")}
-            onPress={handleToggleTips}
-            testID="daily-tips-setting"
           />
         </SettingsSection>
 
