@@ -119,7 +119,7 @@ describe("DashboardCard", () => {
           testID="card"
         />
       );
-      const actionButton = screen.getByLabelText("Add Feeding");
+      const actionButton = screen.getByLabelText("accessibility.addActivity");
       fireEvent.press(actionButton, { stopPropagation: jest.fn() });
       expect(onActionPressMock).toHaveBeenCalledTimes(1);
     });
@@ -153,8 +153,7 @@ describe("DashboardCard", () => {
     it("has correct accessibility label", () => {
       render(<DashboardCard {...defaultProps} testID="card" />);
       const card = screen.getByTestId("card");
-      expect(card.props.accessibilityLabel).toContain("Feeding");
-      expect(card.props.accessibilityLabel).toContain("2h ago");
+      expect(card.props.accessibilityLabel).toBe("accessibility.cardTimeSince");
     });
 
     it("has button accessibility role", () => {

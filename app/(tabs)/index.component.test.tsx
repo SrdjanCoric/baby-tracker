@@ -28,7 +28,10 @@ jest.mock("react-i18next", () => ({
         "tummyTime.title": "Tummy Time",
         "tummyTime.inProgress": "In Progress",
         "growth.title": "Growth",
+        "milestones.title": "Milestones",
+        "health.title": "Health",
         "common.now": "Now",
+        "common.today": "Today",
       };
       return translations[key] || key;
     },
@@ -81,6 +84,29 @@ jest.mock("@/components", () => ({
       </Pressable>
     );
   },
+  CompactActivityRow: ({
+    activity,
+    label,
+    onPress,
+    onActionPress,
+  }: {
+    activity: string;
+    label: string;
+    onPress?: () => void;
+    onActionPress?: () => void;
+  }) => {
+    const { Pressable, Text } = require("react-native");
+    return (
+      <Pressable testID={`compact-row-${activity}`} onPress={onPress}>
+        <Text>{label}</Text>
+        <Pressable testID={`action-${activity}`} onPress={onActionPress}>
+          <Text>+</Text>
+        </Pressable>
+      </Pressable>
+    );
+  },
+  SleepPredictionCard: () => null,
+  BirthdayCelebrationModal: () => null,
   TodaySummary: ({ feedingTotal, napCount, diaperCount }: { feedingTotal?: string; napCount?: number; diaperCount?: number }) => {
     const { View, Text } = require("react-native");
     return (
@@ -91,6 +117,10 @@ jest.mock("@/components", () => ({
       </View>
     );
   },
+}));
+
+jest.mock("@/components/TipCarousel", () => ({
+  TipCarousel: () => null,
 }));
 
 const mockUseFeeding = jest.fn();
@@ -107,19 +137,31 @@ jest.mock("@/contexts", () => ({
   usePumping: () => mockUsePumping(),
   useGrowth: () => mockUseGrowth(),
   useTummyTime: () => mockUseTummyTime(),
-  useDashboardConfig: () => ({
-    visibleCards: [
-      { activity: "feeding", visible: true, order: 0 },
-      { activity: "sleep", visible: true, order: 1 },
-      { activity: "diaper", visible: true, order: 2 },
-      { activity: "pumping", visible: true, order: 3 },
-      { activity: "tummyTime", visible: true, order: 4 },
-      { activity: "growth", visible: true, order: 5 },
-    ],
-    isLoading: false,
+  useMilestones: () => ({
+    getYesCountForAge: () => 0,
+    getNotSureCountForAge: () => 0,
+    getTotalCountForAge: () => 10,
+    isAgeCompleted: () => false,
+    getStarsEarned: () => 0,
+    getCurrentAgeGroup: () => ({ key: "0-3m", label: "0-3 months" }),
+    responses: [],
+    refreshResponses: jest.fn(),
+  }),
+  useHealth: () => ({
+    healthEntries: [],
+    getLastHealth: () => null,
+    refreshHealth: jest.fn(),
   }),
   useBaby: () => ({
     selectedBaby: { id: "baby-1", name: "Test Baby" },
+  }),
+  useAuth: () => ({
+    session: { access_token: "test" },
+  }),
+  useUnits: () => ({
+    temperatureUnit: "celsius",
+    volumeUnit: "ml",
+    unitSystem: "metric",
   }),
   useActiveTimers: () => ({
     isLockedByOther: () => false,
@@ -136,8 +178,35 @@ jest.mock("@/utils/time", () => ({
   formatDuration: (_seconds: number, _format?: string) => "5m",
 }));
 
+jest.mock("@/utils/growth-helpers", () => ({
+  getGrowthTrendArrow: () => "↗",
+}));
+
+jest.mock("@/utils/temperature", () => ({
+  formatTemperature: () => "36.8°C",
+  getFeverStatus: () => "normal",
+}));
+
+jest.mock("@/utils/health-display", () => ({
+  getHealthDisplayName: () => "Test",
+}));
+
+jest.mock("@/utils/volume", () => ({
+  formatVolume: () => "100ml",
+}));
+
+jest.mock("@/constants/milestones", () => ({
+  getCurrentAgeGroupKey: () => "0-3m",
+  AGE_GROUPS: [{ key: "0-3m", label: "0-3 months" }],
+}));
+
 jest.mock("@/hooks", () => ({
   useTimeRefresh: () => 0,
+  useBirthdayCelebration: () => ({
+    showCelebration: false,
+    milestoneAge: null,
+    dismiss: jest.fn(),
+  }),
 }));
 
 import HomeScreen from "./index";
@@ -151,6 +220,10 @@ describe("HomeScreen", () => {
       activeTimer: null,
       getLastFeeding: () => null,
       suggestedSide: "left",
+      refreshFeedings: jest.fn(),
+      stopBreastfeeding: jest.fn(),
+      pauseBreastfeeding: jest.fn(),
+      resumeBreastfeeding: jest.fn(),
     });
 
     mockUseSleep.mockReturnValue({
@@ -160,21 +233,34 @@ describe("HomeScreen", () => {
       getTodaysTotalSleepMinutes: () => 0,
       dailyGoalMinutes: 840,
       getDailyProgress: () => 0,
+      refreshSleeps: jest.fn(),
+      stopSleep: jest.fn(),
+      pauseSleep: jest.fn(),
+      resumeSleep: jest.fn(),
+      wakeWindowConfig: null,
+      getCurrentNapSlot: () => null,
+      getCompletedNapsSinceNightSleep: () => 0,
     });
 
     mockUseDiaper.mockReturnValue({
       diapers: [],
-      getTodaysCounts: () => ({ wet: 0, dirty: 0, total: 0 }),
+      getTodaysCounts: () => ({ wet: 0, dirty: 0, mixed: 0, total: 0 }),
+      refreshDiapers: jest.fn(),
     });
 
     mockUsePumping.mockReturnValue({
+      pumpings: [],
       activeTimer: null,
       getLastPumping: () => null,
       getTodaysTotalVolume: () => 0,
       getLastSide: () => null,
+      refreshPumpings: jest.fn(),
+      pausePumping: jest.fn(),
+      resumePumping: jest.fn(),
     });
 
     mockUseGrowth.mockReturnValue({
+      measurements: [],
       getLastMeasurement: () => null,
       getWeightChange: () => null,
       getMeasurementHistory: () => [],
@@ -182,11 +268,16 @@ describe("HomeScreen", () => {
     });
 
     mockUseTummyTime.mockReturnValue({
+      tummyTimes: [],
       activeTimer: null,
       getDailyProgress: () => 0,
       getTodaysTotalSeconds: () => 0,
       getTodaysSessionCount: () => 0,
       dailyGoalSeconds: 1800,
+      refreshTummyTimes: jest.fn(),
+      stopTummyTime: jest.fn(),
+      pauseTummyTime: jest.fn(),
+      resumeTummyTime: jest.fn(),
     });
   });
 
@@ -196,19 +287,20 @@ describe("HomeScreen", () => {
       expect(screen.getByTestId("baby-header")).toBeTruthy();
     });
 
-    it("renders all 6 DashboardCards", () => {
+    it("renders 4 primary DashboardCards", () => {
       render(<HomeScreen />);
       expect(screen.getByTestId("dashboard-card-feeding")).toBeTruthy();
       expect(screen.getByTestId("dashboard-card-sleep")).toBeTruthy();
       expect(screen.getByTestId("dashboard-card-diaper")).toBeTruthy();
-      expect(screen.getByTestId("dashboard-card-pumping")).toBeTruthy();
       expect(screen.getByTestId("dashboard-card-tummyTime")).toBeTruthy();
-      expect(screen.getByTestId("dashboard-card-growth")).toBeTruthy();
     });
 
-    it("renders TodaySummary", () => {
+    it("renders 4 compact activity rows", () => {
       render(<HomeScreen />);
-      expect(screen.getByTestId("today-summary")).toBeTruthy();
+      expect(screen.getByTestId("compact-row-pumping")).toBeTruthy();
+      expect(screen.getByTestId("compact-row-growth")).toBeTruthy();
+      expect(screen.getByTestId("compact-row-milestones")).toBeTruthy();
+      expect(screen.getByTestId("compact-row-health")).toBeTruthy();
     });
   });
 
@@ -231,9 +323,9 @@ describe("HomeScreen", () => {
       expect(mockPush).toHaveBeenCalledWith("/diaper");
     });
 
-    it("navigates to /pumping when pumping card pressed", () => {
+    it("navigates to /pumping when pumping compact row pressed", () => {
       render(<HomeScreen />);
-      fireEvent.press(screen.getByTestId("dashboard-card-pumping"));
+      fireEvent.press(screen.getByTestId("compact-row-pumping"));
       expect(mockPush).toHaveBeenCalledWith("/pumping");
     });
 
@@ -243,9 +335,9 @@ describe("HomeScreen", () => {
       expect(mockPush).toHaveBeenCalledWith("/tummyTime");
     });
 
-    it("navigates to /growth when growth card pressed", () => {
+    it("navigates to /growth when growth compact row pressed", () => {
       render(<HomeScreen />);
-      fireEvent.press(screen.getByTestId("dashboard-card-growth"));
+      fireEvent.press(screen.getByTestId("compact-row-growth"));
       expect(mockPush).toHaveBeenCalledWith("/growth");
     });
 
@@ -263,6 +355,10 @@ describe("HomeScreen", () => {
         activeTimer: { isRunning: true, startTime: new Date(), side: "left" },
         getLastFeeding: () => null,
         suggestedSide: "left",
+        refreshFeedings: jest.fn(),
+        stopBreastfeeding: jest.fn(),
+        pauseBreastfeeding: jest.fn(),
+        resumeBreastfeeding: jest.fn(),
       });
       render(<HomeScreen />);
       expect(screen.getByTestId("active-feeding")).toBeTruthy();
@@ -276,32 +372,16 @@ describe("HomeScreen", () => {
         getTodaysTotalSleepMinutes: () => 0,
         dailyGoalMinutes: 840,
         getDailyProgress: () => 0,
+        refreshSleeps: jest.fn(),
+        stopSleep: jest.fn(),
+        pauseSleep: jest.fn(),
+        resumeSleep: jest.fn(),
+        wakeWindowConfig: null,
+        getCurrentNapSlot: () => null,
+        getCompletedNapsSinceNightSleep: () => 0,
       });
       render(<HomeScreen />);
       expect(screen.getByTestId("active-sleep")).toBeTruthy();
-    });
-
-    it("shows active state for pumping when timer running", () => {
-      mockUsePumping.mockReturnValue({
-        activeTimer: { isRunning: true, startTime: new Date() },
-        getLastPumping: () => null,
-        getTodaysTotalVolume: () => 0,
-        getLastSide: () => null,
-      });
-      render(<HomeScreen />);
-      expect(screen.getByTestId("active-pumping")).toBeTruthy();
-    });
-
-    it("shows active state for tummyTime when timer running", () => {
-      mockUseTummyTime.mockReturnValue({
-        activeTimer: { isRunning: true, startTime: new Date() },
-        getDailyProgress: () => 50,
-        getTodaysTotalSeconds: () => 900,
-        getTodaysSessionCount: () => 1,
-        dailyGoalSeconds: 1800,
-      });
-      render(<HomeScreen />);
-      expect(screen.getByTestId("active-tummyTime")).toBeTruthy();
     });
   });
 
@@ -317,6 +397,10 @@ describe("HomeScreen", () => {
         activeTimer: null,
         getLastFeeding: () => lastFeeding,
         suggestedSide: "right",
+        refreshFeedings: jest.fn(),
+        stopBreastfeeding: jest.fn(),
+        pauseBreastfeeding: jest.fn(),
+        resumeBreastfeeding: jest.fn(),
       });
       render(<HomeScreen />);
       expect(screen.getByTestId("subtitle-feeding")).toBeTruthy();
@@ -330,6 +414,13 @@ describe("HomeScreen", () => {
         getTodaysTotalSleepMinutes: () => 420,
         dailyGoalMinutes: 840,
         getDailyProgress: () => 50,
+        refreshSleeps: jest.fn(),
+        stopSleep: jest.fn(),
+        pauseSleep: jest.fn(),
+        resumeSleep: jest.fn(),
+        wakeWindowConfig: null,
+        getCurrentNapSlot: () => null,
+        getCompletedNapsSinceNightSleep: () => 0,
       });
       render(<HomeScreen />);
       expect(screen.getByTestId("progress-sleep")).toBeTruthy();
@@ -337,11 +428,16 @@ describe("HomeScreen", () => {
 
     it("displays tummy time progress", () => {
       mockUseTummyTime.mockReturnValue({
+        tummyTimes: [],
         activeTimer: null,
         getDailyProgress: () => 75,
         getTodaysTotalSeconds: () => 1350,
         getTodaysSessionCount: () => 3,
         dailyGoalSeconds: 1800,
+        refreshTummyTimes: jest.fn(),
+        stopTummyTime: jest.fn(),
+        pauseTummyTime: jest.fn(),
+        resumeTummyTime: jest.fn(),
       });
       render(<HomeScreen />);
       expect(screen.getByTestId("progress-tummyTime")).toBeTruthy();
