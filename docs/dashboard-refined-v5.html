@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Refined v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0d0d1a;
+
+    /* Real app colors from colors.ts */
+    --d-bg: #121110;
+    --d-card: #2A2725;
+    --d-text-primary: rgba(232, 224, 216, 0.87);
+    --d-text-secondary: rgba(232, 224, 216, 0.60);
+    --d-text-tertiary: rgba(232, 224, 216, 0.38);
+
+    --l-bg: #F5EDE8;
+    --l-card: #FFFFFF;
+    --l-text-primary: #2D2A26;
+    --l-text-secondary: #7A7570;
+    --l-text-tertiary: #B0AAA5;
+
+    /* Dark accents */
+    --d-feed: #A5C88A;
+    --d-sleep: #A68DC8;
+    --d-diaper: #EAB8B2;
+    --d-pump: #96B8BC;
+    --d-tummy: #DABB78;
+    --d-growth: #88BEB0;
+    --d-milestone: #DABB78;
+    --d-health: #E09B85;
+
+    /* Light accents */
+    --l-feed: #8CB369;
+    --l-sleep: #8B7BA0;
+    --l-diaper: #E0A099;
+    --l-pump: #7BA3A8;
+    --l-tummy: #C9A55C;
+    --l-growth: #6AAB9C;
+    --l-milestone: #C9A55C;
+    --l-health: #D4836B;
+
+    --tip-accent-d: #E0B990;
+    --tip-accent-l: #D4A574;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--d-text-primary);
+    font-family: 'Nunito', sans-serif;
+    padding: 40px 20px 80px;
+  }
+
+  h1 { text-align: center; font-size: 1.7rem; font-weight: 900; margin-bottom: 6px; color: var(--d-sleep); }
+  .page-sub { text-align: center; color: var(--d-text-secondary); font-size: 0.85rem; margin-bottom: 60px; }
+
+  .section { max-width: 500px; margin: 0 auto 80px; }
+  .slabel { font-size: 0.62rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+  .stitle { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+  .sdesc { color: var(--d-text-secondary); font-size: 0.82rem; margin-bottom: 20px; line-height: 1.5; }
+
+  .phone {
+    width: 390px; height: 844px; margin: 0 auto;
+    border-radius: 44px; border: 3px solid #3a3a50;
+    position: relative; overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+  .phone.dark { background: var(--d-bg); }
+  .phone.light { background: var(--l-bg); }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 160px; height: 34px; background: #111;
+    border-radius: 0 0 20px 20px; z-index: 100;
+  }
+  .notch::after {
+    content: ''; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 6px; background: #222; border-radius: 3px;
+  }
+  .scroll { width: 100%; height: 100%; overflow-y: auto; padding: 52px 16px 90px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .tab-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 80px; display: flex; align-items: center;
+    justify-content: space-around; padding-bottom: 16px; z-index: 50;
+  }
+  .dark .tab-bar { background: #1A1817; border-top: 1px solid #2a2725; }
+  .light .tab-bar { background: #fff; border-top: 1px solid #E0D8D0; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.6rem; font-weight: 600; }
+  .dark .tab { color: var(--d-text-tertiary); }
+  .dark .tab.active { color: var(--d-feed); }
+  .light .tab { color: var(--l-text-tertiary); }
+  .light .tab.active { color: var(--l-feed); }
+  .tab-i { font-size: 1.1rem; }
+
+  /* Header */
+  .hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .hdr-l { display: flex; align-items: center; gap: 10px; }
+  .ava { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; }
+  .dark .ava { background: #3a3632; }
+  .light .ava { background: #E8E0D8; }
+  .nm { font-size: 0.92rem; font-weight: 700; }
+  .light .nm { color: var(--l-text-primary); }
+  .ag { font-size: 0.7rem; }
+  .dark .ag { color: var(--d-text-secondary); }
+  .light .ag { color: var(--l-text-secondary); }
+  .hdr-r { display: flex; gap: 6px; align-items: center; }
+  .hi { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+  .dark .hi { background: var(--d-card); }
+  .light .hi { background: #E8E0D8; }
+
+  /* Tip toggle */
+  .tip-toggle {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; cursor: pointer; border: none; position: relative;
+  }
+  .dark .tip-toggle { background: rgba(224,185,144,0.1); }
+  .light .tip-toggle { background: rgba(212,165,116,0.1); }
+  .tip-dot {
+    position: absolute; top: 2px; right: 2px;
+    width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid;
+  }
+  .dark .tip-dot { background: var(--tip-accent-d); border-color: var(--d-bg); }
+  .light .tip-dot { background: var(--tip-accent-l); border-color: var(--l-bg); }
+
+  /* Tip panel */
+  .tip-panel { border-radius: 16px; padding: 14px 16px; margin-bottom: 20px; position: relative; overflow: hidden; }
+  .dark .tip-panel { background: #322E2B; border: 1px solid rgba(224,185,144,0.1); }
+  .light .tip-panel { background: #FEF7F4; border: 1px solid #F0E5DF; }
+  .tip-panel-circle { position: absolute; top: -20px; right: -10px; width: 80px; height: 80px; border-radius: 50%; opacity: 0.05; }
+  .dark .tip-panel-circle { background: var(--tip-accent-d); }
+  .light .tip-panel-circle { background: var(--tip-accent-l); }
+  .tip-panel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .tip-panel-emoji { font-size: 1.1rem; }
+  .tip-panel-badge { font-size: 0.58rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .dark .tip-panel-badge { color: #B5A7BD; background: rgba(181,167,189,0.12); }
+  .light .tip-panel-badge { color: #8B5E2A; background: rgba(212,165,116,0.12); }
+  .tip-panel-close {
+    position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; border-radius: 50%; border: none;
+    font-size: 0.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .dark .tip-panel-close { background: rgba(181,167,189,0.08); color: #908B85; }
+  .light .tip-panel-close { background: rgba(212,165,116,0.08); color: #857F78; }
+  .tip-panel-text { font-size: 0.78rem; line-height: 1.55; font-weight: 600; padding-right: 20px; }
+  .dark .tip-panel-text { color: #E0DBE0; }
+  .light .tip-panel-text { color: #2D2A26; }
+  .tip-panel-dots { display: flex; gap: 6px; margin-top: 10px; }
+  .tip-panel-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .dark .tip-panel-dot.a { background: #B5A7BD; }
+  .dark .tip-panel-dot.i { background: rgba(181,167,189,0.15); }
+  .light .tip-panel-dot.a { background: var(--tip-accent-l); }
+  .light .tip-panel-dot.i { background: rgba(212,165,116,0.2); }
+  .tip-panel-swipe { font-size: 0.55rem; font-weight: 600; margin-top: 6px; }
+  .dark .tip-panel-swipe { color: var(--d-text-tertiary); }
+  .light .tip-panel-swipe { color: var(--l-text-tertiary); }
+
+  /* Prediction hero */
+  .pred { border-radius: 16px; padding: 16px 18px; position: relative; overflow: hidden; }
+  .dark .pred {
+    background: linear-gradient(165deg, rgba(166,141,200,0.14) 0%, rgba(166,141,200,0.05) 100%);
+    border: 1px solid rgba(166,141,200,0.18);
+    border-top: 2px solid rgba(166,141,200,0.35);
+  }
+  .light .pred {
+    background: linear-gradient(165deg, rgba(139,123,160,0.08) 0%, rgba(139,123,160,0.02) 100%);
+    border: 1px solid rgba(139,123,160,0.12);
+    border-top: 2px solid rgba(139,123,160,0.25);
+  }
+  .pred::before {
+    content: ''; position: absolute; top: -40px; right: -20px;
+    width: 120px; height: 120px; border-radius: 50%; pointer-events: none;
+  }
+  .dark .pred::before { background: radial-gradient(circle, rgba(166,141,200,0.1) 0%, transparent 65%); }
+  .light .pred::before { background: radial-gradient(circle, rgba(139,123,160,0.06) 0%, transparent 65%); }
+  .pred::after {
+    content: ''; position: absolute; bottom: -30px; left: -20px;
+    width: 80px; height: 80px; border-radius: 50%; pointer-events: none;
+  }
+  .dark .pred::after { background: radial-gradient(circle, rgba(166,141,200,0.05) 0%, transparent 70%); }
+  .light .pred::after { background: radial-gradient(circle, rgba(139,123,160,0.03) 0%, transparent 70%); }
+
+  .pred-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; position: relative; z-index: 1; }
+  .pred-lbl { font-size: 0.58rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+  .dark .pred-lbl { color: var(--d-sleep); }
+  .light .pred-lbl { color: var(--l-sleep); }
+  .pred-awake { font-size: 0.55rem; font-weight: 600; }
+  .dark .pred-awake { color: var(--d-text-tertiary); }
+  .light .pred-awake { color: var(--l-text-tertiary); }
+  .pred-main { font-size: 0.95rem; font-weight: 700; position: relative; z-index: 1; }
+  .light .pred-main { color: var(--l-text-primary); }
+  .pred-main strong { font-weight: 900; font-size: 1rem; }
+  .dark .pred-main strong { color: var(--d-sleep); }
+  .light .pred-main strong { color: var(--l-sleep); }
+  .pred-sub { font-size: 0.62rem; margin-top: 2px; position: relative; z-index: 1; }
+  .dark .pred-sub { color: var(--d-text-secondary); }
+  .light .pred-sub { color: var(--l-text-secondary); }
+  .seg { display: inline-flex; border-radius: 6px; overflow: hidden; margin-top: 8px; position: relative; z-index: 1; }
+  .dark .seg { background: rgba(255,255,255,0.04); }
+  .light .seg { background: rgba(0,0,0,0.04); }
+  .seg-b { font-family: 'Nunito'; font-size: 0.58rem; font-weight: 700; padding: 4px 10px; border: none; cursor: pointer; }
+  .dark .seg-b { background: transparent; color: var(--d-text-secondary); }
+  .light .seg-b { background: transparent; color: var(--l-text-secondary); }
+  .dark .seg-b.active { background: var(--d-sleep); color: white; }
+  .light .seg-b.active { background: var(--l-sleep); color: white; }
+
+  .section-gap { height: 24px; }
+
+  /* Grid cards with category tints */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card {
+    border-radius: 20px; padding: 14px; min-height: 120px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; border-left: 3px solid;
+  }
+  .dark .card-feed { background: linear-gradient(165deg, rgba(165,200,138,0.06) 0%, var(--d-card) 60%); }
+  .dark .card-sleep { background: linear-gradient(165deg, rgba(166,141,200,0.06) 0%, var(--d-card) 60%); }
+  .dark .card-diaper { background: linear-gradient(165deg, rgba(234,184,178,0.05) 0%, var(--d-card) 60%); }
+  .dark .card-tummy { background: linear-gradient(165deg, rgba(218,187,120,0.06) 0%, var(--d-card) 60%); }
+  .light .card-feed { background: linear-gradient(165deg, rgba(140,179,105,0.06) 0%, var(--l-card) 60%); }
+  .light .card-sleep { background: linear-gradient(165deg, rgba(139,123,160,0.06) 0%, var(--l-card) 60%); }
+  .light .card-diaper { background: linear-gradient(165deg, rgba(224,160,153,0.06) 0%, var(--l-card) 60%); }
+  .light .card-tummy { background: linear-gradient(165deg, rgba(201,165,92,0.06) 0%, var(--l-card) 60%); }
+  .light .card { box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+
+  .c-top { display: flex; align-items: center; gap: 5px; margin-bottom: 8px; }
+  .c-icon { font-size: 0.9rem; }
+  .c-lbl { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .c-val { font-size: 1rem; font-weight: 800; margin-bottom: 2px; }
+  .light .c-val { color: var(--l-text-primary); }
+  .c-sub { font-size: 0.65rem; }
+  .dark .c-sub { color: var(--d-text-secondary); }
+  .light .c-sub { color: var(--l-text-secondary); }
+  .c-btn {
+    position: absolute; bottom: 10px; right: 10px;
+    width: 28px; height: 28px; border-radius: 50%; border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 700; color: white; cursor: pointer;
+  }
+  .prog { height: 3px; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+  .dark .prog { background: rgba(255,255,255,0.05); }
+  .light .prog { background: rgba(0,0,0,0.05); }
+  .prog-f { height: 100%; border-radius: 2px; }
+  .bdg { display: inline-block; font-size: 0.55rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 3px; }
+  .dark .bdg { background: rgba(255,255,255,0.05); color: var(--d-text-secondary); }
+  .light .bdg { background: rgba(0,0,0,0.04); color: var(--l-text-secondary); }
+
+  /* Compact rows with category tints */
+  .list-rows { display: flex; flex-direction: column; gap: 6px; }
+  .list-row {
+    border-radius: 14px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px; border-left: 3px solid;
+  }
+  .dark .row-pump { background: linear-gradient(90deg, rgba(150,184,188,0.05) 0%, var(--d-card) 50%); }
+  .dark .row-growth { background: linear-gradient(90deg, rgba(136,190,176,0.05) 0%, var(--d-card) 50%); }
+  .dark .row-milestone { background: linear-gradient(90deg, rgba(218,187,120,0.05) 0%, var(--d-card) 50%); }
+  .dark .row-health { background: linear-gradient(90deg, rgba(224,155,133,0.05) 0%, var(--d-card) 50%); }
+  .light .row-pump { background: linear-gradient(90deg, rgba(123,163,168,0.05) 0%, var(--l-card) 50%); }
+  .light .row-growth { background: linear-gradient(90deg, rgba(106,171,156,0.05) 0%, var(--l-card) 50%); }
+  .light .row-milestone { background: linear-gradient(90deg, rgba(201,165,92,0.05) 0%, var(--l-card) 50%); }
+  .light .row-health { background: linear-gradient(90deg, rgba(212,131,107,0.05) 0%, var(--l-card) 50%); }
+  .light .list-row { box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+
+  .lr-icon { font-size: 0.85rem; flex-shrink: 0; }
+  .lr-info { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .lr-label { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+  .lr-val { font-size: 0.8rem; font-weight: 800; }
+  .light .lr-val { color: var(--l-text-primary); }
+  .lr-sub { font-size: 0.58rem; }
+  .dark .lr-sub { color: var(--d-text-secondary); }
+  .light .lr-sub { color: var(--l-text-secondary); }
+  .lr-btn {
+    width: 26px; height: 26px; border-radius: 50%; border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; font-weight: 700; color: white; cursor: pointer; flex-shrink: 0;
+  }
+
+  @media (max-width: 440px) { .phone { width: 100%; border-radius: 32px; } }
+</style>
+</head>
+<body>
+
+<h1>Refined v5</h1>
+<p class="page-sub">Real app colors, tummy→gold, category tints, dark + light</p>
+
+<!-- ===== DARK — Collapsed ===== -->
+<section class="section">
+  <p class="slabel" style="color:var(--d-sleep);">Dark — Collapsed</p>
+  <h2 class="stitle">Tips Available</h2>
+  <div class="phone dark">
+    <div class="notch"></div>
+    <div class="scroll">
+      <div class="hdr">
+        <div class="hdr-l"><div class="ava">👶</div><div><div class="nm">Emma</div><div class="ag">4 months old</div></div></div>
+        <div class="hdr-r"><button class="tip-toggle"><span>💡</span><span class="tip-dot"></span></button><div class="hi">🔔</div><div class="hi">⚙️</div></div>
+      </div>
+      <div class="pred">
+        <div class="pred-top"><span class="pred-lbl">Sleep prediction</span><span class="pred-awake">Awake 1h 28m</span></div>
+        <div class="pred-main">Nap time near <strong>11:15 AM</strong></div>
+        <div class="pred-sub">Based on Emma's recent sleep patterns</div>
+        <div class="seg"><button class="seg-b active">3-nap day</button><button class="seg-b">4-nap day</button></div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="grid">
+        <div class="card card-feed" style="border-left-color:var(--d-feed);"><div class="c-top"><span class="c-icon">🤱</span><span class="c-lbl" style="color:var(--d-feed);">Feeding</span></div><div><div class="c-val">L 12m R 8m</div><div class="c-sub">35 min ago · Next: R</div></div><button class="c-btn" style="background:var(--d-feed);">+</button></div>
+        <div class="card card-sleep" style="border-left-color:var(--d-sleep);"><div class="c-top"><span class="c-icon">😴</span><span class="c-lbl" style="color:var(--d-sleep);">Sleep</span></div><div><div class="c-val">2h 10m / 15h</div><div class="c-sub">14%</div><div class="prog"><div class="prog-f" style="width:14%;background:var(--d-sleep);"></div></div></div><button class="c-btn" style="background:var(--d-sleep);">+</button></div>
+        <div class="card card-diaper" style="border-left-color:var(--d-diaper);"><div class="c-top"><span class="c-icon">🚼</span><span class="c-lbl" style="color:var(--d-diaper);">Diaper</span></div><div><div class="c-val">Wet</div><div class="c-sub">1 hour ago</div><span class="bdg">4💧 today</span></div><button class="c-btn" style="background:var(--d-diaper);">+</button></div>
+        <div class="card card-tummy" style="border-left-color:var(--d-tummy);"><div class="c-top"><span class="c-icon">💪</span><span class="c-lbl" style="color:var(--d-tummy);">Tummy Time</span></div><div><div class="c-val">12 / 45 min</div><div class="c-sub">27%</div><div class="prog"><div class="prog-f" style="width:27%;background:var(--d-tummy);"></div></div></div><button class="c-btn" style="background:var(--d-tummy);">+</button></div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="list-rows">
+        <div class="list-row row-pump" style="border-left-color:var(--d-pump);"><span class="lr-icon">🫙</span><div class="lr-info"><span class="lr-label" style="color:var(--d-pump);">Pumping</span><span class="lr-val">120ml</span><span class="lr-sub">today</span></div><button class="lr-btn" style="background:var(--d-pump);">+</button></div>
+        <div class="list-row row-growth" style="border-left-color:var(--d-growth);"><span class="lr-icon">📏</span><div class="lr-info"><span class="lr-label" style="color:var(--d-growth);">Growth</span><span class="lr-val">6.2 kg</span><span class="lr-sub">↗ +200g · 12d ago</span></div><button class="lr-btn" style="background:var(--d-growth);">+</button></div>
+        <div class="list-row row-milestone" style="border-left-color:var(--d-milestone);"><span class="lr-icon">⭐</span><div class="lr-info"><span class="lr-label" style="color:var(--d-milestone);">Milestones</span><span class="lr-val">3 ⭐</span><span class="lr-sub">4 months</span></div><button class="lr-btn" style="background:var(--d-milestone);">+</button></div>
+        <div class="list-row row-health" style="border-left-color:var(--d-health);"><span class="lr-icon">💊</span><div class="lr-info"><span class="lr-label" style="color:var(--d-health);">Health</span><span class="lr-val">36.8°C</span><span class="lr-sub">2 days ago</span></div><button class="lr-btn" style="background:var(--d-health);">+</button></div>
+      </div>
+    </div>
+    <div class="tab-bar"><div class="tab active"><span class="tab-i">🏠</span>Home</div><div class="tab"><span class="tab-i">📋</span>Timeline</div><div class="tab"><span class="tab-i">📊</span>Stats</div></div>
+  </div>
+</section>
+
+<!-- ===== LIGHT — Collapsed ===== -->
+<section class="section">
+  <p class="slabel" style="color:var(--l-sleep);">Light — Collapsed</p>
+  <h2 class="stitle">Tips Available</h2>
+  <div class="phone light">
+    <div class="notch"></div>
+    <div class="scroll">
+      <div class="hdr">
+        <div class="hdr-l"><div class="ava">👶</div><div><div class="nm">Emma</div><div class="ag">4 months old</div></div></div>
+        <div class="hdr-r"><button class="tip-toggle"><span>💡</span><span class="tip-dot"></span></button><div class="hi">🔔</div><div class="hi">⚙️</div></div>
+      </div>
+      <div class="pred">
+        <div class="pred-top"><span class="pred-lbl">Sleep prediction</span><span class="pred-awake">Awake 1h 28m</span></div>
+        <div class="pred-main">Nap time near <strong>11:15 AM</strong></div>
+        <div class="pred-sub">Based on Emma's recent sleep patterns</div>
+        <div class="seg"><button class="seg-b active">3-nap day</button><button class="seg-b">4-nap day</button></div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="grid">
+        <div class="card card-feed" style="border-left-color:var(--l-feed);"><div class="c-top"><span class="c-icon">🤱</span><span class="c-lbl" style="color:var(--l-feed);">Feeding</span></div><div><div class="c-val">L 12m R 8m</div><div class="c-sub">35 min ago · Next: R</div></div><button class="c-btn" style="background:var(--l-feed);">+</button></div>
+        <div class="card card-sleep" style="border-left-color:var(--l-sleep);"><div class="c-top"><span class="c-icon">😴</span><span class="c-lbl" style="color:var(--l-sleep);">Sleep</span></div><div><div class="c-val">2h 10m / 15h</div><div class="c-sub">14%</div><div class="prog"><div class="prog-f" style="width:14%;background:var(--l-sleep);"></div></div></div><button class="c-btn" style="background:var(--l-sleep);">+</button></div>
+        <div class="card card-diaper" style="border-left-color:var(--l-diaper);"><div class="c-top"><span class="c-icon">🚼</span><span class="c-lbl" style="color:var(--l-diaper);">Diaper</span></div><div><div class="c-val">Wet</div><div class="c-sub">1 hour ago</div><span class="bdg">4💧 today</span></div><button class="c-btn" style="background:var(--l-diaper);">+</button></div>
+        <div class="card card-tummy" style="border-left-color:var(--l-tummy);"><div class="c-top"><span class="c-icon">💪</span><span class="c-lbl" style="color:var(--l-tummy);">Tummy Time</span></div><div><div class="c-val">12 / 45 min</div><div class="c-sub">27%</div><div class="prog"><div class="prog-f" style="width:27%;background:var(--l-tummy);"></div></div></div><button class="c-btn" style="background:var(--l-tummy);">+</button></div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="list-rows">
+        <div class="list-row row-pump" style="border-left-color:var(--l-pump);"><span class="lr-icon">🫙</span><div class="lr-info"><span class="lr-label" style="color:var(--l-pump);">Pumping</span><span class="lr-val">120ml</span><span class="lr-sub">today</span></div><button class="lr-btn" style="background:var(--l-pump);">+</button></div>
+        <div class="list-row row-growth" style="border-left-color:var(--l-growth);"><span class="lr-icon">📏</span><div class="lr-info"><span class="lr-label" style="color:var(--l-growth);">Growth</span><span class="lr-val">6.2 kg</span><span class="lr-sub">↗ +200g · 12d ago</span></div><button class="lr-btn" style="background:var(--l-growth);">+</button></div>
+        <div class="list-row row-milestone" style="border-left-color:var(--l-milestone);"><span class="lr-icon">⭐</span><div class="lr-info"><span class="lr-label" style="color:var(--l-milestone);">Milestones</span><span class="lr-val">3 ⭐</span><span class="lr-sub">4 months</span></div><button class="lr-btn" style="background:var(--l-milestone);">+</button></div>
+        <div class="list-row row-health" style="border-left-color:var(--l-health);"><span class="lr-icon">💊</span><div class="lr-info"><span class="lr-label" style="color:var(--l-health);">Health</span><span class="lr-val">36.8°C</span><span class="lr-sub">2 days ago</span></div><button class="lr-btn" style="background:var(--l-health);">+</button></div>
+      </div>
+    </div>
+    <div class="tab-bar"><div class="tab active"><span class="tab-i">🏠</span>Home</div><div class="tab"><span class="tab-i">📋</span>Timeline</div><div class="tab"><span class="tab-i">📊</span>Stats</div></div>
+  </div>
+</section>
+
+<!-- ===== DARK — Expanded ===== -->
+<section class="section">
+  <p class="slabel" style="color:var(--d-sleep);">Dark — Expanded Tips</p>
+  <h2 class="stitle">Tip Panel Open</h2>
+  <div class="phone dark">
+    <div class="notch"></div>
+    <div class="scroll">
+      <div class="hdr">
+        <div class="hdr-l"><div class="ava">👶</div><div><div class="nm">Emma</div><div class="ag">4 months old</div></div></div>
+        <div class="hdr-r"><button class="tip-toggle" style="background:rgba(224,185,144,0.2);box-shadow:0 0 12px rgba(212,165,116,0.15);">💡</button><div class="hi">🔔</div><div class="hi">⚙️</div></div>
+      </div>
+      <div class="tip-panel">
+        <div class="tip-panel-circle"></div>
+        <button class="tip-panel-close">×</button>
+        <div class="tip-panel-head"><span class="tip-panel-emoji">🧸</span><span class="tip-panel-badge">Play</span></div>
+        <div class="tip-panel-text">Try placing a colorful toy just out of reach during tummy time — it encourages reaching and strengthens arm muscles.</div>
+        <div class="tip-panel-dots"><div class="tip-panel-dot a"></div><div class="tip-panel-dot i"></div><div class="tip-panel-dot i"></div></div>
+        <div class="tip-panel-swipe">Swipe for more tips</div>
+      </div>
+      <div class="pred">
+        <div class="pred-top"><span class="pred-lbl">Sleep prediction</span><span class="pred-awake">Awake 1h 28m</span></div>
+        <div class="pred-main">Nap time near <strong>11:15 AM</strong></div>
+        <div class="pred-sub">Based on Emma's recent sleep patterns</div>
+        <div class="seg"><button class="seg-b active">3-nap day</button><button class="seg-b">4-nap day</button></div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="grid">
+        <div class="card card-feed" style="border-left-color:var(--d-feed);"><div class="c-top"><span class="c-icon">🤱</span><span class="c-lbl" style="color:var(--d-feed);">Feeding</span></div><div><div class="c-val">L 12m R 8m</div><div class="c-sub">35 min ago · Next: R</div></div><button class="c-btn" style="background:var(--d-feed);">+</button></div>
+        <div class="card card-sleep" style="border-left-color:var(--d-sleep);"><div class="c-top"><span class="c-icon">😴</span><span class="c-lbl" style="color:var(--d-sleep);">Sleep</span></div><div><div class="c-val">2h 10m / 15h</div><div class="c-sub">14%</div><div class="prog"><div class="prog-f" style="width:14%;background:var(--d-sleep);"></div></div></div><button class="c-btn" style="background:var(--d-sleep);">+</button></div>
+        <div class="card card-diaper" style="border-left-color:var(--d-diaper);"><div class="c-top"><span class="c-icon">🚼</span><span class="c-lbl" style="color:var(--d-diaper);">Diaper</span></div><div><div class="c-val">Wet</div><div class="c-sub">1 hour ago</div><span class="bdg">4💧 today</span></div><button class="c-btn" style="background:var(--d-diaper);">+</button></div>
+        <div class="card card-tummy" style="border-left-color:var(--d-tummy);"><div class="c-top"><span class="c-icon">💪</span><span class="c-lbl" style="color:var(--d-tummy);">Tummy Time</span></div><div><div class="c-val">12 / 45 min</div><div class="c-sub">27%</div><div class="prog"><div class="prog-f" style="width:27%;background:var(--d-tummy);"></div></div></div><button class="c-btn" style="background:var(--d-tummy);">+</button></div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="list-rows">
+        <div class="list-row row-pump" style="border-left-color:var(--d-pump);"><span class="lr-icon">🫙</span><div class="lr-info"><span class="lr-label" style="color:var(--d-pump);">Pumping</span><span class="lr-val">120ml</span><span class="lr-sub">today</span></div><button class="lr-btn" style="background:var(--d-pump);">+</button></div>
+        <div class="list-row row-growth" style="border-left-color:var(--d-growth);"><span class="lr-icon">📏</span><div class="lr-info"><span class="lr-label" style="color:var(--d-growth);">Growth</span><span class="lr-val">6.2 kg</span><span class="lr-sub">↗ +200g · 12d ago</span></div><button class="lr-btn" style="background:var(--d-growth);">+</button></div>
+        <div class="list-row row-milestone" style="border-left-color:var(--d-milestone);"><span class="lr-icon">⭐</span><div class="lr-info"><span class="lr-label" style="color:var(--d-milestone);">Milestones</span><span class="lr-val">3 ⭐</span><span class="lr-sub">4 months</span></div><button class="lr-btn" style="background:var(--d-milestone);">+</button></div>
+        <div class="list-row row-health" style="border-left-color:var(--d-health);"><span class="lr-icon">💊</span><div class="lr-info"><span class="lr-label" style="color:var(--d-health);">Health</span><span class="lr-val">36.8°C</span><span class="lr-sub">2 days ago</span></div><button class="lr-btn" style="background:var(--d-health);">+</button></div>
+      </div>
+    </div>
+    <div class="tab-bar"><div class="tab active"><span class="tab-i">🏠</span>Home</div><div class="tab"><span class="tab-i">📋</span>Timeline</div><div class="tab"><span class="tab-i">📊</span>Stats</div></div>
+  </div>
+</section>
+
+<!-- ===== LIGHT — Expanded ===== -->
+<section class="section">
+  <p class="slabel" style="color:var(--l-sleep);">Light — Expanded Tips</p>
+  <h2 class="stitle">Tip Panel Open</h2>
+  <div class="phone light">
+    <div class="notch"></div>
+    <div class="scroll">
+      <div class="hdr">
+        <div class="hdr-l"><div class="ava">👶</div><div><div class="nm">Emma</div><div class="ag">4 months old</div></div></div>
+        <div class="hdr-r"><button class="tip-toggle" style="background:rgba(212,165,116,0.15);box-shadow:0 0 12px rgba(212,165,116,0.1);">💡</button><div class="hi">🔔</div><div class="hi">⚙️</div></div>
+      </div>
+      <div class="tip-panel">
+        <div class="tip-panel-circle"></div>
+        <button class="tip-panel-close">×</button>
+        <div class="tip-panel-head"><span class="tip-panel-emoji">🧸</span><span class="tip-panel-badge">Play</span></div>
+        <div class="tip-panel-text">Try placing a colorful toy just out of reach during tummy time — it encourages reaching and strengthens arm muscles.</div>
+        <div class="tip-panel-dots"><div class="tip-panel-dot a"></div><div class="tip-panel-dot i"></div><div class="tip-panel-dot i"></div></div>
+        <div class="tip-panel-swipe">Swipe for more tips</div>
+      </div>
+      <div class="pred">
+        <div class="pred-top"><span class="pred-lbl">Sleep prediction</span><span class="pred-awake">Awake 1h 28m</span></div>
+        <div class="pred-main">Nap time near <strong>11:15 AM</strong></div>
+        <div class="pred-sub">Based on Emma's recent sleep patterns</div>
+        <div class="seg"><button class="seg-b active">3-nap day</button><button class="seg-b">4-nap day</button></div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="grid">
+        <div class="card card-feed" style="border-left-color:var(--l-feed);"><div class="c-top"><span class="c-icon">🤱</span><span class="c-lbl" style="color:var(--l-feed);">Feeding</span></div><div><div class="c-val">L 12m R 8m</div><div class="c-sub">35 min ago · Next: R</div></div><button class="c-btn" style="background:var(--l-feed);">+</button></div>
+        <div class="card card-sleep" style="border-left-color:var(--l-sleep);"><div class="c-top"><span class="c-icon">😴</span><span class="c-lbl" style="color:var(--l-sleep);">Sleep</span></div><div><div class="c-val">2h 10m / 15h</div><div class="c-sub">14%</div><div class="prog"><div class="prog-f" style="width:14%;background:var(--l-sleep);"></div></div></div><button class="c-btn" style="background:var(--l-sleep);">+</button></div>
+        <div class="card card-diaper" style="border-left-color:var(--l-diaper);"><div class="c-top"><span class="c-icon">🚼</span><span class="c-lbl" style="color:var(--l-diaper);">Diaper</span></div><div><div class="c-val">Wet</div><div class="c-sub">1 hour ago</div><span class="bdg">4💧 today</span></div><button class="c-btn" style="background:var(--l-diaper);">+</button></div>
+        <div class="card card-tummy" style="border-left-color:var(--l-tummy);"><div class="c-top"><span class="c-icon">💪</span><span class="c-lbl" style="color:var(--l-tummy);">Tummy Time</span></div><div><div class="c-val">12 / 45 min</div><div class="c-sub">27%</div><div class="prog"><div class="prog-f" style="width:27%;background:var(--l-tummy);"></div></div></div><button class="c-btn" style="background:var(--l-tummy);">+</button></div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="list-rows">
+        <div class="list-row row-pump" style="border-left-color:var(--l-pump);"><span class="lr-icon">🫙</span><div class="lr-info"><span class="lr-label" style="color:var(--l-pump);">Pumping</span><span class="lr-val">120ml</span><span class="lr-sub">today</span></div><button class="lr-btn" style="background:var(--l-pump);">+</button></div>
+        <div class="list-row row-growth" style="border-left-color:var(--l-growth);"><span class="lr-icon">📏</span><div class="lr-info"><span class="lr-label" style="color:var(--l-growth);">Growth</span><span class="lr-val">6.2 kg</span><span class="lr-sub">↗ +200g · 12d ago</span></div><button class="lr-btn" style="background:var(--l-growth);">+</button></div>
+        <div class="list-row row-milestone" style="border-left-color:var(--l-milestone);"><span class="lr-icon">⭐</span><div class="lr-info"><span class="lr-label" style="color:var(--l-milestone);">Milestones</span><span class="lr-val">3 ⭐</span><span class="lr-sub">4 months</span></div><button class="lr-btn" style="background:var(--l-milestone);">+</button></div>
+        <div class="list-row row-health" style="border-left-color:var(--l-health);"><span class="lr-icon">💊</span><div class="lr-info"><span class="lr-label" style="color:var(--l-health);">Health</span><span class="lr-val">36.8°C</span><span class="lr-sub">2 days ago</span></div><button class="lr-btn" style="background:var(--l-health);">+</button></div>
+      </div>
+    </div>
+    <div class="tab-bar"><div class="tab active"><span class="tab-i">🏠</span>Home</div><div class="tab"><span class="tab-i">📋</span>Timeline</div><div class="tab"><span class="tab-i">📊</span>Stats</div></div>
+  </div>
+</section>
+
+</body>
+</html>
