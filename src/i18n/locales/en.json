@@ -719,7 +719,9 @@
       "health": "Health",
       "play": "Play",
       "safety": "Safety"
-    }
+    },
+    "discoveryMessage": "Get daily parenting tips tailored to {{babyName}}'s age — from sleep to feeding to play.",
+    "discoveryEnable": "Enable Tips"
   },
   "widget": {
     "title": "Widget Configuration",
@@ -864,7 +866,11 @@
     "filterGrowth": "Growth",
     "filterTummyTime": "Tummy Time",
     "summary": "Summary",
-    "sleepSummaryInfo": "Totals are calculated from {{hour}}, based on your day start time setting"
+    "jumpToDate": "Jump to date",
+    "sleepSummaryInfo": "Totals are calculated from {{hour}}, based on your day start time setting",
+    "returnToToday": "Return to today",
+    "viewingDaysAgo_one": "Viewing {{count}} day ago",
+    "viewingDaysAgo_other": "Viewing {{count}} days ago"
   },
   "sync": {
     "synced": "Synced",

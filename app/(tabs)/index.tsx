@@ -15,6 +15,8 @@ import {
   BirthdayCelebrationModal,
 } from "@/components";
 import { TipCarousel } from "@/components/TipCarousel";
+import { TipDiscoveryBanner } from "@/components/TipDiscoveryBanner";
+import { getTipsEnabled, setTipsEnabled, getDiscoveryBannerDismissed, setDiscoveryBannerDismissed } from "@/services/tip-storage";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useDashboardConfig, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
 import { Alert } from "react-native";
 import { timeSince, hoursSince, formatDuration } from "@/utils/time";
@@ -91,10 +93,18 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [tipsEnabled, setTipsEnabledState] = useState<boolean | null>(null);
+  const [discoveryDismissed, setDiscoveryDismissedState] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (isFocused) {
       refreshLocks();
+      Promise.all([getTipsEnabled(), getDiscoveryBannerDismissed()]).then(
+        ([enabled, dismissed]) => {
+          setTipsEnabledState(enabled);
+          setDiscoveryDismissedState(dismissed);
+        }
+      );
     }
   }, [isFocused, refreshLocks]);
 
@@ -108,6 +118,25 @@ export default function HomeScreen() {
       }
     });
     return () => subscription.remove();
+  }, []);
+
+  const totalEntries = feedings.length + sleeps.length + diapers.length
+    + pumpings.length + tummyTimes.length + measurements.length + healthEntries.length;
+
+  const showDiscoveryBanner = tipsEnabled === false
+    && discoveryDismissed === false
+    && totalEntries >= 10;
+
+  const handleEnableTips = useCallback(async () => {
+    await setTipsEnabled(true);
+    await setDiscoveryBannerDismissed();
+    setTipsEnabledState(true);
+    setDiscoveryDismissedState(true);
+  }, []);
+
+  const handleDismissDiscovery = useCallback(async () => {
+    await setDiscoveryBannerDismissed();
+    setDiscoveryDismissedState(true);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -839,10 +868,18 @@ export default function HomeScreen() {
           )
         }
       >
-        <TipCarousel
-          babyId={selectedBaby?.id}
-          birthDate={selectedBaby?.birthDate ? new Date(selectedBaby.birthDate) : undefined}
-        />
+        {tipsEnabled ? (
+          <TipCarousel
+            babyId={selectedBaby?.id}
+            birthDate={selectedBaby?.birthDate ? new Date(selectedBaby.birthDate) : undefined}
+          />
+        ) : showDiscoveryBanner ? (
+          <TipDiscoveryBanner
+            babyName={selectedBaby?.name ?? ""}
+            onEnable={handleEnableTips}
+            onDismiss={handleDismissDiscovery}
+          />
+        ) : null}
 
         <View className={isAndroid ? "gap-2.5" : "gap-3"}>
           {cardRows.map((row, rowIndex) => (

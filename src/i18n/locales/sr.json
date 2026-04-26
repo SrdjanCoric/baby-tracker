@@ -740,7 +740,9 @@
       "health": "Zdravlje",
       "play": "Igra",
       "safety": "Bezbednost"
-    }
+    },
+    "discoveryMessage": "Dobijajte dnevne savete prilagođene uzrastu deteta {{babyName}} — od spavanja do ishrane i igre.",
+    "discoveryEnable": "Uključi savete"
   },
   "widget": {
     "title": "Pode\u0161avanje vid\u017eeta",
@@ -889,7 +891,11 @@
     "filterGrowth": "Rast",
     "filterTummyTime": "Vreme na stomaku",
     "summary": "Rezime",
-    "sleepSummaryInfo": "Ukupno se računa od {{hour}}, na osnovu podešavanja početka dana"
+    "jumpToDate": "Idi na datum",
+    "sleepSummaryInfo": "Ukupno se računa od {{hour}}, na osnovu podešavanja početka dana",
+    "returnToToday": "Povratak na danas",
+    "viewingDaysAgo_one": "Gledate pre {{count}} dan",
+    "viewingDaysAgo_other": "Gledate pre {{count}} dana"
   },
   "sync": {
     "synced": "Sinhronizovano",

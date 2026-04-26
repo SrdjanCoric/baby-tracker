@@ -723,7 +723,9 @@
       "health": "Salud",
       "play": "Juego",
       "safety": "Seguridad"
-    }
+    },
+    "discoveryMessage": "Recibe consejos diarios adaptados a la edad de {{babyName}} — desde el sueño hasta la alimentación y el juego.",
+    "discoveryEnable": "Activar consejos"
   },
   "widget": {
     "title": "Configuraci\u00f3n de widgets",
@@ -868,7 +870,11 @@
     "filterGrowth": "Crecimiento",
     "filterTummyTime": "Tiempo boca abajo",
     "summary": "Resumen",
-    "sleepSummaryInfo": "Los totales se calculan desde las {{hour}}, según la configuración de inicio del día"
+    "jumpToDate": "Ir a fecha",
+    "sleepSummaryInfo": "Los totales se calculan desde las {{hour}}, según la configuración de inicio del día",
+    "returnToToday": "Volver a hoy",
+    "viewingDaysAgo_one": "Viendo hace {{count}} día",
+    "viewingDaysAgo_other": "Viendo hace {{count}} días"
   },
   "sync": {
     "synced": "Sincronizado",
