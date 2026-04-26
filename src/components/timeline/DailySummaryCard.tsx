@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { View, Text, Pressable, Platform } from "react-native";
 import { useColorScheme } from "nativewind";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -15,7 +15,8 @@ interface DailySummaryCardProps {
   dayStartHour?: number;
   timeFormat?: TimeFormat;
   t: (key: string, options?: Record<string, unknown>) => string;
-  onDateChange?: (date: Date) => void;
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
 }
 
 export function DailySummaryCard({
@@ -25,15 +26,11 @@ export function DailySummaryCard({
   dayStartHour = 6,
   timeFormat = "12h",
   t,
+  selectedDate,
   onDateChange,
 }: DailySummaryCardProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
 
@@ -42,14 +39,15 @@ export function DailySummaryCard({
     [selectedDate, allData, dayStartHour]
   );
 
-  const [pickerKey, setPickerKey] = useState(0);
+  const [pickerDate, setPickerDate] = useState(selectedDate);
 
   const handleDatePress = useCallback(() => {
-    setPickerKey(prev => prev + 1);
-    setShowDatePicker(true);
-  }, []);
-
-  const pendingDateRef = useRef<Date | null>(null);
+    setPickerDate(selectedDate);
+    setShowDatePicker(false);
+    requestAnimationFrame(() => {
+      setShowDatePicker(true);
+    });
+  }, [selectedDate]);
 
   const handleDateChange = useCallback(
     (_event: DateTimePickerEvent, date?: Date) => {
@@ -58,31 +56,26 @@ export function DailySummaryCard({
         if (date) {
           const normalized = new Date(date);
           normalized.setHours(0, 0, 0, 0);
-          setSelectedDate(normalized);
-          onDateChange?.(normalized);
+          onDateChange(normalized);
         }
       } else if (date) {
-        pendingDateRef.current = date;
+        setPickerDate(date);
       }
     },
     [onDateChange]
   );
 
   const handleCancel = useCallback(() => {
-    pendingDateRef.current = null;
+    setPickerDate(selectedDate);
     setShowDatePicker(false);
-  }, []);
+  }, [selectedDate]);
 
   const handleDone = useCallback(() => {
     setShowDatePicker(false);
-    if (pendingDateRef.current) {
-      const normalized = new Date(pendingDateRef.current);
-      normalized.setHours(0, 0, 0, 0);
-      setSelectedDate(normalized);
-      onDateChange?.(normalized);
-      pendingDateRef.current = null;
-    }
-  }, [onDateChange]);
+    const normalized = new Date(pickerDate);
+    normalized.setHours(0, 0, 0, 0);
+    onDateChange(normalized);
+  }, [onDateChange, pickerDate]);
 
   const minDate = useMemo(() => {
     if (!birthDate) return undefined;
@@ -104,8 +97,108 @@ export function DailySummaryCard({
     return selectedDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   }, [selectedDate, t]);
 
+  const primaryColor = isDark ? ACTION_COLORS.dark.primary : ACTION_COLORS.light.primary;
+
   if (filter === "all") {
-    return null;
+    return (
+      <View
+        className="mx-4 mt-3 mb-1 rounded-xl p-3"
+        style={{
+          backgroundColor: isDark ? SURFACE_COLORS.dark.card : SURFACE_COLORS.light.card,
+        }}
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center">
+            <Text className="text-base mr-2">📅</Text>
+            <Text
+              className="text-sm font-semibold"
+              style={{ color: isDark ? CONTENT_COLORS.dark.secondary : CONTENT_COLORS.light.secondary }}
+            >
+              {t("timeline.jumpToDate")}
+            </Text>
+          </View>
+          <Pressable
+            onPress={handleDatePress}
+            className="flex-row items-center py-1 px-2 rounded-lg active:opacity-70"
+            accessibilityRole="button"
+            accessibilityLabel={`${t("timeline.selectDate")}, ${dateLabel}`}
+          >
+            <Text
+              className="text-sm font-semibold"
+              style={{ color: primaryColor }}
+            >
+              {dateLabel}
+            </Text>
+            <Text
+              className="ml-1 text-xs"
+              style={{ color: primaryColor }}
+            >
+              ▼
+            </Text>
+          </Pressable>
+        </View>
+
+        {showDatePicker && Platform.OS === "android" && (
+          <DateTimePicker
+            value={pickerDate}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+            minimumDate={minDate}
+            maximumDate={maxDate}
+          />
+        )}
+
+        {showDatePicker && Platform.OS === "ios" && (
+          <View
+            style={{
+              backgroundColor: isDark
+                ? SURFACE_COLORS.dark.card
+                : SURFACE_COLORS.light.card,
+              borderRadius: 12,
+              marginTop: 8,
+            }}
+          >
+            <DateTimePicker
+              value={pickerDate}
+              mode="date"
+              display="spinner"
+              onChange={handleDateChange}
+              minimumDate={minDate}
+              maximumDate={maxDate}
+            />
+            <View className="flex-row justify-between px-4 py-2 border-t border-border dark:border-border-dark">
+              <Pressable
+                onPress={handleCancel}
+                className="py-2 px-4"
+                accessibilityRole="button"
+                accessibilityLabel={t("common.cancel")}
+              >
+                <Text
+                  className="text-base"
+                  style={{ color: isDark ? CONTENT_COLORS.dark.secondary : CONTENT_COLORS.light.secondary }}
+                >
+                  {t("common.cancel")}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleDone}
+                className="py-2 px-4"
+                accessibilityRole="button"
+                accessibilityLabel={t("common.done")}
+              >
+                <Text
+                  className="font-semibold text-base"
+                  style={{ color: primaryColor }}
+                >
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </View>
+    );
   }
 
   const getSummaryContent = () => {
@@ -230,7 +323,6 @@ export function DailySummaryCard({
   const config = ACTIVITY_CONFIG[filter as ActivityType];
   const bgColor = isDark ? config.mutedBgDark : config.mutedBg;
   const accentColor = config.accentColor;
-  const primaryColor = isDark ? ACTION_COLORS.dark.primary : ACTION_COLORS.light.primary;
 
   return (
     <View
@@ -317,7 +409,7 @@ export function DailySummaryCard({
 
       {showDatePicker && Platform.OS === "android" && (
         <DateTimePicker
-          value={selectedDate}
+          value={pickerDate}
           mode="date"
           display="default"
           onChange={handleDateChange}
@@ -337,8 +429,7 @@ export function DailySummaryCard({
           }}
         >
           <DateTimePicker
-            key={pickerKey}
-            value={selectedDate}
+            value={pickerDate}
             mode="date"
             display="spinner"
             onChange={handleDateChange}

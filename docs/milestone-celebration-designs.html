@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Milestone Celebration UI — 5 Design Directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0d0d1a;
+    --bg-page: #111122;
+    --phone-bg: #1a1a2e;
+    --card-bg: #252540;
+    --card-bg-light: #2e2e4a;
+    --gold: #FFD700;
+    --gold-soft: #FFC94D;
+    --gold-dim: rgba(255, 215, 0, 0.15);
+    --green: #4CAF50;
+    --green-soft: #66BB6A;
+    --purple: #BB86FC;
+    --purple-soft: #D4AAFF;
+    --text-primary: #F0EAF8;
+    --text-secondary: #9E95B0;
+    --text-muted: #6B6280;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Nunito', sans-serif;
+    padding: 40px 20px 80px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--gold), var(--purple-soft));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .page-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 60px;
+    font-weight: 400;
+  }
+
+  .design-section {
+    max-width: 500px;
+    margin: 0 auto 80px;
+  }
+
+  .design-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .design-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .design-desc {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  /* Phone Frame */
+  .phone-frame {
+    width: 390px;
+    height: 760px;
+    margin: 0 auto;
+    border-radius: 44px;
+    border: 3px solid #3a3a55;
+    background: var(--phone-bg);
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04),
+      0 30px 80px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .phone-notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 34px;
+    background: #111;
+    border-radius: 0 0 20px 20px;
+    z-index: 100;
+  }
+
+  .phone-notch::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 6px;
+    background: #222;
+    border-radius: 3px;
+  }
+
+  .phone-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ========================================
+     DESIGN 1: Full Celebration Modal
+     ======================================== */
+
+  .d1-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 26, 0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+  }
+
+  /* Confetti */
+  .confetti-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    animation: confetti-fall linear infinite;
+    opacity: 0.9;
+  }
+
+  @keyframes confetti-fall {
+    0% { transform: translateY(-20px) rotate(0deg) scale(1); opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(780px) rotate(720deg) scale(0.5); opacity: 0; }
+  }
+
+  .d1-emoji-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, transparent 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    animation: d1-pulse 2s ease-in-out infinite;
+    margin-bottom: 28px;
+  }
+
+  .d1-emoji-ring::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    opacity: 0.3;
+    animation: d1-ring-expand 2s ease-out infinite;
+  }
+
+  @keyframes d1-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  @keyframes d1-ring-expand {
+    0% { inset: -4px; opacity: 0.5; }
+    100% { inset: -30px; opacity: 0; }
+  }
+
+  .d1-emoji {
+    font-size: 56px;
+    filter: drop-shadow(0 4px 20px rgba(255, 215, 0, 0.4));
+  }
+
+  .d1-congrats {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+    animation: d1-fade-in 0.8s ease-out 0.3s both;
+  }
+
+  .d1-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    animation: d1-fade-in 0.8s ease-out 0.5s both;
+  }
+
+  .d1-note {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    text-align: center;
+    line-height: 1.6;
+    max-width: 300px;
+    margin-bottom: 36px;
+    animation: d1-fade-in 0.8s ease-out 0.7s both;
+  }
+
+  @keyframes d1-fade-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .d1-btn {
+    background: linear-gradient(135deg, var(--gold), #FFAA00);
+    color: #1a1a2e;
+    border: none;
+    padding: 16px 48px;
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+    animation: d1-fade-in 0.8s ease-out 0.9s both;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .d1-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(255, 215, 0, 0.4);
+  }
+
+  /* Stars */
+  .d1-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .d1-star {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: d1-twinkle 2s ease-in-out infinite;
+  }
+
+  @keyframes d1-twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  /* ========================================
+     DESIGN 2: Elegant Card Modal
+     ======================================== */
+
+  .d2-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 26, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+  }
+
+  .d2-card {
+    width: 100%;
+    background: linear-gradient(165deg, #2a2a48 0%, #1e1e38 100%);
+    border-radius: 28px;
+    padding: 40px 28px 32px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(187, 134, 252, 0.15);
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.5),
+      0 0 80px rgba(187, 134, 252, 0.06);
+  }
+
+  .d2-card::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(187, 134, 252, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .d2-card::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: -40px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .d2-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  .d2-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(187,134,252,0.15), rgba(255,215,0,0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    position: relative;
+    animation: d2-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes d2-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(187,134,252,0.1); }
+    50% { box-shadow: 0 0 40px rgba(187,134,252,0.2); }
+  }
+
+  .d2-icon-wrap .emoji { font-size: 38px; }
+
+  .d2-badge {
+    display: inline-block;
+    background: rgba(255, 215, 0, 0.12);
+    color: var(--gold-soft);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+
+  .d2-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .d2-divider {
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--purple), var(--gold));
+    margin: 0 auto 16px;
+    border-radius: 1px;
+  }
+
+  .d2-note {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    text-align: center;
+    line-height: 1.65;
+    margin-bottom: 28px;
+  }
+
+  .d2-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(135deg, rgba(187,134,252,0.2), rgba(187,134,252,0.08));
+    color: var(--purple-soft);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .d2-btn:hover {
+    background: linear-gradient(135deg, rgba(187,134,252,0.3), rgba(187,134,252,0.15));
+  }
+
+  /* ========================================
+     DESIGN 3: Tiered System
+     ======================================== */
+
+  .d3-phone-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: var(--phone-bg);
+  }
+
+  /* Minor: Toast */
+  .d3-toast {
+    position: absolute;
+    top: 54px;
+    left: 16px;
+    right: 16px;
+    background: linear-gradient(135deg, #2a3a2a, #253025);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: d3-slide-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    z-index: 10;
+  }
+
+  @keyframes d3-slide-in {
+    from { transform: translateY(-100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .d3-toast-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(76, 175, 80, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .d3-toast-content { flex: 1; }
+
+  .d3-toast-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--green-soft);
+    margin-bottom: 2px;
+  }
+
+  .d3-toast-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .d3-toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 16px;
+    right: 16px;
+    height: 3px;
+    border-radius: 0 0 16px 16px;
+    background: rgba(76, 175, 80, 0.1);
+    overflow: hidden;
+  }
+
+  .d3-toast-progress::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: var(--green);
+    animation: d3-progress 4s linear forwards;
+    border-radius: 2px;
+  }
+
+  @keyframes d3-progress {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+
+  /* Divider label */
+  .d3-label-minor, .d3-label-major {
+    position: absolute;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .d3-label-minor {
+    top: 140px;
+    left: 16px;
+    color: var(--green);
+  }
+
+  .d3-label-major {
+    top: 180px;
+    left: 16px;
+    color: var(--gold);
+  }
+
+  /* Major: Modal */
+  .d3-modal-overlay {
+    position: absolute;
+    top: 210px;
+    left: 16px;
+    right: 16px;
+    bottom: 40px;
+    background: linear-gradient(170deg, #2a2845, #1e1c35);
+    border-radius: 24px;
+    padding: 32px 24px 24px;
+    border: 1px solid rgba(255, 215, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  }
+
+  .d3-modal-sparkle {
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .d3-modal-emoji {
+    font-size: 48px;
+    margin-bottom: 16px;
+    animation: d3-bounce 1s ease-out;
+    filter: drop-shadow(0 4px 12px rgba(255,215,0,0.3));
+  }
+
+  @keyframes d3-bounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  .d3-modal-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .d3-modal-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .d3-modal-note {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    flex: 1;
+  }
+
+  .d3-modal-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, var(--gold), #FFAA00);
+    color: #1a1a2e;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .d3-vs-badge {
+    position: absolute;
+    top: 174px;
+    right: 20px;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  /* ========================================
+     DESIGN 4: Story-style
+     ======================================== */
+
+  .d4-story {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #1a1040 0%, #0f1a3d 30%, #162040 60%, #1a1040 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 32px 50px;
+    overflow: hidden;
+  }
+
+  /* Ambient orbs */
+  .d4-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    animation: d4-drift 8s ease-in-out infinite;
+  }
+
+  .d4-orb-1 {
+    width: 200px; height: 200px;
+    background: rgba(187, 134, 252, 0.12);
+    top: 10%; left: -20%;
+  }
+
+  .d4-orb-2 {
+    width: 180px; height: 180px;
+    background: rgba(255, 215, 0, 0.08);
+    bottom: 15%; right: -15%;
+    animation-delay: -4s;
+  }
+
+  .d4-orb-3 {
+    width: 120px; height: 120px;
+    background: rgba(100, 180, 255, 0.08);
+    top: 40%; right: 10%;
+    animation-delay: -2s;
+  }
+
+  @keyframes d4-drift {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(10px, -15px); }
+    66% { transform: translate(-8px, 10px); }
+  }
+
+  /* Sparkles */
+  .d4-sparkle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: white;
+    border-radius: 50%;
+    animation: d4-sparkle-anim 3s ease-in-out infinite;
+  }
+
+  @keyframes d4-sparkle-anim {
+    0%, 100% { opacity: 0; transform: scale(0); }
+    50% { opacity: 0.8; transform: scale(1); }
+  }
+
+  /* Progress bar at top */
+  .d4-progress-bar {
+    position: absolute;
+    top: 50px;
+    left: 20px;
+    right: 20px;
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+  }
+
+  .d4-progress-bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 65%;
+    height: 100%;
+    background: rgba(255,255,255,0.5);
+    border-radius: 2px;
+  }
+
+  .d4-emoji-large {
+    font-size: 72px;
+    margin-bottom: 32px;
+    animation: d4-float 4s ease-in-out infinite;
+    filter: drop-shadow(0 8px 24px rgba(255, 215, 0, 0.25));
+    position: relative;
+    z-index: 2;
+  }
+
+  @keyframes d4-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .d4-achievement-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .d4-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .d4-note {
+    color: rgba(240, 234, 248, 0.7);
+    font-size: 0.95rem;
+    text-align: center;
+    line-height: 1.7;
+    max-width: 300px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .d4-tap-hint {
+    position: absolute;
+    bottom: 30px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 2;
+    animation: d4-hint-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes d4-hint-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
+  /* ========================================
+     DESIGN 5: Gamified Achievement
+     ======================================== */
+
+  .d5-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 26, 0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .d5-card {
+    width: 100%;
+    background: linear-gradient(170deg, #262645, #1c1c35);
+    border-radius: 24px;
+    padding: 32px 24px 24px;
+    position: relative;
+    border: 1px solid rgba(255,215,0,0.1);
+    overflow: hidden;
+  }
+
+  .d5-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--green), var(--gold));
+    background-size: 200% 100%;
+    animation: d5-shimmer 3s linear infinite;
+  }
+
+  @keyframes d5-shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  .d5-unlocked-label {
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    animation: d5-fade-down 0.6s ease-out 0.2s both;
+  }
+
+  @keyframes d5-fade-down {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Badge */
+  .d5-badge-container {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 24px;
+    position: relative;
+    animation: d5-badge-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  @keyframes d5-badge-appear {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .d5-badge {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #3a3660, #2a2548);
+    border: 3px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    box-shadow:
+      0 0 30px rgba(255,215,0,0.15),
+      inset 0 2px 4px rgba(255,255,255,0.1);
+    position: relative;
+  }
+
+  .d5-badge::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 215, 0, 0.2);
+    animation: d5-rotate 20s linear infinite;
+  }
+
+  @keyframes d5-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .d5-badge-shine {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent);
+    border-radius: 50%;
+  }
+
+  .d5-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 8px;
+    animation: d5-fade-down 0.6s ease-out 0.6s both;
+  }
+
+  .d5-note {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    animation: d5-fade-down 0.6s ease-out 0.8s both;
+  }
+
+  /* Next milestone progress */
+  .d5-next {
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    animation: d5-fade-down 0.6s ease-out 1s both;
+  }
+
+  .d5-next-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .d5-next-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .d5-next-target {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--purple-soft);
+  }
+
+  .d5-progress-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .d5-progress-fill {
+    height: 100%;
+    width: 75%;
+    background: linear-gradient(90deg, var(--purple), var(--gold));
+    border-radius: 3px;
+    animation: d5-fill 1.5s ease-out 1.2s both;
+  }
+
+  @keyframes d5-fill {
+    from { width: 0%; }
+    to { width: 75%; }
+  }
+
+  /* Achievement count */
+  .d5-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    animation: d5-fade-down 0.6s ease-out 1.1s both;
+  }
+
+  .d5-count-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+
+  .d5-count-dot.empty {
+    background: rgba(255,255,255,0.08);
+  }
+
+  .d5-count-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  .d5-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,215,0,0.25);
+    background: transparent;
+    color: var(--gold-soft);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    animation: d5-fade-down 0.6s ease-out 1.3s both;
+  }
+
+  .d5-btn:hover {
+    background: rgba(255,215,0,0.08);
+    border-color: rgba(255,215,0,0.4);
+  }
+
+  /* Responsive */
+  @media (max-width: 440px) {
+    .phone-frame {
+      width: 100%;
+      height: 700px;
+      border-radius: 32px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>Milestone Celebrations</h1>
+<p class="page-subtitle">5 design directions for the achievement system</p>
+
+<!-- ===== DESIGN 1: Full Celebration ===== -->
+<section class="design-section">
+  <p class="design-label">Design 1</p>
+  <h2 class="design-title">Full Celebration Modal</h2>
+  <p class="design-desc">Full-screen takeover with confetti, particles, and maximum celebration energy. Ideal for the biggest milestones that deserve a party.</p>
+
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-content">
+      <div class="d1-overlay">
+        <!-- Confetti -->
+        <div class="confetti-container">
+          <div class="confetti" style="left:5%;background:#FFD700;width:8px;height:12px;animation-duration:3.2s;animation-delay:0s;border-radius:2px;"></div>
+          <div class="confetti" style="left:12%;background:#BB86FC;width:10px;height:6px;animation-duration:2.8s;animation-delay:0.2s;"></div>
+          <div class="confetti" style="left:20%;background:#4CAF50;width:6px;height:10px;animation-duration:3.5s;animation-delay:0.5s;border-radius:50%;"></div>
+          <div class="confetti" style="left:28%;background:#FF6B8A;width:8px;height:8px;animation-duration:2.9s;animation-delay:0.1s;transform:rotate(45deg);"></div>
+          <div class="confetti" style="left:35%;background:#FFD700;width:10px;height:5px;animation-duration:3.1s;animation-delay:0.7s;"></div>
+          <div class="confetti" style="left:45%;background:#64B5F6;width:7px;height:11px;animation-duration:3.4s;animation-delay:0.3s;border-radius:2px;"></div>
+          <div class="confetti" style="left:55%;background:#BB86FC;width:9px;height:7px;animation-duration:2.7s;animation-delay:0.6s;"></div>
+          <div class="confetti" style="left:62%;background:#4CAF50;width:6px;height:9px;animation-duration:3.3s;animation-delay:0.15s;border-radius:50%;"></div>
+          <div class="confetti" style="left:72%;background:#FFD700;width:11px;height:6px;animation-duration:2.6s;animation-delay:0.45s;"></div>
+          <div class="confetti" style="left:80%;background:#FF6B8A;width:8px;height:10px;animation-duration:3.6s;animation-delay:0.8s;border-radius:2px;"></div>
+          <div class="confetti" style="left:88%;background:#64B5F6;width:7px;height:7px;animation-duration:3s;animation-delay:0.25s;transform:rotate(45deg);"></div>
+          <div class="confetti" style="left:95%;background:#BB86FC;width:9px;height:5px;animation-duration:2.5s;animation-delay:0.55s;"></div>
+          <div class="confetti" style="left:8%;background:#FF6B8A;width:5px;height:8px;animation-duration:3.8s;animation-delay:1s;"></div>
+          <div class="confetti" style="left:40%;background:#4CAF50;width:8px;height:5px;animation-duration:2.4s;animation-delay:0.9s;border-radius:50%;"></div>
+          <div class="confetti" style="left:68%;background:#FFD700;width:6px;height:12px;animation-duration:3.7s;animation-delay:0.35s;"></div>
+        </div>
+
+        <!-- Stars -->
+        <div class="d1-stars">
+          <div class="d1-star" style="top:8%;left:15%;animation-delay:0s;"></div>
+          <div class="d1-star" style="top:15%;right:20%;animation-delay:0.5s;"></div>
+          <div class="d1-star" style="top:25%;left:30%;animation-delay:1s;width:3px;height:3px;"></div>
+          <div class="d1-star" style="top:75%;right:15%;animation-delay:1.5s;"></div>
+          <div class="d1-star" style="top:85%;left:25%;animation-delay:0.7s;width:3px;height:3px;"></div>
+          <div class="d1-star" style="top:60%;left:10%;animation-delay:0.3s;"></div>
+        </div>
+
+        <div class="d1-emoji-ring">
+          <span class="d1-emoji">🌙</span>
+        </div>
+
+        <p class="d1-congrats">Congratulations!</p>
+        <h2 class="d1-title">First 6-Hour Sleep!</h2>
+        <p class="d1-note">At 4 months, babies' stomachs grow large enough to sustain longer sleep stretches without feeding.</p>
+        <button class="d1-btn">Wonderful!</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DESIGN 2: Elegant Card ===== -->
+<section class="design-section">
+  <p class="design-label">Design 2</p>
+  <h2 class="design-title">Elegant Card Modal</h2>
+  <p class="design-desc">Centered card with subtle glow and refined typography. Premium feel without the noise. Respects the user's attention.</p>
+
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-content">
+      <div class="d2-overlay">
+        <div class="d2-card">
+          <button class="d2-close">&times;</button>
+
+          <div class="d2-icon-wrap">
+            <span class="emoji">🌙</span>
+          </div>
+
+          <div style="text-align:center;">
+            <span class="d2-badge">Milestone</span>
+          </div>
+
+          <h2 class="d2-title">First 6-Hour Sleep!</h2>
+
+          <div class="d2-divider"></div>
+
+          <p class="d2-note">At 4 months, babies' stomachs grow large enough to sustain longer sleep stretches without feeding.</p>
+
+          <button class="d2-btn">Got it</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DESIGN 3: Tiered System ===== -->
+<section class="design-section">
+  <p class="design-label">Design 3</p>
+  <h2 class="design-title">Tiered System</h2>
+  <p class="design-desc">Minor achievements get a slide-in toast that auto-dismisses. Major milestones get a proper modal celebration. Two levels of interruption.</p>
+
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="d3-phone-content">
+      <!-- Minor Toast -->
+      <div class="d3-toast">
+        <div class="d3-toast-icon">💪</div>
+        <div class="d3-toast-content">
+          <p class="d3-toast-title">5 Minutes of Tummy Time!</p>
+          <p class="d3-toast-subtitle">Next goal: 10 minutes in a single session</p>
+        </div>
+        <div class="d3-toast-progress"></div>
+      </div>
+
+      <p class="d3-label-minor">Minor Achievement — Toast</p>
+      <div class="d3-vs-badge">vs.</div>
+      <p class="d3-label-major">Major Milestone — Modal</p>
+
+      <!-- Major Modal -->
+      <div class="d3-modal-overlay">
+        <div class="d3-modal-sparkle"></div>
+        <div class="d3-modal-emoji">🌙</div>
+        <span class="d3-modal-label">Milestone</span>
+        <h2 class="d3-modal-title">First 6-Hour Sleep!</h2>
+        <p class="d3-modal-note">At 4 months, babies' stomachs grow large enough to sustain longer sleep stretches without feeding.</p>
+        <button class="d3-modal-btn">Wonderful!</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DESIGN 4: Story-style ===== -->
+<section class="design-section">
+  <p class="design-label">Design 4</p>
+  <h2 class="design-title">Story-style Achievement</h2>
+  <p class="design-desc">Full-screen immersive experience with ambient lighting, floating emoji, and atmospheric glow. Tap to dismiss like Instagram stories.</p>
+
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-content">
+      <div class="d4-story">
+        <!-- Orbs -->
+        <div class="d4-orb d4-orb-1"></div>
+        <div class="d4-orb d4-orb-2"></div>
+        <div class="d4-orb d4-orb-3"></div>
+
+        <!-- Sparkles -->
+        <div class="d4-sparkle" style="top:12%;left:18%;animation-delay:0s;"></div>
+        <div class="d4-sparkle" style="top:22%;right:22%;animation-delay:0.8s;"></div>
+        <div class="d4-sparkle" style="top:65%;left:12%;animation-delay:1.5s;width:2px;height:2px;"></div>
+        <div class="d4-sparkle" style="top:45%;right:15%;animation-delay:0.4s;"></div>
+        <div class="d4-sparkle" style="top:78%;right:28%;animation-delay:2s;width:2px;height:2px;"></div>
+        <div class="d4-sparkle" style="top:35%;left:28%;animation-delay:1.2s;"></div>
+        <div class="d4-sparkle" style="top:55%;left:85%;animation-delay:0.6s;width:2px;height:2px;"></div>
+
+        <!-- Progress bar -->
+        <div class="d4-progress-bar"></div>
+
+        <span class="d4-emoji-large">🌙</span>
+        <p class="d4-achievement-label">Achievement Unlocked</p>
+        <h2 class="d4-title">First 6-Hour Sleep!</h2>
+        <p class="d4-note">At 4 months, babies' stomachs grow large enough to sustain longer sleep stretches without feeding.</p>
+
+        <p class="d4-tap-hint">Tap anywhere to continue</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DESIGN 5: Gamified ===== -->
+<section class="design-section">
+  <p class="design-label">Design 5</p>
+  <h2 class="design-title">Gamified Achievement Card</h2>
+  <p class="design-desc">Badge unlock animation with progress toward the next milestone. Creates anticipation and a sense of collection. Encourages continued tracking.</p>
+
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-content">
+      <div class="d5-overlay">
+        <div class="d5-card">
+          <p class="d5-unlocked-label">Achievement Unlocked</p>
+
+          <div class="d5-badge-container">
+            <div class="d5-badge">
+              🌙
+              <div class="d5-badge-shine"></div>
+            </div>
+          </div>
+
+          <h2 class="d5-title">First 6-Hour Sleep!</h2>
+          <p class="d5-note">At 4 months, babies' stomachs grow large enough to sustain longer sleep stretches without feeding.</p>
+
+          <!-- Achievement dots -->
+          <div class="d5-count">
+            <div class="d5-count-dot"></div>
+            <div class="d5-count-dot"></div>
+            <div class="d5-count-dot"></div>
+            <div class="d5-count-dot empty"></div>
+            <div class="d5-count-dot empty"></div>
+            <div class="d5-count-dot empty"></div>
+            <span class="d5-count-text">3 of 6 sleep badges</span>
+          </div>
+
+          <!-- Next milestone -->
+          <div class="d5-next">
+            <div class="d5-next-header">
+              <span class="d5-next-label">Next: 8-Hour Sleep</span>
+              <span class="d5-next-target">75%</span>
+            </div>
+            <div class="d5-progress-track">
+              <div class="d5-progress-fill"></div>
+            </div>
+          </div>
+
+          <button class="d5-btn">Keep Going!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

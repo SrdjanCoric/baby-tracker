@@ -721,7 +721,9 @@
       "health": "Saúde",
       "play": "Brincadeira",
       "safety": "Segurança"
-    }
+    },
+    "discoveryMessage": "Receba dicas diárias adaptadas à idade de {{babyName}} — do sono à alimentação e brincadeiras.",
+    "discoveryEnable": "Ativar dicas"
   },
   "widget": {
     "title": "Configuração de Widget",
@@ -866,7 +868,11 @@
     "filterGrowth": "Crescimento",
     "filterTummyTime": "Tempo de Barriguinha",
     "summary": "Resumo",
-    "sleepSummaryInfo": "Os totais são calculados a partir das {{hour}}, com base na configuração de início do dia"
+    "jumpToDate": "Ir para data",
+    "sleepSummaryInfo": "Os totais são calculados a partir das {{hour}}, com base na configuração de início do dia",
+    "returnToToday": "Voltar para hoje",
+    "viewingDaysAgo_one": "Vendo há {{count}} dia",
+    "viewingDaysAgo_other": "Vendo há {{count}} dias"
   },
   "sync": {
     "synced": "Sincronizado",
