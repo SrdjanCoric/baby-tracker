@@ -79,7 +79,19 @@
     "napIn": "Dremka za {{time}}",
     "bedtimeIn": "Spavanje za {{time}}",
     "napTimeNow": "Vreme za dremku!",
-    "bedtimeNow": "Vreme za spavanje!"
+    "bedtimeNow": "Vreme za spavanje!",
+    "sleepPrediction": "Predviđanje spavanja",
+    "awakeTime": "Budno {{time}}",
+    "predictionsComingSoon": "Predviđanja uskoro",
+    "awake": "Budno",
+    "napTimeNear": "Vreme za spavanje oko",
+    "threeNapDay": "3 dremke dnevno",
+    "fourNapDay": "4 dremke dnevno",
+    "predictionInfo": "O predviđanjima",
+    "predictionInfoDetail": "Predviđanja su zasnovana na skorašnjim obrascima spavanja deteta {{name}}. Možete podesiti broj dremki u Podešavanjima.",
+    "predictionInfoDetailGeneric": "Predviđanja su zasnovana na skorašnjim obrascima spavanja. Možete podesiti broj dremki u Podešavanjima.",
+    "basedOnPatterns": "Na osnovu skorašnjih obrazaca spavanja deteta {{name}}",
+    "basedOnPatternsGeneric": "Na osnovu skorašnjih obrazaca spavanja"
   },
   "navigation": {
     "home": "Po\u010detna",
@@ -742,7 +754,8 @@
       "safety": "Bezbednost"
     },
     "discoveryMessage": "Dobijajte dnevne savete prilagođene uzrastu deteta {{babyName}} — od spavanja do ishrane i igre.",
-    "discoveryEnable": "Uključi savete"
+    "discoveryEnable": "Uključi savete",
+    "toggle": "Dnevni saveti"
   },
   "widget": {
     "title": "Pode\u0161avanje vid\u017eeta",

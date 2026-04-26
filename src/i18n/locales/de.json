@@ -71,7 +71,19 @@
     "napIn": "Nickerchen in {{time}}",
     "bedtimeIn": "Schlafenszeit in {{time}}",
     "napTimeNow": "Zeit fürs Nickerchen!",
-    "bedtimeNow": "Schlafenszeit!"
+    "bedtimeNow": "Schlafenszeit!",
+    "sleepPrediction": "Schlafvorhersage",
+    "awakeTime": "Wach seit {{time}}",
+    "predictionsComingSoon": "Vorhersagen bald verfügbar",
+    "awake": "Wach",
+    "napTimeNear": "Schlafenszeit gegen",
+    "threeNapDay": "3 Nickerchen pro Tag",
+    "fourNapDay": "4 Nickerchen pro Tag",
+    "predictionInfo": "Über Vorhersagen",
+    "predictionInfoDetail": "Vorhersagen basieren auf den letzten Schlafmustern von {{name}}. Sie können die Anzahl der Nickerchen in den Einstellungen anpassen.",
+    "predictionInfoDetailGeneric": "Vorhersagen basieren auf den letzten Schlafmustern. Sie können die Anzahl der Nickerchen in den Einstellungen anpassen.",
+    "basedOnPatterns": "Basierend auf {{name}}s aktuellen Schlafmustern",
+    "basedOnPatternsGeneric": "Basierend auf aktuellen Schlafmustern"
   },
   "navigation": {
     "home": "Startseite",
@@ -721,7 +733,8 @@
       "safety": "Sicherheit"
     },
     "discoveryMessage": "Erhalte tägliche Tipps, die auf das Alter von {{babyName}} abgestimmt sind — von Schlaf über Ernährung bis Spielen.",
-    "discoveryEnable": "Tipps aktivieren"
+    "discoveryEnable": "Tipps aktivieren",
+    "toggle": "Tägliche Tipps"
   },
   "widget": {
     "title": "Widget-Konfiguration",
