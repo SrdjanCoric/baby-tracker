@@ -375,6 +375,70 @@ Compact rows: `linear-gradient(90deg, rgba(accent,0.05) 0%, cardBg 50%)`
 
 ---
 
+## Implementation Progress
+
+### Completed: Dashboard Card Tints (2026-04-26)
+
+Replaced the 6-step `generateSmoothGradient()` function with precomputed solid hex tint colors for reliable cross-device rendering.
+
+**Approach:** Each activity has 4 new color tokens in `colors.ts` / `colors.js`:
+- `cardTintDark` / `cardTintLight` — 10% (dark) / 16% (light) accent blend with card background
+- `rowTintDark` / `rowTintLight` — 4% (dark) / 14% (light) accent blend with card background
+
+**Files changed:**
+- `src/constants/colors.ts` — Added tint tokens to all 8 activities
+- `src/constants/colors.js` — Synced JS mirror
+- `src/components/DashboardCard.tsx` — Removed `hexToRgb`/`generateSmoothGradient`, uses simple 2-stop gradient `[tintColor, bgColor]` at locations `[0, 0.6]`
+- `src/components/CompactActivityRow.tsx` — Same simplification, locations `[0, 0.5]`
+
+### Completed: Sleep Prediction Card UI (2026-04-26)
+
+Built the `SleepPredictionCard` component with nap time prediction and segmented nap-day toggle.
+
+**Layout (Variant A — "Breathe"):**
+- "SLEEP PREDICTION" label (11px, 800 weight, 2px letter-spacing)
+- "Nap time near **HH:MM**" with highlighted time in accent-soft color
+- Segmented control: "3-nap day" / "4-nap day" with info `(i)` button (16px gap)
+- Info button shows Alert explaining predictions are based on sleep patterns
+- Generous padding (20px/22px) and spacing between elements
+
+**Colors:**
+- Dark: gradient `#27222A` → `#191719`, border `#353039`, top border `#4C4357`
+- Light: gradient `#EDE4E2` → `#F3EBE7`, "Nap time near" text `#3D3350`, time `#6B5A80`
+- Borders use solid hex (dark) computed from HTML's rgba composited on actual background
+
+**Subtitle removed:** "Based on name's recent sleep patterns" replaced with a small `(i)` info button next to the segmented control. Tapping shows an Alert with the explanation. Reduces clutter, more breathing room.
+
+**Files changed:**
+- `src/components/SleepPredictionCard.tsx` — Full rewrite with segmented control, info button, precomputed gradients
+
+### Completed: Dashboard Test Fixes (2026-04-26)
+
+Fixed 2 pre-existing test failures in `DashboardCard.component.test.tsx` caused by i18n mock returning translation keys instead of interpolated strings.
+
+### Completed: Tip System Changes (2026-04-26)
+
+**X button behavior changed:** Pressing X on the TipCarousel now just toggles tips off (same as pressing the bulb), instead of dismissing for the entire day. Removed `setTipsDismissedDate` calls and dismissed-date checks on load.
+
+**Notification dot behavior:** The dot on the 💡 bulb icon now persists until the user opens tips (via `tipsViewed` state), rather than disappearing whenever tips are expanded. Dot enlarged from 7px to 10px for better visibility.
+
+**Baby selector arrow removed:** The `▾` dropdown caret next to the baby name was removed — tapping the name already opens the baby switcher.
+
+**Files changed:**
+- `src/components/TipCarousel.tsx` — Removed dismiss-for-day logic and `getTodayString`/`setTipsDismissedDate`
+- `src/components/BabyHeader.tsx` — Dot uses `tipsViewed` prop instead of `!tipsExpanded`, dot enlarged
+- `src/components/BabySelector.tsx` — Removed `▾` dropdown arrow
+- `app/(tabs)/index.tsx` — Added `tipsViewed` state, passed to BabyHeader
+
+### Completed: Translation Keys (2026-04-26)
+
+Added sleep prediction keys to all 6 locales (en, sr, es, fr, de, pt):
+- `dashboard.napTimeNear`, `dashboard.threeNapDay`, `dashboard.fourNapDay`
+- `dashboard.predictionInfo`, `dashboard.predictionInfoDetail`, `dashboard.predictionInfoDetailGeneric`
+- `dashboard.awake`
+
+---
+
 ## Open Questions
 
 1. How should the nap count toggle interact with the existing wake window settings? Should changing nap count on dashboard also update the wake window config, or are they independent?
@@ -382,3 +446,4 @@ Compact rows: `linear-gradient(90deg, rgba(accent,0.05) 0%, cardBg 50%)`
 3. Should there be a way to view past achievements (an achievements history screen), or is the celebration moment the only surface?
 4. What happens when a user has dashboard card customization that conflicts with the new hybrid layout (e.g., they've hidden Pumping but it's in the compact rows)?
 5. Should the tummy time color change (`#D4A574` → `#C9A55C` / `#E0B990` → `#DABB78`) be applied globally across the app, or only on the dashboard?
+6. Should the info button on the prediction card open a richer modal (Huckleberry-style with expandable sections like "adjust nap count", "what if baby misses a nap", "why we recommend an extra nap") instead of a simple Alert?

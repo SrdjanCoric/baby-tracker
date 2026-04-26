@@ -71,7 +71,19 @@
     "napIn": "Nap in {{time}}",
     "bedtimeIn": "Bedtime in {{time}}",
     "napTimeNow": "Nap time!",
-    "bedtimeNow": "Bedtime!"
+    "bedtimeNow": "Bedtime!",
+    "sleepPrediction": "Sleep prediction",
+    "awakeTime": "Awake {{time}}",
+    "predictionsComingSoon": "Predictions coming soon",
+    "awake": "Awake",
+    "napTimeNear": "Nap time near",
+    "threeNapDay": "3-nap day",
+    "fourNapDay": "4-nap day",
+    "predictionInfo": "About predictions",
+    "predictionInfoDetail": "Predictions are based on {{name}}'s recent sleep patterns. You can adjust the number of naps in Settings.",
+    "predictionInfoDetailGeneric": "Predictions are based on recent sleep patterns. You can adjust the number of naps in Settings.",
+    "basedOnPatterns": "Based on {{name}}'s recent sleep patterns",
+    "basedOnPatternsGeneric": "Based on recent sleep patterns"
   },
   "navigation": {
     "home": "Home",
@@ -721,7 +733,8 @@
       "safety": "Safety"
     },
     "discoveryMessage": "Get daily parenting tips tailored to {{babyName}}'s age — from sleep to feeding to play.",
-    "discoveryEnable": "Enable Tips"
+    "discoveryEnable": "Enable Tips",
+    "toggle": "Daily tips"
   },
   "widget": {
     "title": "Widget Configuration",

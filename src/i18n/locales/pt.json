@@ -73,7 +73,19 @@
     "napIn": "Cochilo em {{time}}",
     "bedtimeIn": "Dormir em {{time}}",
     "napTimeNow": "Hora do cochilo!",
-    "bedtimeNow": "Hora de dormir!"
+    "bedtimeNow": "Hora de dormir!",
+    "sleepPrediction": "Previsão de sono",
+    "awakeTime": "Acordado(a) há {{time}}",
+    "predictionsComingSoon": "Previsões em breve",
+    "awake": "Acordado",
+    "napTimeNear": "Hora da soneca perto de",
+    "threeNapDay": "3 sonecas por dia",
+    "fourNapDay": "4 sonecas por dia",
+    "predictionInfo": "Sobre previsões",
+    "predictionInfoDetail": "As previsões são baseadas nos padrões de sono recentes de {{name}}. Você pode ajustar o número de sonecas nas Configurações.",
+    "predictionInfoDetailGeneric": "As previsões são baseadas nos padrões de sono recentes. Você pode ajustar o número de sonecas nas Configurações.",
+    "basedOnPatterns": "Com base nos padrões de sono recentes de {{name}}",
+    "basedOnPatternsGeneric": "Com base nos padrões de sono recentes"
   },
   "navigation": {
     "home": "Início",
@@ -723,7 +735,8 @@
       "safety": "Segurança"
     },
     "discoveryMessage": "Receba dicas diárias adaptadas à idade de {{babyName}} — do sono à alimentação e brincadeiras.",
-    "discoveryEnable": "Ativar dicas"
+    "discoveryEnable": "Ativar dicas",
+    "toggle": "Dicas diárias"
   },
   "widget": {
     "title": "Configuração de Widget",

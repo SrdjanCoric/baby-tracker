@@ -71,7 +71,19 @@
     "napIn": "Sieste dans {{time}}",
     "bedtimeIn": "Coucher dans {{time}}",
     "napTimeNow": "C'est l'heure de la sieste !",
-    "bedtimeNow": "C'est l'heure de dormir !"
+    "bedtimeNow": "C'est l'heure de dormir !",
+    "sleepPrediction": "Prévision de sommeil",
+    "awakeTime": "Éveillé(e) depuis {{time}}",
+    "predictionsComingSoon": "Prévisions bientôt disponibles",
+    "awake": "Éveillé",
+    "napTimeNear": "Sieste vers",
+    "threeNapDay": "3 siestes par jour",
+    "fourNapDay": "4 siestes par jour",
+    "predictionInfo": "À propos des prédictions",
+    "predictionInfoDetail": "Les prédictions sont basées sur les habitudes de sommeil récentes de {{name}}. Vous pouvez ajuster le nombre de siestes dans les Paramètres.",
+    "predictionInfoDetailGeneric": "Les prédictions sont basées sur les habitudes de sommeil récentes. Vous pouvez ajuster le nombre de siestes dans les Paramètres.",
+    "basedOnPatterns": "Basé sur les habitudes de sommeil récentes de {{name}}",
+    "basedOnPatternsGeneric": "Basé sur les habitudes de sommeil récentes"
   },
   "navigation": {
     "home": "Accueil",
@@ -721,7 +733,8 @@
       "safety": "Sécurité"
     },
     "discoveryMessage": "Recevez des conseils quotidiens adaptés à l'âge de {{babyName}} — du sommeil à l'alimentation en passant par le jeu.",
-    "discoveryEnable": "Activer les conseils"
+    "discoveryEnable": "Activer les conseils",
+    "toggle": "Conseils du jour"
   },
   "widget": {
     "title": "Configuration des widgets",
