@@ -16,41 +16,6 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const SPRING_CONFIG = { damping: 15, stiffness: 400 };
 const ROW_BORDER_RADIUS = 14;
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-    : { r: 0, g: 0, b: 0 };
-}
-
-function generateSmoothGradient(
-  accentHex: string,
-  cardHex: string,
-  pageBgHex: string,
-  blendAmount: number = 0.05,
-  steps: number = 6
-): { colors: [string, string, ...string[]]; locations: [number, number, ...number[]] } {
-  const accent = hexToRgb(accentHex);
-  const pageBg = hexToRgb(pageBgHex);
-  const card = hexToRgb(cardHex);
-  const startR = Math.round(accent.r * blendAmount + pageBg.r * (1 - blendAmount));
-  const startG = Math.round(accent.g * blendAmount + pageBg.g * (1 - blendAmount));
-  const startB = Math.round(accent.b * blendAmount + pageBg.b * (1 - blendAmount));
-  const colors: string[] = [];
-  const locations: number[] = [];
-
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1);
-    const r = Math.round(startR + (card.r - startR) * t);
-    const g = Math.round(startG + (card.g - startG) * t);
-    const b = Math.round(startB + (card.b - startB) * t);
-    colors.push(`rgb(${r},${g},${b})`);
-    locations.push(t * 0.5);
-  }
-
-  return { colors, locations } as { colors: [string, string, ...string[]]; locations: [number, number, ...number[]] };
-}
-
 interface CompactActivityRowProps {
   activity: ActivityType;
   label: string;
@@ -139,8 +104,9 @@ const CompactActivityRowInner = ({
   const textPrimary = isDark ? "rgba(232,224,216,0.87)" : "#2D2A26";
   const textSecondary = isDark ? "rgba(232,224,216,0.60)" : "#7A7570";
 
-  const pageBgColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
-  const smoothGradient = generateSmoothGradient(accentColor, cardBg, pageBgColor, 0.05, 6);
+  const tintColor = isDark ? activityColors.rowTintDark : activityColors.rowTintLight;
+  const gradientColors: [string, string] = [tintColor, cardBg];
+  const gradientLocations: [number, number] = [0, 0.5];
 
   const rowScale = useSharedValue(1);
 
@@ -177,8 +143,8 @@ const CompactActivityRowInner = ({
       accessibilityLabel={timeSince ? t("accessibility.cardTimeSince", { label, time: timeSince }) : t("accessibility.cardNoTime", { label })}
     >
       <LinearGradient
-        colors={smoothGradient.colors}
-        locations={smoothGradient.locations}
+        colors={gradientColors}
+        locations={gradientLocations}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={{
