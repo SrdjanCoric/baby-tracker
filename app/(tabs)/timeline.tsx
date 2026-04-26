@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, AppState, InteractionManager, RefreshControl, ScrollView, SectionList, View } from "react-native";
+import { ActivityIndicator, AppState, InteractionManager, Pressable, RefreshControl, ScrollView, SectionList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { useColorScheme } from "nativewind";
-import { getActionColor } from "@/constants/design-tokens";
+import { getActionColor, ACTION_COLORS } from "@/constants/design-tokens";
 import { useRouter } from "expo-router";
 import {
   TimelineItem,
@@ -18,10 +18,7 @@ import { formatVolume } from "@/utils/volume";
 import { formatWeight, formatHeight } from "@/utils/growth";
 import { formatDualSideDuration } from "@/utils/feeding";
 import {
-  calculateDailySummary,
-  formatDailySummaryText,
   type TimelineDataByDate,
-  type DailySummary,
 } from "@/utils/timeline";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
@@ -48,18 +45,12 @@ interface TimelineSection {
   header: string;
   dateLabel: string;
   dateObj: Date;
-  summaryLines: string[];
-  summary: DailySummary;
   data: TimelineEntry[];
 }
 
 function groupEntriesByDay(
   entries: TimelineEntry[],
-  filter: FilterType,
-  allData: TimelineDataByDate,
-  t: (key: string, options?: Record<string, unknown>) => string,
-  dayStartHour: number = 6,
-  dayEndHour: number = 19
+  t: (key: string, options?: Record<string, unknown>) => string
 ): TimelineSection[] {
   const grouped: Map<string, { entries: TimelineEntry[]; date: Date }> = new Map();
 
@@ -80,16 +71,11 @@ function groupEntriesByDay(
 
     dayEntries.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    const summary = calculateDailySummary(date, allData, dayStartHour, dayEndHour);
-    const summaryLines = formatDailySummaryText(summary, filter, t);
-
     result.push({
       header,
       dateLabel,
       dateObj: date,
       data: dayEntries,
-      summaryLines,
-      summary,
     });
   }
 
@@ -117,6 +103,7 @@ export default function TimelineScreen() {
   const { timeFormat } = useTimeFormat();
   const { selectedBaby } = useBaby();
   const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -132,7 +119,18 @@ export default function TimelineScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [daysToShow, setDaysToShow] = useState(14);
   const [isReady, setIsReady] = useState(false);
+  const [isJumping, setIsJumping] = useState(false);
+  const [anchorDate, setAnchorDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
   const sectionListRef = useRef<SectionList<TimelineEntry, TimelineSection>>(null);
+  const [summaryDate, setSummaryDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
 
   useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
@@ -190,7 +188,6 @@ export default function TimelineScreen() {
 
   const handleFilterChange = useCallback((filter: FilterType) => {
     setActiveFilter(filter);
-    setDaysToShow(14);
   }, []);
 
   // Collect all data for summary calculations
@@ -498,17 +495,30 @@ export default function TimelineScreen() {
   ]);
 
   const cutoffDate = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
+    const d = new Date(anchorDate);
     d.setDate(d.getDate() - daysToShow);
     return d;
-  }, [daysToShow]);
+  }, [anchorDate, daysToShow]);
+
+  const windowEndDate = useMemo(() => {
+    const d = new Date(anchorDate);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }, [anchorDate]);
 
   const paginatedEntries = useMemo(() => {
-    return timelineEntries.filter(entry => entry.date >= cutoffDate);
+    return timelineEntries.filter(entry => entry.date >= cutoffDate && entry.date <= windowEndDate);
+  }, [timelineEntries, cutoffDate, windowEndDate]);
+
+  const hasMoreData = useMemo(() => {
+    return timelineEntries.some(entry => entry.date < cutoffDate);
   }, [timelineEntries, cutoffDate]);
 
-  const hasMoreData = paginatedEntries.length < timelineEntries.length;
+  const isViewingPast = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return anchorDate.getTime() < today.getTime();
+  }, [anchorDate]);
 
   // When content is too short to scroll, onEndReached never fires.
   // Auto-expand until enough entries are visible or all data is loaded.
@@ -528,87 +538,30 @@ export default function TimelineScreen() {
   const translate = t as (key: string, options?: Record<string, unknown>) => string;
 
   const sections = useMemo(() => {
-    const startHour = wakeWindowConfig?.dayStartHour ?? 6;
-    const endHour = wakeWindowConfig?.dayEndHour ?? 19;
-    return groupEntriesByDay(paginatedEntries, activeFilter, allData, translate, startHour, endHour);
-  }, [paginatedEntries, activeFilter, allData, translate, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
-
-  const dateToSectionIndex = useMemo(() => {
-    const map = new Map<string, number>();
-    sections.forEach((section, index) => {
-      map.set(section.dateObj.toDateString(), index);
-    });
-    return map;
-  }, [sections]);
-
-  const pendingScrollDateRef = useRef<Date | null>(null);
-
-  const findNearestSectionBefore = useCallback((date: Date): number => {
-    for (let i = 0; i < sections.length; i++) {
-      if (sections[i].dateObj <= date) return i;
-    }
-    return -1;
-  }, [sections]);
-
-  const scrollToDate = useCallback((date: Date) => {
-    let sectionIndex = dateToSectionIndex.get(date.toDateString());
-    if (sectionIndex === undefined) {
-      const nearest = findNearestSectionBefore(date);
-      if (nearest !== -1) sectionIndex = nearest;
-    }
-    if (sectionIndex !== undefined && sectionIndex < sections.length) {
-      try {
-        sectionListRef.current?.scrollToLocation({
-          sectionIndex,
-          itemIndex: 0,
-          animated: true,
-        });
-      } catch {
-        // SectionList may not have laid out the target section yet
-      }
-      pendingScrollDateRef.current = null;
-    }
-  }, [dateToSectionIndex, sections.length, findNearestSectionBefore]);
-
-  useEffect(() => {
-    if (pendingScrollDateRef.current) {
-      const timer = setTimeout(() => {
-        if (pendingScrollDateRef.current) {
-          scrollToDate(pendingScrollDateRef.current);
-        }
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-  }, [scrollToDate]);
+    return groupEntriesByDay(paginatedEntries, translate);
+  }, [paginatedEntries, translate]);
 
   const handleSummaryDateChange = useCallback((date: Date) => {
-    let sectionIndex = dateToSectionIndex.get(date.toDateString());
-    if (sectionIndex === undefined) {
-      const nearest = findNearestSectionBefore(date);
-      if (nearest !== -1) sectionIndex = nearest;
-    }
+    setSummaryDate(date);
+    setIsJumping(true);
+    setDaysToShow(14);
+    setAnchorDate(date);
+    requestAnimationFrame(() => {
+      setIsJumping(false);
+    });
+  }, []);
 
-    if (sectionIndex !== undefined && sectionIndex < sections.length) {
-      try {
-        sectionListRef.current?.scrollToLocation({
-          sectionIndex,
-          itemIndex: 0,
-          animated: true,
-        });
-      } catch {
-        // SectionList may not have laid out the target section yet
-      }
-    } else {
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      const diffDays = Math.ceil((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-      const needed = Math.ceil(diffDays / 14) * 14;
-      if (needed > daysToShow) {
-        pendingScrollDateRef.current = date;
-        setDaysToShow(needed);
-      }
-    }
-  }, [dateToSectionIndex, daysToShow, sections.length, findNearestSectionBefore]);
+  const handleReturnToToday = useCallback(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setIsJumping(true);
+    setSummaryDate(today);
+    setAnchorDate(today);
+    setDaysToShow(14);
+    requestAnimationFrame(() => {
+      setIsJumping(false);
+    });
+  }, []);
 
   const hasEntries = paginatedEntries.length > 0;
 
@@ -637,8 +590,40 @@ export default function TimelineScreen() {
         dayStartHour={wakeWindowConfig?.dayStartHour ?? 6}
         timeFormat={timeFormat}
         t={translate}
+        selectedDate={summaryDate}
         onDateChange={handleSummaryDateChange}
       />
+
+      {isViewingPast && !isJumping && (
+        <Pressable
+          onPress={handleReturnToToday}
+          className="flex-row items-center justify-between mx-4 mt-2 mb-1 px-3.5 py-2.5 rounded-xl active:opacity-80"
+          style={{
+            backgroundColor: isDark ? ACTION_COLORS.dark.primary : ACTION_COLORS.light.primary,
+          }}
+        >
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <Text style={{ color: "#FFFFFF", fontSize: 14 }}>↑</Text>
+            <View>
+              <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>
+                {t("timeline.returnToToday")}
+              </Text>
+              <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 1 }}>
+                {t("timeline.viewingDaysAgo", {
+                  count: Math.round((new Date().setHours(0,0,0,0) - anchorDate.getTime()) / (1000 * 60 * 60 * 24)),
+                })}
+              </Text>
+            </View>
+          </View>
+          <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 20, fontWeight: "600" }}>›</Text>
+        </Pressable>
+      )}
+
+      {isJumping && (
+        <View className="py-3 items-center">
+          <ActivityIndicator size="small" color={getActionColor("primary", isDark)} />
+        </View>
+      )}
 
       {hasEntries ? (
         <SectionList
@@ -669,18 +654,17 @@ export default function TimelineScreen() {
           className="flex-1"
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-
           ListFooterComponent={hasMoreData ? (
             <View className="py-4 items-center">
-              <ActivityIndicator size="small" color={getActionColor("primary", colorScheme === "dark")} />
+              <ActivityIndicator size="small" color={getActionColor("primary", isDark)} />
             </View>
           ) : null}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={getActionColor("primary", colorScheme === "dark")}
-              colors={[getActionColor("primary", colorScheme === "dark")]}
+              tintColor={getActionColor("primary", isDark)}
+              colors={[getActionColor("primary", isDark)]}
             />
           }
         />
@@ -692,8 +676,8 @@ export default function TimelineScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={getActionColor("primary", colorScheme === "dark")}
-              colors={[getActionColor("primary", colorScheme === "dark")]}
+              tintColor={getActionColor("primary", isDark)}
+              colors={[getActionColor("primary", isDark)]}
             />
           }
         >
