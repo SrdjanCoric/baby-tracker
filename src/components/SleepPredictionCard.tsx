@@ -1,9 +1,7 @@
-import { Text, View, useColorScheme } from "react-native";
-import { memo, useEffect, useState, useRef } from "react";
+import { Alert, Pressable, Text, View, useColorScheme } from "react-native";
+import { memo, useEffect, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
-import { SURFACE } from "@/constants/design-tokens";
-import { formatDuration } from "@/utils/time";
 
 interface SleepPredictionCardProps {
   lastWakeUpTime?: Date;
@@ -21,6 +19,7 @@ const SleepPredictionCardInner = ({
   const isDark = colorScheme === "dark";
 
   const [awakeSeconds, setAwakeSeconds] = useState(0);
+  const [selectedNapSchedule, setSelectedNapSchedule] = useState<"3-nap" | "4-nap">("3-nap");
   const lastWakeUpRef = useRef(lastWakeUpTime);
   lastWakeUpRef.current = lastWakeUpTime;
 
@@ -40,49 +39,41 @@ const SleepPredictionCardInner = ({
     return () => clearInterval(interval);
   }, [lastWakeUpTime, isSleeping]);
 
+  const handleInfoPress = useCallback(() => {
+    Alert.alert(
+      t("dashboard.sleepPrediction"),
+      babyName
+        ? t("dashboard.predictionInfoDetail", { name: babyName })
+        : t("dashboard.predictionInfoDetailGeneric"),
+    );
+  }, [t, babyName]);
+
   if (isSleeping || !lastWakeUpTime) return null;
 
   const sleepAccent = isDark ? "#A68DC8" : "#8B7BA0";
+  const sleepAccentSoft = isDark ? "#C4ADE0" : "#6B5A80";
   const textPrimary = isDark ? "rgba(232,224,216,0.87)" : "#2D2A26";
   const textSecondary = isDark ? "rgba(232,224,216,0.60)" : "#7A7570";
-  const textTertiary = isDark ? "rgba(232,224,216,0.38)" : "#B0AAA5";
 
-  const bgColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
-  const sleepR = isDark ? 166 : 139;
-  const sleepG = isDark ? 141 : 123;
-  const sleepB = isDark ? 200 : 160;
-  const blendStart = isDark ? 0.14 : 0.08;
-  const blendEnd = isDark ? 0.05 : 0.02;
-
-  function hexToRgb(hex: string) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-      : { r: 0, g: 0, b: 0 };
-  }
-  const bg = hexToRgb(bgColor);
-  const steps = 6;
-  const gradientColors: string[] = [] as string[];
-  const gradientLocations: number[] = [] as number[];
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1);
-    const blend = blendStart + (blendEnd - blendStart) * t;
-    const r = Math.round(sleepR * blend + bg.r * (1 - blend));
-    const g = Math.round(sleepG * blend + bg.g * (1 - blend));
-    const b = Math.round(sleepB * blend + bg.b * (1 - blend));
-    gradientColors.push(`rgb(${r},${g},${b})`);
-    gradientLocations.push(t);
-  }
+  const gradientStart = isDark ? "#27222A" : "#EDE4E2";
+  const gradientEnd = isDark ? "#191719" : "#F3EBE7";
+  const gradientColors: [string, string] = [gradientStart, gradientEnd];
+  const gradientLocations: [number, number] = [0, 1];
 
   const borderColor = isDark
-    ? "rgba(166,141,200,0.18)"
-    : "rgba(139,123,160,0.12)";
+    ? "#353039"
+    : "rgba(139,123,160,0.15)";
 
   const topBorderColor = isDark
-    ? "rgba(166,141,200,0.35)"
-    : "rgba(139,123,160,0.25)";
+    ? "#4C4357"
+    : "rgba(139,123,160,0.30)";
 
-  const awakeFormatted = formatDuration(awakeSeconds, "short");
+  const predictedTime = new Date(lastWakeUpRef.current!.getTime() + (selectedNapSchedule === "3-nap" ? 2 * 60 * 60 * 1000 : 1.5 * 60 * 60 * 1000));
+  const predictedTimeStr = predictedTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  const segBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
+  const segInactiveText = isDark ? textSecondary : "#7A7570";
+  const infoBg = isDark ? "rgba(166,141,200,0.12)" : "rgba(139,123,160,0.10)";
 
   return (
     <View
@@ -95,25 +86,69 @@ const SleepPredictionCardInner = ({
       }}
     >
       <LinearGradient
-        colors={gradientColors as [string, string, ...string[]]}
-        locations={gradientLocations as [number, number, ...number[]]}
+        colors={gradientColors}
+        locations={gradientLocations}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
-        style={{ padding: 16, paddingHorizontal: 18, borderRadius: 15, overflow: "hidden" }}
+        style={{ padding: 20, paddingHorizontal: 22, borderRadius: 15, overflow: "hidden" }}
       >
-        <Text style={{ fontSize: 10, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1.5, color: sleepAccent, marginBottom: 4 }}>
+        <Text style={{ fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 2, color: sleepAccent, marginBottom: 12 }}>
           {t("dashboard.sleepPrediction")}
         </Text>
 
-        <Text style={{ fontSize: 15, fontWeight: "700", color: textPrimary, marginTop: 2 }}>
-          {t("dashboard.predictionsComingSoon")}
+        <Text style={{ fontSize: 15, fontWeight: "700", color: isDark ? textPrimary : "#3D3350", marginBottom: 16 }}>
+          {t("dashboard.napTimeNear")}{" "}
+          <Text style={{ fontWeight: "900", fontSize: 16, color: sleepAccentSoft }}>
+            {predictedTimeStr}
+          </Text>
         </Text>
 
-        <Text style={{ fontSize: 11, marginTop: 2, color: textSecondary }}>
-          {babyName
-            ? t("dashboard.basedOnPatterns", { name: babyName })
-            : t("dashboard.basedOnPatternsGeneric")}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+          <View style={{ flexDirection: "row", backgroundColor: segBg, borderRadius: 8, overflow: "hidden" }}>
+          <Pressable
+            onPress={() => setSelectedNapSchedule("3-nap")}
+            style={{
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              borderRadius: 8,
+              backgroundColor: selectedNapSchedule === "3-nap" ? sleepAccent : "transparent",
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: "700", color: selectedNapSchedule === "3-nap" ? "#FFFFFF" : segInactiveText }}>
+              {t("dashboard.threeNapDay")}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setSelectedNapSchedule("4-nap")}
+            style={{
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              borderRadius: 8,
+              backgroundColor: selectedNapSchedule === "4-nap" ? sleepAccent : "transparent",
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: "700", color: selectedNapSchedule === "4-nap" ? "#FFFFFF" : segInactiveText }}>
+              {t("dashboard.fourNapDay")}
+            </Text>
+          </Pressable>
+          </View>
+          <Pressable
+            onPress={handleInfoPress}
+            hitSlop={8}
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: infoBg,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t("dashboard.predictionInfo")}
+          >
+            <Text style={{ fontSize: 11, fontWeight: "700", color: sleepAccent }}>i</Text>
+          </Pressable>
+        </View>
       </LinearGradient>
     </View>
   );
