@@ -532,13 +532,32 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
       let feeding: StoredFeedingEntry;
 
-      if (user?.householdId && user?.id) {
-        feeding = await createFeedingInDatabase(feedingInput, user.id);
-      } else {
-        feeding = await FeedingStorageService.addFeeding(feedingInput);
+      try {
+        if (user?.householdId && user?.id) {
+          console.log("[FeedingContext] stopBreastfeeding: saving to database");
+          feeding = await createFeedingInDatabase(feedingInput, user.id);
+        } else {
+          console.log("[FeedingContext] stopBreastfeeding: saving to local storage");
+          feeding = await FeedingStorageService.addFeeding(feedingInput);
+        }
+        console.log("[FeedingContext] stopBreastfeeding: saved entry id=%s", feeding.id);
+        dispatch({ type: "ADD_FEEDING", payload: feeding });
+      } catch (saveError) {
+        console.error("[FeedingContext] stopBreastfeeding: FAILED to save, cleaning up timer", saveError);
+        dispatch({ type: "STOP_TIMER" });
+        await FeedingStorageService.clearActiveTimer(selectedBaby.id);
+        if (liveActivityIdRef.current) {
+          await endTimerLiveActivity(liveActivityIdRef.current);
+          liveActivityIdRef.current = null;
+        } else {
+          await endLiveActivityByType("feeding");
+        }
+        if (user?.id) {
+          try { await releaseTimerLock(selectedBaby.id, "feeding", user.id); } catch { /* ignore */ }
+        }
+        throw saveError;
       }
 
-      dispatch({ type: "ADD_FEEDING", payload: feeding });
       dispatch({ type: "STOP_TIMER" });
       await FeedingStorageService.clearActiveTimer(selectedBaby.id);
 

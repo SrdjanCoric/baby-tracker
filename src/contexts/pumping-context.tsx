@@ -391,13 +391,32 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
       let pumping: StoredPumpingEntry;
 
-      if (user?.householdId && user?.id) {
-        pumping = await createPumpingInDatabase(pumpingInput, user.id);
-      } else {
-        pumping = await PumpingStorageService.addPumping(pumpingInput);
+      try {
+        if (user?.householdId && user?.id) {
+          console.log("[PumpingContext] stopPumping: saving to database");
+          pumping = await createPumpingInDatabase(pumpingInput, user.id);
+        } else {
+          console.log("[PumpingContext] stopPumping: saving to local storage");
+          pumping = await PumpingStorageService.addPumping(pumpingInput);
+        }
+        console.log("[PumpingContext] stopPumping: saved entry id=%s", pumping.id);
+        dispatch({ type: "ADD_PUMPING", payload: pumping });
+      } catch (saveError) {
+        console.error("[PumpingContext] stopPumping: FAILED to save, cleaning up timer", saveError);
+        dispatch({ type: "STOP_TIMER" });
+        await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+        if (liveActivityIdRef.current) {
+          await endTimerLiveActivity(liveActivityIdRef.current);
+          liveActivityIdRef.current = null;
+        } else {
+          await endLiveActivityByType("pumping");
+        }
+        if (user?.id) {
+          try { await releaseTimerLock(selectedBaby.id, "pumping", user.id); } catch { /* ignore */ }
+        }
+        throw saveError;
       }
 
-      dispatch({ type: "ADD_PUMPING", payload: pumping });
       dispatch({ type: "STOP_TIMER" });
       await PumpingStorageService.clearActiveTimer(selectedBaby.id);
 
