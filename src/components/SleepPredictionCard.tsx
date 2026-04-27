@@ -1,7 +1,6 @@
 import { Alert, Pressable, Text, View, useColorScheme } from "react-native";
 import { memo, useEffect, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { LinearGradient } from "expo-linear-gradient";
 
 interface SleepPredictionCardProps {
   lastWakeUpTime?: Date;
@@ -55,10 +54,9 @@ const SleepPredictionCardInner = ({
   const textPrimary = isDark ? "rgba(232,224,216,0.87)" : "#2D2A26";
   const textSecondary = isDark ? "rgba(232,224,216,0.60)" : "#7A7570";
 
-  const gradientStart = isDark ? "#27222A" : "#EDE4E2";
-  const gradientEnd = isDark ? "#191719" : "#F3EBE7";
-  const gradientColors: [string, string] = [gradientStart, gradientEnd];
-  const gradientLocations: [number, number] = [0, 1];
+  // Previous gradient fill (kept for reference):
+  // dark: #27222A → #191719, light: #EDE4E2 → #F3EBE7
+  const cardBg = isDark ? "#2A2725" : "transparent";
 
   const borderColor = isDark
     ? "#353039"
@@ -83,13 +81,10 @@ const SleepPredictionCardInner = ({
         borderColor,
         borderTopWidth: 2,
         borderTopColor: topBorderColor,
+        backgroundColor: cardBg,
       }}
     >
-      <LinearGradient
-        colors={gradientColors}
-        locations={gradientLocations}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
+      <View
         style={{ padding: 20, paddingHorizontal: 22, borderRadius: 15, overflow: "hidden" }}
       >
         <Text style={{ fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 2, color: sleepAccent, marginBottom: 12 }}>
@@ -149,7 +144,7 @@ const SleepPredictionCardInner = ({
             <Text style={{ fontSize: 11, fontWeight: "700", color: sleepAccent }}>i</Text>
           </Pressable>
         </View>
-      </LinearGradient>
+      </View>
     </View>
   );
 };

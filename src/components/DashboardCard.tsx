@@ -348,8 +348,6 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 className="text-base font-extrabold"
                 style={{ color: textColor }}
                 numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.7}
               >
                 {timeSince || "--:--"}
               </Text>
@@ -363,7 +361,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 </Text>
               )}
               {progress !== undefined && (
-                <View className="mt-2">
+                <View className="mt-1">
                   <View className="flex-row items-center">
                     <View
                       className="h-2 rounded-full flex-1 mr-2"
