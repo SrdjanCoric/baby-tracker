@@ -10,6 +10,8 @@ import { ACTIVITY_CONFIG } from "@/constants/activities";
 import { SURFACE } from "@/constants/colors";
 import { getGrowthTrendArrow, isUnderTwoYears } from "@/utils/growth-helpers";
 import { classifyPercentile, type PercentileClassification } from "@/types/growth-chart";
+import { useUnits } from "@/contexts";
+import { kgToLbs, cmToInches } from "@/utils/growth";
 
 interface MeasurementData {
   value: number;
@@ -142,6 +144,7 @@ export function GrowthStatsCard() {
   const isDark = colorScheme === "dark";
   const { selectedBaby } = useBaby();
   const { getMeasurementHistory } = useGrowth();
+  const { weightUnit, heightUnit } = useUnits();
 
   const accentColor = isDark
     ? ACTIVITY_CONFIG.growth.accentColorDark
@@ -294,13 +297,20 @@ export function GrowthStatsCard() {
               <MeasurementRow
                 icon="⚖️"
                 label={t("growth.weight")}
-                value={measurements.weight.value.toFixed(3)}
-                unit="kg"
+                value={weightUnit === "lbs"
+                  ? kgToLbs(measurements.weight.value, 3).toFixed(3)
+                  : measurements.weight.value.toFixed(3)}
+                unit={weightUnit}
                 measuredAt={measurements.weight.measuredAt}
                 percentile={measurements.weight.percentile}
                 change={
                   measurements.weight.change !== null
-                    ? { value: measurements.weight.change, unit: "g" }
+                    ? {
+                        value: weightUnit === "lbs"
+                          ? Math.round(measurements.weight.change * 2.20462)
+                          : measurements.weight.change,
+                        unit: weightUnit === "lbs" ? "oz" : "g",
+                      }
                     : null
                 }
                 isDark={isDark}
@@ -315,13 +325,20 @@ export function GrowthStatsCard() {
                 <MeasurementRow
                   icon="📏"
                   label={heightLabel}
-                  value={measurements.height.value.toFixed(3)}
-                  unit="cm"
+                  value={heightUnit === "in"
+                    ? cmToInches(measurements.height.value, 3).toFixed(3)
+                    : measurements.height.value.toFixed(3)}
+                  unit={heightUnit}
                   measuredAt={measurements.height.measuredAt}
                   percentile={measurements.height.percentile}
                   change={
                     measurements.height.change !== null
-                      ? { value: measurements.height.change, unit: "cm" }
+                      ? {
+                          value: heightUnit === "in"
+                            ? Math.round(cmToInches(measurements.height.change, 1) * 10) / 10
+                            : measurements.height.change,
+                          unit: heightUnit,
+                        }
                       : null
                   }
                   isDark={isDark}
@@ -337,13 +354,20 @@ export function GrowthStatsCard() {
                 <MeasurementRow
                   icon="👶"
                   label={t("growth.headCircumference")}
-                  value={measurements.head.value.toFixed(3)}
-                  unit="cm"
+                  value={heightUnit === "in"
+                    ? cmToInches(measurements.head.value, 3).toFixed(3)
+                    : measurements.head.value.toFixed(3)}
+                  unit={heightUnit}
                   measuredAt={measurements.head.measuredAt}
                   percentile={measurements.head.percentile}
                   change={
                     measurements.head.change !== null
-                      ? { value: measurements.head.change, unit: "cm" }
+                      ? {
+                          value: heightUnit === "in"
+                            ? Math.round(cmToInches(measurements.head.change, 1) * 10) / 10
+                            : measurements.head.change,
+                          unit: heightUnit,
+                        }
                       : null
                   }
                   isDark={isDark}

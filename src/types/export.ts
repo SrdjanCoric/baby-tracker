@@ -27,6 +27,9 @@ export interface ExportOptions {
   babyId: string;
   babyName: string;
   includeNotes: boolean;
+  volumeUnit?: "ml" | "oz";
+  weightUnit?: "kg" | "lbs";
+  heightUnit?: "cm" | "in";
 }
 
 export interface ExportResult {

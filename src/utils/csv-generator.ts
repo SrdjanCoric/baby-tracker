@@ -98,15 +98,22 @@ export function generateCSVHeader(columns: string[]): string {
 
 export function formatFeedingsAsCSV(
   feedings: StoredFeedingEntry[],
-  includeNotes: boolean
+  includeNotes: boolean,
+  volumeUnit: "ml" | "oz" = "ml"
 ): string {
+  const convertVolume = (val: number | undefined | null) => {
+    if (val == null) return "";
+    if (volumeUnit === "oz") return Number((val / 29.5735).toFixed(1));
+    return val;
+  };
+
   const headers = [
     "Date",
     "Time",
     "Type",
     "Duration",
     "Side",
-    "Amount (ml)",
+    `Amount (${volumeUnit})`,
     "Content Type",
     "Food",
     "Solid Amount",
@@ -122,7 +129,7 @@ export function formatFeedingsAsCSV(
       feeding.type,
       formatCSVDuration(feeding.durationSeconds),
       feeding.side || feeding.lastFinishedSide || "",
-      feeding.amountMl || "",
+      convertVolume(feeding.amountMl),
       feeding.contentType || "",
       feeding.foodType || "",
       feeding.amount || "",
@@ -196,13 +203,20 @@ export function formatDiapersAsCSV(
 
 export function formatPumpingAsCSV(
   pumpings: StoredPumpingEntry[],
-  includeNotes: boolean
+  includeNotes: boolean,
+  volumeUnit: "ml" | "oz" = "ml"
 ): string {
+  const convertVolume = (val: number | undefined | null) => {
+    if (val == null) return "";
+    if (volumeUnit === "oz") return Number((val / 29.5735).toFixed(1));
+    return val;
+  };
+
   const headers = [
     "Date",
     "Time",
     "Duration",
-    "Volume (ml)",
+    `Volume (${volumeUnit})`,
     "Side",
     ...(includeNotes ? ["Notes"] : []),
     "Logged By",
@@ -213,7 +227,7 @@ export function formatPumpingAsCSV(
       formatCSVDate(pumping.startedAt),
       formatCSVTime(pumping.startedAt),
       formatCSVDuration(pumping.durationSeconds),
-      pumping.volumeMl || "",
+      convertVolume(pumping.volumeMl),
       pumping.side,
       ...(includeNotes ? [pumping.notes || ""] : []),
       pumping.loggedBy || "",
@@ -226,23 +240,37 @@ export function formatPumpingAsCSV(
 
 export function formatGrowthAsCSV(
   growth: StoredGrowthEntry[],
-  includeNotes: boolean
+  includeNotes: boolean,
+  weightUnit: "kg" | "lbs" = "kg",
+  heightUnit: "cm" | "in" = "cm"
 ): string {
   const headers = [
     "Date",
-    "Weight (kg)",
-    "Height (cm)",
-    "Head Circumference (cm)",
+    `Weight (${weightUnit})`,
+    `Height (${heightUnit})`,
+    `Head Circumference (${heightUnit})`,
     ...(includeNotes ? ["Notes"] : []),
     "Logged By",
   ];
 
+  const convertWeight = (val: number | undefined | null) => {
+    if (val == null) return "";
+    if (weightUnit === "lbs") return Number((val / 0.453592).toFixed(1));
+    return val;
+  };
+
+  const convertLength = (val: number | undefined | null) => {
+    if (val == null) return "";
+    if (heightUnit === "in") return Number((val / 2.54).toFixed(1));
+    return val;
+  };
+
   const rows = growth.map((entry) => {
     const values = [
       formatCSVDate(entry.measuredAt),
-      entry.weightKg || "",
-      entry.heightCm || "",
-      entry.headCircumferenceCm || "",
+      convertWeight(entry.weightKg),
+      convertLength(entry.heightCm),
+      convertLength(entry.headCircumferenceCm),
       ...(includeNotes ? [entry.notes || ""] : []),
       entry.loggedBy || "",
     ];
@@ -287,19 +315,27 @@ export interface CombinedExportData {
   tummyTime: StoredTummyTimeEntry[];
 }
 
+export interface ExportUnitPreferences {
+  volumeUnit?: "ml" | "oz";
+  weightUnit?: "kg" | "lbs";
+  heightUnit?: "cm" | "in";
+}
+
 export function generateCombinedExport(
   data: CombinedExportData,
   selectedTypes: ExportDataType[],
-  includeNotes: boolean
+  includeNotes: boolean,
+  units: ExportUnitPreferences = {}
 ): string {
+  const { volumeUnit = "ml", weightUnit = "kg", heightUnit = "cm" } = units;
   const sections: string[] = [];
 
   const formatters: Record<ExportDataType, () => string> = {
-    feedings: () => formatFeedingsAsCSV(data.feedings, includeNotes),
+    feedings: () => formatFeedingsAsCSV(data.feedings, includeNotes, volumeUnit),
     sleep: () => formatSleepAsCSV(data.sleep, includeNotes),
     diapers: () => formatDiapersAsCSV(data.diapers, includeNotes),
-    pumping: () => formatPumpingAsCSV(data.pumping, includeNotes),
-    growth: () => formatGrowthAsCSV(data.growth, includeNotes),
+    pumping: () => formatPumpingAsCSV(data.pumping, includeNotes, volumeUnit),
+    growth: () => formatGrowthAsCSV(data.growth, includeNotes, weightUnit, heightUnit),
     tummyTime: () => formatTummyTimeAsCSV(data.tummyTime, includeNotes),
   };
 
