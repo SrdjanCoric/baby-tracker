@@ -402,15 +402,16 @@ Built the `SleepPredictionCard` component with nap time prediction and segmented
 - Info button shows Alert explaining predictions are based on sleep patterns
 - Generous padding (20px/22px) and spacing between elements
 
-**Colors:**
-- Dark: gradient `#27222A` → `#191719`, border `#353039`, top border `#4C4357`
-- Light: gradient `#EDE4E2` → `#F3EBE7`, "Nap time near" text `#3D3350`, time `#6B5A80`
-- Borders use solid hex (dark) computed from HTML's rgba composited on actual background
+**Colors (updated 2026-04-26):**
+- Light: transparent background (blends with warm `#F5EDE8` page)
+- Dark: solid `#2A2725` (`SURFACE.dark.card`) — matches activity cards
+- Borders kept: `1px #353039` (dark) / `1px rgba(139,123,160,0.15)` (light), top border `2px #4C4357` (dark) / `2px rgba(139,123,160,0.30)` (light)
+- Previous gradient fill removed: was `#27222A→#191719` (dark) / `#EDE4E2→#F3EBE7` (light) — too close to page background in both modes
 
 **Subtitle removed:** "Based on name's recent sleep patterns" replaced with a small `(i)` info button next to the segmented control. Tapping shows an Alert with the explanation. Reduces clutter, more breathing room.
 
 **Files changed:**
-- `src/components/SleepPredictionCard.tsx` — Full rewrite with segmented control, info button, precomputed gradients
+- `src/components/SleepPredictionCard.tsx` — Full rewrite with segmented control, info button; LinearGradient removed in favor of transparent/solid fill
 
 ### Completed: Dashboard Test Fixes (2026-04-26)
 
@@ -436,6 +437,39 @@ Added sleep prediction keys to all 6 locales (en, sr, es, fr, de, pt):
 - `dashboard.napTimeNear`, `dashboard.threeNapDay`, `dashboard.fourNapDay`
 - `dashboard.predictionInfo`, `dashboard.predictionInfoDetail`, `dashboard.predictionInfoDetailGeneric`
 - `dashboard.awake`
+
+### Completed: Cleanup — Dashboard Config & Tip Banner Removal (2026-04-26)
+
+Removed `DashboardConfigProvider`, dashboard settings screen, daily tips toggle from settings, and `TipDiscoveryBanner` component. Simplified onboarding features screen from activity toggles to read-only activity preview. Added milestones and health to onboarding feature list.
+
+**Files removed:**
+- `app/settings/dashboard.tsx`
+- `src/components/TipDiscoveryBanner.tsx`
+
+**Files changed:**
+- `app/_layout.tsx` — Removed `DashboardConfigProvider` from provider tree
+- `app/settings/index.tsx` — Removed dashboard config and daily tips rows
+- `app/onboarding/features.tsx` — Simplified to preview-only (no toggles)
+- `src/contexts/index.ts` — Removed `DashboardConfigProvider` export
+
+### Completed: Sleep Prediction Card Background Refinement (2026-04-26)
+
+Explored multiple background options for the prediction card (see `docs/sleep-prediction-background-options.html` and `docs/sleep-prediction-dark-bg-options.html`). Settled on:
+- **Light mode:** transparent — warm page background shows through, card feels natural
+- **Dark mode:** `#2A2725` (SURFACE.dark.card) — matches activity cards, clear separation from `#121110` page
+
+Removed `expo-linear-gradient` dependency from the component. Border treatment unchanged.
+
+---
+
+## Next Steps
+
+1. **Milestone celebrations** — Achievement detection service, storage, and celebration modals (story-style for major, toast for minor). Standalone feature, no dashboard dependency. Follows existing `BirthdayCelebrationModal` pattern closely.
+2. **Dashboard integration** — Wire `SleepPredictionCard` into the actual dashboard with real sleep context data (lastWakeUpTime from sleep context, babyName, isSleeping).
+3. **Info button upgrade** — Replace the simple Alert with a richer modal that explains how predictions work, links to sleep/wake window settings so users can manually adjust nap count and wake windows, and describes the algorithm briefly.
+4. **Nap count toggle persistence** — Wire dashboard toggle to daily override, settings toggle to persistent default. Connect to existing wake window config.
+5. **Sleep prediction algorithm** — Implement the actual prediction logic: average wake windows from last 5-7 days, fall back to age defaults from `WAKE_WINDOW_PROGRESSIONS`. Replace current simple offset calculation with data-driven predictions.
+6. **Contextual display states** — Implement the 6 states from the design doc (awake/nap soon/nap now/sleeping/all naps done/after bedtime). Currently only shows the basic "Nap time near" state. Most complex — touches prediction card, sleep context, and multiple UI branches.
 
 ---
 
