@@ -479,13 +479,32 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
       let tummyTime: StoredTummyTimeEntry;
 
-      if (user?.householdId && user?.id) {
-        tummyTime = await createTummyTimeInDatabase(tummyTimeInput, user.id);
-      } else {
-        tummyTime = await TummyTimeStorageService.addTummyTime(tummyTimeInput);
+      try {
+        if (user?.householdId && user?.id) {
+          console.log("[TummyTimeContext] stopTummyTime: saving to database");
+          tummyTime = await createTummyTimeInDatabase(tummyTimeInput, user.id);
+        } else {
+          console.log("[TummyTimeContext] stopTummyTime: saving to local storage");
+          tummyTime = await TummyTimeStorageService.addTummyTime(tummyTimeInput);
+        }
+        console.log("[TummyTimeContext] stopTummyTime: saved entry id=%s", tummyTime.id);
+        dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
+      } catch (saveError) {
+        console.error("[TummyTimeContext] stopTummyTime: FAILED to save, cleaning up timer", saveError);
+        dispatch({ type: "STOP_TIMER" });
+        await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+        if (liveActivityIdRef.current) {
+          await endTimerLiveActivity(liveActivityIdRef.current);
+          liveActivityIdRef.current = null;
+        } else {
+          await endLiveActivityByType("tummyTime");
+        }
+        if (user?.id) {
+          try { await releaseTimerLock(selectedBaby.id, "tummy_time", user.id); } catch { /* ignore */ }
+        }
+        throw saveError;
       }
 
-      dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
       dispatch({ type: "STOP_TIMER" });
       await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
 

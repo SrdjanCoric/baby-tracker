@@ -583,19 +583,32 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   }, [selectedBaby, user?.id]);
 
   const stopSleep = useCallback(async (requestedEndTime?: Date): Promise<StoredSleepEntry | null> => {
-    if (!selectedBaby || !state.activeTimer) return null;
-    if (isStoppingRef.current) return null;
+    if (!selectedBaby || !state.activeTimer) {
+      console.warn("[SleepContext] stopSleep called but no active timer", { hasBaby: !!selectedBaby, hasTimer: !!state.activeTimer });
+      return null;
+    }
+    if (isStoppingRef.current) {
+      console.warn("[SleepContext] stopSleep already in progress, skipping");
+      return null;
+    }
     isStoppingRef.current = true;
+
+    const timerStartTime = state.activeTimer.startTime;
+    const totalPausedMs = state.activeTimer.totalPausedMs;
+    const babyId = selectedBaby.id;
 
     try {
       const endTime = requestedEndTime ?? new Date();
       const durationSeconds = Math.floor(
-        (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+        (endTime.getTime() - timerStartTime.getTime() - totalPausedMs) / 1000
       );
 
+      console.log("[SleepContext] stopSleep: duration=%ds, babyId=%s", durationSeconds, babyId);
+
       if (durationSeconds < 60) {
+        console.log("[SleepContext] stopSleep: duration < 60s, discarding");
         dispatch({ type: "STOP_TIMER" });
-        await SleepStorageService.clearActiveTimer(selectedBaby.id);
+        await SleepStorageService.clearActiveTimer(babyId);
         if (liveActivityIdRef.current) {
           await endTimerLiveActivity(liveActivityIdRef.current);
           liveActivityIdRef.current = null;
@@ -603,7 +616,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           await endLiveActivityByType("sleep");
         }
         if (user?.id) {
-          try { await releaseTimerLock(selectedBaby.id, "sleep", user.id); } catch { /* ignore */ }
+          try { await releaseTimerLock(babyId, "sleep", user.id); } catch { /* ignore */ }
         }
         return null;
       }
@@ -611,30 +624,49 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
       const dayEndHour = state.wakeWindowConfig?.dayEndHour ?? 19;
       const sleepType = classifySleepByTimeRange(
-        state.activeTimer.startTime,
+        timerStartTime,
         endTime,
         dayStartHour,
         dayEndHour
       );
 
       const sleepInput: CreateSleepInput = {
-        babyId: selectedBaby.id,
+        babyId,
         type: sleepType,
-        startedAt: state.activeTimer.startTime,
+        startedAt: timerStartTime,
         endedAt: endTime,
         durationSeconds,
       };
 
       let lastSleep: StoredSleepEntry;
-      if (user?.householdId && user?.id) {
-        lastSleep = await createSleepInDatabase(sleepInput, user.id);
-      } else {
-        lastSleep = await SleepStorageService.addSleep(sleepInput);
+      try {
+        if (user?.householdId && user?.id) {
+          console.log("[SleepContext] stopSleep: saving to database");
+          lastSleep = await createSleepInDatabase(sleepInput, user.id);
+        } else {
+          console.log("[SleepContext] stopSleep: saving to local storage");
+          lastSleep = await SleepStorageService.addSleep(sleepInput);
+        }
+        console.log("[SleepContext] stopSleep: saved entry id=%s", lastSleep.id);
+        dispatch({ type: "ADD_SLEEP", payload: lastSleep });
+      } catch (saveError) {
+        console.error("[SleepContext] stopSleep: FAILED to save entry, still cleaning up timer", saveError);
+        dispatch({ type: "STOP_TIMER" });
+        await SleepStorageService.clearActiveTimer(babyId);
+        if (liveActivityIdRef.current) {
+          await endTimerLiveActivity(liveActivityIdRef.current);
+          liveActivityIdRef.current = null;
+        } else {
+          await endLiveActivityByType("sleep");
+        }
+        if (user?.id) {
+          try { await releaseTimerLock(babyId, "sleep", user.id); } catch { /* ignore */ }
+        }
+        throw saveError;
       }
-      dispatch({ type: "ADD_SLEEP", payload: lastSleep });
 
       dispatch({ type: "STOP_TIMER" });
-      await SleepStorageService.clearActiveTimer(selectedBaby.id);
+      await SleepStorageService.clearActiveTimer(babyId);
 
       if (liveActivityIdRef.current) {
         await endTimerLiveActivity(liveActivityIdRef.current);
@@ -645,12 +677,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
       if (user?.id) {
         try {
-          await releaseTimerLock(selectedBaby.id, "sleep", user.id);
+          await releaseTimerLock(babyId, "sleep", user.id);
         } catch (error) {
           console.error("[SleepContext] Failed to release timer lock:", error);
         }
       }
 
+      console.log("[SleepContext] stopSleep: completed successfully");
       return lastSleep;
     } finally {
       isStoppingRef.current = false;
