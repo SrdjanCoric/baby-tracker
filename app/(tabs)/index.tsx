@@ -23,6 +23,7 @@ import { timeSince, hoursSince, formatDuration } from "@/utils/time";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
 import { getHealthDisplayName } from "@/utils/health-display";
+import { formatVolume } from "@/utils/volume";
 import { ActivityType } from "@/constants/activities";
 import { isUnderTwoMonths } from "@/utils/sleepGoals";
 import { getCurrentAgeGroupKey, AGE_GROUPS } from "@/constants/milestones";
@@ -309,10 +310,10 @@ export default function HomeScreen() {
 
     const todayVolume = getTodaysTotalVolume();
     if (todayVolume > 0) {
-      return `${todayVolume}ml ${t("common.today").toLowerCase()}`;
+      return `${formatVolume(todayVolume, volumeUnit)} ${t("common.today").toLowerCase()}`;
     }
     return "--";
-  }, [pumpingActiveTimer, getTodaysTotalVolume, t, pumpings]);
+  }, [pumpingActiveTimer, getTodaysTotalVolume, t, pumpings, volumeUnit]);
 
   const pumpingSubtitle = useMemo(() => {
     if (pumpingActiveTimer?.isRunning) return undefined;

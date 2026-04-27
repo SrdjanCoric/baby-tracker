@@ -33,6 +33,8 @@ export interface ReportOptions {
   babyBirthDate?: Date;
   babyGender?: Gender;
   includeCharts: boolean;
+  weightUnit?: "kg" | "lbs";
+  heightUnit?: "cm" | "in";
 }
 
 export interface ReportResult {

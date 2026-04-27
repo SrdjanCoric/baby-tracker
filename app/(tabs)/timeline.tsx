@@ -98,7 +98,7 @@ export default function TimelineScreen() {
   const { measurements, isLoading: growthLoading, refreshMeasurements } = useGrowth();
   const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
   const { healthEntries, isLoading: healthLoading, refreshHealth } = useHealth();
-  const { temperatureUnit } = useUnits();
+  const { temperatureUnit, weightUnit, heightUnit, volumeUnit } = useUnits();
   const { members } = useHousehold();
   const { timeFormat } = useTimeFormat();
   const { selectedBaby } = useBaby();
@@ -232,7 +232,7 @@ export default function TimelineScreen() {
         ? t("feeding.breastMilk")
         : t("feeding.formula");
       title = `${t("feeding.bottle")} (${contentLabel})`;
-      subtitle = feeding.amountMl ? `${feeding.amountMl} ml` : "";
+      subtitle = feeding.amountMl ? formatVolume(feeding.amountMl, volumeUnit) : "";
     } else {
       title = t("feeding.solid");
       const foodLabel = feeding.foodType || "";
@@ -259,7 +259,7 @@ export default function TimelineScreen() {
       date,
       loggedBy: feeding.loggedBy,
     };
-  }, [t, timeFormat]);
+  }, [t, timeFormat, volumeUnit]);
 
   const sleepToTimelineEntry = useCallback((sleep: StoredSleepEntry): TimelineEntry => {
     const date = new Date(sleep.startedAt);
@@ -321,7 +321,7 @@ export default function TimelineScreen() {
       : pumping.side === "right"
         ? t("feeding.right")
         : t("feeding.both");
-    const volumeLabel = pumping.volumeMl ? formatVolume(pumping.volumeMl, "ml") : "";
+    const volumeLabel = pumping.volumeMl ? formatVolume(pumping.volumeMl, volumeUnit) : "";
     const durationLabel = pumping.durationSeconds
       ? formatDuration(pumping.durationSeconds, "short")
       : "";
@@ -348,9 +348,9 @@ export default function TimelineScreen() {
 
     const title = t("growth.title");
     const parts: string[] = [];
-    if (growth.weightKg) parts.push(formatWeight(growth.weightKg, "kg"));
-    if (growth.heightCm) parts.push(formatHeight(growth.heightCm, "cm"));
-    if (growth.headCircumferenceCm) parts.push(`${t("growth.headCircumference")}: ${growth.headCircumferenceCm} cm`);
+    if (growth.weightKg) parts.push(formatWeight(growth.weightKg, weightUnit));
+    if (growth.heightCm) parts.push(formatHeight(growth.heightCm, heightUnit));
+    if (growth.headCircumferenceCm) parts.push(`${t("growth.headCircumference")}: ${formatHeight(growth.headCircumferenceCm, heightUnit)}`);
     const subtitle = parts.join(" · ");
 
     return {
@@ -362,7 +362,7 @@ export default function TimelineScreen() {
       date,
       loggedBy: growth.loggedBy,
     };
-  }, [t, timeFormat]);
+  }, [t, timeFormat, weightUnit, heightUnit]);
 
   const tummyTimeToTimelineEntry = useCallback((tummyTime: StoredTummyTimeEntry): TimelineEntry => {
     const date = new Date(tummyTime.startedAt);

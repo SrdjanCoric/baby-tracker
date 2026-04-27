@@ -19,6 +19,11 @@ function renderPercentileBadge(percentile: number | undefined): string {
   return `<span class="percentile-label ${className}">${Math.round(percentile)}%</span>`;
 }
 
+export interface GrowthUnitPreferences {
+  weightUnit?: "kg" | "lbs";
+  heightUnit?: "cm" | "in";
+}
+
 function generateGrowthChartSvg(
   stats: GrowthReportStats,
   measurementType: "weight" | "height" | "head",
@@ -87,6 +92,7 @@ function generateGrowthChartSvg(
 
   const t = i18n.t.bind(i18n);
   const title = measurementType === "weight" ? `${t("reports.pdf.weight")} (kg)` : measurementType === "height" ? `${t("reports.pdf.height")} (cm)` : `${t("reports.pdf.headCircumference")} (cm)`;
+  // Note: Charts always use metric (WHO standard data is in metric units)
 
   return `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
@@ -145,15 +151,26 @@ function generateGrowthChartSvg(
 export function renderGrowthSection(
   stats: GrowthReportStats,
   babyGender?: Gender,
-  includeCharts?: boolean
+  includeCharts?: boolean,
+  units: GrowthUnitPreferences = {}
 ): string {
   const t = i18n.t.bind(i18n);
+  const { weightUnit = "kg", heightUnit = "cm" } = units;
   const hasWeight = stats.latestWeight !== undefined;
   const hasHeight = stats.latestHeight !== undefined;
   const hasHead = stats.latestHeadCircumference !== undefined;
   const hasMeasurements = stats.measurements.length > 0;
 
   const showCharts = includeCharts && babyGender && hasMeasurements;
+
+  const fmtWeight = (kg: number) => {
+    if (weightUnit === "lbs") return (kg / 0.453592).toFixed(1);
+    return kg.toFixed(3);
+  };
+  const fmtLength = (cm: number) => {
+    if (heightUnit === "in") return (cm / 2.54).toFixed(1);
+    return cm.toFixed(3);
+  };
 
   return `
     <div class="section">
@@ -178,7 +195,7 @@ export function renderGrowthSection(
             ${hasWeight ? `
             <tr>
               <td>${t("reports.pdf.weight")}</td>
-              <td class="text-center">${stats.latestWeight!.value.toFixed(3)} kg</td>
+              <td class="text-center">${fmtWeight(stats.latestWeight!.value)} ${weightUnit}</td>
               <td class="text-center">${renderPercentileBadge(stats.latestWeight!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestWeight!.date)}</td>
             </tr>
@@ -186,7 +203,7 @@ export function renderGrowthSection(
             ${hasHeight ? `
             <tr>
               <td>${t("reports.pdf.height")}</td>
-              <td class="text-center">${stats.latestHeight!.value.toFixed(3)} cm</td>
+              <td class="text-center">${fmtLength(stats.latestHeight!.value)} ${heightUnit}</td>
               <td class="text-center">${renderPercentileBadge(stats.latestHeight!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestHeight!.date)}</td>
             </tr>
@@ -194,7 +211,7 @@ export function renderGrowthSection(
             ${hasHead ? `
             <tr>
               <td>${t("reports.pdf.headCircumference")}</td>
-              <td class="text-center">${stats.latestHeadCircumference!.value.toFixed(3)} cm</td>
+              <td class="text-center">${fmtLength(stats.latestHeadCircumference!.value)} ${heightUnit}</td>
               <td class="text-center">${renderPercentileBadge(stats.latestHeadCircumference!.percentile)}</td>
               <td class="text-center">${formatDate(stats.latestHeadCircumference!.date)}</td>
             </tr>
@@ -213,11 +230,11 @@ export function renderGrowthSection(
             <div class="info-row">
               <span class="info-label">${t("reports.pdf.weight")}</span>
               <span class="info-value" style="color: ${stats.weightGain.change >= 0 ? "#22C55E" : "#EF4444"}">
-                ${stats.weightGain.change >= 0 ? "+" : ""}${stats.weightGain.change.toFixed(3)} kg
+                ${stats.weightGain.change >= 0 ? "+" : ""}${fmtWeight(stats.weightGain.change)} ${weightUnit}
               </span>
             </div>
             <div style="font-size: 10px; color: #6B7280; margin-top: 2px;">
-              ${stats.weightGain.startValue.toFixed(3)} kg → ${stats.weightGain.endValue.toFixed(3)} kg
+              ${fmtWeight(stats.weightGain.startValue)} ${weightUnit} → ${fmtWeight(stats.weightGain.endValue)} ${weightUnit}
             </div>
           </div>
           ` : ""}
@@ -226,11 +243,11 @@ export function renderGrowthSection(
             <div class="info-row">
               <span class="info-label">${t("reports.pdf.height")}</span>
               <span class="info-value" style="color: ${stats.heightGain.change >= 0 ? "#22C55E" : "#EF4444"}">
-                ${stats.heightGain.change >= 0 ? "+" : ""}${stats.heightGain.change.toFixed(3)} cm
+                ${stats.heightGain.change >= 0 ? "+" : ""}${fmtLength(stats.heightGain.change)} ${heightUnit}
               </span>
             </div>
             <div style="font-size: 10px; color: #6B7280; margin-top: 2px;">
-              ${stats.heightGain.startValue.toFixed(3)} cm → ${stats.heightGain.endValue.toFixed(3)} cm
+              ${fmtLength(stats.heightGain.startValue)} ${heightUnit} → ${fmtLength(stats.heightGain.endValue)} ${heightUnit}
             </div>
           </div>
           ` : ""}

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { useBaby } from "@/contexts";
+import { useBaby, useUnits } from "@/contexts";
 import { ExportService } from "@/services/export-service";
 import { DataTypeSelector, DateRangePicker } from "@/components/export";
 import type {
@@ -38,6 +38,7 @@ function getInitialDateRange(): DateRange {
 export default function ExportScreen() {
   const { t } = useTranslation();
   const { selectedBaby } = useBaby();
+  const { volumeUnit, weightUnit, heightUnit } = useUnits();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
@@ -92,6 +93,9 @@ export default function ExportScreen() {
         babyId: selectedBaby.id,
         babyName: selectedBaby.name,
         includeNotes,
+        volumeUnit,
+        weightUnit,
+        heightUnit,
       });
 
       if (result.success && result.content && result.fileName) {
