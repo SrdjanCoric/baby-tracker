@@ -9,6 +9,7 @@ jest.mock("expo-router", () => ({
     push: mockPush,
     back: mockBack,
   }),
+  useLocalSearchParams: () => ({}),
 }));
 
 jest.mock("react-i18next", () => ({
@@ -98,6 +99,9 @@ jest.mock("@/contexts", () => ({
     volumeUnit: "ml",
     isLoading: false,
     setUnitSystem: jest.fn(),
+  }),
+  useAuth: () => ({
+    session: { access_token: "test-token" },
   }),
 }));
 
@@ -202,7 +206,7 @@ describe("FeedingScreen", () => {
       render(<FeedingScreen />);
       fireEvent.press(screen.getByText("L"));
       await waitFor(() => {
-        expect(mockStartBreastfeeding).toHaveBeenCalledWith("left");
+        expect(mockStartBreastfeeding).toHaveBeenCalledWith("left", undefined);
       });
     });
 
@@ -210,7 +214,7 @@ describe("FeedingScreen", () => {
       render(<FeedingScreen />);
       fireEvent.press(screen.getByText("R"));
       await waitFor(() => {
-        expect(mockStartBreastfeeding).toHaveBeenCalledWith("right");
+        expect(mockStartBreastfeeding).toHaveBeenCalledWith("right", undefined);
       });
     });
 
@@ -218,7 +222,7 @@ describe("FeedingScreen", () => {
       render(<FeedingScreen />);
       fireEvent.press(screen.getByText("Both Sides"));
       await waitFor(() => {
-        expect(mockStartBreastfeeding).toHaveBeenCalledWith("both");
+        expect(mockStartBreastfeeding).toHaveBeenCalledWith("both", undefined);
       });
     });
 

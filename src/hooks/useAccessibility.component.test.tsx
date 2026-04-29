@@ -128,10 +128,12 @@ describe("useAccessibility", () => {
 
       act(() => {
         hookResult.announce("Test message");
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith("Test message");
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith("Test message");
+      });
     });
 
     it("should not announce empty message", async () => {
@@ -153,7 +155,7 @@ describe("useAccessibility", () => {
 
       act(() => {
         hookResult.announce("");
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
       expect(mockAnnounceForAccessibility).not.toHaveBeenCalled();
@@ -177,16 +179,20 @@ describe("useAccessibility", () => {
       act(() => {
         hookResult.announce("Message 1");
         hookResult.announce("Message 2");
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith("Message 1");
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith("Message 1");
+      });
 
       act(() => {
         jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith("Message 2");
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith("Message 2");
+      });
     });
   });
 
@@ -206,14 +212,18 @@ describe("useAccessibility", () => {
         expect(hookResult).toBeDefined();
       });
 
+      mockAnnounceForAccessibility.mockClear();
+
       act(() => {
         hookResult.announceTimerStart("breastfeeding");
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
-        "Breastfeeding timer started"
-      );
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
+          "Breastfeeding timer started"
+        );
+      });
     });
   });
 
@@ -233,14 +243,18 @@ describe("useAccessibility", () => {
         expect(hookResult).toBeDefined();
       });
 
+      mockAnnounceForAccessibility.mockClear();
+
       act(() => {
         hookResult.announceTimerStop("pumping");
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
-        "Pumping timer stopped"
-      );
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
+          "Pumping timer stopped"
+        );
+      });
     });
 
     it("should announce timer stop message with duration", async () => {
@@ -258,14 +272,18 @@ describe("useAccessibility", () => {
         expect(hookResult).toBeDefined();
       });
 
+      mockAnnounceForAccessibility.mockClear();
+
       act(() => {
         hookResult.announceTimerStop("tummyTime", 600);
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
-        "Tummy time timer stopped. Duration: 10 minutes"
-      );
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
+          "Tummy time timer stopped. Duration: 10 minutes"
+        );
+      });
     });
   });
 
@@ -285,14 +303,18 @@ describe("useAccessibility", () => {
         expect(hookResult).toBeDefined();
       });
 
+      mockAnnounceForAccessibility.mockClear();
+
       act(() => {
         hookResult.announceSaveSuccess("diaper");
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
-        "Diaper change saved successfully"
-      );
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
+          "Diaper change saved successfully"
+        );
+      });
     });
   });
 
@@ -312,14 +334,18 @@ describe("useAccessibility", () => {
         expect(hookResult).toBeDefined();
       });
 
+      mockAnnounceForAccessibility.mockClear();
+
       act(() => {
         hookResult.announceError();
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
-        "An error occurred. Please try again."
-      );
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
+          "An error occurred. Please try again."
+        );
+      });
     });
 
     it("should announce error with context", async () => {
@@ -337,14 +363,18 @@ describe("useAccessibility", () => {
         expect(hookResult).toBeDefined();
       });
 
+      mockAnnounceForAccessibility.mockClear();
+
       act(() => {
         hookResult.announceError("saving");
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(500);
       });
 
-      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
-        "Error saving. Please try again."
-      );
+      await waitFor(() => {
+        expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
+          "Error saving. Please try again."
+        );
+      });
     });
   });
 

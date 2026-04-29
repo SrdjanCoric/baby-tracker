@@ -5,7 +5,7 @@ import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/dat
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { CONTENT_COLORS, ACTION_COLORS, SURFACE_COLORS } from "@/constants/design-tokens";
 import { calculateDailySummary, type TimelineDataByDate } from "@/utils/timeline";
-import { formatHourValue, type TimeFormat } from "@/utils/time";
+import { formatHourValue, formatDurationShort, type TimeFormat } from "@/utils/time";
 import type { FilterType } from "./ActivityFilterTabs";
 
 interface DailySummaryCardProps {
@@ -208,7 +208,7 @@ export function DailySummaryCard({
         if (summary.nursingCount > 0) {
           const hours = Math.floor(summary.nursingMinutes / 60);
           const mins = summary.nursingMinutes % 60;
-          const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+          const timeStr = formatDurationShort(hours, mins, t);
           lines.push({
             label: t("feeding.breastfeeding"),
             value: `${timeStr} · ${summary.nursingCount}×`,
@@ -244,7 +244,7 @@ export function DailySummaryCard({
         const lines: { label: string; value: string }[] = [];
         const hours = Math.floor(summary.sleepMinutes / 60);
         const mins = summary.sleepMinutes % 60;
-        const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+        const timeStr = formatDurationShort(hours, mins, t);
         if (summary.napCount > 0) {
           lines.push({
             label: t("sleep.nap"),

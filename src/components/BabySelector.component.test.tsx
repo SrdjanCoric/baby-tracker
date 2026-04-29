@@ -6,6 +6,10 @@ const mockSelectBaby = jest.fn();
 
 jest.mock("@/contexts", () => ({
   useBaby: jest.fn(),
+  useFeeding: jest.fn(),
+  useSleep: jest.fn(),
+  usePumping: jest.fn(),
+  useTummyTime: jest.fn(),
 }));
 
 jest.mock("@/validators/baby", () => ({
@@ -37,9 +41,13 @@ jest.mock("react-i18next", () => ({
   }),
 }));
 
-import { useBaby } from "@/contexts";
+import { useBaby, useFeeding, useSleep, usePumping, useTummyTime } from "@/contexts";
 
 const mockUseBaby = useBaby as jest.Mock;
+const mockUseFeeding = useFeeding as jest.Mock;
+const mockUseSleep = useSleep as jest.Mock;
+const mockUsePumping = usePumping as jest.Mock;
+const mockUseTummyTime = useTummyTime as jest.Mock;
 
 describe("BabySelector", () => {
   const mockBaby1 = {
@@ -61,6 +69,22 @@ describe("BabySelector", () => {
       selectedBaby: mockBaby1,
       selectBaby: mockSelectBaby,
       isLoading: false,
+    });
+    mockUseFeeding.mockReturnValue({
+      activeTimer: null,
+      stopBreastfeeding: jest.fn(),
+    });
+    mockUseSleep.mockReturnValue({
+      activeTimer: null,
+      stopSleep: jest.fn(),
+    });
+    mockUsePumping.mockReturnValue({
+      activeTimer: null,
+      stopPumping: jest.fn(),
+    });
+    mockUseTummyTime.mockReturnValue({
+      activeTimer: null,
+      stopTummyTime: jest.fn(),
     });
   });
 
@@ -115,8 +139,8 @@ describe("BabySelector", () => {
     });
   });
 
-  describe("dropdown indicator", () => {
-    it("shows dropdown indicator when multiple babies", () => {
+  describe("multiple babies", () => {
+    it("renders all babies in modal when multiple babies exist", () => {
       mockUseBaby.mockReturnValue({
         babies: [mockBaby1, mockBaby2],
         selectedBaby: mockBaby1,
@@ -124,12 +148,22 @@ describe("BabySelector", () => {
         isLoading: false,
       });
       render(<BabySelector />);
-      expect(screen.getByText("▾")).toBeTruthy();
+      fireEvent.press(screen.getByLabelText(/Emma.*Tap to switch/));
+      expect(screen.getAllByText("Emma").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("Oliver")).toBeTruthy();
     });
 
-    it("hides dropdown when single baby", () => {
+    it("allows switching between multiple babies", () => {
+      mockUseBaby.mockReturnValue({
+        babies: [mockBaby1, mockBaby2],
+        selectedBaby: mockBaby1,
+        selectBaby: mockSelectBaby,
+        isLoading: false,
+      });
       render(<BabySelector />);
-      expect(screen.queryByText("▾")).toBeNull();
+      fireEvent.press(screen.getByLabelText(/Emma.*Tap to switch/));
+      fireEvent.press(screen.getByLabelText("Oliver"));
+      expect(mockSelectBaby).toHaveBeenCalledWith("2");
     });
   });
 

@@ -452,9 +452,9 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 style={[
                   pauseButtonAnimatedStyle,
                   {
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
                     backgroundColor: isPaused ? buttonBgColor : "transparent",
                     borderWidth: isPaused ? 0 : 2,
                     borderColor: buttonBgColor,
@@ -479,7 +479,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 onPressIn={handleButtonPressIn}
                 onPressOut={handleButtonPressOut}
                 className="items-center justify-center"
-                style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor, width: 28, height: 28, borderRadius: 14 }]}
+                style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor, width: 34, height: 34, borderRadius: 17 }]}
                 accessibilityRole="button"
                 accessibilityLabel={t("common.stop")}
                 testID={testID ? `${testID}-action` : undefined}
@@ -498,7 +498,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
               onPressIn={handleButtonPressIn}
               onPressOut={handleButtonPressOut}
               className="items-center justify-center"
-              style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor, width: 28, height: 28, borderRadius: 14 }]}
+              style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor, width: 34, height: 34, borderRadius: 17 }]}
               accessibilityRole="button"
               accessibilityLabel={isActive ? t("common.stop") : t("accessibility.addActivity", { label })}
               testID={testID ? `${testID}-action` : undefined}

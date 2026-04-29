@@ -14,6 +14,10 @@ const MILESTONE_CHECK_KEY_PREFIX = "@sleep_milestone_check:";
 const DISMISSED_MILESTONES_KEY_PREFIX = "@sleep_dismissed_milestones:";
 const WAKE_WINDOW_CONFIG_KEY_PREFIX = "@wake_window_config:";
 const NEWBORN_NAP_OPT_IN_KEY_PREFIX = "@newborn_nap_opt_in:";
+const PREDICTION_MODEL_KEY_PREFIX = "@sleep_prediction_model:";
+const PREDICTION_BANNER_DISMISSED_KEY_PREFIX = "@sleep_prediction_dismissed_banner:";
+const DRIFT_DISMISSED_KEY_PREFIX = "@sleep_prediction_drift_dismissed:";
+const SELECTED_NAP_COUNT_KEY_PREFIX = "@sleep_prediction_selected_nap_count:";
 const DEFAULT_DAILY_GOAL_MINUTES = 14 * 60; // 14 hours in minutes
 
 export interface StoredSleepEntry {
@@ -88,6 +92,22 @@ function getWakeWindowConfigKey(babyId: string): string {
 
 function getNewbornNapOptInKey(babyId: string): string {
   return getUserScopedKey(`${NEWBORN_NAP_OPT_IN_KEY_PREFIX}${babyId}`);
+}
+
+function getPredictionModelKey(babyId: string): string {
+  return getUserScopedKey(`${PREDICTION_MODEL_KEY_PREFIX}${babyId}`);
+}
+
+function getPredictionBannerDismissedKey(babyId: string): string {
+  return getUserScopedKey(`${PREDICTION_BANNER_DISMISSED_KEY_PREFIX}${babyId}`);
+}
+
+function getDriftDismissedKey(babyId: string): string {
+  return getUserScopedKey(`${DRIFT_DISMISSED_KEY_PREFIX}${babyId}`);
+}
+
+function getSelectedNapCountKey(babyId: string): string {
+  return getUserScopedKey(`${SELECTED_NAP_COUNT_KEY_PREFIX}${babyId}`);
 }
 
 function isToday(date: Date): boolean {
@@ -274,5 +294,59 @@ export const SleepStorageService = {
 
   async setNewbornNapOptIn(babyId: string, optIn: boolean): Promise<void> {
     await AsyncStorage.setItem(getNewbornNapOptInKey(babyId), optIn ? "true" : "false");
+  },
+
+  async getSleepPredictionModel(babyId: string): Promise<Record<string, unknown> | null> {
+    const data = await AsyncStorage.getItem(getPredictionModelKey(babyId));
+    if (!data) return null;
+    return JSON.parse(data);
+  },
+
+  async setSleepPredictionModel(babyId: string, model: Record<string, unknown>): Promise<void> {
+    await AsyncStorage.setItem(getPredictionModelKey(babyId), JSON.stringify(model));
+  },
+
+  async getPredictionBannerDismissed(babyId: string): Promise<boolean> {
+    const val = await AsyncStorage.getItem(getPredictionBannerDismissedKey(babyId));
+    return val === "true";
+  },
+
+  async setPredictionBannerDismissed(babyId: string, dismissed: boolean): Promise<void> {
+    await AsyncStorage.setItem(getPredictionBannerDismissedKey(babyId), dismissed ? "true" : "false");
+  },
+
+  async getDriftDismissed(babyId: string): Promise<{ suggestedHour: number; type: string } | null> {
+    const data = await AsyncStorage.getItem(getDriftDismissedKey(babyId));
+    if (!data) return null;
+    return JSON.parse(data);
+  },
+
+  async setDriftDismissed(babyId: string, drift: { suggestedHour: number; type: string }): Promise<void> {
+    await AsyncStorage.setItem(getDriftDismissedKey(babyId), JSON.stringify(drift));
+  },
+
+  async clearDriftDismissed(babyId: string): Promise<void> {
+    await AsyncStorage.removeItem(getDriftDismissedKey(babyId));
+  },
+
+  async getSelectedNapCount(babyId: string): Promise<number | null> {
+    const val = await AsyncStorage.getItem(getSelectedNapCountKey(babyId));
+    if (!val) return null;
+    try {
+      const parsed = JSON.parse(val);
+      if (parsed.date !== new Date().toISOString().slice(0, 10)) return null;
+      return parsed.count;
+    } catch {
+      return null;
+    }
+  },
+
+  async setSelectedNapCount(babyId: string, count: number): Promise<void> {
+    const data = JSON.stringify({ count, date: new Date().toISOString().slice(0, 10) });
+    await AsyncStorage.setItem(getSelectedNapCountKey(babyId), data);
+  },
+
+  async clearSelectedNapCount(babyId: string): Promise<void> {
+    await AsyncStorage.removeItem(getSelectedNapCountKey(babyId));
   },
 };

@@ -8,6 +8,7 @@ import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredGrowthEntry } from "@/services/growth-storage";
+import { formatDurationShort } from "@/utils/time";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import type { ActivityType } from "@/constants/activities";
 import { sleepDayKey, localDateKey, splitSleepAtDayBoundary } from "@/utils/sleep-patterns";
@@ -216,7 +217,7 @@ export function formatDailySummaryText(
     if (summary.napCount > 0 || summary.nightSleepCount > 0) {
       const hours = Math.floor(summary.sleepMinutes / 60);
       const mins = summary.sleepMinutes % 60;
-      const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+      const timeStr = formatDurationShort(hours, mins, t);
       const totalCount = summary.napCount + summary.nightSleepCount;
       lines.push(`${t("sleep.title")} ${timeStr} · ${totalCount}×`);
     }
