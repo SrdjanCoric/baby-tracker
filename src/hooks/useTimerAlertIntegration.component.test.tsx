@@ -331,7 +331,7 @@ describe("useTimerAlertIntegration", () => {
       await waitFor(() => {
         expect(mockScheduleNotification).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: "Breastfeeding Timer",
+            title: "Feeding Timer",
             body: expect.any(String),
             data: expect.objectContaining({
               type: "timer_alert",

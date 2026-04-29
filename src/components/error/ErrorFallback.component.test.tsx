@@ -77,16 +77,14 @@ describe("ErrorFallback", () => {
       render(<ErrorFallback error={null} resetError={mockResetError} />);
 
       const button = screen.getByTestId("error-retry-button");
-      expect(button.props.accessibilityLabel).toBe("Try again");
+      expect(button.props.accessibilityLabel).toBe("Try Again");
     });
 
     it("should have accessibility hint on Try Again", () => {
       render(<ErrorFallback error={null} resetError={mockResetError} />);
 
       const button = screen.getByTestId("error-retry-button");
-      expect(button.props.accessibilityHint).toBe(
-        "Attempts to recover from the error"
-      );
+      expect(button.props.accessibilityHint).toBe("Try Again");
     });
   });
 

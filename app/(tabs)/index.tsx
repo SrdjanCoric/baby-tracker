@@ -19,7 +19,7 @@ import {
 import { TipCarousel } from "@/components/TipCarousel";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
 import { Alert } from "react-native";
-import { timeSince, hoursSince, formatDuration } from "@/utils/time";
+import { timeSince, hoursSince, formatDuration, formatDurationShort, type TranslateFn } from "@/utils/time";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
 import { getHealthDisplayName } from "@/utils/health-display";
@@ -57,6 +57,7 @@ const COMPACT_ACTIVITIES: ActivityType[] = ["pumping", "growth", "milestones", "
 
 export default function HomeScreen() {
   const { t } = useTranslation();
+  const tFn = t as TranslateFn;
   const router = useRouter();
   const isFocused = useIsFocused();
   const timeTick = useTimeRefresh(60000);
@@ -265,11 +266,11 @@ export default function HomeScreen() {
     if (remainingMinutes >= 60) {
       const h = Math.floor(remainingMinutes / 60);
       const m = remainingMinutes % 60;
-      const timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+      const timeStr = formatDurationShort(h, m, tFn);
       return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: timeStr }) : t("dashboard.napIn", { time: timeStr })}`;
     }
 
-    return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: `${remainingMinutes}m` }) : t("dashboard.napIn", { time: `${remainingMinutes}m` })}`;
+    return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: formatDurationShort(0, remainingMinutes, tFn) }) : t("dashboard.napIn", { time: formatDurationShort(0, remainingMinutes, tFn) })}`;
   }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender, selectedBaby?.birthDate, wakeWindowConfig, getCurrentNapSlot, sleeps]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
@@ -818,13 +819,6 @@ export default function HomeScreen() {
     return rows;
   }, []);
 
-  const lastWakeUpTime = useMemo(() => {
-    if (isSleepActive) return undefined;
-    const lastSleep = getLastSleep();
-    if (!lastSleep?.endedAt) return undefined;
-    return new Date(lastSleep.endedAt);
-  }, [isSleepActive, getLastSleep, sleeps]);
-
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]} testID="home-screen">
       <BabyHeader
@@ -865,9 +859,7 @@ export default function HomeScreen() {
 
         {selectedBaby && (
           <SleepPredictionCard
-            lastWakeUpTime={lastWakeUpTime}
             babyName={selectedBaby.name}
-            isSleeping={isSleepActive}
           />
         )}
 

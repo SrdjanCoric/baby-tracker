@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { SURFACE } from "@/constants/colors";
-import { formatDuration, formatTime } from "@/utils/time";
+import { formatDuration, formatTime, formatDurationShort, type TranslateFn } from "@/utils/time";
 import type { TimeFormat } from "@/utils/time";
 import { calculateSleepSummary, buildDailySleepBars } from "@/utils/sleep-patterns";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
@@ -169,6 +169,7 @@ export function SummaryView({
   birthDate?: string;
 }) {
   const { t } = useTranslation();
+  const tFn = t as TranslateFn;
   const [period, setPeriod] = useState<Period>(7);
 
   const data = useMemo(
@@ -267,6 +268,7 @@ export function SummaryView({
             colors={colors}
             locale={locale}
             labelInterval={labelInterval}
+            formatHourLabel={(v) => formatDurationShort(v, 0, tFn)}
           />
         </View>
       )}

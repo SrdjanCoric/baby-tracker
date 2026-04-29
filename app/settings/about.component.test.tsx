@@ -22,6 +22,22 @@ jest.mock("expo-constants", () => ({
   },
 }));
 
+jest.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "settings.about": "About",
+        "aboutScreen.appName": "Baby Tracker",
+        "settings.version": "Version",
+        "aboutScreen.appDescription": "A privacy-first, ad-free baby tracking app designed for sleep-deprived parents.",
+        "settings.privacyPolicy": "Privacy Policy",
+        "aboutScreen.madeWithLove": "Made with ❤️ for parents everywhere",
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 jest.spyOn(Linking, "openURL").mockImplementation(() => Promise.resolve(true));
 
 describe("AboutSettingsScreen", () => {

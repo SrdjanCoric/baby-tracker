@@ -111,7 +111,7 @@ describe("ErrorBoundary", () => {
       );
 
       const button = screen.getByTestId("error-retry-button");
-      expect(button.props.accessibilityLabel).toBe("Try again");
+      expect(button.props.accessibilityLabel).toBe("Try Again");
       expect(button.props.accessibilityRole).toBe("button");
     });
   });

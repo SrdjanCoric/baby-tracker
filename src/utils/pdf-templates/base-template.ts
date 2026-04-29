@@ -3,6 +3,7 @@
  */
 
 import { REPORT_COLORS } from "@/constants/report";
+import { formatDurationShort } from "@/utils/time";
 
 const { primary, primaryLight, secondary, text, textLight, border, background, tableHeader, tableRowAlt } = REPORT_COLORS;
 
@@ -289,16 +290,13 @@ export function formatDateTime(date: Date): string {
   });
 }
 
-export function formatDuration(minutes: number): string {
+export function formatDuration(minutes: number, t?: (key: string, opts?: Record<string, unknown>) => string): string {
   if (minutes < 60) {
     return `${Math.round(minutes)} min`;
   }
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = Math.round(minutes % 60);
-  if (remainingMinutes === 0) {
-    return `${hours}h`;
-  }
-  return `${hours}h ${remainingMinutes}m`;
+  return formatDurationShort(hours, remainingMinutes, t);
 }
 
 export function getPercentileClass(percentile: number): string {

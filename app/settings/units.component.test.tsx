@@ -1,6 +1,9 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
 
+const mockSetUnitSystem = jest.fn();
+const mockBack = jest.fn();
+
 jest.mock("@/services/supabase", () => ({
   supabase: {
     auth: {
@@ -12,10 +15,22 @@ jest.mock("@/services/supabase", () => ({
   },
 }));
 
-import UnitsSettingsScreen from "./units";
-
-const mockSetUnitSystem = jest.fn();
-const mockBack = jest.fn();
+jest.mock("react-i18next", () => {
+  const actualModule = jest.requireActual("react-i18next");
+  return {
+    ...actualModule,
+    useTranslation: () => ({
+      t: (key: string) => {
+        const translations: Record<string, string> = {
+          "settings.units": "Units",
+          "settings.metric": "Metric (kg, cm, ml)",
+          "settings.imperial": "Imperial (lbs, in, oz)",
+        };
+        return translations[key] || key;
+      },
+    }),
+  };
+});
 
 jest.mock("@/contexts/unit-context", () => ({
   useUnits: () => ({
@@ -36,6 +51,8 @@ jest.mock("expo-router", () => ({
   }),
 }));
 
+import UnitsSettingsScreen from "./units";
+
 describe("UnitsSettingsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -52,8 +69,8 @@ describe("UnitsSettingsScreen", () => {
     it("renders unit option descriptions", () => {
       render(<UnitsSettingsScreen />);
 
-      expect(screen.getByText("kg, cm, ml")).toBeTruthy();
-      expect(screen.getByText("lbs, in, oz")).toBeTruthy();
+      expect(screen.getByText("kg, cm, ml, °C")).toBeTruthy();
+      expect(screen.getByText("lbs, in, oz, °F")).toBeTruthy();
     });
 
     it("renders the page title", () => {

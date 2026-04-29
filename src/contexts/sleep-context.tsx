@@ -18,7 +18,7 @@ import { useAuth } from "./auth-context";
 import { RemoteChange } from "@/services/sync";
 import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
-import { fetchWakeWindowPreference } from "@/services/push-token-service";
+import { fetchWakeWindowPreference, upsertWakeWindowPreference } from "@/services/push-token-service";
 import { fetchActivityGoal, upsertActivityGoal } from "@/services/activity-goal-service";
 import {
   SleepAgeGroup,
@@ -33,6 +33,15 @@ import {
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 import { isNightTime, countNapsWithContinuation } from "@/utils/day-night-boundary";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
+import {
+  processSleepData,
+  computeSleepModel,
+  getAgeFallbackModel,
+  getQualifyingDayCount,
+  detectBedtimeDrift,
+  detectMorningDrift,
+} from "@/utils/sleepPredictions";
+import type { SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
 
 export interface ActiveSleepTimer {
   isRunning: boolean;
@@ -55,6 +64,13 @@ export interface SleepState {
   showMilestoneSuggestion: boolean;
   suggestedGoalMinutes: number | null;
   newbornNapOptIn: boolean;
+  sleepPredictionModel: SleepPredictionModel | null;
+  isComputingModel: boolean;
+  qualifyingDayCount: number;
+  predictionBannerDismissed: boolean;
+  driftDetection: DriftDetectionResult | null;
+  modelRecomputeVersion: number;
+  sleepsLoadVersion: number;
 }
 
 export type SleepAction =
@@ -79,7 +95,12 @@ export type SleepAction =
   | { type: "SET_NEWBORN_NAP_OPT_IN"; payload: boolean }
   | { type: "REMOTE_INSERT"; payload: StoredSleepEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredSleepEntry }
-  | { type: "REMOTE_DELETE"; payload: string };
+  | { type: "REMOTE_DELETE"; payload: string }
+  | { type: "SET_PREDICTION_MODEL"; payload: SleepPredictionModel | null }
+  | { type: "SET_COMPUTING_MODEL"; payload: boolean }
+  | { type: "SET_QUALIFYING_DAY_COUNT"; payload: number }
+  | { type: "SET_PREDICTION_BANNER_DISMISSED"; payload: boolean }
+  | { type: "SET_DRIFT_DETECTION"; payload: DriftDetectionResult | null };
 
 const DEFAULT_DAILY_GOAL_MINUTES = 14 * 60; // 14 hours
 const DEFAULT_WAKE_WINDOW_MINUTES = 150; // 2.5 hours
@@ -96,26 +117,33 @@ export const initialSleepState: SleepState = {
   showMilestoneSuggestion: false,
   suggestedGoalMinutes: null,
   newbornNapOptIn: false,
+  sleepPredictionModel: null,
+  isComputingModel: false,
+  qualifyingDayCount: 0,
+  predictionBannerDismissed: false,
+  driftDetection: null,
+  modelRecomputeVersion: 0,
+  sleepsLoadVersion: 0,
 };
 
 export function sleepReducer(state: SleepState, action: SleepAction): SleepState {
   switch (action.type) {
     case "SET_SLEEPS":
-      return { ...state, sleeps: action.payload };
+      return { ...state, sleeps: action.payload, sleepsLoadVersion: state.sleepsLoadVersion + 1 };
 
     case "ADD_SLEEP":
-      return { ...state, sleeps: [...state.sleeps, action.payload] };
+      return { ...state, sleeps: [...state.sleeps, action.payload], modelRecomputeVersion: state.modelRecomputeVersion + 1 };
 
     case "UPDATE_SLEEP": {
       const updatedSleeps = state.sleeps.map(s =>
         s.id === action.payload.id ? action.payload : s
       );
-      return { ...state, sleeps: updatedSleeps };
+      return { ...state, sleeps: updatedSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1 };
     }
 
     case "DELETE_SLEEP": {
       const filteredSleeps = state.sleeps.filter(s => s.id !== action.payload);
-      return { ...state, sleeps: filteredSleeps };
+      return { ...state, sleeps: filteredSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1 };
     }
 
     case "SET_LOADING":
@@ -202,20 +230,35 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     case "REMOTE_INSERT": {
       const exists = state.sleeps.some(s => s.id === action.payload.id);
       if (exists) return state;
-      return { ...state, sleeps: [...state.sleeps, action.payload] };
+      return { ...state, sleeps: [...state.sleeps, action.payload], modelRecomputeVersion: state.modelRecomputeVersion + 1 };
     }
 
     case "REMOTE_UPDATE": {
       const updatedSleeps = state.sleeps.map(s =>
         s.id === action.payload.id ? action.payload : s
       );
-      return { ...state, sleeps: updatedSleeps };
+      return { ...state, sleeps: updatedSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1 };
     }
 
     case "REMOTE_DELETE": {
       const filteredSleeps = state.sleeps.filter(s => s.id !== action.payload);
-      return { ...state, sleeps: filteredSleeps };
+      return { ...state, sleeps: filteredSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1 };
     }
+
+    case "SET_PREDICTION_MODEL":
+      return { ...state, sleepPredictionModel: action.payload };
+
+    case "SET_COMPUTING_MODEL":
+      return { ...state, isComputingModel: action.payload };
+
+    case "SET_QUALIFYING_DAY_COUNT":
+      return { ...state, qualifyingDayCount: action.payload };
+
+    case "SET_PREDICTION_BANNER_DISMISSED":
+      return { ...state, predictionBannerDismissed: action.payload };
+
+    case "SET_DRIFT_DETECTION":
+      return { ...state, driftDetection: action.payload };
 
     default:
       return state;
@@ -256,6 +299,9 @@ interface SleepContextValue extends SleepState {
   setNapContinuationMinutes: (minutes: number) => Promise<void>;
   setWakeWindowsEnabled: (enabled: boolean) => Promise<void>;
   setNewbornNapOptIn: (optIn: boolean) => Promise<void>;
+  dismissPredictionBanner: () => Promise<void>;
+  dismissDrift: () => Promise<void>;
+  acceptDrift: () => Promise<void>;
 }
 
 const SleepContext = createContext<SleepContextValue | null>(null);
@@ -304,6 +350,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           source,
           dayStartHour: (data.day_start_hour as number | undefined) ?? 6,
           dayEndHour: (data.day_end_hour as number | undefined) ?? 19,
+          dayBoundariesConfigured: data.day_start_hour != null && data.day_end_hour != null,
           napContinuationMinutes: (data.nap_continuation_minutes as number | undefined) ?? 15,
         };
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
@@ -410,6 +457,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               source,
               dayStartHour: dbPref.day_start_hour ?? 6,
               dayEndHour: dbPref.day_end_hour ?? 19,
+              dayBoundariesConfigured: dbPref.day_start_hour != null && dbPref.day_end_hour != null,
               napContinuationMinutes: dbPref.nap_continuation_minutes ?? 15,
             };
             await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
@@ -437,6 +485,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       const newbornOptIn = await SleepStorageService.getNewbornNapOptIn(selectedBaby.id);
       dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: newbornOptIn });
 
+      const cachedModel = await SleepStorageService.getSleepPredictionModel(selectedBaby.id);
+      if (cachedModel) {
+        dispatch({ type: "SET_PREDICTION_MODEL", payload: cachedModel as unknown as SleepPredictionModel });
+      }
+
+      const bannerDismissed = await SleepStorageService.getPredictionBannerDismissed(selectedBaby.id);
+      dispatch({ type: "SET_PREDICTION_BANNER_DISMISSED", payload: bannerDismissed });
+
+      const driftDismissed = await SleepStorageService.getDriftDismissed(selectedBaby.id);
+      driftDismissedRef.current = driftDismissed;
+
       if (birthDate && !hasCustomGoal) {
         const lastCheckDate = await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
         const dismissedMilestones = await SleepStorageService.getDismissedMilestones(selectedBaby.id);
@@ -462,22 +521,45 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
       const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
       if (activeTimer) {
-        dispatch({
-          type: "RESTORE_TIMER",
-          payload: {
-            isRunning: true,
-            isPaused: activeTimer.isPaused ?? false,
-            startTime: new Date(activeTimer.startedAt),
-            sleepType: activeTimer.type,
-            totalPausedMs: activeTimer.totalPausedMs ?? 0,
-            pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
-          },
-        });
+        let isStale = false;
+        if (user?.id && user?.householdId) {
+          try {
+            const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
+            if (!lock || lock.startedBy !== user.id) {
+              isStale = true;
+              await SleepStorageService.clearActiveTimer(selectedBaby.id);
+            }
+          } catch {
+          }
+        }
 
-        if (activeTimer.liveActivityId) {
-          const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
-          if (isRunning) {
-            liveActivityIdRef.current = activeTimer.liveActivityId;
+        if (!isStale) {
+          dispatch({
+            type: "RESTORE_TIMER",
+            payload: {
+              isRunning: true,
+              isPaused: activeTimer.isPaused ?? false,
+              startTime: new Date(activeTimer.startedAt),
+              sleepType: activeTimer.type,
+              totalPausedMs: activeTimer.totalPausedMs ?? 0,
+              pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
+            },
+          });
+
+          if (activeTimer.liveActivityId) {
+            const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+            if (isRunning) {
+              liveActivityIdRef.current = activeTimer.liveActivityId;
+            } else if (!(activeTimer.isPaused ?? false)) {
+              const totalPausedMs = activeTimer.totalPausedMs ?? 0;
+              const effectiveStartTime = totalPausedMs > 0
+                ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
+                : new Date(activeTimer.startedAt);
+              const activityId = await startTimerLiveActivity(
+                "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
+              );
+              if (activityId) liveActivityIdRef.current = activityId;
+            }
           } else if (!(activeTimer.isPaused ?? false)) {
             const totalPausedMs = activeTimer.totalPausedMs ?? 0;
             const effectiveStartTime = totalPausedMs > 0
@@ -488,15 +570,6 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             );
             if (activityId) liveActivityIdRef.current = activityId;
           }
-        } else if (!(activeTimer.isPaused ?? false)) {
-          const totalPausedMs = activeTimer.totalPausedMs ?? 0;
-          const effectiveStartTime = totalPausedMs > 0
-            ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
-            : new Date(activeTimer.startedAt);
-          const activityId = await startTimerLiveActivity(
-            "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
-          );
-          if (activityId) liveActivityIdRef.current = activityId;
         }
       } else if (user?.id && user?.householdId) {
         try {
@@ -551,6 +624,145 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     loadSleeps();
   }, [loadSleeps, foregroundRefreshKey]);
 
+  const computingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const driftDismissedRef = useRef<{ suggestedHour: number; type: string } | null>(null);
+  const lastRecomputeVersionRef = useRef(0);
+
+  const runModelComputation = useCallback((showComputing: boolean) => {
+    if (!selectedBaby || state.sleeps.length === 0) return;
+
+    if (showComputing) {
+      dispatch({ type: "SET_COMPUTING_MODEL", payload: true });
+    }
+
+    const computeStart = Date.now();
+
+    const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
+    const dayEndHour = state.wakeWindowConfig?.dayEndHour ?? 19;
+    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    const babyAgeMonths = birthDate
+      ? Math.floor((Date.now() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44))
+      : 0;
+
+    const processed = processSleepData(state.sleeps);
+    const qualifyingCount = getQualifyingDayCount(processed, dayStartHour, dayEndHour, babyAgeMonths);
+
+    let model: SleepPredictionModel | null = null;
+
+    if (qualifyingCount >= 5) {
+      model = computeSleepModel(processed, dayStartHour, dayEndHour, babyAgeMonths);
+    } else if (birthDate) {
+      model = getAgeFallbackModel(birthDate);
+    }
+
+
+
+    let drift: DriftDetectionResult | null = null;
+    const isCustomWakeWindows = state.wakeWindowConfig?.source === "custom";
+    if (qualifyingCount >= 5 && !isCustomWakeWindows) {
+      drift = detectBedtimeDrift(processed, dayStartHour, dayEndHour)
+        ?? detectMorningDrift(processed, dayStartHour, dayEndHour);
+
+      if (drift && driftDismissedRef.current) {
+        const dismissed = driftDismissedRef.current;
+        if (dismissed.type === drift.type && Math.abs(dismissed.suggestedHour - drift.suggestedHour) < 0.5) {
+          drift = null;
+        }
+      }
+    }
+
+    const applyModel = () => {
+      dispatch({ type: "SET_PREDICTION_MODEL", payload: model });
+      dispatch({ type: "SET_QUALIFYING_DAY_COUNT", payload: qualifyingCount });
+      dispatch({ type: "SET_DRIFT_DETECTION", payload: drift });
+      if (showComputing) {
+        dispatch({ type: "SET_COMPUTING_MODEL", payload: false });
+      }
+    };
+
+    if (showComputing) {
+      const elapsed = Date.now() - computeStart;
+      const minDisplayMs = 2000;
+      const remaining = Math.max(0, minDisplayMs - elapsed);
+      if (computingTimerRef.current) clearTimeout(computingTimerRef.current);
+      computingTimerRef.current = setTimeout(applyModel, remaining);
+    } else {
+      applyModel();
+    }
+
+    if (model && selectedBaby) {
+      SleepStorageService.setSleepPredictionModel(
+        selectedBaby.id,
+        model as unknown as Record<string, unknown>
+      ).catch(() => {});
+    }
+  }, [state.sleeps, selectedBaby, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, state.wakeWindowConfig?.source]);
+
+  // Silent recompute on bulk load (SET_SLEEPS) — skip until wake window config is loaded
+  const lastSleepsLoadVersionRef = useRef(0);
+  useEffect(() => {
+    if (!selectedBaby || state.sleeps.length === 0) return;
+    if (!state.wakeWindowConfig) return;
+    if (state.sleepsLoadVersion === lastSleepsLoadVersionRef.current) return;
+    lastSleepsLoadVersionRef.current = state.sleepsLoadVersion;
+    runModelComputation(false);
+  }, [state.sleepsLoadVersion, selectedBaby, state.wakeWindowConfig, runModelComputation]);
+
+  // Animated recompute on mutations (ADD_SLEEP, UPDATE_SLEEP, DELETE_SLEEP, REMOTE_*)
+  useEffect(() => {
+    if (state.modelRecomputeVersion === 0) return;
+    if (state.modelRecomputeVersion === lastRecomputeVersionRef.current) return;
+    lastRecomputeVersionRef.current = state.modelRecomputeVersion;
+    runModelComputation(true);
+  }, [state.modelRecomputeVersion, runModelComputation]);
+
+  // Silent recompute at day boundary transitions (dayStartHour / dayEndHour)
+  useEffect(() => {
+    const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
+    const dayEndHour = state.wakeWindowConfig?.dayEndHour ?? 19;
+
+    const getNextBoundaryMs = (): number | null => {
+      const now = new Date();
+      const currentHour = now.getHours() + now.getMinutes() / 60;
+
+      let nextBoundaryHour: number;
+      if (currentHour < dayStartHour) {
+        nextBoundaryHour = dayStartHour;
+      } else if (currentHour < dayEndHour) {
+        nextBoundaryHour = dayEndHour;
+      } else {
+        nextBoundaryHour = dayStartHour + 24;
+      }
+
+      const target = new Date(now);
+      const h = Math.floor(nextBoundaryHour % 24);
+      const m = Math.round((nextBoundaryHour % 1) * 60);
+      target.setHours(h, m, 0, 0);
+      if (nextBoundaryHour >= 24) {
+        target.setDate(target.getDate() + 1);
+      }
+
+      return target.getTime() - now.getTime();
+    };
+
+    const scheduleNext = () => {
+      const ms = getNextBoundaryMs();
+      if (ms === null) return;
+      return setTimeout(() => {
+        if (!state.activeTimer) {
+          runModelComputation(false);
+        }
+        boundaryTimerRef.current = scheduleNext() ?? null;
+      }, ms);
+    };
+
+    const boundaryTimerRef = { current: scheduleNext() ?? null };
+
+    return () => {
+      if (boundaryTimerRef.current) clearTimeout(boundaryTimerRef.current);
+    };
+  }, [state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, state.activeTimer, runModelComputation]);
+
   const startSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };
 
@@ -562,6 +774,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("[SleepContext] Failed to acquire timer lock:", error);
+        return { success: false };
       }
     }
 
@@ -860,7 +1073,6 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const getTodaysTotalSleepMinutes = useCallback((): number => {
     const now = new Date();
     const dayStart = state.wakeWindowConfig?.dayStartHour ?? 6;
-
     const windowStart = new Date(now);
     windowStart.setHours(dayStart, 0, 0, 0);
     if (now.getHours() < dayStart) {
@@ -973,9 +1185,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       s => s.type === "nap" && s.endedAt && new Date(s.startedAt) >= lastNightEnd
     );
 
-    const threshold = state.wakeWindowConfig?.napContinuationMinutes ?? 15;
-    return countNapsWithContinuation(napsSinceNight, threshold);
-  }, [state.sleeps, state.wakeWindowConfig?.napContinuationMinutes]);
+    const processed = processSleepData(napsSinceNight);
+    return processed.length;
+  }, [state.sleeps]);
 
   const getCurrentNapSlot = useCallback((): NapSlotWindow | null => {
     if (!state.wakeWindowConfig) return null;
@@ -1028,16 +1240,32 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     return isNightTime(new Date(), dayStart, dayEnd);
   }, [state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour]);
 
+  const syncWakeConfigToSupabase = useCallback((babyId: string, config: WakeWindowConfig) => {
+    if (!user?.householdId) return;
+    upsertWakeWindowPreference(
+      babyId,
+      config.enabled,
+      config.napCount,
+      config.slots,
+      config.source,
+      config.dayStartHour,
+      config.dayEndHour,
+      config.napContinuationMinutes
+    ).catch(() => {});
+  }, [user?.householdId]);
+
   const setDayNightBoundary = useCallback(async (dayStartHour: number, dayEndHour: number): Promise<void> => {
     if (!selectedBaby) return;
     const config: WakeWindowConfig = {
       ...(state.wakeWindowConfig ?? { enabled: false, napCount: 2, slots: [], source: "age_based" as const }),
       dayStartHour,
       dayEndHour,
+      dayBoundariesConfigured: true,
     };
     dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig]);
+    syncWakeConfigToSupabase(selectedBaby.id, config);
+  }, [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]);
 
   const setNapContinuationMinutes = useCallback(async (minutes: number): Promise<void> => {
     if (!selectedBaby) return;
@@ -1047,7 +1275,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     };
     dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig]);
+    syncWakeConfigToSupabase(selectedBaby.id, config);
+  }, [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]);
 
   const setWakeWindowsEnabled = useCallback(async (enabled: boolean): Promise<void> => {
     if (!selectedBaby) return;
@@ -1057,13 +1286,41 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     };
     dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig]);
+    syncWakeConfigToSupabase(selectedBaby.id, config);
+  }, [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]);
 
   const setNewbornNapOptInMethod = useCallback(async (optIn: boolean): Promise<void> => {
     if (!selectedBaby) return;
     dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: optIn });
     await SleepStorageService.setNewbornNapOptIn(selectedBaby.id, optIn);
   }, [selectedBaby]);
+
+  const dismissPredictionBanner = useCallback(async (): Promise<void> => {
+    if (!selectedBaby) return;
+    dispatch({ type: "SET_PREDICTION_BANNER_DISMISSED", payload: true });
+    await SleepStorageService.setPredictionBannerDismissed(selectedBaby.id, true);
+  }, [selectedBaby]);
+
+  const dismissDrift = useCallback(async (): Promise<void> => {
+    if (!selectedBaby || !state.driftDetection) return;
+    const { type, suggestedHour } = state.driftDetection;
+    driftDismissedRef.current = { type, suggestedHour };
+    dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
+    await SleepStorageService.setDriftDismissed(selectedBaby.id, { type, suggestedHour });
+  }, [selectedBaby, state.driftDetection]);
+
+  const acceptDrift = useCallback(async (): Promise<void> => {
+    if (!selectedBaby || !state.driftDetection) return;
+    const { type, suggestedHour } = state.driftDetection;
+    if (type === "bedtime") {
+      await setDayNightBoundary(state.wakeWindowConfig?.dayStartHour ?? 6, suggestedHour);
+    } else {
+      await setDayNightBoundary(suggestedHour, state.wakeWindowConfig?.dayEndHour ?? 19);
+    }
+    driftDismissedRef.current = null;
+    dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
+    await SleepStorageService.clearDriftDismissed(selectedBaby.id);
+  }, [selectedBaby, state.driftDetection, state.wakeWindowConfig, setDayNightBoundary]);
 
   const setNapCount = useCallback(async (count: number): Promise<void> => {
     if (!selectedBaby) return;
@@ -1111,7 +1368,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     setNapContinuationMinutes,
     setWakeWindowsEnabled,
     setNewbornNapOptIn: setNewbornNapOptInMethod,
-  }), [state, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod]);
+    dismissPredictionBanner,
+    dismissDrift,
+    acceptDrift,
+  }), [state, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod, dismissPredictionBanner, dismissDrift, acceptDrift]);
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
 }

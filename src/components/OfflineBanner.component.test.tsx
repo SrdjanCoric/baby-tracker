@@ -8,6 +8,24 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, options?: { count?: number; changes?: string }) => {
+      const translations: Record<string, (opts?: { count?: number; changes?: string }) => string> = {
+        'offline.title': () => "You're offline",
+        'offline.changesPending': (opts) => {
+          const count = opts?.count ?? 0;
+          return count === 1 ? '1 change' : `${count} changes`;
+        },
+        'offline.willSyncWhenConnected': (opts) => `${opts?.changes || ''} - will sync when connected`,
+        'offline.dismissBanner': () => 'Dismiss offline banner',
+      };
+      const translator = translations[key];
+      return translator ? translator(options) : key;
+    },
+  }),
+}));
+
 describe('OfflineBanner', () => {
   describe('rendering', () => {
     it('renders offline message', () => {
