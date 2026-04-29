@@ -332,6 +332,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
               await FeedingStorageService.clearActiveTimer(selectedBaby.id);
             }
           } catch {
+            // ignore
           }
         }
 

@@ -411,10 +411,6 @@ function predictAfterAllNaps(
   lastWakeTime: Date,
   dayEndTime: Date
 ): SleepPrediction {
-  const bedtime = new Date(
-    lastWakeTime.getTime() + model.bedtimeWakeWindow * 60 * 1000
-  );
-
   const gapToDayEnd = minutesBetween(lastWakeTime, dayEndTime);
 
   if (gapToDayEnd > model.bedtimeWakeWindow * 1.5) {
@@ -427,6 +423,19 @@ function predictAfterAllNaps(
       return { predictedTime: extraNapStart, type: "nap" };
     }
   }
+
+  let bedtimeWindowMinutes = model.bedtimeWakeWindow;
+  if (gapToDayEnd <= 60) {
+    const fallback = getFallbackWakeWindow(model);
+    const positional = model.startRelativeWakeWindows[String(completedNapsToday)];
+    bedtimeWindowMinutes = positional !== undefined
+      ? Math.min(fallback, positional)
+      : fallback;
+  }
+
+  const bedtime = new Date(
+    lastWakeTime.getTime() + bedtimeWindowMinutes * 60 * 1000
+  );
 
   return { predictedTime: bedtime, type: "bedtime" };
 }

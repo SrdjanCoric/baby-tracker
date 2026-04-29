@@ -80,6 +80,8 @@ const SleepPredictionCardInner = ({
 
   const overdueTickMinute = useTimeRefresh(60000);
 
+  const [midnightTick, setMidnightTick] = useState(0);
+
   const hasNightSleepToday = useMemo((): boolean => {
     const threshold = getMorningThreshold(effectiveDayStart);
     return getQualifyingNightSleep(sleeps, threshold) !== null;
@@ -112,7 +114,21 @@ const SleepPredictionCardInner = ({
 
     const now = new Date();
     const currentHour = now.getHours() + now.getMinutes() / 60;
-    if (currentHour >= effectiveDayEnd || currentHour < effectiveDayStart) {
+
+    const morningThreshold = getMorningThreshold(effectiveDayStart);
+    if (currentHour < morningThreshold) {
+      return "nighttime";
+    }
+
+    if (currentHour >= effectiveDayEnd) {
+      const lastSleep = getLastSleep();
+      if (lastSleep?.endedAt) {
+        if (lastSleep.type === "night") return "nighttime";
+        if (lastSleep.type === "nap") {
+          const endedAtHour = new Date(lastSleep.endedAt).getHours() + new Date(lastSleep.endedAt).getMinutes() / 60;
+          if (endedAtHour >= effectiveDayEnd) return "nighttime";
+        }
+      }
       if (!hasPredictionData) return "nighttime";
     }
 
@@ -125,7 +141,21 @@ const SleepPredictionCardInner = ({
     }
 
     return "prediction";
-  }, [birthDate, predictionBannerDismissed, hasDayBoundaries, isComputingModel, activeTimer, effectiveDayStart, effectiveDayEnd, hasNightSleepToday, hasPredictionData, qualifyingDayCount]);
+  }, [birthDate, predictionBannerDismissed, hasDayBoundaries, isComputingModel, activeTimer, effectiveDayStart, effectiveDayEnd, hasNightSleepToday, hasPredictionData, qualifyingDayCount, getLastSleep, midnightTick]);
+
+  useEffect(() => {
+    const needsTransition = !activeTimer && cardState === "prediction";
+    if (!needsTransition) return;
+    const now = new Date();
+    const currentHour = now.getHours() + now.getMinutes() / 60;
+    if (currentHour < effectiveDayEnd) return;
+    const midnight = new Date(now);
+    midnight.setDate(midnight.getDate() + 1);
+    midnight.setHours(0, 0, 0, 0);
+    const msUntilMidnight = midnight.getTime() - now.getTime();
+    const timer = setTimeout(() => setMidnightTick((t) => t + 1), msUntilMidnight);
+    return () => clearTimeout(timer);
+  }, [activeTimer, cardState, effectiveDayEnd, midnightTick]);
 
   useEffect(() => {
     if (cardState !== "sleeping_nap" || !activeTimer) {
