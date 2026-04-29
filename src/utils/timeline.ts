@@ -11,7 +11,7 @@ import type { StoredGrowthEntry } from "@/services/growth-storage";
 import { formatDurationShort } from "@/utils/time";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import type { ActivityType } from "@/constants/activities";
-import { sleepDayKey, localDateKey, splitSleepAtDayBoundary } from "@/utils/sleep-patterns";
+import { localDateKey, splitSleepAtDayBoundary } from "@/utils/sleep-patterns";
 
 export interface DailySummary {
   date: Date;

@@ -1,4 +1,4 @@
-import { Pressable, Text, View, useColorScheme, Platform } from "react-native";
+import { Pressable, Text, View, useColorScheme } from "react-native";
 import { memo, useCallback, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Animated, {

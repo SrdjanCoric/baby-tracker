@@ -353,6 +353,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
               await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
             }
           } catch {
+            // ignore
           }
         }
 

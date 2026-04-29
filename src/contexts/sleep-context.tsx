@@ -31,7 +31,7 @@ import {
   isUnderTwoMonths,
 } from "@/utils/sleepGoals";
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
-import { isNightTime, countNapsWithContinuation } from "@/utils/day-night-boundary";
+import { isNightTime } from "@/utils/day-night-boundary";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 import {
   processSleepData,
@@ -42,6 +42,7 @@ import {
   detectMorningDrift,
 } from "@/utils/sleepPredictions";
 import type { SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
+import { getQualifyingNightSleep, getMorningThreshold } from "@/utils/sleepPredictions";
 
 export interface ActiveSleepTimer {
   isRunning: boolean;
@@ -530,6 +531,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               await SleepStorageService.clearActiveTimer(selectedBaby.id);
             }
           } catch {
+            // ignore
           }
         }
 
@@ -706,6 +708,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     if (state.sleepsLoadVersion === lastSleepsLoadVersionRef.current) return;
     lastSleepsLoadVersionRef.current = state.sleepsLoadVersion;
     runModelComputation(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.sleepsLoadVersion, selectedBaby, state.wakeWindowConfig, runModelComputation]);
 
   // Animated recompute on mutations (ADD_SLEEP, UPDATE_SLEEP, DELETE_SLEEP, REMOTE_*)
@@ -1173,12 +1176,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   }, [selectedBaby, state.suggestedGoalMinutes, user?.householdId]);
 
   const getCompletedNapsSinceNightSleep = useCallback((): number => {
-    const nightSleeps = state.sleeps
-      .filter(s => s.type === "night" && s.endedAt)
-      .sort((a, b) => new Date(b.endedAt!).getTime() - new Date(a.endedAt!).getTime());
+    const dayStart = state.wakeWindowConfig?.dayStartHour ?? 6;
+    const threshold = getMorningThreshold(dayStart);
+    const morningNightSleep = getQualifyingNightSleep(state.sleeps, threshold);
 
-    const lastNightEnd = nightSleeps.length > 0
-      ? new Date(nightSleeps[0].endedAt!)
+    const lastNightEnd = morningNightSleep?.endedAt
+      ? new Date(morningNightSleep.endedAt)
       : new Date(new Date().setHours(0, 0, 0, 0));
 
     const napsSinceNight = state.sleeps.filter(
@@ -1187,7 +1190,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     const processed = processSleepData(napsSinceNight);
     return processed.length;
-  }, [state.sleeps]);
+  }, [state.sleeps, state.wakeWindowConfig?.dayStartHour]);
 
   const getCurrentNapSlot = useCallback((): NapSlotWindow | null => {
     if (!state.wakeWindowConfig) return null;

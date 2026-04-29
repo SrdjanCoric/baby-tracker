@@ -76,7 +76,6 @@ export function FeedingWeekView() {
 
   const accentColor = isDark ? ACTIVITY.feeding.accentDark : ACTIVITY.feeding.accent;
   const textAccent = isDark ? ACTIVITY.feeding.textAccentDark : ACTIVITY.feeding.textAccent;
-  const accentDark = isDark ? ACTIVITY.feeding.buttonDark : ACTIVITY.feeding.button;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
   const { stats, dailyBreastMin, dailyBottleStacked, breastYAxis, bottleYAxis } = useMemo(() => {

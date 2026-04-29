@@ -243,6 +243,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
               await PumpingStorageService.clearActiveTimer(selectedBaby.id);
             }
           } catch {
+            // ignore
           }
         }
 
