@@ -1,4 +1,4 @@
-import { Animated, Easing, Platform, Pressable, Text, View, useColorScheme } from "react-native";
+import { Animated, Easing, Image, type ImageSourcePropType, Platform, Pressable, Text, View, useColorScheme } from "react-native";
 import { SleepPredictionInfoModal } from "./SleepPredictionInfoModal";
 import { useTimeRefresh } from "@/hooks/useTimeRefresh";
 import { memo, useEffect, useState, useCallback, useMemo, useRef } from "react";
@@ -11,9 +11,10 @@ import {
   getQualifyingNightSleep,
   getMorningThreshold,
 } from "@/utils/sleepPredictions";
-import type { SleepPrediction, SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
+import type { SleepPrediction, SleepPredictionModel } from "@/utils/sleepPredictions";
 import { isUnderTwoMonths } from "@/utils/sleepGoals";
-import { formatDurationShort, type TranslateFn } from "@/utils/time";
+import { formatDurationShort, formatTime, type TranslateFn } from "@/utils/time";
+import { useTimeFormat } from "@/contexts/time-format-context";
 import { SleepStorageService } from "@/services/sleep-storage";
 
 interface SleepPredictionCardProps {
@@ -42,6 +43,7 @@ const SleepPredictionCardInner = ({
   const router = useRouter();
 
   const { selectedBaby } = useBaby();
+  const { timeFormat } = useTimeFormat();
   const {
     sleepPredictionModel: model,
     isComputingModel,
@@ -277,10 +279,26 @@ const SleepPredictionCardInner = ({
 
   const formatHour = (fractionalHour: number): string => {
     const d = makeTimeDate(fractionalHour);
-    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    return formatTime(d, timeFormat);
   };
 
   const overdueHeaderColor = isDark ? "#DCA06E" : "#B47838";
+
+  const stateImage = useMemo((): ImageSourcePropType | null => {
+    if (cardState === "sleeping_nap" || cardState === "sleeping_night") {
+      return require("../../assets/images/sleepy-baby.png");
+    }
+    if (cardState === "nighttime") {
+      return require("../../assets/images/nighttime.png");
+    }
+    if (cardState === "prediction" || cardState === "need_more_data") {
+      if (isOverdue) {
+        return require("../../assets/images/overdue-baby.png");
+      }
+      return require("../../assets/images/happy-baby.png");
+    }
+    return null;
+  }, [cardState, isOverdue]);
 
   const renderHeader = () => (
     <Text style={{ fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 2, color: isOverdue ? overdueHeaderColor : sleepAccent, marginBottom: 12 }}>
@@ -586,10 +604,7 @@ const SleepPredictionCardInner = ({
   const renderPredictionContent = () => {
     if (!prediction || !effectiveModel || selectedNapCount === null) return null;
 
-    const predictedTimeStr = prediction.predictedTime.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    const predictedTimeStr = formatTime(prediction.predictedTime, timeFormat);
 
 
     const label = isOverdue
@@ -759,7 +774,18 @@ const SleepPredictionCardInner = ({
         style={{ padding: 20, paddingHorizontal: 22, borderRadius: 15, overflow: "hidden" }}
       >
         {renderDriftBanner()}
-        {content || renderHeader()}
+        <View style={stateImage ? { flexDirection: "row", alignItems: "center", gap: 12 } : undefined}>
+          <View style={stateImage ? { flex: 1 } : undefined}>
+            {content || renderHeader()}
+          </View>
+          {stateImage && (
+            <Image
+              source={stateImage}
+              style={{ width: 80, height: 80 }}
+              resizeMode="contain"
+            />
+          )}
+        </View>
       </View>
       <SleepPredictionInfoModal
         visible={showInfoModal}
