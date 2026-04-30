@@ -1000,7 +1000,8 @@
       "wakeWindow": "Period budnosti",
       "activityGoal": "Cilj aktivnosti",
       "milestone": "Razvojni korak",
-      "health": "Zdravlje"
+      "health": "Zdravlje",
+      "achievement": "Dostignuće"
     }
   },
   "household": {
@@ -2048,5 +2049,49 @@
     "year_one": "godinu",
     "year_few": "godine",
     "year_other": "godina"
+  },
+  "achievements": {
+    "unlocked": "Dostignuće Otključano",
+    "allMilestonesComplete": "Svi Razvojni Milestoni Kompleti",
+    "tapToContinue": "Tapni bilo gde da nastaviš",
+    "title": {
+      "sleep_6h": "Prvi 6-Satni San!",
+      "sleep_8h": "Prvi 8-Satni San!",
+      "sleep_10h": "Prvi 10-Satni San!",
+      "tummy_5min": "Prvih 5 Minuta na Stomaku!",
+      "tummy_10min": "Prvih 10 min na stomaku!",
+      "tummy_15min": "Prvih 15 Minuta na Stomaku!",
+      "tummy_20min": "Prvih 20 min na stomaku!",
+      "first_solid": "Prva Čvrsta Hrana!"
+    },
+    "subtitle": {
+      "tummy_5min": "Sledeći cilj: 10 minuta",
+      "tummy_10min": "Sledeći cilj: 15 minuta",
+      "tummy_15min": "Sledeći cilj: 20 minuta",
+      "tummy_20min": "Neverovatna snaga i izdržljivost!",
+      "first_solid": "Poglavlje se počinje pisati"
+    },
+    "periodComplete": "{{age}} \u2014 Sve Gotovo!",
+    "periodNote": "Pratila si sve razvojne milestonie za ovaj period. Svaka beba se razvija u svom tempu \u2014 ovo je divna tačka provere.",
+    "sleepNote": {
+      "6h": {
+        "under3m": "Čudesno rano znakovic! Mozak tvoje bebe počinje da razvija svoj unutrašnji sat, sa produkcijom melatonina koja je upravo počela.",
+        "3to4m": "Prekrasan mileston. Mozak tvoje bebe sada proizvodi melatonin i gradi ritam dan-noć, što joj pomaže da konsoliduje spavanje u duže periode.",
+        "5to6m": "Ciklusi spavanja tvoje bebe se divno sazrevaju. Njihov mozak postaje bolji u povezivanju ciklusa spavanja, a dublje faze spavanja postaju više zastupljene.",
+        "7plus": "Cirkadijalni ritam tvoje bebice je dobro uspostavljen i njihova arhitektura spavanja postaje sve zrelija, sa dužim periodima dubokog, obnavljajućeg spavanja."
+      },
+      "8h": {
+        "under3m": "Sasvim izuzetan rezultat u ovoj godini! Nervni sistem tvoje bebe sazreva rano, već učeći kako glatko da pređe između ciklusa spavanja bez punog buđenja.",
+        "3to4m": "Čudesan znakovic neurološkog rasta. Mozak tvoje bebe razvija mogućnost da sam prelazi između ciklusa spavanja \u2014 veština koja zahteva pravi razvojni zrelost.",
+        "5to6m": "Spavanje tvoje bebe se zaista slaže. Duboke faze spavanja su sada više zastupljene, a njihov mozak uči da se samiruje kroz prirodne buđenja između ciklusa spavanja.",
+        "7plus": "Lepa odslikavanje koliko je tvoja beba napredovala. Njihova arhitektura spavanja se značajno sazrela, sa duženprima periodima dubokog, obnavljajućeg spavanja koji je kroz noć."
+      },
+      "10h": {
+        "under3m": "Šta pravi izvanredan spavač! Nervni sistem tvoje bebe pokazuje ranu zrelost u regulaciji obuđenosti-budnosti. Njihov unutrašnji sat je počeo impresivno.",
+        "3to4m": "Veliki mileston! Cirkadijalni ritam i nagona za spavanjem tvoje bebe raduju zajedno izvanredno dobro, omogućavajući duboko, konsolidovano spavanje za produženi period.",
+        "5to6m": "Sistem spavanja tvoje bebe se zaista cveta. Njihov mozak je napravio čudesan napredak u povezivanju ciklusa spavanja, proizvodnji melatonina u pravom vremenu i prirodnom vraćanju u spavanje.",
+        "7plus": "Svedočanstvo koliko je mozak tvoje bebe napredovao. Njihov cirkadijalni ritam je robustan, njihovi ciklusi spavanja sazrevaju prema obrascima sličnim odraslima, i njihova sposobnost prirodnog samirenja se divno razvila."
+      }
+    }
   }
 }

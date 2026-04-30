@@ -81,6 +81,8 @@ export { ConflictResolutionModal } from "./ConflictResolutionModal";
 
 // Celebration components
 export { BirthdayCelebrationModal } from "./BirthdayCelebrationModal";
+export { MilestoneCelebrationModal } from "./MilestoneCelebrationModal";
+export { MilestoneToast } from "./MilestoneToast";
 
 // Auth components
 export { DisplayNamePrompt } from "./DisplayNamePrompt";

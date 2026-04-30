@@ -53,3 +53,5 @@ export { MilestonesProvider, useMilestones } from "./milestones-context";
 
 export { HealthProvider, useHealth, healthReducer, initialHealthState } from "./health-context";
 export type { HealthState, HealthAction } from "./health-context";
+
+export { AchievementProvider, useAchievements } from "./achievement-context";

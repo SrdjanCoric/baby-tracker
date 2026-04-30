@@ -971,7 +971,8 @@
       "wakeWindow": "Wake Window",
       "activityGoal": "Activity Goal",
       "milestone": "Milestone",
-      "health": "Health"
+      "health": "Health",
+      "achievement": "Achievement"
     }
   },
   "household": {
@@ -1957,5 +1958,49 @@
     "month_other": "Months",
     "year_one": "Year",
     "year_other": "Years"
+  },
+  "achievements": {
+    "unlocked": "Achievement Unlocked",
+    "allMilestonesComplete": "All Milestones Complete",
+    "tapToContinue": "Tap anywhere to continue",
+    "title": {
+      "sleep_6h": "First 6-Hour Sleep!",
+      "sleep_8h": "First 8-Hour Sleep!",
+      "sleep_10h": "First 10-Hour Sleep!",
+      "tummy_5min": "First 5-Min Tummy Time!",
+      "tummy_10min": "First 10-Min Tummy Time!",
+      "tummy_15min": "First 15-Min Tummy Time!",
+      "tummy_20min": "First 20-Min Tummy Time!",
+      "first_solid": "First Solid Food!"
+    },
+    "subtitle": {
+      "tummy_5min": "Next goal: 10 minutes",
+      "tummy_10min": "Next goal: 15 minutes",
+      "tummy_15min": "Next goal: 20 minutes",
+      "tummy_20min": "Incredible strength and endurance!",
+      "first_solid": "A new chapter begins"
+    },
+    "periodComplete": "{{age}} \u2014 All Done!",
+    "periodNote": "You've tracked all developmental milestones for this period. Every baby develops at their own pace \u2014 this is a wonderful checkpoint.",
+    "sleepNote": {
+      "6h": {
+        "under3m": "A wonderful early sign! Your baby's brain is beginning to develop its own internal clock, with melatonin production just starting to kick in.",
+        "3to4m": "A lovely milestone. Your baby's brain is now producing melatonin and building a day-night rhythm, helping them consolidate sleep into longer stretches.",
+        "5to6m": "Your baby's sleep cycles are maturing beautifully. Their brain is getting better at linking sleep cycles together, with deeper stages of sleep becoming more prominent.",
+        "7plus": "Your little one's circadian rhythm is well established and their sleep architecture is becoming more mature, with longer periods of deep, restorative sleep."
+      },
+      "8h": {
+        "under3m": "Quite remarkable at this age! Your baby's nervous system is maturing early, already learning to transition smoothly between sleep cycles without fully waking.",
+        "3to4m": "A wonderful sign of neurological growth. Your baby's brain is developing the ability to transition between sleep cycles on its own \u2014 a skill that takes real developmental maturity.",
+        "5to6m": "Your baby's sleep is really coming together. Deeper sleep stages are now more prominent, and their brain is learning to self-soothe through natural arousals between sleep cycles.",
+        "7plus": "A beautiful reflection of how much your baby has grown. Their sleep architecture has matured significantly, with longer stretches of deep, restorative sleep carrying them through the night."
+      },
+      "10h": {
+        "under3m": "What an extraordinary sleeper! Your baby's nervous system is showing early maturity in regulating sleep-wake patterns. Their internal clock is off to an impressive start.",
+        "3to4m": "A big milestone! Your baby's circadian rhythm and sleep drive are working together remarkably well, allowing deep, consolidated sleep for an extended stretch.",
+        "5to6m": "Your baby's sleep system is really flourishing. Their brain has made wonderful progress in linking sleep cycles, producing melatonin at the right times, and settling back to sleep naturally.",
+        "7plus": "A testament to your baby's growing brain. Their circadian rhythm is robust, their sleep cycles are maturing toward adult-like patterns, and their natural self-soothing ability has developed beautifully."
+      }
+    }
   }
 }

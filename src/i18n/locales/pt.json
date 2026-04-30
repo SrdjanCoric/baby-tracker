@@ -973,7 +973,8 @@
       "wakeWindow": "Janela de Vigília",
       "activityGoal": "Meta de Atividade",
       "milestone": "Marco",
-      "health": "Saúde"
+      "health": "Saúde",
+      "achievement": "Conquista"
     }
   },
   "household": {
@@ -1959,5 +1960,49 @@
     "month_other": "Meses",
     "year_one": "Ano",
     "year_other": "Anos"
+  },
+  "achievements": {
+    "unlocked": "Conquista Desbloqueada",
+    "allMilestonesComplete": "Todos os Marcos Completos",
+    "tapToContinue": "Toque em qualquer lugar para continuar",
+    "title": {
+      "sleep_6h": "Primeiro Sono de 6 Horas!",
+      "sleep_8h": "Primeiro Sono de 8 Horas!",
+      "sleep_10h": "Primeiro Sono de 10 Horas!",
+      "tummy_5min": "Primeiros 5 Minutos na Barriguinha!",
+      "tummy_10min": "Primeiros 10 min de bruços!",
+      "tummy_15min": "Primeiros 15 Minutos na Barriguinha!",
+      "tummy_20min": "Primeiros 20 min de bruços!",
+      "first_solid": "Primeiro Alimento Sólido!"
+    },
+    "subtitle": {
+      "tummy_5min": "Próxima meta: 10 minutos",
+      "tummy_10min": "Próxima meta: 15 minutos",
+      "tummy_15min": "Próxima meta: 20 minutos",
+      "tummy_20min": "Força e resistência incríveis!",
+      "first_solid": "Um novo capítulo começa"
+    },
+    "periodComplete": "{{age}} \u2014 Tudo Pronto!",
+    "periodNote": "Você acompanhou todos os marcos do desenvolvimento para este período. Cada bebê se desenvolve no seu próprio ritmo \u2014 este é um ponto de verificação maravilhoso.",
+    "sleepNote": {
+      "6h": {
+        "under3m": "Um sinal maravilhoso nesta fase! O cérebro do seu bebê está começando a desenvolver seu próprio relógio interno, com a produção de melatonina começando a ser ativada.",
+        "3to4m": "Um marco encantador. O cérebro do seu bebê agora está produzindo melatonina e construindo um ritmo dia-noite, ajudando-o a consolidar o sono em períodos mais longos.",
+        "5to6m": "Os ciclos de sono do seu bebê estão amadurecendo lindamente. Seu cérebro está ficando melhor em conectar ciclos de sono juntos, com estágios mais profundos do sono se tornando mais predominantes.",
+        "7plus": "O ritmo circadiano do seu pequeno está bem estabelecido e sua arquitetura de sono está ficando mais madura, com períodos mais longos de sono profundo e reparador."
+      },
+      "8h": {
+        "under3m": "Bem notável nesta idade! O sistema nervoso do seu bebê está amadurecendo cedo, já aprendendo a fazer uma transição suave entre ciclos de sono sem acordar completamente.",
+        "3to4m": "Um sinal maravilhoso de crescimento neurológico. O cérebro do seu bebê está desenvolvendo a capacidade de fazer a transição entre ciclos de sono por conta própria \u2014 uma habilidade que exige verdadeira maturidade do desenvolvimento.",
+        "5to6m": "O sono do seu bebê está realmente se conectando. Estágios de sono mais profundos agora são mais predominantes, e seu cérebro está aprendendo a se auto-acalmar através de despertares naturais entre ciclos de sono.",
+        "7plus": "Um reflexo lindo de quanto seu bebê cresceu. Sua arquitetura de sono amadureceu significativamente, com períodos mais longos de sono profundo e reparador levando-o pela noite."
+      },
+      "10h": {
+        "under3m": "Que dorminhoco extraordinário! O sistema nervoso do seu bebê está mostrando maturidade precoce em regular padrões de sono-vigília. Seu relógio interno está tendo um começo impressionante.",
+        "3to4m": "Um grande marco! O ritmo circadiano e o impulso de sono do seu bebê estão funcionando muito bem juntos, permitindo sono profundo e consolidado por um período prolongado.",
+        "5to6m": "O sistema de sono do seu bebê está realmente florescendo. Seu cérebro fez um progresso maravilhoso ao conectar ciclos de sono, produzir melatonina nas horas certas e voltar a dormir naturalmente.",
+        "7plus": "Um testemunho do cérebro em crescimento do seu bebê. Seu ritmo circadiano é robusto, seus ciclos de sono estão amadurecendo para padrões semelhantes aos dos adultos, e sua capacidade natural de auto-acalmar se desenvolveu maravilhosamente."
+      }
+    }
   }
 }

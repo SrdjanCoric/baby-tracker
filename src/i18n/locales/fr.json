@@ -971,7 +971,8 @@
       "wakeWindow": "Fenêtre d'éveil",
       "activityGoal": "Objectif d'activité",
       "milestone": "Étape de développement",
-      "health": "Santé"
+      "health": "Santé",
+      "achievement": "Accomplissement"
     }
   },
   "household": {
@@ -1957,5 +1958,49 @@
     "month_other": "mois",
     "year_one": "an",
     "year_other": "ans"
+  },
+  "achievements": {
+    "unlocked": "Succès Déverrouillé",
+    "allMilestonesComplete": "Tous les Jalons Terminés",
+    "tapToContinue": "Tapez n'importe où pour continuer",
+    "title": {
+      "sleep_6h": "Premier Sommeil de 6 Heures !",
+      "sleep_8h": "Premier Sommeil de 8 Heures !",
+      "sleep_10h": "Premier Sommeil de 10 Heures !",
+      "tummy_5min": "Premiers 5 Minutes sur le Ventre !",
+      "tummy_10min": "Premiers 10 min sur le ventre !",
+      "tummy_15min": "Premiers 15 Minutes sur le Ventre !",
+      "tummy_20min": "Premiers 20 min sur le ventre !",
+      "first_solid": "Premier Aliment Solide !"
+    },
+    "subtitle": {
+      "tummy_5min": "Prochain objectif : 10 minutes",
+      "tummy_10min": "Prochain objectif : 15 minutes",
+      "tummy_15min": "Prochain objectif : 20 minutes",
+      "tummy_20min": "Une force et une endurance incroyables !",
+      "first_solid": "Un nouveau chapitre commence"
+    },
+    "periodComplete": "{{age}} \u2014 C'est Fini !",
+    "periodNote": "Vous avez suivi tous les jalons du développement pour cette période. Chaque bébé se développe à son propre rythme \u2014 c'est un magnifique point de contrôle.",
+    "sleepNote": {
+      "6h": {
+        "under3m": "Un merveilleux signe précoce ! Le cerveau de votre bébé commence à développer sa propre horloge interne, avec la production de mélatonine qui commence à peine.",
+        "3to4m": "Un jalon magnifique. Le cerveau de votre bébé produit maintenant de la mélatonine et construit un rythme jour-nuit, l'aidant à consolider le sommeil en périodes plus longues.",
+        "5to6m": "Les cycles de sommeil de votre bébé mûrissent magnifiquement. Leur cerveau devient de plus en plus capable de lier les cycles de sommeil ensemble, avec les stades plus profonds du sommeil devenant plus importants.",
+        "7plus": "Le rythme circadien de votre petit est bien établi et son architecture du sommeil devient plus mature, avec des périodes plus longues de sommeil profond et réparateur."
+      },
+      "8h": {
+        "under3m": "Tout à fait remarquable à cet âge ! Le système nerveux de votre bébé mûrit tôt, apprenant déjà à faire la transition en douceur entre les cycles de sommeil sans se réveiller complètement.",
+        "3to4m": "Un merveilleux signe de croissance neurologique. Le cerveau de votre bébé développe la capacité à faire la transition entre les cycles de sommeil par lui-même \u2014 une compétence qui nécessite une véritable maturité du développement.",
+        "5to6m": "Le sommeil de votre bébé se met vraiment en place. Les stades de sommeil plus profond sont maintenant plus importants, et son cerveau apprend à se calmer lui-même par les micro-réveils naturels entre les cycles de sommeil.",
+        "7plus": "Un reflet magnifique de la croissance de votre bébé. Son architecture du sommeil a considérablement mûri, avec des périodes plus longues de sommeil profond et réparateur qui le portent à travers la nuit."
+      },
+      "10h": {
+        "under3m": "Quel dormeur extraordinaire ! Le système nerveux de votre bébé montre une maturité précoce dans la régulation des cycles veille-sommeil. Son horloge interne a un excellent début.",
+        "3to4m": "Un grand jalon ! Le rythme circadien et le besoin de sommeil de votre bébé fonctionnent ensemble remarquablement bien, permettant un sommeil profond et consolidé pour une période prolongée.",
+        "5to6m": "Le système de sommeil de votre bébé s'épanouit vraiment. Son cerveau a fait des progrès merveilleux en reliant les cycles de sommeil, en produisant de la mélatonine aux bons moments et en se rendormant naturellement.",
+        "7plus": "Un témoignage du cerveau en croissance de votre bébé. Son rythme circadien est robuste, ses cycles de sommeil mûrissent vers des modèles semblables à ceux de l'adulte, et sa capacité naturelle à se calmer s'est développée magnifiquement."
+      }
+    }
   }
 }

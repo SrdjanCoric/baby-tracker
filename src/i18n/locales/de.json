@@ -971,7 +971,8 @@
       "wakeWindow": "Wachfenster",
       "activityGoal": "Aktivitätsziel",
       "milestone": "Meilenstein",
-      "health": "Gesundheit"
+      "health": "Gesundheit",
+      "achievement": "Errungenschaft"
     }
   },
   "household": {
@@ -1957,5 +1958,49 @@
     "month_other": "Monate",
     "year_one": "Jahr",
     "year_other": "Jahre"
+  },
+  "achievements": {
+    "unlocked": "Erfolg Freigeschaltet",
+    "allMilestonesComplete": "Alle Meilensteine Abgeschlossen",
+    "tapToContinue": "Tippen Sie überall an, um fortzufahren",
+    "title": {
+      "sleep_6h": "Erster 6-Stunden-Schlaf!",
+      "sleep_8h": "Erster 8-Stunden-Schlaf!",
+      "sleep_10h": "Erster 10-Stunden-Schlaf!",
+      "tummy_5min": "Erste 5 Minuten Bauchzeit!",
+      "tummy_10min": "Erste 10 Min Bauchlage!",
+      "tummy_15min": "Erste 15 Minuten Bauchzeit!",
+      "tummy_20min": "Erste 20 Min Bauchlage!",
+      "first_solid": "Erste Beikost!"
+    },
+    "subtitle": {
+      "tummy_5min": "Nächstes Ziel: 10 Minuten",
+      "tummy_10min": "Nächstes Ziel: 15 Minuten",
+      "tummy_15min": "Nächstes Ziel: 20 Minuten",
+      "tummy_20min": "Unglaubliche Kraft und Ausdauer!",
+      "first_solid": "Ein neues Kapitel beginnt"
+    },
+    "periodComplete": "{{age}} \u2014 Alles Erledigt!",
+    "periodNote": "Sie haben alle Entwicklungsmeilensteine für diese Phase verfolgt. Jedes Baby entwickelt sich in seinem eigenen Tempo \u2014 dies ist ein wundervoller Kontrollpunkt.",
+    "sleepNote": {
+      "6h": {
+        "under3m": "Ein wunderbares frühes Zeichen! Das Gehirn Ihres Babys beginnt, seine eigene innere Uhr zu entwickeln, wobei die Melatoninproduktion gerade erst beginnt.",
+        "3to4m": "Ein wundervoller Meilenstein. Das Gehirn Ihres Babys produziert nun Melatonin und baut einen Tag-Nacht-Rhythmus auf, was ihm hilft, den Schlaf in längere Phasen zu konsolidieren.",
+        "5to6m": "Die Schlafzyklen Ihres Babys reifen wunderbar heran. Ihr Gehirn wird besser darin, Schlafzyklen miteinander zu verbinden, und tiefere Schlafstadien werden immer stärker.",
+        "7plus": "Der zirkadiane Rhythmus Ihres Kleinen ist gut etabliert und seine Schlafarchitektur wird reifer, mit längeren Phasen tiefen, erholsamen Schlafs."
+      },
+      "8h": {
+        "under3m": "Ziemlich bemerkenswert in diesem Alter! Das Nervensystem Ihres Babys reift früh heran und lernt bereits, sanft zwischen Schlafzyklen zu wechseln, ohne vollständig aufzuwachen.",
+        "3to4m": "Ein wunderbares Zeichen neurologischen Wachstums. Das Gehirn Ihres Babys entwickelt die Fähigkeit, zwischen Schlafzyklen eigenständig zu wechseln \u2014 eine Fähigkeit, die echte Entwicklungsreife erfordert.",
+        "5to6m": "Der Schlaf Ihres Babys kommt wirklich zusammen. Tiefere Schlafstadien sind nun stärker vertreten, und sein Gehirn lernt, sich selbst zu beruhigen, während natürliche Weckreize zwischen den Schlafzyklen auftreten.",
+        "7plus": "Eine schöne Widerspiegelung davon, wie sehr Ihr Baby gewachsen ist. Seine Schlafarchitektur hat sich erheblich gereift, mit längeren Phasen tiefen, erholsamen Schlafs, die es durch die Nacht tragen."
+      },
+      "10h": {
+        "under3m": "Was für ein außergewöhnlicher Schläfer! Das Nervensystem Ihres Babys zeigt frühe Reife bei der Regulierung von Schlaf-Wach-Mustern. Seine innere Uhr hat einen beeindruckenden Start.",
+        "3to4m": "Ein großer Meilenstein! Der zirkadiane Rhythmus und der Schlaftrieb Ihres Babys arbeiten bemerkenswert gut zusammen, ermöglichen tiefen, konsolidierten Schlaf für eine längere Phase.",
+        "5to6m": "Das Schlafsystem Ihres Babys blüht wirklich auf. Sein Gehirn hat wunderbare Fortschritte bei der Verknüpfung von Schlafzyklen gemacht, produziert Melatonin zum richtigen Zeitpunkt und findet von selbst in den Schlaf zurück.",
+        "7plus": "Ein Beweis für das wachsende Gehirn Ihres Babys. Sein zirkadianer Rhythmus ist robust, seine Schlafzyklen reifen zu erwachsenenähnlichen Mustern heran, und seine natürliche Selbstberuhigungsfähigkeit hat sich wunderbar entwickelt."
+      }
+    }
   }
 }
