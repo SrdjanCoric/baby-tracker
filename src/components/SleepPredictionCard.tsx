@@ -6,6 +6,9 @@ import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useSleep, useBaby } from "@/contexts";
+import { useActiveTimers } from "@/contexts/active-timers-context";
+import type { ActiveSleepTimer } from "@/contexts/sleep-context";
+import type { SleepType } from "@/constants/activities";
 import {
   predictNextSleep,
   getQualifyingNightSleep,
@@ -61,6 +64,26 @@ const SleepPredictionCardInner = ({
     acceptDrift,
   } = useSleep();
 
+  const { getLockForActivity } = useActiveTimers();
+
+  const remoteSleepLock = useMemo(() => {
+    if (activeTimer || !selectedBaby?.id) return null;
+    return getLockForActivity(selectedBaby.id, "sleep");
+  }, [activeTimer, selectedBaby?.id, getLockForActivity]);
+
+  const effectiveActiveTimer = useMemo((): ActiveSleepTimer | null => {
+    if (activeTimer) return activeTimer;
+    if (!remoteSleepLock) return null;
+    const sleepType = (remoteSleepLock.timerData?.type as SleepType) ?? "nap";
+    return {
+      isRunning: true,
+      isPaused: false,
+      startTime: new Date(remoteSleepLock.startedAt),
+      sleepType,
+      totalPausedMs: 0,
+    };
+  }, [activeTimer, remoteSleepLock]);
+
   const birthDate = selectedBaby?.birthDate;
   const dayStartHour = wakeWindowConfig?.dayStartHour;
   const dayEndHour = wakeWindowConfig?.dayEndHour;
@@ -80,7 +103,7 @@ const SleepPredictionCardInner = ({
 
   const overdueTickMinute = useTimeRefresh(60000);
 
-  const [midnightTick, setMidnightTick] = useState(0);
+  const [transitionTick, setTransitionTick] = useState(0);
 
   const hasNightSleepToday = useMemo((): boolean => {
     const threshold = getMorningThreshold(effectiveDayStart);
@@ -108,8 +131,8 @@ const SleepPredictionCardInner = ({
       return "computing";
     }
 
-    if (activeTimer) {
-      return activeTimer.sleepType === "nap" ? "sleeping_nap" : "sleeping_night";
+    if (effectiveActiveTimer) {
+      return effectiveActiveTimer.sleepType === "nap" ? "sleeping_nap" : "sleeping_night";
     }
 
     const now = new Date();
@@ -141,10 +164,11 @@ const SleepPredictionCardInner = ({
     }
 
     return "prediction";
-  }, [birthDate, predictionBannerDismissed, hasDayBoundaries, isComputingModel, activeTimer, effectiveDayStart, effectiveDayEnd, hasNightSleepToday, hasPredictionData, qualifyingDayCount, getLastSleep, midnightTick]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [birthDate, predictionBannerDismissed, hasDayBoundaries, isComputingModel, effectiveActiveTimer, effectiveDayStart, effectiveDayEnd, hasNightSleepToday, hasPredictionData, qualifyingDayCount, getLastSleep, transitionTick]);
 
   useEffect(() => {
-    const needsTransition = !activeTimer && cardState === "prediction";
+    const needsTransition = !effectiveActiveTimer && cardState === "prediction";
     if (!needsTransition) return;
     const now = new Date();
     const currentHour = now.getHours() + now.getMinutes() / 60;
@@ -153,32 +177,44 @@ const SleepPredictionCardInner = ({
     midnight.setDate(midnight.getDate() + 1);
     midnight.setHours(0, 0, 0, 0);
     const msUntilMidnight = midnight.getTime() - now.getTime();
-    const timer = setTimeout(() => setMidnightTick((t) => t + 1), msUntilMidnight);
+    const timer = setTimeout(() => setTransitionTick((t) => t + 1), msUntilMidnight);
     return () => clearTimeout(timer);
-  }, [activeTimer, cardState, effectiveDayEnd, midnightTick]);
+  }, [effectiveActiveTimer, cardState, effectiveDayEnd, transitionTick]);
 
   useEffect(() => {
-    if (cardState !== "sleeping_nap" || !activeTimer) {
+    if (effectiveActiveTimer || cardState !== "nighttime") return;
+    const now = new Date();
+    const threshold = getMorningThreshold(effectiveDayStart);
+    const thresholdDate = new Date(now);
+    thresholdDate.setHours(Math.floor(threshold), Math.round((threshold % 1) * 60), 0, 0);
+    if (thresholdDate.getTime() <= now.getTime()) return;
+    const ms = thresholdDate.getTime() - now.getTime();
+    const timer = setTimeout(() => setTransitionTick((t) => t + 1), ms);
+    return () => clearTimeout(timer);
+  }, [effectiveActiveTimer, cardState, effectiveDayStart, transitionTick]);
+
+  useEffect(() => {
+    if (cardState !== "sleeping_nap" || !effectiveActiveTimer) {
       setElapsed(0);
       return;
     }
 
     const compute = () => {
-      const ms = Date.now() - activeTimer.startTime.getTime() - (activeTimer.totalPausedMs || 0);
+      const ms = Date.now() - effectiveActiveTimer.startTime.getTime() - (effectiveActiveTimer.totalPausedMs || 0);
       setElapsed(Math.max(0, Math.floor(ms / 1000)));
     };
 
     compute();
     const interval = setInterval(compute, 1000);
     return () => clearInterval(interval);
-  }, [cardState, activeTimer]);
+  }, [cardState, effectiveActiveTimer]);
 
   const lastWakeTime = useMemo((): Date | null => {
-    if (activeTimer) return null;
+    if (effectiveActiveTimer) return null;
     const lastSleep = getLastSleep();
     if (!lastSleep?.endedAt) return null;
     return new Date(lastSleep.endedAt);
-  }, [activeTimer, getLastSleep]);
+  }, [effectiveActiveTimer, getLastSleep]);
 
   const manualModel = useMemo((): SleepPredictionModel | null => {
     if (wakeWindowConfig?.source !== "custom" || !wakeWindowConfig.slots.length) return null;
