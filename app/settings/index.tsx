@@ -204,7 +204,7 @@ export default function SettingsScreen() {
           <SettingsRow
             icon="ℹ️"
             label={t("settings.version")}
-            value="1.0.0"
+            value="4.0.0"
             showChevron={false}
           />
           <SettingsDivider />
