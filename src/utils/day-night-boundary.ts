@@ -1,9 +1,9 @@
 import type { SleepType } from "@/constants/activities";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
+import { SLEEP_MERGE_THRESHOLD_MINUTES } from "@/utils/sleepPredictions";
 
 const DEFAULT_DAY_START = 6;
 const DEFAULT_DAY_END = 19;
-const DEFAULT_NAP_CONTINUATION_MINUTES = 15;
 
 export function isNightTime(
   date: Date,
@@ -24,7 +24,7 @@ export function determineSleepTypeFromBoundary(
 
 export function countNapsWithContinuation(
   naps: StoredSleepEntry[],
-  thresholdMinutes = DEFAULT_NAP_CONTINUATION_MINUTES
+  thresholdMinutes = SLEEP_MERGE_THRESHOLD_MINUTES
 ): number {
   if (naps.length === 0) return 0;
 

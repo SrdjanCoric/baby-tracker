@@ -234,22 +234,46 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
       const activeTimer = await PumpingStorageService.getActiveTimer(selectedBaby.id);
       if (activeTimer) {
-        dispatch({
-          type: "RESTORE_TIMER",
-          payload: {
-            isRunning: true,
-            isPaused: activeTimer.isPaused ?? false,
-            startTime: new Date(activeTimer.startedAt),
-            side: activeTimer.side,
-            totalPausedMs: activeTimer.totalPausedMs ?? 0,
-            pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
-          },
-        });
+        let isStale = false;
+        if (user?.id && user?.householdId) {
+          try {
+            const lock = await getActiveTimerLock(selectedBaby.id, "pumping");
+            if (!lock || lock.startedBy !== user.id) {
+              isStale = true;
+              await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+            }
+          } catch {
+            // ignore
+          }
+        }
 
-        if (activeTimer.liveActivityId) {
-          const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
-          if (isRunning) {
-            liveActivityIdRef.current = activeTimer.liveActivityId;
+        if (!isStale) {
+          dispatch({
+            type: "RESTORE_TIMER",
+            payload: {
+              isRunning: true,
+              isPaused: activeTimer.isPaused ?? false,
+              startTime: new Date(activeTimer.startedAt),
+              side: activeTimer.side,
+              totalPausedMs: activeTimer.totalPausedMs ?? 0,
+              pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
+            },
+          });
+
+          if (activeTimer.liveActivityId) {
+            const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+            if (isRunning) {
+              liveActivityIdRef.current = activeTimer.liveActivityId;
+            } else if (!(activeTimer.isPaused ?? false)) {
+              const totalPausedMs = activeTimer.totalPausedMs ?? 0;
+              const effectiveStartTime = totalPausedMs > 0
+                ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
+                : new Date(activeTimer.startedAt);
+              const activityId = await startTimerLiveActivity(
+                "pumping", selectedBaby.name, activeTimer.side, effectiveStartTime
+              );
+              if (activityId) liveActivityIdRef.current = activityId;
+            }
           } else if (!(activeTimer.isPaused ?? false)) {
             const totalPausedMs = activeTimer.totalPausedMs ?? 0;
             const effectiveStartTime = totalPausedMs > 0
@@ -260,15 +284,6 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             );
             if (activityId) liveActivityIdRef.current = activityId;
           }
-        } else if (!(activeTimer.isPaused ?? false)) {
-          const totalPausedMs = activeTimer.totalPausedMs ?? 0;
-          const effectiveStartTime = totalPausedMs > 0
-            ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
-            : new Date(activeTimer.startedAt);
-          const activityId = await startTimerLiveActivity(
-            "pumping", selectedBaby.name, activeTimer.side, effectiveStartTime
-          );
-          if (activityId) liveActivityIdRef.current = activityId;
         }
       } else if (user?.id && user?.householdId) {
         try {
@@ -334,6 +349,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("[PumpingContext] Failed to acquire timer lock:", error);
+        return { success: false };
       }
     }
 
@@ -391,13 +407,32 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
       let pumping: StoredPumpingEntry;
 
-      if (user?.householdId && user?.id) {
-        pumping = await createPumpingInDatabase(pumpingInput, user.id);
-      } else {
-        pumping = await PumpingStorageService.addPumping(pumpingInput);
+      try {
+        if (user?.householdId && user?.id) {
+          console.log("[PumpingContext] stopPumping: saving to database");
+          pumping = await createPumpingInDatabase(pumpingInput, user.id);
+        } else {
+          console.log("[PumpingContext] stopPumping: saving to local storage");
+          pumping = await PumpingStorageService.addPumping(pumpingInput);
+        }
+        console.log("[PumpingContext] stopPumping: saved entry id=%s", pumping.id);
+        dispatch({ type: "ADD_PUMPING", payload: pumping });
+      } catch (saveError) {
+        console.error("[PumpingContext] stopPumping: FAILED to save, cleaning up timer", saveError);
+        dispatch({ type: "STOP_TIMER" });
+        await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+        if (liveActivityIdRef.current) {
+          await endTimerLiveActivity(liveActivityIdRef.current);
+          liveActivityIdRef.current = null;
+        } else {
+          await endLiveActivityByType("pumping");
+        }
+        if (user?.id) {
+          try { await releaseTimerLock(selectedBaby.id, "pumping", user.id); } catch { /* ignore */ }
+        }
+        throw saveError;
       }
 
-      dispatch({ type: "ADD_PUMPING", payload: pumping });
       dispatch({ type: "STOP_TIMER" });
       await PumpingStorageService.clearActiveTimer(selectedBaby.id);
 

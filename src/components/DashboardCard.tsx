@@ -11,11 +11,13 @@ import Animated, {
   Easing,
   cancelAnimation,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { CONTENT_COLORS, SURFACE, ACTIVITY } from "@/constants/design-tokens";
 import { formatDuration } from "@/utils/time";
 
-const CARD_MIN_HEIGHT = Platform.OS === "android" ? 180 : 200;
+const CARD_MIN_HEIGHT = Platform.OS === "android" ? 150 : 160;
+const CARD_BORDER_RADIUS = 20;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -205,6 +207,10 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
     const lockedBgColor = isDark ? `${accentColor}15` : `${accentColor}08`;
     const lockedBorderColor = isDark ? `${accentColor}40` : `${accentColor}30`;
 
+    const tintColor = isDark ? activityColors.cardTintDark : activityColors.cardTintLight;
+    const gradientColors: [string, string] = [tintColor, bgColor];
+    const gradientLocations: [number, number] = [0, 0.6];
+
     return (
       <AnimatedPressable
         ref={ref}
@@ -213,11 +219,11 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
         onPressOut={isLockedByOther ? undefined : handleCardPressOut}
         disabled={isLockedByOther}
         testID={testID}
-        className={`flex-1 rounded-[20px] ${Platform.OS === "android" ? "p-3" : "p-4"}`}
         style={[
           cardAnimatedStyle,
           {
-            backgroundColor: isLockedByOther ? lockedBgColor : bgColor,
+            flex: 1,
+            borderRadius: CARD_BORDER_RADIUS,
             minHeight: CARD_MIN_HEIGHT,
             borderWidth: isActive || isLockedByOther ? 2 : 0,
             borderColor: isLockedByOther ? lockedBorderColor : isActive ? accentColor : "transparent",
@@ -232,13 +238,24 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
             : timeSince ? t("accessibility.cardTimeSince", { label, time: timeSince }) : t("accessibility.cardNoTime", { label })
         }
       >
+        <LinearGradient
+          colors={isLockedByOther ? [lockedBgColor, lockedBgColor] : gradientColors}
+          locations={isLockedByOther ? [0, 1] : gradientLocations}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
+          style={{
+            flex: 1,
+            borderRadius: CARD_BORDER_RADIUS - 1,
+            overflow: "hidden",
+            padding: Platform.OS === "android" ? 12 : 14,
+          }}
+        >
         {/* Top row: Icon + Label */}
         <View className="flex-row items-center justify-between mb-2">
           <View className="flex-row items-center flex-1 mr-2">
-            <Text className="text-2xl mr-2">{config.icon}</Text>
+            <Text style={{ fontSize: 16, marginRight: 6 }}>{config.icon}</Text>
             <Text
-              className="text-sm font-semibold uppercase tracking-wider flex-1"
-              style={{ color: accentColor }}
+              style={{ fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, color: accentColor, flex: 1 }}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.75}
@@ -278,7 +295,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
         </View>
 
         {/* Main content: Time since, Active state, or Locked state */}
-        <View className="flex-1 justify-center py-2">
+        <View className="flex-1 justify-center">
           {isLockedByOther ? (
             <View>
               <Text
@@ -309,7 +326,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
           ) : isActive ? (
             <View>
               <Text
-                className="text-xl font-bold"
+                className="text-base font-extrabold"
                 style={{ color: accentColor }}
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -328,11 +345,9 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
           ) : (
             <View>
               <Text
-                className="text-xl font-bold"
+                className="text-base font-extrabold"
                 style={{ color: textColor }}
                 numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.7}
               >
                 {timeSince || "--:--"}
               </Text>
@@ -346,7 +361,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 </Text>
               )}
               {progress !== undefined && (
-                <View className="mt-2">
+                <View className="mt-1">
                   <View className="flex-row items-center">
                     <View
                       className="h-2 rounded-full flex-1 mr-2"
@@ -398,7 +413,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
         </View>
 
         {/* Action row */}
-        <View className="flex-row items-end justify-between mt-1">
+        <View className="flex-row items-end justify-between">
           {todayBadge !== undefined && !isLockedByOther ? (
             <View
               className="px-2 py-1 rounded-full"
@@ -417,10 +432,10 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
           <View>
           {isLockedByOther ? (
             <View
-              className={`${Platform.OS === "android" ? "min-w-[40px] min-h-[40px] rounded-xl" : "min-w-[48px] min-h-[48px] rounded-2xl"} items-center justify-center`}
-              style={{ backgroundColor: isDark ? "#3A3A3A" : "#E5E5E5" }}
+              className="items-center justify-center"
+              style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isDark ? "#3A3A3A" : "#E5E5E5" }}
             >
-              <Text className={`${Platform.OS === "android" ? "text-base" : "text-lg"}`}>
+              <Text className="text-sm">
                 ⏳
               </Text>
             </View>
@@ -433,10 +448,13 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 }}
                 onPressIn={handlePauseButtonPressIn}
                 onPressOut={handlePauseButtonPressOut}
-                className={`${Platform.OS === "android" ? "min-w-[36px] min-h-[36px] rounded-xl" : "min-w-[40px] min-h-[40px] rounded-2xl"} items-center justify-center`}
+                className="items-center justify-center"
                 style={[
                   pauseButtonAnimatedStyle,
                   {
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
                     backgroundColor: isPaused ? buttonBgColor : "transparent",
                     borderWidth: isPaused ? 0 : 2,
                     borderColor: buttonBgColor,
@@ -447,7 +465,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 testID={testID ? `${testID}-pause` : undefined}
               >
                 <Text
-                  className={`${Platform.OS === "android" ? "text-sm" : "text-base"} font-bold`}
+                  className="text-xs font-bold"
                   style={{ color: isPaused ? "#FFFFFF" : buttonBgColor }}
                 >
                   {isPaused ? "▶" : "⏸"}
@@ -460,13 +478,13 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 }}
                 onPressIn={handleButtonPressIn}
                 onPressOut={handleButtonPressOut}
-                className={`${Platform.OS === "android" ? "min-w-[36px] min-h-[36px] rounded-xl" : "min-w-[40px] min-h-[40px] rounded-2xl"} items-center justify-center`}
-                style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor }]}
+                className="items-center justify-center"
+                style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor, width: 34, height: 34, borderRadius: 17 }]}
                 accessibilityRole="button"
                 accessibilityLabel={t("common.stop")}
                 testID={testID ? `${testID}-action` : undefined}
               >
-                <Text className={`${Platform.OS === "android" ? "text-sm" : "text-base"} font-bold text-white`}>
+                <Text className="text-xs font-bold text-white">
                   ⏹
                 </Text>
               </AnimatedPressable>
@@ -479,19 +497,20 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
               }}
               onPressIn={handleButtonPressIn}
               onPressOut={handleButtonPressOut}
-              className={`${Platform.OS === "android" ? "min-w-[40px] min-h-[40px] rounded-xl" : "min-w-[48px] min-h-[48px] rounded-2xl"} items-center justify-center`}
-              style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor }]}
+              className="items-center justify-center"
+              style={[buttonAnimatedStyle, { backgroundColor: buttonBgColor, width: 34, height: 34, borderRadius: 17 }]}
               accessibilityRole="button"
               accessibilityLabel={isActive ? t("common.stop") : t("accessibility.addActivity", { label })}
               testID={testID ? `${testID}-action` : undefined}
             >
-              <Text className={`${Platform.OS === "android" ? "text-base" : "text-lg"} font-bold text-white`}>
+              <Text className="text-base font-bold text-white">
                 {isActive ? "⏹" : actionLabel}
               </Text>
             </AnimatedPressable>
           )}
           </View>
         </View>
+        </LinearGradient>
       </AnimatedPressable>
     );
   }

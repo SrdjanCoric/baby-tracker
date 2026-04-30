@@ -9,7 +9,6 @@ import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { MilestoneSuggestionModal } from "@/components";
-import Svg, { Circle } from "react-native-svg";
 
 const TUMMY_ORANGE = "#E67E22";
 const TUMMY_ORANGE_MUTED = "#FEF3E2";
@@ -29,10 +28,7 @@ export default function TummyTimeScreen() {
     stopTummyTime,
     pauseTummyTime,
     resumeTummyTime,
-    getTodaysTotalSeconds,
-    getDailyProgress,
     dailyGoalSeconds,
-    goalSource,
     currentAgeGroup,
     showMilestoneSuggestion,
     suggestedGoalSeconds,
@@ -76,17 +72,6 @@ export default function TummyTimeScreen() {
     return Math.floor((now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000);
   }, [activeTimer, tick]);
 
-  const todaysTotal = useMemo(() => {
-    void tick;
-    return getTodaysTotalSeconds() + (activeTimer?.isRunning ? elapsedSeconds : 0);
-  }, [getTodaysTotalSeconds, activeTimer?.isRunning, elapsedSeconds, tick]);
-
-  const progress = useMemo(() => {
-    const baseProgress = getDailyProgress();
-    if (!activeTimer?.isRunning) return baseProgress;
-    const currentProgress = (todaysTotal / dailyGoalSeconds) * 100;
-    return Math.min(100, Math.round(currentProgress));
-  }, [getDailyProgress, activeTimer?.isRunning, todaysTotal, dailyGoalSeconds]);
 
   const handleStartTummyTime = useCallback(async (customStartTime?: Date) => {
     await startTummyTime(customStartTime);
@@ -184,9 +169,6 @@ export default function TummyTimeScreen() {
         {isTimerRunning ? (
           <RunningTimerView
             elapsedSeconds={elapsedSeconds}
-            todaysTotal={todaysTotal}
-            progress={progress}
-            dailyGoalSeconds={dailyGoalSeconds}
             isPaused={activeTimer?.isPaused ?? false}
             onStop={handleStopTummyTime}
             onPause={isAuthenticated ? handlePause : undefined}
@@ -194,14 +176,8 @@ export default function TummyTimeScreen() {
           />
         ) : (
           <StartView
-            todaysTotal={todaysTotal}
-            progress={progress}
-            dailyGoalSeconds={dailyGoalSeconds}
-            goalSource={goalSource}
-            currentAgeGroup={currentAgeGroup}
             onStart={handleStartTummyTime}
             onLogPast={handleLogPastTummyTime}
-            onGoalSettings={handleGoalSettings}
           />
         )}
       </View>
@@ -220,68 +196,17 @@ export default function TummyTimeScreen() {
   );
 }
 
-interface ProgressRingProps {
-  progress: number;
-  size: number;
-  strokeWidth: number;
-}
-
-function ProgressRing({ progress, size, strokeWidth }: ProgressRingProps) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-  return (
-    <Svg width={size} height={size}>
-      {/* Background circle */}
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        stroke={TUMMY_ORANGE_MUTED}
-        strokeWidth={strokeWidth}
-        fill="transparent"
-      />
-      {/* Progress circle */}
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        stroke={progress >= 100 ? "#4CAF50" : TUMMY_ORANGE}
-        strokeWidth={strokeWidth}
-        fill="transparent"
-        strokeDasharray={circumference}
-        strokeDashoffset={strokeDashoffset}
-        strokeLinecap="round"
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-      />
-    </Svg>
-  );
-}
 
 interface StartViewProps {
-  todaysTotal: number;
-  progress: number;
-  dailyGoalSeconds: number;
-  goalSource: "age_based" | "custom";
-  currentAgeGroup: { label: string; rationale: string } | null;
   onStart: (customStartTime?: Date) => void;
   onLogPast: () => void;
-  onGoalSettings: () => void;
 }
 
 function StartView({
-  todaysTotal,
-  progress,
-  dailyGoalSeconds,
-  goalSource,
-  currentAgeGroup,
   onStart,
   onLogPast,
-  onGoalSettings,
 }: StartViewProps) {
   const { t } = useTranslation();
-  const isGoalComplete = progress >= 100;
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
 
@@ -348,57 +273,11 @@ function StartView({
 
   return (
     <View className="items-center w-full">
-      {/* Progress Ring with Icon */}
-      <View className="relative items-center justify-center mb-8">
-        <ProgressRing progress={progress} size={180} strokeWidth={12} />
-        <View className="absolute items-center justify-center">
-          <Text className="text-5xl mb-1">💪</Text>
-          <Text
-            className="text-2xl font-bold"
-            style={{ color: isGoalComplete ? "#4CAF50" : TUMMY_ORANGE }}
-          >
-            {progress}%
-          </Text>
-        </View>
-      </View>
-
-      {/* Goal Status */}
-      {isGoalComplete ? (
-        <View className="items-center mb-6">
-          <Text className="text-xl font-bold text-green-600 mb-1">
-            {t("tummyTime.goalComplete")}
-          </Text>
-          <Text className="text-base text-content-secondary dark:text-content-dark-secondary">
-            {formatDuration(todaysTotal)} {t("tummyTime.today")}
-          </Text>
-        </View>
-      ) : (
-        <View className="items-center mb-6">
-          <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-1">
-            {t("tummyTime.todaysProgress")}
-          </Text>
-          <Pressable onPress={onGoalSettings} className="items-center active:opacity-70">
-            <Text className="text-xl font-semibold text-content-primary dark:text-content-dark-primary text-center">
-              {formatDuration(todaysTotal)} / {formatDuration(dailyGoalSeconds)}
-            </Text>
-            {goalSource === "age_based" && currentAgeGroup ? (
-              <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary text-center mt-1">
-                {t("tummyTime.basedOnGuidelines", { ageGroup: currentAgeGroup.label })}
-              </Text>
-            ) : goalSource === "custom" ? (
-              <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary text-center mt-1">
-                {t("tummyTime.customGoalNote")}
-              </Text>
-            ) : null}
-          </Pressable>
-        </View>
-      )}
-
       {/* Started Earlier Button */}
       {!customStartTime ? (
         <Pressable
           onPress={handleStartedEarlierPress}
-          className="mb-6 py-3 px-5 rounded-full flex-row items-center border-2"
+          className="mb-8 py-3 px-5 rounded-full flex-row items-center border-2"
           style={{ borderColor: TUMMY_ORANGE, backgroundColor: 'transparent' }}
           accessibilityRole="button"
           accessibilityLabel={t("tummyTime.startedEarlier")}
@@ -409,7 +288,7 @@ function StartView({
           </Text>
         </Pressable>
       ) : (
-        <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: TUMMY_ORANGE_MUTED }}>
+        <View className="flex-row items-center mb-8 py-3 px-5 rounded-full" style={{ backgroundColor: TUMMY_ORANGE_MUTED }}>
           <Text className="text-lg mr-2">🕐</Text>
           <Text className="text-base font-medium mr-2" style={{ color: TUMMY_ORANGE_DARK }}>
             {t("tummyTime.startTime")}: {formatCustomTime(customStartTime)}
@@ -428,19 +307,22 @@ function StartView({
       {/* Start Button */}
       <Pressable
         onPress={handleStartPress}
-        className="w-touch-xl h-touch-xl rounded-full items-center justify-center active:scale-95"
+        className="w-48 h-48 rounded-full items-center justify-center mb-8 active:scale-[0.97]"
         style={{ backgroundColor: TUMMY_ORANGE }}
         accessibilityRole="button"
         accessibilityLabel={t("tummyTime.startTummyTime")}
         testID="start-timer-button"
       >
-        <Text className="text-3xl text-white">▶</Text>
+        <Text className="text-4xl">💪</Text>
+        <Text className="text-base font-semibold text-white mt-2">
+          {t("tummyTime.startTummyTime")}
+        </Text>
       </Pressable>
 
       {/* Log Past Tummy Time Link */}
       <Pressable
         onPress={onLogPast}
-        className="mt-8 py-3 px-6 rounded-button-lg active:opacity-70"
+        className="mt-4 py-3 px-6 rounded-button-lg active:opacity-70"
         style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
         accessibilityRole="button"
         accessibilityLabel={t("tummyTime.logPastTummyTime")}
@@ -483,9 +365,6 @@ function StartView({
 
 interface RunningTimerViewProps {
   elapsedSeconds: number;
-  todaysTotal: number;
-  progress: number;
-  dailyGoalSeconds: number;
   isPaused: boolean;
   onStop: () => void;
   onPause?: () => void;
@@ -494,9 +373,6 @@ interface RunningTimerViewProps {
 
 function RunningTimerView({
   elapsedSeconds,
-  todaysTotal,
-  progress,
-  dailyGoalSeconds,
   isPaused,
   onStop,
   onPause,
@@ -504,49 +380,27 @@ function RunningTimerView({
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
   const formattedTime = formatDuration(elapsedSeconds);
-  const isGoalComplete = progress >= 100;
 
   return (
     <View className="items-center w-full">
-      <View className="flex-row items-center mb-4">
+      <View className="flex-row items-center mb-8">
         <Text className="text-4xl mr-3">💪</Text>
         <Text style={{ color: TUMMY_ORANGE }} className="text-lg font-semibold">
           {t("tummyTime.inProgress")}
         </Text>
       </View>
 
-      <View className="relative items-center justify-center mb-4">
-        <ProgressRing progress={progress} size={200} strokeWidth={14} />
-        <View className="absolute items-center justify-center">
-          <Text
-            className="text-4xl font-bold tracking-tight"
-            style={{ color: isPaused ? PAUSED_AMBER : TUMMY_ORANGE, opacity: isPaused ? 0.5 : 1 }}
-            accessibilityLabel={`${t("common.timer")}: ${formattedTime}`}
-          >
-            {formattedTime}
-          </Text>
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mt-1">
-            {t("tummyTime.thisSession")}
-          </Text>
-        </View>
-      </View>
-
       <View
-        className="px-6 py-3 rounded-card mb-6"
+        className="px-12 py-8 rounded-card-lg mb-8"
         style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
       >
-        {isGoalComplete ? (
-          <Text className="text-base font-medium text-green-600 text-center">
-            🎉 {t("tummyTime.goalComplete")}
-          </Text>
-        ) : (
-          <Text
-            className="text-base text-center"
-            style={{ color: TUMMY_ORANGE_DARK }}
-          >
-            {t("tummyTime.todaysProgress")}: {formatDuration(todaysTotal)} / {formatDuration(dailyGoalSeconds)}
-          </Text>
-        )}
+        <Text
+          className="text-timer-xl text-center font-bold tracking-tight"
+          style={{ color: isPaused ? PAUSED_AMBER : TUMMY_ORANGE, opacity: isPaused ? 0.5 : 1 }}
+          accessibilityLabel={`${t("common.timer")}: ${formattedTime}`}
+        >
+          {formattedTime}
+        </Text>
       </View>
 
       <View className="flex-row items-center mb-10">

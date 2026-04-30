@@ -177,7 +177,8 @@ export const PDFService = {
         renderGrowthSection(
           aggregatedData.growth,
           options.babyGender,
-          options.includeCharts
+          options.includeCharts,
+          { weightUnit: options.weightUnit, heightUnit: options.heightUnit }
         )
       );
     }

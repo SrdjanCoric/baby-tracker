@@ -158,10 +158,12 @@ describe("TimelineDayHeader", () => {
       expect(screen.getByText("Today")).toBeTruthy();
     });
 
-    it("renders date when provided", () => {
-      render(<TimelineDayHeader title="Yesterday" date="Jan 19, 2026" />);
+    it("renders date parts when dateObj provided", () => {
+      const testDate = new Date(2026, 0, 19); // Jan 19, 2026
+      render(<TimelineDayHeader title="Yesterday" dateObj={testDate} />);
       expect(screen.getByText("Yesterday")).toBeTruthy();
-      expect(screen.getByText("Jan 19, 2026")).toBeTruthy();
+      expect(screen.getByText("19")).toBeTruthy(); // day number
+      expect(screen.getByText("Jan")).toBeTruthy(); // month
     });
   });
 });

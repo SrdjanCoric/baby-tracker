@@ -5,6 +5,8 @@ export { Input, type InputProps } from "./Input";
 
 // Dashboard components
 export { DashboardCard, type DashboardCardProps, type ActivityType } from "./DashboardCard";
+export { CompactActivityRow, type CompactActivityRowProps } from "./CompactActivityRow";
+export { SleepPredictionCard, type SleepPredictionCardProps } from "./SleepPredictionCard";
 export { BabyHeader, type BabyHeaderProps } from "./BabyHeader";
 export { TodaySummary, type TodaySummaryProps } from "./TodaySummary";
 

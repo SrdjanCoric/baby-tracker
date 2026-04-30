@@ -1,4 +1,4 @@
-import { Pressable, Text, View, Platform } from "react-native";
+import { Pressable, Text, View, Platform, useColorScheme } from "react-native";
 import { forwardRef, useCallback } from "react";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -9,13 +9,19 @@ const isAndroid = Platform.OS === "android";
 
 interface BabyHeaderProps {
   onSettingsPress?: () => void;
+  tipsExpanded?: boolean;
+  hasTips?: boolean;
+  tipsViewed?: boolean;
+  onTipToggle?: () => void;
   testID?: string;
 }
 
 const BabyHeader = forwardRef<View, BabyHeaderProps>(
-  ({ onSettingsPress, testID }, ref) => {
+  ({ onSettingsPress, tipsExpanded = false, hasTips = false, tipsViewed = false, onTipToggle, testID }, ref) => {
     const { t } = useTranslation();
     const { selectedBaby, isLoading } = useBaby();
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === "dark";
 
     const handleAddBaby = useCallback(() => {
       router.push("/baby/add");
@@ -85,6 +91,13 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
       );
     }
 
+    const tipBulbBg = tipsExpanded
+      ? isDark ? "rgba(224,185,144,0.2)" : "rgba(212,165,116,0.15)"
+      : isDark ? "rgba(224,185,144,0.1)" : "rgba(212,165,116,0.1)";
+
+    const tipDotColor = isDark ? "#E0B990" : "#D4A574";
+    const tipDotBorder = isDark ? "#121110" : "#F5EDE8";
+
     return (
       <View
         ref={ref}
@@ -96,6 +109,40 @@ const BabyHeader = forwardRef<View, BabyHeaderProps>(
         </View>
 
         <View className="flex-row items-center gap-2">
+          {onTipToggle && (
+            <Pressable
+              onPress={onTipToggle}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: tipBulbBg,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t("tips.toggle")}
+              testID="tip-toggle-button"
+            >
+              <Text style={{ fontSize: 18 }}>💡</Text>
+              {hasTips && !tipsViewed && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: tipDotColor,
+                    borderWidth: 1.5,
+                    borderColor: tipDotBorder,
+                  }}
+                />
+              )}
+            </Pressable>
+          )}
+
           <Pressable
             onPress={handleEditBaby}
             className="w-11 h-11 rounded-full bg-surface-secondary dark:bg-surface-dark-secondary items-center justify-center active:scale-95"

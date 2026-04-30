@@ -15,15 +15,11 @@ import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import { useUnits } from "@/contexts";
 import { selectDailyTips, Tip, TipCategory } from "@/utils/tip-selector";
-import {
-  getTipsDismissedDate,
-  setTipsDismissedDate,
-  getTipsEnabled,
-} from "@/services/tip-storage";
 
 interface TipCarouselProps {
   babyId?: string;
   birthDate?: Date;
+  onDismiss?: () => void;
 }
 
 const CATEGORY_ICONS: Record<TipCategory, string> = {
@@ -75,11 +71,7 @@ const COLORS = {
 
 const HORIZONTAL_MARGIN = Platform.OS === "android" ? 12 : 16;
 
-function getTodayString(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-export function TipCarousel({ babyId, birthDate }: TipCarouselProps) {
+export function TipCarousel({ babyId, birthDate, onDismiss }: TipCarouselProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { t, i18n } = useTranslation();
@@ -117,21 +109,6 @@ export function TipCarousel({ babyId, birthDate }: TipCarouselProps) {
         return;
       }
 
-      const isEnabled = await getTipsEnabled();
-      if (cancelled) return;
-      if (!isEnabled) {
-        setVisible(false);
-        return;
-      }
-
-      const today = getTodayString();
-      const dismissedDate = await getTipsDismissedDate(babyId);
-      if (cancelled) return;
-      if (dismissedDate === today) {
-        setVisible(false);
-        return;
-      }
-
       const bd = new Date(birthDateStr);
       const dailyTips = await selectDailyTips(babyId, bd, new Date(), locale);
       if (cancelled) return;
@@ -154,17 +131,6 @@ export function TipCarousel({ babyId, birthDate }: TipCarouselProps) {
       if (state !== "active" || !babyId || !birthDateStr) return;
 
       (async () => {
-        const isEnabled = await getTipsEnabled();
-        if (!isEnabled) {
-          setVisible(false);
-          return;
-        }
-        const today = getTodayString();
-        const dismissedDate = await getTipsDismissedDate(babyId);
-        if (dismissedDate === today) {
-          setVisible(false);
-          return;
-        }
         const bd = new Date(birthDateStr);
         const dailyTips = await selectDailyTips(babyId, bd, new Date(), locale);
         if (dailyTips.length === 0) {
@@ -180,16 +146,15 @@ export function TipCarousel({ babyId, birthDate }: TipCarouselProps) {
   }, [babyId, birthDateStr, locale, fadeAnim]);
 
   const handleDismiss = useCallback(() => {
-    if (!babyId) return;
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 250,
       useNativeDriver: true,
     }).start(() => {
       setVisible(false);
-      setTipsDismissedDate(babyId, getTodayString());
+      onDismiss?.();
     });
-  }, [babyId, fadeAnim]);
+  }, [fadeAnim, onDismiss]);
 
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {

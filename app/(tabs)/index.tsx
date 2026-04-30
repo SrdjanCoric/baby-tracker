@@ -12,20 +12,19 @@ const isAndroid = Platform.OS === "android";
 import {
   BabyHeader,
   DashboardCard,
+  CompactActivityRow,
+  SleepPredictionCard,
   BirthdayCelebrationModal,
 } from "@/components";
 import { TipCarousel } from "@/components/TipCarousel";
-import { TipDiscoveryBanner } from "@/components/TipDiscoveryBanner";
-import { getTipsEnabled, setTipsEnabled, getDiscoveryBannerDismissed, setDiscoveryBannerDismissed } from "@/services/tip-storage";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useDashboardConfig, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
 import { Alert } from "react-native";
-import { timeSince, hoursSince, formatDuration } from "@/utils/time";
+import { timeSince, hoursSince, formatDuration, formatDurationShort, type TranslateFn } from "@/utils/time";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
 import { getHealthDisplayName } from "@/utils/health-display";
 import { formatVolume } from "@/utils/volume";
 import { ActivityType } from "@/constants/activities";
-import { DashboardCardConfig } from "@/services/dashboard-config-storage";
 import { isUnderTwoMonths } from "@/utils/sleepGoals";
 import { getCurrentAgeGroupKey, AGE_GROUPS } from "@/constants/milestones";
 
@@ -53,21 +52,21 @@ interface CardProps {
   timerTotalPausedMs?: number;
 }
 
+const PRIMARY_ACTIVITIES: ActivityType[] = ["feeding", "sleep", "diaper", "tummyTime"];
+const COMPACT_ACTIVITIES: ActivityType[] = ["pumping", "growth", "milestones", "health"];
+
 export default function HomeScreen() {
   const { t } = useTranslation();
+  const tFn = t as TranslateFn;
   const router = useRouter();
   const isFocused = useIsFocused();
-  const { visibleCards } = useDashboardConfig();
   const timeTick = useTimeRefresh(60000);
 
-  // Navigate safely - if a modal is open, dismiss it first then navigate
   const safeNavigate = useCallback((path: string) => {
     if (isFocused) {
       router.push(path as Parameters<typeof router.push>[0]);
     } else {
-      // Modal is open - dismiss it and navigate to new destination
       router.dismissAll();
-      // Small delay to let dismissal complete
       setTimeout(() => {
         router.push(path as Parameters<typeof router.push>[0]);
       }, 50);
@@ -93,18 +92,12 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [tipsEnabled, setTipsEnabledState] = useState<boolean | null>(null);
-  const [discoveryDismissed, setDiscoveryDismissedState] = useState<boolean | null>(null);
+  const [tipsExpanded, setTipsExpanded] = useState(false);
+  const [tipsViewed, setTipsViewed] = useState(false);
 
   useEffect(() => {
     if (isFocused) {
       refreshLocks();
-      Promise.all([getTipsEnabled(), getDiscoveryBannerDismissed()]).then(
-        ([enabled, dismissed]) => {
-          setTipsEnabledState(enabled);
-          setDiscoveryDismissedState(dismissed);
-        }
-      );
     }
   }, [isFocused, refreshLocks]);
 
@@ -120,23 +113,11 @@ export default function HomeScreen() {
     return () => subscription.remove();
   }, []);
 
-  const totalEntries = feedings.length + sleeps.length + diapers.length
-    + pumpings.length + tummyTimes.length + measurements.length + healthEntries.length;
-
-  const showDiscoveryBanner = tipsEnabled === false
-    && discoveryDismissed === false
-    && totalEntries >= 10;
-
-  const handleEnableTips = useCallback(async () => {
-    await setTipsEnabled(true);
-    await setDiscoveryBannerDismissed();
-    setTipsEnabledState(true);
-    setDiscoveryDismissedState(true);
-  }, []);
-
-  const handleDismissDiscovery = useCallback(async () => {
-    await setDiscoveryBannerDismissed();
-    setDiscoveryDismissedState(true);
+  const handleToggleTips = useCallback(() => {
+    setTipsExpanded(prev => {
+      if (!prev) setTipsViewed(true);
+      return !prev;
+    });
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -192,12 +173,10 @@ export default function HomeScreen() {
 
     const parts: string[] = [];
 
-    // Add duration/quantity as first part
     const L = t("feeding.leftShort");
     const R = t("feeding.rightShort");
 
     if (lastFeeding.type === "breast") {
-      // Show L/R breakdown if both sides were used
       if (lastFeeding.leftDurationSeconds && lastFeeding.rightDurationSeconds) {
         const leftTime = formatDuration(lastFeeding.leftDurationSeconds, "short");
         const rightTime = formatDuration(lastFeeding.rightDurationSeconds, "short");
@@ -213,7 +192,6 @@ export default function HomeScreen() {
       parts.push(`${lastFeeding.amountMl}ml`);
     }
 
-    // Add contextual info based on type
     if (lastFeeding.type === "breast") {
       if (hoursSince(new Date(lastFeeding.startedAt)) <= 24) {
         const nextSide = suggestedSide === "left" ? L : R;
@@ -288,11 +266,11 @@ export default function HomeScreen() {
     if (remainingMinutes >= 60) {
       const h = Math.floor(remainingMinutes / 60);
       const m = remainingMinutes % 60;
-      const timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+      const timeStr = formatDurationShort(h, m, tFn);
       return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: timeStr }) : t("dashboard.napIn", { time: timeStr })}`;
     }
 
-    return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: `${remainingMinutes}m` }) : t("dashboard.napIn", { time: `${remainingMinutes}m` })}`;
+    return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: formatDurationShort(0, remainingMinutes, tFn) }) : t("dashboard.napIn", { time: formatDurationShort(0, remainingMinutes, tFn) })}`;
   }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender, selectedBaby?.birthDate, wakeWindowConfig, getCurrentNapSlot, sleeps]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
@@ -300,7 +278,6 @@ export default function HomeScreen() {
   const diaperTimeSince = useMemo(() => {
     if (diapers.length === 0) return "--";
 
-    // Find the last diaper - primary display is just the type
     const sortedDiapers = [...diapers].sort((a, b) =>
       new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
     );
@@ -314,14 +291,12 @@ export default function HomeScreen() {
   const diaperSubtitle = useMemo(() => {
     if (diapers.length === 0) return undefined;
 
-    // Find last diaper for time since
     const sortedDiapers = [...diapers].sort((a, b) =>
       new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
     );
     const lastDiaper = sortedDiapers[0];
     if (!lastDiaper) return undefined;
 
-    // Show time since last change
     return t("dashboard.last", { time: timeSince(new Date(lastDiaper.changedAt), undefined, t) });
   }, [diapers, t, timeTick]);
 
@@ -336,10 +311,10 @@ export default function HomeScreen() {
 
     const todayVolume = getTodaysTotalVolume();
     if (todayVolume > 0) {
-      return `${todayVolume}ml ${t("common.today").toLowerCase()}`;
+      return `${formatVolume(todayVolume, volumeUnit)} ${t("common.today").toLowerCase()}`;
     }
     return "--";
-  }, [pumpingActiveTimer, getTodaysTotalVolume, t, pumpings]);
+  }, [pumpingActiveTimer, getTodaysTotalVolume, t, pumpings, volumeUnit]);
 
   const pumpingSubtitle = useMemo(() => {
     if (pumpingActiveTimer?.isRunning) return undefined;
@@ -836,17 +811,23 @@ export default function HomeScreen() {
     health: healthCardProps,
   }), [feedingCardProps, sleepCardProps, diaperCardProps, pumpingCardProps, tummyTimeCardProps, growthCardProps, milestonesCardProps, healthCardProps]);
 
-  const cardRows = useMemo(() => {
-    const rows: DashboardCardConfig[][] = [];
-    for (let i = 0; i < visibleCards.length; i += 2) {
-      rows.push(visibleCards.slice(i, i + 2));
+  const gridRows = useMemo(() => {
+    const rows: ActivityType[][] = [];
+    for (let i = 0; i < PRIMARY_ACTIVITIES.length; i += 2) {
+      rows.push(PRIMARY_ACTIVITIES.slice(i, i + 2));
     }
     return rows;
-  }, [visibleCards]);
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]} testID="home-screen">
-      <BabyHeader onSettingsPress={handleSettingsPress} />
+      <BabyHeader
+        onSettingsPress={handleSettingsPress}
+        tipsExpanded={tipsExpanded}
+        hasTips={!!selectedBaby}
+        tipsViewed={tipsViewed}
+        onTipToggle={selectedBaby ? handleToggleTips : undefined}
+      />
 
       <ScrollView
         className="flex-1"
@@ -868,30 +849,33 @@ export default function HomeScreen() {
           )
         }
       >
-        {tipsEnabled ? (
+        {tipsExpanded && selectedBaby && (
           <TipCarousel
-            babyId={selectedBaby?.id}
-            birthDate={selectedBaby?.birthDate ? new Date(selectedBaby.birthDate) : undefined}
+            babyId={selectedBaby.id}
+            birthDate={selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined}
+            onDismiss={handleToggleTips}
           />
-        ) : showDiscoveryBanner ? (
-          <TipDiscoveryBanner
-            babyName={selectedBaby?.name ?? ""}
-            onEnable={handleEnableTips}
-            onDismiss={handleDismissDiscovery}
-          />
-        ) : null}
+        )}
 
-        <View className={isAndroid ? "gap-2.5" : "gap-3"}>
-          {cardRows.map((row, rowIndex) => (
-            <View key={rowIndex} className={`flex-row ${isAndroid ? "gap-2.5" : "gap-3"}`}>
+        {selectedBaby && (
+          <SleepPredictionCard
+            babyName={selectedBaby.name}
+          />
+        )}
+
+        <View style={{ height: 24 }} />
+
+        <View style={{ gap: 12 }}>
+          {gridRows.map((row, rowIndex) => (
+            <View key={rowIndex} style={{ flexDirection: "row", gap: 12 }}>
               {row.length === 1 && <View style={{ flex: 0.5 }} />}
-              {row.map((cardConfig) => {
-                const props = cardPropsMap[cardConfig.activity];
+              {row.map((activity) => {
+                const props = cardPropsMap[activity];
                 return (
                   <DashboardCard
-                    key={cardConfig.activity}
-                    activity={cardConfig.activity}
-                    testID={`${cardConfig.activity}-card`}
+                    key={activity}
+                    activity={activity}
+                    testID={`${activity}-card`}
                     {...props}
                   />
                 );
@@ -899,6 +883,22 @@ export default function HomeScreen() {
               {row.length === 1 && <View style={{ flex: 0.5 }} />}
             </View>
           ))}
+        </View>
+
+        <View style={{ height: 24 }} />
+
+        <View style={{ gap: 6 }}>
+          {COMPACT_ACTIVITIES.map((activity) => {
+            const props = cardPropsMap[activity];
+            return (
+              <CompactActivityRow
+                key={activity}
+                activity={activity}
+                testID={`${activity}-card`}
+                {...props}
+              />
+            );
+          })}
         </View>
       </ScrollView>
 

@@ -202,13 +202,6 @@ function BabySelector({ onAddBaby }: BabySelectorProps) {
             </Text>
           )}
         </View>
-        {babies.length > 1 && (
-          <Text
-            className={`text-lg ${isDark ? "text-content-dark-tertiary" : "text-content-tertiary"}`}
-          >
-            ▾
-          </Text>
-        )}
       </Pressable>
 
       <Modal

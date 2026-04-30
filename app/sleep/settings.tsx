@@ -22,7 +22,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useNotifications } from "@/contexts/notification-context";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { NapReminderWarningModal } from "@/components/NapReminderWarningModal";
-import { formatHourValue } from "@/utils/time";
+import { formatHourValue, formatDurationShort, type TranslateFn } from "@/utils/time";
 import { getPresetPillsForAge, generateSlotsForNapCount, getDefaultWakeWindowConfig, isUnderTwoMonths } from "@/utils/sleepGoals";
 
 const SLEEP_PURPLE = "#6B5B95";
@@ -37,6 +37,7 @@ const NAP_CONTINUATION_OPTIONS = [10, 15, 20, 30];
 
 export default function SleepSettingsScreen() {
   const { t } = useTranslation();
+  const tFn = t as TranslateFn;
   const { isDark } = useTheme();
   const { timeFormat } = useTimeFormat();
   const router = useRouter();
@@ -496,11 +497,10 @@ export default function SleepSettingsScreen() {
     return <NoBabyScreen />;
   }
 
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes}m`;
+  const formatDur = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+    return formatDurationShort(h, m, tFn);
   };
 
   return (
@@ -775,7 +775,7 @@ export default function SleepSettingsScreen() {
                                 </Text>
                               </View>
                               <Text className="text-base font-medium" style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}>
-                                {formatDuration(slot.durationMinutes)}
+                                {formatDur(slot.durationMinutes)}
                               </Text>
                               <Text className="text-content-tertiary dark:text-content-dark-tertiary ml-2">
                                 {isExpanded ? "\u{25B2}" : "\u{25BC}"}
@@ -803,7 +803,7 @@ export default function SleepSettingsScreen() {
                                             isPresetSelected ? "text-white font-medium" : "text-content-primary dark:text-content-dark-primary"
                                           }`}
                                         >
-                                          {formatDuration(preset)}
+                                          {formatDur(preset)}
                                         </Text>
                                       </Pressable>
                                     );

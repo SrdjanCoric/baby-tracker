@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { useBaby } from "@/contexts";
+import { useBaby, useUnits } from "@/contexts";
 import { PDFService } from "@/services/pdf-service";
 import { SectionSelector } from "@/components/reports";
 import { DateRangePicker } from "@/components/export";
@@ -37,6 +37,7 @@ function getInitialDateRange(): DateRange {
 export default function ReportsScreen() {
   const { t } = useTranslation();
   const { selectedBaby } = useBaby();
+  const { weightUnit, heightUnit } = useUnits();
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedSections, setSelectedSections] = useState<ReportSection[]>(
@@ -61,6 +62,8 @@ export default function ReportsScreen() {
           : undefined,
         babyGender: selectedBaby.gender,
         includeCharts,
+        weightUnit,
+        heightUnit,
       });
 
       if (result.success && result.filePath && result.fileName) {

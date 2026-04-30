@@ -344,21 +344,45 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
       const activeTimer = await TummyTimeStorageService.getActiveTimer(selectedBaby.id);
       if (activeTimer) {
-        dispatch({
-          type: "RESTORE_TIMER",
-          payload: {
-            isRunning: true,
-            isPaused: activeTimer.isPaused ?? false,
-            startTime: new Date(activeTimer.startedAt),
-            totalPausedMs: activeTimer.totalPausedMs ?? 0,
-            pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
-          },
-        });
+        let isStale = false;
+        if (user?.id && user?.householdId) {
+          try {
+            const lock = await getActiveTimerLock(selectedBaby.id, "tummy_time");
+            if (!lock || lock.startedBy !== user.id) {
+              isStale = true;
+              await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+            }
+          } catch {
+            // ignore
+          }
+        }
 
-        if (activeTimer.liveActivityId) {
-          const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
-          if (isRunning) {
-            liveActivityIdRef.current = activeTimer.liveActivityId;
+        if (!isStale) {
+          dispatch({
+            type: "RESTORE_TIMER",
+            payload: {
+              isRunning: true,
+              isPaused: activeTimer.isPaused ?? false,
+              startTime: new Date(activeTimer.startedAt),
+              totalPausedMs: activeTimer.totalPausedMs ?? 0,
+              pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
+            },
+          });
+
+          if (activeTimer.liveActivityId) {
+            const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+            if (isRunning) {
+              liveActivityIdRef.current = activeTimer.liveActivityId;
+            } else if (!(activeTimer.isPaused ?? false)) {
+              const totalPausedMs = activeTimer.totalPausedMs ?? 0;
+              const effectiveStartTime = totalPausedMs > 0
+                ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
+                : new Date(activeTimer.startedAt);
+              const activityId = await startTimerLiveActivity(
+                "tummyTime", selectedBaby.name, undefined, effectiveStartTime
+              );
+              if (activityId) liveActivityIdRef.current = activityId;
+            }
           } else if (!(activeTimer.isPaused ?? false)) {
             const totalPausedMs = activeTimer.totalPausedMs ?? 0;
             const effectiveStartTime = totalPausedMs > 0
@@ -369,15 +393,6 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
             );
             if (activityId) liveActivityIdRef.current = activityId;
           }
-        } else if (!(activeTimer.isPaused ?? false)) {
-          const totalPausedMs = activeTimer.totalPausedMs ?? 0;
-          const effectiveStartTime = totalPausedMs > 0
-            ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
-            : new Date(activeTimer.startedAt);
-          const activityId = await startTimerLiveActivity(
-            "tummyTime", selectedBaby.name, undefined, effectiveStartTime
-          );
-          if (activityId) liveActivityIdRef.current = activityId;
         }
       } else if (user?.id && user?.householdId) {
         try {
@@ -440,6 +455,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("[TummyTimeContext] Failed to acquire timer lock:", error);
+        return { success: false };
       }
     }
 
@@ -479,13 +495,32 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
       let tummyTime: StoredTummyTimeEntry;
 
-      if (user?.householdId && user?.id) {
-        tummyTime = await createTummyTimeInDatabase(tummyTimeInput, user.id);
-      } else {
-        tummyTime = await TummyTimeStorageService.addTummyTime(tummyTimeInput);
+      try {
+        if (user?.householdId && user?.id) {
+          console.log("[TummyTimeContext] stopTummyTime: saving to database");
+          tummyTime = await createTummyTimeInDatabase(tummyTimeInput, user.id);
+        } else {
+          console.log("[TummyTimeContext] stopTummyTime: saving to local storage");
+          tummyTime = await TummyTimeStorageService.addTummyTime(tummyTimeInput);
+        }
+        console.log("[TummyTimeContext] stopTummyTime: saved entry id=%s", tummyTime.id);
+        dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
+      } catch (saveError) {
+        console.error("[TummyTimeContext] stopTummyTime: FAILED to save, cleaning up timer", saveError);
+        dispatch({ type: "STOP_TIMER" });
+        await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+        if (liveActivityIdRef.current) {
+          await endTimerLiveActivity(liveActivityIdRef.current);
+          liveActivityIdRef.current = null;
+        } else {
+          await endLiveActivityByType("tummyTime");
+        }
+        if (user?.id) {
+          try { await releaseTimerLock(selectedBaby.id, "tummy_time", user.id); } catch { /* ignore */ }
+        }
+        throw saveError;
       }
 
-      dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
       dispatch({ type: "STOP_TIMER" });
       await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
 
