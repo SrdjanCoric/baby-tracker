@@ -260,8 +260,8 @@ const SleepPredictionCardInner = ({
     if (!hasNightSleepToday) return null;
 
     const completedNaps = getCompletedNapsSinceNightSleep();
-    return predictNextSleep(effectiveModel, selectedNapCount, completedNaps, lastWakeTime, effectiveDayEnd);
-  }, [cardState, effectiveModel, lastWakeTime, selectedNapCount, hasNightSleepToday, getCompletedNapsSinceNightSleep, effectiveDayEnd]);
+    return predictNextSleep(effectiveModel, selectedNapCount, completedNaps, lastWakeTime, effectiveDayEnd, effectiveDayStart);
+  }, [cardState, effectiveModel, lastWakeTime, selectedNapCount, hasNightSleepToday, getCompletedNapsSinceNightSleep, effectiveDayEnd, effectiveDayStart]);
 
   const isOverdue = useMemo((): boolean => {
     if (!prediction) return false;
