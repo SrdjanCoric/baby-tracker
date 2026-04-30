@@ -93,7 +93,6 @@ const SleepPredictionCardInner = ({
 
   const [selectedNapCount, setSelectedNapCountState] = useState<number | null>(null);
   const [loadedPersistedNapCount, setLoadedPersistedNapCount] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
   const [showSetup, setShowSetup] = useState(false);
   const [setupDayStart, setSetupDayStart] = useState(7);
   const [setupDayEnd, setSetupDayEnd] = useState(19);
@@ -192,22 +191,6 @@ const SleepPredictionCardInner = ({
     const timer = setTimeout(() => setTransitionTick((t) => t + 1), ms);
     return () => clearTimeout(timer);
   }, [effectiveActiveTimer, cardState, effectiveDayStart, transitionTick]);
-
-  useEffect(() => {
-    if (cardState !== "sleeping_nap" || !effectiveActiveTimer) {
-      setElapsed(0);
-      return;
-    }
-
-    const compute = () => {
-      const ms = Date.now() - effectiveActiveTimer.startTime.getTime() - (effectiveActiveTimer.totalPausedMs || 0);
-      setElapsed(Math.max(0, Math.floor(ms / 1000)));
-    };
-
-    compute();
-    const interval = setInterval(compute, 1000);
-    return () => clearInterval(interval);
-  }, [cardState, effectiveActiveTimer]);
 
   const lastWakeTime = useMemo((): Date | null => {
     if (effectiveActiveTimer) return null;
@@ -584,11 +567,6 @@ const SleepPredictionCardInner = ({
     }
 
     if (cardState === "sleeping_nap") {
-      const totalMinutes = Math.floor(elapsed / 60);
-      const h = Math.floor(totalMinutes / 60);
-      const m = totalMinutes % 60;
-      const elapsedStr = formatDurationShort(h, m, tFn);
-
       return (
         <>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -601,9 +579,6 @@ const SleepPredictionCardInner = ({
             {babyName
               ? t("dashboard.isSleeping", { name: babyName })
               : t("dashboard.isSleepingGeneric")}
-          </Text>
-          <Text style={{ fontSize: 13, color: textSecondary, marginTop: 4 }}>
-            {elapsedStr}
           </Text>
         </>
       );
@@ -862,16 +837,32 @@ const SleepPredictionCardInner = ({
   );
 };
 
-const PulsingDot = ({ color }: { color: string }) => (
-  <View
-    style={{
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: color,
-    }}
-  />
-);
+const PulsingDot = ({ color }: { color: string }) => {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.3, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: color,
+        opacity,
+      }}
+    />
+  );
+};
 
 const LoadingDots = ({ color }: { color: string }) => {
   const anim1 = useRef(new Animated.Value(0.3)).current;
