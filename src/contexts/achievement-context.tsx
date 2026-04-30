@@ -68,7 +68,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
 
   const [pendingCelebration, setPendingCelebration] = useState<DetectedAchievement | null>(null);
   const [alreadyDetected, setAlreadyDetected] = useState<Set<AchievementId>>(new Set());
-  const loadedBabyRef = useRef<string | null>(null);
+  const seededBabyRef = useRef<string | null>(null);
   const prevSleepCountRef = useRef(0);
   const prevFeedingCountRef = useRef(0);
   const prevTummyTimeCountRef = useRef(0);
@@ -76,14 +76,20 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!selectedBaby?.id || !selectedBaby?.birthDate) return;
-    if (loadedBabyRef.current === selectedBaby.id) return;
 
-    loadedBabyRef.current = selectedBaby.id;
-    initializedRef.current = false;
+    if (seededBabyRef.current !== selectedBaby.id) {
+      initializedRef.current = false;
+      seededBabyRef.current = selectedBaby.id;
+    }
+
+    if (initializedRef.current) return;
+    if (sleeps.length === 0 && feedings.length === 0 && tummyTimes.length === 0) return;
 
     const birthDate = selectedBaby.birthDate;
     const babyId = selectedBaby.id;
     getDetectedAchievementIds(babyId).then((storedIds) => {
+      if (seededBabyRef.current !== babyId) return;
+
       const allIds = seedExistingAchievements(
         sleeps, feedings, tummyTimes,
         storedIds, birthDate,
