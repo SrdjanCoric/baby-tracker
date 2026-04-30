@@ -4,8 +4,56 @@ import { ConflictResolutionModal } from './ConflictResolutionModal';
 import { ConflictScenario } from '@/services/sync/types';
 
 jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, defaultValue?: string) => defaultValue || key,
+  useTranslation: () => {
+    const translations: Record<string, string> = {
+      'sync.resolveConflicts': 'Resolve Conflicts',
+      'sync.conflictCount': '{{count}} conflict(s) to resolve',
+      'sync.tableLabels.feeding': 'Feeding',
+      'sync.tableLabels.sleep': 'Sleep',
+      'sync.tableLabels.diaper': 'Diaper',
+      'sync.conflictLabel': '{{type}} Conflict',
+      'sync.yourVersion': 'Your Version',
+      'sync.theirVersion': 'Their Version',
+      'sync.entryDetails': 'Entry Details',
+      'sync.keepMine': 'Keep Mine',
+      'sync.keepTheirs': 'Keep Theirs',
+      'sync.keepNewer': 'Keep Newer',
+      'sync.keepAllMine': 'Keep All Mine',
+      'sync.keepAllNewer': 'Keep All Newer',
+      'common.close': 'Close',
+      'common.cancel': 'Cancel',
+      'sync.conflictAccessibility': 'Conflict {{index}}: {{type}}',
+      'sync.expandDetails': 'Expand Details',
+      'sync.collapseDetails': 'Collapse Details',
+      'sync.keepMyVersion': 'Keep my version',
+      'sync.keepTheirVersion': 'Keep their version',
+      'sync.keepNewerVersion': 'Keep the newer version',
+      'sync.keepAllMyVersions': 'Keep all my versions',
+      'sync.keepAllNewerVersions': 'Keep all newer versions',
+      'sync.conflictsExplanation': 'There are conflicts between your local changes and the server. Choose how to resolve them.',
+    };
+
+    return {
+      t: (key: string, options?: Record<string, unknown>) => {
+        let result = translations[key] || key;
+
+        if (options && typeof options === 'object') {
+          Object.entries(options).forEach(([optKey, optVal]) => {
+            result = result.replace(`{{${optKey}}}`, String(optVal));
+          });
+        }
+
+        return result;
+      },
+    };
+  },
+}));
+
+jest.mock('@/contexts/time-format-context', () => ({
+  useTimeFormat: () => ({
+    timeFormat: '12h',
+    isLoading: false,
+    setTimeFormat: jest.fn(),
   }),
 }));
 
@@ -95,7 +143,7 @@ describe('ConflictResolutionModal', () => {
         />
       );
 
-      expect(screen.getByText('{{count}} conflict(s) to resolve')).toBeTruthy();
+      expect(screen.getByText('2 conflict(s) to resolve')).toBeTruthy();
     });
   });
 

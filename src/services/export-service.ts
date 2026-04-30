@@ -14,6 +14,7 @@ import { TummyTimeStorageService, StoredTummyTimeEntry } from "./tummyTime-stora
 import {
   generateCombinedExport,
   CombinedExportData,
+  type ExportUnitPreferences,
 } from "@/utils/csv-generator";
 import type {
   ExportOptions,
@@ -226,10 +227,17 @@ export const ExportService = {
         filteredGrowth.length +
         filteredTummyTimes.length;
 
+      const units: ExportUnitPreferences = {
+        volumeUnit: options.volumeUnit,
+        weightUnit: options.weightUnit,
+        heightUnit: options.heightUnit,
+      };
+
       const csvContent = generateCombinedExport(
         data,
         dataTypes as ExportDataType[],
-        includeNotes
+        includeNotes,
+        units
       );
 
       const fileName = this.generateFileName(babyName, new Date());

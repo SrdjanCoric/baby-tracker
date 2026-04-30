@@ -5,8 +5,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useGrowth } from "@/contexts/growth-context";
-import { useBaby, useTimeFormat } from "@/contexts";
+import { useBaby, useTimeFormat, useUnits } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
+import { kgToLbs, lbsToKg, cmToInches, inchesToCm } from "@/utils/growth";
 
 const GROWTH_TEAL = "#009B77";
 const GROWTH_TEAL_MUTED = "#E0F5EF";
@@ -18,6 +19,7 @@ export default function EditGrowthScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
+  const { weightUnit, heightUnit } = useUnits();
   const { measurements, updateMeasurement, deleteMeasurement } = useGrowth();
 
   const measurement = useMemo(() => {
@@ -33,20 +35,32 @@ export default function EditGrowthScreen() {
 
   useEffect(() => {
     if (measurement && !isInitialized) {
-      setWeightKg(measurement.weightKg ? String(measurement.weightKg) : "");
-      setHeightCm(measurement.heightCm ? String(measurement.heightCm) : "");
-      setHeadCircumferenceCm(measurement.headCircumferenceCm ? String(measurement.headCircumferenceCm) : "");
+      setWeightKg(measurement.weightKg
+        ? String(weightUnit === "lbs" ? kgToLbs(measurement.weightKg) : measurement.weightKg)
+        : "");
+      setHeightCm(measurement.heightCm
+        ? String(heightUnit === "in" ? cmToInches(measurement.heightCm) : measurement.heightCm)
+        : "");
+      setHeadCircumferenceCm(measurement.headCircumferenceCm
+        ? String(heightUnit === "in" ? cmToInches(measurement.headCircumferenceCm) : measurement.headCircumferenceCm)
+        : "");
       setNotes(measurement.notes ?? "");
       setIsInitialized(true);
     }
-  }, [measurement, isInitialized]);
+  }, [measurement, isInitialized, weightUnit, heightUnit]);
 
   const hasChanges = useMemo(() => {
     if (!measurement || !isInitialized) return false;
 
-    const originalWeight = measurement.weightKg ? String(measurement.weightKg) : "";
-    const originalHeight = measurement.heightCm ? String(measurement.heightCm) : "";
-    const originalHead = measurement.headCircumferenceCm ? String(measurement.headCircumferenceCm) : "";
+    const originalWeight = measurement.weightKg
+      ? String(weightUnit === "lbs" ? kgToLbs(measurement.weightKg) : measurement.weightKg)
+      : "";
+    const originalHeight = measurement.heightCm
+      ? String(heightUnit === "in" ? cmToInches(measurement.heightCm) : measurement.heightCm)
+      : "";
+    const originalHead = measurement.headCircumferenceCm
+      ? String(heightUnit === "in" ? cmToInches(measurement.headCircumferenceCm) : measurement.headCircumferenceCm)
+      : "";
     const originalNotes = measurement.notes ?? "";
 
     return (
@@ -55,7 +69,7 @@ export default function EditGrowthScreen() {
       headCircumferenceCm !== originalHead ||
       notes !== originalNotes
     );
-  }, [measurement, isInitialized, weightKg, heightCm, headCircumferenceCm, notes]);
+  }, [measurement, isInitialized, weightKg, heightCm, headCircumferenceCm, notes, weightUnit, heightUnit]);
 
   usePreventRemove(hasChanges, ({ data }) => {
     Alert.alert(
@@ -84,9 +98,19 @@ export default function EditGrowthScreen() {
 
     setIsSaving(true);
     try {
-      const weight = parseDecimal(weightKg);
-      const height = parseDecimal(heightCm);
-      const head = parseDecimal(headCircumferenceCm);
+      const weightRaw = parseDecimal(weightKg);
+      const heightRaw = parseDecimal(heightCm);
+      const headRaw = parseDecimal(headCircumferenceCm);
+
+      const weight = weightRaw !== undefined
+        ? (weightUnit === "lbs" ? lbsToKg(weightRaw) : weightRaw)
+        : undefined;
+      const height = heightRaw !== undefined
+        ? (heightUnit === "in" ? inchesToCm(heightRaw) : heightRaw)
+        : undefined;
+      const head = headRaw !== undefined
+        ? (heightUnit === "in" ? inchesToCm(headRaw) : headRaw)
+        : undefined;
 
       await updateMeasurement(measurement.id, {
         weightKg: weight,
@@ -100,7 +124,7 @@ export default function EditGrowthScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, measurement, weightKg, heightCm, headCircumferenceCm, notes, updateMeasurement, router]);
+  }, [selectedBaby, measurement, weightKg, heightCm, headCircumferenceCm, notes, updateMeasurement, router, weightUnit, heightUnit]);
 
   const handleDelete = useCallback(() => {
     if (!measurement) return;
@@ -196,7 +220,7 @@ export default function EditGrowthScreen() {
         {/* Weight */}
         <View className="mb-4">
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("growth.weight")} ({t("settings.kg")})
+            {t("growth.weight")} ({t(`settings.${weightUnit}`)})
           </Text>
           <View className="flex-row items-center">
             <TextInput
@@ -208,7 +232,7 @@ export default function EditGrowthScreen() {
               placeholderTextColor="#999"
             />
             <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
-              kg
+              {weightUnit}
             </Text>
           </View>
         </View>
@@ -216,7 +240,7 @@ export default function EditGrowthScreen() {
         {/* Height */}
         <View className="mb-4">
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("growth.height")} ({t("settings.cm")})
+            {t("growth.height")} ({t(`settings.${heightUnit}`)})
           </Text>
           <View className="flex-row items-center">
             <TextInput
@@ -228,7 +252,7 @@ export default function EditGrowthScreen() {
               placeholderTextColor="#999"
             />
             <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
-              cm
+              {heightUnit}
             </Text>
           </View>
         </View>
@@ -236,7 +260,7 @@ export default function EditGrowthScreen() {
         {/* Head Circumference */}
         <View className="mb-4">
           <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("growth.headCircumference")} ({t("settings.cm")})
+            {t("growth.headCircumference")} ({t(`settings.${heightUnit}`)})
           </Text>
           <View className="flex-row items-center">
             <TextInput
@@ -248,7 +272,7 @@ export default function EditGrowthScreen() {
               placeholderTextColor="#999"
             />
             <Text className="ml-3 text-base text-content-secondary dark:text-content-dark-secondary">
-              cm
+              {heightUnit}
             </Text>
           </View>
         </View>

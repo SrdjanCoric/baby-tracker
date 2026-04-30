@@ -12,6 +12,7 @@ interface SleepDailyChartProps {
   colors: SleepPatternColors;
   locale: string;
   labelInterval: number;
+  formatHourLabel?: (value: number) => string;
 }
 
 const PADDING_LEFT = 32;
@@ -47,6 +48,7 @@ export function SleepDailyChart({
   colors,
   locale,
   labelInterval,
+  formatHourLabel,
 }: SleepDailyChartProps) {
   const { width: screenWidth } = useWindowDimensions();
   const cardPadding = 32;
@@ -126,7 +128,7 @@ export function SleepDailyChart({
                   fill={colors.textTertiary}
                   textAnchor="end"
                 >
-                  {`${value}h`}
+                  {formatHourLabel ? formatHourLabel(value) : `${value}h`}
                 </SvgText>
               </G>
             );

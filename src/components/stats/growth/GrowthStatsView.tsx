@@ -8,6 +8,8 @@ import { useBaby } from "@/contexts/baby-context";
 import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS, BORDER } from "@/constants/colors";
 import { calculatePercentileFromMeasurement, calculateAgeInMonths } from "@/utils/percentile-calculator";
 import { isUnderTwoYears, getGrowthTrendArrow } from "@/utils/growth-helpers";
+import { useUnits } from "@/contexts";
+import { kgToLbs, cmToInches } from "@/utils/growth";
 
 interface MeasurementData {
   value: number;
@@ -23,6 +25,7 @@ export function GrowthStatsView() {
   const isDark = colorScheme === "dark";
   const { selectedBaby } = useBaby();
   const { getMeasurementHistory } = useGrowth();
+  const { weightUnit, heightUnit } = useUnits();
 
   const accentColor = isDark ? ACTIVITY.growth.accentDark : ACTIVITY.growth.accent;
   const textAccent = isDark ? ACTIVITY.growth.textAccentDark : ACTIVITY.growth.textAccent;
@@ -161,10 +164,46 @@ export function GrowthStatsView() {
     </View>
   );
 
+  const isImperialWeight = weightUnit === "lbs";
+  const isImperialHeight = heightUnit === "in";
+
+  const convertValue = (data: MeasurementData, type: "weight" | "height"): MeasurementData => {
+    if (type === "weight" && isImperialWeight) {
+      return {
+        ...data,
+        value: kgToLbs(data.value, 3),
+        change: data.change !== null ? Math.round(data.change * 2.20462) : null,
+      };
+    }
+    if (type === "height" && isImperialHeight) {
+      return {
+        ...data,
+        value: cmToInches(data.value, 3),
+        change: data.change !== null ? Math.round(cmToInches(data.change, 1) * 10) / 10 : null,
+      };
+    }
+    return data;
+  };
+
   const rows = [
-    measurements.weight && { label: t("stats.growth.weight"), data: measurements.weight, unit: "kg", changeUnit: "g" },
-    measurements.height && { label: heightLabel, data: measurements.height, unit: "cm", changeUnit: "cm" },
-    measurements.head && { label: t("stats.growth.headCircumference"), data: measurements.head, unit: "cm", changeUnit: "cm" },
+    measurements.weight && {
+      label: t("stats.growth.weight"),
+      data: convertValue(measurements.weight, "weight"),
+      unit: weightUnit,
+      changeUnit: isImperialWeight ? "oz" : "g",
+    },
+    measurements.height && {
+      label: heightLabel,
+      data: convertValue(measurements.height, "height"),
+      unit: heightUnit,
+      changeUnit: heightUnit,
+    },
+    measurements.head && {
+      label: t("stats.growth.headCircumference"),
+      data: convertValue(measurements.head, "height"),
+      unit: heightUnit,
+      changeUnit: heightUnit,
+    },
   ].filter(Boolean) as { label: string; data: MeasurementData; unit: string; changeUnit: string }[];
 
   return (

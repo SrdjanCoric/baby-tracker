@@ -5,6 +5,7 @@ import { useColorScheme } from "nativewind";
 import { useFeeding, useUnits } from "@/contexts";
 import { formatVolume, mlToOz } from "@/utils/volume";
 import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS } from "@/constants/colors";
+import { formatDurationShort, type TranslateFn } from "@/utils/time";
 import { StatCard } from "../StatCard";
 import { BreastBalanceBar } from "../BreastBalanceBar";
 import { BarChartWithAxis } from "../BarChartWithAxis";
@@ -24,11 +25,12 @@ function getWeekdayLabel(dateKey: string, locale: string): string {
   return date.toLocaleDateString(locale, { weekday: "short" });
 }
 
-function formatMinutes(v: number): string {
-  if (v < 60) return `${v}m`;
-  const h = Math.floor(v / 60);
-  const m = v % 60;
-  return m === 0 ? `${h}h` : `${h}h${m}m`;
+function makeMinuteFormatter(t: (key: string, opts?: Record<string, unknown>) => string) {
+  return (v: number): string => {
+    const h = Math.floor(v / 60);
+    const m = v % 60;
+    return formatDurationShort(h, m, t);
+  };
 }
 
 function computeNiceBottleYAxis(data: { value: number }[], unit: "ml" | "oz") {
@@ -70,10 +72,10 @@ export function FeedingWeekView() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const locale = i18n.language;
+  const formatMinutes = makeMinuteFormatter(t as TranslateFn);
 
   const accentColor = isDark ? ACTIVITY.feeding.accentDark : ACTIVITY.feeding.accent;
   const textAccent = isDark ? ACTIVITY.feeding.textAccentDark : ACTIVITY.feeding.textAccent;
-  const accentDark = isDark ? ACTIVITY.feeding.buttonDark : ACTIVITY.feeding.button;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
   const { stats, dailyBreastMin, dailyBottleStacked, breastYAxis, bottleYAxis } = useMemo(() => {

@@ -276,12 +276,12 @@ export function getSleepGoalInfo(
   };
 }
 
-interface WakeWindowProgression {
+export interface WakeWindowProgression {
   napCount: number;
   windows: number[];
 }
 
-const WAKE_WINDOW_PROGRESSIONS: Record<string, WakeWindowProgression> = {
+export const WAKE_WINDOW_PROGRESSIONS: Record<string, WakeWindowProgression> = {
   "0-3 months": { napCount: 5, windows: [30, 36, 42, 48, 54, 60] },
   "3-5 months": { napCount: 4, windows: [60, 75, 90, 105, 120] },
   "6-8 months": { napCount: 3, windows: [120, 140, 160, 180] },
@@ -322,7 +322,8 @@ export function getDefaultWakeWindowConfig(
       source: "age_based",
       dayStartHour: 6,
       dayEndHour: 19,
-      napContinuationMinutes: 15,
+      dayBoundariesConfigured: false,
+      napContinuationMinutes: 25,
     };
   }
 
@@ -342,7 +343,8 @@ export function getDefaultWakeWindowConfig(
       source: "age_based",
       dayStartHour: 6,
       dayEndHour: 19,
-      napContinuationMinutes: 15,
+      dayBoundariesConfigured: false,
+      napContinuationMinutes: 25,
     };
   }
 
@@ -357,6 +359,7 @@ export function getDefaultWakeWindowConfig(
     source: "age_based",
     dayStartHour: 6,
     dayEndHour: 19,
+    dayBoundariesConfigured: false,
     napContinuationMinutes: 15,
   };
 }

@@ -4,23 +4,39 @@
 
 import type { TFunction } from "i18next";
 
+export type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
+/**
+ * Formats hours and minutes into a localized short duration string.
+ * Uses translation keys common.durationHM / common.durationH / common.durationM.
+ * Falls back to English abbreviations when no t function is provided.
+ */
+export function formatDurationShort(hours: number, minutes: number, t?: TranslateFn): string {
+  if (t) {
+    if (hours > 0 && minutes > 0) return t("common.durationHM", { h: hours, m: minutes });
+    if (hours > 0) return t("common.durationH", { h: hours });
+    return t("common.durationM", { m: minutes });
+  }
+  if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${minutes}m`;
+}
+
 /**
  * Formats seconds into a human-readable duration string
  * @param seconds Total seconds to format
  * @param format 'short' returns "1h 30m", 'long' returns "1:30:00"
+ * @param t Optional translation function for localized short format
  */
-export function formatDuration(seconds: number, format: "short" | "long" = "long"): string {
-  if (seconds < 0) return format === "short" ? "0m" : "0:00";
+export function formatDuration(seconds: number, format: "short" | "long" = "long", t?: TranslateFn): string {
+  if (seconds < 0) return format === "short" ? (t ? t("common.durationM", { m: 0 }) : "0m") : "0:00";
 
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
 
   if (format === "short") {
-    if (hours > 0) {
-      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-    }
-    return `${minutes}m`;
+    return formatDurationShort(hours, minutes, t);
   }
 
   // Long format: H:MM:SS or MM:SS

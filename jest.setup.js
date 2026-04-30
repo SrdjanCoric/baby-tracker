@@ -107,6 +107,31 @@ jest.mock("react-i18next", () => ({
         "auth.passwordRequirements": "At least 8 characters with uppercase, lowercase, and a number",
         "summary.today": "Today",
         "summary.sleep": "Sleep",
+        "errorFallback.title": "Something went wrong",
+        "errorFallback.message": "We're sorry for the inconvenience. Please try again.",
+        "errorFallback.tryAgain": "Try Again",
+        "accessibility.breastfeeding": "Breastfeeding",
+        "accessibility.pumping": "Pumping",
+        "accessibility.tummyTime": "Tummy time",
+        "accessibility.diaper": "Diaper change",
+        "accessibility.timerStarted": "{{activity}} timer started",
+        "accessibility.timerStoppedNoDuration": "{{activity}} timer stopped",
+        "accessibility.timerStoppedDuration": "{{activity}} timer stopped. Duration: {{duration}}",
+        "accessibility.savedSuccessfully": "{{activity}} saved successfully",
+        "accessibility.errorGeneric": "An error occurred. Please try again.",
+        "accessibility.errorWithContext": "Error {{context}}. Please try again.",
+        "accessibility.hour_one": "1 hour",
+        "accessibility.hour_other": "{{count}} hours",
+        "accessibility.minute_one": "1 minute",
+        "accessibility.minute_other": "{{count}} minutes",
+        "accessibility.second_one": "1 second",
+        "accessibility.second_other": "{{count}} seconds",
+        "accessibility.zeroSeconds": "0 seconds",
+        "notificationMessages.feedingTimerTitle": "Feeding Timer",
+        "notificationMessages.pumpingTimerTitle": "Pumping Timer",
+        "notificationMessages.tummyTimeTimerTitle": "Tummy Time",
+        "notificationMessages.napTimerTitle": "Nap Timer",
+        "notificationMessages.nightSleepTimerTitle": "Sleep Timer",
       };
       // Handle pluralization for summary keys
       if (key === "summary.feeding") {
@@ -117,6 +142,29 @@ jest.mock("react-i18next", () => ({
       }
       if (key === "summary.diaper") {
         return options?.count === 1 ? "Diaper" : "Diapers";
+      }
+      // Handle pluralization for i18next style keys (without _one/_other suffix)
+      if (options?.count !== undefined) {
+        const count = options.count;
+        const pluralKey = count === 1 ? `${key}_one` : `${key}_other`;
+        let result = translations[pluralKey] || translations[key] || key;
+        // Replace count placeholder
+        result = result.replace("{{count}}", String(count));
+        // Replace other template variables
+        Object.entries(options).forEach(([optKey, optValue]) => {
+          if (optKey !== "count") {
+            result = result.replace(`{{${optKey}}}`, String(optValue));
+          }
+        });
+        return result;
+      }
+      // Handle template replacements
+      if (typeof translations[key] === "string" && options) {
+        let result = translations[key];
+        Object.entries(options).forEach(([optKey, optValue]) => {
+          result = result.replace(`{{${optKey}}}`, String(optValue));
+        });
+        return result;
       }
       return translations[key] || key;
     },

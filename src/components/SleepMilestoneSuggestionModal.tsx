@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { type TranslateFn } from "@/utils/time";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_MUTED = "#E8E4F0";
@@ -15,12 +16,10 @@ interface SleepMilestoneSuggestionModalProps {
   onKeepCurrent: () => void;
 }
 
-function formatHours(minutes: number): string {
+function formatHours(minutes: number, t: TranslateFn): string {
   const hours = minutes / 60;
-  if (Number.isInteger(hours)) {
-    return `${hours}h`;
-  }
-  return `${hours.toFixed(1)}h`;
+  const h = Number.isInteger(hours) ? String(hours) : hours.toFixed(1);
+  return t("common.durationH", { h });
 }
 
 export function SleepMilestoneSuggestionModal({
@@ -33,6 +32,7 @@ export function SleepMilestoneSuggestionModal({
   onKeepCurrent,
 }: SleepMilestoneSuggestionModalProps) {
   const { t } = useTranslation();
+  const tFn = t as TranslateFn;
 
   const handleAccept = useCallback(() => {
     onAccept();
@@ -79,7 +79,7 @@ export function SleepMilestoneSuggestionModal({
                 {t("sleep.currentGoalLabel")}
               </Text>
               <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-                {formatHours(currentGoalMinutes)}
+                {formatHours(currentGoalMinutes, tFn)}
               </Text>
             </View>
             <View
@@ -96,7 +96,7 @@ export function SleepMilestoneSuggestionModal({
                 className="text-lg font-semibold"
                 style={{ color: SLEEP_PURPLE }}
               >
-                {formatHours(suggestedGoalMinutes)}
+                {formatHours(suggestedGoalMinutes, tFn)}
               </Text>
             </View>
           </View>

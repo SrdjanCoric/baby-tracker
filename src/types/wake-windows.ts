@@ -11,6 +11,7 @@ export interface WakeWindowConfig {
   source: "age_based" | "custom";
   dayStartHour?: number;
   dayEndHour?: number;
+  dayBoundariesConfigured?: boolean;
   napContinuationMinutes?: number;
 }
 
