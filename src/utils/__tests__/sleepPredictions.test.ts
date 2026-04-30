@@ -456,6 +456,20 @@ describe("predictNextSleep", () => {
     expect(r2!.predictedTime).toEqual(ld(2026, 4, 27, 9, 12));
   });
 
+  it("uses shortest wake window when waking before dayStart", () => {
+    // Wake at 5:00 AM, dayStart=7, shortest WW = min(87,79,61,86) = 61m
+    const result = predictNextSleep(baseModel, 4, 0, ld(2026, 4, 27, 5, 0), 21, 7);
+    expect(result!.type).toBe("nap");
+    expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 6, 1));
+  });
+
+  it("uses normal WW[0] when waking after dayStart", () => {
+    // Wake at 7:30 AM, dayStart=7 → normal position 0 = 87m
+    const result = predictNextSleep(baseModel, 4, 0, ld(2026, 4, 27, 7, 30), 21, 7);
+    expect(result!.type).toBe("nap");
+    expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 8, 57));
+  });
+
   it("exceeded nap count → bedtime prediction when gap is small", () => {
     // 5 naps done on a 4-nap day, wake at 17:00, dayEnd 19:00. Gap=120m.
     // bedtimeWW(146)+30+medianWW(~83)=259 > 120 → no extra nap → bedtime
