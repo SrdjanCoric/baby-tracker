@@ -16,6 +16,7 @@ import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
+import { useStoreReview } from "@/hooks/useStoreReview";
 import { useWatchMessageHandler } from "@/hooks/useWatchMessageHandler";
 import { startWatchMessageListening } from "@/services/watch-service";
 import { supabase } from "@/services/supabase";
@@ -150,6 +151,11 @@ function WidgetPauseHandler({ children }: { children: React.ReactNode }) {
 
 function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
   useGlobalTimerAlerts();
+  return <>{children}</>;
+}
+
+function StoreReviewHandler({ children }: { children: React.ReactNode }) {
+  useStoreReview();
   return <>{children}</>;
 }
 
@@ -434,7 +440,9 @@ export default function RootLayout() {
                                         <WidgetPauseHandler>
                                         <WatchMessageHandler>
                                         <GlobalTimerAlertWatcher>
+                                        <StoreReviewHandler>
                                           <AppContent />
+                                        </StoreReviewHandler>
                                         </GlobalTimerAlertWatcher>
                                         </WatchMessageHandler>
                                         </WidgetPauseHandler>
