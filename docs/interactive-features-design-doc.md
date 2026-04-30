@@ -27,12 +27,9 @@ Should also trigger on `REMOTE_INSERT` (when a household member logs an entry th
 #### Major (Story-style full-screen modal with educational note)
 
 **Sleep stretch firsts:**
-- First 4-hour night sleep
-- First 5-hour night sleep
 - First 6-hour night sleep
 - First 8-hour night sleep
 - First 10-hour night sleep
-- First 12-hour night sleep
 
 Detection: Single sleep entry with duration >= threshold, nighttime only (start time between ~6pm-midnight).
 
@@ -42,7 +39,7 @@ Detection: Single sleep entry with duration >= threshold, nighttime only (start 
 - First 5-minute session
 - First 10-minute session
 - First 15-minute session
-- First 30-minute session
+- First 20-minute session
 
 Detection: Single tummy time entry with duration >= threshold.
 
