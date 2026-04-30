@@ -62,9 +62,9 @@ function seedExistingAchievements(
 export function AchievementProvider({ children }: { children: ReactNode }) {
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
-  const { sleeps } = useSleep();
-  const { feedings } = useFeeding();
-  const { tummyTimes } = useTummyTime();
+  const { sleeps, isLoading: sleepsLoading } = useSleep();
+  const { feedings, isLoading: feedingsLoading } = useFeeding();
+  const { tummyTimes, isLoading: tummyTimesLoading } = useTummyTime();
 
   const [pendingCelebration, setPendingCelebration] = useState<DetectedAchievement | null>(null);
   const [alreadyDetected, setAlreadyDetected] = useState<Set<AchievementId>>(new Set());
@@ -83,7 +83,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
     }
 
     if (initializedRef.current) return;
-    if (sleeps.length === 0 && feedings.length === 0 && tummyTimes.length === 0) return;
+    if (sleepsLoading || feedingsLoading || tummyTimesLoading) return;
 
     const birthDate = selectedBaby.birthDate;
     const babyId = selectedBaby.id;
@@ -102,7 +102,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
       prevTummyTimeCountRef.current = tummyTimes.length;
       initializedRef.current = true;
     });
-  }, [selectedBaby?.id, selectedBaby?.birthDate, sleeps.length, feedings.length, tummyTimes.length, session?.user?.id]);
+  }, [selectedBaby?.id, selectedBaby?.birthDate, sleeps.length, feedings.length, tummyTimes.length, sleepsLoading, feedingsLoading, tummyTimesLoading, session?.user?.id]);
 
   useEffect(() => {
     if (!initializedRef.current) return;
