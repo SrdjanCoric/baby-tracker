@@ -371,6 +371,7 @@ export function predictNextSleep(
   completedNapsToday: number,
   lastWakeTime: Date,
   dayEndHour: number,
+  dayStartHour?: number,
   referenceDate?: Date
 ): SleepPrediction | null {
   const ref = referenceDate || lastWakeTime;
@@ -383,7 +384,9 @@ export function predictNextSleep(
   const position = completedNapsToday;
   let wakeWindowMinutes: number;
 
-  if (position === selectedNapCount - 1) {
+  if (position === 0 && dayStartHour !== undefined && isBeforeDayStart(lastWakeTime, dayStartHour)) {
+    wakeWindowMinutes = getShortestWakeWindow(model);
+  } else if (position === selectedNapCount - 1) {
     wakeWindowMinutes = model.penultimateWakeWindow;
   } else {
     const key = String(position);
@@ -454,6 +457,16 @@ function isNapWorthIt(
 function getFallbackWakeWindow(model: SleepPredictionModel): number {
   const values = Object.values(model.startRelativeWakeWindows);
   return values.length > 0 ? median(values) : 60;
+}
+
+function getShortestWakeWindow(model: SleepPredictionModel): number {
+  const values = Object.values(model.startRelativeWakeWindows);
+  return values.length > 0 ? Math.min(...values) : 60;
+}
+
+function isBeforeDayStart(time: Date, dayStartHour: number): boolean {
+  const hour = time.getHours() + time.getMinutes() / 60;
+  return hour < dayStartHour;
 }
 
 export function getQualifyingNightSleep(
