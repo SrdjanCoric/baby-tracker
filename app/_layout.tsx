@@ -9,6 +9,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
 import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
+import { AchievementProvider } from "@/contexts/achievement-context";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
@@ -423,6 +424,7 @@ export default function RootLayout() {
                               <TummyTimeProvider>
                               <MilestonesProvider>
                               <HealthProvider>
+                              <AchievementProvider>
                                 <ActiveTimersProvider>
                                 <WidgetProvider>
                                 <NotificationProvider>
@@ -442,6 +444,7 @@ export default function RootLayout() {
                                 </NotificationProvider>
                                 </WidgetProvider>
                                 </ActiveTimersProvider>
+                              </AchievementProvider>
                               </HealthProvider>
                               </MilestonesProvider>
                               </TummyTimeProvider>

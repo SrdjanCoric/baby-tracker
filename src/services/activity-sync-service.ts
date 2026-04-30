@@ -12,6 +12,7 @@ import type { StoredGrowthEntry, CreateGrowthInput, UpdateGrowthInput } from "./
 import type { StoredTummyTimeEntry, CreateTummyTimeInput, UpdateTummyTimeInput } from "./tummyTime-storage";
 import type { StoredMilestoneResponse, MilestoneState } from "./milestones-storage";
 import type { StoredHealthEntry, CreateHealthInput, UpdateHealthInput } from "./health-storage";
+import type { AchievementId } from "./achievement-detection";
 
 const KEYS = {
   feedings: "@feedings:",
@@ -22,6 +23,7 @@ const KEYS = {
   tummyTime: "@tummyTimes:",
   milestones: "@milestones:",
   health: "@health:",
+  achievements: "@achievements:",
 };
 
 function generateId(): string {
@@ -1124,6 +1126,57 @@ async function updateLocalMilestoneResponses(
   const data = await AsyncStorage.getItem(key);
   const responses = data ? (JSON.parse(data) as StoredMilestoneResponse[]) : [];
   await AsyncStorage.setItem(key, JSON.stringify(updater(responses)));
+}
+
+// ============ ACHIEVEMENTS ============
+
+interface StoredAchievementRecord {
+  id: AchievementId;
+  detectedAt: string;
+}
+
+export async function fetchAchievementsFromDatabase(babyId: string): Promise<StoredAchievementRecord[]> {
+  const { data, error } = await supabase
+    .from("achievements")
+    .select("*")
+    .eq("baby_id", babyId);
+
+  if (error) {
+    console.error("[ActivitySync] Failed to fetch achievements:", error.message);
+    return [];
+  }
+
+  const records: StoredAchievementRecord[] = (data || []).map((row: Record<string, unknown>) => ({
+    id: row.achievement_id as AchievementId,
+    detectedAt: row.detected_at as string,
+  }));
+
+  const key = getUserScopedKey(`${KEYS.achievements}${babyId}`);
+  await AsyncStorage.setItem(key, JSON.stringify(records));
+  return records;
+}
+
+export async function insertAchievementInDatabase(
+  babyId: string,
+  achievementId: AchievementId,
+  detectedBy?: string
+): Promise<void> {
+  const id = generateId();
+  const now = new Date().toISOString();
+
+  await queueSyncOperation({
+    type: 'CREATE',
+    table: 'achievements',
+    entityId: id,
+    data: {
+      id,
+      baby_id: babyId,
+      achievement_id: achievementId,
+      detected_at: now,
+      detected_by: detectedBy,
+      created_at: now,
+    },
+  });
 }
 
 // ============ GUEST DATA MIGRATION ============

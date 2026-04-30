@@ -975,7 +975,8 @@
       "wakeWindow": "Ventana de vigilia",
       "activityGoal": "Meta de actividad",
       "milestone": "Hito",
-      "health": "Salud"
+      "health": "Salud",
+      "achievement": "Logro"
     }
   },
   "household": {
@@ -1961,5 +1962,49 @@
     "month_other": "meses",
     "year_one": "a\u00f1o",
     "year_other": "a\u00f1os"
+  },
+  "achievements": {
+    "unlocked": "Logro Desbloqueado",
+    "allMilestonesComplete": "Todos los Hitos Completados",
+    "tapToContinue": "Toca en cualquier lugar para continuar",
+    "title": {
+      "sleep_6h": "¡Primer Sue\u00f1o de 6 Horas!",
+      "sleep_8h": "¡Primer Sue\u00f1o de 8 Horas!",
+      "sleep_10h": "¡Primer Sue\u00f1o de 10 Horas!",
+      "tummy_5min": "¡Primeros 5 Minutos Boca Abajo!",
+      "tummy_10min": "¡Primeros 10 min boca abajo!",
+      "tummy_15min": "¡Primeros 15 Minutos Boca Abajo!",
+      "tummy_20min": "¡Primeros 20 min boca abajo!",
+      "first_solid": "¡Primer Alimento S\u00f3lido!"
+    },
+    "subtitle": {
+      "tummy_5min": "Próxima meta: 10 minutos",
+      "tummy_10min": "Próxima meta: 15 minutos",
+      "tummy_15min": "Próxima meta: 20 minutos",
+      "tummy_20min": "¡Increíble fuerza y resistencia!",
+      "first_solid": "Comienza un nuevo cap\u00edtulo"
+    },
+    "periodComplete": "{{age}} \u2014 ¡Completado!",
+    "periodNote": "Has registrado todos los hitos del desarrollo para este per\u00edodo. Cada bebé se desarrolla a su propio ritmo \u2014 este es un maravilloso punto de referencia.",
+    "sleepNote": {
+      "6h": {
+        "under3m": "¡Una señal maravillosa en esta etapa! El cerebro de tu bebé está comenzando a desarrollar su propio reloj interno, con la producción de melatonina apenas comenzando.",
+        "3to4m": "Un hito hermoso. El cerebro de tu bebé ahora produce melatonina y está construyendo un ritmo día-noche, ayudándoles a consolidar el sueño en períodos más largos.",
+        "5to6m": "Los ciclos de sueño de tu bebé están madurando maravillosamente. Su cerebro se está volviendo mejor en vincular ciclos de sueño juntos, con etapas más profundas de sueño volviéndose más prominentes.",
+        "7plus": "El ritmo circadiano de tu pequeño está bien establecido y su arquitectura del sueño está volviéndose más madura, con períodos más largos de sueño profundo y reparador."
+      },
+      "8h": {
+        "under3m": "¡Bastante notable a esta edad! El sistema nervioso de tu bebé está madurando temprano, ya aprendiendo a hacer la transición suavemente entre ciclos de sueño sin despertarse completamente.",
+        "3to4m": "Una señal maravillosa del crecimiento neurológico. El cerebro de tu bebé está desarrollando la capacidad de transitar entre ciclos de sueño por sí solo \u2014 una habilidad que requiere verdadera madurez del desarrollo.",
+        "5to6m": "El sueño de tu bebé realmente está cuadrándose. Las etapas de sueño más profundo ahora son más prominentes, y su cerebro está aprendiendo a autocalmarse a través de despertares naturales entre ciclos de sueño.",
+        "7plus": "Un hermoso reflejo de cuánto ha crecido tu bebé. Su arquitectura del sueño ha madurado significativamente, con períodos más largos de sueño profundo y reparador que los llevan a través de la noche."
+      },
+      "10h": {
+        "under3m": "¡Qué durmiente extraordinario! El sistema nervioso de tu bebé está mostrando madurez temprana en la regulación de patrones de sueño-vigilia. Su reloj interno está teniendo un comienzo impresionante.",
+        "3to4m": "¡Un gran hito! El ritmo circadiano y la presión del sueño de tu bebé están funcionando juntos notablemente bien, permitiendo sueño profundo y consolidado para un período extendido.",
+        "5to6m": "El sistema de sueño de tu bebé está realmente floreciendo. Su cerebro ha hecho un progreso maravilloso en vincular ciclos de sueño, produciendo melatonina en los momentos adecuados y volviendo a dormirse naturalmente.",
+        "7plus": "Un testamento al cerebro en crecimiento de tu bebé. Su ritmo circadiano es robusto, sus ciclos de sueño están madurando hacia patrones similares a los adultos, y su capacidad natural de autocalmarse se ha desarrollado maravillosamente."
+      }
+    }
   }
 }

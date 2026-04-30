@@ -51,6 +51,7 @@ const tableLabelKeys = {
   activity_goals: 'sync.tableLabels.activityGoal',
   milestone_responses: 'sync.tableLabels.milestone',
   health_entries: 'sync.tableLabels.health',
+  achievements: 'sync.tableLabels.achievement',
 } as const satisfies Record<SyncableTable, string>;
 
 function formatTimestamp(timestamp: string, timeFormat: TimeFormat): string {
