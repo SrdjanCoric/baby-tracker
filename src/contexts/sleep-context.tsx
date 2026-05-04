@@ -190,8 +190,18 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     case "SET_SUGGESTED_GOAL":
       return { ...state, suggestedGoalMinutes: action.payload };
 
-    case "SET_WAKE_WINDOW_CONFIG":
-      return { ...state, wakeWindowConfig: action.payload };
+    case "SET_WAKE_WINDOW_CONFIG": {
+      const prevStart = state.wakeWindowConfig?.dayStartHour;
+      const prevEnd = state.wakeWindowConfig?.dayEndHour;
+      const newStart = action.payload?.dayStartHour;
+      const newEnd = action.payload?.dayEndHour;
+      const boundariesChanged = prevStart !== newStart || prevEnd !== newEnd;
+      return {
+        ...state,
+        wakeWindowConfig: action.payload,
+        ...(boundariesChanged ? { modelRecomputeVersion: state.modelRecomputeVersion + 1 } : {}),
+      };
+    }
 
     case "PAUSE_TIMER": {
       if (!state.activeTimer) return state;
