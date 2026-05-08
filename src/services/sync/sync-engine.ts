@@ -36,6 +36,7 @@ export class SyncEngine {
   private authContext: SyncAuthContext | null = null;
   private isSyncing = false;
   private pendingSync = false;
+  private activeSyncPromise: Promise<void> | null = null;
 
   constructor(config: Partial<SyncEngineConfig> = {}) {
     this.queue = new SyncQueue();
@@ -107,6 +108,9 @@ export class SyncEngine {
 
     if (this.isSyncing) {
       this.pendingSync = true;
+      if (this.activeSyncPromise) {
+        await this.activeSyncPromise;
+      }
       return;
     }
 
@@ -116,40 +120,46 @@ export class SyncEngine {
     let retryCount = 0;
     const maxRetries = this.config.maxRetries;
 
-    try {
-      while (retryCount < maxRetries) {
-        try {
-          await this.pullChanges();
-          await this.pushChanges();
+    this.activeSyncPromise = (async () => {
+      try {
+        while (retryCount < maxRetries) {
+          try {
+            await this.pullChanges();
+            await this.pushChanges();
 
-          this.updateState({
-            status: 'online',
-            lastSyncedAt: new Date().toISOString(),
-            pendingCount: this.queue.getCount(),
-          });
-
-          this.isSyncing = false;
-
-          if (this.pendingSync) {
-            this.pendingSync = false;
-            await this.sync();
-          }
-          return;
-        } catch (error) {
-          retryCount++;
-          if (retryCount >= maxRetries) {
             this.updateState({
-              status: 'error',
-              error: error instanceof Error ? error.message : 'Sync failed',
+              status: 'online',
+              lastSyncedAt: new Date().toISOString(),
+              pendingCount: this.queue.getCount(),
             });
-            throw error;
+
+            this.isSyncing = false;
+            this.activeSyncPromise = null;
+
+            if (this.pendingSync) {
+              this.pendingSync = false;
+              await this.sync();
+            }
+            return;
+          } catch (error) {
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              this.updateState({
+                status: 'error',
+                error: error instanceof Error ? error.message : 'Sync failed',
+              });
+              throw error;
+            }
+            await this.delay(this.queue.calculateBackoff(retryCount));
           }
-          await this.delay(this.queue.calculateBackoff(retryCount));
         }
+      } finally {
+        this.isSyncing = false;
+        this.activeSyncPromise = null;
       }
-    } finally {
-      this.isSyncing = false;
-    }
+    })();
+
+    await this.activeSyncPromise;
   }
 
   async enqueueOperation(operation: QueuedOperation): Promise<void> {
@@ -346,6 +356,17 @@ export class SyncEngine {
 
   getPendingCount(): number {
     return this.queue.getCount();
+  }
+
+  getPendingEntityIds(table: SyncableTable): Set<string> {
+    const ops = this.queue.getAll();
+    const ids = new Set<string>();
+    for (const op of ops) {
+      if (op.table === table && op.type === 'CREATE') {
+        ids.add(op.entityId);
+      }
+    }
+    return ids;
   }
 
   getLastSyncedAt(): string | null {
