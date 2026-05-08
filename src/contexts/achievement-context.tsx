@@ -46,13 +46,13 @@ function seedExistingAchievements(
   let found = true;
   while (found) {
     found = false;
-    const sleepHit = detectSleepAchievements(sleeps, seeded, birthDate);
+    const sleepHit = detectSleepAchievements(sleeps, seeded, birthDate, false);
     if (sleepHit) { seeded.add(sleepHit.id); saveAchievement(babyId, sleepHit.id, userId); found = true; }
 
-    const feedHit = detectFeedingAchievements(feedings, seeded, birthDate);
+    const feedHit = detectFeedingAchievements(feedings, seeded, birthDate, false);
     if (feedHit) { seeded.add(feedHit.id); saveAchievement(babyId, feedHit.id, userId); found = true; }
 
-    const tummyHit = detectTummyTimeAchievements(tummyTimes, seeded, birthDate);
+    const tummyHit = detectTummyTimeAchievements(tummyTimes, seeded, birthDate, false);
     if (tummyHit) { seeded.add(tummyHit.id); saveAchievement(babyId, tummyHit.id, userId); found = true; }
   }
 
