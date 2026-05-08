@@ -454,8 +454,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }
       } catch (error) {
-        console.error("[TummyTimeContext] Failed to acquire timer lock:", error);
-        return { success: false };
+        console.error("[TummyTimeContext] Failed to acquire timer lock (proceeding offline):", error);
       }
     }
 
@@ -507,6 +506,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "ADD_TUMMY_TIME", payload: tummyTime });
       } catch (saveError) {
         console.error("[TummyTimeContext] stopTummyTime: FAILED to save, cleaning up timer", saveError);
+        console.error("[TummyTimeContext] BUG5: TummyTime data LOST — tummyTimeInput=%j (no local fallback save)", tummyTimeInput);
         dispatch({ type: "STOP_TIMER" });
         await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
         if (liveActivityIdRef.current) {
