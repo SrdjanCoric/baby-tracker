@@ -292,7 +292,7 @@ describe("computeSleepModel", () => {
     expect(model).not.toBeNull();
     expect(model.primaryNapCount).toBe(3);
     expect(model.napCountDistribution).toEqual({ 3: 3, 4: 2 });
-    expect(model.secondaryNapCount).toBe(4);
+    expect(model.secondaryNapCount).toBeNull();
 
     // WW0: [90,95,85,90,90] → sorted [85,90,90,90,95] → median=90
     expect(model.startRelativeWakeWindows["0"]).toBe(90);
@@ -419,13 +419,12 @@ describe("predictNextSleep", () => {
   });
 
   it("predicts bedtime after all naps done when extra nap would start too close to dayEnd", () => {
-    // 4 naps done, wake at 18:00, dayEnd 19:00. Gap=60m (≤60).
-    // Uses min(medianWW, positional) instead of bedtimeWW.
-    // medianWW = median([87,79,61,86]) = (79+86)/2 = 82.5. No positional[4] → uses 82.5.
-    // → bedtime at 18:00 + 82.5m = 19:22:30
+    // 4 naps done, wake at 18:00, dayEnd 19:00.
+    // candidateBedtime = 18:00 + 146m (bedtimeWW) = 20:26
+    // isInBedtimeZone(20:26, 19:00) → true (past anchor) → returns bedtime
     const result = predictNextSleep(baseModel, 4, 4, ld(2026, 4, 27, 18, 0), 19);
     expect(result!.type).toBe("bedtime");
-    expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 19, 22, 30));
+    expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 20, 26));
   });
 
   it("adds extra nap when gap to bedtime is very large", () => {
