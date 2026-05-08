@@ -194,18 +194,26 @@ const SleepPredictionCardInner = ({
 
   const lastWakeTime = useMemo((): Date | null => {
     if (effectiveActiveTimer) return null;
-    const lastSleep = getLastSleep();
-    if (!lastSleep?.endedAt) return null;
 
-    const durationMin = (new Date(lastSleep.endedAt).getTime() - new Date(lastSleep.startedAt).getTime()) / 60000;
-    if (durationMin < 5) return null;
+    const sorted = [...sleeps].sort((a, b) =>
+      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    );
 
-    const startHour = new Date(lastSleep.startedAt).getHours() + new Date(lastSleep.startedAt).getMinutes() / 60;
-    const isPastZoneStart = startHour >= bedtimeZoneStartHour;
-    if (isPastZoneStart && durationMin < 15) return null;
+    for (const sleep of sorted) {
+      if (!sleep.endedAt) continue;
 
-    return new Date(lastSleep.endedAt);
-  }, [effectiveActiveTimer, getLastSleep, bedtimeZoneStartHour]);
+      const durationMin = (new Date(sleep.endedAt).getTime() - new Date(sleep.startedAt).getTime()) / 60000;
+      if (durationMin < 5) continue;
+
+      const startHour = new Date(sleep.startedAt).getHours() + new Date(sleep.startedAt).getMinutes() / 60;
+      const isPastZoneStart = startHour >= bedtimeZoneStartHour;
+      if (isPastZoneStart && durationMin < 15) continue;
+
+      return new Date(sleep.endedAt);
+    }
+
+    return null;
+  }, [effectiveActiveTimer, sleeps, bedtimeZoneStartHour]);
 
   const manualModel = useMemo((): SleepPredictionModel | null => {
     if (wakeWindowConfig?.source !== "custom" || !wakeWindowConfig.slots.length) return null;
