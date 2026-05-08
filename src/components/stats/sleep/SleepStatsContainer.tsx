@@ -4,7 +4,7 @@ import { useSleep } from "@/contexts/sleep-context";
 import { useBaby } from "@/contexts/baby-context";
 import { useTimeFormat } from "@/contexts/time-format-context";
 import { useTimeRefresh } from "@/hooks";
-import { buildDayViewData, buildWeekViewData, getSleepDate } from "@/utils/sleep-patterns";
+import { buildDayViewData, buildWeekViewData, getSleepDate, classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import { isUnderThreeMonths } from "@/utils/sleepGoals";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import {
@@ -41,7 +41,7 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
     const syntheticEntry: StoredSleepEntry = {
       id: `ongoing-${selectedBaby.id}`,
       babyId: selectedBaby.id,
-      type: activeTimer.sleepType,
+      type: classifySleepByTimeRange(activeTimer.startTime, now, dayStartHour, dayEndHour),
       startedAt: activeTimer.startTime.toISOString(),
       endedAt: now.toISOString(),
       durationSeconds: Math.floor(
