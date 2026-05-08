@@ -422,6 +422,7 @@ export default function RootLayout() {
                 <UnitProvider>
                 <TimeFormatProvider>
                   <BabyProvider>
+                    <ActiveTimersProvider>
                     <FeedingProvider>
                       <SleepProvider>
                         <DiaperProvider>
@@ -431,7 +432,6 @@ export default function RootLayout() {
                               <MilestonesProvider>
                               <HealthProvider>
                               <AchievementProvider>
-                                <ActiveTimersProvider>
                                 <WidgetProvider>
                                 <NotificationProvider>
                                   <NotificationAuthSetup>
@@ -451,7 +451,6 @@ export default function RootLayout() {
                                   </NotificationAuthSetup>
                                 </NotificationProvider>
                                 </WidgetProvider>
-                                </ActiveTimersProvider>
                               </AchievementProvider>
                               </HealthProvider>
                               </MilestonesProvider>
@@ -461,6 +460,7 @@ export default function RootLayout() {
                         </DiaperProvider>
                       </SleepProvider>
                     </FeedingProvider>
+                    </ActiveTimersProvider>
                   </BabyProvider>
                 </TimeFormatProvider>
                 </UnitProvider>
