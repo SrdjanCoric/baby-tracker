@@ -39,6 +39,12 @@ const TUMMY_TIME_ACHIEVEMENTS: Achievement[] = [
   { id: "tummy_20min", tier: "minor", emoji: "💪", durationMinutes: 20 },
 ];
 
+const RECENCY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+function isRecent(createdAt: string): boolean {
+  return Date.now() - new Date(createdAt).getTime() < RECENCY_WINDOW_MS;
+}
+
 function isNightSleep(entry: StoredSleepEntry): boolean {
   return entry.type === "night";
 }
@@ -52,10 +58,11 @@ function getBabyAgeMonths(birthDate: string): number {
 export function detectSleepAchievements(
   sleeps: StoredSleepEntry[],
   alreadyDetected: Set<AchievementId>,
-  birthDate: string
+  birthDate: string,
+  recentOnly = true
 ): DetectedAchievement | null {
   const nightSleeps = sleeps.filter(
-    (s) => isNightSleep(s) && s.durationSeconds != null && s.durationSeconds > 0
+    (s) => isNightSleep(s) && s.durationSeconds != null && s.durationSeconds > 0 && (!recentOnly || isRecent(s.createdAt))
   );
 
   for (const achievement of SLEEP_ACHIEVEMENTS) {
@@ -79,10 +86,11 @@ export function detectSleepAchievements(
 export function detectTummyTimeAchievements(
   tummyTimes: StoredTummyTimeEntry[],
   alreadyDetected: Set<AchievementId>,
-  birthDate: string
+  birthDate: string,
+  recentOnly = true
 ): DetectedAchievement | null {
   const completed = tummyTimes.filter(
-    (t) => t.durationSeconds != null && t.durationSeconds > 0
+    (t) => t.durationSeconds != null && t.durationSeconds > 0 && (!recentOnly || isRecent(t.createdAt))
   );
 
   for (const achievement of TUMMY_TIME_ACHIEVEMENTS) {
@@ -106,11 +114,12 @@ export function detectTummyTimeAchievements(
 export function detectFeedingAchievements(
   feedings: StoredFeedingEntry[],
   alreadyDetected: Set<AchievementId>,
-  birthDate: string
+  birthDate: string,
+  recentOnly = true
 ): DetectedAchievement | null {
   if (alreadyDetected.has("first_solid")) return null;
 
-  const hasSolid = feedings.some((f) => f.type === "solid");
+  const hasSolid = feedings.some((f) => f.type === "solid" && (!recentOnly || isRecent(f.createdAt)));
   if (hasSolid) {
     return {
       id: "first_solid",
