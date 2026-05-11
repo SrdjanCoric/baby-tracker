@@ -27,6 +27,8 @@ interface SleepPredictionCardProps {
 }
 
 type CardState =
+  | "loading"
+  | "no_birthdate"
   | "under_two_months"
   | "setup_required"
   | "need_more_data"
@@ -125,13 +127,21 @@ const SleepPredictionCardInner = ({
   const bedtimeZoneStartHour = nighttimeThresholdHour - BEDTIME_ZONE_MINUTES / 60;
 
   const cardState = useMemo((): CardState | null => {
+    if (!selectedBaby) {
+      return "loading";
+    }
+
+    if (!birthDate) {
+      return "no_birthdate";
+    }
+
     if (isUnderTwoMonths(birthDate)) {
       if (!predictionBannerDismissed) return "under_two_months";
       return null;
     }
 
-    if (!isUnderTwoMonths(birthDate) && !hasDayBoundaries) {
-      return "setup_required";
+    if (!hasDayBoundaries) {
+      return wakeWindowConfig === null ? "loading" : "setup_required";
     }
 
     if (isComputingModel) {
@@ -164,7 +174,7 @@ const SleepPredictionCardInner = ({
 
     return "prediction";
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [birthDate, predictionBannerDismissed, hasDayBoundaries, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasNightSleepToday, hasPredictionData, qualifyingDayCount, transitionTick]);
+  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasNightSleepToday, hasPredictionData, qualifyingDayCount, transitionTick]);
 
   useEffect(() => {
     const needsTransition = !effectiveActiveTimer && cardState === "prediction";
@@ -412,6 +422,44 @@ const SleepPredictionCardInner = ({
 
   const renderContent = () => {
     if (cardState === null) return null;
+
+    if (cardState === "loading") {
+      return (
+        <View style={{ gap: 12 }}>
+          <SkeletonBar width={120} height={12} color={sleepAccent} />
+          <SkeletonBar width={200} height={16} color={sleepAccent} />
+        </View>
+      );
+    }
+
+    if (cardState === "no_birthdate") {
+      return (
+        <>
+          {renderHeader()}
+          <Text style={{ fontSize: 14, fontWeight: "600", color: textPrimary, marginBottom: 12 }}>
+            {t("dashboard.startAt2Months")}
+          </Text>
+          <Pressable
+            onPress={() => selectedBaby && router.push(`/baby/${selectedBaby.id}`)}
+            style={{
+              alignSelf: "flex-start",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              paddingVertical: 6,
+              paddingHorizontal: 14,
+              borderRadius: 20,
+              backgroundColor: isDark ? "rgba(184,160,212,0.15)" : "rgba(166,141,200,0.12)",
+            }}
+          >
+            <Text style={{ fontSize: 12 }}>🗓</Text>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: sleepAccent }}>
+              {t("dashboard.addBirthdate")}
+            </Text>
+          </Pressable>
+        </>
+      );
+    }
 
     if (cardState === "under_two_months") {
       return (
@@ -965,6 +1013,40 @@ const LoadingDots = ({ color }: { color: string }) => {
       <Animated.View style={dotStyle(anim2)} />
       <Animated.View style={dotStyle(anim3)} />
     </View>
+  );
+};
+
+const SkeletonBar = ({ width, height, color }: { width: number; height: number; color: string }) => {
+  const shimmer = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(shimmer, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      })
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [shimmer]);
+
+  const opacity = shimmer.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.12, 0.25, 0.12],
+  });
+
+  return (
+    <Animated.View
+      style={{
+        width,
+        height,
+        borderRadius: 6,
+        backgroundColor: color,
+        opacity,
+      }}
+    />
   );
 };
 

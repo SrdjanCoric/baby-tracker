@@ -102,6 +102,7 @@
     "nighttime": "Nighttime",
     "bedtimeNear": "Bedtime near",
     "startAt2Months": "Sleep predictions start at 2 months",
+    "addBirthdate": "Add birthdate",
     "manualWakeWindows": "Set manual wake windows",
     "setupTitle": "Set up sleep predictions",
     "setupDescription": "Set your baby's typical day start and bedtime to enable predictions",

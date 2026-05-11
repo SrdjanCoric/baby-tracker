@@ -86,7 +86,7 @@ export default function HomeScreen() {
   const { healthEntries, getLastHealth, refreshHealth } = useHealth();
   const { temperatureUnit, volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
-  const { selectedBaby } = useBaby();
+  const { selectedBaby, isLoading: isBabyLoading } = useBaby();
   const { session } = useAuth();
   const { isLockedByOther, getLockedByName, getLockForActivity, refreshLocks } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
@@ -861,9 +861,9 @@ export default function HomeScreen() {
           />
         )}
 
-        {selectedBaby && (
+        {(selectedBaby || isBabyLoading) && (
           <SleepPredictionCard
-            babyName={selectedBaby.name}
+            babyName={selectedBaby?.name}
           />
         )}
 
