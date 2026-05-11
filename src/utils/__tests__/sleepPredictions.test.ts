@@ -519,6 +519,46 @@ describe("predictNextSleep", () => {
     expect(r4!.type).toBe("nap");
     expect(r4!.predictedTime).toEqual(ld(2026, 4, 27, 16, 50));
   });
+
+  it("classifies prediction after dayEndHour as bedtime when medianBedtimeStart is later", () => {
+    const lateModel = {
+      ...baseModel,
+      medianBedtimeStart: 23.25,
+      bedtimeWakeWindow: 120,
+    };
+    // Wake at 20:40, all 3 naps done, dayEndHour=22
+    // candidateBedtime = 20:40 + 120m = 22:40 (after dayEnd 22:00)
+    // Without fix: 22:40 is 35min before anchor 23:15 → outside 30min zone → "nap"
+    // With fix: dayEnd(22:00) is 75min from anchor(23:15) ≤ 90 → 22:40 >= 22:00 → "bedtime"
+    const result = predictNextSleep(lateModel, 3, 3, ld(2026, 5, 8, 20, 40), 22);
+    expect(result!.type).toBe("bedtime");
+  });
+
+  it("still classifies as nap when prediction is before dayEndHour and outside bedtime zone", () => {
+    const lateModel = {
+      ...baseModel,
+      medianBedtimeStart: 23.25,
+    };
+    // Wake at 13:00, 0 naps done, dayEnd=22
+    // WW[0]=87m → nap at 14:27, well before dayEnd and anchor
+    const result = predictNextSleep(lateModel, 4, 0, ld(2026, 5, 8, 13, 0), 22);
+    expect(result!.type).toBe("nap");
+  });
+
+  it("does not use dayEndHour anchor when it is more than 90 min from medianBedtimeStart", () => {
+    const veryLateModel = {
+      ...baseModel,
+      medianBedtimeStart: 24.5,
+      bedtimeWakeWindow: 120,
+      startRelativeWakeWindows: { "0": 60 },
+    };
+    // Wake at 20:00, all naps done, dayEnd=22, medianBedtime=00:30
+    // candidateBedtime = 20:00 + 120m = 22:00
+    // dayEnd(22:00) is 150min from anchor(00:30) > 90 → dayEnd check inactive
+    // 22:00 is 150min before anchor → outside 30min zone → "nap"
+    const result = predictNextSleep(veryLateModel, 3, 3, ld(2026, 5, 8, 20, 0), 22);
+    expect(result!.type).toBe("nap");
+  });
 });
 
 describe("getQualifyingNightSleep", () => {
