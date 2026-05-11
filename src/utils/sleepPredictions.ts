@@ -381,9 +381,10 @@ export function predictNextSleep(
   const ref = referenceDate || lastWakeTime;
   const anchorHour = model.medianBedtimeStart ?? dayEndHour;
   const anchorTime = hourToDate(anchorHour, ref);
+  const dayEndTime = hourToDate(dayEndHour, ref);
 
   if (completedNapsToday >= selectedNapCount) {
-    return predictAfterAllNaps(model, lastWakeTime, anchorTime);
+    return predictAfterAllNaps(model, lastWakeTime, anchorTime, dayEndTime);
   }
 
   const position = completedNapsToday;
@@ -403,7 +404,7 @@ export function predictNextSleep(
     lastWakeTime.getTime() + wakeWindowMinutes * 60 * 1000
   );
 
-  if (isInBedtimeZone(predictedNapStart, anchorTime)) {
+  if (isInBedtimeZone(predictedNapStart, anchorTime, dayEndTime)) {
     const bedtimeWW = Math.max(wakeWindowMinutes, model.bedtimeWakeWindow);
     const bedtime = new Date(
       lastWakeTime.getTime() + bedtimeWW * 60 * 1000
@@ -417,19 +418,20 @@ export function predictNextSleep(
 function predictAfterAllNaps(
   model: SleepPredictionModel,
   lastWakeTime: Date,
-  anchorTime: Date
+  anchorTime: Date,
+  dayEndTime?: Date
 ): SleepPrediction {
   const candidateBedtime = new Date(
     lastWakeTime.getTime() + model.bedtimeWakeWindow * 60 * 1000
   );
 
-  if (!isInBedtimeZone(candidateBedtime, anchorTime)) {
+  if (!isInBedtimeZone(candidateBedtime, anchorTime, dayEndTime)) {
     const fallbackWW = getFallbackWakeWindow(model);
     const extraNapStart = new Date(
       lastWakeTime.getTime() + fallbackWW * 60 * 1000
     );
 
-    if (!isInBedtimeZone(extraNapStart, anchorTime)) {
+    if (!isInBedtimeZone(extraNapStart, anchorTime, dayEndTime)) {
       return { predictedTime: extraNapStart, type: "nap" };
     }
 
@@ -509,9 +511,20 @@ function capBedtime(predictedTime: Date, anchorTime: Date): Date {
   return predictedTime.getTime() > maxTime.getTime() ? maxTime : predictedTime;
 }
 
-function isInBedtimeZone(time: Date, anchorTime: Date): boolean {
+const DAY_END_ANCHOR_MAX_DISTANCE_MINUTES = 90;
+
+function isInBedtimeZone(time: Date, anchorTime: Date, dayEndTime?: Date): boolean {
   const minutesBefore = (anchorTime.getTime() - time.getTime()) / 60000;
-  return minutesBefore < BEDTIME_ZONE_MINUTES;
+  if (minutesBefore < BEDTIME_ZONE_MINUTES) return true;
+
+  if (dayEndTime) {
+    const dayEndToAnchorMinutes = (anchorTime.getTime() - dayEndTime.getTime()) / 60000;
+    if (dayEndToAnchorMinutes >= 0 && dayEndToAnchorMinutes <= DAY_END_ANCHOR_MAX_DISTANCE_MINUTES && time.getTime() >= dayEndTime.getTime()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function getFallbackWakeWindow(model: SleepPredictionModel): number {
