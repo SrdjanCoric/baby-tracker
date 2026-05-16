@@ -1,0 +1,692 @@
+[
+  {
+    "id": "9m-development-01",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé pode começar a puxar-se para ficar de pé usando os móveis. Certifica-te de que tudo em que se apoia é resistente o suficiente para suportar o peso dele."
+  },
+  {
+    "id": "9m-development-02",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "A preensão do teu bebé está a ficar mais precisa. Por volta dos 8-9 meses, a preensão em pinça — agarrar pequenos objetos entre o polegar e o indicador — começa a surgir. Oferece petiscos pequenos e seguros para estimular esta competência."
+  },
+  {
+    "id": "9m-development-03",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé pode começar a \"navegar\" — andar apoiando-se nos móveis. Dispõe os móveis perto o suficiente para que consiga deslocar-se de um para outro."
+  },
+  {
+    "id": "9m-development-04",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Dizer adeus, bater palmas e apontar são gestos sociais que surgem por volta desta idade. Demonstra estes gestos com frequência e celebra quando o teu bebé participar."
+  },
+  {
+    "id": "9m-development-05",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé compreende mais palavras do que consegue dizer. Pode olhar para o cão quando dizes \"cão\" ou olhar para a porta quando ouve \"lá fora\"."
+  },
+  {
+    "id": "9m-development-06",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "A ansiedade de separação costuma atingir o pico por volta dos 8-9 meses. Despedidas rápidas e confiantes funcionam melhor do que as longas e arrastadas. O teu bebé vai adaptar-se."
+  },
+  {
+    "id": "9m-development-07",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé pode começar a bater um objeto no outro, o que mostra que está a aprender a usar as duas mãos de forma coordenada. Oferece blocos, colheres ou copinhos para bater."
+  },
+  {
+    "id": "9m-development-08",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "\"Mamã\" ou \"papá\" podem surgir por volta de agora, embora o teu bebé talvez não use essas palavras especificamente para ti ainda. Responde com entusiasmo na mesma!"
+  },
+  {
+    "id": "9m-development-09",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé pode começar a entender instruções simples como \"dá-me a bola\" ou \"onde está o teu copo?\" Usa frases curtas e claras e repete com frequência."
+  },
+  {
+    "id": "9m-development-10",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Os estilos de gatinhar variam muito: gatinhar tradicional, rastejar de barriga, arrastar-se sentado ou até a rolar. Todos são formas normais de se deslocar."
+  },
+  {
+    "id": "9m-development-11",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé está a tornar-se um pequeno solucionador de problemas. Pode puxar um cobertor para alcançar um brinquedo ou afastar um obstáculo do caminho."
+  },
+  {
+    "id": "9m-development-12",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "A imitação está a todo o vapor. O teu bebé observa-te de perto e pode tentar \"falar\" ao telefone, pentear o cabelo ou limpar uma superfície como já te viu fazer."
+  },
+  {
+    "id": "9m-development-13",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Alguns bebés saltam o gatinhar por completo e vão diretos para apoiar-se e andar segurando-se nos móveis. Se o teu bebé está a encontrar o próprio jeito de se mover, está a ir muito bem."
+  },
+  {
+    "id": "9m-development-14",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé pode começar a mostrar preferência por uma mão. A verdadeira dominância de mão desenvolve-se mais tarde, mas preferências iniciais são normais."
+  },
+  {
+    "id": "9m-development-15",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tenta mostrar ao teu bebé um brinquedo simples de causa e efeito, como carregar num botão para fazer um boneco aparecer. A surpresa e a repetição são maravilhosas para a aprendizagem."
+  },
+  {
+    "id": "9m-sleep-01",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "A maioria dos bebés nesta idade segue um horário firme de 2 sestas. Sestas de manhã e à tarde com janelas de vigília de 2,5-3,5 horas funcionam bem para muitas famílias."
+  },
+  {
+    "id": "9m-sleep-02",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "O teu bebé pode passar por uma regressão de sono ligada a grandes saltos de desenvolvimento como gatinhar, ficar de pé e ansiedade de separação. Vai passar."
+  },
+  {
+    "id": "9m-sleep-03",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se o teu bebé pratica ficar de pé no berço em vez de dormir, deita-o com calma sem transformar isso em brincadeira. Em breve vai habituar-se."
+  },
+  {
+    "id": "9m-sleep-04",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "O teu bebé pode resistir às sestas porque há muito para explorar. Uma rotina de relaxamento antes de cada sesta sinaliza que é hora de descansar."
+  },
+  {
+    "id": "9m-sleep-05",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Despertares noturnos por ansiedade de separação são comuns agora. Uma visita breve e discreta tranquiliza o teu bebé sem o acordar por completo."
+  },
+  {
+    "id": "9m-sleep-06",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "O sono total é tipicamente de 12-16 horas em 24 horas nesta idade, incluindo sestas. Se o teu bebé dorme menos, mas parece descansado e feliz, está tudo bem."
+  },
+  {
+    "id": "9m-sleep-07",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se a hora de dormir está a tornar-se uma batalha, o teu bebé pode precisar de um horário um pouco mais tardio ou de mais brincadeiras ativas durante o dia para gastar energia."
+  },
+  {
+    "id": "9m-sleep-09",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se o teu bebé acorda cedo (antes das 6h), pode estar demasiado cansado. Tenta antecipar a hora de dormir — por incrível que pareça, isso muitas vezes faz o bebé acordar mais tarde."
+  },
+  {
+    "id": "9m-sleep-10",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Mantém a rotina de dormir curta e consistente: 20-30 minutos é suficiente. Um banho, um livro, uma canção e para o berço é uma fórmula fiável."
+  },
+  {
+    "id": "9m-sleep-12",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Novos dentes — como os incisivos superiores ou laterais — podem estar a nascer por volta desta idade e causar mais irritação na hora de dormir. Um mordedor gelado antes de deitar e conforto extra podem ajudar."
+  },
+  {
+    "id": "9m-sleep-13",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Evita ecrãs perto da hora de dormir. A estimulação pode dificultar o relaxamento do teu bebé, mesmo que o conteúdo pareça calmo."
+  },
+  {
+    "id": "9m-sleep-14",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se as sestas estão a ficar mais curtas, tenta prolongar ligeiramente as janelas de vigília. Às vezes 15-20 minutos a mais de tempo acordado resulta em sestas melhores."
+  },
+  {
+    "id": "9m-sleep-15",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Mudanças de horário de verão podem ser difíceis. Ajusta a hora de dormir em 15 minutos por dia durante 3-4 dias para facilitar a transição."
+  },
+  {
+    "id": "9m-feeding-01",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Os alimentos sólidos são um mundo novo e empolgante para o teu bebé. Começa com alimentos simples e vai ampliando a variedade de frutas, legumes, cereais e proteínas. Por volta dos 8-9 meses, muitos bebés aproveitam 2-3 pequenas refeições por dia."
+  },
+  {
+    "id": "9m-feeding-02",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Incentiva a autoalimentação com petiscos que o bebé segura sozinho. Pedacinhos macios de banana, abacate, batata-doce ou massa bem cozida são ótimas opções."
+  },
+  {
+    "id": "9m-feeding-03",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "O teu bebé já pode comer a maioria do que a família come, basta cortar em tamanhos seguros e sem sal ou açúcar adicionados. Isto simplifica a preparação das refeições!"
+  },
+  {
+    "id": "9m-feeding-04",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Oferece uma variedade de texturas: esmagados, pedacinhos macios e alimentos que o bebé segura sozinho. Ir além dos purés ajuda a desenvolver a mastigação e evita aversão a texturas no futuro."
+  },
+  {
+    "id": "9m-feeding-06",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "A seletividade alimentar pode começar a aparecer. Continua a oferecer variedade sem pressão. O teu papel é oferecer; o do teu bebé é decidir quanto come."
+  },
+  {
+    "id": "9m-feeding-07",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Deixa o teu bebé praticar com uma colher, mesmo que a maior parte da comida acabe no chão. Coloca a comida na colher e entrega-lha para estimular a independência."
+  },
+  {
+    "id": "9m-feeding-08",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Oferece água nas refeições num copo aberto ou copo com palhinha. O teu bebé precisa de pequenos goles de água agora que os sólidos fazem parte regular da dieta."
+  },
+  {
+    "id": "9m-feeding-09",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Alimentos ricos em ferro continuam importantes. Oferece carne, feijão, lentilhas, tofu e cereais enriquecidos com ferro regularmente para apoiar o crescimento acelerado do teu bebé."
+  },
+  {
+    "id": "9m-feeding-10",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Se o teu bebé atira comida ao chão, pode ter terminado de comer, estar a experimentar a gravidade ou a dizer que não quer aquela comida. Tudo isto é normal."
+  },
+  {
+    "id": "9m-feeding-11",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Evita dar sumo ao teu bebé. As frutas inteiras fornecem mais fibra e menos açúcar. Água e leite são as melhores opções de bebida."
+  },
+  {
+    "id": "9m-feeding-12",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Iogurte e queijo são ótimos alimentos ricos em cálcio para bebés nesta idade. Escolhe versões naturais e gordas, sem açúcar adicionado."
+  },
+  {
+    "id": "9m-feeding-13",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Refeições em família, mesmo que o teu bebé apenas brinque com a comida, ensinam competências sociais importantes e deixam-no mais disposto a experimentar o que os outros estão a comer."
+  },
+  {
+    "id": "9m-feeding-14",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Se estás a amamentar, o teu bebé pode começar a mamar menos à medida que come mais sólidos. Esta é uma transição natural e não significa que precises de fazer o desmame."
+  },
+  {
+    "id": "9m-feeding-15",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "As gorduras saudáveis são essenciais para o desenvolvimento do cérebro. Abacate, azeite, manteiga de amendoim (espalhada fina) e laticínios gordos são fontes excelentes."
+  },
+  {
+    "id": "9m-health-01",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Consultas regulares de desenvolvimento são importantes nesta fase. O pediatra vai avaliar competências motoras, comunicação e interação social."
+  },
+  {
+    "id": "9m-health-02",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Com o teu bebé cada vez mais ativo, tombos e pequenas lesões tornam-se mais comuns. A maioria é inofensiva, mas fica atento a sinais de concussão após pancadas na cabeça."
+  },
+  {
+    "id": "9m-health-04",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se o teu bebé frequenta a creche, espera mais constipações e doenças ligeiras. Cada uma fortalece o sistema imunitário, mesmo que seja difícil de ver."
+  },
+  {
+    "id": "9m-health-05",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A doença mão-pé-boca é comum em bebés e crianças pequenas. Fica atento a bolhas nas mãos, pés e na boca, acompanhadas de febre. É desconfortável, mas geralmente resolve-se sozinha."
+  },
+  {
+    "id": "9m-health-06",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Verifica com o pediatra se o teu bebé está em dia com as vacinas. Seguir o calendário oferece a melhor proteção, e doses de recuperação estão disponíveis caso alguma tenha sido perdida."
+  },
+  {
+    "id": "9m-health-07",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A dentição pode causar baba excessiva, irritação e uma temperatura levemente elevada, mas febre verdadeira (acima de {{100.4°F|38°C}}) não é causada pela dentição. Consulta o médico se houver febre."
+  },
+  {
+    "id": "9m-health-08",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A exposição ao chumbo é uma preocupação quando os bebés começam a gatinhar e a meter tudo na boca. Se a tua casa é antiga, pergunta sobre testes de chumbo."
+  },
+  {
+    "id": "9m-health-09",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "O pediatra pode verificar os níveis de ferro por volta dos 9-12 meses. A deficiência de ferro pode afetar o desenvolvimento, portanto menciona se tiveres alguma preocupação."
+  },
+  {
+    "id": "9m-health-10",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A roséola é comum entre os 6-12 meses: febre alta repentina por alguns dias e depois uma erupção surge quando a febre cede. Pode assustar, mas geralmente é inofensiva."
+  },
+  {
+    "id": "9m-health-11",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se o teu bebé não está a balbuciar, a fazer contacto visual ou a responder ao próprio nome aos 9 meses, fala com o pediatra para uma avaliação precoce."
+  },
+  {
+    "id": "9m-health-12",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Roupa com proteção solar e sombra são as melhores defesas contra os danos do sol. Para a pele exposta, o protetor solar já é seguro a partir dos 6 meses — escolhe um de largo espetro com FPS 30 ou superior."
+  },
+  {
+    "id": "9m-health-14",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se o teu bebé tem otites recorrentes, fala com o pediatra sobre a possibilidade de colocar tubos de ventilação."
+  },
+  {
+    "id": "9m-health-15",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Não é necessário comprar sapatos até que o teu bebé esteja a andar ao ar livre regularmente. Por enquanto, pés descalços ou meias antiderrapantes oferecem melhor apoio e estímulo sensorial para aprender a ficar de pé."
+  },
+  {
+    "id": "9m-play-01",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Empilha blocos e deixa o teu bebé derrubá-los. À medida que ficam mais habilidosos, podem começar a empilhar um ou dois blocos sozinhos por volta dos 9-12 meses."
+  },
+  {
+    "id": "9m-play-02",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brinca de \"apanha-apanha\" gatinhando atrás do teu bebé ou deixando-o gatinhar atrás de ti. Esta brincadeira ativa desenvolve competências físicas e rende muitas gargalhadas."
+  },
+  {
+    "id": "9m-play-03",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Oferece recipientes com tampas para o teu bebé praticar abrir e fechar. Colocar um brinquedo dentro dá-lhe motivação para descobrir como funciona."
+  },
+  {
+    "id": "9m-play-04",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Lê livros com histórias simples e deixa o teu bebé virar as páginas. Livros de cartão com abas para levantar trazem um elemento interativo que eles adoram."
+  },
+  {
+    "id": "9m-play-05",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brinca de \"põe e tira\" com um balde e bolas ou blocos. Esta repetição de colocar e tirar é fascinante para os bebés e desenvolve a motricidade fina."
+  },
+  {
+    "id": "9m-play-06",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Experimenta atividades de separação simples: oferece uma forma com divisórias e diferentes objetos para colocar em cada espaço. O teu bebé está a começar a perceber categorias e diferenças."
+  },
+  {
+    "id": "9m-play-07",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brincar com água na pia ou numa bacia rasa com copinhos, colheres e funis diverte sem fim e ensina conceitos como cheio, vazio e entornar."
+  },
+  {
+    "id": "9m-play-08",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Canta cantigas com gestos como \"Dona Aranha\" ou \"Palminhas\" com movimentos de mão. O teu bebé pode começar a tentar fazer os gestos contigo."
+  },
+  {
+    "id": "9m-play-09",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Cria um espaço seguro para trepar com almofadas grandes no chão. Os bebés nesta idade adoram trepar, e isso fortalece os músculos, a coordenação e a confiança."
+  },
+  {
+    "id": "9m-play-10",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brinquedos de empurrar (que o bebé empurra enquanto anda) são ótimos para bebés que estão a começar a andar apoiados. Dão suporte e motivação para dar os primeiros passos."
+  },
+  {
+    "id": "9m-play-11",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Perto do final desta fase, experimenta oferecer um lápis de cera grande e atóxico com papel. O teu bebé pode bater ou levá-lo à boca no início, mas com supervisão estará a começar a descobrir que ferramentas podem deixar marcas."
+  },
+  {
+    "id": "9m-play-12",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Brinca às escondidas escondendo-te atrás de uma porta e chamando o nome do teu bebé. A alegria ao encontrar-te reforça a noção de permanência do objeto."
+  },
+  {
+    "id": "9m-play-13",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Oferece brinquedos com partes móveis: portinhas que abrem, rodinhas que giram, botões que fazem clique. Estes desafios de motricidade fina são perfeitos para esta idade."
+  },
+  {
+    "id": "9m-play-14",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Leva o teu bebé a um parque infantil e deixa-o experimentar o baloiço de bebé. O movimento suave e o ambiente novo são ótimas experiências sensoriais."
+  },
+  {
+    "id": "9m-play-15",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Deixa o teu bebé \"ajudar\" com tarefas simples como pôr uma toalhinha no cesto de roupa ou um copo na mesa. Eles adoram sentir-se incluídos."
+  },
+  {
+    "id": "9m-safety-01",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Agora que o teu bebé se apoia em tudo para ficar de pé, verifica novamente se todos os móveis estão fixos à parede. Cómodas e estantes são os maiores riscos de tombo."
+  },
+  {
+    "id": "9m-safety-02",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Mantém as portas da casa de banho fechadas ou usa protetores de puxador. Sanitas, banheiras e armários da casa de banho oferecem riscos para um bebé curioso que gatinha."
+  },
+  {
+    "id": "9m-safety-03",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Protetores de botão de fogão e trancas de forno são importantes agora. O teu bebé alcança mais alto do que imaginas, e superfícies quentes causam queimaduras graves."
+  },
+  {
+    "id": "9m-safety-04",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Nunca deixes pequenos objetos como moedas, missangas ou balões vazios ao alcance do teu bebé. A preensão em pinça aprimorada permite-lhe agarrar itens muito pequenos."
+  },
+  {
+    "id": "9m-safety-05",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Mantém o teu bebé virado de costas na cadeirinha do carro o máximo de tempo possível, até atingir a altura ou o peso máximo permitido pelo fabricante. A posição virada de costas é a mais segura."
+  },
+  {
+    "id": "9m-safety-06",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Verifica se os portões de segurança estão bem instalados. Um bebé determinado pode empurrar um portão mal fixado e deslocá-lo."
+  },
+  {
+    "id": "9m-safety-07",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Coloca protetores ou batentes nas portas que podem prender dedinhos. Lesões nos dedos causadas por portas que fecham são muito comuns nesta idade."
+  },
+  {
+    "id": "9m-safety-08",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Mantém os caixotes do lixo com tampa ou dentro de armários trancados. Os bebés ficam fascinados pelo lixo e podem encontrar itens perigosos como tampas de lata afiadas ou embalagens pequenas."
+  },
+  {
+    "id": "9m-safety-09",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Se tens tigelas de comida ou água de animais de estimação no chão, move-as para uma área inacessível ao bebé. Ração é risco de engasgamento e tigelas de água são risco de afogamento."
+  },
+  {
+    "id": "9m-safety-10",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Prende os fios de eletrodomésticos (torradeira, chaleira, candeeiro) para que o teu bebé não consiga puxá-los. Enrolar o excesso de fio e usar organizadores de cabos ajuda."
+  },
+  {
+    "id": "9m-safety-11",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Grades ou trancas de janela são essenciais, especialmente acima do rés do chão. Uma rede mosquiteira sozinha não impede um bebé de cair por uma janela aberta."
+  },
+  {
+    "id": "9m-safety-12",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Fica atento aos brinquedos de irmãos mais velhos com peças pequenas. Legos, berlindes e acessórios de boneca são riscos de engasgamento para um bebé nesta idade."
+  },
+  {
+    "id": "9m-safety-13",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Guarda todos os medicamentos, vitaminas e suplementos em armários altos e trancados. Tampas com fecho de segurança atrasam as crianças, mas não as impedem."
+  },
+  {
+    "id": "9m-safety-14",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Se o teu bebé se apoia na porta da máquina de lavar loiça, usa uma tranca. Facas, garfos e pastilhas de detergente lá dentro são perigos sérios."
+  },
+  {
+    "id": "9m-safety-15",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Quando o teu bebé começar a andar apoiado nos móveis, verifica se os tapetes estão fixados com bases antiderrapantes. Tapetes que deslizam podem causar quedas em pisos lisos."
+  },
+  {
+    "id": "9m-development-16",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé pode começar a deixar cair objetos de propósito e observar onde caem. Não é traquinice — é uma experiência científica sobre gravidade e causa e efeito."
+  },
+  {
+    "id": "9m-development-17",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Tenta narrar as tuas atividades do dia com palavras simples. \"Agora vamos pôr as tuas meias\" ajuda a construir vocabulário mesmo antes de o bebé conseguir falar."
+  },
+  {
+    "id": "9m-development-18",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "O teu bebé pode começar a olhar para onde apontas, em vez de olhar para o teu dedo. Esta atenção partilhada é um grande marco cognitivo que favorece a aprendizagem da linguagem."
+  },
+  {
+    "id": "9m-development-19",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "Oferece dois brinquedos ao teu bebé quando as mãos dele já estiverem cheias. Descobrir como segurar um terceiro ou largar um é resolução de problemas na prática."
+  },
+  {
+    "id": "9m-development-20",
+    "ageGroup": "9m",
+    "category": "development",
+    "text": "A memória do teu bebé está a crescer depressa. Pode lembrar-se de onde um brinquedo favorito fica guardado e gatinhar até lá, mesmo sem conseguir vê-lo."
+  },
+  {
+    "id": "9m-sleep-16",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se o teu bebé começou a gatinhar durante o sono e acorda com isso, oferece bastante prática de gatinhar durante o dia para que a novidade passe."
+  },
+  {
+    "id": "9m-sleep-17",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Um horário consistente para acordar de manhã ajuda a organizar o dia inteiro do teu bebé. Tenta começar o dia dentro de uma janela de 30 minutos, inclusive aos fins de semana."
+  },
+  {
+    "id": "9m-sleep-18",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se o teu bebé resiste à segunda sesta, pode precisar de uma janela de vigília um pouco mais longa antes dela. Tenta acrescentar 15 minutos de tempo acordado e vê se ajuda."
+  },
+  {
+    "id": "9m-sleep-19",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Oferecer um pequeno lanche 30 minutos antes de dormir pode ajudar o teu bebé a dormir mais confortavelmente sem criar uma associação entre comer e dormir."
+  },
+  {
+    "id": "9m-sleep-20",
+    "ageGroup": "9m",
+    "category": "sleep",
+    "text": "Se o teu bebé só dorme 30 minutos, pode estar a acordar entre ciclos de sono. Esperar alguns minutos antes de ir ter com ele pode ajudá-lo a aprender a emendar os ciclos."
+  },
+  {
+    "id": "9m-feeding-16",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Experimenta oferecer tiras de comida macia que o teu bebé consiga segurar no punho e roer. Pensa em palitos de cenoura cozida, fatias de manga madura ou tirinhas de torrada."
+  },
+  {
+    "id": "9m-feeding-17",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Se o teu bebé engasga com novas texturas, mantém a calma e dá-lhe tempo. Engasgar é um reflexo de proteção que ajuda a aprender a lidar com a comida — não é o mesmo que asfixia."
+  },
+  {
+    "id": "9m-feeding-18",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Introduzir especiarias e ervas como canela, manjericão e cominhos é perfeitamente seguro e ajuda o teu bebé a desenvolver um paladar variado desde cedo."
+  },
+  {
+    "id": "9m-feeding-19",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Se o teu bebé de repente recusa uma comida que antes gostava, continua a oferecer sem pressão. As preferências de sabor mudam com frequência nesta idade e costumam voltar."
+  },
+  {
+    "id": "9m-feeding-20",
+    "ageGroup": "9m",
+    "category": "feeding",
+    "text": "Oferecer alimentos do teu próprio prato (desde que sejam seguros e sem sal) pode despertar o interesse do teu bebé. Eles adoram comer o que tu estás a comer."
+  },
+  {
+    "id": "9m-health-16",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se o teu bebé tem tosse persistente à noite, um humidificador de vapor frio no quarto pode trazer alívio. Nunca eleves ou inclines o colchão do berço — os bebés precisam de uma superfície firme e plana. Consulta o pediatra se a tosse durar mais de uma semana."
+  },
+  {
+    "id": "9m-health-17",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A obstipação pode acontecer à medida que o teu bebé come mais sólidos. Oferece água entre as refeições e alimentos ricos em fibra como ameixa, pera e ervilha para ajudar o intestino a funcionar."
+  },
+  {
+    "id": "9m-health-18",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "A crosta láctea por vezes reaparece ou surge pela primeira vez por volta desta idade. Massajar suavemente o couro cabeludo com óleo e escovar com uma escova macia geralmente resolve."
+  },
+  {
+    "id": "9m-health-19",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "Se o nariz do teu bebé vive a pingar sem outros sintomas, pode ser alergia e não constipação. Menciona na próxima consulta com o pediatra."
+  },
+  {
+    "id": "9m-health-20",
+    "ageGroup": "9m",
+    "category": "health",
+    "text": "O crescimento acelerado do teu bebé pode causar uma ligeira curvatura nas pernas. Isto é completamente normal nesta idade e geralmente corrige-se sozinho com o tempo."
+  },
+  {
+    "id": "9m-play-16",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Experimenta dar ao teu bebé um cestinho com lenços ou retalhos de tecido para puxar um de cada vez. As cores e texturas tornam esta uma atividade sensorial maravilhosa."
+  },
+  {
+    "id": "9m-play-17",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Faz um chocalho caseiro colocando massa seca ou arroz dentro de um frasco bem fechado. O teu bebé vai adorar agitar e descobrir os sons que consegue criar."
+  },
+  {
+    "id": "9m-play-18",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Experimenta brincar de \"onde está a música?\" escondendo um brinquedo musical debaixo de um cobertor enquanto toca. O teu bebé vai usar a audição para encontrá-lo."
+  },
+  {
+    "id": "9m-play-19",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Cola um pedaço grande de papel no chão e deixa o teu bebé explorar a pintura com os dedos usando iogurte ou corante alimentar seguro. Faz sujidade, mas é maravilhoso para o desenvolvimento sensorial."
+  },
+  {
+    "id": "9m-play-20",
+    "ageGroup": "9m",
+    "category": "play",
+    "text": "Oferece ao teu bebé um telefone de brinquedo ou comando e finge ter uma conversa com ele. Esta brincadeira de ida e volta desenvolve competências de comunicação desde cedo."
+  },
+  {
+    "id": "9m-safety-16",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Verifica se as plantas de interior estão fora do alcance ou se são atóxicas. Muitas plantas comuns como jiboia e filodendro podem causar irritação ou mal-estar se mastigadas."
+  },
+  {
+    "id": "9m-safety-17",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Mantém malas e sacos fora do chão. Costumam conter itens pequenos como moedas, batom, canetas e medicamentos que são perigosos para um bebé curioso."
+  },
+  {
+    "id": "9m-safety-18",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Certifica-te de que o colchão do berço está na posição mais baixa agora que o teu bebé consegue ficar de pé. Um bebé que se levanta pode tentar trepar a grade se o colchão estiver alto demais."
+  },
+  {
+    "id": "9m-safety-19",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Ímanes de frigorífico são um perigo oculto — os pequenos podem ser engolidos. Coloca os ímanes decorativos bem alto ou remove-os até que o teu bebé seja mais velho."
+  },
+  {
+    "id": "9m-safety-20",
+    "ageGroup": "9m",
+    "category": "safety",
+    "text": "Se usas toalha de mesa, troca por individuais por enquanto. O teu bebé pode puxar a toalha e derrubar comida quente, pratos ou objetos pesados sobre si."
+  }
+]

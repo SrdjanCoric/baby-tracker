@@ -1,0 +1,512 @@
+[
+  {
+    "id": "2y-development-01",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il vocabolario del tuo bambino sta esplodendo e potrebbe imparare diverse parole nuove ogni settimana. Leggete insieme ogni giorno e nomina tutto quello che vedete."
+  },
+  {
+    "id": "2y-development-02",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Frasi di due parole come \"camion grande\" o \"voglio biscotto\" sono tipiche a questa età. Espandi le sue parole dicendo \"Sì, quello è un grande camion rosso!\""
+  },
+  {
+    "id": "2y-development-03",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe iniziare a mostrare interesse per il vasino. Osserva i segnali di prontezza come restare asciutto per periodi più lunghi o dirti quando il pannolino è bagnato."
+  },
+  {
+    "id": "2y-development-04",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Saltare con entrambi i piedi staccati da terra è una tappa tra i 18 e i 24 mesi. Prova a saltare insieme su una superficie morbida per fare pratica."
+  },
+  {
+    "id": "2y-development-05",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe allineare i giocattoli, ordinare oggetti per colore o raggruppare elementi simili. Queste prime competenze matematiche si costruiscono naturalmente attraverso il gioco."
+  },
+  {
+    "id": "2y-development-06",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il gioco parallelo, in cui il tuo bambino gioca accanto ma non direttamente con altri bambini, è la fase sociale normale a questa età."
+  },
+  {
+    "id": "2y-development-07",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il tuo bambino riesce a seguire semplici istruzioni a un passaggio e potrebbe iniziare a capire istruzioni a due passaggi come \"prendi la palla e portamela.\" Esercitatevi durante le routine quotidiane."
+  },
+  {
+    "id": "2y-development-08",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il gioco di immaginazione diventa più elaborato. Il tuo bambino potrebbe creare scenari con pupazzetti, recitare storie o assegnare ruoli durante il gioco."
+  },
+  {
+    "id": "2y-development-09",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe mostrare una preferenza per una mano a questa età, anche se è normale che continui ad alternare fino ai 3 anni o oltre."
+  },
+  {
+    "id": "2y-development-10",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "I capricci potrebbero aumentare mentre il tuo bambino lotta tra il desiderio di indipendenza e il non avere ancora le capacità per fare tutto da solo. Resta calmo e valida i suoi sentimenti."
+  },
+  {
+    "id": "2y-development-11",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe iniziare a riconoscersi nelle foto e negli specchi e usare \"io\" e \"mio.\" Questa consapevolezza di sé è un grande salto cognitivo."
+  },
+  {
+    "id": "2y-development-12",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Salire e scendere le scale tenendosi al corrimano è un'abilità in sviluppo. Esercitatevi insieme e festeggia la sua crescente sicurezza."
+  },
+  {
+    "id": "2y-development-13",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe iniziare a mostrare empatia, consolando un amico che piange o offrendo un giocattolo a qualcuno che è triste. Riconosci e incoraggia questa gentilezza."
+  },
+  {
+    "id": "2y-development-14",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Puzzle semplici con forme da 4-6 pezzi stimolano le capacità di problem-solving. Mostra al tuo bambino come girare i pezzi per trovare l'incastro giusto."
+  },
+  {
+    "id": "2y-development-15",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Il tuo bambino probabilmente riesce a identificare diverse parti del corpo e potrebbe iniziare a contare oggetti, anche se i numeri non sono sempre nell'ordine giusto."
+  },
+  {
+    "id": "2y-sleep-01",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Il tuo bambino ha ancora bisogno di un pisolino al giorno, di solito 1-2,5 ore dopo pranzo. La maggior parte dei bambini trae beneficio dal mantenere questo pisolino almeno fino ai 3 anni."
+  },
+  {
+    "id": "2y-sleep-02",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "I bambini hanno bisogno di circa 11-14 ore di sonno totale al giorno. Se le battaglie per andare a dormire sono frequenti, valuta se il programma ha bisogno di aggiustamenti."
+  },
+  {
+    "id": "2y-sleep-03",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Le tattiche per ritardare l'ora della nanna diventano più creative ora. Stabilisci una routine chiara con un punto finale definito, come \"dopo due libri, è ora di dormire.\""
+  },
+  {
+    "id": "2y-sleep-04",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Se il tuo bambino inizia ad avere incubi, consolalo con calma e rassicuralo che è al sicuro. Gli incubi sono una parte normale dello sviluppo cognitivo."
+  },
+  {
+    "id": "2y-sleep-05",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Un orologio per bambini che cambia colore all'ora della sveglia può aiutare il tuo bambino a capire quando è il momento giusto per alzarsi dal letto."
+  },
+  {
+    "id": "2y-sleep-06",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Tieni il lettino con le sbarre finché il tuo bambino non si arrampica fuori. Passare al lettino aperto troppo presto spesso porta a più risvegli notturni e resistenza all'ora della nanna."
+  },
+  {
+    "id": "2y-sleep-07",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Se il tuo bambino salta un pisolino, anticipa l'ora della nanna di 30-60 minuti per evitare che la stanchezza eccessiva si trasformi in una notte difficile."
+  },
+  {
+    "id": "2y-sleep-08",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "La coerenza nella tua risposta all'ora della nanna conta più del metodo specifico che usi. Scegli un approccio che puoi mantenere e attieniti ad esso."
+  },
+  {
+    "id": "2y-sleep-09",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Un programma giornaliero prevedibile con pasti, pisolino e nanna a orari più o meno uguali aiuta l'orologio biologico del tuo bambino a restare regolato."
+  },
+  {
+    "id": "2y-sleep-10",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Grandi transizioni come un nuovo fratellino, un trasloco o l'inizio dell'asilo possono disturbare temporaneamente il sonno. Più coccole e coerenza nella routine aiutano."
+  },
+  {
+    "id": "2y-sleep-11",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Se il tuo bambino ha paura del buio, una luce notturna rossa tenue o calda può dare conforto senza disturbare la produzione di melatonina."
+  },
+  {
+    "id": "2y-sleep-12",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Una regressione del sonno a questa età spesso coincide con esplosioni linguistiche, l'uso del vasino o l'arrivo di un nuovo fratellino. Di solito si risolve in 2-6 settimane."
+  },
+  {
+    "id": "2y-sleep-13",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Il gioco attivo e il tempo all'aperto durante il giorno migliorano davvero la qualità del sonno notturno. Un corpo stanco porta a un sonno più profondo e ristoratore."
+  },
+  {
+    "id": "2y-sleep-14",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Evita di usare il letto o la cameretta come luogo di punizione. Vuoi che il tuo bambino associ il suo spazio per dormire al comfort e alla sicurezza."
+  },
+  {
+    "id": "2y-sleep-15",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Se il tuo bambino è passato al lettino e continua ad alzarsi, riaccompagnalo con calma ogni volta con un'interazione minima. La coerenza è fondamentale."
+  },
+  {
+    "id": "2y-feeding-01",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Il tuo bambino può mangiare quasi tutto quello che mangia la famiglia ora. Servi gli stessi pasti in porzioni adatte ai bambini e lascialo scegliere quanto mangiare."
+  },
+  {
+    "id": "2y-feeding-02",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "L'assunzione di latte dovrebbe essere circa {{16-24 ounces|475-710 ml}} (2-3 tazze) al giorno. Troppo latte riempie lo stomaco e riduce l'appetito per cibi solidi ricchi di nutrienti."
+  },
+  {
+    "id": "2y-feeding-04",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Offri tre pasti e 2-3 spuntini strutturati al giorno. Spiluccare tutto il giorno può ridurre la fame ai pasti e rendere l'alimentazione meno equilibrata."
+  },
+  {
+    "id": "2y-feeding-05",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Il tuo bambino potrebbe fissarsi su un solo cibo, mangiando solo quello per giorni. Continua a offrire varietà ad ogni pasto e non preparare piatti separati su richiesta."
+  },
+  {
+    "id": "2y-feeding-06",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Rendi il cibo divertente usando formine per biscotti sui panini, disponendo il cibo in motivi colorati o servendolo su un piatto speciale."
+  },
+  {
+    "id": "2y-feeding-07",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Il tuo bambino sta imparando a usare forchetta e cucchiaio con più abilità ora. Aspettati qualche pasticcio ma elogia lo sforzo e la crescente indipendenza."
+  },
+  {
+    "id": "2y-feeding-08",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Gli acidi grassi omega-3 supportano lo sviluppo cerebrale. Includi nella dieta del tuo bambino cibi come salmone, semi di chia, noci o uova fortificate."
+  },
+  {
+    "id": "2y-feeding-09",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Incoraggia il tuo bambino a bere acqua durante tutta la giornata, specialmente durante il gioco attivo. Una tazza piccola e facile da tenere rende più semplice bere in autonomia."
+  },
+  {
+    "id": "2y-feeding-10",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Se il tuo bambino è ancora allattato al seno, l'OMS supporta la continuazione dell'allattamento fino ai 2 anni e oltre. Non c'è bisogno di smettere se funziona per entrambi."
+  },
+  {
+    "id": "2y-feeding-11",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Evita di etichettare i cibi come \"buoni\" o \"cattivi\" davanti al tuo bambino. Usa un linguaggio neutro come \"questo cibo ci dà energia\" o \"questo è un cibo delle occasioni.\""
+  },
+  {
+    "id": "2y-feeding-12",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Lascia che il tuo bambino aiuti ad apparecchiare, versare l'acqua da una piccola brocca o scegliere tra due opzioni sane. Il coinvolgimento incoraggia una migliore alimentazione."
+  },
+  {
+    "id": "2y-feeding-14",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Se il tuo bambino beve succo, limitalo a {{4 ounces|120 ml}} al giorno di succo di frutta 100%. Meglio ancora, offri frutta intera e acqua al suo posto."
+  },
+  {
+    "id": "2y-health-01",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Le visite di controllo in questa fase includono misurazioni della crescita, screening dello sviluppo e possibilmente esami del sangue che il pediatra raccomanda in base alle esigenze del tuo bambino."
+  },
+  {
+    "id": "2y-health-02",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Il tuo bambino dovrebbe fare un controllo dentale ogni sei mesi. Il dentista può applicare una vernice al fluoro per proteggere i denti in sviluppo."
+  },
+  {
+    "id": "2y-health-03",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Lava i denti del tuo bambino due volte al giorno con una quantità minima (grande come un chicco di riso) di dentifricio al fluoro fino ai 3 anni, poi aumenta a una quantità grande come un pisello."
+  },
+  {
+    "id": "2y-health-04",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se il tuo bambino non mette insieme due parole entro i 2 anni, parla con il pediatra di una valutazione logopedica. L'intervento precoce è il più efficace."
+  },
+  {
+    "id": "2y-health-05",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Il vaccino antinfluenzale annuale è raccomandato per tutti i bambini sopra i 6 mesi. Vaccinarsi aiuta a proteggere il tuo bambino e chi gli sta intorno."
+  },
+  {
+    "id": "2y-health-06",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "I bambini che frequentano l'asilo possono prendere 8-12 raffreddori all'anno. Ogni raffreddore rafforza il loro sistema immunitario. Contatta il pediatra in caso di febbre alta o sintomi che durano più di 10 giorni."
+  },
+  {
+    "id": "2y-health-07",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "I canini e i secondi molari spuntano tipicamente tra i 16 e i 33 mesi. Offri cibi freddi e giocattoli da masticare per dare sollievo durante questo periodo."
+  },
+  {
+    "id": "2y-health-08",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se introduci il tempo davanti allo schermo, scegli programmi di alta qualità e guardali insieme al tuo bambino. La visione condivisa lo aiuta a capire quello che vede."
+  },
+  {
+    "id": "2y-health-09",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Aiuta il tuo bambino a imparare a lavarsi le mani con il sapone per 20 secondi, specialmente prima dei pasti e dopo aver usato il bagno o giocato all'aperto."
+  },
+  {
+    "id": "2y-health-10",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se il tuo bambino russa forte ogni notte o sembra smettere di respirare durante il sonno, parlane con il pediatra. Potrebbe indicare adenoidi ingrossate."
+  },
+  {
+    "id": "2y-health-11",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Gli occhi del tuo bambino dovrebbero essere allineati ormai. Se noti un occhio che converge verso l'interno o devia verso l'esterno, prenota prontamente una visita oculistica."
+  },
+  {
+    "id": "2y-health-14",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se l'uso del vasino causa stitichezza, aumenta l'apporto di fibre e liquidi ed evita di mettere pressione al tuo bambino. Trattenere le feci è comune durante questa transizione."
+  },
+  {
+    "id": "2y-health-15",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Assicurati che il tuo bambino assuma 600 UI di vitamina D al giorno attraverso la dieta, il latte fortificato o un integratore. Molti bambini non ne assumono abbastanza solo dal cibo."
+  },
+  {
+    "id": "2y-play-01",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Incoraggia il tuo bambino a disegnare cerchi e linee sulla carta. Questi sono i mattoncini per la formazione delle lettere e sviluppano il controllo della mano."
+  },
+  {
+    "id": "2y-play-02",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Costruisci con blocchi ad incastro più grandi. Il tuo bambino può creare torri, ponti e strutture, sviluppando il pensiero spaziale e la capacità di pianificazione."
+  },
+  {
+    "id": "2y-play-03",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Gioca al negozio, al ristorante o al dottore. Questo gioco di ruolo sviluppa il linguaggio, le competenze sociali e la comprensione emotiva."
+  },
+  {
+    "id": "2y-play-04",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Salta nelle pozzanghere, corri sotto gli irrigatori o gioca nella sabbiera. Il gioco all'aperto ricco di stimoli sensoriali è essenziale per uno sviluppo sano."
+  },
+  {
+    "id": "2y-play-05",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Strappare la carta e giocare con la pasta modellabile costruiscono la forza nelle mani necessaria per usare le forbici in futuro. Verso i 2 anni, puoi introdurre forbici sicure per bambini per fare i primi tagli."
+  },
+  {
+    "id": "2y-play-06",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Leggi libri con storie semplici e fai domande al tuo bambino: \"Cosa pensi che succeda dopo?\" o \"Riesci a trovare il gatto?\""
+  },
+  {
+    "id": "2y-play-07",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Strumenti musicali come tamburi, sonagli e xilofoni insegnano il ritmo, il rapporto causa-effetto e l'espressione creativa."
+  },
+  {
+    "id": "2y-play-08",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Prepara un semplice percorso a ostacoli: striscia sotto un tavolo, salta sopra un cuscino, cammina lungo una linea di nastro adesivo sul pavimento. Questo sviluppa la pianificazione e la motricità globale."
+  },
+  {
+    "id": "2y-play-09",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Gioca a memory con immagini o colori. Inizia con solo 3-4 coppie e aumenta man mano che la memoria del tuo bambino cresce."
+  },
+  {
+    "id": "2y-play-10",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Dipingere con pennelli, spugne o dita permette al tuo bambino di sperimentare con colori e texture. Concentrati sul processo, non sul risultato."
+  },
+  {
+    "id": "2y-play-11",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Incoraggia l'arrampicata al parco giochi. Salire scale, attraversare ponti e scendere scivoli sviluppa il coraggio, la coordinazione e la valutazione del rischio."
+  },
+  {
+    "id": "2y-play-12",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Gioca a nascondino in casa. Il tuo bambino strilla di gioia e si esercita nella memoria spaziale, nell'ascolto e nell'autocontrollo."
+  },
+  {
+    "id": "2y-play-13",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Introduci il contare durante le attività quotidiane: conta i gradini mentre li salite, i cracker nel piatto o i giocattoli mentre li mettete via."
+  },
+  {
+    "id": "2y-play-14",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Lascia che il tuo bambino aiuti con il giardinaggio. Scavare, innaffiare e guardare le piante crescere insegna la pazienza, la responsabilità e il legame con la natura."
+  },
+  {
+    "id": "2y-play-15",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Incoraggia il tuo bambino a raccontarti dei suoi disegni, anche se ti sembrano scarabocchi. Chiedere \"raccontami del tuo disegno\" sviluppa le capacità narrative."
+  },
+  {
+    "id": "2y-safety-01",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Il tuo bambino sa arrampicarsi più in alto e raggiungere più lontano che mai. Rivaluta regolarmente la tua casa per nuovi pericoli dal suo punto di vista."
+  },
+  {
+    "id": "2y-safety-02",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Tieni il tuo bambino rivolto all'indietro nel seggiolino auto il più a lungo possibile, idealmente fino a raggiungere il peso o l'altezza massimi del seggiolino. La posizione contro il senso di marcia è la più sicura per i bambini piccoli."
+  },
+  {
+    "id": "2y-safety-03",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Insegna al tuo bambino le regole base di sicurezza in acqua: non avvicinarsi mai all'acqua senza un adulto e indossare sempre il giubbotto salvagente vicino all'acqua aperta."
+  },
+  {
+    "id": "2y-safety-04",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Popcorn, noci intere, caramelle dure e pezzi di verdura cruda restano seri rischi di soffocamento per i bambini. Continua a tagliare il cibo in pezzi piccoli."
+  },
+  {
+    "id": "2y-safety-05",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Esercitati sulle vie di fuga in caso di incendio con la tua famiglia. Mostra al tuo bambino come strisciare basso e andare a un punto di ritrovo designato all'esterno."
+  },
+  {
+    "id": "2y-safety-06",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Se il tuo bambino riesce ad aprire la porta di casa, aggiungi un catenaccio alto o un chiavistello che non possa raggiungere. I bambini possono uscire senza sorveglianza in un attimo."
+  },
+  {
+    "id": "2y-safety-07",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Insegna al tuo bambino il suo nome completo e inizia a lavorare sul tuo numero di telefono. Usa canzoncine o la ripetizione per renderlo divertente e memorabile."
+  },
+  {
+    "id": "2y-safety-08",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Controlla sempre che le attrezzature del parco giochi siano adatte all'età e ben mantenute. Cerca aperture che potrebbero intrappolare la testa o le dita del bambino."
+  },
+  {
+    "id": "2y-safety-09",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Tieni le porte del bagno chiuse o usa un blocco per il water. I bambini sono affascinati dall'acqua e un water rappresenta un rischio di annegamento per un bambino con il baricentro alto."
+  },
+  {
+    "id": "2y-safety-10",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Controlla regolarmente l'installazione del seggiolino auto. Assicurati che le cinghie siano ben aderenti con la clip pettorale all'altezza delle ascelle e senza giacche invernali ingombranti sotto le cinture."
+  },
+  {
+    "id": "2y-safety-11",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Insegna al tuo bambino a stare seduto mentre mangia. Correre o giocare con il cibo in bocca aumenta notevolmente il rischio di soffocamento."
+  },
+  {
+    "id": "2y-safety-12",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Conserva gli utensili da cucina affilati come coltelli, pelapatate e forbici in un cassetto alto con blocco di sicurezza. Il tuo bambino ora riesce ad aprire molti cassetti e armadietti bassi."
+  },
+  {
+    "id": "2y-safety-13",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Se il tuo bambino sta passando al lettino, posiziona il materasso basso a terra e usa una sponda. Rimuovi dalla stanza i pericoli a cui potrebbe accedere di notte."
+  },
+  {
+    "id": "2y-safety-14",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "La sicurezza nel vialetto e nei parcheggi è fondamentale. Tieni sempre il tuo bambino per mano e controlla dietro il veicolo prima di fare retromarcia. Sono troppo bassi per essere visti."
+  },
+  {
+    "id": "2y-safety-15",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Controlla i rilevatori di fumo e monossido di carbonio ogni mese e sostituisci le batterie almeno una volta all'anno. Un rilevatore funzionante è uno dei modi più semplici per proteggere la tua famiglia."
+  }
+]
