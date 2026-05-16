@@ -81,10 +81,13 @@ const LANGUAGE_LABELS = {
   system: "settings.systemDefault",
   en: "settings.english",
   sr: "settings.serbian",
-  es: "settings.spanish",
+  es: "settings.spanishLatam",
+  "es-ES": "settings.spanishSpain",
   fr: "settings.french",
-  pt: "settings.portuguese",
+  "pt-PT": "settings.portuguesePT",
+  "pt-BR": "settings.portugueseBR",
   de: "settings.german",
+  it: "settings.italian",
 } as const;
 
 export default function SettingsScreen() {
