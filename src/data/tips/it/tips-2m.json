@@ -1,0 +1,872 @@
+[
+  {
+    "id": "2m-development-01",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe iniziare a sollevare brevemente la testa durante il tummy time. Anche pochi secondi sono un ottimo progresso!"
+  },
+  {
+    "id": "2m-development-02",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "I neonati vedono meglio a circa {{8-12 inches|20-30 cm}} di distanza, più o meno la distanza dal tuo viso durante la poppata. Cerca spesso il contatto visivo."
+  },
+  {
+    "id": "2m-development-03",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "I movimenti a scatti di braccia e gambe del tuo bambino diventeranno gradualmente più fluidi nelle prossime settimane, man mano che il sistema nervoso matura."
+  },
+  {
+    "id": "2m-development-04",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Prova a tenere un'immagine in bianco e nero ad alto contrasto a circa {{10 inches|25 cm}} dal viso del tuo bambino. In questo momento è attratto dai motivi decisi."
+  },
+  {
+    "id": "2m-development-05",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il tuo bambino riconosce già la tua voce dal periodo nel pancione. Parlargli e cantare rafforza il legame e supporta lo sviluppo del linguaggio."
+  },
+  {
+    "id": "2m-development-06",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Intorno alle 6-8 settimane, potresti vedere il primo vero sorriso sociale del tuo bambino. Non sono le colichette stavolta — sta davvero rispondendo a te!"
+  },
+  {
+    "id": "2m-development-07",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Appoggia delicatamente il dito nel palmo del tuo bambino e senti il riflesso di presa. Questa presa involontaria evolverà in un'azione intenzionale nei prossimi mesi."
+  },
+  {
+    "id": "2m-development-08",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il cervello del tuo neonato forma oltre 1 milione di nuove connessioni neurali ogni secondo. Ogni coccola e conversazione sta costruendo il suo cervello."
+  },
+  {
+    "id": "2m-development-09",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Prova a muovere lentamente un giocattolo colorato ad arco davanti al tuo bambino. Intorno alle 6 settimane, potrebbe iniziare a seguirlo con gli occhi."
+  },
+  {
+    "id": "2m-development-10",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Quei piccoli suoni gorgoglianti che fa il tuo bambino sono i suoi primi tentativi di comunicazione. Rispondigli — state avendo le vostre prime conversazioni!"
+  },
+  {
+    "id": "2m-development-11",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il contatto pelle a pelle non è solo confortante — regola il battito cardiaco, la temperatura e la respirazione del bambino, promuovendo il legame."
+  },
+  {
+    "id": "2m-development-12",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il tuo bambino riesce a distinguere il tuo odore da quello degli altri adulti. Questo è uno dei primi modi in cui ti riconosce."
+  },
+  {
+    "id": "2m-development-13",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Se il tuo bambino sembra sobbalzare ai rumori forti, è un riflesso sano. Il suo udito è ben sviluppato, anche se la vista sta ancora recuperando."
+  },
+  {
+    "id": "2m-development-14",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Alterna il lato in cui tieni il bambino durante la poppata e quando lo porti in braccio. Questo lo incoraggia a girare la testa in entrambe le direzioni e rafforza il collo."
+  },
+  {
+    "id": "2m-development-15",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe aprire brevemente le mani e allargare le dita. È un primo passo verso il controllo delle mani che gli servirà più avanti per afferrare i giocattoli."
+  },
+  {
+    "id": "2m-development-16",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe iniziare a girarsi verso le voci familiari, soprattutto la tua. Prova a parlare da diversi punti della stanza e guardalo cercarti."
+  },
+  {
+    "id": "2m-development-17",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Quando il tuo bambino fissa il ventilatore a soffitto o una lampada, sta esercitando la messa a fuoco e l'attenzione visiva. Questi momenti di osservazione sono vero lavoro cerebrale."
+  },
+  {
+    "id": "2m-development-18",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Intorno alle 6 settimane, il pianto del tuo bambino inizia a differenziarsi. Potresti notare un pianto di fame diverso da quello di stanchezza o disagio."
+  },
+  {
+    "id": "2m-development-19",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Tieni il tuo bambino in posizione eretta contro la spalla e lascialo esercitarsi a sollevare la testa per guardarsi intorno. Questo rafforza i muscoli del collo in una nuova posizione."
+  },
+  {
+    "id": "2m-development-20",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe calmarsi brevemente quando vede il tuo viso o sente la tua voce. Questa prima autoregolazione è segno del forte legame che state costruendo."
+  },
+  {
+    "id": "2m-development-21",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Prova a toccare delicatamente la guancia del tuo bambino e guardalo girarsi verso la tua mano. Questo riflesso di ricerca lo aiuta a trovare il seno, ma mostra anche che i suoi riflessi funzionano bene."
+  },
+  {
+    "id": "2m-development-22",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Le gambe del tuo bambino potrebbero raddrizzarsi un po' di più quando lo tieni in posizione eretta. Non può ancora reggere il peso, ma questi movimenti stanno rafforzando le gambe per le tappe future."
+  },
+  {
+    "id": "2m-development-23",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Se il tuo bambino sembra preferire guardare da un lato, incoraggialo delicatamente a girarsi dall'altro posizionandoti o mettendo cose interessanti dal lato meno preferito."
+  },
+  {
+    "id": "2m-development-24",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Nota come il tuo bambino diventa tranquillo e attento quando qualcosa di nuovo cattura la sua attenzione. Questi momenti di concentrazione sono quando avviene un apprendimento profondo."
+  },
+  {
+    "id": "2m-development-25",
+    "ageGroup": "2m",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe iniziare a produrre suoni vocalici come \"ah\" e \"oh\" intorno alle 6-8 settimane. Ripeti questi suoni per incoraggiare più vocalizzazioni."
+  },
+  {
+    "id": "2m-sleep-01",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "I neonati dormono 14-17 ore al giorno ma in brevi intervalli. È del tutto normale che si sveglino ogni 2-3 ore durante tutto il giorno e la notte."
+  },
+  {
+    "id": "2m-sleep-02",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Metti sempre il tuo bambino a dormire sulla schiena, su una superficie rigida e piatta senza coperte, cuscini o peluche."
+  },
+  {
+    "id": "2m-sleep-03",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Il tuo bambino non conosce ancora la differenza tra giorno e notte. Aiutalo a capirla mantenendo il giorno luminoso e attivo, e la notte buia e tranquilla."
+  },
+  {
+    "id": "2m-sleep-04",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "La fasciatura può aiutare il neonato a sentirsi sicuro e ridurre il riflesso di Moro che lo sveglia. Assicurati che sia aderente al petto ma permetta il movimento delle anche."
+  },
+  {
+    "id": "2m-sleep-05",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Una semplice routine della nanna anche adesso — luci soffuse, voce bassa, una poppata — aiuta il bambino a iniziare ad associare questi segnali con il momento di dormire."
+  },
+  {
+    "id": "2m-sleep-08",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Se il tuo bambino si addormenta nel seggiolino auto, nell'altalena o nella sdraietta, spostalo su una superficie rigida e piatta appena possibile."
+  },
+  {
+    "id": "2m-sleep-09",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Le finestre di veglia del neonato sono tipicamente di 45-90 minuti, più brevi nelle prime settimane e gradualmente più lunghe. Osserva i segnali di sonno come sbadigli e sguardo assente prima che si stanchi troppo."
+  },
+  {
+    "id": "2m-sleep-10",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "È normale che i neonati siano rumorosi nel sonno. Grugniti, sospiri e brevi movimenti non significano sempre che hanno bisogno di essere presi in braccio."
+  },
+  {
+    "id": "2m-sleep-11",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Se il tuo bambino fa fatica ad addormentarsi, prova le 5 S: fasciatura, posizione laterale/pancia (da sveglio), shh, dondolio e suzione. Imitano l'ambiente del pancione."
+  },
+  {
+    "id": "2m-sleep-12",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Non preoccuparti delle \"cattive abitudini\" a questa età. Se allattare, cullare o tenere in braccio il tuo bambino per farlo dormire funziona, va benissimo adesso."
+  },
+  {
+    "id": "2m-sleep-13",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Mantieni le poppate notturne e i cambi pannolino tranquilli. Usa una luce fioca, parla sottovoce ed evita giochi stimolanti per aiutare il bambino a capire che la notte è per dormire."
+  },
+  {
+    "id": "2m-sleep-14",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Il tratto di sonno più lungo del tuo bambino potrebbe essere solo di 3-4 ore a questa età, ed è perfettamente normale. Tratti più lunghi arriveranno."
+  },
+  {
+    "id": "2m-sleep-15",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Vesti il tuo bambino con uno strato in più rispetto a quello che indosseresti tu. Il surriscaldamento è un fattore di rischio per la SIDS, quindi controlla che sia caldo ma non sudato al petto."
+  },
+  {
+    "id": "2m-sleep-16",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Un ciuccio offerto al momento della nanna può aiutare a ridurre il rischio di SIDS. Se allatti, considera di aspettare che l'allattamento sia ben avviato prima di introdurne uno."
+  },
+  {
+    "id": "2m-sleep-17",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Il tuo bambino potrebbe avere il giorno e la notte invertiti nelle prime settimane. Esponilo alla luce naturale durante i periodi di veglia per aiutare a resettare il suo orologio interno."
+  },
+  {
+    "id": "2m-sleep-18",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Se il tuo bambino dorme solo in braccio, prova a scaldare il lenzuolo della culla con una borsa dell'acqua calda (rimossa prima di adagiarlo) così la superficie non è uno shock freddo."
+  },
+  {
+    "id": "2m-sleep-19",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "I neonati trascorrono circa metà del sonno in fase REM (sonno attivo), ecco perché si muovono, sorridono e fanno smorfie. Questo sonno attivo è essenziale per lo sviluppo cerebrale."
+  },
+  {
+    "id": "2m-sleep-20",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Va bene svegliare un neonato che dorme per una poppata se sono passate più di 3-4 ore, specialmente nelle prime due settimane per assicurare l'aumento di peso."
+  },
+  {
+    "id": "2m-sleep-21",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Prova ad adagiare il bambino quando è assonnato ma non completamente addormentato. Anche se non funziona ogni volta, introduce dolcemente la capacità di addormentarsi nella culla."
+  },
+  {
+    "id": "2m-sleep-22",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Un ventilatore nella cameretta aiuta la circolazione dell'aria ed è stato associato a un minor rischio di SIDS. Un ventilatore a soffitto a bassa velocità funziona bene."
+  },
+  {
+    "id": "2m-sleep-23",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "\"Dormi quando il bambino dorme\" è un consiglio classico per un buon motivo. Anche brevi sonnellini ti aiutano a recuperare, e il bucato può davvero aspettare."
+  },
+  {
+    "id": "2m-sleep-24",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Se il tuo bambino si sveglia spesso per il riflesso di Moro (sobbalzo), una fasciatura aderente può aiutare a contenere quei movimenti involontari delle braccia e mantenerlo tranquillo."
+  },
+  {
+    "id": "2m-sleep-25",
+    "ageGroup": "2m",
+    "category": "sleep",
+    "text": "Ogni bambino ha esigenze di sonno diverse. Alcuni neonati dormono circa 14 ore al giorno mentre altri circa 17, ed entrambi possono essere perfettamente normali."
+  },
+  {
+    "id": "2m-feeding-01",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "I neonati si nutrono tipicamente 8-12 volte al giorno. Poppate frequenti sono normali e aiutano a stabilire la produzione di latte se allatti al seno."
+  },
+  {
+    "id": "2m-feeding-02",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Osserva i segnali di fame come il rooting, i movimenti mano-bocca e lo schiocco delle labbra. Il pianto è in realtà un segnale tardivo di fame."
+  },
+  {
+    "id": "2m-feeding-03",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se allatti al seno, un buon attacco non dovrebbe far male. Se senti pizzicore o dolore, stacca delicatamente con il dito e riprova."
+  },
+  {
+    "id": "2m-feeding-04",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "L'allattamento a grappolo — quando il bambino vuole mangiare molto frequentemente per diverse ore — è normale, soprattutto la sera. Aiuta ad aumentare la produzione di latte."
+  },
+  {
+    "id": "2m-feeding-05",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "I neonati allattati con formula prendono tipicamente {{2-3 ounces|60-90 ml}} per poppata ogni 3-4 ore. Lascia che il bambino guidi la quantità piuttosto che forzarlo a finire il biberon."
+  },
+  {
+    "id": "2m-feeding-06",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Conta i pannolini bagnati per sapere se il bambino riceve abbastanza latte. Dal quinto giorno, aspettati almeno 6 pannolini bagnati in 24 ore."
+  },
+  {
+    "id": "2m-feeding-07",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Fai fare il ruttino al bambino a metà e dopo ogni poppata. Prova a tenerlo in posizione eretta contro la spalla o seduto con supporto al mento."
+  },
+  {
+    "id": "2m-feeding-08",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Il rigurgito è molto comune e di solito non è preoccupante. Se il bambino cresce bene e sembra a suo agio, il rigurgito occasionale è normale."
+  },
+  {
+    "id": "2m-feeding-10",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Le feci dei bambini allattati al seno sono tipicamente gialle, granulose e molli. Questo è completamente normale e non è diarrea."
+  },
+  {
+    "id": "2m-feeding-11",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Gli scatti di crescita intorno alle 2-3 settimane e alle 6 settimane possono far desiderare al bambino di mangiare più spesso. Di solito si risolve in un giorno o due."
+  },
+  {
+    "id": "2m-feeding-12",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se l'allattamento al seno ti sembra opprimente, anche un allattamento parziale combinato con la formula offre benefici. L'importante è che il bambino sia nutrito."
+  },
+  {
+    "id": "2m-feeding-13",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "L'alimentazione con biberon a ritmo — tenendo il biberon più orizzontale e facendo pause frequenti — aiuta a prevenire la sovralimentazione ed è più facile per la digestione del bambino."
+  },
+  {
+    "id": "2m-feeding-14",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Le gocce di vitamina D (400 UI al giorno) sono raccomandate per tutti i bambini allattati al seno a partire dai primi giorni di vita, poiché il latte materno da solo non ne fornisce abbastanza."
+  },
+  {
+    "id": "2m-feeding-16",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se il bambino è agitato al seno la sera, non significa necessariamente scarsa produzione. Il flusso di latte è spesso più lento di notte, ma il contenuto di grassi è più alto."
+  },
+  {
+    "id": "2m-feeding-17",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Il latte materno cambia composizione durante il giorno e anche durante una singola poppata. Il primo latte è più leggero e idratante, mentre l'ultimo è più ricco e saziante."
+  },
+  {
+    "id": "2m-feeding-18",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se noti che il bambino ingoia troppo, si stacca dal seno o tossisce durante la fuoriuscita del latte, prova ad allattare semisdraiata per rallentare il flusso con la gravità."
+  },
+  {
+    "id": "2m-feeding-19",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "I bambini allattati con formula possono passare più tempo tra le poppate rispetto a quelli allattati al seno perché la formula richiede più tempo per essere digerita. Entrambi i ritmi sono sani."
+  },
+  {
+    "id": "2m-feeding-20",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se stai tornando al lavoro e prevedi di tirare il latte, inizia a fare pratica con il tiralatte qualche settimana prima così tu e il bambino potete adattarvi alla routine."
+  },
+  {
+    "id": "2m-feeding-21",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Una consulente per l'allattamento può essere incredibilmente utile se allattare è doloroso o frustrante. Verifica se questo supporto è disponibile tramite il tuo servizio sanitario."
+  },
+  {
+    "id": "2m-feeding-22",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Il peso del bambino può calare leggermente nei primi giorni dopo la nascita, poi recuperare entro 10-14 giorni. Il pediatra monitorerà questo attentamente."
+  },
+  {
+    "id": "2m-feeding-23",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Non scaldare mai il latte materno o la formula al microonde — crea punti caldi che possono bruciare la bocca del bambino. Scalda i biberon in una ciotola di acqua calda."
+  },
+  {
+    "id": "2m-feeding-24",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Se il bambino sembra avere gas dopo le poppate, prova a tenerlo in posizione eretta per 10-15 minuti. Anche un delicato massaggio alla pancia in senso orario può aiutare."
+  },
+  {
+    "id": "2m-feeding-25",
+    "ageGroup": "2m",
+    "category": "feeding",
+    "text": "Nutrire il bambino a richiesta piuttosto che con un orario rigido è raccomandato nelle prime settimane. Il tuo bambino è il miglior giudice di quando ha fame."
+  },
+  {
+    "id": "2m-health-01",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Le vaccinazioni sono uno dei modi più importanti per proteggere il tuo bambino. Parla con il pediatra del calendario raccomandato per restare in regola."
+  },
+  {
+    "id": "2m-health-02",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Per un neonato sotto i 3 mesi, una temperatura rettale di {{100.4°F|38°C}} o superiore è un'emergenza. Chiama immediatamente il pediatra."
+  },
+  {
+    "id": "2m-health-03",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Mantieni il moncone del cordone ombelicale pulito e asciutto. Di solito cade entro 1-3 settimane. Piega il pannolino sotto per far circolare l'aria."
+  },
+  {
+    "id": "2m-health-04",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "La crosta lattea — chiazze squamose e giallastre sul cuoio capelluto — è innocua e comune. Spazzolare delicatamente con una spazzola morbida dopo il bagnetto può aiutare."
+  },
+  {
+    "id": "2m-health-05",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Acne neonatale, piccoli puntini bianchi e pelle a chiazze sono tutti normali nelle prime settimane. La pelle del bambino si sta adattando alla vita fuori dal pancione."
+  },
+  {
+    "id": "2m-health-06",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Un termometro rettale dà la lettura più accurata per i bambini sotto i 3 mesi. Tienine uno nel kit per la cura del bambino."
+  },
+  {
+    "id": "2m-health-07",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Limita l'esposizione del neonato a luoghi affollati e visitatori malati nei primi 2 mesi mentre il suo sistema immunitario si sta ancora sviluppando."
+  },
+  {
+    "id": "2m-health-08",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "L'ittero neonatale (pelle giallastra) è comune e di solito si risolve da solo. Se l'ingiallimento sembra estendersi o intensificarsi, informane il medico."
+  },
+  {
+    "id": "2m-health-09",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Appunta le domande che hai per il pediatra tra una visita e l'altra così non le dimentichi. Nessuna domanda è troppo piccola quando si tratta della salute del tuo bambino."
+  },
+  {
+    "id": "2m-health-10",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Il tummy time da sveglio aiuta a prevenire le zone piatte sulla testa del bambino. Se noti un appiattimento persistente su un lato, parlane al prossimo controllo."
+  },
+  {
+    "id": "2m-health-11",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "È normale che i neonati starnutiscano frequentemente. Stanno liberando le loro piccole vie nasali, non necessariamente si stanno ammalando."
+  },
+  {
+    "id": "2m-health-12",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Usa una peretta o un aspiratore nasale con gocce di soluzione fisiologica per liberare delicatamente il nasino chiuso. I neonati respirano obbligatoriamente dal naso e possono avere difficoltà con la congestione."
+  },
+  {
+    "id": "2m-health-13",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Lavati le mani frequentemente prima di maneggiare il bambino, e chiedi ai visitatori di fare lo stesso. È uno dei modi migliori per prevenire le malattie."
+  },
+  {
+    "id": "2m-health-14",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Una leggera irritabilità dopo i vaccini è normale. Conforta il bambino con coccole extra e chiedi al pediatra un antidolorifico per neonati se necessario."
+  },
+  {
+    "id": "2m-health-15",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Il singhiozzo è molto comune nei neonati e non li disturba come disturba gli adulti. Di solito passa da solo."
+  },
+  {
+    "id": "2m-health-16",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "I neonati non hanno bisogno di bagnetti quotidiani. Due o tre volte a settimana sono sufficienti, perché bagni frequenti possono seccare la loro pelle delicata."
+  },
+  {
+    "id": "2m-health-17",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Se il bambino ha un dotto lacrimale ostruito (occhio lacrimoso o leggermente crostoso), massaggia delicatamente l'angolo interno dell'occhio verso il basso alcune volte al giorno. La maggior parte si risolve entro i 12 mesi."
+  },
+  {
+    "id": "2m-health-18",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Taglia le unghie del bambino mentre dorme per evitare tagli. Usa una limetta per neonati o piccole forbicine e taglia dritto per prevenire le unghie incarnite."
+  },
+  {
+    "id": "2m-health-19",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Se il bambino rigurgita con forza o sembra soffrire dopo la poppata, parlane al pediatra. C'è differenza tra rigurgito normale e reflusso che richiede attenzione."
+  },
+  {
+    "id": "2m-health-20",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Usa un detersivo per il bucato senza profumo e senza coloranti per i vestiti e la biancheria del bambino. La sua pelle è sensibile e può facilmente reagire a sostanze chimiche aggressive."
+  },
+  {
+    "id": "2m-health-21",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "La fontanella del tuo bambino è normale e può essere toccata delicatamente. Potrebbe pulsare leggermente, è solo il flusso sanguigno sottostante. Una fontanella infossata o sporgente deve essere controllata dal medico."
+  },
+  {
+    "id": "2m-health-23",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Chiedi a chiunque starà vicino al neonato di assicurarsi che le proprie vaccinazioni siano aggiornate, soprattutto pertosse e influenza. Questa protezione \"a bozzolo\" aiuta a tenere il bambino al sicuro."
+  },
+  {
+    "id": "2m-health-24",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "Pelle secca e desquamazione nelle prime settimane sono normali, soprattutto per i bambini nati dopo il termine. Una crema idratante senza profumo può aiutare se sembra dare fastidio."
+  },
+  {
+    "id": "2m-health-25",
+    "ageGroup": "2m",
+    "category": "health",
+    "text": "La respirazione del bambino può sembrare irregolare, con respiri rapidi seguiti da pause di pochi secondi. Questa respirazione periodica è normale per i neonati finché non diventano blu."
+  },
+  {
+    "id": "2m-play-01",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Il tummy time è l'\"esercizio\" più importante per il tuo neonato. Inizia con 1-2 minuti alcune volte al giorno e aumenta gradualmente man mano che si rafforza."
+  },
+  {
+    "id": "2m-play-02",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Se il bambino non ama il tummy time sul pavimento, prova ad adagiarlo sul tuo petto mentre sei semisdraiata. La vicinanza al tuo viso lo rende più piacevole."
+  },
+  {
+    "id": "2m-play-03",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Muovi lentamente il viso da un lato all'altro mentre il bambino ti guarda. Questo aiuta a rafforzare i muscoli oculari e incoraggia la rotazione della testa."
+  },
+  {
+    "id": "2m-play-04",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Racconta la tua giornata al bambino: \"Adesso ti cambiamo il pannolino. Ecco l'acqua calda.\" Questo parlare costante costruisce le basi del linguaggio."
+  },
+  {
+    "id": "2m-play-05",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Muovi delicatamente le gambine del bambino come se pedalasse mentre è sdraiato sulla schiena. È divertente per lui e può anche aiutare a liberare il gas."
+  },
+  {
+    "id": "2m-play-06",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Metti un piccolo specchio infrangibile vicino al bambino durante il tummy time. Anche se non si riconosce ancora, i visi lo affascinano."
+  },
+  {
+    "id": "2m-play-07",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Canta filastrocche o canzoncine semplici. Il ritmo e la ripetizione sono meravigliosi per lo sviluppo cerebrale del bambino, e ama il suono della tua voce."
+  },
+  {
+    "id": "2m-play-08",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Lascia che il bambino afferri il tuo dito e tiralo delicatamente verso la posizione seduta. Questo mini \"allenamento\" rafforza il core (sostieni sempre la testa)."
+  },
+  {
+    "id": "2m-play-09",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Prova diverse texture — una copertina morbida, una sciarpa di seta, un tessuto di spugna — sulle mani e sulle guance del bambino per una delicata esplorazione sensoriale."
+  },
+  {
+    "id": "2m-play-10",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Porta il bambino fuori per aria fresca e un cambio di scenario. La luce naturale, i suoni e la brezza leggera offrono una meravigliosa stimolazione sensoriale."
+  },
+  {
+    "id": "2m-play-11",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Appendi una giostrina semplice sopra il fasciatoio o l'area gioco. Il bambino si divertirà a guardare il movimento delicato e i colori contrastanti."
+  },
+  {
+    "id": "2m-play-12",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Leggi un libro cartonato al tuo bambino. Non è mai troppo presto! Il suono della tua voce e il contatto ravvicinato sono ciò che conta di più adesso."
+  },
+  {
+    "id": "2m-play-13",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Massaggia delicatamente braccia, gambe e pancino del bambino con una lozione adatta ai neonati. Questo tocco rilassante favorisce la consapevolezza corporea e il legame."
+  },
+  {
+    "id": "2m-play-14",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Fai espressioni facciali esagerate — grandi sorrisi, occhi spalancati, bocca aperta — vicino al viso del bambino. È predisposto a studiare e poi imitare i volti."
+  },
+  {
+    "id": "2m-play-15",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Durante il tummy time, metti un asciugamano arrotolato sotto il petto del bambino per un supporto extra. Questo leggero rialzo può rendere la posizione più confortevole."
+  },
+  {
+    "id": "2m-play-16",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Batti delicatamente le mani del bambino insieme cantando una canzone ritmica. Questo gli introduce il movimento coordinato e la gioia del ritmo."
+  },
+  {
+    "id": "2m-play-17",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Prova a tenere il bambino in posizioni diverse — sull'avambraccio a pancia in giù, in posizione eretta sulla spalla, o in grembo. Ognuna gli offre una nuova prospettiva sul mondo."
+  },
+  {
+    "id": "2m-play-18",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Agita dolcemente un sonaglio vicino a un orecchio del bambino, poi l'altro. Si eserciterà a girarsi verso il suono, rafforzando sia i muscoli del collo che le capacità di ascolto."
+  },
+  {
+    "id": "2m-play-19",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Metti il bambino sulla schiena sotto una palestrina con giocattoli pendenti. Anche prima di poterli raggiungere, si divertirà a guardare i colori e il movimento."
+  },
+  {
+    "id": "2m-play-20",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Prova a dondolarti dolcemente con il bambino in braccio ascoltando diversi tipi di musica. La musica lenta può calmarlo mentre quella vivace può renderlo più attento."
+  },
+  {
+    "id": "2m-play-21",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Lascia il bambino su una copertina frusciante o un tappetino con texture. I suoni e le sensazioni inaspettati quando muove braccia e gambe lo tengono curioso."
+  },
+  {
+    "id": "2m-play-22",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Durante il bagnetto, versa delicatamente acqua calda sulla pancia e sulle gambe del bambino descrivendo quello che fai. Il bagnetto è un meraviglioso gioco sensoriale."
+  },
+  {
+    "id": "2m-play-23",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Sussurra, poi parla normalmente, poi usa una voce dolce e cantilenante. Variare il tono e il volume aiuta il bambino a conoscere la gamma del linguaggio umano."
+  },
+  {
+    "id": "2m-play-24",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Prova un breve tummy time su una palla da yoga, tenendo il bambino saldamente mentre dondoli delicatamente la palla. Il movimento aggiunge una sfida divertente al rafforzamento del collo."
+  },
+  {
+    "id": "2m-play-25",
+    "ageGroup": "2m",
+    "category": "play",
+    "text": "Porta il bambino rivolto verso di te in un marsupio o in braccio e descrivi quello che vedi intorno. Ambienti nuovi, anche solo una stanza diversa, offrono una stimolazione meravigliosa attraverso la tua voce e la sua visione periferica."
+  },
+  {
+    "id": "2m-safety-01",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Non lasciare mai il bambino incustodito sul fasciatoio, letto o divano — anche se non sa ancora rotolarsi. Potrebbe succedere per la prima volta quando meno te lo aspetti."
+  },
+  {
+    "id": "2m-safety-02",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Assicurati che il seggiolino auto sia rivolto all'indietro e installato con la corretta inclinazione. Le cinghie devono essere aderenti con la clip pettorale all'altezza delle ascelle."
+  },
+  {
+    "id": "2m-safety-03",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Mantieni la culla vuota: niente paracolpi, cuscini, coperte o peluche. Un lenzuolo con angoli su un materasso rigido è tutto ciò che serve al bambino per dormire in sicurezza."
+  },
+  {
+    "id": "2m-safety-04",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Controlla la temperatura dell'acqua del bagnetto con l'interno del polso o il gomito prima di immergere il bambino. La temperatura ideale è circa {{98-100°F|37-38°C}}."
+  },
+  {
+    "id": "2m-safety-05",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Non lasciare mai il bambino solo nell'acqua o vicino all'acqua, nemmeno per un momento. I bambini possono annegare in appena {{1 inch|2.5 cm}} d'acqua."
+  },
+  {
+    "id": "2m-safety-06",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Evita di mettere qualsiasi cosa intorno al collo del bambino, incluse collanine, clip per ciuccio con cordini lunghi o vestiti con cappuccio con cordoncini."
+  },
+  {
+    "id": "2m-safety-07",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Rimuovi gli inserti per la testa del seggiolino auto quando la testa del bambino non ciondola più di lato, a meno che l'inserto non sia originale. Gli inserti aftermarket non sono testati negli incidenti."
+  },
+  {
+    "id": "2m-safety-08",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Se hai animali domestici, sorvegliati sempre vicino al bambino. Anche gli animali docili possono accidentalmente far male a un neonato."
+  },
+  {
+    "id": "2m-safety-09",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Assicurati che i rilevatori di fumo e monossido di carbonio funzionino su ogni piano della casa, specialmente vicino alle zone notte."
+  },
+  {
+    "id": "2m-safety-10",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Se qualcuno fuma, tieni il bambino lontano dal fumo e chiedi ai fumatori di cambiarsi i vestiti prima di prendere in braccio il bambino. Il fumo di terza mano è una preoccupazione reale."
+  },
+  {
+    "id": "2m-safety-11",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Non usare posizionatori per il sonno, cunei o lettini inclinati. Le linee guida per il sonno sicuro raccomandano solo una superficie rigida e piatta."
+  },
+  {
+    "id": "2m-safety-12",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Sostieni sempre la testa e il collo del bambino quando lo prendi in braccio o lo tieni. I muscoli del collo non sono ancora abbastanza forti per tenere la testa stabile."
+  },
+  {
+    "id": "2m-safety-13",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Quando usi un marsupio o una fascia, assicurati che il viso del bambino sia sempre visibile e il mento sia sollevato dal petto per mantenere le vie aeree libere."
+  },
+  {
+    "id": "2m-safety-14",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Tieni piccoli oggetti, monete e pile a bottone fuori dalla portata. Inizia a pensare alla messa in sicurezza della casa — il bambino sarà mobile prima di quanto pensi."
+  },
+  {
+    "id": "2m-safety-15",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Smetti di fasciare il bambino appena mostra segni di tentare di rotolarsi, anche se succede prima dei 2 mesi. Rotolarsi fasciati aumenta il rischio di SIDS."
+  },
+  {
+    "id": "2m-safety-16",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Tieni una mano sul bambino in ogni momento durante il cambio pannolino. Prepara tutto il necessario a portata di mano prima di iniziare così non devi mai allontanarti."
+  },
+  {
+    "id": "2m-safety-17",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Evita la luce solare diretta sulla pelle del neonato. Usa l'ombra, la capote del passeggino o vestiti leggeri che coprano braccia e gambe all'aperto."
+  },
+  {
+    "id": "2m-safety-18",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Non scaldare mai il biberon del bambino al microonde. Il riscaldamento non uniforme può creare punti caldi pericolosi anche quando l'esterno del biberon sembra fresco."
+  },
+  {
+    "id": "2m-safety-19",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Se il bambino dorme in una culla navicella, controlla regolarmente il limite di peso. Molte navicelle hanno un limite più basso di quanto pensi, e il bambino cresce velocemente."
+  },
+  {
+    "id": "2m-safety-20",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Controlla che tutte le sbarre della culla non siano distanti più di {{2 3/8 inches|6 cm}}, circa la larghezza di una lattina. Spazi più larghi comportano rischio di intrappolamento."
+  },
+  {
+    "id": "2m-safety-21",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Non addormentarti con il bambino su un divano, poltrona o reclinabile. Queste superfici hanno fessure dove il bambino può rimanere intrappolato e soffocare."
+  },
+  {
+    "id": "2m-safety-22",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Assicurati che i vestiti del bambino siano della misura giusta. Tessuti larghi, cordini lunghi o vestiti sovradimensionati possono diventare un rischio di soffocamento durante il sonno."
+  },
+  {
+    "id": "2m-safety-23",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Registra il seggiolino auto e la culla del bambino presso il produttore così riceverai direttamente eventuali avvisi di richiamo."
+  },
+  {
+    "id": "2m-safety-24",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Quando posizioni il bambino nel seggiolino auto, assicurati che le cinghie siano all'altezza delle spalle o sotto per un seggiolino rivolto all'indietro e che siano piatte senza torsioni."
+  },
+  {
+    "id": "2m-safety-25",
+    "ageGroup": "2m",
+    "category": "safety",
+    "text": "Tieni medicinali, vitamine e crema per il cambio lontani dalla culla e dall'area fasciatoio. Anche piccole quantità di certi prodotti possono essere nocive se ingerite."
+  }
+]

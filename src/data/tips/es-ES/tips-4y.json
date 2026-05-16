@@ -1,0 +1,512 @@
+[
+  {
+    "id": "4y-development-01",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo probablemente puede contar historias simples con principio, medio y fin. Hazle preguntas abiertas como \"¿Qué pasó después?\" para estimular sus habilidades narrativas."
+  },
+  {
+    "id": "4y-development-02",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a mostrar interés en escribir letras o su nombre. Déjalo practicar en papel grande con crayones gruesos o marcadores — los garabatos e intentos son parte del aprendizaje."
+  },
+  {
+    "id": "4y-development-03",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo está desarrollando un sentido del humor y puede amar bromas tontas y juegos de palabras. Reír juntos fortalece tu vínculo con él y desarrolla habilidades del lenguaje."
+  },
+  {
+    "id": "4y-development-05",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo puede tener un amigo imaginario. Esto es saludable e indica desarrollo cognitivo avanzado, creatividad y procesamiento emocional."
+  },
+  {
+    "id": "4y-development-06",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Contar hasta 10 o más allá, reconocer algunos números y entender \"más\" y \"menos\" son habilidades matemáticas típicas a esta edad."
+  },
+  {
+    "id": "4y-development-07",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo está aprendiendo a dibujar personas y puede incluir una cabeza, cuerpo, brazos o piernas. Para su cuarto cumpleaños, dibujar una persona con 3 o más partes del cuerpo es un hito común."
+  },
+  {
+    "id": "4y-development-08",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Las amistades se vuelven más significativas ahora. Tu hijo puede tener un amigo preferido y comenzar a navegar la complejidad de las relaciones sociales."
+  },
+  {
+    "id": "4y-development-09",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo entiende las reglas básicas y la justicia. Usa juegos y actividades familiares para reforzar que las reglas se aplican a todos por igual."
+  },
+  {
+    "id": "4y-development-10",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Cortar en línea recta con tijeras, abotonarse la camisa y usar un cierre demuestran que las habilidades motoras finas están madurando. Celebra el esfuerzo."
+  },
+  {
+    "id": "4y-development-11",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo a veces puede confundir la fantasía con la realidad. Ayúdalo suavemente a distinguir entre lo imaginario y lo real sin desalentar su imaginación."
+  },
+  {
+    "id": "4y-development-12",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Anima a tu hijo a resolver pequeños problemas de forma independiente antes de intervenir. \"¿Qué crees que deberíamos intentar?\" construye confianza y pensamiento crítico."
+  },
+  {
+    "id": "4y-development-13",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo probablemente puede clasificar objetos por múltiples atributos — color Y tamaño, por ejemplo. Clasificar ropa o juguetes juntos lo hace divertido y práctico."
+  },
+  {
+    "id": "4y-development-14",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "La regulación emocional aún está en desarrollo. Ayuda a tu hijo a nombrar sentimientos complejos como \"decepcionado\" o \"celoso\" — un vocabulario emocional rico lo ayuda a afrontar."
+  },
+  {
+    "id": "4y-development-15",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tu hijo puede mostrar interés en letras y lectura temprana. Sigue su iniciativa — señala palabras en carteles y déjalo \"leer\" libros familiares para ti."
+  },
+  {
+    "id": "4y-sleep-02",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Tu hijo puede intentar negociar la hora de dormir sin fin. Establece una rutina predecible y mantenla con amor — \"Leemos dos libros, luego apagamos la luz\" proporciona claridad."
+  },
+  {
+    "id": "4y-sleep-03",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Las pesadillas pueden ser más vívidas a esta edad a medida que la imaginación se expande. Consuela a tu hijo y habla brevemente sobre el sueño sin obsesionarse."
+  },
+  {
+    "id": "4y-sleep-04",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Si tu hijo le teme a la oscuridad, busquen soluciones juntos — una luz nocturna especial, un peluche \"amigo valiente\" o una rápida inspección de la habitación pueden ayudar."
+  },
+  {
+    "id": "4y-sleep-05",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "El tiempo tranquilo antes de dormir es tan importante como el sueño mismo. Leer, estiramientos suaves o conversación tranquila ayudan al cerebro a hacer la transición al descanso."
+  },
+  {
+    "id": "4y-sleep-06",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Si tu hijo se despierta frecuentemente por la noche, primero verifica las causas ambientales — temperatura de la habitación, ruido, luz o un colchón incómodo."
+  },
+  {
+    "id": "4y-sleep-07",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Una hora de despertar consistente es tan importante como una hora de dormir consistente. Intenta mantener los despertares matutinos dentro de 30 minutos de la misma hora diariamente."
+  },
+  {
+    "id": "4y-sleep-08",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Tu hijo puede comenzar a resistirse a la hora de dormir diciendo que no está cansado. Una rutina relajante ayuda al cuerpo a desacelerarse aunque la mente se sienta alerta."
+  },
+  {
+    "id": "4y-sleep-10",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Si tu hijo ha dejado la siesta recientemente, podrías notar irritabilidad a última hora de la tarde. Un breve período de descanso con un libro puede ayudar a compensar."
+  },
+  {
+    "id": "4y-sleep-11",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Los ejercicios de respiración profunda antes de dormir pueden ayudar a tu hijo a aprender a calmarse. Prueba \"oler la flor, soplar la vela\" como una técnica simple."
+  },
+  {
+    "id": "4y-sleep-12",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Evita alimentos azucarados cerca de la hora de dormir. Si tu hijo necesita un bocadillo antes de acostarse, elige algo ligero como un plátano o un pequeño puñado de galletas."
+  },
+  {
+    "id": "4y-sleep-13",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Tu hijo puede intentar dilatar la rutina pidiendo más agua o idas al baño. Permite una ida al baño y una pequeña taza de agua antes de acostarse, luego mantén el límite con cariño."
+  },
+  {
+    "id": "4y-sleep-14",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Compartir \"la mejor parte del día\" a la hora de dormir le da a tu hijo algo positivo en lo que pensar mientras se duerme y fortalece tu conexión con él."
+  },
+  {
+    "id": "4y-sleep-15",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Si tu hijo constantemente lucha contra la hora de dormir, puede que no esté lo suficientemente cansado. Asegúrate de que tenga mucha actividad física durante el día."
+  },
+  {
+    "id": "4y-feeding-01",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Tu hijo puede usar un cuchillo de mantequilla para untar alimentos suaves y ayudar a cortar alimentos tiernos. Estas habilidades culinarias construyen confianza y control motor fino."
+  },
+  {
+    "id": "4y-feeding-02",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Habla sobre la comida en términos de lo que hace por el cuerpo — \"Las zanahorias ayudan a tu vista\" o \"La proteína hace que tus músculos sean fuertes\" — para crear conciencia alimentaria."
+  },
+  {
+    "id": "4y-feeding-03",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Si tu hijo rechaza un grupo de alimentos completo, encuentra alternativas creativas. ¿No quiere comer verduras? Pruébalas en batidos, panecillos o como parte de un plato con dip."
+  },
+  {
+    "id": "4y-feeding-04",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Tu hijo ahora puede ayudar con tareas de cocina más complejas — revolver la masa, romper huevos con ayuda o espolvorear ingredientes. Cocinar juntos fomenta el entusiasmo por comer."
+  },
+  {
+    "id": "4y-feeding-05",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Modela los hábitos alimentarios que quieres que tu hijo desarrolle. Él nota e imita cómo hablas sobre la comida y qué eliges comer."
+  },
+  {
+    "id": "4y-feeding-06",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "La fibra es importante para la digestión. Ofrece pan integral, avena, bayas y alubias regularmente para mantener todo funcionando sin problemas."
+  },
+  {
+    "id": "4y-feeding-07",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Enseña a tu hijo a reconocer señales de hambre y saciedad. \"¿Tu barriguita aún tiene hambre?\" es mejor que \"Termina tu plato.\""
+  },
+  {
+    "id": "4y-feeding-08",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Cultivar un pequeño huerto de hierbas o germinar semillas enseña a tu hijo de dónde viene la comida. A los niños les encanta comer cosas que cultivaron ellos mismos."
+  },
+  {
+    "id": "4y-feeding-09",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Prueba los \"puentes alimentarios\" — si a tu hijo le gustan las patatas fritas, introduce boniatos al horno. Usa alimentos que disfruta como puente hacia nuevos alimentos similares."
+  },
+  {
+    "id": "4y-feeding-10",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Tu hijo necesita aproximadamente 2 a 2.5 tazas de lácteos o equivalente de calcio por día. Si no le gusta la leche, el yogur, el queso y los alimentos fortificados con calcio también cuentan."
+  },
+  {
+    "id": "4y-feeding-11",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Las comidas deben durar aproximadamente 20-30 minutos. Si tu hijo no ha comido después de eso, termina la comida con calma. Comerá en la próxima oportunidad."
+  },
+  {
+    "id": "4y-feeding-12",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Anima a tu hijo a probar un bocado de nuevos alimentos sin forzar. Con el tiempo, este enfoque de exposición suave funciona mejor que la presión."
+  },
+  {
+    "id": "4y-feeding-13",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Los ácidos grasos omega-3 apoyan el desarrollo cerebral. Incluye pescado, nueces, semillas de chía o linaza en la dieta de tu hijo cuando sea posible."
+  },
+  {
+    "id": "4y-feeding-14",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Evita usar la comida como consuelo o recompensa. En su lugar, enseña a tu hijo otras formas de celebrar o sentirse mejor — un abrazo, un juego o tiempo juntos."
+  },
+  {
+    "id": "4y-feeding-15",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Tu hijo ahora puede beber de una taza abierta con habilidad. Ofrece agua durante todo el día y mantén las bebidas azucaradas como algo ocasional."
+  },
+  {
+    "id": "4y-health-01",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Tu hijo puede necesitar importantes refuerzos de vacunas durante esta etapa. Habla con tu pediatra para asegurar que las inmunizaciones estén al día."
+  },
+  {
+    "id": "4y-health-04",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Si tu hijo se queja de dolores de crecimiento en las piernas por la noche, un masaje suave y una compresa tibia generalmente ayudan. Estos dolores son normales y temporales."
+  },
+  {
+    "id": "4y-health-05",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Enseña a tu hijo a lavarse las manos correctamente: mojar, enjabonar, frotar durante 20 segundos, enjuagar y secar. Esto es especialmente importante antes de las comidas y después de ir al baño."
+  },
+  {
+    "id": "4y-health-06",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Los primeros molares permanentes de tu hijo llegarán alrededor de los 6 años. Cuando salgan, pregunta a tu dentista sobre selladores dentales para protegerlos de las caries."
+  },
+  {
+    "id": "4y-health-07",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Tu hijo puede comenzar a experimentar alergias estacionales. Mucosidad clara constante, estornudos y ojos con picazón que persisten son señales que vale la pena consultar con tu doctor."
+  },
+  {
+    "id": "4y-health-08",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "La conjuntivitis se propaga fácilmente entre los niños. Enseña a tu hijo a no tocarse los ojos y a usar su propia toalla."
+  },
+  {
+    "id": "4y-health-09",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Si tu hijo tiene asma, trabaja con tu pediatra en un plan de acción. Conoce la diferencia entre medicamentos controladores diarios e inhaladores de rescate."
+  },
+  {
+    "id": "4y-health-10",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Verifica la postura de tu hijo durante las actividades. Una silla y mesa de tamaño infantil resistentes ayudan a prevenir que se encorve mientras dibuja o come."
+  },
+  {
+    "id": "4y-health-11",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Los piojos son comunes en entornos grupales y no tienen nada que ver con la higiene. Enseña a tu hijo a no compartir sombreros, cepillos o accesorios para el cabello."
+  },
+  {
+    "id": "4y-health-12",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Tu hijo puede comenzar a aprender a sonarse la nariz de forma efectiva. Practica usar pañuelos y desecharlos — es una habilidad que reduce la propagación de gérmenes."
+  },
+  {
+    "id": "4y-health-13",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Asegúrate de que tu hijo pase suficiente tiempo al aire libre. La luz natural del sol apoya la producción de vitamina D, la regulación del ánimo y los ciclos de sueño saludables."
+  },
+  {
+    "id": "4y-health-14",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Si tu hijo rechina los dientes por la noche, menciónalo en tu próxima cita dental. Generalmente es inofensivo pero vale la pena monitorearlo."
+  },
+  {
+    "id": "4y-health-15",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Mantente al día con la vacuna anual contra la gripe. Los niños en entornos de cuidado grupal son especialmente vulnerables durante la temporada de gripe."
+  },
+  {
+    "id": "4y-play-01",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Tu hijo ahora puede manejar proyectos de construcción más complejos. Construir con ladrillos entrelazados o bloques siguiendo instrucciones simples desarrolla razonamiento espacial y paciencia."
+  },
+  {
+    "id": "4y-play-02",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Introduce juegos de cartas simples como \"Ve a pescar\" o juegos de memoria. Enseñan reconocimiento de números, estrategia y habilidades sociales a la vez."
+  },
+  {
+    "id": "4y-play-03",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "El juego al aire libre es esencial — trepar, correr y columpiarse desarrollan fuerza, coordinación y evaluación de riesgos. Los niños en edad preescolar se benefician de estar activos durante todo el día, así que procura que se muevan mucho."
+  },
+  {
+    "id": "4y-play-04",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Tu hijo puede disfrutar montando \"espectáculos\" o funciones de títeres. Este juego dramático construye confianza, habilidades del lenguaje y expresión emocional."
+  },
+  {
+    "id": "4y-play-05",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Experimentos científicos simples — mezclar bicarbonato de sodio y vinagre, cultivar semillas o explorar imanes — despiertan la curiosidad y enseñan causa y efecto."
+  },
+  {
+    "id": "4y-play-06",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Anima a tu hijo a dibujar o pintar sus sentimientos. El arte es una salida poderosa para emociones para las que aún no tiene palabras."
+  },
+  {
+    "id": "4y-play-07",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Tu hijo está listo para juegos con reglas simples como Simón Dice o Luz Roja Luz Verde. Estos desarrollan habilidades de escucha y control de impulsos."
+  },
+  {
+    "id": "4y-play-08",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Jugar con tazas medidoras, cucharas y agua enseña conceptos matemáticos tempranos como volumen, más/menos y estimación de manera práctica."
+  },
+  {
+    "id": "4y-play-09",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Tu hijo puede disfrutar creando con materiales reciclados — tubos de cartón, cajas de huevos, tapas de botellas. Este juego abierto despierta creatividad e ingenio."
+  },
+  {
+    "id": "4y-play-10",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Andar en una bicicleta de equilibrio o una bicicleta con rueditas de entrenamiento desarrolla coordinación y confianza que se transferirá a andar sin apoyo más adelante."
+  },
+  {
+    "id": "4y-play-11",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Juega \"Veo Veo\" durante paseos en auto o caminatas. Agudiza las habilidades de observación y el vocabulario mientras mantiene a tu hijo entretenido."
+  },
+  {
+    "id": "4y-play-12",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Plantar semillas y verlas crecer enseña paciencia, responsabilidad y ciencia básica. Deja que tu hijo riegue su planta diariamente."
+  },
+  {
+    "id": "4y-play-13",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Las tarjetas de enhebrado y actividades de ensartar cuentas desarrollan la precisión motora fina que tu hijo necesitará para escribir. Hazlo divertido con materiales coloridos."
+  },
+  {
+    "id": "4y-play-14",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Crea un mapa del tesoro de tu patio o casa. Seguir un mapa introduce conceptos espaciales como izquierda, derecha, cerca y lejos."
+  },
+  {
+    "id": "4y-play-15",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Los juegos cooperativos donde todos trabajan hacia un objetivo compartido enseñan trabajo en equipo y reducen el estrés de la competencia para niños que aún están aprendiendo a perder con gracia."
+  },
+  {
+    "id": "4y-safety-01",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Mantén a tu hijo en un asiento de auto orientado hacia adelante con arnés el mayor tiempo posible, hasta los límites máximos de altura y peso del asiento. La mayoría de los niños a esta edad aún no han superado el arnés."
+  },
+  {
+    "id": "4y-safety-02",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Enseña a tu hijo a siempre pedirle permiso a un adulto antes de acercarse al agua. Incluso los niños que saben nadar nunca deben estar en o cerca del agua sin supervisión."
+  },
+  {
+    "id": "4y-safety-03",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Practica qué hacer si tu hijo se separa de ti en una tienda: quedarse donde está, buscar a un empleado de la tienda y nunca salir del edificio."
+  },
+  {
+    "id": "4y-safety-04",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Tu hijo puede comenzar a aprender su dirección de casa. Practícala regularmente como una canción o rima para que la memorice."
+  },
+  {
+    "id": "4y-safety-05",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Enseña a tu hijo el concepto de \"adultos seguros\" — padres, maestros, policías — a quienes puede acudir por ayuda. Evita el término vago \"peligro de extraños.\""
+  },
+  {
+    "id": "4y-safety-06",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Tu hijo siempre debe usar casco para andar en bicicleta, patineta y patines. Déjalo ayudar a elegir uno que le guste para que esté más dispuesto a usarlo."
+  },
+  {
+    "id": "4y-safety-07",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "La conciencia de seguridad en la cocina crece a esta edad. Enseña a tu hijo que la estufa, el horno y los objetos afilados son para adultos, y modela un comportamiento seguro en la cocina."
+  },
+  {
+    "id": "4y-safety-08",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Asegúrate de que tu hijo sepa que no debe abrir la puerta principal sin un adulto presente. Un pestillo alto o un cerrojo de cadena añade una barrera física."
+  },
+  {
+    "id": "4y-safety-09",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Repasa las reglas del parque infantil: bajar por los toboganes con los pies primero, esperar su turno en los columpios y mantener distancia segura de los niños que se están columpiando."
+  },
+  {
+    "id": "4y-safety-10",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Si tu hijo usa una tableta o dispositivo, configura controles parentales y mantén las pantallas en espacios compartidos. Enséñale que nunca debe compartir información personal en línea."
+  },
+  {
+    "id": "4y-safety-11",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Enseña a tu hijo sobre seguridad corporal usando nombres anatómicos correctos. Los niños que conocen las palabras adecuadas pueden comunicar mejor si algo anda mal."
+  },
+  {
+    "id": "4y-safety-12",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Tu hijo tiene la edad suficiente para practicar cómo llamar a servicios de emergencia en un teléfono y saber qué decir: su nombre, que necesita ayuda y su dirección."
+  },
+  {
+    "id": "4y-safety-13",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Las puertas del garaje, herramientas eléctricas y áreas de taller siempre deben estar prohibidas sin supervisión de un adulto. Usa cerraduras o alarmas si es necesario."
+  },
+  {
+    "id": "4y-safety-14",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Cuando viajan en auto, tu hijo siempre debe ir en el asiento trasero. El asiento trasero es el lugar más seguro para todos los niños menores de 13 años."
+  },
+  {
+    "id": "4y-safety-15",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Enseña a tu hijo a detenerse al borde de cada entrada de autos y acera. Practica mirando a la izquierda, a la derecha y luego a la izquierda nuevamente antes de cruzar juntos."
+  }
+]

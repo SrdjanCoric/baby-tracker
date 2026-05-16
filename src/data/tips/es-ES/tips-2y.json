@@ -1,0 +1,512 @@
+[
+  {
+    "id": "2y-development-01",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "El vocabulario de tu hijo está explotando, y puede aprender varias palabras nuevas cada semana. Lean juntos todos los días y nombra todo lo que vean."
+  },
+  {
+    "id": "2y-development-02",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Las frases de dos palabras como \"camión grande\" o \"quiero galleta\" son típicas a esta edad. Expande sus palabras diciendo \"¡Sí, ese es un camión grande y rojo!\""
+  },
+  {
+    "id": "2y-development-03",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a mostrar interés en aprender a ir al baño. Observa señales de preparación como permanecer seco por períodos más largos o avisarte cuando el pañal está mojado."
+  },
+  {
+    "id": "2y-development-04",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Saltar con ambos pies separados del suelo es un hito entre los 18 y 24 meses. Intenta saltar juntos en una superficie suave para practicar."
+  },
+  {
+    "id": "2y-development-05",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tu hijo puede alinear juguetes, ordenar objetos por color o agrupar elementos similares. Estas primeras habilidades matemáticas se desarrollan naturalmente a través del juego."
+  },
+  {
+    "id": "2y-development-06",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "El juego paralelo, donde tu hijo juega junto a otros niños pero no directamente con ellos, es la etapa social normal a esta edad."
+  },
+  {
+    "id": "2y-development-07",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tu hijo puede seguir instrucciones simples de un paso y puede comenzar a entender instrucciones de dos pasos como \"recoge la pelota y tráemela.\" Practica durante las rutinas diarias."
+  },
+  {
+    "id": "2y-development-08",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "El juego imaginativo se está volviendo más elaborado. Tu hijo puede crear escenarios con figuras de juguete, representar historias o asignar roles durante el juego."
+  },
+  {
+    "id": "2y-development-09",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tu hijo puede mostrar preferencia por una mano alrededor de esta edad, aunque es normal que siga cambiando hasta los 3 años o más."
+  },
+  {
+    "id": "2y-development-10",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Los rabietas pueden aumentar a medida que tu hijo lucha entre querer independencia pero no tener aún las habilidades para hacer todo solo. Mantén la calma y valida sus sentimientos."
+  },
+  {
+    "id": "2y-development-11",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a reconocerse en fotos y espejos y usar \"yo\" y \"mío.\" Esta autoconciencia es un gran salto cognitivo."
+  },
+  {
+    "id": "2y-development-12",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Subir y bajar escaleras agarrándose del pasamanos es una habilidad en desarrollo. Practiquen juntos y celebra su confianza creciente."
+  },
+  {
+    "id": "2y-development-13",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a mostrar empatía, consolando a un amigo que llora u ofreciendo un juguete a alguien que está triste. Reconoce y fomenta esta bondad."
+  },
+  {
+    "id": "2y-development-14",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Los rompecabezas de formas simples con 4-6 piezas desafían las habilidades de resolución de problemas. Muéstrale a tu hijo cómo girar las piezas para encontrar el ajuste correcto."
+  },
+  {
+    "id": "2y-development-15",
+    "ageGroup": "2y",
+    "category": "development",
+    "text": "Tu hijo probablemente puede identificar varias partes del cuerpo y puede comenzar a contar objetos, aunque los números no siempre estén en orden."
+  },
+  {
+    "id": "2y-sleep-01",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Tu hijo todavía necesita una siesta al día, generalmente de 1 a 2.5 horas después del almuerzo. La mayoría de los niños se benefician de mantener esta siesta hasta al menos los 3 años."
+  },
+  {
+    "id": "2y-sleep-02",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Los niños pequeños necesitan aproximadamente 11-14 horas de sueño total por día. Si las batallas a la hora de dormir son frecuentes, evalúa si el horario necesita ajustarse."
+  },
+  {
+    "id": "2y-sleep-03",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Las tácticas para retrasar la hora de acostarse se vuelven más creativas ahora. Establece una rutina clara con un punto final definido, como \"después de dos libros, es hora de dormir.\""
+  },
+  {
+    "id": "2y-sleep-04",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Si tu hijo comienza a tener pesadillas, consuélalo con calma y asegúrale que está seguro. Las pesadillas son una parte normal del desarrollo cognitivo."
+  },
+  {
+    "id": "2y-sleep-05",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Un reloj infantil que cambia de color a la hora de despertar puede ayudar a tu hijo a entender cuándo es momento de levantarse de la cama."
+  },
+  {
+    "id": "2y-sleep-06",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Mantén la cuna mientras tu hijo no se esté trepando para salirse. Pasar a una cama demasiado temprano a menudo lleva a más despertares nocturnos y resistencia a la hora de dormir."
+  },
+  {
+    "id": "2y-sleep-07",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Si tu hijo se salta una siesta, adelanta la hora de acostarse 30-60 minutos para evitar que el cansancio excesivo se convierta en una noche difícil."
+  },
+  {
+    "id": "2y-sleep-08",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "La consistencia en tu respuesta a la hora de dormir importa más que el método específico que uses. Elige un enfoque que puedas mantener y apégate a él."
+  },
+  {
+    "id": "2y-sleep-09",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Un horario diario predecible con comidas, siesta y hora de dormir aproximadamente a la misma hora ayuda a mantener regulado el reloj biológico de tu hijo."
+  },
+  {
+    "id": "2y-sleep-10",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Las grandes transiciones como un nuevo hermano, una mudanza o comenzar el preescolar pueden alterar el sueño temporalmente. El consuelo extra y la consistencia en la rutina ayudan."
+  },
+  {
+    "id": "2y-sleep-11",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Si tu hijo le teme a la oscuridad, una luz nocturna tenue de tono rojo o cálido puede brindar tranquilidad sin interrumpir la producción de melatonina."
+  },
+  {
+    "id": "2y-sleep-12",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Una regresión del sueño alrededor de esta edad a menudo coincide con explosiones de lenguaje, el aprendizaje para ir al baño o la llegada de un nuevo hermano. Generalmente se resuelve en 2-6 semanas."
+  },
+  {
+    "id": "2y-sleep-13",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "El juego activo y el tiempo al aire libre durante el día realmente mejoran la calidad del sueño por la noche. Un cuerpo cansado lleva a un sueño más profundo y reparador."
+  },
+  {
+    "id": "2y-sleep-14",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Evita usar la cama o la habitación como lugar de castigo. Quieres que tu hijo asocie su espacio de sueño con tranquilidad y seguridad."
+  },
+  {
+    "id": "2y-sleep-15",
+    "ageGroup": "2y",
+    "category": "sleep",
+    "text": "Si tu hijo ya pasó a una cama y sigue levantándose, llévalo de regreso con calma cada vez y con la menor interacción posible. La consistencia es clave."
+  },
+  {
+    "id": "2y-feeding-01",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Tu hijo ahora puede comer la mayoría de lo que come la familia. Sirve las mismas comidas en porciones apropiadas para su edad y déjalo elegir cuánto comer."
+  },
+  {
+    "id": "2y-feeding-02",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "La ingesta de leche debe ser aproximadamente {{16-24 onzas|475-710 ml}} (2-3 tazas) por día. Demasiada leche llena el estómago y reduce el apetito por alimentos sólidos ricos en nutrientes."
+  },
+  {
+    "id": "2y-feeding-04",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Ofrece tres comidas y 2-3 meriendas estructuradas al día. Picar todo el día puede reducir el hambre a la hora de las comidas y hacer que la alimentación sea menos equilibrada."
+  },
+  {
+    "id": "2y-feeding-05",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Tu hijo puede tener caprichos alimentarios, comiendo solo un alimento durante días. Sigue ofreciendo variedad en cada comida y no prepares platos a la carta."
+  },
+  {
+    "id": "2y-feeding-06",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Haz que la comida sea divertida usando cortadores de galletas en los sándwiches, organizando la comida en patrones coloridos o sirviendo en un plato especial."
+  },
+  {
+    "id": "2y-feeding-07",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Tu hijo está aprendiendo a usar el tenedor y la cuchara con más habilidad. Espera algunos derrames, pero elogia el esfuerzo y la independencia creciente."
+  },
+  {
+    "id": "2y-feeding-08",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Los ácidos grasos omega-3 apoyan el desarrollo del cerebro. Incluye alimentos como salmón, semillas de chía, nueces o huevos enriquecidos en la dieta de tu hijo."
+  },
+  {
+    "id": "2y-feeding-09",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Anima a tu hijo a beber agua durante todo el día, especialmente durante el juego activo. Una taza pequeña y fácil de coger facilita que beba solo."
+  },
+  {
+    "id": "2y-feeding-10",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Si tu hijo todavía toma pecho, la OMS apoya la lactancia materna continuada hasta los 2 años y más allá. No hay necesidad de parar si funciona para ambos."
+  },
+  {
+    "id": "2y-feeding-11",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Evita etiquetar los alimentos como \"buenos\" o \"malos\" frente a tu hijo. Usa lenguaje neutral como \"esta comida nos da energía\" o \"esta comida es solo de vez en cuando.\""
+  },
+  {
+    "id": "2y-feeding-12",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Deja que tu hijo ayude a poner la mesa, sirva agua de una jarrita o elija entre dos opciones saludables. La participación fomenta una mejor alimentación."
+  },
+  {
+    "id": "2y-feeding-14",
+    "ageGroup": "2y",
+    "category": "feeding",
+    "text": "Si tu hijo toma zumo, limítalo a {{4 onzas|120 ml}} por día de zumo de fruta 100% natural. Mejor aún, ofrece fruta entera y agua."
+  },
+  {
+    "id": "2y-health-01",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Las visitas de control durante esta etapa incluyen mediciones de crecimiento, evaluación del desarrollo y posiblemente análisis de sangre que tu pediatra recomiende según las necesidades de tu hijo."
+  },
+  {
+    "id": "2y-health-02",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Tu hijo debe tener una revisión dental cada seis meses. El dentista puede aplicar barniz de flúor para proteger los dientes en desarrollo."
+  },
+  {
+    "id": "2y-health-03",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Cepilla los dientes de tu hijo dos veces al día con una cantidad pequeña (tamaño de grano de arroz) de pasta dental con flúor hasta los 3 años, luego aumenta a una cantidad del tamaño de un guisante."
+  },
+  {
+    "id": "2y-health-04",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Si tu hijo no está juntando dos palabras a los 2 años, habla con tu pediatra sobre una evaluación del lenguaje. La intervención temprana es la más efectiva."
+  },
+  {
+    "id": "2y-health-05",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Se recomienda la vacuna anual contra la gripe para todos los niños mayores de 6 meses. Vacunarse ayuda a proteger a tu hijo y a quienes lo rodean."
+  },
+  {
+    "id": "2y-health-06",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Los niños en guardería pueden contraer de 8 a 12 resfriados al año. Cada resfriado fortalece su sistema inmunológico. Consulta a tu pediatra si hay fiebre alta o síntomas que duren más de 10 días."
+  },
+  {
+    "id": "2y-health-07",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Los caninos y segundos molares generalmente salen entre los 16 y 33 meses. Ofrece alimentos fríos y mordedores para aliviar las molestias durante este período."
+  },
+  {
+    "id": "2y-health-08",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Si introduces tiempo de pantalla, elige programación de alta calidad y mírala junto con tu hijo. Ver juntos le ayuda a entender lo que está viendo."
+  },
+  {
+    "id": "2y-health-09",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Ayuda a tu hijo a aprender a lavarse las manos con jabón durante 20 segundos, especialmente antes de comer y después de ir al baño o jugar afuera."
+  },
+  {
+    "id": "2y-health-10",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Si tu hijo ronca fuerte todas las noches o parece dejar de respirar mientras duerme, coméntalo con tu pediatra. Podría indicar adenoides agrandadas."
+  },
+  {
+    "id": "2y-health-11",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Los ojos de tu hijo ya deben estar alineados. Si notas que un ojo se desvía hacia adentro o hacia afuera, programa un examen de la vista cuanto antes."
+  },
+  {
+    "id": "2y-health-14",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Si el aprendizaje para ir al baño causa estreñimiento, aumenta la ingesta de fibra y líquidos y evita presionar a tu hijo. La retención de heces es común durante esta transición."
+  },
+  {
+    "id": "2y-health-15",
+    "ageGroup": "2y",
+    "category": "health",
+    "text": "Asegúrate de que tu hijo reciba 600 UI de vitamina D al día a través de la dieta, leche enriquecida o un suplemento. Muchos niños pequeños no obtienen suficiente solo de los alimentos."
+  },
+  {
+    "id": "2y-play-01",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Anima a tu hijo a dibujar círculos y líneas en papel. Estos son la base para formar letras y desarrollan el control de la mano."
+  },
+  {
+    "id": "2y-play-02",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Construye con bloques de ensamblaje más grandes. Tu hijo puede crear torres, puentes y estructuras, desarrollando el pensamiento espacial y la planificación."
+  },
+  {
+    "id": "2y-play-03",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Jueguen a la tiendita, al restaurante o al doctor. Este juego de roles desarrolla el lenguaje, las habilidades sociales y la comprensión emocional."
+  },
+  {
+    "id": "2y-play-04",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Salten en charcos, corran entre aspersores o jueguen en un arenero. El juego al aire libre desordenado y sensorial es esencial para un desarrollo saludable."
+  },
+  {
+    "id": "2y-play-05",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Rasgar papel y jugar con plastilina desarrollan la fuerza de la mano necesaria para usar tijeras en el futuro. Cerca de los 2 años, puedes introducir tijeras seguras para niños para una práctica temprana de corte."
+  },
+  {
+    "id": "2y-play-06",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Lee libros con historias sencillas y hazle preguntas a tu hijo: \"¿Qué crees que pasa después?\" o \"¿Puedes encontrar al gato?\""
+  },
+  {
+    "id": "2y-play-07",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Los instrumentos musicales como tambores, maracas y xilófonos enseñan ritmo, causa y efecto, y expresión creativa."
+  },
+  {
+    "id": "2y-play-08",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Arma un circuito de obstáculos sencillo: arrastrarse bajo una mesa, saltar sobre una almohada, caminar por una línea de cinta en el piso. Esto desarrolla la planificación y las habilidades motoras gruesas."
+  },
+  {
+    "id": "2y-play-09",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Jueguen a emparejar con imágenes o colores. Comienza con solo 3-4 pares y aumenta a medida que crece la memoria de tu hijo."
+  },
+  {
+    "id": "2y-play-10",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Pintar con pinceles, esponjas o los dedos permite que tu hijo experimente con colores y texturas. Enfócate en el proceso, no en el resultado."
+  },
+  {
+    "id": "2y-play-11",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Fomenta que trepe en el parque infantil. Subir escaleras, cruzar puentes y bajar por toboganes desarrolla valentía, coordinación y evaluación de riesgos."
+  },
+  {
+    "id": "2y-play-12",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Jueguen a las escondidas por la casa. Tu hijo se morirá de la risa y practicará memoria espacial, habilidades de escucha y autocontrol."
+  },
+  {
+    "id": "2y-play-13",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Introduce el conteo durante actividades cotidianas: cuenta los escalones al subirlos, las galletas en el plato o los juguetes al guardarlos."
+  },
+  {
+    "id": "2y-play-14",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Deja que tu hijo ayude con la jardinería. Cavar, regar y ver crecer las plantas enseña paciencia, responsabilidad y conexión con la naturaleza."
+  },
+  {
+    "id": "2y-play-15",
+    "ageGroup": "2y",
+    "category": "play",
+    "text": "Anima a tu hijo a contarte sobre sus dibujos, aunque parezcan garabatos. Preguntarle \"cuéntame sobre tu dibujo\" desarrolla habilidades narrativas."
+  },
+  {
+    "id": "2y-safety-01",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Tu hijo puede trepar más alto y alcanzar más lejos que nunca. Reevalúa tu hogar regularmente en busca de nuevos peligros desde su perspectiva."
+  },
+  {
+    "id": "2y-safety-02",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Mantén a tu hijo mirando hacia atrás en la silla de auto el mayor tiempo posible, idealmente hasta que alcance el límite máximo de peso o altura del asiento. La posición mirando hacia atrás es la más segura para los niños pequeños."
+  },
+  {
+    "id": "2y-safety-03",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Enséñale a tu hijo reglas básicas de seguridad en el agua: nunca acercarse al agua sin un adulto y siempre usar chaleco salvavidas cerca de aguas abiertas."
+  },
+  {
+    "id": "2y-safety-04",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Las palomitas de maíz, nueces enteras, dulces duros y trozos de verduras crudas siguen siendo peligros graves de asfixia para los niños pequeños. Sigue cortando la comida en trozos pequeños."
+  },
+  {
+    "id": "2y-safety-05",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Practica rutas de escape en caso de incendio con tu familia. Muéstrale a tu hijo cómo arrastrarse bajo el humo y dirigirse a un punto de reunión afuera."
+  },
+  {
+    "id": "2y-safety-06",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Si tu hijo puede abrir la puerta principal, agrega una cadena de seguridad alta o un cerrojo que no pueda alcanzar. Los niños pequeños pueden salir sin supervisión en cuestión de segundos."
+  },
+  {
+    "id": "2y-safety-07",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Enséñale a tu hijo su nombre completo y comienza a practicar tu número de teléfono. Usa canciones o repetición para hacerlo divertido y fácil de recordar."
+  },
+  {
+    "id": "2y-safety-08",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Siempre verifica que los juegos del parque sean apropiados para la edad y estén en buen estado. Busca aberturas que puedan atrapar la cabeza o los dedos de un niño."
+  },
+  {
+    "id": "2y-safety-09",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Mantén las puertas del baño cerradas o usa un seguro para el inodoro. Los niños pequeños sienten fascinación por el agua y un inodoro representa un riesgo de ahogamiento, ya que su cabeza es pesada en proporción al cuerpo."
+  },
+  {
+    "id": "2y-safety-10",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Revisa regularmente la instalación de la silla de auto. Asegúrate de que el arnés esté ajustado, con la hebilla del pecho a la altura de las axilas y sin abrigos voluminosos debajo de las correas."
+  },
+  {
+    "id": "2y-safety-11",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Enséñale a tu hijo a sentarse mientras come. Correr o jugar con comida en la boca aumenta significativamente el riesgo de asfixia."
+  },
+  {
+    "id": "2y-safety-12",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Guarda los utensilios de cocina afilados como cuchillos, peladores y tijeras en un cajón alto con seguro para niños. Tu hijo ahora puede abrir muchos cajones y gabinetes bajos."
+  },
+  {
+    "id": "2y-safety-13",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Si tu hijo está pasando a una cama, coloca el colchón cerca del suelo y usa una baranda. Retira de la habitación cualquier peligro al que pueda acceder por la noche."
+  },
+  {
+    "id": "2y-safety-14",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "La seguridad en la entrada de autos y los estacionamientos es fundamental. Siempre toma la mano de tu hijo y revisa detrás del vehículo antes de dar reversa. Son demasiado bajitos para ser vistos."
+  },
+  {
+    "id": "2y-safety-15",
+    "ageGroup": "2y",
+    "category": "safety",
+    "text": "Revisa los detectores de humo y monóxido de carbono cada mes y cambia las baterías al menos una vez al año. Un detector funcionando es una de las formas más sencillas de proteger a tu familia."
+  }
+]
