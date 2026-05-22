@@ -33,6 +33,8 @@ yarn-error.*
 # local env files
 .env
 .env*.local
+.env.e2e
+.env.e2e.android
 
 # typescript
 *.tsbuildinfo
@@ -44,6 +46,7 @@ yarn-error.*
 # research notes (not part of app)
 /research
 google-play-service-account.json
+google-services.json
 supabase/.temp/
 
 # E2E testing
