@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sofi Baby Tracker",
     "slug": "sofi-baby-tracker",
-    "version": "4.1.25",
+    "version": "4.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
