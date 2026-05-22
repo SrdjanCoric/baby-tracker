@@ -24,6 +24,10 @@ const LANGUAGE_OPTIONS: LanguageOptionConfig[] = [
   },
   {
     value: "es",
+    icon: "\u{1F30E}",
+  },
+  {
+    value: "es-ES",
     icon: "\u{1F1EA}\u{1F1F8}",
   },
   {
@@ -31,12 +35,20 @@ const LANGUAGE_OPTIONS: LanguageOptionConfig[] = [
     icon: "\u{1F1EB}\u{1F1F7}",
   },
   {
-    value: "pt",
+    value: "pt-PT",
+    icon: "\u{1F1F5}\u{1F1F9}",
+  },
+  {
+    value: "pt-BR",
     icon: "\u{1F1E7}\u{1F1F7}",
   },
   {
     value: "de",
     icon: "\u{1F1E9}\u{1F1EA}",
+  },
+  {
+    value: "it",
+    icon: "\u{1F1EE}\u{1F1F9}",
   },
 ];
 
@@ -44,10 +56,13 @@ const LANGUAGE_LABELS = {
   system: { label: "settings.systemDefault", description: "settings.systemDefaultDesc" },
   en: { label: "settings.english", description: "English" },
   sr: { label: "settings.serbian", description: "Srpski" },
-  es: { label: "settings.spanish", description: "Español" },
+  es: { label: "settings.spanishLatam", description: "Español (Latinoamérica)" },
+  "es-ES": { label: "settings.spanishSpain", description: "Español (España)" },
   fr: { label: "settings.french", description: "Français" },
-  pt: { label: "settings.portuguese", description: "Português" },
+  "pt-PT": { label: "settings.portuguesePT", description: "Português (Portugal)" },
+  "pt-BR": { label: "settings.portugueseBR", description: "Português (Brasil)" },
   de: { label: "settings.german", description: "Deutsch" },
+  it: { label: "settings.italian", description: "Italiano" },
 } as const;
 
 export default function LanguageSettingsScreen() {
@@ -73,7 +88,7 @@ export default function LanguageSettingsScreen() {
       <ScrollView className="flex-1 px-4 py-4">
         <View className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-card p-4 mb-6">
           <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-1">
-            {resolvedLanguage === "sr" ? "Srpski" : resolvedLanguage === "es" ? "Español" : resolvedLanguage === "fr" ? "Français" : resolvedLanguage === "pt" ? "Português" : resolvedLanguage === "de" ? "Deutsch" : "English"}
+            {resolvedLanguage === "sr" ? "Srpski" : resolvedLanguage === "es" ? "Español (Latinoamérica)" : resolvedLanguage === "es-ES" ? "Español (España)" : resolvedLanguage === "fr" ? "Français" : resolvedLanguage === "pt-BR" ? "Português (Brasil)" : resolvedLanguage === "pt-PT" ? "Português (Portugal)" : resolvedLanguage === "de" ? "Deutsch" : resolvedLanguage === "it" ? "Italiano" : "English"}
           </Text>
         </View>
 

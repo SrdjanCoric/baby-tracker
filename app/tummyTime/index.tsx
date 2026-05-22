@@ -314,7 +314,7 @@ function StartView({
         testID="start-timer-button"
       >
         <Text className="text-4xl">💪</Text>
-        <Text className="text-base font-semibold text-white mt-2">
+        <Text className="text-base font-semibold text-white mt-2 text-center px-4">
           {t("tummyTime.startTummyTime")}
         </Text>
       </Pressable>

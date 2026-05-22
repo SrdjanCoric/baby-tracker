@@ -1,5 +1,61 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/services/supabase";
 import i18n from "@/i18n";
+
+const PENDING_LOCK_RELEASES_KEY = "@pending_lock_releases";
+
+interface PendingLockRelease {
+  babyId: string;
+  activityType: TimerActivityType;
+  userId: string;
+  queuedAt: string;
+}
+
+export async function queuePendingLockRelease(
+  babyId: string,
+  activityType: TimerActivityType,
+  userId: string
+): Promise<void> {
+  const pending = await getPendingLockReleases();
+  const alreadyQueued = pending.some(
+    p => p.babyId === babyId && p.activityType === activityType && p.userId === userId
+  );
+  if (alreadyQueued) return;
+
+  pending.push({ babyId, activityType, userId, queuedAt: new Date().toISOString() });
+  await AsyncStorage.setItem(PENDING_LOCK_RELEASES_KEY, JSON.stringify(pending));
+
+}
+
+async function getPendingLockReleases(): Promise<PendingLockRelease[]> {
+  const raw = await AsyncStorage.getItem(PENDING_LOCK_RELEASES_KEY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as PendingLockRelease[];
+  } catch {
+    return [];
+  }
+}
+
+export async function retryPendingLockReleases(): Promise<void> {
+  const pending = await getPendingLockReleases();
+  if (pending.length === 0) return;
+
+
+  const remaining: PendingLockRelease[] = [];
+
+  for (const release of pending) {
+    try {
+      await releaseTimerLock(release.babyId, release.activityType as TimerActivityType, release.userId);
+
+    } catch (error) {
+      console.error("[ActiveTimerService] Pending lock release still failing:", release, error);
+      remaining.push(release);
+    }
+  }
+
+  await AsyncStorage.setItem(PENDING_LOCK_RELEASES_KEY, JSON.stringify(remaining));
+}
 
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummy_time";
 
@@ -68,8 +124,6 @@ export async function releaseTimerLock(
   activityType: TimerActivityType,
   userId: string
 ): Promise<boolean> {
-  console.log("[ActiveTimerService] releaseTimerLock called:", { babyId, activityType, userId });
-
   const { error, count } = await supabase
     .from("active_timers")
     .delete()
@@ -82,7 +136,6 @@ export async function releaseTimerLock(
     throw error;
   }
 
-  console.log("[ActiveTimerService] releaseTimerLock result:", { count, success: (count ?? 0) > 0 });
   return (count ?? 0) > 0;
 }
 

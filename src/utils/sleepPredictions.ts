@@ -14,6 +14,7 @@ export interface SleepPredictionModel {
   bedtimeWakeWindow: number;
   medianNapDuration: number;
   napCountDistribution: Record<number, number>;
+  medianBedtimeStart: number | null;
 }
 
 export interface ProcessedSleep {
@@ -328,30 +329,33 @@ export function computeSleepModel(
 
   const napCounts = Object.entries(napCountDist)
     .map(([count, freq]) => ({ count: Number(count), freq }))
-    .sort((a, b) => b.freq - a.freq || a.count - b.count);
+    .sort((a, b) => b.freq - a.freq || b.count - a.count);
 
-  const primaryNapCount = napCounts[0].count;
-  let secondaryNapCount: number | null = null;
+  let primaryNapCount: number;
 
-  if (napCounts.length > 1) {
-    const candidate = napCounts[1];
-    if (
-      Math.abs(candidate.count - primaryNapCount) === 1 &&
-      candidate.freq >= 2
-    ) {
-      secondaryNapCount = candidate.count;
-    }
+  const topFreq = napCounts[0].freq;
+  const tied = napCounts.filter(n => n.freq === topFreq);
+  if (tied.length > 1) {
+    const pastDays = last7.filter(d => d.date !== todayStr);
+    const mostRecentDay = pastDays[pastDays.length - 1];
+    primaryNapCount = mostRecentDay ? mostRecentDay.naps.length : tied[0].count;
+  } else {
+    primaryNapCount = napCounts[0].count;
   }
 
-  return {
+  const medianBedtimeStart = computeMedianBedtimeStart(sleeps, last7, dayEndHour);
+
+  const result: SleepPredictionModel = {
     primaryNapCount,
-    secondaryNapCount,
+    secondaryNapCount: null,
     startRelativeWakeWindows: startRelativeMedians,
     penultimateWakeWindow: penultimatePool.length > 0 ? median(penultimatePool) : 60,
     bedtimeWakeWindow: bedtimePool.length > 0 ? median(bedtimePool) : 120,
     medianNapDuration: allNapDurations.length > 0 ? median(allNapDurations) : 45,
     napCountDistribution: napCountDist,
+    medianBedtimeStart,
   };
+  return result;
 }
 
 export function getQualifyingDayCount(
@@ -371,19 +375,63 @@ export function predictNextSleep(
   completedNapsToday: number,
   lastWakeTime: Date,
   dayEndHour: number,
-  referenceDate?: Date
+  dayStartHour?: number,
+  referenceDate?: Date,
+  lastSleepDurationMinutes?: number,
+  previousProperWakeTime?: Date
 ): SleepPrediction | null {
   const ref = referenceDate || lastWakeTime;
+  const anchorHour = model.medianBedtimeStart ?? dayEndHour;
+  const anchorTime = hourToDate(anchorHour, ref);
   const dayEndTime = hourToDate(dayEndHour, ref);
 
   if (completedNapsToday >= selectedNapCount) {
-    return predictAfterAllNaps(model, completedNapsToday, lastWakeTime, dayEndTime);
+    return predictAfterAllNaps(model, lastWakeTime, anchorTime, dayEndTime);
+  }
+
+  const candidateBedtime = new Date(
+    lastWakeTime.getTime() + model.bedtimeWakeWindow * 60 * 1000
+  );
+  const bedtimeFits = isInBedtimeZone(candidateBedtime, anchorTime, dayEndTime);
+
+  let candidateFromProper: Date | null = null;
+  let properNapFits = false;
+  if (
+    lastSleepDurationMinutes !== undefined &&
+    lastSleepDurationMinutes < SHORT_NAP_THRESHOLD_MINUTES &&
+    previousProperWakeTime
+  ) {
+    candidateFromProper = new Date(
+      previousProperWakeTime.getTime() + model.bedtimeWakeWindow * 60 * 1000
+    );
+    const gapFromShortNap = (candidateFromProper.getTime() - lastWakeTime.getTime()) / 60000;
+    properNapFits = isInBedtimeZone(candidateFromProper, anchorTime, dayEndTime)
+      && gapFromShortNap >= SHORT_NAP_BEDTIME_MIN_GAP_MINUTES;
+  }
+
+  if (properNapFits && bedtimeFits && candidateFromProper) {
+    const cappedFromProper = capBedtime(candidateFromProper, anchorTime);
+    const cappedFromShort = capBedtime(candidateBedtime, anchorTime);
+    const distProper = Math.abs(cappedFromProper.getTime() - anchorTime.getTime());
+    const distShort = Math.abs(cappedFromShort.getTime() - anchorTime.getTime());
+    const result = distProper <= distShort ? cappedFromProper : cappedFromShort;
+    return { predictedTime: result, type: "bedtime" };
+  }
+
+  if (properNapFits && candidateFromProper) {
+    return { predictedTime: capBedtime(candidateFromProper, anchorTime), type: "bedtime" };
+  }
+
+  if (bedtimeFits) {
+    return { predictedTime: capBedtime(candidateBedtime, anchorTime), type: "bedtime" };
   }
 
   const position = completedNapsToday;
   let wakeWindowMinutes: number;
 
-  if (position === selectedNapCount - 1) {
+  if (position === 0 && dayStartHour !== undefined && isBeforeDayStart(lastWakeTime, dayStartHour)) {
+    wakeWindowMinutes = getShortestWakeWindow(model);
+  } else if (position === selectedNapCount - 1) {
     wakeWindowMinutes = model.penultimateWakeWindow;
   } else {
     const key = String(position);
@@ -395,11 +443,12 @@ export function predictNextSleep(
     lastWakeTime.getTime() + wakeWindowMinutes * 60 * 1000
   );
 
-  if (!isNapWorthIt(predictedNapStart, model, dayEndTime)) {
+  if (isInBedtimeZone(predictedNapStart, anchorTime, dayEndTime)) {
+    const bedtimeWW = Math.max(wakeWindowMinutes, model.bedtimeWakeWindow);
     const bedtime = new Date(
-      lastWakeTime.getTime() + model.bedtimeWakeWindow * 60 * 1000
+      lastWakeTime.getTime() + bedtimeWW * 60 * 1000
     );
-    return { predictedTime: bedtime, type: "bedtime" };
+    return { predictedTime: capBedtime(bedtime, anchorTime), type: "bedtime" };
   }
 
   return { predictedTime: predictedNapStart, type: "nap" };
@@ -407,53 +456,131 @@ export function predictNextSleep(
 
 function predictAfterAllNaps(
   model: SleepPredictionModel,
-  completedNapsToday: number,
   lastWakeTime: Date,
-  dayEndTime: Date
+  anchorTime: Date,
+  dayEndTime?: Date
 ): SleepPrediction {
-  const gapToDayEnd = minutesBetween(lastWakeTime, dayEndTime);
+  const candidateBedtime = new Date(
+    lastWakeTime.getTime() + model.bedtimeWakeWindow * 60 * 1000
+  );
 
-  if (gapToDayEnd > model.bedtimeWakeWindow * 1.5) {
-    const wakeWindowMinutes = getFallbackWakeWindow(model);
+  if (!isInBedtimeZone(candidateBedtime, anchorTime, dayEndTime)) {
+    const fallbackWW = getFallbackWakeWindow(model);
     const extraNapStart = new Date(
-      lastWakeTime.getTime() + wakeWindowMinutes * 60 * 1000
+      lastWakeTime.getTime() + fallbackWW * 60 * 1000
     );
 
-    if (isNapWorthIt(extraNapStart, model, dayEndTime)) {
+    if (!isInBedtimeZone(extraNapStart, anchorTime, dayEndTime)) {
       return { predictedTime: extraNapStart, type: "nap" };
     }
-  }
 
-  let bedtimeWindowMinutes = model.bedtimeWakeWindow;
-  if (gapToDayEnd <= 60) {
-    const fallback = getFallbackWakeWindow(model);
-    const positional = model.startRelativeWakeWindows[String(completedNapsToday)];
-    bedtimeWindowMinutes = positional !== undefined
-      ? Math.min(fallback, positional)
-      : fallback;
+    const bedtimeWW = Math.max(fallbackWW, model.bedtimeWakeWindow);
+    const bedtime = new Date(
+      lastWakeTime.getTime() + bedtimeWW * 60 * 1000
+    );
+    return { predictedTime: capBedtime(bedtime, anchorTime), type: "bedtime" };
   }
 
   const bedtime = new Date(
-    lastWakeTime.getTime() + bedtimeWindowMinutes * 60 * 1000
+    lastWakeTime.getTime() + model.bedtimeWakeWindow * 60 * 1000
   );
-
-  return { predictedTime: bedtime, type: "bedtime" };
+  return { predictedTime: capBedtime(bedtime, anchorTime), type: "bedtime" };
 }
 
-const MIN_NAP_START_BEFORE_DAY_END = 20;
+export const BEDTIME_ZONE_MINUTES = 30;
+const MAX_BEDTIME_OFFSET_MINUTES = 45;
+const SHORT_NAP_THRESHOLD_MINUTES = 20;
+const SHORT_NAP_BEDTIME_MIN_GAP_MINUTES = 45;
+const TIER1_MIN_DURATION_MINUTES = 90;
+const TIER2_MIN_DURATION_MINUTES = 120;
+const TIER2_MAX_BEFORE_MINUTES = 90;
+const MIN_DAYS_FOR_MEDIAN_BEDTIME = 3;
+const DRIFT_TIER_BEFORE_MINUTES = 120;
+const DRIFT_TIER_MIN_DURATION_MINUTES = 180;
 
-function isNapWorthIt(
-  napStart: Date,
-  _model: SleepPredictionModel,
-  dayEndTime: Date
-): boolean {
-  const latestNapStart = new Date(dayEndTime.getTime() - MIN_NAP_START_BEFORE_DAY_END * 60 * 1000);
-  return napStart.getTime() <= latestNapStart.getTime();
+export function findFirstQualifyingNightSleep(
+  sleeps: ProcessedSleep[],
+  dayEndHour: number,
+  referenceDate: Date
+): ProcessedSleep | null {
+  const dayEndTime = hourToDate(dayEndHour, referenceDate);
+  const tier2Start = new Date(dayEndTime.getTime() - TIER2_MAX_BEFORE_MINUTES * 60 * 1000);
+  const tier1Start = new Date(dayEndTime.getTime() - BEDTIME_ZONE_MINUTES * 60 * 1000);
+
+  const candidates = sleeps
+    .filter(s => s.startedAt.getTime() >= tier2Start.getTime())
+    .sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
+
+  for (const sleep of candidates) {
+    const startTime = sleep.startedAt.getTime();
+    if (startTime >= tier1Start.getTime()) {
+      if (sleep.durationMinutes >= TIER1_MIN_DURATION_MINUTES) return sleep;
+    } else {
+      if (sleep.durationMinutes >= TIER2_MIN_DURATION_MINUTES) return sleep;
+    }
+  }
+  return null;
+}
+
+function computeMedianBedtimeStart(
+  sleeps: ProcessedSleep[],
+  days: ProcessedDay[],
+  dayEndHour: number
+): number | null {
+  const bedtimeStartHours: number[] = [];
+
+  for (const day of days) {
+    const sleepsAfterMorning = sleeps.filter(
+      s => s.startedAt.getTime() > day.morningWakeTime.getTime()
+    );
+
+    const refDate = new Date(day.morningWakeTime);
+    refDate.setHours(0, 0, 0, 0);
+
+    const nightSleep = findFirstQualifyingNightSleep(sleepsAfterMorning, dayEndHour, refDate);
+    if (nightSleep) {
+      bedtimeStartHours.push(dateToFractionalHour(nightSleep.startedAt));
+    }
+  }
+
+  if (bedtimeStartHours.length < MIN_DAYS_FOR_MEDIAN_BEDTIME) return null;
+  return median(bedtimeStartHours);
+}
+
+function capBedtime(predictedTime: Date, anchorTime: Date): Date {
+  const maxTime = new Date(anchorTime.getTime() + MAX_BEDTIME_OFFSET_MINUTES * 60 * 1000);
+  return predictedTime.getTime() > maxTime.getTime() ? maxTime : predictedTime;
+}
+
+const DAY_END_ANCHOR_MAX_DISTANCE_MINUTES = 90;
+
+function isInBedtimeZone(time: Date, anchorTime: Date, dayEndTime?: Date): boolean {
+  const minutesBefore = (anchorTime.getTime() - time.getTime()) / 60000;
+  if (minutesBefore < BEDTIME_ZONE_MINUTES) return true;
+
+  if (dayEndTime) {
+    const dayEndToAnchorMinutes = (anchorTime.getTime() - dayEndTime.getTime()) / 60000;
+    if (dayEndToAnchorMinutes >= 0 && dayEndToAnchorMinutes <= DAY_END_ANCHOR_MAX_DISTANCE_MINUTES && time.getTime() >= dayEndTime.getTime()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function getFallbackWakeWindow(model: SleepPredictionModel): number {
   const values = Object.values(model.startRelativeWakeWindows);
   return values.length > 0 ? median(values) : 60;
+}
+
+function getShortestWakeWindow(model: SleepPredictionModel): number {
+  const values = Object.values(model.startRelativeWakeWindows);
+  return values.length > 0 ? Math.min(...values) : 60;
+}
+
+function isBeforeDayStart(time: Date, dayStartHour: number): boolean {
+  const hour = time.getHours() + time.getMinutes() / 60;
+  return hour < dayStartHour;
 }
 
 export function getQualifyingNightSleep(
@@ -470,6 +597,7 @@ export function getQualifyingNightSleep(
   const qualifying = sleeps
     .filter((s) => {
       if (!s.endedAt) return false;
+      if (s.type !== "night") return false;
       const endedAt = new Date(s.endedAt);
       return endedAt.getTime() >= thresholdTime.getTime();
     })
@@ -501,22 +629,29 @@ export function detectBedtimeDrift(
       ? last5[i + 1].morningWakeTime
       : null;
 
-    const candidates = sleeps
-      .filter((s) => {
-        if (s.durationMinutes <= 120) return false;
-        if (s.startedAt.getTime() <= day.morningWakeTime.getTime()) return false;
-        if (nextDayMorning && s.startedAt.getTime() >= nextDayMorning.getTime()) return false;
-        return true;
-      })
-      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
+    const daySleeps = sleeps.filter((s) => {
+      if (s.startedAt.getTime() <= day.morningWakeTime.getTime()) return false;
+      if (nextDayMorning && s.startedAt.getTime() >= nextDayMorning.getTime()) return false;
+      return true;
+    });
+    const refDate = new Date(day.morningWakeTime);
+    refDate.setHours(0, 0, 0, 0);
 
-    if (candidates.length === 0) return null;
+    let nightSleep = findFirstQualifyingNightSleep(daySleeps, dayEndHour, refDate);
 
-    bedtimeHours.push(dateToFractionalHour(candidates[0].startedAt));
+    if (!nightSleep) {
+      const driftTierStart = new Date(hourToDate(dayEndHour, refDate).getTime() - DRIFT_TIER_BEFORE_MINUTES * 60 * 1000);
+      nightSleep = daySleeps
+        .filter((s) => s.startedAt.getTime() >= driftTierStart.getTime() && s.durationMinutes >= DRIFT_TIER_MIN_DURATION_MINUTES)
+        .sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime())[0] ?? null;
+    }
+    if (!nightSleep) return null;
+
+    bedtimeHours.push(dateToFractionalHour(nightSleep.startedAt));
   }
 
-  const allEarlyEnough = bedtimeHours.every((h) => dayEndHour - h >= 1);
-  if (!allEarlyEnough) return null;
+  const allDrifted = bedtimeHours.every((h) => Math.abs(dayEndHour - h) >= 1);
+  if (!allDrifted) return null;
 
   const medianBedtime = median(bedtimeHours);
 
@@ -586,5 +721,6 @@ export function getAgeFallbackModel(
     bedtimeWakeWindow: progression.windows[lastWindowIndex],
     medianNapDuration: 45,
     napCountDistribution: { [progression.napCount]: 7 },
+    medianBedtimeStart: null,
   };
 }

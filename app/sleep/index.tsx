@@ -92,7 +92,8 @@ export default function SleepScreen() {
   const handleStartSleep = useCallback(async (customStartTime?: Date) => {
     const timeToCheck = customStartTime ?? new Date();
     const autoType = determineSleepType(timeToCheck, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour);
-    await startSleep(autoType, customStartTime);
+    const result = await startSleep(autoType, customStartTime);
+    console.log("[SleepScreen] startSleep result:", JSON.stringify(result));
   }, [startSleep, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
 
   const isStoppingRef = useRef(false);

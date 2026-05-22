@@ -85,7 +85,7 @@ export function TipCarousel({ babyId, birthDate, onDismiss }: TipCarouselProps) 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const flatListRef = useRef<FlatList>(null);
   const birthDateStr = birthDate?.toISOString() ?? "";
-  const locale = i18n.language?.split("-")[0] || "en";
+  const locale = i18n.language || "en";
 
   const cardWidth = screenWidth - HORIZONTAL_MARGIN * 2;
   const c = isDark ? COLORS.dark : COLORS.light;

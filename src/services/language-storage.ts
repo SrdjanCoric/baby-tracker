@@ -2,9 +2,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LANGUAGE_PREFERENCE_KEY = "@language_preference";
 
-export type LanguageCode = "en" | "sr" | "es" | "fr" | "pt" | "de" | "system";
+export type LanguageCode = "en" | "sr" | "es" | "es-ES" | "fr" | "pt-PT" | "pt-BR" | "de" | "it" | "system";
 
-const VALID_LANGUAGES: LanguageCode[] = ["en", "sr", "es", "fr", "pt", "de", "system"];
+const VALID_LANGUAGES: LanguageCode[] = ["en", "sr", "es", "es-ES", "fr", "pt-PT", "pt-BR", "de", "it", "system"];
 
 function isValidLanguage(value: string): value is LanguageCode {
   return VALID_LANGUAGES.includes(value as LanguageCode);

@@ -15,9 +15,10 @@ import type { SleepType } from "@/constants/activities";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
+import { useActiveTimers } from "./active-timers-context";
 import { RemoteChange } from "@/services/sync";
 import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
-import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
+import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock, queuePendingLockRelease } from "@/services/active-timer-service";
 import { fetchWakeWindowPreference, upsertWakeWindowPreference } from "@/services/push-token-service";
 import { fetchActivityGoal, upsertActivityGoal } from "@/services/activity-goal-service";
 import {
@@ -133,18 +134,18 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
       return { ...state, sleeps: action.payload, sleepsLoadVersion: state.sleepsLoadVersion + 1 };
 
     case "ADD_SLEEP":
-      return { ...state, sleeps: [...state.sleeps, action.payload], modelRecomputeVersion: state.modelRecomputeVersion + 1 };
+      return { ...state, sleeps: [...state.sleeps, action.payload], modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
 
     case "UPDATE_SLEEP": {
       const updatedSleeps = state.sleeps.map(s =>
         s.id === action.payload.id ? action.payload : s
       );
-      return { ...state, sleeps: updatedSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1 };
+      return { ...state, sleeps: updatedSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
     }
 
     case "DELETE_SLEEP": {
       const filteredSleeps = state.sleeps.filter(s => s.id !== action.payload);
-      return { ...state, sleeps: filteredSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1 };
+      return { ...state, sleeps: filteredSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
     }
 
     case "SET_LOADING":
@@ -190,8 +191,18 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     case "SET_SUGGESTED_GOAL":
       return { ...state, suggestedGoalMinutes: action.payload };
 
-    case "SET_WAKE_WINDOW_CONFIG":
-      return { ...state, wakeWindowConfig: action.payload };
+    case "SET_WAKE_WINDOW_CONFIG": {
+      const prevStart = state.wakeWindowConfig?.dayStartHour;
+      const prevEnd = state.wakeWindowConfig?.dayEndHour;
+      const newStart = action.payload?.dayStartHour;
+      const newEnd = action.payload?.dayEndHour;
+      const boundariesChanged = prevStart !== newStart || prevEnd !== newEnd;
+      return {
+        ...state,
+        wakeWindowConfig: action.payload,
+        ...(boundariesChanged ? { modelRecomputeVersion: state.modelRecomputeVersion + 1 } : {}),
+      };
+    }
 
     case "PAUSE_TIMER": {
       if (!state.activeTimer) return state;
@@ -231,19 +242,19 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     case "REMOTE_INSERT": {
       const exists = state.sleeps.some(s => s.id === action.payload.id);
       if (exists) return state;
-      return { ...state, sleeps: [...state.sleeps, action.payload], modelRecomputeVersion: state.modelRecomputeVersion + 1 };
+      return { ...state, sleeps: [...state.sleeps, action.payload], modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
     }
 
     case "REMOTE_UPDATE": {
       const updatedSleeps = state.sleeps.map(s =>
         s.id === action.payload.id ? action.payload : s
       );
-      return { ...state, sleeps: updatedSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1 };
+      return { ...state, sleeps: updatedSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
     }
 
     case "REMOTE_DELETE": {
       const filteredSleeps = state.sleeps.filter(s => s.id !== action.payload);
-      return { ...state, sleeps: filteredSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1 };
+      return { ...state, sleeps: filteredSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
     }
 
     case "SET_PREDICTION_MODEL":
@@ -312,8 +323,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
+  const { removeLock } = useActiveTimers();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
+  const stopVersionRef = useRef(0);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('sleep_sessions', (change: RemoteChange) => {
@@ -353,9 +366,16 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           dayEndHour: (data.day_end_hour as number | undefined) ?? 19,
           dayBoundariesConfigured: data.day_start_hour != null && data.day_end_hour != null,
           napContinuationMinutes: (data.nap_continuation_minutes as number | undefined) ?? 15,
+          driftDismissed: (data.drift_dismissed as { type: string; suggestedHour: number } | null) ?? null,
         };
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
         SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+        if (config.driftDismissed) {
+          driftDismissedRef.current = config.driftDismissed;
+          dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
+        } else {
+          driftDismissedRef.current = null;
+        }
       }
     });
     return unsubscribe;
@@ -389,6 +409,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_LOADING", payload: false });
       return;
     }
+
+    const stopVersionAtStart = stopVersionRef.current;
 
     dispatch({ type: "SET_LOADING", payload: true });
 
@@ -460,6 +482,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               dayEndHour: dbPref.day_end_hour ?? 19,
               dayBoundariesConfigured: dbPref.day_start_hour != null && dbPref.day_end_hour != null,
               napContinuationMinutes: dbPref.nap_continuation_minutes ?? 15,
+              driftDismissed: dbPref.drift_dismissed ?? null,
             };
             await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
           }
@@ -494,8 +517,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       const bannerDismissed = await SleepStorageService.getPredictionBannerDismissed(selectedBaby.id);
       dispatch({ type: "SET_PREDICTION_BANNER_DISMISSED", payload: bannerDismissed });
 
-      const driftDismissed = await SleepStorageService.getDriftDismissed(selectedBaby.id);
-      driftDismissedRef.current = driftDismissed;
+      if (wakeConfig?.driftDismissed) {
+        driftDismissedRef.current = wakeConfig.driftDismissed;
+      } else {
+        const driftDismissed = await SleepStorageService.getDriftDismissed(selectedBaby.id);
+        driftDismissedRef.current = driftDismissed;
+      }
 
       if (birthDate && !hasCustomGoal) {
         const lastCheckDate = await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
@@ -520,38 +547,64 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         await SleepStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
       }
 
+      const stopOccurred = isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart;
+      if (stopOccurred) {
+        dispatch({ type: "SET_LOADING", payload: false });
+        return;
+      }
+
       const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
       if (activeTimer) {
-        let isStale = false;
-        if (user?.id && user?.householdId) {
-          try {
-            const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
-            if (!lock || lock.startedBy !== user.id) {
-              isStale = true;
-              await SleepStorageService.clearActiveTimer(selectedBaby.id);
+        if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) {
+          // skip — a stop completed during this loadSleeps run
+        } else {
+          let isStale = false;
+          if (user?.id && user?.householdId) {
+            try {
+              const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
+              if (!lock || lock.startedBy !== user.id) {
+                console.warn("[SleepContext] loadSleeps: marking timer as STALE", {
+                  lockFound: !!lock,
+                  lockStartedBy: lock?.startedBy,
+                  userId: user.id,
+                  timerStartedAt: activeTimer.startedAt,
+                });
+                isStale = true;
+                await SleepStorageService.clearActiveTimer(selectedBaby.id);
+                dispatch({ type: "STOP_TIMER" });
+              }
+            } catch {
+              // ignore
             }
-          } catch {
-            // ignore
           }
-        }
 
-        if (!isStale) {
-          dispatch({
-            type: "RESTORE_TIMER",
-            payload: {
-              isRunning: true,
-              isPaused: activeTimer.isPaused ?? false,
-              startTime: new Date(activeTimer.startedAt),
-              sleepType: activeTimer.type,
-              totalPausedMs: activeTimer.totalPausedMs ?? 0,
-              pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
-            },
-          });
+          if (!isStale) {
+            dispatch({
+              type: "RESTORE_TIMER",
+              payload: {
+                isRunning: true,
+                isPaused: activeTimer.isPaused ?? false,
+                startTime: new Date(activeTimer.startedAt),
+                sleepType: activeTimer.type,
+                totalPausedMs: activeTimer.totalPausedMs ?? 0,
+                pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
+              },
+            });
 
-          if (activeTimer.liveActivityId) {
-            const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
-            if (isRunning) {
-              liveActivityIdRef.current = activeTimer.liveActivityId;
+            if (activeTimer.liveActivityId) {
+              const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+              if (isRunning) {
+                liveActivityIdRef.current = activeTimer.liveActivityId;
+              } else if (!(activeTimer.isPaused ?? false)) {
+                const totalPausedMs = activeTimer.totalPausedMs ?? 0;
+                const effectiveStartTime = totalPausedMs > 0
+                  ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
+                  : new Date(activeTimer.startedAt);
+                const activityId = await startTimerLiveActivity(
+                  "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
+                );
+                if (activityId) liveActivityIdRef.current = activityId;
+              }
             } else if (!(activeTimer.isPaused ?? false)) {
               const totalPausedMs = activeTimer.totalPausedMs ?? 0;
               const effectiveStartTime = totalPausedMs > 0
@@ -562,53 +615,62 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               );
               if (activityId) liveActivityIdRef.current = activityId;
             }
-          } else if (!(activeTimer.isPaused ?? false)) {
-            const totalPausedMs = activeTimer.totalPausedMs ?? 0;
-            const effectiveStartTime = totalPausedMs > 0
-              ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
-              : new Date(activeTimer.startedAt);
-            const activityId = await startTimerLiveActivity(
-              "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
-            );
-            if (activityId) liveActivityIdRef.current = activityId;
           }
         }
       } else if (user?.id && user?.householdId) {
         try {
           const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
           if (lock && lock.startedBy === user.id) {
-            const td = lock.timerData || {};
-            const sleepType = (td.type === "night" ? "night" : "nap") as SleepType;
-            const isPaused = td.isPaused === true;
-            const totalPausedMs = typeof td.totalPausedMs === "number" ? td.totalPausedMs : 0;
-            const pausedAt = typeof td.pausedAt === "string" ? td.pausedAt : undefined;
+            if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) {
+              // skip — a stop completed during this loadSleeps run
+            } else {
+              const lockStartTime = new Date(lock.startedAt).getTime();
+              const alreadyStopped = sleeps.some(s => {
+                const entryStart = new Date(s.startedAt).getTime();
+                return Math.abs(entryStart - lockStartTime) < 5000;
+              });
 
-            dispatch({
-              type: "RESTORE_TIMER",
-              payload: {
-                isRunning: true,
-                isPaused,
-                startTime: new Date(lock.startedAt),
-                sleepType,
-                totalPausedMs,
-                pausedAt: pausedAt ? new Date(pausedAt) : undefined,
-              },
-            });
+              if (alreadyStopped) {
+                try {
+                  await releaseTimerLock(selectedBaby.id, "sleep", user.id);
+                } catch {
+                  await queuePendingLockRelease(selectedBaby.id, "sleep", user.id);
+                }
+              } else {
+                const td = lock.timerData || {};
+                const sleepType = (td.type === "night" ? "night" : "nap") as SleepType;
+                const isPaused = td.isPaused === true;
+                const totalPausedMs = typeof td.totalPausedMs === "number" ? td.totalPausedMs : 0;
+                const pausedAt = typeof td.pausedAt === "string" ? td.pausedAt : undefined;
 
-            await SleepStorageService.setActiveTimer(selectedBaby.id, {
-              startedAt: lock.startedAt,
-              type: sleepType,
-              isPaused,
-              totalPausedMs,
-              pausedAt,
-            });
+                dispatch({
+                  type: "RESTORE_TIMER",
+                  payload: {
+                    isRunning: true,
+                    isPaused,
+                    startTime: new Date(lock.startedAt),
+                    sleepType,
+                    totalPausedMs,
+                    pausedAt: pausedAt ? new Date(pausedAt) : undefined,
+                  },
+                });
 
-            if (!isPaused) {
-              const effectiveStartTime = totalPausedMs > 0
-                ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
-                : new Date(lock.startedAt);
-              const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType, effectiveStartTime);
-              if (activityId) liveActivityIdRef.current = activityId;
+                await SleepStorageService.setActiveTimer(selectedBaby.id, {
+                  startedAt: lock.startedAt,
+                  type: sleepType,
+                  isPaused,
+                  totalPausedMs,
+                  pausedAt,
+                });
+
+                if (!isPaused) {
+                  const effectiveStartTime = totalPausedMs > 0
+                    ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
+                    : new Date(lock.startedAt);
+                  const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType, effectiveStartTime);
+                  if (activityId) liveActivityIdRef.current = activityId;
+                }
+              }
             }
           }
         } catch (error) {
@@ -823,8 +885,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
       if (durationSeconds < 60) {
         console.log("[SleepContext] stopSleep: duration < 60s, discarding");
-        dispatch({ type: "STOP_TIMER" });
         await SleepStorageService.clearActiveTimer(babyId);
+        dispatch({ type: "STOP_TIMER" });
+        stopVersionRef.current++;
+        removeLock(babyId, "sleep");
         if (liveActivityIdRef.current) {
           await endTimerLiveActivity(liveActivityIdRef.current);
           liveActivityIdRef.current = null;
@@ -832,7 +896,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           await endLiveActivityByType("sleep");
         }
         if (user?.id) {
-          try { await releaseTimerLock(babyId, "sleep", user.id); } catch { /* ignore */ }
+          try { await releaseTimerLock(babyId, "sleep", user.id); } catch { await queuePendingLockRelease(babyId, "sleep", user.id); }
         }
         return null;
       }
@@ -864,11 +928,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           lastSleep = await SleepStorageService.addSleep(sleepInput);
         }
         console.log("[SleepContext] stopSleep: saved entry id=%s", lastSleep.id);
-        dispatch({ type: "ADD_SLEEP", payload: lastSleep });
       } catch (saveError) {
         console.error("[SleepContext] stopSleep: FAILED to save entry, still cleaning up timer", saveError);
-        dispatch({ type: "STOP_TIMER" });
         await SleepStorageService.clearActiveTimer(babyId);
+        dispatch({ type: "STOP_TIMER" });
+        stopVersionRef.current++;
+        removeLock(babyId, "sleep");
         if (liveActivityIdRef.current) {
           await endTimerLiveActivity(liveActivityIdRef.current);
           liveActivityIdRef.current = null;
@@ -876,13 +941,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           await endLiveActivityByType("sleep");
         }
         if (user?.id) {
-          try { await releaseTimerLock(babyId, "sleep", user.id); } catch { /* ignore */ }
+          try { await releaseTimerLock(babyId, "sleep", user.id); } catch { await queuePendingLockRelease(babyId, "sleep", user.id); }
         }
         throw saveError;
       }
 
-      dispatch({ type: "STOP_TIMER" });
       await SleepStorageService.clearActiveTimer(babyId);
+      dispatch({ type: "STOP_TIMER" });
+      stopVersionRef.current++;
+      removeLock(babyId, "sleep");
+      console.log("[SleepContext] stopSleep: timer cleared, adding sleep entry");
+      dispatch({ type: "ADD_SLEEP", payload: lastSleep });
 
       if (liveActivityIdRef.current) {
         await endTimerLiveActivity(liveActivityIdRef.current);
@@ -895,7 +964,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         try {
           await releaseTimerLock(babyId, "sleep", user.id);
         } catch (error) {
-          console.error("[SleepContext] Failed to release timer lock:", error);
+          console.error("[SleepContext] Failed to release timer lock, queuing for retry:", error);
+          await queuePendingLockRelease(babyId, "sleep", user.id);
         }
       }
 
@@ -904,7 +974,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     } finally {
       isStoppingRef.current = false;
     }
-  }, [selectedBaby, state.activeTimer, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, user?.householdId, user?.id]);
+  }, [selectedBaby, state.activeTimer, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, user?.householdId, user?.id, removeLock]);
 
   const changeSleepType = useCallback((sleepType: SleepType) => {
     if (state.activeTimer?.isPaused) return;
@@ -1253,7 +1323,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       config.source,
       config.dayStartHour,
       config.dayEndHour,
-      config.napContinuationMinutes
+      config.napContinuationMinutes,
+      config.driftDismissed
     ).catch(() => {});
   }, [user?.householdId]);
 
@@ -1264,6 +1335,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       dayStartHour,
       dayEndHour,
       dayBoundariesConfigured: true,
+      driftDismissed: null,
     };
     dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
@@ -1307,22 +1379,30 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const dismissDrift = useCallback(async (): Promise<void> => {
     if (!selectedBaby || !state.driftDetection) return;
     const { type, suggestedHour } = state.driftDetection;
-    driftDismissedRef.current = { type, suggestedHour };
+    const dismissed = { type, suggestedHour };
+    driftDismissedRef.current = dismissed;
     dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
-    await SleepStorageService.setDriftDismissed(selectedBaby.id, { type, suggestedHour });
-  }, [selectedBaby, state.driftDetection]);
+    await SleepStorageService.setDriftDismissed(selectedBaby.id, dismissed);
+    const config: WakeWindowConfig = {
+      ...(state.wakeWindowConfig ?? { enabled: false, napCount: 2, slots: [], source: "age_based" as const }),
+      driftDismissed: dismissed,
+    };
+    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+    syncWakeConfigToSupabase(selectedBaby.id, config);
+  }, [selectedBaby, state.driftDetection, state.wakeWindowConfig, syncWakeConfigToSupabase]);
 
   const acceptDrift = useCallback(async (): Promise<void> => {
     if (!selectedBaby || !state.driftDetection) return;
     const { type, suggestedHour } = state.driftDetection;
+    driftDismissedRef.current = null;
+    dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
+    await SleepStorageService.clearDriftDismissed(selectedBaby.id);
     if (type === "bedtime") {
       await setDayNightBoundary(state.wakeWindowConfig?.dayStartHour ?? 6, suggestedHour);
     } else {
       await setDayNightBoundary(suggestedHour, state.wakeWindowConfig?.dayEndHour ?? 19);
     }
-    driftDismissedRef.current = null;
-    dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
-    await SleepStorageService.clearDriftDismissed(selectedBaby.id);
   }, [selectedBaby, state.driftDetection, state.wakeWindowConfig, setDayNightBoundary]);
 
   const setNapCount = useCallback(async (count: number): Promise<void> => {

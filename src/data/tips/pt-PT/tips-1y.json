@@ -1,0 +1,686 @@
+[
+  {
+    "id": "1y-development-01",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé pode começar a puxar-se para ficar de pé usando os móveis. Coloca itens resistentes por perto para que possa praticar com segurança."
+  },
+  {
+    "id": "1y-development-02",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Acenar adeus, bater palmas e apontar são sinais de que o teu bebé está a desenvolver competências importantes de comunicação social."
+  },
+  {
+    "id": "1y-development-03",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tenta empilhar dois ou três blocos e deixa o teu bebé derrubá-los. Isto ensina causa e efeito enquanto desenvolve a coordenação olho-mão."
+  },
+  {
+    "id": "1y-development-04",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé pode começar a apoiar-se nos móveis para andar entre os 9 e os 12 meses. Reorganiza os assentos para que consiga deslocar-se de um para o outro."
+  },
+  {
+    "id": "1y-development-05",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Responder consistentemente ao próprio nome é um marco nesta idade. Usa o nome dele frequentemente durante brincadeiras e refeições."
+  },
+  {
+    "id": "1y-development-06",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé está a aprender a permanência do objeto. Brinca às escondidas ou esconde um brinquedo debaixo de um cobertor e observa-o a procurar."
+  },
+  {
+    "id": "1y-development-07",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Balbuciar com sons consonantais como \"mamã\" e \"papá\" é o teu bebé a experimentar a linguagem. Repete esses sons de volta para encorajar mais."
+  },
+  {
+    "id": "1y-development-08",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Deixa o teu bebé praticar a apanhar alimentos pequenos e seguros com o movimento de pinça. Esta competência motora fina desenvolve-se rapidamente entre os 9 e os 12 meses."
+  },
+  {
+    "id": "1y-development-09",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé pode começar a entender instruções simples como \"dá-me a bola\". Usa frases curtas e claras junto com gestos suaves."
+  },
+  {
+    "id": "1y-development-10",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Bater dois objetos um no outro é um sinal de coordenação crescente e curiosidade. Oferece colheres de madeira, copos ou blocos macios para isso."
+  },
+  {
+    "id": "1y-development-11",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé pode demonstrar ansiedade perante estranhos nesta idade. Este é um sinal saudável de forte apego a ti."
+  },
+  {
+    "id": "1y-development-12",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tenta ler livros de cartão juntos e deixa o teu bebé virar as páginas. Está a construir competências de literacia precoce mesmo antes de entender as palavras."
+  },
+  {
+    "id": "1y-development-13",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Apontar para objetos que quer é um dos primeiros gestos de comunicação intencional. Reconhece o que ele aponta dizendo o nome do objeto."
+  },
+  {
+    "id": "1y-development-14",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé pode começar a imitar ações simples como mexer uma colher ou pentear o cabelo. Esta brincadeira de imitação é a forma como aprende sobre a vida diária."
+  },
+  {
+    "id": "1y-development-15",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Alguns bebés dão os primeiros passos por volta dos 12 meses, mas muitos não andam até mais tarde. Ambos os ritmos são perfeitamente normais."
+  },
+  {
+    "id": "1y-sleep-02",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Perto dos 12 meses, alguns bebés começam a resistir à sesta da manhã. Se isto acontecer consistentemente, tenta adiar gradualmente a sesta da manhã em vez de a eliminares logo."
+  },
+  {
+    "id": "1y-sleep-03",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "A ansiedade de separação pode causar despertares noturnos por volta dos 9-10 meses. Uma breve visita calma para tranquilizar é mais útil do que mudar toda a rotina."
+  },
+  {
+    "id": "1y-sleep-04",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Mantém o ambiente de sono escuro, fresco e silencioso. Uma máquina de ruído branco em volume moderado pode ajudar o teu bebé a dormir melhor."
+  },
+  {
+    "id": "1y-sleep-05",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Uma rotina curta e previsível de 15 a 20 minutos na hora de dormir sinaliza ao teu bebé que o sono está a chegar. Banho, livro, música e cama funciona bem."
+  },
+  {
+    "id": "1y-sleep-06",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "O teu bebé ainda deve dormir de costas numa superfície firme e plana. Remove todos os cobertores soltos, almofadas e peluches do berço."
+  },
+  {
+    "id": "1y-sleep-07",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "O desmame noturno geralmente acontece naturalmente entre os 9 e os 12 meses à medida que o teu bebé come mais sólidos durante o dia. Fala com o teu pediatra se tiveres dúvidas."
+  },
+  {
+    "id": "1y-sleep-08",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Se o teu bebé se puxa para ficar de pé no berço e chora, pode precisar de ajuda para aprender a sentar-se de novo. Pratica esta competência durante brincadeiras diurnas."
+  },
+  {
+    "id": "1y-sleep-09",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Procura manter janelas de vigília de 2,5 a 3,5 horas entre sestas nesta idade. Bebés demasiado cansados geralmente têm mais dificuldade em adormecer."
+  },
+  {
+    "id": "1y-sleep-10",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Despertares cedo de manhã antes das 6h são comuns nesta idade. Certifica-te de que o quarto está muito escuro e evita atividades estimulantes se acordar muito cedo."
+  },
+  {
+    "id": "1y-sleep-11",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "O desconforto da dentição pode perturbar o sono. Se o teu bebé parece estar com dor, pergunta ao teu pediatra sobre alívio da dor apropriado para a idade antes de dormir."
+  },
+  {
+    "id": "1y-sleep-12",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Viagens e mudanças de horário podem afetar temporariamente o sono. Tem paciência e volta à rotina normal o mais rapidamente possível."
+  },
+  {
+    "id": "1y-sleep-14",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Se o teu bebé está a fazer duas sestas, a primeira é geralmente por volta das 9-10 da manhã e a segunda por volta das 13-14h. Ajusta com base nos sinais de sono do teu bebé."
+  },
+  {
+    "id": "1y-sleep-15",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Alguns bebés passam por uma regressão do sono por volta dos 10-12 meses relacionada com marcos de desenvolvimento como ficar de pé e andar apoiado nos móveis. Geralmente passa em 2 a 4 semanas."
+  },
+  {
+    "id": "1y-feeding-01",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Entre os 9 e os 12 meses, o teu bebé pode comer uma grande variedade de alimentos macios com as mãos. Corta tudo em pedacinhos do tamanho de uma ervilha."
+  },
+  {
+    "id": "1y-feeding-02",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Oferece água num copo aberto ou copo com palhinha durante as refeições. Praticar agora ajuda na transição dos biberões aos 12-15 meses."
+  },
+  {
+    "id": "1y-feeding-03",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "O teu bebé ainda precisa de leite materno ou fórmula como nutrição principal até aos 12 meses. Os sólidos são complementares nesta fase."
+  },
+  {
+    "id": "1y-feeding-04",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Pode ser preciso 10 a 15 exposições a um alimento novo antes de o bebé o aceitar. Continua a oferecer sem pressão se ele rejeitar."
+  },
+  {
+    "id": "1y-feeding-05",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Alimentos ricos em ferro como cereais enriquecidos, carnes em puré, feijões e lentilhas são especialmente importantes entre os 9 e os 12 meses, à medida que as reservas de ferro do nascimento se esgotam."
+  },
+  {
+    "id": "1y-feeding-06",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Deixa o teu bebé alimentar-se sozinho o máximo possível. A sujidade vale a pena pelo desenvolvimento de independência e competências motoras finas."
+  },
+  {
+    "id": "1y-feeding-07",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Evita o mel até depois dos 12 meses devido ao risco de botulismo infantil. Isto aplica-se a todas as formas, incluindo produtos de pastelaria feitos com mel."
+  },
+  {
+    "id": "1y-feeding-08",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "O reflexo de engasgamento é diferente de asfixia e é um reflexo protetor normal à medida que o teu bebé aprende a lidar com novas texturas. Mantém a calma e deixa-o resolver sozinho."
+  },
+  {
+    "id": "1y-feeding-09",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Oferece três refeições e 1 a 2 lanches por dia junto com leite materno ou fórmula. Segue os sinais de fome e saciedade do teu bebé."
+  },
+  {
+    "id": "1y-feeding-10",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Introduz alergénios comuns como manteiga de amendoim (diluída ou em snacks), ovo e laticínios cedo e com frequência. Estudos mostram que isto pode reduzir o risco de alergias."
+  },
+  {
+    "id": "1y-feeding-11",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Evita açúcar adicionado e sal na comida do teu bebé. Os rins e as papilas gustativas dele ainda estão a desenvolver-se, e os alimentos naturais fornecem tudo o que precisa."
+  },
+  {
+    "id": "1y-feeding-12",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Se o teu bebé vira a cabeça ou fecha a boca, está a dizer-te que acabou. Respeita esses sinais de saciedade para construir uma relação saudável com a comida."
+  },
+  {
+    "id": "1y-feeding-13",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Comer juntos em família ajuda o teu bebé a aprender ao observar-te. Tem mais probabilidade de experimentar alimentos novos quando te vê a comer com prazer."
+  },
+  {
+    "id": "1y-feeding-14",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Frutas macias como banana, abacate maduro e pera cozida a vapor são ótimos primeiros alimentos para comer com as mãos. Esmaga levemente ou corta em pequenas tiras."
+  },
+  {
+    "id": "1y-feeding-15",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Se estás a planear o desmame da amamentação, eliminar uma mamada de cada vez ao longo de várias semanas é mais suave para ti e para o teu bebé."
+  },
+  {
+    "id": "1y-health-01",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "As consultas de rotina incluem rastreio de desenvolvimento e verificação do crescimento. Leva todas as perguntas que foste guardando."
+  },
+  {
+    "id": "1y-health-02",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Fala com o teu pediatra sobre quais vacinas estão previstas durante esta fase. Manter o calendário de vacinação em dia é importante para proteger o teu pequeno explorador."
+  },
+  {
+    "id": "1y-health-04",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "A dentição geralmente intensifica-se entre os 9 e os 12 meses à medida que nascem mais dentes. Um anel de dentição refrigerado (não congelado) pode proporcionar um alívio reconfortante."
+  },
+  {
+    "id": "1y-health-05",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "A primeira visita ao dentista do teu bebé deve acontecer até ao primeiro aniversário ou nos seis meses após o primeiro dente nascer."
+  },
+  {
+    "id": "1y-health-06",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "As otites são comuns nesta idade. Fica atento se ele puxa a orelha, fica irritado, tem dificuldade em dormir ou febre, e contacta o teu pediatra se suspeitares."
+  },
+  {
+    "id": "1y-health-07",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Quando os dentes nascem, escova-os duas vezes ao dia com uma quantidade de pasta com flúor do tamanho de um grão de arroz e uma escova de dentes macia para bebé."
+  },
+  {
+    "id": "1y-health-08",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Lavar as mãos com frequência é uma das melhores formas de prevenir doenças à medida que o teu bebé explora mais superfícies e objetos."
+  },
+  {
+    "id": "1y-health-09",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Se o teu bebé apanha uma constipação ligeira, gotas de soro fisiológico e um aspirador nasal podem ajudar a desobstruir o nariz. Um humidificador de ar frio no quarto também ajuda."
+  },
+  {
+    "id": "1y-health-11",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Mantém o boletim de vacinas do teu bebé num só lugar. Vais precisar dele para a inscrição na creche e futuras consultas médicas."
+  },
+  {
+    "id": "1y-health-12",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Efeitos secundários ligeiros após as vacinas, como febre baixa ou irritabilidade durante um ou dois dias, são normais e um sinal de que o sistema imunitário está a responder."
+  },
+  {
+    "id": "1y-health-13",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Pés chatos são completamente normais nesta idade. O arco desenvolve-se ao longo dos primeiros anos e geralmente não precisa de qualquer intervenção."
+  },
+  {
+    "id": "1y-health-14",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Se o teu bebé tem assadura persistente que não melhora com pomada de barreira, pode ser uma candidíase. Pergunta ao teu pediatra sobre o tratamento."
+  },
+  {
+    "id": "1y-health-15",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "A vacina contra a gripe é recomendada anualmente a partir dos 6 meses. Se o teu bebé ainda não a tomou, não é tarde para pôr em dia."
+  },
+  {
+    "id": "1y-play-01",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Enche um recipiente com itens grandes e macios e deixa o teu bebé praticar a tirar e a pôr de volta. Isto desenvolve competências de resolução de problemas."
+  },
+  {
+    "id": "1y-play-02",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Tenta um cesto de tesouros simples com itens seguros de casa, de diferentes texturas, formas e pesos. O teu bebé vai adorar explorar cada um."
+  },
+  {
+    "id": "1y-play-03",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Rola uma bola para a frente e para trás com o teu bebé. Este jogo simples de vez-a-vez ensina interação social e a seguir objetos em movimento."
+  },
+  {
+    "id": "1y-play-04",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Deixa o teu bebé brincar com água durante o banho usando copos e recipientes para despejar. Brincadeira com água supervisionada é ótima para o desenvolvimento sensorial."
+  },
+  {
+    "id": "1y-play-05",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Cria um circuito de obstáculos simples com almofadas do sofá no chão. Gatinhar por cima e à volta delas desenvolve a força do tronco e a consciência espacial."
+  },
+  {
+    "id": "1y-play-06",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Canta canções com gestos de mão como brincadeiras de palmas e de roda. O teu bebé está a aprender a ligar palavras a ações."
+  },
+  {
+    "id": "1y-play-07",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Oferece lápis de cera grandes e papel para as primeiras experiências de rabisco. Segura o lápis junto se necessário e celebra qualquer marca que ele fizer."
+  },
+  {
+    "id": "1y-play-08",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Põe música e dancem juntos. Mover-se ao ritmo estimula o desenvolvimento motor e é uma experiência de vínculo muito alegre."
+  },
+  {
+    "id": "1y-play-09",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Leva o teu bebé lá para fora para sentir a relva, as folhas e a areia. Experiências sensoriais ao ar livre são oportunidades ricas de aprendizagem."
+  },
+  {
+    "id": "1y-play-10",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Copos de encaixe ou anéis de empilhamento ensinam o teu bebé sobre relações de tamanho. Mostra como empilhar e depois deixa-o explorar sozinho."
+  },
+  {
+    "id": "1y-play-11",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Brinca ao \"Onde está?\" escondendo um brinquedo debaixo de um de dois copos. Isto fortalece a memória e as competências de resolução de problemas."
+  },
+  {
+    "id": "1y-play-12",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Deixa o teu bebé bater em tachos e colheres de madeira. Fazer barulho ensina causa e efeito e é infinitamente divertido para ele."
+  },
+  {
+    "id": "1y-play-13",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Descreve o que estás a fazer ao longo do dia. \"Agora estamos a lavar as tuas mãos\" desenvolve o vocabulário mesmo antes de o teu bebé falar."
+  },
+  {
+    "id": "1y-play-14",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Tenta brincadeiras supervisionadas com itens seguros da cozinha como copos de medida, espátulas de silicone e taças de plástico. Objetos reais fascinam bebés nesta idade."
+  },
+  {
+    "id": "1y-play-15",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Brinquedos de empurrar com pega incentivam a prática de caminhada e desenvolvem confiança nos bebés que estão a começar a andar. Deixa o teu bebé empurrar ao seu ritmo."
+  },
+  {
+    "id": "1y-safety-01",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Agora que o teu bebé se está a movimentar, prende todos os móveis à parede com suportes anti-tombamento. Cómodas e estantes são os perigos de tombamento mais comuns."
+  },
+  {
+    "id": "1y-safety-02",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Mantém todos os objetos pequenos, moedas e pilhas de botão fora do alcance. Qualquer coisa que caiba por um rolo de papel higiénico é risco de asfixia."
+  },
+  {
+    "id": "1y-safety-03",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Instala portões de segurança no topo e na base das escadas. Portões de pressão funcionam na base, mas usa portões fixados com parafusos no topo."
+  },
+  {
+    "id": "1y-safety-04",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Verifica se a cadeirinha do carro do teu bebé está voltada para trás e instalada corretamente. Os especialistas em segurança recomendam manter as crianças voltadas para trás o máximo possível, até atingirem o limite máximo de altura ou peso do assento."
+  },
+  {
+    "id": "1y-safety-05",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Nunca deixes o teu bebé sozinho perto de água, nem por um instante. O afogamento pode acontecer em apenas {{1 inch|2,5 cm}} de água."
+  },
+  {
+    "id": "1y-safety-06",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Cobre todas as tomadas elétricas com protetores de segurança. Bebés que estão a gatinhar são naturalmente atraídos por tomadas ao nível dos olhos deles."
+  },
+  {
+    "id": "1y-safety-07",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Move produtos de limpeza, medicamentos e produtos químicos para armários altos e trancados. Usa trancas de segurança em qualquer armário baixo que contenha perigos."
+  },
+  {
+    "id": "1y-safety-08",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Corta alimentos redondos como uvas, tomates cereja e salsichas ao comprido em pedacinhos. Formas redondas são o risco de asfixia mais comum para bebés."
+  },
+  {
+    "id": "1y-safety-09",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Regula o teu esquentador a {{120°F|49°C}} ou menos para prevenir escaldaduras. Testa sempre a água do banho com o pulso ou cotovelo antes de colocar o teu bebé."
+  },
+  {
+    "id": "1y-safety-10",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Mantém os cordões dos estores e cortinas fora do alcance ou troca por cortinas sem cordas. Representam um sério risco de estrangulamento."
+  },
+  {
+    "id": "1y-safety-11",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Baixa o colchão do berço para a posição mais baixa assim que o teu bebé consiga puxar-se para ficar de pé. Isto impede-o de trepar ou cair para fora."
+  },
+  {
+    "id": "1y-safety-12",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Guarda o número do centro de informação antivenenos no teu telemóvel. O acesso rápido faz toda a diferença numa emergência."
+  },
+  {
+    "id": "1y-safety-13",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Evita andarilhos com rodas, pois os especialistas em segurança pediátrica alertam que contribuem para lesões e não ajudam os bebés a aprender a andar."
+  },
+  {
+    "id": "1y-safety-14",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Usa protetores de quina em bordas de móveis pontiagudos como mesas de centro e lareiras. Bebés que estão a começar a andar caem frequentemente e à altura da cabeça."
+  },
+  {
+    "id": "1y-safety-15",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Supervisiona sempre o teu bebé enquanto come. Fica ao alcance do braço e aprende reanimação infantil para estares preparado caso aconteça uma asfixia."
+  },
+  {
+    "id": "1y-development-16",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé pode começar a usar uma ou duas palavras reais com significado nesta idade. Celebra cada tentativa de comunicação, mesmo que a palavra não esteja perfeita."
+  },
+  {
+    "id": "1y-development-17",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Oferecer ao teu bebé um encaixe de formas ou puzzle com puxadores grandes ajuda-o a aprender sobre combinação e relações espaciais por tentativa e erro."
+  },
+  {
+    "id": "1y-development-18",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé pode dar-te um livro quando quer que leias para ele. Seguir o interesse dele e ler o que o atrai desenvolve o amor pelos livros para a vida toda."
+  },
+  {
+    "id": "1y-development-19",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "Tenta dar instruções simples de uma etapa junto com um gesto, como estender a mão e dizer \"dá-me a bola\". O teu bebé está a aprender a ligar as tuas palavras a ações."
+  },
+  {
+    "id": "1y-development-20",
+    "ageGroup": "1y",
+    "category": "development",
+    "text": "O teu bebé está a começar a entender que os objetos têm nomes. Nomear tudo à volta dele — \"aquela é uma árvore\", \"olha o passarinho\" — alimenta o vocabulário crescente."
+  },
+  {
+    "id": "1y-sleep-16",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Por volta dos 12 meses ou depois, alguns bebés começam a fazer a transição de duas sestas para uma. Se isto acontecer, espera algumas semanas de inconsistência em que alguns dias precisam de duas sestas e outros apenas de uma."
+  },
+  {
+    "id": "1y-sleep-17",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Se o teu bebé está a passar para uma sesta só por volta dos 12 meses ou depois, procura fazer uma sesta a meio do dia por volta das 12h-13h. Antecipar a hora de dormir pode ajudar enquanto se ajusta."
+  },
+  {
+    "id": "1y-sleep-18",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Se o teu bebé começou a trepar para fora do berço, baixa o colchão para a posição mais baixa e remove qualquer coisa que pudesse usar como degrau."
+  },
+  {
+    "id": "1y-sleep-19",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Resiste ao impulso de saltar sestas para passeios. Sono consistente durante o dia leva de facto a um melhor sono noturno e a um bebé mais feliz no geral."
+  },
+  {
+    "id": "1y-sleep-20",
+    "ageGroup": "1y",
+    "category": "sleep",
+    "text": "Se as birras na hora de dormir começarem, uma rotina simples de contagem decrescente pode ajudar. \"Mais dois minutinhos de brincadeira, depois lavamos os dentes\" dá ao teu bebé uma noção do que vem a seguir."
+  },
+  {
+    "id": "1y-feeding-16",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "À medida que o teu bebé se aproxima do primeiro aniversário, podes começar a introduzir leite de vaca gordo como bebida. Procura oferecer cerca de {{16-24 ounces|475-710 ml}} por dia — demasiado pode enchê-lo e tirar espaço aos alimentos sólidos."
+  },
+  {
+    "id": "1y-feeding-17",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Tenta oferecer um molho como húmus ou iogurte para acompanhar os alimentos com as mãos. Mergulhar a comida é divertido para o teu bebé e pode tornar alimentos novos mais atraentes."
+  },
+  {
+    "id": "1y-feeding-18",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Se o teu bebé insiste em comer sozinho, deixa-o. Oferece uma colher já com comida para que pratique, e come junto para lhe mostrar como se faz."
+  },
+  {
+    "id": "1y-feeding-19",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Quando sentires que é o momento certo, começa a fazer a transição dos biberões. Oferecer leite num copo às refeições e água entre refeições facilita a mudança."
+  },
+  {
+    "id": "1y-feeding-20",
+    "ageGroup": "1y",
+    "category": "feeding",
+    "text": "Não te preocupes se o apetite do teu bebé varia de um dia para o outro. Surtos de crescimento, dentição e nível de atividade afetam a fome. Confia nos sinais dele."
+  },
+  {
+    "id": "1y-health-16",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Andar na ponta dos pés de vez em quando é comum à medida que o teu bebé experimenta o movimento. Se isto se tornar o padrão principal de marcha, menciona-o ao teu pediatra."
+  },
+  {
+    "id": "1y-health-18",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "Se o teu bebé desenvolve uma irritação na pele após experimentar um alimento novo, anota o que comeu e quando a irritação apareceu. Partilha isto com o teu pediatra para ajudar a identificar possíveis sensibilidades alimentares."
+  },
+  {
+    "id": "1y-health-19",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "A diarreia causada por vírus estomacais pode desidratar bebés rapidamente. Oferece pequenos e frequentes goles de solução de reidratação oral e contacta o teu pediatra se durar mais de um dia."
+  },
+  {
+    "id": "1y-health-20",
+    "ageGroup": "1y",
+    "category": "health",
+    "text": "À medida que o teu bebé começa a andar, espera nódoas negras nas canelas e na testa por causa dos tombos. Isto é uma parte normal da aprendizagem, mas verifica sempre se não houve lesão na cabeça após quedas mais fortes."
+  },
+  {
+    "id": "1y-play-16",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Tenta dar ao teu bebé um brinquedo com portinhas, fechos ou fechos éclair para abrir e fechar. Estes desafios de motricidade fina mantêm-no entretido e desenvolvem a destreza."
+  },
+  {
+    "id": "1y-play-17",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Monta uma prateleira baixa com alguns brinquedos em rotação em vez de uma grande caixa de brinquedos. Menos opções de uma vez ajudam o teu bebé a concentrar-se e a brincar com mais profundidade."
+  },
+  {
+    "id": "1y-play-18",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "O teu bebé pode começar a brincar ao faz de conta, como dar comidinha a um peluche ou deitar uma boneca. Participa e expande as ideias dele para estimular a imaginação."
+  },
+  {
+    "id": "1y-play-20",
+    "ageGroup": "1y",
+    "category": "play",
+    "text": "Tenta soprar bolas de sabão e deixar o teu bebé persegui-las e rebentá-las. É ótimo para o rastreamento visual, o alcance e para pôr os bebés que estão a começar a andar em movimento."
+  },
+  {
+    "id": "1y-safety-16",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "À medida que o teu bebé começa a andar, sapatos com solas flexíveis e antiderrapantes protegem os pés ao ar livre. Em casa, pés descalços ou meias com aderência são melhores para o equilíbrio."
+  },
+  {
+    "id": "1y-safety-17",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Mantém as cápsulas de detergente para a roupa trancadas. As suas cores vivas atraem os bebés, e morder uma pode causar queimaduras químicas graves na boca e garganta."
+  },
+  {
+    "id": "1y-safety-18",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Verifica se os brinquedos do teu bebé não têm peças pequenas que possam soltar-se. Inspeciona regularmente os brinquedos à procura de fissuras, peças soltas ou tinta a descascar."
+  },
+  {
+    "id": "1y-safety-19",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Se tens lareira ou aquecedor, usa um ecrã de proteção ou barreira. Até superfícies mornas podem queimar a pele sensível de um bebé ao contacto."
+  },
+  {
+    "id": "1y-safety-20",
+    "ageGroup": "1y",
+    "category": "safety",
+    "text": "Fica atento aos lanches de crianças mais velhas perto do teu bebé. Pipocas, frutos secos, rebuçados duros e pastilha elástica são riscos de asfixia fáceis de passar despercebidos quando os irmãos estão a partilhar."
+  }
+]

@@ -81,10 +81,13 @@ const LANGUAGE_LABELS = {
   system: "settings.systemDefault",
   en: "settings.english",
   sr: "settings.serbian",
-  es: "settings.spanish",
+  es: "settings.spanishLatam",
+  "es-ES": "settings.spanishSpain",
   fr: "settings.french",
-  pt: "settings.portuguese",
+  "pt-PT": "settings.portuguesePT",
+  "pt-BR": "settings.portugueseBR",
   de: "settings.german",
+  it: "settings.italian",
 } as const;
 
 export default function SettingsScreen() {
@@ -204,7 +207,7 @@ export default function SettingsScreen() {
           <SettingsRow
             icon="ℹ️"
             label={t("settings.version")}
-            value="1.0.0"
+            value="4.0.0"
             showChevron={false}
           />
           <SettingsDivider />

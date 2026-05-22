@@ -12,6 +12,36 @@ import type { StoredGrowthEntry, CreateGrowthInput, UpdateGrowthInput } from "./
 import type { StoredTummyTimeEntry, CreateTummyTimeInput, UpdateTummyTimeInput } from "./tummyTime-storage";
 import type { StoredMilestoneResponse, MilestoneState } from "./milestones-storage";
 import type { StoredHealthEntry, CreateHealthInput, UpdateHealthInput } from "./health-storage";
+import type { AchievementId } from "./achievement-detection";
+import type { SyncEngine } from "./sync/sync-engine";
+
+function getPendingCreateIds(engine: SyncEngine | null, table: SyncableTable): Set<string> {
+  if (!engine) return new Set();
+  return engine.getPendingEntityIds(table);
+}
+
+function mergeWithPendingLocal<T extends { id: string }>(
+  serverEntries: T[],
+  localEntries: T[],
+  pendingIds: Set<string>
+): T[] {
+  if (pendingIds.size === 0) return serverEntries;
+  const serverIds = new Set(serverEntries.map(e => e.id));
+  const unsyncedLocal = localEntries.filter(
+    l => !serverIds.has(l.id) && pendingIds.has(l.id)
+  );
+  if (unsyncedLocal.length === 0) return serverEntries;
+  return [...serverEntries, ...unsyncedLocal];
+}
+
+const storageLocks = new Map<string, Promise<void>>();
+
+function withStorageLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const prev = storageLocks.get(key) ?? Promise.resolve();
+  const next = prev.then(fn, fn);
+  storageLocks.set(key, next.then(() => {}, () => {}));
+  return next;
+}
 
 const KEYS = {
   feedings: "@feedings:",
@@ -22,6 +52,7 @@ const KEYS = {
   tummyTime: "@tummyTimes:",
   milestones: "@milestones:",
   health: "@health:",
+  achievements: "@achievements:",
 };
 
 function generateId(): string {
@@ -127,7 +158,11 @@ export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredF
     throw new Error("Failed to fetch feedings");
   }
 
-  const feedings: StoredFeedingEntry[] = (data || []).map(transformFeedingFromDb);
+  const serverFeedings: StoredFeedingEntry[] = (data || []).map(transformFeedingFromDb);
+  const pendingIds = getPendingCreateIds(getSyncEngine(), 'feedings');
+  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.feedings}${babyId}`));
+  const localFeedings: StoredFeedingEntry[] = localData ? JSON.parse(localData) : [];
+  const feedings = mergeWithPendingLocal(serverFeedings, localFeedings, pendingIds);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.feedings}${babyId}`), JSON.stringify(feedings));
   return feedings;
 }
@@ -286,9 +321,11 @@ async function updateLocalFeedings(
   updater: (feedings: StoredFeedingEntry[]) => StoredFeedingEntry[]
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.feedings}${babyId}`);
-  const data = await AsyncStorage.getItem(key);
-  const feedings = data ? (JSON.parse(data) as StoredFeedingEntry[]) : [];
-  await AsyncStorage.setItem(key, JSON.stringify(updater(feedings)));
+  await withStorageLock(key, async () => {
+    const data = await AsyncStorage.getItem(key);
+    const feedings = data ? (JSON.parse(data) as StoredFeedingEntry[]) : [];
+    await AsyncStorage.setItem(key, JSON.stringify(updater(feedings)));
+  });
 }
 
 // ============ DIAPERS ============
@@ -305,7 +342,11 @@ export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDi
     throw new Error("Failed to fetch diapers");
   }
 
-  const diapers: StoredDiaperEntry[] = (data || []).map(transformDiaperFromDb);
+  const serverDiapers: StoredDiaperEntry[] = (data || []).map(transformDiaperFromDb);
+  const pendingIds = getPendingCreateIds(getSyncEngine(), 'diapers');
+  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.diapers}${babyId}`));
+  const localDiapers: StoredDiaperEntry[] = localData ? JSON.parse(localData) : [];
+  const diapers = mergeWithPendingLocal(serverDiapers, localDiapers, pendingIds);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.diapers}${babyId}`), JSON.stringify(diapers));
   return diapers;
 }
@@ -424,9 +465,11 @@ async function updateLocalDiapers(
   updater: (diapers: StoredDiaperEntry[]) => StoredDiaperEntry[]
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.diapers}${babyId}`);
-  const data = await AsyncStorage.getItem(key);
-  const diapers = data ? (JSON.parse(data) as StoredDiaperEntry[]) : [];
-  await AsyncStorage.setItem(key, JSON.stringify(updater(diapers)));
+  await withStorageLock(key, async () => {
+    const data = await AsyncStorage.getItem(key);
+    const diapers = data ? (JSON.parse(data) as StoredDiaperEntry[]) : [];
+    await AsyncStorage.setItem(key, JSON.stringify(updater(diapers)));
+  });
 }
 
 // ============ SLEEP ============
@@ -443,7 +486,23 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
     throw new Error("Failed to fetch sleep sessions");
   }
 
-  const sleepSessions: StoredSleepEntry[] = (data || []).map(transformSleepFromDb);
+  const serverSessions: StoredSleepEntry[] = (data || []).map(transformSleepFromDb);
+  const pendingIds = getPendingCreateIds(getSyncEngine(), 'sleep_sessions');
+  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.sleep}${babyId}`));
+  const localSessions: StoredSleepEntry[] = localData ? JSON.parse(localData) : [];
+  const sleepSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingIds);
+  const mergedIds = new Set(sleepSessions.map(s => s.id));
+  const droppedRecent = localSessions.filter(l =>
+    !mergedIds.has(l.id) && (Date.now() - new Date(l.createdAt).getTime()) < 120_000
+  );
+  if (droppedRecent.length > 0) {
+    console.error("[ActivitySync] fetchSleep: DROPPING recent local entries!", {
+      droppedIds: droppedRecent.map(d => d.id),
+      pendingCount: pendingIds.size,
+      serverCount: serverSessions.length,
+      localCount: localSessions.length,
+    });
+  }
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.sleep}${babyId}`), JSON.stringify(sleepSessions));
   return sleepSessions;
 }
@@ -469,6 +528,7 @@ export async function createSleepInDatabase(
   };
 
   await updateLocalSleep(input.babyId, (sessions) => [...sessions, sleep]);
+  console.log("[ActivitySync] createSleep: local write done, id=%s", id);
 
   await queueSyncOperation({
     type: 'CREATE',
@@ -568,9 +628,11 @@ async function updateLocalSleep(
   updater: (sessions: StoredSleepEntry[]) => StoredSleepEntry[]
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.sleep}${babyId}`);
-  const data = await AsyncStorage.getItem(key);
-  const sessions = data ? (JSON.parse(data) as StoredSleepEntry[]) : [];
-  await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
+  await withStorageLock(key, async () => {
+    const data = await AsyncStorage.getItem(key);
+    const sessions = data ? (JSON.parse(data) as StoredSleepEntry[]) : [];
+    await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
+  });
 }
 
 // ============ PUMPING ============
@@ -587,7 +649,11 @@ export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPu
     throw new Error("Failed to fetch pumping sessions");
   }
 
-  const pumpingSessions: StoredPumpingEntry[] = (data || []).map(transformPumpingFromDb);
+  const serverSessions: StoredPumpingEntry[] = (data || []).map(transformPumpingFromDb);
+  const pendingIds = getPendingCreateIds(getSyncEngine(), 'pumping_sessions');
+  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.pumping}${babyId}`));
+  const localSessions: StoredPumpingEntry[] = localData ? JSON.parse(localData) : [];
+  const pumpingSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingIds);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.pumping}${babyId}`), JSON.stringify(pumpingSessions));
   return pumpingSessions;
 }
@@ -713,9 +779,11 @@ async function updateLocalPumping(
   updater: (sessions: StoredPumpingEntry[]) => StoredPumpingEntry[]
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.pumping}${babyId}`);
-  const data = await AsyncStorage.getItem(key);
-  const sessions = data ? (JSON.parse(data) as StoredPumpingEntry[]) : [];
-  await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
+  await withStorageLock(key, async () => {
+    const data = await AsyncStorage.getItem(key);
+    const sessions = data ? (JSON.parse(data) as StoredPumpingEntry[]) : [];
+    await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
+  });
 }
 
 // ============ GROWTH ============
@@ -732,7 +800,11 @@ export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGro
     throw new Error("Failed to fetch growth measurements");
   }
 
-  const measurements: StoredGrowthEntry[] = (data || []).map(transformGrowthFromDb);
+  const serverMeasurements: StoredGrowthEntry[] = (data || []).map(transformGrowthFromDb);
+  const pendingIds = getPendingCreateIds(getSyncEngine(), 'growth_measurements');
+  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.growth}${babyId}`));
+  const localMeasurements: StoredGrowthEntry[] = localData ? JSON.parse(localData) : [];
+  const measurements = mergeWithPendingLocal(serverMeasurements, localMeasurements, pendingIds);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.growth}${babyId}`), JSON.stringify(measurements));
   return measurements;
 }
@@ -855,9 +927,11 @@ async function updateLocalGrowth(
   updater: (measurements: StoredGrowthEntry[]) => StoredGrowthEntry[]
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.growth}${babyId}`);
-  const data = await AsyncStorage.getItem(key);
-  const measurements = data ? (JSON.parse(data) as StoredGrowthEntry[]) : [];
-  await AsyncStorage.setItem(key, JSON.stringify(updater(measurements)));
+  await withStorageLock(key, async () => {
+    const data = await AsyncStorage.getItem(key);
+    const measurements = data ? (JSON.parse(data) as StoredGrowthEntry[]) : [];
+    await AsyncStorage.setItem(key, JSON.stringify(updater(measurements)));
+  });
 }
 
 // ============ TUMMY TIME ============
@@ -874,7 +948,11 @@ export async function fetchTummyTimeFromDatabase(babyId: string): Promise<Stored
     throw new Error("Failed to fetch tummy time sessions");
   }
 
-  const sessions: StoredTummyTimeEntry[] = (data || []).map(transformTummyTimeFromDb);
+  const serverSessions: StoredTummyTimeEntry[] = (data || []).map(transformTummyTimeFromDb);
+  const pendingIds = getPendingCreateIds(getSyncEngine(), 'tummy_time_sessions');
+  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.tummyTime}${babyId}`));
+  const localSessions: StoredTummyTimeEntry[] = localData ? JSON.parse(localData) : [];
+  const sessions = mergeWithPendingLocal(serverSessions, localSessions, pendingIds);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.tummyTime}${babyId}`), JSON.stringify(sessions));
   return sessions;
 }
@@ -992,9 +1070,11 @@ async function updateLocalTummyTime(
   updater: (sessions: StoredTummyTimeEntry[]) => StoredTummyTimeEntry[]
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.tummyTime}${babyId}`);
-  const data = await AsyncStorage.getItem(key);
-  const sessions = data ? (JSON.parse(data) as StoredTummyTimeEntry[]) : [];
-  await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
+  await withStorageLock(key, async () => {
+    const data = await AsyncStorage.getItem(key);
+    const sessions = data ? (JSON.parse(data) as StoredTummyTimeEntry[]) : [];
+    await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
+  });
 }
 
 // ============ MILESTONES ============
@@ -1121,9 +1201,62 @@ async function updateLocalMilestoneResponses(
   updater: (responses: StoredMilestoneResponse[]) => StoredMilestoneResponse[]
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.milestones}${babyId}`);
-  const data = await AsyncStorage.getItem(key);
-  const responses = data ? (JSON.parse(data) as StoredMilestoneResponse[]) : [];
-  await AsyncStorage.setItem(key, JSON.stringify(updater(responses)));
+  await withStorageLock(key, async () => {
+    const data = await AsyncStorage.getItem(key);
+    const responses = data ? (JSON.parse(data) as StoredMilestoneResponse[]) : [];
+    await AsyncStorage.setItem(key, JSON.stringify(updater(responses)));
+  });
+}
+
+// ============ ACHIEVEMENTS ============
+
+interface StoredAchievementRecord {
+  id: AchievementId;
+  detectedAt: string;
+}
+
+export async function fetchAchievementsFromDatabase(babyId: string): Promise<StoredAchievementRecord[]> {
+  const { data, error } = await supabase
+    .from("achievements")
+    .select("*")
+    .eq("baby_id", babyId);
+
+  if (error) {
+    console.error("[ActivitySync] Failed to fetch achievements:", error.message);
+    return [];
+  }
+
+  const records: StoredAchievementRecord[] = (data || []).map((row: Record<string, unknown>) => ({
+    id: row.achievement_id as AchievementId,
+    detectedAt: row.detected_at as string,
+  }));
+
+  const key = getUserScopedKey(`${KEYS.achievements}${babyId}`);
+  await AsyncStorage.setItem(key, JSON.stringify(records));
+  return records;
+}
+
+export async function insertAchievementInDatabase(
+  babyId: string,
+  achievementId: AchievementId,
+  detectedBy?: string
+): Promise<void> {
+  const id = generateId();
+  const now = new Date().toISOString();
+
+  await queueSyncOperation({
+    type: 'CREATE',
+    table: 'achievements',
+    entityId: id,
+    data: {
+      id,
+      baby_id: babyId,
+      achievement_id: achievementId,
+      detected_at: now,
+      detected_by: detectedBy,
+      created_at: now,
+    },
+  });
 }
 
 // ============ GUEST DATA MIGRATION ============
@@ -1417,7 +1550,11 @@ export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHea
     throw new Error("Failed to fetch health");
   }
 
-  const entries: StoredHealthEntry[] = (data || []).map(transformHealthFromDb);
+  const serverEntries: StoredHealthEntry[] = (data || []).map(transformHealthFromDb);
+  const pendingIds = getPendingCreateIds(getSyncEngine(), 'health_entries');
+  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.health}${babyId}`));
+  const localEntries: StoredHealthEntry[] = localData ? JSON.parse(localData) : [];
+  const entries = mergeWithPendingLocal(serverEntries, localEntries, pendingIds);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.health}${babyId}`), JSON.stringify(entries));
   return entries;
 }
@@ -1593,7 +1730,9 @@ async function updateLocalHealth(
   updater: (entries: StoredHealthEntry[]) => StoredHealthEntry[]
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.health}${babyId}`);
-  const data = await AsyncStorage.getItem(key);
-  const entries = data ? (JSON.parse(data) as StoredHealthEntry[]) : [];
-  await AsyncStorage.setItem(key, JSON.stringify(updater(entries)));
+  await withStorageLock(key, async () => {
+    const data = await AsyncStorage.getItem(key);
+    const entries = data ? (JSON.parse(data) as StoredHealthEntry[]) : [];
+    await AsyncStorage.setItem(key, JSON.stringify(updater(entries)));
+  });
 }

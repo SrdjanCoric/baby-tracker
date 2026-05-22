@@ -461,8 +461,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }
       } catch (error) {
-        console.error("[FeedingContext] Failed to acquire timer lock:", error);
-        return { success: false };
+        console.error("[FeedingContext] Failed to acquire timer lock (proceeding offline):", error);
       }
     }
 
@@ -560,6 +559,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "ADD_FEEDING", payload: feeding });
       } catch (saveError) {
         console.error("[FeedingContext] stopBreastfeeding: FAILED to save, cleaning up timer", saveError);
+        console.error("[FeedingContext] BUG5: Feeding data LOST — feedingInput=%j (no local fallback save)", feedingInput);
         dispatch({ type: "STOP_TIMER" });
         await FeedingStorageService.clearActiveTimer(selectedBaby.id);
         if (liveActivityIdRef.current) {

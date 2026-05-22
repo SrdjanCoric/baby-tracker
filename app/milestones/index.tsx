@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
-  withDelay,
-  withSequence,
-  runOnJS,
 } from "react-native-reanimated";
 import { useMilestones, useBaby } from "@/contexts";
+import { MilestoneCelebrationModal } from "@/components/MilestoneCelebrationModal";
 import {
   AGE_GROUPS,
   CATEGORY_ORDER,
@@ -308,13 +305,14 @@ export default function MilestonesScreen() {
         />
       )}
 
-      {showCelebration && (
-        <CelebrationOverlay
-          visible={showCelebration}
-          onDismiss={() => setShowCelebration(false)}
-          accent={accent}
-        />
-      )}
+      <MilestoneCelebrationModal
+        visible={showCelebration}
+        achievementId="milestone_period"
+        emoji="⭐"
+        babyAgeMonths={0}
+        ageGroupLabel={t(`milestones.age.${selectedAgeKey}` as never)}
+        onClose={() => setShowCelebration(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -550,143 +548,3 @@ function MilestonesInfoOverlay({
   );
 }
 
-function CelebrationOverlay({
-  visible,
-  onDismiss,
-  accent,
-}: {
-  visible: boolean;
-  onDismiss: () => void;
-  accent: string;
-}) {
-  const { width, height } = useWindowDimensions();
-  const starScale = useSharedValue(0);
-  const overlayOpacity = useSharedValue(0);
-  const particles = useMemo(() => {
-    return Array.from({ length: 14 }, (_, i) => ({
-      id: i,
-      angle: (i / 14) * Math.PI * 2 + (Math.random() - 0.5) * 0.4,
-      distance: 80 + Math.random() * 60,
-      delay: Math.random() * 300,
-    }));
-  }, []);
-
-  useEffect(() => {
-    if (visible) {
-      overlayOpacity.value = withTiming(1, { duration: 200 });
-      starScale.value = withSequence(
-        withSpring(1.2, { damping: 8, stiffness: 120 }),
-        withSpring(1, { damping: 10 })
-      );
-
-      const timer = setTimeout(() => {
-        overlayOpacity.value = withTiming(0, { duration: 400 });
-        starScale.value = withTiming(0, { duration: 400 });
-        setTimeout(() => {
-          runOnJS(onDismiss)();
-        }, 450);
-      }, 2200);
-
-      return () => clearTimeout(timer);
-    }
-  }, [visible]);
-
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: overlayOpacity.value,
-  }));
-
-  const starStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: starScale.value }],
-  }));
-
-  if (!visible) return null;
-
-  return (
-    <Animated.View
-      style={[
-        {
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 100,
-        },
-        overlayStyle,
-      ]}
-      pointerEvents="none"
-    >
-      {particles.map((p) => (
-        <StarParticle
-          key={p.id}
-          centerX={width / 2}
-          centerY={height / 2}
-          angle={p.angle}
-          distance={p.distance}
-          delay={p.delay}
-          accent={accent}
-        />
-      ))}
-      <Animated.View style={starStyle}>
-        <Text style={{ fontSize: 64 }}>{"\u2B50"}</Text>
-      </Animated.View>
-    </Animated.View>
-  );
-}
-
-function StarParticle({
-  centerX,
-  centerY,
-  angle,
-  distance,
-  delay,
-  accent,
-}: {
-  centerX: number;
-  centerY: number;
-  angle: number;
-  distance: number;
-  delay: number;
-  accent: string;
-}) {
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.3);
-
-  useEffect(() => {
-    const targetX = Math.cos(angle) * distance;
-    const targetY = Math.sin(angle) * distance;
-
-    opacity.value = withDelay(delay, withSequence(
-      withTiming(1, { duration: 200 }),
-      withDelay(800, withTiming(0, { duration: 600 }))
-    ));
-    translateX.value = withDelay(delay, withTiming(targetX, { duration: 1000 }));
-    translateY.value = withDelay(delay, withTiming(targetY, { duration: 1000 }));
-    scale.value = withDelay(delay, withSequence(
-      withTiming(1, { duration: 300 }),
-      withTiming(0.5, { duration: 700 })
-    ));
-  }, []);
-
-  const style = useAnimatedStyle(() => ({
-    position: "absolute" as const,
-    left: centerX - 8,
-    top: centerY - 8,
-    opacity: opacity.value,
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-  }));
-
-  return (
-    <Animated.View style={style}>
-      <Text style={{ fontSize: 16, color: accent }}>{"\u2B50"}</Text>
-    </Animated.View>
-  );
-}

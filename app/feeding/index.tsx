@@ -420,7 +420,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
           <SideButton
             side="left"
             label={t("feeding.leftSide")}
-            shortLabel="L"
+            shortLabel={t("feeding.leftShort")}
             isSuggested={suggestedSide === "left"}
             onPress={() => handleSidePress("left")}
             accentColor={accentColor}
@@ -431,7 +431,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
           <SideButton
             side="right"
             label={t("feeding.rightSide")}
-            shortLabel="R"
+            shortLabel={t("feeding.rightShort")}
             isSuggested={suggestedSide === "right"}
             onPress={() => handleSidePress("right")}
             accentColor={accentColor}
@@ -591,9 +591,9 @@ function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, 
           style={{ backgroundColor: secondaryBg, opacity: isPaused ? 0.4 : 1 }}
           pointerEvents={isPaused ? "none" : "auto"}
         >
-          <CompactSideButton label="L" fullLabel={t("feeding.left")} isSelected={side === "left"} onPress={() => onSideChange("left")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
-          <CompactSideButton label="B" fullLabel={t("feeding.both")} isSelected={side === "both"} onPress={() => onSideChange("both")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
-          <CompactSideButton label="R" fullLabel={t("feeding.right")} isSelected={side === "right"} onPress={() => onSideChange("right")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
+          <CompactSideButton label={t("feeding.leftShort")} fullLabel={t("feeding.left")} isSelected={side === "left"} onPress={() => onSideChange("left")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
+          <CompactSideButton label={t("feeding.bothShort")} fullLabel={t("feeding.both")} isSelected={side === "both"} onPress={() => onSideChange("both")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
+          <CompactSideButton label={t("feeding.rightShort")} fullLabel={t("feeding.right")} isSelected={side === "right"} onPress={() => onSideChange("right")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
         </View>
 
         {/* Timer display */}

@@ -558,7 +558,7 @@ export default function ManualFeedingScreen() {
                 <SideButton
                   side="left"
                   label={t("feeding.leftSide")}
-                  shortLabel="L"
+                  shortLabel={t("feeding.leftShort")}
                   isSelected={side === "left"}
                   onPress={() => setSide("left")}
                   accentColor={colors.accent}
@@ -568,7 +568,7 @@ export default function ManualFeedingScreen() {
                 <SideButton
                   side="right"
                   label={t("feeding.rightSide")}
-                  shortLabel="R"
+                  shortLabel={t("feeding.rightShort")}
                   isSelected={side === "right"}
                   onPress={() => setSide("right")}
                   accentColor={colors.accent}

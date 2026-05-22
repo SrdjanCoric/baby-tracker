@@ -13,6 +13,7 @@ import { useSync } from "./sync-context";
 import {
   getActiveTimersForBaby,
   transformActiveTimerFromRemote,
+  retryPendingLockReleases,
   type ActiveTimerLock,
   type TimerActivityType,
 } from "@/services/active-timer-service";
@@ -40,6 +41,7 @@ interface ActiveTimersContextValue {
     babyId: string,
     activityType: TimerActivityType
   ) => ActiveTimerLock | null;
+  removeLock: (babyId: string, activityType: TimerActivityType) => void;
   isLockedByOther: (
     babyId: string,
     activityType: TimerActivityType
@@ -163,7 +165,7 @@ export function ActiveTimersProvider({
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === "active") {
-        refreshLocks();
+        retryPendingLockReleases().then(() => refreshLocks()).catch(() => refreshLocks());
       }
     };
     const subscription = AppState.addEventListener("change", handleAppStateChange);
@@ -172,30 +174,24 @@ export function ActiveTimersProvider({
 
   useEffect(() => {
     const handleChange = async (change: RemoteChange) => {
-      console.log("[ActiveTimersContext] handleChange called:", { eventType: change.eventType, table: change.table });
-      console.log("[ActiveTimersContext] change.new:", change.new);
-      console.log("[ActiveTimersContext] change.old:", change.old);
-
       const babyId = (change.new?.baby_id || change.old?.baby_id) as
         | string
         | undefined;
 
-      console.log("[ActiveTimersContext] babyId from change:", babyId, "selectedBaby:", selectedBaby?.id);
-
-      // For DELETE events, we may only have the ID (not baby_id), so handle separately
       if (change.eventType === "DELETE" && change.old?.id) {
+        const deletedBabyId = change.old.baby_id as string | undefined;
         const deletedId = change.old.id as string;
-        console.log("[ActiveTimersContext] Processing DELETE by id:", deletedId);
+        if (deletedBabyId && deletedBabyId !== selectedBaby?.id) {
+          return;
+        }
         dispatch({
           type: "REMOVE_LOCK_BY_ID",
           id: deletedId,
         });
-        console.log("[ActiveTimersContext] REMOVE_LOCK_BY_ID dispatched");
         return;
       }
 
       if (!babyId || babyId !== selectedBaby?.id) {
-        console.log("[ActiveTimersContext] Ignoring - baby mismatch");
         return;
       }
 
@@ -247,6 +243,13 @@ export function ActiveTimersProvider({
     [state.locks]
   );
 
+  const removeLock = useCallback(
+    (babyId: string, activityType: TimerActivityType) => {
+      dispatch({ type: "REMOVE_LOCK", babyId, activityType });
+    },
+    []
+  );
+
   const isLockedByOther = useCallback(
     (babyId: string, activityType: TimerActivityType) => {
       if (!user?.id) return false;
@@ -270,6 +273,7 @@ export function ActiveTimersProvider({
       locks: state.locks,
       isLoading: state.isLoading,
       getLockForActivity,
+      removeLock,
       isLockedByOther,
       getLockedByName,
       refreshLocks,
@@ -278,6 +282,7 @@ export function ActiveTimersProvider({
       state.locks,
       state.isLoading,
       getLockForActivity,
+      removeLock,
       isLockedByOther,
       getLockedByName,
       refreshLocks,
