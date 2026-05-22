@@ -56,3 +56,6 @@ e2e-results.xml
 # mockups
 mockups/
 .claude/mockups/
+
+# archive (docs, plans, design mockups)
+/archive
