@@ -422,9 +422,10 @@ describe("predictNextSleep", () => {
     // 4 naps done, wake at 18:00, dayEnd 19:00.
     // candidateBedtime = 18:00 + 146m (bedtimeWW) = 20:26
     // isInBedtimeZone(20:26, 19:00) → true (past anchor) → returns bedtime
+    // capBedtime(20:26, 19:00) → capped at 19:45 (anchor + 45min)
     const result = predictNextSleep(baseModel, 4, 4, ld(2026, 4, 27, 18, 0), 19);
     expect(result!.type).toBe("bedtime");
-    expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 20, 26));
+    expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 19, 45));
   });
 
   it("adds extra nap when gap to bedtime is very large", () => {
@@ -559,31 +560,323 @@ describe("predictNextSleep", () => {
     const result = predictNextSleep(veryLateModel, 3, 3, ld(2026, 5, 8, 20, 0), 22);
     expect(result!.type).toBe("nap");
   });
+
+  describe("bedtime cap (anchor + 45 min)", () => {
+    it("caps bedtime prediction that exceeds anchor + 45 min", () => {
+      // 4 naps done, wake at 18:00, dayEnd=19 (anchor=19:00)
+      // bedtimeWW=146 → 18:00 + 146 = 20:26, cap = 19:45
+      const result = predictNextSleep(baseModel, 4, 4, ld(2026, 4, 27, 18, 0), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 19, 45));
+    });
+
+    it("does not cap bedtime prediction within anchor + 45 min", () => {
+      // 4 naps done, wake at 18:30, dayEnd=21 (anchor=21:00)
+      // bedtimeWW=146 → 18:30 + 146 = 20:56, cap = 21:45. 20:56 < 21:45 → no cap
+      const result = predictNextSleep(baseModel, 4, 4, ld(2026, 4, 27, 18, 30), 21);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 20, 56));
+    });
+
+    it("caps using medianBedtimeStart when set", () => {
+      const modelWithMedian = { ...baseModel, medianBedtimeStart: 20.5, bedtimeWakeWindow: 180 };
+      // 4 naps done, wake at 18:00, anchor=20:30
+      // bedtimeWW=180 → 18:00 + 180 = 21:00, cap = 20:30 + 45 = 21:15. 21:00 < 21:15 → no cap
+      const result = predictNextSleep(modelWithMedian, 4, 4, ld(2026, 4, 27, 18, 0), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 21, 0));
+    });
+
+    it("caps using dayEndHour when medianBedtimeStart is null", () => {
+      const modelNullMedian = { ...baseModel, medianBedtimeStart: null, bedtimeWakeWindow: 180 };
+      // anchor = dayEndHour = 19, cap = 19:45
+      // 4 naps done, wake 17:00, bedtimeWW=180 → 20:00, capped to 19:45
+      const result = predictNextSleep(modelNullMedian, 4, 4, ld(2026, 4, 27, 17, 0), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 19, 45));
+    });
+
+    it("does not cap prediction exactly at anchor + 45 min", () => {
+      // anchor=19:00, cap=19:45. Prediction exactly 19:45 → not capped (<=)
+      const modelExact = { ...baseModel, bedtimeWakeWindow: 105 };
+      // wake 18:00, 18:00 + 105 = 19:45 exactly
+      const result = predictNextSleep(modelExact, 4, 4, ld(2026, 4, 27, 18, 0), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 19, 45));
+    });
+  });
+
+  describe("bedtime fits check (skip remaining naps)", () => {
+    it("predicts bedtime when bedtimeWW lands in bedtime zone even with naps remaining", () => {
+      // 5-nap schedule, completed 3. Wake at 18:30, dayEnd=19 (anchor=19:00)
+      // candidateBedtime = 18:30 + 146 = 20:56 → past anchor → in zone
+      // capBedtime(20:56, 19:00) = 19:45
+      const result = predictNextSleep(baseModel, 5, 3, ld(2026, 4, 27, 18, 30), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 19, 45));
+    });
+
+    it("predicts nap normally when bedtimeWW does not land in bedtime zone", () => {
+      // 5-nap schedule, completed 1. Wake at 10:00, dayEnd=21 (anchor=21:00)
+      // candidateBedtime = 10:00 + 146 = 12:26 → 514 min before anchor → not in zone
+      // normal WW[1]=79 → nap at 11:19
+      const result = predictNextSleep(baseModel, 5, 1, ld(2026, 4, 27, 10, 0), 21);
+      expect(result!.type).toBe("nap");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 11, 19));
+    });
+
+    it("does not trigger bedtime when candidateBedtime is exactly 30 min before anchor", () => {
+      // minutesBefore = 30, condition is < 30 → NOT in zone → predict nap
+      const modelExact = { ...baseModel, bedtimeWakeWindow: 90 };
+      // wake at 17:30, dayEnd=19 (anchor=19:00). 17:30 + 90 = 19:00. minutesBefore = 0 < 30 → in zone
+      // Actually that's 0 min before, which IS in zone. Let me adjust:
+      // wake at 17:00, bedtimeWW=90. 17:00 + 90 = 18:30. anchor=19:00. minutesBefore = 30. NOT < 30 → nap
+      const result = predictNextSleep(modelExact, 4, 2, ld(2026, 4, 27, 17, 0), 19);
+      expect(result!.type).toBe("nap");
+    });
+
+    it("triggers bedtime when candidateBedtime is 29 min before anchor", () => {
+      const modelExact = { ...baseModel, bedtimeWakeWindow: 91 };
+      // wake at 17:00, dayEnd=19 (anchor=19:00). 17:00 + 91 = 18:31. minutesBefore = 29 < 30 → in zone
+      const result = predictNextSleep(modelExact, 4, 2, ld(2026, 4, 27, 17, 0), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 18, 31));
+    });
+
+    it("predicts bedtime with medianBedtimeStart set", () => {
+      const modelWithMedian = { ...baseModel, medianBedtimeStart: 20.5, bedtimeWakeWindow: 146 };
+      // 4-nap schedule, completed 2. Wake at 18:15, anchor=20:30
+      // candidateBedtime = 18:15 + 146 = 20:41. minutesBefore = -11 < 30 → in zone
+      // cap = 20:30 + 45 = 21:15. 20:41 < 21:15 → no cap
+      const result = predictNextSleep(modelWithMedian, 4, 2, ld(2026, 4, 27, 18, 15), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 20, 41));
+    });
+
+    it("still routes through predictAfterAllNaps when all naps are done", () => {
+      // 4 naps done → goes to predictAfterAllNaps, not the bedtime-fits check
+      const result = predictNextSleep(baseModel, 4, 4, ld(2026, 4, 27, 17, 0), 19);
+      expect(result!.type).toBe("bedtime");
+    });
+  });
+
+  describe("short nap handling", () => {
+    it("predicts bedtime from previous proper nap when short nap < 20 min", () => {
+      // Need Change 1 to NOT fire, but Change 2 to fire.
+      // This requires: lastWakeTime + bedtimeWW outside zone, but properWake + bedtimeWW in zone.
+      // Use a short bedtimeWW where short nap is recent (so WW from it misses zone),
+      // but proper nap was long enough ago that its WW reaches zone.
+      const model = { ...baseModel, medianBedtimeStart: 21.0, bedtimeWakeWindow: 120 };
+      // Proper nap ended 19:00, short nap (15 min) ended 20:40
+      // Change 1: 20:40 + 120 = 22:40. anchor=21:00. minutesBefore = -100 < 30 → in zone!
+      // Change 1 still fires. The issue is that when bedtimeWW is large enough to reach zone
+      // from the proper nap, it almost always reaches from the short nap too (which is later).
+      // Change 2 is only independently useful when:
+      // - bedtimeWW is small AND
+      // - properWake is much earlier than shortNap AND
+      // - dayEnd bridge rule helps properWake's candidate but not shortNap's candidate
+      // Actually the simplest case: use dayEnd bridge. dayEnd close to anchor.
+      // properWake + bedtimeWW lands after dayEnd → bridge → in zone
+      // shortNap + bedtimeWW lands before dayEnd → no bridge → NOT in zone
+      const model2 = { ...baseModel, medianBedtimeStart: 22.0, bedtimeWakeWindow: 150 };
+      // dayEnd=21. dayEnd(21:00) to anchor(22:00) = 60min ≤ 90 → bridge active.
+      // Proper nap ended 18:00. 18:00 + 150 = 20:30. anchor=22:00. minutesBefore=90. NOT < 30.
+      // 20:30 < dayEnd(21:00) → bridge doesn't apply. NOT in zone. Change 2 fails too.
+      // Need properWake + WW to land past dayEnd.
+      // Proper nap ended 19:00. 19:00 + 150 = 21:30. minutesBefore=30. NOT < 30.
+      // But 21:30 >= dayEnd(21:00) and bridge active → IN ZONE via bridge!
+      // Short nap ended 20:50. Change 1: 20:50 + 150 = 23:20. minutesBefore=-80 < 30 → in zone.
+      // Change 1 fires again.
+      // It seems Change 1 will always fire if bedtimeWW is large enough.
+      // Let me try a different approach: make bedtimeWW very small.
+      const model3 = { ...baseModel, medianBedtimeStart: 22.0, bedtimeWakeWindow: 30 };
+      // Proper nap ended 19:10, short nap ended 21:35
+      // Change 1: 21:35 + 30 = 22:05. anchor=22:00. minutesBefore=-5 < 30 → in zone! Still fires.
+      // OK, Change 1 will always fire when the prediction is anywhere near bedtime.
+      // The only case where Change 2 fires independently is when Change 1 result is different
+      // (e.g., different predicted time). But since Change 1 returns first, Change 2 never runs.
+      // Let me just test that Change 2 produces the CORRECT bedtime when Change 1 also fires,
+      // and verify the overall result is correct (from Change 1).
+      // For a pure Change 2 test, I'll test the scenario where Change 1 fires and verify the output.
+      const model4 = { ...baseModel, medianBedtimeStart: 22.0, bedtimeWakeWindow: 185 };
+      // Real-world: proper nap ended 19:09, short nap (10 min) ended 21:02, dayEnd=22
+      // Both candidates computed:
+      // - From short nap: 21:02 + 185 = 00:07 → in zone → cap(00:07, 22:00) = 22:45
+      // - From proper nap: 19:09 + 185 = 22:14 → in zone, gap=72min ≥ 45 → cap(22:14, 22:00) = 22:14
+      // Proper nap preferred (more accurate), returns 22:14
+      const result = predictNextSleep(
+        model4, 5, 4, ld(2026, 5, 11, 21, 2), 22,
+        undefined, undefined, 10, ld(2026, 5, 11, 19, 9)
+      );
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 5, 11, 22, 14));
+    });
+
+    it("falls through to normal flow when previousProperWakeTime is not provided", () => {
+      const result = predictNextSleep(
+        baseModel, 4, 1, ld(2026, 4, 27, 10, 0), 21,
+        undefined, undefined, 10, undefined
+      );
+      expect(result!.type).toBe("nap");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 11, 19));
+    });
+
+    it("falls through when both changes miss bedtime zone (mid-day)", () => {
+      const result = predictNextSleep(
+        baseModel, 4, 2, ld(2026, 4, 27, 12, 0), 21,
+        undefined, undefined, 10, ld(2026, 4, 27, 10, 0)
+      );
+      expect(result!.type).toBe("nap");
+    });
+
+    it("does not apply short nap logic when duration is exactly 20 min", () => {
+      // 20 min is NOT < 20, so short nap handling is skipped.
+      // Change 1 still fires since wake 19:00 + bedtimeWW lands in zone.
+      const modelWithMedian = { ...baseModel, medianBedtimeStart: 20.25, bedtimeWakeWindow: 180 };
+      const result = predictNextSleep(
+        modelWithMedian, 4, 3, ld(2026, 4, 27, 19, 0), 19,
+        undefined, undefined, 20, ld(2026, 4, 27, 17, 0)
+      );
+      expect(result!.type).toBe("bedtime");
+    });
+
+    it("short nap mid-day falls through to normal nap prediction", () => {
+      // 19 min nap mid-day. Change 1: 10:00 + 146 = 12:26. anchor=21:00. Not in zone.
+      // Change 2: 8:00 + 146 = 10:26. Not in zone. Falls to normal nap.
+      const result = predictNextSleep(
+        { ...baseModel, medianBedtimeStart: null },
+        4, 1, ld(2026, 4, 27, 10, 0), 21,
+        undefined, undefined, 19, ld(2026, 4, 27, 8, 0)
+      );
+      expect(result!.type).toBe("nap");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 11, 19));
+    });
+
+    it("works with backward compatibility when new params are omitted", () => {
+      const result = predictNextSleep(baseModel, 4, 1, ld(2026, 4, 27, 10, 0), 21);
+      expect(result!.type).toBe("nap");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 11, 19));
+    });
+  });
+
+  describe("integration: all changes together", () => {
+    it("short nap near bedtime: proper nap preferred over capped short nap", () => {
+      // Real-world: baby took 4 naps, 10-min catnap at 20:52, proper nap ended 19:09
+      const realModel = {
+        ...baseModel,
+        medianBedtimeStart: 22.5,
+        bedtimeWakeWindow: 185,
+        penultimateWakeWindow: 124,
+      };
+      // Both candidates:
+      // - From short nap: 21:02 + 185 = 00:07 → in zone → cap = 23:15
+      // - From proper nap: 19:09 + 185 = 22:14 → in zone, gap=72min ≥ 45 → 22:14 (under cap 23:15)
+      // Proper nap preferred: 22:14
+      const result = predictNextSleep(
+        realModel, 5, 4, ld(2026, 5, 11, 21, 2), 22,
+        undefined, undefined, 10, ld(2026, 5, 11, 19, 9)
+      );
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 5, 11, 22, 14));
+    });
+
+    it("bedtime fits check skips nap, prediction under cap", () => {
+      const model = {
+        ...baseModel,
+        medianBedtimeStart: 20.0,
+        bedtimeWakeWindow: 200,
+      };
+      // Change 1: 17:00 + 200 = 20:20. anchor=20:00. minutesBefore=-20 < 30 → in zone
+      // cap = 20:45. 20:20 < 20:45 → no cap. Returns 20:20.
+      const result = predictNextSleep(model, 4, 2, ld(2026, 4, 27, 17, 0), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 20, 20));
+    });
+
+    it("bedtime fits check skips nap, prediction exceeds cap", () => {
+      const model = {
+        ...baseModel,
+        medianBedtimeStart: 20.0,
+        bedtimeWakeWindow: 250,
+      };
+      // Change 1: 17:00 + 250 = 21:10. anchor=20:00. In zone. cap(21:10, 20:00) = 20:45
+      const result = predictNextSleep(model, 4, 2, ld(2026, 4, 27, 17, 0), 19);
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 20, 45));
+    });
+
+    it("normal flow unaffected when bedtime does not fit and no short nap", () => {
+      const result = predictNextSleep(baseModel, 4, 1, ld(2026, 4, 27, 10, 0), 21);
+      expect(result!.type).toBe("nap");
+      expect(result!.predictedTime).toEqual(ld(2026, 4, 27, 11, 19));
+    });
+
+    it("proper nap preferred over capped short nap result", () => {
+      const model = {
+        ...baseModel,
+        medianBedtimeStart: 22.0,
+        bedtimeWakeWindow: 185,
+      };
+      // Both candidates:
+      // - From short nap: 21:00 + 185 = 00:05 → in zone → cap = 22:45
+      // - From proper nap: 19:00 + 185 = 22:05 → in zone, gap=65min ≥ 45 → 22:05 (under cap)
+      // Proper nap preferred: 22:05
+      const result = predictNextSleep(
+        model, 5, 4, ld(2026, 5, 11, 21, 0), 22,
+        undefined, undefined, 10, ld(2026, 5, 11, 19, 0)
+      );
+      expect(result!.type).toBe("bedtime");
+      expect(result!.predictedTime).toEqual(ld(2026, 5, 11, 22, 5));
+    });
+  });
 });
 
 describe("getQualifyingNightSleep", () => {
   it("finds night sleep ending after threshold", () => {
     const threshold = getMorningThreshold(8);
-    const sleeps = [makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 5, 0).toISOString())];
+    const sleeps = [makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 5, 0).toISOString(), { type: "night" })];
     const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 10, 0));
     expect(result).not.toBeNull();
   });
 
   it("returns null for night sleep ending before threshold", () => {
     const threshold = getMorningThreshold(8);
-    const sleeps = [makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 4, 30).toISOString())];
+    const sleeps = [makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 4, 30).toISOString(), { type: "night" })];
     const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 10, 0));
     expect(result).toBeNull();
   });
 
-  it("returns the most recent qualifying sleep", () => {
+  it("returns the most recent qualifying night sleep", () => {
     const threshold = getMorningThreshold(8);
     const sleeps = [
-      makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 5, 0).toISOString()),
-      makeSleep(ld(2026, 4, 27, 5, 30).toISOString(), ld(2026, 4, 27, 7, 45).toISOString()),
+      makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 5, 0).toISOString(), { type: "night" }),
+      makeSleep(ld(2026, 4, 27, 5, 30).toISOString(), ld(2026, 4, 27, 7, 45).toISOString(), { type: "night" }),
     ];
     const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 10, 0));
     expect(new Date(result!.endedAt!)).toEqual(ld(2026, 4, 27, 7, 45));
+  });
+
+  it("ignores naps and returns the night sleep", () => {
+    const threshold = getMorningThreshold(8);
+    const sleeps = [
+      makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 7, 0).toISOString(), { type: "night" }),
+      makeSleep(ld(2026, 4, 27, 9, 30).toISOString(), ld(2026, 4, 27, 10, 15).toISOString(), { type: "nap" }),
+      makeSleep(ld(2026, 4, 27, 12, 30).toISOString(), ld(2026, 4, 27, 13, 30).toISOString(), { type: "nap" }),
+      makeSleep(ld(2026, 4, 27, 16, 0).toISOString(), ld(2026, 4, 27, 16, 45).toISOString(), { type: "nap" }),
+    ];
+    const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 17, 0));
+    expect(result).not.toBeNull();
+    expect(new Date(result!.endedAt!)).toEqual(ld(2026, 4, 27, 7, 0));
+  });
+
+  it("returns null when only naps exist after threshold", () => {
+    const threshold = getMorningThreshold(8);
+    const sleeps = [
+      makeSleep(ld(2026, 4, 27, 9, 30).toISOString(), ld(2026, 4, 27, 10, 15).toISOString(), { type: "nap" }),
+      makeSleep(ld(2026, 4, 27, 12, 30).toISOString(), ld(2026, 4, 27, 13, 30).toISOString(), { type: "nap" }),
+    ];
+    const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 14, 0));
+    expect(result).toBeNull();
   });
 });
 
@@ -642,8 +935,16 @@ describe("detectBedtimeDrift", () => {
     expect(detectBedtimeDrift(buildDaysWithBedtimes([18.5, 18.5, 18.5, 18.5, 18.5]), 7, 19)).toBeNull();
   });
 
-  it("no drift for later bedtimes", () => {
-    expect(detectBedtimeDrift(buildDaysWithBedtimes([20, 20, 20, 20, 20]), 7, 19)).toBeNull();
+  it("detects drift for later bedtimes (1+ hour after dayEnd)", () => {
+    const result = detectBedtimeDrift(buildDaysWithBedtimes([20.5, 20.5, 20.5, 20.5, 20.5]), 7, 19);
+    expect(result).not.toBeNull();
+    expect(result!.type).toBe("bedtime");
+    expect(result!.suggestedHour).toBe(20.5);
+    expect(result!.currentHour).toBe(19);
+  });
+
+  it("no drift for later bedtimes within 1 hour of dayEnd", () => {
+    expect(detectBedtimeDrift(buildDaysWithBedtimes([19.5, 19.5, 19.5, 19.5, 19.5]), 7, 19)).toBeNull();
   });
 
   it("no drift with fewer than 5 days", () => {
