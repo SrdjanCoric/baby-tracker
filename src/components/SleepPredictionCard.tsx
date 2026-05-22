@@ -176,6 +176,8 @@ const SleepPredictionCardInner = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasNightSleepToday, hasPredictionData, qualifyingDayCount, transitionTick]);
 
+
+
   useEffect(() => {
     const needsTransition = !effectiveActiveTimer && cardState === "prediction";
     if (!needsTransition) return;
@@ -202,12 +204,20 @@ const SleepPredictionCardInner = ({
     return () => clearTimeout(timer);
   }, [effectiveActiveTimer, cardState, effectiveDayStart, transitionTick]);
 
-  const lastWakeTime = useMemo((): Date | null => {
-    if (effectiveActiveTimer) return null;
+  const sleepContext = useMemo((): {
+    lastWakeTime: Date | null;
+    lastSleepDurationMinutes: number | undefined;
+    previousProperWakeTime: Date | undefined;
+  } => {
+    if (effectiveActiveTimer) return { lastWakeTime: null, lastSleepDurationMinutes: undefined, previousProperWakeTime: undefined };
 
     const sorted = [...sleeps].sort((a, b) =>
       new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
     );
+
+    let lastWakeTime: Date | null = null;
+    let lastSleepDurationMinutes: number | undefined = undefined;
+    let previousProperWakeTime: Date | undefined = undefined;
 
     for (const sleep of sorted) {
       if (!sleep.endedAt) continue;
@@ -219,11 +229,25 @@ const SleepPredictionCardInner = ({
       const isPastZoneStart = startHour >= bedtimeZoneStartHour;
       if (isPastZoneStart && durationMin < 15) continue;
 
-      return new Date(sleep.endedAt);
+      if (lastWakeTime === null) {
+        lastWakeTime = new Date(sleep.endedAt);
+        lastSleepDurationMinutes = durationMin;
+        if (durationMin >= 20) break;
+        continue;
+      }
+
+      if (durationMin >= 20) {
+        previousProperWakeTime = new Date(sleep.endedAt);
+        break;
+      }
     }
 
-    return null;
+    return { lastWakeTime, lastSleepDurationMinutes, previousProperWakeTime };
   }, [effectiveActiveTimer, sleeps, bedtimeZoneStartHour]);
+
+  const lastWakeTime = sleepContext.lastWakeTime;
+  const lastSleepDurationMinutes = sleepContext.lastSleepDurationMinutes;
+  const previousProperWakeTime = sleepContext.previousProperWakeTime;
 
   const manualModel = useMemo((): SleepPredictionModel | null => {
     if (wakeWindowConfig?.source !== "custom" || !wakeWindowConfig.slots.length) return null;
@@ -281,8 +305,8 @@ const SleepPredictionCardInner = ({
     if (!hasNightSleepToday) return null;
 
     const completedNaps = getCompletedNapsSinceNightSleep();
-    return predictNextSleep(effectiveModel, selectedNapCount, completedNaps, lastWakeTime, effectiveDayEnd, effectiveDayStart);
-  }, [cardState, effectiveModel, lastWakeTime, selectedNapCount, hasNightSleepToday, getCompletedNapsSinceNightSleep, effectiveDayEnd, effectiveDayStart]);
+    return predictNextSleep(effectiveModel, selectedNapCount, completedNaps, lastWakeTime, effectiveDayEnd, effectiveDayStart, undefined, lastSleepDurationMinutes, previousProperWakeTime);
+  }, [cardState, effectiveModel, lastWakeTime, selectedNapCount, hasNightSleepToday, getCompletedNapsSinceNightSleep, effectiveDayEnd, effectiveDayStart, lastSleepDurationMinutes, previousProperWakeTime]);
 
   const isOverdue = useMemo((): boolean => {
     if (!prediction) return false;

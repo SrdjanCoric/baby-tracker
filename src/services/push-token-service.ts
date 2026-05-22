@@ -152,6 +152,7 @@ export interface WakeWindowPreferenceRow {
   day_end_hour: number | null;
   nap_continuation_minutes: number | null;
   timezone: string | null;
+  drift_dismissed: { type: string; suggestedHour: number } | null;
 }
 
 export async function fetchWakeWindowPreference(
@@ -159,7 +160,7 @@ export async function fetchWakeWindowPreference(
 ): Promise<{ data: WakeWindowPreferenceRow | null; error: Error | null }> {
   const { data, error } = await supabase
     .from("wake_window_preferences")
-    .select("baby_id, enabled, nap_count, wake_window_slots, source, day_start_hour, day_end_hour, nap_continuation_minutes, timezone")
+    .select("baby_id, enabled, nap_count, wake_window_slots, source, day_start_hour, day_end_hour, nap_continuation_minutes, timezone, drift_dismissed")
     .eq("baby_id", babyId)
     .maybeSingle();
 
@@ -178,7 +179,8 @@ export async function upsertWakeWindowPreference(
   source: string,
   dayStartHour?: number,
   dayEndHour?: number,
-  napContinuationMinutes?: number
+  napContinuationMinutes?: number,
+  driftDismissed?: { type: string; suggestedHour: number } | null
 ): Promise<{ error: Error | null }> {
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -200,6 +202,7 @@ export async function upsertWakeWindowPreference(
         day_start_hour: dayStartHour ?? 6,
         day_end_hour: dayEndHour ?? 19,
         nap_continuation_minutes: napContinuationMinutes ?? 15,
+        drift_dismissed: driftDismissed ?? null,
         timezone,
         updated_at: new Date().toISOString(),
       },
