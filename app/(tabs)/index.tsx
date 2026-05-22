@@ -16,6 +16,9 @@ import {
   SleepPredictionCard,
   BirthdayCelebrationModal,
 } from "@/components";
+import { MilestoneCelebrationModal } from "@/components/MilestoneCelebrationModal";
+import { MilestoneToast } from "@/components/MilestoneToast";
+import { useAchievements } from "@/contexts/achievement-context";
 import { TipCarousel } from "@/components/TipCarousel";
 import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
 import { Alert } from "react-native";
@@ -83,12 +86,13 @@ export default function HomeScreen() {
   const { healthEntries, getLastHealth, refreshHealth } = useHealth();
   const { temperatureUnit, volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
-  const { selectedBaby } = useBaby();
+  const { selectedBaby, isLoading: isBabyLoading } = useBaby();
   const { session } = useAuth();
   const { isLockedByOther, getLockedByName, getLockForActivity, refreshLocks } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
 
   const { showCelebration, milestoneAge, dismiss: dismissCelebration } = useBirthdayCelebration(selectedBaby);
+  const { pendingCelebration, dismissCelebration: dismissAchievement } = useAchievements();
 
   const [refreshing, setRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -857,9 +861,9 @@ export default function HomeScreen() {
           />
         )}
 
-        {selectedBaby && (
+        {(selectedBaby || isBabyLoading) && (
           <SleepPredictionCard
-            babyName={selectedBaby.name}
+            babyName={selectedBaby?.name}
           />
         )}
 
@@ -908,6 +912,25 @@ export default function HomeScreen() {
           baby={selectedBaby}
           milestoneAge={milestoneAge}
           onClose={dismissCelebration}
+        />
+      )}
+
+      {pendingCelebration?.tier === "major" && (
+        <MilestoneCelebrationModal
+          visible
+          achievementId={pendingCelebration.id}
+          emoji={pendingCelebration.emoji}
+          babyAgeMonths={pendingCelebration.babyAgeMonths}
+          onClose={dismissAchievement}
+        />
+      )}
+
+      {pendingCelebration?.tier === "minor" && (
+        <MilestoneToast
+          visible
+          achievementId={pendingCelebration.id}
+          emoji={pendingCelebration.emoji}
+          onDismiss={dismissAchievement}
         />
       )}
     </SafeAreaView>

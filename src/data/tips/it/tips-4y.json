@@ -1,0 +1,512 @@
+[
+  {
+    "id": "4y-development-01",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino probabilmente sa raccontare storie semplici con un inizio, uno svolgimento e una fine. Fai domande aperte come \"E poi cosa è successo?\" per incoraggiare le capacità narrative."
+  },
+  {
+    "id": "4y-development-02",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe iniziare a mostrare interesse per scrivere lettere o il proprio nome. Lascialo esercitare su fogli grandi con pastelli o pennarelli spessi — scarabocchi e tentativi fanno tutti parte dell'apprendimento."
+  },
+  {
+    "id": "4y-development-03",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino sta sviluppando il senso dell'umorismo e potrebbe adorare le battute sciocche e i giochi di parole. Ridere insieme rafforza il vostro legame e sviluppa le competenze linguistiche."
+  },
+  {
+    "id": "4y-development-05",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe avere un amico immaginario. Questo è sano e indica uno sviluppo cognitivo avanzato, creatività ed elaborazione emotiva."
+  },
+  {
+    "id": "4y-development-06",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Contare fino a 10 o oltre, riconoscere alcuni numeri e capire i concetti di \"di più\" e \"di meno\" sono abilità matematiche tipiche di questa età."
+  },
+  {
+    "id": "4y-development-07",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino sta imparando a disegnare le persone e potrebbe includere testa, corpo, braccia o gambe. Entro il quarto compleanno, disegnare una persona con 3 o più parti del corpo è un traguardo comune."
+  },
+  {
+    "id": "4y-development-08",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Le amicizie diventano più significative ora. Il tuo bambino potrebbe avere un amico preferito e iniziare a orientarsi nella complessità delle relazioni sociali."
+  },
+  {
+    "id": "4y-development-09",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino capisce le regole di base e il concetto di equità. Usa giochi e attività familiari per rafforzare l'idea che le regole valgono per tutti allo stesso modo."
+  },
+  {
+    "id": "4y-development-10",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Tagliare lungo una linea con le forbici, abbottonarsi la camicia e usare una cerniera sono tutti segnali che le abilità motorie fini stanno maturando. Celebra l'impegno."
+  },
+  {
+    "id": "4y-development-11",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe a volte confondere fantasia e realtà. Aiutalo con delicatezza a distinguere tra il fare finta e il reale senza scoraggiare l'immaginazione."
+  },
+  {
+    "id": "4y-development-12",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Incoraggia il tuo bambino a risolvere piccoli problemi da solo prima di intervenire. \"Cosa pensi che potremmo provare?\" costruisce fiducia e pensiero critico."
+  },
+  {
+    "id": "4y-development-13",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino probabilmente sa classificare gli oggetti per più attributi — colore E dimensione, per esempio. Dividere insieme il bucato o i giocattoli rende tutto divertente e pratico."
+  },
+  {
+    "id": "4y-development-14",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "La regolazione emotiva è ancora in fase di sviluppo. Aiuta il tuo bambino a dare un nome a sentimenti complessi come \"deluso\" o \"geloso\" — un vocabolario emotivo ricco lo aiuta ad affrontare le situazioni."
+  },
+  {
+    "id": "4y-development-15",
+    "ageGroup": "4y",
+    "category": "development",
+    "text": "Il tuo bambino potrebbe mostrare interesse per le lettere e la lettura iniziale. Segui il suo ritmo — indica le parole sui cartelli e lascialo \"leggere\" libri familiari per te."
+  },
+  {
+    "id": "4y-sleep-02",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Il tuo bambino potrebbe cercare di negoziare l'ora della nanna all'infinito. Stabilisci una routine prevedibile e mantienila con amore — \"Leggiamo due libri, poi si spegne la luce\" offre chiarezza."
+  },
+  {
+    "id": "4y-sleep-03",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Gli incubi possono essere più vividi a questa età man mano che l'immaginazione si espande. Conforta il tuo bambino e parla brevemente del sogno senza soffermartici troppo."
+  },
+  {
+    "id": "4y-sleep-04",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Se il tuo bambino ha paura del buio, trovate insieme delle soluzioni — una lucina speciale, un peluche \"amico coraggioso\" o un rapido controllo della stanza possono aiutare."
+  },
+  {
+    "id": "4y-sleep-05",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Il tempo tranquillo prima di dormire è importante quanto il sonno stesso. Leggere, fare stretching dolce o parlare a bassa voce aiuta il cervello a prepararsi al riposo."
+  },
+  {
+    "id": "4y-sleep-06",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Se il tuo bambino si sveglia spesso di notte, controlla prima le cause ambientali — temperatura della stanza, rumore, luce o un materasso scomodo."
+  },
+  {
+    "id": "4y-sleep-07",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Un orario di sveglia costante è importante quanto un orario costante per andare a dormire. Cerca di mantenere il risveglio mattutino entro 30 minuti dallo stesso orario ogni giorno."
+  },
+  {
+    "id": "4y-sleep-08",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Il tuo bambino potrebbe iniziare a resistere all'ora della nanna dicendo che non ha sonno. Una routine rilassante aiuta il corpo a calmarsi anche quando la mente si sente ancora sveglia."
+  },
+  {
+    "id": "4y-sleep-10",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Se il tuo bambino ha eliminato di recente il pisolino, potresti notare irritabilità nel tardo pomeriggio. Un breve momento di riposo con un libro può aiutare a colmare il vuoto."
+  },
+  {
+    "id": "4y-sleep-11",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Esercizi di respirazione profonda prima di dormire possono aiutare il tuo bambino a imparare a calmarsi da solo. Prova \"annusa il fiore, soffia la candela\" come tecnica semplice."
+  },
+  {
+    "id": "4y-sleep-12",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Evita snack zuccherati vicino all'ora della nanna. Se il tuo bambino ha bisogno di uno spuntino prima di dormire, scegli qualcosa di leggero come una banana o una piccola manciata di cracker."
+  },
+  {
+    "id": "4y-sleep-13",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Il tuo bambino potrebbe temporeggiare chiedendo ancora acqua o andare in bagno. Concedi un passaggio in bagno e un bicchierino d'acqua, poi mantieni il limite con dolcezza."
+  },
+  {
+    "id": "4y-sleep-14",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Condividere il \"momento più bello della giornata\" all'ora della nanna dà al tuo bambino qualcosa di positivo a cui pensare mentre si addormenta e rafforza il vostro legame."
+  },
+  {
+    "id": "4y-sleep-15",
+    "ageGroup": "4y",
+    "category": "sleep",
+    "text": "Se il tuo bambino combatte costantemente l'ora della nanna, potrebbe non essere abbastanza stanco. Assicurati che faccia tanta attività fisica durante il giorno."
+  },
+  {
+    "id": "4y-feeding-01",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Il tuo bambino può usare un coltello da burro per spalmare cibi morbidi e aiutare a tagliare alimenti teneri. Queste abilità in cucina costruiscono sicurezza e controllo motorio fine."
+  },
+  {
+    "id": "4y-feeding-02",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Parla del cibo in termini di cosa fa per il corpo — \"Le carote aiutano i tuoi occhi\" o \"Le proteine rendono i tuoi muscoli forti\" — per costruire la consapevolezza alimentare."
+  },
+  {
+    "id": "4y-feeding-03",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Se il tuo bambino rifiuta un intero gruppo alimentare, trova alternative creative. Non vuole le verdure? Prova nei frullati, nei muffin o come parte di un piatto con le salsine."
+  },
+  {
+    "id": "4y-feeding-04",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Il tuo bambino può aiutare con compiti di cucina più complessi ora — mescolare l'impasto, rompere le uova con aiuto o cospargere condimenti. Cucinare insieme stimola l'entusiasmo per il cibo."
+  },
+  {
+    "id": "4y-feeding-05",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Dai il buon esempio con le abitudini alimentari che vuoi che il tuo bambino sviluppi. Nota e imita il modo in cui parli del cibo e cosa scegli di mangiare."
+  },
+  {
+    "id": "4y-feeding-06",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "La fibra è importante per la digestione. Offri regolarmente pane integrale, fiocchi d'avena, frutti di bosco e legumi per mantenere tutto in ordine."
+  },
+  {
+    "id": "4y-feeding-07",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Insegna al tuo bambino a riconoscere i segnali di fame e sazietà. \"Il tuo pancino ha ancora fame?\" è meglio di \"Finisci il piatto.\""
+  },
+  {
+    "id": "4y-feeding-08",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Coltivare un piccolo orto di erbe aromatiche o far germogliare dei semi insegna al tuo bambino da dove viene il cibo. I bambini adorano mangiare cose che hanno coltivato loro stessi."
+  },
+  {
+    "id": "4y-feeding-09",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Prova i \"ponti alimentari\" — se al tuo bambino piacciono le patatine fritte, introduci le patatine dolci al forno. Usa i cibi che gli piacciono come ponte verso nuovi alimenti simili."
+  },
+  {
+    "id": "4y-feeding-10",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Il tuo bambino ha bisogno di circa 2-2,5 porzioni di latticini o equivalenti di calcio al giorno. Se non gli piace il latte, yogurt, formaggio e alimenti arricchiti di calcio contano ugualmente."
+  },
+  {
+    "id": "4y-feeding-11",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "I pasti dovrebbero durare circa 20-30 minuti. Se il tuo bambino non ha mangiato dopo quel tempo, concludi il pasto con calma. Mangerà alla prossima occasione."
+  },
+  {
+    "id": "4y-feeding-12",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Incoraggia il tuo bambino ad assaggiare un boccone di cibi nuovi senza forzarlo. Nel tempo, questo approccio di esposizione dolce funziona meglio della pressione."
+  },
+  {
+    "id": "4y-feeding-13",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Gli acidi grassi omega-3 supportano lo sviluppo del cervello. Includi pesce, noci, semi di chia o semi di lino nella dieta del tuo bambino quando possibile."
+  },
+  {
+    "id": "4y-feeding-14",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Evita di usare il cibo come conforto o ricompensa. Insegna invece al tuo bambino altri modi per festeggiare o sentirsi meglio — un abbraccio, un gioco o del tempo insieme."
+  },
+  {
+    "id": "4y-feeding-15",
+    "ageGroup": "4y",
+    "category": "feeding",
+    "text": "Il tuo bambino ora sa bere abilmente da un bicchiere aperto. Offri acqua durante la giornata e riserva le bevande zuccherate come occasioni speciali."
+  },
+  {
+    "id": "4y-health-01",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Il tuo bambino potrebbe essere in programma per importanti richiami vaccinali in questa fase. Parla con il pediatra per assicurarti che le vaccinazioni siano aggiornate."
+  },
+  {
+    "id": "4y-health-04",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Se il tuo bambino lamenta dolori della crescita alle gambe di notte, un massaggio delicato e un impacco caldo di solito aiutano. Questi dolori sono normali e temporanei."
+  },
+  {
+    "id": "4y-health-05",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Insegna al tuo bambino a lavarsi le mani correttamente: bagnare, insaponare, strofinare per 20 secondi, sciacquare, asciugare. Questo è particolarmente importante prima dei pasti e dopo il bagno."
+  },
+  {
+    "id": "4y-health-06",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "I primi molari permanenti del tuo bambino arriveranno intorno ai 6 anni. Quando spunteranno, chiedi al dentista delle sigillature dentali per proteggerli dalle carie."
+  },
+  {
+    "id": "4y-health-07",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Il tuo bambino potrebbe iniziare ad avere allergie stagionali. Naso che cola con muco chiaro, starnuti e occhi che prudono in modo persistente sono segni da discutere con il medico."
+  },
+  {
+    "id": "4y-health-08",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "La congiuntivite si diffonde facilmente tra i bambini. Insegna al tuo bambino a non toccarsi gli occhi e a usare il proprio asciugamano."
+  },
+  {
+    "id": "4y-health-09",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Se il tuo bambino ha l'asma, collabora con il pediatra per un piano d'azione. Conosci la differenza tra il farmaco di controllo quotidiano e l'inalatore di emergenza."
+  },
+  {
+    "id": "4y-health-10",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Controlla la postura del tuo bambino durante le attività. Una sedia e un tavolo robusti a misura di bambino aiutano a prevenire posture scorrette durante il disegno o i pasti."
+  },
+  {
+    "id": "4y-health-11",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "I pidocchi sono comuni negli ambienti di gruppo e non hanno nulla a che fare con l'igiene. Insegna al tuo bambino a non condividere cappelli, spazzole o accessori per capelli."
+  },
+  {
+    "id": "4y-health-12",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Il tuo bambino può iniziare a imparare a soffiarsi il naso in modo efficace. Esercitati a usare i fazzoletti e a buttarli via — è un'abilità di vita che riduce la diffusione dei germi."
+  },
+  {
+    "id": "4y-health-13",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Assicurati che il tuo bambino passi abbastanza tempo all'aperto. La luce naturale del sole favorisce la produzione di vitamina D, la regolazione dell'umore e cicli di sonno sani."
+  },
+  {
+    "id": "4y-health-14",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Se il tuo bambino digrigna i denti di notte, menzionalo alla prossima visita dal dentista. Di solito è innocuo ma vale la pena monitorarlo."
+  },
+  {
+    "id": "4y-health-15",
+    "ageGroup": "4y",
+    "category": "health",
+    "text": "Mantieniti aggiornato con il vaccino antinfluenzale annuale. I bambini che frequentano ambienti di gruppo sono particolarmente vulnerabili durante la stagione influenzale."
+  },
+  {
+    "id": "4y-play-01",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Il tuo bambino ora può affrontare progetti di costruzione più complessi. Costruire con mattoncini a incastro o blocchi seguendo istruzioni semplici sviluppa il ragionamento spaziale e la pazienza."
+  },
+  {
+    "id": "4y-play-02",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Introduci giochi di carte semplici come \"Pesca\" o giochi di memoria. Insegnano il riconoscimento dei numeri, la strategia e le abilità sociali tutto in una volta."
+  },
+  {
+    "id": "4y-play-03",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Il gioco all'aperto è essenziale — arrampicarsi, correre e dondolarsi sviluppano forza, coordinazione e valutazione del rischio. I bambini in età prescolare traggono beneficio dall'essere attivi durante tutta la giornata, quindi punta a tanto movimento."
+  },
+  {
+    "id": "4y-play-04",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Il tuo bambino potrebbe divertirsi a mettere in scena \"spettacoli\" o esibizioni con i burattini. Questo gioco drammatico costruisce sicurezza, competenze linguistiche ed espressione emotiva."
+  },
+  {
+    "id": "4y-play-05",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Semplici esperimenti scientifici — mescolare bicarbonato e aceto, far crescere semi o esplorare i magneti — stimolano la curiosità e insegnano causa ed effetto."
+  },
+  {
+    "id": "4y-play-06",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Incoraggia il tuo bambino a disegnare o dipingere le proprie emozioni. L'arte è uno sfogo potente per sentimenti che potrebbero non avere ancora parole."
+  },
+  {
+    "id": "4y-play-07",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Il tuo bambino è pronto per giochi con regole semplici come \"Simon dice\" o \"Semaforo\". Questi costruiscono capacità di ascolto e controllo degli impulsi."
+  },
+  {
+    "id": "4y-play-08",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Giocare con tazze dosatrici, cucchiai e acqua insegna concetti matematici precoci come volume, di più/di meno e stima in modo pratico."
+  },
+  {
+    "id": "4y-play-09",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Il tuo bambino potrebbe divertirsi a creare con materiali riciclati — tubi di cartone, cartoni delle uova, tappi di bottiglia. Questo gioco aperto stimola creatività e ingegnosità."
+  },
+  {
+    "id": "4y-play-10",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Andare su una bici senza pedali o una bicicletta con le rotelle costruisce coordinazione e sicurezza che si trasferiranno poi al pedalare senza supporto."
+  },
+  {
+    "id": "4y-play-11",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Gioca a \"Vedo vedo\" durante i viaggi in auto o le passeggiate. Affina le capacità di osservazione e il vocabolario mantenendo il tuo bambino coinvolto."
+  },
+  {
+    "id": "4y-play-12",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Piantare semi e guardarli crescere insegna pazienza, responsabilità e scienze di base. Lascia che il tuo bambino annaffi la sua pianta ogni giorno."
+  },
+  {
+    "id": "4y-play-13",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Le schede per allacciare e le attività di infilare perline costruiscono la precisione motoria fine di cui il tuo bambino avrà bisogno per scrivere. Rendilo divertente con materiali colorati."
+  },
+  {
+    "id": "4y-play-14",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "Crea una mappa del tesoro del giardino o della casa. Seguire una mappa introduce concetti spaziali come sinistra, destra, vicino e lontano."
+  },
+  {
+    "id": "4y-play-15",
+    "ageGroup": "4y",
+    "category": "play",
+    "text": "I giochi cooperativi in cui tutti lavorano verso un obiettivo comune insegnano il lavoro di squadra e riducono lo stress della competizione per i bambini che stanno ancora imparando a perdere con grazia."
+  },
+  {
+    "id": "4y-safety-01",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Tieni il tuo bambino nel seggiolino auto rivolto in avanti con le cinghie il più a lungo possibile, fino ai limiti massimi di altezza e peso del seggiolino. La maggior parte dei bambini di questa età non ha ancora superato le cinghie."
+  },
+  {
+    "id": "4y-safety-02",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Insegna al tuo bambino a chiedere sempre a un adulto prima di avvicinarsi all'acqua. Anche i bambini che sanno nuotare non dovrebbero mai essere in acqua o vicino all'acqua senza supervisione."
+  },
+  {
+    "id": "4y-safety-03",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Esercitati su cosa fare se il tuo bambino si separa da te in un negozio: restare dove si trova, cercare un commesso e non uscire mai dall'edificio."
+  },
+  {
+    "id": "4y-safety-04",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Il tuo bambino può iniziare a imparare il proprio indirizzo di casa. Esercitati regolarmente come una canzoncina o una filastrocca per aiutarlo a ricordare."
+  },
+  {
+    "id": "4y-safety-05",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Insegna al tuo bambino il concetto di \"adulti sicuri\" — genitori, insegnanti, agenti di polizia — a cui possono rivolgersi per chiedere aiuto. Evita il termine vago \"pericolo degli sconosciuti\"."
+  },
+  {
+    "id": "4y-safety-06",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Il tuo bambino dovrebbe sempre indossare il casco per andare in bici, monopattino e pattini. Lascialo aiutare a sceglierne uno che gli piace così sarà più disposto a indossarlo."
+  },
+  {
+    "id": "4y-safety-07",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "La consapevolezza della sicurezza in cucina cresce a questa età. Insegna al tuo bambino che fornelli, forno e oggetti appuntiti sono per gli adulti, e dai il buon esempio con un comportamento sicuro in cucina."
+  },
+  {
+    "id": "4y-safety-08",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Assicurati che il tuo bambino sappia di non aprire la porta d'ingresso senza un adulto presente. Un chiavistello alto o una catena di sicurezza aggiungono una barriera fisica."
+  },
+  {
+    "id": "4y-safety-09",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Ripassa le regole del parco giochi: scendere dallo scivolo con i piedi avanti, aspettare il proprio turno sulle altalene e mantenere una distanza di sicurezza dai bambini che si dondolano."
+  },
+  {
+    "id": "4y-safety-10",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Se il tuo bambino usa un tablet o un dispositivo, imposta i controlli parentali e tieni gli schermi negli spazi condivisi. Insegnagli a non condividere mai informazioni personali online."
+  },
+  {
+    "id": "4y-safety-11",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Insegna al tuo bambino la sicurezza del corpo usando i nomi anatomici corretti. I bambini che conoscono le parole giuste sono più capaci di comunicare se qualcosa non va."
+  },
+  {
+    "id": "4y-safety-12",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Il tuo bambino è abbastanza grande per esercitarsi a chiamare i servizi di emergenza al telefono e sapere cosa dire: il proprio nome, che ha bisogno di aiuto e il proprio indirizzo."
+  },
+  {
+    "id": "4y-safety-13",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Garage, attrezzi elettrici e aree di lavoro dovrebbero essere sempre vietati senza la supervisione di un adulto. Usa lucchetti o allarmi se necessario."
+  },
+  {
+    "id": "4y-safety-14",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Quando viaggia in auto, il tuo bambino dovrebbe essere sempre sul sedile posteriore. Il sedile posteriore è il posto più sicuro per tutti i bambini sotto i 13 anni."
+  },
+  {
+    "id": "4y-safety-15",
+    "ageGroup": "4y",
+    "category": "safety",
+    "text": "Insegna al tuo bambino a fermarsi al bordo di ogni vialetto e marciapiede. Esercitati a guardare a sinistra, a destra, poi di nuovo a sinistra prima di attraversare insieme."
+  }
+]

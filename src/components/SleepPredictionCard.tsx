@@ -4,7 +4,8 @@ import { useTimeRefresh } from "@/hooks/useTimeRefresh";
 import { memo, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerEvent, AndroidNativeProps } from "@react-native-community/datetimepicker";
+import RNDatePicker from "react-native-date-picker";
 import { useSleep, useBaby } from "@/contexts";
 import { useActiveTimers } from "@/contexts/active-timers-context";
 import type { ActiveSleepTimer } from "@/contexts/sleep-context";
@@ -13,6 +14,7 @@ import {
   predictNextSleep,
   getQualifyingNightSleep,
   getMorningThreshold,
+  BEDTIME_ZONE_MINUTES,
 } from "@/utils/sleepPredictions";
 import type { SleepPrediction, SleepPredictionModel } from "@/utils/sleepPredictions";
 import { isUnderTwoMonths } from "@/utils/sleepGoals";
@@ -25,6 +27,8 @@ interface SleepPredictionCardProps {
 }
 
 type CardState =
+  | "loading"
+  | "no_birthdate"
   | "under_two_months"
   | "setup_required"
   | "need_more_data"
@@ -93,12 +97,13 @@ const SleepPredictionCardInner = ({
 
   const [selectedNapCount, setSelectedNapCountState] = useState<number | null>(null);
   const [loadedPersistedNapCount, setLoadedPersistedNapCount] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
   const [showSetup, setShowSetup] = useState(false);
   const [setupDayStart, setSetupDayStart] = useState(7);
   const [setupDayEnd, setSetupDayEnd] = useState(19);
   const [showDayStartPicker, setShowDayStartPicker] = useState(false);
   const [showDayEndPicker, setShowDayEndPicker] = useState(false);
+  const [pendingDayStart, setPendingDayStart] = useState<number | null>(null);
+  const [pendingDayEnd, setPendingDayEnd] = useState<number | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
 
   const overdueTickMinute = useTimeRefresh(60000);
@@ -117,14 +122,26 @@ const SleepPredictionCardInner = ({
     return hasModel && !!lastSleep?.endedAt;
   }, [hasNightSleepToday, model, wakeWindowConfig, getLastSleep]);
 
+  const medianBedtimeHour = model?.medianBedtimeStart ?? null;
+  const nighttimeThresholdHour = medianBedtimeHour ?? effectiveDayEnd;
+  const bedtimeZoneStartHour = nighttimeThresholdHour - BEDTIME_ZONE_MINUTES / 60;
+
   const cardState = useMemo((): CardState | null => {
+    if (!selectedBaby) {
+      return "loading";
+    }
+
+    if (!birthDate) {
+      return "no_birthdate";
+    }
+
     if (isUnderTwoMonths(birthDate)) {
       if (!predictionBannerDismissed) return "under_two_months";
       return null;
     }
 
-    if (!isUnderTwoMonths(birthDate) && !hasDayBoundaries) {
-      return "setup_required";
+    if (!hasDayBoundaries) {
+      return wakeWindowConfig === null ? "loading" : "setup_required";
     }
 
     if (isComputingModel) {
@@ -143,16 +160,8 @@ const SleepPredictionCardInner = ({
       return "nighttime";
     }
 
-    if (currentHour >= effectiveDayEnd) {
-      const lastSleep = getLastSleep();
-      if (lastSleep?.endedAt) {
-        if (lastSleep.type === "night") return "nighttime";
-        if (lastSleep.type === "nap") {
-          const endedAtHour = new Date(lastSleep.endedAt).getHours() + new Date(lastSleep.endedAt).getMinutes() / 60;
-          if (endedAtHour >= effectiveDayEnd) return "nighttime";
-        }
-      }
-      if (!hasPredictionData) return "nighttime";
+    if (currentHour >= bedtimeZoneStartHour && !hasPredictionData) {
+      return "nighttime";
     }
 
     if (!hasNightSleepToday) {
@@ -165,7 +174,9 @@ const SleepPredictionCardInner = ({
 
     return "prediction";
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [birthDate, predictionBannerDismissed, hasDayBoundaries, isComputingModel, effectiveActiveTimer, effectiveDayStart, effectiveDayEnd, hasNightSleepToday, hasPredictionData, qualifyingDayCount, getLastSleep, transitionTick]);
+  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasNightSleepToday, hasPredictionData, qualifyingDayCount, transitionTick]);
+
+
 
   useEffect(() => {
     const needsTransition = !effectiveActiveTimer && cardState === "prediction";
@@ -193,28 +204,50 @@ const SleepPredictionCardInner = ({
     return () => clearTimeout(timer);
   }, [effectiveActiveTimer, cardState, effectiveDayStart, transitionTick]);
 
-  useEffect(() => {
-    if (cardState !== "sleeping_nap" || !effectiveActiveTimer) {
-      setElapsed(0);
-      return;
+  const sleepContext = useMemo((): {
+    lastWakeTime: Date | null;
+    lastSleepDurationMinutes: number | undefined;
+    previousProperWakeTime: Date | undefined;
+  } => {
+    if (effectiveActiveTimer) return { lastWakeTime: null, lastSleepDurationMinutes: undefined, previousProperWakeTime: undefined };
+
+    const sorted = [...sleeps].sort((a, b) =>
+      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    );
+
+    let lastWakeTime: Date | null = null;
+    let lastSleepDurationMinutes: number | undefined = undefined;
+    let previousProperWakeTime: Date | undefined = undefined;
+
+    for (const sleep of sorted) {
+      if (!sleep.endedAt) continue;
+
+      const durationMin = (new Date(sleep.endedAt).getTime() - new Date(sleep.startedAt).getTime()) / 60000;
+      if (durationMin < 5) continue;
+
+      const startHour = new Date(sleep.startedAt).getHours() + new Date(sleep.startedAt).getMinutes() / 60;
+      const isPastZoneStart = startHour >= bedtimeZoneStartHour;
+      if (isPastZoneStart && durationMin < 15) continue;
+
+      if (lastWakeTime === null) {
+        lastWakeTime = new Date(sleep.endedAt);
+        lastSleepDurationMinutes = durationMin;
+        if (durationMin >= 20) break;
+        continue;
+      }
+
+      if (durationMin >= 20) {
+        previousProperWakeTime = new Date(sleep.endedAt);
+        break;
+      }
     }
 
-    const compute = () => {
-      const ms = Date.now() - effectiveActiveTimer.startTime.getTime() - (effectiveActiveTimer.totalPausedMs || 0);
-      setElapsed(Math.max(0, Math.floor(ms / 1000)));
-    };
+    return { lastWakeTime, lastSleepDurationMinutes, previousProperWakeTime };
+  }, [effectiveActiveTimer, sleeps, bedtimeZoneStartHour]);
 
-    compute();
-    const interval = setInterval(compute, 1000);
-    return () => clearInterval(interval);
-  }, [cardState, effectiveActiveTimer]);
-
-  const lastWakeTime = useMemo((): Date | null => {
-    if (effectiveActiveTimer) return null;
-    const lastSleep = getLastSleep();
-    if (!lastSleep?.endedAt) return null;
-    return new Date(lastSleep.endedAt);
-  }, [effectiveActiveTimer, getLastSleep]);
+  const lastWakeTime = sleepContext.lastWakeTime;
+  const lastSleepDurationMinutes = sleepContext.lastSleepDurationMinutes;
+  const previousProperWakeTime = sleepContext.previousProperWakeTime;
 
   const manualModel = useMemo((): SleepPredictionModel | null => {
     if (wakeWindowConfig?.source !== "custom" || !wakeWindowConfig.slots.length) return null;
@@ -240,8 +273,9 @@ const SleepPredictionCardInner = ({
       bedtimeWakeWindow: bedtimeSlot?.durationMinutes ?? 120,
       medianNapDuration: model?.medianNapDuration ?? 60,
       napCountDistribution: { [napCount]: 7 },
+      medianBedtimeStart: model?.medianBedtimeStart ?? null,
     };
-  }, [wakeWindowConfig, model?.medianNapDuration]);
+  }, [wakeWindowConfig, model?.medianNapDuration, model?.medianBedtimeStart]);
 
   const effectiveModel = manualModel ?? model;
 
@@ -264,12 +298,6 @@ const SleepPredictionCardInner = ({
     setSelectedNapCountState(effectiveModel.primaryNapCount);
   }, [effectiveModel, loadedPersistedNapCount, selectedNapCount]);
 
-  const setSelectedNapCount = useCallback((count: number) => {
-    setSelectedNapCountState(count);
-    if (selectedBaby?.id) {
-      SleepStorageService.setSelectedNapCount(selectedBaby.id, count).catch(() => {});
-    }
-  }, [selectedBaby?.id]);
 
   const prediction = useMemo((): SleepPrediction | null => {
     if (cardState !== "prediction" && cardState !== "need_more_data") return null;
@@ -277,8 +305,8 @@ const SleepPredictionCardInner = ({
     if (!hasNightSleepToday) return null;
 
     const completedNaps = getCompletedNapsSinceNightSleep();
-    return predictNextSleep(effectiveModel, selectedNapCount, completedNaps, lastWakeTime, effectiveDayEnd);
-  }, [cardState, effectiveModel, lastWakeTime, selectedNapCount, hasNightSleepToday, getCompletedNapsSinceNightSleep, effectiveDayEnd]);
+    return predictNextSleep(effectiveModel, selectedNapCount, completedNaps, lastWakeTime, effectiveDayEnd, effectiveDayStart, undefined, lastSleepDurationMinutes, previousProperWakeTime);
+  }, [cardState, effectiveModel, lastWakeTime, selectedNapCount, hasNightSleepToday, getCompletedNapsSinceNightSleep, effectiveDayEnd, effectiveDayStart, lastSleepDurationMinutes, previousProperWakeTime]);
 
   const isOverdue = useMemo((): boolean => {
     if (!prediction) return false;
@@ -306,22 +334,34 @@ const SleepPredictionCardInner = ({
   }, [setupDayStart, setupDayEnd, setDayNightBoundary]);
 
   const handleDayStartPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === "android") {
-      setShowDayStartPicker(false);
-    }
+    setShowDayStartPicker(false);
     if (selectedDate) {
-      setSetupDayStart(selectedDate.getHours() + selectedDate.getMinutes() / 60);
+      setSetupDayStart(selectedDate.getHours());
     }
   }, []);
 
-  const handleDayEndPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === "android") {
-      setShowDayEndPicker(false);
+  const handleDayStartDone = useCallback(() => {
+    setShowDayStartPicker(false);
+    if (pendingDayStart !== null) {
+      setSetupDayStart(pendingDayStart);
     }
+    setPendingDayStart(null);
+  }, [pendingDayStart]);
+
+  const handleDayEndPickerChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowDayEndPicker(false);
     if (selectedDate) {
-      setSetupDayEnd(selectedDate.getHours() + selectedDate.getMinutes() / 60);
+      setSetupDayEnd(selectedDate.getHours());
     }
   }, []);
+
+  const handleDayEndDone = useCallback(() => {
+    setShowDayEndPicker(false);
+    if (pendingDayEnd !== null) {
+      setSetupDayEnd(pendingDayEnd);
+    }
+    setPendingDayEnd(null);
+  }, [pendingDayEnd]);
 
   const sleepAccent = isDark ? "#A68DC8" : "#8B7BA0";
   const sleepAccentSoft = isDark ? "#C4ADE0" : "#6B5A80";
@@ -331,7 +371,6 @@ const SleepPredictionCardInner = ({
   const borderColor = isDark ? "#353039" : "rgba(139,123,160,0.18)";
   const topBorderColor = isDark ? "#4C4357" : "rgba(139,123,160,0.35)";
   const segBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
-  const segInactiveText = isDark ? textSecondary : "#7A7570";
   const infoBg = isDark ? "rgba(166,141,200,0.12)" : "rgba(139,123,160,0.10)";
   const overdueColor = isDark ? "#E8A87C" : "#D4845A";
 
@@ -342,6 +381,18 @@ const SleepPredictionCardInner = ({
     d.setHours(h, m, 0, 0);
     return d;
   };
+
+  const dayStartPickerValue = useMemo(() => {
+    const d = new Date();
+    d.setHours(pendingDayStart ?? setupDayStart, 0, 0, 0);
+    return d;
+  }, [pendingDayStart, setupDayStart]);
+
+  const dayEndPickerValue = useMemo(() => {
+    const d = new Date();
+    d.setHours(pendingDayEnd ?? setupDayEnd, 0, 0, 0);
+    return d;
+  }, [pendingDayEnd, setupDayEnd]);
 
   const formatHour = (fractionalHour: number): string => {
     const d = makeTimeDate(fractionalHour);
@@ -367,13 +418,71 @@ const SleepPredictionCardInner = ({
   }, [cardState, isOverdue]);
 
   const renderHeader = () => (
-    <Text style={{ fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 2, color: isOverdue ? overdueHeaderColor : sleepAccent, marginBottom: 12 }}>
-      {t("dashboard.sleepPrediction")}
-    </Text>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+      <Text style={{ fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 2, color: isOverdue ? overdueHeaderColor : sleepAccent }}>
+        {t("dashboard.sleepPrediction")}
+      </Text>
+      <Pressable
+        onPress={handleInfoPress}
+        hitSlop={8}
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: 9,
+          backgroundColor: infoBg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        accessibilityLabel={t("dashboard.predictionInfo")}
+        accessibilityRole="button"
+      >
+        <Text style={{ fontSize: 11, fontWeight: "700", fontStyle: "italic", color: isOverdue ? overdueHeaderColor : sleepAccent }}>
+          i
+        </Text>
+      </Pressable>
+    </View>
   );
 
   const renderContent = () => {
     if (cardState === null) return null;
+
+    if (cardState === "loading") {
+      return (
+        <View style={{ gap: 12 }}>
+          <SkeletonBar width={120} height={12} color={sleepAccent} />
+          <SkeletonBar width={200} height={16} color={sleepAccent} />
+        </View>
+      );
+    }
+
+    if (cardState === "no_birthdate") {
+      return (
+        <>
+          {renderHeader()}
+          <Text style={{ fontSize: 14, fontWeight: "600", color: textPrimary, marginBottom: 12 }}>
+            {t("dashboard.startAt2Months")}
+          </Text>
+          <Pressable
+            onPress={() => selectedBaby && router.push(`/baby/${selectedBaby.id}`)}
+            style={{
+              alignSelf: "flex-start",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              paddingVertical: 6,
+              paddingHorizontal: 14,
+              borderRadius: 20,
+              backgroundColor: isDark ? "rgba(184,160,212,0.15)" : "rgba(166,141,200,0.12)",
+            }}
+          >
+            <Text style={{ fontSize: 12 }}>🗓</Text>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: sleepAccent }}>
+              {t("dashboard.addBirthdate")}
+            </Text>
+          </Pressable>
+        </>
+      );
+    }
 
     if (cardState === "under_two_months") {
       return (
@@ -422,85 +531,129 @@ const SleepPredictionCardInner = ({
             </Text>
 
             <View style={{ gap: 12, marginBottom: 16 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={{ fontSize: 13, fontWeight: "600", color: textPrimary }}>
-                  {t("dashboard.dayStartLabel")}
-                </Text>
-                {Platform.OS === "ios" ? (
-                  <DateTimePicker
-                    value={makeTimeDate(setupDayStart)}
-                    mode="time"
-                    display="compact"
-
-                    onChange={handleDayStartPickerChange}
-                    themeVariant={isDark ? "dark" : "light"}
-                  />
-                ) : (
-                  <>
+              <View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: textPrimary }}>
+                    {t("dashboard.dayStartLabel")}
+                  </Text>
+                  <Pressable
+                    onPress={() => setShowDayStartPicker(true)}
+                    style={{
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      backgroundColor: segBg,
+                      borderRadius: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: sleepAccent }}>
+                      {formatHour(setupDayStart)}
+                    </Text>
+                  </Pressable>
+                </View>
+                {showDayStartPicker && Platform.OS === "ios" && (
+                  <View style={{
+                    marginTop: 8,
+                    backgroundColor: segBg,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                  }}>
+                    <View style={{ alignItems: "center" }}>
+                      <RNDatePicker
+                        date={dayStartPickerValue}
+                        mode="time"
+                        onDateChange={(date) => setPendingDayStart(date.getHours())}
+                        theme={isDark ? "dark" : "light"}
+                      />
+                    </View>
                     <Pressable
-                      onPress={() => setShowDayStartPicker(true)}
+                      onPress={handleDayStartDone}
                       style={{
-                        paddingVertical: 6,
-                        paddingHorizontal: 12,
-                        backgroundColor: segBg,
-                        borderRadius: 8,
+                        alignSelf: "stretch",
+                        alignItems: "center",
+                        paddingVertical: 10,
+                        borderTopWidth: 1,
+                        borderTopColor: borderColor,
                       }}
                     >
-                      <Text style={{ fontSize: 13, fontWeight: "600", color: sleepAccent }}>
-                        {formatHour(setupDayStart)}
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: sleepAccent }}>
+                        {t("common.done")}
                       </Text>
                     </Pressable>
-                    {showDayStartPicker && (
-                      <DateTimePicker
-                        value={makeTimeDate(setupDayStart)}
-                        mode="time"
-                        display="spinner"
-    
-                        onChange={handleDayStartPickerChange}
-                      />
-                    )}
-                  </>
+                  </View>
+                )}
+                {showDayStartPicker && Platform.OS === "android" && (
+                  <DateTimePicker
+                    {...{
+                      value: dayStartPickerValue,
+                      mode: "time",
+                      display: "default",
+                      onChange: handleDayStartPickerChange,
+                      minuteInterval: 30,
+                    } as AndroidNativeProps}
+                  />
                 )}
               </View>
 
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={{ fontSize: 13, fontWeight: "600", color: textPrimary }}>
-                  {t("dashboard.dayEndLabel")}
-                </Text>
-                {Platform.OS === "ios" ? (
-                  <DateTimePicker
-                    value={makeTimeDate(setupDayEnd)}
-                    mode="time"
-                    display="compact"
-
-                    onChange={handleDayEndPickerChange}
-                    themeVariant={isDark ? "dark" : "light"}
-                  />
-                ) : (
-                  <>
+              <View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: textPrimary }}>
+                    {t("dashboard.dayEndLabel")}
+                  </Text>
+                  <Pressable
+                    onPress={() => setShowDayEndPicker(true)}
+                    style={{
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      backgroundColor: segBg,
+                      borderRadius: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: sleepAccent }}>
+                      {formatHour(setupDayEnd)}
+                    </Text>
+                  </Pressable>
+                </View>
+                {showDayEndPicker && Platform.OS === "ios" && (
+                  <View style={{
+                    marginTop: 8,
+                    backgroundColor: segBg,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                  }}>
+                    <View style={{ alignItems: "center" }}>
+                      <RNDatePicker
+                        date={dayEndPickerValue}
+                        mode="time"
+                        onDateChange={(date) => setPendingDayEnd(date.getHours())}
+                        theme={isDark ? "dark" : "light"}
+                      />
+                    </View>
                     <Pressable
-                      onPress={() => setShowDayEndPicker(true)}
+                      onPress={handleDayEndDone}
                       style={{
-                        paddingVertical: 6,
-                        paddingHorizontal: 12,
-                        backgroundColor: segBg,
-                        borderRadius: 8,
+                        alignSelf: "stretch",
+                        alignItems: "center",
+                        paddingVertical: 10,
+                        borderTopWidth: 1,
+                        borderTopColor: borderColor,
                       }}
                     >
-                      <Text style={{ fontSize: 13, fontWeight: "600", color: sleepAccent }}>
-                        {formatHour(setupDayEnd)}
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: sleepAccent }}>
+                        {t("common.done")}
                       </Text>
                     </Pressable>
-                    {showDayEndPicker && (
-                      <DateTimePicker
-                        value={makeTimeDate(setupDayEnd)}
-                        mode="time"
-                        display="spinner"
-    
-                        onChange={handleDayEndPickerChange}
-                      />
-                    )}
-                  </>
+                  </View>
+                )}
+                {showDayEndPicker && Platform.OS === "android" && (
+                  <DateTimePicker
+                    {...{
+                      value: dayEndPickerValue,
+                      mode: "time",
+                      display: "default",
+                      onChange: handleDayEndPickerChange,
+                      minuteInterval: 30,
+                    } as AndroidNativeProps}
+                  />
                 )}
               </View>
             </View>
@@ -584,11 +737,6 @@ const SleepPredictionCardInner = ({
     }
 
     if (cardState === "sleeping_nap") {
-      const totalMinutes = Math.floor(elapsed / 60);
-      const h = Math.floor(totalMinutes / 60);
-      const m = totalMinutes % 60;
-      const elapsedStr = formatDurationShort(h, m, tFn);
-
       return (
         <>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -601,9 +749,6 @@ const SleepPredictionCardInner = ({
             {babyName
               ? t("dashboard.isSleeping", { name: babyName })
               : t("dashboard.isSleepingGeneric")}
-          </Text>
-          <Text style={{ fontSize: 13, color: textSecondary, marginTop: 4 }}>
-            {elapsedStr}
           </Text>
         </>
       );
@@ -679,13 +824,11 @@ const SleepPredictionCardInner = ({
         ? t("dashboard.bedtimeNear")
         : t("dashboard.napTimeNear");
 
-    const hasSecondary = effectiveModel.secondaryNapCount !== null;
-
     return (
       <>
         {cardState !== "need_more_data" && renderHeader()}
 
-        <Text style={{ fontSize: 15, fontWeight: "700", color: isOverdue ? overdueColor : (isDark ? textPrimary : "#3D3350"), marginBottom: 16 }}>
+        <Text style={{ fontSize: 15, fontWeight: "700", color: isOverdue ? overdueColor : (isDark ? textPrimary : "#3D3350"), marginTop: 4 }}>
           {label}{" "}
           {!isOverdue && (
             <Text style={{ fontWeight: "900", fontSize: 16, color: sleepAccentSoft }}>
@@ -693,59 +836,6 @@ const SleepPredictionCardInner = ({
             </Text>
           )}
         </Text>
-
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-          {hasSecondary ? (
-            <View style={{ flexDirection: "row", backgroundColor: segBg, borderRadius: 8, overflow: "hidden" }}>
-              <Pressable
-                onPress={() => setSelectedNapCount(effectiveModel.primaryNapCount)}
-                style={{
-                  paddingVertical: 6,
-                  paddingHorizontal: 12,
-                  borderRadius: 8,
-                  backgroundColor: selectedNapCount === effectiveModel.primaryNapCount ? sleepAccent : "transparent",
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: "700", color: selectedNapCount === effectiveModel.primaryNapCount ? "#FFFFFF" : segInactiveText }}>
-                  {t("dashboard.napDayCount", { count: effectiveModel.primaryNapCount })}
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setSelectedNapCount(effectiveModel.secondaryNapCount!)}
-                style={{
-                  paddingVertical: 6,
-                  paddingHorizontal: 12,
-                  borderRadius: 8,
-                  backgroundColor: selectedNapCount === effectiveModel.secondaryNapCount ? sleepAccent : "transparent",
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: "700", color: selectedNapCount === effectiveModel.secondaryNapCount ? "#FFFFFF" : segInactiveText }}>
-                  {t("dashboard.napDayCount", { count: effectiveModel.secondaryNapCount! })}
-                </Text>
-              </Pressable>
-            </View>
-          ) : (
-            <Text style={{ fontSize: 11, fontWeight: "700", color: textSecondary }}>
-              {t("dashboard.napDayCount", { count: selectedNapCount })}
-            </Text>
-          )}
-          <Pressable
-            onPress={handleInfoPress}
-            hitSlop={8}
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              backgroundColor: infoBg,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t("dashboard.predictionInfo")}
-          >
-            <Text style={{ fontSize: 11, fontWeight: "700", color: sleepAccent }}>i</Text>
-          </Pressable>
-        </View>
       </>
     );
   };
@@ -815,7 +905,24 @@ const SleepPredictionCardInner = ({
     );
   };
 
-  const effectiveCardState = isOverdue ? "overdue" : cardState;
+  const isBedtimeOverdue = isOverdue && prediction?.type === "bedtime";
+
+  const hasQualifyingSleepPastZoneStart = useMemo((): boolean => {
+    const now = new Date();
+    const currentHour = now.getHours() + now.getMinutes() / 60;
+    if (currentHour < bedtimeZoneStartHour) return false;
+    const lastSleep = getLastSleep();
+    if (!lastSleep?.endedAt) return false;
+    const durationMin = (new Date(lastSleep.endedAt).getTime() - new Date(lastSleep.startedAt).getTime()) / 60000;
+    if (durationMin < 15) return false;
+    const startedAtHour = new Date(lastSleep.startedAt).getHours() + new Date(lastSleep.startedAt).getMinutes() / 60;
+    return startedAtHour >= bedtimeZoneStartHour;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bedtimeZoneStartHour, getLastSleep, transitionTick]);
+
+  const effectiveCardState = (isBedtimeOverdue || hasQualifyingSleepPastZoneStart)
+    ? "nighttime"
+    : isOverdue ? "overdue" : cardState;
 
   const overdueBg = isDark ? "#2D2723" : "#F7F1EC";
   const overdueBorder = "rgba(220,160,110,0.2)";
@@ -862,16 +969,32 @@ const SleepPredictionCardInner = ({
   );
 };
 
-const PulsingDot = ({ color }: { color: string }) => (
-  <View
-    style={{
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: color,
-    }}
-  />
-);
+const PulsingDot = ({ color }: { color: string }) => {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.3, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: color,
+        opacity,
+      }}
+    />
+  );
+};
 
 const LoadingDots = ({ color }: { color: string }) => {
   const anim1 = useRef(new Animated.Value(0.3)).current;
@@ -913,6 +1036,40 @@ const LoadingDots = ({ color }: { color: string }) => {
       <Animated.View style={dotStyle(anim2)} />
       <Animated.View style={dotStyle(anim3)} />
     </View>
+  );
+};
+
+const SkeletonBar = ({ width, height, color }: { width: number; height: number; color: string }) => {
+  const shimmer = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(shimmer, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      })
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [shimmer]);
+
+  const opacity = shimmer.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.12, 0.25, 0.12],
+  });
+
+  return (
+    <Animated.View
+      style={{
+        width,
+        height,
+        borderRadius: 6,
+        backgroundColor: color,
+        opacity,
+      }}
+    />
   );
 };
 

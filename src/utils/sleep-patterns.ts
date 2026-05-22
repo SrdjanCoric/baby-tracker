@@ -237,7 +237,7 @@ export function buildDayViewData(
     blocks.push({
       topPx,
       heightPx,
-      type: classifySleepType(clampedStart.getHours(), dayStartHour, dayEndHour),
+      type: classifySleepByTimeRange(sleepStart, sleepEnd, dayStartHour, dayEndHour),
       durationSeconds,
       startedAt: sleep.startedAt,
     });
@@ -307,7 +307,7 @@ export function buildWeekViewData(
         dayBlocks.push({
           topFraction,
           heightFraction,
-          type: classifySleepType(clampedStart.getHours(), dayStartHour, dayEndHour),
+          type: classifySleepByTimeRange(sleepStart, sleepEnd, dayStartHour, dayEndHour),
         });
       }
     }
@@ -448,7 +448,7 @@ export function calculateSleepSummary(
     const startKey = sleepDayKey(startDate, dayStartHour);
     const startDay = dailyData.get(startKey);
     if (startDay) {
-      const autoType = classifySleepType(startDate.getHours(), dayStartHour, dayEndHour);
+      const autoType = classifySleepByTimeRange(startDate, new Date(sleep.endedAt!), dayStartHour, dayEndHour);
       if (autoType === "night") {
         startDay.nightSessions++;
       } else {
@@ -463,8 +463,7 @@ export function calculateSleepSummary(
   > = new Map();
 
   const nightSleeps = recentSleeps.filter((s) => {
-    const startHour = new Date(s.startedAt).getHours();
-    return classifySleepType(startHour, dayStartHour, dayEndHour) === "night";
+    return classifySleepByTimeRange(new Date(s.startedAt), new Date(s.endedAt!), dayStartHour, dayEndHour) === "night";
   });
   for (const sleep of nightSleeps) {
     const startDate = new Date(sleep.startedAt);

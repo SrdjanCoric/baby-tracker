@@ -1,0 +1,512 @@
+[
+  {
+    "id": "5y-development-01",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo probablemente puede contar hasta 20 o más y puede comenzar a entender sumas simples. Usa objetos reales — \"Tienes 3 uvas, te daré 2 más\" — para hacer las matemáticas tangibles."
+  },
+  {
+    "id": "5y-development-02",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Escribir letras y su nombre con creciente control es un gran logro. Ofrece papel rayado y celebra el progreso en lugar de la perfección."
+  },
+  {
+    "id": "5y-development-03",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo está desarrollando empatía y puede reconocer cuándo otros están tristes o molestos. Habla sobre sentimientos en libros y en la vida real para fortalecer esta habilidad."
+  },
+  {
+    "id": "5y-development-04",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Brincar, trepar con confianza y lanzar una pelota por encima de la cabeza muestran que las habilidades motoras gruesas están bien desarrolladas. Continúa ofreciendo desafíos físicos variados."
+  },
+  {
+    "id": "5y-development-05",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a entender el concepto de tiempo — hoy, mañana, ayer. Un calendario sencillo puede ayudarle a entender días, semanas y eventos próximos."
+  },
+  {
+    "id": "5y-development-06",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo puede seguir instrucciones de múltiples pasos y recordar reglas. Dale pequeñas responsabilidades como poner la mesa para construir confianza."
+  },
+  {
+    "id": "5y-development-07",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Las amistades son cada vez más estables y significativas. Tu hijo puede tener un mejor amigo y comenzar a resolver conflictos de forma más independiente."
+  },
+  {
+    "id": "5y-development-08",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a pronunciar palabras simples letra por letra o reconocer palabras frecuentes. Leer juntos cada noche sigue siendo la mejor actividad de alfabetización."
+  },
+  {
+    "id": "5y-development-09",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo puede dibujar imágenes reconocibles con detalles como casas con ventanas y personas con dedos. Estos dibujos reflejan cómo entiende su mundo."
+  },
+  {
+    "id": "5y-development-10",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "La capacidad de atención está creciendo — tu hijo puede enfocarse en una sola actividad durante 10-15 minutos. Proporciona oportunidades para mantener la concentración sin interrupción."
+  },
+  {
+    "id": "5y-development-11",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo puede comenzar a compararse con sus compañeros. Enfatiza el esfuerzo sobre el resultado y celebra las fortalezas individuales para construir una autoestima saludable."
+  },
+  {
+    "id": "5y-development-12",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Rimar, aplaudir sílabas e identificar sonidos iniciales son habilidades de prelectura que se desarrollan ahora. Juega juegos de palabras para reforzarlas de forma natural."
+  },
+  {
+    "id": "5y-development-13",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo está aprendiendo a tomar turnos en la conversación — escuchar, luego responder. Modela esto dándole tu atención completa cuando habla."
+  },
+  {
+    "id": "5y-development-14",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "La resolución de problemas se vuelve más sofisticada. Cuando tu hijo enfrenta un desafío, guíalo a pensar en soluciones en lugar de resolverlo por él."
+  },
+  {
+    "id": "5y-development-15",
+    "ageGroup": "5y",
+    "category": "development",
+    "text": "Tu hijo puede entender y contar chistes simples. El humor es una habilidad cognitiva compleja que involucra sorpresa, juego de palabras y conciencia social."
+  },
+  {
+    "id": "5y-sleep-01",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Tu hijo necesita 10-13 horas de sueño por cada 24 horas. La mayoría de los niños a esta edad han dejado las siestas, pero algunos de 4 años pueden aún necesitar una. Protege la hora de dormir incluso en días ocupados."
+  },
+  {
+    "id": "5y-sleep-02",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Un período de relajación de 30 minutos antes de dormir — leer, conversar tranquilamente, estiramientos suaves — ayuda al cerebro de tu hijo a pasar del modo activo al modo de sueño."
+  },
+  {
+    "id": "5y-sleep-03",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Si tu hijo está comenzando la escuela, el sueño consistente se vuelve aún más importante. Los niños cansados tienen dificultad para concentrarse, aprender y manejar emociones."
+  },
+  {
+    "id": "5y-sleep-04",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Las pesadillas aún pueden ocurrir y a menudo involucran temas de la vida diaria. Habla brevemente sobre el sueño, ofrece consuelo y ayúdale a sentirse seguro."
+  },
+  {
+    "id": "5y-sleep-05",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Tu hijo puede comenzar a hacerse cargo de partes de su rutina para dormir — elegir pijama, cepillarse los dientes, escoger un libro. La independencia fomenta la cooperación."
+  },
+  {
+    "id": "5y-sleep-07",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Si tu hijo se resiste a la hora de dormir porque quiere más tiempo contigo, intenta incluir 10 minutos de tiempo especial a solas antes de que comience la rutina."
+  },
+  {
+    "id": "5y-sleep-08",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Mantén la habitación fresca, oscura y tranquila. Tu hijo puede querer ayudar a organizar su habitación para dormir — elegir dónde va la luz de noche o cómo se colocan las almohadas."
+  },
+  {
+    "id": "5y-sleep-09",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Evita las pantallas durante al menos una hora antes de dormir. La estimulación y la luz azul dificultan que el cerebro de tu hijo se prepare para dormir."
+  },
+  {
+    "id": "5y-sleep-10",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Si tu hijo se despierta temprano y no puede volver a dormirse, enséñale a hojear libros tranquilamente en la cama hasta que sea hora de levantarse."
+  },
+  {
+    "id": "5y-sleep-11",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Las grandes transiciones de vida — comenzar la escuela, un nuevo hermano o mudarse — pueden interrumpir temporalmente el sueño. El consuelo adicional y la consistencia en la rutina les ayudan a adaptarse."
+  },
+  {
+    "id": "5y-sleep-12",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Una práctica de gratitud a la hora de dormir — nombrar tres cosas por las que esté agradecido — puede ayudar a tu hijo a dormirse con una mentalidad positiva."
+  },
+  {
+    "id": "5y-sleep-13",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "Si tu hijo ronca regularmente o hace pausas en la respiración mientras duerme, menciónaselo a tu pediatra. Podría indicar apnea del sueño, que es tratable."
+  },
+  {
+    "id": "5y-sleep-14",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "La hora de dormir del fin de semana no debe diferir más de una hora de la de entre semana. Los grandes cambios de horario hacen que los lunes por la mañana sean mucho más difíciles."
+  },
+  {
+    "id": "5y-sleep-15",
+    "ageGroup": "5y",
+    "category": "sleep",
+    "text": "La actividad física durante el día mejora significativamente la calidad del sueño. Incluso en días lluviosos, encuentra formas para que tu hijo se mueva — bailar, circuitos de obstáculos en casa o yoga."
+  },
+  {
+    "id": "5y-feeding-01",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Tu hijo puede usar cuchillo y tenedor juntos con habilidad creciente. Déjalo practicar cortando alimentos suaves como plátanos o panqueques en las comidas."
+  },
+  {
+    "id": "5y-feeding-02",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Si tu hijo está comenzando la escuela, involúcralo en preparar su almuerzo. Los niños comen mejor cuando han ayudado a elegir y preparar su comida."
+  },
+  {
+    "id": "5y-feeding-03",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Enséñale a tu hijo sobre los grupos de alimentos en términos simples — \"alimentos para crecer\" (proteína), \"alimentos para la energía\" (carbohidratos), \"alimentos que brillan\" (frutas y verduras) — para fomentar la conciencia nutricional."
+  },
+  {
+    "id": "5y-feeding-04",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Tu hijo necesita aproximadamente 1,200-1,600 calorías por día. El tamaño de las porciones debe ser aproximadamente un cuarto a un tercio de las porciones de adultos."
+  },
+  {
+    "id": "5y-feeding-05",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "La alimentación selectiva a menudo mejora alrededor de los 5 años a medida que los niños se vuelven más dispuestos a probar alimentos nuevos. Continúa ofreciendo variedad sin presión."
+  },
+  {
+    "id": "5y-feeding-06",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Tu hijo puede ayudar con tareas de cocina reales — medir ingredientes, romper huevos, mezclar masa. Estas habilidades desarrollan conceptos matemáticos e independencia."
+  },
+  {
+    "id": "5y-feeding-07",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Si tu hijo almuerza en la escuela, pregúntale qué comió y qué le gustó. Esto te mantiene al tanto de su nutrición y fortalece las habilidades de conversación."
+  },
+  {
+    "id": "5y-feeding-08",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Las necesidades de hierro siguen siendo importantes a esta edad. Las carnes magras, los alubias, las espinacas y los cereales fortificados con hierro ayudan a prevenir la deficiencia, que puede afectar la energía y la concentración."
+  },
+  {
+    "id": "5y-feeding-09",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "La influencia de los compañeros en la alimentación comienza ahora. Tu hijo puede querer probar alimentos que ve comer a sus amigos — úsalo como una oportunidad para introducir cosas nuevas."
+  },
+  {
+    "id": "5y-feeding-10",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Enséñale a tu hijo a beber agua cuando tenga sed en lugar de buscar zumo o bebidas con sabor. Los buenos hábitos de hidratación formados ahora duran toda la vida."
+  },
+  {
+    "id": "5y-feeding-11",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Comer en familia — incluso 3-4 veces a la semana — se asocia con mejor nutrición, vocabulario más amplio y relaciones familiares más cercanas."
+  },
+  {
+    "id": "5y-feeding-12",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Habla sobre la comida de forma positiva. Evita etiquetar alimentos como \"buenos\" o \"malos\" — en su lugar, explica que algunos alimentos son para comer todos los días y otros son para ocasiones especiales."
+  },
+  {
+    "id": "5y-feeding-13",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Tu hijo puede comenzar a entender lo básico de la seguridad alimentaria, como lavar frutas y verduras, no comer comida que cayó al piso afuera y consultar con adultos sobre alimentos desconocidos."
+  },
+  {
+    "id": "5y-feeding-14",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Si tu hijo come despacio, dale suficiente tiempo en las comidas sin apurarlo. Presionarlo para que coma más rápido puede crear ansiedad alrededor de las comidas."
+  },
+  {
+    "id": "5y-feeding-15",
+    "ageGroup": "5y",
+    "category": "feeding",
+    "text": "Proteína en el desayuno — huevos, yogur, mantequilla de cacahuate en tostadas — ayuda a tu hijo a mantenerse enfocado y con energía durante la mañana, especialmente en días de escuela."
+  },
+  {
+    "id": "5y-health-01",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Una consulta de niño sano durante esta etapa es importante. Tu pediatra revisará la visión, la audición, el crecimiento y el desarrollo, y puede proporcionar cualquier documentación necesaria para el ingreso a la escuela."
+  },
+  {
+    "id": "5y-health-03",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Si tu hijo usa anteojos, asegúrate de que realmente los use de manera constante. Los niños se adaptan rápidamente y su desarrollo visual depende de la corrección adecuada."
+  },
+  {
+    "id": "5y-health-04",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Tu hijo puede comenzar a perder dientes de leche pronto. Explícale que es una parte normal y emocionante de crecer para aliviar cualquier preocupación."
+  },
+  {
+    "id": "5y-health-05",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Lavarse las manos antes de las comidas, después de ir al baño y después de jugar afuera es un hábito que reduce enormemente las enfermedades. Asegúrate de que tu hijo lo haga de manera constante."
+  },
+  {
+    "id": "5y-health-06",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Si tu hijo tiene ansiedad por comenzar la escuela o nuevas actividades, valida sus sentimientos y practica la nueva situación a través de juego de roles o visitando el lugar de antemano."
+  },
+  {
+    "id": "5y-health-07",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Consulta con tu pediatra para asegurarte de que las vacunas de tu hijo estén al día. Algunas pueden ser obligatorias antes de comenzar la escuela."
+  },
+  {
+    "id": "5y-health-08",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Los piojos pueden propagarse en entornos escolares. Revisa el cabello de tu hijo semanalmente, especialmente detrás de las orejas y en la nuca."
+  },
+  {
+    "id": "5y-health-09",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Establece una rutina diaria de uso de hilo dental. Los dientes de tu hijo probablemente están muy juntos ahora, y el hilo dental previene caries entre los dientes."
+  },
+  {
+    "id": "5y-health-10",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Anima a tu hijo a decirte cuándo algo le duele o no se siente bien. A esta edad, puede comenzar a describir síntomas, lo que te ayuda a responder de manera adecuada."
+  },
+  {
+    "id": "5y-health-11",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Las verrugas son comunes en niños en edad escolar y son causadas por un virus. Son inofensivas pero se pueden tratar si le molestan a tu hijo."
+  },
+  {
+    "id": "5y-health-12",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Si tu hijo se queja frecuentemente de dolores de cabeza o entrecierra los ojos al ver libros y pantallas, programa un examen de la vista. Las necesidades visuales pueden cambiar rápidamente a esta edad."
+  },
+  {
+    "id": "5y-health-13",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "La actividad física protege la salud mental de tu hijo tanto como su cuerpo. Los niños activos muestran menores niveles de ansiedad y mejor regulación emocional."
+  },
+  {
+    "id": "5y-health-14",
+    "ageGroup": "5y",
+    "category": "health",
+    "text": "Enséñale a tu hijo hábitos básicos de higiene — cubrirse al toser, lavarse las manos, usar pañuelos desechables. Estas habilidades lo ayudan a mantenerse sano en entornos grupales."
+  },
+  {
+    "id": "5y-play-01",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Juegos de mesa con estrategia simple — como memoria, dominó o damas — desarrollan el pensamiento crítico, la paciencia y el buen espíritu deportivo."
+  },
+  {
+    "id": "5y-play-02",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Tu hijo puede estar listo para aprender a andar en bicicleta sin rueditas. Comienza en una superficie plana y blanda y déjalo ganar confianza a su propio ritmo."
+  },
+  {
+    "id": "5y-play-03",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Anima a tu hijo a crear sus propias historias — dibujadas, dictadas o escritas. La narración desarrolla la alfabetización, la creatividad y el procesamiento emocional."
+  },
+  {
+    "id": "5y-play-04",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Los deportes grupales o las clases de movimiento pueden introducir el trabajo en equipo y la actividad física. Enfócate en la diversión y la participación en lugar de la competencia a esta edad."
+  },
+  {
+    "id": "5y-play-05",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Construir estructuras elaboradas con bloques, cajas o juegos de construcción enseña conceptos de ingeniería, planificación y persistencia."
+  },
+  {
+    "id": "5y-play-06",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Tu hijo puede disfrutar proyectos sencillos de cocina. Hacer un batido, armar un sándwich o decorar galletas combina matemáticas, lectura y habilidades motoras finas."
+  },
+  {
+    "id": "5y-play-07",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "La exploración de la naturaleza — coleccionar rocas, identificar aves o examinar insectos — nutre la curiosidad y el pensamiento científico."
+  },
+  {
+    "id": "5y-play-08",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Los instrumentos musicales o las actividades de ritmo desarrollan la coordinación, las habilidades matemáticas y la autoexpresión. Incluso un simple tambor o xilófono ofrece un aprendizaje rico."
+  },
+  {
+    "id": "5y-play-09",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Los circuitos de obstáculos que incluyen arrastrarse, saltar, equilibrarse y lanzar desafían múltiples habilidades físicas y se pueden armar con artículos del hogar."
+  },
+  {
+    "id": "5y-play-11",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "El juego de roles con temas como doctor, maestro o bombero ayuda a tu hijo a procesar experiencias del mundo real y practicar situaciones sociales."
+  },
+  {
+    "id": "5y-play-12",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Juegos de letras y números — rayuela con letras, contar saltos de tijera — hacen que el aprendizaje temprano sea físico y divertido."
+  },
+  {
+    "id": "5y-play-13",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Dale a tu hijo una lupa y déjalo explorar el patio de cerca. Las habilidades de observación desarrolladas a través del juego se traducen en preparación para la ciencia y la lectura."
+  },
+  {
+    "id": "5y-play-14",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "Anima a tu hijo a jugar con niños de diferentes edades. Los más pequeños lo ayudan a practicar el liderazgo; los mayores lo desafían a crecer."
+  },
+  {
+    "id": "5y-play-15",
+    "ageGroup": "5y",
+    "category": "play",
+    "text": "El juego libre y no estructurado sigue siendo esencial incluso cuando aumentan las actividades programadas. Protege tiempo diario para que tu hijo juegue como quiera."
+  },
+  {
+    "id": "5y-safety-01",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Tu hijo debe saber su nombre completo, tu número de teléfono y la dirección de su casa. Practica regularmente hasta que pueda recitar los tres de memoria."
+  },
+  {
+    "id": "5y-safety-02",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Enseña seguridad peatonal: detenerse en cada bordillo, mirar izquierda-derecha-izquierda, y caminar (no correr) al cruzar las calles. Practica juntos en cada salida."
+  },
+  {
+    "id": "5y-safety-03",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Tu hijo debe permanecer en un asiento de auto o elevador hasta que mida al menos {{4 feet 9 inches|145 cm}}, lo que típicamente no ocurre hasta los 8-12 años."
+  },
+  {
+    "id": "5y-safety-05",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Enséñale a tu hijo la diferencia entre un secreto y una sorpresa. Los secretos que lo hacen sentir incómodo siempre deben contarse a un adulto de confianza."
+  },
+  {
+    "id": "5y-safety-06",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Si tu hijo camina a la escuela o a una parada de autobús, recorre la ruta juntos varias veces. Identifica lugares seguros y practica qué hacer si se siente inseguro."
+  },
+  {
+    "id": "5y-safety-07",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "El casco es obligatorio para andar en bicicleta, patinar y usar patineta. Tu hijo debe verte usando uno también — el ejemplo importa más que las reglas."
+  },
+  {
+    "id": "5y-safety-08",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Comienza conversaciones sencillas sobre seguridad en internet. Aunque no esté en línea solo, enséñale que la información personal es privada y que las pantallas se usan en espacios compartidos."
+  },
+  {
+    "id": "5y-safety-09",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Enséñale a tu hijo qué hacer en una emergencia: llamar a servicios de emergencia, decir su nombre y dirección, y quedarse en la línea. Practica con un teléfono de juguete."
+  },
+  {
+    "id": "5y-safety-10",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Tu hijo puede aprender seguridad básica contra incendios — detenerse, tirarse al piso y rodar; agacharse en el humo; reunirse en el punto de encuentro familiar. Practica tu plan de escape del hogar dos veces al año."
+  },
+  {
+    "id": "5y-safety-11",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Cuando visite otras casas, enséñale a tu hijo a preguntar antes de tocar cosas o entrar en habitaciones desconocidas. Esto fomenta el respeto y lo mantiene seguro."
+  },
+  {
+    "id": "5y-safety-12",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Asegúrate de que tu hijo entienda que ningún adulto debe pedirle que guarde un secreto de sus padres. La comunicación abierta es la mejor protección."
+  },
+  {
+    "id": "5y-safety-13",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Repasa las reglas del parque infantil: no empujar, esperar su turno y avisarle a un adulto si alguien se comporta de manera insegura. Tu hijo puede comenzar a defenderse solo en estas situaciones."
+  },
+  {
+    "id": "5y-safety-14",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Si tu hijo juega afuera de manera independiente, establece límites claros sobre qué tan lejos puede ir y revisa regularmente. Amplía la independencia gradualmente a medida que demuestre responsabilidad."
+  },
+  {
+    "id": "5y-safety-15",
+    "ageGroup": "5y",
+    "category": "safety",
+    "text": "Mantén una foto actualizada de tu hijo en tu teléfono. En el improbable caso de que se pierda en una multitud, una foto reciente ayuda a otros a encontrarlo rápidamente."
+  }
+]

@@ -88,11 +88,11 @@
     "infoSettingsBody": "Wir nutzen die Schlafmuster deines Babys, um Nickerchenzeiten und die Anzahl der Nickerchen pro Tag vorherzusagen. Je mehr du erfasst, desto genauer werden die Vorhersagen. Wenn du die Wachfenster lieber manuell einstellen möchtest, kannst du das in den Schlafeinstellungen tun.",
     "infoSettingsButton": "Schlafeinstellungen",
     "infoMissedNapTitle": "Was, wenn das Baby nicht schlafen will?",
-    "infoMissedNapBody": "Selbst mit guten Vorhersagen sind Babys manchmal einfach nicht bereit zum Schlafen. Schlaf wird von Routine, Umgebung und Entwicklungsphase beeinflusst. Wenn dein Kleines nicht eingeschlafen ist, ist das in Ordnung — hier ist, wann du es erneut versuchen kannst:",
+    "infoMissedNapBody": "Selbst mit guten Vorhersagen sind Babys manchmal einfach nicht bereit zum Schlafen. Schlaf wird von Routine, Umgebung und Entwicklungsphase beeinflusst. Wenn dein Kleines nicht eingeschlafen ist, ist das in Ordnung — so kannst du es erneut versuchen:",
     "infoMissedNapRetry": "2–3 Monate: warte ~30 Min. und versuche es erneut\n4–5 Monate: warte ~45 Min. und versuche es erneut\n6+ Monate: warte ~60 Min. und versuche es erneut",
     "infoHowLongTitle": "Wie lange sollte ich es versuchen?",
     "infoHowLongRetry": "2–3 Monate: versuche es etwa 30 Min.\n4–5 Monate: versuche es etwa 45 Min.\n6+ Monate: versuche es etwa 60 Min.",
-    "infoEncouragement": "Ein verpasstes Nickerchen bedeutet nicht, dass du versagt hast. Manche Tage laufen einfach anders — und das ist normal. Du und dein Baby lernt zusammen.",
+    "infoEncouragement": "Ein verpasstes Nickerchen bedeutet nicht, dass du versagt hast. Manche Tage laufen einfach anders — und das ist normal. Du und dein Baby lernen zusammen.",
     "basedOnPatterns": "Basierend auf {{name}}s aktuellen Schlafmustern",
     "basedOnPatternsGeneric": "Basierend auf aktuellen Schlafmustern",
     "napDayCount": "{{count}} Nickerchen pro Tag",
@@ -102,6 +102,7 @@
     "nighttime": "Nachtzeit",
     "bedtimeNear": "Schlafenszeit gegen",
     "startAt2Months": "Schlafvorhersagen beginnen ab 2 Monaten",
+    "addBirthdate": "Geburtsdatum hinzufügen",
     "manualWakeWindows": "Manuelle Wachfenster einstellen",
     "setupTitle": "Schlafvorhersagen einrichten",
     "setupDescription": "Stelle die typische Aufwach- und Schlafenszeit deines Babys ein, um Vorhersagen zu aktivieren",
@@ -109,9 +110,9 @@
     "dayEndLabel": "Schlafenszeit",
     "setupButton": "Einrichten",
     "setupSave": "Speichern",
-    "ageBasedNote": "Basierend auf Altersrichtlinien — noch {{count}} Tag bis personalisiert",
-    "ageBasedNote_other": "Basierend auf Altersrichtlinien — noch {{count}} Tage bis personalisiert",
-    "trackSleep": "Schlaf aufzeichnen, um Nickerchen vorherzusagen",
+    "ageBasedNote": "Basierend auf Altersrichtlinien — noch {{count}} Tag bis zur Personalisierung",
+    "ageBasedNote_other": "Basierend auf Altersrichtlinien — noch {{count}} Tage bis zur Personalisierung",
+    "trackSleep": "Nachtschlaf aufzeichnen, um Nickerchen vorherzusagen",
     "computing": "Schlafmuster für {{name}} werden berechnet",
     "computingGeneric": "Schlafmuster werden berechnet",
     "napTimeAgo": "Nickerchenzeit vor {{time}}",
@@ -177,6 +178,7 @@
     "right": "Rechts",
     "leftShort": "L",
     "rightShort": "R",
+    "bothShort": "B",
     "both": "Beide",
     "nextBreast": "Nächste",
     "leftSide": "Linke Seite",
@@ -256,7 +258,7 @@
     "sleepType": "Schlafart",
     "selectTypeToStart": "Wähle eine Schlafart, um den Timer zu starten",
     "timerRunning": "Timer läuft",
-    "tapToStop": "Tippe um Baby zu wecken",
+    "tapToStop": "Tippe, um Baby zu wecken",
     "sleeping": "Schläft",
     "sleepSaved": "Schlaf gespeichert",
     "autoDetectHint": "Schlafart basierend auf Tageszeit erkannt",
@@ -276,7 +278,7 @@
     "currentGoal": "Tagesziel",
     "goalHours": "{{hours}}h",
     "ageGroup": "Alter des Babys",
-    "basedOnGuidelines": "Basierend auf AAP/Sleep-Foundation-Richtlinien für {{ageGroup}}",
+    "basedOnGuidelines": "Basierend auf Richtlinien der AAP/Sleep Foundation für {{ageGroup}}",
     "customGoalNote": "Du hast ein eigenes Ziel festgelegt",
     "ageBasedGoal": "Altersbasiertes Ziel",
     "recommendedRange": "Empfohlen: {{min}}-{{max}} Stunden/Tag",
@@ -350,7 +352,7 @@
     "wetOnly": "Nur nass – kein Stuhl",
     "dirtyOnly": "Stuhl vorhanden",
     "mixedType": "Nass und Stuhl",
-    "dryOnly": "Saubere Kontrolle – kein Wechsel nötig",
+    "dryOnly": "Kontrolliert — alles sauber",
     "diaperSaved": "Windelwechsel gespeichert",
     "quickLog": "Schnell erfassen",
     "optionalColor": "Farbe (optional)",
@@ -670,10 +672,13 @@
     "languageDesc": "Wähle deine bevorzugte Sprache",
     "english": "English",
     "serbian": "Srpski",
-    "spanish": "Español",
+    "spanishLatam": "Español (Latinoamérica)",
+    "spanishSpain": "Español (España)",
     "french": "Français",
-    "portuguese": "Português",
+    "portuguesePT": "Português (Portugal)",
+    "portugueseBR": "Português (Brasil)",
     "german": "Deutsch",
+    "italian": "Italiano",
     "units": "Einheiten",
     "metric": "Metrisch (kg, cm, ml)",
     "imperial": "Imperial (lbs, in, oz)",
@@ -750,7 +755,7 @@
     "privacyPolicy": "Datenschutzrichtlinie",
     "customizeDashboard": "Dashboard anpassen",
     "showHideCards": "Karten ein-/ausblenden",
-    "dragToReorder": "Halten und ziehen zum Umordnen",
+    "dragToReorder": "Gedrückt halten und ziehen zum Neuanordnen",
     "resetDashboard": "Dashboard zurücksetzen",
     "resetDashboardConfirm": "Dies setzt alle Karten auf ihre Standardreihenfolge und Sichtbarkeit zurück. Fortfahren?",
     "resetToDefault": "Auf Standard zurücksetzen",
@@ -784,7 +789,7 @@
     "iosOnlyTitle": "Nur für iOS",
     "iosOnlyMessage": "Widget-Konfiguration ist nur auf iOS-Geräten mit Widget-Unterstützung verfügbar.",
     "customizeDescription": "Passe an, welche Aktivitäten in deinen iOS-Widgets und der Apple Watch App erscheinen.",
-    "dragHint": "{{enabled}}/{{max}} ausgewählt \u2022 Halten und ziehen zum Umordnen",
+    "dragHint": "{{enabled}}/{{max}} ausgewählt • Gedrückt halten und ziehen zum Neuanordnen",
     "smallWidgetTitle": "Kleines Widget – Aktivität",
     "quickLogTitle": "Schnellerfassung-Widget (4 Aktivitäten)",
     "summaryTitle": "Zusammenfassungs-Widget (4 Aktivitäten)",
@@ -811,7 +816,7 @@
     "noDataThisWeek": "Diese Woche keine Daten erfasst. Beginne mit der Erfassung, um deine Statistiken zu sehen!",
     "noDataThisMonth": "In den letzten 30 Tagen keine Daten erfasst. Beginne mit der Erfassung, um deine Statistiken zu sehen!",
     "weeklyOverview": "Wochenübersicht",
-    "vsLastWeek": "gg. letzte Woche",
+    "vsLastWeek": "vs. letzte Woche",
     "comparedToLastWeek": "im Vergleich zur letzten Woche",
     "weeklyTrends": "Wöchentliche Trends",
     "weeklyInsights": "Wöchentliche Einblicke",
@@ -829,7 +834,7 @@
     "session_other": "{{count}} Sitzungen",
     "nap_one": "{{count}} Nickerchen",
     "nap_other": "{{count}} Nickerchen",
-    "wetAndDirty": "{{wet}} nass \u00b7 {{dirty}} Stuhl",
+    "wetAndDirty": "{{wet}} nass · {{dirty}} Stuhl",
     "daySun": "So",
     "dayMon": "Mo",
     "dayTue": "Di",
@@ -856,7 +861,7 @@
     "dirty": "Stuhl",
     "chartOverview": "Diagramme",
     "noDataThisPeriod": "Keine Daten erfasst. Beginne mit der Erfassung, um deine Statistiken zu sehen!",
-    "vsLastPeriod": "gg. vorherigen Zeitraum"
+    "vsLastPeriod": "vs. vorherigen Zeitraum"
   },
   "insights": {
     "sleepIncrease": "Schlaf ist um {{percentage}}% gestiegen",
@@ -922,8 +927,8 @@
     "jumpToDate": "Zum Datum springen",
     "sleepSummaryInfo": "Summen werden ab {{hour}} berechnet, basierend auf deiner Tagesbeginn-Einstellung",
     "returnToToday": "Zurück zu heute",
-    "viewingDaysAgo_one": "Ansicht vor {{count}} Tag",
-    "viewingDaysAgo_other": "Ansicht vor {{count}} Tagen"
+    "viewingDaysAgo_one": "Vor {{count}} Tag",
+    "viewingDaysAgo_other": "Vor {{count}} Tagen"
   },
   "sync": {
     "synced": "Synchronisiert",
@@ -971,7 +976,8 @@
       "wakeWindow": "Wachfenster",
       "activityGoal": "Aktivitätsziel",
       "milestone": "Meilenstein",
-      "health": "Gesundheit"
+      "health": "Gesundheit",
+      "achievement": "Errungenschaft"
     }
   },
   "household": {
@@ -1076,7 +1082,7 @@
     "signInSubtitle": "Melde dich bei deinem Konto an",
     "signInDescription": "Melde dich an, um geräteübergreifend zu synchronisieren und mit Betreuungspersonen zu teilen",
     "signUpTitle": "Konto erstellen",
-    "signUpSubtitle": "Beginne die Reise deines Babys zu verfolgen",
+    "signUpSubtitle": "Beginne die Entwicklung deines Babys festzuhalten",
     "signInError": "Ungültige E-Mail oder Passwort",
     "signUpError": "Konto konnte nicht erstellt werden",
     "emailRequired": "E-Mail ist erforderlich",
@@ -1161,7 +1167,7 @@
   },
   "errorFallback": {
     "title": "Etwas ist schiefgelaufen",
-    "message": "Entschuldigung für die Unannehmlichkeit. Bitte versuche es erneut.",
+    "message": "Entschuldigung für die Unannehmlichkeiten. Bitte versuche es erneut.",
     "tryAgain": "Erneut versuchen"
   },
   "foods": {
@@ -1211,11 +1217,11 @@
     },
     "activityDesc": {
       "feeding": "Erfasse Stillen, Flaschenfütterungen und Beikost mit Timern und Mengen",
-      "sleep": "Überwache Nickerchen und Nachtschlaf mit automatischer Wachfenster-Erfassung",
+      "sleep": "Erfasse Nickerchen und Nachtschlaf mit automatischer Wachfenster-Erfassung",
       "diaper": "Erfasse nasse, verschmutzte und gemischte Windeln mit optionalen Notizen",
       "pumping": "Erfasse Pump-Sitzungen mit Seitenauswahl und Milchmengen",
       "growth": "Erfasse Gewicht, Größe und Kopfumfang mit Wachstumskurven",
-      "tummyTime": "Messe die Bauchlagenzeit, um die Entwicklung des Babys zu unterstützen"
+      "tummyTime": "Erfasse Bauchlage-Sitzungen, um die Entwicklung deines Babys zu unterstützen"
     },
     "preferences": {
       "title": "Deine Einstellungen",
@@ -1469,7 +1475,7 @@
     "firstMilestones": "Erste Meilensteine",
     "allDone": "Alle geschafft!",
     "earned": "{{count}} von 12 erreicht",
-    "progress": "{{yes}}/{{total}} \u2713",
+    "progress": "{{yes}}/{{total}} ✓",
     "notSureCount": "{{count}} unsicher",
     "social": "Sozial/Emotional",
     "language": "Sprache/Kommunikation",
@@ -1478,7 +1484,7 @@
     "yes": "Ja",
     "notYet": "Noch nicht",
     "notSure": "Nicht sicher",
-    "attribution": "Basierend auf den CDC-Meilensteinen \u201ELearn the Signs. Act Early.\u201C",
+    "attribution": "Basierend auf den CDC-Meilensteinen „Learn the Signs. Act Early.“",
     "starEarned": "Stern verdient!",
     "teaserSmile": "Achte auf das erste Lächeln deines Babys",
     "teaserCalm": "Beobachte, ob sich dein Baby beruhigt, wenn es hochgenommen wird",
@@ -1740,8 +1746,8 @@
       "totalTummyTime": "Bauchlage gesamt",
       "sessions": "Sitzungen",
       "longestSession": "Längste Sitzung",
-      "aboveAvg": "\u2191 {{value}} über 7-Tage-Ø",
-      "belowAvg": "\u2193 {{value}} unter 7-Tage-Ø",
+      "aboveAvg": "↑ {{value}} über 7-Tage-Ø",
+      "belowAvg": "↓ {{value}} unter 7-Tage-Ø",
       "avgDailyTotal": "Ø Tagessumme",
       "avgSessionLength": "Ø Sitzungsdauer",
       "dailyTummyTime": "Tägliche Bauchlage",
@@ -1919,7 +1925,7 @@
   "aboutScreen": {
     "appName": "Baby Tracker",
     "appDescription": "Eine datenschutzfreundliche, werbefreie Baby-Tracking-App für übermüdete Eltern.",
-    "madeWithLove": "Mit \u2764\ufe0f für Eltern überall gemacht"
+    "madeWithLove": "Mit ❤️ für Eltern überall gemacht"
   },
   "notifications": {
     "feedingRemindersChannel": "Fütterungserinnerungen",
@@ -1957,5 +1963,49 @@
     "month_other": "Monate",
     "year_one": "Jahr",
     "year_other": "Jahre"
+  },
+  "achievements": {
+    "unlocked": "Erfolg freigeschaltet",
+    "allMilestonesComplete": "Alle Meilensteine abgeschlossen",
+    "tapToContinue": "Tippe irgendwo, um fortzufahren",
+    "title": {
+      "sleep_6h": "Erster 6-Stunden-Schlaf!",
+      "sleep_8h": "Erster 8-Stunden-Schlaf!",
+      "sleep_10h": "Erster 10-Stunden-Schlaf!",
+      "tummy_5min": "Erste 5 Min Bauchlage!",
+      "tummy_10min": "Erste 10 Min Bauchlage!",
+      "tummy_15min": "Erste 15 Min Bauchlage!",
+      "tummy_20min": "Erste 20 Min Bauchlage!",
+      "first_solid": "Erste Beikost!"
+    },
+    "subtitle": {
+      "tummy_5min": "Nächstes Ziel: 10 Minuten",
+      "tummy_10min": "Nächstes Ziel: 15 Minuten",
+      "tummy_15min": "Nächstes Ziel: 20 Minuten",
+      "tummy_20min": "Unglaubliche Kraft und Ausdauer!",
+      "first_solid": "Ein neues Kapitel beginnt"
+    },
+    "periodComplete": "{{age}} — Alles Erledigt!",
+    "periodNote": "Du hast alle Entwicklungsmeilensteine für diese Phase verfolgt. Jedes Baby entwickelt sich in seinem eigenen Tempo — dies ist eine wundervolle Zwischenbilanz.",
+    "sleepNote": {
+      "6h": {
+        "under3m": "Ein wunderbares frühes Zeichen! Das Gehirn deines Babys beginnt, seine eigene innere Uhr zu entwickeln, wobei die Melatoninproduktion gerade erst beginnt.",
+        "3to4m": "Ein wundervoller Meilenstein. Das Gehirn deines Babys produziert nun Melatonin und baut einen Tag-Nacht-Rhythmus auf, was ihm hilft, den Schlaf in längere Phasen zu konsolidieren.",
+        "5to6m": "Die Schlafzyklen deines Babys reifen wunderbar heran. Sein Gehirn wird besser darin, Schlafzyklen miteinander zu verbinden, und tiefere Schlafstadien werden immer ausgeprägter.",
+        "7plus": "Der zirkadiane Rhythmus deines Babys ist gut etabliert und seine Schlafarchitektur wird reifer, mit längeren Phasen tiefen, erholsamen Schlafs."
+      },
+      "8h": {
+        "under3m": "Ziemlich bemerkenswert in diesem Alter! Das Nervensystem deines Babys reift früh heran und lernt bereits, sanft zwischen Schlafzyklen zu wechseln, ohne vollständig aufzuwachen.",
+        "3to4m": "Ein wunderbares Zeichen neurologischen Wachstums. Das Gehirn deines Babys entwickelt die Fähigkeit, zwischen Schlafzyklen eigenständig zu wechseln — eine Fähigkeit, die echte Entwicklungsreife erfordert.",
+        "5to6m": "Der Schlaf deines Babys fügt sich wirklich zusammen. Tiefere Schlafstadien sind nun stärker vertreten, und sein Gehirn lernt, sich durch natürliche Weckreize zwischen den Schlafzyklen selbst zu beruhigen.",
+        "7plus": "Eine schöne Widerspiegelung davon, wie sehr dein Baby gewachsen ist. Seine Schlafarchitektur hat sich erheblich gereift, mit längeren Phasen tiefen, erholsamen Schlafs, die es durch die Nacht tragen."
+      },
+      "10h": {
+        "under3m": "Was für ein außergewöhnlicher Schläfer! Das Nervensystem deines Babys zeigt frühe Reife bei der Regulierung von Schlaf-Wach-Mustern. Seine innere Uhr hat einen beeindruckenden Start.",
+        "3to4m": "Ein großer Meilenstein! Der zirkadiane Rhythmus und der Schlaftrieb deines Babys arbeiten bemerkenswert gut zusammen und ermöglichen tiefen, konsolidierten Schlaf über eine längere Phase.",
+        "5to6m": "Das Schlafsystem deines Babys gedeiht wirklich. Sein Gehirn hat wunderbare Fortschritte bei der Verknüpfung von Schlafzyklen gemacht, produziert Melatonin zum richtigen Zeitpunkt und findet von selbst in den Schlaf zurück.",
+        "7plus": "Ein Beweis für das wachsende Gehirn deines Babys. Sein zirkadianer Rhythmus ist robust, seine Schlafzyklen reifen zu erwachsenenähnlichen Mustern heran, und seine natürliche Selbstberuhigungsfähigkeit hat sich wunderbar entwickelt."
+      }
+    }
   }
 }

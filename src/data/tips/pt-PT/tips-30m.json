@@ -1,0 +1,512 @@
+[
+  {
+    "id": "30m-development-01",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "O teu pequeno está a formar frases de duas a três palavras como \"quer mais leite\" ou \"papá vai trabalhar\". Repete as frases dele em frases completas para estimular o desenvolvimento da linguagem."
+  },
+  {
+    "id": "30m-development-02",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Empilhar seis ou mais blocos é um grande marco nesta idade. Celebra a torre — e a queda — de igual forma."
+  },
+  {
+    "id": "30m-development-03",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "O teu pequeno está a começar a separar objetos por forma e cor. Experimenta um jogo simples de separação com meias ou animais de peluche."
+  },
+  {
+    "id": "30m-development-04",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Brincadeira paralela — brincar ao lado, mas não junto com outras crianças — é completamente normal agora. A brincadeira cooperativa desenvolve-se gradualmente ao longo do próximo ano."
+  },
+  {
+    "id": "30m-development-05",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Incentiva o teu pequeno a tentar rodar maçanetas e desenroscar tampas. Estes desafios de motricidade fina desenvolvem força e destreza nas mãos."
+  },
+  {
+    "id": "30m-development-06",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "O teu pequeno pode começar a mostrar preferência por uma mão em relação à outra. Isto é uma parte natural do desenvolvimento cerebral — não há necessidade de incentivar nenhuma delas."
+  },
+  {
+    "id": "30m-development-07",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Brincadeira de faz de conta simples — como dar comidinha a uma boneca ou falar num telefone de brinquedo — mostra que o teu pequeno está a desenvolver pensamento simbólico, um salto cognitivo importante."
+  },
+  {
+    "id": "30m-development-08",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "O teu pequeno provavelmente já consegue seguir instruções de duas etapas como \"apanha a bola e traz para mim\". Pratica com tarefas divertidas durante as rotinas do dia a dia."
+  },
+  {
+    "id": "30m-development-09",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Rabiscar é o início da escrita. Dá ao teu pequeno lápis de cera grandes e folhas grandes — ele pode começar a fazer linhas verticais e horizontais de propósito."
+  },
+  {
+    "id": "30m-development-10",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Se o teu pequeno fica frustrado facilmente, é porque os desejos dele superam as suas capacidades. Dar nome às emoções — \"Estás frustrado!\" — ajuda a desenvolver o vocabulário emocional."
+  },
+  {
+    "id": "30m-development-11",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Subir escadas a segurar-se ao corrimão é uma grande conquista nesta idade. Deixa-o praticar em lances de escada curtos e seguros."
+  },
+  {
+    "id": "30m-development-13",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Crianças nesta idade adoram imitar tarefas domésticas. Deixar que \"ajudem\" a varrer ou limpar desenvolve a confiança e as capacidades motoras."
+  },
+  {
+    "id": "30m-development-14",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "O teu pequeno pode começar a reconhecer-se em fotos e no espelho. Esta autoconsciência é um grande marco cognitivo."
+  },
+  {
+    "id": "30m-development-15",
+    "ageGroup": "30m",
+    "category": "development",
+    "text": "Saltar com os dois pés a sair do chão geralmente surge por volta desta idade. Incentiva-o em superfícies macias — desenvolve força no tronco e equilíbrio."
+  },
+  {
+    "id": "30m-sleep-01",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "A maioria das crianças nesta idade precisa de 11 a 14 horas de sono total por dia, incluindo uma sesta. Se a hora de dormir é uma batalha, a sesta pode precisar de ser encurtada ou antecipada."
+  },
+  {
+    "id": "30m-sleep-02",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Uma rotina consistente antes de dormir — banho, livro, música, dormir — sinaliza ao cérebro do teu pequeno que é hora de relaxar. Mantém-na abaixo dos 30 minutos."
+  },
+  {
+    "id": "30m-sleep-03",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Os despertares noturnos podem ressurgir nesta idade devido a novos medos ou saltos de desenvolvimento. Oferece conforto breve e calmo sem criar novos hábitos."
+  },
+  {
+    "id": "30m-sleep-04",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Se o teu pequeno está a trepar para fora do berço, pode ser altura de fazer a transição para uma cama de grades. Coloca o colchão em baixo e usa grades de proteção para segurança."
+  },
+  {
+    "id": "30m-sleep-05",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "A ansiedade de separação na hora de dormir ainda é comum. Um boneco de peluche especial ou uma mantinha pode oferecer conforto e facilitar a transição para o sono."
+  },
+  {
+    "id": "30m-sleep-06",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Evita ecrãs por pelo menos uma hora antes de dormir. A luz azul suprime a melatonina e torna mais difícil para as crianças adormecerem."
+  },
+  {
+    "id": "30m-sleep-07",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "O teu pequeno pode começar a enrolar na hora de dormir — a pedir água, outra história, mais um abraço. Estabelece limites claros com carinho: um livro, um abraço e boa noite."
+  },
+  {
+    "id": "30m-sleep-08",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Se a hora da sesta está a ficar mais difícil, tenta limitá-la a 90 minutos e terminá-la até às 15h para proteger o sono noturno."
+  },
+  {
+    "id": "30m-sleep-09",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Um quarto escuro e fresco com ruído branco pode fazer uma diferença real no sono da criança. Procura manter entre {{68-72°F|20-22°C}}."
+  },
+  {
+    "id": "30m-sleep-10",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Algumas crianças desenvolvem medo do escuro por volta desta idade. Uma luz de presença bem fraquinha pode ajudar sem prejudicar a produção de melatonina."
+  },
+  {
+    "id": "30m-sleep-11",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Acordar demasiado cedo, antes das 6h, geralmente é causado por cansaço excessivo. Tenta antecipar a hora de dormir em 15 a 30 minutos durante uma semana."
+  },
+  {
+    "id": "30m-sleep-12",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "A sesta do teu pequeno pode naturalmente deslocar-se para mais tarde. Desde que esteja a ter um bom descanso ao meio do dia, o horário exato pode ser flexível."
+  },
+  {
+    "id": "30m-sleep-13",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "Se o teu pequeno acorda a chorar de um pesadelo, conforta-o com calma. Os pesadelos podem começar por volta desta idade à medida que a imaginação se desenvolve."
+  },
+  {
+    "id": "30m-sleep-14",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "A fazer a transição para uma cama grande? Mantém o resto da rotina de sono idêntica. Mudar apenas uma coisa de cada vez ajuda as crianças a adaptarem-se."
+  },
+  {
+    "id": "30m-sleep-15",
+    "ageGroup": "30m",
+    "category": "sleep",
+    "text": "A atividade física durante o dia ajuda o teu pequeno a dormir melhor à noite. Procura garantir pelo menos uma hora de brincadeira ativa, de preferência ao ar livre."
+  },
+  {
+    "id": "30m-feeding-01",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "A seletividade alimentar costuma atingir o pico entre os 2 e os 3 anos. Continua a oferecer variedade de alimentos sem pressão — a exposição repetida funciona com o tempo."
+  },
+  {
+    "id": "30m-feeding-02",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "O teu pequeno já consegue praticar o uso de garfo e colher na maioria das refeições. Espera sujidade — é assim que aprendem a comer sozinhos."
+  },
+  {
+    "id": "30m-feeding-04",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "As crianças pequenas têm estômagos pequenos. Três refeições mais dois lanches por dia é geralmente o ritmo certo — não te preocupes se as refeições parecerem pequenas."
+  },
+  {
+    "id": "30m-feeding-05",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Ter reflexo de vómito com novas texturas é diferente de engasgar e é bastante normal. Mantém a calma e deixa o teu pequeno lidar com isso sozinho."
+  },
+  {
+    "id": "30m-feeding-06",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Deixa o teu pequeno ajudar na preparação simples das refeições — lavar frutas, rasgar alface, mexer. As crianças comem mais quando ajudam a preparar a comida."
+  },
+  {
+    "id": "30m-feeding-07",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Evita usar a sobremesa como recompensa por terminar o jantar. Isto ensina as crianças que os doces são mais valiosos que outros alimentos."
+  },
+  {
+    "id": "30m-feeding-08",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Se o teu pequeno recusa legumes e verduras, tenta servi-los no início da refeição, quando a fome é maior, ou mistura-os em molhos e sopas."
+  },
+  {
+    "id": "30m-feeding-09",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Água e leite são as melhores bebidas para crianças pequenas. Limita o sumo a no máximo {{4 oz|120 ml}} por dia e serve-o sempre junto com uma refeição."
+  },
+  {
+    "id": "30m-feeding-10",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Comer juntos como família, mesmo nesta idade, ajuda o teu pequeno a aprender boas maneiras à mesa e a desenvolver uma relação saudável com a comida."
+  },
+  {
+    "id": "30m-feeding-11",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Fixações alimentares — querer a mesma comida todos os dias — são normais. Continua a oferecer outras opções junto com o favorito sem transformar numa batalha."
+  },
+  {
+    "id": "30m-feeding-12",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Alimentos ricos em ferro como feijão, cereais enriquecidos e carnes magras são importantes nesta idade. Combina-os com alimentos ricos em vitamina C para aumentar a absorção."
+  },
+  {
+    "id": "30m-feeding-13",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "O teu pequeno pode querer servir a sua própria bebida ou servir-se sozinho. Usa jarrinhos pequenos e leves para incentivar esta independência com segurança."
+  },
+  {
+    "id": "30m-feeding-14",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Experimenta a abordagem da \"divisão de responsabilidade\": tu decides o quê, quando e onde comer. O teu pequeno decide se vai comer e quanto."
+  },
+  {
+    "id": "30m-feeding-15",
+    "ageGroup": "30m",
+    "category": "feeding",
+    "text": "Se o teu pequeno atira comida, pode ser que já esteja satisfeito ou a experimentar causa e efeito. Encerra a refeição com calma em vez de reagires de forma exagerada."
+  },
+  {
+    "id": "30m-health-02",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Verifica com o pediatra se as vacinas do teu pequeno estão em dia. Algumas vacinas exigem doses de reforço que podem estar previstas por volta desta idade."
+  },
+  {
+    "id": "30m-health-03",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "A doença mão-pé-boca é comum em crianças pequenas e geralmente resolve-se em 7 a 10 dias. Foca-te na hidratação e alívio da dor conforme orientação do pediatra."
+  },
+  {
+    "id": "30m-health-04",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Escova os dentes do teu pequeno duas vezes ao dia — de manhã e antes de dormir. Deixa-o segurar uma escova de dentes também, mas faz tu a escovagem a sério."
+  },
+  {
+    "id": "30m-health-06",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "As otites ainda são comuns nesta idade. Fica atento se a criança puxa a orelha, fica irritada ou tem dificuldade em dormir, e procura o pediatra."
+  },
+  {
+    "id": "30m-health-07",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Aplica protetor solar de largo espectro com FPS 30+ quinze minutos antes de brincar ao ar livre. Reaplica a cada duas horas, especialmente após brincar na água."
+  },
+  {
+    "id": "30m-health-08",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "A vacina anual contra a gripe é recomendada para todas as crianças acima dos 6 meses. É uma das melhores formas de proteger o teu pequeno durante a época da gripe."
+  },
+  {
+    "id": "30m-health-09",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "A obstipação é comum em crianças pequenas. Aumenta a fibra com frutas, legumes e cereais integrais, e garante que estejam a beber água suficiente."
+  },
+  {
+    "id": "30m-health-10",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "As consultas de rotina com o pediatra nesta fase são ótimas oportunidades para discutir desenvolvimento da fala, comportamento e qualquer preocupação sobre o crescimento."
+  },
+  {
+    "id": "30m-health-11",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Se o teu pequeno apanha constipações com frequência, sabe que isso é normal — 8 a 10 por ano é típico para crianças pequenas que estão a fortalecer o sistema imunitário."
+  },
+  {
+    "id": "30m-health-13",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Começa a ensinar o teu pequeno a assoar o nariz, praticando soprar ar pelas narinas. Leva tempo, mas ajuda bastante com a congestão."
+  },
+  {
+    "id": "30m-health-14",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Tem um kit de primeiros socorros infantil acessível em casa, com pensos, soro fisiológico, um termómetro e os medicamentos que o pediatra recomendar."
+  },
+  {
+    "id": "30m-health-15",
+    "ageGroup": "30m",
+    "category": "health",
+    "text": "Se o teu pequeno ainda usa chupeta, agora é um bom momento para começar a tirar. O uso prolongado após os 2 anos pode afetar o alinhamento dos dentes."
+  },
+  {
+    "id": "30m-play-01",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Brincar com água — despejar, espirrar, encher recipientes — é infinitamente divertido e ensina conceitos iniciais de volume e causa e efeito."
+  },
+  {
+    "id": "30m-play-02",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "A plasticina fortalece os músculos das mãos necessários para a escrita no futuro. Deixa o teu pequeno apertar, enrolar e furar o quanto quiser."
+  },
+  {
+    "id": "30m-play-03",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Puzzles simples com 4 a 6 peças grandes são perfeitos nesta idade. Desenvolvem a noção espacial e a capacidade de resolução de problemas."
+  },
+  {
+    "id": "30m-play-04",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Canta canções com gestos como \"A Dona Aranha\" ou \"Cabeça, Ombros, Joelhos e Pés\". Desenvolvem vocabulário, ritmo e consciência corporal ao mesmo tempo."
+  },
+  {
+    "id": "30m-play-05",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Deixa o teu pequeno brincar numa caixa de areia ou canteiro de terra. Cavar e usar a pá são ótimos para o desenvolvimento sensorial e as capacidades motoras."
+  },
+  {
+    "id": "30m-play-06",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Monta um circuito de obstáculos com almofadas, caixas e túneis. Trepar, passar por cima e por dentro de objetos desenvolve a motricidade grossa e a noção espacial."
+  },
+  {
+    "id": "30m-play-07",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "O teu pequeno pode gostar de brincar ao faz de conta com uma cozinha de brinquedo ou kit de ferramentas. Participa e segue a liderança dele — desenvolve a imaginação e as competências sociais."
+  },
+  {
+    "id": "30m-play-08",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Dançar ao som de música ajuda o teu pequeno a desenvolver ritmo, equilíbrio e coordenação. Põe ritmos diferentes e observa-o a mexer-se."
+  },
+  {
+    "id": "30m-play-09",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Ler o mesmo livro vezes sem conta é realmente benéfico. A repetição ajuda as crianças a aprender novas palavras e a compreender a estrutura das histórias."
+  },
+  {
+    "id": "30m-play-10",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Experimenta pintura com os dedos usando tintas laváveis. A experiência sensorial é valiosa mesmo que o resultado seja apenas uma mancha colorida."
+  },
+  {
+    "id": "30m-play-11",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Jogos de bola simples — rolar, chutar, lançar por baixo — ajudam a desenvolver coordenação e ensinam o básico de esperar pela vez."
+  },
+  {
+    "id": "30m-play-12",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Enche uma bacia com arroz seco ou massa e esconde pequenos brinquedos lá dentro. Esta \"caça ao tesouro\" desenvolve a motricidade fina e mantém as crianças entretidas."
+  },
+  {
+    "id": "30m-play-13",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Soprar bolas de sabão ajuda o teu pequeno a praticar controlo da boca, acompanhamento visual e alcance — além de ser pura alegria."
+  },
+  {
+    "id": "30m-play-14",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Dá ao teu pequeno caixas vazias e observa a criatividade dele. Uma caixa pode virar um carro, uma casa ou um barco — isto é pensamento abstrato em ação."
+  },
+  {
+    "id": "30m-play-15",
+    "ageGroup": "30m",
+    "category": "play",
+    "text": "Passeios pela natureza onde o teu pequeno recolhe folhas, pedras e paus combinam atividade física com exploração sensorial e desenvolvimento da linguagem."
+  },
+  {
+    "id": "30m-safety-01",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "O teu pequeno agora alcança mais alto do que imaginas. Prende os móveis à parede e move itens perigosos para locais realmente fora do alcance."
+  },
+  {
+    "id": "30m-safety-02",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Nunca deixes o teu pequeno sozinho perto de água — até poucos centímetros numa banheira ou balde podem ser perigosos. O afogamento é silencioso e rápido."
+  },
+  {
+    "id": "30m-safety-03",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "O teu pequeno ainda deve andar virado de costas na cadeirinha do carro até atingir o limite máximo de altura ou peso para essa posição."
+  },
+  {
+    "id": "30m-safety-04",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Mantém todos os medicamentos, vitaminas e produtos de limpeza trancados ou fora do alcance. As crianças nesta idade são curiosas e rápidas."
+  },
+  {
+    "id": "30m-safety-05",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Pratica dar a mão em parques de estacionamento e perto de ruas. Começa a ensinar o conceito de \"paramos e olhamos\" antes de atravessar."
+  },
+  {
+    "id": "30m-safety-06",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Verifica os brinquedos do parque infantil quanto a superfícies quentes no verão — escorregas de metal e plataformas podem causar queimaduras sob luz solar direta."
+  },
+  {
+    "id": "30m-safety-07",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "As pilhas de botão são extremamente perigosas se engolidas. Mantém comandos e aparelhos com pilhas pequenas longe do teu pequeno."
+  },
+  {
+    "id": "30m-safety-08",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Alimentos que oferecem risco de engasgamento nesta idade incluem uvas inteiras, salsichas, pipocas e rebuçados. Corta alimentos redondos em pedaços pequenos."
+  },
+  {
+    "id": "30m-safety-09",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Se tens uma piscina ou lago, instala uma vedação nos quatro lados com um portão que fecha automaticamente. As coberturas de piscina sozinhas não substituem a vedação."
+  },
+  {
+    "id": "30m-safety-10",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Garante que o teu pequeno usa um capacete bem ajustado ao andar de triciclo ou ao ser transportado num assento de bicicleta."
+  },
+  {
+    "id": "30m-safety-11",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Cordões de estores e cortinas representam risco de estrangulamento. Troca por modelos sem cordão ou mantém os cordões enrolados fora do alcance."
+  },
+  {
+    "id": "30m-safety-12",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Ensina ao teu pequeno o primeiro nome dele e começa a praticar o apelido da família. Esta é uma das primeiras competências de segurança que ele pode aprender."
+  },
+  {
+    "id": "30m-safety-13",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Protetores para os botões do fogão são essenciais nesta idade. O teu pequeno pode ser alto o suficiente para alcançar os botões dos bicos antes de te aperceberes."
+  },
+  {
+    "id": "30m-safety-14",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Mantém uma lista de números de emergência no frigorífico e no telemóvel, incluindo o centro de intoxicações da tua região. Podes precisar deles a qualquer momento."
+  },
+  {
+    "id": "30m-safety-15",
+    "ageGroup": "30m",
+    "category": "safety",
+    "text": "Supervisiona sempre o teu pequeno perto de animais de estimação, mesmo os da família que ele já conhece bem. As crianças pequenas movem-se de forma imprevisível e podem assustar os animais."
+  }
+]

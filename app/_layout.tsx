@@ -9,12 +9,14 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
 import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
+import { AchievementProvider } from "@/contexts/achievement-context";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
+import { useStoreReview } from "@/hooks/useStoreReview";
 import { useWatchMessageHandler } from "@/hooks/useWatchMessageHandler";
 import { startWatchMessageListening } from "@/services/watch-service";
 import { supabase } from "@/services/supabase";
@@ -149,6 +151,11 @@ function WidgetPauseHandler({ children }: { children: React.ReactNode }) {
 
 function GlobalTimerAlertWatcher({ children }: { children: React.ReactNode }) {
   useGlobalTimerAlerts();
+  return <>{children}</>;
+}
+
+function StoreReviewHandler({ children }: { children: React.ReactNode }) {
+  useStoreReview();
   return <>{children}</>;
 }
 
@@ -415,6 +422,7 @@ export default function RootLayout() {
                 <UnitProvider>
                 <TimeFormatProvider>
                   <BabyProvider>
+                    <ActiveTimersProvider>
                     <FeedingProvider>
                       <SleepProvider>
                         <DiaperProvider>
@@ -423,7 +431,7 @@ export default function RootLayout() {
                               <TummyTimeProvider>
                               <MilestonesProvider>
                               <HealthProvider>
-                                <ActiveTimersProvider>
+                              <AchievementProvider>
                                 <WidgetProvider>
                                 <NotificationProvider>
                                   <NotificationAuthSetup>
@@ -432,7 +440,9 @@ export default function RootLayout() {
                                         <WidgetPauseHandler>
                                         <WatchMessageHandler>
                                         <GlobalTimerAlertWatcher>
+                                        <StoreReviewHandler>
                                           <AppContent />
+                                        </StoreReviewHandler>
                                         </GlobalTimerAlertWatcher>
                                         </WatchMessageHandler>
                                         </WidgetPauseHandler>
@@ -441,7 +451,7 @@ export default function RootLayout() {
                                   </NotificationAuthSetup>
                                 </NotificationProvider>
                                 </WidgetProvider>
-                                </ActiveTimersProvider>
+                              </AchievementProvider>
                               </HealthProvider>
                               </MilestonesProvider>
                               </TummyTimeProvider>
@@ -450,6 +460,7 @@ export default function RootLayout() {
                         </DiaperProvider>
                       </SleepProvider>
                     </FeedingProvider>
+                    </ActiveTimersProvider>
                   </BabyProvider>
                 </TimeFormatProvider>
                 </UnitProvider>

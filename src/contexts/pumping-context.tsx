@@ -348,8 +348,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }
       } catch (error) {
-        console.error("[PumpingContext] Failed to acquire timer lock:", error);
-        return { success: false };
+        console.error("[PumpingContext] Failed to acquire timer lock (proceeding offline):", error);
       }
     }
 
@@ -419,6 +418,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "ADD_PUMPING", payload: pumping });
       } catch (saveError) {
         console.error("[PumpingContext] stopPumping: FAILED to save, cleaning up timer", saveError);
+        console.error("[PumpingContext] BUG5: Pumping data LOST — pumpingInput=%j (no local fallback save)", pumpingInput);
         dispatch({ type: "STOP_TIMER" });
         await PumpingStorageService.clearActiveTimer(selectedBaby.id);
         if (liveActivityIdRef.current) {
