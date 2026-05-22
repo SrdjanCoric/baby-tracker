@@ -666,38 +666,8 @@ describe("predictNextSleep", () => {
       // This requires: lastWakeTime + bedtimeWW outside zone, but properWake + bedtimeWW in zone.
       // Use a short bedtimeWW where short nap is recent (so WW from it misses zone),
       // but proper nap was long enough ago that its WW reaches zone.
-      const model = { ...baseModel, medianBedtimeStart: 21.0, bedtimeWakeWindow: 120 };
-      // Proper nap ended 19:00, short nap (15 min) ended 20:40
-      // Change 1: 20:40 + 120 = 22:40. anchor=21:00. minutesBefore = -100 < 30 → in zone!
-      // Change 1 still fires. The issue is that when bedtimeWW is large enough to reach zone
-      // from the proper nap, it almost always reaches from the short nap too (which is later).
-      // Change 2 is only independently useful when:
-      // - bedtimeWW is small AND
-      // - properWake is much earlier than shortNap AND
-      // - dayEnd bridge rule helps properWake's candidate but not shortNap's candidate
-      // Actually the simplest case: use dayEnd bridge. dayEnd close to anchor.
-      // properWake + bedtimeWW lands after dayEnd → bridge → in zone
-      // shortNap + bedtimeWW lands before dayEnd → no bridge → NOT in zone
-      const model2 = { ...baseModel, medianBedtimeStart: 22.0, bedtimeWakeWindow: 150 };
-      // dayEnd=21. dayEnd(21:00) to anchor(22:00) = 60min ≤ 90 → bridge active.
-      // Proper nap ended 18:00. 18:00 + 150 = 20:30. anchor=22:00. minutesBefore=90. NOT < 30.
-      // 20:30 < dayEnd(21:00) → bridge doesn't apply. NOT in zone. Change 2 fails too.
-      // Need properWake + WW to land past dayEnd.
-      // Proper nap ended 19:00. 19:00 + 150 = 21:30. minutesBefore=30. NOT < 30.
-      // But 21:30 >= dayEnd(21:00) and bridge active → IN ZONE via bridge!
-      // Short nap ended 20:50. Change 1: 20:50 + 150 = 23:20. minutesBefore=-80 < 30 → in zone.
-      // Change 1 fires again.
-      // It seems Change 1 will always fire if bedtimeWW is large enough.
-      // Let me try a different approach: make bedtimeWW very small.
-      const model3 = { ...baseModel, medianBedtimeStart: 22.0, bedtimeWakeWindow: 30 };
-      // Proper nap ended 19:10, short nap ended 21:35
-      // Change 1: 21:35 + 30 = 22:05. anchor=22:00. minutesBefore=-5 < 30 → in zone! Still fires.
-      // OK, Change 1 will always fire when the prediction is anywhere near bedtime.
-      // The only case where Change 2 fires independently is when Change 1 result is different
-      // (e.g., different predicted time). But since Change 1 returns first, Change 2 never runs.
-      // Let me just test that Change 2 produces the CORRECT bedtime when Change 1 also fires,
-      // and verify the overall result is correct (from Change 1).
-      // For a pure Change 2 test, I'll test the scenario where Change 1 fires and verify the output.
+      // When both short-nap and regular candidates land in the bedtime zone,
+      // the algorithm picks the one closer to the anchor (median bedtime).
       const model4 = { ...baseModel, medianBedtimeStart: 22.0, bedtimeWakeWindow: 185 };
       // Real-world: proper nap ended 19:09, short nap (10 min) ended 21:02, dayEnd=22
       // Both candidates computed:

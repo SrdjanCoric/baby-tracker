@@ -275,7 +275,7 @@ const SleepPredictionCardInner = ({
       napCountDistribution: { [napCount]: 7 },
       medianBedtimeStart: model?.medianBedtimeStart ?? null,
     };
-  }, [wakeWindowConfig, model?.medianNapDuration]);
+  }, [wakeWindowConfig, model?.medianNapDuration, model?.medianBedtimeStart]);
 
   const effectiveModel = manualModel ?? model;
 
@@ -371,7 +371,6 @@ const SleepPredictionCardInner = ({
   const borderColor = isDark ? "#353039" : "rgba(139,123,160,0.18)";
   const topBorderColor = isDark ? "#4C4357" : "rgba(139,123,160,0.35)";
   const segBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
-  const segInactiveText = isDark ? textSecondary : "#7A7570";
   const infoBg = isDark ? "rgba(166,141,200,0.12)" : "rgba(139,123,160,0.10)";
   const overdueColor = isDark ? "#E8A87C" : "#D4845A";
 

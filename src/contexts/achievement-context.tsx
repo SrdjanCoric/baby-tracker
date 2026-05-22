@@ -102,6 +102,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
       prevTummyTimeCountRef.current = tummyTimes.length;
       initializedRef.current = true;
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBaby?.id, selectedBaby?.birthDate, sleeps.length, feedings.length, tummyTimes.length, sleepsLoading, feedingsLoading, tummyTimesLoading, session?.user?.id]);
 
   useEffect(() => {
@@ -138,6 +139,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
       setAlreadyDetected((prev) => new Set([...prev, detected!.id]));
       saveAchievement(selectedBaby.id, detected.id, session?.user?.id);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sleeps.length, feedings.length, tummyTimes.length, selectedBaby?.id, selectedBaby?.birthDate, alreadyDetected, pendingCelebration, session?.user?.id]);
 
   const dismissCelebration = useCallback(() => {
