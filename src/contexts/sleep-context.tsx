@@ -556,7 +556,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
       if (activeTimer) {
         if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) {
-
+          // skip — a stop completed during this loadSleeps run
         } else {
           let isStale = false;
           if (user?.id && user?.householdId) {
