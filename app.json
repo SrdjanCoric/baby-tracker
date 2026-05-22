@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sofi Baby Tracker",
     "slug": "sofi-baby-tracker",
-    "version": "4.0.8",
+    "version": "4.0.9",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -19,12 +19,16 @@
       "usesAppleSignIn": true,
       "associatedDomains": [],
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.sofibaby.app"]
+        "com.apple.security.application-groups": [
+          "group.com.sofibaby.app"
+        ]
       },
       "infoPlist": {
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["sofibaby"]
+            "CFBundleURLSchemes": [
+              "sofibaby"
+            ]
           },
           {
             "CFBundleURLSchemes": [
@@ -33,7 +37,14 @@
           }
         ],
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleLocalizations": ["en", "sr", "es", "fr", "pt", "de"],
+        "CFBundleLocalizations": [
+          "en",
+          "sr",
+          "es",
+          "fr",
+          "pt",
+          "de"
+        ],
         "NSSupportsLiveActivities": true
       }
     },
@@ -55,7 +66,10 @@
               "host": "login-callback"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         },
         {
           "action": "VIEW",
@@ -66,7 +80,10 @@
               "host": "*"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
