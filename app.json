@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sofi Baby Tracker",
     "slug": "sofi-baby-tracker",
-    "version": "4.1.17",
+    "version": "4.1.25",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -33,7 +33,15 @@
           }
         ],
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleLocalizations": ["en", "sr", "es", "fr", "pt", "de"],
+        "CFBundleLocalizations": [
+          "en",
+          "sr",
+          "es",
+          "fr",
+          "pt-PT",
+          "pt-BR",
+          "de"
+        ],
         "NSSupportsLiveActivities": true
       }
     },
