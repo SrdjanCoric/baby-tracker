@@ -11,7 +11,9 @@ const mockGetLastSleep = jest.fn().mockReturnValue(null);
 
 let mockUseSleepReturn: Record<string, unknown> = {};
 let mockUseBabyReturn: Record<string, unknown> = {};
+let mockUseActiveTimersReturn: Record<string, unknown> = {};
 let mockIsUnderTwoMonths = false;
+const mockGetLockForActivity = jest.fn().mockReturnValue(null);
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -81,12 +83,13 @@ jest.mock("@/utils/sleepGoals", () => ({
 
 const mockPredictNextSleep = jest.fn().mockReturnValue(null);
 const mockGetQualifyingNightSleep = jest.fn().mockReturnValue(null);
-const mockGetMorningThreshold = jest.fn().mockReturnValue(3);
+const mockGetMorningThreshold = jest.fn().mockImplementation((dayStartHour: number) => dayStartHour - 3 - 3 / 60);
 
 jest.mock("@/utils/sleepPredictions", () => ({
   predictNextSleep: (...args: unknown[]) => mockPredictNextSleep(...args),
   getQualifyingNightSleep: (...args: unknown[]) => mockGetQualifyingNightSleep(...args),
   getMorningThreshold: (...args: unknown[]) => mockGetMorningThreshold(...args),
+  BEDTIME_ZONE_MINUTES: 30,
 }));
 
 jest.mock("@/services/sleep-storage", () => ({
@@ -95,6 +98,14 @@ jest.mock("@/services/sleep-storage", () => ({
     setSelectedNapCount: jest.fn().mockResolvedValue(undefined),
     clearSelectedNapCount: jest.fn().mockResolvedValue(undefined),
   },
+}));
+
+jest.mock("@/contexts/active-timers-context", () => ({
+  useActiveTimers: () => mockUseActiveTimersReturn,
+}));
+
+jest.mock("@/contexts/time-format-context", () => ({
+  useTimeFormat: () => ({ timeFormat: "12h" }),
 }));
 
 jest.mock("@react-native-community/datetimepicker", () => {
@@ -128,6 +139,34 @@ const defaultBabyContext = () => ({
   selectedBaby: { id: "baby-1", name: "Sofija", birthDate: "2025-06-15" },
 });
 
+const defaultActiveTimersContext = () => ({
+  getLockForActivity: mockGetLockForActivity,
+  locks: [],
+  isLoading: false,
+  removeLock: jest.fn(),
+  isLockedByOther: jest.fn().mockReturnValue(false),
+  getLockedByName: jest.fn().mockReturnValue(null),
+  refreshLocks: jest.fn(),
+});
+
+const makeNightSleep = (endedAt: Date) => ({
+  id: "night-1",
+  babyId: "baby-1",
+  type: "night",
+  startedAt: new Date(endedAt.getTime() - 8 * 60 * 60 * 1000).toISOString(),
+  endedAt: endedAt.toISOString(),
+  durationSeconds: 8 * 60 * 60,
+});
+
+const makeNapSleep = (startedAt: Date, durationMin: number) => ({
+  id: `nap-${startedAt.getTime()}`,
+  babyId: "baby-1",
+  type: "nap",
+  startedAt: startedAt.toISOString(),
+  endedAt: new Date(startedAt.getTime() + durationMin * 60 * 1000).toISOString(),
+  durationSeconds: durationMin * 60,
+});
+
 const makeModel = (overrides: Record<string, unknown> = {}) => ({
   primaryNapCount: 2,
   secondaryNapCount: null,
@@ -146,9 +185,11 @@ beforeEach(() => {
   mockIsUnderTwoMonths = false;
   mockUseSleepReturn = defaultSleepContext();
   mockUseBabyReturn = defaultBabyContext();
+  mockUseActiveTimersReturn = defaultActiveTimersContext();
+  mockGetLockForActivity.mockReturnValue(null);
   mockPredictNextSleep.mockReturnValue(null);
   mockGetQualifyingNightSleep.mockReturnValue(null);
-  mockGetMorningThreshold.mockReturnValue(3);
+  mockGetMorningThreshold.mockImplementation((dayStartHour: number) => dayStartHour - 3 - 3 / 60);
 });
 
 afterEach(() => {
@@ -279,18 +320,25 @@ describe("SleepPredictionCard", () => {
     });
   });
 
-  describe("State 5/5b: Prediction with toggle", () => {
+  describe("State 5: Prediction", () => {
     const now = new Date(2026, 3, 27, 10, 0, 0);
     const futureTime = new Date(now.getTime() + 30 * 60 * 1000);
+    const nightSleepEnd = new Date(2026, 3, 27, 7, 0, 0);
+    const napEnd = new Date(now.getTime() - 60 * 60 * 1000);
 
     beforeEach(() => {
+      const sleeps = [
+        makeNightSleep(nightSleepEnd),
+        makeNapSleep(new Date(napEnd.getTime() - 45 * 60 * 1000), 45),
+      ];
       mockUseSleepReturn = {
         ...defaultSleepContext(),
+        sleeps,
         qualifyingDayCount: 10,
-        sleepPredictionModel: makeModel({ secondaryNapCount: 3 }),
+        sleepPredictionModel: makeModel(),
       };
-      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: new Date(now.getTime()) });
-      mockGetLastSleep.mockReturnValue({ endedAt: new Date(now.getTime() - 60 * 60 * 1000) });
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: napEnd });
       mockPredictNextSleep.mockReturnValue({
         predictedTime: futureTime,
         type: "nap",
@@ -303,36 +351,10 @@ describe("SleepPredictionCard", () => {
       expect(screen.getByText(/Nap time near/)).toBeTruthy();
     });
 
-    it("shows toggle when secondary nap count exists (State 5)", async () => {
+    it("shows predicted time", async () => {
       render(<SleepPredictionCard babyName="Sofija" />);
       await act(async () => {});
-      expect(screen.getByText("2-nap day")).toBeTruthy();
-      expect(screen.getByText("3-nap day")).toBeTruthy();
-    });
-
-    it("toggle switches nap count and recalculates", async () => {
-      render(<SleepPredictionCard babyName="Sofija" />);
-      await act(async () => {});
-      fireEvent.press(screen.getByText("3-nap day"));
-      expect(mockPredictNextSleep).toHaveBeenCalledWith(
-        expect.anything(),
-        3,
-        expect.anything(),
-        expect.anything(),
-        expect.anything(),
-      );
-    });
-
-    it("shows static label when no secondary (State 5b)", async () => {
-      mockUseSleepReturn = {
-        ...defaultSleepContext(),
-        qualifyingDayCount: 10,
-        sleepPredictionModel: makeModel({ secondaryNapCount: null }),
-      };
-      render(<SleepPredictionCard babyName="Sofija" />);
-      await act(async () => {});
-      expect(screen.getByText("2-nap day")).toBeTruthy();
-      expect(screen.queryByText("3-nap day")).toBeNull();
+      expect(screen.getByText(/10:30/)).toBeTruthy();
     });
 
     it("shows info button with accessibility label", async () => {
@@ -343,15 +365,23 @@ describe("SleepPredictionCard", () => {
   });
 
   describe("State 6: Overdue", () => {
+    const nightSleepEnd = new Date(2026, 3, 27, 7, 0, 0);
+    const lastNapEnd = new Date(Date.now() - 3 * 60 * 60 * 1000);
+
     beforeEach(() => {
       const pastTime = new Date(Date.now() - 15 * 60 * 1000);
+      const sleeps = [
+        makeNightSleep(nightSleepEnd),
+        makeNapSleep(new Date(lastNapEnd.getTime() - 45 * 60 * 1000), 45),
+      ];
       mockUseSleepReturn = {
         ...defaultSleepContext(),
+        sleeps,
         qualifyingDayCount: 10,
         sleepPredictionModel: makeModel(),
       };
-      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: new Date() });
-      mockGetLastSleep.mockReturnValue({ endedAt: new Date(Date.now() - 3 * 60 * 60 * 1000) });
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: lastNapEnd });
       mockPredictNextSleep.mockReturnValue({
         predictedTime: pastTime,
         type: "nap",
@@ -364,24 +394,6 @@ describe("SleepPredictionCard", () => {
       expect(screen.getByText(/Nap time.*ago/)).toBeTruthy();
     });
 
-    it("toggle still available when overdue", async () => {
-      mockUseSleepReturn = {
-        ...defaultSleepContext(),
-        qualifyingDayCount: 10,
-        sleepPredictionModel: makeModel({ secondaryNapCount: 3 }),
-      };
-      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: new Date() });
-      mockGetLastSleep.mockReturnValue({ endedAt: new Date(Date.now() - 3 * 60 * 60 * 1000) });
-      mockPredictNextSleep.mockReturnValue({
-        predictedTime: new Date(Date.now() - 15 * 60 * 1000),
-        type: "nap",
-      });
-
-      render(<SleepPredictionCard babyName="Sofija" />);
-      await act(async () => {});
-      expect(screen.getByText("2-nap day")).toBeTruthy();
-      expect(screen.getByText("3-nap day")).toBeTruthy();
-    });
   });
 
   describe("State 7: Sleeping nap (with elapsed time)", () => {
@@ -409,22 +421,31 @@ describe("SleepPredictionCard", () => {
       expect(screen.getByText("Baby is sleeping")).toBeTruthy();
     });
 
-    it("shows elapsed time for nap", () => {
+    it("shows sleeping state for nap (no elapsed time shown)", () => {
       render(<SleepPredictionCard babyName="Sofija" />);
-      expect(screen.getByText(/\d+m/)).toBeTruthy();
+      expect(screen.getByText("Sofija is sleeping")).toBeTruthy();
+      expect(screen.queryByText(/\d+h|\d+m/)).toBeNull();
     });
   });
 
   describe("State 8: Bedtime prediction", () => {
+    const nightSleepEnd = new Date(2026, 3, 27, 7, 0, 0);
+    const lastNapEnd = new Date(Date.now() - 60 * 60 * 1000);
+
     beforeEach(() => {
       const futureTime = new Date(Date.now() + 60 * 60 * 1000);
+      const sleeps = [
+        makeNightSleep(nightSleepEnd),
+        makeNapSleep(new Date(lastNapEnd.getTime() - 45 * 60 * 1000), 45),
+      ];
       mockUseSleepReturn = {
         ...defaultSleepContext(),
+        sleeps,
         qualifyingDayCount: 10,
         sleepPredictionModel: makeModel(),
       };
-      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: new Date() });
-      mockGetLastSleep.mockReturnValue({ endedAt: new Date(Date.now() - 60 * 60 * 1000) });
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: lastNapEnd });
       mockPredictNextSleep.mockReturnValue({
         predictedTime: futureTime,
         type: "bedtime",
@@ -637,15 +658,21 @@ describe("SleepPredictionCard", () => {
     });
 
     it("shows prediction after model finishes computing", async () => {
+      const nightSleepEnd = new Date(2026, 3, 27, 7, 0, 0);
+      const lastNapEnd = new Date(Date.now() - 60 * 60 * 1000);
       const futureTime = new Date(Date.now() + 30 * 60 * 1000);
       mockUseSleepReturn = {
         ...defaultSleepContext(),
+        sleeps: [
+          makeNightSleep(nightSleepEnd),
+          makeNapSleep(new Date(lastNapEnd.getTime() - 45 * 60 * 1000), 45),
+        ],
         qualifyingDayCount: 10,
         sleepPredictionModel: makeModel(),
         isComputingModel: false,
       };
-      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: new Date() });
-      mockGetLastSleep.mockReturnValue({ endedAt: new Date(Date.now() - 60 * 60 * 1000) });
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: lastNapEnd });
       mockPredictNextSleep.mockReturnValue({
         predictedTime: futureTime,
         type: "nap",
@@ -657,39 +684,331 @@ describe("SleepPredictionCard", () => {
     });
   });
 
-  describe("Integration: toggle persists per device", () => {
-    it("toggle is per-device (persisted in AsyncStorage, not synced)", async () => {
-      const { SleepStorageService } = require("@/services/sleep-storage");
-      const futureTime = new Date(Date.now() + 30 * 60 * 1000);
+  describe("Loading and no-baby states", () => {
+    it("shows loading when no baby selected", () => {
+      mockUseBabyReturn = { selectedBaby: null };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.queryByText("Track sleep so we can predict nap times")).toBeNull();
+      expect(screen.queryByText("Sofija is sleeping")).toBeNull();
+    });
+
+    it("shows no_birthdate state when baby has no birth date", () => {
+      mockUseBabyReturn = { selectedBaby: { id: "baby-1", name: "Sofija", birthDate: undefined } };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.queryByText("Set up sleep predictions")).toBeNull();
+      expect(screen.queryByText("Track sleep so we can predict nap times")).toBeNull();
+    });
+  });
+
+  describe("Remote lock → sleeping state", () => {
+    it("shows sleeping when remote lock exists and no local timer", () => {
+      mockGetLockForActivity.mockReturnValue({
+        id: "lock-1",
+        babyId: "baby-1",
+        activityType: "sleep",
+        startedBy: "other-user",
+        startedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        timerData: { type: "nap" },
+      });
       mockUseSleepReturn = {
         ...defaultSleepContext(),
-        qualifyingDayCount: 10,
-        sleepPredictionModel: makeModel({ secondaryNapCount: 3 }),
+        activeTimer: null,
       };
-      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: new Date() });
-      mockGetLastSleep.mockReturnValue({ endedAt: new Date(Date.now() - 60 * 60 * 1000) });
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Sofija is sleeping")).toBeTruthy();
+    });
+
+    it("local timer takes priority over remote lock", () => {
+      mockGetLockForActivity.mockReturnValue({
+        id: "lock-1",
+        babyId: "baby-1",
+        activityType: "sleep",
+        startedBy: "other-user",
+        startedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        timerData: { type: "night" },
+      });
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        activeTimer: {
+          isRunning: true,
+          isPaused: false,
+          startTime: new Date(Date.now() - 10 * 60 * 1000),
+          sleepType: "nap",
+          totalPausedMs: 0,
+        },
+      };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Sofija is sleeping")).toBeTruthy();
+    });
+
+    it("does not show sleeping when remote lock is cleared", () => {
+      mockGetLockForActivity.mockReturnValue(null);
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        activeTimer: null,
+      };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.queryByText("Sofija is sleeping")).toBeNull();
+    });
+  });
+
+  describe("Timer stop transition", () => {
+    it("shows track_sleep (not sleeping) when timer stops and no remote lock", () => {
+      mockGetLockForActivity.mockReturnValue(null);
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        activeTimer: null,
+        qualifyingDayCount: 10,
+        sleepPredictionModel: makeModel(),
+      };
+      mockGetQualifyingNightSleep.mockReturnValue(null);
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.queryByText("Sofija is sleeping")).toBeNull();
+      expect(screen.getByText("Track sleep so we can predict nap times")).toBeTruthy();
+    });
+
+    it("shows sleeping when timer stops but remote lock still present", () => {
+      mockGetLockForActivity.mockReturnValue({
+        id: "lock-1",
+        babyId: "baby-1",
+        activityType: "sleep",
+        startedBy: "other-user",
+        startedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        timerData: { type: "nap" },
+      });
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        activeTimer: null,
+      };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Sofija is sleeping")).toBeTruthy();
+    });
+
+    it("shows prediction after stop when night sleep exists and model ready", async () => {
+      const nightSleepEnd = new Date(2026, 3, 27, 7, 0, 0);
+      const napEnd = new Date(Date.now() - 60 * 60 * 1000);
+      const futureTime = new Date(Date.now() + 30 * 60 * 1000);
+      mockGetLockForActivity.mockReturnValue(null);
+      const sleeps = [
+        makeNightSleep(nightSleepEnd),
+        makeNapSleep(new Date(napEnd.getTime() - 45 * 60 * 1000), 45),
+      ];
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleeps,
+        activeTimer: null,
+        qualifyingDayCount: 10,
+        sleepPredictionModel: makeModel(),
+      };
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: napEnd });
       mockPredictNextSleep.mockReturnValue({
         predictedTime: futureTime,
         type: "nap",
       });
-
-      const { unmount } = render(<SleepPredictionCard babyName="Sofija" />);
-      await act(async () => {});
-      fireEvent.press(screen.getByText("3-nap day"));
-      expect(SleepStorageService.setSelectedNapCount).toHaveBeenCalledWith("baby-1", 3);
-
-      unmount();
-
-      SleepStorageService.getSelectedNapCount.mockResolvedValueOnce(3);
       render(<SleepPredictionCard babyName="Sofija" />);
       await act(async () => {});
-      expect(mockPredictNextSleep).toHaveBeenLastCalledWith(
-        expect.anything(),
-        3,
-        expect.anything(),
-        expect.anything(),
-        expect.anything(),
-      );
+      expect(screen.queryByText("Sofija is sleeping")).toBeNull();
+      expect(screen.getByText(/Nap time near/)).toBeTruthy();
     });
   });
+
+  describe("Nighttime edge cases", () => {
+    it("shows nighttime in bedtime zone when no prediction data", () => {
+      jest.setSystemTime(new Date(2026, 3, 27, 19, 30, 0));
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        wakeWindowConfig: { dayStartHour: 7, dayEndHour: 19, dayBoundariesConfigured: true },
+      };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Bedtime")).toBeTruthy();
+    });
+
+    it("shows prediction in bedtime zone when prediction data exists", async () => {
+      jest.setSystemTime(new Date(2026, 3, 27, 19, 30, 0));
+      const nightSleepEnd = new Date(2026, 3, 27, 7, 0, 0);
+      const napEnd = new Date(2026, 3, 27, 15, 0, 0);
+      const futureTime = new Date(2026, 3, 27, 20, 0, 0);
+      const sleeps = [
+        makeNightSleep(nightSleepEnd),
+        makeNapSleep(new Date(napEnd.getTime() - 45 * 60 * 1000), 45),
+      ];
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleeps,
+        qualifyingDayCount: 10,
+        sleepPredictionModel: makeModel({ medianBedtimeStart: 20.5 }),
+        wakeWindowConfig: { dayStartHour: 7, dayEndHour: 19, dayBoundariesConfigured: true },
+      };
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: napEnd });
+      mockPredictNextSleep.mockReturnValue({
+        predictedTime: futureTime,
+        type: "bedtime",
+      });
+      render(<SleepPredictionCard babyName="Sofija" />);
+      await act(async () => {});
+      expect(screen.queryByText("Bedtime")).toBeNull();
+      expect(screen.getByText(/Bedtime near/)).toBeTruthy();
+    });
+
+    it("shows nighttime just before morning threshold", () => {
+      jest.setSystemTime(new Date(2026, 3, 27, 3, 30, 0));
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        wakeWindowConfig: { dayStartHour: 7, dayEndHour: 19, dayBoundariesConfigured: true },
+      };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Nighttime")).toBeTruthy();
+    });
+
+    it("shows track_sleep just after morning threshold", () => {
+      jest.setSystemTime(new Date(2026, 3, 27, 4, 0, 0));
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        wakeWindowConfig: { dayStartHour: 7, dayEndHour: 19, dayBoundariesConfigured: true },
+      };
+      mockGetQualifyingNightSleep.mockReturnValue(null);
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Track sleep so we can predict nap times")).toBeTruthy();
+    });
+  });
+
+  describe("Track sleep state", () => {
+    it("shows track_sleep when no night sleep registered today", () => {
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        qualifyingDayCount: 10,
+        sleepPredictionModel: makeModel(),
+      };
+      mockGetQualifyingNightSleep.mockReturnValue(null);
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Track sleep so we can predict nap times")).toBeTruthy();
+    });
+
+    it("does not show track_sleep when night sleep is registered", async () => {
+      const nightSleepEnd = new Date(2026, 3, 27, 7, 0, 0);
+      const sleeps = [makeNightSleep(nightSleepEnd)];
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleeps,
+        qualifyingDayCount: 10,
+        sleepPredictionModel: makeModel(),
+      };
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockPredictNextSleep.mockReturnValue({
+        predictedTime: new Date(Date.now() + 60 * 60 * 1000),
+        type: "nap",
+      });
+      render(<SleepPredictionCard babyName="Sofija" />);
+      await act(async () => {});
+      expect(screen.queryByText("Track sleep so we can predict nap times")).toBeNull();
+      expect(screen.getByText(/Nap time near/)).toBeTruthy();
+    });
+  });
+
+  describe("Need more data vs prediction", () => {
+    const nightSleepEnd = new Date(2026, 3, 27, 7, 0, 0);
+    const napEnd = new Date(Date.now() - 60 * 60 * 1000);
+
+    it("shows need_more_data when qualifying days < 5", () => {
+      const sleeps = [
+        makeNightSleep(nightSleepEnd),
+        makeNapSleep(new Date(napEnd.getTime() - 45 * 60 * 1000), 45),
+      ];
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleeps,
+        qualifyingDayCount: 2,
+        sleepPredictionModel: makeModel(),
+      };
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: napEnd });
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText(/Based on age guidelines — 3 more days until personalized/)).toBeTruthy();
+    });
+
+    it("shows prediction when qualifying days >= 5", async () => {
+      const sleeps = [
+        makeNightSleep(nightSleepEnd),
+        makeNapSleep(new Date(napEnd.getTime() - 45 * 60 * 1000), 45),
+      ];
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleeps,
+        qualifyingDayCount: 5,
+        sleepPredictionModel: makeModel(),
+      };
+      mockGetQualifyingNightSleep.mockReturnValue({ endedAt: nightSleepEnd });
+      mockGetLastSleep.mockReturnValue({ endedAt: napEnd });
+      mockPredictNextSleep.mockReturnValue({
+        predictedTime: new Date(Date.now() + 60 * 60 * 1000),
+        type: "nap",
+      });
+      render(<SleepPredictionCard babyName="Sofija" />);
+      await act(async () => {});
+      expect(screen.queryByText(/Based on age guidelines/)).toBeNull();
+      expect(screen.getByText(/Nap time near/)).toBeTruthy();
+    });
+  });
+
+  describe("Extended priority order", () => {
+    it("computing takes priority over sleeping", () => {
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        isComputingModel: true,
+        activeTimer: {
+          isRunning: true,
+          isPaused: false,
+          startTime: new Date(Date.now() - 10 * 60 * 1000),
+          sleepType: "nap",
+          totalPausedMs: 0,
+        },
+      };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Predicting sleep patterns for Sofija")).toBeTruthy();
+      expect(screen.queryByText("Sofija is sleeping")).toBeNull();
+    });
+
+    it("sleeping takes priority over track_sleep", () => {
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        activeTimer: {
+          isRunning: true,
+          isPaused: false,
+          startTime: new Date(Date.now() - 10 * 60 * 1000),
+          sleepType: "nap",
+          totalPausedMs: 0,
+        },
+      };
+      mockGetQualifyingNightSleep.mockReturnValue(null);
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Sofija is sleeping")).toBeTruthy();
+      expect(screen.queryByText("Track sleep so we can predict nap times")).toBeNull();
+    });
+
+    it("no_birthdate takes priority over setup_required", () => {
+      mockUseBabyReturn = { selectedBaby: { id: "baby-1", name: "Sofija", birthDate: undefined } };
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        wakeWindowConfig: { dayStartHour: undefined, dayEndHour: undefined },
+      };
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.queryByText("Set up sleep predictions")).toBeNull();
+    });
+
+    it("nighttime (early morning) takes priority over track_sleep", () => {
+      jest.setSystemTime(new Date(2026, 3, 27, 2, 0, 0));
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        wakeWindowConfig: { dayStartHour: 7, dayEndHour: 19, dayBoundariesConfigured: true },
+      };
+      mockGetQualifyingNightSleep.mockReturnValue(null);
+      render(<SleepPredictionCard babyName="Sofija" />);
+      expect(screen.getByText("Nighttime")).toBeTruthy();
+      expect(screen.queryByText("Track sleep so we can predict nap times")).toBeNull();
+    });
+  });
+
 });
