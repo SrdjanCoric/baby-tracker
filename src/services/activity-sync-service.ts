@@ -491,6 +491,18 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.sleep}${babyId}`));
   const localSessions: StoredSleepEntry[] = localData ? JSON.parse(localData) : [];
   const sleepSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingIds);
+  const mergedIds = new Set(sleepSessions.map(s => s.id));
+  const droppedRecent = localSessions.filter(l =>
+    !mergedIds.has(l.id) && (Date.now() - new Date(l.createdAt).getTime()) < 120_000
+  );
+  if (droppedRecent.length > 0) {
+    console.error("[ActivitySync] fetchSleep: DROPPING recent local entries!", {
+      droppedIds: droppedRecent.map(d => d.id),
+      pendingCount: pendingIds.size,
+      serverCount: serverSessions.length,
+      localCount: localSessions.length,
+    });
+  }
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.sleep}${babyId}`), JSON.stringify(sleepSessions));
   return sleepSessions;
 }
@@ -516,6 +528,7 @@ export async function createSleepInDatabase(
   };
 
   await updateLocalSleep(input.babyId, (sessions) => [...sessions, sleep]);
+  console.log("[ActivitySync] createSleep: local write done, id=%s", id);
 
   await queueSyncOperation({
     type: 'CREATE',

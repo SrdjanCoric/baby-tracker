@@ -13,6 +13,7 @@ export interface WakeWindowConfig {
   dayEndHour?: number;
   dayBoundariesConfigured?: boolean;
   napContinuationMinutes?: number;
+  driftDismissed?: { type: string; suggestedHour: number } | null;
 }
 
 export interface WakeWindowReminderSettings {
