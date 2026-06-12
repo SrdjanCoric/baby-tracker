@@ -131,8 +131,8 @@ Multi-caregiver support with household management:
 
 ### i18n
 - i18next + react-i18next + expo-localization
-- 3 languages: English (en), Serbian (sr), Spanish (es)
-- Translation files: `src/i18n/locales/{en,sr,es}.json`
+- 7 languages: English (en), Spanish (es, es-ES), Portuguese (pt-BR, pt-PT), German (de), French (fr), Italian (it), Serbian (sr)
+- Translation files: `src/i18n/locales/{en,es,es-ES,pt-BR,pt-PT,de,fr,it,sr}.json` (9 locale files; Spanish and Portuguese have regional variants)
 - Custom hook: `useAppTranslation()` wraps i18next
 
 ### Navigation Structure

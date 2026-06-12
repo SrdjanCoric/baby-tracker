@@ -1,173 +1,120 @@
-# Baby Tracker
+# Sofi — Baby Tracker
 
-A privacy-first, ad-free baby tracking app for iOS and Android with Apple Watch support, home screen widgets, and real-time multi-caregiver sync (coming soon).
+A production baby tracking app for iOS and Android, built with React Native. Offline-first architecture with a custom sync engine, real-time multi-caregiver collaboration, iOS widgets, Apple Watch app, and Live Activities.
+
+Free. No ads. No subscriptions.
+
+<p>
+  <a href="https://apps.apple.com/it/app/sofi-baby-tracker/id6758142736">
+    <img src="https://img.shields.io/badge/App_Store-0D96F6?style=for-the-badge&logo=app-store&logoColor=white" alt="App Store" />
+  </a>
+  <a href="https://play.google.com/store/apps/details?id=com.sofibaby.app&hl=en">
+    <img src="https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=google-play&logoColor=white" alt="Google Play" />
+  </a>
+</p>
+
+<p align="center">
+  <img src="assets/images/screenshots/6.9_03.jpg" width="180" alt="Dashboard" />
+  <img src="assets/images/screenshots/6.9_01.jpg" width="180" alt="Sleep Prediction" />
+  <img src="assets/images/screenshots/6.9_05.jpg" width="180" alt="Statistics" />
+  <img src="assets/images/screenshots/6.9_06.jpg" width="180" alt="Feeding" />
+  <img src="assets/images/screenshots/6.9_07.jpg" width="180" alt="Multi-caregiver Sync" />
+</p>
 
 ## Tech Stack
 
-- **Framework:** React Native with Expo (SDK 54)
-- **Language:** TypeScript (strict mode)
-- **Styling:** NativeWind v4 (Tailwind CSS for React Native)
-- **Navigation:** Expo Router v6
-- **State Management:** React Context + AsyncStorage
-- **Internationalization:** i18next with expo-localization
-- **Testing:** Vitest for unit tests
+| Layer | Technology |
+|-------|-----------|
+| Framework | React Native, Expo SDK 54 |
+| Language | TypeScript (strict mode) |
+| Backend | Supabase (PostgreSQL, Auth, Realtime, Edge Functions) |
+| Styling | NativeWind v4 (Tailwind CSS for React Native) |
+| Navigation | Expo Router v6 (file-based) |
+| State | React Context + Reducers |
+| i18n | i18next (7 languages) |
+| Testing | Vitest (unit), Jest (component), Maestro (E2E) |
 
-## Prerequisites
+## Architecture
 
-- Node.js 20+
-- npm
-- Expo CLI (`npm install -g expo-cli`)
-- iOS Simulator (macOS) or Android Emulator
+### Offline-First Sync Engine
 
-## Installation
+All writes go to local storage first and are immediately reflected in the UI. A persistent sync queue handles server delivery with retry logic and exponential backoff. On foreground resume, the queue flushes before pulling server state to avoid overwriting optimistic updates.
 
-```bash
-# Clone the repository
-git clone https://github.com/SrdjanCoric/baby-tracker.git
-cd baby-tracker
-
-# Install dependencies
-npm install
-
-# Start the development server
-npx expo start
+```
+User action → Local storage → UI update (immediate)
+                ↓
+           Sync queue → Supabase (async, retries on failure)
+                ↓
+           Realtime subscription → Other household devices
 ```
 
-## iOS Development Setup
+### Real-Time Multi-Caregiver Sync
 
-This app uses native modules that require building with Xcode. Before running on iOS:
+Supabase Realtime subscriptions push changes between household members instantly. Remote changes dispatch directly into React context reducers (`REMOTE_INSERT`, `REMOTE_UPDATE`, `REMOTE_DELETE`). Device ID filtering prevents echo updates.
 
-### 1. Install CocoaPods (if not installed)
+### Timer Exclusivity
 
-```bash
-gem install cocoapods
-```
+Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Stale locks auto-expire after 12 hours.
 
-### 2. Fix PATH for rbenv users
+### iOS Native Integrations
 
-If you use rbenv and get `pod: command not found` errors after installing CocoaPods:
+- **WidgetKit** home screen widgets with push-triggered timeline refresh via APNs
+- **Live Activities + Dynamic Island** for active feeding and sleep timers
+- **Apple Watch** companion app using WCSession with REST API fallback
+- **Deep linking** (`sofibaby://`) for widget and notification actions
 
-```bash
-# Add rbenv Ruby bin to PATH (add to ~/.zshrc for persistence)
-export PATH="$HOME/.rbenv/versions/$(rbenv version-name)/bin:$PATH"
+### Edge Functions
 
-# Or use rbenv rehash
-rbenv rehash
-```
-
-### 3. Build and run
-
-```bash
-# Prebuild native code and run
-npx expo prebuild --platform ios --clean
-npx expo run:ios
-
-# Or in one command
-npx expo prebuild --platform ios --clean && npx expo run:ios
-```
-
-If `pod install` fails, run it manually:
-
-```bash
-cd ios && pod install && cd ..
-npx expo run:ios
-```
-
-## Android Development Setup
-
-```bash
-# Prebuild and run on Android
-npx expo prebuild --platform android --clean && npx expo run:android
-```
-
-## Running the App
-
-```bash
-# Start Expo development server
-npm start
-
-# Run on iOS Simulator
-npm run ios
-
-# Run on Android Emulator
-npm run android
-```
-
-You can also scan the QR code with Expo Go app on your physical device.
-
-## Running Tests
-
-```bash
-# Run all unit tests
-npm run test:unit
-
-# Run tests in watch mode
-npm run test:unit:watch
-
-# Type check
-npm run typecheck
-
-# Lint
-npm run lint
-```
+Deno-based serverless functions for direct APNs push delivery, feeding reminders, wake window alerts, and Live Activity management. All push notifications use direct APNs (not Expo Push API).
 
 ## Project Structure
 
 ```
-baby-tracker/
-├── app/                    # Expo Router screens and navigation
-│   ├── (tabs)/            # Tab navigation screens (home, timeline, stats, profile)
-│   ├── baby/              # Baby profile screens
-│   ├── feeding/           # Feeding tracking screens
-│   ├── sleep/             # Sleep tracking screens
-│   ├── diaper/            # Diaper tracking screens
-│   └── pumping/           # Pumping tracking screens
-├── src/
-│   ├── components/        # Reusable UI components
-│   ├── constants/         # App constants and configuration
-│   ├── contexts/          # React Context providers
-│   ├── hooks/             # Custom React hooks
-│   ├── i18n/              # Internationalization setup
-│   ├── services/          # Storage and API services
-│   ├── types/             # TypeScript type definitions
-│   ├── utils/             # Utility functions
-│   └── validators/        # Input validation functions
-├── plans/                  # Implementation plans and documentation
-└── .github/workflows/      # CI/CD configuration
+app/                        # Expo Router screens (tabs, settings, activities)
+src/
+├── components/             # UI components, charts, stats cards
+├── contexts/               # ~20 feature-scoped context providers + reducers
+├── services/
+│   ├── sync/               # Sync engine, real-time sync, queue, conflict resolver
+│   └── ...                 # Storage, notifications, watch, widget, household
+├── hooks/                  # Timer alerts, duplicate detection, accessibility
+├── i18n/                   # Translation files (en, sr, es + 3 more)
+├── utils/                  # Growth helpers, temperature, retry logic
+└── types/                  # TypeScript definitions
+supabase/
+├── functions/              # Edge Functions (Deno)
+└── migrations/             # 49 PostgreSQL migrations
+targets/widget/             # iOS WidgetKit extension (Swift)
+e2e/                        # Maestro E2E tests
 ```
 
-## Development Approach
+## Development
 
-This project follows **Test-Driven Development (TDD)**:
+```bash
+npm install
+npx expo start
+```
 
-1. Write failing tests that define expected behavior
-2. Implement minimum code to make tests pass
-3. Refactor while keeping tests green
+Requires a `.env` file — see `.env.example` for required variables (Supabase, Google OAuth).
 
-Each feature is developed on a separate branch and merged to main when complete.
+```bash
+# iOS (requires CocoaPods)
+npx expo prebuild --platform ios --clean && npx expo run:ios
 
-## Current Features
+# Android
+npx expo prebuild --platform android --clean && npx expo run:android
+```
 
-- Baby profile management (add, edit, switch between babies)
-- Breastfeeding tracking with timer and side memory
-- Bottle feeding with volume tracking (ml/oz)
-- Solid food tracking with reaction logging
-- Sleep tracking with nap/night auto-detection
-- Diaper tracking with stool color selection
-- Pumping tracking with timer and volume
-- Manual entry for all activities (log past events)
-- Dark mode support
+## Testing
 
-## Coming Soon
-
-- Multi-caregiver sync (Supabase + PowerSync)
-- Growth tracking and charts
-- Tummy time with daily goals
-- Statistics and trends
-- Apple Watch app
-- Home screen widgets
-- Data export
+```bash
+npm run test:unit            # ~1900 Vitest unit tests
+npm run test:component       # Jest component tests
+npm run test:security        # Security tests
+npm run typecheck            # TypeScript strict mode
+npm run lint                 # ESLint
+```
 
 ## License
 
-Private - All rights reserved
+MIT
