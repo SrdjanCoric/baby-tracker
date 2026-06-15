@@ -758,6 +758,7 @@
     "privacyPolicy": "Política de Privacidade",
     "customizeDashboard": "Personalizar Painel",
     "showHideCards": "Mostrar/Ocultar Cartões",
+    "minimumOneCard": "Pelo menos um cart\u00e3o deve permanecer vis\u00edvel",
     "dragToReorder": "Segure e arraste para reordenar",
     "resetDashboard": "Redefinir Painel",
     "resetDashboardConfirm": "Isso redefinirá todos os cartões para sua ordem e visibilidade padrão. Continuar?",

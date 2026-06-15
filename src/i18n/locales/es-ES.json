@@ -759,6 +759,7 @@
     "privacyPolicy": "Política de privacidad",
     "customizeDashboard": "Personalizar panel",
     "showHideCards": "Mostrar/Ocultar tarjetas",
+    "minimumOneCard": "Al menos una tarjeta debe permanecer visible",
     "dragToReorder": "Mantén presionado y arrastra para reordenar",
     "resetDashboard": "Restablecer panel",
     "resetDashboardConfirm": "Esto restablecerá todas las tarjetas a su orden y visibilidad predeterminados. ¿Continuar?",

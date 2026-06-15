@@ -8,7 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, DashboardConfigProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
 import { AchievementProvider } from "@/contexts/achievement-context";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
@@ -421,6 +421,7 @@ export default function RootLayout() {
                 <SyncAuthSetup>
                 <UnitProvider>
                 <TimeFormatProvider>
+                <DashboardConfigProvider>
                   <BabyProvider>
                     <ActiveTimersProvider>
                     <FeedingProvider>
@@ -462,6 +463,7 @@ export default function RootLayout() {
                     </FeedingProvider>
                     </ActiveTimersProvider>
                   </BabyProvider>
+                </DashboardConfigProvider>
                 </TimeFormatProvider>
                 </UnitProvider>
                 </SyncAuthSetup>

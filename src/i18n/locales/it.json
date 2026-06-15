@@ -758,6 +758,7 @@
     "privacyPolicy": "Informativa sulla privacy",
     "customizeDashboard": "Personalizza pannello",
     "showHideCards": "Mostra/Nascondi schede",
+    "minimumOneCard": "Almeno una scheda deve rimanere visibile",
     "dragToReorder": "Tieni premuto e trascina per riordinare",
     "resetDashboard": "Ripristina pannello",
     "resetDashboardConfirm": "Questo ripristinerà tutte le schede all'ordine e alla visibilità predefiniti. Continuare?",

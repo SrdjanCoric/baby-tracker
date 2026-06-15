@@ -755,6 +755,7 @@
     "privacyPolicy": "Politique de confidentialité",
     "customizeDashboard": "Personnaliser le tableau de bord",
     "showHideCards": "Afficher/Masquer les cartes",
+    "minimumOneCard": "Au moins une carte doit rester visible",
     "dragToReorder": "Maintenez et faites glisser pour réorganiser",
     "resetDashboard": "Réinitialiser le tableau de bord",
     "resetDashboardConfirm": "Cela réinitialisera toutes les cartes à leur ordre et visibilité par défaut. Continuer ?",

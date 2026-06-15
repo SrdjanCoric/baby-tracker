@@ -6,24 +6,28 @@ import {
   DashboardCardConfig,
   DEFAULT_DASHBOARD_CONFIG,
 } from "@/services/dashboard-config-storage";
+import { canHideCard } from "@/utils/dashboard-layout";
+import { useAuth } from "./auth-context";
 
 interface DashboardConfigContextValue {
   config: DashboardConfig;
   visibleCards: DashboardCardConfig[];
   isLoading: boolean;
-  setCardVisibility: (activity: ActivityType, visible: boolean) => Promise<void>;
-  reorderCards: (cards: DashboardCardConfig[]) => Promise<void>;
+  setCardVisibility: (activity: ActivityType, visible: boolean) => Promise<boolean>;
   resetToDefault: () => Promise<void>;
 }
 
 const DashboardConfigContext = createContext<DashboardConfigContextValue | null>(null);
 
 export function DashboardConfigProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [config, setConfig] = useState<DashboardConfig>(DEFAULT_DASHBOARD_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const loadConfig = async () => {
+      setIsLoading(true);
       const storedConfig = await DashboardConfigStorageService.getConfig();
       const hasMilestones = storedConfig.cards.some((c) => c.activity === "milestones");
       if (!hasMilestones) {
@@ -31,11 +35,16 @@ export function DashboardConfigProvider({ children }: { children: React.ReactNod
         storedConfig.cards.push({ activity: "milestones", visible: true, order: maxOrder + 1 });
         await DashboardConfigStorageService.setConfig(storedConfig);
       }
-      setConfig(storedConfig);
-      setIsLoading(false);
+      if (!cancelled) {
+        setConfig(storedConfig);
+        setIsLoading(false);
+      }
     };
     loadConfig();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const visibleCards = useMemo(() => {
     return [...config.cards]
@@ -43,15 +52,17 @@ export function DashboardConfigProvider({ children }: { children: React.ReactNod
       .sort((a, b) => a.order - b.order);
   }, [config.cards]);
 
-  const setCardVisibility = useCallback(async (activity: ActivityType, visible: boolean) => {
-    const updatedConfig = await DashboardConfigStorageService.updateCardVisibility(activity, visible);
-    setConfig(updatedConfig);
-  }, []);
-
-  const reorderCards = useCallback(async (cards: DashboardCardConfig[]) => {
-    const updatedConfig = await DashboardConfigStorageService.reorderCards(cards);
-    setConfig(updatedConfig);
-  }, []);
+  const setCardVisibility = useCallback(
+    async (activity: ActivityType, visible: boolean): Promise<boolean> => {
+      if (!visible && !canHideCard(config.cards, activity)) {
+        return false;
+      }
+      const updatedConfig = await DashboardConfigStorageService.updateCardVisibility(activity, visible);
+      setConfig(updatedConfig);
+      return true;
+    },
+    [config.cards]
+  );
 
   const resetToDefault = useCallback(async () => {
     const defaultConfig = await DashboardConfigStorageService.resetToDefault();
@@ -63,9 +74,8 @@ export function DashboardConfigProvider({ children }: { children: React.ReactNod
     visibleCards,
     isLoading,
     setCardVisibility,
-    reorderCards,
     resetToDefault,
-  }), [config, visibleCards, isLoading, setCardVisibility, reorderCards, resetToDefault]);
+  }), [config, visibleCards, isLoading, setCardVisibility, resetToDefault]);
 
   return (
     <DashboardConfigContext.Provider value={value}>

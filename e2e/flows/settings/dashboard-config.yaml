@@ -11,11 +11,16 @@ tags:
 - tapOn:
     id: "skip-button"
 
-# Navigate to settings
+# Pumping card starts visible on the dashboard
+- scrollUntilVisible:
+    element:
+      id: "pumping-card"
+    direction: DOWN
+
+# Navigate to dashboard customization
 - tapOn:
     id: "settings-button"
 
-# Find dashboard config
 - scrollUntilVisible:
     element:
       id: "dashboard-config"
@@ -24,11 +29,11 @@ tags:
 - tapOn:
     id: "dashboard-config"
 
-# Toggle a feature off
+# Toggle pumping off
 - tapOn:
     id: "toggle-pumping"
-    optional: true
 
+# Dismiss settings modal
 - swipe:
     start: 50%, 15%
     end: 50%, 85%
@@ -36,3 +41,89 @@ tags:
 # Verify pumping card is hidden
 - assertNotVisible:
     id: "pumping-card"
+
+# Re-open customization and toggle pumping back on
+- tapOn:
+    id: "settings-button"
+
+- scrollUntilVisible:
+    element:
+      id: "dashboard-config"
+    direction: DOWN
+
+- tapOn:
+    id: "dashboard-config"
+
+- tapOn:
+    id: "toggle-pumping"
+
+- swipe:
+    start: 50%, 15%
+    end: 50%, 85%
+
+# Verify pumping card is back
+- scrollUntilVisible:
+    element:
+      id: "pumping-card"
+    direction: DOWN
+
+# Hide two cards, then reset to default
+- tapOn:
+    id: "settings-button"
+
+- scrollUntilVisible:
+    element:
+      id: "dashboard-config"
+    direction: DOWN
+
+- tapOn:
+    id: "dashboard-config"
+
+- tapOn:
+    id: "toggle-pumping"
+
+- tapOn:
+    id: "toggle-growth"
+
+- tapOn:
+    id: "reset-dashboard"
+
+- tapOn:
+    text: "Reset"
+
+- swipe:
+    start: 50%, 15%
+    end: 50%, 85%
+
+# Verify all eight cards are visible after reset
+- assertVisible:
+    id: "feeding-card"
+
+- assertVisible:
+    id: "sleep-card"
+
+- assertVisible:
+    id: "diaper-card"
+
+- assertVisible:
+    id: "tummyTime-card"
+
+- scrollUntilVisible:
+    element:
+      id: "pumping-card"
+    direction: DOWN
+
+- scrollUntilVisible:
+    element:
+      id: "growth-card"
+    direction: DOWN
+
+- scrollUntilVisible:
+    element:
+      id: "milestones-card"
+    direction: DOWN
+
+- scrollUntilVisible:
+    element:
+      id: "health-card"
+    direction: DOWN

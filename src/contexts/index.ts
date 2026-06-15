@@ -28,6 +28,8 @@ export type { UnitSystem } from "./unit-context";
 export { TimeFormatProvider, useTimeFormat } from "./time-format-context";
 export type { TimeFormat } from "./time-format-context";
 
+export { DashboardConfigProvider, useDashboardConfig } from "./dashboard-config-context";
+
 export { AuthProvider, useAuth } from "./auth-context";
 export type { AuthUser } from "./auth-context";
 

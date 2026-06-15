@@ -755,6 +755,7 @@
     "privacyPolicy": "Privacy Policy",
     "customizeDashboard": "Customize Dashboard",
     "showHideCards": "Show/Hide Cards",
+    "minimumOneCard": "At least one card must stay visible",
     "dragToReorder": "Hold and drag to reorder",
     "resetDashboard": "Reset Dashboard",
     "resetDashboardConfirm": "This will reset all cards to their default order and visibility. Continue?",

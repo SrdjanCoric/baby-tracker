@@ -755,6 +755,7 @@
     "privacyPolicy": "Datenschutzrichtlinie",
     "customizeDashboard": "Dashboard anpassen",
     "showHideCards": "Karten ein-/ausblenden",
+    "minimumOneCard": "Mindestens eine Karte muss sichtbar bleiben",
     "dragToReorder": "Gedrückt halten und ziehen zum Neuanordnen",
     "resetDashboard": "Dashboard zurücksetzen",
     "resetDashboardConfirm": "Dies setzt alle Karten auf ihre Standardreihenfolge und Sichtbarkeit zurück. Fortfahren?",

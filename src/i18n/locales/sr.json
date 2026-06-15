@@ -776,6 +776,7 @@
     "privacyPolicy": "Politika privatnosti",
     "customizeDashboard": "Prilagodi kontrolnu tablu",
     "showHideCards": "Prikaži/Sakrij kartice",
+    "minimumOneCard": "Najmanje jedna kartica mora ostati vidljiva",
     "dragToReorder": "Držite i prevucite za promenu redosleda",
     "resetDashboard": "Resetuj kontrolnu tablu",
     "resetDashboardConfirm": "Ovo će resetovati sve kartice na podrazumevani redosled i vidljivost. Nastaviti?",
