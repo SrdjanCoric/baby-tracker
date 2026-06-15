@@ -19,12 +19,16 @@
       "usesAppleSignIn": true,
       "associatedDomains": [],
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.sofibaby.app"]
+        "com.apple.security.application-groups": [
+          "group.com.sofibaby.app"
+        ]
       },
       "infoPlist": {
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["sofibaby"]
+            "CFBundleURLSchemes": [
+              "sofibaby"
+            ]
           },
           {
             "CFBundleURLSchemes": [
@@ -63,7 +67,10 @@
               "host": "login-callback"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         },
         {
           "action": "VIEW",
@@ -74,7 +81,10 @@
               "host": "*"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -113,7 +123,15 @@
           "appleTeamId": "743WPPWD3W"
         }
       ],
-      "./plugins/with-watch-complication/index.js"
+      "./plugins/with-watch-complication/index.js",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
