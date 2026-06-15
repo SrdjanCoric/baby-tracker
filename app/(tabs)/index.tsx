@@ -20,7 +20,8 @@ import { MilestoneCelebrationModal } from "@/components/MilestoneCelebrationModa
 import { MilestoneToast } from "@/components/MilestoneToast";
 import { useAchievements } from "@/contexts/achievement-context";
 import { TipCarousel } from "@/components/TipCarousel";
-import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useActiveTimers, useBaby, useAuth, useUnits } from "@/contexts";
+import { useFeeding, useSleep, useDiaper, usePumping, useGrowth, useTummyTime, useMilestones, useHealth, useActiveTimers, useBaby, useAuth, useUnits, useDashboardConfig } from "@/contexts";
+import { getDashboardLayout } from "@/utils/dashboard-layout";
 import { Alert } from "react-native";
 import { timeSince, hoursSince, formatDuration, formatDurationShort, type TranslateFn } from "@/utils/time";
 import { getGrowthTrendArrow } from "@/utils/growth-helpers";
@@ -55,9 +56,6 @@ interface CardProps {
   timerTotalPausedMs?: number;
 }
 
-const PRIMARY_ACTIVITIES: ActivityType[] = ["feeding", "sleep", "diaper", "tummyTime"];
-const COMPACT_ACTIVITIES: ActivityType[] = ["pumping", "growth", "milestones", "health"];
-
 export default function HomeScreen() {
   const { t } = useTranslation();
   const tFn = t as TranslateFn;
@@ -76,6 +74,7 @@ export default function HomeScreen() {
     }
   }, [isFocused, router]);
 
+  const { config: dashboardConfig } = useDashboardConfig();
   const { feedings, activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide, refreshFeedings, stopBreastfeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
   const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps, stopSleep, pauseSleep, resumeSleep, wakeWindowConfig, getCurrentNapSlot, getCompletedNapsSinceNightSleep } = useSleep();
   const { diapers, getTodaysCounts, refreshDiapers } = useDiaper();
@@ -815,13 +814,10 @@ export default function HomeScreen() {
     health: healthCardProps,
   }), [feedingCardProps, sleepCardProps, diaperCardProps, pumpingCardProps, tummyTimeCardProps, growthCardProps, milestonesCardProps, healthCardProps]);
 
-  const gridRows = useMemo(() => {
-    const rows: ActivityType[][] = [];
-    for (let i = 0; i < PRIMARY_ACTIVITIES.length; i += 2) {
-      rows.push(PRIMARY_ACTIVITIES.slice(i, i + 2));
-    }
-    return rows;
-  }, []);
+  const { gridRows, compactCards } = useMemo(
+    () => getDashboardLayout(dashboardConfig.cards),
+    [dashboardConfig.cards]
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]} testID="home-screen">
@@ -892,7 +888,7 @@ export default function HomeScreen() {
         <View style={{ height: 24 }} />
 
         <View style={{ gap: 6 }}>
-          {COMPACT_ACTIVITIES.map((activity) => {
+          {compactCards.map((activity) => {
             const props = cardPropsMap[activity];
             return (
               <CompactActivityRow

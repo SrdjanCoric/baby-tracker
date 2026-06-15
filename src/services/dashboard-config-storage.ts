@@ -1,7 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityType } from "@/constants/activities";
+import { getUserScopedKey } from "./storage-prefix";
 
-const DASHBOARD_CONFIG_KEY = "@dashboard_config";
+const DASHBOARD_CONFIG_KEY_BASE = "@dashboard_config";
+
+function getDashboardConfigKey(): string {
+  return getUserScopedKey(DASHBOARD_CONFIG_KEY_BASE);
+}
 
 export interface DashboardCardConfig {
   activity: ActivityType;
@@ -49,7 +54,7 @@ function isValidDashboardConfig(config: unknown): config is DashboardConfig {
 
 export const DashboardConfigStorageService = {
   async getConfig(): Promise<DashboardConfig> {
-    const stored = await AsyncStorage.getItem(DASHBOARD_CONFIG_KEY);
+    const stored = await AsyncStorage.getItem(getDashboardConfigKey());
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -65,7 +70,7 @@ export const DashboardConfigStorageService = {
 
   async setConfig(config: DashboardConfig): Promise<void> {
     const updated = { ...config, lastModified: new Date().toISOString() };
-    await AsyncStorage.setItem(DASHBOARD_CONFIG_KEY, JSON.stringify(updated));
+    await AsyncStorage.setItem(getDashboardConfigKey(), JSON.stringify(updated));
   },
 
   async updateCardVisibility(activity: ActivityType, visible: boolean): Promise<DashboardConfig> {
@@ -93,6 +98,6 @@ export const DashboardConfigStorageService = {
   },
 
   async clearConfig(): Promise<void> {
-    await AsyncStorage.removeItem(DASHBOARD_CONFIG_KEY);
+    await AsyncStorage.removeItem(getDashboardConfigKey());
   },
 };
