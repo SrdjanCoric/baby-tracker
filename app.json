@@ -123,7 +123,15 @@
           "appleTeamId": "743WPPWD3W"
         }
       ],
-      "./plugins/with-watch-complication/index.js"
+      "./plugins/with-watch-complication/index.js",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
