@@ -1,0 +1,248 @@
+{
+  "description": "Shared CRDT merge test vectors. Each vector merges records `a` and `b` (each a `{fields, fieldClocks}` pair) and asserts the field-wise LWW result. Consumed by the TypeScript `merge` (task 0002) and the server-side merge RPC (task 0003) so both implementations stay in lockstep. MERGE RULES the SQL twin must reproduce EXACTLY: (1) For each field the winner is the side whose clock string is lexicographically greater. Clock strings follow the HLC format `<ISO-8601 UTC ms>-<4-digit counter>-<deviceId>`, which is fixed-width up through the counter, so plain string comparison equals logical order. (2) A missing fieldClocks entry is the bottom sentinel — it loses to ANY present clock (legacy rows lose to clocked writes), and a field present on only one side is kept as-is. (3) On a byte-identical clock tie (same origin, or two legacy rows with no clock) the winner is the field whose VALUE has the greater canonical serialization. Canonical serialization = JSON with object keys sorted ascending and arrays in element order (numbers unquoted, strings quoted, booleans `true`/`false`, null `null`); values are compared as STRINGS, so e.g. amountMl 100 loses to 90 because `\"100\" < \"90\"`. The winning field's clock (if any) is carried into the merged record; a field won on the empty-clock sentinel carries no clock entry.",
+  "vectors": [
+    {
+      "name": "identity-equal-records",
+      "a": {
+        "fields": { "notes": "hi", "amountMl": 100 },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "amountMl": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      },
+      "b": {
+        "fields": { "notes": "hi", "amountMl": 100 },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "amountMl": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      },
+      "expected": {
+        "fields": { "notes": "hi", "amountMl": 100 },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "amountMl": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      }
+    },
+    {
+      "name": "update-update-remote-newer",
+      "a": {
+        "fields": { "notes": "local" },
+        "fieldClocks": { "notes": "2026-07-04T10:00:00.000Z-0000-device-a" }
+      },
+      "b": {
+        "fields": { "notes": "remote" },
+        "fieldClocks": { "notes": "2026-07-04T10:05:00.000Z-0000-device-b" }
+      },
+      "expected": {
+        "fields": { "notes": "remote" },
+        "fieldClocks": { "notes": "2026-07-04T10:05:00.000Z-0000-device-b" }
+      }
+    },
+    {
+      "name": "update-update-local-newer",
+      "a": {
+        "fields": { "notes": "local" },
+        "fieldClocks": { "notes": "2026-07-04T10:05:00.000Z-0000-device-b" }
+      },
+      "b": {
+        "fields": { "notes": "remote" },
+        "fieldClocks": { "notes": "2026-07-04T10:00:00.000Z-0000-device-a" }
+      },
+      "expected": {
+        "fields": { "notes": "local" },
+        "fieldClocks": { "notes": "2026-07-04T10:05:00.000Z-0000-device-b" }
+      }
+    },
+    {
+      "name": "exact-tie-broken-by-device-id",
+      "a": {
+        "fields": { "notes": "from-a" },
+        "fieldClocks": { "notes": "2026-07-04T10:00:00.000Z-0000-device-a" }
+      },
+      "b": {
+        "fields": { "notes": "from-b" },
+        "fieldClocks": { "notes": "2026-07-04T10:00:00.000Z-0000-device-b" }
+      },
+      "expected": {
+        "fields": { "notes": "from-b" },
+        "fieldClocks": { "notes": "2026-07-04T10:00:00.000Z-0000-device-b" }
+      }
+    },
+    {
+      "name": "disjoint-field-edits-both-survive",
+      "a": {
+        "fields": { "notes": "note-new", "amountMl": 100 },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:05:00.000Z-0000-device-b",
+          "amountMl": "2026-07-04T10:00:00.000Z-0000-device-a"
+        }
+      },
+      "b": {
+        "fields": { "notes": "note-old", "amountMl": 150 },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "amountMl": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      },
+      "expected": {
+        "fields": { "notes": "note-new", "amountMl": 150 },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:05:00.000Z-0000-device-b",
+          "amountMl": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      }
+    },
+    {
+      "name": "multi-field-mixed-edit-all-survive",
+      "a": {
+        "fields": { "notes": "local-note", "amountMl": 100, "side": "left" },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:05:00.000Z-0000-device-b",
+          "amountMl": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "side": "2026-07-04T10:00:00.000Z-0000-device-a"
+        }
+      },
+      "b": {
+        "fields": { "notes": "orig-note", "amountMl": 150, "side": "right" },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "amountMl": "2026-07-04T10:05:00.000Z-0000-device-b",
+          "side": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      },
+      "expected": {
+        "fields": { "notes": "local-note", "amountMl": 150, "side": "right" },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:05:00.000Z-0000-device-b",
+          "amountMl": "2026-07-04T10:05:00.000Z-0000-device-b",
+          "side": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      }
+    },
+    {
+      "name": "legacy-empty-clock-loses-to-clocked-write",
+      "a": {
+        "fields": { "notes": "legacy" },
+        "fieldClocks": {}
+      },
+      "b": {
+        "fields": { "notes": "clocked" },
+        "fieldClocks": { "notes": "2026-07-04T10:00:00.000Z-0000-device-a" }
+      },
+      "expected": {
+        "fields": { "notes": "clocked" },
+        "fieldClocks": { "notes": "2026-07-04T10:00:00.000Z-0000-device-a" }
+      }
+    },
+    {
+      "name": "legacy-both-sides-deterministic-value-tiebreak",
+      "a": {
+        "fields": { "notes": "apple" },
+        "fieldClocks": {}
+      },
+      "b": {
+        "fields": { "notes": "banana" },
+        "fieldClocks": {}
+      },
+      "expected": {
+        "fields": { "notes": "banana" },
+        "fieldClocks": {}
+      }
+    },
+    {
+      "name": "tombstone-set-newer-delete-wins",
+      "a": {
+        "fields": { "notes": "edited", "deleted": false },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "deleted": "2026-07-04T10:00:00.000Z-0000-device-a"
+        }
+      },
+      "b": {
+        "fields": { "notes": "edited", "deleted": true },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "deleted": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      },
+      "expected": {
+        "fields": { "notes": "edited", "deleted": true },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "deleted": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      }
+    },
+    {
+      "name": "tombstone-undelete-newer-revive-wins",
+      "a": {
+        "fields": { "deleted": true },
+        "fieldClocks": { "deleted": "2026-07-04T10:00:00.000Z-0000-device-a" }
+      },
+      "b": {
+        "fields": { "deleted": false },
+        "fieldClocks": { "deleted": "2026-07-04T10:05:00.000Z-0000-device-b" }
+      },
+      "expected": {
+        "fields": { "deleted": false },
+        "fieldClocks": { "deleted": "2026-07-04T10:05:00.000Z-0000-device-b" }
+      }
+    },
+    {
+      "name": "exact-tie-numeric-value-compared-as-canonical-string",
+      "a": {
+        "fields": { "amountMl": 100 },
+        "fieldClocks": {}
+      },
+      "b": {
+        "fields": { "amountMl": 90 },
+        "fieldClocks": {}
+      },
+      "expected": {
+        "fields": { "amountMl": 90 },
+        "fieldClocks": {}
+      }
+    },
+    {
+      "name": "exact-tie-object-value-compared-by-sorted-key-canonical-form",
+      "a": {
+        "fields": { "meta": { "x": 1, "y": 2 } },
+        "fieldClocks": {}
+      },
+      "b": {
+        "fields": { "meta": { "x": 1, "y": 3 } },
+        "fieldClocks": {}
+      },
+      "expected": {
+        "fields": { "meta": { "x": 1, "y": 3 } },
+        "fieldClocks": {}
+      }
+    },
+    {
+      "name": "delete-wins-but-concurrent-field-edit-survives",
+      "a": {
+        "fields": { "notes": "new-note", "deleted": false },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:05:00.000Z-0000-device-b",
+          "deleted": "2026-07-04T10:00:00.000Z-0000-device-a"
+        }
+      },
+      "b": {
+        "fields": { "notes": "old-note", "deleted": true },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:00:00.000Z-0000-device-a",
+          "deleted": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      },
+      "expected": {
+        "fields": { "notes": "new-note", "deleted": true },
+        "fieldClocks": {
+          "notes": "2026-07-04T10:05:00.000Z-0000-device-b",
+          "deleted": "2026-07-04T10:05:00.000Z-0000-device-b"
+        }
+      }
+    }
+  ]
+}
