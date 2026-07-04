@@ -77,7 +77,6 @@ export { LoadingState } from "./LoadingState";
 export { SyncStatusIndicator } from "./SyncStatusIndicator";
 export { OfflineBanner } from "./OfflineBanner";
 export { CaregiverListItem } from "./CaregiverListItem";
-export { ConflictResolutionModal } from "./ConflictResolutionModal";
 
 // Celebration components
 export { BirthdayCelebrationModal } from "./BirthdayCelebrationModal";

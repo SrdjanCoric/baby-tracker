@@ -22,8 +22,6 @@
       "dependencies": [
         "npm:@bacons/apple-targets@4",
         "npm:@eslint/js@^9.39.2",
-        "npm:@powersync/common@^1.45.0",
-        "npm:@powersync/react-native@^1.28.1",
         "npm:@react-native-async-storage/async-storage@^2.2.0",
         "npm:@react-native-community/datetimepicker@8.4.4",
         "npm:@react-native-community/netinfo@^11.4.1",
@@ -69,7 +67,6 @@
         "npm:react-native-draggable-flatlist@^4.0.3",
         "npm:react-native-gesture-handler@^2.30.0",
         "npm:react-native-launch-arguments@^4.1.1",
-        "npm:react-native-quick-sqlite@^8.2.7",
         "npm:react-native-reanimated@~4.1.1",
         "npm:react-native-safe-area-context@5.6",
         "npm:react-native-screens@4.16",

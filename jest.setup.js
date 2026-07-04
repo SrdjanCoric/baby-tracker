@@ -2,21 +2,9 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
 
-jest.mock("@powersync/react-native", () => ({
-  PowerSyncDatabase: jest.fn(),
-  Schema: jest.fn(),
-  Table: jest.fn(),
-  column: {
-    text: "TEXT",
-    integer: "INTEGER",
-    real: "REAL",
-  },
-}));
-
 jest.mock("@/services/sync", () => ({
   SyncEngine: jest.fn(),
   SyncQueue: jest.fn(),
-  ConflictResolver: jest.fn(),
 }));
 
 jest.mock("@/contexts/sync-context", () => ({
