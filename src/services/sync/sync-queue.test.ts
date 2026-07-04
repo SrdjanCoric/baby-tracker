@@ -264,6 +264,55 @@ describe('SyncQueue', () => {
       const optimized = syncQueue.peek();
       expect(optimized?.data).toEqual({ notes: 'first', amountMl: 100 });
     });
+
+    it('should union per-field CRDT clocks when merging updates (not shallow-clobber)', async () => {
+      const op1 = createOperation('UPDATE', 'feedings', 'feeding-1', {
+        notes: 'first',
+        field_clocks: { notes: '2026-01-01T10:00:00.000Z-0000-devA' },
+      });
+      op1.timestamp = '2024-01-01T10:00:00.000Z';
+      const op2 = createOperation('UPDATE', 'feedings', 'feeding-1', {
+        amountMl: 100,
+        field_clocks: { amountMl: '2026-01-01T10:01:00.000Z-0000-devA' },
+      });
+      op2.timestamp = '2024-01-01T10:01:00.000Z';
+
+      await syncQueue.enqueue(op1);
+      await syncQueue.enqueue(op2);
+      syncQueue.optimize();
+
+      const optimized = syncQueue.peek();
+      expect(optimized?.data).toEqual({
+        notes: 'first',
+        amountMl: 100,
+        field_clocks: {
+          notes: '2026-01-01T10:00:00.000Z-0000-devA',
+          amountMl: '2026-01-01T10:01:00.000Z-0000-devA',
+        },
+      });
+    });
+
+    it('should keep the greater clock when two updates stamp the same field', async () => {
+      const op1 = createOperation('UPDATE', 'feedings', 'feeding-1', {
+        amountMl: 100,
+        field_clocks: { amountMl: '2026-01-01T10:00:00.000Z-0000-devA' },
+      });
+      op1.timestamp = '2024-01-01T10:00:00.000Z';
+      const op2 = createOperation('UPDATE', 'feedings', 'feeding-1', {
+        amountMl: 200,
+        field_clocks: { amountMl: '2026-01-01T10:05:00.000Z-0000-devA' },
+      });
+      op2.timestamp = '2024-01-01T10:01:00.000Z';
+
+      await syncQueue.enqueue(op1);
+      await syncQueue.enqueue(op2);
+      syncQueue.optimize();
+
+      const optimized = syncQueue.peek();
+      expect((optimized?.data?.field_clocks as Record<string, string>).amountMl).toBe(
+        '2026-01-01T10:05:00.000Z-0000-devA'
+      );
+    });
   });
 
   describe('batch processing', () => {

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
-import { SyncEngine, SyncState as EngineSyncState, SyncStatus, RealTimeSync, RemoteChange, SyncableTable } from '@/services/sync';
+import { SyncEngine, SyncState as EngineSyncState, SyncStatus, RealTimeSync, RemoteChange, SyncableTable, isCrdtTable, reconcileRemoteChange } from '@/services/sync';
+import { getCrdtSync } from '@/services/sync/crdt-sync-instance';
 
 export interface SyncState {
   status: SyncStatus;
@@ -95,6 +96,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const remoteChangeListenersRef = useRef<Map<SyncableTable, Set<RemoteChangeCallback>>>(new Map());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const wasOfflineRef = useRef(false);
+  const reconcileChainRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     const handleAppStateChange = async (nextState: AppStateStatus) => {
@@ -145,11 +147,31 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    const unsubscribeRealTime = realTimeSync.onRemoteChange((change: RemoteChange) => {
+    const dispatchChange = (change: RemoteChange) => {
       const listeners = remoteChangeListenersRef.current.get(change.table as SyncableTable);
       if (listeners) {
         listeners.forEach(callback => callback(change));
       }
+    };
+
+    const unsubscribeRealTime = realTimeSync.onRemoteChange((change: RemoteChange) => {
+      // In-scope rows are merged against local CRDT state before dispatch so a stale
+      // remote write can't clobber a newer local field. Reconciliation reads and writes
+      // the shared shadow, so serialize it to keep per-record ordering and avoid races.
+      if (!isCrdtTable(change.table)) {
+        dispatchChange(change);
+        return;
+      }
+      reconcileChainRef.current = reconcileChainRef.current.then(async () => {
+        try {
+          const crdt = await getCrdtSync();
+          const reconciled = (await reconcileRemoteChange(crdt, change)) as RemoteChange;
+          dispatchChange(reconciled);
+        } catch (error) {
+          console.error('[SyncContext] CRDT reconcile failed; dispatching raw change:', error);
+          dispatchChange(change);
+        }
+      });
     });
 
     engine.initialize().catch((error) => {

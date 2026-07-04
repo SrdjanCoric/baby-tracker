@@ -9,8 +9,18 @@ import {
   SyncableTable,
 } from './types';
 import { supabase } from '../supabase';
+import { isCrdtTable } from './crdt-sync';
+import { getCrdtSync } from './crdt-sync-instance';
+import type { FieldClocks } from './crdt';
 
 type SyncStateListener = (state: SyncState) => void;
+
+/** The subset of the CRDT coordinator the engine needs — kept minimal so tests can
+ * inject an in-memory instance. */
+interface CrdtCoordinator {
+  stampWrite(table: SyncableTable, entityId: string, data: Record<string, unknown>): Promise<FieldClocks>;
+  forget(table: SyncableTable, entityId: string): Promise<void>;
+}
 
 interface ValidationResult {
   valid: boolean;
@@ -35,6 +45,7 @@ export class SyncEngine {
   private isSyncing = false;
   private pendingSync = false;
   private activeSyncPromise: Promise<void> | null = null;
+  private crdtSync: CrdtCoordinator | null = null;
 
   constructor(config: Partial<SyncEngineConfig> = {}) {
     this.queue = new SyncQueue();
@@ -50,6 +61,19 @@ export class SyncEngine {
 
   setAuthContext(context: SyncAuthContext): void {
     this.authContext = context;
+  }
+
+  /** Inject the CRDT coordinator (tests). In the app it is resolved lazily from the
+   * process singleton the first time a stamped write is enqueued. */
+  setCrdtSync(coordinator: CrdtCoordinator): void {
+    this.crdtSync = coordinator;
+  }
+
+  private async getCrdtSync(): Promise<CrdtCoordinator> {
+    if (!this.crdtSync) {
+      this.crdtSync = await getCrdtSync();
+    }
+    return this.crdtSync;
   }
 
   getAuthContext(): SyncAuthContext | null {
@@ -179,6 +203,8 @@ export class SyncEngine {
       throw new Error('Cannot enqueue operation for a different household');
     }
 
+    await this.stampOperation(operation);
+
     this.processedOperationIds.add(operation.id);
     await this.queue.enqueue(operation);
     await this.queue.persist();
@@ -187,6 +213,25 @@ export class SyncEngine {
     if (this.state.isConnected) {
       this.handleNetworkChange(true);
     }
+  }
+
+  /**
+   * Stamp an in-scope create/update with per-field HLC clocks before it is queued, so
+   * the clocks are persisted with the operation and survive a restart. Deletes drop the
+   * record's CRDT shadow. Out-of-scope tables are untouched.
+   */
+  private async stampOperation(operation: QueuedOperation): Promise<void> {
+    if (!isCrdtTable(operation.table)) return;
+    const crdt = await this.getCrdtSync();
+
+    if (operation.type === 'DELETE') {
+      await crdt.forget(operation.table, operation.entityId);
+      return;
+    }
+    if (!operation.data) return;
+
+    const clocks = await crdt.stampWrite(operation.table, operation.entityId, operation.data);
+    operation.data = { ...operation.data, field_clocks: clocks };
   }
 
   private generateOperationId(): string {
@@ -274,6 +319,22 @@ export class SyncEngine {
 
   private async executeOperation(operation: QueuedOperation): Promise<void> {
     const { table, type, entityId, data } = operation;
+
+    // In-scope create/update writes go through the server-side merge RPC (per-field LWW),
+    // never a raw insert/update. Deletes stay hard deletes until task 0005 (tombstones).
+    if (isCrdtTable(table) && (type === 'CREATE' || type === 'UPDATE')) {
+      if (!data) throw new Error(`${type} operation requires data`);
+      const { field_clocks, ...record } = data;
+      const { error } = await supabase.rpc('merge_record', {
+        p_table: table,
+        p_record: { id: entityId, ...record },
+        p_field_clocks: (field_clocks as FieldClocks | undefined) ?? {},
+      });
+      if (error) {
+        throw new Error(`Failed to merge ${table}: ${error.message}`);
+      }
+      return;
+    }
 
     switch (type) {
       case 'CREATE': {

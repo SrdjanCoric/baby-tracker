@@ -68,6 +68,28 @@ describe("HLC", () => {
       expect(compareClocks(merged, previous)).toBeGreaterThan(0);
       expect(compareClocks(merged, remote)).toBeGreaterThan(0);
     });
+
+    it("receiveMany folds every clock but persists only once (skipping empty entries)", () => {
+      let saves = 0;
+      const storage = { load: async () => null, save: async () => { saves += 1; } };
+      const hlc = new HLC({ deviceId: DEVICE, clock: () => 1000, storage });
+      const c1 = formatClock(Date.parse("2026-01-01T00:00:00.000Z"), 1, "device-b");
+      const c2 = formatClock(Date.parse("2027-01-01T00:00:00.000Z"), 1, "device-c");
+
+      hlc.receiveMany([c1, "", c2]);
+
+      expect(saves).toBe(1); // one write for the whole batch, not one per clock
+      const next = hlc.tick();
+      expect(compareClocks(next, c2)).toBeGreaterThan(0); // advanced past the latest observed clock
+    });
+
+    it("receiveMany with no real clocks does not persist", () => {
+      let saves = 0;
+      const storage = { load: async () => null, save: async () => { saves += 1; } };
+      const hlc = new HLC({ deviceId: DEVICE, clock: () => 1000, storage });
+      hlc.receiveMany(["", ""]);
+      expect(saves).toBe(0);
+    });
   });
 
   describe("restart safety", () => {

@@ -4,6 +4,9 @@ import { supabase } from "./supabase";
 import { getUserScopedKey } from "./storage-prefix";
 import { getSyncEngine } from "@/contexts/sync-context";
 import type { SyncableTable } from "./sync/types";
+import { isCrdtTable } from "./sync/crdt-sync";
+import { mergeRecordWrite } from "./sync/merge-record-write";
+import { reconcilePulled } from "./sync/crdt-sync-instance";
 import type { StoredFeedingEntry, CreateFeedingInput, UpdateFeedingInput } from "./feeding-storage";
 import type { StoredDiaperEntry, CreateDiaperInput, UpdateDiaperInput } from "./diaper-storage";
 import type { StoredSleepEntry, CreateSleepInput, UpdateSleepInput } from "./sleep-storage";
@@ -114,6 +117,17 @@ async function writeDirectlyToDatabase(operation: {
   const { table, type, entityId, data } = operation;
 
   try {
+    // In-scope create/update writes merge server-side via the RPC (per-field LWW) with
+    // freshly stamped clocks; deletes stay hard deletes until task 0005 (tombstones).
+    if (isCrdtTable(table) && (type === 'CREATE' || type === 'UPDATE')) {
+      if (!data) throw new Error(`${type} requires data`);
+      const { error } = await mergeRecordWrite(table, entityId, data);
+      if (error) {
+        console.error(`[ActivitySync] Direct ${type} merge failed for ${table}:`, error.message);
+      }
+      return;
+    }
+
     switch (type) {
       case 'CREATE': {
         if (!data) throw new Error('CREATE requires data');
@@ -158,7 +172,8 @@ export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredF
     throw new Error("Failed to fetch feedings");
   }
 
-  const serverFeedings: StoredFeedingEntry[] = (data || []).map(transformFeedingFromDb);
+  const reconciled = await reconcilePulled("feedings", (data || []) as Record<string, unknown>[]);
+  const serverFeedings: StoredFeedingEntry[] = reconciled.map(transformFeedingFromDb);
   const pendingIds = getPendingCreateIds(getSyncEngine(), 'feedings');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.feedings}${babyId}`));
   const localFeedings: StoredFeedingEntry[] = localData ? JSON.parse(localData) : [];
@@ -342,7 +357,8 @@ export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDi
     throw new Error("Failed to fetch diapers");
   }
 
-  const serverDiapers: StoredDiaperEntry[] = (data || []).map(transformDiaperFromDb);
+  const reconciled = await reconcilePulled("diapers", (data || []) as Record<string, unknown>[]);
+  const serverDiapers: StoredDiaperEntry[] = reconciled.map(transformDiaperFromDb);
   const pendingIds = getPendingCreateIds(getSyncEngine(), 'diapers');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.diapers}${babyId}`));
   const localDiapers: StoredDiaperEntry[] = localData ? JSON.parse(localData) : [];
@@ -486,7 +502,8 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
     throw new Error("Failed to fetch sleep sessions");
   }
 
-  const serverSessions: StoredSleepEntry[] = (data || []).map(transformSleepFromDb);
+  const reconciled = await reconcilePulled("sleep_sessions", (data || []) as Record<string, unknown>[]);
+  const serverSessions: StoredSleepEntry[] = reconciled.map(transformSleepFromDb);
   const pendingIds = getPendingCreateIds(getSyncEngine(), 'sleep_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.sleep}${babyId}`));
   const localSessions: StoredSleepEntry[] = localData ? JSON.parse(localData) : [];
@@ -649,7 +666,8 @@ export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPu
     throw new Error("Failed to fetch pumping sessions");
   }
 
-  const serverSessions: StoredPumpingEntry[] = (data || []).map(transformPumpingFromDb);
+  const reconciled = await reconcilePulled("pumping_sessions", (data || []) as Record<string, unknown>[]);
+  const serverSessions: StoredPumpingEntry[] = reconciled.map(transformPumpingFromDb);
   const pendingIds = getPendingCreateIds(getSyncEngine(), 'pumping_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.pumping}${babyId}`));
   const localSessions: StoredPumpingEntry[] = localData ? JSON.parse(localData) : [];
@@ -800,7 +818,8 @@ export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGro
     throw new Error("Failed to fetch growth measurements");
   }
 
-  const serverMeasurements: StoredGrowthEntry[] = (data || []).map(transformGrowthFromDb);
+  const reconciled = await reconcilePulled("growth_measurements", (data || []) as Record<string, unknown>[]);
+  const serverMeasurements: StoredGrowthEntry[] = reconciled.map(transformGrowthFromDb);
   const pendingIds = getPendingCreateIds(getSyncEngine(), 'growth_measurements');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.growth}${babyId}`));
   const localMeasurements: StoredGrowthEntry[] = localData ? JSON.parse(localData) : [];
@@ -948,7 +967,8 @@ export async function fetchTummyTimeFromDatabase(babyId: string): Promise<Stored
     throw new Error("Failed to fetch tummy time sessions");
   }
 
-  const serverSessions: StoredTummyTimeEntry[] = (data || []).map(transformTummyTimeFromDb);
+  const reconciled = await reconcilePulled("tummy_time_sessions", (data || []) as Record<string, unknown>[]);
+  const serverSessions: StoredTummyTimeEntry[] = reconciled.map(transformTummyTimeFromDb);
   const pendingIds = getPendingCreateIds(getSyncEngine(), 'tummy_time_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.tummyTime}${babyId}`));
   const localSessions: StoredTummyTimeEntry[] = localData ? JSON.parse(localData) : [];
@@ -1090,7 +1110,8 @@ export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promi
     throw new Error("Failed to fetch milestone responses");
   }
 
-  const responses: StoredMilestoneResponse[] = (data || []).map(transformMilestoneResponseFromDb);
+  const reconciled = await reconcilePulled("milestone_responses", (data || []) as Record<string, unknown>[]);
+  const responses: StoredMilestoneResponse[] = reconciled.map(transformMilestoneResponseFromDb);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.milestones}${babyId}`), JSON.stringify(responses));
   return responses;
 }
@@ -1340,7 +1361,7 @@ async function syncFeedingsForBaby(oldBabyId: string, newBabyId: string, userId:
       updated_at: feeding.updatedAt,
     };
 
-    const { error } = await supabase.from('feedings').upsert(dbRecord);
+    const { error } = await mergeRecordWrite('feedings', newId, dbRecord);
     if (error) {
       console.error('[ActivitySync] Failed to sync feeding:', feeding.id, error.message);
     }
@@ -1375,7 +1396,7 @@ async function syncDiapersForBaby(oldBabyId: string, newBabyId: string, userId: 
       created_at: diaper.createdAt,
     };
 
-    const { error } = await supabase.from('diapers').upsert(dbRecord);
+    const { error } = await mergeRecordWrite('diapers', newId, dbRecord);
     if (error) {
       console.error('[ActivitySync] Failed to sync diaper:', diaper.id, error.message);
     }
@@ -1412,7 +1433,7 @@ async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: st
       updated_at: sleep.updatedAt,
     };
 
-    const { error } = await supabase.from('sleep_sessions').upsert(dbRecord);
+    const { error } = await mergeRecordWrite('sleep_sessions', newId, dbRecord);
     if (error) {
       console.error('[ActivitySync] Failed to sync sleep:', sleep.id, error.message);
     }
@@ -1449,7 +1470,7 @@ async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: 
       created_at: pumping.createdAt,
     };
 
-    const { error } = await supabase.from('pumping_sessions').upsert(dbRecord);
+    const { error } = await mergeRecordWrite('pumping_sessions', newId, dbRecord);
     if (error) {
       console.error('[ActivitySync] Failed to sync pumping:', pumping.id, error.message);
     }
@@ -1485,7 +1506,7 @@ async function syncGrowthForBaby(oldBabyId: string, newBabyId: string, userId: s
       created_at: growth.createdAt,
     };
 
-    const { error } = await supabase.from('growth_measurements').upsert(dbRecord);
+    const { error } = await mergeRecordWrite('growth_measurements', newId, dbRecord);
     if (error) {
       console.error('[ActivitySync] Failed to sync growth:', growth.id, error.message);
     }
@@ -1520,7 +1541,7 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
       created_at: tummyTime.createdAt,
     };
 
-    const { error } = await supabase.from('tummy_time_sessions').upsert(dbRecord);
+    const { error } = await mergeRecordWrite('tummy_time_sessions', newId, dbRecord);
     if (error) {
       console.error('[ActivitySync] Failed to sync tummy time:', tummyTime.id, error.message);
     }
@@ -1550,7 +1571,8 @@ export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHea
     throw new Error("Failed to fetch health");
   }
 
-  const serverEntries: StoredHealthEntry[] = (data || []).map(transformHealthFromDb);
+  const reconciled = await reconcilePulled("health_entries", (data || []) as Record<string, unknown>[]);
+  const serverEntries: StoredHealthEntry[] = reconciled.map(transformHealthFromDb);
   const pendingIds = getPendingCreateIds(getSyncEngine(), 'health_entries');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.health}${babyId}`));
   const localEntries: StoredHealthEntry[] = localData ? JSON.parse(localData) : [];
