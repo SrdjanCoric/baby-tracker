@@ -44,28 +44,6 @@ export interface QueuedOperation {
   retryCount: number;
 }
 
-export type ConflictType =
-  | 'UPDATE_UPDATE'
-  | 'UPDATE_DELETE'
-  | 'DELETE_UPDATE'
-  | 'CREATE_CREATE';
-
-export interface ConflictScenario<T extends SyncableEntry = SyncableEntry> {
-  type: ConflictType;
-  local: T;
-  remote: T;
-  base?: T;
-  table: SyncableTable;
-}
-
-export type ResolutionStrategy = 'KEEP_LOCAL' | 'KEEP_REMOTE' | 'MERGE' | 'KEEP_BOTH';
-
-export interface ConflictResolution<T extends SyncableEntry = SyncableEntry> {
-  strategy: ResolutionStrategy;
-  resolved: T | T[];
-  conflictLogged: boolean;
-}
-
 export interface SyncQueuePersistence {
   operations: QueuedOperation[];
   version: number;

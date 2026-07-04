@@ -1,6 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
 import { SyncQueue } from './sync-queue';
-import { ConflictResolver } from './conflict-resolver';
 import {
   SyncState,
   SyncStatus,
@@ -25,7 +24,6 @@ export interface SyncAuthContext {
 
 export class SyncEngine {
   private queue: SyncQueue;
-  private conflictResolver: ConflictResolver;
   private config: SyncEngineConfig;
   private state: SyncState;
   private listeners: Set<SyncStateListener> = new Set();
@@ -40,7 +38,6 @@ export class SyncEngine {
 
   constructor(config: Partial<SyncEngineConfig> = {}) {
     this.queue = new SyncQueue();
-    this.conflictResolver = new ConflictResolver();
     this.config = { ...DEFAULT_SYNC_CONFIG, ...config };
     this.state = {
       status: 'offline',

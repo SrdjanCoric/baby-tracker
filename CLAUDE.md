@@ -37,7 +37,7 @@ npm run lint:fix             # Auto-fix lint issues
 - NativeWind v4 (Tailwind CSS for React Native)
 - Expo Router v6 (file-based routing)
 - Supabase (auth + PostgreSQL backend + Realtime)
-- Custom sync engine with offline queue and conflict resolution
+- Custom sync engine with offline queue (CRDT conflict resolution in progress)
 - i18next for internationalization (en, sr, es)
 
 ### State Management
@@ -60,12 +60,10 @@ The app uses a custom sync system with the following components:
 - `sync-engine.ts` - Main orchestrator for sync operations with auth context, queue management, and push changes
 - `real-time-sync.ts` - Supabase Realtime subscriptions for live updates between household members; uses device ID for echo filtering
 - `sync-queue.ts` - Persistent queue for offline operations with retry logic
-- `conflict-resolver.ts` - Handles sync conflicts with timestamp-based resolution
 
 **Sync Services (`src/services/`):**
 - `activity-sync-service.ts` - Syncs all activity types (feedings, sleep, diapers, etc.) to Supabase
 - `baby-sync-service.ts` - Handles baby data sync including ID remapping for local-only babies
-- `baby-storage-sync.ts` - Bridge between local baby storage and sync layer
 
 **Key Patterns:**
 - Remote changes dispatch actions like `REMOTE_INSERT`, `REMOTE_UPDATE`, `REMOTE_DELETE` to contexts

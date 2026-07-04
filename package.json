@@ -29,8 +29,6 @@
   },
   "dependencies": {
     "@bacons/apple-targets": "^4.0.0",
-    "@powersync/common": "^1.45.0",
-    "@powersync/react-native": "^1.28.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-community/netinfo": "^11.4.1",
@@ -68,7 +66,6 @@
     "react-native-draggable-flatlist": "^4.0.3",
     "react-native-gesture-handler": "^2.30.0",
     "react-native-launch-arguments": "^4.1.1",
-    "react-native-quick-sqlite": "^8.2.7",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",

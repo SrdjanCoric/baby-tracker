@@ -31,7 +31,7 @@ vi.mock('@/services/supabase', () => ({
   },
 }));
 
-describe('PowerSync Service Unavailability (EC-4)', () => {
+describe('Sync Service Unavailability (EC-4)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
