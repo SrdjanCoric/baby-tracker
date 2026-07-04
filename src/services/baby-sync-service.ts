@@ -3,6 +3,20 @@ import * as Crypto from "expo-crypto";
 import { supabase } from "./supabase";
 import { getUserScopedKey } from "./storage-prefix";
 import type { StoredBabyProfile, CreateBabyInput, UpdateBabyInput } from "./baby-storage";
+import { mergeRecordWrite } from "./sync/merge-record-write";
+import { reconcilePulled } from "./sync/crdt-sync-instance";
+
+function mapBabyRow(row: Record<string, unknown>): StoredBabyProfile {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    birthDate: (row.birth_date as string) || undefined,
+    gender: (row.gender as StoredBabyProfile["gender"]) || undefined,
+    photoUri: (row.photo_url as string) || undefined,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
+}
 
 const BABIES_KEY_BASE = "@babies";
 const SELECTED_BABY_KEY_BASE = "@selected_baby_id";
@@ -30,15 +44,8 @@ export async function fetchAndSyncHouseholdBabies(householdId: string): Promise<
     throw new Error("Failed to fetch household babies");
   }
 
-  const babies: StoredBabyProfile[] = (data || []).map((row) => ({
-    id: row.id,
-    name: row.name,
-    birthDate: row.birth_date || undefined,
-    gender: row.gender || undefined,
-    photoUri: row.photo_url || undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  const reconciled = await reconcilePulled("babies", (data || []) as Record<string, unknown>[]);
+  const babies: StoredBabyProfile[] = reconciled.map(mapBabyRow);
 
   await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
 
@@ -52,35 +59,23 @@ export async function createBabyInDatabase(
   const now = new Date().toISOString();
   const id = input.id || generateUUID();
 
-  const { data, error } = await supabase
-    .from("babies")
-    .insert({
-      id,
-      household_id: householdId,
-      name: input.name,
-      birth_date: input.birthDate?.toISOString(),
-      gender: input.gender,
-      photo_url: input.photoUri,
-      created_at: now,
-      updated_at: now,
-    })
-    .select()
-    .single();
+  const { data, error } = await mergeRecordWrite("babies", id, {
+    id,
+    household_id: householdId,
+    name: input.name,
+    birth_date: input.birthDate?.toISOString(),
+    gender: input.gender,
+    photo_url: input.photoUri,
+    created_at: now,
+    updated_at: now,
+  });
 
-  if (error) {
-    console.error("[BabySyncService] Failed to create baby:", error.message);
+  if (error || !data) {
+    console.error("[BabySyncService] Failed to create baby:", error?.message);
     throw new Error("Failed to create baby");
   }
 
-  const baby: StoredBabyProfile = {
-    id: data.id,
-    name: data.name,
-    birthDate: data.birth_date || undefined,
-    gender: data.gender || undefined,
-    photoUri: data.photo_url || undefined,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+  const baby: StoredBabyProfile = mapBabyRow(data);
 
   // Also update local storage
   const localBabies = await getLocalBabies();
@@ -104,28 +99,17 @@ export async function updateBabyInDatabase(
   if (input.gender !== undefined) updateData.gender = input.gender;
   if (input.photoUri !== undefined) updateData.photo_url = input.photoUri;
 
-  const { data, error } = await supabase
-    .from("babies")
-    .update(updateData)
-    .eq("id", id)
-    .eq("household_id", householdId)
-    .select()
-    .single();
+  const { data, error } = await mergeRecordWrite("babies", id, {
+    ...updateData,
+    household_id: householdId,
+  });
 
-  if (error) {
-    console.error("[BabySyncService] Failed to update baby:", error.message);
+  if (error || !data) {
+    console.error("[BabySyncService] Failed to update baby:", error?.message);
     return null;
   }
 
-  const baby: StoredBabyProfile = {
-    id: data.id,
-    name: data.name,
-    birthDate: data.birth_date || undefined,
-    gender: data.gender || undefined,
-    photoUri: data.photo_url || undefined,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+  const baby: StoredBabyProfile = mapBabyRow(data);
 
   // Update local storage
   const localBabies = await getLocalBabies();
@@ -231,18 +215,16 @@ export async function syncLocalBabiesToDatabase(
       idMap.set(baby.id, babyId);
     }
 
-    const { error } = await supabase
-      .from("babies")
-      .upsert({
-        id: babyId,
-        household_id: householdId,
-        name: baby.name,
-        birth_date: baby.birthDate,
-        gender: baby.gender,
-        photo_url: baby.photoUri,
-        created_at: baby.createdAt,
-        updated_at: baby.updatedAt,
-      });
+    const { error } = await mergeRecordWrite("babies", babyId, {
+      id: babyId,
+      household_id: householdId,
+      name: baby.name,
+      birth_date: baby.birthDate,
+      gender: baby.gender,
+      photo_url: baby.photoUri,
+      created_at: baby.createdAt,
+      updated_at: baby.updatedAt,
+    });
 
     if (error) {
       console.error("[BabySyncService] Failed to sync baby:", babyId, error.message);

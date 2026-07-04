@@ -6,6 +6,8 @@ import {
   OperationType,
   SyncableTable,
 } from './types';
+import { compareClocks, type FieldClocks } from './crdt';
+import { FIELD_CLOCKS_COLUMN } from './crdt-sync';
 
 const STORAGE_KEY = '@sync_queue';
 const QUEUE_VERSION = 1;
@@ -124,10 +126,25 @@ export class SyncQueue {
       const updates = sorted.filter((op) => op.type === 'UPDATE');
       if (updates.length > 1) {
         const mergedData: Record<string, unknown> = {};
+        const mergedClocks: FieldClocks = {};
         for (const update of updates) {
-          if (update.data) {
-            Object.assign(mergedData, update.data);
+          if (!update.data) continue;
+          const { [FIELD_CLOCKS_COLUMN]: clocks, ...fields } = update.data;
+          Object.assign(mergedData, fields);
+          // `field_clocks` is a nested per-field map, not a scalar column — a shallow
+          // Object.assign would drop clocks for fields the later update didn't touch.
+          // Union the maps, keeping the greater clock per field.
+          if (clocks && typeof clocks === 'object') {
+            for (const [field, clock] of Object.entries(clocks as FieldClocks)) {
+              const existing = mergedClocks[field];
+              if (existing === undefined || compareClocks(clock, existing) > 0) {
+                mergedClocks[field] = clock;
+              }
+            }
           }
+        }
+        if (Object.keys(mergedClocks).length > 0) {
+          mergedData[FIELD_CLOCKS_COLUMN] = mergedClocks;
         }
         const lastUpdate = updates[updates.length - 1];
         lastUpdate.data = mergedData;
