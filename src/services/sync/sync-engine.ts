@@ -217,15 +217,17 @@ export class SyncEngine {
 
   /**
    * Stamp an in-scope create/update with per-field HLC clocks before it is queued, so
-   * the clocks are persisted with the operation and survive a restart. Deletes drop the
-   * record's CRDT shadow. Out-of-scope tables are untouched.
+   * the clocks are persisted with the operation and survive a restart. A delete becomes a
+   * tombstone: a `deleted: true` field write stamped and merged through the same path as any
+   * edit. Out-of-scope tables are untouched.
    */
   private async stampOperation(operation: QueuedOperation): Promise<void> {
     if (!isCrdtTable(operation.table)) return;
     const crdt = await this.getCrdtSync();
 
     if (operation.type === 'DELETE') {
-      await crdt.forget(operation.table, operation.entityId);
+      const clocks = await crdt.stampWrite(operation.table, operation.entityId, { deleted: true });
+      operation.data = { deleted: true, field_clocks: clocks };
       return;
     }
     if (!operation.data) return;
@@ -320,9 +322,12 @@ export class SyncEngine {
   private async executeOperation(operation: QueuedOperation): Promise<void> {
     const { table, type, entityId, data } = operation;
 
-    // In-scope create/update writes go through the server-side merge RPC (per-field LWW),
-    // never a raw insert/update. Deletes stay hard deletes until task 0005 (tombstones).
-    if (isCrdtTable(table) && (type === 'CREATE' || type === 'UPDATE')) {
+    // In-scope writes go through the server-side merge RPC (per-field LWW), never a raw
+    // insert/update/delete. A DELETE arrives here already stamped as a `deleted: true`
+    // tombstone write by stampOperation, so it merges like any other field write. A DELETE
+    // with no data can only be a legacy op queued by a pre-tombstone binary; it falls
+    // through to the hard-delete path below (today's behavior — never worse).
+    if (isCrdtTable(table) && (type === 'CREATE' || type === 'UPDATE' || (type === 'DELETE' && data))) {
       if (!data) throw new Error(`${type} operation requires data`);
       const { field_clocks, ...record } = data;
       const { error } = await supabase.rpc('merge_record', {

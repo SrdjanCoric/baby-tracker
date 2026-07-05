@@ -15,7 +15,7 @@ import type { BreastSide } from "@/constants/activities";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
-import { RemoteChange } from "@/services/sync";
+import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 
@@ -140,10 +140,7 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
     }
 
     case "REMOTE_UPDATE": {
-      const updatedPumpings = state.pumpings.map(p =>
-        p.id === action.payload.id ? action.payload : p
-      );
-      return { ...state, pumpings: updatedPumpings };
+      return { ...state, pumpings: upsertById(state.pumpings, action.payload) };
     }
 
     case "REMOTE_DELETE": {
@@ -192,15 +189,18 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
 
+      const removeId = tombstonedId(change);
+      if (removeId) {
+        dispatch({ type: "REMOTE_DELETE", payload: removeId });
+        return;
+      }
+
       switch (change.eventType) {
         case 'INSERT':
           if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformPumpingFromRemote(change.new) });
           break;
         case 'UPDATE':
           if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformPumpingFromRemote(change.new) });
-          break;
-        case 'DELETE':
-          if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
           break;
       }
     });

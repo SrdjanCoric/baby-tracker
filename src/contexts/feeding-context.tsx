@@ -16,7 +16,7 @@ import { useBaby } from "./baby-context";
 import { computeSuggestedSide } from "@/utils/feeding-sessions";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
-import { RemoteChange } from "@/services/sync";
+import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 import type { BreastSide as LiveActivityBreastSide } from "@/services/live-activity-service";
@@ -210,10 +210,7 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
     }
 
     case "REMOTE_UPDATE": {
-      const updatedFeedings = state.feedings.map(f =>
-        f.id === action.payload.id ? action.payload : f
-      );
-      return { ...state, feedings: updatedFeedings };
+      return { ...state, feedings: upsertById(state.feedings, action.payload) };
     }
 
     case "REMOTE_DELETE": {
@@ -262,6 +259,12 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
 
+      const removeId = tombstonedId(change);
+      if (removeId) {
+        dispatch({ type: "REMOTE_DELETE", payload: removeId });
+        return;
+      }
+
       switch (change.eventType) {
         case 'INSERT':
           if (change.new) {
@@ -276,14 +279,6 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             dispatch({
               type: "REMOTE_UPDATE",
               payload: transformFeedingFromRemote(change.new),
-            });
-          }
-          break;
-        case 'DELETE':
-          if (change.old && change.old.id) {
-            dispatch({
-              type: "REMOTE_DELETE",
-              payload: change.old.id as string,
             });
           }
           break;

@@ -16,7 +16,7 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { useActiveTimers } from "./active-timers-context";
-import { RemoteChange } from "@/services/sync";
+import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock, queuePendingLockRelease } from "@/services/active-timer-service";
 import { fetchWakeWindowPreference, upsertWakeWindowPreference } from "@/services/push-token-service";
@@ -246,10 +246,7 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     }
 
     case "REMOTE_UPDATE": {
-      const updatedSleeps = state.sleeps.map(s =>
-        s.id === action.payload.id ? action.payload : s
-      );
-      return { ...state, sleeps: updatedSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
+      return { ...state, sleeps: upsertById(state.sleeps, action.payload), modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
     }
 
     case "REMOTE_DELETE": {
@@ -334,15 +331,18 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
 
+      const removeId = tombstonedId(change);
+      if (removeId) {
+        dispatch({ type: "REMOTE_DELETE", payload: removeId });
+        return;
+      }
+
       switch (change.eventType) {
         case 'INSERT':
           if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformSleepFromRemote(change.new) });
           break;
         case 'UPDATE':
           if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformSleepFromRemote(change.new) });
-          break;
-        case 'DELETE':
-          if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
           break;
       }
     });

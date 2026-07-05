@@ -104,6 +104,16 @@ function runMergeRecordTests() {
   }
 }
 
+function runTombstoneReminderTests() {
+  const file = join(ROOT, "scripts/sql/tombstone-reminder-tests.sql");
+  try {
+    const out = psql(["-f", file]);
+    return { ok: true, out };
+  } catch (err) {
+    return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
+  }
+}
+
 // Two overlapping transactions merge the same row concurrently, each editing a different field
 // with a newer clock. The advisory lock in merge_record must serialize them so neither field is
 // lost. Worker A holds the lock (pg_sleep) so B provably waits and re-reads A's committed write.
@@ -189,6 +199,17 @@ if (mr.ok) {
 } else {
   console.log(`${RED}✗ merge_record tests failed${RESET}`);
   process.stdout.write(mr.out);
+  hardFail = true;
+}
+
+console.log("");
+const tr = runTombstoneReminderTests();
+if (tr.ok) {
+  const passed = (tr.out.match(/PASS:/g) || []).length;
+  console.log(`${GREEN}✓${RESET} tombstone reminders: ${passed} assertions passed (sleep reads ignore tombstones)`);
+} else {
+  console.log(`${RED}✗ tombstone reminder tests failed${RESET}`);
+  process.stdout.write(tr.out);
   hardFail = true;
 }
 

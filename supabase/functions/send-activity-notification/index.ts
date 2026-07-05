@@ -145,6 +145,17 @@ serve(async (req) => {
       );
     }
 
+    // Deletes are CRDT tombstones: a `deleted: true` field write that lands as an UPDATE. A push
+    // is a "partner logged an activity" event — never fire it for a delete, regardless of how the
+    // Database Webhook that invokes this function is configured (INSERT vs INSERT+UPDATE).
+    if (record?.deleted === true) {
+      console.log(`Skipping activity notification for tombstoned ${table} record ${record?.id}`);
+      return new Response(
+        JSON.stringify({ skipped: "tombstoned" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!record?.baby_id || !record?.logged_by) {
       console.log("Missing baby_id or logged_by in record:", { baby_id: record?.baby_id, logged_by: record?.logged_by });
       return new Response(

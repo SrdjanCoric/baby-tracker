@@ -90,6 +90,17 @@ describe("SyncEngine CRDT stamping on enqueue", () => {
     expect(Object.keys(clocks).sort()).toEqual(["amount_ml", "baby_id", "id"]);
   });
 
+  it("stamps a deleted:true field write onto an in-scope DELETE before it is queued", async () => {
+    const engine = makeEngine();
+    const operation = op("DELETE", "feedings", "f1", null);
+    await engine.enqueueOperation(operation);
+
+    const data = operation.data as Record<string, unknown>;
+    expect(data.deleted).toBe(true);
+    const clocks = data.field_clocks as Record<string, string>;
+    expect(clocks.deleted).toBeDefined();
+  });
+
   it("does not stamp an out-of-scope table", async () => {
     const engine = makeEngine();
     const operation = op("CREATE", "active_timers", "t1", { id: "t1", baby_id: "b1" });
@@ -137,14 +148,20 @@ describe("SyncEngine CRDT push path", () => {
     expect(params.p_record.amount_ml).toBe(150);
   });
 
-  it("keeps hard delete for an in-scope DELETE (tombstones are task 0005)", async () => {
+  it("pushes an in-scope DELETE as a tombstone merge_record write, not a hard delete", async () => {
     const engine = makeEngine();
     engine.setOnlineForTesting(true);
     await engine.enqueueOperation(op("DELETE", "feedings", "f1", null));
     await engine.sync();
 
-    expect(rpc).not.toHaveBeenCalled();
-    expect(deleteEq).toHaveBeenCalledWith("id", "f1");
+    expect(deleteEq).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledTimes(1);
+    const [fn, params] = rpc.mock.calls[0];
+    expect(fn).toBe("merge_record");
+    expect(params.p_table).toBe("feedings");
+    expect(params.p_record.id).toBe("f1");
+    expect(params.p_record.deleted).toBe(true);
+    expect(params.p_field_clocks.deleted).toBeDefined();
   });
 
   it("leaves an out-of-scope CREATE on the raw insert path", async () => {

@@ -12,7 +12,7 @@ import {
 import { syncGuestActivitiesToDatabase } from "@/services/activity-sync-service";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
-import { RemoteChange } from "@/services/sync";
+import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 
 export interface BabyState {
   babies: StoredBabyProfile[];
@@ -81,14 +81,11 @@ export function babyReducer(state: BabyState, action: BabyAction): BabyState {
     }
 
     case "REMOTE_UPDATE": {
-      const updatedBabies = state.babies.map(b =>
-        b.id === action.payload.id ? action.payload : b
-      );
       const updatedSelectedBaby =
         state.selectedBaby?.id === action.payload.id
           ? action.payload
           : state.selectedBaby;
-      return { ...state, babies: updatedBabies, selectedBaby: updatedSelectedBaby };
+      return { ...state, babies: upsertById(state.babies, action.payload), selectedBaby: updatedSelectedBaby };
     }
 
     case "REMOTE_DELETE": {
@@ -145,6 +142,12 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const removeId = tombstonedId(change);
+    if (removeId) {
+      dispatch({ type: "REMOTE_DELETE", payload: removeId });
+      return;
+    }
+
     switch (change.eventType) {
       case 'INSERT':
         if (change.new) {
@@ -164,14 +167,6 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
           dispatch({
             type: "REMOTE_UPDATE",
             payload: transformBabyFromRemote(change.new),
-          });
-        }
-        break;
-      case 'DELETE':
-        if (change.old && change.old.id) {
-          dispatch({
-            type: "REMOTE_DELETE",
-            payload: change.old.id as string,
           });
         }
         break;
