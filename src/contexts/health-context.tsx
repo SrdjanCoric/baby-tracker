@@ -14,7 +14,7 @@ import {
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
-import { RemoteChange } from "@/services/sync";
+import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/constants/activities";
 import { CDC_VACCINE_SCHEDULE, getNextDoseNumber } from "@/constants/vaccine-schedule";
 import { useTranslation } from "react-i18next";
@@ -75,10 +75,7 @@ export function healthReducer(state: HealthState, action: HealthAction): HealthS
     }
 
     case "REMOTE_UPDATE": {
-      const updatedEntries = state.healthEntries.map(h =>
-        h.id === action.payload.id ? action.payload : h
-      );
-      return { ...state, healthEntries: updatedEntries };
+      return { ...state, healthEntries: upsertById(state.healthEntries, action.payload) };
     }
 
     case "REMOTE_DELETE": {
@@ -117,6 +114,12 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
 
+      const removeId = tombstonedId(change);
+      if (removeId) {
+        dispatch({ type: "REMOTE_DELETE", payload: removeId });
+        return;
+      }
+
       switch (change.eventType) {
         case 'INSERT':
           if (change.new) {
@@ -131,14 +134,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
             dispatch({
               type: "REMOTE_UPDATE",
               payload: transformHealthFromRemote(change.new),
-            });
-          }
-          break;
-        case 'DELETE':
-          if (change.old && change.old.id) {
-            dispatch({
-              type: "REMOTE_DELETE",
-              payload: change.old.id as string,
             });
           }
           break;

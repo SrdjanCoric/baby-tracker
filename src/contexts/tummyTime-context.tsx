@@ -14,7 +14,7 @@ import {
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
-import { RemoteChange } from "@/services/sync";
+import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import {
   AgeGroup,
@@ -171,10 +171,7 @@ export function tummyTimeReducer(
     }
 
     case "REMOTE_UPDATE": {
-      const updatedTummyTimes = state.tummyTimes.map(t =>
-        t.id === action.payload.id ? action.payload : t
-      );
-      return { ...state, tummyTimes: updatedTummyTimes };
+      return { ...state, tummyTimes: upsertById(state.tummyTimes, action.payload) };
     }
 
     case "REMOTE_DELETE": {
@@ -231,15 +228,18 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
 
+      const removeId = tombstonedId(change);
+      if (removeId) {
+        dispatch({ type: "REMOTE_DELETE", payload: removeId });
+        return;
+      }
+
       switch (change.eventType) {
         case 'INSERT':
           if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformTummyTimeFromRemote(change.new) });
           break;
         case 'UPDATE':
           if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformTummyTimeFromRemote(change.new) });
-          break;
-        case 'DELETE':
-          if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
           break;
       }
     });

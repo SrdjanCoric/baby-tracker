@@ -15,7 +15,7 @@ import {
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
-import { RemoteChange } from "@/services/sync";
+import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 
 export interface DiaperState {
@@ -68,10 +68,7 @@ export function diaperReducer(state: DiaperState, action: DiaperAction): DiaperS
     }
 
     case "REMOTE_UPDATE": {
-      const updatedDiapers = state.diapers.map(d =>
-        d.id === action.payload.id ? action.payload : d
-      );
-      return { ...state, diapers: updatedDiapers };
+      return { ...state, diapers: upsertById(state.diapers, action.payload) };
     }
 
     case "REMOTE_DELETE": {
@@ -108,6 +105,12 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
 
+      const removeId = tombstonedId(change);
+      if (removeId) {
+        dispatch({ type: "REMOTE_DELETE", payload: removeId });
+        return;
+      }
+
       switch (change.eventType) {
         case 'INSERT':
           if (change.new) {
@@ -122,14 +125,6 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
             dispatch({
               type: "REMOTE_UPDATE",
               payload: transformDiaperFromRemote(change.new),
-            });
-          }
-          break;
-        case 'DELETE':
-          if (change.old && change.old.id) {
-            dispatch({
-              type: "REMOTE_DELETE",
-              payload: change.old.id as string,
             });
           }
           break;

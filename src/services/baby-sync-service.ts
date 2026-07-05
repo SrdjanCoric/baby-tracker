@@ -5,6 +5,7 @@ import { getUserScopedKey } from "./storage-prefix";
 import type { StoredBabyProfile, CreateBabyInput, UpdateBabyInput } from "./baby-storage";
 import { mergeRecordWrite } from "./sync/merge-record-write";
 import { reconcilePulled } from "./sync/crdt-sync-instance";
+import { dropTombstoned } from "./sync/tombstone";
 
 function mapBabyRow(row: Record<string, unknown>): StoredBabyProfile {
   return {
@@ -45,7 +46,7 @@ export async function fetchAndSyncHouseholdBabies(householdId: string): Promise<
   }
 
   const reconciled = await reconcilePulled("babies", (data || []) as Record<string, unknown>[]);
-  const babies: StoredBabyProfile[] = reconciled.map(mapBabyRow);
+  const babies: StoredBabyProfile[] = dropTombstoned(reconciled).map(mapBabyRow);
 
   await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
 
@@ -124,22 +125,14 @@ export async function updateBabyInDatabase(
 
 export async function deleteBabyFromDatabase(
   id: string,
-  householdId: string
+  _householdId: string
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("babies")
-    .delete()
-    .eq("id", id)
-    .eq("household_id", householdId)
-    .select();
+  // Tombstone: a `deleted: true` field write merged through the CRDT RPC, not a hard delete.
+  // RLS enforces household ownership; the row is located by id.
+  const { error } = await mergeRecordWrite("babies", id, { deleted: true });
 
   if (error) {
     console.error("[BabySyncService] Failed to delete baby:", error.message);
-    return false;
-  }
-
-  const deletedCount = data?.length ?? 0;
-  if (deletedCount === 0) {
     return false;
   }
 

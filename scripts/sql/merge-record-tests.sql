@@ -269,4 +269,23 @@ BEGIN
 END $$;
 \echo 'ok: partial delta (no baby_id) merges via existing-row ownership, bumps updated_at'
 
+-- ---- 11. tombstone delete of a row the server never saw is a no-op (id + deleted, no baby_id) ----
+DO $$
+DECLARE v_result jsonb; v_count int;
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', '22222222-2222-2222-2222-222222222222')::text, true);
+  -- A delete arrives as {id, deleted:true} with no baby_id. The row was never on the server
+  -- (its CREATE was quarantined, or it was purely local), so there is nothing to tombstone.
+  v_result := merge_record('feedings',
+    jsonb_build_object('id', 'f0000000-0000-0000-0000-0000000000e1', 'deleted', true),
+    jsonb_build_object('deleted', '2026-07-04T12:00:00.000Z-0000-device-b'));
+
+  IF v_result IS NOT NULL THEN
+    RAISE EXCEPTION 'tombstone delete of a missing row should return NULL, got %', v_result;
+  END IF;
+  SELECT count(*) INTO v_count FROM feedings WHERE id = 'f0000000-0000-0000-0000-0000000000e1';
+  IF v_count <> 0 THEN RAISE EXCEPTION 'tombstone delete of a missing row must not insert a row'; END IF;
+END $$;
+\echo 'ok: tombstone delete of a non-existent row is a no-op (no throw, no insert)'
+
 ROLLBACK;

@@ -14,7 +14,7 @@ import type { AgeGroup } from "@/constants/milestones";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
-import { RemoteChange } from "@/services/sync";
+import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 
 interface MilestonesState {
   responses: StoredMilestoneResponse[];
@@ -80,10 +80,7 @@ function milestonesReducer(state: MilestonesState, action: MilestonesAction): Mi
     }
 
     case "REMOTE_UPDATE": {
-      const updated = state.responses.map((r) =>
-        r.id === action.payload.id ? action.payload : r
-      );
-      return { ...state, responses: updated };
+      return { ...state, responses: upsertById(state.responses, action.payload) };
     }
 
     case "REMOTE_DELETE":
@@ -124,15 +121,18 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
 
+      const removeId = tombstonedId(change);
+      if (removeId) {
+        dispatch({ type: "REMOTE_DELETE", payload: removeId });
+        return;
+      }
+
       switch (change.eventType) {
         case 'INSERT':
           if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformFromRemote(change.new) });
           break;
         case 'UPDATE':
           if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformFromRemote(change.new) });
-          break;
-        case 'DELETE':
-          if (change.old?.id) dispatch({ type: "REMOTE_DELETE", payload: change.old.id as string });
           break;
       }
     });

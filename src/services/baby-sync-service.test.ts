@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createBabyInDatabase, updateBabyInDatabase, fetchAndSyncHouseholdBabies } from "./baby-sync-service";
+import { createBabyInDatabase, updateBabyInDatabase, fetchAndSyncHouseholdBabies, deleteBabyFromDatabase } from "./baby-sync-service";
 import { __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
 import { __resetDeviceIdForTests } from "./sync/device-id";
 
@@ -89,6 +89,21 @@ describe("baby-sync-service CRDT writes", () => {
     expect(baby?.name).toBe("Grace");
   });
 
+  it("deletes a baby as a tombstone merge_record write, not a hard delete", async () => {
+    rpc.mockResolvedValue({ data: { id: "b1", deleted: true }, error: null });
+
+    const ok = await deleteBabyFromDatabase("b1", "h1");
+
+    expect(ok).toBe(true);
+    expect(rpc).toHaveBeenCalledTimes(1);
+    const [fn, params] = rpc.mock.calls[0];
+    expect(fn).toBe("merge_record");
+    expect(params.p_table).toBe("babies");
+    expect(params.p_record.id).toBe("b1");
+    expect(params.p_record.deleted).toBe(true);
+    expect(params.p_field_clocks.deleted).toBeDefined();
+  });
+
   it("foreground pull merges pulled babies against local edits (a stale pull can't clobber)", async () => {
     // Local edit stamps a fresh clock on the baby's name (creates a shadow).
     rpc.mockResolvedValue({ data: { id: "b1", name: "Grace", created_at: "c", updated_at: "u" }, error: null });
@@ -108,5 +123,24 @@ describe("baby-sync-service CRDT writes", () => {
 
     const babies = await fetchAndSyncHouseholdBabies("h1");
     expect(babies[0].name).toBe("Grace");
+  });
+
+  it("excludes tombstoned babies from a foreground pull", async () => {
+    selectResult.data = [
+      { id: "b1", household_id: "h1", name: "Ada", created_at: "c", updated_at: "u", field_clocks: {} },
+      {
+        id: "b2",
+        household_id: "h1",
+        name: "Deleted",
+        deleted: true,
+        created_at: "c",
+        updated_at: "u",
+        field_clocks: { deleted: "2026-07-04T00:00:00.000Z-0000-devRemote" },
+      },
+    ];
+
+    const babies = await fetchAndSyncHouseholdBabies("h1");
+
+    expect(babies.map((b) => b.id)).toEqual(["b1"]);
   });
 });

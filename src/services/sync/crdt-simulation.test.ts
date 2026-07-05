@@ -118,6 +118,29 @@ describe("replica convergence simulation", () => {
     expect(merged?.notes).toBe("v2");
   });
 
+  it("revives a record when an un-delete acts later than the delete (the other ordering)", () => {
+    const a = new Replica("device-a", 1000);
+    const b = new Replica("device-b", 1000);
+
+    a.edit("rec-1", { notes: "v1", deleted: false });
+    a.flushTo(b); // shared base
+
+    // a deletes first; b receives the tombstone, then un-deletes at a later clock.
+    a.advanceWall(10);
+    a.delete("rec-1");
+    a.flushTo(b);
+    b.advanceWall(20);
+    b.edit("rec-1", { deleted: false });
+
+    settle([a, b]);
+
+    assertConverged([a, b]);
+    // Later clock wins the `deleted` field: the un-delete revives the record on every replica.
+    const merged = a.store.get("rec-1");
+    expect(merged?.deleted).toBe(false);
+    expect(merged?.notes).toBe("v1");
+  });
+
   it("converges under arbitrary interleaved edits, deletes, and offline flushes", () => {
     fc.assert(
       fc.property(
