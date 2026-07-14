@@ -17,7 +17,6 @@ const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_LIGHT = "#A594CF";
 const SLEEP_PURPLE_MUTED = "#E8E4F0";
 const SLEEP_PURPLE_MUTED_DARK = "#2E2840";
-const SLEEP_PURPLE_DARK = "#574A7B";
 const PAUSED_AMBER = "#D4A017";
 
 export default function SleepScreen() {
@@ -41,11 +40,6 @@ export default function SleepScreen() {
     dismissMilestoneSuggestion,
     wakeWindowConfig,
   } = useSleep();
-
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const accent = isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE;
-  const mutedBg = isDark ? SLEEP_PURPLE_MUTED_DARK : SLEEP_PURPLE_MUTED;
 
   const napAlert = useTimerAlertIntegration("nap");
   const nightSleepAlert = useTimerAlertIntegration("nightSleep");

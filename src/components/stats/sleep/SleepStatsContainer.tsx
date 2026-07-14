@@ -22,7 +22,7 @@ interface SleepStatsContainerProps {
 }
 
 export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const colors = useSleepPatternColors();
   const { sleeps, activeTimer, wakeWindowConfig } = useSleep();
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;

@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /**
  * Setup Verification Script
  * Tests all configurations from Parts A-E of the setup guide

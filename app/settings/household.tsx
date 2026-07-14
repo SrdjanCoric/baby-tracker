@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Clipboard from "expo-clipboard";
 import * as Sharing from "expo-sharing";
-import { useHousehold, useAuth, useBaby } from "@/contexts";
+import { useHousehold, useAuth } from "@/contexts";
 import { formatInviteCodeForDisplay } from "@/utils/inviteCode";
 
 type HouseholdErrorKey =
@@ -32,9 +32,8 @@ const ERROR_TRANSLATIONS: Record<string, HouseholdErrorKey> = {
 export default function HouseholdSettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { household, members, isLoading, error, regenerateCode, leaveHousehold, isOwner } = useHousehold();
-  const { babies } = useBaby();
   const [isCopied, setIsCopied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);

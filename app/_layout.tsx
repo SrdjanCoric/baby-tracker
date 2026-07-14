@@ -1,6 +1,6 @@
 import "../global.css";
 import "../src/i18n";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, useRouter, useSegments } from "expo-router";
@@ -8,10 +8,8 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, DashboardConfigProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useSync, useNotifications, useWidget } from "@/contexts";
+import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, DashboardConfigProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useNotifications, useWidget } from "@/contexts";
 import { AchievementProvider } from "@/contexts/achievement-context";
-import { OfflineBanner } from "@/components/OfflineBanner";
-import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { SyncAuthGate } from "@/components/SyncAuthGate";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
@@ -165,7 +163,6 @@ function WatchMessageHandler({ children }: { children: React.ReactNode }) {
 }
 
 function DeepLinkHandler({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const hasHandledInitialUrl = useRef(false);
 
   useEffect(() => {
@@ -286,35 +283,6 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
   }, []);
 
   return <>{children}</>;
-}
-
-function OfflineBannerWrapper() {
-  const { status, pendingCount } = useSync();
-  const { isAuthenticated } = useAuth();
-  const [isDismissed, setIsDismissed] = useState(false);
-  const [prevStatus, setPrevStatus] = useState(status);
-  const isOffline = status === "offline";
-
-  // Reset dismissed state when status changes (React recommended pattern)
-  if (status !== prevStatus) {
-    setPrevStatus(status);
-    if (!isOffline) {
-      setIsDismissed(false);
-    }
-  }
-
-  // Don't show offline banner if user is not logged in
-  if (!isAuthenticated || !isOffline || isDismissed) {
-    return null;
-  }
-
-  return (
-    <OfflineBanner
-      pendingCount={pendingCount}
-      onDismiss={() => setIsDismissed(true)}
-      testID="offline-banner"
-    />
-  );
 }
 
 function AppContent() {

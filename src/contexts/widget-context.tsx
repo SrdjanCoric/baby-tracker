@@ -52,8 +52,8 @@ const ACTIVITY_TYPE_MAP: Record<TimerActivityType, ActiveTimerData["type"]> = {
 export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { feedings, activeTimer: feedingTimer, getLastFeeding } = useFeeding();
-  const { sleeps, activeTimer: sleepTimer, dailyGoalMinutes: sleepGoal, wakeWindowConfig, getCurrentNapSlot, getCompletedNapsSinceNightSleep } = useSleep();
-  const { diapers, getTodaysCounts, getLastDiaper } = useDiaper();
+  const { sleeps, activeTimer: sleepTimer, dailyGoalMinutes: sleepGoal, getCurrentNapSlot, getCompletedNapsSinceNightSleep } = useSleep();
+  const { getTodaysCounts, getLastDiaper } = useDiaper();
   const { pumpings, activeTimer: pumpingTimer } = usePumping();
   const { measurements } = useGrowth();
   const { tummyTimes, activeTimer: tummyTimeTimer, dailyGoalSeconds: tummyTimeGoalSeconds } = useTummyTime();
@@ -269,10 +269,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     sleeps,
     sleepTimer,
     sleepGoal,
-    wakeWindowConfig,
     getCurrentNapSlot,
     getCompletedNapsSinceNightSleep,
-    diapers,
     getTodaysCounts,
     getLastDiaper,
     pumpings,
@@ -389,7 +387,6 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     feedingTimer,
     sleeps,
     sleepTimer,
-    diapers,
     pumpings,
     pumpingTimer,
     measurements,

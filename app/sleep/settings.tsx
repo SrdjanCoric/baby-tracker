@@ -1,7 +1,6 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
-  Animated,
   Keyboard,
   Platform,
   Pressable,
@@ -74,14 +73,12 @@ export default function SleepSettingsScreen() {
   const [expandedSlotIndex, setExpandedSlotIndex] = useState<number | null>(null);
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [durationError, setDurationError] = useState("");
-  const [showReminderHint, setShowReminderHint] = useState(false);
   const [saveButtonFeedback, setSaveButtonFeedback] = useState(false);
   const [showUnderTwoMonthsWarning, setShowUnderTwoMonthsWarning] = useState(false);
   const [showDayStartPicker, setShowDayStartPicker] = useState(false);
   const [showNightStartPicker, setShowNightStartPicker] = useState(false);
   const [pendingDayStartHour, setPendingDayStartHour] = useState<number | null>(null);
   const [pendingNightStartHour, setPendingNightStartHour] = useState<number | null>(null);
-  const reminderHintAnim = useRef(new Animated.Value(0)).current;
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
   const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
@@ -350,16 +347,6 @@ export default function SleepSettingsScreen() {
       setTimeout(() => setSaveButtonFeedback(false), 1500);
     });
   }, [confirmHouseholdChange, wakeWindowConfig, selectedBaby?.id, setCustomWakeWindows, setWakeWindowsEnabled, syncWakeWindowPreferenceForBaby, settings.wakeWindowReminders.enabled]);
-
-  const handleReminderHintPress = useCallback(() => {
-    const toValue = showReminderHint ? 0 : 1;
-    setShowReminderHint(!showReminderHint);
-    Animated.timing(reminderHintAnim, {
-      toValue,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  }, [showReminderHint, reminderHintAnim]);
 
   const handleRequestPermissions = useCallback(async () => {
     if (permissionStatus === "denied") {

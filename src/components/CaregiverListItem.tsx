@@ -27,7 +27,6 @@ export function CaregiverListItem({
   id,
   name,
   email,
-  entryCount,
   isOwner,
   isCurrentUser,
   canRemove,

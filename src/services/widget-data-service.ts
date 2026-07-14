@@ -538,7 +538,7 @@ export async function clearPendingWidgetPauseToggle(): Promise<void> {
     if (extensionStorage) {
       await extensionStorage.set("pendingWidgetPauseToggle", "", APP_GROUP);
     }
-  } catch (_) { /* best-effort cleanup */ }
+  } catch { /* best-effort cleanup */ }
 }
 
 export async function clearPendingWidgetStop(expected?: PendingWidgetStop): Promise<void> {

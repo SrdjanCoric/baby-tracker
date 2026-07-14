@@ -35,7 +35,7 @@ export default function SignInScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { isDark } = useTheme();
-  const { signIn, signUp, signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, user, refreshUserProfile } = useAuth();
+  const { signIn, signUp, signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, refreshUserProfile } = useAuth();
 
   const [email, setEmail] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);

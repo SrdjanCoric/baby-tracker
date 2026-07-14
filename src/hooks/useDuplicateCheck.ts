@@ -8,7 +8,6 @@ import {
   checkPumpingDuplicate,
   checkGrowthDuplicate,
   checkTummyTimeDuplicate,
-  DuplicateCheckResult,
 } from '@/services/duplicate-detection';
 import { showDuplicateConfirmationAsync } from '@/components/DuplicateConfirmationDialog';
 import type { SyncedFeedingEntry } from '@/services/feeding-storage-sync';

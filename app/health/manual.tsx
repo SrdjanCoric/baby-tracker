@@ -15,8 +15,6 @@ import { COMMON_MEDICATION_KEYS, COMMON_VACCINE_KEYS, SYMPTOM_OPTIONS, MEASUREME
 import { CDC_VACCINE_SCHEDULE, getNextDoseNumber } from "@/constants/vaccine-schedule";
 import { ACTIVITY, TEXT } from "@/constants/colors";
 import { getFeverStatus, getFeverColor, QUICK_TEMPS_CELSIUS, DEFAULT_TEMP_CELSIUS, TEMP_RANGE_CELSIUS, celsiusToFahrenheit } from "@/utils/temperature";
-import { getHealthDisplayName } from "@/utils/health-display";
-
 const HEALTH_ACCENT = ACTIVITY.health.accent;
 const HEALTH_ACCENT_DARK = ACTIVITY.health.accentDark;
 
@@ -25,7 +23,7 @@ export default function ManualHealthScreen() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
-  const { addHealth, healthEntries, getCompletedVaccinations } = useHealth();
+  const { addHealth, getCompletedVaccinations } = useHealth();
   const { colorScheme } = useColorScheme();
   const { temperatureUnit } = useUnits();
   const isDark = colorScheme === "dark";

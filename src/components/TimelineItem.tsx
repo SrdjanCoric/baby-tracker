@@ -159,7 +159,7 @@ interface TimelineDayHeaderProps {
   filter?: FilterType;
 }
 
-function TimelineDayHeaderInner({ title, date, dateObj, summaryLines }: TimelineDayHeaderProps) {
+function TimelineDayHeaderInner({ title, dateObj, summaryLines }: TimelineDayHeaderProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const cardBg = isDark ? SURFACE_COLORS.dark.secondary : SURFACE_COLORS.light.secondary;

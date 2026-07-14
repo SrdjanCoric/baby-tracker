@@ -112,7 +112,7 @@ npm run test:unit            # ~1900 Vitest unit tests
 npm run test:component       # Jest component tests
 npm run test:security        # Security tests
 npm run typecheck            # TypeScript strict mode
-npm run lint                 # ESLint
+npm run lint                 # ESLint (warnings fail the quality gate)
 ```
 
 ## License

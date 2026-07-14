@@ -21,7 +21,6 @@ export function HighlightCard({
   unit,
   subtitle,
   comparisonText,
-  comparisonPositive,
 }: HighlightCardProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";

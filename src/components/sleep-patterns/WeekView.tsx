@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { Text, View, useWindowDimensions } from "react-native";
 import { formatHourValue, formatDuration } from "@/utils/time";
 import type { TimeFormat } from "@/utils/time";
@@ -31,7 +30,6 @@ export function WeekView({
   colors: SleepPatternColors;
   locale: string;
 }) {
-  const { t } = useTranslation();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const evenHours = getEvenHoursForAxis(dayStartHour);
   const chartHeight = screenHeight - 460;

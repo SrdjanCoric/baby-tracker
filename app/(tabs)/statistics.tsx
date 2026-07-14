@@ -69,9 +69,6 @@ export default function StatisticsScreen() {
   ];
 
   const activePeriod = periodByCategory[activeCategory];
-  const accentColor = isDark
-    ? CATEGORY_ACCENT[activeCategory].dark
-    : CATEGORY_ACCENT[activeCategory].light;
   const textAccentColor = isDark
     ? CATEGORY_ACCENT[activeCategory].textDark
     : CATEGORY_ACCENT[activeCategory].textLight;
