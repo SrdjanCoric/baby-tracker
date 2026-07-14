@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Modal, Pressable, View, Image } from "react-native";
 import Animated, {
   useSharedValue,

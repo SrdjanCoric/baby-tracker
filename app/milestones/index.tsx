@@ -43,10 +43,8 @@ export default function MilestonesScreen() {
     clearMilestoneState,
     getMilestoneState,
     getYesCountForAge,
-    getNotSureCountForAge,
     getTotalCountForAge,
     isAgeCompleted,
-    responses,
   } = useMilestones();
 
   const currentAgeKey = useMemo(() => {
@@ -73,11 +71,10 @@ export default function MilestonesScreen() {
     [selectedAgeKey]
   );
 
-  const yesCount = useMemo(() => getYesCountForAge(selectedAgeKey), [getYesCountForAge, selectedAgeKey, responses]);
-  const notSureCount = useMemo(() => getNotSureCountForAge(selectedAgeKey), [getNotSureCountForAge, selectedAgeKey, responses]);
+  const yesCount = useMemo(() => getYesCountForAge(selectedAgeKey), [getYesCountForAge, selectedAgeKey]);
   const totalCount = useMemo(() => getTotalCountForAge(selectedAgeKey), [getTotalCountForAge, selectedAgeKey]);
   const progress = totalCount > 0 ? Math.round((yesCount / totalCount) * 100) : 0;
-  const completed = useMemo(() => isAgeCompleted(selectedAgeKey), [isAgeCompleted, selectedAgeKey, responses]);
+  const completed = useMemo(() => isAgeCompleted(selectedAgeKey), [isAgeCompleted, selectedAgeKey]);
 
   const prevCompletedRef = useRef(completed);
   useEffect(() => {
@@ -192,7 +189,7 @@ export default function MilestonesScreen() {
           contentContainerClassName="gap-2 pb-2"
           className="mb-4"
         >
-          {AGE_GROUPS.map((group, idx) => {
+          {AGE_GROUPS.map((group) => {
             const isActive = group.key === selectedAgeKey;
             const isFuture = group.months > (selectedGroup?.months ?? 0) && group.key !== currentAgeKey;
             return (

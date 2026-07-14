@@ -585,7 +585,7 @@ export function buildDailySleepBars(
   now: Date = new Date(),
   dayStartHour: number = 6,
   dayEndHour: number = 19,
-  locale: string = "en"
+  _locale: string = "en"
 ): DailySleepBar[] {
   const cutoff = new Date(now);
   cutoff.setDate(cutoff.getDate() - days);
@@ -634,7 +634,7 @@ export function buildDailySleepBars(
 
 export function formatDateLabel(
   date: Date,
-  now: Date = new Date(),
+  _now: Date = new Date(),
   locale: string = "en"
 ): string {
   const options: Intl.DateTimeFormatOptions = {

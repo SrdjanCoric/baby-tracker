@@ -14,7 +14,6 @@ import {
   getButtonTextColor,
   getActivityButtonColor,
   type ThemeMode,
-  type ActivityColorKey,
 } from "./colors";
 
 export { SURFACE, TEXT, ACTION, BORDER, SEMANTIC, ACTIVITY, getButtonTextColor, getActivityButtonColor };

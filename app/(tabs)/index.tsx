@@ -30,7 +30,7 @@ import { getHealthDisplayName } from "@/utils/health-display";
 import { formatVolume } from "@/utils/volume";
 import { ActivityType } from "@/constants/activities";
 import { isUnderTwoMonths } from "@/utils/sleepGoals";
-import { getCurrentAgeGroupKey, AGE_GROUPS } from "@/constants/milestones";
+import { AGE_GROUPS } from "@/constants/milestones";
 
 interface CardProps {
   label: string;
@@ -75,14 +75,14 @@ export default function HomeScreen() {
   }, [isFocused, router]);
 
   const { config: dashboardConfig } = useDashboardConfig();
-  const { feedings, activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide, refreshFeedings, stopBreastfeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
-  const { sleeps, activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps, stopSleep, pauseSleep, resumeSleep, wakeWindowConfig, getCurrentNapSlot, getCompletedNapsSinceNightSleep } = useSleep();
+  const { activeTimer: feedingActiveTimer, getLastFeeding, suggestedSide, refreshFeedings, stopBreastfeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
+  const { activeTimer: sleepActiveTimer, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps, stopSleep, pauseSleep, resumeSleep, wakeWindowConfig, getCurrentNapSlot } = useSleep();
   const { diapers, getTodaysCounts, refreshDiapers } = useDiaper();
-  const { pumpings, activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide, refreshPumpings, pausePumping, resumePumping } = usePumping();
-  const { measurements, getMeasurementHistory, getWeightChange, refreshMeasurements } = useGrowth();
-  const { tummyTimes, activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
-  const { getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, isAgeCompleted, getStarsEarned, getCurrentAgeGroup, responses: milestoneResponses, refreshResponses: refreshMilestones } = useMilestones();
-  const { healthEntries, getLastHealth, refreshHealth } = useHealth();
+  const { activeTimer: pumpingActiveTimer, getLastPumping, getTodaysTotalVolume, getLastSide, refreshPumpings, pausePumping, resumePumping } = usePumping();
+  const { getMeasurementHistory, getWeightChange, refreshMeasurements } = useGrowth();
+  const { activeTimer: tummyTimeActiveTimer, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
+  const { getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, isAgeCompleted, getStarsEarned, getCurrentAgeGroup, refreshResponses: refreshMilestones } = useMilestones();
+  const { getLastHealth, refreshHealth } = useHealth();
   const { temperatureUnit, volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
   const { selectedBaby, isLoading: isBabyLoading } = useBaby();
@@ -162,11 +162,11 @@ export default function HomeScreen() {
       return "--";
     }
 
-    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastFeeding.startedAt), undefined, t) });
+    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastFeeding.startedAt), new Date(timeTick), t) });
     const typeIcon = lastFeeding.type === "breast" ? "🤱" : lastFeeding.type === "bottle" ? "🍼" : "🥣";
 
     return `${typeIcon} ${timeAgo}`;
-  }, [feedingActiveTimer, getLastFeeding, t, timeTick, feedings]);
+  }, [feedingActiveTimer, getLastFeeding, t, timeTick]);
 
   const feedingSubtitle = useMemo(() => {
     if (feedingActiveTimer?.isRunning) return undefined;
@@ -196,7 +196,7 @@ export default function HomeScreen() {
     }
 
     if (lastFeeding.type === "breast") {
-      if (hoursSince(new Date(lastFeeding.startedAt)) <= 24) {
+      if (hoursSince(new Date(lastFeeding.startedAt), new Date(timeTick)) <= 24) {
         const nextSide = suggestedSide === "left" ? L : R;
         parts.push(`${t("feeding.nextBreast")}: ${nextSide}`);
       }
@@ -213,7 +213,7 @@ export default function HomeScreen() {
     }
 
     return parts.length > 0 ? parts.join(" · ") : undefined;
-  }, [feedingActiveTimer?.isRunning, getLastFeeding, suggestedSide, t, timeTick, feedings]);
+  }, [feedingActiveTimer?.isRunning, getLastFeeding, suggestedSide, t, timeTick]);
 
 
   const isFeedingActive = feedingActiveTimer?.isRunning ?? false;
@@ -238,7 +238,7 @@ export default function HomeScreen() {
     }
 
     return progress;
-  }, [sleepActiveTimer, getTodaysTotalSleepMinutes, dailyGoalMinutes, t, sleeps]);
+  }, [sleepActiveTimer, getTodaysTotalSleepMinutes, dailyGoalMinutes, t]);
 
   const sleepSecondaryInfo = useMemo(() => {
     if (sleepActiveTimer?.isRunning) return undefined;
@@ -246,7 +246,7 @@ export default function HomeScreen() {
 
     if (!lastSleep?.endedAt) return undefined;
 
-    const awakeText = t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt), undefined, t), context: selectedBaby?.gender });
+    const awakeText = t("dashboard.awake", { time: timeSince(new Date(lastSleep.endedAt), new Date(timeTick), t), context: selectedBaby?.gender });
 
     if (!wakeWindowConfig || !wakeWindowConfig.enabled || wakeWindowConfig.source !== "custom" || wakeWindowConfig.slots.length === 0) {
       return awakeText;
@@ -256,7 +256,7 @@ export default function HomeScreen() {
     if (!currentSlot) return awakeText;
 
     const endedAt = new Date(lastSleep.endedAt);
-    const awakeMs = Date.now() - endedAt.getTime();
+    const awakeMs = timeTick - endedAt.getTime();
     const windowMs = currentSlot.durationMinutes * 60000;
     const remainingMs = windowMs - awakeMs;
     const remainingMinutes = Math.floor(remainingMs / 60000);
@@ -274,7 +274,7 @@ export default function HomeScreen() {
     }
 
     return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: formatDurationShort(0, remainingMinutes, tFn) }) : t("dashboard.napIn", { time: formatDurationShort(0, remainingMinutes, tFn) })}`;
-  }, [sleepActiveTimer, getLastSleep, t, tFn, timeTick, selectedBaby?.gender, selectedBaby?.birthDate, wakeWindowConfig, getCurrentNapSlot, sleeps]);
+  }, [sleepActiveTimer, getLastSleep, t, tFn, timeTick, selectedBaby?.gender, selectedBaby?.birthDate, wakeWindowConfig, getCurrentNapSlot]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 
@@ -300,12 +300,12 @@ export default function HomeScreen() {
     const lastDiaper = sortedDiapers[0];
     if (!lastDiaper) return undefined;
 
-    return t("dashboard.last", { time: timeSince(new Date(lastDiaper.changedAt), undefined, t) });
+    return t("dashboard.last", { time: timeSince(new Date(lastDiaper.changedAt), new Date(timeTick), t) });
   }, [diapers, t, timeTick]);
 
   const todayDiaperCounts = useMemo(() => {
     return getTodaysCounts();
-  }, [getTodaysCounts, diapers]);
+  }, [getTodaysCounts]);
 
   const pumpingTimeSince = useMemo(() => {
     if (pumpingActiveTimer?.isRunning) {
@@ -317,7 +317,7 @@ export default function HomeScreen() {
       return `${formatVolume(todayVolume, volumeUnit)} ${t("common.today").toLowerCase()}`;
     }
     return "--";
-  }, [pumpingActiveTimer, getTodaysTotalVolume, t, pumpings, volumeUnit]);
+  }, [pumpingActiveTimer, getTodaysTotalVolume, t, volumeUnit]);
 
   const pumpingSubtitle = useMemo(() => {
     if (pumpingActiveTimer?.isRunning) return undefined;
@@ -327,7 +327,7 @@ export default function HomeScreen() {
 
     if (!lastPumping) return undefined;
 
-    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastPumping.startedAt), undefined, t) });
+    const timeAgo = t("dashboard.last", { time: timeSince(new Date(lastPumping.startedAt), new Date(timeTick), t) });
     const parts: string[] = [timeAgo];
 
     if (lastSide) {
@@ -335,7 +335,7 @@ export default function HomeScreen() {
     }
 
     return parts.join(" · ");
-  }, [pumpingActiveTimer, getLastPumping, getLastSide, t, timeTick, pumpings]);
+  }, [pumpingActiveTimer, getLastPumping, getLastSide, t, timeTick]);
 
   const isPumpingActive = pumpingActiveTimer?.isRunning ?? false;
 
@@ -348,7 +348,7 @@ export default function HomeScreen() {
     const latest = withWeight[0];
     const weight = Number(latest.weightKg);
     return `${weight.toFixed(2)}kg`;
-  }, [getMeasurementHistory, measurements]);
+  }, [getMeasurementHistory]);
 
   const growthSubtitle = useMemo(() => {
     const history = getMeasurementHistory();
@@ -359,8 +359,7 @@ export default function HomeScreen() {
 
     const latestWeight = withWeight[0];
     const measuredDate = new Date(latestWeight.measuredAt);
-    const now = new Date();
-    const diffMs = now.getTime() - measuredDate.getTime();
+    const diffMs = timeTick - measuredDate.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     let timeAgo: string;
@@ -382,7 +381,7 @@ export default function HomeScreen() {
     }
 
     return timeAgo;
-  }, [getMeasurementHistory, getWeightChange, t, timeTick, measurements]);
+  }, [getMeasurementHistory, getWeightChange, t, timeTick]);
 
   const tummyTimeTimeSince = useMemo(() => {
     if (tummyTimeActiveTimer?.isRunning) {
@@ -394,7 +393,7 @@ export default function HomeScreen() {
     const totalMinutes = Math.round(totalSeconds / 60);
 
     return t("dashboard.minuteProgress", { current: totalMinutes, goal: goalMinutes });
-  }, [tummyTimeActiveTimer, getTodaysTotalSeconds, dailyGoalSeconds, t, tummyTimes]);
+  }, [tummyTimeActiveTimer, getTodaysTotalSeconds, dailyGoalSeconds, t]);
 
   const tummyTimeSecondaryInfo = useMemo(() => {
     if (tummyTimeActiveTimer?.isRunning) return undefined;
@@ -406,17 +405,17 @@ export default function HomeScreen() {
     }
 
     return undefined;
-  }, [tummyTimeActiveTimer, getTodaysSessionCount, t, tummyTimes]);
+  }, [tummyTimeActiveTimer, getTodaysSessionCount, t]);
 
   const isTummyTimeActive = tummyTimeActiveTimer?.isRunning ?? false;
 
   const tummyTimeProgress = useMemo(() => {
     return getTummyTimeDailyProgress();
-  }, [getTummyTimeDailyProgress, tummyTimes]);
+  }, [getTummyTimeDailyProgress]);
 
   const sleepProgress = useMemo(() => {
     return getSleepDailyProgress();
-  }, [getSleepDailyProgress, sleeps]);
+  }, [getSleepDailyProgress]);
 
   const handleAddFeeding = useCallback(() => {
     safeNavigate("/feeding");
@@ -486,8 +485,8 @@ export default function HomeScreen() {
     const lastHealth = getLastHealth();
     if (!lastHealth) return "--";
 
-    return t("dashboard.last", { time: timeSince(new Date(lastHealth.loggedAt), undefined, t) });
-  }, [getLastHealth, t, timeTick, healthEntries]);
+    return t("dashboard.last", { time: timeSince(new Date(lastHealth.loggedAt), new Date(timeTick), t) });
+  }, [getLastHealth, t, timeTick]);
 
   const healthSubtitle = useMemo(() => {
     const lastHealth = getLastHealth();
@@ -527,7 +526,7 @@ export default function HomeScreen() {
       default:
         return undefined;
     }
-  }, [getLastHealth, t, temperatureUnit, volumeUnit, timeTick, healthEntries]);
+  }, [getLastHealth, t, temperatureUnit]);
 
 
 
@@ -789,7 +788,7 @@ export default function HomeScreen() {
       actionLabel: "+",
       progress,
     };
-  }, [t, getCurrentAgeGroup, getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, getStarsEarned, isAgeCompleted, handleMilestonesPress, milestoneResponses]);
+  }, [t, getCurrentAgeGroup, getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, getStarsEarned, isAgeCompleted, handleMilestonesPress]);
 
   const healthCardProps = useMemo((): CardProps => {
     return {

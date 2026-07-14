@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
 import { useFeeding, useUnits } from "@/contexts";
 import { formatVolume } from "@/utils/volume";
-import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS, BORDER } from "@/constants/colors";
+import { SURFACE, TEXT as TEXT_COLORS, BORDER } from "@/constants/colors";
 import { StatsMetricCard } from "../StatsMetricCard";
 import { BreastBalanceBar } from "../BreastBalanceBar";
 import {

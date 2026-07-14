@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   checkFeedingDuplicate,
   checkSleepDuplicate,
@@ -7,8 +7,6 @@ import {
   checkGrowthDuplicate,
   checkTummyTimeDuplicate,
   DUPLICATE_THRESHOLDS,
-  DuplicateCheckResult,
-  DuplicateCheckOptions,
 } from './duplicate-detection';
 import type { SyncedFeedingEntry } from './feeding-storage-sync';
 import type { SyncedSleepEntry } from './sleep-storage-sync';

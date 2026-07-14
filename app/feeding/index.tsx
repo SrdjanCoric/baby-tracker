@@ -11,14 +11,13 @@ import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { getLastFeedingType, feedingTypeToTab } from "@/utils/feeding";
 import { COMMON_FOODS } from "@/constants/foods";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
-import { ACTIVITY, SURFACE, TEXT } from "@/constants/colors";
+import { ACTIVITY, TEXT } from "@/constants/colors";
 import { useColorScheme } from "nativewind";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 
 const FEEDING_GREEN = ACTIVITY.feeding.accent;
 const FEEDING_GREEN_LIGHT = ACTIVITY.feeding.accentDark;
 const FEEDING_GREEN_BUTTON_DARK = ACTIVITY.feeding.buttonDark;
-const FEEDING_GREEN_MUTED = ACTIVITY.feeding.muted;
 
 type FeedingTab = "breast" | "bottle" | "solids";
 
@@ -297,7 +296,7 @@ interface BreastfeedingFormProps {
   secondaryBg: string;
 }
 
-function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, buttonBgColor, mutedBg, secondaryBg }: BreastfeedingFormProps) {
+function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, buttonBgColor, secondaryBg }: BreastfeedingFormProps) {
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -922,7 +921,7 @@ interface ContentTypeButtonProps {
   testID?: string;
 }
 
-function ContentTypeButton({ label, emoji, isSelected, onPress, accentColor, buttonBgColor, secondaryBg, textColor, testID }: ContentTypeButtonProps) {
+function ContentTypeButton({ label, emoji, isSelected, onPress, buttonBgColor, secondaryBg, textColor, testID }: ContentTypeButtonProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -1217,7 +1216,7 @@ interface ReactionButtonProps {
   textColor: string;
 }
 
-function ReactionButton({ emoji, label, isSelected, onPress, accentColor, buttonBgColor, secondaryBg, textColor }: ReactionButtonProps) {
+function ReactionButton({ emoji, label, isSelected, onPress, buttonBgColor, secondaryBg, textColor }: ReactionButtonProps) {
   return (
     <Pressable
       onPress={onPress}

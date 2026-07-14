@@ -348,7 +348,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: new Error("Apple Sign-In: No identity token received") };
       }
 
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const { error } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: credential.identityToken,
       });
