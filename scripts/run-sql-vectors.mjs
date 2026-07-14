@@ -176,6 +176,69 @@ async function runConcurrencyTest() {
   }
 }
 
+function idempotencyWorker(value, clock, sleepSeconds) {
+  const claims = JSON.stringify({ sub: CC.user });
+  const record = JSON.stringify({
+    id: CC.feeding,
+    baby_id: CC.baby,
+    notes: value,
+  }).replaceAll("'", "''");
+  const clocks = JSON.stringify({ notes: clock }).replaceAll("'", "''");
+  const sql =
+    `BEGIN;` +
+    `SELECT set_config('request.jwt.claims', '${claims.replaceAll("'", "''")}', true);` +
+    `SELECT merge_record('feedings', '${record}'::jsonb, '${clocks}'::jsonb, ` +
+    `'concurrent-same-operation', '${CC.user}'::uuid);` +
+    `SELECT pg_sleep(${sleepSeconds});` +
+    `COMMIT;`;
+  return execFileAsync("psql", [DB_URL, "-v", "ON_ERROR_STOP=1", "-q", "-c", sql]);
+}
+
+async function runIdempotencyConcurrencyTest() {
+  const seed = `
+    INSERT INTO auth.users (id, email) VALUES ('${CC.user}', 'cc@test.dev') ON CONFLICT (id) DO NOTHING;
+    INSERT INTO babies (id, household_id, name)
+      SELECT '${CC.baby}', household_id, 'CC Baby' FROM users WHERE id = '${CC.user}'
+      ON CONFLICT (id) DO NOTHING;
+    INSERT INTO feedings (id, baby_id, type, started_at)
+      VALUES ('${CC.feeding}', '${CC.baby}', 'bottle', '2026-07-04T10:00:00Z')
+      ON CONFLICT (id) DO NOTHING;
+    DELETE FROM sync_operation_acknowledgements
+      WHERE user_id = '${CC.user}' AND operation_id = 'concurrent-same-operation';`;
+  const cleanup = `
+    DELETE FROM sync_operation_acknowledgements
+      WHERE user_id = '${CC.user}' AND operation_id = 'concurrent-same-operation';
+    DELETE FROM feedings WHERE id = '${CC.feeding}';
+    DELETE FROM babies WHERE id = '${CC.baby}';
+    DELETE FROM auth.users WHERE id = '${CC.user}';`;
+
+  psql(["-c", seed]);
+  try {
+    await Promise.all([
+      idempotencyWorker("same-op-A", "2026-07-04T10:06:00.000Z-0000-device-a", 0.4),
+      idempotencyWorker("same-op-B", "2026-07-04T10:07:00.000Z-0000-device-b", 0),
+    ]);
+    const row = psql([
+      "-A",
+      "-t",
+      "-F",
+      "\t",
+      "-c",
+      `SELECT f.notes, count(a.operation_id)
+       FROM feedings f
+       LEFT JOIN sync_operation_acknowledgements a
+         ON a.user_id = '${CC.user}' AND a.operation_id = 'concurrent-same-operation'
+       WHERE f.id = '${CC.feeding}'
+       GROUP BY f.notes`,
+    ]).trim();
+    const [notes, count] = row.split("\t");
+    const ok = ["same-op-A", "same-op-B"].includes(notes) && Number(count) === 1;
+    return { ok, detail: `notes=${notes} acknowledgements=${count}` };
+  } finally {
+    psql(["-c", cleanup]);
+  }
+}
+
 console.log(`Running CRDT SQL vectors against ${DB_URL}\n`);
 
 let hardFail = false;
@@ -224,6 +287,20 @@ try {
   }
 } catch (err) {
   console.log(`${RED}✗ concurrency test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`);
+  hardFail = true;
+}
+
+console.log("");
+try {
+  const replay = await runIdempotencyConcurrencyTest();
+  if (replay.ok) {
+    console.log(`${GREEN}✓${RESET} idempotency concurrency: same-id replays apply once (${replay.detail})`);
+  } else {
+    console.log(`${RED}✗ idempotency concurrency: same-id replay was not atomic (${replay.detail})${RESET}`);
+    hardFail = true;
+  }
+} catch (err) {
+  console.log(`${RED}✗ idempotency concurrency test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`);
   hardFail = true;
 }
 

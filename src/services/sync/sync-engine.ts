@@ -1,4 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SyncQueue } from './sync-queue';
 import {
   SyncState,
@@ -7,11 +8,13 @@ import {
   DEFAULT_SYNC_CONFIG,
   SyncEngineConfig,
   SyncableTable,
+  SyncOperationOwner,
+  LocalStorageMutation,
 } from './types';
 import { supabase } from '../supabase';
 import { isCrdtTable } from './crdt-sync';
 import { getCrdtSync } from './crdt-sync-instance';
-import type { FieldClocks } from './crdt';
+import type { ClockedRecord, FieldClocks } from './crdt';
 
 type SyncStateListener = (state: SyncState) => void;
 
@@ -20,11 +23,18 @@ type SyncStateListener = (state: SyncState) => void;
 interface CrdtCoordinator {
   stampWrite(table: SyncableTable, entityId: string, data: Record<string, unknown>): Promise<FieldClocks>;
   forget(table: SyncableTable, entityId: string): Promise<void>;
+  getShadow(table: SyncableTable, entityId: string): Promise<ClockedRecord | null>;
+  restoreShadow(table: SyncableTable, entityId: string, shadow: ClockedRecord | null): Promise<void>;
 }
 
 interface ValidationResult {
   valid: boolean;
   errors: string[];
+}
+
+interface AuthRun {
+  context: SyncAuthContext;
+  epoch: number;
 }
 
 const VALID_OPERATION_TYPES = new Set(['CREATE', 'UPDATE', 'DELETE']);
@@ -46,10 +56,7 @@ const VALID_SYNCABLE_TABLES = new Set<SyncableTable>([
   'achievements',
 ]);
 
-export interface SyncAuthContext {
-  householdId: string;
-  userId: string;
-}
+export type SyncAuthContext = SyncOperationOwner;
 
 export class SyncEngine {
   private queue: SyncQueue;
@@ -61,10 +68,16 @@ export class SyncEngine {
   private quarantined: QueuedOperation[] = [];
   private processedOperationIds: Set<string> = new Set();
   private authContext: SyncAuthContext | null = null;
+  private authEpoch = 0;
   private isSyncing = false;
   private pendingSync = false;
   private activeSyncPromise: Promise<void> | null = null;
   private crdtSync: CrdtCoordinator | null = null;
+  private enqueueChain: Promise<void> = Promise.resolve();
+  private queuePersistenceChain: Promise<void> = Promise.resolve();
+  private ownerBindingsInProgress = new Set<string>();
+  private legacyOwnerMigrationError: Error | null = null;
+  private pullReadiness: Promise<void> = Promise.resolve();
 
   constructor(config: Partial<SyncEngineConfig> = {}) {
     this.queue = new SyncQueue();
@@ -79,13 +92,20 @@ export class SyncEngine {
   }
 
   setAuthContext(context: SyncAuthContext): void {
+    if (!this.authContext || !this.sameAuthContext(this.authContext, context)) {
+      this.authEpoch += 1;
+    }
     this.authContext = context;
+    this.scheduleLegacyOwnerMigration();
     if (this.state.isConnected && this.queue.getCount() > 0) {
       void this.handleNetworkChange(true);
     }
   }
 
   clearAuthContext(): void {
+    if (this.authContext) {
+      this.authEpoch += 1;
+    }
     this.authContext = null;
   }
 
@@ -115,6 +135,15 @@ export class SyncEngine {
 
   async initialize(): Promise<void> {
     await this.queue.restore();
+    await this.resolvePreparedLocalMutations();
+    if (this.authContext) {
+      await this.migrateLegacyOperationOwners(this.captureAuthRun());
+    }
+    for (const operation of this.queue.getAll()) {
+      if (!operation.localMutation || operation.localMutation.state === 'committed') {
+        this.processedOperationIds.add(operation.id);
+      }
+    }
     this.updateState({ pendingCount: this.queue.getCount() });
 
     let isOnline = false;
@@ -165,9 +194,15 @@ export class SyncEngine {
   }
 
   async sync(): Promise<void> {
+    await this.enqueueChain;
+    if (this.legacyOwnerMigrationError) {
+      throw this.legacyOwnerMigrationError;
+    }
     if (!this.state.isConnected || !this.authContext) {
       return;
     }
+
+    const authRun = this.captureAuthRun();
 
     if (this.isSyncing) {
       this.pendingSync = true;
@@ -187,8 +222,10 @@ export class SyncEngine {
       try {
         while (retryCount < maxRetries) {
           try {
+            this.assertAuthRun(authRun);
             await this.pullChanges();
-            await this.pushChanges();
+            this.assertAuthRun(authRun);
+            await this.pushChanges(authRun);
 
             this.updateState({
               status: 'online',
@@ -231,7 +268,35 @@ export class SyncEngine {
   }
 
   async enqueueOperation(operation: QueuedOperation): Promise<void> {
-    const authContext = this.ensureAuthContext();
+    const authRun = this.captureAuthRun();
+    this.bindOperationOwner(operation, authRun.context);
+    const enqueue = this.enqueueChain.then(() => this.enqueueOperationLocked(operation, authRun));
+    this.enqueueChain = enqueue.catch(() => {});
+    return enqueue;
+  }
+
+  async enqueueOperationWithLocalMutation(
+    operation: QueuedOperation,
+    mutation: Omit<LocalStorageMutation, 'state' | 'previousShadow'>
+  ): Promise<void> {
+    const authRun = this.captureAuthRun();
+    this.bindOperationOwner(operation, authRun.context);
+    const enqueue = this.enqueueChain.then(() => this.enqueueOperationLocked(
+      operation,
+      authRun,
+      mutation
+    ));
+    this.enqueueChain = enqueue.catch(() => {});
+    return enqueue;
+  }
+
+  private async enqueueOperationLocked(
+    operation: QueuedOperation,
+    authRun: AuthRun,
+    localMutation?: Omit<LocalStorageMutation, 'state' | 'previousShadow'>
+  ): Promise<void> {
+    this.assertAuthRun(authRun);
+    const authContext = authRun.context;
 
     if (!operation.id) {
       operation.id = this.generateOperationId();
@@ -250,12 +315,22 @@ export class SyncEngine {
       throw new Error('Cannot enqueue operation for a different household');
     }
 
-    await this.stampOperation(operation);
-
-    await this.queue.enqueue(operation);
+    const previousShadow = await this.getPreviousShadow(operation);
     try {
-      await this.persistQueueWithRetry();
+      await this.stampOperation(operation);
+      this.assertAuthRun(authRun);
+      if (localMutation) {
+        operation.localMutation = {
+          ...localMutation,
+          state: 'prepared',
+          previousShadow,
+        };
+      }
+      await this.queue.enqueue(operation);
+      await this.persistQueueSerialized();
     } catch (error) {
+      this.queue.remove(operation.id);
+      await this.restorePreviousShadow(operation, previousShadow);
       this.updateState({
         status: 'error',
         error: 'Failed to persist sync queue',
@@ -263,12 +338,149 @@ export class SyncEngine {
       });
       throw error;
     }
+
+    if (operation.localMutation) {
+      try {
+        this.assertAuthRun(authRun);
+        await AsyncStorage.setItem(
+          operation.localMutation.key,
+          operation.localMutation.nextValue
+        );
+      } catch (error) {
+        this.queue.remove(operation.id);
+        try {
+          await this.persistQueueSerialized();
+        } catch (cleanupError) {
+          console.error(
+            '[SyncEngine] Failed to remove an unapplied prepared operation from durable storage:',
+            cleanupError instanceof Error ? cleanupError.message : 'Unknown error'
+          );
+        }
+        await this.restorePreviousShadow(operation, previousShadow);
+        this.updateState({ pendingCount: this.queue.getCount() });
+        throw error;
+      }
+
+      operation.localMutation.state = 'committed';
+      try {
+        await this.persistQueueSerialized();
+      } catch (error) {
+        console.warn(
+          '[SyncEngine] Local mutation committed with a durable prepared queue record; restart will finalize it:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+      }
+    }
+
     this.processedOperationIds.add(operation.id);
     this.updateState({ pendingCount: this.queue.getCount() });
 
     if (this.state.isConnected) {
       this.handleNetworkChange(true);
     }
+  }
+
+  private bindOperationOwner(operation: QueuedOperation, authContext: SyncAuthContext): void {
+    if (operation.owner && !this.isOwnedByAuthContext(operation, authContext)) {
+      throw new Error('Cannot enqueue an operation owned by a different authenticated user');
+    }
+    operation.owner = { ...authContext };
+  }
+
+  private captureAuthRun(): AuthRun {
+    return {
+      context: { ...this.ensureAuthContext() },
+      epoch: this.authEpoch,
+    };
+  }
+
+  private assertAuthRun(authRun: AuthRun): void {
+    if (
+      this.authEpoch !== authRun.epoch
+      || !this.authContext
+      || !this.sameAuthContext(this.authContext, authRun.context)
+    ) {
+      throw new Error('Sync authentication context changed during operation');
+    }
+  }
+
+  private sameAuthContext(left: SyncAuthContext, right: SyncAuthContext): boolean {
+    return left.householdId === right.householdId && left.userId === right.userId;
+  }
+
+  private scheduleLegacyOwnerMigration(): void {
+    if (!this.authContext || this.queue.getCount() === 0) return;
+    const authRun = this.captureAuthRun();
+    const migration = this.enqueueChain.then(() => this.migrateLegacyOperationOwners(authRun));
+    this.enqueueChain = migration.catch(() => {});
+    this.pullReadiness = migration;
+    void migration.catch((error) => {
+      this.legacyOwnerMigrationError = error instanceof Error
+        ? error
+        : new Error('Failed to migrate legacy sync operation ownership');
+      this.updateState({
+        status: 'error',
+        error: this.legacyOwnerMigrationError.message,
+      });
+    });
+  }
+
+  private async migrateLegacyOperationOwners(authRun: AuthRun): Promise<void> {
+    this.assertAuthRun(authRun);
+    const operationsToBind: QueuedOperation[] = [];
+    for (const operation of this.queue.getAll()) {
+      if (operation.owner) continue;
+      const attributedUserId = await this.inferLegacyOperationUserId(operation);
+      this.assertAuthRun(authRun);
+      if (attributedUserId === authRun.context.userId) {
+        operationsToBind.push(operation);
+      }
+    }
+    if (operationsToBind.length === 0) {
+      this.legacyOwnerMigrationError = null;
+      return;
+    }
+
+    for (const operation of operationsToBind) {
+      this.ownerBindingsInProgress.add(operation.id);
+      operation.owner = { ...authRun.context };
+    }
+    try {
+      await this.persistQueueSerialized();
+      this.legacyOwnerMigrationError = null;
+    } catch (error) {
+      for (const operation of operationsToBind) {
+        operation.owner = undefined;
+      }
+      throw error;
+    } finally {
+      for (const operation of operationsToBind) {
+        this.ownerBindingsInProgress.delete(operation.id);
+      }
+    }
+  }
+
+  private async inferLegacyOperationUserId(operation: QueuedOperation): Promise<string | null> {
+    const directUserId = this.readAttributedUserId(operation.data);
+    if (directUserId) return directUserId;
+    if (!isCrdtTable(operation.table)) return null;
+
+    const shadow = await (await this.getCrdtSync()).getShadow(
+      operation.table,
+      operation.entityId
+    );
+    return this.readAttributedUserId(shadow);
+  }
+
+  private readAttributedUserId(data: Record<string, unknown> | null): string | null {
+    if (!data) return null;
+    for (const field of ['logged_by', 'responded_by', 'detected_by']) {
+      const value = data[field];
+      if (typeof value === 'string' && value.length > 0) {
+        return value;
+      }
+    }
+    return null;
   }
 
   /**
@@ -292,6 +504,56 @@ export class SyncEngine {
     operation.data = { ...operation.data, field_clocks: clocks };
   }
 
+  private async getPreviousShadow(
+    operation: QueuedOperation
+  ): Promise<ClockedRecord | null | undefined> {
+    if (!isCrdtTable(operation.table)) return undefined;
+    const crdt = await this.getCrdtSync();
+    return crdt.getShadow(operation.table, operation.entityId);
+  }
+
+  private async restorePreviousShadow(
+    operation: QueuedOperation,
+    previousShadow: ClockedRecord | null | undefined
+  ): Promise<void> {
+    if (previousShadow === undefined || !isCrdtTable(operation.table)) return;
+    const crdt = await this.getCrdtSync();
+    await crdt.restoreShadow(operation.table, operation.entityId, previousShadow);
+  }
+
+  private async resolvePreparedLocalMutations(): Promise<void> {
+    let changed = false;
+    for (const operation of this.queue.getAll()) {
+      const mutation = operation.localMutation;
+      if (!mutation || mutation.state === 'committed') continue;
+
+      const currentValue = await AsyncStorage.getItem(mutation.key);
+      if (currentValue === mutation.nextValue) {
+        mutation.state = 'committed';
+        changed = true;
+        continue;
+      }
+      if (currentValue === mutation.previousValue) {
+        this.queue.remove(operation.id);
+        await this.restorePreviousShadow(operation, mutation.previousShadow);
+        changed = true;
+        continue;
+      }
+      throw new Error('Cannot resolve prepared local mutation from storage state');
+    }
+
+    if (changed) {
+      try {
+        await this.persistQueueSerialized();
+      } catch (error) {
+        console.warn(
+          '[SyncEngine] Prepared local mutation was resolved in memory but could not be checkpointed:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+      }
+    }
+  }
+
   private async persistQueueWithRetry(): Promise<void> {
     const maxAttempts = Math.max(1, Math.min(this.config.maxRetries, 3));
     let attempt = 0;
@@ -308,6 +570,12 @@ export class SyncEngine {
         await this.delay(Math.min(this.queue.calculateBackoff(attempt), 250));
       }
     }
+  }
+
+  private async persistQueueSerialized(): Promise<void> {
+    const persistence = this.queuePersistenceChain.then(() => this.persistQueueWithRetry());
+    this.queuePersistenceChain = persistence.catch(() => {});
+    return persistence;
   }
 
   private generateOperationId(): string {
@@ -366,7 +634,7 @@ export class SyncEngine {
   async quarantineOperation(operation: QueuedOperation): Promise<void> {
     this.quarantined.push(operation);
     this.queue.remove(operation.id);
-    await this.persistQueueWithRetry();
+    await this.persistQueueSerialized();
   }
 
   getQuarantinedOperations(): QueuedOperation[] {
@@ -377,11 +645,24 @@ export class SyncEngine {
     return [];
   }
 
-  private async pushChanges(): Promise<void> {
+  async waitUntilReadyForPull(): Promise<void> {
+    await this.pullReadiness;
+    if (this.legacyOwnerMigrationError) {
+      throw this.legacyOwnerMigrationError;
+    }
+  }
+
+  private async pushChanges(authRun: AuthRun): Promise<void> {
     const batches = this.queue.getBatches(this.config.batchSize);
 
     for (const batch of batches) {
       for (const operation of batch) {
+        if (!this.isOperationCommitted(operation)) {
+          continue;
+        }
+        if (!this.isOwnedByAuthContext(operation, authRun.context)) {
+          continue;
+        }
         const validation = this.validateOperation(operation);
         if (!validation.valid) {
           await this.quarantineOperation(operation);
@@ -389,23 +670,26 @@ export class SyncEngine {
         }
 
         try {
-          await this.executeOperation(operation);
+          this.assertAuthRun(authRun);
+          await this.executeOperation(operation, authRun);
+          this.assertAuthRun(authRun);
           this.queue.remove(operation.id);
         } catch (error) {
           this.queue.markRetry(operation.id);
-          await this.persistQueueWithRetry();
+          await this.persistQueueSerialized();
           this.updateState({ pendingCount: this.queue.getCount() });
           throw error;
         }
       }
     }
 
-    await this.persistQueueWithRetry();
+    await this.persistQueueSerialized();
     this.updateState({ pendingCount: this.queue.getCount() });
   }
 
-  private async executeOperation(operation: QueuedOperation): Promise<void> {
+  private async executeOperation(operation: QueuedOperation, authRun: AuthRun): Promise<void> {
     const { table, type, entityId, data } = operation;
+    this.assertAuthRun(authRun);
 
     // In-scope writes go through the server-side merge RPC (per-field LWW), never a raw
     // insert/update/delete. A DELETE arrives here already stamped as a `deleted: true`
@@ -419,6 +703,8 @@ export class SyncEngine {
         p_table: table,
         p_record: { id: entityId, ...record },
         p_field_clocks: (field_clocks as FieldClocks | undefined) ?? {},
+        p_operation_id: operation.id,
+        p_expected_user_id: authRun.context.userId,
       });
       if (error) {
         throw new Error(`Failed to merge ${table}: ${error.message}`);
@@ -509,11 +795,35 @@ export class SyncEngine {
   getPendingEntityOperations(table: SyncableTable): Map<string, QueuedOperation['type']> {
     const operations = new Map<string, QueuedOperation['type']>();
     for (const operation of this.queue.getAll()) {
-      if (operation.table === table && this.validateOperation(operation).valid) {
+      if (
+        operation.table === table
+        && this.validateOperation(operation).valid
+        && this.isOperationCommitted(operation)
+        && this.isOwnedByCurrentAuth(operation)
+      ) {
         operations.set(operation.entityId, operation.type);
       }
     }
     return operations;
+  }
+
+  private isOwnedByCurrentAuth(operation: QueuedOperation): boolean {
+    return this.authContext !== null
+      && !this.ownerBindingsInProgress.has(operation.id)
+      && this.isOwnedByAuthContext(operation, this.authContext);
+  }
+
+  private isOwnedByAuthContext(
+    operation: QueuedOperation,
+    authContext: SyncAuthContext
+  ): boolean {
+    return operation.owner?.householdId === authContext.householdId
+      && operation.owner.userId === authContext.userId;
+  }
+
+  private isOperationCommitted(operation: QueuedOperation): boolean {
+    return operation.localMutation?.state === 'committed'
+      || (!operation.localMutation && this.processedOperationIds.has(operation.id));
   }
 
   getLastSyncedAt(): string | null {

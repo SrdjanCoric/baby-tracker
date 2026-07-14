@@ -163,6 +163,19 @@ export class CrdtSync {
   async getShadow(table: SyncableTable, entityId: string): Promise<ClockedRecord | null> {
     return this.shadowStore.get(shadowKey(table, entityId));
   }
+
+  async restoreShadow(
+    table: SyncableTable,
+    entityId: string,
+    shadow: ClockedRecord | null
+  ): Promise<void> {
+    const key = shadowKey(table, entityId);
+    if (shadow) {
+      await this.shadowStore.set(key, shadow);
+    } else {
+      await this.shadowStore.delete(key);
+    }
+  }
 }
 
 /** A remote row change as emitted by the Realtime layer (or a foreground pull). */

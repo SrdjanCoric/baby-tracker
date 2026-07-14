@@ -3,7 +3,7 @@ import * as Crypto from "expo-crypto";
 import { supabase } from "./supabase";
 import { getUserScopedKey } from "./storage-prefix";
 import { getSyncEngine } from "@/contexts/sync-context";
-import type { OperationType, SyncableTable } from "./sync/types";
+import type { LocalStorageMutation, OperationType, SyncableTable } from "./sync/types";
 import { reconcilePulled } from "./sync/crdt-sync-instance";
 import { dropTombstoned } from "./sync/tombstone";
 import type { StoredFeedingEntry, CreateFeedingInput, UpdateFeedingInput } from "./feeding-storage";
@@ -17,11 +17,12 @@ import type { StoredHealthEntry, CreateHealthInput, UpdateHealthInput } from "./
 import type { AchievementId } from "./achievement-detection";
 import type { SyncEngine } from "./sync/sync-engine";
 
-function getPendingEntityOperations(
+async function getPendingEntityOperations(
   engine: SyncEngine | null,
   table: SyncableTable
-): Map<string, OperationType> {
+): Promise<Map<string, OperationType>> {
   if (!engine) return new Map();
+  await engine.waitUntilReadyForPull();
   return engine.getPendingEntityOperations(table);
 }
 
@@ -64,6 +65,35 @@ function withStorageLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
   return next;
 }
 
+type ActivityQueueOperation = {
+  type: OperationType;
+  table: SyncableTable;
+  entityId: string;
+  data: Record<string, unknown> | null;
+};
+
+type LocalMutationInput = Omit<LocalStorageMutation, 'state' | 'previousShadow'>;
+type DurableQueueCommit = (mutation: LocalMutationInput) => Promise<void>;
+
+async function updateLocalCollection<T>(
+  key: string,
+  updater: (entries: T[]) => T[],
+  queueCommit?: DurableQueueCommit
+): Promise<void> {
+  await withStorageLock(key, async () => {
+    const previousData = await AsyncStorage.getItem(key);
+    const entries = previousData ? (JSON.parse(previousData) as T[]) : [];
+    const nextData = JSON.stringify(updater(entries));
+
+    if (!queueCommit) {
+      await AsyncStorage.setItem(key, nextData);
+      return;
+    }
+
+    await queueCommit({ key, previousValue: previousData, nextValue: nextData });
+  });
+}
+
 const KEYS = {
   feedings: "@feedings:",
   diapers: "@diapers:",
@@ -99,24 +129,23 @@ async function ensureUUID(id: string, namespace: SyncableTable): Promise<string>
 }
 
 async function queueSyncOperation(
-  operation: {
-    type: OperationType;
-    table: SyncableTable;
-    entityId: string;
-    data: Record<string, unknown> | null;
-  },
-  requireAuthenticatedQueue = false
+  operation: ActivityQueueOperation,
+  queueRequirement: 'when-authenticated' | 'required' = 'when-authenticated',
+  localMutation?: LocalMutationInput
 ): Promise<void> {
   const engine = getSyncEngine();
   if (!engine?.getAuthContext()) {
-    if (requireAuthenticatedQueue) {
-      throw new Error('Authenticated sync queue is not ready');
+    if (queueRequirement === 'required') {
+        throw new Error('Authenticated sync queue is not ready');
+    }
+    if (localMutation) {
+      await AsyncStorage.setItem(localMutation.key, localMutation.nextValue);
     }
     return;
   }
 
   try {
-    await engine.enqueueOperation({
+    const queuedOperation = {
       id: '',
       type: operation.type,
       table: operation.table,
@@ -124,21 +153,43 @@ async function queueSyncOperation(
       data: operation.data,
       timestamp: new Date().toISOString(),
       retryCount: 0,
-    });
+    };
+    if (localMutation) {
+      await engine.enqueueOperationWithLocalMutation(queuedOperation, localMutation);
+    } else {
+      await engine.enqueueOperation(queuedOperation);
+    }
   } catch (error) {
     console.error(
       '[ActivitySync] Failed to persist activity operation in the sync queue:',
       error instanceof Error ? error.message : 'Unknown error'
     );
-    if (requireAuthenticatedQueue) {
-      throw error;
-    }
-    return;
+    throw error;
   }
 
   void engine.sync().catch(() => {
     // SyncEngine reports the failure and retains the operation for the next retry.
   });
+}
+
+function createDurableQueueCommit(
+  operation: ActivityQueueOperation,
+  queueRequirement: 'when-authenticated' | 'required' = 'when-authenticated'
+): DurableQueueCommit {
+  return (mutation) => queueSyncOperation(operation, queueRequirement, mutation);
+}
+
+function createConditionalDurableQueueCommit(
+  operation: () => ActivityQueueOperation | null
+): DurableQueueCommit {
+  return async (mutation) => {
+    const queuedOperation = operation();
+    if (queuedOperation) {
+      await queueSyncOperation(queuedOperation, 'when-authenticated', mutation);
+    } else {
+      await AsyncStorage.setItem(mutation.key, mutation.nextValue);
+    }
+  };
 }
 
 // ============ FEEDINGS ============
@@ -157,7 +208,7 @@ export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredF
 
   const reconciled = await reconcilePulled("feedings", (data || []) as Record<string, unknown>[]);
   const serverFeedings: StoredFeedingEntry[] = dropTombstoned(reconciled).map(transformFeedingFromDb);
-  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'feedings');
+  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'feedings');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.feedings}${babyId}`));
   const localFeedings: StoredFeedingEntry[] = localData ? JSON.parse(localData) : [];
   const feedings = mergeWithPendingLocal(serverFeedings, localFeedings, pendingOperations);
@@ -194,34 +245,36 @@ export async function createFeedingInDatabase(
     updatedAt: now,
   };
 
-  await updateLocalFeedings(input.babyId, (feedings) => [...feedings, feeding]);
-
-  await queueSyncOperation({
-    type: 'CREATE',
-    table: 'feedings',
-    entityId: id,
-    data: {
-      id,
-      baby_id: input.babyId,
-      type: input.type,
-      side: input.side,
-      last_finished_side: input.lastFinishedSide,
-      started_at: input.startedAt.toISOString(),
-      ended_at: input.endedAt?.toISOString(),
-      duration_seconds: input.durationSeconds,
-      left_duration_seconds: input.leftDurationSeconds,
-      right_duration_seconds: input.rightDurationSeconds,
-      amount_ml: input.amountMl,
-      content_type: input.contentType,
-      food_type: input.foodType,
-      amount: input.amount,
-      reaction: input.reaction,
-      notes: input.notes,
-      logged_by: userId,
-      created_at: now,
-      updated_at: now,
-    },
-  });
+  await updateLocalFeedings(
+    input.babyId,
+    (feedings) => [...feedings, feeding],
+    createDurableQueueCommit({
+      type: 'CREATE',
+      table: 'feedings',
+      entityId: id,
+      data: {
+        id,
+        baby_id: input.babyId,
+        type: input.type,
+        side: input.side,
+        last_finished_side: input.lastFinishedSide,
+        started_at: input.startedAt.toISOString(),
+        ended_at: input.endedAt?.toISOString(),
+        duration_seconds: input.durationSeconds,
+        left_duration_seconds: input.leftDurationSeconds,
+        right_duration_seconds: input.rightDurationSeconds,
+        amount_ml: input.amountMl,
+        content_type: input.contentType,
+        food_type: input.foodType,
+        amount: input.amount,
+        reaction: input.reaction,
+        notes: input.notes,
+        logged_by: userId,
+        created_at: now,
+        updated_at: now,
+      },
+    })
+  );
 
   return feeding;
 }
@@ -250,42 +303,46 @@ export async function updateFeedingInDatabase(
 
   let updatedFeeding: StoredFeedingEntry | null = null;
 
-  await updateLocalFeedings(babyId, (feedings) =>
-    feedings.map((f) => {
-      if (f.id === feedingId) {
-        updatedFeeding = {
-          ...f,
-          ...input,
-          endedAt: input.endedAt?.toISOString() ?? f.endedAt,
-          updatedAt: now,
-        };
-        return updatedFeeding;
-      }
-      return f;
-    })
+  await updateLocalFeedings(
+    babyId,
+    (feedings) => feedings.map((f) => {
+        if (f.id === feedingId) {
+          updatedFeeding = {
+            ...f,
+            ...input,
+            endedAt: input.endedAt?.toISOString() ?? f.endedAt,
+            updatedAt: now,
+          };
+          return updatedFeeding;
+        }
+        return f;
+      }),
+    createConditionalDurableQueueCommit(() => updatedFeeding
+      ? ({
+          type: 'UPDATE',
+          table: 'feedings',
+          entityId: feedingId,
+          data: updateData,
+        })
+      : null)
   );
 
   if (!updatedFeeding) return null;
-
-  await queueSyncOperation({
-    type: 'UPDATE',
-    table: 'feedings',
-    entityId: feedingId,
-    data: updateData,
-  });
 
   return updatedFeeding;
 }
 
 export async function deleteFeedingFromDatabase(babyId: string, feedingId: string): Promise<boolean> {
-  await updateLocalFeedings(babyId, (feedings) => feedings.filter((f) => f.id !== feedingId));
-
-  await queueSyncOperation({
-    type: 'DELETE',
-    table: 'feedings',
-    entityId: feedingId,
-    data: null,
-  });
+  await updateLocalFeedings(
+    babyId,
+    (feedings) => feedings.filter((f) => f.id !== feedingId),
+    createDurableQueueCommit({
+      type: 'DELETE',
+      table: 'feedings',
+      entityId: feedingId,
+      data: null,
+    })
+  );
 
   return true;
 }
@@ -316,14 +373,11 @@ function transformFeedingFromDb(data: Record<string, unknown>): StoredFeedingEnt
 
 async function updateLocalFeedings(
   babyId: string,
-  updater: (feedings: StoredFeedingEntry[]) => StoredFeedingEntry[]
+  updater: (feedings: StoredFeedingEntry[]) => StoredFeedingEntry[],
+  queueCommit?: DurableQueueCommit
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.feedings}${babyId}`);
-  await withStorageLock(key, async () => {
-    const data = await AsyncStorage.getItem(key);
-    const feedings = data ? (JSON.parse(data) as StoredFeedingEntry[]) : [];
-    await AsyncStorage.setItem(key, JSON.stringify(updater(feedings)));
-  });
+  await updateLocalCollection(key, updater, queueCommit);
 }
 
 // ============ DIAPERS ============
@@ -342,7 +396,7 @@ export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDi
 
   const reconciled = await reconcilePulled("diapers", (data || []) as Record<string, unknown>[]);
   const serverDiapers: StoredDiaperEntry[] = dropTombstoned(reconciled).map(transformDiaperFromDb);
-  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'diapers');
+  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'diapers');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.diapers}${babyId}`));
   const localDiapers: StoredDiaperEntry[] = localData ? JSON.parse(localData) : [];
   const diapers = mergeWithPendingLocal(serverDiapers, localDiapers, pendingOperations);
@@ -369,23 +423,25 @@ export async function createDiaperInDatabase(
     updatedAt: now,
   };
 
-  await updateLocalDiapers(input.babyId, (diapers) => [...diapers, diaper]);
-
-  await queueSyncOperation({
-    type: 'CREATE',
-    table: 'diapers',
-    entityId: id,
-    data: {
-      id,
-      baby_id: input.babyId,
-      type: input.type,
-      stool_color: input.stoolColor,
-      changed_at: input.changedAt.toISOString(),
-      notes: input.notes,
-      logged_by: userId,
-      created_at: now,
-    },
-  });
+  await updateLocalDiapers(
+    input.babyId,
+    (diapers) => [...diapers, diaper],
+    createDurableQueueCommit({
+      type: 'CREATE',
+      table: 'diapers',
+      entityId: id,
+      data: {
+        id,
+        baby_id: input.babyId,
+        type: input.type,
+        stool_color: input.stoolColor,
+        changed_at: input.changedAt.toISOString(),
+        notes: input.notes,
+        logged_by: userId,
+        created_at: now,
+      },
+    })
+  );
 
   return diaper;
 }
@@ -405,42 +461,46 @@ export async function updateDiaperInDatabase(
 
   let updatedDiaper: StoredDiaperEntry | null = null;
 
-  await updateLocalDiapers(babyId, (diapers) =>
-    diapers.map((d) => {
-      if (d.id === diaperId) {
-        updatedDiaper = {
-          ...d,
-          ...input,
-          changedAt: input.changedAt?.toISOString() ?? d.changedAt,
-          updatedAt: now,
-        };
-        return updatedDiaper;
-      }
-      return d;
-    })
+  await updateLocalDiapers(
+    babyId,
+    (diapers) => diapers.map((d) => {
+        if (d.id === diaperId) {
+          updatedDiaper = {
+            ...d,
+            ...input,
+            changedAt: input.changedAt?.toISOString() ?? d.changedAt,
+            updatedAt: now,
+          };
+          return updatedDiaper;
+        }
+        return d;
+      }),
+    createConditionalDurableQueueCommit(() => updatedDiaper
+      ? ({
+          type: 'UPDATE',
+          table: 'diapers',
+          entityId: diaperId,
+          data: updateData,
+        })
+      : null)
   );
 
   if (!updatedDiaper) return null;
-
-  await queueSyncOperation({
-    type: 'UPDATE',
-    table: 'diapers',
-    entityId: diaperId,
-    data: updateData,
-  });
 
   return updatedDiaper;
 }
 
 export async function deleteDiaperFromDatabase(babyId: string, diaperId: string): Promise<boolean> {
-  await updateLocalDiapers(babyId, (diapers) => diapers.filter((d) => d.id !== diaperId));
-
-  await queueSyncOperation({
-    type: 'DELETE',
-    table: 'diapers',
-    entityId: diaperId,
-    data: null,
-  });
+  await updateLocalDiapers(
+    babyId,
+    (diapers) => diapers.filter((d) => d.id !== diaperId),
+    createDurableQueueCommit({
+      type: 'DELETE',
+      table: 'diapers',
+      entityId: diaperId,
+      data: null,
+    })
+  );
 
   return true;
 }
@@ -461,14 +521,11 @@ function transformDiaperFromDb(data: Record<string, unknown>): StoredDiaperEntry
 
 async function updateLocalDiapers(
   babyId: string,
-  updater: (diapers: StoredDiaperEntry[]) => StoredDiaperEntry[]
+  updater: (diapers: StoredDiaperEntry[]) => StoredDiaperEntry[],
+  queueCommit?: DurableQueueCommit
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.diapers}${babyId}`);
-  await withStorageLock(key, async () => {
-    const data = await AsyncStorage.getItem(key);
-    const diapers = data ? (JSON.parse(data) as StoredDiaperEntry[]) : [];
-    await AsyncStorage.setItem(key, JSON.stringify(updater(diapers)));
-  });
+  await updateLocalCollection(key, updater, queueCommit);
 }
 
 // ============ SLEEP ============
@@ -487,7 +544,7 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
 
   const reconciled = await reconcilePulled("sleep_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredSleepEntry[] = dropTombstoned(reconciled).map(transformSleepFromDb);
-  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'sleep_sessions');
+  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'sleep_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.sleep}${babyId}`));
   const localSessions: StoredSleepEntry[] = localData ? JSON.parse(localData) : [];
   const sleepSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
@@ -527,26 +584,27 @@ export async function createSleepInDatabase(
     updatedAt: now,
   };
 
-  await updateLocalSleep(input.babyId, (sessions) => [...sessions, sleep]);
-  console.log("[ActivitySync] createSleep: local write done, id=%s", id);
-
-  await queueSyncOperation({
-    type: 'CREATE',
-    table: 'sleep_sessions',
-    entityId: id,
-    data: {
-      id,
-      baby_id: input.babyId,
-      type: input.type,
-      started_at: input.startedAt.toISOString(),
-      ended_at: input.endedAt?.toISOString(),
-      duration_seconds: input.durationSeconds,
-      notes: input.notes,
-      logged_by: userId,
-      created_at: now,
-      updated_at: now,
-    },
-  });
+  await updateLocalSleep(
+    input.babyId,
+    (sessions) => [...sessions, sleep],
+    createDurableQueueCommit({
+      type: 'CREATE',
+      table: 'sleep_sessions',
+      entityId: id,
+      data: {
+        id,
+        baby_id: input.babyId,
+        type: input.type,
+        started_at: input.startedAt.toISOString(),
+        ended_at: input.endedAt?.toISOString(),
+        duration_seconds: input.durationSeconds,
+        notes: input.notes,
+        logged_by: userId,
+        created_at: now,
+        updated_at: now,
+      },
+    })
+  );
 
   return sleep;
 }
@@ -568,42 +626,46 @@ export async function updateSleepInDatabase(
 
   let updatedSleep: StoredSleepEntry | null = null;
 
-  await updateLocalSleep(babyId, (sessions) =>
-    sessions.map((s) => {
-      if (s.id === sleepId) {
-        updatedSleep = {
-          ...s,
-          ...input,
-          endedAt: input.endedAt?.toISOString() ?? s.endedAt,
-          updatedAt: now,
-        };
-        return updatedSleep;
-      }
-      return s;
-    })
+  await updateLocalSleep(
+    babyId,
+    (sessions) => sessions.map((s) => {
+        if (s.id === sleepId) {
+          updatedSleep = {
+            ...s,
+            ...input,
+            endedAt: input.endedAt?.toISOString() ?? s.endedAt,
+            updatedAt: now,
+          };
+          return updatedSleep;
+        }
+        return s;
+      }),
+    createConditionalDurableQueueCommit(() => updatedSleep
+      ? ({
+          type: 'UPDATE',
+          table: 'sleep_sessions',
+          entityId: sleepId,
+          data: updateData,
+        })
+      : null)
   );
 
   if (!updatedSleep) return null;
-
-  await queueSyncOperation({
-    type: 'UPDATE',
-    table: 'sleep_sessions',
-    entityId: sleepId,
-    data: updateData,
-  });
 
   return updatedSleep;
 }
 
 export async function deleteSleepFromDatabase(babyId: string, sleepId: string): Promise<boolean> {
-  await updateLocalSleep(babyId, (sessions) => sessions.filter((s) => s.id !== sleepId));
-
-  await queueSyncOperation({
-    type: 'DELETE',
-    table: 'sleep_sessions',
-    entityId: sleepId,
-    data: null,
-  });
+  await updateLocalSleep(
+    babyId,
+    (sessions) => sessions.filter((s) => s.id !== sleepId),
+    createDurableQueueCommit({
+      type: 'DELETE',
+      table: 'sleep_sessions',
+      entityId: sleepId,
+      data: null,
+    })
+  );
 
   return true;
 }
@@ -625,14 +687,11 @@ function transformSleepFromDb(data: Record<string, unknown>): StoredSleepEntry {
 
 async function updateLocalSleep(
   babyId: string,
-  updater: (sessions: StoredSleepEntry[]) => StoredSleepEntry[]
+  updater: (sessions: StoredSleepEntry[]) => StoredSleepEntry[],
+  queueCommit?: DurableQueueCommit
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.sleep}${babyId}`);
-  await withStorageLock(key, async () => {
-    const data = await AsyncStorage.getItem(key);
-    const sessions = data ? (JSON.parse(data) as StoredSleepEntry[]) : [];
-    await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
-  });
+  await updateLocalCollection(key, updater, queueCommit);
 }
 
 // ============ PUMPING ============
@@ -651,7 +710,7 @@ export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPu
 
   const reconciled = await reconcilePulled("pumping_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredPumpingEntry[] = dropTombstoned(reconciled).map(transformPumpingFromDb);
-  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'pumping_sessions');
+  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'pumping_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.pumping}${babyId}`));
   const localSessions: StoredPumpingEntry[] = localData ? JSON.parse(localData) : [];
   const pumpingSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
@@ -680,25 +739,27 @@ export async function createPumpingInDatabase(
     updatedAt: now,
   };
 
-  await updateLocalPumping(input.babyId, (sessions) => [...sessions, pumping]);
-
-  await queueSyncOperation({
-    type: 'CREATE',
-    table: 'pumping_sessions',
-    entityId: id,
-    data: {
-      id,
-      baby_id: input.babyId,
-      side: input.side,
-      started_at: input.startedAt.toISOString(),
-      ended_at: input.endedAt?.toISOString(),
-      duration_seconds: input.durationSeconds,
-      amount_ml: input.volumeMl,
-      notes: input.notes,
-      logged_by: userId,
-      created_at: now,
-    },
-  });
+  await updateLocalPumping(
+    input.babyId,
+    (sessions) => [...sessions, pumping],
+    createDurableQueueCommit({
+      type: 'CREATE',
+      table: 'pumping_sessions',
+      entityId: id,
+      data: {
+        id,
+        baby_id: input.babyId,
+        side: input.side,
+        started_at: input.startedAt.toISOString(),
+        ended_at: input.endedAt?.toISOString(),
+        duration_seconds: input.durationSeconds,
+        amount_ml: input.volumeMl,
+        notes: input.notes,
+        logged_by: userId,
+        created_at: now,
+      },
+    })
+  );
 
   return pumping;
 }
@@ -719,42 +780,46 @@ export async function updatePumpingInDatabase(
 
   let updatedPumping: StoredPumpingEntry | null = null;
 
-  await updateLocalPumping(babyId, (sessions) =>
-    sessions.map((p) => {
-      if (p.id === pumpingId) {
-        updatedPumping = {
-          ...p,
-          ...input,
-          endedAt: input.endedAt?.toISOString() ?? p.endedAt,
-          updatedAt: now,
-        };
-        return updatedPumping;
-      }
-      return p;
-    })
+  await updateLocalPumping(
+    babyId,
+    (sessions) => sessions.map((p) => {
+        if (p.id === pumpingId) {
+          updatedPumping = {
+            ...p,
+            ...input,
+            endedAt: input.endedAt?.toISOString() ?? p.endedAt,
+            updatedAt: now,
+          };
+          return updatedPumping;
+        }
+        return p;
+      }),
+    createConditionalDurableQueueCommit(() => updatedPumping
+      ? ({
+          type: 'UPDATE',
+          table: 'pumping_sessions',
+          entityId: pumpingId,
+          data: updateData,
+        })
+      : null)
   );
 
   if (!updatedPumping) return null;
-
-  await queueSyncOperation({
-    type: 'UPDATE',
-    table: 'pumping_sessions',
-    entityId: pumpingId,
-    data: updateData,
-  });
 
   return updatedPumping;
 }
 
 export async function deletePumpingFromDatabase(babyId: string, pumpingId: string): Promise<boolean> {
-  await updateLocalPumping(babyId, (sessions) => sessions.filter((p) => p.id !== pumpingId));
-
-  await queueSyncOperation({
-    type: 'DELETE',
-    table: 'pumping_sessions',
-    entityId: pumpingId,
-    data: null,
-  });
+  await updateLocalPumping(
+    babyId,
+    (sessions) => sessions.filter((p) => p.id !== pumpingId),
+    createDurableQueueCommit({
+      type: 'DELETE',
+      table: 'pumping_sessions',
+      entityId: pumpingId,
+      data: null,
+    })
+  );
 
   return true;
 }
@@ -777,14 +842,11 @@ function transformPumpingFromDb(data: Record<string, unknown>): StoredPumpingEnt
 
 async function updateLocalPumping(
   babyId: string,
-  updater: (sessions: StoredPumpingEntry[]) => StoredPumpingEntry[]
+  updater: (sessions: StoredPumpingEntry[]) => StoredPumpingEntry[],
+  queueCommit?: DurableQueueCommit
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.pumping}${babyId}`);
-  await withStorageLock(key, async () => {
-    const data = await AsyncStorage.getItem(key);
-    const sessions = data ? (JSON.parse(data) as StoredPumpingEntry[]) : [];
-    await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
-  });
+  await updateLocalCollection(key, updater, queueCommit);
 }
 
 // ============ GROWTH ============
@@ -803,7 +865,7 @@ export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGro
 
   const reconciled = await reconcilePulled("growth_measurements", (data || []) as Record<string, unknown>[]);
   const serverMeasurements: StoredGrowthEntry[] = dropTombstoned(reconciled).map(transformGrowthFromDb);
-  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'growth_measurements');
+  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'growth_measurements');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.growth}${babyId}`));
   const localMeasurements: StoredGrowthEntry[] = localData ? JSON.parse(localData) : [];
   const measurements = mergeWithPendingLocal(serverMeasurements, localMeasurements, pendingOperations);
@@ -831,24 +893,26 @@ export async function createGrowthInDatabase(
     updatedAt: now,
   };
 
-  await updateLocalGrowth(input.babyId, (measurements) => [...measurements, growth]);
-
-  await queueSyncOperation({
-    type: 'CREATE',
-    table: 'growth_measurements',
-    entityId: id,
-    data: {
-      id,
-      baby_id: input.babyId,
-      measured_at: input.measuredAt.toISOString(),
-      weight_kg: input.weightKg,
-      height_cm: input.heightCm,
-      head_cm: input.headCircumferenceCm,
-      notes: input.notes,
-      logged_by: userId,
-      created_at: now,
-    },
-  });
+  await updateLocalGrowth(
+    input.babyId,
+    (measurements) => [...measurements, growth],
+    createDurableQueueCommit({
+      type: 'CREATE',
+      table: 'growth_measurements',
+      entityId: id,
+      data: {
+        id,
+        baby_id: input.babyId,
+        measured_at: input.measuredAt.toISOString(),
+        weight_kg: input.weightKg,
+        height_cm: input.heightCm,
+        head_cm: input.headCircumferenceCm,
+        notes: input.notes,
+        logged_by: userId,
+        created_at: now,
+      },
+    })
+  );
 
   return growth;
 }
@@ -869,42 +933,46 @@ export async function updateGrowthInDatabase(
 
   let updatedGrowth: StoredGrowthEntry | null = null;
 
-  await updateLocalGrowth(babyId, (measurements) =>
-    measurements.map((g) => {
-      if (g.id === growthId) {
-        updatedGrowth = {
-          ...g,
-          ...input,
-          measuredAt: input.measuredAt?.toISOString() ?? g.measuredAt,
-          updatedAt: now,
-        };
-        return updatedGrowth;
-      }
-      return g;
-    })
+  await updateLocalGrowth(
+    babyId,
+    (measurements) => measurements.map((g) => {
+        if (g.id === growthId) {
+          updatedGrowth = {
+            ...g,
+            ...input,
+            measuredAt: input.measuredAt?.toISOString() ?? g.measuredAt,
+            updatedAt: now,
+          };
+          return updatedGrowth;
+        }
+        return g;
+      }),
+    createConditionalDurableQueueCommit(() => updatedGrowth
+      ? ({
+          type: 'UPDATE',
+          table: 'growth_measurements',
+          entityId: growthId,
+          data: updateData,
+        })
+      : null)
   );
 
   if (!updatedGrowth) return null;
-
-  await queueSyncOperation({
-    type: 'UPDATE',
-    table: 'growth_measurements',
-    entityId: growthId,
-    data: updateData,
-  });
 
   return updatedGrowth;
 }
 
 export async function deleteGrowthFromDatabase(babyId: string, growthId: string): Promise<boolean> {
-  await updateLocalGrowth(babyId, (measurements) => measurements.filter((g) => g.id !== growthId));
-
-  await queueSyncOperation({
-    type: 'DELETE',
-    table: 'growth_measurements',
-    entityId: growthId,
-    data: null,
-  });
+  await updateLocalGrowth(
+    babyId,
+    (measurements) => measurements.filter((g) => g.id !== growthId),
+    createDurableQueueCommit({
+      type: 'DELETE',
+      table: 'growth_measurements',
+      entityId: growthId,
+      data: null,
+    })
+  );
 
   return true;
 }
@@ -926,14 +994,11 @@ function transformGrowthFromDb(data: Record<string, unknown>): StoredGrowthEntry
 
 async function updateLocalGrowth(
   babyId: string,
-  updater: (measurements: StoredGrowthEntry[]) => StoredGrowthEntry[]
+  updater: (measurements: StoredGrowthEntry[]) => StoredGrowthEntry[],
+  queueCommit?: DurableQueueCommit
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.growth}${babyId}`);
-  await withStorageLock(key, async () => {
-    const data = await AsyncStorage.getItem(key);
-    const measurements = data ? (JSON.parse(data) as StoredGrowthEntry[]) : [];
-    await AsyncStorage.setItem(key, JSON.stringify(updater(measurements)));
-  });
+  await updateLocalCollection(key, updater, queueCommit);
 }
 
 // ============ TUMMY TIME ============
@@ -952,7 +1017,7 @@ export async function fetchTummyTimeFromDatabase(babyId: string): Promise<Stored
 
   const reconciled = await reconcilePulled("tummy_time_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredTummyTimeEntry[] = dropTombstoned(reconciled).map(transformTummyTimeFromDb);
-  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'tummy_time_sessions');
+  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'tummy_time_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.tummyTime}${babyId}`));
   const localSessions: StoredTummyTimeEntry[] = localData ? JSON.parse(localData) : [];
   const sessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
@@ -979,23 +1044,25 @@ export async function createTummyTimeInDatabase(
     updatedAt: now,
   };
 
-  await updateLocalTummyTime(input.babyId, (sessions) => [...sessions, tummyTime]);
-
-  await queueSyncOperation({
-    type: 'CREATE',
-    table: 'tummy_time_sessions',
-    entityId: id,
-    data: {
-      id,
-      baby_id: input.babyId,
-      started_at: input.startedAt.toISOString(),
-      ended_at: input.endedAt?.toISOString(),
-      duration_seconds: input.durationSeconds,
-      notes: input.notes,
-      logged_by: userId,
-      created_at: now,
-    },
-  });
+  await updateLocalTummyTime(
+    input.babyId,
+    (sessions) => [...sessions, tummyTime],
+    createDurableQueueCommit({
+      type: 'CREATE',
+      table: 'tummy_time_sessions',
+      entityId: id,
+      data: {
+        id,
+        baby_id: input.babyId,
+        started_at: input.startedAt.toISOString(),
+        ended_at: input.endedAt?.toISOString(),
+        duration_seconds: input.durationSeconds,
+        notes: input.notes,
+        logged_by: userId,
+        created_at: now,
+      },
+    })
+  );
 
   return tummyTime;
 }
@@ -1014,42 +1081,46 @@ export async function updateTummyTimeInDatabase(
 
   let updatedTummyTime: StoredTummyTimeEntry | null = null;
 
-  await updateLocalTummyTime(babyId, (sessions) =>
-    sessions.map((t) => {
-      if (t.id === tummyTimeId) {
-        updatedTummyTime = {
-          ...t,
-          ...input,
-          endedAt: input.endedAt?.toISOString() ?? t.endedAt,
-          updatedAt: now,
-        };
-        return updatedTummyTime;
-      }
-      return t;
-    })
+  await updateLocalTummyTime(
+    babyId,
+    (sessions) => sessions.map((t) => {
+        if (t.id === tummyTimeId) {
+          updatedTummyTime = {
+            ...t,
+            ...input,
+            endedAt: input.endedAt?.toISOString() ?? t.endedAt,
+            updatedAt: now,
+          };
+          return updatedTummyTime;
+        }
+        return t;
+      }),
+    createConditionalDurableQueueCommit(() => updatedTummyTime
+      ? ({
+          type: 'UPDATE',
+          table: 'tummy_time_sessions',
+          entityId: tummyTimeId,
+          data: updateData,
+        })
+      : null)
   );
 
   if (!updatedTummyTime) return null;
-
-  await queueSyncOperation({
-    type: 'UPDATE',
-    table: 'tummy_time_sessions',
-    entityId: tummyTimeId,
-    data: updateData,
-  });
 
   return updatedTummyTime;
 }
 
 export async function deleteTummyTimeFromDatabase(babyId: string, tummyTimeId: string): Promise<boolean> {
-  await updateLocalTummyTime(babyId, (sessions) => sessions.filter((t) => t.id !== tummyTimeId));
-
-  await queueSyncOperation({
-    type: 'DELETE',
-    table: 'tummy_time_sessions',
-    entityId: tummyTimeId,
-    data: null,
-  });
+  await updateLocalTummyTime(
+    babyId,
+    (sessions) => sessions.filter((t) => t.id !== tummyTimeId),
+    createDurableQueueCommit({
+      type: 'DELETE',
+      table: 'tummy_time_sessions',
+      entityId: tummyTimeId,
+      data: null,
+    })
+  );
 
   return true;
 }
@@ -1070,14 +1141,11 @@ function transformTummyTimeFromDb(data: Record<string, unknown>): StoredTummyTim
 
 async function updateLocalTummyTime(
   babyId: string,
-  updater: (sessions: StoredTummyTimeEntry[]) => StoredTummyTimeEntry[]
+  updater: (sessions: StoredTummyTimeEntry[]) => StoredTummyTimeEntry[],
+  queueCommit?: DurableQueueCommit
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.tummyTime}${babyId}`);
-  await withStorageLock(key, async () => {
-    const data = await AsyncStorage.getItem(key);
-    const sessions = data ? (JSON.parse(data) as StoredTummyTimeEntry[]) : [];
-    await AsyncStorage.setItem(key, JSON.stringify(updater(sessions)));
-  });
+  await updateLocalCollection(key, updater, queueCommit);
 }
 
 // ============ MILESTONES ============
@@ -1095,7 +1163,7 @@ export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promi
 
   const reconciled = await reconcilePulled("milestone_responses", (data || []) as Record<string, unknown>[]);
   const serverResponses: StoredMilestoneResponse[] = dropTombstoned(reconciled).map(transformMilestoneResponseFromDb);
-  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'milestone_responses');
+  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'milestone_responses');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.milestones}${babyId}`));
   const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
   const responses = mergeWithPendingLocal(serverResponses, localResponses, pendingOperations);
@@ -1126,18 +1194,6 @@ export async function upsertMilestoneResponseInDatabase(
     updatedAt: now,
   };
 
-  await updateLocalMilestoneResponses(input.babyId, (responses) => {
-    const existing = responses.find((r) => r.milestoneId === input.milestoneId);
-    if (existing) {
-      return responses.map((r) =>
-        r.milestoneId === input.milestoneId
-          ? { ...r, state: input.state, respondedAt: now, updatedAt: now, respondedBy: input.respondedBy ?? r.respondedBy }
-          : r
-      );
-    }
-    return [...responses, response];
-  });
-
   const dbData: Record<string, unknown> = {
     id,
     baby_id: input.babyId,
@@ -1149,25 +1205,37 @@ export async function upsertMilestoneResponseInDatabase(
     updated_at: now,
   };
 
-  if (existingId) {
-    await queueSyncOperation({
-      type: 'UPDATE',
-      table: 'milestone_responses',
-      entityId: id,
-      data: {
-        state: input.state,
-        responded_at: now,
-        updated_at: now,
-      },
-    });
-  } else {
-    await queueSyncOperation({
-      type: 'CREATE',
-      table: 'milestone_responses',
-      entityId: id,
-      data: dbData,
-    });
-  }
+  await updateLocalMilestoneResponses(
+    input.babyId,
+    (responses) => {
+      const existing = responses.find((r) => r.milestoneId === input.milestoneId);
+      if (existing) {
+        return responses.map((r) =>
+          r.milestoneId === input.milestoneId
+            ? { ...r, state: input.state, respondedAt: now, updatedAt: now, respondedBy: input.respondedBy ?? r.respondedBy }
+            : r
+        );
+      }
+      return [...responses, response];
+    },
+    createConditionalDurableQueueCommit(() => existingId
+      ? ({
+          type: 'UPDATE',
+          table: 'milestone_responses',
+          entityId: id,
+          data: {
+            state: input.state,
+            responded_at: now,
+            updated_at: now,
+          },
+        })
+      : ({
+          type: 'CREATE',
+          table: 'milestone_responses',
+          entityId: id,
+          data: dbData,
+        }))
+  );
 
   return response;
 }
@@ -1177,16 +1245,16 @@ export async function deleteMilestoneResponseFromDatabase(
   responseId: string,
   milestoneId: string
 ): Promise<boolean> {
-  await updateLocalMilestoneResponses(babyId, (responses) =>
-    responses.filter((r) => r.milestoneId !== milestoneId)
+  await updateLocalMilestoneResponses(
+    babyId,
+    (responses) => responses.filter((r) => r.milestoneId !== milestoneId),
+    createDurableQueueCommit({
+      type: 'DELETE',
+      table: 'milestone_responses',
+      entityId: responseId,
+      data: null,
+    })
   );
-
-  await queueSyncOperation({
-    type: 'DELETE',
-    table: 'milestone_responses',
-    entityId: responseId,
-    data: null,
-  });
 
   return true;
 }
@@ -1206,14 +1274,11 @@ function transformMilestoneResponseFromDb(data: Record<string, unknown>): Stored
 
 async function updateLocalMilestoneResponses(
   babyId: string,
-  updater: (responses: StoredMilestoneResponse[]) => StoredMilestoneResponse[]
+  updater: (responses: StoredMilestoneResponse[]) => StoredMilestoneResponse[],
+  queueCommit?: DurableQueueCommit
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.milestones}${babyId}`);
-  await withStorageLock(key, async () => {
-    const data = await AsyncStorage.getItem(key);
-    const responses = data ? (JSON.parse(data) as StoredMilestoneResponse[]) : [];
-    await AsyncStorage.setItem(key, JSON.stringify(updater(responses)));
-  });
+  await updateLocalCollection(key, updater, queueCommit);
 }
 
 // ============ ACHIEVEMENTS ============
@@ -1353,7 +1418,7 @@ async function syncFeedingsForBaby(oldBabyId: string, newBabyId: string, userId:
       table: 'feedings',
       entityId: newId,
       data: dbRecord,
-    }, true);
+    }, 'required');
 
     migratedFeedings.push({ ...feeding, id: newId, babyId: newBabyId });
   }
@@ -1390,7 +1455,7 @@ async function syncDiapersForBaby(oldBabyId: string, newBabyId: string, userId: 
       table: 'diapers',
       entityId: newId,
       data: dbRecord,
-    }, true);
+    }, 'required');
 
     migratedDiapers.push({ ...diaper, id: newId, babyId: newBabyId });
   }
@@ -1429,7 +1494,7 @@ async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: st
       table: 'sleep_sessions',
       entityId: newId,
       data: dbRecord,
-    }, true);
+    }, 'required');
 
     migratedSleep.push({ ...sleep, id: newId, babyId: newBabyId });
   }
@@ -1468,7 +1533,7 @@ async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: 
       table: 'pumping_sessions',
       entityId: newId,
       data: dbRecord,
-    }, true);
+    }, 'required');
 
     migratedPumping.push({ ...pumping, id: newId, babyId: newBabyId });
   }
@@ -1506,7 +1571,7 @@ async function syncGrowthForBaby(oldBabyId: string, newBabyId: string, userId: s
       table: 'growth_measurements',
       entityId: newId,
       data: dbRecord,
-    }, true);
+    }, 'required');
 
     migratedGrowth.push({ ...growth, id: newId, babyId: newBabyId });
   }
@@ -1543,7 +1608,7 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
       table: 'tummy_time_sessions',
       entityId: newId,
       data: dbRecord,
-    }, true);
+    }, 'required');
 
     migratedTummyTime.push({ ...tummyTime, id: newId, babyId: newBabyId });
   }
@@ -1572,7 +1637,7 @@ export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHea
 
   const reconciled = await reconcilePulled("health_entries", (data || []) as Record<string, unknown>[]);
   const serverEntries: StoredHealthEntry[] = dropTombstoned(reconciled).map(transformHealthFromDb);
-  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'health_entries');
+  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'health_entries');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.health}${babyId}`));
   const localEntries: StoredHealthEntry[] = localData ? JSON.parse(localData) : [];
   const entries = mergeWithPendingLocal(serverEntries, localEntries, pendingOperations);
@@ -1606,31 +1671,33 @@ export async function createHealthInDatabase(
     updatedAt: now,
   };
 
-  await updateLocalHealth(input.babyId, (entries) => [...entries, entry]);
-
-  await queueSyncOperation({
-    type: 'CREATE',
-    table: 'health_entries',
-    entityId: id,
-    data: {
-      id,
-      baby_id: input.babyId,
-      type: input.type,
-      logged_at: input.loggedAt.toISOString(),
-      notes: input.notes,
-      medication_name: input.medicationName,
-      dosage_amount: input.dosageAmount,
-      dosage_unit: input.dosageUnit,
-      dose_number: input.doseNumber,
-      temperature_celsius: input.temperatureCelsius,
-      measurement_method: input.measurementMethod,
-      vaccine_name: input.vaccineName,
-      symptoms: input.symptoms,
-      logged_by: userId,
-      created_at: now,
-      updated_at: now,
-    },
-  });
+  await updateLocalHealth(
+    input.babyId,
+    (entries) => [...entries, entry],
+    createDurableQueueCommit({
+      type: 'CREATE',
+      table: 'health_entries',
+      entityId: id,
+      data: {
+        id,
+        baby_id: input.babyId,
+        type: input.type,
+        logged_at: input.loggedAt.toISOString(),
+        notes: input.notes,
+        medication_name: input.medicationName,
+        dosage_amount: input.dosageAmount,
+        dosage_unit: input.dosageUnit,
+        dose_number: input.doseNumber,
+        temperature_celsius: input.temperatureCelsius,
+        measurement_method: input.measurementMethod,
+        vaccine_name: input.vaccineName,
+        symptoms: input.symptoms,
+        logged_by: userId,
+        created_at: now,
+        updated_at: now,
+      },
+    })
+  );
 
   return entry;
 }
@@ -1667,60 +1734,64 @@ export async function updateHealthInDatabase(
 
   let updatedEntry: StoredHealthEntry | null = null;
 
-  await updateLocalHealth(babyId, (entries) =>
-    entries.map((h) => {
-      if (h.id === healthId) {
-        const updated: StoredHealthEntry = {
-          ...h,
-          type: input.type ?? h.type,
-          loggedAt: input.loggedAt?.toISOString() ?? h.loggedAt,
-          updatedAt: now,
-        };
+  await updateLocalHealth(
+    babyId,
+    (entries) => entries.map((h) => {
+        if (h.id === healthId) {
+          const updated: StoredHealthEntry = {
+            ...h,
+            type: input.type ?? h.type,
+            loggedAt: input.loggedAt?.toISOString() ?? h.loggedAt,
+            updatedAt: now,
+          };
 
-        const nullableFields = [
-          "notes", "medicationName", "dosageAmount", "dosageUnit",
-          "doseNumber", "temperatureCelsius", "measurementMethod",
-          "vaccineName", "symptoms",
-        ] as const;
+          const nullableFields = [
+            "notes", "medicationName", "dosageAmount", "dosageUnit",
+            "doseNumber", "temperatureCelsius", "measurementMethod",
+            "vaccineName", "symptoms",
+          ] as const;
 
-        for (const field of nullableFields) {
-          if ((input as unknown as Record<string, unknown>)[field] !== undefined) {
-            if ((input as unknown as Record<string, unknown>)[field] === null) {
-              delete (updated as unknown as Record<string, unknown>)[field];
-            } else {
-              (updated as unknown as Record<string, unknown>)[field] = (input as unknown as Record<string, unknown>)[field];
+          for (const field of nullableFields) {
+            if ((input as unknown as Record<string, unknown>)[field] !== undefined) {
+              if ((input as unknown as Record<string, unknown>)[field] === null) {
+                delete (updated as unknown as Record<string, unknown>)[field];
+              } else {
+                (updated as unknown as Record<string, unknown>)[field] = (input as unknown as Record<string, unknown>)[field];
+              }
             }
           }
-        }
 
-        updatedEntry = updated;
-        return updated;
-      }
-      return h;
-    })
+          updatedEntry = updated;
+          return updated;
+        }
+        return h;
+      }),
+    createConditionalDurableQueueCommit(() => updatedEntry
+      ? ({
+          type: 'UPDATE',
+          table: 'health_entries',
+          entityId: healthId,
+          data: updateData,
+        })
+      : null)
   );
 
   if (!updatedEntry) return null;
-
-  await queueSyncOperation({
-    type: 'UPDATE',
-    table: 'health_entries',
-    entityId: healthId,
-    data: updateData,
-  });
 
   return updatedEntry;
 }
 
 export async function deleteHealthFromDatabase(babyId: string, healthId: string): Promise<boolean> {
-  await updateLocalHealth(babyId, (entries) => entries.filter((h) => h.id !== healthId));
-
-  await queueSyncOperation({
-    type: 'DELETE',
-    table: 'health_entries',
-    entityId: healthId,
-    data: null,
-  });
+  await updateLocalHealth(
+    babyId,
+    (entries) => entries.filter((h) => h.id !== healthId),
+    createDurableQueueCommit({
+      type: 'DELETE',
+      table: 'health_entries',
+      entityId: healthId,
+      data: null,
+    })
+  );
 
   return true;
 }
@@ -1748,12 +1819,9 @@ function transformHealthFromDb(data: Record<string, unknown>): StoredHealthEntry
 
 async function updateLocalHealth(
   babyId: string,
-  updater: (entries: StoredHealthEntry[]) => StoredHealthEntry[]
+  updater: (entries: StoredHealthEntry[]) => StoredHealthEntry[],
+  queueCommit?: DurableQueueCommit
 ): Promise<void> {
   const key = getUserScopedKey(`${KEYS.health}${babyId}`);
-  await withStorageLock(key, async () => {
-    const data = await AsyncStorage.getItem(key);
-    const entries = data ? (JSON.parse(data) as StoredHealthEntry[]) : [];
-    await AsyncStorage.setItem(key, JSON.stringify(updater(entries)));
-  });
+  await updateLocalCollection(key, updater, queueCommit);
 }

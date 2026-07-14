@@ -27,6 +27,12 @@ const selectResult = { data: [] as unknown[], error: null as unknown };
 vi.mock("./supabase", () => ({
   supabase: {
     rpc: (...args: unknown[]) => rpc(...args),
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: { id: "user-1" } },
+        error: null,
+      })),
+    },
     from: () => ({
       insert: (...a: unknown[]) => insert(...a),
       update: (...a: unknown[]) => update(...a),

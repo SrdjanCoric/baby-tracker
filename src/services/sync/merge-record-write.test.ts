@@ -15,6 +15,12 @@ const rpc = vi.fn().mockResolvedValue({ data: {}, error: null });
 vi.mock("../supabase", () => ({
   supabase: {
     rpc: (...args: unknown[]) => rpc(...args),
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: { id: "user-1" } },
+        error: null,
+      })),
+    },
   },
 }));
 
@@ -39,6 +45,8 @@ describe("mergeRecordWrite", () => {
     expect(params.p_record.id).toBe("f1");
     expect(params.p_record.amount_ml).toBe(100);
     expect(Object.keys(params.p_field_clocks)).toContain("amount_ml");
+    expect(params.p_operation_id).toMatch(/^direct-/);
+    expect(params.p_expected_user_id).toBe("user-1");
   });
 
   it("injects the entity id when the data is a partial (no id column)", async () => {
