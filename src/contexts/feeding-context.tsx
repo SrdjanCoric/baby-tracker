@@ -20,6 +20,7 @@ import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 import type { BreastSide as LiveActivityBreastSide } from "@/services/live-activity-service";
+import { isPendingStopForTimer, isTimerRestoreObsolete, readPendingTimerStop } from "@/services/timer-stop-coordinator";
 
 export interface ActiveTimer {
   isRunning: boolean;
@@ -251,6 +252,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
+  const stopVersionRef = useRef(0);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('feedings', (change: RemoteChange) => {
@@ -295,6 +297,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const stopVersionAtStart = stopVersionRef.current;
     dispatch({ type: "SET_LOADING", payload: true });
 
     try {
@@ -316,12 +319,20 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       const suggestedSide = computeSuggestedSide(feedings);
       dispatch({ type: "SET_LAST_BREAST_SIDE", payload: suggestedSide });
 
+      if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
+
       const activeTimer = await FeedingStorageService.getActiveTimer(selectedBaby.id);
+      const pendingStop = activeTimer ? await readPendingTimerStop() : null;
+      const hasPendingStop = activeTimer
+        ? isPendingStopForTimer(pendingStop, "feeding", new Date(activeTimer.startedAt), selectedBaby.id)
+        : false;
+
       if (activeTimer) {
         let isStale = false;
-        if (user?.id && user?.householdId) {
+        if (user?.id && user?.householdId && !hasPendingStop) {
           try {
             const lock = await getActiveTimerLock(selectedBaby.id, "feeding");
+            if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
             if (!lock || lock.startedBy !== user.id) {
               isStale = true;
               await FeedingStorageService.clearActiveTimer(selectedBaby.id);
@@ -331,7 +342,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        if (!isStale) {
+        if (!isStale && !isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) {
           dispatch({
             type: "RESTORE_TIMER",
             payload: {
@@ -349,7 +360,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             },
           });
 
-          if (activeTimer.liveActivityId) {
+          if (!hasPendingStop && activeTimer.liveActivityId) {
             const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
             if (isRunning) {
               liveActivityIdRef.current = activeTimer.liveActivityId;
@@ -363,7 +374,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
               );
               if (activityId) liveActivityIdRef.current = activityId;
             }
-          } else if (!(activeTimer.isPaused ?? false)) {
+          } else if (!hasPendingStop && !(activeTimer.isPaused ?? false)) {
             const totalPausedMs = activeTimer.totalPausedMs ?? 0;
             const effectiveStartTime = totalPausedMs > 0
               ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
@@ -377,7 +388,11 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       } else if (user?.id && user?.householdId) {
         try {
           const lock = await getActiveTimerLock(selectedBaby.id, "feeding");
-          if (lock && lock.startedBy === user.id) {
+          if (
+            lock &&
+            lock.startedBy === user.id &&
+            !isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)
+          ) {
             const td = lock.timerData || {};
             const side = (typeof td.side === "string" ? td.side : undefined) as BreastSide | undefined;
             const isPaused = td.isPaused === true;
@@ -485,6 +500,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     if (!selectedBaby || !state.activeTimer) return null;
     if (isStoppingRef.current) return null;
     isStoppingRef.current = true;
+    stopVersionRef.current++;
 
     try {
       const endTime = requestedEndTime ?? new Date();

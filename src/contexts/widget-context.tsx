@@ -292,7 +292,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     if (!widgetData) return;
 
     const pendingStop = await readPendingWidgetStop();
-    if (pendingStop) {
+    if (pendingStop && (!pendingStop.babyId || pendingStop.babyId === widgetData.babyId)) {
       const stopType = pendingStop.activityType === "tummy_time"
         ? "tummyTime" : pendingStop.activityType;
       const stoppedAtMs = new Date(pendingStop.stoppedAt).getTime();
@@ -300,7 +300,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         t => t.type === stopType && new Date(t.startTime).getTime() > stoppedAtMs
       );
       if (hasNewerTimer) {
-        await clearPendingWidgetStop();
+        await clearPendingWidgetStop(pendingStop);
       } else {
         widgetData.activeTimers = widgetData.activeTimers.filter(
           t => t.type !== stopType || new Date(t.startTime).getTime() > stoppedAtMs
