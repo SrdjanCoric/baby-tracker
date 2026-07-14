@@ -145,8 +145,11 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
             const pendingStop = await readPendingWidgetStop();
             if (pendingStop) {
               const dbType = activityType === "tummyTime" ? "tummy_time" : activityType;
-              if (pendingStop.activityType === dbType || pendingStop.activityType === activityType) {
-                await clearPendingWidgetStop();
+              if (
+                (!pendingStop.babyId || pendingStop.babyId === selectedBaby?.id) &&
+                (pendingStop.activityType === dbType || pendingStop.activityType === activityType)
+              ) {
+                await clearPendingWidgetStop(pendingStop);
                 await clearPendingWidgetPauseToggle();
               }
             }

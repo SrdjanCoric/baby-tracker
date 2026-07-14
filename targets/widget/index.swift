@@ -415,6 +415,18 @@ struct StopActivityIntent: AppIntent {
         let laPushToken = userDefaults.string(forKey: "liveActivityPushToken")
         NSLog("[StopActivity] liveActivityPushToken=\(laPushToken != nil ? "present" : "nil")")
 
+        var stop: [String: String] = [
+            "activityType": dbType,
+            "stoppedAt": ISO8601DateFormatter().string(from: Date())
+        ]
+        if let babyId {
+            stop["babyId"] = babyId
+        }
+        if let json = try? JSONSerialization.data(withJSONObject: stop),
+           let jsonString = String(data: json, encoding: .utf8) {
+            userDefaults.set(jsonString, forKey: "pendingWidgetStop")
+        }
+
         if let supabaseUrl, let anonKey, let accessToken, let babyId, let userId {
             let urlString = "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(userId)"
             if let url = URL(string: urlString) {
@@ -425,15 +437,6 @@ struct StopActivityIntent: AppIntent {
                 request.timeoutInterval = 10
                 _ = try? await URLSession.shared.data(for: request)
             }
-        }
-
-        let stop: [String: String] = [
-            "activityType": dbType,
-            "stoppedAt": ISO8601DateFormatter().string(from: Date())
-        ]
-        if let json = try? JSONSerialization.data(withJSONObject: stop),
-           let jsonString = String(data: json, encoding: .utf8) {
-            userDefaults.set(jsonString, forKey: "pendingWidgetStop")
         }
 
         userDefaults.removeObject(forKey: "pendingWidgetPauseToggle")

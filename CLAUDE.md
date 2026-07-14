@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Active plan
+
+`plans/master-plan.md` — the project's master plan (durable architectural decisions + ordered task pointers). Task bodies live in `plans/tasks/`; new work is added via the `to-plan` skill, which appends to this plan and never creates a second one.
+
 ## Build and Development Commands
 
 ```bash

@@ -491,10 +491,13 @@ export async function readPushToStartToken(): Promise<string | null> {
   return null;
 }
 
-export async function readPendingWidgetStop(): Promise<{
+export interface PendingWidgetStop {
   activityType: string;
   stoppedAt: string;
-} | null> {
+  babyId?: string;
+}
+
+export async function readPendingWidgetStop(): Promise<PendingWidgetStop | null> {
   if (Platform.OS !== "ios") return null;
   try {
     const extensionStorage = await loadExtensionStorage();
@@ -538,14 +541,29 @@ export async function clearPendingWidgetPauseToggle(): Promise<void> {
   } catch (_) { /* best-effort cleanup */ }
 }
 
-export async function clearPendingWidgetStop(): Promise<void> {
+export async function clearPendingWidgetStop(expected?: PendingWidgetStop): Promise<void> {
   if (Platform.OS !== "ios") return;
   try {
     const extensionStorage = await loadExtensionStorage();
-    if (extensionStorage) {
-      await extensionStorage.set("pendingWidgetStop", "", APP_GROUP);
+    if (!extensionStorage) return;
+
+    if (expected) {
+      const raw = await extensionStorage.get("pendingWidgetStop", APP_GROUP);
+      if (!raw) return;
+      const current = JSON.parse(raw) as PendingWidgetStop;
+      if (
+        current.activityType !== expected.activityType ||
+        current.stoppedAt !== expected.stoppedAt ||
+        current.babyId !== expected.babyId
+      ) {
+        return;
+      }
     }
-  } catch (_) { /* best-effort cleanup */ }
+
+    await extensionStorage.set("pendingWidgetStop", "", APP_GROUP);
+  } catch {
+    // Best-effort cleanup. A failed clear leaves the idempotent command for the next pass.
+  }
 }
 
 export async function clearWidgetData(): Promise<void> {

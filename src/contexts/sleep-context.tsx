@@ -34,6 +34,7 @@ import {
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 import { isNightTime } from "@/utils/day-night-boundary";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
+import { isPendingStopForTimer, readPendingTimerStop } from "@/services/timer-stop-coordinator";
 import {
   processSleepData,
   computeSleepModel,
@@ -554,12 +555,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       }
 
       const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
+      const pendingStop = activeTimer ? await readPendingTimerStop() : null;
+      const hasPendingStop = activeTimer
+        ? isPendingStopForTimer(pendingStop, "sleep", new Date(activeTimer.startedAt), selectedBaby.id)
+        : false;
+
       if (activeTimer) {
         if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) {
           // skip — a stop completed during this loadSleeps run
         } else {
           let isStale = false;
-          if (user?.id && user?.householdId) {
+          if (user?.id && user?.householdId && !hasPendingStop) {
             try {
               const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
               if (!lock || lock.startedBy !== user.id) {
@@ -591,7 +597,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               },
             });
 
-            if (activeTimer.liveActivityId) {
+            if (!hasPendingStop && activeTimer.liveActivityId) {
               const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
               if (isRunning) {
                 liveActivityIdRef.current = activeTimer.liveActivityId;
@@ -605,7 +611,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
                 );
                 if (activityId) liveActivityIdRef.current = activityId;
               }
-            } else if (!(activeTimer.isPaused ?? false)) {
+            } else if (!hasPendingStop && !(activeTimer.isPaused ?? false)) {
               const totalPausedMs = activeTimer.totalPausedMs ?? 0;
               const effectiveStartTime = totalPausedMs > 0
                 ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
