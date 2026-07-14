@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useBaby } from "@/contexts/baby-context";
 import { useFeeding } from "@/contexts/feeding-context";
 import { useSleep } from "@/contexts/sleep-context";
@@ -16,122 +16,89 @@ import {
 } from "@/services/widget-data-service";
 
 const REQUEST_DEDUP_TTL_MS = 30_000;
+const WATCH_ACTIONS = new Set([
+  "requestSync",
+  "selectBaby",
+  "startTimer",
+  "stopTimer",
+  "stopPumpingWithVolume",
+  "logDiaper",
+  "logBottleFeeding",
+  "pauseTimer",
+  "resumeTimer",
+  "switchSide",
+]);
 
 interface UseWatchMessageHandlerOptions {
   onRequestSync?: (replyHandler?: WatchReplyHandler) => void;
   onSelectBabyRequest?: (babyId: string) => void;
 }
 
+interface ProcessedRequest {
+  timestamp: number;
+  response?: Record<string, unknown>;
+  waitingReplies: WatchReplyHandler[];
+}
+
+interface QueuedWatchMessage {
+  message: Record<string, unknown>;
+  replyHandler?: WatchReplyHandler;
+  targetBabyId?: string;
+}
+
+function parseRequestedTime(timeString: unknown): Date | undefined {
+  if (typeof timeString !== "string") return undefined;
+  const parsed = new Date(timeString);
+  if (isNaN(parsed.getTime())) return undefined;
+  const hoursDiff = (Date.now() - parsed.getTime()) / (1000 * 60 * 60);
+  return hoursDiff >= 0 && hoursDiff <= 24 ? parsed : undefined;
+}
+
 export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) {
-  const { selectedBaby, selectBaby } = useBaby();
+  const { onRequestSync, onSelectBabyRequest } = options ?? {};
+  const { selectedBaby, getBabyById, selectBaby } = useBaby();
   const { startBreastfeeding, stopBreastfeeding, changeSide, addFeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
   const { startSleep, stopSleep, pauseSleep, resumeSleep } = useSleep();
   const { addDiaper } = useDiaper();
   const { startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping } = usePumping();
   const { startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
 
-  const processedRequestIds = useRef<Map<string, number>>(new Map());
+  const processedRequestsRef = useRef<Map<string, ProcessedRequest>>(new Map());
+  const messageQueueRef = useRef<QueuedWatchMessage[]>([]);
+  const isProcessingRef = useRef(false);
+  const processAgainRef = useRef(false);
+  const selectingBabyIdRef = useRef<string | undefined>(undefined);
+  const selectedBabyIdRef = useRef(selectedBaby?.id);
+  selectedBabyIdRef.current = selectedBaby?.id;
 
-  const handleMessage = useCallback(
-    async (message: Record<string, unknown>, replyHandler?: WatchReplyHandler) => {
+  const executeMessage = useCallback(
+    async (
+      message: Record<string, unknown>,
+      targetBabyId: string | undefined,
+      replyHandler?: WatchReplyHandler
+    ) => {
       const action = message.action as string;
-      const messageBabyId = message.babyId as string | undefined;
-      const requestId = message.requestId as string | undefined;
-
-      console.log(
-        `[WatchMessageHandler] Received: action=${action}, babyId=${messageBabyId}, requestId=${requestId}, selectedBaby=${selectedBaby?.id}`
-      );
-
-      if (requestId) {
-        const now = Date.now();
-        const seen = processedRequestIds.current;
-
-        for (const [id, timestamp] of seen) {
-          if (now - timestamp > REQUEST_DEDUP_TTL_MS) {
-            seen.delete(id);
-          }
-        }
-
-        if (seen.has(requestId)) {
-          console.log(`[WatchMessageHandler] DUPLICATE requestId=${requestId}, skipping`);
-          return;
-        }
-        seen.set(requestId, now);
-      }
-
-      if (action === "requestSync") {
-        options?.onRequestSync?.(replyHandler);
-        return;
-      }
-
-      if (action === "selectBaby") {
-        const babyId = message.babyId as string;
-        if (babyId) {
-          await selectBaby(babyId);
-          options?.onSelectBabyRequest?.(babyId);
-        }
-        return;
-      }
-
-      if (!selectedBaby) {
-        console.log(`[WatchMessageHandler] DROPPING action ${action} - no selectedBaby`);
-        return;
-      }
-
-      if (messageBabyId && messageBabyId !== selectedBaby.id) {
-        console.log(
-          `[WatchMessageHandler] Baby mismatch - switching from ${selectedBaby.id} to ${messageBabyId}, then processing action`
-        );
-        await selectBaby(messageBabyId);
-      }
-
       const activityType = message.activityType as string | undefined;
       const context = message.context as string | undefined;
-      const requestedStartTime = message.requestedStartTime as string | undefined;
-      const requestedEndTime = message.requestedEndTime as string | undefined;
-      const requestedLogTime = message.requestedLogTime as string | undefined;
-
-      // Helper to parse and validate a time string (within last 24 hours)
-      const parseRequestedTime = (timeString: string | undefined): Date | undefined => {
-        if (!timeString) return undefined;
-        const parsed = new Date(timeString);
-        if (isNaN(parsed.getTime())) return undefined;
-        const now = new Date();
-        const hoursDiff = (now.getTime() - parsed.getTime()) / (1000 * 60 * 60);
-        if (hoursDiff >= 0 && hoursDiff <= 24) {
-          return parsed;
-        }
-        return undefined;
-      };
-
-      const startTime = parseRequestedTime(requestedStartTime);
-      const endTime = parseRequestedTime(requestedEndTime);
-      const logTime = parseRequestedTime(requestedLogTime);
-
-      if (startTime) {
-        console.log(`[WatchMessageHandler] Using requested start time: ${startTime.toISOString()}`);
-      }
-      if (endTime) {
-        console.log(`[WatchMessageHandler] Using requested end time: ${endTime.toISOString()}`);
-      }
-      if (logTime) {
-        console.log(`[WatchMessageHandler] Using requested log time: ${logTime.toISOString()}`);
-      }
+      const startTime = parseRequestedTime(message.requestedStartTime);
+      const endTime = parseRequestedTime(message.requestedEndTime);
+      const logTime = parseRequestedTime(message.requestedLogTime);
 
       try {
         switch (action) {
+          case "requestSync":
+            onRequestSync?.(replyHandler);
+            break;
+
           case "startTimer": {
             switch (activityType) {
               case "feeding":
                 await startBreastfeeding((context as BreastSide) || "left", startTime);
                 break;
               case "sleep": {
-                let sleepType: SleepType;
-                if (context === "auto" || !context) {
-                  sleepType = determineSleepType(startTime ?? new Date());
-                } else {
-                  sleepType = context as SleepType;
-                }
+                const sleepType = context === "auto" || !context
+                  ? determineSleepType(startTime ?? new Date())
+                  : context as SleepType;
                 await startSleep(sleepType, startTime);
                 break;
               }
@@ -146,7 +113,7 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
             if (pendingStop) {
               const dbType = activityType === "tummyTime" ? "tummy_time" : activityType;
               if (
-                (!pendingStop.babyId || pendingStop.babyId === selectedBaby?.id) &&
+                (!pendingStop.babyId || pendingStop.babyId === targetBabyId) &&
                 (pendingStop.activityType === dbType || pendingStop.activityType === activityType)
               ) {
                 await clearPendingWidgetStop(pendingStop);
@@ -156,7 +123,7 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
             break;
           }
 
-          case "stopTimer": {
+          case "stopTimer":
             switch (activityType) {
               case "feeding":
                 await stopBreastfeeding(endTime);
@@ -172,43 +139,37 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
                 break;
             }
             break;
-          }
 
-          case "stopPumpingWithVolume": {
-            const volumeMl = (message.volumeMl as number) || 0;
-            await stopPumping(volumeMl, endTime);
+          case "stopPumpingWithVolume":
+            await stopPumping(typeof message.volumeMl === "number" ? message.volumeMl : 0, endTime);
             break;
-          }
 
-          case "logDiaper": {
-            const diaperType = message.diaperType as DiaperType;
-            const stoolColor = message.stoolColor as StoolColor | undefined;
-            const changedAt = logTime ?? new Date();
-            await addDiaper({
-              babyId: selectedBaby.id,
-              type: diaperType,
-              stoolColor,
-              changedAt,
-            });
+          case "logDiaper":
+            if (targetBabyId) {
+              await addDiaper({
+                babyId: targetBabyId,
+                type: message.diaperType as DiaperType,
+                stoolColor: message.stoolColor as StoolColor | undefined,
+                changedAt: logTime ?? new Date(),
+              });
+            }
             break;
-          }
 
-          case "logBottleFeeding": {
-            const volumeMl = message.volumeMl as number;
-            const contentType = message.contentType as BottleContentType;
-            const feedingTime = logTime ?? new Date();
-            await addFeeding({
-              babyId: selectedBaby.id,
-              type: "bottle",
-              startedAt: feedingTime,
-              endedAt: feedingTime,
-              amountMl: volumeMl,
-              contentType,
-            });
+          case "logBottleFeeding":
+            if (targetBabyId) {
+              const feedingTime = logTime ?? new Date();
+              await addFeeding({
+                babyId: targetBabyId,
+                type: "bottle",
+                startedAt: feedingTime,
+                endedAt: feedingTime,
+                amountMl: message.volumeMl as number,
+                contentType: message.contentType as BottleContentType,
+              });
+            }
             break;
-          }
 
-          case "pauseTimer": {
+          case "pauseTimer":
             switch (activityType) {
               case "feeding":
                 await pauseBreastfeeding();
@@ -224,9 +185,8 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
                 break;
             }
             break;
-          }
 
-          case "resumeTimer": {
+          case "resumeTimer":
             switch (activityType) {
               case "feeding":
                 await resumeBreastfeeding();
@@ -242,11 +202,9 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
                 break;
             }
             break;
-          }
 
           case "switchSide": {
-            const currentSide = message.currentSide as BreastSide;
-            const newSide: BreastSide = currentSide === "left" ? "right" : "left";
+            const newSide: BreastSide = message.currentSide === "left" ? "right" : "left";
             if (activityType === "feeding") {
               changeSide(newSide);
             } else if (activityType === "pumping") {
@@ -256,14 +214,14 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
           }
         }
       } catch (error) {
-        console.error("[WatchMessageHandler] Error handling message:", error);
+        console.error(
+          "[WatchMessageHandler] Action failed:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     },
     [
-      selectedBaby,
-      selectBaby,
-      options?.onRequestSync,
-      options?.onSelectBabyRequest,
+      onRequestSync,
       startBreastfeeding,
       stopBreastfeeding,
       pauseBreastfeeding,
@@ -285,6 +243,140 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       pauseTummyTime,
       resumeTummyTime,
     ]
+  );
+
+  const executeMessageRef = useRef(executeMessage);
+  executeMessageRef.current = executeMessage;
+
+  const processQueue = useCallback(async function processQueuedMessages() {
+    if (isProcessingRef.current) {
+      processAgainRef.current = true;
+      return;
+    }
+
+    isProcessingRef.current = true;
+    try {
+      while (messageQueueRef.current.length > 0) {
+        const queued = messageQueueRef.current[0];
+        if (queued.targetBabyId && selectedBabyIdRef.current !== queued.targetBabyId) {
+          if (selectingBabyIdRef.current === queued.targetBabyId) {
+            return;
+          }
+
+          selectingBabyIdRef.current = queued.targetBabyId;
+          try {
+            await selectBaby(queued.targetBabyId);
+            onSelectBabyRequest?.(queued.targetBabyId);
+            return;
+          } catch (error) {
+            selectingBabyIdRef.current = undefined;
+            console.error(
+              "[WatchMessageHandler] Baby selection failed:",
+              error instanceof Error ? error.message : "Unknown error"
+            );
+            messageQueueRef.current.shift();
+            continue;
+          }
+        }
+
+        messageQueueRef.current.shift();
+        await executeMessageRef.current(
+          queued.message,
+          queued.targetBabyId ?? selectedBabyIdRef.current,
+          queued.replyHandler
+        );
+      }
+    } finally {
+      isProcessingRef.current = false;
+      if (processAgainRef.current) {
+        processAgainRef.current = false;
+        void processQueuedMessages();
+      }
+    }
+  }, [onSelectBabyRequest, selectBaby]);
+
+  useEffect(() => {
+    selectedBabyIdRef.current = selectedBaby?.id;
+    if (selectingBabyIdRef.current === selectedBaby?.id) {
+      selectingBabyIdRef.current = undefined;
+    }
+    void processQueue();
+  }, [processQueue, selectedBaby?.id]);
+
+  const handleMessage = useCallback(
+    async (message: Record<string, unknown>, replyHandler?: WatchReplyHandler) => {
+      const action = typeof message.action === "string" ? message.action : undefined;
+      if (!action || !WATCH_ACTIONS.has(action)) {
+        console.warn("[WatchMessageHandler] Rejected invalid action");
+        return;
+      }
+
+      const requestId = typeof message.requestId === "string" ? message.requestId : undefined;
+      let trackedReplyHandler = replyHandler;
+
+      if (requestId) {
+        const now = Date.now();
+        const seen = processedRequestsRef.current;
+        for (const [id, request] of seen) {
+          if (now - request.timestamp > REQUEST_DEDUP_TTL_MS) {
+            seen.delete(id);
+          }
+        }
+
+        const existing = seen.get(requestId);
+        if (existing) {
+          if (replyHandler) {
+            if (existing.response) {
+              replyHandler(existing.response);
+            } else {
+              existing.waitingReplies.push(replyHandler);
+            }
+          }
+          return;
+        }
+
+        const request: ProcessedRequest = { timestamp: now, waitingReplies: [] };
+        seen.set(requestId, request);
+        if (replyHandler) {
+          trackedReplyHandler = (response) => {
+            request.response = response;
+            replyHandler(response);
+            for (const waitingReply of request.waitingReplies) {
+              waitingReply(response);
+            }
+            request.waitingReplies = [];
+          };
+        }
+      }
+
+      const targetBabyId = typeof message.babyId === "string" ? message.babyId : undefined;
+      if (targetBabyId && !getBabyById(targetBabyId)) {
+        console.warn("[WatchMessageHandler] Rejected action for unknown baby");
+        return;
+      }
+
+      if (action === "selectBaby") {
+        if (targetBabyId && targetBabyId !== selectedBabyIdRef.current) {
+          await selectBaby(targetBabyId);
+          onSelectBabyRequest?.(targetBabyId);
+        }
+        return;
+      }
+
+      const resolvedBabyId = targetBabyId ?? selectedBabyIdRef.current;
+      if (action !== "requestSync" && !resolvedBabyId) {
+        console.warn("[WatchMessageHandler] Rejected activity action without a baby");
+        return;
+      }
+
+      messageQueueRef.current.push({
+        message,
+        replyHandler: trackedReplyHandler,
+        targetBabyId: resolvedBabyId,
+      });
+      await processQueue();
+    },
+    [getBabyById, onSelectBabyRequest, processQueue, selectBaby]
   );
 
   const registerHandler = useCallback(() => {
