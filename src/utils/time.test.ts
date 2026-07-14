@@ -292,20 +292,22 @@ describe("formatDayHeader", () => {
     expect(formatDayHeader(yesterday, now)).toBe("Yesterday");
   });
 
-  it("returns formatted date for older dates", () => {
+  it("returns a locale-aware weekday for older dates", () => {
     const now = new Date(2024, 0, 15, 12, 0);
     const older = new Date(2024, 0, 10, 12, 0);
     const result = formatDayHeader(older, now);
-    expect(result).toBe("Wednesday");
+    expect(result).toBe(older.toLocaleDateString(undefined, { weekday: "long" }));
   });
 });
 
 describe("formatDate", () => {
-  it("formats date correctly", () => {
+  it("formats the date using the device locale", () => {
     const date = new Date(2024, 0, 15);
     const result = formatDate(date);
-    expect(result).toContain("Jan");
-    expect(result).toContain("15");
-    expect(result).toContain("2024");
+    expect(result).toBe(date.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }));
   });
 });

@@ -94,6 +94,25 @@ describe('SyncEngine', () => {
 
       expect(syncEngine.isOnline()).toBe(false);
     });
+
+    it('should initialize in offline mode when network status lookup fails', async () => {
+      const NetInfo = await import('@react-native-community/netinfo');
+      vi.mocked(NetInfo.default.fetch).mockRejectedValue(new Error('network status unavailable'));
+
+      await expect(syncEngine.initialize()).resolves.toBeUndefined();
+      expect(syncEngine.isOnline()).toBe(false);
+    });
+  });
+
+  describe('auth context', () => {
+    it('should reject authenticated writes after auth is cleared', async () => {
+      syncEngine.clearAuthContext();
+
+      expect(syncEngine.getAuthContext()).toBeNull();
+      await expect(
+        syncEngine.enqueueOperation(createOperation('CREATE', 'feedings', 'f1'))
+      ).rejects.toThrow('Sync auth context not set');
+    });
   });
 
   describe('network transitions', () => {

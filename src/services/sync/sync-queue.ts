@@ -20,6 +20,9 @@ export class SyncQueue {
     if (!operation.id) {
       operation.id = this.generateOperationId();
     }
+    if (this.queue.some(queued => queued.id === operation.id)) {
+      return;
+    }
     this.queue.push(operation);
     this.sortByTimestamp();
   }
@@ -69,31 +72,45 @@ export class SyncQueue {
         return;
       }
 
-      const persistence: SyncQueuePersistence = JSON.parse(data);
-
-      if (persistence.version !== QUEUE_VERSION) {
-        console.warn(`[SyncQueue] Queue version mismatch. Expected ${QUEUE_VERSION}, got ${persistence.version}. Resetting queue.`);
-        this.queue = [];
-        await AsyncStorage.removeItem(STORAGE_KEY);
-        return;
+      const parsed: unknown = JSON.parse(data);
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Queue data must be an object');
       }
 
+      const persistence = parsed as Partial<SyncQueuePersistence>;
       if (!Array.isArray(persistence.operations)) {
-        console.warn('[SyncQueue] Invalid queue data format. Resetting queue.');
-        this.queue = [];
-        await AsyncStorage.removeItem(STORAGE_KEY);
-        return;
+        throw new Error('Queue operations must be an array');
       }
 
-      this.queue = persistence.operations;
+      const operations = persistence.operations.filter(
+        (operation): operation is QueuedOperation => Boolean(operation) && typeof operation === 'object'
+      );
+      const droppedInvalidEntries = operations.length !== persistence.operations.length;
+
+      this.queue = operations;
       this.sortByTimestamp();
+
+      if (persistence.version !== QUEUE_VERSION || droppedInvalidEntries) {
+        console.warn('[SyncQueue] Restored compatible operations from non-current queue data.');
+        try {
+          await this.persist();
+        } catch (error) {
+          console.error(
+            '[SyncQueue] Failed to upgrade restored queue data; retained operations in memory:',
+            error instanceof Error ? error.message : 'Unknown error'
+          );
+        }
+      }
     } catch (error) {
       console.error('[SyncQueue] Failed to restore queue:', error instanceof Error ? error.message : 'Unknown error');
       this.queue = [];
       try {
         await AsyncStorage.removeItem(STORAGE_KEY);
       } catch (cleanupError) {
-        console.error('[SyncQueue] Failed to cleanup corrupted queue data:', cleanupError);
+        console.error(
+          '[SyncQueue] Failed to cleanup corrupted queue data:',
+          cleanupError instanceof Error ? cleanupError.message : 'Unknown error'
+        );
       }
     }
   }

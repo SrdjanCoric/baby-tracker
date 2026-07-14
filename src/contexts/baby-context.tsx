@@ -209,7 +209,6 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
             if (guestBabies.length > 0) {
               try {
                 const { idMap } = await syncLocalBabiesToDatabase(user.householdId, guestBabies);
-                await clearGuestBabies();
 
                 const babyIdMap = new Map<string, string>();
                 for (const baby of guestBabies) {
@@ -218,6 +217,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
                 }
 
                 await syncGuestActivitiesToDatabase(user.id, babyIdMap);
+                await clearGuestBabies();
               } catch (error) {
                 console.error("[BabyContext] Failed to migrate guest data:", error);
               }

@@ -3,9 +3,7 @@ import * as Crypto from "expo-crypto";
 import { supabase } from "./supabase";
 import { getUserScopedKey } from "./storage-prefix";
 import { getSyncEngine } from "@/contexts/sync-context";
-import type { SyncableTable } from "./sync/types";
-import { isCrdtTable } from "./sync/crdt-sync";
-import { mergeRecordWrite } from "./sync/merge-record-write";
+import type { OperationType, SyncableTable } from "./sync/types";
 import { reconcilePulled } from "./sync/crdt-sync-instance";
 import { dropTombstoned } from "./sync/tombstone";
 import type { StoredFeedingEntry, CreateFeedingInput, UpdateFeedingInput } from "./feeding-storage";
@@ -19,23 +17,42 @@ import type { StoredHealthEntry, CreateHealthInput, UpdateHealthInput } from "./
 import type { AchievementId } from "./achievement-detection";
 import type { SyncEngine } from "./sync/sync-engine";
 
-function getPendingCreateIds(engine: SyncEngine | null, table: SyncableTable): Set<string> {
-  if (!engine) return new Set();
-  return engine.getPendingEntityIds(table);
+function getPendingEntityOperations(
+  engine: SyncEngine | null,
+  table: SyncableTable
+): Map<string, OperationType> {
+  if (!engine) return new Map();
+  return engine.getPendingEntityOperations(table);
 }
 
 function mergeWithPendingLocal<T extends { id: string }>(
   serverEntries: T[],
   localEntries: T[],
-  pendingIds: Set<string>
+  pendingOperations: Map<string, OperationType>
 ): T[] {
-  if (pendingIds.size === 0) return serverEntries;
-  const serverIds = new Set(serverEntries.map(e => e.id));
-  const unsyncedLocal = localEntries.filter(
-    l => !serverIds.has(l.id) && pendingIds.has(l.id)
-  );
-  if (unsyncedLocal.length === 0) return serverEntries;
-  return [...serverEntries, ...unsyncedLocal];
+  if (pendingOperations.size === 0) return serverEntries;
+
+  const localById = new Map(localEntries.map(entry => [entry.id, entry]));
+  const merged: T[] = [];
+  const mergedIds = new Set<string>();
+
+  for (const serverEntry of serverEntries) {
+    const pendingType = pendingOperations.get(serverEntry.id);
+    if (pendingType === 'DELETE') continue;
+
+    const entry = pendingType ? localById.get(serverEntry.id) ?? serverEntry : serverEntry;
+    merged.push(entry);
+    mergedIds.add(entry.id);
+  }
+
+  for (const localEntry of localEntries) {
+    const pendingType = pendingOperations.get(localEntry.id);
+    if (pendingType && pendingType !== 'DELETE' && !mergedIds.has(localEntry.id)) {
+      merged.push(localEntry);
+    }
+  }
+
+  return merged;
 }
 
 const storageLocks = new Map<string, Promise<void>>();
@@ -68,28 +85,33 @@ function isValidUUID(id: string): boolean {
   return uuidRegex.test(id);
 }
 
-function ensureUUID(id: string): string {
+async function ensureUUID(id: string, namespace: SyncableTable): Promise<string> {
   if (isValidUUID(id)) {
     return id;
   }
-  return generateId();
+
+  const hash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    `${namespace}:${id}`
+  );
+  const variant = ((Number.parseInt(hash[16], 16) & 0x3) | 0x8).toString(16);
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-5${hash.slice(13, 16)}-${variant}${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
 }
 
-async function queueSyncOperation(operation: {
-  type: 'CREATE' | 'UPDATE' | 'DELETE';
-  table: SyncableTable;
-  entityId: string;
-  data: Record<string, unknown> | null;
-}): Promise<void> {
+async function queueSyncOperation(
+  operation: {
+    type: OperationType;
+    table: SyncableTable;
+    entityId: string;
+    data: Record<string, unknown> | null;
+  },
+  requireAuthenticatedQueue = false
+): Promise<void> {
   const engine = getSyncEngine();
-  if (!engine) {
-    await writeDirectlyToDatabase(operation);
-    return;
-  }
-
-  const authContext = engine.getAuthContext();
-  if (!authContext) {
-    await writeDirectlyToDatabase(operation);
+  if (!engine?.getAuthContext()) {
+    if (requireAuthenticatedQueue) {
+      throw new Error('Authenticated sync queue is not ready');
+    }
     return;
   }
 
@@ -103,67 +125,20 @@ async function queueSyncOperation(operation: {
       timestamp: new Date().toISOString(),
       retryCount: 0,
     });
-    engine.sync().catch(() => {});
-  } catch {
-    await writeDirectlyToDatabase(operation);
-  }
-}
-
-async function writeDirectlyToDatabase(operation: {
-  type: 'CREATE' | 'UPDATE' | 'DELETE';
-  table: string;
-  entityId: string;
-  data: Record<string, unknown> | null;
-}): Promise<void> {
-  const { table, type, entityId, data } = operation;
-
-  try {
-    // In-scope writes merge server-side via the RPC (per-field LWW) with freshly stamped
-    // clocks. A delete is a `deleted: true` tombstone field write through the same path.
-    if (isCrdtTable(table) && (type === 'CREATE' || type === 'UPDATE')) {
-      if (!data) throw new Error(`${type} requires data`);
-      const { error } = await mergeRecordWrite(table, entityId, data);
-      if (error) {
-        console.error(`[ActivitySync] Direct ${type} merge failed for ${table}:`, error.message);
-      }
-      return;
-    }
-    if (isCrdtTable(table) && type === 'DELETE') {
-      const { error } = await mergeRecordWrite(table, entityId, { deleted: true });
-      if (error) {
-        console.error(`[ActivitySync] Direct DELETE tombstone failed for ${table}:`, error.message);
-      }
-      return;
-    }
-
-    switch (type) {
-      case 'CREATE': {
-        if (!data) throw new Error('CREATE requires data');
-        const { error } = await supabase.from(table).insert(data);
-        if (error && error.code !== '23505') {
-          console.error(`[ActivitySync] Direct CREATE failed for ${table}:`, error.message);
-        }
-        break;
-      }
-      case 'UPDATE': {
-        if (!data) throw new Error('UPDATE requires data');
-        const { error } = await supabase.from(table).update(data).eq('id', entityId);
-        if (error) {
-          console.error(`[ActivitySync] Direct UPDATE failed for ${table}:`, error.message);
-        }
-        break;
-      }
-      case 'DELETE': {
-        const { error } = await supabase.from(table).delete().eq('id', entityId);
-        if (error) {
-          console.error(`[ActivitySync] Direct DELETE failed for ${table}:`, error.message);
-        }
-        break;
-      }
-    }
   } catch (error) {
-    console.error('[ActivitySync] Direct database operation failed:', error);
+    console.error(
+      '[ActivitySync] Failed to persist activity operation in the sync queue:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+    if (requireAuthenticatedQueue) {
+      throw error;
+    }
+    return;
   }
+
+  void engine.sync().catch(() => {
+    // SyncEngine reports the failure and retains the operation for the next retry.
+  });
 }
 
 // ============ FEEDINGS ============
@@ -182,10 +157,10 @@ export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredF
 
   const reconciled = await reconcilePulled("feedings", (data || []) as Record<string, unknown>[]);
   const serverFeedings: StoredFeedingEntry[] = dropTombstoned(reconciled).map(transformFeedingFromDb);
-  const pendingIds = getPendingCreateIds(getSyncEngine(), 'feedings');
+  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'feedings');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.feedings}${babyId}`));
   const localFeedings: StoredFeedingEntry[] = localData ? JSON.parse(localData) : [];
-  const feedings = mergeWithPendingLocal(serverFeedings, localFeedings, pendingIds);
+  const feedings = mergeWithPendingLocal(serverFeedings, localFeedings, pendingOperations);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.feedings}${babyId}`), JSON.stringify(feedings));
   return feedings;
 }
@@ -367,10 +342,10 @@ export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDi
 
   const reconciled = await reconcilePulled("diapers", (data || []) as Record<string, unknown>[]);
   const serverDiapers: StoredDiaperEntry[] = dropTombstoned(reconciled).map(transformDiaperFromDb);
-  const pendingIds = getPendingCreateIds(getSyncEngine(), 'diapers');
+  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'diapers');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.diapers}${babyId}`));
   const localDiapers: StoredDiaperEntry[] = localData ? JSON.parse(localData) : [];
-  const diapers = mergeWithPendingLocal(serverDiapers, localDiapers, pendingIds);
+  const diapers = mergeWithPendingLocal(serverDiapers, localDiapers, pendingOperations);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.diapers}${babyId}`), JSON.stringify(diapers));
   return diapers;
 }
@@ -512,10 +487,10 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
 
   const reconciled = await reconcilePulled("sleep_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredSleepEntry[] = dropTombstoned(reconciled).map(transformSleepFromDb);
-  const pendingIds = getPendingCreateIds(getSyncEngine(), 'sleep_sessions');
+  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'sleep_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.sleep}${babyId}`));
   const localSessions: StoredSleepEntry[] = localData ? JSON.parse(localData) : [];
-  const sleepSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingIds);
+  const sleepSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
   const mergedIds = new Set(sleepSessions.map(s => s.id));
   const droppedRecent = localSessions.filter(l =>
     !mergedIds.has(l.id) && (Date.now() - new Date(l.createdAt).getTime()) < 120_000
@@ -523,7 +498,7 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
   if (droppedRecent.length > 0) {
     console.error("[ActivitySync] fetchSleep: DROPPING recent local entries!", {
       droppedIds: droppedRecent.map(d => d.id),
-      pendingCount: pendingIds.size,
+      pendingCount: pendingOperations.size,
       serverCount: serverSessions.length,
       localCount: localSessions.length,
     });
@@ -676,10 +651,10 @@ export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPu
 
   const reconciled = await reconcilePulled("pumping_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredPumpingEntry[] = dropTombstoned(reconciled).map(transformPumpingFromDb);
-  const pendingIds = getPendingCreateIds(getSyncEngine(), 'pumping_sessions');
+  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'pumping_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.pumping}${babyId}`));
   const localSessions: StoredPumpingEntry[] = localData ? JSON.parse(localData) : [];
-  const pumpingSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingIds);
+  const pumpingSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.pumping}${babyId}`), JSON.stringify(pumpingSessions));
   return pumpingSessions;
 }
@@ -828,10 +803,10 @@ export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGro
 
   const reconciled = await reconcilePulled("growth_measurements", (data || []) as Record<string, unknown>[]);
   const serverMeasurements: StoredGrowthEntry[] = dropTombstoned(reconciled).map(transformGrowthFromDb);
-  const pendingIds = getPendingCreateIds(getSyncEngine(), 'growth_measurements');
+  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'growth_measurements');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.growth}${babyId}`));
   const localMeasurements: StoredGrowthEntry[] = localData ? JSON.parse(localData) : [];
-  const measurements = mergeWithPendingLocal(serverMeasurements, localMeasurements, pendingIds);
+  const measurements = mergeWithPendingLocal(serverMeasurements, localMeasurements, pendingOperations);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.growth}${babyId}`), JSON.stringify(measurements));
   return measurements;
 }
@@ -977,10 +952,10 @@ export async function fetchTummyTimeFromDatabase(babyId: string): Promise<Stored
 
   const reconciled = await reconcilePulled("tummy_time_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredTummyTimeEntry[] = dropTombstoned(reconciled).map(transformTummyTimeFromDb);
-  const pendingIds = getPendingCreateIds(getSyncEngine(), 'tummy_time_sessions');
+  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'tummy_time_sessions');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.tummyTime}${babyId}`));
   const localSessions: StoredTummyTimeEntry[] = localData ? JSON.parse(localData) : [];
-  const sessions = mergeWithPendingLocal(serverSessions, localSessions, pendingIds);
+  const sessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.tummyTime}${babyId}`), JSON.stringify(sessions));
   return sessions;
 }
@@ -1119,7 +1094,11 @@ export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promi
   }
 
   const reconciled = await reconcilePulled("milestone_responses", (data || []) as Record<string, unknown>[]);
-  const responses: StoredMilestoneResponse[] = dropTombstoned(reconciled).map(transformMilestoneResponseFromDb);
+  const serverResponses: StoredMilestoneResponse[] = dropTombstoned(reconciled).map(transformMilestoneResponseFromDb);
+  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'milestone_responses');
+  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.milestones}${babyId}`));
+  const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
+  const responses = mergeWithPendingLocal(serverResponses, localResponses, pendingOperations);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.milestones}${babyId}`), JSON.stringify(responses));
   return responses;
 }
@@ -1346,7 +1325,7 @@ async function syncFeedingsForBaby(oldBabyId: string, newBabyId: string, userId:
   const migratedFeedings: StoredFeedingEntry[] = [];
 
   for (const feeding of feedings) {
-    const newId = ensureUUID(feeding.id);
+    const newId = await ensureUUID(feeding.id, 'feedings');
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -1369,10 +1348,12 @@ async function syncFeedingsForBaby(oldBabyId: string, newBabyId: string, userId:
       updated_at: feeding.updatedAt,
     };
 
-    const { error } = await mergeRecordWrite('feedings', newId, dbRecord);
-    if (error) {
-      console.error('[ActivitySync] Failed to sync feeding:', feeding.id, error.message);
-    }
+    await queueSyncOperation({
+      type: 'CREATE',
+      table: 'feedings',
+      entityId: newId,
+      data: dbRecord,
+    }, true);
 
     migratedFeedings.push({ ...feeding, id: newId, babyId: newBabyId });
   }
@@ -1392,7 +1373,7 @@ async function syncDiapersForBaby(oldBabyId: string, newBabyId: string, userId: 
   const migratedDiapers: StoredDiaperEntry[] = [];
 
   for (const diaper of diapers) {
-    const newId = ensureUUID(diaper.id);
+    const newId = await ensureUUID(diaper.id, 'diapers');
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -1404,10 +1385,12 @@ async function syncDiapersForBaby(oldBabyId: string, newBabyId: string, userId: 
       created_at: diaper.createdAt,
     };
 
-    const { error } = await mergeRecordWrite('diapers', newId, dbRecord);
-    if (error) {
-      console.error('[ActivitySync] Failed to sync diaper:', diaper.id, error.message);
-    }
+    await queueSyncOperation({
+      type: 'CREATE',
+      table: 'diapers',
+      entityId: newId,
+      data: dbRecord,
+    }, true);
 
     migratedDiapers.push({ ...diaper, id: newId, babyId: newBabyId });
   }
@@ -1427,7 +1410,7 @@ async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: st
   const migratedSleep: StoredSleepEntry[] = [];
 
   for (const sleep of sleepSessions) {
-    const newId = ensureUUID(sleep.id);
+    const newId = await ensureUUID(sleep.id, 'sleep_sessions');
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -1441,10 +1424,12 @@ async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: st
       updated_at: sleep.updatedAt,
     };
 
-    const { error } = await mergeRecordWrite('sleep_sessions', newId, dbRecord);
-    if (error) {
-      console.error('[ActivitySync] Failed to sync sleep:', sleep.id, error.message);
-    }
+    await queueSyncOperation({
+      type: 'CREATE',
+      table: 'sleep_sessions',
+      entityId: newId,
+      data: dbRecord,
+    }, true);
 
     migratedSleep.push({ ...sleep, id: newId, babyId: newBabyId });
   }
@@ -1464,7 +1449,7 @@ async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: 
   const migratedPumping: StoredPumpingEntry[] = [];
 
   for (const pumping of pumpingSessions) {
-    const newId = ensureUUID(pumping.id);
+    const newId = await ensureUUID(pumping.id, 'pumping_sessions');
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -1478,10 +1463,12 @@ async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: 
       created_at: pumping.createdAt,
     };
 
-    const { error } = await mergeRecordWrite('pumping_sessions', newId, dbRecord);
-    if (error) {
-      console.error('[ActivitySync] Failed to sync pumping:', pumping.id, error.message);
-    }
+    await queueSyncOperation({
+      type: 'CREATE',
+      table: 'pumping_sessions',
+      entityId: newId,
+      data: dbRecord,
+    }, true);
 
     migratedPumping.push({ ...pumping, id: newId, babyId: newBabyId });
   }
@@ -1501,7 +1488,7 @@ async function syncGrowthForBaby(oldBabyId: string, newBabyId: string, userId: s
   const migratedGrowth: StoredGrowthEntry[] = [];
 
   for (const growth of measurements) {
-    const newId = ensureUUID(growth.id);
+    const newId = await ensureUUID(growth.id, 'growth_measurements');
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -1514,10 +1501,12 @@ async function syncGrowthForBaby(oldBabyId: string, newBabyId: string, userId: s
       created_at: growth.createdAt,
     };
 
-    const { error } = await mergeRecordWrite('growth_measurements', newId, dbRecord);
-    if (error) {
-      console.error('[ActivitySync] Failed to sync growth:', growth.id, error.message);
-    }
+    await queueSyncOperation({
+      type: 'CREATE',
+      table: 'growth_measurements',
+      entityId: newId,
+      data: dbRecord,
+    }, true);
 
     migratedGrowth.push({ ...growth, id: newId, babyId: newBabyId });
   }
@@ -1537,7 +1526,7 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
   const migratedTummyTime: StoredTummyTimeEntry[] = [];
 
   for (const tummyTime of sessions) {
-    const newId = ensureUUID(tummyTime.id);
+    const newId = await ensureUUID(tummyTime.id, 'tummy_time_sessions');
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -1549,10 +1538,12 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
       created_at: tummyTime.createdAt,
     };
 
-    const { error } = await mergeRecordWrite('tummy_time_sessions', newId, dbRecord);
-    if (error) {
-      console.error('[ActivitySync] Failed to sync tummy time:', tummyTime.id, error.message);
-    }
+    await queueSyncOperation({
+      type: 'CREATE',
+      table: 'tummy_time_sessions',
+      entityId: newId,
+      data: dbRecord,
+    }, true);
 
     migratedTummyTime.push({ ...tummyTime, id: newId, babyId: newBabyId });
   }
@@ -1581,10 +1572,10 @@ export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHea
 
   const reconciled = await reconcilePulled("health_entries", (data || []) as Record<string, unknown>[]);
   const serverEntries: StoredHealthEntry[] = dropTombstoned(reconciled).map(transformHealthFromDb);
-  const pendingIds = getPendingCreateIds(getSyncEngine(), 'health_entries');
+  const pendingOperations = getPendingEntityOperations(getSyncEngine(), 'health_entries');
   const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.health}${babyId}`));
   const localEntries: StoredHealthEntry[] = localData ? JSON.parse(localData) : [];
-  const entries = mergeWithPendingLocal(serverEntries, localEntries, pendingIds);
+  const entries = mergeWithPendingLocal(serverEntries, localEntries, pendingOperations);
   await AsyncStorage.setItem(getUserScopedKey(`${KEYS.health}${babyId}`), JSON.stringify(entries));
   return entries;
 }
