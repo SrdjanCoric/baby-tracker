@@ -115,7 +115,7 @@ export default function ExportScreen() {
     } finally {
       setIsExporting(false);
     }
-  }, [selectedBaby, selectedTypes, dateRange, includeNotes, t]);
+  }, [selectedBaby, selectedTypes, dateRange, includeNotes, volumeUnit, weightUnit, heightUnit, t]);
 
   const totalSelectedRecords = selectedTypes.reduce(
     (sum, type) => sum + recordCounts[type],

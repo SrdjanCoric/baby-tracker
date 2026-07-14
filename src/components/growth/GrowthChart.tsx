@@ -72,7 +72,10 @@ export function GrowthChart({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const convert = unitConverter ?? ((v: number) => v);
+  const convert = useMemo(
+    () => unitConverter ?? ((value: number) => value),
+    [unitConverter]
+  );
 
   const dimensions: ChartDimensions = useMemo(
     () => ({

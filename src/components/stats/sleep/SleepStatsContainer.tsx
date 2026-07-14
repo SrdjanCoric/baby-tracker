@@ -36,6 +36,7 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
   const [weekEndDate, setWeekEndDate] = useState(() => getSleepDate(new Date(), dayStartHour));
 
   const sleepsWithOngoing = useMemo(() => {
+    void refreshTick;
     if (!activeTimer?.isRunning || !selectedBaby) return sleeps;
     const now = new Date();
     const syntheticEntry: StoredSleepEntry = {
@@ -51,7 +52,7 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
       updatedAt: now.toISOString(),
     };
     return [syntheticEntry, ...sleeps];
-  }, [sleeps, activeTimer, selectedBaby, refreshTick]);
+  }, [sleeps, activeTimer, selectedBaby, refreshTick, dayStartHour, dayEndHour]);
 
   const hasSleepData = sleepsWithOngoing.length > 0;
   const isNewborn = isUnderThreeMonths(selectedBaby?.birthDate);

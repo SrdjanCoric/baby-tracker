@@ -140,7 +140,7 @@ export default function HealthScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, addHealth, router, getCompletedVaccinations]);
+  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, addHealth, router, getCompletedVaccinations, t]);
 
   const canSave = selectedType !== null && !isSaving && (
     (selectedType === "medication" && (medicationName === "custom" ? customMedicationName : medicationName)) ||

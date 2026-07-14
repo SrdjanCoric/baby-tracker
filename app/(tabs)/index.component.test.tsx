@@ -123,6 +123,21 @@ jest.mock("@/components/TipCarousel", () => ({
   TipCarousel: () => null,
 }));
 
+jest.mock("@/components/MilestoneCelebrationModal", () => ({
+  MilestoneCelebrationModal: () => null,
+}));
+
+jest.mock("@/components/MilestoneToast", () => ({
+  MilestoneToast: () => null,
+}));
+
+jest.mock("@/contexts/achievement-context", () => ({
+  useAchievements: () => ({
+    pendingCelebration: null,
+    dismissCelebration: jest.fn(),
+  }),
+}));
+
 const mockUseFeeding = jest.fn();
 const mockUseSleep = jest.fn();
 const mockUseDiaper = jest.fn();
@@ -168,6 +183,20 @@ jest.mock("@/contexts", () => ({
     getLockedByName: () => null,
     getLockForActivity: () => null,
     refreshLocks: jest.fn(),
+  }),
+  useDashboardConfig: () => ({
+    config: {
+      cards: [
+        "feeding",
+        "sleep",
+        "diaper",
+        "tummyTime",
+        "pumping",
+        "growth",
+        "milestones",
+        "health",
+      ].map((activity) => ({ activity, visible: true })),
+    },
   }),
 }));
 

@@ -436,7 +436,7 @@ function MilestonesInfoOverlay({
 
   useEffect(() => {
     opacity.value = withTiming(1, { duration: 200 });
-  }, []);
+  }, [opacity]);
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

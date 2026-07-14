@@ -163,7 +163,7 @@ export default function ManualHealthScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, loggedAt, addHealth, router, getCompletedVaccinations]);
+  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, loggedAt, addHealth, router, getCompletedVaccinations, t]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, {
