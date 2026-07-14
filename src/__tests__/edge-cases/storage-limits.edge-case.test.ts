@@ -38,15 +38,16 @@ describe('Storage Limits (EC-8)', () => {
       expect(queue.getCount()).toBe(100);
     });
 
-    it('should handle storage write failures gracefully', async () => {
+    it('should report failure when neither queue snapshot can be stored', async () => {
       const AsyncStorage = await import('@react-native-async-storage/async-storage');
-      vi.mocked(AsyncStorage.default.setItem).mockRejectedValueOnce(
+      vi.mocked(AsyncStorage.default.setItem).mockRejectedValue(
         new Error('Storage full')
       );
 
       const queue = new SyncQueue();
 
       await expect(queue.persist()).rejects.toThrow('Storage full');
+      vi.mocked(AsyncStorage.default.setItem).mockReset();
     });
 
     it('should maintain queue integrity after storage errors', async () => {

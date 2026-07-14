@@ -1,3 +1,5 @@
+import type { ClockedRecord } from './crdt';
+
 export type SyncStatus = 'offline' | 'online' | 'syncing' | 'pending' | 'error';
 
 export interface SyncState {
@@ -34,6 +36,19 @@ export type SyncableTable =
 
 export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE';
 
+export interface SyncOperationOwner {
+  householdId: string;
+  userId: string;
+}
+
+export interface LocalStorageMutation {
+  key: string;
+  previousValue: string | null;
+  nextValue: string;
+  state: 'prepared' | 'committed';
+  previousShadow?: ClockedRecord | null;
+}
+
 export interface QueuedOperation {
   id: string;
   type: OperationType;
@@ -42,11 +57,14 @@ export interface QueuedOperation {
   data: Record<string, unknown> | null;
   timestamp: string;
   retryCount: number;
+  owner?: SyncOperationOwner;
+  localMutation?: LocalStorageMutation;
 }
 
 export interface SyncQueuePersistence {
   operations: QueuedOperation[];
   version: number;
+  generation?: number;
 }
 
 export interface SyncEngineConfig {

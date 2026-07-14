@@ -1,11 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SyncEngine } from '@/services/sync/sync-engine';
 
+const { storage, rpcMock } = vi.hoisted(() => ({
+  storage: new Map<string, string>(),
+  rpcMock: vi.fn(),
+}));
+
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
+    getItem: vi.fn(async (key: string) => storage.get(key) ?? null),
+    setItem: vi.fn(async (key: string, value: string) => {
+      storage.set(key, value);
+    }),
+    removeItem: vi.fn(async (key: string) => {
+      storage.delete(key);
+    }),
     clear: vi.fn(),
     getAllKeys: vi.fn().mockResolvedValue([]),
     multiRemove: vi.fn(),
@@ -25,6 +34,7 @@ vi.mock('@/contexts/sync-context', () => ({
 
 vi.mock('@/services/supabase', () => ({
   supabase: {
+    rpc: rpcMock,
     from: vi.fn().mockReturnValue({
       insert: vi.fn().mockResolvedValue({ error: null }),
       update: vi.fn().mockReturnValue({
@@ -39,7 +49,9 @@ vi.mock('@/services/supabase', () => ({
 
 describe('Auth Token Security (SR-3)', () => {
   beforeEach(() => {
+    storage.clear();
     vi.clearAllMocks();
+    rpcMock.mockResolvedValue({ error: null });
   });
 
   describe('Token Clearing on Logout', () => {
@@ -114,6 +126,79 @@ describe('Auth Token Security (SR-3)', () => {
 
       await engine.clearAllData();
       expect(engine.getQuarantinedOperations().length).toBe(0);
+    });
+
+    it("should retain another user's durable operation without uploading it", async () => {
+      const aliceEngine = new SyncEngine({ debounceMs: 60_000 });
+      aliceEngine.setAuthContext({ householdId: 'household-123', userId: 'alice' });
+      aliceEngine.setCrdtSync({
+        stampWrite: vi.fn(async () => ({ id: 'clock-1' })),
+        forget: vi.fn(async () => {}),
+        getShadow: vi.fn(async () => null),
+        restoreShadow: vi.fn(async () => {}),
+      });
+      await aliceEngine.enqueueOperation({
+        id: 'op-alice',
+        type: 'CREATE',
+        table: 'feedings',
+        entityId: 'feeding-alice',
+        data: { id: 'feeding-alice', baby_id: 'baby-1', logged_by: 'alice' },
+        timestamp: new Date().toISOString(),
+        retryCount: 0,
+      });
+      aliceEngine.destroy();
+
+      const bobEngine = new SyncEngine({ debounceMs: 60_000 });
+      bobEngine.setAuthContext({ householdId: 'household-123', userId: 'bob' });
+      bobEngine.setCrdtSync({
+        stampWrite: vi.fn(async () => ({ id: 'clock-2' })),
+        forget: vi.fn(async () => {}),
+        getShadow: vi.fn(async () => null),
+        restoreShadow: vi.fn(async () => {}),
+      });
+      await bobEngine.initialize();
+      bobEngine.setOnlineForTesting(true);
+      await bobEngine.sync();
+
+      expect(rpcMock).not.toHaveBeenCalled();
+      expect(bobEngine.getPendingCount()).toBe(1);
+      expect(bobEngine.getQuarantinedOperations()).toHaveLength(0);
+      bobEngine.destroy();
+    });
+
+    it('binds an RPC to the immutable initiating user when auth changes in flight', async () => {
+      const engine = new SyncEngine({ debounceMs: 60_000, maxRetries: 1 });
+      engine.setAuthContext({ householdId: 'household-123', userId: 'alice' });
+      engine.setCrdtSync({
+        stampWrite: vi.fn(async () => ({ id: 'clock-1' })),
+        forget: vi.fn(async () => {}),
+        getShadow: vi.fn(async () => null),
+        restoreShadow: vi.fn(async () => {}),
+      });
+      await engine.enqueueOperation({
+        id: 'op-alice-race',
+        type: 'CREATE',
+        table: 'feedings',
+        entityId: 'feeding-alice-race',
+        data: { id: 'feeding-alice-race', baby_id: 'baby-1', logged_by: 'alice' },
+        timestamp: new Date().toISOString(),
+        retryCount: 0,
+      });
+      engine.setOnlineForTesting(true);
+      rpcMock.mockImplementationOnce(async (_name: string, params: Record<string, unknown>) => {
+        engine.setAuthContext({ householdId: 'household-123', userId: 'bob' });
+        expect(params.p_expected_user_id).toBe('alice');
+        return { error: { message: 'authenticated user changed' } };
+      });
+
+      await expect(engine.sync()).rejects.toThrow('authenticated user changed');
+
+      expect(engine.getPendingCount()).toBe(1);
+      expect(rpcMock).toHaveBeenCalledWith('merge_record', expect.objectContaining({
+        p_operation_id: 'op-alice-race',
+        p_expected_user_id: 'alice',
+      }));
+      engine.destroy();
     });
   });
 

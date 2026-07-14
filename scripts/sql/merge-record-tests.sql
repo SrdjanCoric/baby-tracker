@@ -288,4 +288,102 @@ BEGIN
 END $$;
 \echo 'ok: tombstone delete of a non-existent row is a no-op (no throw, no insert)'
 
+-- ---- 12. queued replay: the same operation id applies its merge exactly once ----
+DO $$
+DECLARE row_notes text; ack_count int;
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', '11111111-1111-1111-1111-111111111111')::text, true);
+  PERFORM merge_record(
+    'feedings',
+    jsonb_build_object(
+      'id', 'f0000000-0000-0000-0000-0000000000f2',
+      'baby_id', 'a0000000-0000-0000-0000-000000000001',
+      'type', 'bottle',
+      'started_at', '2026-07-04T10:00:00Z',
+      'notes', 'first-application'
+    ),
+    jsonb_build_object('notes', '2026-07-04T13:00:00.000Z-0000-device-a'),
+    'sql-idempotency-op',
+    '11111111-1111-1111-1111-111111111111'
+  );
+  PERFORM merge_record(
+    'feedings',
+    jsonb_build_object(
+      'id', 'f0000000-0000-0000-0000-0000000000f2',
+      'baby_id', 'a0000000-0000-0000-0000-000000000001',
+      'notes', 'must-not-replay'
+    ),
+    jsonb_build_object('notes', '2026-07-04T14:00:00.000Z-0000-device-b'),
+    'sql-idempotency-op',
+    '11111111-1111-1111-1111-111111111111'
+  );
+
+  SELECT notes INTO row_notes FROM feedings
+  WHERE id = 'f0000000-0000-0000-0000-0000000000f2';
+  SELECT count(*) INTO ack_count FROM sync_operation_acknowledgements
+  WHERE user_id = '11111111-1111-1111-1111-111111111111'
+    AND operation_id = 'sql-idempotency-op';
+  IF row_notes <> 'first-application' THEN
+    RAISE EXCEPTION 'same-id replay applied twice, got notes=%', row_notes;
+  END IF;
+  IF ack_count <> 1 THEN RAISE EXCEPTION 'expected one acknowledgement, got %', ack_count; END IF;
+END $$;
+\echo 'ok: queued operation id is acknowledged and applied exactly once'
+
+-- ---- 13. immutable actor: the session user must match p_expected_user_id ----
+DO $$
+DECLARE raised boolean := false;
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', '22222222-2222-2222-2222-222222222222')::text, true);
+  BEGIN
+    PERFORM merge_record(
+      'feedings',
+      jsonb_build_object('id', 'f0000000-0000-0000-0000-0000000000f2', 'notes', 'wrong-actor'),
+      jsonb_build_object('notes', '2026-07-04T15:00:00.000Z-0000-device-b'),
+      'sql-wrong-actor-op',
+      '11111111-1111-1111-1111-111111111111'
+    );
+  EXCEPTION WHEN insufficient_privilege THEN raised := true;
+  END;
+  IF NOT raised THEN RAISE EXCEPTION 'expected immutable actor rejection'; END IF;
+END $$;
+\echo 'ok: queued operation rejects a changed authenticated user'
+
+-- ---- 14. acknowledgement and merge are atomic on failure ----
+DO $$
+DECLARE raised boolean := false; ack_count int;
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', '11111111-1111-1111-1111-111111111111')::text, true);
+  BEGIN
+    PERFORM merge_record(
+      'not_mergeable', '{}'::jsonb, '{}'::jsonb,
+      'sql-failed-merge-op',
+      '11111111-1111-1111-1111-111111111111'
+    );
+  EXCEPTION WHEN OTHERS THEN raised := true;
+  END;
+  IF NOT raised THEN RAISE EXCEPTION 'expected underlying merge failure'; END IF;
+  SELECT count(*) INTO ack_count FROM sync_operation_acknowledgements
+  WHERE user_id = '11111111-1111-1111-1111-111111111111'
+    AND operation_id = 'sql-failed-merge-op';
+  IF ack_count <> 0 THEN RAISE EXCEPTION 'failed merge must not be acknowledged'; END IF;
+END $$;
+\echo 'ok: a failed merge leaves no acknowledgement'
+
+-- ---- 15. authenticated clients can execute only the bound overload ----
+DO $$
+BEGIN
+  IF has_function_privilege(
+    'authenticated', 'public.merge_record(text,jsonb,jsonb)', 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'authenticated must not execute the legacy merge overload';
+  END IF;
+  IF NOT has_function_privilege(
+    'authenticated', 'public.merge_record(text,jsonb,jsonb,text,uuid)', 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'authenticated must execute the bound merge overload';
+  END IF;
+END $$;
+\echo 'ok: authenticated cannot bypass actor binding or idempotency'
+
 ROLLBACK;

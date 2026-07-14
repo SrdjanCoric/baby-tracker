@@ -10,11 +10,24 @@ import { compareClocks, type FieldClocks } from './crdt';
 import { FIELD_CLOCKS_COLUMN } from './crdt-sync';
 
 const STORAGE_KEY = '@sync_queue';
-const QUEUE_VERSION = 1;
+const RECOVERY_STORAGE_KEY = '@sync_queue_recovery';
+const QUEUE_VERSION = 2;
+
+interface RestoredQueueSnapshot {
+  persistence: SyncQueuePersistence;
+  operations: QueuedOperation[];
+  droppedInvalidEntries: boolean;
+}
+
+interface SnapshotReadResult {
+  snapshot: RestoredQueueSnapshot | null;
+  readError: Error | null;
+}
 
 export class SyncQueue {
   private queue: QueuedOperation[] = [];
   private config = DEFAULT_SYNC_CONFIG;
+  private generation = 0;
 
   async enqueue(operation: QueuedOperation): Promise<void> {
     if (!operation.id) {
@@ -57,62 +70,160 @@ export class SyncQueue {
   }
 
   async persist(): Promise<void> {
+    const generation = this.generation + 1;
     const persistence: SyncQueuePersistence = {
       operations: this.queue,
       version: QUEUE_VERSION,
+      generation,
     };
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(persistence));
+    const serialized = JSON.stringify(persistence);
+
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, serialized);
+      this.generation = generation;
+      try {
+        await AsyncStorage.removeItem(RECOVERY_STORAGE_KEY);
+      } catch (error) {
+        console.warn(
+          '[SyncQueue] Failed to remove a stale recovery snapshot:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+      }
+    } catch (error) {
+      try {
+        await AsyncStorage.setItem(RECOVERY_STORAGE_KEY, serialized);
+        this.generation = generation;
+      } catch (recoveryError) {
+        console.error(
+          '[SyncQueue] Failed to persist the queue recovery snapshot:',
+          recoveryError instanceof Error ? recoveryError.message : 'Unknown error'
+        );
+        throw error;
+      }
+    }
   }
 
   async restore(): Promise<void> {
-    try {
-      const data = await AsyncStorage.getItem(STORAGE_KEY);
-      if (!data) {
-        this.queue = [];
-        return;
-      }
+    const [primaryRead, recoveryRead] = await Promise.all([
+      this.readStoredSnapshot(STORAGE_KEY),
+      this.readStoredSnapshot(RECOVERY_STORAGE_KEY),
+    ]);
+    const readError = primaryRead.readError ?? recoveryRead.readError;
+    if (readError) {
+      throw readError;
+    }
+    const primary = primaryRead.snapshot;
+    const recovery = recoveryRead.snapshot;
+    const restored = this.chooseNewestSnapshot(primary, recovery);
 
-      const parsed: unknown = JSON.parse(data);
-      if (!parsed || typeof parsed !== 'object') {
-        throw new Error('Queue data must be an object');
-      }
-
-      const persistence = parsed as Partial<SyncQueuePersistence>;
-      if (!Array.isArray(persistence.operations)) {
-        throw new Error('Queue operations must be an array');
-      }
-
-      const operations = persistence.operations.filter(
-        (operation): operation is QueuedOperation => Boolean(operation) && typeof operation === 'object'
-      );
-      const droppedInvalidEntries = operations.length !== persistence.operations.length;
-
-      this.queue = operations;
-      this.sortByTimestamp();
-
-      if (persistence.version !== QUEUE_VERSION || droppedInvalidEntries) {
-        console.warn('[SyncQueue] Restored compatible operations from non-current queue data.');
-        try {
-          await this.persist();
-        } catch (error) {
-          console.error(
-            '[SyncQueue] Failed to upgrade restored queue data; retained operations in memory:',
-            error instanceof Error ? error.message : 'Unknown error'
-          );
-        }
-      }
-    } catch (error) {
-      console.error('[SyncQueue] Failed to restore queue:', error instanceof Error ? error.message : 'Unknown error');
+    if (!restored) {
       this.queue = [];
+      this.generation = 0;
+      return;
+    }
+
+    this.queue = restored.operations;
+    this.generation = restored.persistence.generation ?? 0;
+    this.sortByTimestamp();
+
+    const recoveredFallback = restored === recovery;
+    if (
+      restored.persistence.version !== QUEUE_VERSION
+      || restored.droppedInvalidEntries
+      || recoveredFallback
+    ) {
+      console.warn('[SyncQueue] Restored compatible operations from non-current queue data.');
       try {
-        await AsyncStorage.removeItem(STORAGE_KEY);
-      } catch (cleanupError) {
+        await this.persist();
+      } catch (error) {
         console.error(
-          '[SyncQueue] Failed to cleanup corrupted queue data:',
-          cleanupError instanceof Error ? cleanupError.message : 'Unknown error'
+          '[SyncQueue] Failed to upgrade restored queue data; retained operations in memory:',
+          error instanceof Error ? error.message : 'Unknown error'
         );
       }
     }
+  }
+
+  private async readStoredSnapshot(storageKey: string): Promise<SnapshotReadResult> {
+    let data: string | null;
+    try {
+      data = await AsyncStorage.getItem(storageKey);
+    } catch (error) {
+      console.error(
+        '[SyncQueue] Failed to read a queue snapshot; preserving other snapshots:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+      return {
+        snapshot: null,
+        readError: error instanceof Error ? error : new Error('Failed to read queue snapshot'),
+      };
+    }
+    return {
+      snapshot: await this.parseStoredSnapshot(data, storageKey),
+      readError: null,
+    };
+  }
+
+  private parseSnapshot(data: string | null): RestoredQueueSnapshot | null {
+    if (!data) return null;
+
+    const parsed: unknown = JSON.parse(data);
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('Queue data must be an object');
+    }
+
+    const persistence = parsed as Partial<SyncQueuePersistence>;
+    if (!Array.isArray(persistence.operations)) {
+      throw new Error('Queue operations must be an array');
+    }
+
+    const operations = persistence.operations.filter(
+      (operation): operation is QueuedOperation => Boolean(operation) && typeof operation === 'object'
+    );
+    return {
+      persistence: {
+        operations,
+        version: persistence.version ?? 0,
+        generation: persistence.generation ?? 0,
+      },
+      operations,
+      droppedInvalidEntries: operations.length !== persistence.operations.length,
+    };
+  }
+
+  private async parseStoredSnapshot(
+    data: string | null,
+    storageKey: string
+  ): Promise<RestoredQueueSnapshot | null> {
+    try {
+      return this.parseSnapshot(data);
+    } catch (error) {
+      console.error(
+        '[SyncQueue] Ignored a corrupted queue snapshot:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+      try {
+        await AsyncStorage.removeItem(storageKey);
+      } catch (cleanupError) {
+        console.error(
+          '[SyncQueue] Failed to cleanup a corrupted queue snapshot:',
+          cleanupError instanceof Error ? cleanupError.message : 'Unknown error'
+        );
+      }
+      return null;
+    }
+  }
+
+  private chooseNewestSnapshot(
+    primary: RestoredQueueSnapshot | null,
+    recovery: RestoredQueueSnapshot | null
+  ): RestoredQueueSnapshot | null {
+    if (!primary) return recovery;
+    if (!recovery) return primary;
+
+    const primaryGeneration = primary.persistence.generation ?? 0;
+    const recoveryGeneration = recovery.persistence.generation ?? 0;
+    return recoveryGeneration > primaryGeneration ? recovery : primary;
   }
 
   optimize(): void {

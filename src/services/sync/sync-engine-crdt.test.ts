@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SyncEngine } from "./sync-engine";
 import { CrdtSync, type ShadowStore } from "./crdt-sync";
 import { MemoryClockStorage, type ClockedRecord } from "./crdt";
@@ -78,6 +79,7 @@ describe("SyncEngine CRDT stamping on enqueue", () => {
     insert.mockClear();
     updateEq.mockClear();
     deleteEq.mockClear();
+    vi.mocked(AsyncStorage.setItem).mockResolvedValue(undefined);
   });
 
   it("stamps field_clocks onto an in-scope CREATE before it is queued", async () => {
@@ -107,6 +109,31 @@ describe("SyncEngine CRDT stamping on enqueue", () => {
     await engine.enqueueOperation(operation);
     expect((operation.data as Record<string, unknown>).field_clocks).toBeUndefined();
   });
+
+  it("restores the previous CRDT shadow when queue persistence totally fails", async () => {
+    const shadowStore = new MemoryShadowStore();
+    const previousShadow: ClockedRecord = {
+      id: "f1",
+      amount_ml: 100,
+      fieldClocks: { amount_ml: "2026-07-14T10:00:00.000Z-0000-devTest" },
+    };
+    await shadowStore.set("feedings:f1", previousShadow);
+    const crdt = new CrdtSync({
+      deviceId: "devTest",
+      clockStorage: new MemoryClockStorage(),
+      shadowStore,
+    });
+    const engine = new SyncEngine({ maxRetries: 1 });
+    engine.setAuthContext({ householdId: "h1", userId: "u1" });
+    engine.setCrdtSync(crdt);
+    vi.mocked(AsyncStorage.setItem).mockRejectedValue(new Error("queue storage unavailable"));
+
+    await expect(engine.enqueueOperation(
+      op("UPDATE", "feedings", "f1", { amount_ml: 150 })
+    )).rejects.toThrow("queue storage unavailable");
+
+    await expect(crdt.getShadow("feedings", "f1")).resolves.toEqual(previousShadow);
+  });
 });
 
 describe("SyncEngine CRDT push path", () => {
@@ -115,6 +142,7 @@ describe("SyncEngine CRDT push path", () => {
     insert.mockClear();
     updateEq.mockClear();
     deleteEq.mockClear();
+    vi.mocked(AsyncStorage.setItem).mockResolvedValue(undefined);
   });
 
   it("pushes an in-scope CREATE through the merge_record RPC with its clocks", async () => {
@@ -132,6 +160,8 @@ describe("SyncEngine CRDT push path", () => {
     expect(params.p_record.amount_ml).toBe(100);
     expect(params.p_record.field_clocks).toBeUndefined();
     expect(params.p_field_clocks.amount_ml).toBeDefined();
+    expect(params.p_operation_id).toBe("op-f1-CREATE");
+    expect(params.p_expected_user_id).toBe("u1");
   });
 
   it("pushes an in-scope UPDATE through merge_record, injecting the id into the record", async () => {
