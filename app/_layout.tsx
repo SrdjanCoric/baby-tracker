@@ -12,6 +12,7 @@ import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvi
 import { AchievementProvider } from "@/contexts/achievement-context";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
+import { SyncAuthGate } from "@/components/SyncAuthGate";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
@@ -89,30 +90,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       </View>
     );
   }
-
-  return <>{children}</>;
-}
-
-function SyncAuthSetup({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  const { setAuthContext } = useSync();
-  const lastHouseholdIdRef = useRef<string | null>(null);
-  const lastUserIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (user?.id) {
-      const householdId = user.householdId || user.id;
-
-      if (lastUserIdRef.current !== user.id || lastHouseholdIdRef.current !== householdId) {
-        setAuthContext(householdId, user.id);
-        lastUserIdRef.current = user.id;
-        lastHouseholdIdRef.current = householdId;
-      }
-    } else {
-      lastUserIdRef.current = null;
-      lastHouseholdIdRef.current = null;
-    }
-  }, [user?.id, user?.householdId, setAuthContext]);
 
   return <>{children}</>;
 }
@@ -418,7 +395,7 @@ export default function RootLayout() {
           <AuthGuard>
             <SyncProvider>
               <HouseholdProvider>
-                <SyncAuthSetup>
+                <SyncAuthGate>
                 <UnitProvider>
                 <TimeFormatProvider>
                 <DashboardConfigProvider>
@@ -466,7 +443,7 @@ export default function RootLayout() {
                 </DashboardConfigProvider>
                 </TimeFormatProvider>
                 </UnitProvider>
-                </SyncAuthSetup>
+                </SyncAuthGate>
               </HouseholdProvider>
             </SyncProvider>
           </AuthGuard>

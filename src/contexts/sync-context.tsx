@@ -69,11 +69,13 @@ type RemoteChangeCallback = (change: RemoteChange) => void;
 
 interface SyncContextValue extends SyncState {
   foregroundRefreshKey: number;
+  isInitialized: boolean;
   forceSync: () => Promise<void>;
   retryFailedSync: () => Promise<void>;
   clearAllData: () => Promise<void>;
   subscribeToRemoteChanges: (table: SyncableTable, callback: RemoteChangeCallback) => () => void;
   setAuthContext: (householdId: string, userId: string) => void;
+  clearAuthContext: () => void;
   enqueueOperation: (operation: {
     type: 'CREATE' | 'UPDATE' | 'DELETE';
     table: SyncableTable;
@@ -93,6 +95,7 @@ let instanceRefCount = 0;
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(syncReducer, initialSyncState);
   const [foregroundRefreshKey, setForegroundRefreshKey] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
   const remoteChangeListenersRef = useRef<Map<SyncableTable, Set<RemoteChangeCallback>>>(new Map());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const wasOfflineRef = useRef(false);
@@ -174,11 +177,19 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       });
     });
 
-    engine.initialize().catch((error) => {
-      dispatch({ type: 'SYNC_ERROR', payload: error.message });
-    });
+    let isMounted = true;
+    engine.initialize()
+      .then(() => {
+        if (isMounted) {
+          setIsInitialized(true);
+        }
+      })
+      .catch((error) => {
+        dispatch({ type: 'SYNC_ERROR', payload: error.message });
+      });
 
     return () => {
+      isMounted = false;
       unsubscribe();
       unsubscribeRealTime();
       instanceRefCount--;
@@ -263,6 +274,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const clearAuthContext = useCallback(() => {
+    syncEngineInstance?.clearAuthContext();
+    realTimeSyncInstance?.clearAuthContext();
+  }, []);
+
   const enqueueOperation = useCallback(async (operation: {
     type: 'CREATE' | 'UPDATE' | 'DELETE';
     table: SyncableTable;
@@ -290,13 +306,15 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const value: SyncContextValue = useMemo(() => ({
     ...state,
     foregroundRefreshKey,
+    isInitialized,
     forceSync,
     retryFailedSync,
     clearAllData,
     subscribeToRemoteChanges,
     setAuthContext,
+    clearAuthContext,
     enqueueOperation,
-  }), [state, foregroundRefreshKey, forceSync, retryFailedSync, clearAllData, subscribeToRemoteChanges, setAuthContext, enqueueOperation]);
+  }), [state, foregroundRefreshKey, isInitialized, forceSync, retryFailedSync, clearAllData, subscribeToRemoteChanges, setAuthContext, clearAuthContext, enqueueOperation]);
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }

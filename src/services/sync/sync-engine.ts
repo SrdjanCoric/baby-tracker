@@ -27,6 +27,25 @@ interface ValidationResult {
   errors: string[];
 }
 
+const VALID_OPERATION_TYPES = new Set(['CREATE', 'UPDATE', 'DELETE']);
+const VALID_SYNCABLE_TABLES = new Set<SyncableTable>([
+  'feedings',
+  'sleep_sessions',
+  'diapers',
+  'pumping_sessions',
+  'growth_measurements',
+  'tummy_time_sessions',
+  'babies',
+  'users',
+  'households',
+  'active_timers',
+  'wake_window_preferences',
+  'activity_goals',
+  'milestone_responses',
+  'health_entries',
+  'achievements',
+]);
+
 export interface SyncAuthContext {
   householdId: string;
   userId: string;
@@ -61,6 +80,13 @@ export class SyncEngine {
 
   setAuthContext(context: SyncAuthContext): void {
     this.authContext = context;
+    if (this.state.isConnected && this.queue.getCount() > 0) {
+      void this.handleNetworkChange(true);
+    }
+  }
+
+  clearAuthContext(): void {
+    this.authContext = null;
   }
 
   /** Inject the CRDT coordinator (tests). In the app it is resolved lazily from the
@@ -91,8 +117,16 @@ export class SyncEngine {
     await this.queue.restore();
     this.updateState({ pendingCount: this.queue.getCount() });
 
-    const netState = await NetInfo.fetch();
-    const isOnline = netState.isConnected === true && netState.isInternetReachable === true;
+    let isOnline = false;
+    try {
+      const netState = await NetInfo.fetch();
+      isOnline = netState.isConnected === true && netState.isInternetReachable === true;
+    } catch (error) {
+      console.warn(
+        '[SyncEngine] Network status unavailable during initialization; starting offline:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
 
     this.updateState({
       isConnected: isOnline,
@@ -101,8 +135,12 @@ export class SyncEngine {
 
     this.networkUnsubscribe = NetInfo.addEventListener((state) => {
       const online = state.isConnected === true && state.isInternetReachable === true;
-      this.handleNetworkChange(online);
+      void this.handleNetworkChange(online);
     });
+
+    if (isOnline && this.authContext && this.queue.getCount() > 0) {
+      void this.handleNetworkChange(true);
+    }
   }
 
   async handleNetworkChange(isOnline: boolean): Promise<void> {
@@ -117,13 +155,17 @@ export class SyncEngine {
 
     this.debounceTimer = setTimeout(async () => {
       if (isOnline && this.queue.getCount() > 0) {
-        await this.sync();
+        try {
+          await this.sync();
+        } catch {
+          // Sync state already records the failure; keep the operation queued for a later retry.
+        }
       }
     }, this.config.debounceMs);
   }
 
   async sync(): Promise<void> {
-    if (!this.state.isConnected) {
+    if (!this.state.isConnected || !this.authContext) {
       return;
     }
 
@@ -168,7 +210,12 @@ export class SyncEngine {
               this.updateState({
                 status: 'error',
                 error: error instanceof Error ? error.message : 'Sync failed',
+                pendingCount: this.queue.getCount(),
               });
+              console.error(
+                `[SyncEngine] Sync failed after ${retryCount} attempts; ${this.queue.getCount()} operations remain queued:`,
+                error instanceof Error ? error.message : 'Unknown error'
+              );
               throw error;
             }
             await this.delay(this.queue.calculateBackoff(retryCount));
@@ -205,9 +252,18 @@ export class SyncEngine {
 
     await this.stampOperation(operation);
 
-    this.processedOperationIds.add(operation.id);
     await this.queue.enqueue(operation);
-    await this.queue.persist();
+    try {
+      await this.persistQueueWithRetry();
+    } catch (error) {
+      this.updateState({
+        status: 'error',
+        error: 'Failed to persist sync queue',
+        pendingCount: this.queue.getCount(),
+      });
+      throw error;
+    }
+    this.processedOperationIds.add(operation.id);
     this.updateState({ pendingCount: this.queue.getCount() });
 
     if (this.state.isConnected) {
@@ -236,6 +292,24 @@ export class SyncEngine {
     operation.data = { ...operation.data, field_clocks: clocks };
   }
 
+  private async persistQueueWithRetry(): Promise<void> {
+    const maxAttempts = Math.max(1, Math.min(this.config.maxRetries, 3));
+    let attempt = 0;
+
+    while (attempt < maxAttempts) {
+      try {
+        await this.queue.persist();
+        return;
+      } catch (error) {
+        attempt++;
+        if (attempt >= maxAttempts) {
+          throw error;
+        }
+        await this.delay(Math.min(this.queue.calculateBackoff(attempt), 250));
+      }
+    }
+  }
+
   private generateOperationId(): string {
     return `op-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
@@ -243,32 +317,44 @@ export class SyncEngine {
   validateOperation(operation: QueuedOperation): ValidationResult {
     const errors: string[] = [];
 
-    if (!operation.id) {
+    if (typeof operation.id !== 'string' || operation.id.length === 0) {
       errors.push('Operation ID is required');
     }
 
-    if (!operation.entityId) {
+    if (typeof operation.entityId !== 'string' || operation.entityId.length === 0) {
       errors.push('Entity ID is required');
     }
 
-    if (!operation.table) {
-      errors.push('Table name is required');
+    if (!VALID_SYNCABLE_TABLES.has(operation.table)) {
+      errors.push('Table name is invalid');
     }
 
-    if (!operation.type) {
-      errors.push('Operation type is required');
+    if (!VALID_OPERATION_TYPES.has(operation.type)) {
+      errors.push('Operation type is invalid');
     }
 
-    if (operation.type === 'CREATE' && !operation.data) {
-      errors.push('CREATE operations require data');
+    const hasRecordData = operation.data !== null
+      && typeof operation.data === 'object'
+      && !Array.isArray(operation.data);
+
+    if ((operation.type === 'CREATE' || operation.type === 'UPDATE') && !hasRecordData) {
+      errors.push(`${operation.type} operations require data`);
     }
 
-    if (operation.type === 'CREATE' && operation.data && !operation.data.id) {
+    if (operation.type === 'CREATE' && hasRecordData && !operation.data?.id) {
       errors.push('CREATE data must include id');
     }
 
-    if (operation.type === 'UPDATE' && !operation.data) {
-      errors.push('UPDATE operations require data');
+    if (operation.data !== null && !hasRecordData) {
+      errors.push('Operation data must be an object or null');
+    }
+
+    if (typeof operation.timestamp !== 'string' || !Number.isFinite(Date.parse(operation.timestamp))) {
+      errors.push('Operation timestamp is invalid');
+    }
+
+    if (!Number.isInteger(operation.retryCount) || operation.retryCount < 0) {
+      errors.push('Operation retry count is invalid');
     }
 
     return {
@@ -280,7 +366,7 @@ export class SyncEngine {
   async quarantineOperation(operation: QueuedOperation): Promise<void> {
     this.quarantined.push(operation);
     this.queue.remove(operation.id);
-    await this.queue.persist();
+    await this.persistQueueWithRetry();
   }
 
   getQuarantinedOperations(): QueuedOperation[] {
@@ -306,17 +392,16 @@ export class SyncEngine {
           await this.executeOperation(operation);
           this.queue.remove(operation.id);
         } catch (error) {
-          console.error(`[SyncEngine] Failed to execute operation ${operation.id}:`, error);
-          operation.retryCount++;
-          if (operation.retryCount >= this.config.maxRetries) {
-            console.warn(`[SyncEngine] Quarantining operation ${operation.id} after ${operation.retryCount} retries`);
-            await this.quarantineOperation(operation);
-          }
+          this.queue.markRetry(operation.id);
+          await this.persistQueueWithRetry();
+          this.updateState({ pendingCount: this.queue.getCount() });
+          throw error;
         }
       }
     }
 
-    await this.queue.persist();
+    await this.persistQueueWithRetry();
+    this.updateState({ pendingCount: this.queue.getCount() });
   }
 
   private async executeOperation(operation: QueuedOperation): Promise<void> {
@@ -421,15 +506,14 @@ export class SyncEngine {
     return this.queue.getCount();
   }
 
-  getPendingEntityIds(table: SyncableTable): Set<string> {
-    const ops = this.queue.getAll();
-    const ids = new Set<string>();
-    for (const op of ops) {
-      if (op.table === table && op.type === 'CREATE') {
-        ids.add(op.entityId);
+  getPendingEntityOperations(table: SyncableTable): Map<string, QueuedOperation['type']> {
+    const operations = new Map<string, QueuedOperation['type']>();
+    for (const operation of this.queue.getAll()) {
+      if (operation.table === table && this.validateOperation(operation).valid) {
+        operations.set(operation.entityId, operation.type);
       }
     }
-    return ids;
+    return operations;
   }
 
   getLastSyncedAt(): string | null {

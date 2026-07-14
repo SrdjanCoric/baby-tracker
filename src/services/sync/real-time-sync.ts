@@ -52,6 +52,11 @@ export class RealTimeSync {
     this.authContext = context;
   }
 
+  clearAuthContext(): void {
+    this.unsubscribe();
+    this.authContext = null;
+  }
+
   private ensureAuthContext(): RealTimeSyncContext {
     if (!this.authContext) {
       throw new Error('RealTimeSync auth context not set. Call setAuthContext first.');
