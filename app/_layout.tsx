@@ -81,7 +81,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     };
 
     handleNavigation();
-  }, [authLoading, isAuthenticated, segments, router]);
+  }, [authLoading, isAuthenticated, segments, router, user?.displayName]);
 
   if (authLoading || !isReady) {
     return (

@@ -62,7 +62,7 @@ export function useTimerAlertIntegration(activityType: keyof TimerThresholds) {
         return false;
       }
     },
-    [activityType, checkTimerAlert, permissionStatus]
+    [activityType, checkTimerAlert, permissionStatus, timerAlertsEnabled]
   );
 
   const resetAlert = useCallback(() => {

@@ -85,5 +85,5 @@ Durable decisions that apply across all tasks:
 - [x] 0006 · Make external timer stops durable → tasks/done/0006-make-external-timer-stops-durable.md
 - [x] 0007 · Make authenticated activity sync lossless (after 0006) → tasks/done/0007-make-sync-queue-lossless.md
 - [x] 0008 · Target Watch actions to the requested baby (after 0006) → tasks/done/0008-target-watch-actions-to-the-requested-baby.md
-- [ ] 0009 · Fix stale preference-driven UI and exports → tasks/0009-fix-stale-preference-driven-ui.md
+- [x] 0009 · Fix stale preference-driven UI and exports → tasks/done/0009-fix-stale-preference-driven-ui.md
 - [ ] 0010 · Enforce a warning-free production quality gate (after 0006, 0007, 0008, 0009) → tasks/0010-enforce-warning-free-production-quality-gate.md

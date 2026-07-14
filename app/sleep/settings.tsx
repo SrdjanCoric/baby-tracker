@@ -110,10 +110,10 @@ export default function SleepSettingsScreen() {
   const birthDate = selectedBaby?.birthDate ? new Date(selectedBaby.birthDate) : undefined;
   const presetPills = birthDate ? getPresetPillsForAge(birthDate) : [60, 90, 120, 150, 180];
 
-  const goalConfirmOptions = {
+  const goalConfirmOptions = useMemo(() => ({
     title: t("sleep.householdGoalTitle"),
     message: t("sleep.householdGoalConfirm"),
-  };
+  }), [t]);
 
   const handleSelectQuickGoal = useCallback(
     (hours: number) => {
@@ -203,7 +203,7 @@ export default function SleepSettingsScreen() {
       }
       await doEnableReminders();
     },
-    [doEnableReminders, updateSettings, settings.wakeWindowReminders, selectedBaby?.birthDate, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, permissionStatus, requestPermissions]
+    [doEnableReminders, updateSettings, settings.wakeWindowReminders, selectedBaby?.birthDate, selectedBaby?.id, wakeWindowConfig, syncWakeWindowPreferenceForBaby, permissionStatus, requestPermissions, setNewbornNapOptIn]
   );
 
   const handleSelectNapCount = useCallback(

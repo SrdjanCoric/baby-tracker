@@ -89,7 +89,7 @@ export default function ReportsScreen() {
     } finally {
       setIsGenerating(false);
     }
-  }, [selectedBaby, selectedSections, dateRange, includeCharts, t]);
+  }, [selectedBaby, selectedSections, dateRange, includeCharts, weightUnit, heightUnit, t]);
 
   const canGenerate = selectedSections.length > 0;
 

@@ -114,7 +114,7 @@ function TestConsumer({
   durationToCheck,
   onAlertSent,
 }: TestConsumerProps) {
-  const { isLoading } = useNotifications();
+  const { isLoading, updateSettings } = useNotifications();
   const { alertSent, timerAlertsEnabled, threshold, checkAndSendAlert, resetAlert } =
     useTimerAlertIntegration(activityType);
   const checkAndSendAlertRef = useRef(checkAndSendAlert);
@@ -143,6 +143,19 @@ function TestConsumer({
       </Pressable>
       <Pressable testID="reset-button" onPress={resetAlert}>
         <Text>Reset</Text>
+      </Pressable>
+      <Pressable
+        testID="disable-alerts-button"
+        onPress={() =>
+          updateSettings({
+            timerAlerts: {
+              ...mockDefaultSettings.timerAlerts,
+              enabled: false,
+            },
+          })
+        }
+      >
+        <Text>Disable alerts</Text>
       </Pressable>
     </View>
   );
@@ -259,6 +272,34 @@ describe("useTimerAlertIntegration", () => {
         expect(mockScheduleNotification).toHaveBeenCalled();
         expect(screen.getByTestId("alert-sent").props.children).toBe("true");
       });
+    });
+
+    it("uses the latest enabled setting without remounting", async () => {
+      mockCheckTimerAlert.mockReturnValue(true);
+
+      renderWithProvider({
+        activityType: "breastfeeding",
+        durationToCheck: 61,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading").props.children).toBe("ready");
+      });
+
+      await act(async () => {
+        fireEvent.press(screen.getByTestId("disable-alerts-button"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("timer-alerts-enabled").props.children).toBe("false");
+      });
+
+      await act(async () => {
+        fireEvent.press(screen.getByTestId("check-button"));
+      });
+
+      expect(mockScheduleNotification).not.toHaveBeenCalled();
+      expect(screen.getByTestId("alert-sent").props.children).toBe("false");
     });
 
     it("should not send alert when duration is under threshold", async () => {

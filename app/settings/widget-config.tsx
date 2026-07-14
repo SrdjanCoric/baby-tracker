@@ -453,7 +453,7 @@ function MultiActivitySelector({
     }
   }, [items, maxActivities, onUpdate]);
 
-  const toggleActivity = (activity: ActivityType) => {
+  const toggleActivity = useCallback((activity: ActivityType) => {
     setItems(prev => {
       const current = prev.find(i => i.key === activity);
       if (!current) return prev;
@@ -476,7 +476,7 @@ function MultiActivitySelector({
         );
       }
     });
-  };
+  }, [maxActivities]);
 
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<ActivityItem>) => (

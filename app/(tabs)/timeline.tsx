@@ -340,7 +340,7 @@ export default function TimelineScreen() {
       date,
       loggedBy: pumping.loggedBy,
     };
-  }, [t, timeFormat]);
+  }, [t, timeFormat, volumeUnit]);
 
   const growthToTimelineEntry = useCallback((growth: StoredGrowthEntry): TimelineEntry => {
     const date = new Date(growth.measuredAt);

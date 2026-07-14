@@ -274,7 +274,7 @@ export default function HomeScreen() {
     }
 
     return `${awakeText}\n${isBedtime ? t("dashboard.bedtimeIn", { time: formatDurationShort(0, remainingMinutes, tFn) }) : t("dashboard.napIn", { time: formatDurationShort(0, remainingMinutes, tFn) })}`;
-  }, [sleepActiveTimer, getLastSleep, t, timeTick, selectedBaby?.gender, selectedBaby?.birthDate, wakeWindowConfig, getCurrentNapSlot, sleeps]);
+  }, [sleepActiveTimer, getLastSleep, t, tFn, timeTick, selectedBaby?.gender, selectedBaby?.birthDate, wakeWindowConfig, getCurrentNapSlot, sleeps]);
 
   const isSleepActive = sleepActiveTimer?.isRunning ?? false;
 

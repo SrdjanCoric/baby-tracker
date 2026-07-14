@@ -254,7 +254,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [user?.householdId, user?.id]);
+  }, [user?.householdId, user?.id, user?.createdAt]);
 
   useEffect(() => {
     loadBabies();
@@ -318,8 +318,9 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "DELETE_BABY", payload: id });
 
       const remainingBabies = state.babies.filter(b => b.id !== id);
-      const wasSelectedBaby = state.selectedBaby?.id === id;
-      const noSelectedBaby = !state.selectedBaby;
+      const selectedBabyId = state.selectedBaby?.id;
+      const wasSelectedBaby = selectedBabyId === id;
+      const noSelectedBaby = selectedBabyId === undefined;
 
       if ((wasSelectedBaby || noSelectedBaby) && remainingBabies.length > 0) {
         await BabyStorageService.setSelectedBabyId(remainingBabies[0].id);

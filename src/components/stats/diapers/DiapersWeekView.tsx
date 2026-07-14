@@ -59,7 +59,7 @@ export function DiapersWeekView() {
     }
 
     return { stats: s, chartData: bars };
-  }, [diapers, locale, isDark]);
+  }, [diapers, locale, diaperColors.wet, diaperColors.dirty, diaperColors.mixed]);
 
   const avgPerDay = (stats.totalCount / 7).toFixed(1);
   const dryCount = stats.totalCount - stats.wetCount - stats.dirtyCount - stats.mixedCount;
