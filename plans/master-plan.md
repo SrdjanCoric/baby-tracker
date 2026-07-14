@@ -87,7 +87,7 @@ Durable decisions that apply across all tasks:
 - [x] 0008 · Target Watch actions to the requested baby (after 0006) → tasks/done/0008-target-watch-actions-to-the-requested-baby.md
 - [x] 0009 · Fix stale preference-driven UI and exports → tasks/done/0009-fix-stale-preference-driven-ui.md
 - [x] 0010 · Enforce a warning-free production quality gate (after 0006, 0007, 0008, 0009) → tasks/done/0010-enforce-warning-free-production-quality-gate.md
-- [~] 0011 · Make activity queue acknowledgement durable → tasks/0011-make-activity-queue-acknowledgement-durable.md
+- [>] 0011 · Make activity queue acknowledgement durable → tasks/0011-make-activity-queue-acknowledgement-durable.md
 - [ ] 0012 · Keep Watch baby selection storage-consistent → tasks/0012-keep-watch-baby-selection-storage-consistent.md
 - [ ] 0013 · Test external timer stops through real providers → tasks/0013-test-external-timer-stops-through-real-providers.md
 
