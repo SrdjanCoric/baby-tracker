@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import type { ActivityType, BreastSide, DiaperType, SleepType } from "@/constants/activities";
+import { loadExtensionStorage } from "@/services/extension-storage";
 
 const APP_GROUP = "group.com.sofibaby.app";
 const WIDGET_DATA_KEY = "@widget_data";
@@ -139,46 +140,6 @@ const DEFAULT_WIDGET_ACTIVITY_DATA: WidgetActivityData = {
     lastDurationMinutes: null,
   },
 };
-
-let ExtensionStorageModule: {
-  set: (key: string, value: string, groupId: string) => Promise<void>;
-  get: (key: string, groupId: string) => Promise<string | null>;
-  reloadWidget: () => Promise<void>;
-} | null = null;
-
-async function loadExtensionStorage(): Promise<typeof ExtensionStorageModule> {
-  if (Platform.OS !== "ios") {
-    return null;
-  }
-
-  if (ExtensionStorageModule) {
-    return ExtensionStorageModule;
-  }
-
-  try {
-    const appleTargets = await import("@bacons/apple-targets");
-    if (appleTargets.ExtensionStorage) {
-      ExtensionStorageModule = {
-        set: async (key: string, value: string, groupId: string) => {
-          const storage = new appleTargets.ExtensionStorage(groupId);
-          await storage.set(key, value);
-        },
-        get: async (key: string, groupId: string) => {
-          const storage = new appleTargets.ExtensionStorage(groupId);
-          return storage.get(key);
-        },
-        reloadWidget: async () => {
-          await appleTargets.ExtensionStorage.reloadWidget();
-        },
-      };
-      return ExtensionStorageModule;
-    }
-  } catch (error) {
-    console.log("[WidgetDataService] ExtensionStorage not available:", error);
-  }
-
-  return null;
-}
 
 export interface WatchAuthContext {
   supabaseUrl: string;
@@ -581,4 +542,3 @@ export async function clearWidgetData(): Promise<void> {
     console.error("[WidgetDataService] Failed to clear widget data:", error);
   }
 }
-

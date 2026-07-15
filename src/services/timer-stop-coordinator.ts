@@ -1,3 +1,5 @@
+import { readPendingWidgetStop } from "./widget-data-service";
+
 export type TimerStopActivityType =
   | "feeding"
   | "sleep"
@@ -18,7 +20,6 @@ export interface RestoredTimer {
 export type PendingTimerStopResult = "waiting" | "consumed" | "stale";
 
 export async function readPendingTimerStop(): Promise<PendingTimerStop | null> {
-  const { readPendingWidgetStop } = await import("./widget-data-service");
   return readPendingWidgetStop();
 }
 
