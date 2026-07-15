@@ -25,6 +25,7 @@ import {
 import { fetchActivityGoal, upsertActivityGoal } from "@/services/activity-goal-service";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 import { isPendingStopForTimer, isTimerRestoreObsolete, readPendingTimerStop } from "@/services/timer-stop-coordinator";
+import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
 
 export interface ActiveTummyTimeTimer {
   isRunning: boolean;
@@ -191,6 +192,7 @@ export interface TimerLockResult {
 }
 
 interface TummyTimeContextValue extends TummyTimeState {
+  babyBinding: BabyProviderBinding;
   startTummyTime: (requestedStartTime?: Date) => Promise<TimerLockResult>;
   stopTummyTime: (requestedEndTime?: Date) => Promise<StoredTummyTimeEntry | null>;
   pauseTummyTime: (requestedPauseTime?: Date) => Promise<void>;
@@ -223,6 +225,8 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
   const stopVersionRef = useRef(0);
+  const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
+    useBabyProviderBinding(selectedBaby?.id ?? null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('tummy_time_sessions', (change: RemoteChange) => {
@@ -271,13 +275,25 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadTummyTimes = useCallback(async () => {
+    const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
+    const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
+    const acceptStartedLiveActivity = async (activityId: string | null) => {
+      if (!isCurrentBinding()) {
+        if (activityId) await endTimerLiveActivity(activityId);
+        return false;
+      }
+      if (activityId) liveActivityIdRef.current = activityId;
+      return true;
+    };
     if (!selectedBaby) {
       dispatch({ type: "SET_TUMMY_TIMES", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
+      finishBabyBinding(bindingToken, "ready");
       return;
     }
 
     const stopVersionAtStart = stopVersionRef.current;
+    let bindingStatus: "ready" | "error" = "ready";
     dispatch({ type: "SET_LOADING", payload: true });
 
     try {
@@ -287,6 +303,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         try {
           tummyTimes = await fetchTummyTimeFromDatabase(selectedBaby.id);
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[TummyTimeContext] Failed to fetch from database, using local:", error);
           tummyTimes = await TummyTimeStorageService.getAllTummyTimes(selectedBaby.id);
         }
@@ -294,10 +311,12 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         tummyTimes = await TummyTimeStorageService.getAllTummyTimes(selectedBaby.id);
       }
 
+      if (!isCurrentBinding()) return;
       dispatch({ type: "SET_TUMMY_TIMES", payload: tummyTimes });
 
       const hasCustomGoal = await TummyTimeStorageService.hasCustomGoal(selectedBaby.id);
       const storedGoal = await TummyTimeStorageService.getDailyGoal(selectedBaby.id);
+      if (!isCurrentBinding()) return;
 
       const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
       const goalInfo = getGoalInfo(
@@ -312,17 +331,21 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       if (user?.householdId) {
         try {
           const { data: dbGoal } = await fetchActivityGoal(selectedBaby.id, 'tummy_time');
+          if (!isCurrentBinding()) return;
           if (dbGoal) {
             dispatch({ type: "SET_DAILY_GOAL", payload: dbGoal.target_value });
             dispatch({ type: "SET_GOAL_SOURCE", payload: dbGoal.source as GoalSource });
             await TummyTimeStorageService.setDailyGoal(selectedBaby.id, dbGoal.target_value);
+            if (!isCurrentBinding()) return;
             if (dbGoal.source === 'custom') {
               await TummyTimeStorageService.setCustomGoal(selectedBaby.id, dbGoal.target_value);
             } else {
               await TummyTimeStorageService.clearCustomGoal(selectedBaby.id);
             }
+            if (!isCurrentBinding()) return;
           }
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[TummyTimeContext] Failed to fetch activity goal from DB:", error);
         }
       }
@@ -330,6 +353,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       if (birthDate && !hasCustomGoal) {
         const lastCheckDate = await TummyTimeStorageService.getLastMilestoneCheckDate(selectedBaby.id);
         const dismissedMilestones = await TummyTimeStorageService.getDismissedMilestones(selectedBaby.id);
+        if (!isCurrentBinding()) return;
 
         if (lastCheckDate) {
           const milestoneCrossing = checkMilestoneCrossing(birthDate, lastCheckDate);
@@ -343,12 +367,14 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         }
 
         await TummyTimeStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
+        if (!isCurrentBinding()) return;
       }
 
       if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
 
       const activeTimer = await TummyTimeStorageService.getActiveTimer(selectedBaby.id);
       const pendingStop = activeTimer ? await readPendingTimerStop() : null;
+      if (!isCurrentBinding()) return;
       const hasPendingStop = activeTimer
         ? isPendingStopForTimer(pendingStop, "tummy_time", new Date(activeTimer.startedAt), selectedBaby.id)
         : false;
@@ -358,10 +384,12 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         if (user?.id && user?.householdId && !hasPendingStop) {
           try {
             const lock = await getActiveTimerLock(selectedBaby.id, "tummy_time");
+            if (!isCurrentBinding()) return;
             if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
             if (!lock || lock.startedBy !== user.id) {
               isStale = true;
               await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+              if (!isCurrentBinding()) return;
             }
           } catch {
             // ignore
@@ -382,6 +410,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
           if (!hasPendingStop && activeTimer.liveActivityId) {
             const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+            if (!isCurrentBinding()) return;
             if (isRunning) {
               liveActivityIdRef.current = activeTimer.liveActivityId;
             } else if (!(activeTimer.isPaused ?? false)) {
@@ -392,7 +421,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
               const activityId = await startTimerLiveActivity(
                 "tummyTime", selectedBaby.name, undefined, effectiveStartTime
               );
-              if (activityId) liveActivityIdRef.current = activityId;
+              if (!await acceptStartedLiveActivity(activityId)) return;
             }
           } else if (!hasPendingStop && !(activeTimer.isPaused ?? false)) {
             const totalPausedMs = activeTimer.totalPausedMs ?? 0;
@@ -402,12 +431,13 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
             const activityId = await startTimerLiveActivity(
               "tummyTime", selectedBaby.name, undefined, effectiveStartTime
             );
-            if (activityId) liveActivityIdRef.current = activityId;
+            if (!await acceptStartedLiveActivity(activityId)) return;
           }
         }
       } else if (user?.id && user?.householdId) {
         try {
           const lock = await getActiveTimerLock(selectedBaby.id, "tummy_time");
+          if (!isCurrentBinding()) return;
           if (
             lock &&
             lock.startedBy === user.id &&
@@ -435,25 +465,32 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
               totalPausedMs,
               pausedAt,
             });
+            if (!isCurrentBinding()) return;
 
             if (!isPaused) {
               const effectiveStartTime = totalPausedMs > 0
                 ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
                 : new Date(lock.startedAt);
               const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name, undefined, effectiveStartTime);
-              if (activityId) liveActivityIdRef.current = activityId;
+              if (!await acceptStartedLiveActivity(activityId)) return;
             }
           }
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[TummyTimeContext] Failed to restore from server:", error);
         }
       }
     } catch (error) {
+      if (!isCurrentBinding()) return;
+      bindingStatus = "error";
       console.error("[TummyTimeContext] Failed to load tummy times:", error);
     } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
+      if (isCurrentBinding()) {
+        dispatch({ type: "SET_LOADING", payload: false });
+        finishBabyBinding(bindingToken, bindingStatus);
+      }
     }
-  }, [selectedBaby, user?.householdId, user?.id]);
+  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId, user?.id]);
 
   useEffect(() => {
     loadTummyTimes();
@@ -820,6 +857,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
   const value: TummyTimeContextValue = useMemo(() => ({
     ...state,
+    babyBinding,
     startTummyTime,
     stopTummyTime,
     pauseTummyTime,
@@ -837,7 +875,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     resetToAgeBasedGoal,
     dismissMilestoneSuggestion,
     acceptMilestoneSuggestion,
-  }), [state, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
+  }), [state, babyBinding, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
 
   return (
     <TummyTimeContext.Provider value={value}>{children}</TummyTimeContext.Provider>
@@ -865,4 +903,3 @@ function transformTummyTimeFromRemote(data: Record<string, unknown>): StoredTumm
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
 }
-

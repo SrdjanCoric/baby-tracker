@@ -45,6 +45,7 @@ import {
 } from "@/utils/sleepPredictions";
 import type { SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
 import { getQualifyingNightSleep, getMorningThreshold } from "@/utils/sleepPredictions";
+import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
 
 export interface ActiveSleepTimer {
   isRunning: boolean;
@@ -281,6 +282,7 @@ export interface TimerLockResult {
 }
 
 interface SleepContextValue extends SleepState {
+  babyBinding: BabyProviderBinding;
   startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<TimerLockResult>;
   stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
@@ -325,6 +327,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
   const stopVersionRef = useRef(0);
+  const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
+    useBabyProviderBinding(selectedBaby?.id ?? null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('sleep_sessions', (change: RemoteChange) => {
@@ -405,13 +409,25 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadSleeps = useCallback(async () => {
+    const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
+    const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
+    const acceptStartedLiveActivity = async (activityId: string | null) => {
+      if (!isCurrentBinding()) {
+        if (activityId) await endTimerLiveActivity(activityId);
+        return false;
+      }
+      if (activityId) liveActivityIdRef.current = activityId;
+      return true;
+    };
     if (!selectedBaby) {
       dispatch({ type: "SET_SLEEPS", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
+      finishBabyBinding(bindingToken, "ready");
       return;
     }
 
     const stopVersionAtStart = stopVersionRef.current;
+    let bindingStatus: "ready" | "error" = "ready";
 
     dispatch({ type: "SET_LOADING", payload: true });
 
@@ -422,6 +438,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         try {
           sleeps = await fetchSleepFromDatabase(selectedBaby.id);
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[SleepContext] Failed to fetch from database, using local:", error);
           sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
         }
@@ -429,10 +446,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
       }
 
+      if (!isCurrentBinding()) return;
       dispatch({ type: "SET_SLEEPS", payload: sleeps });
 
       const hasCustomGoal = await SleepStorageService.hasCustomGoal(selectedBaby.id);
       const storedGoal = await SleepStorageService.getDailyGoal(selectedBaby.id);
+      if (!isCurrentBinding()) return;
 
       const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
       const goalInfo = getSleepGoalInfo(
@@ -447,17 +466,21 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       if (user?.householdId) {
         try {
           const { data: dbGoal } = await fetchActivityGoal(selectedBaby.id, 'sleep');
+          if (!isCurrentBinding()) return;
           if (dbGoal) {
             dispatch({ type: "SET_DAILY_GOAL", payload: dbGoal.target_value });
             dispatch({ type: "SET_GOAL_SOURCE", payload: dbGoal.source as GoalSource });
             await SleepStorageService.setDailyGoal(selectedBaby.id, dbGoal.target_value);
+            if (!isCurrentBinding()) return;
             if (dbGoal.source === 'custom') {
               await SleepStorageService.setCustomGoal(selectedBaby.id, dbGoal.target_value);
             } else {
               await SleepStorageService.clearCustomGoal(selectedBaby.id);
             }
+            if (!isCurrentBinding()) return;
           }
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[SleepContext] Failed to fetch activity goal from DB:", error);
         }
       }
@@ -472,6 +495,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       if (user?.householdId) {
         try {
           const { data: dbPref } = await fetchWakeWindowPreference(selectedBaby.id);
+          if (!isCurrentBinding()) return;
           if (dbPref) {
             const source = dbPref.source as "age_based" | "custom";
             wakeConfig = {
@@ -486,14 +510,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               driftDismissed: dbPref.drift_dismissed ?? null,
             };
             await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
+            if (!isCurrentBinding()) return;
           }
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[SleepContext] Failed to fetch wake window prefs from DB:", error);
         }
       }
 
       if (!wakeConfig) {
         wakeConfig = await SleepStorageService.getWakeWindowConfig(selectedBaby.id);
+        if (!isCurrentBinding()) return;
         if (wakeConfig && wakeConfig.enabled === undefined) {
           wakeConfig = { ...wakeConfig, enabled: wakeConfig.source === "custom" };
         }
@@ -505,29 +532,35 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         const defaultConfig = getDefaultWakeWindowConfig(birthDate);
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: defaultConfig });
         await SleepStorageService.setWakeWindowConfig(selectedBaby.id, defaultConfig);
+        if (!isCurrentBinding()) return;
       }
 
       const newbornOptIn = await SleepStorageService.getNewbornNapOptIn(selectedBaby.id);
+      if (!isCurrentBinding()) return;
       dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: newbornOptIn });
 
       const cachedModel = await SleepStorageService.getSleepPredictionModel(selectedBaby.id);
+      if (!isCurrentBinding()) return;
       if (cachedModel) {
         dispatch({ type: "SET_PREDICTION_MODEL", payload: cachedModel as unknown as SleepPredictionModel });
       }
 
       const bannerDismissed = await SleepStorageService.getPredictionBannerDismissed(selectedBaby.id);
+      if (!isCurrentBinding()) return;
       dispatch({ type: "SET_PREDICTION_BANNER_DISMISSED", payload: bannerDismissed });
 
       if (wakeConfig?.driftDismissed) {
         driftDismissedRef.current = wakeConfig.driftDismissed;
       } else {
         const driftDismissed = await SleepStorageService.getDriftDismissed(selectedBaby.id);
+        if (!isCurrentBinding()) return;
         driftDismissedRef.current = driftDismissed;
       }
 
       if (birthDate && !hasCustomGoal) {
         const lastCheckDate = await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
         const dismissedMilestones = await SleepStorageService.getDismissedMilestones(selectedBaby.id);
+        if (!isCurrentBinding()) return;
 
         if (lastCheckDate) {
           const milestoneCrossing = checkSleepMilestoneCrossing(birthDate, lastCheckDate);
@@ -546,16 +579,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         }
 
         await SleepStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
+        if (!isCurrentBinding()) return;
       }
 
       const stopOccurred = isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart;
       if (stopOccurred) {
-        dispatch({ type: "SET_LOADING", payload: false });
         return;
       }
 
       const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
       const pendingStop = activeTimer ? await readPendingTimerStop() : null;
+      if (!isCurrentBinding()) return;
       const hasPendingStop = activeTimer
         ? isPendingStopForTimer(pendingStop, "sleep", new Date(activeTimer.startedAt), selectedBaby.id)
         : false;
@@ -568,6 +602,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           if (user?.id && user?.householdId && !hasPendingStop) {
             try {
               const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
+              if (!isCurrentBinding()) return;
               if (!lock || lock.startedBy !== user.id) {
                 console.warn("[SleepContext] loadSleeps: marking timer as STALE", {
                   lockFound: !!lock,
@@ -577,6 +612,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
                 });
                 isStale = true;
                 await SleepStorageService.clearActiveTimer(selectedBaby.id);
+                if (!isCurrentBinding()) return;
                 dispatch({ type: "STOP_TIMER" });
               }
             } catch {
@@ -599,6 +635,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
             if (!hasPendingStop && activeTimer.liveActivityId) {
               const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+              if (!isCurrentBinding()) return;
               if (isRunning) {
                 liveActivityIdRef.current = activeTimer.liveActivityId;
               } else if (!(activeTimer.isPaused ?? false)) {
@@ -609,7 +646,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
                 const activityId = await startTimerLiveActivity(
                   "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
                 );
-                if (activityId) liveActivityIdRef.current = activityId;
+                if (!await acceptStartedLiveActivity(activityId)) return;
               }
             } else if (!hasPendingStop && !(activeTimer.isPaused ?? false)) {
               const totalPausedMs = activeTimer.totalPausedMs ?? 0;
@@ -619,13 +656,14 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               const activityId = await startTimerLiveActivity(
                 "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
               );
-              if (activityId) liveActivityIdRef.current = activityId;
+              if (!await acceptStartedLiveActivity(activityId)) return;
             }
           }
         }
       } else if (user?.id && user?.householdId) {
         try {
           const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
+          if (!isCurrentBinding()) return;
           if (lock && lock.startedBy === user.id) {
             if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) {
               // skip — a stop completed during this loadSleeps run
@@ -642,6 +680,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
                 } catch {
                   await queuePendingLockRelease(selectedBaby.id, "sleep", user.id);
                 }
+                if (!isCurrentBinding()) return;
               } else {
                 const td = lock.timerData || {};
                 const sleepType = (td.type === "night" ? "night" : "nap") as SleepType;
@@ -668,27 +707,34 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
                   totalPausedMs,
                   pausedAt,
                 });
+                if (!isCurrentBinding()) return;
 
                 if (!isPaused) {
                   const effectiveStartTime = totalPausedMs > 0
                     ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
                     : new Date(lock.startedAt);
                   const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType, effectiveStartTime);
-                  if (activityId) liveActivityIdRef.current = activityId;
+                  if (!await acceptStartedLiveActivity(activityId)) return;
                 }
               }
             }
           }
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[SleepContext] Failed to restore from server:", error);
         }
       }
     } catch (error) {
+      if (!isCurrentBinding()) return;
+      bindingStatus = "error";
       console.error("[SleepContext] Failed to load sleeps:", error);
     } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
+      if (isCurrentBinding()) {
+        dispatch({ type: "SET_LOADING", payload: false });
+        finishBabyBinding(bindingToken, bindingStatus);
+      }
     }
-  }, [selectedBaby, user?.householdId, user?.id]);
+  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId, user?.id]);
 
   useEffect(() => {
     loadSleeps();
@@ -1429,6 +1475,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
   const value: SleepContextValue = useMemo(() => ({
     ...state,
+    babyBinding,
     startSleep,
     stopSleep,
     changeSleepType,
@@ -1460,7 +1507,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dismissPredictionBanner,
     dismissDrift,
     acceptDrift,
-  }), [state, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod, dismissPredictionBanner, dismissDrift, acceptDrift]);
+  }), [state, babyBinding, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod, dismissPredictionBanner, dismissDrift, acceptDrift]);
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
 }
@@ -1487,4 +1534,3 @@ function transformSleepFromRemote(data: Record<string, unknown>): StoredSleepEnt
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
 }
-

@@ -62,6 +62,11 @@ $$;
 REVOKE ALL ON FUNCTION merge_record(text, jsonb, jsonb, text, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION merge_record(text, jsonb, jsonb, text, uuid) TO authenticated;
 
--- Clients must not bypass the identity check or acknowledgement ledger. The owner of the
--- five-argument SECURITY DEFINER wrapper can still invoke this implementation internally.
-REVOKE ALL ON FUNCTION merge_record(text, jsonb, jsonb) FROM PUBLIC, authenticated;
+-- Released app versions still call the three-argument overload. Do not revoke or otherwise alter
+-- its existing privileges in this migration: applying 055 must preserve the complete legacy RPC
+-- contract during a mixed-version mobile rollout. The legacy implementation retains its
+-- household authorization checks from migration 054, but it does not provide operation
+-- acknowledgement/idempotency; new clients use the five-argument overload above. A later,
+-- separately deployed migration may retire or harden the legacy API after old versions are no
+-- longer supported.
+GRANT EXECUTE ON FUNCTION merge_record(text, jsonb, jsonb) TO authenticated;

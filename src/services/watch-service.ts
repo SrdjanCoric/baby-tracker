@@ -89,7 +89,7 @@ export async function sendMessageToWatch(
       module.sendMessage(
         message,
         (reply) => {
-          console.log("[WatchService] Message sent, response:", reply);
+          console.log("[WatchService] Message sent");
           resolve(reply);
         },
         (error) => {
@@ -151,7 +151,7 @@ export async function startWatchMessageListening(): Promise<(() => void) | null>
     const unsubscribeMessage = connectivity.watchEvents.addListener(
       "message",
       (payload, replyHandler) => {
-        console.log("[WatchService] Received message from watch:", payload);
+        console.log("[WatchService] Received message from watch");
         handleWatchMessage(payload as Record<string, unknown>, replyHandler as WatchReplyHandler | undefined);
       }
     );
@@ -159,7 +159,7 @@ export async function startWatchMessageListening(): Promise<(() => void) | null>
     const unsubscribeUserInfo = connectivity.watchEvents.addListener(
       "user-info",
       (userInfoArray) => {
-        console.log("[WatchService] Received queued actions from watch:", userInfoArray);
+        console.log("[WatchService] Received queued actions from watch");
         const items = Array.isArray(userInfoArray) ? userInfoArray : [userInfoArray];
         for (const userInfo of items) {
           handleWatchMessage(userInfo as Record<string, unknown>);

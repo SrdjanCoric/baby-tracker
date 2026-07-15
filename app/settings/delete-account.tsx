@@ -62,7 +62,8 @@ export default function DeleteAccountScreen() {
 
       const result = await AccountDeletionService.getDeletionPreview(
         selectedBaby.id,
-        user.householdId
+        user.householdId,
+        user.id
       );
       setPreview(result);
     } catch {

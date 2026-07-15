@@ -5,6 +5,7 @@ import { useSleep } from "@/contexts/sleep-context";
 import { useDiaper } from "@/contexts/diaper-context";
 import { usePumping } from "@/contexts/pumping-context";
 import { useTummyTime } from "@/contexts/tummyTime-context";
+import { useAuth } from "@/contexts/auth-context";
 import { setWatchMessageHandler } from "@/services/watch-service";
 import type { WatchReplyHandler } from "@/services/watch-service";
 import type { BreastSide, DiaperType, SleepType, BottleContentType, StoolColor } from "@/constants/activities";
@@ -16,6 +17,7 @@ import {
 } from "@/services/widget-data-service";
 
 const REQUEST_DEDUP_TTL_MS = 30_000;
+const PROVIDER_BINDING_TIMEOUT_MS = 5_000;
 const WATCH_ACTIONS = new Set([
   "requestSync",
   "selectBaby",
@@ -35,7 +37,8 @@ interface UseWatchMessageHandlerOptions {
 }
 
 interface ProcessedRequest {
-  timestamp: number;
+  fingerprint: string;
+  completedAt?: number;
   response?: Record<string, unknown>;
   waitingReplies: WatchReplyHandler[];
 }
@@ -43,7 +46,26 @@ interface ProcessedRequest {
 interface QueuedWatchMessage {
   message: Record<string, unknown>;
   replyHandler?: WatchReplyHandler;
+  requestKey?: string;
   targetBabyId?: string;
+  authScope: string;
+  bindingDeadlineAt: number;
+}
+
+function requestFingerprint(message: Record<string, unknown>): string {
+  const normalize = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(normalize);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>)
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([key, nested]) => [key, normalize(nested)])
+      );
+    }
+    return value;
+  };
+
+  return JSON.stringify(normalize(message));
 }
 
 function parseRequestedTime(timeString: unknown): Date | undefined {
@@ -56,20 +78,43 @@ function parseRequestedTime(timeString: unknown): Date | undefined {
 
 export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) {
   const { onRequestSync, onSelectBabyRequest } = options ?? {};
+  const { user } = useAuth();
   const { selectedBaby, getBabyById, selectBaby } = useBaby();
-  const { startBreastfeeding, stopBreastfeeding, changeSide, addFeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
-  const { startSleep, stopSleep, pauseSleep, resumeSleep } = useSleep();
-  const { addDiaper } = useDiaper();
-  const { startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping } = usePumping();
-  const { startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
+  const { babyBinding: feedingBinding, startBreastfeeding, stopBreastfeeding, changeSide, addFeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
+  const { babyBinding: sleepBinding, startSleep, stopSleep, pauseSleep, resumeSleep } = useSleep();
+  const { babyBinding: diaperBinding, addDiaper } = useDiaper();
+  const { babyBinding: pumpingBinding, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping } = usePumping();
+  const { babyBinding: tummyTimeBinding, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
 
   const processedRequestsRef = useRef<Map<string, ProcessedRequest>>(new Map());
   const messageQueueRef = useRef<QueuedWatchMessage[]>([]);
   const isProcessingRef = useRef(false);
   const processAgainRef = useRef(false);
   const selectingBabyIdRef = useRef<string | undefined>(undefined);
+  const bindingWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const authScope = user ? `${user.id}:${user.householdId ?? ""}` : "guest";
+  const authScopeRef = useRef(authScope);
+  const changedAuthScopeRef = useRef<string | null>(null);
+  if (authScopeRef.current !== authScope) {
+    changedAuthScopeRef.current = authScopeRef.current;
+    authScopeRef.current = authScope;
+  }
   const selectedBabyIdRef = useRef(selectedBaby?.id);
   selectedBabyIdRef.current = selectedBaby?.id;
+  const providerBindingsRef = useRef([
+    feedingBinding,
+    sleepBinding,
+    diaperBinding,
+    pumpingBinding,
+    tummyTimeBinding,
+  ]);
+  providerBindingsRef.current = [
+    feedingBinding,
+    sleepBinding,
+    diaperBinding,
+    pumpingBinding,
+    tummyTimeBinding,
+  ];
 
   const executeMessage = useCallback(
     async (
@@ -87,27 +132,38 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       try {
         switch (action) {
           case "requestSync":
-            onRequestSync?.(replyHandler);
-            break;
+            if (onRequestSync) {
+              onRequestSync(replyHandler);
+              return null;
+            }
+            return { success: true };
 
           case "startTimer": {
+            let startResult: { success: boolean; lockedByName?: string } | undefined;
             switch (activityType) {
               case "feeding":
-                await startBreastfeeding((context as BreastSide) || "left", startTime);
+                startResult = await startBreastfeeding((context as BreastSide) || "left", startTime);
                 break;
               case "sleep": {
                 const sleepType = context === "auto" || !context
                   ? determineSleepType(startTime ?? new Date())
                   : context as SleepType;
-                await startSleep(sleepType, startTime);
+                startResult = await startSleep(sleepType, startTime);
                 break;
               }
               case "pumping":
-                await startPumping((context as BreastSide) || "left", startTime);
+                startResult = await startPumping((context as BreastSide) || "left", startTime);
                 break;
               case "tummyTime":
-                await startTummyTime(startTime);
+                startResult = await startTummyTime(startTime);
                 break;
+            }
+            if (startResult && !startResult.success) {
+              return {
+                success: false,
+                error: "timer-start-rejected",
+                ...(startResult.lockedByName && { lockedByName: startResult.lockedByName }),
+              };
             }
             const pendingStop = await readPendingWidgetStop();
             if (pendingStop) {
@@ -218,7 +274,10 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
           "[WatchMessageHandler] Action failed:",
           error instanceof Error ? error.message : "Unknown error"
         );
+        return { success: false, error: "action-failed" };
       }
+
+      return { success: true };
     },
     [
       onRequestSync,
@@ -248,6 +307,61 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
   const executeMessageRef = useRef(executeMessage);
   executeMessageRef.current = executeMessage;
 
+  const completeProcessedRequest = useCallback(
+    (request: ProcessedRequest, response: Record<string, unknown>) => {
+      if (request.response) return;
+      request.response = response;
+      request.completedAt = Date.now();
+      for (const waitingReply of request.waitingReplies) {
+        waitingReply(response);
+      }
+      request.waitingReplies = [];
+    },
+    []
+  );
+
+  const finishQueuedRequest = useCallback(
+    (queued: QueuedWatchMessage, response: Record<string, unknown>) => {
+      if (queued.requestKey) {
+        const request = processedRequestsRef.current.get(queued.requestKey);
+        if (request) completeProcessedRequest(request, response);
+        return;
+      }
+
+      queued.replyHandler?.(response);
+    },
+    [completeProcessedRequest]
+  );
+
+  useEffect(() => {
+    const previousScope = changedAuthScopeRef.current;
+    if (!previousScope) return;
+    changedAuthScopeRef.current = null;
+    const response = { success: false, error: "auth-scope-changed" };
+
+    for (const queued of messageQueueRef.current) {
+      if (queued.authScope === previousScope) {
+        finishQueuedRequest(queued, response);
+      }
+    }
+    messageQueueRef.current = messageQueueRef.current.filter(
+      queued => queued.authScope !== previousScope
+    );
+
+    const requestPrefix = `${previousScope}\u0000`;
+    for (const [requestKey, request] of processedRequestsRef.current) {
+      if (!requestKey.startsWith(requestPrefix)) continue;
+      completeProcessedRequest(request, response);
+      processedRequestsRef.current.delete(requestKey);
+    }
+
+    selectingBabyIdRef.current = undefined;
+    if (bindingWaitTimerRef.current) {
+      clearTimeout(bindingWaitTimerRef.current);
+      bindingWaitTimerRef.current = null;
+    }
+  }, [authScope, completeProcessedRequest, finishQueuedRequest]);
+
   const processQueue = useCallback(async function processQueuedMessages() {
     if (isProcessingRef.current) {
       processAgainRef.current = true;
@@ -258,6 +372,14 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
     try {
       while (messageQueueRef.current.length > 0) {
         const queued = messageQueueRef.current[0];
+        if (bindingWaitTimerRef.current) {
+          clearTimeout(bindingWaitTimerRef.current);
+          bindingWaitTimerRef.current = null;
+        }
+        if (queued.authScope !== authScopeRef.current) {
+          messageQueueRef.current.shift();
+          continue;
+        }
         if (queued.targetBabyId && selectedBabyIdRef.current !== queued.targetBabyId) {
           if (selectingBabyIdRef.current === queued.targetBabyId) {
             return;
@@ -265,7 +387,20 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
 
           selectingBabyIdRef.current = queued.targetBabyId;
           try {
-            await selectBaby(queued.targetBabyId);
+            const baby = await selectBaby(queued.targetBabyId);
+            if (queued.authScope !== authScopeRef.current) {
+              selectingBabyIdRef.current = undefined;
+              continue;
+            }
+            if (!baby) {
+              selectingBabyIdRef.current = undefined;
+              messageQueueRef.current.shift();
+              finishQueuedRequest(queued, {
+                success: false,
+                error: "baby-selection-failed",
+              });
+              continue;
+            }
             onSelectBabyRequest?.(queued.targetBabyId);
             return;
           } catch (error) {
@@ -275,16 +410,56 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
               error instanceof Error ? error.message : "Unknown error"
             );
             messageQueueRef.current.shift();
+            finishQueuedRequest(queued, {
+              success: false,
+              error: "baby-selection-failed",
+            });
             continue;
           }
         }
 
+        if (queued.targetBabyId) {
+          const bindings = providerBindingsRef.current;
+          const bindingFailed = bindings.some(
+            binding => binding.babyId === queued.targetBabyId && binding.status === "error"
+          );
+          if (bindingFailed) {
+            messageQueueRef.current.shift();
+            finishQueuedRequest(queued, {
+              success: false,
+              error: "provider-binding-failed",
+            });
+            continue;
+          }
+
+          const providersReady = bindings.every(
+            binding => binding.babyId === queued.targetBabyId && binding.status === "ready"
+          );
+          if (!providersReady) {
+            const remainingMs = queued.bindingDeadlineAt - Date.now();
+            if (remainingMs <= 0) {
+              messageQueueRef.current.shift();
+              finishQueuedRequest(queued, {
+                success: false,
+                error: "provider-binding-timeout",
+              });
+              continue;
+            }
+            bindingWaitTimerRef.current = setTimeout(() => {
+              bindingWaitTimerRef.current = null;
+              void processQueuedMessages();
+            }, remainingMs);
+            return;
+          }
+        }
+
         messageQueueRef.current.shift();
-        await executeMessageRef.current(
+        const response = await executeMessageRef.current(
           queued.message,
           queued.targetBabyId ?? selectedBabyIdRef.current,
           queued.replyHandler
         );
+        if (response) finishQueuedRequest(queued, response);
       }
     } finally {
       isProcessingRef.current = false;
@@ -293,7 +468,22 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
         void processQueuedMessages();
       }
     }
-  }, [onSelectBabyRequest, selectBaby]);
+  }, [finishQueuedRequest, onSelectBabyRequest, selectBaby]);
+
+  useEffect(() => () => {
+    if (bindingWaitTimerRef.current) clearTimeout(bindingWaitTimerRef.current);
+
+    const response = { success: false, error: "handler-unmounted" };
+    for (const queued of messageQueueRef.current) {
+      finishQueuedRequest(queued, response);
+    }
+    messageQueueRef.current = [];
+
+    for (const request of processedRequestsRef.current.values()) {
+      completeProcessedRequest(request, response);
+    }
+    processedRequestsRef.current.clear();
+  }, [completeProcessedRequest, finishQueuedRequest]);
 
   useEffect(() => {
     selectedBabyIdRef.current = selectedBaby?.id;
@@ -301,7 +491,20 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       selectingBabyIdRef.current = undefined;
     }
     void processQueue();
-  }, [processQueue, selectedBaby?.id]);
+  }, [
+    diaperBinding.babyId,
+    diaperBinding.status,
+    feedingBinding.babyId,
+    feedingBinding.status,
+    processQueue,
+    pumpingBinding.babyId,
+    pumpingBinding.status,
+    selectedBaby?.id,
+    sleepBinding.babyId,
+    sleepBinding.status,
+    tummyTimeBinding.babyId,
+    tummyTimeBinding.status,
+  ]);
 
   const handleMessage = useCallback(
     async (message: Record<string, unknown>, replyHandler?: WatchReplyHandler) => {
@@ -311,20 +514,45 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
         return;
       }
 
+      const targetBabyId = typeof message.babyId === "string" ? message.babyId : undefined;
+      if (targetBabyId && !getBabyById(targetBabyId)) {
+        console.warn("[WatchMessageHandler] Rejected action for unknown baby");
+        replyHandler?.({ success: false, error: "unknown-baby" });
+        return;
+      }
+
+      const resolvedBabyId = targetBabyId ?? selectedBabyIdRef.current;
+      if (action !== "requestSync" && action !== "selectBaby" && !resolvedBabyId) {
+        console.warn("[WatchMessageHandler] Rejected activity action without a baby");
+        replyHandler?.({ success: false, error: "missing-baby" });
+        return;
+      }
+
       const requestId = typeof message.requestId === "string" ? message.requestId : undefined;
+      const requestKey = requestId && (action !== "requestSync" || replyHandler)
+        ? `${authScope}\u0000${requestId}`
+        : undefined;
+      const fingerprint = requestFingerprint(message);
       let trackedReplyHandler = replyHandler;
 
-      if (requestId) {
+      if (requestKey) {
         const now = Date.now();
         const seen = processedRequestsRef.current;
         for (const [id, request] of seen) {
-          if (now - request.timestamp > REQUEST_DEDUP_TTL_MS) {
+          if (
+            request.completedAt !== undefined &&
+            now - request.completedAt > REQUEST_DEDUP_TTL_MS
+          ) {
             seen.delete(id);
           }
         }
 
-        const existing = seen.get(requestId);
+        const existing = seen.get(requestKey);
         if (existing) {
+          if (existing.fingerprint !== fingerprint) {
+            replyHandler?.({ success: false, error: "request-id-conflict" });
+            return;
+          }
           if (replyHandler) {
             if (existing.response) {
               replyHandler(existing.response);
@@ -335,48 +563,55 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
           return;
         }
 
-        const request: ProcessedRequest = { timestamp: now, waitingReplies: [] };
-        seen.set(requestId, request);
+        const request: ProcessedRequest = { fingerprint, waitingReplies: [] };
+        seen.set(requestKey, request);
         if (replyHandler) {
+          request.waitingReplies.push(replyHandler);
           trackedReplyHandler = (response) => {
-            request.response = response;
-            replyHandler(response);
-            for (const waitingReply of request.waitingReplies) {
-              waitingReply(response);
-            }
-            request.waitingReplies = [];
+            completeProcessedRequest(request, response);
           };
         }
       }
 
-      const targetBabyId = typeof message.babyId === "string" ? message.babyId : undefined;
-      if (targetBabyId && !getBabyById(targetBabyId)) {
-        console.warn("[WatchMessageHandler] Rejected action for unknown baby");
-        return;
-      }
-
       if (action === "selectBaby") {
-        if (targetBabyId && targetBabyId !== selectedBabyIdRef.current) {
-          await selectBaby(targetBabyId);
-          onSelectBabyRequest?.(targetBabyId);
+        const queued: QueuedWatchMessage = {
+          message,
+          replyHandler: trackedReplyHandler,
+          requestKey,
+          targetBabyId,
+          authScope,
+          bindingDeadlineAt: Date.now() + PROVIDER_BINDING_TIMEOUT_MS,
+        };
+        try {
+          if (targetBabyId && targetBabyId !== selectedBabyIdRef.current) {
+            const baby = await selectBaby(targetBabyId);
+            if (authScope !== authScopeRef.current) return;
+            if (!baby) {
+              finishQueuedRequest(queued, { success: false, error: "baby-selection-failed" });
+              return;
+            }
+            onSelectBabyRequest?.(targetBabyId);
+          }
+          finishQueuedRequest(queued, { success: true });
+        } catch {
+          if (authScope === authScopeRef.current) {
+            finishQueuedRequest(queued, { success: false, error: "baby-selection-failed" });
+          }
         }
-        return;
-      }
-
-      const resolvedBabyId = targetBabyId ?? selectedBabyIdRef.current;
-      if (action !== "requestSync" && !resolvedBabyId) {
-        console.warn("[WatchMessageHandler] Rejected activity action without a baby");
         return;
       }
 
       messageQueueRef.current.push({
         message,
         replyHandler: trackedReplyHandler,
+        requestKey,
         targetBabyId: resolvedBabyId,
+        authScope,
+        bindingDeadlineAt: Date.now() + PROVIDER_BINDING_TIMEOUT_MS,
       });
       await processQueue();
     },
-    [getBabyById, onSelectBabyRequest, processQueue, selectBaby]
+    [authScope, completeProcessedRequest, finishQueuedRequest, getBabyById, onSelectBabyRequest, processQueue, selectBaby]
   );
 
   const registerHandler = useCallback(() => {

@@ -11,6 +11,7 @@ import * as Linking from "expo-linking";
 import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, DashboardConfigProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useNotifications, useWidget } from "@/contexts";
 import { AchievementProvider } from "@/contexts/achievement-context";
 import { SyncAuthGate } from "@/components/SyncAuthGate";
+import { AuthScopeBoundary } from "@/components/AuthScopeBoundary";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
@@ -368,6 +369,7 @@ export default function RootLayout() {
                 <TimeFormatProvider>
                 <DashboardConfigProvider>
                   <BabyProvider>
+                    <AuthScopeBoundary>
                     <ActiveTimersProvider>
                     <FeedingProvider>
                       <SleepProvider>
@@ -407,6 +409,7 @@ export default function RootLayout() {
                       </SleepProvider>
                     </FeedingProvider>
                     </ActiveTimersProvider>
+                    </AuthScopeBoundary>
                   </BabyProvider>
                 </DashboardConfigProvider>
                 </TimeFormatProvider>

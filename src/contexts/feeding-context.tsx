@@ -21,6 +21,7 @@ import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 import type { BreastSide as LiveActivityBreastSide } from "@/services/live-activity-service";
 import { isPendingStopForTimer, isTimerRestoreObsolete, readPendingTimerStop } from "@/services/timer-stop-coordinator";
+import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
 
 export interface ActiveTimer {
   isRunning: boolean;
@@ -230,6 +231,7 @@ export interface TimerLockResult {
 }
 
 interface FeedingContextValue extends FeedingState {
+  babyBinding: BabyProviderBinding;
   startBreastfeeding: (side: BreastSide, requestedStartTime?: Date) => Promise<TimerLockResult>;
   stopBreastfeeding: (requestedEndTime?: Date) => Promise<StoredFeedingEntry | null>;
   changeSide: (side: BreastSide) => void;
@@ -253,6 +255,8 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
   const stopVersionRef = useRef(0);
+  const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
+    useBabyProviderBinding(selectedBaby?.id ?? null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('feedings', (change: RemoteChange) => {
@@ -291,13 +295,25 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadFeedings = useCallback(async () => {
+    const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
+    const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
+    const acceptStartedLiveActivity = async (activityId: string | null) => {
+      if (!isCurrentBinding()) {
+        if (activityId) await endTimerLiveActivity(activityId);
+        return false;
+      }
+      if (activityId) liveActivityIdRef.current = activityId;
+      return true;
+    };
     if (!selectedBaby) {
       dispatch({ type: "SET_FEEDINGS", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
+      finishBabyBinding(bindingToken, "ready");
       return;
     }
 
     const stopVersionAtStart = stopVersionRef.current;
+    let bindingStatus: "ready" | "error" = "ready";
     dispatch({ type: "SET_LOADING", payload: true });
 
     try {
@@ -307,6 +323,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         try {
           feedings = await fetchFeedingsFromDatabase(selectedBaby.id);
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[FeedingContext] Failed to fetch from database, using local:", error);
           feedings = await FeedingStorageService.getAllFeedings(selectedBaby.id);
         }
@@ -314,6 +331,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         feedings = await FeedingStorageService.getAllFeedings(selectedBaby.id);
       }
 
+      if (!isCurrentBinding()) return;
       dispatch({ type: "SET_FEEDINGS", payload: feedings });
 
       const suggestedSide = computeSuggestedSide(feedings);
@@ -323,6 +341,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
       const activeTimer = await FeedingStorageService.getActiveTimer(selectedBaby.id);
       const pendingStop = activeTimer ? await readPendingTimerStop() : null;
+      if (!isCurrentBinding()) return;
       const hasPendingStop = activeTimer
         ? isPendingStopForTimer(pendingStop, "feeding", new Date(activeTimer.startedAt), selectedBaby.id)
         : false;
@@ -332,10 +351,12 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         if (user?.id && user?.householdId && !hasPendingStop) {
           try {
             const lock = await getActiveTimerLock(selectedBaby.id, "feeding");
+            if (!isCurrentBinding()) return;
             if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
             if (!lock || lock.startedBy !== user.id) {
               isStale = true;
               await FeedingStorageService.clearActiveTimer(selectedBaby.id);
+              if (!isCurrentBinding()) return;
             }
           } catch {
             // ignore
@@ -362,6 +383,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
           if (!hasPendingStop && activeTimer.liveActivityId) {
             const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+            if (!isCurrentBinding()) return;
             if (isRunning) {
               liveActivityIdRef.current = activeTimer.liveActivityId;
             } else if (!(activeTimer.isPaused ?? false)) {
@@ -372,7 +394,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
               const activityId = await startTimerLiveActivity(
                 "feeding", selectedBaby.name, activeTimer.side as LiveActivityBreastSide, effectiveStartTime
               );
-              if (activityId) liveActivityIdRef.current = activityId;
+              if (!await acceptStartedLiveActivity(activityId)) return;
             }
           } else if (!hasPendingStop && !(activeTimer.isPaused ?? false)) {
             const totalPausedMs = activeTimer.totalPausedMs ?? 0;
@@ -382,12 +404,13 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             const activityId = await startTimerLiveActivity(
               "feeding", selectedBaby.name, activeTimer.side as LiveActivityBreastSide, effectiveStartTime
             );
-            if (activityId) liveActivityIdRef.current = activityId;
+            if (!await acceptStartedLiveActivity(activityId)) return;
           }
         }
       } else if (user?.id && user?.householdId) {
         try {
           const lock = await getActiveTimerLock(selectedBaby.id, "feeding");
+          if (!isCurrentBinding()) return;
           if (
             lock &&
             lock.startedBy === user.id &&
@@ -430,6 +453,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
               totalPausedMs,
               pausedAt,
             });
+            if (!isCurrentBinding()) return;
 
             if (!isPaused) {
               const effectiveStartTime = totalPausedMs > 0
@@ -438,19 +462,25 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
               const activityId = await startTimerLiveActivity(
                 "feeding", selectedBaby.name, side as LiveActivityBreastSide, effectiveStartTime
               );
-              if (activityId) liveActivityIdRef.current = activityId;
+              if (!await acceptStartedLiveActivity(activityId)) return;
             }
           }
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[FeedingContext] Failed to restore from server:", error);
         }
       }
     } catch (error) {
+      if (!isCurrentBinding()) return;
+      bindingStatus = "error";
       console.error("[FeedingContext] Failed to load feedings:", error);
     } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
+      if (isCurrentBinding()) {
+        dispatch({ type: "SET_LOADING", payload: false });
+        finishBabyBinding(bindingToken, bindingStatus);
+      }
     }
-  }, [selectedBaby, user?.householdId, user?.id]);
+  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId, user?.id]);
 
   useEffect(() => {
     loadFeedings();
@@ -838,6 +868,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
   const value: FeedingContextValue = useMemo(() => ({
     ...state,
+    babyBinding,
     startBreastfeeding,
     stopBreastfeeding,
     changeSide,
@@ -849,7 +880,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     deleteFeeding,
     refreshFeedings: loadFeedings,
     getLastFeeding,
-  }), [state, startBreastfeeding, stopBreastfeeding, changeSide, pauseBreastfeeding, resumeBreastfeeding, suggestedSide, addFeeding, updateFeeding, deleteFeeding, loadFeedings, getLastFeeding]);
+  }), [state, babyBinding, startBreastfeeding, stopBreastfeeding, changeSide, pauseBreastfeeding, resumeBreastfeeding, suggestedSide, addFeeding, updateFeeding, deleteFeeding, loadFeedings, getLastFeeding]);
 
   return <FeedingContext.Provider value={value}>{children}</FeedingContext.Provider>;
 }
@@ -885,4 +916,3 @@ function transformFeedingFromRemote(data: Record<string, unknown>): StoredFeedin
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
 }
-

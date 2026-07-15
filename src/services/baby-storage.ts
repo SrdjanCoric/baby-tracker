@@ -3,17 +3,31 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
-import { getUserScopedKey } from "./storage-prefix";
+import { getStorageUserId, getUserScopedKeyFor } from "./storage-prefix";
 
 const BABIES_KEY_BASE = "@babies";
 const SELECTED_BABY_KEY_BASE = "@selected_baby_id";
 
-function getBabiesKey(): string {
-  return getUserScopedKey(BABIES_KEY_BASE);
+export interface BabyStorageScope {
+  babiesKey: string;
+  selectedBabyKey: string;
 }
 
-function getSelectedBabyKey(): string {
-  return getUserScopedKey(SELECTED_BABY_KEY_BASE);
+function createStorageScope(
+  userId: string | null,
+  householdId?: string | null
+): BabyStorageScope {
+  const scopeId = userId && householdId !== undefined
+    ? `${userId}:${householdId ?? "no-household"}`
+    : userId;
+  return {
+    babiesKey: getUserScopedKeyFor(BABIES_KEY_BASE, scopeId),
+    selectedBabyKey: getUserScopedKeyFor(SELECTED_BABY_KEY_BASE, scopeId),
+  };
+}
+
+function getCurrentStorageScope(): BabyStorageScope {
+  return createStorageScope(getStorageUserId());
 }
 
 export interface StoredBabyProfile {
@@ -45,12 +59,52 @@ function generateId(): string {
   return Crypto.randomUUID();
 }
 
+const babyMutationTails = new Map<string, Promise<void>>();
+
+function mutateStoredBabies<TResult>(
+  mutation: (babies: StoredBabyProfile[]) => {
+    babies: StoredBabyProfile[];
+    result: TResult;
+  },
+  storageScope: BabyStorageScope = getCurrentStorageScope()
+): Promise<TResult> {
+  const babiesKey = storageScope.babiesKey;
+  const mutationTail = babyMutationTails.get(babiesKey) ?? Promise.resolve();
+  const operation = mutationTail.then(async () => {
+    const data = await AsyncStorage.getItem(babiesKey);
+    const babies = data ? JSON.parse(data) as StoredBabyProfile[] : [];
+    const outcome = mutation(babies);
+    await AsyncStorage.setItem(babiesKey, JSON.stringify(outcome.babies));
+    return outcome.result;
+  });
+
+  const nextTail = operation.then(
+    () => undefined,
+    () => undefined
+  );
+  babyMutationTails.set(babiesKey, nextTail);
+  void nextTail.finally(() => {
+    if (babyMutationTails.get(babiesKey) === nextTail) {
+      babyMutationTails.delete(babiesKey);
+    }
+  });
+  return operation;
+}
+
 export const BabyStorageService = {
+  scopeForUser(userId: string | null, householdId: string | null): BabyStorageScope {
+    return createStorageScope(userId, householdId);
+  },
+
+  currentScope(): BabyStorageScope {
+    return getCurrentStorageScope();
+  },
+
   /**
    * Get all stored babies
    */
-  async getAllBabies(): Promise<StoredBabyProfile[]> {
-    const data = await AsyncStorage.getItem(getBabiesKey());
+  async getAllBabies(storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<StoredBabyProfile[]> {
+    const data = await AsyncStorage.getItem(storageScope.babiesKey);
     if (!data) return [];
     return JSON.parse(data) as StoredBabyProfile[];
   },
@@ -58,16 +112,31 @@ export const BabyStorageService = {
   /**
    * Get a baby by ID
    */
-  async getBabyById(id: string): Promise<StoredBabyProfile | null> {
-    const babies = await this.getAllBabies();
+  async getBabyById(id: string, storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<StoredBabyProfile | null> {
+    const babies = await this.getAllBabies(storageScope);
     return babies.find(b => b.id === id) ?? null;
+  },
+
+  async upsertBaby(baby: StoredBabyProfile, storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<void> {
+    await mutateStoredBabies(babies => {
+      const existingIndex = babies.findIndex(item => item.id === baby.id);
+      if (existingIndex === -1) {
+        babies.push(baby);
+      } else {
+        babies[existingIndex] = baby;
+      }
+      return { babies, result: undefined };
+    }, storageScope);
+  },
+
+  async replaceAllBabies(babies: StoredBabyProfile[], storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<void> {
+    await mutateStoredBabies(() => ({ babies: [...babies], result: undefined }), storageScope);
   },
 
   /**
    * Add a new baby
    */
-  async addBaby(input: CreateBabyInput): Promise<StoredBabyProfile> {
-    const babies = await this.getAllBabies();
+  async addBaby(input: CreateBabyInput, storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<StoredBabyProfile> {
     const now = new Date().toISOString();
 
     const newBaby: StoredBabyProfile = {
@@ -80,89 +149,90 @@ export const BabyStorageService = {
       updatedAt: now,
     };
 
-    babies.push(newBaby);
-    await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
-
-    return newBaby;
+    return mutateStoredBabies(babies => ({
+      babies: [...babies, newBaby],
+      result: newBaby,
+    }), storageScope);
   },
 
   /**
    * Update an existing baby
    */
-  async updateBaby(id: string, input: UpdateBabyInput): Promise<StoredBabyProfile | null> {
-    const babies = await this.getAllBabies();
-    const index = babies.findIndex(b => b.id === id);
+  async updateBaby(id: string, input: UpdateBabyInput, storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<StoredBabyProfile | null> {
+    return mutateStoredBabies(babies => {
+      const index = babies.findIndex(b => b.id === id);
+      if (index === -1) return { babies, result: null };
 
-    if (index === -1) return null;
+      const updatedBaby: StoredBabyProfile = {
+        ...babies[index],
+        ...(input.name !== undefined && { name: input.name }),
+        ...(input.birthDate !== undefined && { birthDate: input.birthDate.toISOString() }),
+        ...("gender" in input && { gender: input.gender }),
+        ...("photoUri" in input && { photoUri: input.photoUri }),
+        updatedAt: new Date().toISOString(),
+      };
 
-    const updatedBaby: StoredBabyProfile = {
-      ...babies[index],
-      ...(input.name !== undefined && { name: input.name }),
-      ...(input.birthDate !== undefined && { birthDate: input.birthDate.toISOString() }),
-      ...("gender" in input && { gender: input.gender }),
-      ...("photoUri" in input && { photoUri: input.photoUri }),
-      updatedAt: new Date().toISOString(),
-    };
-
-    babies[index] = updatedBaby;
-    await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
-
-    return updatedBaby;
+      babies[index] = updatedBaby;
+      return { babies, result: updatedBaby };
+    }, storageScope);
   },
 
   /**
    * Delete a baby
    */
-  async deleteBaby(id: string): Promise<boolean> {
-    const babies = await this.getAllBabies();
-    const index = babies.findIndex(b => b.id === id);
+  async deleteBaby(id: string, storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<boolean> {
+    const selectedBabyKey = storageScope.selectedBabyKey;
+    const deleted = await mutateStoredBabies(babies => {
+      const remainingBabies = babies.filter(baby => baby.id !== id);
+      return {
+        babies: remainingBabies,
+        result: remainingBabies.length !== babies.length,
+      };
+    }, storageScope);
 
-    if (index === -1) return false;
-
-    babies.splice(index, 1);
-    await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
+    if (!deleted) return false;
 
     // Clear selected baby if we deleted it
-    const selectedId = await this.getSelectedBabyId();
+    const selectedId = await AsyncStorage.getItem(selectedBabyKey);
     if (selectedId === id) {
-      await this.setSelectedBabyId(null);
+      await AsyncStorage.removeItem(selectedBabyKey);
     }
 
-    return true;
+    return deleted;
   },
 
   /**
    * Get the selected baby ID
    */
-  async getSelectedBabyId(): Promise<string | null> {
-    return AsyncStorage.getItem(getSelectedBabyKey());
+  async getSelectedBabyId(storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<string | null> {
+    return AsyncStorage.getItem(storageScope.selectedBabyKey);
   },
 
   /**
    * Set the selected baby ID
    */
-  async setSelectedBabyId(id: string | null): Promise<void> {
+  async setSelectedBabyId(id: string | null, storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<void> {
     if (id === null) {
-      await AsyncStorage.removeItem(getSelectedBabyKey());
+      await AsyncStorage.removeItem(storageScope.selectedBabyKey);
     } else {
-      await AsyncStorage.setItem(getSelectedBabyKey(), id);
+      await AsyncStorage.setItem(storageScope.selectedBabyKey, id);
     }
   },
 
   /**
    * Get the selected baby object
    */
-  async getSelectedBaby(): Promise<StoredBabyProfile | null> {
-    const selectedId = await this.getSelectedBabyId();
+  async getSelectedBaby(storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<StoredBabyProfile | null> {
+    const selectedId = await this.getSelectedBabyId(storageScope);
     if (!selectedId) return null;
-    return this.getBabyById(selectedId);
+    return this.getBabyById(selectedId, storageScope);
   },
 
   /**
    * Clear all local baby data (used when joining a household)
    */
-  async clearAllBabies(): Promise<void> {
-    await AsyncStorage.removeItem(getBabiesKey());
-    await AsyncStorage.removeItem(getSelectedBabyKey());
+  async clearAllBabies(storageScope: BabyStorageScope = getCurrentStorageScope()): Promise<void> {
+    await AsyncStorage.removeItem(storageScope.babiesKey);
+    await AsyncStorage.removeItem(storageScope.selectedBabyKey);
   },
 };

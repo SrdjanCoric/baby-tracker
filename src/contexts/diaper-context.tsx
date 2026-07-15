@@ -17,6 +17,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import type { DiaperType, StoolColor } from "@/constants/activities";
+import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
 
 export interface DiaperState {
   diapers: StoredDiaperEntry[];
@@ -82,6 +83,7 @@ export function diaperReducer(state: DiaperState, action: DiaperAction): DiaperS
 }
 
 interface DiaperContextValue extends DiaperState {
+  babyBinding: BabyProviderBinding;
   addDiaper: (input: CreateDiaperInput) => Promise<StoredDiaperEntry>;
   updateDiaper: (diaperId: string, input: UpdateDiaperInput) => Promise<StoredDiaperEntry | null>;
   deleteDiaper: (diaperId: string) => Promise<boolean>;
@@ -97,6 +99,12 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
+  const {
+    babyBinding,
+    beginBabyBinding,
+    finishBabyBinding,
+    isCurrentBabyBinding,
+  } = useBabyProviderBinding(selectedBaby?.id ?? null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('diapers', (change: RemoteChange) => {
@@ -135,30 +143,45 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
   }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadDiapers = useCallback(async () => {
+    const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
     if (!selectedBaby) {
       dispatch({ type: "SET_DIAPERS", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
+      finishBabyBinding(bindingToken, "ready");
       return;
     }
 
     dispatch({ type: "SET_LOADING", payload: true });
+    let bindingStatus: "ready" | "error" = "ready";
 
-    let diapers: StoredDiaperEntry[];
+    try {
+      let diapers: StoredDiaperEntry[];
 
-    if (user?.householdId) {
-      try {
-        diapers = await fetchDiapersFromDatabase(selectedBaby.id);
-      } catch (error) {
-        console.error("[DiaperContext] Failed to fetch from database, using local:", error);
+      if (user?.householdId) {
+        try {
+          diapers = await fetchDiapersFromDatabase(selectedBaby.id);
+        } catch (error) {
+          if (!isCurrentBabyBinding(bindingToken)) return;
+          console.error("[DiaperContext] Failed to fetch from database, using local:", error);
+          diapers = await DiaperStorageService.getAllDiapers(selectedBaby.id);
+        }
+      } else {
         diapers = await DiaperStorageService.getAllDiapers(selectedBaby.id);
       }
-    } else {
-      diapers = await DiaperStorageService.getAllDiapers(selectedBaby.id);
-    }
 
-    dispatch({ type: "SET_DIAPERS", payload: diapers });
-    dispatch({ type: "SET_LOADING", payload: false });
-  }, [selectedBaby, user?.householdId]);
+      if (!isCurrentBabyBinding(bindingToken)) return;
+      dispatch({ type: "SET_DIAPERS", payload: diapers });
+    } catch (error) {
+      if (!isCurrentBabyBinding(bindingToken)) return;
+      bindingStatus = "error";
+      console.error("[DiaperContext] Failed to load diapers:", error);
+    } finally {
+      if (isCurrentBabyBinding(bindingToken)) {
+        dispatch({ type: "SET_LOADING", payload: false });
+        finishBabyBinding(bindingToken, bindingStatus);
+      }
+    }
+  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId]);
 
   useEffect(() => {
     loadDiapers();
@@ -250,13 +273,14 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
 
   const value: DiaperContextValue = useMemo(() => ({
     ...state,
+    babyBinding,
     addDiaper,
     updateDiaper,
     deleteDiaper,
     refreshDiapers: loadDiapers,
     getLastDiaper,
     getTodaysCounts,
-  }), [state, addDiaper, updateDiaper, deleteDiaper, loadDiapers, getLastDiaper, getTodaysCounts]);
+  }), [state, babyBinding, addDiaper, updateDiaper, deleteDiaper, loadDiapers, getLastDiaper, getTodaysCounts]);
 
   return <DiaperContext.Provider value={value}>{children}</DiaperContext.Provider>;
 }
@@ -282,4 +306,3 @@ function transformDiaperFromRemote(data: Record<string, unknown>): StoredDiaperE
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
 }
-

@@ -49,6 +49,10 @@ vi.mock("./tummyTime-storage", () => ({
 
 vi.mock("./baby-storage", () => ({
   BabyStorageService: {
+    scopeForUser: vi.fn((userId: string, householdId: string | null) => ({
+      babiesKey: `@babies:${userId}:${householdId ?? "no-household"}`,
+      selectedBabyKey: `@selected_baby_id:${userId}:${householdId ?? "no-household"}`,
+    })),
     getAllBabies: vi.fn().mockResolvedValue([]),
   },
 }));
@@ -105,7 +109,8 @@ describe("AccountDeletionService", () => {
 
       const result = await AccountDeletionService.getDeletionPreview(
         mockBabyId,
-        mockHouseholdId
+        mockHouseholdId,
+        mockUserId
       );
 
       expect(result.feedings).toBe(2);
@@ -126,7 +131,8 @@ describe("AccountDeletionService", () => {
 
       const result = await AccountDeletionService.getDeletionPreview(
         mockBabyId,
-        mockHouseholdId
+        mockHouseholdId,
+        mockUserId
       );
 
       expect(result.babies).toHaveLength(2);
@@ -147,7 +153,8 @@ describe("AccountDeletionService", () => {
 
       const result = await AccountDeletionService.getDeletionPreview(
         mockBabyId,
-        mockHouseholdId
+        mockHouseholdId,
+        mockUserId
       );
 
       expect(result.householdWillBeDeleted).toBe(true);
@@ -166,7 +173,8 @@ describe("AccountDeletionService", () => {
 
       const result = await AccountDeletionService.getDeletionPreview(
         mockBabyId,
-        mockHouseholdId
+        mockHouseholdId,
+        mockUserId
       );
 
       expect(result.hasOtherCaregivers).toBe(true);
@@ -190,7 +198,8 @@ describe("AccountDeletionService", () => {
 
       const result = await AccountDeletionService.getDeletionPreview(
         mockBabyId,
-        mockHouseholdId
+        mockHouseholdId,
+        mockUserId
       );
 
       expect(result.feedings).toBe(0);
@@ -204,7 +213,8 @@ describe("AccountDeletionService", () => {
     it("should handle null householdId", async () => {
       const result = await AccountDeletionService.getDeletionPreview(
         mockBabyId,
-        null
+        null,
+        mockUserId
       );
 
       expect(result.householdWillBeDeleted).toBe(false);

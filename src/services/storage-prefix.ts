@@ -9,8 +9,12 @@ export function getStorageUserId(): string | null {
 }
 
 export function getUserScopedKey(baseKey: string): string {
-  if (!currentUserId) {
+  return getUserScopedKeyFor(baseKey, currentUserId);
+}
+
+export function getUserScopedKeyFor(baseKey: string, userId: string | null): string {
+  if (!userId) {
     return baseKey;
   }
-  return `${baseKey}:${currentUserId}`;
+  return `${baseKey}:${userId}`;
 }
