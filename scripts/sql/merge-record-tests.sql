@@ -370,13 +370,13 @@ BEGIN
 END $$;
 \echo 'ok: a failed merge leaves no acknowledgement'
 
--- ---- 15. authenticated clients can execute only the bound overload ----
+-- ---- 15. mixed app versions can execute their respective overloads ----
 DO $$
 BEGIN
-  IF has_function_privilege(
+  IF NOT has_function_privilege(
     'authenticated', 'public.merge_record(text,jsonb,jsonb)', 'EXECUTE'
   ) THEN
-    RAISE EXCEPTION 'authenticated must not execute the legacy merge overload';
+    RAISE EXCEPTION 'authenticated legacy clients must execute the three-argument merge overload';
   END IF;
   IF NOT has_function_privilege(
     'authenticated', 'public.merge_record(text,jsonb,jsonb,text,uuid)', 'EXECUTE'
@@ -384,6 +384,32 @@ BEGIN
     RAISE EXCEPTION 'authenticated must execute the bound merge overload';
   END IF;
 END $$;
-\echo 'ok: authenticated cannot bypass actor binding or idempotency'
+
+SELECT set_config(
+  'request.jwt.claims',
+  json_build_object('sub', '11111111-1111-1111-1111-111111111111')::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+SELECT merge_record(
+  'feedings',
+  jsonb_build_object(
+    'id', 'f0000000-0000-0000-0000-0000000000f2',
+    'notes', 'legacy-client-compatible'
+  ),
+  jsonb_build_object('notes', '2026-07-04T16:00:00.000Z-0000-legacy-client')
+);
+RESET ROLE;
+
+DO $$
+DECLARE row_notes text;
+BEGIN
+  SELECT notes INTO row_notes FROM feedings
+  WHERE id = 'f0000000-0000-0000-0000-0000000000f2';
+  IF row_notes <> 'legacy-client-compatible' THEN
+    RAISE EXCEPTION 'legacy authenticated merge did not execute, got notes=%', row_notes;
+  END IF;
+END $$;
+\echo 'ok: old and new authenticated app versions can execute merge_record'
 
 ROLLBACK;

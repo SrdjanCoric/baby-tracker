@@ -20,14 +20,9 @@ function mapBabyRow(row: Record<string, unknown>): StoredBabyProfile {
 }
 
 const BABIES_KEY_BASE = "@babies";
-const SELECTED_BABY_KEY_BASE = "@selected_baby_id";
 
 function getBabiesKey(): string {
   return getUserScopedKey(BABIES_KEY_BASE);
-}
-
-function getSelectedBabyKey(): string {
-  return getUserScopedKey(SELECTED_BABY_KEY_BASE);
 }
 
 function generateUUID(): string {
@@ -47,8 +42,6 @@ export async function fetchAndSyncHouseholdBabies(householdId: string): Promise<
 
   const reconciled = await reconcilePulled("babies", (data || []) as Record<string, unknown>[]);
   const babies: StoredBabyProfile[] = dropTombstoned(reconciled).map(mapBabyRow);
-
-  await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(babies));
 
   return babies;
 }
@@ -77,11 +70,6 @@ export async function createBabyInDatabase(
   }
 
   const baby: StoredBabyProfile = mapBabyRow(data);
-
-  // Also update local storage
-  const localBabies = await getLocalBabies();
-  localBabies.push(baby);
-  await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(localBabies));
 
   return baby;
 }
@@ -112,14 +100,6 @@ export async function updateBabyInDatabase(
 
   const baby: StoredBabyProfile = mapBabyRow(data);
 
-  // Update local storage
-  const localBabies = await getLocalBabies();
-  const index = localBabies.findIndex((b) => b.id === id);
-  if (index !== -1) {
-    localBabies[index] = baby;
-    await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(localBabies));
-  }
-
   return baby;
 }
 
@@ -134,17 +114,6 @@ export async function deleteBabyFromDatabase(
   if (error) {
     console.error("[BabySyncService] Failed to delete baby:", error.message);
     return false;
-  }
-
-  // Update local storage
-  const localBabies = await getLocalBabies();
-  const filtered = localBabies.filter((b) => b.id !== id);
-  await AsyncStorage.setItem(getBabiesKey(), JSON.stringify(filtered));
-
-  // Clear selected baby if deleted
-  const selectedId = await AsyncStorage.getItem(getSelectedBabyKey());
-  if (selectedId === id) {
-    await AsyncStorage.removeItem(getSelectedBabyKey());
   }
 
   return true;

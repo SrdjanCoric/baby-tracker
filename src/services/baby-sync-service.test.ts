@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createBabyInDatabase, updateBabyInDatabase, fetchAndSyncHouseholdBabies, deleteBabyFromDatabase } from "./baby-sync-service";
 import { __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
 import { __resetDeviceIdForTests } from "./sync/device-id";
+import { setStorageUserId } from "./storage-prefix";
 
 const asyncStore = new Map<string, string>();
 vi.mock("@react-native-async-storage/async-storage", () => ({
@@ -51,6 +52,7 @@ describe("baby-sync-service CRDT writes", () => {
     selectResult.error = null;
     __resetCrdtSyncForTests();
     __resetDeviceIdForTests();
+    setStorageUserId(null);
   });
 
   it("creates a baby through merge_record and maps the returned row", async () => {
@@ -93,6 +95,24 @@ describe("baby-sync-service CRDT writes", () => {
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(rpc.mock.calls[0][1].p_record.id).toBe("b1");
     expect(baby?.name).toBe("Grace");
+  });
+
+  it("does not persist a remote create into a different user scope after auth changes", async () => {
+    let resolveRpc: ((result: { data: Record<string, unknown>; error: null }) => void) | undefined;
+    rpc.mockImplementation(() => new Promise(resolve => { resolveRpc = resolve; }));
+    setStorageUserId("user-a");
+
+    const create = createBabyInDatabase({ id: "b1", name: "Ada" }, "h1");
+    await vi.waitFor(() => expect(resolveRpc).toBeDefined());
+    setStorageUserId("user-b");
+    resolveRpc?.({
+      data: { id: "b1", name: "Ada", created_at: "c", updated_at: "u" },
+      error: null,
+    });
+
+    await expect(create).resolves.toEqual(expect.objectContaining({ id: "b1", name: "Ada" }));
+    expect(asyncStore.get("@babies:user-a")).toBeUndefined();
+    expect(asyncStore.get("@babies:user-b")).toBeUndefined();
   });
 
   it("deletes a baby as a tombstone merge_record write, not a hard delete", async () => {

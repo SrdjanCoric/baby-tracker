@@ -7,6 +7,8 @@ import {
   BabyStorageService,
   StoredBabyProfile,
 } from "./baby-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setStorageUserId } from "./storage-prefix";
 
 // Mock AsyncStorage
 const mockStorage: Record<string, string> = {};
@@ -35,6 +37,7 @@ describe("BabyStorageService", () => {
     // Clear mock storage before each test
     Object.keys(mockStorage).forEach(key => delete mockStorage[key]);
     uuidCounter = 0;
+    setStorageUserId(null);
     vi.clearAllMocks();
   });
 
@@ -229,5 +232,43 @@ describe("BabyStorageService", () => {
       const selectedBaby = await BabyStorageService.getSelectedBaby();
       expect(selectedBaby).toBeNull();
     });
+  });
+
+  it("keeps a queued mutation bound to the user scope that submitted it", async () => {
+    const babyA: StoredBabyProfile = {
+      id: "baby-a",
+      name: "Baby A",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    const babyB: StoredBabyProfile = {
+      id: "baby-b",
+      name: "Baby B",
+      createdAt: "2026-02-01T00:00:00.000Z",
+      updatedAt: "2026-02-01T00:00:00.000Z",
+    };
+    mockStorage["@babies:user-a"] = JSON.stringify([babyA]);
+    setStorageUserId("user-a");
+
+    let resolveRead: ((value: string | null) => void) | undefined;
+    let markReadStarted: (() => void) | undefined;
+    const readStarted = new Promise<void>(resolve => {
+      markReadStarted = resolve;
+    });
+    vi.mocked(AsyncStorage.getItem).mockImplementationOnce((_key: string) => {
+      markReadStarted?.();
+      return new Promise(resolve => {
+        resolveRead = resolve;
+      });
+    });
+
+    const mutation = BabyStorageService.upsertBaby(babyB);
+    await readStarted;
+    setStorageUserId("user-b");
+    resolveRead?.(JSON.stringify([babyA]));
+    await mutation;
+
+    expect(JSON.parse(mockStorage["@babies:user-a"])).toEqual([babyA, babyB]);
+    expect(mockStorage["@babies:user-b"]).toBeUndefined();
   });
 });

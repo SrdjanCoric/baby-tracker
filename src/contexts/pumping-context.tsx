@@ -19,6 +19,7 @@ import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock } from "@/services/active-timer-service";
 import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
 import { isPendingStopForTimer, isTimerRestoreObsolete, readPendingTimerStop } from "@/services/timer-stop-coordinator";
+import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
 
 export interface ActivePumpingTimer {
   isRunning: boolean;
@@ -160,6 +161,7 @@ export interface TimerLockResult {
 }
 
 interface PumpingContextValue extends PumpingState {
+  babyBinding: BabyProviderBinding;
   startPumping: (side: BreastSide, requestedStartTime?: Date) => Promise<TimerLockResult>;
   stopPumping: (volumeMl: number, requestedEndTime?: Date) => Promise<StoredPumpingEntry | null>;
   changePumpingSide: (side: BreastSide) => void;
@@ -184,6 +186,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
   const stopVersionRef = useRef(0);
+  const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
+    useBabyProviderBinding(selectedBaby?.id ?? null);
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('pumping_sessions', (change: RemoteChange) => {
@@ -210,13 +214,25 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   }, [subscribeToRemoteChanges, selectedBaby]);
 
   const loadPumpings = useCallback(async () => {
+    const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
+    const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
+    const acceptStartedLiveActivity = async (activityId: string | null) => {
+      if (!isCurrentBinding()) {
+        if (activityId) await endTimerLiveActivity(activityId);
+        return false;
+      }
+      if (activityId) liveActivityIdRef.current = activityId;
+      return true;
+    };
     if (!selectedBaby) {
       dispatch({ type: "SET_PUMPINGS", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
+      finishBabyBinding(bindingToken, "ready");
       return;
     }
 
     const stopVersionAtStart = stopVersionRef.current;
+    let bindingStatus: "ready" | "error" = "ready";
     dispatch({ type: "SET_LOADING", payload: true });
 
     try {
@@ -226,6 +242,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         try {
           pumpings = await fetchPumpingFromDatabase(selectedBaby.id);
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[PumpingContext] Failed to fetch from database, using local:", error);
           pumpings = await PumpingStorageService.getAllPumpings(selectedBaby.id);
         }
@@ -233,12 +250,14 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         pumpings = await PumpingStorageService.getAllPumpings(selectedBaby.id);
       }
 
+      if (!isCurrentBinding()) return;
       dispatch({ type: "SET_PUMPINGS", payload: pumpings });
 
       if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
 
       const activeTimer = await PumpingStorageService.getActiveTimer(selectedBaby.id);
       const pendingStop = activeTimer ? await readPendingTimerStop() : null;
+      if (!isCurrentBinding()) return;
       const hasPendingStop = activeTimer
         ? isPendingStopForTimer(pendingStop, "pumping", new Date(activeTimer.startedAt), selectedBaby.id)
         : false;
@@ -248,10 +267,12 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         if (user?.id && user?.householdId && !hasPendingStop) {
           try {
             const lock = await getActiveTimerLock(selectedBaby.id, "pumping");
+            if (!isCurrentBinding()) return;
             if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
             if (!lock || lock.startedBy !== user.id) {
               isStale = true;
               await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+              if (!isCurrentBinding()) return;
             }
           } catch {
             // ignore
@@ -273,6 +294,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
           if (!hasPendingStop && activeTimer.liveActivityId) {
             const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
+            if (!isCurrentBinding()) return;
             if (isRunning) {
               liveActivityIdRef.current = activeTimer.liveActivityId;
             } else if (!(activeTimer.isPaused ?? false)) {
@@ -283,7 +305,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
               const activityId = await startTimerLiveActivity(
                 "pumping", selectedBaby.name, activeTimer.side, effectiveStartTime
               );
-              if (activityId) liveActivityIdRef.current = activityId;
+              if (!await acceptStartedLiveActivity(activityId)) return;
             }
           } else if (!hasPendingStop && !(activeTimer.isPaused ?? false)) {
             const totalPausedMs = activeTimer.totalPausedMs ?? 0;
@@ -293,12 +315,13 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             const activityId = await startTimerLiveActivity(
               "pumping", selectedBaby.name, activeTimer.side, effectiveStartTime
             );
-            if (activityId) liveActivityIdRef.current = activityId;
+            if (!await acceptStartedLiveActivity(activityId)) return;
           }
         }
       } else if (user?.id && user?.householdId) {
         try {
           const lock = await getActiveTimerLock(selectedBaby.id, "pumping");
+          if (!isCurrentBinding()) return;
           if (
             lock &&
             lock.startedBy === user.id &&
@@ -329,25 +352,32 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
               totalPausedMs,
               pausedAt,
             });
+            if (!isCurrentBinding()) return;
 
             if (!isPaused) {
               const effectiveStartTime = totalPausedMs > 0
                 ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
                 : new Date(lock.startedAt);
               const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side, effectiveStartTime);
-              if (activityId) liveActivityIdRef.current = activityId;
+              if (!await acceptStartedLiveActivity(activityId)) return;
             }
           }
         } catch (error) {
+          if (!isCurrentBinding()) return;
           console.error("[PumpingContext] Failed to restore from server:", error);
         }
       }
     } catch (error) {
+      if (!isCurrentBinding()) return;
+      bindingStatus = "error";
       console.error("[PumpingContext] Failed to load pumpings:", error);
     } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
+      if (isCurrentBinding()) {
+        dispatch({ type: "SET_LOADING", payload: false });
+        finishBabyBinding(bindingToken, bindingStatus);
+      }
     }
-  }, [selectedBaby, user?.householdId, user?.id]);
+  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId, user?.id]);
 
   useEffect(() => {
     loadPumpings();
@@ -660,6 +690,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
   const value: PumpingContextValue = useMemo(() => ({
     ...state,
+    babyBinding,
     startPumping,
     stopPumping,
     changePumpingSide,
@@ -672,7 +703,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     getLastPumping,
     getTodaysTotalVolume,
     getLastSide,
-  }), [state, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping, addPumping, updatePumping, deletePumping, loadPumpings, getLastPumping, getTodaysTotalVolume, getLastSide]);
+  }), [state, babyBinding, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping, addPumping, updatePumping, deletePumping, loadPumpings, getLastPumping, getTodaysTotalVolume, getLastSide]);
 
   return <PumpingContext.Provider value={value}>{children}</PumpingContext.Provider>;
 }
@@ -700,4 +731,3 @@ function transformPumpingFromRemote(data: Record<string, unknown>): StoredPumpin
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
 }
-

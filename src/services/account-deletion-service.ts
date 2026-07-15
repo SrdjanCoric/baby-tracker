@@ -18,8 +18,10 @@ import type { DeletionPreview, DeletionResult } from "@/types/account-deletion";
 export const AccountDeletionService = {
   async getDeletionPreview(
     babyId: string,
-    householdId: string | null
+    householdId: string | null,
+    userId: string
   ): Promise<DeletionPreview> {
+    const babyStorageScope = BabyStorageService.scopeForUser(userId, householdId);
     const [feedings, sleeps, diapers, pumpings, growth, tummyTimes, babies] =
       await Promise.all([
         FeedingStorageService.getAllFeedings(babyId),
@@ -28,7 +30,7 @@ export const AccountDeletionService = {
         PumpingStorageService.getAllPumpings(babyId),
         GrowthStorageService.getAllMeasurements(babyId),
         TummyTimeStorageService.getAllTummyTimes(babyId),
-        BabyStorageService.getAllBabies(),
+        BabyStorageService.getAllBabies(babyStorageScope),
       ]);
 
     let householdWillBeDeleted = false;

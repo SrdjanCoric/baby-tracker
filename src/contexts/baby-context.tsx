@@ -37,6 +37,22 @@ export const initialBabyState: BabyState = {
   isLoading: true,
 };
 
+type BabyMutation =
+  | { sequence: number; scope: string; type: "upsert"; baby: StoredBabyProfile }
+  | { sequence: number; scope: string; type: "delete"; babyId: string };
+
+function applyBabyMutations(
+  babies: StoredBabyProfile[],
+  mutations: BabyMutation[]
+): StoredBabyProfile[] {
+  return mutations.reduce((currentBabies, mutation) => {
+    if (mutation.type === "delete") {
+      return currentBabies.filter(baby => baby.id !== mutation.babyId);
+    }
+    return upsertById(currentBabies, mutation.baby);
+  }, babies);
+}
+
 export function babyReducer(state: BabyState, action: BabyAction): BabyState {
   switch (action.type) {
     case "SET_BABIES":
@@ -108,7 +124,7 @@ interface BabyContextValue extends BabyState {
   addBaby: (input: CreateBabyInput) => Promise<StoredBabyProfile>;
   updateBaby: (id: string, input: UpdateBabyInput) => Promise<StoredBabyProfile | null>;
   deleteBaby: (id: string) => Promise<boolean>;
-  selectBaby: (id: string | null) => Promise<void>;
+  selectBaby: (id: string | null) => Promise<StoredBabyProfile | null>;
   refreshBabies: () => Promise<void>;
 }
 
@@ -131,19 +147,62 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(babyReducer, initialBabyState);
   const { subscribeToRemoteChanges } = useSync();
   const { user } = useAuth();
+  const authScope = user ? `${user.id}:${user.householdId ?? "no-household"}` : "guest";
+  const authScopeRef = useRef(authScope);
+  const authGenerationRef = useRef(0);
+  if (authScopeRef.current !== authScope) {
+    authScopeRef.current = authScope;
+    authGenerationRef.current += 1;
+  }
+  const renderAuthGeneration = authGenerationRef.current;
+  const storageScope = useMemo(
+    () => BabyStorageService.scopeForUser(user?.id ?? null, user?.householdId ?? null),
+    [user?.householdId, user?.id]
+  );
+  const committedScopeRef = useRef(authScope);
   const hasMigratedRef = useRef(false);
   const pendingBabyIdsRef = useRef<Set<string>>(new Set());
+  const babyMutationSequenceRef = useRef(0);
+  const babyMutationsRef = useRef<BabyMutation[]>([]);
+  const recordBabyUpsert = useCallback((scope: string, baby: StoredBabyProfile) => {
+    babyMutationSequenceRef.current += 1;
+    babyMutationsRef.current.push({
+      sequence: babyMutationSequenceRef.current,
+      scope,
+      type: "upsert",
+      baby,
+    });
+  }, []);
+  const recordBabyDelete = useCallback((scope: string, babyId: string) => {
+    babyMutationSequenceRef.current += 1;
+    babyMutationsRef.current.push({
+      sequence: babyMutationSequenceRef.current,
+      scope,
+      type: "delete",
+      babyId,
+    });
+  }, []);
 
-  const handleRemoteChange = useCallback((change: RemoteChange) => {
+  const handleRemoteChange = useCallback(async (change: RemoteChange) => {
     if (!user?.householdId) return;
+    const handlerGeneration = renderAuthGeneration;
+    const handlerScope = authScope;
+    if (
+      authGenerationRef.current !== handlerGeneration ||
+      authScopeRef.current !== handlerScope
+    ) return;
 
     const data = change.new || change.old;
-    if (data && data.household_id && data.household_id !== user.householdId) {
-      return;
-    }
+    if (data?.household_id !== user.householdId) return;
 
     const removeId = tombstonedId(change);
     if (removeId) {
+      recordBabyDelete(handlerScope, removeId);
+      await BabyStorageService.deleteBaby(removeId, storageScope);
+      if (
+        authGenerationRef.current !== handlerGeneration ||
+        authScopeRef.current !== handlerScope
+      ) return;
       dispatch({ type: "REMOTE_DELETE", payload: removeId });
       return;
     }
@@ -156,22 +215,30 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
           if (pendingBabyIdsRef.current.has(babyId)) {
             return;
           }
-          dispatch({
-            type: "REMOTE_INSERT",
-            payload: transformBabyFromRemote(change.new),
-          });
+          const baby = transformBabyFromRemote(change.new);
+          recordBabyUpsert(handlerScope, baby);
+          await BabyStorageService.upsertBaby(baby, storageScope);
+          if (
+            authGenerationRef.current !== handlerGeneration ||
+            authScopeRef.current !== handlerScope
+          ) return;
+          dispatch({ type: "REMOTE_INSERT", payload: baby });
         }
         break;
       case 'UPDATE':
         if (change.new) {
-          dispatch({
-            type: "REMOTE_UPDATE",
-            payload: transformBabyFromRemote(change.new),
-          });
+          const baby = transformBabyFromRemote(change.new);
+          recordBabyUpsert(handlerScope, baby);
+          await BabyStorageService.upsertBaby(baby, storageScope);
+          if (
+            authGenerationRef.current !== handlerGeneration ||
+            authScopeRef.current !== handlerScope
+          ) return;
+          dispatch({ type: "REMOTE_UPDATE", payload: baby });
         }
         break;
     }
-  }, [user?.householdId]);
+  }, [authScope, recordBabyDelete, recordBabyUpsert, renderAuthGeneration, storageScope, user?.householdId]);
 
   useEffect(() => {
     if (!user?.householdId) return;
@@ -184,20 +251,28 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   }, [subscribeToRemoteChanges, user?.householdId, handleRemoteChange]);
 
   // Persist selected baby to AsyncStorage when it changes
-  const prevSelectedBabyIdRef = useRef<string | null>(null);
+  const persistedSelectionRef = useRef<string | null>(null);
   useEffect(() => {
+    if (state.isLoading || committedScopeRef.current !== authScope) return;
     const currentId = state.selectedBaby?.id ?? null;
-    if (currentId !== prevSelectedBabyIdRef.current) {
-      prevSelectedBabyIdRef.current = currentId;
-      BabyStorageService.setSelectedBabyId(currentId);
+    const selectionKey = `${authScope}:${currentId ?? "none"}`;
+    if (selectionKey !== persistedSelectionRef.current) {
+      persistedSelectionRef.current = selectionKey;
+      void BabyStorageService.setSelectedBabyId(currentId, storageScope);
     }
-  }, [state.selectedBaby?.id]);
+  }, [authScope, state.isLoading, state.selectedBaby?.id, storageScope]);
 
   const loadBabies = useCallback(async () => {
+    const loadGeneration = authGenerationRef.current;
+    const loadScope = authScope;
+    const isStaleLoad = () =>
+      authGenerationRef.current !== loadGeneration || authScopeRef.current !== loadScope;
+    const mutationSequenceAtStart = babyMutationSequenceRef.current;
     dispatch({ type: "SET_LOADING", payload: true });
 
     try {
       let babies: StoredBabyProfile[];
+      let persistFetchedSnapshot = false;
 
       if (user?.householdId) {
         if (!hasMigratedRef.current) {
@@ -218,6 +293,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
 
                 await syncGuestActivitiesToDatabase(user.id, babyIdMap);
                 await clearGuestBabies();
+                if (isStaleLoad()) return;
               } catch (error) {
                 console.error("[BabyContext] Failed to migrate guest data:", error);
               }
@@ -227,24 +303,40 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
 
         try {
           babies = await fetchAndSyncHouseholdBabies(user.householdId);
+          if (isStaleLoad()) return;
+          persistFetchedSnapshot = true;
         } catch (error) {
           console.error("[BabyContext] Failed to fetch from database, using local:", error);
-          babies = await BabyStorageService.getAllBabies();
+          babies = await BabyStorageService.getAllBabies(storageScope);
+          if (isStaleLoad()) return;
         }
       } else {
         hasMigratedRef.current = false;
-        babies = await BabyStorageService.getAllBabies();
+        babies = await BabyStorageService.getAllBabies(storageScope);
+        if (isStaleLoad()) return;
       }
 
+      if (persistFetchedSnapshot) {
+        const concurrentMutations = babyMutationsRef.current.filter(
+          mutation => mutation.scope === loadScope && mutation.sequence > mutationSequenceAtStart
+        );
+        babies = applyBabyMutations(babies, concurrentMutations);
+        await BabyStorageService.replaceAllBabies(babies, storageScope);
+        if (isStaleLoad()) return;
+      }
+
+      committedScopeRef.current = loadScope;
       dispatch({ type: "SET_BABIES", payload: babies });
 
-      const selectedBabyId = await BabyStorageService.getSelectedBabyId();
+      const selectedBabyId = await BabyStorageService.getSelectedBabyId(storageScope);
+      if (isStaleLoad()) return;
       const selectedBaby = selectedBabyId
         ? babies.find(b => b.id === selectedBabyId) ?? null
         : null;
 
       if (!selectedBaby && babies.length > 0) {
-        await BabyStorageService.setSelectedBabyId(babies[0].id);
+        await BabyStorageService.setSelectedBabyId(babies[0].id, storageScope);
+        if (isStaleLoad()) return;
         dispatch({ type: "SET_SELECTED_BABY", payload: babies[0] });
       } else {
         dispatch({ type: "SET_SELECTED_BABY", payload: selectedBaby });
@@ -252,15 +344,22 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("[BabyContext] Failed to load babies:", error);
     } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
+      if (!isStaleLoad()) {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
     }
-  }, [user?.householdId, user?.id, user?.createdAt]);
+  }, [authScope, storageScope, user?.householdId, user?.id, user?.createdAt]);
 
   useEffect(() => {
     loadBabies();
   }, [loadBabies]);
 
   const addBaby = useCallback(async (input: CreateBabyInput) => {
+    const operationGeneration = authGenerationRef.current;
+    const operationScope = authScope;
+    const isCurrentOperation = () =>
+      authGenerationRef.current === operationGeneration &&
+      authScopeRef.current === operationScope;
     let newBaby: StoredBabyProfile;
 
     if (user?.householdId) {
@@ -276,45 +375,76 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
           pendingBabyIdsRef.current.delete(pendingId);
         }, 1000);
       }
+      if (!isCurrentOperation()) {
+        throw new Error("Baby create cancelled because the account changed");
+      }
+      recordBabyUpsert(operationScope, newBaby);
+      await BabyStorageService.upsertBaby(newBaby, storageScope);
     } else {
-      newBaby = await BabyStorageService.addBaby(input);
+      newBaby = await BabyStorageService.addBaby(input, storageScope);
     }
 
+    if (!isCurrentOperation()) {
+      throw new Error("Baby create cancelled because the account changed");
+    }
     dispatch({ type: "ADD_BABY", payload: newBaby });
 
     if (state.babies.length === 0) {
-      await BabyStorageService.setSelectedBabyId(newBaby.id);
+      await BabyStorageService.setSelectedBabyId(newBaby.id, storageScope);
+      if (!isCurrentOperation()) {
+        throw new Error("Baby create cancelled because the account changed");
+      }
       dispatch({ type: "SET_SELECTED_BABY", payload: newBaby });
     }
 
     return newBaby;
-  }, [state.babies.length, user?.householdId]);
+  }, [authScope, recordBabyUpsert, state.babies.length, storageScope, user?.householdId]);
 
   const updateBaby = useCallback(async (id: string, input: UpdateBabyInput) => {
+    const operationGeneration = authGenerationRef.current;
+    const operationScope = authScope;
+    const isCurrentOperation = () =>
+      authGenerationRef.current === operationGeneration &&
+      authScopeRef.current === operationScope;
     let updated: StoredBabyProfile | null;
 
     if (user?.householdId) {
       updated = await updateBabyInDatabase(id, input, user.householdId);
+      if (!isCurrentOperation()) return null;
+      if (updated) {
+        recordBabyUpsert(operationScope, updated);
+        await BabyStorageService.upsertBaby(updated, storageScope);
+      }
     } else {
-      updated = await BabyStorageService.updateBaby(id, input);
+      updated = await BabyStorageService.updateBaby(id, input, storageScope);
     }
 
-    if (updated) {
+    if (updated && isCurrentOperation()) {
       dispatch({ type: "UPDATE_BABY", payload: updated });
     }
-    return updated;
-  }, [user?.householdId]);
+    return isCurrentOperation() ? updated : null;
+  }, [authScope, recordBabyUpsert, storageScope, user?.householdId]);
 
   const deleteBaby = useCallback(async (id: string) => {
+    const operationGeneration = authGenerationRef.current;
+    const operationScope = authScope;
+    const isCurrentOperation = () =>
+      authGenerationRef.current === operationGeneration &&
+      authScopeRef.current === operationScope;
     let result: boolean;
 
     if (user?.householdId) {
       result = await deleteBabyFromDatabase(id, user.householdId);
+      if (!isCurrentOperation()) return false;
+      if (result) {
+        recordBabyDelete(operationScope, id);
+        await BabyStorageService.deleteBaby(id, storageScope);
+      }
     } else {
-      result = await BabyStorageService.deleteBaby(id);
+      result = await BabyStorageService.deleteBaby(id, storageScope);
     }
 
-    if (result) {
+    if (result && isCurrentOperation()) {
       dispatch({ type: "DELETE_BABY", payload: id });
 
       const remainingBabies = state.babies.filter(b => b.id !== id);
@@ -323,37 +453,63 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       const noSelectedBaby = selectedBabyId === undefined;
 
       if ((wasSelectedBaby || noSelectedBaby) && remainingBabies.length > 0) {
-        await BabyStorageService.setSelectedBabyId(remainingBabies[0].id);
+        await BabyStorageService.setSelectedBabyId(remainingBabies[0].id, storageScope);
+        if (!isCurrentOperation()) return false;
         dispatch({ type: "SET_SELECTED_BABY", payload: remainingBabies[0] });
       } else if (remainingBabies.length === 0) {
-        await BabyStorageService.setSelectedBabyId(null);
+        await BabyStorageService.setSelectedBabyId(null, storageScope);
+        if (!isCurrentOperation()) return false;
         dispatch({ type: "SET_SELECTED_BABY", payload: null });
       }
     }
-    return result;
-  }, [state.selectedBaby?.id, state.babies, user?.householdId]);
+    return isCurrentOperation() ? result : false;
+  }, [authScope, recordBabyDelete, state.selectedBaby?.id, state.babies, storageScope, user?.householdId]);
 
   const selectBaby = useCallback(async (id: string | null) => {
-    await BabyStorageService.setSelectedBabyId(id);
+    const operationGeneration = authGenerationRef.current;
+    const operationScope = authScope;
+    const isCurrentOperation = () =>
+      authGenerationRef.current === operationGeneration &&
+      authScopeRef.current === operationScope;
     if (id === null) {
+      await BabyStorageService.setSelectedBabyId(null, storageScope);
+      if (!isCurrentOperation()) return null;
       dispatch({ type: "SET_SELECTED_BABY", payload: null });
-    } else {
-      const baby = await BabyStorageService.getBabyById(id);
-      dispatch({ type: "SET_SELECTED_BABY", payload: baby });
+      return null;
     }
-  }, []);
 
-  const getBabyById = useCallback((id: string) => state.babies.find((b) => b.id === id), [state.babies]);
+    if (committedScopeRef.current !== authScope) return null;
+    const baby = state.babies.find(item => item.id === id) ?? null;
+    if (!baby) return null;
 
-  const value: BabyContextValue = useMemo(() => ({
-    ...state,
-    getBabyById,
-    addBaby,
-    updateBaby,
-    deleteBaby,
-    selectBaby,
-    refreshBabies: loadBabies,
-  }), [state, getBabyById, addBaby, updateBaby, deleteBaby, selectBaby, loadBabies]);
+    await BabyStorageService.setSelectedBabyId(id, storageScope);
+    if (!isCurrentOperation()) return null;
+    dispatch({ type: "SET_SELECTED_BABY", payload: baby });
+    return baby;
+  }, [authScope, state.babies, storageScope]);
+
+  const getBabyById = useCallback(
+    (id: string) => committedScopeRef.current === authScope
+      ? state.babies.find(baby => baby.id === id)
+      : undefined,
+    [authScope, state.babies]
+  );
+
+  const value: BabyContextValue = useMemo(() => {
+    const scopedState: BabyState = committedScopeRef.current === authScope
+      ? state
+      : { babies: [], selectedBaby: null, isLoading: true };
+
+    return {
+      ...scopedState,
+      getBabyById,
+      addBaby,
+      updateBaby,
+      deleteBaby,
+      selectBaby,
+      refreshBabies: loadBabies,
+    };
+  }, [authScope, state, getBabyById, addBaby, updateBaby, deleteBaby, selectBaby, loadBabies]);
 
   return <BabyContext.Provider value={value}>{children}</BabyContext.Provider>;
 }
