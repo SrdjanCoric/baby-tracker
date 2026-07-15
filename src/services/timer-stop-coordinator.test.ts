@@ -1,4 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("./widget-data-service", () => ({
+  readPendingWidgetStop: vi.fn(),
+}));
+
 import {
   isPendingStopForTimer,
   isTimerRestoreObsolete,

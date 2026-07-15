@@ -603,6 +603,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             try {
               const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
               if (!isCurrentBinding()) return;
+              if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) return;
               if (!lock || lock.startedBy !== user.id) {
                 console.warn("[SleepContext] loadSleeps: marking timer as STALE", {
                   lockFound: !!lock,
@@ -743,6 +744,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const computingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const driftDismissedRef = useRef<{ suggestedHour: number; type: string } | null>(null);
   const lastRecomputeVersionRef = useRef(0);
+
+  useEffect(() => () => {
+    if (computingTimerRef.current) {
+      clearTimeout(computingTimerRef.current);
+    }
+  }, []);
 
   const runModelComputation = useCallback((showComputing: boolean) => {
     if (!selectedBaby || state.sleeps.length === 0) return;
