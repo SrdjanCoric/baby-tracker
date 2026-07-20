@@ -90,3 +90,4 @@ Confirm `npx supabase status` reports local services on `127.0.0.1`. Do not use 
 - `npm run test:sql` passed against local Supabase, including one-row timer completion replay with the first accepted stop time.
 - `npx supabase status` confirmed all tested endpoints use `127.0.0.1`; no production system or data was accessed.
 - Automated provider integration and local SQL proof cover the required behavior; no manual verification remains.
+- Merged through PR #119 as `2c15b352cf194fc9833765f2e0553cb9c34f7895` on July 20, 2026.
