@@ -51,7 +51,7 @@ export function healthReducer(state: HealthState, action: HealthAction): HealthS
       return { ...state, healthEntries: action.payload };
 
     case "ADD_HEALTH":
-      return { ...state, healthEntries: [...state.healthEntries, action.payload] };
+      return { ...state, healthEntries: upsertById(state.healthEntries, action.payload) };
 
     case "UPDATE_HEALTH": {
       const updatedEntries = state.healthEntries.map(h =>
@@ -68,11 +68,8 @@ export function healthReducer(state: HealthState, action: HealthAction): HealthS
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
 
-    case "REMOTE_INSERT": {
-      const exists = state.healthEntries.some(h => h.id === action.payload.id);
-      if (exists) return state;
-      return { ...state, healthEntries: [...state.healthEntries, action.payload] };
-    }
+    case "REMOTE_INSERT":
+      return { ...state, healthEntries: upsertById(state.healthEntries, action.payload) };
 
     case "REMOTE_UPDATE": {
       return { ...state, healthEntries: upsertById(state.healthEntries, action.payload) };

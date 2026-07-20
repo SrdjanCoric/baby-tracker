@@ -21,7 +21,12 @@ vi.mock("@/contexts/baby-context", () => ({ useBaby: vi.fn() }));
 vi.mock("@/contexts/sync-context", () => ({ useSync: vi.fn() }));
 vi.mock("@/contexts/auth-context", () => ({ useAuth: vi.fn() }));
 vi.mock("@/contexts/active-timers-context", () => ({ useActiveTimers: vi.fn() }));
-vi.mock("@/services/sync", () => ({}));
+vi.mock("@/services/sync", async () => {
+  const sync = await vi.importActual<typeof import("@/services/sync/tombstone")>(
+    "@/services/sync/tombstone"
+  );
+  return { upsertById: sync.upsertById };
+});
 vi.mock("@/utils/sleep-patterns", () => ({ classifySleepByTimeRange: vi.fn() }));
 vi.mock("@/services/active-timer-service", () => ({}));
 vi.mock("@/services/push-token-service", () => ({}));

@@ -16,12 +16,12 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 
-interface MilestonesState {
+export interface MilestonesState {
   responses: StoredMilestoneResponse[];
   isLoading: boolean;
 }
 
-type MilestonesAction =
+export type MilestonesAction =
   | { type: "SET_RESPONSES"; payload: StoredMilestoneResponse[] }
   | { type: "UPSERT_RESPONSE"; payload: StoredMilestoneResponse }
   | { type: "REMOVE_RESPONSE"; payload: string }
@@ -30,28 +30,32 @@ type MilestonesAction =
   | { type: "REMOTE_UPDATE"; payload: StoredMilestoneResponse }
   | { type: "REMOTE_DELETE"; payload: string };
 
-const initialState: MilestonesState = {
+export const initialMilestonesState: MilestonesState = {
   responses: [],
   isLoading: true,
 };
 
-function milestonesReducer(state: MilestonesState, action: MilestonesAction): MilestonesState {
+function upsertMilestoneResponse(
+  responses: StoredMilestoneResponse[],
+  response: StoredMilestoneResponse
+): StoredMilestoneResponse[] {
+  const existing = responses.find((item) => item.milestoneId === response.milestoneId);
+  if (existing && existing.id !== response.id) {
+    return responses.map((item) => item.milestoneId === response.milestoneId ? response : item);
+  }
+  return upsertById(responses, response);
+}
+
+export function milestonesReducer(state: MilestonesState, action: MilestonesAction): MilestonesState {
   switch (action.type) {
     case "SET_RESPONSES":
       return { ...state, responses: action.payload };
 
-    case "UPSERT_RESPONSE": {
-      const existing = state.responses.find((r) => r.milestoneId === action.payload.milestoneId);
-      if (existing) {
-        return {
-          ...state,
-          responses: state.responses.map((r) =>
-            r.milestoneId === action.payload.milestoneId ? action.payload : r
-          ),
-        };
-      }
-      return { ...state, responses: [...state.responses, action.payload] };
-    }
+    case "UPSERT_RESPONSE":
+      return {
+        ...state,
+        responses: upsertMilestoneResponse(state.responses, action.payload),
+      };
 
     case "REMOVE_RESPONSE":
       return {
@@ -62,22 +66,11 @@ function milestonesReducer(state: MilestonesState, action: MilestonesAction): Mi
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
 
-    case "REMOTE_INSERT": {
-      const exists = state.responses.some((r) => r.id === action.payload.id);
-      if (exists) return state;
-      const existingByMilestone = state.responses.find(
-        (r) => r.milestoneId === action.payload.milestoneId
-      );
-      if (existingByMilestone) {
-        return {
-          ...state,
-          responses: state.responses.map((r) =>
-            r.milestoneId === action.payload.milestoneId ? action.payload : r
-          ),
-        };
-      }
-      return { ...state, responses: [...state.responses, action.payload] };
-    }
+    case "REMOTE_INSERT":
+      return {
+        ...state,
+        responses: upsertMilestoneResponse(state.responses, action.payload),
+      };
 
     case "REMOTE_UPDATE": {
       return { ...state, responses: upsertById(state.responses, action.payload) };
@@ -110,7 +103,7 @@ interface MilestonesContextValue extends MilestonesState {
 const MilestonesContext = createContext<MilestonesContextValue | null>(null);
 
 export function MilestonesProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(milestonesReducer, initialState);
+  const [state, dispatch] = useReducer(milestonesReducer, initialMilestonesState);
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();

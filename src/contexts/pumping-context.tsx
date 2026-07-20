@@ -72,7 +72,7 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
       return { ...state, pumpings: action.payload };
 
     case "ADD_PUMPING":
-      return { ...state, pumpings: [...state.pumpings, action.payload] };
+      return { ...state, pumpings: upsertById(state.pumpings, action.payload) };
 
     case "UPDATE_PUMPING": {
       const updatedPumpings = state.pumpings.map(p =>
@@ -145,11 +145,8 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
         activeTimer: action.payload,
       };
 
-    case "REMOTE_INSERT": {
-      const exists = state.pumpings.some(p => p.id === action.payload.id);
-      if (exists) return state;
-      return { ...state, pumpings: [...state.pumpings, action.payload] };
-    }
+    case "REMOTE_INSERT":
+      return { ...state, pumpings: upsertById(state.pumpings, action.payload) };
 
     case "REMOTE_UPDATE": {
       return { ...state, pumpings: upsertById(state.pumpings, action.payload) };

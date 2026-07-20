@@ -42,7 +42,7 @@ export function growthReducer(state: GrowthState, action: GrowthAction): GrowthS
       return { ...state, measurements: action.payload };
 
     case "ADD_MEASUREMENT":
-      return { ...state, measurements: [...state.measurements, action.payload] };
+      return { ...state, measurements: upsertById(state.measurements, action.payload) };
 
     case "UPDATE_MEASUREMENT": {
       const updatedMeasurements = state.measurements.map((m) =>
@@ -59,11 +59,8 @@ export function growthReducer(state: GrowthState, action: GrowthAction): GrowthS
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
 
-    case "REMOTE_INSERT": {
-      const exists = state.measurements.some(m => m.id === action.payload.id);
-      if (exists) return state;
-      return { ...state, measurements: [...state.measurements, action.payload] };
-    }
+    case "REMOTE_INSERT":
+      return { ...state, measurements: upsertById(state.measurements, action.payload) };
 
     case "REMOTE_UPDATE": {
       return { ...state, measurements: upsertById(state.measurements, action.payload) };

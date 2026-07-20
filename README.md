@@ -50,7 +50,7 @@ User action → Local storage → UI update (immediate)
 
 ### Real-Time Multi-Caregiver Sync
 
-Supabase Realtime subscriptions push changes between household members instantly. Remote changes dispatch directly into React context reducers (`REMOTE_INSERT`, `REMOTE_UPDATE`, `REMOTE_DELETE`). Device ID filtering prevents echo updates.
+Supabase Realtime subscriptions push changes between household members instantly. Remote changes dispatch into React context reducers (`REMOTE_INSERT`, `REMOTE_UPDATE`, `REMOTE_DELETE`). Insert acknowledgements upsert by entity ID, so a server event and its matching local create result produce one activity regardless of arrival order. Device ID filtering prevents echo updates.
 
 ### Timer Exclusivity
 
