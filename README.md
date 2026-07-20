@@ -54,7 +54,7 @@ Supabase Realtime subscriptions push changes between household members instantly
 
 ### Timer Exclusivity
 
-Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
+Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
 
 ### iOS Native Integrations
 

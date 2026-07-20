@@ -32,6 +32,7 @@ interface DashboardCardProps {
   timeSince?: string;
   isActive?: boolean;
   activeLabel?: string;
+  isStopping?: boolean;
   onPress?: () => void;
   onActionPress?: () => void;
   onPausePress?: () => void;
@@ -60,6 +61,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       timeSince,
       isActive = false,
       activeLabel,
+      isStopping = false,
       onPress,
       onActionPress,
       onPausePress,
@@ -332,7 +334,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 adjustsFontSizeToFit
                 minimumFontScale={0.7}
               >
-                {activeLabel || t("dashboardCard.active")}
+                {isStopping ? t("common.stopping") : activeLabel || t("dashboardCard.active")}
               </Text>
               <Text
                 className="text-sm mt-1"
@@ -439,6 +441,18 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                 ⏳
               </Text>
             </View>
+          ) : isStopping ? (
+            <Pressable
+              disabled
+              className="items-center justify-center"
+              style={{ backgroundColor: buttonBgColor, opacity: 0.6, width: 34, height: 34, borderRadius: 17 }}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.stopping")}
+              accessibilityState={{ disabled: true, busy: true }}
+              testID={testID ? `${testID}-action` : undefined}
+            >
+              <Text className="text-base font-bold text-white">…</Text>
+            </Pressable>
           ) : isActive && onPausePress ? (
             <View className="flex-row items-center gap-2">
               <AnimatedPressable
@@ -526,6 +540,7 @@ const DashboardCard = memo(DashboardCardInner, (prev, next) => {
     prev.subtitle === next.subtitle &&
     prev.isActive === next.isActive &&
     prev.activeLabel === next.activeLabel &&
+    prev.isStopping === next.isStopping &&
     prev.isPaused === next.isPaused &&
     prev.actionLabel === next.actionLabel &&
     prev.progress === next.progress &&

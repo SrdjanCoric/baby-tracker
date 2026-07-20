@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, Text, TextInput, View, Keyboard, Platform } from "react-native";
+import { Alert, Pressable, Text, TextInput, View, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -33,6 +33,7 @@ export default function PumpingScreen() {
   const { volumeUnit } = useUnits();
   const {
     activeTimer,
+    isStopping,
     startPumping,
     stopPumping,
     changePumpingSide,
@@ -103,10 +104,13 @@ export default function PumpingScreen() {
       resetAlert();
       await stopPumping(volumeMl);
       router.back();
+    } catch (error) {
+      console.error("[PumpingScreen] Failed to stop pumping:", error);
+      Alert.alert(t("common.error"), t("pumping.stopError"));
     } finally {
       isStoppingRef.current = false;
     }
-  }, [resetAlert, stopPumping, volumeMl, router]);
+  }, [resetAlert, stopPumping, volumeMl, router, t]);
 
   const handleCancelStop = useCallback(() => {
     setShowVolumeInput(false);
@@ -211,6 +215,7 @@ export default function PumpingScreen() {
             onInputChange={handleInputChange}
             onUnitToggle={handleUnitToggle}
             onQuickAmountSelect={handleQuickAmountSelect}
+            isStopping={isStopping}
             onConfirm={handleConfirmStop}
             onCancel={handleCancelStop}
           />
@@ -647,6 +652,7 @@ interface VolumeInputViewProps {
   onInputChange: (text: string) => void;
   onUnitToggle: () => void;
   onQuickAmountSelect: (amount: number) => void;
+  isStopping: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -658,11 +664,12 @@ function VolumeInputView({
   onInputChange,
   onUnitToggle,
   onQuickAmountSelect,
+  isStopping,
   onConfirm,
   onCancel,
 }: VolumeInputViewProps) {
   const { t } = useTranslation();
-  const canSave = volumeMl !== null && volumeMl > 0;
+  const canSave = volumeMl !== null && volumeMl > 0 && !isStopping;
 
   return (
     <View className="items-center w-full">
@@ -742,10 +749,12 @@ function VolumeInputView({
       <View className="flex-row gap-4 w-full">
         <Pressable
           onPress={onCancel}
+          disabled={isStopping}
           className="flex-1 py-4 rounded-button-lg items-center active:scale-[0.98]"
           style={{ backgroundColor: PUMPING_BLUE_MUTED }}
           accessibilityRole="button"
           accessibilityLabel={t("common.cancel")}
+          accessibilityState={{ disabled: isStopping }}
         >
           <Text className="text-base font-semibold" style={{ color: PUMPING_BLUE }}>
             {t("common.cancel")}
@@ -759,12 +768,12 @@ function VolumeInputView({
           }`}
           style={{ backgroundColor: PUMPING_BLUE }}
           accessibilityRole="button"
-          accessibilityLabel={t("common.save")}
-          accessibilityState={{ disabled: !canSave }}
+          accessibilityLabel={isStopping ? t("common.stopping") : t("common.save")}
+          accessibilityState={isStopping ? { disabled: true, busy: true } : { disabled: !canSave }}
           testID="save-button"
         >
           <Text className="text-base font-semibold text-white">
-            {t("common.save")}
+            {isStopping ? t("common.stopping") : t("common.save")}
           </Text>
         </Pressable>
       </View>

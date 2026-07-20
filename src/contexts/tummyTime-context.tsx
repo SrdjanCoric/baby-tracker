@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import {
   TummyTimeStorageService,
   StoredTummyTimeEntry,
@@ -203,6 +203,7 @@ export interface TimerLockResult {
 
 interface TummyTimeContextValue extends TummyTimeState {
   babyBinding: BabyProviderBinding;
+  isStopping: boolean;
   startTummyTime: (requestedStartTime?: Date) => Promise<TimerLockResult>;
   stopTummyTime: (requestedEndTime?: Date) => Promise<StoredTummyTimeEntry | null>;
   pauseTummyTime: (requestedPauseTime?: Date) => Promise<void>;
@@ -234,6 +235,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
+  const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
@@ -614,6 +616,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     if (!selectedBaby || !state.activeTimer) return null;
     if (isStoppingRef.current) return null;
     isStoppingRef.current = true;
+    setIsStopping(true);
     stopVersionRef.current++;
     const activeTimer = state.activeTimer;
 
@@ -703,6 +706,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       return tummyTime;
     } finally {
       isStoppingRef.current = false;
+      setIsStopping(false);
     }
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
@@ -974,6 +978,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const value: TummyTimeContextValue = useMemo(() => ({
     ...state,
     babyBinding,
+    isStopping,
     startTummyTime,
     stopTummyTime,
     pauseTummyTime,
@@ -991,7 +996,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     resetToAgeBasedGoal,
     dismissMilestoneSuggestion,
     acceptMilestoneSuggestion,
-  }), [state, babyBinding, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
+  }), [state, babyBinding, isStopping, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
 
   return (
     <TummyTimeContext.Provider value={value}>{children}</TummyTimeContext.Provider>

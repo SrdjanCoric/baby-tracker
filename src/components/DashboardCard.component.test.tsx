@@ -131,6 +131,29 @@ describe("DashboardCard", () => {
       expect(screen.getByText("⏹")).toBeTruthy();
     });
 
+    it("replaces active controls with an accessible stopping state", () => {
+      const onActionPress = jest.fn();
+      const onPausePress = jest.fn();
+      render(
+        <DashboardCard
+          {...defaultProps}
+          isActive
+          isStopping
+          onActionPress={onActionPress}
+          onPausePress={onPausePress}
+          testID="card"
+        />
+      );
+
+      const stoppingControl = screen.getByLabelText("common.stopping");
+      expect(screen.getByText("common.stopping")).toBeTruthy();
+      expect(stoppingControl.props.accessibilityState).toEqual({ disabled: true, busy: true });
+      expect(screen.queryByLabelText("common.pause")).toBeNull();
+      fireEvent.press(stoppingControl);
+      expect(onActionPress).not.toHaveBeenCalled();
+      expect(onPausePress).not.toHaveBeenCalled();
+    });
+
     it('shows "+" when not active', () => {
       render(<DashboardCard {...defaultProps} testID="card" />);
       expect(screen.getByText("+")).toBeTruthy();

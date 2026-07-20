@@ -56,6 +56,7 @@ jest.mock("@/components", () => ({
     label,
     timeSince,
     isActive,
+    isStopping,
     onPress,
     onActionPress,
     progress,
@@ -65,6 +66,7 @@ jest.mock("@/components", () => ({
     label: string;
     timeSince?: string;
     isActive?: boolean;
+    isStopping?: boolean;
     onPress?: () => void;
     onActionPress?: () => void;
     progress?: number;
@@ -76,9 +78,10 @@ jest.mock("@/components", () => ({
         <Text>{label}</Text>
         {timeSince && <Text testID={`time-since-${activity}`}>{timeSince}</Text>}
         {isActive && <Text testID={`active-${activity}`}>Active</Text>}
+        {isStopping && <Text testID={`stopping-${activity}`}>Stopping</Text>}
         {progress !== undefined && <Text testID={`progress-${activity}`}>{progress}%</Text>}
         {subtitle && <Text testID={`subtitle-${activity}`}>{subtitle}</Text>}
-        <Pressable testID={`action-${activity}`} onPress={onActionPress}>
+        <Pressable testID={`action-${activity}`} onPress={onActionPress} disabled={isStopping}>
           <Text>+</Text>
         </Pressable>
       </Pressable>
@@ -87,11 +90,13 @@ jest.mock("@/components", () => ({
   CompactActivityRow: ({
     activity,
     label,
+    isStopping,
     onPress,
     onActionPress,
   }: {
     activity: string;
     label: string;
+    isStopping?: boolean;
     onPress?: () => void;
     onActionPress?: () => void;
   }) => {
@@ -99,7 +104,8 @@ jest.mock("@/components", () => ({
     return (
       <Pressable testID={`compact-row-${activity}`} onPress={onPress}>
         <Text>{label}</Text>
-        <Pressable testID={`action-${activity}`} onPress={onActionPress}>
+        {isStopping && <Text testID={`stopping-${activity}`}>Stopping</Text>}
+        <Pressable testID={`action-${activity}`} onPress={onActionPress} disabled={isStopping}>
           <Text>+</Text>
         </Pressable>
       </Pressable>
@@ -391,6 +397,90 @@ describe("HomeScreen", () => {
       });
       render(<HomeScreen />);
       expect(screen.getByTestId("active-feeding")).toBeTruthy();
+    });
+
+    it("shows feeding stop progress from the provider", () => {
+      mockUseFeeding.mockReturnValue({
+        feedings: [],
+        activeTimer: { isRunning: true, startTime: new Date(), side: "left" },
+        isStopping: true,
+        getLastFeeding: () => null,
+        suggestedSide: "left",
+        refreshFeedings: jest.fn(),
+        stopBreastfeeding: jest.fn(),
+        pauseBreastfeeding: jest.fn(),
+        resumeBreastfeeding: jest.fn(),
+      });
+
+      render(<HomeScreen />);
+
+      expect(screen.getByTestId("stopping-feeding")).toBeTruthy();
+    });
+
+    it("shows sleep stop progress from the provider", () => {
+      mockUseSleep.mockReturnValue({
+        sleeps: [],
+        activeTimer: { isRunning: true, startTime: new Date() },
+        isStopping: true,
+        getLastSleep: () => null,
+        getTodaysTotalSleepMinutes: () => 0,
+        dailyGoalMinutes: 840,
+        getDailyProgress: () => 0,
+        refreshSleeps: jest.fn(),
+        stopSleep: jest.fn(),
+        pauseSleep: jest.fn(),
+        resumeSleep: jest.fn(),
+        wakeWindowConfig: null,
+        getCurrentNapSlot: () => null,
+      });
+
+      render(<HomeScreen />);
+
+      expect(screen.getByTestId("stopping-sleep")).toBeTruthy();
+    });
+
+    it("shows pumping stop progress only after volume confirmation starts completion", () => {
+      const pumpingContext = {
+        pumpings: [],
+        activeTimer: { isRunning: true, startTime: new Date(), side: "both" },
+        isStopping: false,
+        getLastPumping: () => null,
+        getTodaysTotalVolume: () => 0,
+        getLastSide: () => null,
+        refreshPumpings: jest.fn(),
+        pausePumping: jest.fn(),
+        resumePumping: jest.fn(),
+      };
+      mockUsePumping.mockReturnValue(pumpingContext);
+      const { rerender } = render(<HomeScreen />);
+
+      expect(screen.queryByTestId("stopping-pumping")).toBeNull();
+      fireEvent.press(screen.getByTestId("action-pumping"));
+      expect(mockPush).toHaveBeenCalledWith("/pumping?showVolumeInput=true");
+
+      mockUsePumping.mockReturnValue({ ...pumpingContext, isStopping: true });
+      rerender(<HomeScreen />);
+      expect(screen.getByTestId("stopping-pumping")).toBeTruthy();
+    });
+
+    it("shows tummy-time stop progress from the provider", () => {
+      mockUseTummyTime.mockReturnValue({
+        tummyTimes: [],
+        activeTimer: { isRunning: true, startTime: new Date() },
+        isStopping: true,
+        getDailyProgress: () => 0,
+        getTodaysTotalSeconds: () => 0,
+        getTodaysSessionCount: () => 0,
+        dailyGoalSeconds: 1800,
+        refreshTummyTimes: jest.fn(),
+        stopTummyTime: jest.fn(),
+        pauseTummyTime: jest.fn(),
+        resumeTummyTime: jest.fn(),
+      });
+
+      render(<HomeScreen />);
+
+      expect(screen.getByTestId("stopping-tummyTime")).toBeTruthy();
     });
 
     it("shows active state for sleep when timer running", () => {
