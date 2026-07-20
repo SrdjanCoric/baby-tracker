@@ -3,6 +3,7 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserScopedKey } from "./storage-prefix";
+import type { TimerIdentity } from "./timer-completion-service";
 
 const TUMMY_TIMES_KEY_PREFIX = "@tummyTimes:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_tummyTime_timer:";
@@ -25,6 +26,7 @@ export interface StoredTummyTimeEntry {
 }
 
 export interface CreateTummyTimeInput {
+  id?: string;
   babyId: string;
   startedAt: Date;
   endedAt?: Date;
@@ -38,7 +40,7 @@ export interface UpdateTummyTimeInput {
   notes?: string;
 }
 
-export interface ActiveTummyTimeTimerData {
+export interface ActiveTummyTimeTimerData extends Partial<TimerIdentity> {
   startedAt: string;
   liveActivityId?: string;
   isPaused?: boolean;
@@ -97,10 +99,13 @@ export const TummyTimeStorageService = {
 
   async addTummyTime(input: CreateTummyTimeInput): Promise<StoredTummyTimeEntry> {
     const tummyTimes = await this.getAllTummyTimes(input.babyId);
-    const now = new Date().toISOString();
+    const id = input.id ?? generateId();
+    const existing = tummyTimes.find(tummyTime => tummyTime.id === id);
+    if (existing) return existing;
 
+    const now = new Date().toISOString();
     const newTummyTime: StoredTummyTimeEntry = {
-      id: generateId(),
+      id,
       babyId: input.babyId,
       startedAt: input.startedAt.toISOString(),
       endedAt: input.endedAt?.toISOString(),

@@ -22,12 +22,24 @@ import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 
 const mockExtensionStorageData = new Map<string, string>();
 const mockRouterPush = jest.fn();
+const mockRemoveLock = jest.fn();
+let mockUuidCounter = 0;
 
 let mockSelectedBaby = { id: "baby-1", name: "Baby One" };
 let mockAuthUser: { id: string; householdId: string } | null = {
   id: "user-1",
   householdId: "household-1",
 };
+
+jest.mock("expo-crypto", () => ({
+  CryptoDigestAlgorithm: { SHA256: "SHA-256" },
+  randomUUID: jest.fn(() =>
+    `00000000-0000-4000-8000-${(++mockUuidCounter).toString().padStart(12, "0")}`
+  ),
+  digestStringAsync: jest.fn(async (_algorithm: string, value: string) =>
+    (value.startsWith("timer:") ? "a" : "b").repeat(64)
+  ),
+}));
 
 jest.mock("@/services/extension-storage", () => ({
   loadExtensionStorage: jest.fn(async () => ({
@@ -59,7 +71,7 @@ jest.mock("@/contexts/sync-context", () => ({
 }));
 
 jest.mock("@/contexts/active-timers-context", () => ({
-  useActiveTimers: () => ({ removeLock: jest.fn() }),
+  useActiveTimers: () => ({ removeLock: mockRemoveLock }),
 }));
 
 jest.mock("@/services/sync", () => ({
@@ -161,7 +173,7 @@ function RealTimerProviders() {
 
 function storedFeeding(input: CreateFeedingInput): StoredFeedingEntry {
   return {
-    id: "feeding-1",
+    id: input.id ?? "feeding-1",
     babyId: input.babyId,
     type: input.type,
     side: input.side,
@@ -171,48 +183,6 @@ function storedFeeding(input: CreateFeedingInput): StoredFeedingEntry {
     durationSeconds: input.durationSeconds,
     leftDurationSeconds: input.leftDurationSeconds,
     rightDurationSeconds: input.rightDurationSeconds,
-    createdAt: stoppedAt,
-    updatedAt: stoppedAt,
-    loggedBy: "user-1",
-  };
-}
-
-function storedSleep(input: CreateSleepInput): StoredSleepEntry {
-  return {
-    id: "sleep-1",
-    babyId: input.babyId,
-    type: input.type,
-    startedAt: input.startedAt.toISOString(),
-    endedAt: input.endedAt?.toISOString(),
-    durationSeconds: input.durationSeconds,
-    createdAt: stoppedAt,
-    updatedAt: stoppedAt,
-    loggedBy: "user-1",
-  };
-}
-
-function storedPumping(input: CreatePumpingInput): StoredPumpingEntry {
-  return {
-    id: "pumping-1",
-    babyId: input.babyId,
-    side: input.side,
-    startedAt: input.startedAt.toISOString(),
-    endedAt: input.endedAt?.toISOString(),
-    durationSeconds: input.durationSeconds,
-    volumeMl: input.volumeMl,
-    createdAt: stoppedAt,
-    updatedAt: stoppedAt,
-    loggedBy: "user-1",
-  };
-}
-
-function storedTummyTime(input: CreateTummyTimeInput): StoredTummyTimeEntry {
-  return {
-    id: "tummy-time-1",
-    babyId: input.babyId,
-    startedAt: input.startedAt.toISOString(),
-    endedAt: input.endedAt?.toISOString(),
-    durationSeconds: input.durationSeconds,
     createdAt: stoppedAt,
     updatedAt: stoppedAt,
     loggedBy: "user-1",
@@ -233,6 +203,7 @@ describe("external timer stops through production providers", () => {
   beforeEach(async () => {
     jest.restoreAllMocks();
     jest.clearAllMocks();
+    mockUuidCounter = 0;
     feedingState = null;
     sleepState = null;
     pumpingState = null;
@@ -264,16 +235,16 @@ describe("external timer stops through production providers", () => {
     activitySync.fetchPumpingFromDatabase.mockResolvedValue([]);
     activitySync.fetchTummyTimeFromDatabase.mockResolvedValue([]);
     activitySync.createFeedingInDatabase.mockImplementation(
-      async (input: CreateFeedingInput) => storedFeeding(input)
+      async (input: CreateFeedingInput) => FeedingStorageService.addFeeding(input)
     );
     activitySync.createSleepInDatabase.mockImplementation(
-      async (input: CreateSleepInput) => storedSleep(input)
+      async (input: CreateSleepInput) => SleepStorageService.addSleep(input)
     );
     activitySync.createPumpingInDatabase.mockImplementation(
-      async (input: CreatePumpingInput) => storedPumping(input)
+      async (input: CreatePumpingInput) => PumpingStorageService.addPumping(input)
     );
     activitySync.createTummyTimeInDatabase.mockImplementation(
-      async (input: CreateTummyTimeInput) => storedTummyTime(input)
+      async (input: CreateTummyTimeInput) => TummyTimeStorageService.addTummyTime(input)
     );
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
@@ -360,6 +331,71 @@ describe("external timer stops through production providers", () => {
     );
   });
 
+  it("reuses one feeding completion after lock-release failure restores stale UI", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(feedingState?.isLoading).toBe(false));
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      getActiveTimerLock: jest.Mock;
+      releaseTimerLock: jest.Mock;
+      queuePendingLockRelease: jest.Mock;
+    };
+    activeTimers.releaseTimerLock.mockRejectedValue(new Error("offline"));
+
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+    });
+    const lockData = (
+      jest.requireMock("@/services/active-timer-service") as { acquireTimerLock: jest.Mock }
+    ).acquireTimerLock.mock.calls.at(-1)?.[3] as Record<string, unknown>;
+    activeTimers.getActiveTimerLock.mockImplementation(
+      async (_babyId: string, activityType: string) => activityType === "feeding"
+        ? {
+            startedBy: "user-1",
+            startedAt,
+            timerData: lockData,
+          }
+        : null
+    );
+
+    const staleStop = feedingState!.stopBreastfeeding;
+    let firstCompletion: StoredFeedingEntry | null = null;
+    await act(async () => {
+      firstCompletion = await staleStop(new Date(stoppedAt));
+    });
+
+    expect(firstCompletion).not.toBeNull();
+    expect(feedingState?.activeTimer).toBeNull();
+    expect(activeTimers.queuePendingLockRelease).toHaveBeenCalledWith(
+      "baby-1",
+      "feeding",
+      "user-1",
+      expect.any(String),
+      startedAt
+    );
+
+    let repeatedCompletion: StoredFeedingEntry | null = null;
+    await act(async () => {
+      repeatedCompletion = await staleStop(new Date("2026-07-15T08:06:00.000Z"));
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      fetchFeedingsFromDatabase: jest.Mock;
+    };
+    activitySync.fetchFeedingsFromDatabase.mockImplementation(() =>
+      FeedingStorageService.getAllFeedings("baby-1")
+    );
+    await act(async () => {
+      await feedingState!.refreshFeedings();
+    });
+    expect(activitySync.createFeedingInDatabase).toHaveBeenCalledTimes(1);
+    expect(repeatedCompletion).toEqual(firstCompletion);
+    expect(repeatedCompletion?.endedAt).toBe(stoppedAt);
+    expect(feedingState?.feedings).toHaveLength(1);
+    expect(feedingState?.activeTimer).toBeNull();
+  });
+
   it("records one sleep at the pending stop timestamp after its server lock is gone", async () => {
     await SleepStorageService.setActiveTimer("baby-1", {
       startedAt,
@@ -396,6 +432,41 @@ describe("external timer stops through production providers", () => {
       getActiveTimerLock: jest.Mock;
     };
     expect(activeTimers.getActiveTimerLock).not.toHaveBeenCalledWith("baby-1", "sleep");
+  });
+
+  it("reuses one sleep completion and first stop time after cleanup failure", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(sleepState?.isLoading).toBe(false));
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      releaseTimerLock: jest.Mock;
+    };
+    activeTimers.releaseTimerLock.mockRejectedValue(new Error("offline"));
+
+    await act(async () => {
+      await sleepState!.startSleep("nap", new Date(startedAt));
+    });
+    const staleStop = sleepState!.stopSleep;
+
+    let firstCompletion: StoredSleepEntry | null = null;
+    await act(async () => {
+      firstCompletion = await staleStop(new Date(stoppedAt));
+    });
+    expect(sleepState?.activeTimer).toBeNull();
+
+    let repeatedCompletion: StoredSleepEntry | null = null;
+    await act(async () => {
+      repeatedCompletion = await staleStop(new Date("2026-07-15T08:07:00.000Z"));
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createSleepInDatabase: jest.Mock;
+    };
+    expect(activitySync.createSleepInDatabase).toHaveBeenCalledTimes(1);
+    expect(repeatedCompletion).toEqual(firstCompletion);
+    expect(repeatedCompletion?.endedAt).toBe(stoppedAt);
+    expect(sleepState?.sleeps).toHaveLength(1);
+    expect(sleepState?.activeTimer).toBeNull();
   });
 
   it("records one pumping at the pending stop timestamp after its server lock is gone", async () => {
@@ -438,6 +509,49 @@ describe("external timer stops through production providers", () => {
     expect(activeTimers.getActiveTimerLock).not.toHaveBeenCalledWith("baby-1", "pumping");
   });
 
+  it("reuses one pumping completion and queues failed cleanup", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(pumpingState?.isLoading).toBe(false));
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      releaseTimerLock: jest.Mock;
+      queuePendingLockRelease: jest.Mock;
+    };
+    activeTimers.releaseTimerLock.mockRejectedValue(new Error("offline"));
+
+    await act(async () => {
+      await pumpingState!.startPumping("both", new Date(startedAt));
+    });
+    const staleStop = pumpingState!.stopPumping;
+
+    let firstCompletion: StoredPumpingEntry | null = null;
+    await act(async () => {
+      firstCompletion = await staleStop(90, new Date(stoppedAt));
+    });
+    expect(pumpingState?.activeTimer).toBeNull();
+    expect(activeTimers.queuePendingLockRelease).toHaveBeenCalledWith(
+      "baby-1",
+      "pumping",
+      "user-1",
+      expect.any(String),
+      startedAt
+    );
+
+    let repeatedCompletion: StoredPumpingEntry | null = null;
+    await act(async () => {
+      repeatedCompletion = await staleStop(120, new Date("2026-07-15T08:08:00.000Z"));
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createPumpingInDatabase: jest.Mock;
+    };
+    expect(activitySync.createPumpingInDatabase).toHaveBeenCalledTimes(1);
+    expect(repeatedCompletion).toEqual(firstCompletion);
+    expect(repeatedCompletion?.endedAt).toBe(stoppedAt);
+    expect(repeatedCompletion?.volumeMl).toBe(90);
+    expect(pumpingState?.pumpings).toHaveLength(1);
+  });
+
   it("records one tummy-time session at the pending stop timestamp after its server lock is gone", async () => {
     await TummyTimeStorageService.setActiveTimer("baby-1", { startedAt });
     mockExtensionStorageData.set("pendingWidgetStop", JSON.stringify({
@@ -471,6 +585,110 @@ describe("external timer stops through production providers", () => {
       getActiveTimerLock: jest.Mock;
     };
     expect(activeTimers.getActiveTimerLock).not.toHaveBeenCalledWith("baby-1", "tummy_time");
+  });
+
+  it("reuses one tummy-time completion and queues failed cleanup", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(tummyTimeState?.isLoading).toBe(false));
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      releaseTimerLock: jest.Mock;
+      queuePendingLockRelease: jest.Mock;
+    };
+    activeTimers.releaseTimerLock.mockRejectedValue(new Error("offline"));
+
+    await act(async () => {
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    const staleStop = tummyTimeState!.stopTummyTime;
+
+    let firstCompletion: StoredTummyTimeEntry | null = null;
+    await act(async () => {
+      firstCompletion = await staleStop(new Date(stoppedAt));
+    });
+    expect(tummyTimeState?.activeTimer).toBeNull();
+    expect(activeTimers.queuePendingLockRelease).toHaveBeenCalledWith(
+      "baby-1",
+      "tummy_time",
+      "user-1",
+      expect.any(String),
+      startedAt
+    );
+
+    let repeatedCompletion: StoredTummyTimeEntry | null = null;
+    await act(async () => {
+      repeatedCompletion = await staleStop(new Date("2026-07-15T08:09:00.000Z"));
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledTimes(1);
+    expect(repeatedCompletion).toEqual(firstCompletion);
+    expect(repeatedCompletion?.endedAt).toBe(stoppedAt);
+    expect(tummyTimeState?.tummyTimes).toHaveLength(1);
+  });
+
+  it("keeps every timer active when durable activity storage fails", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      createSleepInDatabase: jest.Mock;
+      createPumpingInDatabase: jest.Mock;
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    const storageError = new Error("durable activity storage unavailable");
+    activitySync.createFeedingInDatabase.mockRejectedValue(storageError);
+    activitySync.createSleepInDatabase.mockRejectedValue(storageError);
+    activitySync.createPumpingInDatabase.mockRejectedValue(storageError);
+    activitySync.createTummyTimeInDatabase.mockRejectedValue(storageError);
+
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+
+    const failures: unknown[] = [];
+    await act(async () => {
+      for (const stop of [
+        () => feedingState!.stopBreastfeeding(new Date(stoppedAt)),
+        () => sleepState!.stopSleep(new Date(stoppedAt)),
+        () => pumpingState!.stopPumping(90, new Date(stoppedAt)),
+        () => tummyTimeState!.stopTummyTime(new Date(stoppedAt)),
+      ]) {
+        try {
+          await stop();
+        } catch (error) {
+          failures.push(error);
+        }
+      }
+    });
+
+    expect(failures).toEqual([storageError, storageError, storageError, storageError]);
+    expect(feedingState?.activeTimer?.isRunning).toBe(true);
+    expect(sleepState?.activeTimer?.isRunning).toBe(true);
+    expect(pumpingState?.activeTimer?.isRunning).toBe(true);
+    expect(tummyTimeState?.activeTimer?.isRunning).toBe(true);
+    await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.not.toBeNull();
+    await expect(SleepStorageService.getActiveTimer("baby-1")).resolves.not.toBeNull();
+    await expect(PumpingStorageService.getActiveTimer("baby-1")).resolves.not.toBeNull();
+    await expect(TummyTimeStorageService.getActiveTimer("baby-1")).resolves.not.toBeNull();
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      releaseTimerLock: jest.Mock;
+    };
+    expect(activeTimers.releaseTimerLock).not.toHaveBeenCalled();
   });
 
   it("does not resurrect a feeding when a stale restore finishes after the external stop", async () => {

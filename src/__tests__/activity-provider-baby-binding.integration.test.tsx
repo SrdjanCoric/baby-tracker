@@ -15,6 +15,7 @@ import { TummyTimeStorageService, type StoredTummyTimeEntry } from "@/services/t
 
 let mockSelectedBaby = { id: "baby-a", name: "Baby A" };
 let mockAuthUser: { id: string; householdId: string } | null = null;
+const mockRemoveLock = jest.fn();
 
 jest.mock("@/contexts/baby-context", () => ({
   useBaby: () => ({ selectedBaby: mockSelectedBaby }),
@@ -32,7 +33,7 @@ jest.mock("@/contexts/sync-context", () => ({
 }));
 
 jest.mock("@/contexts/active-timers-context", () => ({
-  useActiveTimers: () => ({ removeLock: jest.fn() }),
+  useActiveTimers: () => ({ removeLock: mockRemoveLock }),
 }));
 
 jest.mock("@/services/sync", () => ({

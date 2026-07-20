@@ -30,6 +30,7 @@ vi.mock("@/services/timer-stop-coordinator", () => ({
   isPendingStopForTimer: vi.fn(),
   readPendingTimerStop: vi.fn(),
 }));
+vi.mock("@/services/timer-completion-service", () => ({}));
 vi.mock("@/utils/sleepGoals", () => ({
   getSleepGoalInfo: vi.fn(),
   getWakeWindowForAge: vi.fn(),
@@ -85,6 +86,8 @@ function sleepEntry(id: string, startedAt: Date): StoredSleepEntry {
 
 function activeTimer(startTime: Date): ActiveSleepTimer {
   return {
+    timerInstanceId: `timer-${startTime.toISOString()}`,
+    activityId: `activity-${startTime.toISOString()}`,
     isRunning: true,
     isPaused: false,
     startTime,
@@ -99,7 +102,12 @@ describe("sleepReducer timer lifecycle", () => {
 
     state = sleepReducer(state, {
       type: "START_TIMER",
-      payload: { startTime: firstStart, sleepType: "nap" },
+      payload: {
+        startTime: firstStart,
+        sleepType: "nap",
+        timerInstanceId: `timer-${firstStart.toISOString()}`,
+        activityId: `activity-${firstStart.toISOString()}`,
+      },
     });
     state = sleepReducer(state, { type: "STOP_TIMER" });
     state = sleepReducer(state, {
@@ -108,7 +116,12 @@ describe("sleepReducer timer lifecycle", () => {
     });
     state = sleepReducer(state, {
       type: "START_TIMER",
-      payload: { startTime: secondStart, sleepType: "nap" },
+      payload: {
+        startTime: secondStart,
+        sleepType: "nap",
+        timerInstanceId: `timer-${secondStart.toISOString()}`,
+        activityId: `activity-${secondStart.toISOString()}`,
+      },
     });
 
     expect(state.activeTimer).toEqual(activeTimer(secondStart));

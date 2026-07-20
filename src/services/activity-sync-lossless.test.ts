@@ -220,6 +220,27 @@ describe("lossless activity sync", () => {
     await expect(fetchFeedingsFromDatabase("baby-1")).resolves.toEqual([localFeeding]);
   });
 
+  it("reuses a reserved timer activity id without storing or queuing a duplicate", async () => {
+    const engine = makeSyncEngine();
+    syncEngine = engine;
+    const input = {
+      id: "22222222-2222-4222-8222-222222222222",
+      babyId: "baby-1",
+      type: "breast" as const,
+      side: "left" as const,
+      startedAt: new Date("2026-07-15T08:00:00.000Z"),
+      endedAt: new Date("2026-07-15T08:05:00.000Z"),
+      durationSeconds: 300,
+    };
+
+    const first = await createFeedingInDatabase(input, "user-1");
+    const replay = await createFeedingInDatabase(input, "user-1");
+
+    expect(replay).toEqual(first);
+    expect(JSON.parse(storage.get("@feedings:baby-1")!)).toEqual([first]);
+    expect(engine.enqueueOperationWithLocalMutation).toHaveBeenCalledTimes(1);
+  });
+
   it("migrates an attributable legacy queue item before pull reconciliation", async () => {
     storage.set("@feedings:baby-1", JSON.stringify([localFeeding]));
     storage.set("@sync_queue", JSON.stringify({

@@ -221,7 +221,7 @@ export async function createFeedingInDatabase(
   userId: string
 ): Promise<StoredFeedingEntry> {
   const now = new Date().toISOString();
-  const id = generateId();
+  const id = input.id ?? generateId();
 
   const feeding: StoredFeedingEntry = {
     id,
@@ -245,38 +245,50 @@ export async function createFeedingInDatabase(
     updatedAt: now,
   };
 
+  let storedFeeding = feeding;
+  let alreadyExists = false;
   await updateLocalFeedings(
     input.babyId,
-    (feedings) => [...feedings, feeding],
-    createDurableQueueCommit({
-      type: 'CREATE',
-      table: 'feedings',
-      entityId: id,
-      data: {
-        id,
-        baby_id: input.babyId,
-        type: input.type,
-        side: input.side,
-        last_finished_side: input.lastFinishedSide,
-        started_at: input.startedAt.toISOString(),
-        ended_at: input.endedAt?.toISOString(),
-        duration_seconds: input.durationSeconds,
-        left_duration_seconds: input.leftDurationSeconds,
-        right_duration_seconds: input.rightDurationSeconds,
-        amount_ml: input.amountMl,
-        content_type: input.contentType,
-        food_type: input.foodType,
-        amount: input.amount,
-        reaction: input.reaction,
-        notes: input.notes,
-        logged_by: userId,
-        created_at: now,
-        updated_at: now,
-      },
-    })
+    (feedings) => {
+      const existing = feedings.find(item => item.id === id);
+      if (existing) {
+        alreadyExists = true;
+        storedFeeding = existing;
+        return feedings;
+      }
+      return [...feedings, feeding];
+    },
+    createConditionalDurableQueueCommit(() => alreadyExists
+      ? null
+      : ({
+          type: 'CREATE',
+          table: 'feedings',
+          entityId: id,
+          data: {
+            id,
+            baby_id: input.babyId,
+            type: input.type,
+            side: input.side,
+            last_finished_side: input.lastFinishedSide,
+            started_at: input.startedAt.toISOString(),
+            ended_at: input.endedAt?.toISOString(),
+            duration_seconds: input.durationSeconds,
+            left_duration_seconds: input.leftDurationSeconds,
+            right_duration_seconds: input.rightDurationSeconds,
+            amount_ml: input.amountMl,
+            content_type: input.contentType,
+            food_type: input.foodType,
+            amount: input.amount,
+            reaction: input.reaction,
+            notes: input.notes,
+            logged_by: userId,
+            created_at: now,
+            updated_at: now,
+          },
+        }))
   );
 
-  return feeding;
+  return storedFeeding;
 }
 
 export async function updateFeedingInDatabase(
@@ -569,7 +581,7 @@ export async function createSleepInDatabase(
   userId: string
 ): Promise<StoredSleepEntry> {
   const now = new Date().toISOString();
-  const id = generateId();
+  const id = input.id ?? generateId();
 
   const sleep: StoredSleepEntry = {
     id,
@@ -584,29 +596,41 @@ export async function createSleepInDatabase(
     updatedAt: now,
   };
 
+  let storedSleep = sleep;
+  let alreadyExists = false;
   await updateLocalSleep(
     input.babyId,
-    (sessions) => [...sessions, sleep],
-    createDurableQueueCommit({
-      type: 'CREATE',
-      table: 'sleep_sessions',
-      entityId: id,
-      data: {
-        id,
-        baby_id: input.babyId,
-        type: input.type,
-        started_at: input.startedAt.toISOString(),
-        ended_at: input.endedAt?.toISOString(),
-        duration_seconds: input.durationSeconds,
-        notes: input.notes,
-        logged_by: userId,
-        created_at: now,
-        updated_at: now,
-      },
-    })
+    (sessions) => {
+      const existing = sessions.find(session => session.id === id);
+      if (existing) {
+        alreadyExists = true;
+        storedSleep = existing;
+        return sessions;
+      }
+      return [...sessions, sleep];
+    },
+    createConditionalDurableQueueCommit(() => alreadyExists
+      ? null
+      : ({
+          type: 'CREATE',
+          table: 'sleep_sessions',
+          entityId: id,
+          data: {
+            id,
+            baby_id: input.babyId,
+            type: input.type,
+            started_at: input.startedAt.toISOString(),
+            ended_at: input.endedAt?.toISOString(),
+            duration_seconds: input.durationSeconds,
+            notes: input.notes,
+            logged_by: userId,
+            created_at: now,
+            updated_at: now,
+          },
+        }))
   );
 
-  return sleep;
+  return storedSleep;
 }
 
 export async function updateSleepInDatabase(
@@ -723,7 +747,7 @@ export async function createPumpingInDatabase(
   userId: string
 ): Promise<StoredPumpingEntry> {
   const now = new Date().toISOString();
-  const id = generateId();
+  const id = input.id ?? generateId();
 
   const pumping: StoredPumpingEntry = {
     id,
@@ -739,29 +763,41 @@ export async function createPumpingInDatabase(
     updatedAt: now,
   };
 
+  let storedPumping = pumping;
+  let alreadyExists = false;
   await updateLocalPumping(
     input.babyId,
-    (sessions) => [...sessions, pumping],
-    createDurableQueueCommit({
-      type: 'CREATE',
-      table: 'pumping_sessions',
-      entityId: id,
-      data: {
-        id,
-        baby_id: input.babyId,
-        side: input.side,
-        started_at: input.startedAt.toISOString(),
-        ended_at: input.endedAt?.toISOString(),
-        duration_seconds: input.durationSeconds,
-        amount_ml: input.volumeMl,
-        notes: input.notes,
-        logged_by: userId,
-        created_at: now,
-      },
-    })
+    (sessions) => {
+      const existing = sessions.find(session => session.id === id);
+      if (existing) {
+        alreadyExists = true;
+        storedPumping = existing;
+        return sessions;
+      }
+      return [...sessions, pumping];
+    },
+    createConditionalDurableQueueCommit(() => alreadyExists
+      ? null
+      : ({
+          type: 'CREATE',
+          table: 'pumping_sessions',
+          entityId: id,
+          data: {
+            id,
+            baby_id: input.babyId,
+            side: input.side,
+            started_at: input.startedAt.toISOString(),
+            ended_at: input.endedAt?.toISOString(),
+            duration_seconds: input.durationSeconds,
+            amount_ml: input.volumeMl,
+            notes: input.notes,
+            logged_by: userId,
+            created_at: now,
+          },
+        }))
   );
 
-  return pumping;
+  return storedPumping;
 }
 
 export async function updatePumpingInDatabase(
@@ -1030,7 +1066,7 @@ export async function createTummyTimeInDatabase(
   userId: string
 ): Promise<StoredTummyTimeEntry> {
   const now = new Date().toISOString();
-  const id = generateId();
+  const id = input.id ?? generateId();
 
   const tummyTime: StoredTummyTimeEntry = {
     id,
@@ -1044,27 +1080,39 @@ export async function createTummyTimeInDatabase(
     updatedAt: now,
   };
 
+  let storedTummyTime = tummyTime;
+  let alreadyExists = false;
   await updateLocalTummyTime(
     input.babyId,
-    (sessions) => [...sessions, tummyTime],
-    createDurableQueueCommit({
-      type: 'CREATE',
-      table: 'tummy_time_sessions',
-      entityId: id,
-      data: {
-        id,
-        baby_id: input.babyId,
-        started_at: input.startedAt.toISOString(),
-        ended_at: input.endedAt?.toISOString(),
-        duration_seconds: input.durationSeconds,
-        notes: input.notes,
-        logged_by: userId,
-        created_at: now,
-      },
-    })
+    (sessions) => {
+      const existing = sessions.find(session => session.id === id);
+      if (existing) {
+        alreadyExists = true;
+        storedTummyTime = existing;
+        return sessions;
+      }
+      return [...sessions, tummyTime];
+    },
+    createConditionalDurableQueueCommit(() => alreadyExists
+      ? null
+      : ({
+          type: 'CREATE',
+          table: 'tummy_time_sessions',
+          entityId: id,
+          data: {
+            id,
+            baby_id: input.babyId,
+            started_at: input.startedAt.toISOString(),
+            ended_at: input.endedAt?.toISOString(),
+            duration_seconds: input.durationSeconds,
+            notes: input.notes,
+            logged_by: userId,
+            created_at: now,
+          },
+        }))
   );
 
-  return tummyTime;
+  return storedTummyTime;
 }
 
 export async function updateTummyTimeInDatabase(
