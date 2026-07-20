@@ -96,7 +96,7 @@ export function tummyTimeReducer(
       return { ...state, tummyTimes: action.payload };
 
     case "ADD_TUMMY_TIME":
-      return { ...state, tummyTimes: [...state.tummyTimes, action.payload] };
+      return { ...state, tummyTimes: upsertById(state.tummyTimes, action.payload) };
 
     case "UPDATE_TUMMY_TIME": {
       const updatedTummyTimes = state.tummyTimes.map(t =>
@@ -176,11 +176,8 @@ export function tummyTimeReducer(
         activeTimer: action.payload,
       };
 
-    case "REMOTE_INSERT": {
-      const exists = state.tummyTimes.some(t => t.id === action.payload.id);
-      if (exists) return state;
-      return { ...state, tummyTimes: [...state.tummyTimes, action.payload] };
-    }
+    case "REMOTE_INSERT":
+      return { ...state, tummyTimes: upsertById(state.tummyTimes, action.payload) };
 
     case "REMOTE_UPDATE": {
       return { ...state, tummyTimes: upsertById(state.tummyTimes, action.payload) };

@@ -144,7 +144,7 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
       return { ...state, sleeps: action.payload, sleepsLoadVersion: state.sleepsLoadVersion + 1 };
 
     case "ADD_SLEEP":
-      return { ...state, sleeps: [...state.sleeps, action.payload], modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
+      return { ...state, sleeps: upsertById(state.sleeps, action.payload), modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
 
     case "UPDATE_SLEEP": {
       const updatedSleeps = state.sleeps.map(s =>
@@ -251,11 +251,8 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
     case "SET_NEWBORN_NAP_OPT_IN":
       return { ...state, newbornNapOptIn: action.payload };
 
-    case "REMOTE_INSERT": {
-      const exists = state.sleeps.some(s => s.id === action.payload.id);
-      if (exists) return state;
-      return { ...state, sleeps: [...state.sleeps, action.payload], modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
-    }
+    case "REMOTE_INSERT":
+      return { ...state, sleeps: upsertById(state.sleeps, action.payload), modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
 
     case "REMOTE_UPDATE": {
       return { ...state, sleeps: upsertById(state.sleeps, action.payload), modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };

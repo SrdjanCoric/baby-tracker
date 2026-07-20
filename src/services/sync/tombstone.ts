@@ -29,9 +29,9 @@ export function dropTombstoned<T extends { deleted?: unknown }>(rows: T[]): T[] 
 }
 
 /**
- * Add-or-replace a record by id, returning a new array. A remote `REMOTE_UPDATE` must upsert
- * (not just replace in place) so that an un-delete/restore — which arrives as an UPDATE for a
- * record the receiver previously hid — re-adds the record instead of silently dropping it.
+ * Add-or-replace a record by id, returning a new array. Insert actions use this to make local and
+ * Realtime acknowledgement ordering idempotent. A remote `REMOTE_UPDATE` also uses it so an
+ * un-delete/restore re-adds a record the receiver previously hid.
  */
 export function upsertById<T extends { id: string }>(list: T[], item: T): T[] {
   const index = list.findIndex((entry) => entry.id === item.id);

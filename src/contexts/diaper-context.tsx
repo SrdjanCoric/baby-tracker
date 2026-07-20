@@ -45,7 +45,7 @@ export function diaperReducer(state: DiaperState, action: DiaperAction): DiaperS
       return { ...state, diapers: action.payload };
 
     case "ADD_DIAPER":
-      return { ...state, diapers: [...state.diapers, action.payload] };
+      return { ...state, diapers: upsertById(state.diapers, action.payload) };
 
     case "UPDATE_DIAPER": {
       const updatedDiapers = state.diapers.map(d =>
@@ -62,11 +62,8 @@ export function diaperReducer(state: DiaperState, action: DiaperAction): DiaperS
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
 
-    case "REMOTE_INSERT": {
-      const exists = state.diapers.some(d => d.id === action.payload.id);
-      if (exists) return state;
-      return { ...state, diapers: [...state.diapers, action.payload] };
-    }
+    case "REMOTE_INSERT":
+      return { ...state, diapers: upsertById(state.diapers, action.payload) };
 
     case "REMOTE_UPDATE": {
       return { ...state, diapers: upsertById(state.diapers, action.payload) };

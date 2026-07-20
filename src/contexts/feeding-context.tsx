@@ -80,7 +80,7 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
       return { ...state, feedings: action.payload };
 
     case "ADD_FEEDING": {
-      const newFeedings = [...state.feedings, action.payload];
+      const newFeedings = upsertById(state.feedings, action.payload);
       const newState: FeedingState = { ...state, feedings: newFeedings };
       if (action.payload.type === "breast") {
         const suggested = computeSuggestedSide(newFeedings);
@@ -208,9 +208,7 @@ export function feedingReducer(state: FeedingState, action: FeedingAction): Feed
     }
 
     case "REMOTE_INSERT": {
-      const exists = state.feedings.some(f => f.id === action.payload.id);
-      if (exists) return state;
-      const newFeedings = [...state.feedings, action.payload];
+      const newFeedings = upsertById(state.feedings, action.payload);
       const newState: FeedingState = { ...state, feedings: newFeedings };
       if (action.payload.type === "breast") {
         const suggested = computeSuggestedSide(newFeedings);
