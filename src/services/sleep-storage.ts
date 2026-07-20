@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { SleepType } from "@/constants/activities";
 import type { WakeWindowConfig } from "@/types/wake-windows";
 import { getUserScopedKey } from "./storage-prefix";
+import type { TimerIdentity } from "./timer-completion-service";
 
 const SLEEPS_KEY_PREFIX = "@sleeps:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_sleep_timer:";
@@ -34,6 +35,7 @@ export interface StoredSleepEntry {
 }
 
 export interface CreateSleepInput {
+  id?: string;
   babyId: string;
   type: SleepType;
   startedAt: Date;
@@ -49,7 +51,7 @@ export interface UpdateSleepInput {
   type?: SleepType;
 }
 
-export interface ActiveSleepTimerData {
+export interface ActiveSleepTimerData extends Partial<TimerIdentity> {
   startedAt: string;
   type: SleepType;
   liveActivityId?: string;
@@ -133,10 +135,13 @@ export const SleepStorageService = {
 
   async addSleep(input: CreateSleepInput): Promise<StoredSleepEntry> {
     const sleeps = await this.getAllSleeps(input.babyId);
-    const now = new Date().toISOString();
+    const id = input.id ?? generateId();
+    const existing = sleeps.find(sleep => sleep.id === id);
+    if (existing) return existing;
 
+    const now = new Date().toISOString();
     const newSleep: StoredSleepEntry = {
-      id: generateId(),
+      id,
       babyId: input.babyId,
       type: input.type,
       startedAt: input.startedAt.toISOString(),

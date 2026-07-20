@@ -3,28 +3,51 @@ import { supabase } from "@/services/supabase";
 import i18n from "@/i18n";
 
 const PENDING_LOCK_RELEASES_KEY = "@pending_lock_releases";
+let pendingLockReleaseMutation = Promise.resolve();
 
 interface PendingLockRelease {
   babyId: string;
   activityType: TimerActivityType;
   userId: string;
+  timerInstanceId?: string;
+  startedAt?: string;
   queuedAt: string;
 }
 
-export async function queuePendingLockRelease(
+function withPendingLockReleaseMutation<T>(operation: () => Promise<T>): Promise<T> {
+  const result = pendingLockReleaseMutation.then(operation, operation);
+  pendingLockReleaseMutation = result.then(() => undefined, () => undefined);
+  return result;
+}
+
+export function queuePendingLockRelease(
   babyId: string,
   activityType: TimerActivityType,
-  userId: string
+  userId: string,
+  timerInstanceId?: string,
+  startedAt?: string
 ): Promise<void> {
-  const pending = await getPendingLockReleases();
-  const alreadyQueued = pending.some(
-    p => p.babyId === babyId && p.activityType === activityType && p.userId === userId
-  );
-  if (alreadyQueued) return;
+  return withPendingLockReleaseMutation(async () => {
+    const pending = await getPendingLockReleases();
+    const alreadyQueued = pending.some(
+      release =>
+        release.babyId === babyId &&
+        release.activityType === activityType &&
+        release.userId === userId &&
+        release.timerInstanceId === timerInstanceId
+    );
+    if (alreadyQueued) return;
 
-  pending.push({ babyId, activityType, userId, queuedAt: new Date().toISOString() });
-  await AsyncStorage.setItem(PENDING_LOCK_RELEASES_KEY, JSON.stringify(pending));
-
+    pending.push({
+      babyId,
+      activityType,
+      userId,
+      timerInstanceId,
+      startedAt,
+      queuedAt: new Date().toISOString(),
+    });
+    await AsyncStorage.setItem(PENDING_LOCK_RELEASES_KEY, JSON.stringify(pending));
+  });
 }
 
 async function getPendingLockReleases(): Promise<PendingLockRelease[]> {
@@ -37,24 +60,38 @@ async function getPendingLockReleases(): Promise<PendingLockRelease[]> {
   }
 }
 
-export async function retryPendingLockReleases(): Promise<void> {
-  const pending = await getPendingLockReleases();
-  if (pending.length === 0) return;
+export function retryPendingLockReleases(): Promise<void> {
+  return withPendingLockReleaseMutation(async () => {
+    const pending = await getPendingLockReleases();
+    if (pending.length === 0) return;
 
-
-  const remaining: PendingLockRelease[] = [];
-
-  for (const release of pending) {
-    try {
-      await releaseTimerLock(release.babyId, release.activityType as TimerActivityType, release.userId);
-
-    } catch (error) {
-      console.error("[ActiveTimerService] Pending lock release still failing:", release, error);
-      remaining.push(release);
+    const remaining: PendingLockRelease[] = [];
+    for (const release of pending) {
+      try {
+        if (!release.timerInstanceId) {
+          const currentLock = await getActiveTimerLock(release.babyId, release.activityType);
+          if (
+            !currentLock ||
+            new Date(currentLock.startedAt).getTime() > new Date(release.queuedAt).getTime()
+          ) {
+            continue;
+          }
+        }
+        await releaseTimerLock(
+          release.babyId,
+          release.activityType,
+          release.userId,
+          release.timerInstanceId,
+          release.startedAt
+        );
+      } catch (error) {
+        console.error("[ActiveTimerService] Pending lock release still failing:", release, error);
+        remaining.push(release);
+      }
     }
-  }
 
-  await AsyncStorage.setItem(PENDING_LOCK_RELEASES_KEY, JSON.stringify(remaining));
+    await AsyncStorage.setItem(PENDING_LOCK_RELEASES_KEY, JSON.stringify(remaining));
+  });
 }
 
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummy_time";
@@ -122,14 +159,41 @@ export async function acquireTimerLock(
 export async function releaseTimerLock(
   babyId: string,
   activityType: TimerActivityType,
-  userId: string
+  userId: string,
+  timerInstanceId?: string,
+  startedAt?: string
 ): Promise<boolean> {
-  const { error, count } = await supabase
+  let lockId: string | undefined;
+  if (timerInstanceId) {
+    const currentLock = await getActiveTimerLock(babyId, activityType);
+    if (!currentLock || currentLock.startedBy !== userId) return false;
+
+    const currentTimerInstanceId = currentLock.timerData?.timerInstanceId;
+    if (typeof currentTimerInstanceId === "string") {
+      if (currentTimerInstanceId !== timerInstanceId) return false;
+    } else if (
+      !startedAt ||
+      new Date(currentLock.startedAt).getTime() !== new Date(startedAt).getTime()
+    ) {
+      return false;
+    }
+    lockId = currentLock.id;
+  }
+
+  let query = supabase
     .from("active_timers")
-    .delete()
-    .eq("baby_id", babyId)
-    .eq("activity_type", activityType)
+    .delete({ count: "exact" })
     .eq("started_by", userId);
+
+  if (lockId) {
+    query = query.eq("id", lockId);
+  } else {
+    query = query
+      .eq("baby_id", babyId)
+      .eq("activity_type", activityType);
+  }
+
+  const { error, count } = await query;
 
   if (error) {
     console.error("[ActiveTimerService] Failed to release lock:", error);

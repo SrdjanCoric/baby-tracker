@@ -75,7 +75,7 @@ const SleepPredictionCardInner = ({
     return getLockForActivity(selectedBaby.id, "sleep");
   }, [activeTimer, selectedBaby?.id, getLockForActivity]);
 
-  const effectiveActiveTimer = useMemo((): ActiveSleepTimer | null => {
+  const effectiveActiveTimer = useMemo((): Omit<ActiveSleepTimer, "timerInstanceId" | "activityId"> | null => {
     if (activeTimer) return activeTimer;
     if (!remoteSleepLock) return null;
     const sleepType = (remoteSleepLock.timerData?.type as SleepType) ?? "nap";

@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
 import { computeSuggestedSide } from "@/utils/feeding-sessions";
+import type { TimerIdentity } from "./timer-completion-service";
 
 const FEEDINGS_KEY_PREFIX = "@feedings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_feeding_timer:";
@@ -32,6 +33,7 @@ export interface StoredFeedingEntry {
 }
 
 export interface CreateFeedingInput {
+  id?: string;
   babyId: string;
   type: FeedingType;
   side?: BreastSide;
@@ -63,7 +65,7 @@ export interface UpdateFeedingInput {
   side?: BreastSide;
 }
 
-export interface ActiveTimerData {
+export interface ActiveTimerData extends Partial<TimerIdentity> {
   startedAt: string;
   side?: BreastSide;
   type: FeedingType;
@@ -102,10 +104,13 @@ export const FeedingStorageService = {
 
   async addFeeding(input: CreateFeedingInput): Promise<StoredFeedingEntry> {
     const feedings = await this.getAllFeedings(input.babyId);
-    const now = new Date().toISOString();
+    const id = input.id ?? generateId();
+    const existing = feedings.find(feeding => feeding.id === id);
+    if (existing) return existing;
 
+    const now = new Date().toISOString();
     const newFeeding: StoredFeedingEntry = {
-      id: generateId(),
+      id,
       babyId: input.babyId,
       type: input.type,
       side: input.side,

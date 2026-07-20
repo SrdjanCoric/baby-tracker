@@ -4,6 +4,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { BreastSide } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
+import type { TimerIdentity } from "./timer-completion-service";
 
 const PUMPINGS_KEY_PREFIX = "@pumpings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_pumping_timer:";
@@ -23,6 +24,7 @@ export interface StoredPumpingEntry {
 }
 
 export interface CreatePumpingInput {
+  id?: string;
   babyId: string;
   side: BreastSide;
   startedAt: Date;
@@ -40,7 +42,7 @@ export interface UpdatePumpingInput {
   side?: BreastSide;
 }
 
-export interface ActivePumpingTimerData {
+export interface ActivePumpingTimerData extends Partial<TimerIdentity> {
   startedAt: string;
   side: BreastSide;
   liveActivityId?: string;
@@ -84,10 +86,13 @@ export const PumpingStorageService = {
 
   async addPumping(input: CreatePumpingInput): Promise<StoredPumpingEntry> {
     const pumpings = await this.getAllPumpings(input.babyId);
-    const now = new Date().toISOString();
+    const id = input.id ?? generateId();
+    const existing = pumpings.find(pumping => pumping.id === id);
+    if (existing) return existing;
 
+    const now = new Date().toISOString();
     const newPumping: StoredPumpingEntry = {
-      id: generateId(),
+      id,
       babyId: input.babyId,
       side: input.side,
       startedAt: input.startedAt.toISOString(),

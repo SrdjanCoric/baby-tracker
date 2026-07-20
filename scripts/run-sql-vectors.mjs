@@ -239,6 +239,69 @@ async function runIdempotencyConcurrencyTest() {
   }
 }
 
+function runTimerCompletionReplayTest() {
+  const operationIds = ["timer-completion-first", "timer-completion-retry"];
+  const record = JSON.stringify({
+    id: CC.feeding,
+    baby_id: CC.baby,
+    type: "breast",
+    started_at: "2026-07-15T08:00:00.000Z",
+    ended_at: "2026-07-15T08:05:00.000Z",
+    duration_seconds: 300,
+    logged_by: CC.user,
+  }).replaceAll("'", "''");
+  const clocks = JSON.stringify({
+    type: "2026-07-15T08:05:00.000Z-0000-timer-device",
+    started_at: "2026-07-15T08:05:00.000Z-0000-timer-device",
+    ended_at: "2026-07-15T08:05:00.000Z-0000-timer-device",
+    duration_seconds: "2026-07-15T08:05:00.000Z-0000-timer-device",
+  }).replaceAll("'", "''");
+  const claims = JSON.stringify({ sub: CC.user }).replaceAll("'", "''");
+  const operationList = operationIds.map(id => `'${id}'`).join(", ");
+  const sql = `
+    INSERT INTO auth.users (id, email) VALUES ('${CC.user}', 'timer-replay@test.dev')
+      ON CONFLICT (id) DO NOTHING;
+    INSERT INTO babies (id, household_id, name)
+      SELECT '${CC.baby}', household_id, 'Timer Replay Baby' FROM users WHERE id = '${CC.user}'
+      ON CONFLICT (id) DO NOTHING;
+    DELETE FROM sync_operation_acknowledgements
+      WHERE user_id = '${CC.user}' AND operation_id IN (${operationList});
+    SELECT set_config('request.jwt.claims', '${claims}', false);
+    SELECT merge_record('feedings', '${record}'::jsonb, '${clocks}'::jsonb,
+      '${operationIds[0]}', '${CC.user}'::uuid);
+    SELECT merge_record('feedings', '${record}'::jsonb, '${clocks}'::jsonb,
+      '${operationIds[1]}', '${CC.user}'::uuid);`;
+  const cleanup = `
+    DELETE FROM sync_operation_acknowledgements
+      WHERE user_id = '${CC.user}' AND operation_id IN (${operationList});
+    DELETE FROM feedings WHERE id = '${CC.feeding}';
+    DELETE FROM babies WHERE id = '${CC.baby}';
+    DELETE FROM auth.users WHERE id = '${CC.user}';`;
+
+  psql(["-q", "-c", sql]);
+  try {
+    const row = psql([
+      "-A",
+      "-t",
+      "-F",
+      "\t",
+      "-c",
+      `SELECT count(*), ended_at, duration_seconds
+       FROM feedings
+       WHERE id = '${CC.feeding}'
+       GROUP BY ended_at, duration_seconds`,
+    ]).trim();
+    const [count, endedAt, duration] = row.split("\t");
+    const ok =
+      Number(count) === 1 &&
+      new Date(endedAt).toISOString() === "2026-07-15T08:05:00.000Z" &&
+      Number(duration) === 300;
+    return { ok, detail: `rows=${count} ended_at=${endedAt} duration=${duration}` };
+  } finally {
+    psql(["-q", "-c", cleanup]);
+  }
+}
+
 console.log(`Running CRDT SQL vectors against ${DB_URL}\n`);
 
 let hardFail = false;
@@ -301,6 +364,20 @@ try {
   }
 } catch (err) {
   console.log(`${RED}✗ idempotency concurrency test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`);
+  hardFail = true;
+}
+
+console.log("");
+try {
+  const timerReplay = runTimerCompletionReplayTest();
+  if (timerReplay.ok) {
+    console.log(`${GREEN}✓${RESET} timer completion replay: one completed row (${timerReplay.detail})`);
+  } else {
+    console.log(`${RED}✗ timer completion replay created divergent rows (${timerReplay.detail})${RESET}`);
+    hardFail = true;
+  }
+} catch (err) {
+  console.log(`${RED}✗ timer completion replay test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`);
   hardFail = true;
 }
 
