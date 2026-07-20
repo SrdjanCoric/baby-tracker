@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `plans/master-plan.md` — the project's master plan (durable architectural decisions + ordered task pointers). Task bodies live in `plans/tasks/`; new work is added via the `to-plan` skill, which appends to this plan and never creates a second one.
 
+Plan files are version-controlled project state. Commit each planning batch through a dedicated documentation PR before starting its implementation branches. Do not leave plan updates as long-lived working-tree changes. After a task PR merges, commit its completed status and move to `plans/tasks/done/` through a documentation PR so `main` and local checkouts remain clean.
+
 ## Build and Development Commands
 
 ```bash
