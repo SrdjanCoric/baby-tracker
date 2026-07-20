@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import {
   SleepStorageService,
   StoredSleepEntry,
@@ -293,6 +293,7 @@ export interface TimerLockResult {
 
 interface SleepContextValue extends SleepState {
   babyBinding: BabyProviderBinding;
+  isStopping: boolean;
   startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<TimerLockResult>;
   stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
@@ -336,6 +337,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const { removeLock } = useActiveTimers();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
+  const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
@@ -1002,6 +1004,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     if (!selectedBaby || !state.activeTimer) return null;
     if (isStoppingRef.current) return null;
     isStoppingRef.current = true;
+    setIsStopping(true);
 
     const activeTimer = state.activeTimer;
     const timerStartTime = activeTimer.startTime;
@@ -1107,6 +1110,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       return lastSleep;
     } finally {
       isStoppingRef.current = false;
+      setIsStopping(false);
     }
   }, [selectedBaby, state.activeTimer, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, user?.householdId, user?.id, removeLock]);
 
@@ -1572,6 +1576,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const value: SleepContextValue = useMemo(() => ({
     ...state,
     babyBinding,
+    isStopping,
     startSleep,
     stopSleep,
     changeSleepType,
@@ -1603,7 +1608,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dismissPredictionBanner,
     dismissDrift,
     acceptDrift,
-  }), [state, babyBinding, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod, dismissPredictionBanner, dismissDrift, acceptDrift]);
+  }), [state, babyBinding, isStopping, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod, dismissPredictionBanner, dismissDrift, acceptDrift]);
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
 }

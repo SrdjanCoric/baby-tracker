@@ -23,6 +23,7 @@ interface CompactActivityRowProps {
   subtitle?: string;
   isActive?: boolean;
   activeLabel?: string;
+  isStopping?: boolean;
   onPress?: () => void;
   onActionPress?: () => void;
   onPausePress?: () => void;
@@ -48,6 +49,7 @@ const CompactActivityRowInner = ({
   timeSince,
   subtitle,
   isActive = false,
+  isStopping = false,
   onPress,
   onActionPress,
   onPausePress,
@@ -122,7 +124,11 @@ const CompactActivityRowInner = ({
     rowScale.value = withSpring(1, SPRING_CONFIG);
   }, [rowScale]);
 
-  const displayValue = isActive && localElapsed ? localElapsed : timeSince || "--";
+  const displayValue = isStopping
+    ? t("common.stopping")
+    : isActive && localElapsed
+      ? localElapsed
+      : timeSince || "--";
 
   return (
     <AnimatedPressable
@@ -201,7 +207,27 @@ const CompactActivityRowInner = ({
           )}
         </View>
 
-        {isActive && onPausePress ? (
+        {isStopping ? (
+          <Pressable
+            disabled
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: buttonBgColor,
+              opacity: 0.6,
+              flexShrink: 0,
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.stopping")}
+            accessibilityState={{ disabled: true, busy: true }}
+            testID={testID ? `${testID}-action` : undefined}
+          >
+            <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}>…</Text>
+          </Pressable>
+        ) : isActive && onPausePress ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 0 }}>
             <Pressable
               onPress={(e) => {
@@ -280,6 +306,7 @@ const CompactActivityRow = memo(CompactActivityRowInner, (prev, next) => {
     prev.subtitle === next.subtitle &&
     prev.isActive === next.isActive &&
     prev.activeLabel === next.activeLabel &&
+    prev.isStopping === next.isStopping &&
     prev.isPaused === next.isPaused &&
     prev.actionLabel === next.actionLabel &&
     prev.progress === next.progress &&

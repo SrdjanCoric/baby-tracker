@@ -22,6 +22,7 @@ import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 
 const mockExtensionStorageData = new Map<string, string>();
 const mockRouterPush = jest.fn();
+const mockRouter = { push: mockRouterPush };
 const mockRemoveLock = jest.fn();
 let mockUuidCounter = 0;
 
@@ -52,7 +53,7 @@ jest.mock("@/services/extension-storage", () => ({
 }));
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: mockRouterPush }),
+  useRouter: () => mockRouter,
 }));
 
 jest.mock("@/contexts/baby-context", () => ({
@@ -279,6 +280,43 @@ describe("external timer stops through production providers", () => {
     pushTokens.fetchWakeWindowPreference.mockResolvedValue(null);
   });
 
+  it("exposes one pending feeding stop and restores the timer after failure", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(feedingState?.isLoading).toBe(false));
+
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+    });
+
+    const saveGate = deferred<void>();
+    const saveError = new Error("storage unavailable");
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+    };
+    activitySync.createFeedingInDatabase.mockImplementation(async () => {
+      await saveGate.promise;
+      throw saveError;
+    });
+
+    let stopPromise!: ReturnType<ReturnType<typeof useFeeding>["stopBreastfeeding"]>;
+    await act(async () => {
+      stopPromise = feedingState!.stopBreastfeeding(new Date(stoppedAt));
+      await Promise.resolve();
+    });
+
+    expect(feedingState?.isStopping).toBe(true);
+    await expect(feedingState!.stopBreastfeeding(new Date(stoppedAt))).resolves.toBeNull();
+    expect(activitySync.createFeedingInDatabase).toHaveBeenCalledTimes(1);
+
+    saveGate.resolve();
+    await act(async () => {
+      await expect(stopPromise).rejects.toBe(saveError);
+    });
+
+    expect(feedingState?.isStopping).toBe(false);
+    expect(feedingState?.activeTimer?.isRunning).toBe(true);
+  });
+
   it("records one feeding at the pending stop timestamp after its server lock is gone", async () => {
     await FeedingStorageService.setActiveTimer("baby-1", {
       startedAt,
@@ -396,6 +434,42 @@ describe("external timer stops through production providers", () => {
     expect(feedingState?.activeTimer).toBeNull();
   });
 
+  it("exposes one pending sleep stop until completion succeeds", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(sleepState?.isLoading).toBe(false));
+
+    await act(async () => {
+      await sleepState!.startSleep("nap", new Date(startedAt));
+    });
+
+    const saveGate = deferred<void>();
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createSleepInDatabase: jest.Mock;
+    };
+    activitySync.createSleepInDatabase.mockImplementation(async (input: CreateSleepInput) => {
+      await saveGate.promise;
+      return SleepStorageService.addSleep(input);
+    });
+
+    let stopPromise!: ReturnType<ReturnType<typeof useSleep>["stopSleep"]>;
+    await act(async () => {
+      stopPromise = sleepState!.stopSleep(new Date(stoppedAt));
+      await Promise.resolve();
+    });
+
+    expect(sleepState?.isStopping).toBe(true);
+    await expect(sleepState!.stopSleep(new Date(stoppedAt))).resolves.toBeNull();
+    expect(activitySync.createSleepInDatabase).toHaveBeenCalledTimes(1);
+
+    saveGate.resolve();
+    await act(async () => {
+      await stopPromise;
+    });
+
+    expect(sleepState?.isStopping).toBe(false);
+    expect(sleepState?.activeTimer).toBeNull();
+  });
+
   it("records one sleep at the pending stop timestamp after its server lock is gone", async () => {
     await SleepStorageService.setActiveTimer("baby-1", {
       startedAt,
@@ -467,6 +541,43 @@ describe("external timer stops through production providers", () => {
     expect(repeatedCompletion?.endedAt).toBe(stoppedAt);
     expect(sleepState?.sleeps).toHaveLength(1);
     expect(sleepState?.activeTimer).toBeNull();
+  });
+
+  it("exposes one pending pumping stop only after volume confirmation calls the provider", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(pumpingState?.isLoading).toBe(false));
+
+    await act(async () => {
+      await pumpingState!.startPumping("both", new Date(startedAt));
+    });
+    expect(pumpingState?.isStopping).toBe(false);
+
+    const saveGate = deferred<void>();
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createPumpingInDatabase: jest.Mock;
+    };
+    activitySync.createPumpingInDatabase.mockImplementation(async (input: CreatePumpingInput) => {
+      await saveGate.promise;
+      return PumpingStorageService.addPumping(input);
+    });
+
+    let stopPromise!: ReturnType<ReturnType<typeof usePumping>["stopPumping"]>;
+    await act(async () => {
+      stopPromise = pumpingState!.stopPumping(90, new Date(stoppedAt));
+      await Promise.resolve();
+    });
+
+    expect(pumpingState?.isStopping).toBe(true);
+    await expect(pumpingState!.stopPumping(90, new Date(stoppedAt))).resolves.toBeNull();
+    expect(activitySync.createPumpingInDatabase).toHaveBeenCalledTimes(1);
+
+    saveGate.resolve();
+    await act(async () => {
+      await stopPromise;
+    });
+
+    expect(pumpingState?.isStopping).toBe(false);
+    expect(pumpingState?.activeTimer).toBeNull();
   });
 
   it("records one pumping at the pending stop timestamp after its server lock is gone", async () => {
@@ -550,6 +661,42 @@ describe("external timer stops through production providers", () => {
     expect(repeatedCompletion?.endedAt).toBe(stoppedAt);
     expect(repeatedCompletion?.volumeMl).toBe(90);
     expect(pumpingState?.pumpings).toHaveLength(1);
+  });
+
+  it("exposes one pending tummy-time stop until completion succeeds", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(tummyTimeState?.isLoading).toBe(false));
+
+    await act(async () => {
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+
+    const saveGate = deferred<void>();
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    activitySync.createTummyTimeInDatabase.mockImplementation(async (input: CreateTummyTimeInput) => {
+      await saveGate.promise;
+      return TummyTimeStorageService.addTummyTime(input);
+    });
+
+    let stopPromise!: ReturnType<ReturnType<typeof useTummyTime>["stopTummyTime"]>;
+    await act(async () => {
+      stopPromise = tummyTimeState!.stopTummyTime(new Date(stoppedAt));
+      await Promise.resolve();
+    });
+
+    expect(tummyTimeState?.isStopping).toBe(true);
+    await expect(tummyTimeState!.stopTummyTime(new Date(stoppedAt))).resolves.toBeNull();
+    expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledTimes(1);
+
+    saveGate.resolve();
+    await act(async () => {
+      await stopPromise;
+    });
+
+    expect(tummyTimeState?.isStopping).toBe(false);
+    expect(tummyTimeState?.activeTimer).toBeNull();
   });
 
   it("records one tummy-time session at the pending stop timestamp after its server lock is gone", async () => {

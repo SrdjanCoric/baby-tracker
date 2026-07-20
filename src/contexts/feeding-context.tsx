@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import {
   FeedingStorageService,
   StoredFeedingEntry,
@@ -242,6 +242,7 @@ export interface TimerLockResult {
 
 interface FeedingContextValue extends FeedingState {
   babyBinding: BabyProviderBinding;
+  isStopping: boolean;
   startBreastfeeding: (side: BreastSide, requestedStartTime?: Date) => Promise<TimerLockResult>;
   stopBreastfeeding: (requestedEndTime?: Date) => Promise<StoredFeedingEntry | null>;
   changeSide: (side: BreastSide) => void;
@@ -264,6 +265,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
+  const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
@@ -609,6 +611,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     if (!selectedBaby || !state.activeTimer) return null;
     if (isStoppingRef.current) return null;
     isStoppingRef.current = true;
+    setIsStopping(true);
     stopVersionRef.current++;
     const activeTimer = state.activeTimer;
 
@@ -735,6 +738,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       return feeding;
     } finally {
       isStoppingRef.current = false;
+      setIsStopping(false);
     }
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
@@ -980,6 +984,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const value: FeedingContextValue = useMemo(() => ({
     ...state,
     babyBinding,
+    isStopping,
     startBreastfeeding,
     stopBreastfeeding,
     changeSide,
@@ -991,7 +996,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     deleteFeeding,
     refreshFeedings: loadFeedings,
     getLastFeeding,
-  }), [state, babyBinding, startBreastfeeding, stopBreastfeeding, changeSide, pauseBreastfeeding, resumeBreastfeeding, suggestedSide, addFeeding, updateFeeding, deleteFeeding, loadFeedings, getLastFeeding]);
+  }), [state, babyBinding, isStopping, startBreastfeeding, stopBreastfeeding, changeSide, pauseBreastfeeding, resumeBreastfeeding, suggestedSide, addFeeding, updateFeeding, deleteFeeding, loadFeedings, getLastFeeding]);
 
   return <FeedingContext.Provider value={value}>{children}</FeedingContext.Provider>;
 }

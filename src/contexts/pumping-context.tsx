@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import {
   PumpingStorageService,
   StoredPumpingEntry,
@@ -172,6 +172,7 @@ export interface TimerLockResult {
 
 interface PumpingContextValue extends PumpingState {
   babyBinding: BabyProviderBinding;
+  isStopping: boolean;
   startPumping: (side: BreastSide, requestedStartTime?: Date) => Promise<TimerLockResult>;
   stopPumping: (volumeMl: number, requestedEndTime?: Date) => Promise<StoredPumpingEntry | null>;
   changePumpingSide: (side: BreastSide) => void;
@@ -195,6 +196,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
+  const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
@@ -502,6 +504,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     if (!selectedBaby || !state.activeTimer) return null;
     if (isStoppingRef.current) return null;
     isStoppingRef.current = true;
+    setIsStopping(true);
     stopVersionRef.current++;
     const activeTimer = state.activeTimer;
 
@@ -602,6 +605,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       return pumping;
     } finally {
       isStoppingRef.current = false;
+      setIsStopping(false);
     }
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
@@ -807,6 +811,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const value: PumpingContextValue = useMemo(() => ({
     ...state,
     babyBinding,
+    isStopping,
     startPumping,
     stopPumping,
     changePumpingSide,
@@ -819,7 +824,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     getLastPumping,
     getTodaysTotalVolume,
     getLastSide,
-  }), [state, babyBinding, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping, addPumping, updatePumping, deletePumping, loadPumpings, getLastPumping, getTodaysTotalVolume, getLastSide]);
+  }), [state, babyBinding, isStopping, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping, addPumping, updatePumping, deletePumping, loadPumpings, getLastPumping, getTodaysTotalVolume, getLastSide]);
 
   return <PumpingContext.Provider value={value}>{children}</PumpingContext.Provider>;
 }
