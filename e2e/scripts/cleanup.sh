@@ -1,19 +1,27 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-E2E_DIR="$(dirname "$SCRIPT_DIR")"
-PROJECT_DIR="$(dirname "$E2E_DIR")"
+E2E_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_DIR="$(cd "$E2E_DIR/.." && pwd)"
+source "$SCRIPT_DIR/lib/local-supabase.sh"
 
-echo "Cleaning up E2E test data..."
+cd "$PROJECT_DIR"
 
-# Get the database URL from supabase status
-DB_URL=$(cd "$PROJECT_DIR" && supabase status --output json 2>/dev/null | grep -o '"DB_URL":"[^"]*"' | cut -d'"' -f4)
+load_local_supabase_status "clean up"
 
-if [ -z "$DB_URL" ]; then
-  # Fallback to default local Supabase database URL
-  DB_URL="postgresql://postgres:postgres@localhost:54322/postgres"
+echo "Cleaning local E2E fixtures..."
+psql "$DB_URL" -f "$E2E_DIR/fixtures/cleanup.sql"
+
+remaining="$(psql "$DB_URL" -Atqc "
+  SELECT count(*)
+  FROM auth.users
+  WHERE email IN ('e2e-owner@test.local', 'e2e-member@test.local', 'e2e-test@test.local')
+")"
+
+if [[ "$remaining" != "0" ]]; then
+  echo "Cleanup failed: $remaining E2E auth users remain" >&2
+  exit 1
 fi
 
-psql "$DB_URL" -f "$E2E_DIR/fixtures/cleanup.sql"
-echo "Cleanup complete!"
+echo "Local E2E cleanup complete."

@@ -113,7 +113,11 @@ npm run test:component       # Jest component tests
 npm run test:security        # Security tests
 npm run typecheck            # TypeScript strict mode
 npm run lint                 # ESLint (warnings fail the quality gate)
+npm run e2e:household-timers       # Fast two-caregiver iOS sleep handoff
+npm run e2e:household-timers:clean # Clean local provisioning and the same handoff
 ```
+
+The fast iOS command reuses the installed E2E app and local fixtures. The clean command resets local Supabase and builds the app for two named simulators before running the handoff. It removes fixture accounts when finished. Both require Docker, Xcode, Maestro, and `psql`; clean provisioning also needs `jq` and CocoaPods. See [`e2e/README.md`](e2e/README.md) for setup and diagnostics, including the local-only safeguards.
 
 ## License
 

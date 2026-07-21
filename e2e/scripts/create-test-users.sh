@@ -1,66 +1,61 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "Creating E2E test users via Supabase Admin API..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+source "$SCRIPT_DIR/lib/local-supabase.sh"
 
-SERVICE_ROLE_KEY=$(supabase status --output json | jq -r '.SERVICE_ROLE_KEY // empty')
+cd "$PROJECT_DIR"
 
-if [ -z "$SERVICE_ROLE_KEY" ]; then
-  echo "Error: Could not get service role key. Is Supabase running?"
-  echo "Run: supabase start"
+load_local_supabase_status "create E2E users against"
+
+if [[ -z "$SERVICE_ROLE_KEY" || -z "$DB_URL" ]]; then
+  echo "Local Supabase credentials are unavailable. Run: npx supabase start" >&2
   exit 1
 fi
 
-API_URL="http://localhost:54321"
-
 create_user() {
-  local email=$1
-  local display_name=$2
+  local email="$1"
+  local display_name="$2"
+  local payload response user_id
 
-  echo "Creating user: $email"
+  payload="$(jq -nc \
+    --arg email "$email" \
+    --arg password "testpassword123" \
+    --arg displayName "$display_name" \
+    '{email: $email, password: $password, email_confirm: true, user_metadata: {display_name: $displayName}}')"
 
-  response=$(curl -s -X POST "$API_URL/auth/v1/admin/users" \
+  response="$(curl --fail-with-body --silent --show-error \
+    -X POST "$API_URL/auth/v1/admin/users" \
     -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
     -H "apikey: $SERVICE_ROLE_KEY" \
     -H "Content-Type: application/json" \
-    -d "{
-      \"email\": \"$email\",
-      \"password\": \"testpassword123\",
-      \"email_confirm\": true,
-      \"user_metadata\": {\"display_name\": \"$display_name\"}
-    }" 2>/dev/null)
-
-  if echo "$response" | jq -e '.id' > /dev/null 2>&1; then
-    user_id=$(echo "$response" | jq -r '.id')
-    echo "  Created: $user_id"
-
-    # Update display_name in public.users table
-    echo "  Setting display name..."
-    docker exec supabase_db_baby-tracker psql -U postgres -c \
-      "UPDATE public.users SET display_name = '$display_name' WHERE id = '$user_id';" > /dev/null 2>&1
-    echo "  Done"
-  else
-    error=$(echo "$response" | jq -r '.msg // .message // "Unknown error"')
-    if [[ "$error" == *"already been registered"* ]]; then
-      echo "  User already exists"
-      # Still try to update display name for existing user
-      existing_id=$(docker exec supabase_db_baby-tracker psql -U postgres -t -c \
-        "SELECT id FROM auth.users WHERE email = '$email';" 2>/dev/null | tr -d ' \n')
-      if [ -n "$existing_id" ]; then
-        docker exec supabase_db_baby-tracker psql -U postgres -c \
-          "UPDATE public.users SET display_name = '$display_name' WHERE id = '$existing_id';" > /dev/null 2>&1
-        echo "  Updated display name"
+    -d "$payload" 2>&1)" || {
+      if [[ "$response" != *"already been registered"* ]]; then
+        echo "Failed to create $email: $response" >&2
+        return 1
       fi
-    else
-      echo "  Error: $error"
-    fi
+    }
+
+  user_id="$(psql "$DB_URL" -Atqc \
+    "SELECT id FROM auth.users WHERE email = '$email' LIMIT 1")"
+
+  if [[ -z "$user_id" ]]; then
+    echo "Auth user was not found after creating $email" >&2
+    return 1
   fi
+
+  curl --fail-with-body --silent --show-error \
+    -X PUT "$API_URL/auth/v1/admin/users/$user_id" \
+    -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
+    -H "apikey: $SERVICE_ROLE_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$payload" >/dev/null
+
+  echo "Ready: $email"
 }
 
+echo "Creating local E2E users..."
 create_user "e2e-owner@test.local" "E2E Owner"
 create_user "e2e-member@test.local" "E2E Member"
 create_user "e2e-test@test.local" "E2E Test User"
-
-echo ""
-echo "Test users created!"
-echo "Password for all users: testpassword123"

@@ -1,19 +1,19 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-E2E_DIR="$(dirname "$SCRIPT_DIR")"
-PROJECT_DIR="$(dirname "$E2E_DIR")"
+E2E_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_DIR="$(cd "$E2E_DIR/.." && pwd)"
+source "$SCRIPT_DIR/lib/local-supabase.sh"
 
-echo "Seeding E2E test data..."
+cd "$PROJECT_DIR"
 
-# Get the database URL from supabase status
-DB_URL=$(cd "$PROJECT_DIR" && supabase status --output json 2>/dev/null | grep -o '"DB_URL":"[^"]*"' | cut -d'"' -f4)
+load_local_supabase_status "seed against"
 
-if [ -z "$DB_URL" ]; then
-  # Fallback to default local Supabase database URL
-  DB_URL="postgresql://postgres:postgres@localhost:54322/postgres"
-fi
+echo "Resetting local E2E fixtures..."
+psql "$DB_URL" -f "$E2E_DIR/fixtures/cleanup.sql" >/dev/null
+"$SCRIPT_DIR/create-test-users.sh"
+psql "$DB_URL" -f "$E2E_DIR/fixtures/seed-data.sql" >/dev/null
+psql "$DB_URL" -f "$E2E_DIR/fixtures/verify-household-timer-fixtures.sql"
 
-psql "$DB_URL" -f "$E2E_DIR/fixtures/seed-data.sql"
-echo "Seed data applied successfully!"
+echo "Local E2E fixtures are ready."

@@ -89,18 +89,50 @@ describe("DashboardCard", () => {
       expect(screen.getByText("00:05:30")).toBeTruthy();
     });
 
-    it("shows active indicator dot when isActive", () => {
+    it("exposes the active state on the card test ID", () => {
       const { getByTestId } = render(
         <DashboardCard {...defaultProps} isActive testID="card" />
       );
-      const card = getByTestId("card");
-      const styles = Array.isArray(card.props.style) ? card.props.style : [card.props.style];
-      const flatStyle = styles.reduce((acc: Record<string, unknown>, s: Record<string, unknown>) => ({ ...acc, ...s }), {});
+      const card = getByTestId("card-own-active");
+      const styles = Array.isArray(card.props.style)
+        ? card.props.style
+        : [card.props.style];
+      const flatStyle = styles.reduce(
+        (acc: Record<string, unknown>, s: Record<string, unknown>) => ({
+          ...acc,
+          ...s,
+        }),
+        {}
+      );
       expect(flatStyle.borderWidth).toBe(2);
     });
   });
 
   describe("interactions", () => {
+    it("renders a remotely locked card without actionable controls", () => {
+      const onPress = jest.fn();
+      const onActionPress = jest.fn();
+      render(
+        <DashboardCard
+          activity="sleep"
+          label="Sleep"
+          isLockedByOther
+          lockedByName="E2E Owner"
+          babyName="E2E Baby"
+          onPress={onPress}
+          onActionPress={onActionPress}
+          testID="card"
+        />
+      );
+
+      const card = screen.getByTestId("card-locked-active");
+      expect(screen.getByText("dashboardCard.isSleeping")).toBeTruthy();
+      expect(screen.queryByLabelText("accessibility.addActivity")).toBeNull();
+      fireEvent.press(card);
+      expect(onPress).not.toHaveBeenCalled();
+      expect(onActionPress).not.toHaveBeenCalled();
+    });
+
     it("calls onPress when card pressed", () => {
       const onPressMock = jest.fn();
       render(
@@ -147,7 +179,10 @@ describe("DashboardCard", () => {
 
       const stoppingControl = screen.getByLabelText("common.stopping");
       expect(screen.getByText("common.stopping")).toBeTruthy();
-      expect(stoppingControl.props.accessibilityState).toEqual({ disabled: true, busy: true });
+      expect(stoppingControl.props.accessibilityState).toEqual({
+        disabled: true,
+        busy: true,
+      });
       expect(screen.queryByLabelText("common.pause")).toBeNull();
       fireEvent.press(stoppingControl);
       expect(onActionPress).not.toHaveBeenCalled();

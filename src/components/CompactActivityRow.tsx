@@ -56,6 +56,10 @@ const CompactActivityRowInner = ({
   isPaused = false,
   testID,
   isLockedByOther = false,
+  lockedByName,
+  lockedElapsedTime,
+  babyName,
+  isPausedByOther = false,
   timerStartTime,
   timerPausedAt,
   timerTotalPausedMs,
@@ -106,7 +110,9 @@ const CompactActivityRowInner = ({
   const textPrimary = isDark ? "rgba(232,224,216,0.87)" : "#2D2A26";
   const textSecondary = isDark ? "rgba(232,224,216,0.60)" : "#7A7570";
 
-  const tintColor = isDark ? activityColors.rowTintDark : activityColors.rowTintLight;
+  const tintColor = isDark
+    ? activityColors.rowTintDark
+    : activityColors.rowTintLight;
   const gradientColors: [string, string] = [tintColor, cardBg];
   const gradientLocations: [number, number] = [0, 0.5];
 
@@ -124,11 +130,36 @@ const CompactActivityRowInner = ({
     rowScale.value = withSpring(1, SPRING_CONFIG);
   }, [rowScale]);
 
+  const lockedDisplayValue = isPausedByOther
+    ? t("dashboardCard.paused", { name: lockedByName })
+    : activity === "feeding"
+      ? t("dashboardCard.isFeeding", { name: lockedByName })
+      : activity === "sleep"
+        ? t("dashboardCard.isSleeping", {
+            name: babyName || t("dashboardCard.baby"),
+          })
+        : activity === "pumping"
+          ? t("dashboardCard.pumpingActive")
+          : activity === "tummyTime"
+            ? t("dashboardCard.isOnTummy", {
+                name: babyName || t("dashboardCard.baby"),
+              })
+            : t("dashboardCard.isBusy", { name: lockedByName });
   const displayValue = isStopping
     ? t("common.stopping")
-    : isActive && localElapsed
-      ? localElapsed
-      : timeSince || "--";
+    : isLockedByOther
+      ? lockedDisplayValue
+      : isActive && localElapsed
+        ? localElapsed
+        : timeSince || "--";
+  const secondaryValue = isLockedByOther ? lockedElapsedTime : subtitle;
+  const resolvedTestID = !testID
+    ? undefined
+    : isLockedByOther
+      ? `${testID}-${isPausedByOther ? "locked-paused" : "locked-active"}`
+      : isActive
+        ? `${testID}-own-active`
+        : testID;
 
   return (
     <AnimatedPressable
@@ -136,7 +167,7 @@ const CompactActivityRowInner = ({
       onPressIn={isLockedByOther ? undefined : handlePressIn}
       onPressOut={isLockedByOther ? undefined : handlePressOut}
       disabled={isLockedByOther}
-      testID={testID}
+      testID={resolvedTestID}
       style={[
         rowAnimatedStyle,
         {
@@ -146,7 +177,13 @@ const CompactActivityRowInner = ({
         },
       ]}
       accessibilityRole="button"
-      accessibilityLabel={timeSince ? t("accessibility.cardTimeSince", { label, time: timeSince }) : t("accessibility.cardNoTime", { label })}
+      accessibilityLabel={
+        isLockedByOther
+          ? t("accessibility.lockedByOther", { label, name: lockedByName })
+          : timeSince
+            ? t("accessibility.cardTimeSince", { label, time: timeSince })
+            : t("accessibility.cardNoTime", { label })
+      }
     >
       <LinearGradient
         colors={gradientColors}
@@ -166,7 +203,16 @@ const CompactActivityRowInner = ({
       >
         <Text style={{ fontSize: 17, flexShrink: 0 }}>{config.icon}</Text>
 
-        <View style={{ flex: 1, minWidth: 0, flexDirection: "row", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+        <View
+          style={{
+            flex: 1,
+            minWidth: 0,
+            flexDirection: "row",
+            alignItems: "baseline",
+            gap: 6,
+            flexWrap: "wrap",
+          }}
+        >
           <Text
             style={{
               fontSize: 11,
@@ -189,12 +235,12 @@ const CompactActivityRowInner = ({
           >
             {displayValue}
           </Text>
-          {subtitle && !isActive && (
+          {secondaryValue && !isActive && (
             <Text
               style={{ fontSize: 11, color: textSecondary }}
               numberOfLines={1}
             >
-              {subtitle}
+              {secondaryValue}
             </Text>
           )}
           {isActive && isPaused && (
@@ -207,7 +253,23 @@ const CompactActivityRowInner = ({
           )}
         </View>
 
-        {isStopping ? (
+        {isLockedByOther ? (
+          <View
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: buttonBgColor,
+              flexShrink: 0,
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
+              {lockedByName?.trim().charAt(0).toUpperCase() || "!"}
+            </Text>
+          </View>
+        ) : isStopping ? (
           <Pressable
             disabled
             style={{
@@ -225,10 +287,19 @@ const CompactActivityRowInner = ({
             accessibilityState={{ disabled: true, busy: true }}
             testID={testID ? `${testID}-action` : undefined}
           >
-            <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}>…</Text>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}>
+              …
+            </Text>
           </Pressable>
         ) : isActive && onPausePress ? (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              flexShrink: 0,
+            }}
+          >
             <Pressable
               onPress={(e) => {
                 e.stopPropagation?.();
@@ -245,9 +316,17 @@ const CompactActivityRowInner = ({
                 borderColor: buttonBgColor,
               }}
               accessibilityRole="button"
-              accessibilityLabel={isPaused ? t("common.resume") : t("common.pause")}
+              accessibilityLabel={
+                isPaused ? t("common.resume") : t("common.pause")
+              }
             >
-              <Text style={{ fontSize: 11, fontWeight: "700", color: isPaused ? "#FFFFFF" : buttonBgColor }}>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: isPaused ? "#FFFFFF" : buttonBgColor,
+                }}
+              >
                 {isPaused ? "▶" : "⏸"}
               </Text>
             </Pressable>
@@ -267,7 +346,11 @@ const CompactActivityRowInner = ({
               accessibilityRole="button"
               accessibilityLabel={t("common.stop")}
             >
-              <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>⏹</Text>
+              <Text
+                style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}
+              >
+                ⏹
+              </Text>
             </Pressable>
           </View>
         ) : (
@@ -286,7 +369,11 @@ const CompactActivityRowInner = ({
               flexShrink: 0,
             }}
             accessibilityRole="button"
-            accessibilityLabel={isActive ? t("common.stop") : t("accessibility.addActivity", { label })}
+            accessibilityLabel={
+              isActive
+                ? t("common.stop")
+                : t("accessibility.addActivity", { label })
+            }
           >
             <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}>
               {isActive ? "⏹" : "+"}

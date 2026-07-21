@@ -40,7 +40,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.component.test.tsx", "**/*.integration.test.tsx"],
+    files: [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.component.test.tsx",
+      "**/*.integration.test.tsx",
+    ],
     languageOptions: {
       globals: {
         jest: "readonly",
@@ -58,11 +63,20 @@ export default tseslint.config(
     },
   },
   {
-    files: ["scripts/**/*.mjs"],
+    files: ["scripts/**/*.mjs", "e2e/scripts/**/*.mjs"],
     languageOptions: {
       globals: {
         process: "readonly",
         console: "readonly",
+        fetch: "readonly",
+      },
+    },
+  },
+  {
+    files: ["e2e/scripts/**/*.cjs"],
+    languageOptions: {
+      globals: {
+        module: "readonly",
       },
     },
   },
