@@ -105,7 +105,7 @@ Durable decisions that apply across all tasks:
 - [x] 0014 · Make in-app timer completion idempotent → tasks/done/0014-make-in-app-timer-completion-idempotent.md
 - [x] 0015 · Show dashboard timer-stop progress (after 0014) → tasks/done/0015-show-dashboard-timer-stop-progress.md
 - [x] 0016 · Deduplicate activity acknowledgements (after 0014) → tasks/done/0016-deduplicate-activity-acknowledgements.md
-- [~] 0017 · Build a maintainable two-account iOS sleep-timer smoke suite (after 0014, 0015, 0016) → tasks/0017-build-two-account-ios-household-timer-suite.md
+- [x] 0017 · Build a maintainable two-account iOS sleep-timer smoke suite (after 0014, 0015, 0016) → tasks/done/0017-build-two-account-ios-household-timer-suite.md
 - [ ] 0018 · Authorize active-timer controls (after 0017) → tasks/0018-authorize-active-timer-controls.md
 - [ ] 0019 · Preserve offline-started timers (after 0017, 0018) → tasks/0019-preserve-offline-started-timers.md
 - [ ] 0020 · Queue multiple external timer commands (after 0014, 0017) → tasks/0020-queue-multiple-external-timer-commands.md
