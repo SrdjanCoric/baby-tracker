@@ -76,9 +76,11 @@ Durable decisions that apply across all tasks:
   completion identity and first accepted stop time. Once completion is durable locally, the provider
   becomes stopped before remote lock or Live Activity cleanup. A cleanup retry or stale UI Stop reuses
   the existing completion and cannot create another household activity.
-- **Household timer release testing uses two iOS simulators and local Supabase**: separate caregiver
-  accounts exercise timer ownership, propagation, reconnect, restart, and baby targeting without
-  production credentials or production data.
+- **Household timer release testing uses one representative sleep smoke**: two iOS simulators and
+  separate caregiver accounts exercise sleep ownership, lock rejection, unlock propagation, and
+  handoff against local Supabase. Shared feeding, pumping, and tummy-time behavior is proved through
+  component and real-provider tests. Fast behavioral runs are separate from clean native provisioning;
+  neither path uses production credentials or production data.
 - **Production database state is a human release checkpoint**: agents apply and verify migrations only
   on local Supabase. The owner performs the documented read-only production migration check before a
   store release.
@@ -103,7 +105,7 @@ Durable decisions that apply across all tasks:
 - [x] 0014 · Make in-app timer completion idempotent → tasks/done/0014-make-in-app-timer-completion-idempotent.md
 - [x] 0015 · Show dashboard timer-stop progress (after 0014) → tasks/done/0015-show-dashboard-timer-stop-progress.md
 - [x] 0016 · Deduplicate activity acknowledgements (after 0014) → tasks/done/0016-deduplicate-activity-acknowledgements.md
-- [ ] 0017 · Build a two-account iOS household timer suite (after 0014, 0015, 0016) → tasks/0017-build-two-account-ios-household-timer-suite.md
+- [~] 0017 · Build a maintainable two-account iOS sleep-timer smoke suite (after 0014, 0015, 0016) → tasks/0017-build-two-account-ios-household-timer-suite.md
 - [ ] 0018 · Authorize active-timer controls (after 0017) → tasks/0018-authorize-active-timer-controls.md
 - [ ] 0019 · Preserve offline-started timers (after 0017, 0018) → tasks/0019-preserve-offline-started-timers.md
 - [ ] 0020 · Queue multiple external timer commands (after 0014, 0017) → tasks/0020-queue-multiple-external-timer-commands.md
@@ -112,7 +114,8 @@ Durable decisions that apply across all tasks:
 - [ ] 0023 · Make the iOS E2E workflow reliable (after 0017, 0022) → tasks/0023-make-ios-e2e-workflow-reliable.md
 - [ ] 0024 · Correct release versioning and traceability (after 0022, 0023) → tasks/0024-correct-release-versioning-and-traceability.md
 - [ ] 0025 · Remediate dependency vulnerabilities (after 0022) → tasks/0025-remediate-dependency-vulnerabilities.md
+- [ ] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/0026-repair-ios-date-picker-module-provider.md
 
 ## Workflow status
 
-Tasks 0001 through 0013 are merged. Their earlier Software Repository Guidelines assessment is recorded in `plans/repository-guidelines-assessment.md`. The July 2026 release review added tasks 0014 through 0025 for timer correctness, two-caregiver iOS verification, authorization, offline behavior, sync races, CI, release traceability, and dependency security.
+Tasks 0001 through 0013 are merged. Their earlier Software Repository Guidelines assessment is recorded in `plans/repository-guidelines-assessment.md`. The July 2026 release review added tasks 0014 through 0026 for timer correctness, two-caregiver iOS verification, authorization, offline behavior, sync races, CI, release traceability, dependency security, and production date-picker codegen compatibility.
