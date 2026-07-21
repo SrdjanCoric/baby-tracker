@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useSleep, useAuth } from "@/contexts";
 import { useBaby } from "@/contexts";
+import { isE2EMode } from "@/utils/e2e-mode";
 import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
@@ -26,6 +27,7 @@ export default function SleepScreen() {
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
   const isAuthenticated = !!session?.access_token;
+  const isE2E = isE2EMode();
   const {
     activeTimer,
     startSleep,
@@ -160,7 +162,19 @@ export default function SleepScreen() {
       <View className="items-center pt-2 pb-3">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <View className="flex-row items-center w-full px-4">
-          <View className="w-touch" />
+          {isE2E ? (
+            <Pressable
+              onPress={() => router.back()}
+              className="w-touch h-touch items-center justify-center"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.close")}
+              testID="e2e-dismiss-sleep-button"
+            >
+              <Text className="text-xl text-content-secondary">×</Text>
+            </Pressable>
+          ) : (
+            <View className="w-touch" />
+          )}
           <View className="flex-1 items-center">
             <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
               {t("sleep.title")}

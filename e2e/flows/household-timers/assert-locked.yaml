@@ -1,0 +1,17 @@
+appId: com.sofibaby.app
+---
+- scrollUntilVisible:
+    element:
+      id: "${ACTIVITY_CARD}-${LOCK_STATE}"
+    direction: DOWN
+    timeout: 20000
+- assertNotVisible:
+    id: "${ACTIVITY_CARD}-action"
+- tapOn:
+    id: "${ACTIVITY_CARD}-${LOCK_STATE}"
+- assertVisible:
+    id: "home-screen"
+- assertVisible:
+    id: "${ACTIVITY_CARD}-${LOCK_STATE}"
+- assertNotVisible:
+    id: "stop-timer-button"

@@ -1,0 +1,11 @@
+appId: com.sofibaby.app
+---
+- scrollUntilVisible:
+    element:
+      id: "${ACTIVITY_CARD}"
+    direction: DOWN
+    timeout: 20000
+- assertNotVisible:
+    id: "${ACTIVITY_CARD}-locked-active"
+- assertNotVisible:
+    id: "${ACTIVITY_CARD}-locked-paused"

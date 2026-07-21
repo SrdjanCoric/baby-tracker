@@ -46,6 +46,7 @@ import {
 import type { SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
 import { getQualifyingNightSleep, getMorningThreshold } from "@/utils/sleepPredictions";
 import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
+import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
 import {
   acceptTimerCompletion,
   createTimerIdentity,
@@ -1052,7 +1053,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       const requestedDurationSeconds = Math.floor(
         (requestedStopTime.getTime() - timerStartTime.getTime() - state.activeTimer.totalPausedMs) / 1000
       );
-      if (requestedDurationSeconds < 60) {
+      if (shouldDiscardTimerDuration(requestedDurationSeconds)) {
         await finishTimer();
         return null;
       }

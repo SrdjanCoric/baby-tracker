@@ -25,6 +25,9 @@
     "e2e:seed": "bash e2e/scripts/seed-data.sh",
     "e2e:cleanup": "bash e2e/scripts/cleanup.sh",
     "e2e:create-users": "bash e2e/scripts/create-test-users.sh",
+    "e2e:household-timers": "node e2e/scripts/run-household-timers.mjs",
+    "e2e:household-timers:clean": "node e2e/scripts/run-household-timers.mjs --clean",
+    "e2e:household-timers:test": "node --test e2e/scripts/household-runner.test.mjs",
     "e2e:smoke": "maestro test e2e/suites/smoke.yaml",
     "e2e:regression": "maestro test e2e/suites/regression.yaml",
     "e2e:flow": "maestro test"

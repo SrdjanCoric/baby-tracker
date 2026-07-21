@@ -1,30 +1,87 @@
--- E2E Test Data Cleanup Script
--- Run with: npm run e2e:cleanup
+\set ON_ERROR_STOP on
 
--- Delete all E2E test data in correct order (respecting foreign keys)
--- E2E test data uses UUIDs starting with 00000000-0000-0000-
+BEGIN;
 
--- Delete active timers first (for babies in E2E households)
-DELETE FROM active_timers WHERE baby_id IN (
-  SELECT id FROM babies WHERE household_id::text LIKE '00000000-0000-0000-0000-%'
+CREATE TEMP TABLE e2e_households_to_remove ON COMMIT DROP AS
+SELECT household_id AS id
+FROM public.users
+WHERE email IN (
+  'e2e-owner@test.local',
+  'e2e-member@test.local',
+  'e2e-test@test.local'
+)
+UNION
+SELECT id
+FROM public.households
+WHERE id IN (
+  '00000000-0000-0000-0000-000000000001'::uuid,
+  '00000000-0000-0000-0000-000000000002'::uuid,
+  '00000000-0000-0000-0000-000000000003'::uuid
 );
 
--- Delete activities (using the E2E baby IDs)
-DELETE FROM feedings WHERE baby_id::text LIKE '00000000-0000-0000-0001-%';
-DELETE FROM sleep_sessions WHERE baby_id::text LIKE '00000000-0000-0000-0001-%';
-DELETE FROM diapers WHERE baby_id::text LIKE '00000000-0000-0000-0001-%';
-DELETE FROM growth_measurements WHERE baby_id::text LIKE '00000000-0000-0000-0001-%';
-DELETE FROM tummy_time_sessions WHERE baby_id::text LIKE '00000000-0000-0000-0001-%';
-DELETE FROM pumping_sessions WHERE baby_id::text LIKE '00000000-0000-0000-0001-%';
+DELETE FROM public.active_timers
+WHERE baby_id IN (
+  SELECT id
+  FROM public.babies
+  WHERE household_id IN (SELECT id FROM e2e_households_to_remove)
+);
 
--- Delete user settings for E2E babies
-DELETE FROM user_settings WHERE baby_id::text LIKE '00000000-0000-0000-0001-%';
+DELETE FROM public.babies
+WHERE household_id IN (SELECT id FROM e2e_households_to_remove)
+   OR id IN (
+     '00000000-0000-0000-0001-000000000001'::uuid,
+     '00000000-0000-0000-0001-000000000002'::uuid,
+     '00000000-0000-0000-0001-000000000003'::uuid
+   );
 
--- Delete babies
-DELETE FROM babies WHERE id::text LIKE '00000000-0000-0000-0001-%';
+DELETE FROM auth.users
+WHERE email IN (
+  'e2e-owner@test.local',
+  'e2e-member@test.local',
+  'e2e-test@test.local'
+);
 
--- Delete user-household links for E2E households
-DELETE FROM users WHERE household_id::text LIKE '00000000-0000-0000-0000-%';
+DELETE FROM public.households h
+WHERE h.id IN (SELECT id FROM e2e_households_to_remove)
+  AND NOT EXISTS (SELECT 1 FROM public.users u WHERE u.household_id = h.id)
+  AND NOT EXISTS (SELECT 1 FROM public.babies b WHERE b.household_id = h.id);
 
--- Delete households
-DELETE FROM households WHERE id::text LIKE '00000000-0000-0000-0000-%';
+COMMIT;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE email IN (
+      'e2e-owner@test.local',
+      'e2e-member@test.local',
+      'e2e-test@test.local'
+    )
+  ) OR EXISTS (
+    SELECT 1 FROM public.users
+    WHERE email IN (
+      'e2e-owner@test.local',
+      'e2e-member@test.local',
+      'e2e-test@test.local'
+    )
+  ) OR EXISTS (
+    SELECT 1 FROM public.babies
+    WHERE id IN (
+      '00000000-0000-0000-0001-000000000001'::uuid,
+      '00000000-0000-0000-0001-000000000002'::uuid,
+      '00000000-0000-0000-0001-000000000003'::uuid
+    )
+  ) OR EXISTS (
+    SELECT 1 FROM public.households
+    WHERE id IN (
+      '00000000-0000-0000-0000-000000000001'::uuid,
+      '00000000-0000-0000-0000-000000000002'::uuid,
+      '00000000-0000-0000-0000-000000000003'::uuid
+    )
+  ) THEN
+    RAISE EXCEPTION 'E2E cleanup left fixture rows behind';
+  END IF;
+END
+$$;
+
+SELECT 'E2E cleanup verified' AS result;

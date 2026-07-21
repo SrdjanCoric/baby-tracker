@@ -51,6 +51,7 @@ supabase/.temp/
 
 # E2E testing
 e2e-results.xml
+e2e/artifacts/
 .maestro/
 
 # mockups

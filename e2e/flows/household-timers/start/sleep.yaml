@@ -1,0 +1,22 @@
+appId: com.sofibaby.app
+---
+- scrollUntilVisible:
+    element:
+      id: "sleep-card"
+    direction: DOWN
+- tapOn:
+    id: "sleep-card"
+- assertVisible:
+    id: "sleep-screen"
+- tapOn:
+    id: "start-sleep-button"
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 10000
+- tapOn:
+    id: "e2e-dismiss-sleep-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 10000

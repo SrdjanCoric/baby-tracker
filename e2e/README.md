@@ -1,16 +1,33 @@
-# E2E Testing with Maestro
+# End-to-end tests
 
-End-to-end tests using [Maestro](https://maestro.mobile.dev/) with local Supabase.
+The maintained two-caregiver iOS suite runs one sleep-timer handoff on separate simulators against Docker-hosted local Supabase. Existing single-device Maestro flows cover general app smoke and regression scenarios.
 
-## Prerequisites
+## Two-caregiver sleep-timer suite
 
-- **Docker Desktop** - Required for local Supabase
-- **Xcode** (macOS) - For iOS simulator
-- **Android Studio** - For Android emulator
+The scenario verifies this household contract:
 
-## Setup Steps
+1. The owner starts sleep.
+2. The member sees the remote lock and cannot open the sleep timer.
+3. The owner stops, and the member sees the card unlock.
+4. The member starts sleep.
+5. The owner sees the remote lock.
+6. The member stops, and the owner sees the card unlock.
+7. PostgreSQL contains one completion from each caregiver and no sleep lock.
 
-### 1. Install Maestro CLI
+Feeding, pumping, and tummy-time use the same lock and completion services. Their completion retry, restoration, stale-lock, and idempotency checks stay in component and real-provider integration tests instead of this device suite.
+
+### Prerequisites
+
+Run the suite on macOS with:
+
+- Apple silicon
+- Xcode and an iOS Simulator runtime
+- Docker Desktop
+- Node.js and npm
+- Maestro CLI
+- `jq`, `psql`, and CocoaPods
+
+Install Maestro if needed:
 
 ```bash
 curl -Ls "https://get.maestro.mobile.dev" | bash
@@ -18,204 +35,111 @@ export PATH="$PATH:$HOME/.maestro/bin"
 maestro --version
 ```
 
-### 2. Install Supabase CLI
+Accept the Xcode license and finish its first-launch setup in Terminal:
 
 ```bash
-brew install supabase/tap/supabase
-# or
-npm install -g supabase
+sudo xcodebuild -license accept
+sudo xcodebuild -runFirstLaunch
+xcodebuild -version
+xcrun simctl list runtimes
 ```
 
-### 3. Start Local Supabase
+Docker Desktop must be running:
 
 ```bash
-cd /Users/srdjancoric/Dropbox/Projects/baby-tracker
-
-# Start Supabase (Docker must be running)
-supabase start
-
-# Apply migrations
-supabase db push
+docker info
 ```
 
-After `supabase start`, note the **anon key** from the output.
+### Clean provisioning
 
-### 4. Configure Environment
-
-Copy the E2E environment file and update it with your local anon key:
+Run this command once from the repository root to provision the local database, app, and simulators:
 
 ```bash
-# For iOS
-cp .env.e2e .env
-
-# For Android
-cp .env.e2e.android .env
+npm run e2e:household-timers:clean
 ```
 
-Edit `.env` and replace `YOUR_LOCAL_ANON_KEY_HERE` with the anon key from step 3.
+The clean command:
 
-### 5. Build the App
+1. Installs locked npm dependencies.
+2. Starts local Supabase, resets its database, and applies the migration chain.
+3. Creates two authenticated caregivers in one household with two babies.
+4. Creates or selects `SofiBaby Owner` and `SofiBaby Member` simulators.
+5. Generates the iOS project and builds the active arm64 simulator architecture once.
+6. Installs the app on both simulators and runs the sleep handoff.
+7. Saves diagnostics, removes the fixture accounts, shuts down both simulators, and retains the installed E2E app for fast runs.
 
-```bash
-# iOS
-npx expo prebuild --platform ios --clean
-npx expo run:ios
+The database reset deletes all data in this project's local Supabase instance. The command rejects Supabase API and PostgreSQL URLs unless they use `localhost`, `127.0.0.1`, or `::1`.
 
-# Android
-npx expo prebuild --platform android --clean
-npx expo run:android
-```
+### Fast behavioral runs
 
-### 6. Seed Test Data
+After a clean build has produced an E2E app and the local fixtures have been reseeded, run:
 
 ```bash
 npm run e2e:seed
+npm run e2e:household-timers
 ```
 
-## Running Tests
+The fast command reinstalls a copy of the `SofiBaby Owner` app on both named simulators, which clears app state. It resets only the primary baby's sleep rows and lock, then restarts this project's Metro process with a cleared cache. It does not install dependencies, run migrations, generate native projects, install Pods, or compile with Xcode. The app stays installed on both simulators, and the fixtures remain available for another run.
 
-### Run Smoke Tests (Critical Paths)
+A measured fast run on 2026-07-21 took 3 minutes 4 seconds with Xcode 26.6 and the iOS 26.5 runtime. Local Supabase was warm. The E2E app was installed on both named simulators, which were already booted.
+
+### Local E2E bundle boundary
+
+The runner reads the API URL and keys from `supabase status`; it does not read or change `.env`. `SOFIBABY_E2E_LOCAL_ENV=1` enables a Babel transform that compiles those local values and a zero-second sleep minimum into the generated E2E bundle. The test-login launch argument also exposes a sleep-sheet close control so Maestro does not depend on simulator swipe recognition. Without that argument, the native sheet is unchanged. Production builds retain the 60-second minimum.
+
+Clean provisioning temporarily removes an invalid `react-native-date-picker` codegen provider from its installed package metadata. Cleanup restores the original file after Xcode finishes.
+
+### Failure diagnostics and cleanup
+
+A failed command exits nonzero. Artifacts are written under:
+
+```text
+e2e/artifacts/household-timers/<timestamp>/
+```
+
+The directory includes command output, Metro logs, Maestro results, screenshots, simulator logs, sleep and lock rows, local Supabase API logs, and cleanup results. Maestro driver startup is capped at 120 seconds, with a four-minute limit per flow. Process cleanup also uses bounded timeouts.
+
+Cleanup checks whether the local Supabase API container is paused and unpauses it before returning. The clean command also verifies that fixture users, babies, and households were removed.
+
+## Fixture commands
+
+The fixture scripts require a running, migrated local Supabase instance:
 
 ```bash
+npm run e2e:seed
+npm run e2e:cleanup
+```
+
+`e2e:seed` is idempotent. It recreates the users and assigns the owner and member to one household. The script then seeds two babies and verifies the rows. `e2e:cleanup` removes the fixture auth users, profiles, babies, activity data, locks, and households.
+
+Run orchestration tests without Xcode or Maestro:
+
+```bash
+npm run e2e:household-timers:test
+```
+
+## Existing single-device suites
+
+The existing Maestro suites expect a built app and local fixtures:
+
+```bash
+npx supabase start
+npx supabase db reset --no-seed
+node scripts/apply-migrations.mjs
+npm run e2e:seed
+
 npm run e2e:smoke
-```
-
-### Run Full Regression
-
-```bash
 npm run e2e:regression
 ```
 
-### Run Single Test
+Run one flow with:
 
 ```bash
 npm run e2e:flow e2e/flows/onboarding/guest-flow.yaml
 ```
 
-### Run with Debug UI
+Remove fixtures when finished:
 
 ```bash
-maestro test e2e/flows/onboarding/guest-flow.yaml --debug
-```
-
-### Interactive Studio Mode
-
-```bash
-maestro studio
-```
-
-## Available npm Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run e2e:setup` | Start local Supabase and apply migrations |
-| `npm run e2e:seed` | Seed test data |
-| `npm run e2e:cleanup` | Remove test data |
-| `npm run e2e:create-users` | Create test users via Admin API |
-| `npm run e2e:smoke` | Run smoke test suite |
-| `npm run e2e:regression` | Run full regression suite |
-| `npm run e2e:flow <path>` | Run specific test flow |
-
-## Directory Structure
-
-```
-e2e/
-├── config/           # Maestro configuration
-├── fixtures/         # SQL seed/cleanup scripts
-├── helpers/          # Reusable flow components
-├── flows/            # Test flows organized by feature
-│   ├── onboarding/   # Welcome, guest flow, validation
-│   ├── auth/         # Sign in, sign out, session
-│   ├── activities/   # Feeding, sleep, diaper, etc.
-│   ├── household/    # Invite codes, join/leave
-│   ├── timeline/     # View, filter, edit activities
-│   ├── settings/     # Theme, language, units
-│   └── edge-cases/   # Empty states, validation errors
-├── suites/           # Test suite definitions
-└── scripts/          # Shell scripts
-```
-
-## Test Suites
-
-| Suite | Contents |
-|-------|----------|
-| `smoke.yaml` | Critical user paths - onboarding, core activities, timeline |
-| `regression.yaml` | Full coverage - all features and edge cases |
-| `multi-user.yaml` | Household scenarios with pre-seeded data |
-
-## testID Reference
-
-Key testIDs used in the app:
-
-### Screens
-- `home-screen` - Home/dashboard
-- `feeding-screen` - Feeding activity
-- `sleep-screen` - Sleep activity
-- `diaper-screen` - Diaper activity
-
-### Navigation
-- `home-tab` - Home tab
-- `timeline-tab` - Timeline tab
-- `stats-tab` - Statistics tab
-- `settings-button` - Settings button
-
-### Activity Cards (Home)
-- `feeding-card` - Feeding dashboard card
-- `sleep-card` - Sleep dashboard card
-- `diaper-card` - Diaper dashboard card
-- `pumping-card` - Pumping dashboard card
-- `growth-card` - Growth dashboard card
-- `tummyTime-card` - Tummy time dashboard card
-
-### Activity Screens
-- `type-breast` - Breastfeeding tab
-- `type-bottle` - Bottle tab
-- `type-solids` - Solids tab
-- `type-nap` - Nap button
-- `type-night` - Night sleep button
-- `type-wet` - Wet diaper
-- `type-dirty` - Dirty diaper
-- `type-mixed` - Mixed diaper
-- `type-dry` - Dry diaper
-- `start-left-button` - Start left side
-- `start-right-button` - Start right side
-- `stop-timer-button` - Stop timer
-- `save-button` - Save entry
-
-### Auth
-- `sign-in-button` - Sign in button
-- `continue-as-guest-button` - Continue as guest
-- `email-input` - Email text input
-- `send-magic-link-button` - Send magic link
-- `skip-button` - Skip onboarding
-- `continue-button` - Continue/next button
-
-## Cleanup
-
-```bash
-# Remove test data
 npm run e2e:cleanup
-
-# Stop Supabase
-supabase stop
 ```
-
-## Troubleshooting
-
-### Maestro can't find elements
-- Use `maestro studio` to inspect the running app
-- Verify testID props are correctly set
-- Check element visibility (not scrolled off-screen)
-
-### Supabase issues
-- Ensure Docker Desktop is running
-- Run `supabase stop` then `supabase start`
-- Check logs with `supabase logs`
-
-### Android emulator can't reach Supabase
-- Android emulator uses `10.0.2.2` instead of `localhost`
-- Use `.env.e2e.android` configuration
-
-### iOS build fails
-- Run `npx expo prebuild --platform ios --clean`
-- Open Xcode and fix signing issues if needed

@@ -1,5 +1,35 @@
 -- E2E Test Data Seed Script
 -- Run with: npm run e2e:seed
+\set ON_ERROR_STOP on
+
+BEGIN;
+
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'users'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'households'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.households;
+  END IF;
+END
+$$;
 
 -- Create test households with proper UUIDs
 -- invite_code is VARCHAR(8), so use 8-char codes
@@ -7,14 +37,73 @@ INSERT INTO households (id, invite_code, created_at) VALUES
   ('00000000-0000-0000-0000-000000000001'::uuid, 'E2E1TEST', NOW()),
   ('00000000-0000-0000-0000-000000000002'::uuid, 'E2E2TEST', NOW()),
   ('00000000-0000-0000-0000-000000000003'::uuid, 'E2E3TEST', NOW())
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET invite_code = EXCLUDED.invite_code;
+
+CREATE TEMP TABLE e2e_generated_households ON COMMIT DROP AS
+SELECT household_id AS id
+FROM users
+WHERE email IN (
+  'e2e-owner@test.local',
+  'e2e-member@test.local',
+  'e2e-test@test.local'
+)
+  AND household_id NOT IN (
+    '00000000-0000-0000-0000-000000000001'::uuid,
+    '00000000-0000-0000-0000-000000000003'::uuid
+  );
+
+UPDATE users
+SET household_id = '00000000-0000-0000-0000-000000000001'::uuid,
+    display_name = CASE email
+      WHEN 'e2e-owner@test.local' THEN 'E2E Owner'
+      WHEN 'e2e-member@test.local' THEN 'E2E Member'
+    END,
+    is_owner = (email = 'e2e-owner@test.local')
+WHERE email IN ('e2e-owner@test.local', 'e2e-member@test.local');
+
+UPDATE users
+SET household_id = '00000000-0000-0000-0000-000000000003'::uuid,
+    display_name = 'E2E Test User',
+    is_owner = true
+WHERE email = 'e2e-test@test.local';
+
+DELETE FROM households h
+WHERE h.id IN (SELECT id FROM e2e_generated_households)
+  AND NOT EXISTS (SELECT 1 FROM users u WHERE u.household_id = h.id)
+  AND NOT EXISTS (SELECT 1 FROM babies b WHERE b.household_id = h.id);
 
 -- Create test babies
 INSERT INTO babies (id, name, birth_date, gender, household_id, created_at) VALUES
   ('00000000-0000-0000-0001-000000000001'::uuid, 'E2E Baby', '2024-06-15', 'female', '00000000-0000-0000-0000-000000000001'::uuid, NOW()),
   ('00000000-0000-0000-0001-000000000002'::uuid, 'E2E Baby Two', '2024-08-01', 'male', '00000000-0000-0000-0000-000000000001'::uuid, NOW()),
   ('00000000-0000-0000-0001-000000000003'::uuid, 'Member Baby', '2024-07-20', 'female', '00000000-0000-0000-0000-000000000002'::uuid, NOW())
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name,
+    birth_date = EXCLUDED.birth_date,
+    gender = EXCLUDED.gender,
+    household_id = EXCLUDED.household_id,
+    deleted = false;
+
+INSERT INTO achievements (baby_id, achievement_id, detected_at)
+SELECT baby_id, achievement_id, NOW()
+FROM (
+  VALUES
+    ('00000000-0000-0000-0001-000000000001'::uuid),
+    ('00000000-0000-0000-0001-000000000002'::uuid)
+) AS fixture_babies(baby_id)
+CROSS JOIN (
+  VALUES
+    ('sleep_6h'),
+    ('sleep_8h'),
+    ('sleep_10h'),
+    ('tummy_5min'),
+    ('tummy_10min'),
+    ('tummy_15min'),
+    ('tummy_20min'),
+    ('first_solid')
+) AS fixture_achievements(achievement_id)
+ON CONFLICT (baby_id, achievement_id) DO NOTHING;
 
 -- Pre-seed feedings for timeline tests
 INSERT INTO feedings (id, baby_id, type, started_at, ended_at, duration_seconds, side, created_at) VALUES
@@ -51,3 +140,5 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO pumping_sessions (id, baby_id, started_at, ended_at, duration_seconds, amount_ml, side, created_at) VALUES
   ('00000000-0000-0000-0007-000000000001'::uuid, '00000000-0000-0000-0001-000000000001'::uuid, NOW() - INTERVAL '4 hours', NOW() - INTERVAL '4 hours' + INTERVAL '20 minutes', 1200, 120, 'both', NOW() - INTERVAL '4 hours')
 ON CONFLICT (id) DO NOTHING;
+
+COMMIT;

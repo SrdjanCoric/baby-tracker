@@ -1,0 +1,23 @@
+appId: com.sofibaby.app
+---
+- launchApp:
+    clearState: true
+    arguments:
+      e2eMode: "true"
+      e2eEmail: "${E2E_EMAIL}"
+      e2ePassword: "testpassword123"
+- extendedWaitUntil:
+    visible: "Skip"
+    timeout: 30000
+- tapOn: "Skip"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+- tapOn:
+    id: "selected-baby-name"
+- tapOn:
+    text: "^E2E Baby$"
+- extendedWaitUntil:
+    visible: "E2E Baby"
+    timeout: 10000
