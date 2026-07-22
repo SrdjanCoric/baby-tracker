@@ -1502,6 +1502,10 @@ describe("external timer stops through production providers", () => {
       new Date(stoppedAt)
     );
     await markTimerCompletionDurable(completion);
+    mockExtensionStorageData.set("pendingWidgetPauseToggle", JSON.stringify({
+      activityType: "feeding",
+      action: "pause",
+    }));
     mockExtensionStorageData.set("externalTimerCommandQueue", JSON.stringify({
       version: 1,
       commands: [{
@@ -1520,6 +1524,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() =>
       expect(JSON.parse(mockExtensionStorageData.get("externalTimerCommandQueue") ?? "{}").commands).toEqual([])
     );
+    expect(mockExtensionStorageData.get("pendingWidgetPauseToggle")).toBe("");
     const activitySync = jest.requireMock("@/services/activity-sync-service") as {
       createFeedingInDatabase: jest.Mock;
     };

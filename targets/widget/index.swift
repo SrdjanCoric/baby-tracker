@@ -329,6 +329,7 @@ struct WidgetDataModel: Codable {
 }
 
 let externalTimerCommandQueueKey = "externalTimerCommandQueue"
+let externalTimerCommandQueueLock = NSLock()
 
 struct ExternalTimerCommand: Codable {
     var id: String
@@ -375,6 +376,8 @@ func writeExternalTimerCommandQueue(_ queue: ExternalTimerCommandQueue, to userD
 }
 
 func appendExternalTimerCommand(_ command: ExternalTimerCommand, to userDefaults: UserDefaults) {
+    externalTimerCommandQueueLock.lock()
+    defer { externalTimerCommandQueueLock.unlock() }
     var queue = readExternalTimerCommandQueue(from: userDefaults)
     guard !queue.commands.contains(where: { $0.id == command.id }) else { return }
     queue.commands.append(command)
@@ -382,6 +385,8 @@ func appendExternalTimerCommand(_ command: ExternalTimerCommand, to userDefaults
 }
 
 func removeExternalTimerCommand(id: String, from userDefaults: UserDefaults) {
+    externalTimerCommandQueueLock.lock()
+    defer { externalTimerCommandQueueLock.unlock() }
     var queue = readExternalTimerCommandQueue(from: userDefaults)
     let originalCount = queue.commands.count
     queue.commands.removeAll { $0.id == id }

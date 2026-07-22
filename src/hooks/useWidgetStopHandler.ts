@@ -50,6 +50,7 @@ export function useWidgetStopHandler() {
         queuedCommand.timerInstanceId
       );
       if (completion?.status === "completed") {
+        await clearPendingWidgetPauseToggle();
         await acknowledgeExternalTimerCommand(queuedCommand);
         return;
       }
