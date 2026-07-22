@@ -1,6 +1,6 @@
 # End-to-end tests
 
-The maintained two-caregiver iOS suite starts a sleep timer without local Supabase API access. After an app restart, it reconnects the timer and runs the household handoff on separate simulators. Existing single-device Maestro flows cover general app smoke and regression scenarios.
+The maintained two-caregiver iOS suite starts a sleep timer without local Supabase API access. After restarting both apps, it reconnects the timer and runs the household handoff on separate simulators. Existing single-device Maestro flows cover general app smoke and regression scenarios.
 
 ## Two-caregiver sleep-timer suite
 
@@ -10,10 +10,10 @@ The scenario verifies this household contract:
 2. The owner starts sleep without creating a server lock.
 3. The runner starts the API container and restarts the owner's app.
 4. The owner keeps the same timer, which acquires the household lock.
-5. The member sees the remote lock and cannot open the sleep timer.
-6. The owner stops, and the member sees the card unlock.
-7. The member starts sleep, then the owner sees the remote lock.
-8. The member stops, and the owner sees the card unlock.
+5. The runner restarts the member's app. The member sees the server lock and cannot open the sleep timer.
+6. The owner stops. After another member restart, the sleep card is unlocked.
+7. The member starts sleep. After an owner restart, the owner sees the server lock.
+8. The member stops. After another owner restart, the sleep card is unlocked.
 9. PostgreSQL contains one completion from each caregiver and no sleep lock.
 
 Feeding, pumping, and tummy-time use the same lock and completion services. Their completion retry, restoration, stale-lock, and idempotency checks stay in component and real-provider integration tests instead of this device suite.
@@ -83,7 +83,7 @@ npm run e2e:household-timers
 
 The fast command reinstalls a copy of the `SofiBaby Owner` app on both named simulators, which clears app state. It resets only the primary baby's sleep rows and lock, then restarts this project's Metro process with a cleared cache. During the scenario it stops only the `supabase_kong_baby-tracker` API container; PostgreSQL remains available for assertions. It does not install dependencies, run migrations, generate native projects, install Pods, or compile with Xcode. The app stays installed on both simulators, and the fixtures remain available for another run.
 
-A measured fast run on 2026-07-21 took 3 minutes 4 seconds with Xcode 26.6 and the iOS 26.5 runtime. Local Supabase was warm. The E2E app was installed on both named simulators, which were already booted.
+A measured fast run on 2026-07-22 took 4 minutes 3 seconds with Xcode 26.6 and the iOS 26.5 runtime. Local Supabase was warm, and both named simulators were already booted.
 
 ### Local E2E bundle boundary
 
