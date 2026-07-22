@@ -1,11 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createFeedingInDatabase,
+  createGrowthInDatabase,
+  createPumpingInDatabase,
+  createSleepInDatabase,
+  createTummyTimeInDatabase,
   deleteFeedingFromDatabase,
+  deleteHealthFromDatabase,
+  fetchDiapersFromDatabase,
   fetchFeedingsFromDatabase,
+  fetchGrowthFromDatabase,
+  fetchHealthFromDatabase,
+  fetchMilestoneResponsesFromDatabase,
+  fetchPumpingFromDatabase,
+  fetchSleepFromDatabase,
+  fetchTummyTimeFromDatabase,
   syncGuestActivitiesToDatabase,
+  updateDiaperInDatabase,
   updateFeedingInDatabase,
+  upsertMilestoneResponseInDatabase,
 } from "./activity-sync-service";
+import { setStorageUserId } from "./storage-prefix";
 import { __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
 import { __resetDeviceIdForTests } from "./sync/device-id";
 import { SyncEngine } from "./sync/sync-engine";
@@ -25,6 +40,13 @@ let failActivityRollback = false;
 let failQueueCheckpointAfterLocalWrite = false;
 let ownerMigrationWriteGate: Promise<void> | null = null;
 let ownerMigrationWriteStarted = false;
+let localMutationCommitGate: Promise<void> | null = null;
+let localMutationCommitStarted = false;
+let activityPullWriteGate: Promise<void> | null = null;
+let activityPullWriteKey: string | null = null;
+let activityPullWriteStarted = false;
+let remoteReadGate: Promise<void> | null = null;
+let remoteReadStarted = false;
 type MockSyncEngine = {
   getPendingEntityOperations: (table: string) => Map<string, OperationType>;
   waitUntilReadyForPull: () => Promise<void>;
@@ -39,6 +61,10 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
     getItem: vi.fn(async (key: string) => storage.get(key) ?? null),
     setItem: vi.fn(async (key: string, value: string) => {
+      if (activityPullWriteGate && key === activityPullWriteKey) {
+        activityPullWriteStarted = true;
+        await activityPullWriteGate;
+      }
       if (
         ownerMigrationWriteGate
         && key === "@sync_queue"
@@ -99,7 +125,13 @@ function queryChain(): Record<string, unknown> {
     ...result,
     select: () => queryChain(),
     eq: () => queryChain(),
-    order: () => queryChain(),
+    order: async () => {
+      remoteReadStarted = true;
+      if (remoteReadGate) {
+        await remoteReadGate;
+      }
+      return result;
+    },
   };
 }
 
@@ -122,6 +154,28 @@ const localFeeding = {
   updatedAt: "2026-07-14T10:00:00.000Z",
 };
 
+const localDiaper = {
+  id: "diaper-1",
+  babyId: "baby-1",
+  type: "wet" as const,
+  changedAt: "2026-07-14T09:00:00.000Z",
+  notes: "local notes",
+  loggedBy: "user-1",
+  createdAt: "2026-07-14T09:00:00.000Z",
+  updatedAt: "2026-07-14T10:00:00.000Z",
+};
+
+const localHealthEntry = {
+  id: "health-1",
+  babyId: "baby-1",
+  type: "temperature" as const,
+  loggedAt: "2026-07-14T09:00:00.000Z",
+  temperatureCelsius: 37,
+  loggedBy: "user-1",
+  createdAt: "2026-07-14T09:00:00.000Z",
+  updatedAt: "2026-07-14T10:00:00.000Z",
+};
+
 function makeSyncEngine(authenticated = true) {
   return {
     getPendingEntityOperations: () => new Map(pendingOperations),
@@ -131,10 +185,15 @@ function makeSyncEngine(authenticated = true) {
       : null,
     enqueueOperation: vi.fn(async () => {}),
     enqueueOperationWithLocalMutation: vi.fn(async (
-      _operation: unknown,
+      operation: { entityId: string; type: OperationType },
       mutation: { key: string; nextValue: string }
     ) => {
+      localMutationCommitStarted = true;
+      if (localMutationCommitGate) {
+        await localMutationCommitGate;
+      }
       storage.set(mutation.key, mutation.nextValue);
+      pendingOperations.set(operation.entityId, operation.type);
     }),
     sync: vi.fn(async () => {}),
   };
@@ -157,6 +216,40 @@ function makeRealSyncEngine(): SyncEngine {
   return engine;
 }
 
+function deferred(): { promise: Promise<void>; resolve: () => void } {
+  let resolve!: () => void;
+  const promise = new Promise<void>((complete) => {
+    resolve = complete;
+  });
+  return { promise, resolve };
+}
+
+async function overlapLocalMutationWithPull<T>(
+  key: string,
+  mutate: () => Promise<T>,
+  pull: () => Promise<unknown>
+): Promise<T> {
+  const localMutation = deferred();
+  localMutationCommitGate = localMutation.promise;
+  const pullWrite = deferred();
+  activityPullWriteGate = pullWrite.promise;
+  activityPullWriteKey = key;
+
+  const mutating = mutate();
+  await vi.waitFor(() => expect(localMutationCommitStarted).toBe(true));
+
+  const pulling = pull();
+  for (let turn = 0; turn < 20; turn += 1) {
+    await Promise.resolve();
+  }
+  localMutation.resolve();
+  const result = await mutating;
+  await vi.waitFor(() => expect(activityPullWriteStarted).toBe(true));
+  pullWrite.resolve();
+  await pulling;
+  return result;
+}
+
 describe("lossless activity sync", () => {
   beforeEach(() => {
     storage.clear();
@@ -168,6 +261,14 @@ describe("lossless activity sync", () => {
     failQueueCheckpointAfterLocalWrite = false;
     ownerMigrationWriteGate = null;
     ownerMigrationWriteStarted = false;
+    localMutationCommitGate = null;
+    localMutationCommitStarted = false;
+    activityPullWriteGate = null;
+    activityPullWriteKey = null;
+    activityPullWriteStarted = false;
+    remoteReadGate = null;
+    remoteReadStarted = false;
+    setStorageUserId(null);
     syncEngine = makeSyncEngine();
     vi.clearAllMocks();
     fromMock.mockImplementation(() => queryChain());
@@ -175,6 +276,178 @@ describe("lossless activity sync", () => {
     rpcMock.mockResolvedValue({ error: null });
     __resetCrdtSyncForTests();
     __resetDeviceIdForTests();
+  });
+
+  it("keeps a create that becomes durable while a pull is reconciling", async () => {
+    const created = await overlapLocalMutationWithPull(
+      "@feedings:baby-1",
+      () => createFeedingInDatabase({
+        babyId: "baby-1",
+        type: "bottle",
+        startedAt: new Date("2026-07-14T09:00:00.000Z"),
+        amountMl: 90,
+      }, "user-1"),
+      () => fetchFeedingsFromDatabase("baby-1")
+    );
+
+    expect(JSON.parse(storage.get("@feedings:baby-1")!)).toEqual([created]);
+    expect(pendingOperations.get(created.id)).toBe("CREATE");
+  });
+
+  it("keeps an update that becomes durable while a pull is reconciling", async () => {
+    serverRows = [{
+      id: "diaper-1",
+      baby_id: "baby-1",
+      type: "wet",
+      changed_at: "2026-07-14T09:00:00.000Z",
+      notes: "stale server notes",
+      created_at: "2026-07-14T09:00:00.000Z",
+      updated_at: "2026-07-14T09:30:00.000Z",
+      field_clocks: {},
+    }];
+    storage.set("@diapers:baby-1", JSON.stringify([localDiaper]));
+    const updated = await overlapLocalMutationWithPull(
+      "@diapers:baby-1",
+      () => updateDiaperInDatabase("baby-1", "diaper-1", {
+        notes: "durable local notes",
+      }),
+      () => fetchDiapersFromDatabase("baby-1")
+    );
+
+    expect(JSON.parse(storage.get("@diapers:baby-1")!)).toEqual([updated]);
+    expect(pendingOperations.get("diaper-1")).toBe("UPDATE");
+  });
+
+  it("does not resurrect a delete that becomes durable while a pull is reconciling", async () => {
+    serverRows = [{
+      id: "health-1",
+      baby_id: "baby-1",
+      type: "temperature",
+      logged_at: "2026-07-14T09:00:00.000Z",
+      temperature_celsius: 37,
+      logged_by: "user-1",
+      created_at: "2026-07-14T09:00:00.000Z",
+      updated_at: "2026-07-14T09:30:00.000Z",
+      field_clocks: {},
+    }];
+    storage.set("@health:baby-1", JSON.stringify([localHealthEntry]));
+    await expect(overlapLocalMutationWithPull(
+      "@health:baby-1",
+      () => deleteHealthFromDatabase("baby-1", "health-1"),
+      () => fetchHealthFromDatabase("baby-1")
+    )).resolves.toBe(true);
+
+    expect(JSON.parse(storage.get("@health:baby-1")!)).toEqual([]);
+    expect(pendingOperations.get("health-1")).toBe("DELETE");
+  });
+
+  it.each([
+    {
+      name: "sleep",
+      key: "@sleeps:baby-1",
+      create: () => createSleepInDatabase({
+        babyId: "baby-1",
+        type: "nap",
+        startedAt: new Date("2026-07-14T09:00:00.000Z"),
+      }, "user-1"),
+      pull: () => fetchSleepFromDatabase("baby-1"),
+    },
+    {
+      name: "pumping",
+      key: "@pumpings:baby-1",
+      create: () => createPumpingInDatabase({
+        babyId: "baby-1",
+        side: "both",
+        startedAt: new Date("2026-07-14T09:00:00.000Z"),
+      }, "user-1"),
+      pull: () => fetchPumpingFromDatabase("baby-1"),
+    },
+    {
+      name: "growth",
+      key: "@growth:baby-1",
+      create: () => createGrowthInDatabase({
+        babyId: "baby-1",
+        measuredAt: new Date("2026-07-14T09:00:00.000Z"),
+        weightKg: 7.5,
+      }, "user-1"),
+      pull: () => fetchGrowthFromDatabase("baby-1"),
+    },
+    {
+      name: "tummy time",
+      key: "@tummyTimes:baby-1",
+      create: () => createTummyTimeInDatabase({
+        babyId: "baby-1",
+        startedAt: new Date("2026-07-14T09:00:00.000Z"),
+        durationSeconds: 300,
+      }, "user-1"),
+      pull: () => fetchTummyTimeFromDatabase("baby-1"),
+    },
+    {
+      name: "milestone",
+      key: "@milestones:baby-1",
+      create: () => upsertMilestoneResponseInDatabase({
+        babyId: "baby-1",
+        milestoneId: "milestone-1",
+        state: "yes",
+        respondedBy: "user-1",
+      }),
+      pull: () => fetchMilestoneResponsesFromDatabase("baby-1"),
+    },
+  ])("serializes $name creates with pull reconciliation", async ({ key, create, pull }) => {
+    const created = await overlapLocalMutationWithPull(key, create, pull);
+
+    expect(JSON.parse(storage.get(key)!)).toEqual([created]);
+    expect(pendingOperations.get(created.id)).toBe("CREATE");
+  });
+
+  it("aborts a pull when its authenticated storage scope changes", async () => {
+    setStorageUserId("user-a");
+    storage.set("@feedings:baby-1:user-a", JSON.stringify([localFeeding]));
+    storage.set("@feedings:baby-1:user-b", JSON.stringify([{ ...localFeeding, id: "feeding-b" }]));
+    serverRows = [{
+      id: "server-feeding",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: "2026-07-14T09:00:00.000Z",
+      created_at: "2026-07-14T09:00:00.000Z",
+      updated_at: "2026-07-14T09:00:00.000Z",
+      field_clocks: {},
+    }];
+    let releaseRemoteRead!: () => void;
+    remoteReadGate = new Promise<void>((resolve) => {
+      releaseRemoteRead = resolve;
+    });
+
+    const pulling = fetchFeedingsFromDatabase("baby-1");
+    await vi.waitFor(() => expect(remoteReadStarted).toBe(true));
+    setStorageUserId("user-b");
+    releaseRemoteRead();
+
+    await expect(pulling).rejects.toThrow("storage scope changed");
+    expect(JSON.parse(storage.get("@feedings:baby-1:user-a")!)).toEqual([localFeeding]);
+    expect(JSON.parse(storage.get("@feedings:baby-1:user-b")!)).toEqual([
+      expect.objectContaining({ id: "feeding-b" }),
+    ]);
+  });
+
+  it("does not hold the collection lock while waiting for the server", async () => {
+    let releaseRemoteRead!: () => void;
+    remoteReadGate = new Promise<void>((resolve) => {
+      releaseRemoteRead = resolve;
+    });
+
+    const pulling = fetchFeedingsFromDatabase("baby-1");
+    await vi.waitFor(() => expect(remoteReadStarted).toBe(true));
+    const created = await createFeedingInDatabase({
+      babyId: "baby-1",
+      type: "bottle",
+      startedAt: new Date("2026-07-14T09:00:00.000Z"),
+      amountMl: 90,
+    }, "user-1");
+    releaseRemoteRead();
+
+    await expect(pulling).resolves.toEqual([created]);
+    expect(JSON.parse(storage.get("@feedings:baby-1")!)).toEqual([created]);
   });
 
   it("keeps a pending local update visible instead of replacing it with pulled server state", async () => {

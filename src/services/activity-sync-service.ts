@@ -1,7 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import { supabase } from "./supabase";
-import { getUserScopedKey } from "./storage-prefix";
+import {
+  getStorageUserId,
+  getUserScopedKey,
+  getUserScopedKeyFor,
+} from "./storage-prefix";
 import { getSyncEngine } from "@/contexts/sync-context";
 import type { LocalStorageMutation, OperationType, SyncableTable } from "./sync/types";
 import { reconcilePulled } from "./sync/crdt-sync-instance";
@@ -63,6 +67,71 @@ function withStorageLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const next = prev.then(fn, fn);
   storageLocks.set(key, next.then(() => {}, () => {}));
   return next;
+}
+
+interface PulledCollectionSnapshot<T> {
+  entries: T[];
+  localEntries: T[];
+  pendingOperations: Map<string, OperationType>;
+}
+
+interface ActivityPullScope {
+  key: string;
+  storageUserId: string | null;
+  engine: SyncEngine | null;
+  authContext: { householdId: string; userId: string } | null;
+}
+
+function captureActivityPullScope(baseKey: string): ActivityPullScope {
+  const storageUserId = getStorageUserId();
+  const engine = getSyncEngine();
+  const authContext = engine?.getAuthContext() ?? null;
+  return {
+    key: getUserScopedKeyFor(baseKey, storageUserId),
+    storageUserId,
+    engine,
+    authContext: authContext ? { ...authContext } : null,
+  };
+}
+
+function assertActivityPullScope(scope: ActivityPullScope): void {
+  const currentEngine = getSyncEngine();
+  const currentAuthContext = currentEngine?.getAuthContext() ?? null;
+  const sameAuthContext = scope.authContext === null
+    ? currentAuthContext === null
+    : currentAuthContext !== null
+      && scope.authContext.householdId === currentAuthContext.householdId
+      && scope.authContext.userId === currentAuthContext.userId;
+
+  if (
+    getStorageUserId() !== scope.storageUserId
+    || currentEngine !== scope.engine
+    || !sameAuthContext
+  ) {
+    throw new Error('Activity pull storage scope changed during reconciliation');
+  }
+}
+
+async function commitPulledCollection<T extends { id: string }>(
+  scope: ActivityPullScope,
+  table: SyncableTable,
+  serverEntries: T[],
+  inspect?: (snapshot: PulledCollectionSnapshot<T>) => void
+): Promise<T[]> {
+  return withStorageLock(scope.key, async () => {
+    assertActivityPullScope(scope);
+    const pendingOperations = await getPendingEntityOperations(scope.engine, table);
+    assertActivityPullScope(scope);
+    const localData = await AsyncStorage.getItem(scope.key);
+    assertActivityPullScope(scope);
+    const localEntries: T[] = localData ? JSON.parse(localData) : [];
+    const entries = mergeWithPendingLocal(serverEntries, localEntries, pendingOperations);
+    inspect?.({ entries, localEntries, pendingOperations });
+    assertActivityPullScope(scope);
+    await AsyncStorage.setItem(scope.key, JSON.stringify(entries));
+    assertActivityPullScope(scope);
+    return entries;
+  });
 }
 
 type ActivityQueueOperation = {
@@ -195,6 +264,7 @@ function createConditionalDurableQueueCommit(
 // ============ FEEDINGS ============
 
 export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredFeedingEntry[]> {
+  const scope = captureActivityPullScope(`${KEYS.feedings}${babyId}`);
   const { data, error } = await supabase
     .from("feedings")
     .select("*")
@@ -208,12 +278,7 @@ export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredF
 
   const reconciled = await reconcilePulled("feedings", (data || []) as Record<string, unknown>[]);
   const serverFeedings: StoredFeedingEntry[] = dropTombstoned(reconciled).map(transformFeedingFromDb);
-  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'feedings');
-  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.feedings}${babyId}`));
-  const localFeedings: StoredFeedingEntry[] = localData ? JSON.parse(localData) : [];
-  const feedings = mergeWithPendingLocal(serverFeedings, localFeedings, pendingOperations);
-  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.feedings}${babyId}`), JSON.stringify(feedings));
-  return feedings;
+  return commitPulledCollection(scope, 'feedings', serverFeedings);
 }
 
 export async function createFeedingInDatabase(
@@ -395,6 +460,7 @@ async function updateLocalFeedings(
 // ============ DIAPERS ============
 
 export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDiaperEntry[]> {
+  const scope = captureActivityPullScope(`${KEYS.diapers}${babyId}`);
   const { data, error } = await supabase
     .from("diapers")
     .select("*")
@@ -408,12 +474,7 @@ export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDi
 
   const reconciled = await reconcilePulled("diapers", (data || []) as Record<string, unknown>[]);
   const serverDiapers: StoredDiaperEntry[] = dropTombstoned(reconciled).map(transformDiaperFromDb);
-  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'diapers');
-  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.diapers}${babyId}`));
-  const localDiapers: StoredDiaperEntry[] = localData ? JSON.parse(localData) : [];
-  const diapers = mergeWithPendingLocal(serverDiapers, localDiapers, pendingOperations);
-  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.diapers}${babyId}`), JSON.stringify(diapers));
-  return diapers;
+  return commitPulledCollection(scope, 'diapers', serverDiapers);
 }
 
 export async function createDiaperInDatabase(
@@ -543,6 +604,7 @@ async function updateLocalDiapers(
 // ============ SLEEP ============
 
 export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSleepEntry[]> {
+  const scope = captureActivityPullScope(`${KEYS.sleep}${babyId}`);
   const { data, error } = await supabase
     .from("sleep_sessions")
     .select("*")
@@ -556,24 +618,26 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
 
   const reconciled = await reconcilePulled("sleep_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredSleepEntry[] = dropTombstoned(reconciled).map(transformSleepFromDb);
-  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'sleep_sessions');
-  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.sleep}${babyId}`));
-  const localSessions: StoredSleepEntry[] = localData ? JSON.parse(localData) : [];
-  const sleepSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
-  const mergedIds = new Set(sleepSessions.map(s => s.id));
-  const droppedRecent = localSessions.filter(l =>
-    !mergedIds.has(l.id) && (Date.now() - new Date(l.createdAt).getTime()) < 120_000
+  return commitPulledCollection(
+    scope,
+    'sleep_sessions',
+    serverSessions,
+    ({ entries, localEntries, pendingOperations }) => {
+      const mergedIds = new Set(entries.map(session => session.id));
+      const droppedRecent = localEntries.filter(session =>
+        !mergedIds.has(session.id)
+        && (Date.now() - new Date(session.createdAt).getTime()) < 120_000
+      );
+      if (droppedRecent.length > 0) {
+        console.error("[ActivitySync] fetchSleep: DROPPING recent local entries!", {
+          droppedIds: droppedRecent.map(entry => entry.id),
+          pendingCount: pendingOperations.size,
+          serverCount: serverSessions.length,
+          localCount: localEntries.length,
+        });
+      }
+    }
   );
-  if (droppedRecent.length > 0) {
-    console.error("[ActivitySync] fetchSleep: DROPPING recent local entries!", {
-      droppedIds: droppedRecent.map(d => d.id),
-      pendingCount: pendingOperations.size,
-      serverCount: serverSessions.length,
-      localCount: localSessions.length,
-    });
-  }
-  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.sleep}${babyId}`), JSON.stringify(sleepSessions));
-  return sleepSessions;
 }
 
 export async function createSleepInDatabase(
@@ -721,6 +785,7 @@ async function updateLocalSleep(
 // ============ PUMPING ============
 
 export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPumpingEntry[]> {
+  const scope = captureActivityPullScope(`${KEYS.pumping}${babyId}`);
   const { data, error } = await supabase
     .from("pumping_sessions")
     .select("*")
@@ -734,12 +799,7 @@ export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPu
 
   const reconciled = await reconcilePulled("pumping_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredPumpingEntry[] = dropTombstoned(reconciled).map(transformPumpingFromDb);
-  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'pumping_sessions');
-  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.pumping}${babyId}`));
-  const localSessions: StoredPumpingEntry[] = localData ? JSON.parse(localData) : [];
-  const pumpingSessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
-  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.pumping}${babyId}`), JSON.stringify(pumpingSessions));
-  return pumpingSessions;
+  return commitPulledCollection(scope, 'pumping_sessions', serverSessions);
 }
 
 export async function createPumpingInDatabase(
@@ -888,6 +948,7 @@ async function updateLocalPumping(
 // ============ GROWTH ============
 
 export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGrowthEntry[]> {
+  const scope = captureActivityPullScope(`${KEYS.growth}${babyId}`);
   const { data, error } = await supabase
     .from("growth_measurements")
     .select("*")
@@ -901,12 +962,7 @@ export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGro
 
   const reconciled = await reconcilePulled("growth_measurements", (data || []) as Record<string, unknown>[]);
   const serverMeasurements: StoredGrowthEntry[] = dropTombstoned(reconciled).map(transformGrowthFromDb);
-  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'growth_measurements');
-  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.growth}${babyId}`));
-  const localMeasurements: StoredGrowthEntry[] = localData ? JSON.parse(localData) : [];
-  const measurements = mergeWithPendingLocal(serverMeasurements, localMeasurements, pendingOperations);
-  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.growth}${babyId}`), JSON.stringify(measurements));
-  return measurements;
+  return commitPulledCollection(scope, 'growth_measurements', serverMeasurements);
 }
 
 export async function createGrowthInDatabase(
@@ -1040,6 +1096,7 @@ async function updateLocalGrowth(
 // ============ TUMMY TIME ============
 
 export async function fetchTummyTimeFromDatabase(babyId: string): Promise<StoredTummyTimeEntry[]> {
+  const scope = captureActivityPullScope(`${KEYS.tummyTime}${babyId}`);
   const { data, error } = await supabase
     .from("tummy_time_sessions")
     .select("*")
@@ -1053,12 +1110,7 @@ export async function fetchTummyTimeFromDatabase(babyId: string): Promise<Stored
 
   const reconciled = await reconcilePulled("tummy_time_sessions", (data || []) as Record<string, unknown>[]);
   const serverSessions: StoredTummyTimeEntry[] = dropTombstoned(reconciled).map(transformTummyTimeFromDb);
-  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'tummy_time_sessions');
-  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.tummyTime}${babyId}`));
-  const localSessions: StoredTummyTimeEntry[] = localData ? JSON.parse(localData) : [];
-  const sessions = mergeWithPendingLocal(serverSessions, localSessions, pendingOperations);
-  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.tummyTime}${babyId}`), JSON.stringify(sessions));
-  return sessions;
+  return commitPulledCollection(scope, 'tummy_time_sessions', serverSessions);
 }
 
 export async function createTummyTimeInDatabase(
@@ -1199,6 +1251,7 @@ async function updateLocalTummyTime(
 // ============ MILESTONES ============
 
 export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promise<StoredMilestoneResponse[]> {
+  const scope = captureActivityPullScope(`${KEYS.milestones}${babyId}`);
   const { data, error } = await supabase
     .from("milestone_responses")
     .select("*")
@@ -1211,12 +1264,7 @@ export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promi
 
   const reconciled = await reconcilePulled("milestone_responses", (data || []) as Record<string, unknown>[]);
   const serverResponses: StoredMilestoneResponse[] = dropTombstoned(reconciled).map(transformMilestoneResponseFromDb);
-  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'milestone_responses');
-  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.milestones}${babyId}`));
-  const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
-  const responses = mergeWithPendingLocal(serverResponses, localResponses, pendingOperations);
-  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.milestones}${babyId}`), JSON.stringify(responses));
-  return responses;
+  return commitPulledCollection(scope, 'milestone_responses', serverResponses);
 }
 
 export async function upsertMilestoneResponseInDatabase(
@@ -1672,6 +1720,7 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
 // ============ HEALTH ============
 
 export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHealthEntry[]> {
+  const scope = captureActivityPullScope(`${KEYS.health}${babyId}`);
   const { data, error } = await supabase
     .from("health_entries")
     .select("*")
@@ -1685,12 +1734,7 @@ export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHea
 
   const reconciled = await reconcilePulled("health_entries", (data || []) as Record<string, unknown>[]);
   const serverEntries: StoredHealthEntry[] = dropTombstoned(reconciled).map(transformHealthFromDb);
-  const pendingOperations = await getPendingEntityOperations(getSyncEngine(), 'health_entries');
-  const localData = await AsyncStorage.getItem(getUserScopedKey(`${KEYS.health}${babyId}`));
-  const localEntries: StoredHealthEntry[] = localData ? JSON.parse(localData) : [];
-  const entries = mergeWithPendingLocal(serverEntries, localEntries, pendingOperations);
-  await AsyncStorage.setItem(getUserScopedKey(`${KEYS.health}${babyId}`), JSON.stringify(entries));
-  return entries;
+  return commitPulledCollection(scope, 'health_entries', serverEntries);
 }
 
 export async function createHealthInDatabase(
