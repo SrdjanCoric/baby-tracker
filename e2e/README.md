@@ -1,18 +1,20 @@
 # End-to-end tests
 
-The maintained two-caregiver iOS suite runs one sleep-timer handoff on separate simulators against Docker-hosted local Supabase. Existing single-device Maestro flows cover general app smoke and regression scenarios.
+The maintained two-caregiver iOS suite starts a sleep timer without local Supabase API access. After restarting both apps, it reconnects the timer and runs the household handoff on separate simulators. Existing single-device Maestro flows cover general app smoke and regression scenarios.
 
 ## Two-caregiver sleep-timer suite
 
 The scenario verifies this household contract:
 
-1. The owner starts sleep.
-2. The member sees the remote lock and cannot open the sleep timer.
-3. The owner stops, and the member sees the card unlock.
-4. The member starts sleep.
-5. The owner sees the remote lock.
-6. The member stops, and the owner sees the card unlock.
-7. PostgreSQL contains one completion from each caregiver and no sleep lock.
+1. The runner stops the local Supabase API container.
+2. The owner starts sleep without creating a server lock.
+3. The runner starts the API container and restarts the owner's app.
+4. The owner keeps the same timer, which acquires the household lock.
+5. The runner restarts the member's app. The member sees the server lock and cannot open the sleep timer.
+6. The owner stops. After another member restart, the sleep card is unlocked.
+7. The member starts sleep. After an owner restart, the owner sees the server lock.
+8. The member stops. After another owner restart, the sleep card is unlocked.
+9. PostgreSQL contains one completion from each caregiver and no sleep lock.
 
 Feeding, pumping, and tummy-time use the same lock and completion services. Their completion retry, restoration, stale-lock, and idempotency checks stay in component and real-provider integration tests instead of this device suite.
 
@@ -65,7 +67,7 @@ The clean command:
 3. Creates two authenticated caregivers in one household with two babies.
 4. Creates or selects `SofiBaby Owner` and `SofiBaby Member` simulators.
 5. Generates the iOS project and builds the active arm64 simulator architecture once.
-6. Installs the app on both simulators and runs the sleep handoff.
+6. Installs the app on both simulators and runs the offline reconnect and sleep handoff.
 7. Saves diagnostics, removes the fixture accounts, shuts down both simulators, and retains the installed E2E app for fast runs.
 
 The database reset deletes all data in this project's local Supabase instance. The command rejects Supabase API and PostgreSQL URLs unless they use `localhost`, `127.0.0.1`, or `::1`.
@@ -79,9 +81,9 @@ npm run e2e:seed
 npm run e2e:household-timers
 ```
 
-The fast command reinstalls a copy of the `SofiBaby Owner` app on both named simulators, which clears app state. It resets only the primary baby's sleep rows and lock, then restarts this project's Metro process with a cleared cache. It does not install dependencies, run migrations, generate native projects, install Pods, or compile with Xcode. The app stays installed on both simulators, and the fixtures remain available for another run.
+The fast command reinstalls a copy of the `SofiBaby Owner` app on both named simulators, which clears app state. It resets only the primary baby's sleep rows and lock, then restarts this project's Metro process with a cleared cache. During the scenario it stops only the `supabase_kong_baby-tracker` API container; PostgreSQL remains available for assertions. It does not install dependencies, run migrations, generate native projects, install Pods, or compile with Xcode. The app stays installed on both simulators, and the fixtures remain available for another run.
 
-A measured fast run on 2026-07-21 took 3 minutes 4 seconds with Xcode 26.6 and the iOS 26.5 runtime. Local Supabase was warm. The E2E app was installed on both named simulators, which were already booted.
+A measured fast run on 2026-07-22 took 4 minutes 3 seconds with Xcode 26.6 and the iOS 26.5 runtime. Local Supabase was warm, and both named simulators were already booted.
 
 ### Local E2E bundle boundary
 
@@ -99,7 +101,7 @@ e2e/artifacts/household-timers/<timestamp>/
 
 The directory includes command output, Metro logs, Maestro results, screenshots, simulator logs, sleep and lock rows, local Supabase API logs, and cleanup results. Maestro driver startup is capped at 120 seconds, with a four-minute limit per flow. Process cleanup also uses bounded timeouts.
 
-Cleanup checks whether the local Supabase API container is paused and unpauses it before returning. The clean command also verifies that fixture users, babies, and households were removed.
+Cleanup starts the local Supabase API container if the scenario stopped it, or unpauses it when needed. The clean command also verifies that fixture users, babies, and households were removed.
 
 ## Fixture commands
 

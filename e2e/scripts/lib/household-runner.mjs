@@ -8,6 +8,12 @@ export const SLEEP_ACTIVITY = {
   lockType: "sleep",
 };
 
+export function getLocalApiRecoveryAction(status, isPaused) {
+  if (isPaused) return "unpause";
+  if (status !== "running") return "start";
+  return null;
+}
+
 export function parseRunnerOptions(args) {
   const unknownOption = args.find((arg) => arg !== "--clean");
   if (unknownOption) {

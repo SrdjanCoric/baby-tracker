@@ -4,6 +4,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserScopedKey } from "./storage-prefix";
 import type { TimerIdentity } from "./timer-completion-service";
+import type { TimerLockReconciliationSnapshot } from "./timer-lock-reconciliation";
 
 const TUMMY_TIMES_KEY_PREFIX = "@tummyTimes:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_tummyTime_timer:";
@@ -40,7 +41,7 @@ export interface UpdateTummyTimeInput {
   notes?: string;
 }
 
-export interface ActiveTummyTimeTimerData extends Partial<TimerIdentity> {
+export interface ActiveTummyTimeTimerData extends Partial<TimerIdentity>, TimerLockReconciliationSnapshot {
   startedAt: string;
   liveActivityId?: string;
   isPaused?: boolean;

@@ -48,6 +48,10 @@
     "durationH": "{{h}}Std",
     "durationM": "{{m}}Min"
   },
+  "timerConflict": {
+    "title": "Timerkonflikt gelöst",
+    "body": "Der Timer von {{name}} wurde zuerst verbunden. Dein Timer wurde gestoppt und in der Zeitleiste gespeichert."
+  },
   "summary": {
     "today": "Heute",
     "feeding_one": "Fütterung",

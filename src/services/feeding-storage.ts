@@ -6,6 +6,7 @@ import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReac
 import { getUserScopedKey } from "./storage-prefix";
 import { computeSuggestedSide } from "@/utils/feeding-sessions";
 import type { TimerIdentity } from "./timer-completion-service";
+import type { TimerLockReconciliationSnapshot } from "./timer-lock-reconciliation";
 
 const FEEDINGS_KEY_PREFIX = "@feedings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_feeding_timer:";
@@ -65,7 +66,7 @@ export interface UpdateFeedingInput {
   side?: BreastSide;
 }
 
-export interface ActiveTimerData extends Partial<TimerIdentity> {
+export interface ActiveTimerData extends Partial<TimerIdentity>, TimerLockReconciliationSnapshot {
   startedAt: string;
   side?: BreastSide;
   type: FeedingType;

@@ -1,0 +1,9 @@
+appId: com.sofibaby.app
+---
+- scrollUntilVisible:
+    element:
+      id: "sleep-card-own-active"
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: "sleep-card-own-active"

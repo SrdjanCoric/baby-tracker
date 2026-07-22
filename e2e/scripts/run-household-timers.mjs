@@ -11,6 +11,7 @@ import {
   SLEEP_ACTIVITY,
   assertLocalEndpoint,
   assertMetroProjectRoot,
+  getLocalApiRecoveryAction,
   getXcodebuildArgs,
   parseRunnerOptions,
   selectNamedSimulators,
@@ -39,6 +40,7 @@ const ownerEmail = "e2e-owner@test.local";
 const memberEmail = "e2e-member@test.local";
 const primaryBabyId = "00000000-0000-0000-0001-000000000001";
 const appId = "com.sofibaby.app";
+const localApiContainer = "supabase_kong_baby-tracker";
 const { cleanEnvironment } = parseRunnerOptions(process.argv.slice(2));
 
 let simulators = [];
@@ -480,33 +482,78 @@ function verifyCaregiverCompletions(status) {
   }
 }
 
-function ensureLocalApiIsUnpaused() {
-  const state = capture(
+function ensureLocalApiIsRunning() {
+  const state = JSON.parse(capture(
     "docker",
-    [
-      "inspect",
-      "--format",
-      "{{.State.Paused}}",
-      "supabase_kong_baby-tracker",
-    ],
+    ["inspect", "--format", "{{json .State}}", localApiContainer],
     `inspect-local-supabase-api-${Date.now()}`,
     { timeout: 30_000 }
-  ).trim();
-  if (state !== "true") return;
+  ));
+  const action = getLocalApiRecoveryAction(state.Status, state.Paused === true);
+  if (!action) return;
 
   run(
     "docker",
-    ["unpause", "supabase_kong_baby-tracker"],
-    `unpause-local-supabase-api-${Date.now()}`,
+    [action, localApiContainer],
+    `${action}-local-supabase-api-${Date.now()}`,
+    { timeout: 30_000 }
+  );
+}
+
+function disconnectLocalApi() {
+  run(
+    "docker",
+    ["stop", "--timeout", "10", localApiContainer],
+    `stop-local-supabase-api-${Date.now()}`,
+    { timeout: 30_000 }
+  );
+}
+
+async function reconnectLocalApi(status) {
+  ensureLocalApiIsRunning();
+  const deadline = Date.now() + 30_000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(`${status.API_URL}/auth/v1/health`);
+      if (response.ok) return;
+    } catch {
+      // The local API container is still starting.
+    }
+    await delay(250);
+  }
+  throw new Error("Local Supabase API did not recover within 30 seconds");
+}
+
+function restartApp(simulator, label) {
+  capture(
+    "xcrun",
+    ["simctl", "terminate", simulator.udid, appId],
+    `${label}-terminate-${Date.now()}`,
+    { allowFailure: true, timeout: 30_000 }
+  );
+  capture(
+    "xcrun",
+    ["simctl", "launch", simulator.udid, appId, "-e2eMode", "true"],
+    `${label}-launch-${Date.now()}`,
     { timeout: 30_000 }
   );
 }
 
 async function runSleepHandoff(status, owner, member) {
-  console.log("\n=== sleep: two-caregiver household handoff ===");
+  console.log("\n=== sleep: offline reconnect and two-caregiver household handoff ===");
 
-  maestro(owner, "start/sleep.yaml");
+  disconnectLocalApi();
+  try {
+    maestro(owner, "start/sleep.yaml");
+    await waitForDatabase(status, SLEEP_ACTIVITY, 0, 0);
+  } finally {
+    await reconnectLocalApi(status);
+  }
+
+  restartApp(owner, "restart-offline-owner");
+  maestro(owner, "assert-owned.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 0, 1);
+  restartApp(member, "restart-offline-member");
   maestro(member, "assert-locked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
     LOCK_STATE: "locked-active",
@@ -515,12 +562,14 @@ async function runSleepHandoff(status, owner, member) {
 
   maestro(owner, "stop/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 0);
+  restartApp(member, "refresh-member-after-owner-stop");
   maestro(member, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
   });
 
   maestro(member, "start/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 1);
+  restartApp(owner, "refresh-owner-after-member-start");
   maestro(owner, "assert-locked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
     LOCK_STATE: "locked-active",
@@ -529,6 +578,7 @@ async function runSleepHandoff(status, owner, member) {
   maestro(member, "stop/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 2, 0);
   verifyCaregiverCompletions(status);
+  restartApp(owner, "refresh-owner-after-member-stop");
   maestro(owner, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
   });
@@ -598,7 +648,7 @@ function collectDiagnostics(status) {
   }
   capture(
     "docker",
-    ["logs", "--tail", "500", "supabase_kong_baby-tracker"],
+    ["logs", "--tail", "500", localApiContainer],
     "supabase-api-diagnostics",
     { allowFailure: true }
   );
@@ -606,7 +656,7 @@ function collectDiagnostics(status) {
 
 async function cleanup() {
   try {
-    ensureLocalApiIsUnpaused();
+    ensureLocalApiIsRunning();
   } catch {
     cleanupFailed = true;
   }
@@ -689,7 +739,7 @@ async function main() {
       run("npx", ["supabase", "start"], "supabase-start", {
         timeout: 1_200_000,
       });
-      ensureLocalApiIsUnpaused();
+      ensureLocalApiIsRunning();
       status = readSupabaseStatus();
       run(
         "npx",
@@ -705,7 +755,7 @@ async function main() {
       });
     }
 
-    ensureLocalApiIsUnpaused();
+    ensureLocalApiIsRunning();
     status = readSupabaseStatus();
     const runtime = findRuntime();
     ensureSimulators(runtime.identifier);

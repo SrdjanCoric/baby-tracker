@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, render, waitFor } from "@testing-library/react-native";
 import React from "react";
-import { AppState, Platform, type AppStateStatus } from "react-native";
+import { Alert, AppState, Platform, type AppStateStatus } from "react-native";
 import { FeedingProvider, useFeeding } from "@/contexts/feeding-context";
 import { PumpingProvider, usePumping } from "@/contexts/pumping-context";
 import { SleepProvider, useSleep } from "@/contexts/sleep-context";
@@ -24,6 +24,7 @@ const mockExtensionStorageData = new Map<string, string>();
 const mockRouterPush = jest.fn();
 const mockRouter = { push: mockRouterPush };
 const mockRemoveLock = jest.fn();
+const mockRefreshLocks = jest.fn().mockResolvedValue(undefined);
 let mockUuidCounter = 0;
 
 let mockSelectedBaby = { id: "baby-1", name: "Baby One" };
@@ -72,7 +73,10 @@ jest.mock("@/contexts/sync-context", () => ({
 }));
 
 jest.mock("@/contexts/active-timers-context", () => ({
-  useActiveTimers: () => ({ removeLock: mockRemoveLock }),
+  useActiveTimers: () => ({
+    removeLock: mockRemoveLock,
+    refreshLocks: mockRefreshLocks,
+  }),
 }));
 
 jest.mock("@/services/sync", () => ({
@@ -921,8 +925,15 @@ describe("external timer stops through production providers", () => {
     await FeedingStorageService.setActiveTimer("baby-1", timerSnapshot);
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
       getActiveTimerLock: jest.Mock;
     };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-1",
+      lockHolderName: "Caregiver",
+      startedAt,
+    });
     activeTimers.getActiveTimerLock.mockImplementation(
       async (_babyId: string, activityType: string) => {
         if (activityType !== "feeding") return null;
@@ -1045,8 +1056,15 @@ describe("external timer stops through production providers", () => {
     await SleepStorageService.setActiveTimer("baby-1", timerSnapshot);
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
       getActiveTimerLock: jest.Mock;
     };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-1",
+      lockHolderName: "Caregiver",
+      startedAt,
+    });
     activeTimers.getActiveTimerLock.mockImplementation(
       async (_babyId: string, activityType: string) => {
         if (activityType !== "sleep") return null;
@@ -1107,8 +1125,15 @@ describe("external timer stops through production providers", () => {
     await SleepStorageService.setActiveTimer("baby-1", timerSnapshot);
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
       getActiveTimerLock: jest.Mock;
     };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-1",
+      lockHolderName: "Caregiver",
+      startedAt,
+    });
     activeTimers.getActiveTimerLock.mockImplementation(
       async (_babyId: string, activityType: string) => {
         if (activityType !== "sleep") return null;
@@ -1229,8 +1254,15 @@ describe("external timer stops through production providers", () => {
     await PumpingStorageService.setActiveTimer("baby-1", timerSnapshot);
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
       getActiveTimerLock: jest.Mock;
     };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-1",
+      lockHolderName: "Caregiver",
+      startedAt,
+    });
     activeTimers.getActiveTimerLock.mockImplementation(
       async (_babyId: string, activityType: string) => {
         if (activityType !== "pumping") return null;
@@ -1347,8 +1379,15 @@ describe("external timer stops through production providers", () => {
     await TummyTimeStorageService.setActiveTimer("baby-1", timerSnapshot);
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
       getActiveTimerLock: jest.Mock;
     };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-1",
+      lockHolderName: "Caregiver",
+      startedAt,
+    });
     activeTimers.getActiveTimerLock.mockImplementation(
       async (_babyId: string, activityType: string) => {
         if (activityType !== "tummy_time") return null;
@@ -1576,5 +1615,354 @@ describe("external timer stops through production providers", () => {
     expect(feedingState?.activeTimer).toBeNull();
     expect(activitySync.createFeedingInDatabase).toHaveBeenCalledTimes(1);
     expect(mockExtensionStorageData.get("pendingWidgetStop")).toBe(JSON.stringify(replacement));
+  });
+
+  it("keeps an uncontested offline feeding active while reconnect acquires its lock", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(feedingState).not.toBeNull());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockRejectedValueOnce(new Error("offline"));
+
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+    });
+    await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "offline" })
+    );
+    await act(async () => {
+      await feedingState!.pauseBreastfeeding(new Date("2026-07-15T08:01:00.000Z"));
+    });
+    await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "offline", isPaused: true })
+    );
+
+    activeTimers.acquireTimerLock.mockResolvedValueOnce({ success: true });
+    await act(async () => {
+      await feedingState!.refreshFeedings();
+    });
+
+    expect(activeTimers.acquireTimerLock).toHaveBeenCalledTimes(2);
+    expect(mockRefreshLocks).toHaveBeenCalledTimes(1);
+    expect(activeTimers.acquireTimerLock).toHaveBeenLastCalledWith(
+      "baby-1",
+      "feeding",
+      "user-1",
+      expect.objectContaining({ side: "left", type: "breast" }),
+      new Date(startedAt)
+    );
+    expect(feedingState?.activeTimer?.isRunning).toBe(true);
+    await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "owned" })
+    );
+  });
+
+  it("keeps uncontested offline sleep active while reconnect acquires its lock", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(sleepState).not.toBeNull());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockRejectedValueOnce(new Error("offline"));
+
+    let startResult!: Awaited<ReturnType<NonNullable<typeof sleepState>["startSleep"]>>;
+    await act(async () => {
+      startResult = await sleepState!.startSleep("nap", new Date(startedAt));
+    });
+    expect(startResult).toEqual({ success: true });
+    await expect(SleepStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, type: "nap", lockState: "offline" })
+    );
+    await act(async () => {
+      await sleepState!.pauseSleep(new Date("2026-07-15T08:01:00.000Z"));
+    });
+    await expect(SleepStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "offline", isPaused: true })
+    );
+
+    activeTimers.acquireTimerLock.mockResolvedValueOnce({ success: true });
+    await act(async () => {
+      await sleepState!.refreshSleeps();
+    });
+
+    expect(activeTimers.acquireTimerLock).toHaveBeenCalledTimes(2);
+    expect(sleepState?.activeTimer).toEqual(expect.objectContaining({
+      isRunning: true,
+      lockState: "owned",
+      sleepType: "nap",
+    }));
+    await expect(SleepStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "owned" })
+    );
+  });
+
+  it("restores an offline feeding and its reconciliation state after restart", async () => {
+    const firstMount = render(<RealTimerProviders />);
+    await waitFor(() => expect(feedingState).not.toBeNull());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockRejectedValue(new Error("offline"));
+    await act(async () => {
+      await feedingState!.startBreastfeeding("right", new Date(startedAt));
+    });
+
+    firstMount.unmount();
+    feedingState = null;
+    render(<RealTimerProviders />);
+
+    await waitFor(() => expect(feedingState?.activeTimer?.isRunning).toBe(true));
+    expect(feedingState?.activeTimer).toEqual(expect.objectContaining({
+      lockState: "offline",
+      side: "right",
+      startTime: new Date(startedAt),
+    }));
+    await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "offline" })
+    );
+  });
+
+  it("keeps an uncontested offline pumping timer active while reconnect acquires its lock", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(pumpingState).not.toBeNull());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockRejectedValueOnce(new Error("offline"));
+
+    await act(async () => {
+      await pumpingState!.startPumping("both", new Date(startedAt));
+    });
+    await expect(PumpingStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "offline" })
+    );
+
+    activeTimers.acquireTimerLock.mockResolvedValueOnce({ success: true });
+    await act(async () => {
+      await pumpingState!.refreshPumpings();
+    });
+
+    expect(activeTimers.acquireTimerLock).toHaveBeenCalledTimes(2);
+    expect(pumpingState?.activeTimer?.isRunning).toBe(true);
+    await expect(PumpingStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "owned" })
+    );
+  });
+
+  it("keeps uncontested offline tummy time active while reconnect acquires its lock", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(tummyTimeState).not.toBeNull());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockRejectedValueOnce(new Error("offline"));
+
+    await act(async () => {
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    await expect(TummyTimeStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "offline" })
+    );
+
+    activeTimers.acquireTimerLock.mockResolvedValueOnce({ success: true });
+    await act(async () => {
+      await tummyTimeState!.refreshTummyTimes();
+    });
+
+    expect(activeTimers.acquireTimerLock).toHaveBeenCalledTimes(2);
+    expect(tummyTimeState?.activeTimer?.isRunning).toBe(true);
+    await expect(TummyTimeStorageService.getActiveTimer("baby-1")).resolves.toEqual(
+      expect.objectContaining({ startedAt, lockState: "owned" })
+    );
+  });
+
+  it("saves a losing offline feeding when another caregiver acquired the lock first", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await FeedingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "timer-loser",
+      activityId: "feeding-loser",
+      startedAt,
+      side: "left",
+      type: "breast",
+      currentSideStartedAt: startedAt,
+      leftAccumulatedSeconds: 0,
+      rightAccumulatedSeconds: 0,
+      lockState: "offline",
+    });
+    jest.spyOn(Date, "now").mockReturnValue(new Date(stoppedAt).getTime());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-2",
+      lockHolderName: "Other Caregiver",
+      startedAt: "2026-07-15T08:01:00.000Z",
+    });
+
+    render(<RealTimerProviders />);
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+    };
+    await waitFor(() => expect(activitySync.createFeedingInDatabase).toHaveBeenCalledTimes(1));
+    expect(activitySync.createFeedingInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "feeding-loser",
+        babyId: "baby-1",
+        startedAt: new Date(startedAt),
+        endedAt: new Date(stoppedAt),
+        durationSeconds: 300,
+        side: "left",
+        lastFinishedSide: "left",
+        leftDurationSeconds: 300,
+      }),
+      "user-1"
+    );
+    expect(feedingState?.activeTimer).toBeNull();
+    expect(feedingState?.feedings).toEqual([
+      expect.objectContaining({ id: "feeding-loser", endedAt: stoppedAt })
+    ]);
+    await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Timer conflict resolved",
+      "Other Caregiver's timer connected first. Your timer was stopped and saved to the timeline."
+    );
+  });
+
+  it("saves a losing offline sleep when another caregiver acquired the lock first", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await SleepStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "timer-loser",
+      activityId: "sleep-loser",
+      startedAt,
+      type: "nap",
+      lockState: "offline",
+    });
+    jest.spyOn(Date, "now").mockReturnValue(new Date(stoppedAt).getTime());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-2",
+      lockHolderName: "Other Caregiver",
+      startedAt: "2026-07-15T08:01:00.000Z",
+    });
+
+    render(<RealTimerProviders />);
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createSleepInDatabase: jest.Mock;
+    };
+    await waitFor(() => expect(activitySync.createSleepInDatabase).toHaveBeenCalledTimes(1));
+    expect(activitySync.createSleepInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "sleep-loser",
+        type: "nap",
+        startedAt: new Date(startedAt),
+        endedAt: new Date(stoppedAt),
+        durationSeconds: 300,
+      }),
+      "user-1"
+    );
+    expect(sleepState?.activeTimer).toBeNull();
+    expect(sleepState?.sleeps).toEqual([
+      expect.objectContaining({ id: "sleep-loser", endedAt: stoppedAt })
+    ]);
+    await expect(SleepStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Timer conflict resolved",
+      "Other Caregiver's timer connected first. Your timer was stopped and saved to the timeline."
+    );
+  });
+
+  it("saves a losing offline pumping timer without inventing a volume", async () => {
+    await PumpingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "timer-loser",
+      activityId: "pumping-loser",
+      startedAt,
+      side: "both",
+      lockState: "offline",
+    });
+    jest.spyOn(Date, "now").mockReturnValue(new Date(stoppedAt).getTime());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-2",
+      lockHolderName: "Other Caregiver",
+      startedAt: "2026-07-15T08:01:00.000Z",
+    });
+
+    render(<RealTimerProviders />);
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createPumpingInDatabase: jest.Mock;
+    };
+    await waitFor(() => expect(activitySync.createPumpingInDatabase).toHaveBeenCalledTimes(1));
+    const input = activitySync.createPumpingInDatabase.mock.calls[0][0] as CreatePumpingInput;
+    expect(input).toEqual(expect.objectContaining({
+      id: "pumping-loser",
+      endedAt: new Date(stoppedAt),
+      durationSeconds: 300,
+      side: "both",
+    }));
+    expect(input.volumeMl).toBeUndefined();
+    expect(pumpingState?.activeTimer).toBeNull();
+    expect(pumpingState?.pumpings).toEqual([
+      expect.objectContaining({ id: "pumping-loser", volumeMl: undefined })
+    ]);
+    await expect(PumpingStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
+  });
+
+  it("saves a losing offline tummy-time session when another caregiver won", async () => {
+    await TummyTimeStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "timer-loser",
+      activityId: "tummy-loser",
+      startedAt,
+      lockState: "offline",
+    });
+    jest.spyOn(Date, "now").mockReturnValue(new Date(stoppedAt).getTime());
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    activeTimers.acquireTimerLock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-2",
+      lockHolderName: "Other Caregiver",
+      startedAt: "2026-07-15T08:01:00.000Z",
+    });
+
+    render(<RealTimerProviders />);
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    await waitFor(() => expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledTimes(1));
+    expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "tummy-loser",
+        endedAt: new Date(stoppedAt),
+        durationSeconds: 300,
+      }),
+      "user-1"
+    );
+    expect(tummyTimeState?.activeTimer).toBeNull();
+    expect(tummyTimeState?.tummyTimes).toEqual([
+      expect.objectContaining({ id: "tummy-loser", endedAt: stoppedAt })
+    ]);
+    await expect(TummyTimeStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
   });
 });

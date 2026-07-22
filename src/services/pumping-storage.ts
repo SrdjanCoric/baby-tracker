@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { BreastSide } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
 import type { TimerIdentity } from "./timer-completion-service";
+import type { TimerLockReconciliationSnapshot } from "./timer-lock-reconciliation";
 
 const PUMPINGS_KEY_PREFIX = "@pumpings:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_pumping_timer:";
@@ -42,7 +43,7 @@ export interface UpdatePumpingInput {
   side?: BreastSide;
 }
 
-export interface ActivePumpingTimerData extends Partial<TimerIdentity> {
+export interface ActivePumpingTimerData extends Partial<TimerIdentity>, TimerLockReconciliationSnapshot {
   startedAt: string;
   side: BreastSide;
   liveActivityId?: string;

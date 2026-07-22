@@ -55,9 +55,15 @@ import {
   resolveTimerIdentity,
   type TimerIdentity,
 } from "@/services/timer-completion-service";
+import {
+  reconcileTimerLock,
+  type TimerLockReconciliationState,
+} from "@/services/timer-lock-reconciliation";
+import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
 
 export interface ActiveSleepTimer extends TimerIdentity {
   isRunning: boolean;
+  lockState: TimerLockReconciliationState;
   isPaused: boolean;
   startTime: Date;
   sleepType: SleepType;
@@ -92,7 +98,7 @@ export type SleepAction =
   | { type: "UPDATE_SLEEP"; payload: StoredSleepEntry }
   | { type: "DELETE_SLEEP"; payload: string }
   | { type: "SET_LOADING"; payload: boolean }
-  | { type: "START_TIMER"; payload: { startTime: Date; sleepType: SleepType } & TimerIdentity }
+  | { type: "START_TIMER"; payload: { startTime: Date; sleepType: SleepType; lockState: TimerLockReconciliationState } & TimerIdentity }
   | { type: "STOP_TIMER" }
   | { type: "UPDATE_TIMER_TYPE"; payload: SleepType }
   | { type: "SET_DAILY_GOAL"; payload: number }
@@ -168,6 +174,7 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
         activeTimer: {
           isRunning: true,
           isPaused: false,
+          lockState: action.payload.lockState,
           startTime: action.payload.startTime,
           timerInstanceId: action.payload.timerInstanceId,
           activityId: action.payload.activityId,
@@ -332,7 +339,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
-  const { removeLock } = useActiveTimers();
+  const { removeLock, refreshLocks } = useActiveTimers();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
   const [isStopping, setIsStopping] = useState(false);
@@ -647,25 +654,83 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           }
 
           let isStale = false;
+          let lockState: TimerLockReconciliationState = activeTimer.lockState ?? "offline";
           if (user?.id && user?.householdId && !hasPendingStop) {
-            try {
-              const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
+            const persistLockState = async (nextLockState: TimerLockReconciliationState) => {
               if (!isCurrentBinding()) return;
               if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) return;
-              if (!lock || lock.startedBy !== user.id) {
-                console.warn("[SleepContext] loadSleeps: marking timer as STALE", {
-                  lockFound: !!lock,
-                  lockStartedBy: lock?.startedBy,
-                  userId: user.id,
-                  timerStartedAt: activeTimer.startedAt,
-                });
-                isStale = true;
-                await SleepStorageService.clearActiveTimer(selectedBaby.id);
-                if (!isCurrentBinding()) return;
-                dispatch({ type: "STOP_TIMER" });
+              lockState = nextLockState;
+              await SleepStorageService.setActiveTimer(selectedBaby.id, {
+                ...activeTimer,
+                ...identity,
+                lockState: nextLockState,
+              });
+            };
+            const reconciliation = await reconcileTimerLock({
+              babyId: selectedBaby.id,
+              activityType: "sleep",
+              userId: user.id,
+              startedAt: activeTimer.startedAt,
+              timerInstanceId: identity.timerInstanceId,
+              timerData: {
+                ...identity,
+                type: activeTimer.type,
+                isPaused: activeTimer.isPaused ?? false,
+                totalPausedMs: activeTimer.totalPausedMs ?? 0,
+                pausedAt: activeTimer.pausedAt,
+              },
+              persistState: persistLockState,
+            });
+            if (!isCurrentBinding()) return;
+            if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) return;
+            if (reconciliation.state !== "offline") await refreshLocks();
+            if (reconciliation.state === "conflicted") {
+              const completion = await acceptTimerCompletion(
+                selectedBaby.id,
+                "sleep",
+                activeTimer.startedAt,
+                identity,
+                new Date(Date.now())
+              );
+              dispatch({ type: "STOP_TIMER" });
+              let sleep = await SleepStorageService.getSleepById(
+                selectedBaby.id,
+                completion.activityId
+              );
+
+              if (!sleep) {
+                const endTime = new Date(completion.stoppedAt);
+                const sleepInput: CreateSleepInput = {
+                  id: completion.activityId,
+                  babyId: selectedBaby.id,
+                  type: activeTimer.type,
+                  startedAt: new Date(activeTimer.startedAt),
+                  endedAt: endTime,
+                  durationSeconds: Math.max(
+                    0,
+                    Math.floor(
+                      (endTime.getTime() - new Date(activeTimer.startedAt).getTime() -
+                        (activeTimer.totalPausedMs ?? 0)) / 1000
+                    )
+                  ),
+                };
+                sleep = user.householdId
+                  ? await createSleepInDatabase(sleepInput, user.id)
+                  : await SleepStorageService.addSleep(sleepInput);
+                await markTimerCompletionDurable(completion);
               }
-            } catch {
-              // ignore
+
+              dispatch({ type: "ADD_SLEEP", payload: sleep });
+              isStale = true;
+              await SleepStorageService.clearActiveTimer(selectedBaby.id);
+              if (activeTimer.liveActivityId) {
+                await endTimerLiveActivity(activeTimer.liveActivityId);
+              } else {
+                await endLiveActivityByType("sleep");
+              }
+              liveActivityIdRef.current = null;
+              showTimerConflictNotice(reconciliation.lockHolderName);
+              if (!isCurrentBinding()) return;
             }
           }
 
@@ -675,6 +740,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               payload: {
                 isRunning: true,
                 isPaused: activeTimer.isPaused ?? false,
+                lockState,
                 startTime: new Date(activeTimer.startedAt),
                 ...identity,
                 sleepType: activeTimer.type,
@@ -763,6 +829,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
                   payload: {
                     isRunning: true,
                     isPaused,
+                    lockState: "owned",
                     startTime: new Date(lock.startedAt),
                     ...identity,
                     sleepType,
@@ -778,6 +845,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
                   isPaused,
                   totalPausedMs,
                   pausedAt,
+                  lockState: "owned",
                 });
                 if (!isCurrentBinding()) return;
 
@@ -806,7 +874,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         finishBabyBinding(bindingToken, bindingStatus);
       }
     }
-  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId, user?.id, removeLock]);
+  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId, user?.id, removeLock, refreshLocks]);
 
   useEffect(() => {
     loadSleeps();
@@ -963,6 +1031,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     const startTime = customStartTime ?? new Date();
     const identity = createTimerIdentity();
+    let lockState: TimerLockReconciliationState = "offline";
     if (user?.id) {
       try {
         const lockResult = await acquireTimerLock(
@@ -975,13 +1044,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         if (!lockResult.success) {
           return { success: false, lockedByName: lockResult.lockHolderName };
         }
+        lockState = "owned";
       } catch (error) {
-        console.error("[SleepContext] Failed to acquire timer lock:", error);
-        return { success: false };
+        console.error("[SleepContext] Failed to acquire timer lock (proceeding offline):", error);
       }
     }
 
-    dispatch({ type: "START_TIMER", payload: { startTime, sleepType, ...identity } });
+    dispatch({ type: "START_TIMER", payload: { startTime, sleepType, lockState, ...identity } });
 
     const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType, startTime);
     if (activityId) {
@@ -993,6 +1062,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       startedAt: startTime.toISOString(),
       type: sleepType,
       liveActivityId: activityId ?? undefined,
+      lockState,
     });
 
     return { success: true };
@@ -1125,6 +1195,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         isPaused: state.activeTimer.isPaused,
         totalPausedMs: state.activeTimer.totalPausedMs,
         pausedAt: state.activeTimer.pausedAt?.toISOString(),
+        lockState: state.activeTimer.lockState,
       });
       if (liveActivityIdRef.current) {
         updateTimerLiveActivity(liveActivityIdRef.current, sleepType);
@@ -1164,6 +1235,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       isPaused: true,
       pausedAt: now.toISOString(),
       totalPausedMs: state.activeTimer.totalPausedMs,
+      lockState: state.activeTimer.lockState,
     });
 
     if (user?.id) {
@@ -1212,6 +1284,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       liveActivityId: liveActivityIdRef.current ?? undefined,
       isPaused: false,
       totalPausedMs: newTotalPausedMs,
+      lockState: state.activeTimer.lockState,
     });
 
     if (user?.id) {

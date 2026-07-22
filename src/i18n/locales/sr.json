@@ -48,6 +48,10 @@
     "durationH": "{{h}}č",
     "durationM": "{{m}}m"
   },
+  "timerConflict": {
+    "title": "Sukob tajmera je rešen",
+    "body": "Tajmer korisnika {{name}} se prvi povezao. Vaš tajmer je zaustavljen i sačuvan na vremenskoj liniji."
+  },
   "summary": {
     "today": "Danas",
     "feeding_one": "Hranjenje",

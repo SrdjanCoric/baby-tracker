@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("react-native", () => ({
+  Alert: { alert: vi.fn() },
   AppState: { addEventListener: vi.fn(() => ({ remove: vi.fn() })) },
   Platform: { OS: "ios", select: vi.fn() },
 }));
@@ -36,6 +37,9 @@ vi.mock("@/services/timer-stop-coordinator", () => ({
   readPendingTimerStop: vi.fn(),
 }));
 vi.mock("@/services/timer-completion-service", () => ({}));
+vi.mock("@/services/timer-conflict-notice", () => ({
+  showTimerConflictNotice: vi.fn(),
+}));
 vi.mock("@/utils/sleepGoals", () => ({
   getSleepGoalInfo: vi.fn(),
   getWakeWindowForAge: vi.fn(),

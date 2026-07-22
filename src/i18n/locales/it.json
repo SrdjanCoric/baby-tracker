@@ -48,6 +48,10 @@
     "durationH": "{{h}}h",
     "durationM": "{{m}}min"
   },
+  "timerConflict": {
+    "title": "Conflitto del timer risolto",
+    "body": "Il timer di {{name}} si è connesso per primo. Il tuo è stato interrotto e salvato nella cronologia."
+  },
   "summary": {
     "today": "Oggi",
     "feeding_one": "Poppata",

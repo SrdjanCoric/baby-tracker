@@ -12,6 +12,7 @@ import {
   SLEEP_ACTIVITY,
   assertLocalEndpoint,
   assertMetroProjectRoot,
+  getLocalApiRecoveryAction,
   getXcodebuildArgs,
   parseRunnerOptions,
   prepareDatePickerCodegenConfig,
@@ -45,6 +46,12 @@ test("household timer runner uses sleep as its only representative activity", ()
     card: "sleep-card",
     lockType: "sleep",
   });
+});
+
+test("household timer cleanup restores a stopped or paused local API", () => {
+  assert.equal(getLocalApiRecoveryAction("running", false), null);
+  assert.equal(getLocalApiRecoveryAction("running", true), "unpause");
+  assert.equal(getLocalApiRecoveryAction("exited", false), "start");
 });
 
 test("E2E dependency preparation removes only the invalid date picker module provider", () => {
