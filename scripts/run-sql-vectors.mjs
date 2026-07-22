@@ -114,6 +114,16 @@ function runTombstoneReminderTests() {
   }
 }
 
+function runActiveTimerAuthorizationTests() {
+  const file = join(ROOT, "scripts/sql/active-timer-authorization-tests.sql");
+  try {
+    const out = psql(["-f", file]);
+    return { ok: true, out };
+  } catch (err) {
+    return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
+  }
+}
+
 // Two overlapping transactions merge the same row concurrently, each editing a different field
 // with a newer clock. The advisory lock in merge_record must serialize them so neither field is
 // lost. Worker A holds the lock (pg_sleep) so B provably waits and re-reads A's committed write.
@@ -336,6 +346,16 @@ if (tr.ok) {
 } else {
   console.log(`${RED}✗ tombstone reminder tests failed${RESET}`);
   process.stdout.write(tr.out);
+  hardFail = true;
+}
+
+console.log("");
+const timerAuthorization = runActiveTimerAuthorizationTests();
+if (timerAuthorization.ok) {
+  console.log(`${GREEN}✓${RESET} active timer authorization: RPC identity, household, ownership, grants, and valid owner flows`);
+} else {
+  console.log(`${RED}✗ active timer authorization tests failed${RESET}`);
+  process.stdout.write(timerAuthorization.out);
   hardFail = true;
 }
 

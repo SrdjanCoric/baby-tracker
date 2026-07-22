@@ -54,7 +54,7 @@ Supabase Realtime subscriptions push changes between household members instantly
 
 ### Timer Exclusivity
 
-Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
+Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
 
 ### iOS Native Integrations
 
@@ -83,7 +83,7 @@ src/
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
-└── migrations/             # 49 PostgreSQL migrations
+└── migrations/             # PostgreSQL migrations through 056
 targets/widget/             # iOS WidgetKit extension (Swift)
 e2e/                        # Maestro E2E tests
 ```
@@ -108,14 +108,19 @@ npx expo prebuild --platform android --clean && npx expo run:android
 ## Testing
 
 ```bash
-npm run test:unit            # ~1900 Vitest unit tests
+npm run test:unit            # 2,200+ Vitest unit tests
 npm run test:component       # Jest component tests
 npm run test:security        # Security tests
+npm run test:sql:setup       # Reset local Supabase and apply all migrations
+npm run test:sql             # PostgreSQL merge and authorization tests
+npm run test:edge:timer      # Local timer RPC and Edge authorization flow
 npm run typecheck            # TypeScript strict mode
 npm run lint                 # ESLint (warnings fail the quality gate)
 npm run e2e:household-timers       # Fast two-caregiver iOS sleep handoff
 npm run e2e:household-timers:clean # Clean local provisioning and the same handoff
 ```
+
+Run `test:sql:setup` before the SQL and timer Edge checks. These commands use the local Supabase stack and do not deploy migrations or functions.
 
 The fast iOS command reuses the installed E2E app and local fixtures. The clean command resets local Supabase and builds the app for two named simulators before running the handoff. It removes fixture accounts when finished. Both require Docker, Xcode, Maestro, and `psql`; clean provisioning also needs `jq` and CocoaPods. See [`e2e/README.md`](e2e/README.md) for setup and diagnostics, including the local-only safeguards.
 

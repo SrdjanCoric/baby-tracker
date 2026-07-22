@@ -1,24 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  ToggleTimerMutationError,
+  createToggleTimerPauseHandler,
+  type ToggleTimerRequest,
+} from "./handler.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": Deno.env.get("SUPABASE_URL") || "",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-interface RequestPayload {
-  babyId: string;
-  activityType: string;
-  userId?: string;
-  action: "pause" | "resume";
-  timerData: Record<string, unknown>;
-  liveActivityPushToken?: string;
-  isSandbox?: boolean;
-  elapsedSeconds?: number;
-  context?: string | null;
-  effectiveStartTimeISO?: string | null;
-}
 
 function base64UrlEncode(data: Uint8Array): string {
   const base64 = btoa(String.fromCharCode(...data));
@@ -101,7 +93,7 @@ async function sendWidgetPush(
   if (response.status !== 200) {
     const responseBody = await response.text();
     console.error(
-      `APNs widget push: status=${response.status} body=${responseBody} token=${deviceToken.slice(0, 12)}...`
+      `APNs widget push failed: status=${response.status} body=${responseBody}`
     );
   }
 
@@ -156,208 +148,169 @@ async function sendLiveActivityUpdate(
   if (response.status !== 200) {
     const responseBody = await response.text();
     console.error(
-      `APNs live activity update: status=${response.status} body=${responseBody} token=${deviceToken.slice(0, 12)}...`
+      `APNs live activity update failed: status=${response.status} body=${responseBody}`
     );
   }
 
   return { success: response.status === 200, status: response.status };
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+function createCallerClient(accessToken: string) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!supabaseUrl || !anonKey) {
+    throw new Error("Missing caller-scoped Supabase configuration");
   }
 
-  try {
-    const payload = (await req.json()) as RequestPayload;
+  return createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
+    },
+  });
+}
 
-    if (!payload.babyId || !payload.activityType || !payload.action) {
-      console.error("Missing required fields:", {
-        babyId: !!payload.babyId,
-        activityType: !!payload.activityType,
-        action: !!payload.action,
-      });
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+async function authenticate(accessToken: string) {
+  const supabase = createCallerClient(accessToken);
+  const { data, error } = await supabase.auth.getUser(accessToken);
+  if (error || !data.user) return null;
+  return { id: data.user.id };
+}
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const apnsAuthKey = Deno.env.get("APNS_AUTH_KEY");
-    const apnsKeyId = Deno.env.get("APNS_KEY_ID");
-    const apnsTeamId = Deno.env.get("APNS_TEAM_ID");
+async function mutateTimer(
+  accessToken: string,
+  caller: { id: string },
+  payload: ToggleTimerRequest
+): Promise<void> {
+  const supabase = createCallerClient(accessToken);
+  const timerData = { ...payload.timerData };
 
-    if (!supabaseUrl || !serviceRoleKey || !apnsAuthKey || !apnsKeyId || !apnsTeamId) {
-      console.error("Missing environment variables");
-      return new Response(
-        JSON.stringify({ error: "Server configuration error" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    const { data: existingTimer, error: fetchError } = await supabase
-      .from("active_timers")
-      .select("timer_data")
-      .eq("baby_id", payload.babyId)
-      .eq("activity_type", payload.activityType)
-      .single();
-
-    if (fetchError) {
-      console.error("Failed to fetch active timer:", fetchError);
-      return new Response(
-        JSON.stringify({ error: "Active timer not found" }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const mergedTimerData = { ...(existingTimer.timer_data || {}), ...payload.timerData };
-
-    if (payload.action === "resume") {
-      if (payload.effectiveStartTimeISO) {
-        mergedTimerData.effectiveStartTime = payload.effectiveStartTimeISO;
-      }
-      delete mergedTimerData.pausedAt;
-    }
-    if (payload.action === "pause") {
-      delete mergedTimerData.effectiveStartTime;
-    }
-
-    const { error: updateError } = await supabase
-      .from("active_timers")
-      .update({ timer_data: mergedTimerData })
-      .eq("baby_id", payload.babyId)
-      .eq("activity_type", payload.activityType);
-
-    if (updateError) {
-      console.error("Failed to update timer_data:", updateError);
-      return new Response(
-        JSON.stringify({ error: "Failed to update timer data" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const { data: baby, error: babyError } = await supabase
-      .from("babies")
-      .select("household_id")
-      .eq("id", payload.babyId)
-      .single();
-
-    if (babyError || !baby) {
-      console.error("Failed to fetch baby:", babyError);
-      return new Response(
-        JSON.stringify({ error: "Baby not found" }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const { data: householdUsers } = await supabase
-      .from("users")
-      .select("id")
-      .eq("household_id", baby.household_id);
-
-    const userIds = (householdUsers || []).map((u) => u.id);
-
-    const jwt = await createApnsJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
-
-    let widgetPushCount = 0;
-    const tokensToRemove: string[] = [];
-
-    if (userIds.length > 0) {
-      const { data: tokens } = await supabase
-        .from("widget_push_tokens")
-        .select("device_token, user_id, is_sandbox")
-        .in("user_id", userIds);
-
-      if (tokens && tokens.length > 0) {
-        const widgetTopic = "com.sofibaby.app.push-type.widgets";
-
-        for (const { device_token, is_sandbox } of tokens) {
-          const result = await sendWidgetPush(device_token, jwt, widgetTopic, is_sandbox ?? false);
-          if (result.success) {
-            widgetPushCount++;
-          } else if (result.status === 410 || result.status === 400) {
-            tokensToRemove.push(device_token);
-          }
-        }
-      }
-    }
-
-    if (tokensToRemove.length > 0) {
-      await supabase
-        .from("widget_push_tokens")
-        .delete()
-        .in("device_token", tokensToRemove);
-      console.log(`Removed ${tokensToRemove.length} invalid widget push tokens`);
-    }
-
-    console.log(`toggle-timer-pause: widget pushes sent=${widgetPushCount} tokensRemoved=${tokensToRemove.length}`);
-
-    let liveActivityUpdated = false;
-    if (payload.liveActivityPushToken) {
-      console.log(`Live Activity content-state: isPaused=${payload.action === "pause"} elapsed=${payload.elapsedSeconds ?? 0} effectiveStart=${payload.effectiveStartTimeISO ?? "null"}`);
-      const laTopic = "com.sofibaby.app.push-type.liveactivity";
-      const result = await sendLiveActivityUpdate(
-        payload.liveActivityPushToken,
-        jwt,
-        laTopic,
-        payload.action === "pause",
-        payload.elapsedSeconds ?? 0,
-        payload.context ?? null,
-        payload.effectiveStartTimeISO ?? null,
-        payload.isSandbox ?? false
-      );
-      liveActivityUpdated = result.success;
-      if (!result.success) {
-        console.error(`Live activity update failed: status=${result.status}`);
-      } else {
-        console.log(`toggle-timer-pause: Live Activity APNs push succeeded`);
-      }
-    } else {
-      console.log(`toggle-timer-pause: NO liveActivityPushToken — Live Activity update SKIPPED`);
-    }
-
-    console.log(
-      `Toggle pause: action=${payload.action} type=${payload.activityType} widgets=${widgetPushCount} liveActivity=${liveActivityUpdated}`
-    );
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        widgetPushCount,
-        liveActivityUpdated,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
-  } catch (error) {
-    console.error("Unexpected error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+  if (payload.action === "resume" && payload.effectiveStartTimeISO) {
+    timerData.effectiveStartTime = payload.effectiveStartTimeISO;
   }
-});
+
+  const { error } = await supabase.rpc("toggle_timer_pause", {
+    p_baby_id: payload.babyId,
+    p_activity_type: payload.activityType,
+    p_user_id: caller.id,
+    p_timer_data: timerData,
+  });
+
+  if (!error) return;
+  if (error.code === "42501") {
+    throw new ToggleTimerMutationError(403, "Timer control denied");
+  }
+  if (error.code === "P0002") {
+    throw new ToggleTimerMutationError(404, "Active timer not found");
+  }
+  if (error.code === "22023") {
+    throw new ToggleTimerMutationError(400, "Invalid timer state");
+  }
+  throw new ToggleTimerMutationError(500, "Failed to update timer");
+}
+
+async function sendNotifications(
+  payload: ToggleTimerRequest
+): Promise<{ widgetPushCount: number; liveActivityUpdated: boolean }> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Missing notification Supabase configuration");
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const { data: baby, error: babyError } = await supabase
+    .from("babies")
+    .select("household_id")
+    .eq("id", payload.babyId)
+    .single();
+  if (babyError || !baby) {
+    throw new Error("Authorized timer baby was not found");
+  }
+
+  const { data: householdUsers, error: householdUsersError } = await supabase
+    .from("users")
+    .select("id")
+    .eq("household_id", baby.household_id);
+  if (householdUsersError) {
+    throw new Error("Timer household users could not be loaded");
+  }
+
+  const userIds = (householdUsers || []).map((user) => user.id);
+  const { data: tokens, error: tokenError } = userIds.length > 0
+    ? await supabase
+      .from("widget_push_tokens")
+      .select("device_token, is_sandbox")
+      .in("user_id", userIds)
+    : { data: [], error: null };
+  if (tokenError) {
+    throw new Error("Widget notification tokens could not be loaded");
+  }
+
+  const widgetTokens = tokens || [];
+  if (widgetTokens.length === 0 && !payload.liveActivityPushToken) {
+    return { widgetPushCount: 0, liveActivityUpdated: false };
+  }
+
+  const apnsAuthKey = Deno.env.get("APNS_AUTH_KEY");
+  const apnsKeyId = Deno.env.get("APNS_KEY_ID");
+  const apnsTeamId = Deno.env.get("APNS_TEAM_ID");
+  if (!apnsAuthKey || !apnsKeyId || !apnsTeamId) {
+    throw new Error("Missing APNs notification configuration");
+  }
+
+  const jwt = await createApnsJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
+  let widgetPushCount = 0;
+  const tokensToRemove: string[] = [];
+  const widgetTopic = "com.sofibaby.app.push-type.widgets";
+
+  for (const { device_token, is_sandbox } of widgetTokens) {
+    const result = await sendWidgetPush(
+      device_token,
+      jwt,
+      widgetTopic,
+      is_sandbox ?? false
+    );
+    if (result.success) {
+      widgetPushCount++;
+    } else if (result.status === 410 || result.status === 400) {
+      tokensToRemove.push(device_token);
+    }
+  }
+
+  if (tokensToRemove.length > 0) {
+    await supabase
+      .from("widget_push_tokens")
+      .delete()
+      .in("device_token", tokensToRemove);
+  }
+
+  let liveActivityUpdated = false;
+  if (payload.liveActivityPushToken) {
+    const result = await sendLiveActivityUpdate(
+      payload.liveActivityPushToken,
+      jwt,
+      "com.sofibaby.app.push-type.liveactivity",
+      payload.action === "pause",
+      payload.elapsedSeconds ?? 0,
+      payload.context ?? null,
+      payload.effectiveStartTimeISO ?? null,
+      payload.isSandbox ?? false
+    );
+    liveActivityUpdated = result.success;
+  }
+
+  console.log(
+    `toggle-timer-pause notifications: widgets=${widgetPushCount} removed=${tokensToRemove.length} liveActivity=${liveActivityUpdated}`
+  );
+  return { widgetPushCount, liveActivityUpdated };
+}
+
+serve(createToggleTimerPauseHandler({
+  authenticate,
+  mutateTimer,
+  sendNotifications,
+  corsHeaders,
+}));

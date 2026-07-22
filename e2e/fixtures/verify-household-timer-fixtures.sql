@@ -17,8 +17,36 @@ BEGIN
     'authenticated',
     'public.acquire_timer_lock(uuid, character varying, uuid, jsonb, timestamp with time zone)',
     'EXECUTE'
+  ) OR NOT has_function_privilege(
+    'authenticated',
+    'public.release_timer_lock(uuid, character varying, uuid)',
+    'EXECUTE'
+  ) OR NOT has_function_privilege(
+    'authenticated',
+    'public.toggle_timer_pause(uuid, text, uuid, jsonb)',
+    'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'authenticated role is missing local timer RPC grants';
+  END IF;
+
+  IF has_function_privilege(
+    'anon',
+    'public.acquire_timer_lock(uuid, character varying, uuid, jsonb, timestamp with time zone)',
+    'EXECUTE'
+  ) OR has_function_privilege(
+    'anon',
+    'public.release_timer_lock(uuid, character varying, uuid)',
+    'EXECUTE'
+  ) OR has_function_privilege(
+    'anon',
+    'public.toggle_timer_pause(uuid, text, uuid, jsonb)',
+    'EXECUTE'
+  ) OR has_function_privilege(
+    'authenticated',
+    'public.cleanup_stale_timer_locks()',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'local timer RPC grants exceed the caller permission contract';
   END IF;
 
   IF (
