@@ -110,7 +110,7 @@ Durable decisions that apply across all tasks:
 - [x] 0019 · Preserve offline-started timers (after 0017, 0018) → tasks/done/0019-preserve-offline-started-timers.md
 - [x] 0020 · Queue multiple external timer commands (after 0014, 0017) → tasks/done/0020-queue-multiple-external-timer-commands.md
 - [x] 0021 · Serialize activity pulls and local mutations (after 0017) → tasks/done/0021-serialize-activity-pulls-and-local-mutations.md
-- [ ] 0022 · Run complete non-device checks in pull-request CI (after 0017) → tasks/0022-run-complete-pr-ci.md
+- [~] 0022 · Run complete non-device checks in pull-request CI (after 0017) → tasks/0022-run-complete-pr-ci.md
 - [ ] 0023 · Make the iOS E2E workflow reliable (after 0017, 0022) → tasks/0023-make-ios-e2e-workflow-reliable.md
 - [ ] 0024 · Correct release versioning and traceability (after 0022, 0023) → tasks/0024-correct-release-versioning-and-traceability.md
 - [ ] 0025 · Remediate dependency vulnerabilities (after 0022) → tasks/0025-remediate-dependency-vulnerabilities.md

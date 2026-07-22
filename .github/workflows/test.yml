@@ -1,4 +1,4 @@
-name: Test
+name: Non-device checks
 
 on:
   pull_request:
@@ -8,25 +8,168 @@ on:
   workflow_call:
 
 jobs:
-  lint-and-typecheck:
+  quality:
+    name: Lint and typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "20.19.4"
+          cache: npm
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
 
   unit-tests:
+    name: Unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "20.19.4"
+          cache: npm
       - run: npm ci
-      - run: npm run test:unit
+      - name: Run unit tests
+        shell: bash
+        run: |
+          mkdir -p test-results
+          set -o pipefail
+          npm run test:unit 2>&1 | tee test-results/unit-tests.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-tests-output
+          path: test-results/
+          if-no-files-found: error
+          retention-days: 7
+
+  component-tests:
+    name: Component tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+          cache: npm
+      - run: npm ci
+      - name: Run component tests
+        shell: bash
+        run: |
+          mkdir -p test-results
+          set -o pipefail
+          npm run test:component -- --runInBand 2>&1 | tee test-results/component-tests.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-tests-output
+          path: test-results/
+          if-no-files-found: error
+          retention-days: 7
+
+  security-tests:
+    name: Security tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+          cache: npm
+      - run: npm ci
+      - name: Run security tests
+        shell: bash
+        run: |
+          mkdir -p test-results
+          set -o pipefail
+          npm run test:security 2>&1 | tee test-results/security-tests.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-tests-output
+          path: test-results/
+          if-no-files-found: error
+          retention-days: 7
+
+  sync-tests:
+    name: Sync tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+          cache: npm
+      - run: npm ci
+      - name: Run sync tests
+        shell: bash
+        run: |
+          mkdir -p test-results
+          set -o pipefail
+          npm run test:sync 2>&1 | tee test-results/sync-tests.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-tests-output
+          path: test-results/
+          if-no-files-found: error
+          retention-days: 7
+
+  sql-tests:
+    name: SQL tests
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+          cache: npm
+      - run: npm ci
+      - name: Provision local Supabase
+        shell: bash
+        run: |
+          mkdir -p test-results
+          set -o pipefail
+          npm run test:sql:setup 2>&1 | tee test-results/sql-setup.log
+      - name: Run SQL tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:sql 2>&1 | tee test-results/sql-tests.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-tests-output
+          path: test-results/
+          if-no-files-found: error
+          retention-days: 7
+      - if: always()
+        run: npx --no-install supabase stop --no-backup
+
+  required:
+    name: Non-device checks required
+    if: always()
+    needs:
+      [
+        quality,
+        unit-tests,
+        component-tests,
+        security-tests,
+        sync-tests,
+        sql-tests,
+      ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: >-
+          node scripts/require-successful-jobs.mjs
+          quality=${{ needs.quality.result }}
+          unit-tests=${{ needs.unit-tests.result }}
+          component-tests=${{ needs.component-tests.result }}
+          security-tests=${{ needs.security-tests.result }}
+          sync-tests=${{ needs.sync-tests.result }}
+          sql-tests=${{ needs.sql-tests.result }}
