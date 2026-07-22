@@ -38,7 +38,7 @@ Free. No ads. No subscriptions.
 
 ### Offline-First Sync Engine
 
-All writes go to local storage first and are immediately reflected in the UI. A persistent sync queue handles server delivery with retry logic and exponential backoff. On foreground resume, the queue flushes before pulling server state to avoid overwriting optimistic updates.
+All writes go to local storage first and are immediately reflected in the UI. A persistent sync queue handles server delivery with retry logic and exponential backoff. On foreground resume, the queue flushes before pulling server state to avoid overwriting optimistic updates. Activity pulls fetch remote rows before entering a per-user, per-baby storage lock. Inside the lock, they re-read pending operations and local entries so a refresh cannot replace a queued create or update or resurrect a queued delete.
 
 ```
 User action → Local storage → UI update (immediate)
