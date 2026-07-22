@@ -8,13 +8,11 @@ import { useTummyTime } from "@/contexts/tummyTime-context";
 import { useAuth } from "@/contexts/auth-context";
 import { setWatchMessageHandler } from "@/services/watch-service";
 import type { WatchReplyHandler } from "@/services/watch-service";
+import { appendExternalTimerCommand } from "@/services/external-timer-command-service";
+import type { TimerIdentity } from "@/services/timer-completion-service";
 import type { BreastSide, DiaperType, SleepType, BottleContentType, StoolColor } from "@/constants/activities";
 import { determineSleepType } from "@/validators/sleep";
-import {
-  readPendingWidgetStop,
-  clearPendingWidgetStop,
-  clearPendingWidgetPauseToggle,
-} from "@/services/widget-data-service";
+import { clearPendingWidgetPauseToggle } from "@/services/widget-data-service";
 
 const REQUEST_DEDUP_TTL_MS = 30_000;
 const PROVIDER_BINDING_TIMEOUT_MS = 5_000;
@@ -76,15 +74,27 @@ function parseRequestedTime(timeString: unknown): Date | undefined {
   return hoursDiff >= 0 && hoursDiff <= 24 ? parsed : undefined;
 }
 
+function parseRequestedIdentity(
+  message: Record<string, unknown>
+): TimerIdentity | undefined {
+  return typeof message.timerInstanceId === "string" &&
+    typeof message.activityId === "string"
+    ? {
+        timerInstanceId: message.timerInstanceId,
+        activityId: message.activityId,
+      }
+    : undefined;
+}
+
 export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) {
   const { onRequestSync, onSelectBabyRequest } = options ?? {};
   const { user } = useAuth();
   const { selectedBaby, getBabyById, selectBaby } = useBaby();
-  const { babyBinding: feedingBinding, startBreastfeeding, stopBreastfeeding, changeSide, addFeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
-  const { babyBinding: sleepBinding, startSleep, stopSleep, pauseSleep, resumeSleep } = useSleep();
+  const { babyBinding: feedingBinding, startBreastfeeding, changeSide, addFeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
+  const { babyBinding: sleepBinding, startSleep, pauseSleep, resumeSleep } = useSleep();
   const { babyBinding: diaperBinding, addDiaper } = useDiaper();
-  const { babyBinding: pumpingBinding, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping } = usePumping();
-  const { babyBinding: tummyTimeBinding, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
+  const { babyBinding: pumpingBinding, startPumping, changePumpingSide, pausePumping, resumePumping } = usePumping();
+  const { babyBinding: tummyTimeBinding, startTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
 
   const processedRequestsRef = useRef<Map<string, ProcessedRequest>>(new Map());
   const messageQueueRef = useRef<QueuedWatchMessage[]>([]);
@@ -126,8 +136,8 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       const activityType = message.activityType as string | undefined;
       const context = message.context as string | undefined;
       const startTime = parseRequestedTime(message.requestedStartTime);
-      const endTime = parseRequestedTime(message.requestedEndTime);
       const logTime = parseRequestedTime(message.requestedLogTime);
+      const requestedIdentity = parseRequestedIdentity(message);
 
       try {
         switch (action) {
@@ -142,20 +152,32 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
             let startResult: { success: boolean; lockedByName?: string } | undefined;
             switch (activityType) {
               case "feeding":
-                startResult = await startBreastfeeding((context as BreastSide) || "left", startTime);
+                startResult = await startBreastfeeding(
+                  (context as BreastSide) || "left",
+                  startTime,
+                  requestedIdentity
+                );
                 break;
               case "sleep": {
                 const sleepType = context === "auto" || !context
                   ? determineSleepType(startTime ?? new Date())
                   : context as SleepType;
-                startResult = await startSleep(sleepType, startTime);
+                startResult = await startSleep(
+                  sleepType,
+                  startTime,
+                  requestedIdentity
+                );
                 break;
               }
               case "pumping":
-                startResult = await startPumping((context as BreastSide) || "left", startTime);
+                startResult = await startPumping(
+                  (context as BreastSide) || "left",
+                  startTime,
+                  requestedIdentity
+                );
                 break;
               case "tummyTime":
-                startResult = await startTummyTime(startTime);
+                startResult = await startTummyTime(startTime, requestedIdentity);
                 break;
             }
             if (startResult && !startResult.success) {
@@ -165,40 +187,76 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
                 ...(startResult.lockedByName && { lockedByName: startResult.lockedByName }),
               };
             }
-            const pendingStop = await readPendingWidgetStop();
-            if (pendingStop) {
-              const dbType = activityType === "tummyTime" ? "tummy_time" : activityType;
-              if (
-                (!pendingStop.babyId || pendingStop.babyId === targetBabyId) &&
-                (pendingStop.activityType === dbType || pendingStop.activityType === activityType)
-              ) {
-                await clearPendingWidgetStop(pendingStop);
-                await clearPendingWidgetPauseToggle();
-              }
-            }
+            await clearPendingWidgetPauseToggle();
             break;
           }
 
           case "stopTimer":
-            switch (activityType) {
-              case "feeding":
-                await stopBreastfeeding(endTime);
-                break;
-              case "sleep":
-                await stopSleep(endTime);
-                break;
-              case "pumping":
-                await stopPumping(0, endTime);
-                break;
-              case "tummyTime":
-                await stopTummyTime(endTime);
-                break;
+          case "stopPumpingWithVolume": {
+            const suppliedCommand = message.externalTimerCommand &&
+              typeof message.externalTimerCommand === "object"
+              ? message.externalTimerCommand as Record<string, unknown>
+              : undefined;
+            const suppliedActivityType = suppliedCommand?.activityType;
+            const commandActivityType = suppliedActivityType === "feeding" ||
+              suppliedActivityType === "sleep" ||
+              suppliedActivityType === "pumping" ||
+              suppliedActivityType === "tummy_time"
+              ? suppliedActivityType
+              : activityType === "tummyTime"
+                ? "tummy_time"
+                : activityType;
+            const requestedEndValue = typeof suppliedCommand?.eventAt === "string"
+              ? suppliedCommand.eventAt
+              : message.requestedEndTime;
+            const requestedEndTime = typeof requestedEndValue === "string"
+              ? new Date(requestedEndValue)
+              : new Date();
+            if (
+              !targetBabyId ||
+              !Number.isFinite(requestedEndTime.getTime()) ||
+              (commandActivityType !== "feeding" &&
+                commandActivityType !== "sleep" &&
+                commandActivityType !== "pumping" &&
+                commandActivityType !== "tummy_time") ||
+              (suppliedCommand?.babyId !== undefined &&
+                suppliedCommand.babyId !== targetBabyId)
+            ) {
+              return { success: false, error: "invalid-timer-command" };
             }
+            const timerInstanceId = typeof suppliedCommand?.timerInstanceId === "string"
+              ? suppliedCommand.timerInstanceId
+              : `legacy:${targetBabyId}:${commandActivityType}:${requestedEndTime.toISOString()}`;
+            const commandId = typeof suppliedCommand?.id === "string"
+              ? suppliedCommand.id
+              : typeof message.requestId === "string"
+                ? `watch:${message.requestId}`
+                : timerInstanceId;
+            const suppliedPayload = suppliedCommand?.payload &&
+              typeof suppliedCommand.payload === "object"
+              ? suppliedCommand.payload as Record<string, unknown>
+              : undefined;
+            const suppliedVolume = suppliedPayload?.volumeMl;
+            const volumeMl = typeof suppliedVolume === "number"
+              ? suppliedVolume
+              : action === "stopPumpingWithVolume" &&
+                  typeof message.volumeMl === "number"
+                ? message.volumeMl
+                : undefined;
+            await appendExternalTimerCommand({
+              id: commandId,
+              action: "stop",
+              activityType: commandActivityType,
+              babyId: targetBabyId,
+              timerInstanceId,
+              eventAt: requestedEndTime.toISOString(),
+              source: "watch",
+              legacy: suppliedCommand?.legacy === true ||
+                typeof suppliedCommand?.timerInstanceId !== "string" || undefined,
+              ...(volumeMl === undefined ? {} : { payload: { volumeMl } }),
+            });
             break;
-
-          case "stopPumpingWithVolume":
-            await stopPumping(typeof message.volumeMl === "number" ? message.volumeMl : 0, endTime);
-            break;
+          }
 
           case "logDiaper":
             if (targetBabyId) {
@@ -282,23 +340,19 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
     [
       onRequestSync,
       startBreastfeeding,
-      stopBreastfeeding,
       pauseBreastfeeding,
       resumeBreastfeeding,
       changeSide,
       addFeeding,
       startSleep,
-      stopSleep,
       pauseSleep,
       resumeSleep,
       addDiaper,
       startPumping,
-      stopPumping,
       pausePumping,
       resumePumping,
       changePumpingSide,
       startTummyTime,
-      stopTummyTime,
       pauseTummyTime,
       resumeTummyTime,
     ]

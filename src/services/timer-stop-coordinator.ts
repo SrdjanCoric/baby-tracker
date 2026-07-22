@@ -1,4 +1,7 @@
-import { readPendingWidgetStop } from "./widget-data-service";
+import {
+  readExternalTimerCommands,
+  type ExternalTimerCommand,
+} from "./external-timer-command-service";
 
 export type TimerStopActivityType =
   | "feeding"
@@ -7,34 +10,68 @@ export type TimerStopActivityType =
   | "tummy_time";
 
 export interface PendingTimerStop {
+  id: string;
   activityType: string;
   stoppedAt: string;
-  babyId?: string;
+  babyId: string;
+  timerInstanceId: string;
+  legacy?: boolean;
 }
 
 export interface RestoredTimer {
   isRunning: boolean;
   startTime: Date;
+  timerInstanceId?: string;
 }
 
 export type PendingTimerStopResult = "waiting" | "consumed" | "stale";
 
-export async function readPendingTimerStop(): Promise<PendingTimerStop | null> {
-  return readPendingWidgetStop();
+function toPendingTimerStop(
+  command: ExternalTimerCommand
+): PendingTimerStop {
+  return {
+    id: command.id,
+    activityType: command.activityType,
+    stoppedAt: command.eventAt,
+    babyId: command.babyId,
+    timerInstanceId: command.timerInstanceId,
+    legacy: command.legacy,
+  };
+}
+
+export async function readPendingTimerStop(
+  activityType?: TimerStopActivityType,
+  babyId?: string
+): Promise<PendingTimerStop | null> {
+  const commands = await readExternalTimerCommands(babyId);
+  const command = commands.find(
+    (candidate) =>
+      (!activityType || candidate.activityType === activityType) &&
+      (!babyId || candidate.babyId === babyId)
+  );
+  return command ? toPendingTimerStop(command) : null;
 }
 
 export function isPendingStopForTimer(
   pending: PendingTimerStop | null,
   activityType: TimerStopActivityType,
   timerStartTime: Date,
-  babyId?: string
+  babyId?: string,
+  timerInstanceId?: string
 ): boolean {
   if (
     !pending ||
     pending.activityType !== activityType ||
-    (pending.babyId !== undefined && pending.babyId !== babyId)
+    pending.babyId !== babyId
   ) {
     return false;
+  }
+
+  if (
+    !pending.legacy ||
+    !pending.timerInstanceId.startsWith("legacy:")
+  ) {
+    return pending.timerInstanceId === timerInstanceId;
   }
 
   const stoppedAtMs = new Date(pending.stoppedAt).getTime();
@@ -60,14 +97,19 @@ export async function processPendingTimerStop(
   stop: (endTime: Date) => Promise<unknown>,
   babyId?: string
 ): Promise<PendingTimerStopResult> {
-  if (pending.babyId !== undefined && pending.babyId !== babyId)
-    return "waiting";
+  if (pending.babyId !== babyId) return "waiting";
   if (!timer?.isRunning) return "waiting";
 
   const stoppedAt = new Date(pending.stoppedAt);
   if (
     !Number.isFinite(stoppedAt.getTime()) ||
     timer.startTime.getTime() > stoppedAt.getTime()
+  ) {
+    return "stale";
+  }
+  if (
+    (!pending.legacy || !pending.timerInstanceId.startsWith("legacy:")) &&
+    pending.timerInstanceId !== timer.timerInstanceId
   ) {
     return "stale";
   }

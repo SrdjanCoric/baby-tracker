@@ -83,6 +83,8 @@ struct WatchActivityData: Codable {
 struct WatchActiveTimer: Codable {
     var type: String
     var startTime: String
+    var timerInstanceId: String?
+    var activityId: String?
     var context: String?
     var isRemote: Bool?
     var isPaused: Bool?
@@ -577,11 +579,15 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         let startTime = Date()
         let startTimeString = ISO8601DateFormatter().string(from: startTime)
+        let timerInstanceId = UUID().uuidString
+        let activityId = UUID().uuidString
 
         var message: [String: Any] = [
             "action": "startTimer",
             "activityType": activityType,
-            "requestedStartTime": startTimeString
+            "requestedStartTime": startTimeString,
+            "timerInstanceId": timerInstanceId,
+            "activityId": activityId
         ]
         if let babyId = currentBabyId {
             message["babyId"] = babyId
@@ -593,7 +599,13 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         sendAction(message)
 
         if !(session?.isReachable ?? false) {
-            supabaseStartTimer(activityType: activityType, startTime: startTimeString, context: context)
+            supabaseStartTimer(
+                activityType: activityType,
+                startTime: startTimeString,
+                context: context,
+                timerInstanceId: timerInstanceId,
+                activityId: activityId
+            )
         }
 
         startLiveActivityViaEdgeFunction(activityType: activityType, startTimeUnix: Int(startTime.timeIntervalSince1970), context: context)
@@ -602,6 +614,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         let localTimer = WatchActiveTimer(
             type: activityType,
             startTime: startTimeString,
+            timerInstanceId: timerInstanceId,
+            activityId: activityId,
             context: context,
             startedBy: supabaseUserId
         )
@@ -627,15 +641,30 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         let endTime = Date()
         let endTimeString = ISO8601DateFormatter().string(from: endTime)
+        guard let babyId = currentBabyId,
+              let timer = combinedActiveTimers.first(where: { $0.type == activityType }) else {
+            return
+        }
+        let timerInstanceId = timer.timerInstanceId ?? "legacy:\(babyId):\(activityType):\(timer.startTime)"
 
-        var message: [String: Any] = [
+        let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
+        let externalTimerCommand: [String: Any] = [
+            "id": UUID().uuidString,
+            "action": "stop",
+            "activityType": dbType,
+            "babyId": babyId,
+            "timerInstanceId": timerInstanceId,
+            "eventAt": endTimeString,
+            "source": "watch",
+            "legacy": timer.timerInstanceId == nil
+        ]
+        let message: [String: Any] = [
             "action": "stopTimer",
             "activityType": activityType,
-            "requestedEndTime": endTimeString
+            "requestedEndTime": endTimeString,
+            "babyId": babyId,
+            "externalTimerCommand": externalTimerCommand
         ]
-        if let babyId = currentBabyId {
-            message["babyId"] = babyId
-        }
         print("[WatchConnector] stopTimer: sending action with requestedEndTime: \(endTimeString)")
         sendAction(message)
 
@@ -661,16 +690,31 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         let endTime = Date()
         let endTimeString = ISO8601DateFormatter().string(from: endTime)
+        guard let babyId = currentBabyId,
+              let timer = combinedActiveTimers.first(where: { $0.type == "pumping" }) else {
+            return
+        }
+        let timerInstanceId = timer.timerInstanceId ?? "legacy:\(babyId):pumping:\(timer.startTime)"
 
-        var message: [String: Any] = [
+        let externalTimerCommand: [String: Any] = [
+            "id": UUID().uuidString,
+            "action": "stop",
+            "activityType": "pumping",
+            "babyId": babyId,
+            "timerInstanceId": timerInstanceId,
+            "eventAt": endTimeString,
+            "source": "watch",
+            "legacy": timer.timerInstanceId == nil,
+            "payload": ["volumeMl": volumeMl]
+        ]
+        let message: [String: Any] = [
             "action": "stopPumpingWithVolume",
             "activityType": "pumping",
             "volumeMl": volumeMl,
-            "requestedEndTime": endTimeString
+            "requestedEndTime": endTimeString,
+            "babyId": babyId,
+            "externalTimerCommand": externalTimerCommand
         ]
-        if let babyId = currentBabyId {
-            message["babyId"] = babyId
-        }
         sendAction(message)
 
         if !(session?.isReachable ?? false) {
@@ -1043,6 +1087,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 let isPaused: Bool?
                 let accumulatedSeconds: Int?
                 let effectiveStartTime: String?
+                let timerInstanceId: String?
+                let activityId: String?
             }
         }
 
@@ -1071,6 +1117,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             return WatchActiveTimer(
                 type: watchType,
                 startTime: startTime,
+                timerInstanceId: timer.timer_data?.timerInstanceId,
+                activityId: timer.timer_data?.activityId,
                 context: context,
                 isRemote: isRemote,
                 isPaused: timer.timer_data?.isPaused,
@@ -1082,7 +1130,13 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     // MARK: - Supabase Write Fallbacks
 
-    private func supabaseStartTimer(activityType: String, startTime: String, context: String?) {
+    private func supabaseStartTimer(
+        activityType: String,
+        startTime: String,
+        context: String?,
+        timerInstanceId: String,
+        activityId: String
+    ) {
         guard hasAuthCredentials, let supabaseUrl, let supabaseAnonKey,
               let supabaseAccessToken, let supabaseUserId,
               let babyId = currentBabyId else { return }
@@ -1091,7 +1145,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         let urlString = "\(supabaseUrl)/rest/v1/rpc/acquire_timer_lock"
         guard let url = URL(string: urlString) else { return }
 
-        var timerData: [String: Any] = [:]
+        var timerData: [String: Any] = [
+            "timerInstanceId": timerInstanceId,
+            "activityId": activityId
+        ]
         if let context {
             if dbType == "feeding" || dbType == "pumping" {
                 timerData["side"] = context

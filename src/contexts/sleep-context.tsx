@@ -299,7 +299,7 @@ export interface TimerLockResult {
 interface SleepContextValue extends SleepState {
   babyBinding: BabyProviderBinding;
   isStopping: boolean;
-  startSleep: (sleepType: SleepType, customStartTime?: Date) => Promise<TimerLockResult>;
+  startSleep: (sleepType: SleepType, customStartTime?: Date, requestedIdentity?: TimerIdentity) => Promise<TimerLockResult>;
   stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
   pauseSleep: (requestedPauseTime?: Date) => Promise<void>;
@@ -605,10 +605,18 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       }
 
       const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
-      const pendingStop = activeTimer ? await readPendingTimerStop() : null;
+      const pendingStop = activeTimer
+        ? await readPendingTimerStop("sleep", selectedBaby.id)
+        : null;
       if (!isCurrentBinding()) return;
       const hasPendingStop = activeTimer
-        ? isPendingStopForTimer(pendingStop, "sleep", new Date(activeTimer.startedAt), selectedBaby.id)
+        ? isPendingStopForTimer(
+            pendingStop,
+            "sleep",
+            new Date(activeTimer.startedAt),
+            selectedBaby.id,
+            activeTimer.timerInstanceId
+          )
         : false;
 
       if (activeTimer) {
@@ -1026,11 +1034,11 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     };
   }, [state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, state.activeTimer, runModelComputation]);
 
-  const startSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
+  const startSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date, requestedIdentity?: TimerIdentity): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };
 
     const startTime = customStartTime ?? new Date();
-    const identity = createTimerIdentity();
+    const identity = requestedIdentity ?? createTimerIdentity();
     let lockState: TimerLockReconciliationState = "offline";
     if (user?.id) {
       try {

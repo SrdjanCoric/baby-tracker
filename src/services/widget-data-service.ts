@@ -56,6 +56,7 @@ export interface WidgetActivityData {
 export interface ActiveTimerData {
   type: "feeding" | "pumping" | "sleep" | "tummyTime";
   startTime: string;
+  timerInstanceId?: string;
   context?: string;
   isRemote?: boolean;
   isPaused?: boolean;
@@ -452,26 +453,6 @@ export async function readPushToStartToken(): Promise<string | null> {
   return null;
 }
 
-export interface PendingWidgetStop {
-  activityType: string;
-  stoppedAt: string;
-  babyId?: string;
-}
-
-export async function readPendingWidgetStop(): Promise<PendingWidgetStop | null> {
-  if (Platform.OS !== "ios") return null;
-  try {
-    const extensionStorage = await loadExtensionStorage();
-    if (!extensionStorage) return null;
-    const raw = await extensionStorage.get("pendingWidgetStop", APP_GROUP);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-
 export async function readPendingWidgetPauseToggle(): Promise<{
   activityType: string;
   action: "pause" | "resume";
@@ -500,31 +481,6 @@ export async function clearPendingWidgetPauseToggle(): Promise<void> {
       await extensionStorage.set("pendingWidgetPauseToggle", "", APP_GROUP);
     }
   } catch { /* best-effort cleanup */ }
-}
-
-export async function clearPendingWidgetStop(expected?: PendingWidgetStop): Promise<void> {
-  if (Platform.OS !== "ios") return;
-  try {
-    const extensionStorage = await loadExtensionStorage();
-    if (!extensionStorage) return;
-
-    if (expected) {
-      const raw = await extensionStorage.get("pendingWidgetStop", APP_GROUP);
-      if (!raw) return;
-      const current = JSON.parse(raw) as PendingWidgetStop;
-      if (
-        current.activityType !== expected.activityType ||
-        current.stoppedAt !== expected.stoppedAt ||
-        current.babyId !== expected.babyId
-      ) {
-        return;
-      }
-    }
-
-    await extensionStorage.set("pendingWidgetStop", "", APP_GROUP);
-  } catch {
-    // Best-effort cleanup. A failed clear leaves the idempotent command for the next pass.
-  }
 }
 
 export async function clearWidgetData(): Promise<void> {

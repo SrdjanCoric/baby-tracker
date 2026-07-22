@@ -209,7 +209,7 @@ export interface TimerLockResult {
 interface TummyTimeContextValue extends TummyTimeState {
   babyBinding: BabyProviderBinding;
   isStopping: boolean;
-  startTummyTime: (requestedStartTime?: Date) => Promise<TimerLockResult>;
+  startTummyTime: (requestedStartTime?: Date, requestedIdentity?: TimerIdentity) => Promise<TimerLockResult>;
   stopTummyTime: (requestedEndTime?: Date) => Promise<StoredTummyTimeEntry | null>;
   pauseTummyTime: (requestedPauseTime?: Date) => Promise<void>;
   resumeTummyTime: (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => Promise<void>;
@@ -391,10 +391,18 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
 
       const activeTimer = await TummyTimeStorageService.getActiveTimer(selectedBaby.id);
-      const pendingStop = activeTimer ? await readPendingTimerStop() : null;
+      const pendingStop = activeTimer
+        ? await readPendingTimerStop("tummy_time", selectedBaby.id)
+        : null;
       if (!isCurrentBinding()) return;
       const hasPendingStop = activeTimer
-        ? isPendingStopForTimer(pendingStop, "tummy_time", new Date(activeTimer.startedAt), selectedBaby.id)
+        ? isPendingStopForTimer(
+            pendingStop,
+            "tummy_time",
+            new Date(activeTimer.startedAt),
+            selectedBaby.id,
+            activeTimer.timerInstanceId
+          )
         : false;
 
       if (activeTimer) {
@@ -648,11 +656,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     loadTummyTimes();
   }, [loadTummyTimes, foregroundRefreshKey]);
 
-  const startTummyTime = useCallback(async (requestedStartTime?: Date): Promise<{ success: boolean; lockedByName?: string }> => {
+  const startTummyTime = useCallback(async (requestedStartTime?: Date, requestedIdentity?: TimerIdentity): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };
 
     const startTime = requestedStartTime ?? new Date();
-    const identity = createTimerIdentity();
+    const identity = requestedIdentity ?? createTimerIdentity();
     let lockState: TimerLockReconciliationState = "offline";
     if (user?.id) {
       try {

@@ -14,9 +14,7 @@ import {
   updateWidgetData,
   writeAuthToAppGroup,
   writeSupabaseConfigToAppGroup,
-  readPendingWidgetStop,
   readPendingWidgetPauseToggle,
-  clearPendingWidgetStop,
   readLiveActivityPushToken,
   readPushToStartToken,
   type WidgetData,
@@ -25,6 +23,10 @@ import {
   type WatchAuthContext,
 } from "@/services/widget-data-service";
 import { syncWidgetPushToken } from "@/services/widget-push-token-service";
+import {
+  acknowledgeExternalTimerCommand,
+  readExternalTimerCommands,
+} from "@/services/external-timer-command-service";
 import { registerPushToStart } from "@/services/live-activity-service";
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import type { TimerActivityType } from "@/services/active-timer-service";
@@ -170,6 +172,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       const feedingEntry: WidgetData["activeTimers"][number] = {
         type: "feeding",
         startTime: effectiveStart.toISOString(),
+        timerInstanceId: feedingTimer.timerInstanceId,
         context: feedingTimer.side,
         isPaused: feedingTimer.isPaused || undefined,
       };
@@ -188,6 +191,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       const sleepEntry: WidgetData["activeTimers"][number] = {
         type: "sleep",
         startTime: effectiveStart.toISOString(),
+        timerInstanceId: sleepTimer.timerInstanceId,
         context: sleepTimer.sleepType,
         isPaused: sleepTimer.isPaused || undefined,
       };
@@ -206,6 +210,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       const pumpingEntry: WidgetData["activeTimers"][number] = {
         type: "pumping",
         startTime: effectiveStart.toISOString(),
+        timerInstanceId: pumpingTimer.timerInstanceId,
         context: pumpingTimer.side,
         isPaused: pumpingTimer.isPaused || undefined,
       };
@@ -224,6 +229,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       const tummyEntry: WidgetData["activeTimers"][number] = {
         type: "tummyTime",
         startTime: effectiveStart.toISOString(),
+        timerInstanceId: tummyTimeTimer.timerInstanceId,
         isPaused: tummyTimeTimer.isPaused || undefined,
       };
       if (tummyTimeTimer.isPaused) {
@@ -244,6 +250,9 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         activeTimers.push({
           type: widgetType,
           startTime: lock.startedAt,
+          timerInstanceId: typeof lock.timerData?.timerInstanceId === "string"
+            ? lock.timerData.timerInstanceId
+            : undefined,
           context: lock.startedByName,
           isRemote: true,
           isPaused: lock.timerData?.isPaused === true || undefined,
@@ -289,22 +298,34 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     const widgetData = buildWidgetData();
     if (!widgetData) return;
 
-    const pendingStop = await readPendingWidgetStop();
-    if (pendingStop && (!pendingStop.babyId || pendingStop.babyId === widgetData.babyId)) {
+    const pendingStops = await readExternalTimerCommands(widgetData.babyId);
+    for (const pendingStop of pendingStops) {
+      if (pendingStop.babyId !== widgetData.babyId) continue;
       const stopType = pendingStop.activityType === "tummy_time"
         ? "tummyTime" : pendingStop.activityType;
-      const stoppedAtMs = new Date(pendingStop.stoppedAt).getTime();
-      const hasNewerTimer = widgetData.activeTimers.some(
-        t => t.type === stopType && new Date(t.startTime).getTime() > stoppedAtMs
+      const matchingTimers = widgetData.activeTimers.filter(
+        (timer) => timer.type === stopType
       );
-      if (hasNewerTimer) {
-        await clearPendingWidgetStop(pendingStop);
-      } else {
-        widgetData.activeTimers = widgetData.activeTimers.filter(
-          t => t.type !== stopType || new Date(t.startTime).getTime() > stoppedAtMs
-        );
-        widgetData.activeTimer = widgetData.activeTimers[0] ?? null;
+      if (matchingTimers.length === 0) continue;
+      const stoppedAtMs = new Date(pendingStop.eventAt).getTime();
+      const targetsLegacyTimer = pendingStop.legacy === true &&
+        pendingStop.timerInstanceId.startsWith("legacy:");
+      const targetsCurrentTimer = matchingTimers.some((timer) =>
+        targetsLegacyTimer
+          ? new Date(timer.startTime).getTime() <= stoppedAtMs
+          : timer.timerInstanceId === pendingStop.timerInstanceId
+      );
+      if (!targetsCurrentTimer) {
+        await acknowledgeExternalTimerCommand(pendingStop);
+        continue;
       }
+      widgetData.activeTimers = widgetData.activeTimers.filter((timer) =>
+        timer.type !== stopType ||
+        (targetsLegacyTimer
+          ? new Date(timer.startTime).getTime() > stoppedAtMs
+          : timer.timerInstanceId !== pendingStop.timerInstanceId)
+      );
+      widgetData.activeTimer = widgetData.activeTimers[0] ?? null;
     }
 
     const pendingPause = await readPendingWidgetPauseToggle();
