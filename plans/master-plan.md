@@ -108,7 +108,7 @@ Durable decisions that apply across all tasks:
 - [x] 0017 · Build a maintainable two-account iOS sleep-timer smoke suite (after 0014, 0015, 0016) → tasks/done/0017-build-two-account-ios-household-timer-suite.md
 - [x] 0018 · Authorize active-timer controls (after 0017) → tasks/done/0018-authorize-active-timer-controls.md
 - [x] 0019 · Preserve offline-started timers (after 0017, 0018) → tasks/done/0019-preserve-offline-started-timers.md
-- [>] 0020 · Queue multiple external timer commands (after 0014, 0017) → tasks/0020-queue-multiple-external-timer-commands.md
+- [x] 0020 · Queue multiple external timer commands (after 0014, 0017) → tasks/done/0020-queue-multiple-external-timer-commands.md
 - [ ] 0021 · Serialize activity pulls and local mutations (after 0017) → tasks/0021-serialize-activity-pulls-and-local-mutations.md
 - [ ] 0022 · Run complete non-device checks in pull-request CI (after 0017) → tasks/0022-run-complete-pr-ci.md
 - [ ] 0023 · Make the iOS E2E workflow reliable (after 0017, 0022) → tasks/0023-make-ios-e2e-workflow-reliable.md
