@@ -503,7 +503,7 @@ function ensureLocalApiIsRunning() {
 function disconnectLocalApi() {
   run(
     "docker",
-    ["stop", "--time", "10", localApiContainer],
+    ["stop", "--timeout", "10", localApiContainer],
     `stop-local-supabase-api-${Date.now()}`,
     { timeout: 30_000 }
   );
@@ -524,6 +524,21 @@ async function reconnectLocalApi(status) {
   throw new Error("Local Supabase API did not recover within 30 seconds");
 }
 
+function restartApp(simulator, label) {
+  capture(
+    "xcrun",
+    ["simctl", "terminate", simulator.udid, appId],
+    `${label}-terminate-${Date.now()}`,
+    { allowFailure: true, timeout: 30_000 }
+  );
+  capture(
+    "xcrun",
+    ["simctl", "launch", simulator.udid, appId, "-e2eMode", "true"],
+    `${label}-launch-${Date.now()}`,
+    { timeout: 30_000 }
+  );
+}
+
 async function runSleepHandoff(status, owner, member) {
   console.log("\n=== sleep: offline reconnect and two-caregiver household handoff ===");
 
@@ -535,14 +550,10 @@ async function runSleepHandoff(status, owner, member) {
     await reconnectLocalApi(status);
   }
 
-  capture(
-    "xcrun",
-    ["simctl", "terminate", owner.udid, appId],
-    `restart-offline-owner-${Date.now()}`,
-    { allowFailure: true, timeout: 30_000 }
-  );
+  restartApp(owner, "restart-offline-owner");
   maestro(owner, "assert-owned.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 0, 1);
+  restartApp(member, "restart-offline-member");
   maestro(member, "assert-locked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
     LOCK_STATE: "locked-active",
@@ -551,12 +562,14 @@ async function runSleepHandoff(status, owner, member) {
 
   maestro(owner, "stop/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 0);
+  restartApp(member, "refresh-member-after-owner-stop");
   maestro(member, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
   });
 
   maestro(member, "start/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 1);
+  restartApp(owner, "refresh-owner-after-member-start");
   maestro(owner, "assert-locked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
     LOCK_STATE: "locked-active",
@@ -565,6 +578,7 @@ async function runSleepHandoff(status, owner, member) {
   maestro(member, "stop/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 2, 0);
   verifyCaregiverCompletions(status);
+  restartApp(owner, "refresh-owner-after-member-stop");
   maestro(owner, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
   });

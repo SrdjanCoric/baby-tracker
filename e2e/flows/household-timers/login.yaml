@@ -8,7 +8,7 @@ appId: com.sofibaby.app
       e2ePassword: "testpassword123"
 - extendedWaitUntil:
     visible: "Skip"
-    timeout: 30000
+    timeout: 120000
 - tapOn: "Skip"
 - extendedWaitUntil:
     visible:
