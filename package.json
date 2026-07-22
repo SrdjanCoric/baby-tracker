@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "A privacy-first baby tracking app for iOS and Android",
   "main": "expo-router/entry",
-  "packageManager": "npm@11.7.0",
+  "packageManager": "npm@10.8.2",
   "engines": {
     "node": ">=20.19.4"
   },

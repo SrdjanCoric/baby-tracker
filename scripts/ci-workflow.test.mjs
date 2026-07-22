@@ -39,6 +39,7 @@ test("pull requests and main run every maintained non-device check", () => {
 
   assert.ok(runs("quality", "npm run lint"));
   assert.ok(runs("quality", "npm run typecheck"));
+  assert.ok(runs("quality", "npm run test:ci"));
   assert.ok(runs("unit-tests", "npm run test:unit"));
   assert.ok(runs("component-tests", "npm run test:component -- --runInBand"));
   assert.ok(runs("security-tests", "npm run test:security"));
@@ -62,6 +63,11 @@ test("every check job uses locked dependencies and pinned tool versions", () => 
     assert.ok(runs(jobName, "npm ci"), jobName);
   }
 
+  const requiredNodeStep = workflow.jobs.required.steps.find(
+    (step) => step.uses === "actions/setup-node@v4"
+  );
+
+  assert.equal(requiredNodeStep.with["node-version"], "20.19.4");
   assert.equal(packageJson.devDependencies.supabase, "2.109.1");
   assert.equal(
     workflow.jobs["sql-tests"].env.SUPABASE_DB_URL,

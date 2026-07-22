@@ -7,6 +7,10 @@ const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8")
 );
 
+test("the declared npm version matches pinned Node 20 tooling", () => {
+  assert.equal(packageJson.packageManager, "npm@10.8.2");
+});
+
 test("the canonical check command runs every maintained non-device suite", () => {
   assert.equal(
     packageJson.scripts["check:code"],
