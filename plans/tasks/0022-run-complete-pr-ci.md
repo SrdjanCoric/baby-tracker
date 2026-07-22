@@ -52,7 +52,7 @@ Confirm SQL tests use `127.0.0.1:54322`. Do not use production or a linked Supab
 - [x] Every maintained non-device suite runs on pull requests from a clean checkout.
 - [x] A failure in any suite fails its CI job and blocks the aggregate result.
 - [x] SQL tests connect only to the CI-owned local Supabase instance.
-- [ ] The final pull request passes every new job without retries masking a flaky test.
+- [x] The final pull request passes every new job without retries masking a flaky test.
 
 ## Implementation record
 
@@ -64,4 +64,4 @@ Confirm SQL tests use `127.0.0.1:54322`. Do not use production or a linked Supab
 - Repository guidelines loaded: `00-overview`, `02-testing`, `04-developer-environment`, `05-ci-cd`, `08-recommended-canonical-commands`, and `10-definition-of-done`. Proof covers locked installation and pinned tools. It also covers root commands, clean-checkout jobs, local service provisioning, failure artifacts, and the aggregate required check.
 - Task review used `base=main` with Standards, Spec, Bug, and Security lenses. One remediation pass put the contract tests in CI and pinned Node in the aggregate job. It also aligned npm with Node 20.19.4 and completed contributor guidance. The second pass had no findings. No security risks were found or accepted.
 - `README.md` documents the pinned setup and canonical checks in its development and testing sections. It also identifies the loopback SQL database, retained artifacts, and required branch-protection check. The write audit took two passes; the first split one overloaded sentence and the second found no issues.
-- Final automated proof: clean `npm ci` followed by `npm run check` passed in 147s. The command ran every check above and applied all 58 local migrations. Test counts were 2,261 unit, 638 component, 103 focused security, 243 focused sync, and 15 CI contract tests. Every SQL assertion passed. No manual proof is required. GitHub-hosted proof remains pending until the pull request is opened.
+- Final automated proof: clean `npm ci` followed by `npm run check` passed in 147s. The command ran every check above and applied all 58 local migrations. Test counts were 2,261 unit, 638 component, 103 focused security, 243 focused sync, and 15 CI contract tests. Every SQL assertion passed. No manual proof is required. GitHub Actions run `29959367589` passed every new job on the first attempt, including the 4m36s SQL job and the aggregate required check.
