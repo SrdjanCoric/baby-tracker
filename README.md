@@ -54,7 +54,7 @@ Supabase Realtime subscriptions push changes between household members instantly
 
 ### Timer Exclusivity
 
-Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
+Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. If the lock service is unavailable, feeding, sleep, pumping, and tummy-time timers continue locally and keep their reconciliation state through restart. Reconnect attempts to acquire the missing lock. When two offline timers compete, the first successful lock acquisition wins. The other timer is saved to the timeline, and its caregiver sees what happened. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
 
 ### iOS Native Integrations
 
@@ -116,13 +116,13 @@ npm run test:sql             # PostgreSQL merge and authorization tests
 npm run test:edge:timer      # Local timer RPC and Edge authorization flow
 npm run typecheck            # TypeScript strict mode
 npm run lint                 # ESLint (warnings fail the quality gate)
-npm run e2e:household-timers       # Fast two-caregiver iOS sleep handoff
-npm run e2e:household-timers:clean # Clean local provisioning and the same handoff
+npm run e2e:household-timers       # Fast iOS offline reconnect and caregiver handoff
+npm run e2e:household-timers:clean # Clean local provisioning and the same scenario
 ```
 
 Run `test:sql:setup` before the SQL and timer Edge checks. These commands use the local Supabase stack and do not deploy migrations or functions.
 
-The fast iOS command reuses the installed E2E app and local fixtures. The clean command resets local Supabase and builds the app for two named simulators before running the handoff. It removes fixture accounts when finished. Both require Docker, Xcode, Maestro, and `psql`; clean provisioning also needs `jq` and CocoaPods. See [`e2e/README.md`](e2e/README.md) for setup and diagnostics, including the local-only safeguards.
+The fast iOS command reuses the installed E2E app and local fixtures. The scenario stops local Supabase API access while the owner starts sleep. It restores the API and restarts the app before verifying the lock and continuing the two-caregiver handoff. The clean command resets local Supabase and builds the app for two named simulators before running the same scenario. It removes fixture accounts when finished. Both require Docker, Xcode, Maestro, and `psql`; clean provisioning also needs `jq` and CocoaPods. See [`e2e/README.md`](e2e/README.md) for setup and diagnostics, including the local-only safeguards.
 
 ## License
 
