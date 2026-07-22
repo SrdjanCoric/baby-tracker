@@ -199,10 +199,21 @@ enum ActivityType: String, CaseIterable, AppEnum {
     var resumeTimerURL: URL {
         URL(string: "sofibaby://\(self.rawValue)?action=resume")!
     }
+}
 
-    var stopTimerURL: URL {
-        URL(string: "sofibaby://\(self.rawValue)?action=stop")!
+func routedStopURL(for activity: ActivityType, data: WidgetDataModel?) -> URL {
+    guard let data,
+          let timerInstanceId = data.getActiveTimer(for: activity)?.timerInstanceId else {
+        return activity.deepLinkURL
     }
+    var components = URLComponents(string: "sofibaby://\(activity.rawValue)")!
+    components.queryItems = [
+        URLQueryItem(name: "action", value: "stop"),
+        URLQueryItem(name: "babyId", value: data.babyId),
+        URLQueryItem(name: "timerInstanceId", value: timerInstanceId),
+        URLQueryItem(name: "commandId", value: "routed:\(data.babyId):\(timerInstanceId)")
+    ]
+    return components.url ?? activity.deepLinkURL
 }
 
 // MARK: - Data Models
@@ -277,6 +288,7 @@ struct WidgetActivityData: Codable {
 struct ActiveTimerData: Codable {
     var type: String
     var startTime: String
+    var timerInstanceId: String? = nil
     var context: String?
     var isRemote: Bool?
     var isPaused: Bool?
@@ -314,6 +326,67 @@ struct WidgetDataModel: Codable {
     func isTimerPaused(for type: ActivityType) -> Bool {
         return getActiveTimer(for: type)?.isPaused == true
     }
+}
+
+let externalTimerCommandQueueKey = "externalTimerCommandQueue"
+
+struct ExternalTimerCommand: Codable {
+    var id: String
+    var action: String
+    var activityType: String
+    var babyId: String
+    var timerInstanceId: String
+    var eventAt: String
+    var source: String
+    var legacy: Bool?
+    var payload: Payload?
+
+    struct Payload: Codable {
+        var volumeMl: Double?
+    }
+}
+
+struct ExternalTimerCommandQueue: Codable {
+    var version: Int = 1
+    var commands: [ExternalTimerCommand] = []
+}
+
+func readExternalTimerCommandQueue(from userDefaults: UserDefaults) -> ExternalTimerCommandQueue {
+    let decoder = JSONDecoder()
+    if let data = userDefaults.data(forKey: externalTimerCommandQueueKey),
+       let decoded = try? decoder.decode(ExternalTimerCommandQueue.self, from: data),
+       decoded.version == 1 {
+        return decoded
+    }
+    if let json = userDefaults.string(forKey: externalTimerCommandQueueKey),
+       let data = json.data(using: .utf8),
+       let decoded = try? decoder.decode(ExternalTimerCommandQueue.self, from: data),
+       decoded.version == 1 {
+        return decoded
+    }
+    return ExternalTimerCommandQueue()
+}
+
+func writeExternalTimerCommandQueue(_ queue: ExternalTimerCommandQueue, to userDefaults: UserDefaults) {
+    if let data = try? JSONEncoder().encode(queue),
+       let json = String(data: data, encoding: .utf8) {
+        userDefaults.set(json, forKey: externalTimerCommandQueueKey)
+    }
+}
+
+func appendExternalTimerCommand(_ command: ExternalTimerCommand, to userDefaults: UserDefaults) {
+    var queue = readExternalTimerCommandQueue(from: userDefaults)
+    guard !queue.commands.contains(where: { $0.id == command.id }) else { return }
+    queue.commands.append(command)
+    writeExternalTimerCommandQueue(queue, to: userDefaults)
+}
+
+func removeExternalTimerCommand(id: String, from userDefaults: UserDefaults) {
+    var queue = readExternalTimerCommandQueue(from: userDefaults)
+    let originalCount = queue.commands.count
+    queue.commands.removeAll { $0.id == id }
+    guard queue.commands.count != originalCount else { return }
+    writeExternalTimerCommandQueue(queue, to: userDefaults)
 }
 
 // MARK: - Interactive App Intents (iOS 17+)
@@ -415,16 +488,27 @@ struct StopActivityIntent: AppIntent {
         let laPushToken = userDefaults.string(forKey: "liveActivityPushToken")
         NSLog("[StopActivity] liveActivityPushToken=\(laPushToken != nil ? "present" : "nil")")
 
-        var stop: [String: String] = [
-            "activityType": dbType,
-            "stoppedAt": ISO8601DateFormatter().string(from: Date())
-        ]
+        let eventAt = ISO8601DateFormatter().string(from: Date())
         if let babyId {
-            stop["babyId"] = babyId
-        }
-        if let json = try? JSONSerialization.data(withJSONObject: stop),
-           let jsonString = String(data: json, encoding: .utf8) {
-            userDefaults.set(jsonString, forKey: "pendingWidgetStop")
+            var timerInstanceId: String?
+            if let dataString = userDefaults.string(forKey: "widgetData"),
+               let data = dataString.data(using: .utf8),
+               let widgetData = try? JSONDecoder().decode(WidgetDataModel.self, from: data) {
+                timerInstanceId = widgetData.getActiveTimer(for: activity)?.timerInstanceId
+            }
+            let resolvedTimerInstanceId = timerInstanceId ?? "legacy:\(babyId):\(dbType):\(eventAt)"
+            let command = ExternalTimerCommand(
+                id: UUID().uuidString,
+                action: "stop",
+                activityType: dbType,
+                babyId: babyId,
+                timerInstanceId: resolvedTimerInstanceId,
+                eventAt: eventAt,
+                source: "widget",
+                legacy: timerInstanceId == nil ? true : nil,
+                payload: nil
+            )
+            appendExternalTimerCommand(command, to: userDefaults)
         }
 
         if let supabaseUrl, let anonKey, let accessToken, let babyId, let userId {
@@ -1346,7 +1430,7 @@ struct SmallWidgetView: View {
                         }
                     }
 
-                    Link(destination: activity.stopTimerURL) {
+                    Link(destination: routedStopURL(for: activity, data: entry.widgetData)) {
                         Image(systemName: "stop.fill")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color(hex: "DC3545"))
@@ -1576,7 +1660,7 @@ struct MediumWidgetView: View {
                     if isRemoteLock {
                         ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date, isRemoteLock: true)
                     } else if isActiveOwn {
-                        Link(destination: activity.stopTimerURL) {
+                        Link(destination: routedStopURL(for: activity, data: entry.widgetData)) {
                             ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date)
                         }
                     } else {
@@ -1854,7 +1938,7 @@ struct ActivityRowView: View {
                         }
                     }
 
-                    Link(destination: activity.stopTimerURL) {
+                    Link(destination: routedStopURL(for: activity, data: data)) {
                         ZStack {
                             Circle()
                                 .fill(Color(hex: WidgetColors.Button.light))
@@ -2361,6 +2445,7 @@ struct RemoteActiveTimer: Decodable {
         let isPaused: Bool?
         let accumulatedSeconds: Int?
         let effectiveStartTime: String?
+        let timerInstanceId: String?
     }
 }
 
@@ -2419,6 +2504,7 @@ func fetchActiveTimersFromNetwork() async -> [ActiveTimerData]? {
         return ActiveTimerData(
             type: widgetType,
             startTime: startTime,
+            timerInstanceId: timer.timer_data?.timerInstanceId,
             context: context,
             isRemote: timer.started_by != userId,
             isPaused: timer.timer_data?.isPaused,
@@ -2439,62 +2525,61 @@ func durationMinutes(from isoString: String, to end: Date) -> Int? {
     return max(0, Int(end.timeIntervalSince(start)) / 60)
 }
 
+func parseExternalCommandDate(_ value: String) -> Date? {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    if let date = formatter.date(from: value) { return date }
+    formatter.formatOptions = [.withInternetDateTime]
+    return formatter.date(from: value)
+}
+
 func filterStoppedTimers(_ timers: [ActiveTimerData]?) -> [ActiveTimerData]? {
-    guard var timers = timers else { return nil }
+    guard var timers else { return nil }
     guard let userDefaults = UserDefaults(suiteName: appGroupId),
-          let stopJson = userDefaults.string(forKey: "pendingWidgetStop"),
-          !stopJson.isEmpty,
-          let stopData = stopJson.data(using: .utf8),
-          let stop = try? JSONSerialization.jsonObject(with: stopData) as? [String: String],
-          let stoppedType = stop["activityType"],
-          let stoppedAtStr = stop["stoppedAt"] else {
-        return timers
-    }
-    let widgetType = stoppedType == "tummy_time" ? "tummyTime" : stoppedType
-
-    let isoFormatter = ISO8601DateFormatter()
-    isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    var stoppedAtDate = isoFormatter.date(from: stoppedAtStr)
-    if stoppedAtDate == nil {
-        isoFormatter.formatOptions = [.withInternetDateTime]
-        stoppedAtDate = isoFormatter.date(from: stoppedAtStr)
-    }
-    guard let stoppedAt = stoppedAtDate else {
-        timers.removeAll { $0.type == widgetType }
+          let babyId = userDefaults.string(forKey: "selectedBabyId") else {
         return timers
     }
 
-    let hasNewerTimer = timers.contains { timer in
-        guard timer.type == widgetType else { return false }
-        var timerStart: Date?
-        let fmt = ISO8601DateFormatter()
-        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        timerStart = fmt.date(from: timer.startTime)
-        if timerStart == nil {
-            fmt.formatOptions = [.withInternetDateTime]
-            timerStart = fmt.date(from: timer.startTime)
+    let commands = readExternalTimerCommandQueue(from: userDefaults).commands.filter {
+        $0.action == "stop" && $0.babyId == babyId
+    }
+    for command in commands {
+        let widgetType = command.activityType == "tummy_time" ? "tummyTime" : command.activityType
+        let matchingTimers = timers.filter { $0.type == widgetType }
+        guard !matchingTimers.isEmpty else { continue }
+
+        let targetsLegacyTimer = command.legacy == true && command.timerInstanceId.hasPrefix("legacy:")
+        let targetsCurrentTimer: Bool
+        if targetsLegacyTimer {
+            let stoppedAt = parseExternalCommandDate(command.eventAt)
+            targetsCurrentTimer = matchingTimers.contains { timer in
+                guard let stoppedAt,
+                      let startedAt = parseExternalCommandDate(timer.startTime) else {
+                    return false
+                }
+                return startedAt <= stoppedAt
+            }
+        } else {
+            targetsCurrentTimer = matchingTimers.contains {
+                $0.timerInstanceId == command.timerInstanceId
+            }
         }
-        guard let start = timerStart else { return false }
-        return start > stoppedAt
-    }
 
-    if hasNewerTimer {
-        userDefaults.removeObject(forKey: "pendingWidgetStop")
-        return timers
-    }
-
-    timers.removeAll { timer in
-        guard timer.type == widgetType else { return false }
-        var timerStart: Date?
-        let fmt = ISO8601DateFormatter()
-        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        timerStart = fmt.date(from: timer.startTime)
-        if timerStart == nil {
-            fmt.formatOptions = [.withInternetDateTime]
-            timerStart = fmt.date(from: timer.startTime)
+        guard targetsCurrentTimer else {
+            removeExternalTimerCommand(id: command.id, from: userDefaults)
+            continue
         }
-        guard let start = timerStart else { return true }
-        return start <= stoppedAt
+        timers.removeAll { timer in
+            guard timer.type == widgetType else { return false }
+            if targetsLegacyTimer {
+                guard let stoppedAt = parseExternalCommandDate(command.eventAt),
+                      let startedAt = parseExternalCommandDate(timer.startTime) else {
+                    return true
+                }
+                return startedAt <= stoppedAt
+            }
+            return timer.timerInstanceId == command.timerInstanceId
+        }
     }
     return timers
 }

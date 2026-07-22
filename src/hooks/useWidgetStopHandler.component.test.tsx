@@ -4,28 +4,38 @@ const mockPush = jest.fn();
 const mockReadPendingWidgetStop = jest.fn();
 const mockClearPendingWidgetStop = jest.fn();
 const mockClearPendingWidgetPauseToggle = jest.fn();
+const mockReadExternalTimerCommands = jest.fn();
+const mockAcknowledgeExternalTimerCommand = jest.fn();
+const mockClaimLegacyExternalTimerCommand = jest.fn();
+const mockGetTimerCompletion = jest.fn();
 const mockStopBreastfeeding = jest.fn();
 const mockStopSleep = jest.fn();
 const mockStopPumping = jest.fn();
 const mockStopTummyTime = jest.fn();
 
+interface MockTimer {
+  isRunning: boolean;
+  startTime: Date;
+  timerInstanceId?: string;
+}
+
 let mockFeedingState = {
-  activeTimer: null as { isRunning: boolean; startTime: Date } | null,
+  activeTimer: null as MockTimer | null,
   isLoading: true,
   stopBreastfeeding: mockStopBreastfeeding,
 };
 let mockSleepState = {
-  activeTimer: null as { isRunning: boolean; startTime: Date } | null,
+  activeTimer: null as MockTimer | null,
   isLoading: false,
   stopSleep: mockStopSleep,
 };
 let mockPumpingState = {
-  activeTimer: null as { isRunning: boolean; startTime: Date } | null,
+  activeTimer: null as MockTimer | null,
   isLoading: false,
   stopPumping: mockStopPumping,
 };
 let mockTummyTimeState = {
-  activeTimer: null as { isRunning: boolean; startTime: Date } | null,
+  activeTimer: null as MockTimer | null,
   isLoading: false,
   stopTummyTime: mockStopTummyTime,
 };
@@ -61,6 +71,20 @@ jest.mock("@/services/widget-data-service", () => ({
   clearPendingWidgetPauseToggle: () => mockClearPendingWidgetPauseToggle(),
 }));
 
+jest.mock("@/services/external-timer-command-service", () => ({
+  readExternalTimerCommands: () => mockReadExternalTimerCommands(),
+  acknowledgeExternalTimerCommand: (command: unknown) =>
+    mockAcknowledgeExternalTimerCommand(command),
+  claimLegacyExternalTimerCommand: (command: unknown, timerInstanceId: string) =>
+    mockClaimLegacyExternalTimerCommand(command, timerInstanceId),
+  subscribeExternalTimerCommands: () => jest.fn(),
+}));
+
+jest.mock("@/services/timer-completion-service", () => ({
+  getTimerCompletion: (babyId: string, activityType: string, timerInstanceId: string) =>
+    mockGetTimerCompletion(babyId, activityType, timerInstanceId),
+}));
+
 import { act, render, waitFor } from "@testing-library/react-native";
 import { AppState, Platform, type AppStateStatus } from "react-native";
 import { useWidgetStopHandler } from "./useWidgetStopHandler";
@@ -90,6 +114,27 @@ describe("useWidgetStopHandler", () => {
     });
     mockClearPendingWidgetStop.mockResolvedValue(undefined);
     mockClearPendingWidgetPauseToggle.mockResolvedValue(undefined);
+    mockReadExternalTimerCommands.mockImplementation(async () => {
+      const pending = await mockReadPendingWidgetStop();
+      if (!pending) return [];
+      const babyId = pending.babyId ?? "baby-1";
+      const id = `legacy:${babyId}:${pending.activityType}:${pending.stoppedAt}`;
+      return [{
+        id,
+        action: "stop",
+        activityType: pending.activityType,
+        babyId,
+        timerInstanceId: id,
+        eventAt: pending.stoppedAt,
+        source: "legacy",
+        legacy: true,
+      }];
+    });
+    mockAcknowledgeExternalTimerCommand.mockResolvedValue(undefined);
+    mockClaimLegacyExternalTimerCommand.mockImplementation(
+      async (command: unknown) => command
+    );
+    mockGetTimerCompletion.mockResolvedValue(null);
     mockStopBreastfeeding.mockResolvedValue(null);
     mockStopSleep.mockResolvedValue(null);
     mockStopPumping.mockResolvedValue(null);
@@ -129,7 +174,7 @@ describe("useWidgetStopHandler", () => {
 
     await waitFor(() => expect(mockReadPendingWidgetStop).toHaveBeenCalled());
     expect(mockStopBreastfeeding).not.toHaveBeenCalled();
-    expect(mockClearPendingWidgetStop).not.toHaveBeenCalled();
+    expect(mockAcknowledgeExternalTimerCommand).not.toHaveBeenCalled();
 
     mockFeedingState = {
       activeTimer: {
@@ -145,7 +190,9 @@ describe("useWidgetStopHandler", () => {
     expect(mockStopBreastfeeding).toHaveBeenCalledWith(
       new Date(pending.stoppedAt)
     );
-    expect(mockClearPendingWidgetStop).toHaveBeenCalledWith(pending);
+    expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ eventAt: pending.stoppedAt })
+    );
     expect(mockPush).toHaveBeenCalledWith("/feeding");
   });
 
@@ -232,11 +279,42 @@ describe("useWidgetStopHandler", () => {
     render(<TestHarness />);
 
     await waitFor(() =>
-      expect(mockClearPendingWidgetStop).toHaveBeenCalledWith(pending)
+      expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ eventAt: pending.stoppedAt })
+      )
     );
     expect(mockStopSleep).not.toHaveBeenCalled();
     expect(mockClearPendingWidgetPauseToggle).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("rejects a command for an older timer instance", async () => {
+    const command = {
+      id: "old-command",
+      action: "stop",
+      activityType: "sleep",
+      babyId: "baby-1",
+      timerInstanceId: "old-timer",
+      eventAt: "2026-07-14T10:00:00.000Z",
+      source: "widget",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    mockSleepState = {
+      activeTimer: {
+        isRunning: true,
+        startTime: new Date("2026-07-14T09:00:00.000Z"),
+        timerInstanceId: "new-timer",
+      },
+      isLoading: false,
+      stopSleep: mockStopSleep,
+    };
+
+    render(<TestHarness />);
+
+    await waitFor(() =>
+      expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command)
+    );
+    expect(mockStopSleep).not.toHaveBeenCalled();
   });
 
   it("keeps repeated delivery pending without stopping again when no timer exists", async () => {
@@ -249,7 +327,101 @@ describe("useWidgetStopHandler", () => {
     render(<TestHarness />);
 
     await waitFor(() => expect(mockReadPendingWidgetStop).toHaveBeenCalled());
-    expect(mockClearPendingWidgetStop).not.toHaveBeenCalled();
+    expect(mockAcknowledgeExternalTimerCommand).not.toHaveBeenCalled();
     expect(mockStopPumping).not.toHaveBeenCalled();
+  });
+
+  it("leaves another baby's command queued", async () => {
+    const selectedBabyCommand = {
+      id: "selected-command",
+      action: "stop",
+      activityType: "feeding",
+      babyId: "baby-1",
+      timerInstanceId: "feeding-timer",
+      eventAt: "2026-07-14T10:00:00.000Z",
+      source: "widget",
+    };
+    const otherBabyCommand = {
+      ...selectedBabyCommand,
+      id: "other-command",
+      babyId: "baby-2",
+      timerInstanceId: "other-timer",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([
+      selectedBabyCommand,
+      otherBabyCommand,
+    ]);
+    mockFeedingState = {
+      activeTimer: {
+        isRunning: true,
+        startTime: new Date("2026-07-14T09:00:00.000Z"),
+        timerInstanceId: "feeding-timer",
+      },
+      isLoading: false,
+      stopBreastfeeding: mockStopBreastfeeding,
+    };
+
+    render(<TestHarness />);
+
+    await waitFor(() => expect(mockStopBreastfeeding).toHaveBeenCalledTimes(1));
+    expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(
+      selectedBabyCommand
+    );
+    expect(mockAcknowledgeExternalTimerCommand).not.toHaveBeenCalledWith(
+      otherBabyCommand
+    );
+  });
+
+  it("consumes two queued stops for different timer types", async () => {
+    const commands = [
+      {
+        id: "feeding-command",
+        action: "stop",
+        activityType: "feeding",
+        babyId: "baby-1",
+        timerInstanceId: "feeding-timer",
+        eventAt: "2026-07-14T10:00:00.000Z",
+        source: "widget",
+      },
+      {
+        id: "sleep-command",
+        action: "stop",
+        activityType: "sleep",
+        babyId: "baby-1",
+        timerInstanceId: "sleep-timer",
+        eventAt: "2026-07-14T10:05:00.000Z",
+        source: "watch",
+      },
+    ];
+    mockReadPendingWidgetStop.mockResolvedValue(null);
+    mockReadExternalTimerCommands.mockResolvedValue(commands);
+    mockFeedingState = {
+      activeTimer: {
+        isRunning: true,
+        startTime: new Date("2026-07-14T09:00:00.000Z"),
+        timerInstanceId: "feeding-timer",
+      },
+      isLoading: false,
+      stopBreastfeeding: mockStopBreastfeeding,
+    } as typeof mockFeedingState;
+    mockSleepState = {
+      activeTimer: {
+        isRunning: true,
+        startTime: new Date("2026-07-14T09:30:00.000Z"),
+        timerInstanceId: "sleep-timer",
+      },
+      isLoading: false,
+      stopSleep: mockStopSleep,
+    } as typeof mockSleepState;
+
+    render(<TestHarness />);
+
+    await waitFor(() =>
+      expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledTimes(2)
+    );
+    expect(mockStopBreastfeeding).toHaveBeenCalledWith(
+      new Date(commands[0].eventAt)
+    );
+    expect(mockStopSleep).toHaveBeenCalledWith(new Date(commands[1].eventAt));
   });
 });

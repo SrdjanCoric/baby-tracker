@@ -136,8 +136,6 @@ export default function PumpingScreen() {
       pausePumping();
     } else if (action === "resume" && activeTimer.isPaused) {
       resumePumping();
-    } else if (action === "stop") {
-      setShowVolumeInput(true);
     }
     router.setParams({ action: undefined });
   }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pausePumping, resumePumping, router]);

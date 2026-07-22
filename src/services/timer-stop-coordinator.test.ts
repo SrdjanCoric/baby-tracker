@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("./widget-data-service", () => ({
-  readPendingWidgetStop: vi.fn(),
+vi.mock("./external-timer-command-service", () => ({
+  readExternalTimerCommands: vi.fn().mockResolvedValue([]),
 }));
 
 import {
@@ -12,15 +12,24 @@ import {
 } from "./timer-stop-coordinator";
 
 const pendingStop: PendingTimerStop = {
+  id: "legacy:baby-1:sleep:2026-07-14T10:00:00.000Z",
   activityType: "sleep",
   stoppedAt: "2026-07-14T10:00:00.000Z",
+  babyId: "baby-1",
+  timerInstanceId: "legacy:baby-1:sleep:2026-07-14T10:00:00.000Z",
+  legacy: true,
 };
 
 describe("timer stop coordinator", () => {
   it("waits for a cold-start timer to restore without consuming the stop", async () => {
     const stop = vi.fn();
 
-    const result = await processPendingTimerStop(pendingStop, undefined, stop);
+    const result = await processPendingTimerStop(
+      pendingStop,
+      undefined,
+      stop,
+      "baby-1"
+    );
 
     expect(result).toBe("waiting");
     expect(stop).not.toHaveBeenCalled();
@@ -29,7 +38,12 @@ describe("timer stop coordinator", () => {
   it("keeps repeated delivery pending without duplicating a completed stop", async () => {
     const stop = vi.fn();
 
-    const result = await processPendingTimerStop(pendingStop, null, stop);
+    const result = await processPendingTimerStop(
+      pendingStop,
+      null,
+      stop,
+      "baby-1"
+    );
 
     expect(result).toBe("waiting");
     expect(stop).not.toHaveBeenCalled();
@@ -41,7 +55,8 @@ describe("timer stop coordinator", () => {
     const result = await processPendingTimerStop(
       pendingStop,
       { isRunning: true, startTime: new Date("2026-07-14T09:00:00.000Z") },
-      stop
+      stop,
+      "baby-1"
     );
 
     expect(result).toBe("consumed");
@@ -55,7 +70,8 @@ describe("timer stop coordinator", () => {
     const result = await processPendingTimerStop(
       pendingStop,
       { isRunning: true, startTime: new Date("2026-07-14T10:05:00.000Z") },
-      stop
+      stop,
+      "baby-1"
     );
 
     expect(result).toBe("stale");
@@ -69,7 +85,8 @@ describe("timer stop coordinator", () => {
         isPendingStopForTimer(
           { ...pendingStop, activityType },
           activityType,
-          new Date("2026-07-14T09:00:00.000Z")
+          new Date("2026-07-14T09:00:00.000Z"),
+          "baby-1"
         )
       ).toBe(true);
     }
@@ -80,13 +97,14 @@ describe("timer stop coordinator", () => {
       isPendingStopForTimer(
         pendingStop,
         "feeding",
-        new Date("2026-07-14T09:00:00.000Z")
+        new Date("2026-07-14T09:00:00.000Z"),
+        "baby-1"
       )
     ).toBe(false);
   });
 
   it("does not apply a stop command to a different baby", async () => {
-    const targetedStop: PendingTimerStop = { ...pendingStop, babyId: "baby-1" };
+    const targetedStop: PendingTimerStop = pendingStop;
     const stop = vi.fn();
 
     expect(

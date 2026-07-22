@@ -127,13 +127,9 @@ export default function FeedingScreen() {
       pauseBreastfeeding();
     } else if (action === "resume" && activeTimer.isPaused) {
       resumeBreastfeeding();
-    } else if (action === "stop") {
-      if (isStoppingRef.current) return;
-      isStoppingRef.current = true;
-      stopBreastfeeding().finally(() => { isStoppingRef.current = false; });
     }
     router.setParams({ action: undefined });
-  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pauseBreastfeeding, resumeBreastfeeding, stopBreastfeeding, router]);
+  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pauseBreastfeeding, resumeBreastfeeding, router]);
 
   if (!selectedBaby) {
     return <NoBabyScreen />;

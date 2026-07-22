@@ -19,6 +19,10 @@ import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
 import { useStoreReview } from "@/hooks/useStoreReview";
 import { useWatchMessageHandler } from "@/hooks/useWatchMessageHandler";
 import { startWatchMessageListening } from "@/services/watch-service";
+import {
+  appendExternalTimerCommand,
+  createRoutedExternalTimerCommand,
+} from "@/services/external-timer-command-service";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -170,13 +174,16 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
     const handleDeepLink = async (url: string) => {
       console.log("[DeepLink] Received URL:", url);
 
-      // Widget deep links (sofibaby://feeding, etc.) - Expo Router handles automatically
       const widgetActivities = ["feeding", "sleep", "diaper", "pumping", "growth", "tummyTime"];
       for (const activity of widgetActivities) {
-        if (url.includes(`sofibaby://${activity}`)) {
-          console.log("[DeepLink] Widget link detected:", activity);
-          return;
-        }
+        if (!url.includes(`sofibaby://${activity}`)) continue;
+        console.log("[DeepLink] Widget link detected:", activity);
+        const command = createRoutedExternalTimerCommand(
+          url,
+          new Date().toISOString()
+        );
+        if (command) await appendExternalTimerCommand(command);
+        return;
       }
 
       if (url.includes("login-callback") || url.includes("auth/callback")) {

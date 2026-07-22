@@ -14,9 +14,9 @@ describe("StopActivityIntent", () => {
       nextDeclaration === -1 ? source.length : nextDeclaration
     );
 
-    const targetBaby = intentSource.indexOf('stop["babyId"] = babyId');
+    const targetBaby = intentSource.indexOf("babyId: babyId");
     const persistStop = intentSource.indexOf(
-      'userDefaults.set(jsonString, forKey: "pendingWidgetStop")'
+      "appendExternalTimerCommand(command, to: userDefaults)"
     );
     const activeTimersUrl = intentSource.indexOf(
       "/rest/v1/active_timers?baby_id=eq."
@@ -43,5 +43,19 @@ describe("StopActivityIntent", () => {
     expect(requestCreation).toBeGreaterThan(userPredicate);
     expect(deleteRequest).toBeGreaterThan(requestCreation);
     expect(releaseLock).toBeGreaterThan(deleteRequest);
+  });
+
+  it("uses the shared versioned queue schema and appends without replacing commands", () => {
+    const source = readFileSync(
+      new URL("../../../targets/widget/index.swift", import.meta.url),
+      "utf8"
+    );
+
+    expect(source).toContain("struct ExternalTimerCommandQueue: Codable");
+    expect(source).toContain("var version: Int = 1");
+    expect(source).toContain('let externalTimerCommandQueueKey = "externalTimerCommandQueue"');
+    expect(source).toContain("queue.commands.append(command)");
+    expect(source).toContain("queue.commands.removeAll { $0.id == id }");
+    expect(source).toContain("timerInstanceId: resolvedTimerInstanceId");
   });
 });

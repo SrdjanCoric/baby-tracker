@@ -6,12 +6,15 @@ import { useSleep } from "@/contexts/sleep-context";
 import { usePumping } from "@/contexts/pumping-context";
 import { useTummyTime } from "@/contexts/tummyTime-context";
 import { useBaby } from "@/contexts/baby-context";
+import { clearPendingWidgetPauseToggle } from "@/services/widget-data-service";
 import {
-  readPendingWidgetStop,
-  clearPendingWidgetStop,
-  clearPendingWidgetPauseToggle,
-} from "@/services/widget-data-service";
-import { processPendingTimerStop } from "@/services/timer-stop-coordinator";
+  acknowledgeExternalTimerCommand,
+  claimLegacyExternalTimerCommand,
+  readExternalTimerCommands,
+  subscribeExternalTimerCommands,
+  type ExternalTimerCommand,
+} from "@/services/external-timer-command-service";
+import { getTimerCompletion } from "@/services/timer-completion-service";
 
 const ACTIVITY_ROUTE_MAP: Record<string, string> = {
   feeding: "/feeding",
@@ -19,6 +22,12 @@ const ACTIVITY_ROUTE_MAP: Record<string, string> = {
   pumping: "/pumping",
   tummy_time: "/tummyTime",
 };
+
+interface CommandTimer {
+  isRunning: boolean;
+  startTime: Date;
+  timerInstanceId: string;
+}
 
 export function useWidgetStopHandler() {
   const router = useRouter();
@@ -31,6 +40,81 @@ export function useWidgetStopHandler() {
   const shouldReprocessRef = useRef(false);
   const processPendingStopRef = useRef<() => Promise<void>>(async () => {});
 
+  const processCommand = useCallback(
+    async (queuedCommand: ExternalTimerCommand): Promise<void> => {
+      if (queuedCommand.babyId !== selectedBaby?.id) return;
+
+      const completion = await getTimerCompletion(
+        queuedCommand.babyId,
+        queuedCommand.activityType,
+        queuedCommand.timerInstanceId
+      );
+      if (completion?.status === "completed") {
+        await acknowledgeExternalTimerCommand(queuedCommand);
+        return;
+      }
+
+      let timer: CommandTimer | null = null;
+      let stop: ((endTime: Date) => Promise<unknown>) | null = null;
+      switch (queuedCommand.activityType) {
+        case "feeding":
+          timer = feedingTimer;
+          stop = stopBreastfeeding;
+          break;
+        case "sleep":
+          timer = sleepTimer;
+          stop = stopSleep;
+          break;
+        case "pumping":
+          timer = pumpingTimer;
+          stop = (endTime) =>
+            stopPumping(queuedCommand.payload?.volumeMl ?? 0, endTime);
+          break;
+        case "tummy_time":
+          timer = tummyTimeTimer;
+          stop = stopTummyTime;
+          break;
+      }
+
+      if (!timer?.isRunning || !stop) return;
+
+      const eventAt = new Date(queuedCommand.eventAt);
+      if (timer.startTime.getTime() > eventAt.getTime()) {
+        await acknowledgeExternalTimerCommand(queuedCommand);
+        return;
+      }
+
+      let command = queuedCommand;
+      if (command.legacy && command.timerInstanceId.startsWith("legacy:")) {
+        command = await claimLegacyExternalTimerCommand(
+          command,
+          timer.timerInstanceId
+        );
+      } else if (timer.timerInstanceId !== command.timerInstanceId) {
+        await acknowledgeExternalTimerCommand(command);
+        return;
+      }
+
+      await stop(eventAt);
+      await clearPendingWidgetPauseToggle();
+      await acknowledgeExternalTimerCommand(command);
+      const route = ACTIVITY_ROUTE_MAP[command.activityType];
+      if (route) router.push(route as never);
+    },
+    [
+      selectedBaby?.id,
+      feedingTimer,
+      sleepTimer,
+      pumpingTimer,
+      tummyTimeTimer,
+      stopBreastfeeding,
+      stopSleep,
+      stopPumping,
+      stopTummyTime,
+      router,
+    ]
+  );
+
   const processPendingStop = useCallback(async () => {
     if (isProcessingRef.current) {
       shouldReprocessRef.current = true;
@@ -39,63 +123,19 @@ export function useWidgetStopHandler() {
     isProcessingRef.current = true;
 
     try {
-      const pending = await readPendingWidgetStop();
-      if (!pending) return;
-
-      let result: "waiting" | "consumed" | "stale";
-      switch (pending.activityType) {
-        case "feeding":
-          result = await processPendingTimerStop(
-            pending,
-            feedingTimer,
-            stopBreastfeeding,
-            selectedBaby?.id
+      const commands = await readExternalTimerCommands(selectedBaby?.id);
+      for (const command of commands) {
+        try {
+          await processCommand(command);
+        } catch (error) {
+          console.error(
+            "[WidgetStopHandler] Failed to process pending stop:",
+            error
           );
-          break;
-        case "sleep":
-          result = await processPendingTimerStop(
-            pending,
-            sleepTimer,
-            stopSleep,
-            selectedBaby?.id
-          );
-          break;
-        case "pumping":
-          result = await processPendingTimerStop(
-            pending,
-            pumpingTimer,
-            (endTime) => stopPumping(0, endTime),
-            selectedBaby?.id
-          );
-          break;
-        case "tummy_time":
-          result = await processPendingTimerStop(
-            pending,
-            tummyTimeTimer,
-            stopTummyTime,
-            selectedBaby?.id
-          );
-          break;
-        default:
-          await clearPendingWidgetStop(pending);
-          return;
-      }
-
-      if (result === "waiting") return;
-
-      if (result === "consumed") {
-        await clearPendingWidgetPauseToggle();
-      }
-      await clearPendingWidgetStop(pending);
-
-      if (result === "consumed") {
-        const route = ACTIVITY_ROUTE_MAP[pending.activityType];
-        if (route) {
-          router.push(route as never);
         }
       }
     } catch (error) {
-      console.error("[WidgetStopHandler] Failed to process pending stop:", error);
+      console.error("[WidgetStopHandler] Failed to read pending stops:", error);
     } finally {
       isProcessingRef.current = false;
       if (shouldReprocessRef.current) {
@@ -103,28 +143,21 @@ export function useWidgetStopHandler() {
         void processPendingStopRef.current();
       }
     }
-  }, [
-    router,
-    selectedBaby?.id,
-    feedingTimer,
-    sleepTimer,
-    pumpingTimer,
-    tummyTimeTimer,
-    stopBreastfeeding,
-    stopSleep,
-    stopPumping,
-    stopTummyTime,
-  ]);
+  }, [processCommand, selectedBaby?.id]);
   processPendingStopRef.current = processPendingStop;
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        processPendingStop();
-      }
+    const appStateSubscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") processPendingStop();
     });
-    return () => sub.remove();
+    const unsubscribeCommands = subscribeExternalTimerCommands(() => {
+      void processPendingStopRef.current();
+    });
+    return () => {
+      appStateSubscription.remove();
+      unsubscribeCommands();
+    };
   }, [processPendingStop]);
 
   useEffect(() => {

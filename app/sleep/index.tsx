@@ -140,15 +140,9 @@ export default function SleepScreen() {
       pauseSleep();
     } else if (action === "resume" && activeTimer.isPaused) {
       resumeSleep();
-    } else if (action === "stop") {
-      if (isStoppingRef.current) return;
-      isStoppingRef.current = true;
-      napAlert.resetAlert();
-      nightSleepAlert.resetAlert();
-      stopSleep().then(() => router.back()).finally(() => { isStoppingRef.current = false; });
     }
     router.setParams({ action: undefined });
-  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pauseSleep, resumeSleep, stopSleep, napAlert, nightSleepAlert, router]);
+  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pauseSleep, resumeSleep, router]);
 
   if (!selectedBaby) {
     return <NoBabyScreen />;

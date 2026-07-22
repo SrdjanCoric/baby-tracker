@@ -19,6 +19,10 @@ import type {
 import { TummyTimeStorageService } from "@/services/tummyTime-storage";
 import { setStorageUserId } from "@/services/storage-prefix";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
+import {
+  acceptTimerCompletion,
+  markTimerCompletionDurable,
+} from "@/services/timer-completion-service";
 
 const mockExtensionStorageData = new Map<string, string>();
 const mockRouterPush = jest.fn();
@@ -1433,6 +1437,95 @@ describe("external timer stops through production providers", () => {
     await expect(TummyTimeStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
   });
 
+  it("consumes two queued stops written before either provider handles them", async () => {
+    await FeedingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "feeding-timer",
+      activityId: "feeding-activity",
+      startedAt,
+      side: "left",
+      type: "breast",
+      currentSideStartedAt: startedAt,
+    });
+    await SleepStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "sleep-timer",
+      activityId: "sleep-activity",
+      startedAt,
+      type: "nap",
+    });
+    mockExtensionStorageData.set("externalTimerCommandQueue", JSON.stringify({
+      version: 1,
+      commands: [
+        {
+          id: "feeding-command",
+          action: "stop",
+          activityType: "feeding",
+          babyId: "baby-1",
+          timerInstanceId: "feeding-timer",
+          eventAt: stoppedAt,
+          source: "widget",
+        },
+        {
+          id: "sleep-command",
+          action: "stop",
+          activityType: "sleep",
+          babyId: "baby-1",
+          timerInstanceId: "sleep-timer",
+          eventAt: stoppedAt,
+          source: "watch",
+        },
+      ],
+    }));
+
+    render(<RealTimerProviders />);
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      createSleepInDatabase: jest.Mock;
+    };
+    await waitFor(() => expect(activitySync.createFeedingInDatabase).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(activitySync.createSleepInDatabase).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(JSON.parse(mockExtensionStorageData.get("externalTimerCommandQueue") ?? "{}").commands).toEqual([])
+    );
+  });
+
+  it("acknowledges a command left queued after its completion became durable", async () => {
+    const identity = {
+      timerInstanceId: "completed-timer",
+      activityId: "completed-activity",
+    };
+    const completion = await acceptTimerCompletion(
+      "baby-1",
+      "feeding",
+      startedAt,
+      identity,
+      new Date(stoppedAt)
+    );
+    await markTimerCompletionDurable(completion);
+    mockExtensionStorageData.set("externalTimerCommandQueue", JSON.stringify({
+      version: 1,
+      commands: [{
+        id: "completed-command",
+        action: "stop",
+        activityType: "feeding",
+        babyId: "baby-1",
+        timerInstanceId: identity.timerInstanceId,
+        eventAt: stoppedAt,
+        source: "widget",
+      }],
+    }));
+
+    render(<RealTimerProviders />);
+
+    await waitFor(() =>
+      expect(JSON.parse(mockExtensionStorageData.get("externalTimerCommandQueue") ?? "{}").commands).toEqual([])
+    );
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+    };
+    expect(activitySync.createFeedingInDatabase).not.toHaveBeenCalled();
+  });
+
   it("keeps repeated delivery harmless and rejects it once a newer feeding starts", async () => {
     await FeedingStorageService.setActiveTimer("baby-1", {
       startedAt,
@@ -1614,7 +1707,19 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith("/feeding"));
     expect(feedingState?.activeTimer).toBeNull();
     expect(activitySync.createFeedingInDatabase).toHaveBeenCalledTimes(1);
-    expect(mockExtensionStorageData.get("pendingWidgetStop")).toBe(JSON.stringify(replacement));
+    expect(mockExtensionStorageData.get("pendingWidgetStop")).toBe("");
+    expect(JSON.parse(mockExtensionStorageData.get("externalTimerCommandQueue") ?? "{}")).toEqual(
+      expect.objectContaining({
+        version: 1,
+        commands: [
+          expect.objectContaining({
+            activityType: replacement.activityType,
+            babyId: replacement.babyId,
+            eventAt: replacement.stoppedAt,
+          }),
+        ],
+      })
+    );
   });
 
   it("keeps an uncontested offline feeding active while reconnect acquires its lock", async () => {

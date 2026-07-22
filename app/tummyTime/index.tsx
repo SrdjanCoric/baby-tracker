@@ -124,14 +124,9 @@ export default function TummyTimeScreen() {
       pauseTummyTime();
     } else if (action === "resume" && activeTimer.isPaused) {
       resumeTummyTime();
-    } else if (action === "stop") {
-      if (isStoppingRef.current) return;
-      isStoppingRef.current = true;
-      resetAlert();
-      stopTummyTime().then(() => router.back()).finally(() => { isStoppingRef.current = false; });
     }
     router.setParams({ action: undefined });
-  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pauseTummyTime, resumeTummyTime, stopTummyTime, resetAlert, router]);
+  }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pauseTummyTime, resumeTummyTime, router]);
 
   if (!selectedBaby) {
     return <NoBabyScreen />;

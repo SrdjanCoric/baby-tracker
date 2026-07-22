@@ -19,6 +19,7 @@ const mockAddDiaperB = jest.fn();
 const mockReadPendingWidgetStop = jest.fn();
 const mockClearPendingWidgetStop = jest.fn();
 const mockClearPendingWidgetPauseToggle = jest.fn();
+const mockAppendExternalTimerCommand = jest.fn();
 
 let registeredHandler: ((message: Record<string, unknown>, replyHandler?: (reply: Record<string, unknown>) => void) => void) | null = null;
 let mockSelectedBabyId = "baby-a";
@@ -111,6 +112,11 @@ jest.mock("@/services/widget-data-service", () => ({
   clearPendingWidgetPauseToggle: () => mockClearPendingWidgetPauseToggle(),
 }));
 
+jest.mock("@/services/external-timer-command-service", () => ({
+  appendExternalTimerCommand: (command: unknown) =>
+    mockAppendExternalTimerCommand(command),
+}));
+
 import { useEffect } from "react";
 import { act, render, waitFor } from "@testing-library/react-native";
 import { useWatchMessageHandler } from "./useWatchMessageHandler";
@@ -154,6 +160,7 @@ describe("useWatchMessageHandler", () => {
     mockReadPendingWidgetStop.mockResolvedValue(null);
     mockClearPendingWidgetStop.mockResolvedValue(undefined);
     mockClearPendingWidgetPauseToggle.mockResolvedValue(undefined);
+    mockAppendExternalTimerCommand.mockResolvedValue(undefined);
     mockStartBreastfeedingA.mockResolvedValue(undefined);
     mockStartBreastfeedingB.mockResolvedValue(undefined);
     mockStopBreastfeedingA.mockResolvedValue(undefined);
@@ -170,12 +177,6 @@ describe("useWatchMessageHandler", () => {
 
   it("waits for contexts to bind to the requested baby before running queued activity commands", async () => {
     const resolveSelection = deferredSelection();
-    const pendingStop = {
-      activityType: "feeding",
-      babyId: "baby-b",
-      stoppedAt: "2026-07-14T10:00:00.000Z",
-    };
-    mockReadPendingWidgetStop.mockResolvedValue(pendingStop);
     mockOnRequestSync.mockImplementation((replyHandler) => replyHandler?.({ widgetData: "baby-b-data" }));
 
     const view = render(<TestHarness />);
@@ -219,14 +220,76 @@ describe("useWatchMessageHandler", () => {
     view.rerender(<TestHarness />);
 
     await waitFor(() => expect(syncReply).toHaveBeenCalledWith({ widgetData: "baby-b-data" }));
-    expect(mockStartBreastfeedingB).toHaveBeenCalledWith("left", undefined);
+    expect(mockStartBreastfeedingB).toHaveBeenCalledWith("left", undefined, undefined);
     expect(mockPauseBreastfeedingB).toHaveBeenCalledTimes(1);
     expect(mockResumeBreastfeedingB).toHaveBeenCalledTimes(1);
-    expect(mockStopBreastfeedingB).toHaveBeenCalledWith(undefined);
+    expect(mockStopBreastfeedingB).not.toHaveBeenCalled();
+    expect(mockAppendExternalTimerCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "stop",
+        activityType: "feeding",
+        babyId: "baby-b",
+        source: "watch",
+      })
+    );
     expect(mockAddDiaperB).toHaveBeenCalledWith(expect.objectContaining({ babyId: "baby-b", type: "wet" }));
     expect(mockAddFeedingB).toHaveBeenCalledWith(expect.objectContaining({ babyId: "baby-b", amountMl: 90 }));
-    expect(mockClearPendingWidgetStop).toHaveBeenCalledWith(pendingStop);
     expect(mockClearPendingWidgetPauseToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves a Watch-created timer identity when starting on the phone", async () => {
+    render(<TestHarness />);
+    await waitFor(() => expect(registeredHandler).not.toBeNull());
+
+    sendMessage({
+      action: "startTimer",
+      activityType: "feeding",
+      babyId: "baby-a",
+      requestId: "identity-start",
+      requestedStartTime: new Date().toISOString(),
+      timerInstanceId: "watch-timer",
+      activityId: "watch-activity",
+    });
+
+    await waitFor(() =>
+      expect(mockStartBreastfeedingA).toHaveBeenCalledWith(
+        "left",
+        expect.any(Date),
+        {
+          timerInstanceId: "watch-timer",
+          activityId: "watch-activity",
+        }
+      )
+    );
+  });
+
+  it("persists the typed Watch command before provider handling", async () => {
+    render(<TestHarness />);
+    await waitFor(() => expect(registeredHandler).not.toBeNull());
+    const command = {
+      id: "watch-stop",
+      action: "stop",
+      activityType: "pumping",
+      babyId: "baby-a",
+      timerInstanceId: "watch-timer",
+      eventAt: new Date().toISOString(),
+      source: "watch",
+      payload: { volumeMl: 90 },
+    };
+
+    sendMessage({
+      action: "stopPumpingWithVolume",
+      activityType: "pumping",
+      babyId: "baby-a",
+      requestId: "watch-stop-request",
+      externalTimerCommand: command,
+    });
+
+    await waitFor(() =>
+      expect(mockAppendExternalTimerCommand).toHaveBeenCalledWith(
+        expect.objectContaining(command)
+      )
+    );
   });
 
   it("rejects an unknown baby without changing selection or running an action", async () => {
