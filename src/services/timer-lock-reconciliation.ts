@@ -75,9 +75,15 @@ export async function reconcileTimerLock({
 
     const lock = await getActiveTimerLock(babyId, activityType);
     const lockTimerInstanceId = lock?.timerData?.timerInstanceId;
+    const lockStartedAtMs = lock ? new Date(lock.startedAt).getTime() : Number.NaN;
+    const localStartedAtMs = new Date(startedAt).getTime();
     const ownsMatchingLock = lock?.startedBy === userId && (
       lockTimerInstanceId === timerInstanceId ||
-      (typeof lockTimerInstanceId !== "string" && lock.startedAt === startedAt)
+      (
+        typeof lockTimerInstanceId !== "string" &&
+        Number.isFinite(lockStartedAtMs) &&
+        lockStartedAtMs === localStartedAtMs
+      )
     );
 
     if (ownsMatchingLock) {

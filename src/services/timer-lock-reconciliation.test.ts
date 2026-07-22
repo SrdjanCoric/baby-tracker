@@ -123,6 +123,34 @@ describe("timer lock reconciliation", () => {
     ]);
   });
 
+  it("recognizes a legacy owned lock when equivalent timestamps use different UTC forms", async () => {
+    acquireTimerLockMock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-1",
+      lockHolderName: "Caregiver",
+      startedAt: "2026-07-15T08:00:00+00:00",
+    });
+    getActiveTimerLockMock.mockResolvedValue({
+      id: "lock-1",
+      babyId: "baby-1",
+      activityType: "sleep",
+      startedBy: "user-1",
+      startedByName: "Caregiver",
+      startedAt: "2026-07-15T08:00:00+00:00",
+      timerData: {},
+    });
+
+    await expect(reconcileTimerLock({
+      babyId: "baby-1",
+      activityType: "sleep",
+      userId: "user-1",
+      startedAt: "2026-07-15T08:00:00.000Z",
+      timerInstanceId: "compatibility-timer",
+      timerData: { timerInstanceId: "compatibility-timer" },
+      persistState: vi.fn().mockResolvedValue(undefined),
+    })).resolves.toEqual({ state: "owned" });
+  });
+
   it("converges sequential reconnects on the first successful lock acquisition", async () => {
     let winner: { id: string; name: string; startedAt: string } | null = null;
     acquireTimerLockMock.mockImplementation(
