@@ -58,6 +58,11 @@ export async function reconcileTimerLock({
       return { state: "owned" };
     }
 
+    if (!acquisition.lockHolderId) {
+      await persistState("offline");
+      return { state: "offline" };
+    }
+
     if (acquisition.lockHolderId !== userId) {
       await persistState("conflicted");
       return {

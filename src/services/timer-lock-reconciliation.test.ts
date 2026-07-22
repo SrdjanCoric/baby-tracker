@@ -48,6 +48,26 @@ describe("timer lock reconciliation", () => {
     expect(getActiveTimerLockMock).not.toHaveBeenCalled();
   });
 
+  it("keeps the timer offline when lock acquisition returns no owner", async () => {
+    acquireTimerLockMock.mockResolvedValue({ success: false });
+    const persistState = vi.fn().mockResolvedValue(undefined);
+
+    await expect(reconcileTimerLock({
+      babyId: "baby-1",
+      activityType: "feeding",
+      userId: "user-1",
+      startedAt: "2026-07-15T08:00:00.000Z",
+      timerInstanceId: "timer-1",
+      timerData: { timerInstanceId: "timer-1" },
+      persistState,
+    })).resolves.toEqual({ state: "offline" });
+
+    expect(persistState.mock.calls.map(([state]) => state)).toEqual([
+      "reconciling",
+      "offline",
+    ]);
+  });
+
   it("restores offline state when lock acquisition cannot reach the server", async () => {
     acquireTimerLockMock.mockRejectedValue(new Error("offline"));
     const persistState = vi.fn().mockResolvedValue(undefined);
