@@ -48,6 +48,10 @@
     "durationH": "{{h}}h",
     "durationM": "{{m}}min"
   },
+  "timerConflict": {
+    "title": "Conflit de minuteur résolu",
+    "body": "Le minuteur de {{name}} s’est connecté en premier. Le vôtre a été arrêté et enregistré dans la chronologie."
+  },
   "summary": {
     "today": "Aujourd'hui",
     "feeding_one": "Repas",

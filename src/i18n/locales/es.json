@@ -48,6 +48,10 @@
     "durationH": "{{h}}h",
     "durationM": "{{m}}min"
   },
+  "timerConflict": {
+    "title": "Conflicto de temporizador resuelto",
+    "body": "El temporizador de {{name}} se conectó primero. El tuyo se detuvo y se guardó en la cronología."
+  },
   "summary": {
     "today": "Hoy",
     "feeding_one": "Alimentación",

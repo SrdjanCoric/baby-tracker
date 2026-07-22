@@ -48,6 +48,10 @@
     "durationH": "{{h}}h",
     "durationM": "{{m}}m"
   },
+  "timerConflict": {
+    "title": "Timer conflict resolved",
+    "body": "{{name}}'s timer connected first. Your timer was stopped and saved to the timeline."
+  },
   "summary": {
     "today": "Today",
     "feeding_one": "Feeding",

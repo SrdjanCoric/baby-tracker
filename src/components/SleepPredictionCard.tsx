@@ -82,6 +82,7 @@ const SleepPredictionCardInner = ({
     return {
       isRunning: true,
       isPaused: false,
+      lockState: "owned",
       startTime: new Date(remoteSleepLock.startedAt),
       sleepType,
       totalPausedMs: 0,

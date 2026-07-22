@@ -6,7 +6,7 @@
 
 ## What to build
 
-Give offline timer starts an explicit reconciliation state. A locally started feeding, pumping, or tummy-time timer must not be treated as externally stopped merely because no server lock exists after connectivity returns. Reconnect must attempt authorized lock acquisition and preserve the timer until the selected conflict policy resolves a genuine competing household timer.
+Give offline timer starts an explicit reconciliation state. A locally started feeding, sleep, pumping, or tummy-time timer must not be treated as externally stopped merely because no server lock exists after connectivity returns. Reconnect must attempt authorized lock acquisition and preserve the timer until the selected conflict policy resolves a genuine competing household timer.
 
 Apply the agreed policy consistently to all timer activities, local snapshots, Live Activities, widgets, and household lock displays. Do not change the duplicate-stop behavior owned by task 0014.
 
@@ -44,7 +44,13 @@ Do not implement conflict behavior until the `[decision]` checkpoint below is re
 
 ## Human checkpoints
 
-- [ ] [decision] Choose the conflict result when two caregivers start the same baby's activity type while both are offline. Options must cover which timer continues, how the other timer is preserved or completed, and what both caregivers see. Resolve through `talk-it-through` before implementation.
+- [x] [decision] Choose the conflict result when two caregivers start the same baby's activity type while both are offline. The first caregiver to acquire the server lock continues. A losing timer is completed at conflict detection with its duration and activity details preserved; pumping volume remains unset. The losing caregiver sees a conflict notice, while both caregivers converge on the lock owner and see the completed losing activity in the timeline.
+
+## Decisions
+
+- Reconciliation uses the existing server lock as the authority: first successful acquisition wins rather than comparing device clocks or local start times.
+- Missing server state never proves that a local timer stopped. Reconciliation attempts lock acquisition and keeps retryable local state when the network request fails.
+- Sleep uses the same offline reconciliation contract as every other timer. This resolves the pre-existing inconsistency where sleep returned failure on a network error while other timers continued locally, and preserves task 0017's single sleep-based two-simulator architecture.
 
 ## Acceptance criteria
 

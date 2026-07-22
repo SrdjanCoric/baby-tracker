@@ -6,6 +6,7 @@ import type { SleepType } from "@/constants/activities";
 import type { WakeWindowConfig } from "@/types/wake-windows";
 import { getUserScopedKey } from "./storage-prefix";
 import type { TimerIdentity } from "./timer-completion-service";
+import type { TimerLockReconciliationSnapshot } from "./timer-lock-reconciliation";
 
 const SLEEPS_KEY_PREFIX = "@sleeps:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_sleep_timer:";
@@ -51,7 +52,7 @@ export interface UpdateSleepInput {
   type?: SleepType;
 }
 
-export interface ActiveSleepTimerData extends Partial<TimerIdentity> {
+export interface ActiveSleepTimerData extends Partial<TimerIdentity>, TimerLockReconciliationSnapshot {
   startedAt: string;
   type: SleepType;
   liveActivityId?: string;

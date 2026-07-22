@@ -48,6 +48,10 @@
     "durationH": "{{h}}h",
     "durationM": "{{m}}min"
   },
+  "timerConflict": {
+    "title": "Conflito de temporizador resolvido",
+    "body": "O temporizador de {{name}} foi conectado primeiro. O seu foi interrompido e salvo na linha do tempo."
+  },
   "summary": {
     "today": "Hoje",
     "feeding_one": "Alimentação",
