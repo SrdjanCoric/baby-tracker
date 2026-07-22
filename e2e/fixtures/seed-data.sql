@@ -8,6 +8,7 @@ GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.cleanup_stale_timer_locks() FROM authenticated, anon;
 
 DO $$
 BEGIN

@@ -19,6 +19,7 @@
     "test:sync": "vitest run src/services/sync/",
     "test:sql": "node scripts/run-sql-vectors.mjs",
     "test:sql:setup": "supabase start && supabase db reset --no-seed && node scripts/apply-migrations.mjs",
+    "test:edge:timer": "node scripts/test-active-timer-edge.mjs",
     "test:all": "npm run test:unit && npm run test:component",
     "analyze:bundle": "npx react-native-bundle-visualizer",
     "e2e:setup": "supabase start && supabase db push",
