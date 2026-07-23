@@ -56,14 +56,14 @@ WHERE n.nspname = 'public'
 ORDER BY p.proname, arguments;
 ```
 
-For the current client, confirm these signatures are present:
+For the current client, confirm the query returns these names, argument names, and types:
 
 ```text
-acquire_timer_lock(uuid, character varying, uuid, jsonb, timestamp with time zone)
-merge_record(text, jsonb, jsonb)
-merge_record(text, jsonb, jsonb, text, uuid)
-release_timer_lock(uuid, character varying, uuid)
-toggle_timer_pause(uuid, text, uuid, jsonb)
+acquire_timer_lock(p_baby_id uuid, p_activity_type character varying, p_user_id uuid, p_timer_data jsonb, p_started_at timestamp with time zone)
+merge_record(p_table text, p_record jsonb, p_field_clocks jsonb)
+merge_record(p_table text, p_record jsonb, p_field_clocks jsonb, p_operation_id text, p_expected_user_id uuid)
+release_timer_lock(p_baby_id uuid, p_activity_type character varying, p_user_id uuid)
+toggle_timer_pause(p_baby_id uuid, p_activity_type text, p_user_id uuid, p_timer_data jsonb)
 ```
 
 If a migration or signature is missing, do not build or submit. Apply it through the approved database change process, follow that migration's recovery plan, and rerun both queries before continuing.
@@ -76,7 +76,7 @@ Create `v<version>` on the already-merged release commit and push that tag. For 
 
 ### Manual release
 
-Run **Deploy to App Stores** against the chosen branch, tag, or commit. Enter the exact version already present in `app.json` and choose `ios`, `android`, or `all`. The workflow records the selected version, source ref, and source commit. It does not change source files.
+Run **Deploy to App Stores** against the chosen branch or tag. Enter the exact version already present in `app.json` and choose `ios`, `android`, or `all`. The workflow records the selected version, source ref, and source commit. It does not change source files.
 
 ## Trace the release
 
