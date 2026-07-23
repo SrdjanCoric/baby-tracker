@@ -26,12 +26,21 @@ function runs(jobName, command) {
 
 const checkJobs = [
   "quality",
+  "dependency-audit",
   "unit-tests",
   "component-tests",
   "security-tests",
   "sync-tests",
   "sql-tests",
 ];
+
+test("dependency advisories are audited as a required pull-request check", () => {
+  assert.equal(packageJson.scripts["audit:dependencies"], "node scripts/audit-dependencies.mjs");
+  assert.ok(runs("dependency-audit", "npm ci"));
+  assert.ok(runs("dependency-audit", "npm run audit:dependencies"));
+  assert.ok(checkJobs.includes("dependency-audit"));
+  assert.ok(workflow.jobs.required.needs.includes("dependency-audit"));
+});
 
 test("pull requests and main run every maintained non-device check", () => {
   assert.ok(workflow.on.pull_request);

@@ -2,6 +2,7 @@
 
 const requiredJobs = [
   "quality",
+  "dependency-audit",
   "unit-tests",
   "component-tests",
   "security-tests",
