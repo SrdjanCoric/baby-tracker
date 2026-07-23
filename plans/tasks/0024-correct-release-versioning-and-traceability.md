@@ -42,6 +42,11 @@ Do not dispatch a production build, submit an app, push a tag, or access product
 - [ ] Require the complete PR checks and the agreed iOS pre-release E2E result.
 - [ ] Document source tracing, build-number behavior, migration verification, and recovery steps.
 
+## Decisions
+
+- GitHub does not offer required environment reviewers for this private repository on its current plan. Release builds and store submission are therefore separate workflows. Build runs never submit. A manual submission run resolves exact EAS build IDs from a completed build workflow run and records the database confirmation plus iOS E2E evidence when applicable.
+- The `production-release` environment scopes release credentials and allows only `main` and `v*` refs.
+
 ## Human checkpoints
 
 - [ ] [confirm-db] Before production release, the owner performs the documented read-only migration and RPC verification in production and confirms the expected signatures are present · Expected: every migration required by the tagged client is recorded as applied and required RPC signatures exist · Failure: a migration or signature is absent or ambiguous, in which case release stops · Reason: the agent is prohibited from accessing production and production schema state cannot be inferred from local migrations.

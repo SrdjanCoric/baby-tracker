@@ -1,4 +1,4 @@
-name: Deploy to App Stores
+name: Build Store Release
 
 on:
   push:
@@ -21,7 +21,7 @@ on:
           - android
 
 concurrency:
-  group: deploy
+  group: release-build
   cancel-in-progress: false
 
 jobs:
@@ -173,78 +173,3 @@ jobs:
           path: eas-android-build.json
           if-no-files-found: error
           retention-days: 90
-
-  submit-ios:
-    needs: [release-metadata, test, build-ios]
-    runs-on: ubuntu-latest
-    environment: production-release
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout validated commit
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.release-metadata.outputs.source-sha }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.19.4"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: "21.1.0"
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Submit validated iOS build to App Store
-        run: |
-          eas submit --platform ios --profile production --id "${{ needs.build-ios.outputs.build-id }}" --non-interactive
-          echo "Submitted iOS EAS build: \`${{ needs.build-ios.outputs.build-id }}\`" >> "$GITHUB_STEP_SUMMARY"
-        env:
-          EXPO_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.EXPO_APPLE_APP_SPECIFIC_PASSWORD }}
-
-  submit-android:
-    needs: [release-metadata, test, build-android]
-    runs-on: ubuntu-latest
-    environment: production-release
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout validated commit
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.release-metadata.outputs.source-sha }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.19.4"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: "21.1.0"
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Write Google Play service account key
-        run: printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > google-play-service-account.json
-        env:
-          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-
-      - name: Submit validated Android build to Google Play
-        run: |
-          eas submit --platform android --profile production --id "${{ needs.build-android.outputs.build-id }}" --non-interactive
-          echo "Submitted Android EAS build: \`${{ needs.build-android.outputs.build-id }}\`" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Cleanup service account key
-        if: always()
-        run: rm -f google-play-service-account.json

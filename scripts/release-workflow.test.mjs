@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -12,6 +12,57 @@ const deployWorkflow = parse(
 );
 const testWorkflow = parse(readFileSync(".github/workflows/test.yml", "utf8"));
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+
+function resolveSubmission({
+  platform = "ios",
+  overrides = {},
+  iosBuildId = "11111111-1111-4111-8111-111111111111",
+  androidBuildId = "22222222-2222-4222-8222-222222222222",
+} = {}) {
+  const directory = mkdtempSync(join(tmpdir(), "sofibaby-submission-"));
+  const outputPath = join(directory, "github-output.txt");
+  const recordPath = join(directory, "submission-metadata.json");
+  writeFileSync(
+    join(directory, "release-metadata.json"),
+    JSON.stringify({
+      version: appVersion,
+      sourceCommit: "0123456789abcdef0123456789abcdef01234567",
+      sourceRef: `refs/tags/v${appVersion}`,
+      trigger: "push",
+      platform: "all",
+      validationRun: "https://github.com/example/sofibaby/actions/runs/12345",
+    })
+  );
+  writeFileSync(
+    join(directory, "eas-ios-build.json"),
+    JSON.stringify([{ id: iosBuildId }])
+  );
+  writeFileSync(
+    join(directory, "eas-android-build.json"),
+    JSON.stringify([{ id: androidBuildId }])
+  );
+
+  const result = spawnSync("node", ["scripts/resolve-release-submission.mjs"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      GITHUB_OUTPUT: outputPath,
+      GITHUB_REF: "refs/heads/main",
+      GITHUB_REPOSITORY: "example/sofibaby",
+      GITHUB_SERVER_URL: "https://github.com",
+      IOS_E2E_EVIDENCE: "e2e/artifacts/household-timers/2026-07-23",
+      PRODUCTION_DATABASE_CONFIRMED: "true",
+      RELEASE_ARTIFACTS_PATH: directory,
+      RELEASE_RUN_ID: "12345",
+      SUBMISSION_METADATA_PATH: recordPath,
+      SUBMISSION_PLATFORM: platform,
+      ...overrides,
+    },
+  });
+
+  return { result, outputPath, recordPath };
+}
 
 function validateRelease(overrides = {}) {
   const directory = mkdtempSync(join(tmpdir(), "sofibaby-release-"));
@@ -170,14 +221,81 @@ test("the operator checklist gates release approval and records recovery evidenc
   assert.equal(easConfig.build.production.autoIncrement, true);
 });
 
-test("store submissions use protected credentials and the exact validated builds", () => {
+test("a confirmed submission resolves the exact build from its release run", () => {
+  const { result, outputPath, recordPath } = resolveSubmission();
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(
+    readFileSync(outputPath, "utf8"),
+    /ios-build-id=11111111-1111-4111-8111-111111111111/
+  );
+  assert.deepEqual(JSON.parse(readFileSync(recordPath, "utf8")), {
+    releaseRunId: "12345",
+    version: appVersion,
+    sourceCommit: "0123456789abcdef0123456789abcdef01234567",
+    sourceRef: `refs/tags/v${appVersion}`,
+    platform: "ios",
+    productionDatabaseConfirmed: true,
+    iosE2eEvidence: "e2e/artifacts/household-timers/2026-07-23",
+    buildIds: { ios: "11111111-1111-4111-8111-111111111111" },
+  });
+});
+
+test("submission stops unless production database verification is confirmed", () => {
+  const { result } = resolveSubmission({
+    overrides: { PRODUCTION_DATABASE_CONFIRMED: "false" },
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(
+    result.stderr,
+    /Confirm the production migration and RPC verification before submission\./
+  );
+});
+
+test("iOS submission requires evidence from the clean local gate", () => {
+  const { result } = resolveSubmission({
+    overrides: { IOS_E2E_EVIDENCE: "" },
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(
+    result.stderr,
+    /Provide the clean iOS E2E result or artifact path before submission\./
+  );
+});
+
+test("submission rejects artifacts that do not belong to the requested release run", () => {
+  const { result } = resolveSubmission({
+    overrides: { RELEASE_RUN_ID: "99999" },
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(
+    result.stderr,
+    /Release metadata does not belong to workflow run 99999\./
+  );
+});
+
+test("submission rejects malformed EAS build IDs before shell use", () => {
+  const { result } = resolveSubmission({
+    iosBuildId: 'bad-id"; echo injected',
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /valid iOS EAS build ID/);
+});
+
+test("release builds never submit to an app store", () => {
+  assert.doesNotMatch(JSON.stringify(deployWorkflow), /eas submit/);
+  assert.equal(deployWorkflow.jobs["submit-ios"], undefined);
+  assert.equal(deployWorkflow.jobs["submit-android"], undefined);
+});
+
+test("protected build jobs use the validated source and record exact EAS IDs", () => {
   for (const platform of ["ios", "android"]) {
     const build = deployWorkflow.jobs[`build-${platform}`];
-    const submit = deployWorkflow.jobs[`submit-${platform}`];
     const buildCommands = build.steps.flatMap((step) =>
-      step.run ? [step.run] : []
-    );
-    const submitCommands = submit.steps.flatMap((step) =>
       step.run ? [step.run] : []
     );
     const expectedRef = "${{ needs.release-metadata.outputs.source-sha }}";
@@ -200,15 +318,39 @@ test("store submissions use protected credentials and the exact validated builds
       "21.1.0"
     );
     assert.match(buildCommands.join("\n"), /eas build .*--wait .*--json/);
+  }
+});
 
-    assert.equal(submit.environment, "production-release", `${platform} submit`);
-    assert.ok(submit.needs.includes("release-metadata"));
-    assert.ok(submit.needs.includes(`build-${platform}`));
-    assert.equal(submit.steps[0].with.ref, expectedRef);
-    assert.match(
-      submitCommands.join("\n"),
-      new RegExp(`eas submit .*--id "\\$\\{\\{ needs\\.build-${platform}\\.outputs\\.build-id \\}\\}"`)
+test("manual submission downloads one release run and submits its exact builds", () => {
+  const submissionWorkflow = parse(
+    readFileSync(".github/workflows/submit.yml", "utf8")
+  );
+  const inputs = submissionWorkflow.on.workflow_dispatch.inputs;
+  const resolve = submissionWorkflow.jobs["resolve-release"];
+  const serialized = JSON.stringify(submissionWorkflow);
+
+  assert.equal(inputs.release_run_id.required, true);
+  assert.equal(inputs.production_database_confirmed.type, "boolean");
+  assert.equal(inputs.ios_e2e_evidence.required, false);
+  assert.equal(resolve.permissions.actions, "read");
+  assert.match(serialized, /actions\/download-artifact@v4/);
+  assert.match(serialized, /node scripts\/resolve-release-submission\.mjs/);
+  assert.doesNotMatch(serialized, /eas build|--latest/);
+
+  for (const platform of ["ios", "android"]) {
+    const submit = submissionWorkflow.jobs[`submit-${platform}`];
+    const commands = submit.steps.flatMap((step) =>
+      step.run ? [step.run] : []
     );
-    assert.doesNotMatch(submitCommands.join("\n"), /--latest/);
+
+    assert.equal(submit.environment, "production-release");
+    assert.equal(
+      submit.steps[0].with.ref,
+      "${{ needs.resolve-release.outputs.source-sha }}"
+    );
+    assert.match(
+      commands.join("\n"),
+      new RegExp(`eas submit .*--id "\\$\\{\\{ needs\\.resolve-release\\.outputs\\.${platform}-build-id \\}\\}"`)
+    );
   }
 });
