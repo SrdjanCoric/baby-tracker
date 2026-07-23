@@ -13,6 +13,7 @@ function run(...results) {
 
 const successfulResults = [
   "quality=success",
+  "dependency-audit=success",
   "unit-tests=success",
   "component-tests=success",
   "security-tests=success",

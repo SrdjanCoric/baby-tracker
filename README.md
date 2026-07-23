@@ -111,6 +111,7 @@ npx expo prebuild --platform android --clean && npx expo run:android
 ```bash
 npm run check                # Complete non-device validation before a pull request
 npm run check:code           # The same validation without local database checks
+npm run audit:dependencies   # Fail on unapproved high or critical advisories
 npm run test:unit            # 2,200+ Vitest unit tests
 npm run test:component -- --runInBand # Jest component tests
 npm run test:security        # Security tests
@@ -127,7 +128,7 @@ npm run e2e:household-timers:clean # Required local iOS device gate before relea
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.
 
-Pull requests and pushes to `main` run the non-device checks as separate GitHub Actions jobs. Configure `Non-device checks required` as the required branch-protection check. Test jobs retain their logs as artifacts for seven days.
+Pull requests and pushes to `main` run the non-device checks as separate GitHub Actions jobs. The required dependency audit blocks unapproved high or critical advisories. Dependabot opens npm update pull requests each week. Configure `Non-device checks required` as the required branch-protection check. Test jobs retain their logs as artifacts for seven days. See [`docs/DEPENDENCY_SECURITY.md`](docs/DEPENDENCY_SECURITY.md) for advisory triage and temporary exception rules.
 
 Run `npm run e2e:household-timers:clean` before each iOS release. GitHub Actions does not run iOS device tests because GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase.
 

@@ -30,6 +30,20 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:ci
 
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+          cache: npm
+      - run: npm ci
+      - run: npm run audit:dependencies
+
   unit-tests:
     name: Unit tests
     runs-on: ubuntu-latest
@@ -175,6 +189,7 @@ jobs:
     needs:
       [
         quality,
+        dependency-audit,
         unit-tests,
         component-tests,
         security-tests,
@@ -192,6 +207,7 @@ jobs:
       - run: >-
           node scripts/require-successful-jobs.mjs
           quality=${{ needs.quality.result }}
+          dependency-audit=${{ needs.dependency-audit.result }}
           unit-tests=${{ needs.unit-tests.result }}
           component-tests=${{ needs.component-tests.result }}
           security-tests=${{ needs.security-tests.result }}
