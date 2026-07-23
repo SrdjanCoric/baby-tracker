@@ -1,4 +1,4 @@
-name: E2E Tests
+name: Android E2E Tests
 
 on:
   push:
@@ -17,99 +17,6 @@ on:
           - regression
 
 jobs:
-  e2e-ios:
-    runs-on: macos-14
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Maestro CLI
-        run: |
-          curl -Ls "https://get.maestro.mobile.dev" | bash
-          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Start Supabase
-        run: |
-          supabase start
-          supabase db push
-
-      - name: Get Supabase credentials
-        id: supabase
-        run: |
-          echo "ANON_KEY=$(supabase status --output json | jq -r '.ANON_KEY')" >> $GITHUB_OUTPUT
-
-      - name: Create .env file
-        run: |
-          cat > .env << EOF
-          EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
-          EXPO_PUBLIC_SUPABASE_ANON_KEY=${{ steps.supabase.outputs.ANON_KEY }}
-          EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=test-ios-client-id
-          EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=test-web-client-id
-          EOF
-
-      - name: Seed test data
-        run: npm run e2e:seed
-
-      - name: Prebuild iOS
-        run: npx expo prebuild --platform ios --clean
-
-      - name: Build iOS app
-        run: |
-          xcodebuild \
-            -workspace ios/*.xcworkspace \
-            -scheme SofiBaby \
-            -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
-            -configuration Debug \
-            build \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Boot iOS Simulator
-        run: |
-          xcrun simctl boot "iPhone 15" || true
-          xcrun simctl bootstatus "iPhone 15"
-
-      - name: Install app on simulator
-        run: |
-          xcrun simctl install booted ios/build/Build/Products/Debug-iphonesimulator/*.app
-
-      - name: Run E2E tests
-        run: |
-          SUITE="${{ github.event.inputs.suite || 'smoke' }}"
-          maestro test "e2e/suites/${SUITE}.yaml" --format junit --output e2e-results.xml
-        continue-on-error: true
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: e2e-results-ios
-          path: |
-            e2e-results.xml
-            ~/.maestro/tests/**/*
-
-      - name: Cleanup
-        if: always()
-        run: |
-          npm run e2e:cleanup || true
-          supabase stop || true
-
   e2e-android:
     runs-on: ubuntu-latest
     timeout-minutes: 60
