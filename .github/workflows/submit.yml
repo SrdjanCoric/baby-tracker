@@ -1,0 +1,182 @@
+name: Submit Store Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_run_id:
+        description: "Successful Build Store Release workflow run ID"
+        required: true
+        type: string
+      platform:
+        description: "Platform to submit"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+      production_database_confirmed:
+        description: "Required migrations and RPC signatures are present in production"
+        required: true
+        default: false
+        type: boolean
+      ios_e2e_evidence:
+        description: "Clean iOS E2E result or artifact path, required for iOS"
+        required: false
+        type: string
+
+concurrency:
+  group: store-submission
+  cancel-in-progress: false
+
+jobs:
+  resolve-release:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      source-sha: ${{ steps.resolve.outputs.source-sha }}
+      ios-build-id: ${{ steps.resolve.outputs.ios-build-id }}
+      android-build-id: ${{ steps.resolve.outputs.android-build-id }}
+    steps:
+      - name: Checkout submission controls
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+
+      - name: Download release metadata
+        uses: actions/download-artifact@v4
+        with:
+          name: release-metadata-${{ inputs.release_run_id }}
+          path: release-artifacts
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.release_run_id }}
+
+      - name: Download iOS build record
+        if: inputs.platform == 'all' || inputs.platform == 'ios'
+        uses: actions/download-artifact@v4
+        with:
+          name: eas-ios-build-${{ inputs.release_run_id }}
+          path: release-artifacts
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.release_run_id }}
+
+      - name: Download Android build record
+        if: inputs.platform == 'all' || inputs.platform == 'android'
+        uses: actions/download-artifact@v4
+        with:
+          name: eas-android-build-${{ inputs.release_run_id }}
+          path: release-artifacts
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.release_run_id }}
+
+      - name: Validate release evidence
+        id: resolve
+        run: node scripts/resolve-release-submission.mjs
+        env:
+          IOS_E2E_EVIDENCE: ${{ inputs.ios_e2e_evidence }}
+          PRODUCTION_DATABASE_CONFIRMED: ${{ inputs.production_database_confirmed }}
+          RELEASE_ARTIFACTS_PATH: release-artifacts
+          RELEASE_RUN_ID: ${{ inputs.release_run_id }}
+          SUBMISSION_METADATA_PATH: submission-metadata.json
+          SUBMISSION_PLATFORM: ${{ inputs.platform }}
+
+      - name: Record submission source
+        run: |
+          echo "## Store submission source" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat submission-metadata.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload submission metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: submission-metadata-${{ github.run_id }}
+          path: submission-metadata.json
+          if-no-files-found: error
+          retention-days: 90
+
+  submit-ios:
+    needs: resolve-release
+    if: needs.resolve-release.outputs.ios-build-id != ''
+    runs-on: ubuntu-latest
+    environment: production-release
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout validated source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-release.outputs.source-sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: "21.1.0"
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit recorded iOS build
+        run: |
+          eas submit --platform ios --profile production --id "${{ needs.resolve-release.outputs.ios-build-id }}" --non-interactive
+          echo "Submitted iOS EAS build: \`${{ needs.resolve-release.outputs.ios-build-id }}\`" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          EXPO_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.EXPO_APPLE_APP_SPECIFIC_PASSWORD }}
+
+  submit-android:
+    needs: resolve-release
+    if: needs.resolve-release.outputs.android-build-id != ''
+    runs-on: ubuntu-latest
+    environment: production-release
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout validated source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-release.outputs.source-sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: "21.1.0"
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Write Google Play service account key
+        run: printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > google-play-service-account.json
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+
+      - name: Submit recorded Android build
+        run: |
+          eas submit --platform android --profile production --id "${{ needs.resolve-release.outputs.android-build-id }}" --non-interactive
+          echo "Submitted Android EAS build: \`${{ needs.resolve-release.outputs.android-build-id }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cleanup service account key
+        if: always()
+        run: rm -f google-play-service-account.json

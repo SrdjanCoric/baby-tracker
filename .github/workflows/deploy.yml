@@ -1,4 +1,4 @@
-name: Deploy to App Stores
+name: Build Store Release
 
 on:
   push:
@@ -6,6 +6,10 @@ on:
       - "v*"
   workflow_dispatch:
     inputs:
+      version:
+        description: "Marketing version already committed in app.json"
+        required: true
+        type: string
       platform:
         description: "Platform to build"
         required: true
@@ -17,66 +21,80 @@ on:
           - android
 
 concurrency:
-  group: deploy
+  group: release-build
   cancel-in-progress: false
 
 jobs:
-  version-bump:
+  release-metadata:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     outputs:
-      version: ${{ steps.extract.outputs.version }}
+      version: ${{ steps.validate.outputs.version }}
+      source-sha: ${{ steps.validate.outputs.source-sha }}
     steps:
-      - name: Checkout
+      - name: Checkout triggering commit
         uses: actions/checkout@v4
         with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.sha }}
 
-      - name: Extract version from tag
-        id: extract
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            VERSION="${GITHUB_REF#refs/tags/v}"
-          else
-            VERSION=$(jq -r '.expo.version' app.json)
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Version: $VERSION"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
 
-      - name: Update app.json version
-        if: github.event_name == 'push'
+      - name: Validate release metadata
+        id: validate
+        run: node scripts/validate-release.mjs
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.version }}
+          RELEASE_PLATFORM: ${{ github.event.inputs.platform || 'all' }}
+          RELEASE_METADATA_PATH: release-metadata.json
+
+      - name: Record release metadata
         run: |
-          jq --arg v "${{ steps.extract.outputs.version }}" '.expo.version = $v' app.json > tmp.json && mv tmp.json app.json
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app.json
-          git commit -m "chore: bump version to ${{ steps.extract.outputs.version }}"
-          git push origin main
+          echo "## Release source" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat release-metadata.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-metadata-${{ github.run_id }}
+          path: release-metadata.json
+          if-no-files-found: error
+          retention-days: 90
 
   test:
-    needs: version-bump
+    needs: release-metadata
     uses: ./.github/workflows/test.yml
+    with:
+      ref: ${{ needs.release-metadata.outputs.source-sha }}
 
   build-ios:
-    needs: test
+    needs: [release-metadata, test]
     if: >-
       github.event.inputs.platform == 'all' ||
       github.event.inputs.platform == 'ios' ||
       github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment: production-release
+    permissions:
+      contents: read
+    outputs:
+      build-id: ${{ steps.build.outputs.build-id }}
     steps:
-      - name: Checkout
+      - name: Checkout validated commit
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ needs.release-metadata.outputs.source-sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "20.19.4"
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -84,30 +102,50 @@ jobs:
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: "21.1.0"
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build iOS
-        run: eas build --platform ios --profile production --non-interactive
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          eas build --platform ios --profile production --non-interactive --wait --json > eas-ios-build.json
+          BUILD_ID=$(node -e 'const data=JSON.parse(require("node:fs").readFileSync("eas-ios-build.json", "utf8")); const build=Array.isArray(data) ? data[0] : data; if (!build?.id) throw new Error("EAS did not return a build ID"); process.stdout.write(build.id)')
+          echo "build-id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          echo "iOS EAS build: \`$BUILD_ID\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload iOS build record
+        uses: actions/upload-artifact@v4
+        with:
+          name: eas-ios-build-${{ github.run_id }}
+          path: eas-ios-build.json
+          if-no-files-found: error
+          retention-days: 90
 
   build-android:
-    needs: test
+    needs: [release-metadata, test]
     if: >-
       github.event.inputs.platform == 'all' ||
       github.event.inputs.platform == 'android' ||
       github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment: production-release
+    permissions:
+      contents: read
+    outputs:
+      build-id: ${{ steps.build.outputs.build-id }}
     steps:
-      - name: Checkout
+      - name: Checkout validated commit
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ needs.release-metadata.outputs.source-sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "20.19.4"
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -115,67 +153,23 @@ jobs:
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: "21.1.0"
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build Android
-        run: eas build --platform android --profile production --non-interactive
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          eas build --platform android --profile production --non-interactive --wait --json > eas-android-build.json
+          BUILD_ID=$(node -e 'const data=JSON.parse(require("node:fs").readFileSync("eas-android-build.json", "utf8")); const build=Array.isArray(data) ? data[0] : data; if (!build?.id) throw new Error("EAS did not return a build ID"); process.stdout.write(build.id)')
+          echo "build-id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          echo "Android EAS build: \`$BUILD_ID\`" >> "$GITHUB_STEP_SUMMARY"
 
-  submit-ios:
-    needs: build-ios
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Upload Android build record
+        uses: actions/upload-artifact@v4
         with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Submit to App Store
-        run: eas submit --platform ios --profile production --latest --non-interactive
-        env:
-          EXPO_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.EXPO_APPLE_APP_SPECIFIC_PASSWORD }}
-
-  submit-android:
-    needs: build-android
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Write Google Play service account key
-        run: echo '${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}' > google-play-service-account.json
-
-      - name: Submit to Google Play
-        run: eas submit --platform android --profile production --latest --non-interactive
-
-      - name: Cleanup service account key
-        if: always()
-        run: rm -f google-play-service-account.json
+          name: eas-android-build-${{ github.run_id }}
+          path: eas-android-build.json
+          if-no-files-found: error
+          retention-days: 90

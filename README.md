@@ -1,4 +1,4 @@
-# Sofi — Baby Tracker
+# Sofi: Baby Tracker
 
 A production baby tracking app for iOS and Android, built with React Native. Offline-first architecture with a custom sync engine, real-time multi-caregiver collaboration, iOS widgets, Apple Watch app, and Live Activities.
 
@@ -132,6 +132,14 @@ Pull requests and pushes to `main` run the non-device checks as separate GitHub 
 Run `npm run e2e:household-timers:clean` before each iOS release. GitHub Actions does not run iOS device tests because GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase.
 
 The fast iOS command reuses the installed E2E app and local fixtures. The scenario stops local Supabase API access while the owner starts sleep. It restores the API, restarts each observing app before checking server state, and continues the two-caregiver handoff. The clean command resets local Supabase and builds the app for two named simulators before running the same scenario. It removes fixture accounts when finished. A build, fixture, assertion, Maestro, or cleanup failure exits nonzero and blocks the release. Both commands require Docker, Xcode, Maestro, and `psql`; clean provisioning also needs `jq` and CocoaPods. See [`e2e/README.md`](e2e/README.md) for setup and diagnostics, including the local-only safeguards.
+
+## Releases
+
+The **Build Store Release** workflow accepts `v*` tags and manual runs. It validates the version and runs the complete non-device checks against the selected source. The build uses that commit and never submits to an app store.
+
+The **Submit Store Release** workflow runs manually from `main`. It takes a successful build workflow run ID and requires production database confirmation. An iOS submission also requires the clean local E2E result or artifact path. The workflow downloads the recorded build IDs and submits them without rebuilding or selecting the latest EAS build.
+
+Release credentials are stored in the `production-release` GitHub environment, which allows only `main` and `v*`. See [`docs/RELEASE.md`](docs/RELEASE.md) for the checklist and recovery procedures.
 
 ## License
 
