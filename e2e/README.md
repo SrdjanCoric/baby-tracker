@@ -2,6 +2,8 @@
 
 The maintained two-caregiver iOS suite starts a sleep timer without local Supabase API access. After restarting both apps, it reconnects the timer and runs the household handoff on separate simulators. Existing single-device Maestro flows cover general app smoke and regression scenarios.
 
+Run `npm run e2e:household-timers:clean` locally before each iOS release. GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase, so GitHub Actions does not run this suite.
+
 ## Two-caregiver sleep-timer suite
 
 The scenario verifies this household contract:
@@ -52,9 +54,9 @@ Docker Desktop must be running:
 docker info
 ```
 
-### Clean provisioning
+### Pre-release clean gate
 
-Run this command once from the repository root to provision the local database, app, and simulators:
+Run this command from the repository root before each iOS release:
 
 ```bash
 npm run e2e:household-timers:clean
@@ -70,7 +72,7 @@ The clean command:
 6. Installs the app on both simulators and runs the offline reconnect and sleep handoff.
 7. Saves diagnostics, removes the fixture accounts, shuts down both simulators, and retains the installed E2E app for fast runs.
 
-The database reset deletes all data in this project's local Supabase instance. The command rejects Supabase API and PostgreSQL URLs unless they use `localhost`, `127.0.0.1`, or `::1`.
+The database reset deletes all data in this project's local Supabase instance. The command rejects Supabase API and PostgreSQL URLs unless they use `localhost`, `127.0.0.1`, or `::1`. A provisioning, fixture, assertion, Maestro, or cleanup failure exits nonzero and blocks the release.
 
 ### Fast behavioral runs
 

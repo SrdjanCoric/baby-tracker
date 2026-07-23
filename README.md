@@ -122,14 +122,16 @@ npm run test:edge:timer      # Local timer RPC and Edge authorization flow
 npm run typecheck            # TypeScript strict mode
 npm run lint                 # ESLint (warnings fail the quality gate)
 npm run e2e:household-timers       # Fast iOS offline reconnect and caregiver handoff
-npm run e2e:household-timers:clean # Clean local provisioning and the same scenario
+npm run e2e:household-timers:clean # Required local iOS device gate before release
 ```
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.
 
 Pull requests and pushes to `main` run the non-device checks as separate GitHub Actions jobs. Configure `Non-device checks required` as the required branch-protection check. Test jobs retain their logs as artifacts for seven days.
 
-The fast iOS command reuses the installed E2E app and local fixtures. The scenario stops local Supabase API access while the owner starts sleep. It restores the API, restarts each observing app before checking server state, and continues the two-caregiver handoff. The clean command resets local Supabase and builds the app for two named simulators before running the same scenario. It removes fixture accounts when finished. Both require Docker, Xcode, Maestro, and `psql`; clean provisioning also needs `jq` and CocoaPods. See [`e2e/README.md`](e2e/README.md) for setup and diagnostics, including the local-only safeguards.
+Run `npm run e2e:household-timers:clean` before each iOS release. GitHub Actions does not run iOS device tests because GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase.
+
+The fast iOS command reuses the installed E2E app and local fixtures. The scenario stops local Supabase API access while the owner starts sleep. It restores the API, restarts each observing app before checking server state, and continues the two-caregiver handoff. The clean command resets local Supabase and builds the app for two named simulators before running the same scenario. It removes fixture accounts when finished. A build, fixture, assertion, Maestro, or cleanup failure exits nonzero and blocks the release. Both commands require Docker, Xcode, Maestro, and `psql`; clean provisioning also needs `jq` and CocoaPods. See [`e2e/README.md`](e2e/README.md) for setup and diagnostics, including the local-only safeguards.
 
 ## License
 
