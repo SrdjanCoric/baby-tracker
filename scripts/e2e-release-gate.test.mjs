@@ -16,7 +16,12 @@ function commands(job) {
 }
 
 test("GitHub Actions does not claim to run iOS device E2E", () => {
-  assert.equal(workflow.jobs["e2e-ios"], undefined);
+  assert.equal(workflow.name, "Android E2E Tests");
+  assert.ok(
+    Object.values(workflow.jobs).every(
+      (job) => !String(job["runs-on"]).startsWith("macos-")
+    )
+  );
   assert.doesNotMatch(
     JSON.stringify(workflow.jobs),
     /iphonesimulator|xcrun simctl|prebuild --platform ios/i
