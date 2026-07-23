@@ -21,7 +21,7 @@ A high or critical advisory may be excepted only when no compatible remediation 
 
 - `advisory`: the exact GHSA identifier
 - `package`: the affected package name
-- `dependencyPath`: the full path from the root package
+- `dependencyPaths`: every affected `node_modules` path reported by `npm audit`, as an array
 - `exposure`: runtime or tooling exposure and attacker-controlled inputs
 - `reason`: why no compatible remediation is currently safe
 - `upstream`: the upstream reference that tracks the fix

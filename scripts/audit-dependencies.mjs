@@ -11,7 +11,7 @@ function advisoryId(url) {
 const REQUIRED_EXCEPTION_FIELDS = [
   "advisory",
   "package",
-  "dependencyPath",
+  "dependencyPaths",
   "exposure",
   "reason",
   "upstream",
@@ -20,9 +20,28 @@ const REQUIRED_EXCEPTION_FIELDS = [
 ];
 
 function missingExceptionFields(exception) {
-  return REQUIRED_EXCEPTION_FIELDS.filter(
-    (field) =>
+  return REQUIRED_EXCEPTION_FIELDS.filter((field) => {
+    if (field === "dependencyPaths") {
+      return (
+        !Array.isArray(exception.dependencyPaths) ||
+        exception.dependencyPaths.length === 0 ||
+        exception.dependencyPaths.some(
+          (path) => typeof path !== "string" || path.trim() === ""
+        )
+      );
+    }
+    return (
       typeof exception[field] !== "string" || exception[field].trim() === ""
+    );
+  });
+}
+
+function dependencyPathsMatch(exception, finding) {
+  const reviewed = [...new Set(exception.dependencyPaths)].sort();
+  const current = [...new Set(finding.nodes)].sort();
+  return (
+    reviewed.length === current.length &&
+    reviewed.every((path, index) => path === current[index])
   );
 }
 
@@ -80,7 +99,8 @@ export function evaluateDependencyAudit({
     validExceptions.some(
       (exception) =>
         exception.advisory === finding.advisory &&
-        exception.package === finding.package
+        exception.package === finding.package &&
+        dependencyPathsMatch(exception, finding)
     )
   );
   const unapproved = findings.filter(
@@ -120,6 +140,25 @@ export function evaluateDependencyAudit({
       package: exception.package,
       problem: `exception expired on ${exception.expiresOn}`,
     }));
+  const changedPathExceptions = validExceptions
+    .flatMap((exception) => {
+      const finding = findings.find(
+        (candidate) =>
+          exception.advisory === candidate.advisory &&
+          exception.package === candidate.package
+      );
+      if (!finding || dependencyPathsMatch(exception, finding)) {
+        return [];
+      }
+
+      return [
+        {
+          advisory: exception.advisory,
+          package: exception.package,
+          problem: `dependency paths changed; reviewed: ${[...new Set(exception.dependencyPaths)].sort().join(", ")}; current: ${[...new Set(finding.nodes)].sort().join(", ")}`,
+        },
+      ];
+    });
   const staleExceptions = validExceptions
     .filter(
       (exception) =>
@@ -138,6 +177,7 @@ export function evaluateDependencyAudit({
     ...incompleteExceptions,
     ...invalidDateExceptions,
     ...expiredExceptions,
+    ...changedPathExceptions,
     ...staleExceptions,
   ];
 

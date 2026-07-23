@@ -55,6 +55,35 @@ test("the same advisory is reported once when npm lists several affected ranges"
   assert.equal(result.unapproved.length, 1);
 });
 
+test("an exception fails when its reviewed dependency paths differ from the audit", () => {
+  const result = evaluateDependencyAudit({
+    audit: auditWith(highAdvisory),
+    exceptions: [
+      {
+        advisory: "GHSA-aaaa-bbbb-cccc",
+        package: "example-package",
+        dependencyPaths: ["node_modules/other-package"],
+        exposure: "Build-time only; input is repository-controlled.",
+        reason: "No compatible patched release is available.",
+        upstream: "https://github.com/example/package/issues/123",
+        owner: "@mobile-maintainers",
+        expiresOn: "2026-08-01",
+      },
+    ],
+    now: new Date("2026-07-15T00:00:00.000Z"),
+  });
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.invalidExceptions, [
+    {
+      advisory: "GHSA-aaaa-bbbb-cccc",
+      package: "example-package",
+      problem:
+        "dependency paths changed; reviewed: node_modules/other-package; current: node_modules/example-package",
+    },
+  ]);
+});
+
 test("a complete unexpired exception approves only its exact advisory and package", () => {
   const result = evaluateDependencyAudit({
     audit: auditWith(highAdvisory),
@@ -62,7 +91,7 @@ test("a complete unexpired exception approves only its exact advisory and packag
       {
         advisory: "GHSA-aaaa-bbbb-cccc",
         package: "example-package",
-        dependencyPath: "root > build-tool > example-package",
+        dependencyPaths: ["node_modules/example-package"],
         exposure: "Build-time only; input is repository-controlled.",
         reason: "No compatible patched release is available.",
         upstream: "https://github.com/example/package/issues/123",
@@ -86,7 +115,7 @@ test("an expired exception cannot suppress a high-severity advisory", () => {
       {
         advisory: "GHSA-aaaa-bbbb-cccc",
         package: "example-package",
-        dependencyPath: "root > build-tool > example-package",
+        dependencyPaths: ["node_modules/example-package"],
         exposure: "Build-time only; input is repository-controlled.",
         reason: "No compatible patched release is available.",
         upstream: "https://github.com/example/package/issues/123",
@@ -108,7 +137,7 @@ test("a stale exception fails after its advisory disappears", () => {
       {
         advisory: "GHSA-aaaa-bbbb-cccc",
         package: "example-package",
-        dependencyPath: "root > build-tool > example-package",
+        dependencyPaths: ["node_modules/example-package"],
         exposure: "Build-time only; input is repository-controlled.",
         reason: "No compatible patched release is available.",
         upstream: "https://github.com/example/package/issues/123",
@@ -148,7 +177,7 @@ test("an exception with incomplete review metadata fails the policy", () => {
       advisory: "GHSA-aaaa-bbbb-cccc",
       package: "example-package",
       problem:
-        "missing required fields: dependencyPath, exposure, reason, upstream, owner",
+        "missing required fields: dependencyPaths, exposure, reason, upstream, owner",
     },
   ]);
 });
@@ -174,7 +203,7 @@ test("an exception requires an exact ISO calendar expiry date", () => {
       {
         advisory: "GHSA-aaaa-bbbb-cccc",
         package: "example-package",
-        dependencyPath: "root > build-tool > example-package",
+        dependencyPaths: ["node_modules/example-package"],
         exposure: "Build-time only; input is repository-controlled.",
         reason: "No compatible patched release is available.",
         upstream: "https://github.com/example/package/issues/123",
