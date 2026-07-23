@@ -112,7 +112,7 @@ Durable decisions that apply across all tasks:
 - [x] 0021 · Serialize activity pulls and local mutations (after 0017) → tasks/done/0021-serialize-activity-pulls-and-local-mutations.md
 - [x] 0022 · Run complete non-device checks in pull-request CI (after 0017) → tasks/done/0022-run-complete-pr-ci.md
 - [x] 0023 · Make the iOS E2E release gate reliable (after 0017, 0022) → tasks/done/0023-make-ios-e2e-workflow-reliable.md
-- [~] 0024 · Correct release versioning and traceability (after 0022, 0023) → tasks/0024-correct-release-versioning-and-traceability.md
+- [>] 0024 · Correct release versioning and traceability (after 0022, 0023) → tasks/0024-correct-release-versioning-and-traceability.md
 - [ ] 0025 · Remediate dependency vulnerabilities (after 0022) → tasks/0025-remediate-dependency-vulnerabilities.md
 - [ ] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/0026-repair-ios-date-picker-module-provider.md
 
