@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   median,
   getMorningThreshold,
+  resolveMorningSleep,
   processSleepData,
   computeSleepModel,
   getQualifyingDayCount,
   predictNextSleep,
-  getQualifyingNightSleep,
   detectBedtimeDrift,
   detectMorningDrift,
   getAgeFallbackModel,
@@ -89,6 +89,165 @@ describe("getMorningThreshold", () => {
   });
 });
 
+describe("resolveMorningSleep", () => {
+  it("uses the first early-window sleep as continuation despite its stored type", () => {
+    const now = ld(2026, 7, 25, 11, 0);
+    const sleeps = [
+      makeSleep(
+        ld(2026, 7, 24, 21, 0).toISOString(),
+        ld(2026, 7, 25, 5, 53).toISOString(),
+        { type: "night" }
+      ),
+      makeSleep(
+        ld(2026, 7, 25, 7, 5).toISOString(),
+        ld(2026, 7, 25, 10, 30).toISOString(),
+        { type: "nap" }
+      ),
+    ];
+
+    const result = resolveMorningSleep(sleeps, 9, now);
+
+    expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 10, 30));
+    expect(result.continuation).toBe(sleeps[1]);
+    expect(result.overnightSleep).toBeNull();
+  });
+
+  it("uses a completed overnight sleep that crosses the morning anchor", () => {
+    const sleep = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 6, 15).toISOString(),
+      { type: "night" }
+    );
+
+    const result = resolveMorningSleep([sleep], 9, ld(2026, 7, 25, 8, 0));
+
+    expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 6, 15));
+    expect(result.overnightSleep).toBe(sleep);
+  });
+
+  it("does not qualify sessions with future timestamps", () => {
+    const futureContinuation = makeSleep(
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      ld(2026, 7, 25, 10, 30).toISOString(),
+      { type: "nap" }
+    );
+
+    const result = resolveMorningSleep(
+      [futureContinuation],
+      9,
+      ld(2026, 7, 25, 8, 0)
+    );
+
+    expect(result.continuation).toBeNull();
+    expect(result.morningWakeTime).toBeNull();
+  });
+
+  it("reports the first early-window continuation as active", () => {
+    const activeContinuation = {
+      ...makeSleep(
+        ld(2026, 7, 25, 5, 57).toISOString(),
+        ld(2026, 7, 25, 6, 30).toISOString(),
+        { type: "nap" }
+      ),
+      endedAt: undefined,
+    };
+
+    const result = resolveMorningSleep(
+      [activeContinuation],
+      9,
+      ld(2026, 7, 25, 6, 0)
+    );
+
+    expect(result.continuation).toBe(activeContinuation);
+    expect(result.isContinuationActive).toBe(true);
+    expect(result.morningWakeTime).toBeNull();
+  });
+
+  it("ignores an early-window sleep that is not subsequent to overnight wake", () => {
+    const overnight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const overlapping = makeSleep(
+      ld(2026, 7, 25, 6, 30).toISOString(),
+      ld(2026, 7, 25, 6, 50).toISOString(),
+      { type: "nap" }
+    );
+
+    const result = resolveMorningSleep(
+      [overlapping, overnight],
+      9,
+      ld(2026, 7, 25, 10, 0)
+    );
+
+    expect(result.continuation).toBeNull();
+    expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 7, 0));
+  });
+
+  it("uses only the first sleep starting in the early window as continuation", () => {
+    const first = makeSleep(
+      ld(2026, 7, 25, 6, 15).toISOString(),
+      ld(2026, 7, 25, 6, 45).toISOString(),
+      { type: "nap" }
+    );
+    const second = makeSleep(
+      ld(2026, 7, 25, 7, 30).toISOString(),
+      ld(2026, 7, 25, 8, 15).toISOString(),
+      { type: "night" }
+    );
+
+    const result = resolveMorningSleep(
+      [second, first],
+      9,
+      ld(2026, 7, 25, 10, 0)
+    );
+
+    expect(result.continuation).toBe(first);
+    expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 6, 45));
+  });
+
+  it("does not treat a sleep starting exactly at day start as continuation", () => {
+    const dayStartSleep = makeSleep(
+      ld(2026, 7, 25, 9, 0).toISOString(),
+      ld(2026, 7, 25, 12, 0).toISOString(),
+      { type: "night" }
+    );
+
+    const result = resolveMorningSleep(
+      [dayStartSleep],
+      9,
+      ld(2026, 7, 25, 13, 0)
+    );
+
+    expect(result.continuation).toBeNull();
+    expect(result.morningWakeTime).toBeNull();
+  });
+
+  it("ignores stale prior-day and same-evening sessions", () => {
+    const stale = makeSleep(
+      ld(2026, 7, 23, 21, 0).toISOString(),
+      ld(2026, 7, 24, 6, 30).toISOString(),
+      { type: "night" }
+    );
+    const sameEvening = makeSleep(
+      ld(2026, 7, 25, 20, 0).toISOString(),
+      ld(2026, 7, 25, 22, 0).toISOString(),
+      { type: "night" }
+    );
+
+    const result = resolveMorningSleep(
+      [stale, sameEvening],
+      9,
+      ld(2026, 7, 25, 23, 0)
+    );
+
+    expect(result.overnightSleep).toBeNull();
+    expect(result.continuation).toBeNull();
+    expect(result.morningWakeTime).toBeNull();
+  });
+});
+
 describe("processSleepData", () => {
   it("merges two sleeps with < 15min gap", () => {
     const sleeps = [
@@ -166,6 +325,52 @@ describe("processSleepData", () => {
 });
 
 describe("groupSleepsByDay", () => {
+  it("uses fragmented early sleep as continuation and excludes it from the nap list", () => {
+    const continuation = ps(
+      ld(2026, 7, 25, 7, 5),
+      ld(2026, 7, 25, 10, 30)
+    );
+    const firstNap = ps(
+      ld(2026, 7, 25, 12, 30),
+      ld(2026, 7, 25, 13, 15)
+    );
+
+    const days = groupSleepsByDay([
+      ps(ld(2026, 7, 24, 21, 0), ld(2026, 7, 25, 5, 53)),
+      continuation,
+      firstNap,
+    ], 9, 19);
+    const july25 = days.find((day) => day.date === "2026-07-25");
+
+    expect(july25?.morningWakeTime).toEqual(ld(2026, 7, 25, 10, 30));
+    expect(july25?.naps).toEqual([firstNap]);
+  });
+
+  it("keeps a long sleep starting at day start as a nap instead of replacing morning wake", () => {
+    const morningSleep = ps(
+      ld(2026, 7, 24, 21, 0),
+      ld(2026, 7, 25, 6, 15)
+    );
+    const longDaytimeNap = ps(
+      ld(2026, 7, 25, 9, 0),
+      ld(2026, 7, 25, 12, 30)
+    );
+    const afternoonNap = ps(
+      ld(2026, 7, 25, 15, 0),
+      ld(2026, 7, 25, 15, 45)
+    );
+
+    const days = groupSleepsByDay(
+      [morningSleep, longDaytimeNap, afternoonNap],
+      9,
+      19
+    );
+    const july25 = days.find((day) => day.date === "2026-07-25");
+
+    expect(july25?.morningWakeTime).toEqual(ld(2026, 7, 25, 6, 15));
+    expect(july25?.naps).toEqual([longDaytimeNap, afternoonNap]);
+  });
+
   it("groups naps between dayStartHour and dayEndHour", () => {
     const sleeps = [
       ps(ld(2026, 4, 19, 21, 0), ld(2026, 4, 20, 7, 0)),
@@ -798,55 +1003,6 @@ describe("predictNextSleep", () => {
       expect(result!.type).toBe("bedtime");
       expect(result!.predictedTime).toEqual(ld(2026, 5, 11, 22, 5));
     });
-  });
-});
-
-describe("getQualifyingNightSleep", () => {
-  it("finds night sleep ending after threshold", () => {
-    const threshold = getMorningThreshold(8);
-    const sleeps = [makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 5, 0).toISOString(), { type: "night" })];
-    const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 10, 0));
-    expect(result).not.toBeNull();
-  });
-
-  it("returns null for night sleep ending before threshold", () => {
-    const threshold = getMorningThreshold(8);
-    const sleeps = [makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 4, 30).toISOString(), { type: "night" })];
-    const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 10, 0));
-    expect(result).toBeNull();
-  });
-
-  it("returns the most recent qualifying night sleep", () => {
-    const threshold = getMorningThreshold(8);
-    const sleeps = [
-      makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 5, 0).toISOString(), { type: "night" }),
-      makeSleep(ld(2026, 4, 27, 5, 30).toISOString(), ld(2026, 4, 27, 7, 45).toISOString(), { type: "night" }),
-    ];
-    const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 10, 0));
-    expect(new Date(result!.endedAt!)).toEqual(ld(2026, 4, 27, 7, 45));
-  });
-
-  it("ignores naps and returns the night sleep", () => {
-    const threshold = getMorningThreshold(8);
-    const sleeps = [
-      makeSleep(ld(2026, 4, 26, 21, 0).toISOString(), ld(2026, 4, 27, 7, 0).toISOString(), { type: "night" }),
-      makeSleep(ld(2026, 4, 27, 9, 30).toISOString(), ld(2026, 4, 27, 10, 15).toISOString(), { type: "nap" }),
-      makeSleep(ld(2026, 4, 27, 12, 30).toISOString(), ld(2026, 4, 27, 13, 30).toISOString(), { type: "nap" }),
-      makeSleep(ld(2026, 4, 27, 16, 0).toISOString(), ld(2026, 4, 27, 16, 45).toISOString(), { type: "nap" }),
-    ];
-    const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 17, 0));
-    expect(result).not.toBeNull();
-    expect(new Date(result!.endedAt!)).toEqual(ld(2026, 4, 27, 7, 0));
-  });
-
-  it("returns null when only naps exist after threshold", () => {
-    const threshold = getMorningThreshold(8);
-    const sleeps = [
-      makeSleep(ld(2026, 4, 27, 9, 30).toISOString(), ld(2026, 4, 27, 10, 15).toISOString(), { type: "nap" }),
-      makeSleep(ld(2026, 4, 27, 12, 30).toISOString(), ld(2026, 4, 27, 13, 30).toISOString(), { type: "nap" }),
-    ];
-    const result = getQualifyingNightSleep(sleeps, threshold, ld(2026, 4, 27, 14, 0));
-    expect(result).toBeNull();
   });
 });
 

@@ -57,6 +57,74 @@ export function getMorningThreshold(dayStartHour: number): number {
   return dayStartHour - 3 - 3 / 60;
 }
 
+export interface MorningSleepSession {
+  startedAt: Date | string;
+  endedAt?: Date | string | null;
+}
+
+export interface MorningSleepResolution<T extends MorningSleepSession> {
+  anchor: Date;
+  dayStart: Date;
+  overnightSleep: T | null;
+  continuation: T | null;
+  morningWakeTime: Date | null;
+  isContinuationActive: boolean;
+}
+
+export function resolveMorningSleep<T extends MorningSleepSession>(
+  sleeps: readonly T[],
+  dayStartHour: number,
+  referenceDate: Date = new Date()
+): MorningSleepResolution<T> {
+  const dayStart = hourToDate(dayStartHour, referenceDate);
+  const anchor = new Date(dayStart.getTime() - 183 * 60 * 1000);
+  const nowMs = referenceDate.getTime();
+
+  const overnightSleep = [...sleeps]
+    .filter((sleep) => {
+      if (!sleep.endedAt) return false;
+      const startedAt = new Date(sleep.startedAt).getTime();
+      const endedAt = new Date(sleep.endedAt).getTime();
+      return startedAt < anchor.getTime()
+        && endedAt >= anchor.getTime()
+        && endedAt <= nowMs;
+    })
+    .sort((a, b) => new Date(b.endedAt!).getTime() - new Date(a.endedAt!).getTime())[0] ?? null;
+
+  const continuationStartMs = overnightSleep?.endedAt
+    ? new Date(overnightSleep.endedAt).getTime()
+    : anchor.getTime();
+  const continuation = [...sleeps]
+    .filter((sleep) => {
+      const startedAt = new Date(sleep.startedAt).getTime();
+      const endedAt = sleep.endedAt ? new Date(sleep.endedAt).getTime() : null;
+      return startedAt >= continuationStartMs
+        && startedAt < dayStart.getTime()
+        && startedAt <= nowMs
+        && (endedAt === null || endedAt <= nowMs);
+    })
+    .sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime())[0] ?? null;
+
+  const continuationEnd = continuation?.endedAt
+    ? new Date(continuation.endedAt)
+    : null;
+  const hasCompletedContinuation = continuationEnd !== null
+    && continuationEnd.getTime() <= nowMs;
+
+  const overnightEnd = overnightSleep?.endedAt
+    ? new Date(overnightSleep.endedAt)
+    : null;
+
+  return {
+    anchor,
+    dayStart,
+    overnightSleep,
+    continuation,
+    morningWakeTime: hasCompletedContinuation ? continuationEnd : overnightEnd,
+    isContinuationActive: continuation !== null && continuationEnd === null,
+  };
+}
+
 function hourToDate(fractionalHour: number, referenceDate: Date): Date {
   const date = new Date(referenceDate);
   date.setHours(0, 0, 0, 0);
@@ -189,38 +257,34 @@ export function groupSleepsByDay(
   const dayMap = new Map<string, ProcessedDay>();
 
   for (const dateStr of dates) {
-    let morningWakeTime: Date | null = null;
+    const referenceDate = new Date(`${dateStr}T12:00:00`);
+    referenceDate.setHours(23, 59, 59, 999);
+    const morning = resolveMorningSleep(sorted, dayStartHour, referenceDate);
+    const morningWakeTime = morning.morningWakeTime;
     const naps: ProcessedSleep[] = [];
     let bedtime: Date | null = null;
 
     for (const sleep of sorted) {
-      const endedAtHour = dateToFractionalHour(sleep.endedAt);
-      const endedOnThisDate = getDayKey(sleep.endedAt) === dateStr;
-      const startedOnThisDate = getDayKey(sleep.startedAt) === dateStr;
+      if (getDayKey(sleep.startedAt) !== dateStr || !morningWakeTime) continue;
+      if (sleep.startedAt.getTime() <= morningWakeTime.getTime()) continue;
 
-      if (endedOnThisDate && endedAtHour >= getMorningThreshold(dayStartHour) && endedAtHour <= dayStartHour + 4) {
-        const startHour = dateToFractionalHour(sleep.startedAt);
-        const isNightSleep = startHour < dayStartHour || getDayKey(sleep.startedAt) !== dateStr || sleep.durationMinutes > 120;
-        if (isNightSleep) {
-          if (!morningWakeTime || sleep.endedAt.getTime() > morningWakeTime.getTime()) {
-            morningWakeTime = sleep.endedAt;
-          }
-        }
+      const startedAtMs = sleep.startedAt.getTime();
+      const isEarlyWindow = startedAtMs >= morning.anchor.getTime()
+        && startedAtMs < morning.dayStart.getTime();
+      const isDay = isEarlyWindow || isDaytimeSleep(
+        sleep.startedAt,
+        sleep.endedAt,
+        dayStartHour,
+        dayEndHour
+      );
+
+      if (sleep !== morning.continuation && isDay) {
+        naps.push(sleep);
       }
 
-      if (startedOnThisDate) {
-        const isDay = isDaytimeSleep(sleep.startedAt, sleep.endedAt, dayStartHour, dayEndHour);
-
-        if (isDay) {
-          if (morningWakeTime && sleep.startedAt.getTime() > morningWakeTime.getTime()) {
-            naps.push(sleep);
-          }
-        }
-
-        if (!isDay && sleep.durationMinutes > 120 && morningWakeTime && sleep.startedAt.getTime() > morningWakeTime.getTime()) {
-          if (!bedtime || sleep.startedAt.getTime() < bedtime.getTime()) {
-            bedtime = sleep.startedAt;
-          }
+      if (!isDay && sleep.durationMinutes > 120) {
+        if (!bedtime || startedAtMs < bedtime.getTime()) {
+          bedtime = sleep.startedAt;
         }
       }
     }
@@ -581,32 +645,6 @@ function getShortestWakeWindow(model: SleepPredictionModel): number {
 function isBeforeDayStart(time: Date, dayStartHour: number): boolean {
   const hour = time.getHours() + time.getMinutes() / 60;
   return hour < dayStartHour;
-}
-
-export function getQualifyingNightSleep(
-  sleeps: StoredSleepEntry[],
-  thresholdHour: number,
-  referenceDate?: Date
-): StoredSleepEntry | null {
-  const ref = referenceDate || new Date();
-  const today = new Date(ref);
-  today.setHours(0, 0, 0, 0);
-
-  const thresholdTime = hourToDate(thresholdHour, today);
-
-  const qualifying = sleeps
-    .filter((s) => {
-      if (!s.endedAt) return false;
-      if (s.type !== "night") return false;
-      const endedAt = new Date(s.endedAt);
-      return endedAt.getTime() >= thresholdTime.getTime();
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.endedAt!).getTime() - new Date(a.endedAt!).getTime()
-    );
-
-  return qualifying.length > 0 ? qualifying[0] : null;
 }
 
 export function detectBedtimeDrift(
