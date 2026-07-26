@@ -84,6 +84,17 @@ Durable decisions that apply across all tasks:
 - **Production database state is a human release checkpoint**: agents apply and verify migrations only
   on local Supabase. The owner performs the documented read-only production migration check before a
   store release.
+- **Morning sleep is resolved independently of persisted sleep type**: predictions keep the configured
+  day-start-minus-3h03 anchor, treat only the first sleep starting between that anchor and day start as
+  night continuation regardless of stored type or duration, preserve raw history, and never let a
+  sleep starting at or after day start replace morning wake.
+- **Earlier-morning drift is conservative and first-window-only**: suggest, but never automatically
+  apply, the median earlier final wake only when at least five of the last seven recorded mornings are
+  at least one hour early and their first nap follows the age-appropriate first wake window within a
+  15-minute tolerance. Later wake windows and bedtime are unaffected.
+- **Manual sleep overlap is permitted with informed confirmation**: warn with Cancel and Continue
+  anyway, preserve both raw records when continued, and use interval union for predictions and
+  statistics so overlap is neither double-counted nor allowed to shorten sleep.
 
 ---
 
@@ -114,8 +125,11 @@ Durable decisions that apply across all tasks:
 - [x] 0023 · Make the iOS E2E release gate reliable (after 0017, 0022) → tasks/done/0023-make-ios-e2e-workflow-reliable.md
 - [x] 0024 · Correct release versioning and traceability (after 0022, 0023) → tasks/done/0024-correct-release-versioning-and-traceability.md
 - [x] 0025 · Remediate dependency vulnerabilities (after 0022) → tasks/done/0025-remediate-dependency-vulnerabilities.md
+- [ ] 0027 · Resolve fragmented morning sleep for predictions → tasks/0027-resolve-fragmented-morning-sleep.md
+- [ ] 0028 · Detect age-aware earlier morning drift (after 0027) → tasks/0028-detect-age-aware-morning-drift.md
+- [ ] 0029 · Warn and safely calculate overlapping manual sleep (after 0028) → tasks/0029-warn-and-union-overlapping-manual-sleep.md
 - [ ] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/0026-repair-ios-date-picker-module-provider.md
 
 ## Workflow status
 
-Tasks 0001 through 0013 are merged. Their earlier Software Repository Guidelines assessment is recorded in `plans/repository-guidelines-assessment.md`. The July 2026 release review added tasks 0014 through 0026 for timer correctness, two-caregiver iOS verification, authorization, offline behavior, sync races, CI, release traceability, dependency security, and production date-picker codegen compatibility.
+Tasks 0001 through 0025 are merged. Their earlier Software Repository Guidelines assessment is recorded in `plans/repository-guidelines-assessment.md`. Task 0026 is unstarted and deprioritized. The 2026-07-26 production diagnosis added tasks 0027 through 0029 for fragmented morning-sleep resolution, age-aware earlier-morning drift, and safe non-blocking manual overlap; the user prioritized task 0027 ahead of task 0026.
