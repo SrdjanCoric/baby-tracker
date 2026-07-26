@@ -12,7 +12,7 @@ import type { ActiveSleepTimer } from "@/contexts/sleep-context";
 import type { SleepType } from "@/constants/activities";
 import {
   predictNextSleep,
-  getQualifyingNightSleep,
+  resolveMorningSleep,
   getMorningThreshold,
   BEDTIME_ZONE_MINUTES,
 } from "@/utils/sleepPredictions";
@@ -109,12 +109,16 @@ const SleepPredictionCardInner = ({
 
   const overdueTickMinute = useTimeRefresh(60000);
 
-  const [transitionTick, setTransitionTick] = useState(0);
+  const [morningReferenceTime, setMorningReferenceTime] = useState(() => new Date());
 
-  const hasNightSleepToday = useMemo((): boolean => {
-    const threshold = getMorningThreshold(effectiveDayStart);
-    return getQualifyingNightSleep(sleeps, threshold) !== null;
-  }, [sleeps, effectiveDayStart]);
+  const morningSleep = useMemo(() => {
+    const referenceTime = new Date(
+      Math.max(Date.now(), morningReferenceTime.getTime())
+    );
+    return resolveMorningSleep(sleeps, effectiveDayStart, referenceTime);
+  }, [sleeps, effectiveDayStart, morningReferenceTime]);
+  const hasNightSleepToday = morningSleep.morningWakeTime !== null
+    || morningSleep.isContinuationActive;
 
   const hasPredictionData = useMemo((): boolean => {
     if (!hasNightSleepToday) return false;
@@ -175,35 +179,37 @@ const SleepPredictionCardInner = ({
 
     return "prediction";
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasNightSleepToday, hasPredictionData, qualifyingDayCount, transitionTick]);
+  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasNightSleepToday, hasPredictionData, qualifyingDayCount, morningReferenceTime]);
 
 
 
   useEffect(() => {
-    const needsTransition = !effectiveActiveTimer && cardState === "prediction";
-    if (!needsTransition) return;
+    if (effectiveActiveTimer) return;
+
     const now = new Date();
-    const currentHour = now.getHours() + now.getMinutes() / 60;
-    if (currentHour < effectiveDayEnd) return;
     const midnight = new Date(now);
     midnight.setDate(midnight.getDate() + 1);
     midnight.setHours(0, 0, 0, 0);
-    const msUntilMidnight = midnight.getTime() - now.getTime();
-    const timer = setTimeout(() => setTransitionTick((t) => t + 1), msUntilMidnight);
-    return () => clearTimeout(timer);
-  }, [effectiveActiveTimer, cardState, effectiveDayEnd, transitionTick]);
 
-  useEffect(() => {
-    if (effectiveActiveTimer || cardState !== "nighttime") return;
-    const now = new Date();
-    const threshold = getMorningThreshold(effectiveDayStart);
-    const thresholdDate = new Date(now);
-    thresholdDate.setHours(Math.floor(threshold), Math.round((threshold % 1) * 60), 0, 0);
-    if (thresholdDate.getTime() <= now.getTime()) return;
-    const ms = thresholdDate.getTime() - now.getTime();
-    const timer = setTimeout(() => setTransitionTick((t) => t + 1), ms);
+    const dayStart = new Date(now);
+    dayStart.setHours(
+      Math.floor(effectiveDayStart),
+      Math.round((effectiveDayStart % 1) * 60),
+      0,
+      0
+    );
+    const anchor = new Date(dayStart.getTime() - 183 * 60 * 1000);
+    if (anchor.getTime() <= now.getTime()) {
+      anchor.setDate(anchor.getDate() + 1);
+    }
+
+    const nextTransition = Math.min(midnight.getTime(), anchor.getTime());
+    const timer = setTimeout(
+      () => setMorningReferenceTime(new Date()),
+      nextTransition - now.getTime()
+    );
     return () => clearTimeout(timer);
-  }, [effectiveActiveTimer, cardState, effectiveDayStart, transitionTick]);
+  }, [effectiveActiveTimer, effectiveDayStart, morningReferenceTime]);
 
   const sleepContext = useMemo((): {
     lastWakeTime: Date | null;
@@ -919,7 +925,7 @@ const SleepPredictionCardInner = ({
     const startedAtHour = new Date(lastSleep.startedAt).getHours() + new Date(lastSleep.startedAt).getMinutes() / 60;
     return startedAtHour >= bedtimeZoneStartHour;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bedtimeZoneStartHour, getLastSleep, transitionTick]);
+  }, [bedtimeZoneStartHour, getLastSleep, morningReferenceTime]);
 
   const effectiveCardState = (isBedtimeOverdue || hasQualifyingSleepPastZoneStart)
     ? "nighttime"

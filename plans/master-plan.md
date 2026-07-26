@@ -125,7 +125,7 @@ Durable decisions that apply across all tasks:
 - [x] 0023 · Make the iOS E2E release gate reliable (after 0017, 0022) → tasks/done/0023-make-ios-e2e-workflow-reliable.md
 - [x] 0024 · Correct release versioning and traceability (after 0022, 0023) → tasks/done/0024-correct-release-versioning-and-traceability.md
 - [x] 0025 · Remediate dependency vulnerabilities (after 0022) → tasks/done/0025-remediate-dependency-vulnerabilities.md
-- [ ] 0027 · Resolve fragmented morning sleep for predictions → tasks/0027-resolve-fragmented-morning-sleep.md
+- [>] 0027 · Resolve fragmented morning sleep for predictions → tasks/0027-resolve-fragmented-morning-sleep.md
 - [ ] 0028 · Detect age-aware earlier morning drift (after 0027) → tasks/0028-detect-age-aware-morning-drift.md
 - [ ] 0029 · Warn and safely calculate overlapping manual sleep (after 0028) → tasks/0029-warn-and-union-overlapping-manual-sleep.md
 - [ ] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/0026-repair-ios-date-picker-module-provider.md

@@ -56,6 +56,10 @@ Supabase Realtime subscriptions push changes between household members instantly
 
 Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. If the lock service is unavailable, feeding, sleep, pumping, and tummy-time timers continue locally and keep their reconciliation state through restart. Reconnect attempts to acquire the missing lock. When two offline timers compete, the first successful lock acquisition wins. The other timer is saved to the timeline, and its caregiver sees what happened. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. External Stop requests from widgets and Apple Watch stay in a versioned queue until matching timer completions are durable, even if several arrive while the app is closed. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
 
+### Sleep Predictions
+
+Sleep predictions use the configured day start and recent sleep history to estimate the next nap or bedtime. Morning qualification starts 3 hours 3 minutes before day start. The first eligible sleep that begins in this early window can continue the night even when stored as a nap, and its end becomes the final morning wake. The app derives this role without changing saved sleep types and reevaluates it at midnight and the next morning anchor. See [`docs/SLEEP_PREDICTIONS.md`](docs/SLEEP_PREDICTIONS.md) for the full rules.
+
 ### iOS Native Integrations
 
 - **WidgetKit** home screen widgets with push-triggered timeline refresh via APNs

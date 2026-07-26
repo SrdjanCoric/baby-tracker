@@ -42,9 +42,9 @@ import {
   getQualifyingDayCount,
   detectBedtimeDrift,
   detectMorningDrift,
+  resolveMorningSleep,
 } from "@/utils/sleepPredictions";
 import type { SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
-import { getQualifyingNightSleep, getMorningThreshold } from "@/utils/sleepPredictions";
 import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
 import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
 import {
@@ -1477,21 +1477,31 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   }, [selectedBaby, state.suggestedGoalMinutes, user?.householdId]);
 
   const getCompletedNapsSinceNightSleep = useCallback((): number => {
-    const dayStart = state.wakeWindowConfig?.dayStartHour ?? 6;
-    const threshold = getMorningThreshold(dayStart);
-    const morningNightSleep = getQualifyingNightSleep(state.sleeps, threshold);
+    const now = new Date();
+    const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
+    const dayEndHour = state.wakeWindowConfig?.dayEndHour ?? 19;
+    const morning = resolveMorningSleep(state.sleeps, dayStartHour, now);
+    if (!morning.morningWakeTime) return 0;
 
-    const lastNightEnd = morningNightSleep?.endedAt
-      ? new Date(morningNightSleep.endedAt)
-      : new Date(new Date().setHours(0, 0, 0, 0));
-
-    const napsSinceNight = state.sleeps.filter(
-      s => s.type === "nap" && s.endedAt && new Date(s.startedAt) >= lastNightEnd
+    const dayEnd = new Date(now);
+    dayEnd.setHours(
+      Math.floor(dayEndHour),
+      Math.round((dayEndHour % 1) * 60),
+      0,
+      0
     );
 
-    const processed = processSleepData(napsSinceNight);
-    return processed.length;
-  }, [state.sleeps, state.wakeWindowConfig?.dayStartHour]);
+    const completedNaps = state.sleeps.filter((sleep) => {
+      if (!sleep.endedAt || sleep === morning.continuation) return false;
+      const startedAt = new Date(sleep.startedAt);
+      const endedAt = new Date(sleep.endedAt);
+      return startedAt.getTime() > morning.morningWakeTime!.getTime()
+        && startedAt.getTime() < dayEnd.getTime()
+        && endedAt.getTime() <= now.getTime();
+    });
+
+    return processSleepData(completedNaps).length;
+  }, [state.sleeps, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour]);
 
   const getCurrentNapSlot = useCallback((): NapSlotWindow | null => {
     if (!state.wakeWindowConfig) return null;
