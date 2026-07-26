@@ -1,3 +1,27 @@
 {
-  "exceptions": []
+  "exceptions": [
+    {
+      "advisory": "GHSA-mh99-v99m-4gvg",
+      "package": "brace-expansion",
+      "dependencyPaths": [
+        "node_modules/@eslint/config-array/node_modules/brace-expansion",
+        "node_modules/@eslint/eslintrc/node_modules/brace-expansion",
+        "node_modules/@jest/reporters/node_modules/brace-expansion",
+        "node_modules/@react-native/codegen/node_modules/brace-expansion",
+        "node_modules/brace-expansion",
+        "node_modules/eslint-plugin-react/node_modules/brace-expansion",
+        "node_modules/eslint/node_modules/brace-expansion",
+        "node_modules/jest-config/node_modules/brace-expansion",
+        "node_modules/jest-runtime/node_modules/brace-expansion",
+        "node_modules/react-native/node_modules/brace-expansion",
+        "node_modules/rimraf/node_modules/brace-expansion",
+        "node_modules/test-exclude/node_modules/brace-expansion"
+      ],
+      "exposure": "Build, lint, test, and React Native code-generation tooling processes repository-controlled paths and glob patterns; no shipped app path accepts attacker-controlled brace patterns.",
+      "reason": "The only patched release is brace-expansion 5.0.8, while affected transitive parents require major versions 1 or 2. Forcing version 5 across ESLint, Jest, React Native, glob, minimatch, and rimraf requires a separate compatibility review and native build verification.",
+      "upstream": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+      "owner": "Srdjan Coric",
+      "expiresOn": "2026-08-09"
+    }
+  ]
 }
