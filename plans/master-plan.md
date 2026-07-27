@@ -55,6 +55,11 @@ Durable decisions that apply across all tasks:
 - **Deletes: tombstones** — `deleted` is an ordinary LWW field (no special cases in merge).
   Delete = field write `deleted: true`; un-delete is possible. Every read path filters
   `deleted = false`.
+- **Milestone responses keep one logical identity across state cycling**: `(baby_id, milestone_id)`
+  identifies one response. Clearing writes a tombstone while internal sync state retains the
+  canonical row ID; rechecking revives that row with a newer `deleted = false` clock. Pull and
+  Realtime retain this identity. Upgrade recovery reconciles an alternate pending ID to the
+  canonical row while the UI continues to hide tombstones.
 - **CRDT scope (9 tables)**: feedings, sleep_sessions, diapers, pumping_sessions,
   growth_measurements, tummy_time_sessions, health_entries, milestones, babies. Explicitly
   excluded: active_timers (keeps its stronger atomic lock RPC), households/members (role-based
@@ -126,10 +131,11 @@ Durable decisions that apply across all tasks:
 - [x] 0024 · Correct release versioning and traceability (after 0022, 0023) → tasks/done/0024-correct-release-versioning-and-traceability.md
 - [x] 0025 · Remediate dependency vulnerabilities (after 0022) → tasks/done/0025-remediate-dependency-vulnerabilities.md
 - [x] 0027 · Resolve fragmented morning sleep for predictions → tasks/done/0027-resolve-fragmented-morning-sleep.md
+- [x] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/done/0026-repair-ios-date-picker-module-provider.md
+- [ ] 0030 · Revive cleared milestone responses (after 0005, 0007, 0021) → tasks/0030-revive-cleared-milestone-responses.md
 - [ ] 0028 · Detect age-aware earlier morning drift (after 0027) → tasks/0028-detect-age-aware-morning-drift.md
 - [ ] 0029 · Warn and safely calculate overlapping manual sleep (after 0028) → tasks/0029-warn-and-union-overlapping-manual-sleep.md
-- [>] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/0026-repair-ios-date-picker-module-provider.md
 
 ## Workflow status
 
-Tasks 0001 through 0025 are merged. Their earlier Software Repository Guidelines assessment is recorded in `plans/repository-guidelines-assessment.md`. Task 0026 is unstarted and deprioritized. The 2026-07-26 production diagnosis added tasks 0027 through 0029 for fragmented morning-sleep resolution, age-aware earlier-morning drift, and safe non-blocking manual overlap; the user prioritized task 0027 ahead of task 0026.
+Tasks 0001 through 0027 are merged. Repository-guideline evidence is recorded in their completed task files and in `plans/repository-guidelines-assessment.md`. Task 0030 is prioritized next, followed by tasks 0028 and 0029.
