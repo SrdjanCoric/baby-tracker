@@ -271,6 +271,34 @@ describe("processSleepData", () => {
     expect(result).toHaveLength(2);
   });
 
+  it("counts partially overlapping sleeps as their interval union", () => {
+    const sleeps = [
+      makeSleep("2026-04-20T10:00:00", "2026-04-20T11:00:00"),
+      makeSleep("2026-04-20T10:30:00", "2026-04-20T12:00:00"),
+    ];
+
+    const result = processSleepData(sleeps);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].startedAt).toEqual(new Date("2026-04-20T10:00:00"));
+    expect(result[0].endedAt).toEqual(new Date("2026-04-20T12:00:00"));
+    expect(result[0].durationMinutes).toBe(120);
+  });
+
+  it("does not shorten a containing sleep when a contained sleep ends earlier", () => {
+    const sleeps = [
+      makeSleep("2026-04-20T10:00:00", "2026-04-20T12:00:00"),
+      makeSleep("2026-04-20T10:30:00", "2026-04-20T11:00:00"),
+    ];
+
+    const result = processSleepData(sleeps);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].startedAt).toEqual(new Date("2026-04-20T10:00:00"));
+    expect(result[0].endedAt).toEqual(new Date("2026-04-20T12:00:00"));
+    expect(result[0].durationMinutes).toBe(120);
+  });
+
   it("drops sleep < 15min after merging", () => {
     const sleeps = [
       makeSleep("2026-04-20T10:00:00", "2026-04-20T10:10:00"),

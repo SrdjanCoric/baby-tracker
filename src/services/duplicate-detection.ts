@@ -118,9 +118,23 @@ export function checkSleepDuplicate(
     if (existing.babyId !== newEntry.babyId) continue;
 
     const existingTimestamp = getTimestamp(existing);
-    const isInProgress = !existing.endedAt;
 
-    if (isInProgress) {
+    if (!existing.endedAt) {
+      candidates.push({
+        entry: existing,
+        matchReason: 'overlapping_session',
+        confidence: 'high',
+        loggedBy: existing.loggedBy,
+      });
+      continue;
+    }
+
+    if (newEntry.endedAt) {
+      const newEnd = new Date(newEntry.endedAt).getTime();
+      const existingEnd = new Date(existing.endedAt).getTime();
+      const intervalsOverlap = newTimestamp < existingEnd && existingTimestamp < newEnd;
+      if (!intervalsOverlap) continue;
+
       candidates.push({
         entry: existing,
         matchReason: 'overlapping_session',

@@ -1,4 +1,5 @@
 import type { StoredSleepEntry } from "@/services/sleep-storage";
+import { unionCompletedSleepIntervals } from "@/utils/sleep-intervals";
 
 export interface DayBlock {
   topPx: number;
@@ -212,10 +213,11 @@ export function buildDayViewData(
   const totalPx = HOURS_IN_DAY * pxPerHour;
 
   const dateLabel = formatDateLabel(date, now, locale);
+  const unionedSleeps = unionCompletedSleepIntervals(sleeps);
 
   const blocks: DayBlock[] = [];
 
-  for (const sleep of sleeps) {
+  for (const sleep of unionedSleeps) {
     const sleepStart = new Date(sleep.startedAt);
     const sleepEnd = sleep.endedAt ? new Date(sleep.endedAt) : now;
 
@@ -245,7 +247,7 @@ export function buildDayViewData(
 
   const dateKey = localDateKey(date);
   let totalSleepSeconds = 0;
-  for (const sleep of sleeps) {
+  for (const sleep of unionedSleeps) {
     if (!sleep.endedAt) continue;
     for (const seg of splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour)) {
       if (seg.dateKey === dateKey) {
@@ -382,7 +384,7 @@ export function calculateSleepSummary(
   cutoff.setDate(cutoff.getDate() - days);
   cutoff.setHours(0, 0, 0, 0);
 
-  const recentSleeps = sleeps.filter((s) => {
+  const recentSleeps = unionCompletedSleepIntervals(sleeps).filter((s) => {
     const start = new Date(s.startedAt);
     return start >= cutoff && s.endedAt;
   });
@@ -591,7 +593,7 @@ export function buildDailySleepBars(
   cutoff.setDate(cutoff.getDate() - days);
   cutoff.setHours(0, 0, 0, 0);
 
-  const recentSleeps = sleeps.filter((s) => {
+  const recentSleeps = unionCompletedSleepIntervals(sleeps).filter((s) => {
     const start = new Date(s.startedAt);
     return start >= cutoff && s.endedAt;
   });

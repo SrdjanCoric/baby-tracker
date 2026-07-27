@@ -1,11 +1,13 @@
 import { Alert } from 'react-native';
 import type { ActivityType } from '@/constants/activities';
 import type { TFunction } from 'i18next';
+import type { MatchReason } from '@/services/duplicate-detection';
 
 export interface DuplicateDialogOptions {
   activityType: ActivityType;
   existingEntryTime: string;
   loggedByName?: string;
+  matchReason?: MatchReason;
   onConfirm: () => void;
   onCancel: () => void;
   t: TFunction;
@@ -33,13 +35,16 @@ function formatTimeDifference(entryTime: string, t: TFunction): string {
 }
 
 export function showDuplicateConfirmation(options: DuplicateDialogOptions): void {
-  const { activityType, existingEntryTime, loggedByName, onConfirm, onCancel, t } = options;
+  const { activityType, existingEntryTime, loggedByName, matchReason, onConfirm, onCancel, t } = options;
 
+  const isSleepOverlap = activityType === 'sleep' && matchReason === 'overlapping_session';
   const timeDiff = formatTimeDifference(existingEntryTime, t);
   const activityName = t(`activities.${activityType}`);
 
   let message: string;
-  if (loggedByName) {
+  if (isSleepOverlap) {
+    message = t('duplicateDetection.sleepOverlapMessage');
+  } else if (loggedByName) {
     message = t('duplicateDetection.messageWithUser', {
       activity: activityName,
       time: timeDiff,
@@ -53,7 +58,7 @@ export function showDuplicateConfirmation(options: DuplicateDialogOptions): void
   }
 
   Alert.alert(
-    t('duplicateDetection.title'),
+    t(isSleepOverlap ? 'duplicateDetection.sleepOverlapTitle' : 'duplicateDetection.title'),
     message,
     [
       {
@@ -62,7 +67,11 @@ export function showDuplicateConfirmation(options: DuplicateDialogOptions): void
         onPress: onCancel,
       },
       {
-        text: t('duplicateDetection.logAnyway'),
+        text: t(
+          isSleepOverlap
+            ? 'duplicateDetection.continueAnyway'
+            : 'duplicateDetection.logAnyway'
+        ),
         onPress: onConfirm,
       },
     ]
