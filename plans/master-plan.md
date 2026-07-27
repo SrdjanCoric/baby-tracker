@@ -141,8 +141,8 @@ Durable decisions that apply across all tasks:
 - [x] 0028 · Detect age-aware earlier morning drift (after 0027) → tasks/done/0028-detect-age-aware-morning-drift.md
 - [x] 0029 · Warn and safely calculate overlapping manual sleep (after 0028) → tasks/done/0029-warn-and-union-overlapping-manual-sleep.md
 - [x] 0031 · Load historical activity ranges on demand in Timeline (after 0007, 0021) → tasks/done/0031-load-historical-activity-ranges-in-timeline.md
-- [>] 0032 · Load requested ranges before calculating statistics (after 0031) → tasks/0032-load-requested-statistics-ranges.md
+- [x] 0032 · Load requested ranges before calculating statistics (after 0031) → tasks/done/0032-load-requested-statistics-ranges.md
 
 ## Workflow status
 
-Tasks 0001 through 0031 are merged. Repository-guideline evidence is recorded in their completed task files and in `plans/repository-guidelines-assessment.md`. Task 0032 remains and is eligible.
+Tasks 0001 through 0032 are merged. Repository-guideline evidence is recorded in their completed task files and in `plans/repository-guidelines-assessment.md`.
