@@ -66,14 +66,8 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-  test:
-    needs: release-metadata
-    uses: ./.github/workflows/test.yml
-    with:
-      ref: ${{ needs.release-metadata.outputs.source-sha }}
-
   build-ios:
-    needs: [release-metadata, test]
+    needs: release-metadata
     if: >-
       github.event.inputs.platform == 'all' ||
       github.event.inputs.platform == 'ios' ||
@@ -124,7 +118,7 @@ jobs:
           retention-days: 90
 
   build-android:
-    needs: [release-metadata, test]
+    needs: release-metadata
     if: >-
       github.event.inputs.platform == 'all' ||
       github.event.inputs.platform == 'android' ||

@@ -17,6 +17,16 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
+jest.mock("react-native/Libraries/Interaction/InteractionManager", () => {
+  const manager = {
+    runAfterInteractions: (callback: () => void) => {
+      callback();
+      return { cancel: jest.fn() };
+    },
+  };
+  return { __esModule: true, default: manager, ...manager };
+});
+
 jest.mock("nativewind", () => ({
   useColorScheme: () => ({ colorScheme: "light" }),
 }));

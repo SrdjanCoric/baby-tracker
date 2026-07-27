@@ -15,8 +15,11 @@ function commands(job) {
   return job.steps.flatMap((step) => (step.run ? [step.run] : []));
 }
 
-test("GitHub Actions does not claim to run iOS device E2E", () => {
+test("Android E2E is manual and does not run in routine CI", () => {
   assert.equal(workflow.name, "Android E2E Tests");
+  assert.ok(workflow.on.workflow_dispatch);
+  assert.equal(workflow.on.push, undefined);
+  assert.equal(workflow.on.schedule, undefined);
   assert.ok(
     Object.values(workflow.jobs).every(
       (job) => !String(job["runs-on"]).startsWith("macos-")

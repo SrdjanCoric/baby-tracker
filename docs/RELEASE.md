@@ -15,9 +15,17 @@ Limit the environment to the `main` branch and tags matching `v*`. This private 
 ## Prepare the source
 
 1. Update `expo.version` in `app.json` through a normal pull request.
-2. Record the merged commit SHA and version.
-3. Confirm the `Non-device checks required` job passed for that commit.
-4. For an iOS release, check out that commit and run:
+2. Record the merged commit SHA and version, then check out that exact commit.
+3. Install locked dependencies and run the complete local non-device release gate:
+
+   ```bash
+   npm ci
+   npm run check
+   npm run audit:dependencies
+   ```
+
+   Record the commit, date, and successful output. Any failure stops the release. Pull-request CI runs lint, type checking, and the dependency audit only; it does not replace this local gate.
+4. For an iOS release, run:
 
    ```bash
    npm run e2e:household-timers:clean
@@ -29,7 +37,7 @@ Limit the environment to the `main` branch and tags matching `v*`. This private 
 
 ### Tag build
 
-Create `v<version>` on the merged release commit and push the tag. For example, `v4.6.0` must point to a commit whose `app.json` version is `4.6.0`. The **Build Store Release** workflow validates the version, reruns the complete non-device checks, and builds both platforms from the tagged commit. It does not submit either build.
+Create `v<version>` on the locally verified release commit and push the tag. For example, `v4.6.0` must point to a commit whose `app.json` version is `4.6.0`. The **Build Store Release** workflow validates the version and builds both platforms from the tagged commit. It does not rerun tests or submit either build.
 
 A version mismatch fails before EAS starts. Fix the source through a pull request and use a new version. Do not move a published release tag.
 
@@ -103,8 +111,9 @@ The workflow downloads release artifacts from that run. It rejects metadata from
 Keep both workflow URLs with the release record. The build run provides:
 
 - `release-metadata-<run-id>`, containing the version and source commit;
-- `eas-ios-build-<run-id>` or `eas-android-build-<run-id>`, containing the EAS build response and build ID;
-- the complete reusable non-device check results for that source commit.
+- `eas-ios-build-<run-id>` or `eas-android-build-<run-id>`, containing the EAS build response and build ID.
+
+Keep the recorded local non-device gate output with these workflow artifacts.
 
 The submission run provides `submission-metadata-<run-id>`, which links the build workflow run to the source, selected platform, confirmations, and submitted build IDs. Build and submission summaries repeat the IDs used by EAS.
 
@@ -112,7 +121,7 @@ The submission run provides `submission-metadata-<run-id>`, which links the buil
 
 ## Recovery
 
-- **Metadata or checks fail:** fix the source through a pull request. Do not edit or retag the failed release.
+- **Metadata or local checks fail:** fix the source through a pull request, rerun the local release gate, and use a new release tag when needed. Do not move a published release tag.
 - **The iOS gate fails:** keep its artifacts, fix the failure, and rerun the clean gate on the final source commit.
 - **The production database check fails:** stop. Apply the missing migration through the approved process or restore according to its recovery plan, then repeat the read-only checks.
 - **An EAS build fails:** identify the cause and rerun the build workflow from the same source. The new workflow run and EAS build ID are separate release artifacts.
