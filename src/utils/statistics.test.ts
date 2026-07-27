@@ -241,7 +241,12 @@ describe("calculateSleepStats", () => {
   });
 
   it("counts naps", () => {
-    const secondNap: StoredSleepEntry = { ...mockNap, id: "3" };
+    const secondNap: StoredSleepEntry = {
+      ...mockNap,
+      id: "3",
+      startedAt: "2024-01-15T12:00:00Z",
+      endedAt: "2024-01-15T13:00:00Z",
+    };
     const stats = calculateSleepStats([mockNap, secondNap, mockNightSleep]);
     expect(stats.napCount).toBe(2);
   });
@@ -251,8 +256,29 @@ describe("calculateSleepStats", () => {
     expect(stats.nightCount).toBe(1);
   });
 
+  it("uses interval union for overlapping sleep totals", () => {
+    const overlappingNap: StoredSleepEntry = {
+      ...mockNap,
+      id: "3",
+      startedAt: "2024-01-15T10:30:00Z",
+      endedAt: "2024-01-15T11:30:00Z",
+      durationSeconds: 3600,
+    };
+
+    const stats = calculateSleepStats([mockNap, overlappingNap]);
+
+    expect(stats.totalDurationSeconds).toBe(90 * 60);
+    expect(stats.napCount).toBe(1);
+  });
+
   it("calculates average nap duration", () => {
-    const shortNap: StoredSleepEntry = { ...mockNap, id: "3", durationSeconds: 1800 };
+    const shortNap: StoredSleepEntry = {
+      ...mockNap,
+      id: "3",
+      startedAt: "2024-01-15T12:00:00Z",
+      endedAt: "2024-01-15T12:30:00Z",
+      durationSeconds: 1800,
+    };
     const stats = calculateSleepStats([mockNap, shortNap]);
     expect(stats.averageNapDurationSeconds).toBe(2700);
   });
@@ -683,6 +709,36 @@ describe("calculateRolling7DayAverage", () => {
     const avg = calculateRolling7DayAverage(feedings, sleeps, [], [], referenceDate);
     expect(avg.feedingsPerDay).toBe(1);
     expect(avg.sleepSecondsPerDay).toBe(Math.round(36000 / 7));
+  });
+
+  it("counts overlapping completed sleeps by their interval union", () => {
+    const referenceDate = new Date("2024-01-15T14:00:00Z");
+    const sleeps: StoredSleepEntry[] = [
+      {
+        id: "s-1",
+        babyId: "baby1",
+        type: "night",
+        startedAt: "2024-01-14T20:00:00Z",
+        endedAt: "2024-01-14T22:00:00Z",
+        durationSeconds: 7200,
+        createdAt: "2024-01-14T20:00:00Z",
+        updatedAt: "2024-01-14T20:00:00Z",
+      },
+      {
+        id: "s-2",
+        babyId: "baby1",
+        type: "night",
+        startedAt: "2024-01-14T21:00:00Z",
+        endedAt: "2024-01-14T23:00:00Z",
+        durationSeconds: 7200,
+        createdAt: "2024-01-14T21:00:00Z",
+        updatedAt: "2024-01-14T21:00:00Z",
+      },
+    ];
+
+    const avg = calculateRolling7DayAverage([], sleeps, [], [], referenceDate);
+
+    expect(avg.sleepSecondsPerDay).toBe(Math.round((3 * 3600) / 7));
   });
 
   it("excludes today's data", () => {

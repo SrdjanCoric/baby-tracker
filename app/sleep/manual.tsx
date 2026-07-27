@@ -20,6 +20,8 @@ import { formatTime as formatTimeUtil } from "@/utils/time";
 import { te } from "@/utils/translate-errors";
 import { validateManualSleep, determineSleepType } from "@/validators/sleep";
 import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
+import type { StoredSleepEntry } from "@/services/sleep-storage";
 import { ACTIVITY } from "@/constants/colors";
 
 const QUICK_DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -29,7 +31,8 @@ export default function ManualSleepScreen() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
-  const { addSleep, wakeWindowConfig } = useSleep();
+  const { addSleep, sleeps, wakeWindowConfig } = useSleep();
+  const { checkAndConfirmSleep } = useDuplicateCheck();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const colors = {
@@ -135,6 +138,22 @@ export default function ManualSleepScreen() {
       const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
       const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
       const sleepType = classifySleepByTimeRange(startTime, endedAt, dayStartHour, dayEndHour);
+      const proposedSleep: StoredSleepEntry = {
+        id: "manual-sleep-candidate",
+        babyId: selectedBaby.id,
+        type: sleepType,
+        startedAt: startTime.toISOString(),
+        endedAt: endedAt.toISOString(),
+        durationSeconds: durationSeconds ?? 0,
+        notes: notes || undefined,
+        createdAt: startTime.toISOString(),
+        updatedAt: startTime.toISOString(),
+      };
+      const shouldSave = await checkAndConfirmSleep(
+        proposedSleep,
+        sleeps.filter((sleep) => sleep.endedAt)
+      );
+      if (!shouldSave) return;
 
       await addSleep({
         babyId: selectedBaby.id,
@@ -155,6 +174,8 @@ export default function ManualSleepScreen() {
     durationMinutes,
     notes,
     addSleep,
+    sleeps,
+    checkAndConfirmSleep,
     router,
     wakeWindowConfig?.dayStartHour,
     wakeWindowConfig?.dayEndHour,

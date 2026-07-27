@@ -1,4 +1,5 @@
 import { StoredSleepEntry } from "../services/sleep-storage";
+import { unionCompletedSleepIntervals } from "./sleep-intervals";
 import {
   WAKE_WINDOW_PROGRESSIONS,
   getSleepAgeGroupForBaby,
@@ -194,7 +195,7 @@ export function processSleepData(
   mergeThreshold: number = SLEEP_MERGE_THRESHOLD_MINUTES,
   minDuration: number = 15
 ): ProcessedSleep[] {
-  const completed = sleeps
+  const completed = unionCompletedSleepIntervals(sleeps)
     .filter((s) => s.endedAt)
     .map((s) => ({
       startedAt: new Date(s.startedAt),
@@ -215,7 +216,9 @@ export function processSleepData(
     const gap = minutesBetween(prev.endedAt, curr.startedAt);
 
     if (gap < mergeThreshold) {
-      prev.endedAt = curr.endedAt;
+      if (curr.endedAt > prev.endedAt) {
+        prev.endedAt = curr.endedAt;
+      }
       prev.durationMinutes = minutesBetween(prev.startedAt, prev.endedAt);
     } else {
       merged.push({ ...curr });

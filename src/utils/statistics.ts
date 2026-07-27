@@ -8,6 +8,7 @@ import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
+import { unionCompletedSleepIntervals } from "@/utils/sleep-intervals";
 
 export type StatisticsPeriod = "today" | "7days" | "30days";
 
@@ -126,12 +127,13 @@ export function calculateFeedingStats(feedings: StoredFeedingEntry[]): FeedingSt
 }
 
 export function calculateSleepStats(sleeps: StoredSleepEntry[]): SleepStats {
+  const unionedSleeps = unionCompletedSleepIntervals(sleeps);
   let totalDurationSeconds = 0;
   let napCount = 0;
   let nightCount = 0;
   let totalNapDurationSeconds = 0;
 
-  for (const sleep of sleeps) {
+  for (const sleep of unionedSleeps) {
     if (sleep.durationSeconds) {
       totalDurationSeconds += sleep.durationSeconds;
     }
@@ -476,7 +478,9 @@ export function calculateRolling7DayAverage(
   const range: DateRange = { start, end };
 
   const filteredFeedings = filterEntriesByDateRange(feedings, range, (e) => e.startedAt);
-  const filteredSleeps = filterEntriesByDateRange(sleeps, range, (e) => e.startedAt);
+  const filteredSleeps = unionCompletedSleepIntervals(
+    filterEntriesByDateRange(sleeps, range, (e) => e.startedAt)
+  );
   const filteredDiapers = filterEntriesByDateRange(diapers, range, (e) => e.changedAt);
   const filteredTummyTimes = filterEntriesByDateRange(tummyTimes, range, (e) => e.startedAt);
 

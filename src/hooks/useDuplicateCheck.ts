@@ -86,6 +86,7 @@ export function useDuplicateCheck() {
         activityType: 'sleep',
         existingEntryTime: candidate.entry.startedAt,
         loggedByName: candidate.loggedBy,
+        matchReason: candidate.matchReason,
         t,
       });
     },

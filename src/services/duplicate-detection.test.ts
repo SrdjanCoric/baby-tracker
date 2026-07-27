@@ -304,6 +304,71 @@ describe('checkSleepDuplicate', () => {
 
     expect(result.hasPotentialDuplicate).toBe(false);
   });
+
+  it('detects partially overlapping completed sleep intervals', () => {
+    const existing = createSleepEntry({
+      startedAt: '2024-06-15T09:00:00.000Z',
+      endedAt: '2024-06-15T10:00:00.000Z',
+    });
+    const newEntry = createSleepEntry({
+      startedAt: '2024-06-15T09:30:00.000Z',
+      endedAt: '2024-06-15T10:30:00.000Z',
+    });
+
+    const result = checkSleepDuplicate(newEntry, [existing]);
+
+    expect(result.hasPotentialDuplicate).toBe(true);
+    expect(result.candidates[0].matchReason).toBe('overlapping_session');
+  });
+
+  it('detects overlap when the proposed sleep ends inside an existing sleep', () => {
+    const existing = createSleepEntry({
+      startedAt: '2024-06-15T09:00:00.000Z',
+      endedAt: '2024-06-15T10:00:00.000Z',
+    });
+    const newEntry = createSleepEntry({
+      startedAt: '2024-06-15T08:30:00.000Z',
+      endedAt: '2024-06-15T09:30:00.000Z',
+    });
+
+    expect(checkSleepDuplicate(newEntry, [existing]).hasPotentialDuplicate).toBe(true);
+  });
+
+  it('detects overlap when either completed sleep contains the other', () => {
+    const existing = createSleepEntry({
+      startedAt: '2024-06-15T09:00:00.000Z',
+      endedAt: '2024-06-15T11:00:00.000Z',
+    });
+    const contained = createSleepEntry({
+      startedAt: '2024-06-15T09:30:00.000Z',
+      endedAt: '2024-06-15T10:00:00.000Z',
+    });
+    const containing = createSleepEntry({
+      startedAt: '2024-06-15T08:30:00.000Z',
+      endedAt: '2024-06-15T11:30:00.000Z',
+    });
+
+    expect(checkSleepDuplicate(contained, [existing]).hasPotentialDuplicate).toBe(true);
+    expect(checkSleepDuplicate(containing, [existing]).hasPotentialDuplicate).toBe(true);
+  });
+
+  it('does not report adjacent completed sleeps as overlapping', () => {
+    const existing = createSleepEntry({
+      startedAt: '2024-06-15T09:00:00.000Z',
+      endedAt: '2024-06-15T10:00:00.000Z',
+    });
+    const before = createSleepEntry({
+      startedAt: '2024-06-15T08:00:00.000Z',
+      endedAt: '2024-06-15T09:00:00.000Z',
+    });
+    const after = createSleepEntry({
+      startedAt: '2024-06-15T10:00:00.000Z',
+      endedAt: '2024-06-15T11:00:00.000Z',
+    });
+
+    expect(checkSleepDuplicate(before, [existing]).hasPotentialDuplicate).toBe(false);
+    expect(checkSleepDuplicate(after, [existing]).hasPotentialDuplicate).toBe(false);
+  });
 });
 
 describe('checkDiaperDuplicate', () => {

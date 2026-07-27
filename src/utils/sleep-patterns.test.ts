@@ -332,6 +332,28 @@ describe("buildDayViewData", () => {
     expect(result.totalSleepSeconds).toBe(3600);
   });
 
+  it("counts partially overlapping sleeps once", () => {
+    const date = new Date(2025, 2, 5);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2025, 3, 5, 12, 0),
+        endedAt: localISO(2025, 3, 5, 13, 0),
+        type: "nap",
+        durationSeconds: 3600,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 5, 12, 30),
+        endedAt: localISO(2025, 3, 5, 13, 30),
+        type: "nap",
+        durationSeconds: 3600,
+      }),
+    ];
+
+    const result = buildDayViewData(sleeps, date, pxPerHour);
+
+    expect(result.totalSleepSeconds).toBe(90 * 60);
+  });
+
   it("excludes sleep before custom dayStartHour window", () => {
     const date = new Date(2025, 2, 5);
     const sleep = makeSleep({
@@ -490,6 +512,29 @@ describe("calculateSleepSummary", () => {
 
     const result = calculateSleepSummary(sleeps, 7, now);
     expect(result.avgTotalSleepSeconds).toBe(3600);
+  });
+
+  it("uses interval union for overlapping sleep averages", () => {
+    const now = new Date(2025, 2, 5, 18, 0, 0);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2025, 3, 5, 10, 0),
+        endedAt: localISO(2025, 3, 5, 12, 0),
+        type: "nap",
+        durationSeconds: 2 * 3600,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 5, 10, 30),
+        endedAt: localISO(2025, 3, 5, 11, 0),
+        type: "nap",
+        durationSeconds: 30 * 60,
+      }),
+    ];
+
+    const result = calculateSleepSummary(sleeps, 7, now);
+
+    expect(result.avgTotalSleepSeconds).toBe(2 * 3600);
+    expect(result.longestStretchSeconds).toBe(2 * 3600);
   });
 
   it("excludes in-progress sleeps without endedAt", () => {
@@ -838,6 +883,28 @@ describe("buildDailySleepBars", () => {
     expect(todayBar.napHours).toBe(2);
     const mar6Bar = bars[bars.length - 2];
     expect(mar6Bar.nightHours).toBe(3);
+  });
+
+  it("uses interval union for overlapping daily bars", () => {
+    const now = new Date(2025, 2, 7, 18, 0, 0);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2025, 3, 7, 10, 0),
+        endedAt: localISO(2025, 3, 7, 11, 0),
+        type: "nap",
+        durationSeconds: 3600,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 7, 10, 30),
+        endedAt: localISO(2025, 3, 7, 11, 30),
+        type: "nap",
+        durationSeconds: 3600,
+      }),
+    ];
+
+    const bars = buildDailySleepBars(sleeps, 7, now);
+
+    expect(bars[bars.length - 1].napHours).toBe(1.5);
   });
 
   it("returns zero hours for days without sleep data", () => {
