@@ -16,11 +16,11 @@ import { __resetDeviceIdForTests } from "./sync/device-id";
 
 const storage = new Map<string, string>();
 const serverRows: Record<string, unknown>[] = [];
-const queriedPages: Array<[number, number]> = [];
 const queriedTables: string[] = [];
 const queryFilters: Array<[string, string]> = [];
 const queriedLimits: number[] = [];
 const queriedOrders: string[] = [];
+let mutateServerRowsAfterFirstRangePage: (() => void) | null = null;
 let pendingOperations = new Map<string, "CREATE" | "UPDATE" | "DELETE">();
 const syncEngine = {
   getPendingEntityOperations: () => new Map(pendingOperations),
@@ -69,11 +69,36 @@ function queryChain(): Record<string, unknown> {
     },
     limit: async (count: number) => {
       queriedLimits.push(count);
-      return { data: serverRows.slice(0, count), error: null };
-    },
-    range: async (from: number, to: number) => {
-      queriedPages.push([from, to]);
-      return { data: serverRows.slice(from, to + 1), error: null };
+      let candidates = serverRows;
+      const timestampFilter = [...queryFilters]
+        .reverse()
+        .find(([filter]) => filter.startsWith("lt:"));
+      const cursorFilter = [...queryFilters]
+        .reverse()
+        .find(([filter, value]) => filter === "or" && value.includes("id.gt."));
+
+      if (timestampFilter && cursorFilter) {
+        const timestampColumn = timestampFilter[0].slice(3);
+        const greaterMarker = `${timestampColumn}.gt.`;
+        const equalMarker = `,and(${timestampColumn}.eq.`;
+        const idMarker = ",id.gt.";
+        const equalIndex = cursorFilter[1].indexOf(equalMarker);
+        const idIndex = cursorFilter[1].lastIndexOf(idMarker);
+        const cursorTimestamp = cursorFilter[1].slice(greaterMarker.length, equalIndex);
+        const cursorId = cursorFilter[1].slice(idIndex + idMarker.length, -1);
+        candidates = serverRows.filter((row) => {
+          const timestamp = row[timestampColumn] as string;
+          const id = row.id as string;
+          return timestamp > cursorTimestamp || (timestamp === cursorTimestamp && id > cursorId);
+        });
+      }
+
+      const data = candidates.slice(0, count);
+      if (timestampFilter && !cursorFilter && mutateServerRowsAfterFirstRangePage) {
+        mutateServerRowsAfterFirstRangePage();
+        mutateServerRowsAfterFirstRangePage = null;
+      }
+      return { data, error: null };
     },
   };
 }
@@ -96,11 +121,11 @@ describe("activity range sync", () => {
   beforeEach(() => {
     storage.clear();
     serverRows.length = 0;
-    queriedPages.length = 0;
     queriedTables.length = 0;
     queryFilters.length = 0;
     queriedLimits.length = 0;
     queriedOrders.length = 0;
+    mutateServerRowsAfterFirstRangePage = null;
     pendingOperations = new Map();
     setStorageUserId("user-1");
     __resetCrdtSyncForTests();
@@ -124,10 +149,7 @@ describe("activity range sync", () => {
 
     expect(entries).toHaveLength(1_005);
     expect(new Set(entries.map((entry) => entry.id))).toHaveLength(1_005);
-    expect(queriedPages).toEqual([
-      [0, 999],
-      [1_000, 1_999],
-    ]);
+    expect(queriedLimits).toEqual([1_000, 1_000]);
     expect(queriedOrders).toEqual([
       "started_at",
       "id",
@@ -135,6 +157,28 @@ describe("activity range sync", () => {
       "id",
     ]);
     expect(JSON.parse(storage.get("@feedings:baby-1:user-1")!)).toHaveLength(1_005);
+  });
+
+  it("does not skip an existing row when an earlier row disappears between pages", async () => {
+    for (let index = 0; index < 1_005; index += 1) {
+      serverRows.push({
+        id: `feeding-${index.toString().padStart(4, "0")}`,
+        baby_id: "baby-1",
+        type: "bottle",
+        started_at: `2026-01-01T${String(Math.floor(index / 60) % 24).padStart(2, "0")}:${String(index % 60).padStart(2, "0")}:00.000Z`,
+        created_at: range.start,
+        updated_at: range.start,
+        field_clocks: {},
+      });
+    }
+    mutateServerRowsAfterFirstRangePage = () => {
+      serverRows.shift();
+    };
+
+    const entries = await fetchActivityRangeFromDatabase("feedings", "baby-1", range);
+
+    expect(entries.some((entry) => entry.id === "feeding-1000")).toBe(true);
+    expect(new Set(entries.map((entry) => entry.id))).toHaveLength(1_005);
   });
 
   it("replaces only the requested interval while preserving queued local mutations", async () => {
@@ -164,9 +208,19 @@ describe("activity range sync", () => {
         createdAt: "2026-01-01T09:00:00.000Z",
         updatedAt: "2026-01-01T09:00:00.000Z",
       },
+      {
+        id: "pending-update",
+        babyId: "baby-1",
+        type: "bottle",
+        startedAt: "2026-01-01T09:30:00.000Z",
+        notes: "local edit",
+        createdAt: "2026-01-01T09:30:00.000Z",
+        updatedAt: "2026-01-01T10:30:00.000Z",
+      },
     ];
     storage.set("@feedings:baby-1:user-1", JSON.stringify(existing));
     pendingOperations.set("pending-create", "CREATE");
+    pendingOperations.set("pending-update", "UPDATE");
     pendingOperations.set("pending-delete", "DELETE");
     serverRows.push(
       {
@@ -179,6 +233,16 @@ describe("activity range sync", () => {
         field_clocks: {},
       },
       {
+        id: "pending-update",
+        baby_id: "baby-1",
+        type: "bottle",
+        started_at: "2026-01-01T09:30:00.000Z",
+        notes: "stale server edit",
+        created_at: "2026-01-01T09:30:00.000Z",
+        updated_at: "2026-01-01T10:00:00.000Z",
+        field_clocks: {},
+      },
+      {
         id: "pending-delete",
         baby_id: "baby-1",
         type: "bottle",
@@ -186,6 +250,18 @@ describe("activity range sync", () => {
         created_at: "2026-01-01T11:00:00.000Z",
         updated_at: "2026-01-01T11:00:00.000Z",
         field_clocks: {},
+      },
+      {
+        id: "stale-in-range",
+        baby_id: "baby-1",
+        type: "bottle",
+        started_at: "2026-01-01T08:00:00.000Z",
+        deleted: true,
+        created_at: "2026-01-01T08:00:00.000Z",
+        updated_at: "2026-01-01T11:00:00.000Z",
+        field_clocks: {
+          deleted: "2026-01-01T11:00:00.000Z-0000-device-remote",
+        },
       }
     );
 
@@ -194,8 +270,10 @@ describe("activity range sync", () => {
     expect(entries.map((entry) => entry.id).sort()).toEqual([
       "outside-range",
       "pending-create",
+      "pending-update",
       "server-live",
     ]);
+    expect(entries.find((entry) => entry.id === "pending-update")?.notes).toBe("local edit");
   });
 
   it("keeps cached history when the bounded startup pull refreshes recent rows", async () => {

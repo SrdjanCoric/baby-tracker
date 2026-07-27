@@ -47,7 +47,7 @@ export async function fetchActivityRangeFromDatabase<T extends TimelineActivityT
   const definition = getActivityRangeDefinition(table);
   const scope = captureActivityPullScope(`${definition.storagePrefix}${babyId}`);
   const rows: Record<string, unknown>[] = [];
-  let from = 0;
+  let cursor: { timestamp: string; id: string } | null = null;
 
   while (true) {
     let query = supabase
@@ -60,10 +60,16 @@ export async function fetchActivityRangeFromDatabase<T extends TimelineActivityT
       ? query.or(`ended_at.gt.${range.start},ended_at.is.null`)
       : query.gte(definition.timestampColumn, range.start);
 
+    if (cursor) {
+      query = query.or(
+        `${definition.timestampColumn}.gt.${cursor.timestamp},and(${definition.timestampColumn}.eq.${cursor.timestamp},id.gt.${cursor.id})`
+      );
+    }
+
     const { data, error } = await query
       .order(definition.timestampColumn, { ascending: true })
       .order("id", { ascending: true })
-      .range(from, from + ACTIVITY_RANGE_PAGE_SIZE - 1);
+      .limit(ACTIVITY_RANGE_PAGE_SIZE);
 
     if (error) {
       console.error("[ActivitySync] Failed to fetch activity range:", error.message);
@@ -73,7 +79,11 @@ export async function fetchActivityRangeFromDatabase<T extends TimelineActivityT
     const page = (data || []) as Record<string, unknown>[];
     rows.push(...page);
     if (page.length < ACTIVITY_RANGE_PAGE_SIZE) break;
-    from += ACTIVITY_RANGE_PAGE_SIZE;
+    const lastRow = page[page.length - 1];
+    cursor = {
+      timestamp: lastRow[definition.timestampColumn] as string,
+      id: lastRow.id as string,
+    };
   }
 
   const reconciled = await reconcilePulled(table, rows);

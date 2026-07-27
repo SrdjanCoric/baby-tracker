@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { useColorScheme } from "nativewind";
 import { getActionColor, ACTION_COLORS } from "@/constants/design-tokens";
+import { SURFACE, TEXT } from "@/constants/colors";
 import { useRouter } from "expo-router";
 import {
   TimelineItem,
@@ -756,8 +757,15 @@ export default function TimelineScreen() {
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           ListHeaderComponent={rangeStatus === "error" ? (
-            <View className="mx-4 my-2 p-3 rounded-xl bg-card dark:bg-card-dark" testID="timeline-range-error">
-              <Text className="text-text dark:text-text-dark text-center mb-2">
+            <View
+              className="mx-4 my-2 p-3 rounded-xl"
+              style={{ backgroundColor: isDark ? SURFACE.dark.card : SURFACE.light.card }}
+              testID="timeline-range-error"
+            >
+              <Text
+                className="text-center mb-2"
+                style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}
+              >
                 {t("timeline.historyLoadError")}
               </Text>
               <Pressable
@@ -767,7 +775,9 @@ export default function TimelineScreen() {
                 className="self-center px-4 py-2 rounded-lg"
                 style={{ backgroundColor: getActionColor("primary", isDark) }}
               >
-                <Text className="text-white font-semibold">{t("common.retry")}</Text>
+                <Text className="font-semibold" style={{ color: TEXT.light.inverse }}>
+                  {t("common.retry")}
+                </Text>
               </Pressable>
             </View>
           ) : null}
@@ -788,13 +798,19 @@ export default function TimelineScreen() {
       ) : rangeStatus === "loading" || rangeStatus === "unverified" ? (
         <View className="flex-1 items-center justify-center" testID="timeline-range-loading">
           <ActivityIndicator size="large" color={getActionColor("primary", isDark)} />
-          <Text className="mt-3 text-text-secondary dark:text-text-secondary-dark">
+          <Text
+            className="mt-3"
+            style={{ color: isDark ? TEXT.dark.secondary : TEXT.light.secondary }}
+          >
             {t("timeline.loadingHistory")}
           </Text>
         </View>
       ) : rangeStatus === "error" ? (
         <View className="flex-1 items-center justify-center px-8" testID="timeline-range-error">
-          <Text className="text-text dark:text-text-dark text-center mb-4">
+          <Text
+            className="text-center mb-4"
+            style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}
+          >
             {t("timeline.historyLoadError")}
           </Text>
           <Pressable
@@ -804,7 +820,9 @@ export default function TimelineScreen() {
             className="px-5 py-3 rounded-xl"
             style={{ backgroundColor: getActionColor("primary", isDark) }}
           >
-            <Text className="text-white font-semibold">{t("common.retry")}</Text>
+            <Text className="font-semibold" style={{ color: TEXT.light.inverse }}>
+              {t("common.retry")}
+            </Text>
           </Pressable>
         </View>
       ) : (
