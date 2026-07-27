@@ -7,6 +7,7 @@ import {
   createTummyTimeInDatabase,
   deleteFeedingFromDatabase,
   deleteHealthFromDatabase,
+  deleteMilestoneResponseFromDatabase,
   fetchDiapersFromDatabase,
   fetchFeedingsFromDatabase,
   fetchGrowthFromDatabase,
@@ -208,7 +209,9 @@ function makeRealSyncEngine(): SyncEngine {
   });
   engine.setAuthContext({ householdId: "household-1", userId: "user-1" });
   engine.setCrdtSync({
-    stampWrite: vi.fn(async () => ({ id: "clock-1", baby_id: "clock-1" })),
+    stampWrite: vi.fn(async (_table, _entityId, data) => Object.fromEntries(
+      Object.keys(data).map((field) => [field, `clock-${field}`])
+    )),
     forget: vi.fn(async () => {}),
     getShadow: vi.fn(async () => null),
     restoreShadow: vi.fn(async () => {}),
@@ -398,6 +401,122 @@ describe("lossless activity sync", () => {
 
     expect(JSON.parse(storage.get(key)!)).toEqual([created]);
     expect(pendingOperations.get(created.id)).toBe("CREATE");
+  });
+
+  it("keeps clear and recheck durable under one milestone response id", async () => {
+    syncEngine = makeRealSyncEngine();
+
+    const first = await upsertMilestoneResponseInDatabase({
+      babyId: "baby-1",
+      milestoneId: "milestone-1",
+      state: "yes",
+      respondedBy: "user-1",
+    });
+    await upsertMilestoneResponseInDatabase({
+      babyId: "baby-1",
+      milestoneId: "milestone-1",
+      state: "not_sure",
+      respondedBy: "user-1",
+    }, first.id);
+    await deleteMilestoneResponseFromDatabase("baby-1", first.id, "milestone-1");
+    const revived = await upsertMilestoneResponseInDatabase({
+      babyId: "baby-1",
+      milestoneId: "milestone-1",
+      state: "yes",
+      respondedBy: "user-1",
+    }, first.id);
+
+    expect(revived).toEqual(expect.objectContaining({ id: first.id, state: "yes", deleted: false }));
+    expect(JSON.parse(storage.get("@milestones:baby-1")!)).toEqual([revived]);
+
+    const queue = JSON.parse(storage.get("@sync_queue")!) as {
+      operations: Array<{ entityId: string; data: Record<string, unknown> }>;
+    };
+    expect(queue.operations).toHaveLength(4);
+    expect(queue.operations.every((operation) => operation.entityId === first.id)).toBe(true);
+    expect(queue.operations.at(-1)?.data).toEqual(expect.objectContaining({
+      deleted: false,
+      field_clocks: expect.objectContaining({ deleted: "clock-deleted" }),
+    }));
+  });
+
+  it("repairs an alternate-id milestone create through the durable queue", async () => {
+    const engine = makeRealSyncEngine();
+    syncEngine = engine;
+    const canonicalId = "22222222-2222-4222-8222-222222222222";
+    const alternateId = "33333333-3333-4333-8333-333333333333";
+    const selectedAt = "2026-07-27T10:05:00.000Z";
+    const alternateResponse = {
+      id: alternateId,
+      babyId: "baby-1",
+      milestoneId: "milestone-1",
+      state: "yes" as const,
+      deleted: false,
+      respondedAt: selectedAt,
+      respondedBy: "user-1",
+      createdAt: selectedAt,
+      updatedAt: selectedAt,
+    };
+    await engine.enqueueOperationWithLocalMutation({
+      id: "legacy-alternate-create",
+      type: "CREATE",
+      table: "milestone_responses",
+      entityId: alternateId,
+      data: {
+        id: alternateId,
+        baby_id: "baby-1",
+        milestone_id: "milestone-1",
+        state: "yes",
+        responded_at: selectedAt,
+        responded_by: "user-1",
+        created_at: selectedAt,
+        updated_at: selectedAt,
+      },
+      timestamp: selectedAt,
+      retryCount: 0,
+    }, {
+      key: "@milestones:baby-1",
+      previousValue: null,
+      nextValue: JSON.stringify([alternateResponse]),
+    });
+    const restarted = makeRealSyncEngine();
+    await restarted.initialize();
+    syncEngine = restarted;
+
+    serverRows = [{
+      id: canonicalId,
+      baby_id: "baby-1",
+      milestone_id: "milestone-1",
+      state: "not_sure",
+      responded_at: "2026-07-27T10:00:00.000Z",
+      responded_by: "user-2",
+      created_at: "2026-07-27T10:00:00.000Z",
+      updated_at: "2026-07-27T10:00:00.000Z",
+      deleted: true,
+      field_clocks: { deleted: "2026-07-27T10:01:00.000Z-0000-device-b" },
+    }];
+
+    const recovered = await fetchMilestoneResponsesFromDatabase("baby-1");
+
+    expect(recovered).toEqual([
+      expect.objectContaining({
+        id: canonicalId,
+        milestoneId: "milestone-1",
+        state: "yes",
+        deleted: false,
+      }),
+    ]);
+    expect(JSON.parse(storage.get("@milestones:baby-1")!)).toEqual(recovered);
+    expect(restarted.getPendingEntityOperations("milestone_responses")).toEqual(new Map([
+      [alternateId, "CREATE"],
+      [canonicalId, "UPDATE"],
+    ]));
+
+    restarted.setOnlineForTesting(true);
+    await restarted.sync();
+
+    expect(restarted.getPendingEntityOperations("milestone_responses")).toEqual(new Map());
+    expect(rpcMock).toHaveBeenCalledTimes(2);
   });
 
   it("aborts a pull when its authenticated storage scope changes", async () => {

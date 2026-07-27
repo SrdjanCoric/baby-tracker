@@ -134,6 +134,73 @@ async function commitPulledCollection<T extends { id: string }>(
   });
 }
 
+async function commitPulledMilestoneResponses(
+  scope: ActivityPullScope,
+  serverResponses: StoredMilestoneResponse[]
+): Promise<StoredMilestoneResponse[]> {
+  return withStorageLock(scope.key, async () => {
+    assertActivityPullScope(scope);
+    const pendingOperations = await getPendingEntityOperations(scope.engine, 'milestone_responses');
+    assertActivityPullScope(scope);
+    const localData = await AsyncStorage.getItem(scope.key);
+    assertActivityPullScope(scope);
+    const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
+    let responses = mergeWithPendingLocal(serverResponses, localResponses, pendingOperations);
+    let previousValue = localData;
+    let recoveredAny = false;
+
+    for (const canonical of serverResponses) {
+      const alternate = localResponses.find((response) =>
+        response.milestoneId === canonical.milestoneId
+        && response.id !== canonical.id
+        && !response.deleted
+        && pendingOperations.get(response.id) === 'CREATE'
+      );
+      if (!alternate) continue;
+
+      const recovered: StoredMilestoneResponse = {
+        ...alternate,
+        id: canonical.id,
+        babyId: canonical.babyId,
+        deleted: false,
+        createdAt: canonical.createdAt,
+      };
+      responses = [
+        ...responses.filter((response) => response.milestoneId !== canonical.milestoneId),
+        recovered,
+      ];
+      const nextValue = JSON.stringify(responses);
+      await queueSyncOperation({
+        type: 'UPDATE',
+        table: 'milestone_responses',
+        entityId: canonical.id,
+        data: {
+          baby_id: recovered.babyId,
+          milestone_id: recovered.milestoneId,
+          state: recovered.state,
+          deleted: false,
+          responded_at: recovered.respondedAt,
+          responded_by: recovered.respondedBy,
+          updated_at: recovered.updatedAt,
+        },
+      }, 'required', {
+        key: scope.key,
+        previousValue,
+        nextValue,
+      });
+      previousValue = nextValue;
+      recoveredAny = true;
+      assertActivityPullScope(scope);
+    }
+
+    if (!recoveredAny) {
+      await AsyncStorage.setItem(scope.key, JSON.stringify(responses));
+    }
+    assertActivityPullScope(scope);
+    return responses;
+  });
+}
+
 type ActivityQueueOperation = {
   type: OperationType;
   table: SyncableTable;
@@ -1263,8 +1330,8 @@ export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promi
   }
 
   const reconciled = await reconcilePulled("milestone_responses", (data || []) as Record<string, unknown>[]);
-  const serverResponses: StoredMilestoneResponse[] = dropTombstoned(reconciled).map(transformMilestoneResponseFromDb);
-  return commitPulledCollection(scope, 'milestone_responses', serverResponses);
+  const serverResponses = reconciled.map(transformMilestoneResponseFromDb);
+  return commitPulledMilestoneResponses(scope, serverResponses);
 }
 
 export async function upsertMilestoneResponseInDatabase(
@@ -1284,17 +1351,20 @@ export async function upsertMilestoneResponseInDatabase(
     babyId: input.babyId,
     milestoneId: input.milestoneId,
     state: input.state,
+    deleted: false,
     respondedAt: now,
     respondedBy: input.respondedBy,
     createdAt: now,
     updatedAt: now,
   };
 
+  let storedResponse = response;
   const dbData: Record<string, unknown> = {
     id,
     baby_id: input.babyId,
     milestone_id: input.milestoneId,
     state: input.state,
+    deleted: false,
     responded_at: now,
     responded_by: input.respondedBy,
     created_at: now,
@@ -1306,11 +1376,21 @@ export async function upsertMilestoneResponseInDatabase(
     (responses) => {
       const existing = responses.find((r) => r.milestoneId === input.milestoneId);
       if (existing) {
-        return responses.map((r) =>
-          r.milestoneId === input.milestoneId
-            ? { ...r, state: input.state, respondedAt: now, updatedAt: now, respondedBy: input.respondedBy ?? r.respondedBy }
-            : r
-        );
+        storedResponse = {
+          ...existing,
+          state: input.state,
+          deleted: false,
+          respondedAt: now,
+          updatedAt: now,
+          respondedBy: input.respondedBy ?? existing.respondedBy,
+        };
+        let replaced = false;
+        return responses.flatMap((item) => {
+          if (item.milestoneId !== input.milestoneId) return [item];
+          if (replaced) return [];
+          replaced = true;
+          return [storedResponse];
+        });
       }
       return [...responses, response];
     },
@@ -1321,7 +1401,9 @@ export async function upsertMilestoneResponseInDatabase(
           entityId: id,
           data: {
             state: input.state,
+            deleted: false,
             responded_at: now,
+            responded_by: input.respondedBy,
             updated_at: now,
           },
         })
@@ -1333,7 +1415,7 @@ export async function upsertMilestoneResponseInDatabase(
         }))
   );
 
-  return response;
+  return storedResponse;
 }
 
 export async function deleteMilestoneResponseFromDatabase(
@@ -1343,7 +1425,11 @@ export async function deleteMilestoneResponseFromDatabase(
 ): Promise<boolean> {
   await updateLocalMilestoneResponses(
     babyId,
-    (responses) => responses.filter((r) => r.milestoneId !== milestoneId),
+    (responses) => responses.map((response) =>
+      response.milestoneId === milestoneId
+        ? { ...response, deleted: true }
+        : response
+    ),
     createDurableQueueCommit({
       type: 'DELETE',
       table: 'milestone_responses',
@@ -1361,6 +1447,7 @@ function transformMilestoneResponseFromDb(data: Record<string, unknown>): Stored
     babyId: data.baby_id as string,
     milestoneId: data.milestone_id as string,
     state: data.state as MilestoneState,
+    deleted: data.deleted === true,
     respondedAt: data.responded_at as string,
     respondedBy: data.responded_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),

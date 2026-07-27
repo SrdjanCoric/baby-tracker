@@ -11,6 +11,7 @@ export interface StoredMilestoneResponse {
   babyId: string;
   milestoneId: string;
   state: MilestoneState;
+  deleted: boolean;
   respondedAt: string;
   respondedBy?: string;
   createdAt: string;
@@ -42,13 +43,18 @@ export const MilestonesStorageService = {
       const updated: StoredMilestoneResponse = {
         ...existing,
         state: input.state,
+        deleted: false,
         respondedAt: now,
         respondedBy: input.respondedBy ?? existing.respondedBy,
         updatedAt: now,
       };
-      const updatedResponses = responses.map((r) =>
-        r.milestoneId === input.milestoneId ? updated : r
-      );
+      let replaced = false;
+      const updatedResponses = responses.flatMap((response) => {
+        if (response.milestoneId !== input.milestoneId) return [response];
+        if (replaced) return [];
+        replaced = true;
+        return [updated];
+      });
       await AsyncStorage.setItem(getMilestonesKey(input.babyId), JSON.stringify(updatedResponses));
       return updated;
     }
@@ -58,6 +64,7 @@ export const MilestonesStorageService = {
       babyId: input.babyId,
       milestoneId: input.milestoneId,
       state: input.state,
+      deleted: false,
       respondedAt: now,
       respondedBy: input.respondedBy,
       createdAt: now,
@@ -72,9 +79,15 @@ export const MilestonesStorageService = {
 
   async clearMilestoneState(babyId: string, milestoneId: string): Promise<boolean> {
     const responses = await this.getResponses(babyId);
-    const filtered = responses.filter((r) => r.milestoneId !== milestoneId);
-    if (filtered.length === responses.length) return false;
-    await AsyncStorage.setItem(getMilestonesKey(babyId), JSON.stringify(filtered));
+    const now = new Date().toISOString();
+    const existing = responses.find((response) => response.milestoneId === milestoneId);
+    if (!existing || existing.deleted) return false;
+    const updatedResponses = responses.map((response) =>
+      response.milestoneId === milestoneId
+        ? { ...response, deleted: true, updatedAt: now }
+        : response
+    );
+    await AsyncStorage.setItem(getMilestonesKey(babyId), JSON.stringify(updatedResponses));
     return true;
   },
 };
