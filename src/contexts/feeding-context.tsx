@@ -36,6 +36,8 @@ import {
   type TimerLockReconciliationState,
 } from "@/services/timer-lock-reconciliation";
 import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
+import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface ActiveTimer extends TimerIdentity {
   isRunning: boolean;
@@ -259,6 +261,8 @@ interface FeedingContextValue extends FeedingState {
   updateFeeding: (feedingId: string, input: UpdateFeedingInput) => Promise<StoredFeedingEntry | null>;
   deleteFeeding: (feedingId: string) => Promise<boolean>;
   refreshFeedings: () => Promise<void>;
+  loadFeedingRange: (range: UtcActivityRange) => Promise<void>;
+  getFeedingRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastFeeding: () => StoredFeedingEntry | null;
 }
 
@@ -276,6 +280,19 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const stopVersionRef = useRef(0);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
+  const acceptFeedingRange = useCallback((entries: StoredFeedingEntry[]) => {
+    dispatch({ type: "SET_FEEDINGS", payload: entries });
+  }, []);
+  const {
+    loadRange: loadFeedingRange,
+    getRangeStatus: getFeedingRangeStatus,
+  } = useActivityRangeLoader({
+    table: "feedings",
+    babyId: selectedBaby?.id ?? null,
+    authenticated: Boolean(user?.householdId),
+    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+    acceptEntries: acceptFeedingRange,
+  });
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('feedings', (change: RemoteChange) => {
@@ -1116,8 +1133,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     updateFeeding,
     deleteFeeding,
     refreshFeedings: loadFeedings,
+    loadFeedingRange,
+    getFeedingRangeStatus,
     getLastFeeding,
-  }), [state, babyBinding, isStopping, startBreastfeeding, stopBreastfeeding, changeSide, pauseBreastfeeding, resumeBreastfeeding, suggestedSide, addFeeding, updateFeeding, deleteFeeding, loadFeedings, getLastFeeding]);
+  }), [state, babyBinding, isStopping, startBreastfeeding, stopBreastfeeding, changeSide, pauseBreastfeeding, resumeBreastfeeding, suggestedSide, addFeeding, updateFeeding, deleteFeeding, loadFeedings, loadFeedingRange, getFeedingRangeStatus, getLastFeeding]);
 
   return <FeedingContext.Provider value={value}>{children}</FeedingContext.Provider>;
 }

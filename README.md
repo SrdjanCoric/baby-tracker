@@ -38,7 +38,9 @@ Free. No ads. No subscriptions.
 
 ### Offline-First Sync Engine
 
-All writes go to local storage first and are immediately reflected in the UI. A persistent sync queue handles server delivery with retry logic and exponential backoff. On foreground resume, the queue flushes before pulling server state to avoid overwriting optimistic updates. Activity pulls fetch remote rows before entering a per-user, per-baby storage lock. Inside the lock, they re-read pending operations and local entries so a refresh cannot replace a queued create or update or resurrect a queued delete.
+All writes go to local storage first and are immediately reflected in the UI. A persistent sync queue handles server delivery with retry logic and exponential backoff. On foreground resume, the queue flushes before pulling server state to avoid overwriting optimistic updates.
+
+Startup pulls read at most 1,000 recent rows per activity table. Timeline requests older UTC ranges when the caregiver navigates to them, then follows a timestamp-and-ID cursor until the visible interval is complete. Both paths reconcile under a per-user, per-baby storage lock, where pending creates, updates, and deletes are re-read before the local collection is written. Cached ranges remain available across foreground refreshes and offline sessions. See [`docs/ACTIVITY_HISTORY.md`](docs/ACTIVITY_HISTORY.md) for range coverage and reconciliation details.
 
 ```
 User action → Local storage → UI update (immediate)
@@ -115,7 +117,7 @@ npx expo prebuild --platform android --clean && npx expo run:android
 ## Testing
 
 ```bash
-npm run check                # Complete non-device validation before a pull request
+npm run check                # Complete local non-device gate before production release
 npm run check:code           # The same validation without local database checks
 npm run audit:dependencies   # Fail on unapproved high or critical advisories
 npm run test:unit            # 2,200+ Vitest unit tests
@@ -134,7 +136,7 @@ npm run e2e:household-timers:clean # Required local iOS device gate before relea
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.
 
-Pull requests and pushes to `main` run the non-device checks as separate GitHub Actions jobs. The required dependency audit blocks unapproved high or critical advisories. Dependabot opens npm update pull requests each week. Configure `Non-device checks required` as the required branch-protection check. Test jobs retain their logs as artifacts for seven days. See [`docs/DEPENDENCY_SECURITY.md`](docs/DEPENDENCY_SECURITY.md) for advisory triage and temporary exception rules.
+Pull requests and pushes to `main` run only lint, strict type checking, and the dependency audit. Test suites stay out of the routine CI path and run locally through `npm run check` before a production release. The required dependency audit blocks unapproved high or critical advisories. Dependabot opens npm update pull requests each week. Configure `Non-device checks required` as the required branch-protection check. See [`docs/DEPENDENCY_SECURITY.md`](docs/DEPENDENCY_SECURITY.md) for advisory triage and temporary exception rules.
 
 Run `npm run e2e:household-timers:clean` before each iOS release. GitHub Actions does not run iOS device tests because GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase.
 
@@ -142,7 +144,7 @@ The fast iOS command reuses the installed E2E app and local fixtures. The scenar
 
 ## Releases
 
-The **Build Store Release** workflow accepts `v*` tags and manual runs. It validates the version and runs the complete non-device checks against the selected source. The build uses that commit and never submits to an app store.
+The **Build Store Release** workflow accepts `v*` tags and manual runs. Run and record the complete local non-device gate first; the workflow validates the version but does not rerun tests. The build uses that commit and never submits to an app store.
 
 The **Submit Store Release** workflow runs manually from `main`. It takes a successful build workflow run ID and requires production database confirmation. An iOS submission also requires the clean local E2E result or artifact path. The workflow downloads the recorded build IDs and submits them without rebuilding or selecting the latest EAS build.
 

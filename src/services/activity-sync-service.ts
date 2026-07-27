@@ -21,6 +21,83 @@ import type { StoredMilestoneResponse, MilestoneState } from "./milestones-stora
 import type { StoredHealthEntry, CreateHealthInput, UpdateHealthInput } from "./health-storage";
 import type { AchievementId } from "./achievement-detection";
 import type { SyncEngine } from "./sync/sync-engine";
+import type { UtcActivityRange } from "./activity-range-loader";
+
+export type { UtcActivityRange } from "./activity-range-loader";
+
+export interface ActivityRangeEntryMap {
+  feedings: StoredFeedingEntry;
+  sleep_sessions: StoredSleepEntry;
+  diapers: StoredDiaperEntry;
+  pumping_sessions: StoredPumpingEntry;
+  growth_measurements: StoredGrowthEntry;
+  tummy_time_sessions: StoredTummyTimeEntry;
+  health_entries: StoredHealthEntry;
+}
+
+export type TimelineActivityTable = keyof ActivityRangeEntryMap;
+
+const ACTIVITY_RANGE_PAGE_SIZE = 1_000;
+
+export async function fetchActivityRangeFromDatabase<T extends TimelineActivityTable>(
+  table: T,
+  babyId: string,
+  range: UtcActivityRange
+): Promise<ActivityRangeEntryMap[T][]> {
+  const definition = getActivityRangeDefinition(table);
+  const scope = captureActivityPullScope(`${definition.storagePrefix}${babyId}`);
+  const rows: Record<string, unknown>[] = [];
+  let cursor: { timestamp: string; id: string } | null = null;
+
+  while (true) {
+    let query = supabase
+      .from(table)
+      .select("*")
+      .eq("baby_id", babyId)
+      .lt(definition.timestampColumn, range.end);
+
+    query = table === "sleep_sessions"
+      ? query.or(`ended_at.gt.${range.start},ended_at.is.null`)
+      : query.gte(definition.timestampColumn, range.start);
+
+    if (cursor) {
+      query = query.or(
+        `${definition.timestampColumn}.gt.${cursor.timestamp},and(${definition.timestampColumn}.eq.${cursor.timestamp},id.gt.${cursor.id})`
+      );
+    }
+
+    const { data, error } = await query
+      .order(definition.timestampColumn, { ascending: true })
+      .order("id", { ascending: true })
+      .limit(ACTIVITY_RANGE_PAGE_SIZE);
+
+    if (error) {
+      console.error("[ActivitySync] Failed to fetch activity range:", error.message);
+      throw new Error("Failed to fetch activity range");
+    }
+
+    const page = (data || []) as Record<string, unknown>[];
+    rows.push(...page);
+    if (page.length < ACTIVITY_RANGE_PAGE_SIZE) break;
+    const lastRow = page[page.length - 1];
+    cursor = {
+      timestamp: lastRow[definition.timestampColumn] as string,
+      id: lastRow.id as string,
+    };
+  }
+
+  const reconciled = await reconcilePulled(table, rows);
+  const entries = dropTombstoned(reconciled).map((row) =>
+    transformActivityRangeRow(table, row)
+  );
+  return commitPulledRange(
+    scope,
+    table,
+    entries,
+    range,
+    (entry, requestedRange) => activityEntryIsInRange(table, entry, requestedRange)
+  );
+}
 
 async function getPendingEntityOperations(
   engine: SyncEngine | null,
@@ -70,12 +147,6 @@ function withStorageLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
   return next;
 }
 
-interface PulledCollectionSnapshot<T> {
-  entries: T[];
-  localEntries: T[];
-  pendingOperations: Map<string, OperationType>;
-}
-
 interface ActivityPullScope {
   key: string;
   storageUserId: string | null;
@@ -113,11 +184,60 @@ function assertActivityPullScope(scope: ActivityPullScope): void {
   }
 }
 
-async function commitPulledCollection<T extends { id: string }>(
+async function commitPulledRecentCollection<T extends { id: string }>(
+  scope: ActivityPullScope,
+  table: SyncableTable,
+  reconciledRows: Record<string, unknown>[],
+  transform: (row: Record<string, unknown>) => T
+): Promise<T[]> {
+  const serverEntries = dropTombstoned(reconciledRows).map(transform);
+  const tombstonedIds = new Set(
+    reconciledRows
+      .filter((row) => row.deleted === true)
+      .map((row) => row.id as string)
+  );
+
+  return withStorageLock(scope.key, async () => {
+    assertActivityPullScope(scope);
+    const pendingOperations = await getPendingEntityOperations(scope.engine, table);
+    assertActivityPullScope(scope);
+    const localData = await AsyncStorage.getItem(scope.key);
+    assertActivityPullScope(scope);
+    const localEntries: T[] = localData ? JSON.parse(localData) : [];
+    const entriesById = new Map<string, T>();
+
+    for (const entry of localEntries) {
+      const pendingType = pendingOperations.get(entry.id);
+      if (pendingType === "DELETE") continue;
+      if (!tombstonedIds.has(entry.id) || pendingType) {
+        entriesById.set(entry.id, entry);
+      }
+    }
+
+    for (const serverEntry of serverEntries) {
+      const pendingType = pendingOperations.get(serverEntry.id);
+      if (pendingType === "DELETE") continue;
+      const localEntry = entriesById.get(serverEntry.id);
+      entriesById.set(
+        serverEntry.id,
+        pendingType && localEntry ? localEntry : serverEntry
+      );
+    }
+
+    const entries = [...entriesById.values()];
+    assertActivityPullScope(scope);
+    await AsyncStorage.setItem(scope.key, JSON.stringify(entries));
+    assertActivityPullScope(scope);
+    return entries;
+  });
+}
+
+async function commitPulledRange<T extends { id: string }>(
   scope: ActivityPullScope,
   table: SyncableTable,
   serverEntries: T[],
-  inspect?: (snapshot: PulledCollectionSnapshot<T>) => void
+  range: UtcActivityRange,
+  isInRange: (entry: T, range: UtcActivityRange) => boolean
 ): Promise<T[]> {
   return withStorageLock(scope.key, async () => {
     assertActivityPullScope(scope);
@@ -126,8 +246,27 @@ async function commitPulledCollection<T extends { id: string }>(
     const localData = await AsyncStorage.getItem(scope.key);
     assertActivityPullScope(scope);
     const localEntries: T[] = localData ? JSON.parse(localData) : [];
-    const entries = mergeWithPendingLocal(serverEntries, localEntries, pendingOperations);
-    inspect?.({ entries, localEntries, pendingOperations });
+    const localEntriesById = new Map(localEntries.map((entry) => [entry.id, entry]));
+    const entriesById = new Map<string, T>();
+
+    for (const entry of localEntries) {
+      const pendingType = pendingOperations.get(entry.id);
+      if (!isInRange(entry, range) || (pendingType && pendingType !== "DELETE")) {
+        entriesById.set(entry.id, entry);
+      }
+    }
+
+    for (const serverEntry of serverEntries) {
+      const pendingType = pendingOperations.get(serverEntry.id);
+      if (pendingType === "DELETE") continue;
+      const localEntry = localEntriesById.get(serverEntry.id);
+      entriesById.set(
+        serverEntry.id,
+        pendingType && localEntry ? localEntry : serverEntry
+      );
+    }
+
+    const entries = [...entriesById.values()];
     assertActivityPullScope(scope);
     await AsyncStorage.setItem(scope.key, JSON.stringify(entries));
     assertActivityPullScope(scope);
@@ -315,6 +454,86 @@ const KEYS = {
   achievements: "@achievements:",
 };
 
+interface ActivityRangeDefinition {
+  timestampColumn: string;
+  storagePrefix: string;
+}
+
+function getActivityRangeDefinition(table: TimelineActivityTable): ActivityRangeDefinition {
+  switch (table) {
+    case "feedings":
+      return { timestampColumn: "started_at", storagePrefix: KEYS.feedings };
+    case "sleep_sessions":
+      return { timestampColumn: "started_at", storagePrefix: KEYS.sleep };
+    case "diapers":
+      return { timestampColumn: "changed_at", storagePrefix: KEYS.diapers };
+    case "pumping_sessions":
+      return { timestampColumn: "started_at", storagePrefix: KEYS.pumping };
+    case "growth_measurements":
+      return { timestampColumn: "measured_at", storagePrefix: KEYS.growth };
+    case "tummy_time_sessions":
+      return { timestampColumn: "started_at", storagePrefix: KEYS.tummyTime };
+    case "health_entries":
+      return { timestampColumn: "logged_at", storagePrefix: KEYS.health };
+  }
+}
+
+function transformActivityRangeRow<T extends TimelineActivityTable>(
+  table: T,
+  row: Record<string, unknown>
+): ActivityRangeEntryMap[T] {
+  switch (table) {
+    case "feedings":
+      return transformFeedingFromDb(row) as ActivityRangeEntryMap[T];
+    case "sleep_sessions":
+      return transformSleepFromDb(row) as ActivityRangeEntryMap[T];
+    case "diapers":
+      return transformDiaperFromDb(row) as ActivityRangeEntryMap[T];
+    case "pumping_sessions":
+      return transformPumpingFromDb(row) as ActivityRangeEntryMap[T];
+    case "growth_measurements":
+      return transformGrowthFromDb(row) as ActivityRangeEntryMap[T];
+    case "tummy_time_sessions":
+      return transformTummyTimeFromDb(row) as ActivityRangeEntryMap[T];
+    case "health_entries":
+      return transformHealthFromDb(row) as ActivityRangeEntryMap[T];
+  }
+}
+
+function activityEntryIsInRange<T extends TimelineActivityTable>(
+  table: T,
+  entry: ActivityRangeEntryMap[T],
+  range: UtcActivityRange
+): boolean {
+  if (table === "sleep_sessions") {
+    const sleep = entry as StoredSleepEntry;
+    return sleep.startedAt < range.end && (!sleep.endedAt || sleep.endedAt > range.start);
+  }
+
+  let timestamp = "";
+  switch (table) {
+    case "feedings":
+      timestamp = (entry as StoredFeedingEntry).startedAt;
+      break;
+    case "diapers":
+      timestamp = (entry as StoredDiaperEntry).changedAt;
+      break;
+    case "pumping_sessions":
+      timestamp = (entry as StoredPumpingEntry).startedAt;
+      break;
+    case "growth_measurements":
+      timestamp = (entry as StoredGrowthEntry).measuredAt;
+      break;
+    case "tummy_time_sessions":
+      timestamp = (entry as StoredTummyTimeEntry).startedAt;
+      break;
+    case "health_entries":
+      timestamp = (entry as StoredHealthEntry).loggedAt;
+      break;
+  }
+  return timestamp >= range.start && timestamp < range.end;
+}
+
 function generateId(): string {
   return Crypto.randomUUID();
 }
@@ -409,7 +628,9 @@ export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredF
     .from("feedings")
     .select("*")
     .eq("baby_id", babyId)
-    .order("started_at", { ascending: false });
+    .order("started_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(ACTIVITY_RANGE_PAGE_SIZE);
 
   if (error) {
     console.error("[ActivitySync] Failed to fetch feedings:", error.message);
@@ -417,8 +638,7 @@ export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredF
   }
 
   const reconciled = await reconcilePulled("feedings", (data || []) as Record<string, unknown>[]);
-  const serverFeedings: StoredFeedingEntry[] = dropTombstoned(reconciled).map(transformFeedingFromDb);
-  return commitPulledCollection(scope, 'feedings', serverFeedings);
+  return commitPulledRecentCollection(scope, "feedings", reconciled, transformFeedingFromDb);
 }
 
 export async function createFeedingInDatabase(
@@ -605,7 +825,9 @@ export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDi
     .from("diapers")
     .select("*")
     .eq("baby_id", babyId)
-    .order("changed_at", { ascending: false });
+    .order("changed_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(ACTIVITY_RANGE_PAGE_SIZE);
 
   if (error) {
     console.error("[ActivitySync] Failed to fetch diapers:", error.message);
@@ -613,8 +835,7 @@ export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDi
   }
 
   const reconciled = await reconcilePulled("diapers", (data || []) as Record<string, unknown>[]);
-  const serverDiapers: StoredDiaperEntry[] = dropTombstoned(reconciled).map(transformDiaperFromDb);
-  return commitPulledCollection(scope, 'diapers', serverDiapers);
+  return commitPulledRecentCollection(scope, "diapers", reconciled, transformDiaperFromDb);
 }
 
 export async function createDiaperInDatabase(
@@ -749,7 +970,9 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
     .from("sleep_sessions")
     .select("*")
     .eq("baby_id", babyId)
-    .order("started_at", { ascending: false });
+    .order("started_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(ACTIVITY_RANGE_PAGE_SIZE);
 
   if (error) {
     console.error("[ActivitySync] Failed to fetch sleep sessions:", error.message);
@@ -757,27 +980,7 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
   }
 
   const reconciled = await reconcilePulled("sleep_sessions", (data || []) as Record<string, unknown>[]);
-  const serverSessions: StoredSleepEntry[] = dropTombstoned(reconciled).map(transformSleepFromDb);
-  return commitPulledCollection(
-    scope,
-    'sleep_sessions',
-    serverSessions,
-    ({ entries, localEntries, pendingOperations }) => {
-      const mergedIds = new Set(entries.map(session => session.id));
-      const droppedRecent = localEntries.filter(session =>
-        !mergedIds.has(session.id)
-        && (Date.now() - new Date(session.createdAt).getTime()) < 120_000
-      );
-      if (droppedRecent.length > 0) {
-        console.error("[ActivitySync] fetchSleep: DROPPING recent local entries!", {
-          droppedIds: droppedRecent.map(entry => entry.id),
-          pendingCount: pendingOperations.size,
-          serverCount: serverSessions.length,
-          localCount: localEntries.length,
-        });
-      }
-    }
-  );
+  return commitPulledRecentCollection(scope, "sleep_sessions", reconciled, transformSleepFromDb);
 }
 
 export async function createSleepInDatabase(
@@ -930,7 +1133,9 @@ export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPu
     .from("pumping_sessions")
     .select("*")
     .eq("baby_id", babyId)
-    .order("started_at", { ascending: false });
+    .order("started_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(ACTIVITY_RANGE_PAGE_SIZE);
 
   if (error) {
     console.error("[ActivitySync] Failed to fetch pumping sessions:", error.message);
@@ -938,8 +1143,7 @@ export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPu
   }
 
   const reconciled = await reconcilePulled("pumping_sessions", (data || []) as Record<string, unknown>[]);
-  const serverSessions: StoredPumpingEntry[] = dropTombstoned(reconciled).map(transformPumpingFromDb);
-  return commitPulledCollection(scope, 'pumping_sessions', serverSessions);
+  return commitPulledRecentCollection(scope, "pumping_sessions", reconciled, transformPumpingFromDb);
 }
 
 export async function createPumpingInDatabase(
@@ -1093,7 +1297,9 @@ export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGro
     .from("growth_measurements")
     .select("*")
     .eq("baby_id", babyId)
-    .order("measured_at", { ascending: false });
+    .order("measured_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(ACTIVITY_RANGE_PAGE_SIZE);
 
   if (error) {
     console.error("[ActivitySync] Failed to fetch growth measurements:", error.message);
@@ -1101,8 +1307,7 @@ export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGro
   }
 
   const reconciled = await reconcilePulled("growth_measurements", (data || []) as Record<string, unknown>[]);
-  const serverMeasurements: StoredGrowthEntry[] = dropTombstoned(reconciled).map(transformGrowthFromDb);
-  return commitPulledCollection(scope, 'growth_measurements', serverMeasurements);
+  return commitPulledRecentCollection(scope, "growth_measurements", reconciled, transformGrowthFromDb);
 }
 
 export async function createGrowthInDatabase(
@@ -1241,7 +1446,9 @@ export async function fetchTummyTimeFromDatabase(babyId: string): Promise<Stored
     .from("tummy_time_sessions")
     .select("*")
     .eq("baby_id", babyId)
-    .order("started_at", { ascending: false });
+    .order("started_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(ACTIVITY_RANGE_PAGE_SIZE);
 
   if (error) {
     console.error("[ActivitySync] Failed to fetch tummy time sessions:", error.message);
@@ -1249,8 +1456,7 @@ export async function fetchTummyTimeFromDatabase(babyId: string): Promise<Stored
   }
 
   const reconciled = await reconcilePulled("tummy_time_sessions", (data || []) as Record<string, unknown>[]);
-  const serverSessions: StoredTummyTimeEntry[] = dropTombstoned(reconciled).map(transformTummyTimeFromDb);
-  return commitPulledCollection(scope, 'tummy_time_sessions', serverSessions);
+  return commitPulledRecentCollection(scope, "tummy_time_sessions", reconciled, transformTummyTimeFromDb);
 }
 
 export async function createTummyTimeInDatabase(
@@ -1932,7 +2138,9 @@ export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHea
     .from("health_entries")
     .select("*")
     .eq("baby_id", babyId)
-    .order("logged_at", { ascending: false });
+    .order("logged_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(ACTIVITY_RANGE_PAGE_SIZE);
 
   if (error) {
     console.error("[ActivitySync] Failed to fetch health:", error.message);
@@ -1940,8 +2148,7 @@ export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHea
   }
 
   const reconciled = await reconcilePulled("health_entries", (data || []) as Record<string, unknown>[]);
-  const serverEntries: StoredHealthEntry[] = dropTombstoned(reconciled).map(transformHealthFromDb);
-  return commitPulledCollection(scope, 'health_entries', serverEntries);
+  return commitPulledRecentCollection(scope, "health_entries", reconciled, transformHealthFromDb);
 }
 
 export async function createHealthInDatabase(

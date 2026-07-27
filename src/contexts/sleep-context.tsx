@@ -46,6 +46,8 @@ import {
 } from "@/utils/sleepPredictions";
 import type { SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
 import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
+import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
 import {
   acceptTimerCompletion,
@@ -308,6 +310,8 @@ interface SleepContextValue extends SleepState {
   updateSleep: (sleepId: string, input: UpdateSleepInput) => Promise<StoredSleepEntry | null>;
   deleteSleep: (sleepId: string) => Promise<boolean>;
   refreshSleeps: () => Promise<void>;
+  loadSleepRange: (range: UtcActivityRange) => Promise<void>;
+  getSleepRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastSleep: () => StoredSleepEntry | null;
   getTodaysTotalSleepMinutes: () => number;
   getWakeWindowProgress: () => number | undefined;
@@ -346,6 +350,19 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const stopVersionRef = useRef(0);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
+  const acceptSleepRange = useCallback((entries: StoredSleepEntry[]) => {
+    dispatch({ type: "SET_SLEEPS", payload: entries });
+  }, []);
+  const {
+    loadRange: loadSleepRange,
+    getRangeStatus: getSleepRangeStatus,
+  } = useActivityRangeLoader({
+    table: "sleep_sessions",
+    babyId: selectedBaby?.id ?? null,
+    authenticated: Boolean(user?.householdId),
+    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+    acceptEntries: acceptSleepRange,
+  });
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('sleep_sessions', (change: RemoteChange) => {
@@ -1679,6 +1696,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     updateSleep,
     deleteSleep,
     refreshSleeps: loadSleeps,
+    loadSleepRange,
+    getSleepRangeStatus,
     getLastSleep,
     getTodaysTotalSleepMinutes,
     getWakeWindowProgress,
@@ -1701,7 +1720,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dismissPredictionBanner,
     dismissDrift,
     acceptDrift,
-  }), [state, babyBinding, isStopping, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod, dismissPredictionBanner, dismissDrift, acceptDrift]);
+  }), [state, babyBinding, isStopping, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, loadSleepRange, getSleepRangeStatus, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod, dismissPredictionBanner, dismissDrift, acceptDrift]);
 
   return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
 }

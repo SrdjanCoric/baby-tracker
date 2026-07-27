@@ -127,7 +127,8 @@ function queryChain(): Record<string, unknown> {
     ...result,
     select: () => queryChain(),
     eq: () => queryChain(),
-    order: async () => {
+    order: () => queryChain(),
+    limit: async () => {
       remoteReadStarted = true;
       if (remoteReadGate) {
         await remoteReadGate;

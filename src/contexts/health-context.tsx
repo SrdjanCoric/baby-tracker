@@ -18,6 +18,8 @@ import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/constants/activities";
 import { CDC_VACCINE_SCHEDULE, getNextDoseNumber } from "@/constants/vaccine-schedule";
 import { useTranslation } from "react-i18next";
+import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface CompletedVaccination {
   vaccineName: string;
@@ -90,6 +92,8 @@ interface HealthContextValue extends HealthState {
   updateHealth: (healthId: string, input: UpdateHealthInput) => Promise<StoredHealthEntry | null>;
   deleteHealth: (healthId: string) => Promise<boolean>;
   refreshHealth: () => Promise<void>;
+  loadHealthRange: (range: UtcActivityRange) => Promise<void>;
+  getHealthRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastHealth: () => StoredHealthEntry | null;
   getTodaysCount: () => number;
   getCompletedVaccinations: () => CompletedVaccination[];
@@ -103,6 +107,19 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const acceptHealthRange = useCallback((entries: StoredHealthEntry[]) => {
+    dispatch({ type: "SET_HEALTH", payload: entries });
+  }, []);
+  const {
+    loadRange: loadHealthRange,
+    getRangeStatus: getHealthRangeStatus,
+  } = useActivityRangeLoader({
+    table: "health_entries",
+    babyId: selectedBaby?.id ?? null,
+    authenticated: Boolean(user?.householdId),
+    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+    acceptEntries: acceptHealthRange,
+  });
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('health_entries', (change: RemoteChange) => {
@@ -324,10 +341,12 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     updateHealth,
     deleteHealth,
     refreshHealth: loadHealth,
+    loadHealthRange,
+    getHealthRangeStatus,
     getLastHealth,
     getTodaysCount,
     getCompletedVaccinations,
-  }), [state, addHealth, updateHealth, deleteHealth, loadHealth, getLastHealth, getTodaysCount, getCompletedVaccinations]);
+  }), [state, addHealth, updateHealth, deleteHealth, loadHealth, loadHealthRange, getHealthRangeStatus, getLastHealth, getTodaysCount, getCompletedVaccinations]);
 
   return <HealthContext.Provider value={value}>{children}</HealthContext.Provider>;
 }

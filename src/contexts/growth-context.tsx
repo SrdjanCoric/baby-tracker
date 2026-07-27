@@ -15,6 +15,8 @@ import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
+import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface GrowthState {
   measurements: StoredGrowthEntry[];
@@ -84,6 +86,8 @@ interface GrowthContextValue extends GrowthState {
   ) => Promise<StoredGrowthEntry | null>;
   deleteMeasurement: (measurementId: string) => Promise<boolean>;
   refreshMeasurements: () => Promise<void>;
+  loadGrowthRange: (range: UtcActivityRange) => Promise<void>;
+  getGrowthRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastMeasurement: () => StoredGrowthEntry | null;
   getMeasurementHistory: (limit?: number) => StoredGrowthEntry[];
   getWeightChange: () => { change: number; hasPrevious: boolean } | null;
@@ -96,6 +100,19 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
+  const acceptGrowthRange = useCallback((entries: StoredGrowthEntry[]) => {
+    dispatch({ type: "SET_MEASUREMENTS", payload: entries });
+  }, []);
+  const {
+    loadRange: loadGrowthRange,
+    getRangeStatus: getGrowthRangeStatus,
+  } = useActivityRangeLoader({
+    table: "growth_measurements",
+    babyId: selectedBaby?.id ?? null,
+    authenticated: Boolean(user?.householdId),
+    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+    acceptEntries: acceptGrowthRange,
+  });
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('growth_measurements', (change: RemoteChange) => {
@@ -259,10 +276,12 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
     updateMeasurement,
     deleteMeasurement,
     refreshMeasurements: loadMeasurements,
+    loadGrowthRange,
+    getGrowthRangeStatus,
     getLastMeasurement,
     getMeasurementHistory,
     getWeightChange,
-  }), [state, addMeasurement, updateMeasurement, deleteMeasurement, loadMeasurements, getLastMeasurement, getMeasurementHistory, getWeightChange]);
+  }), [state, addMeasurement, updateMeasurement, deleteMeasurement, loadMeasurements, loadGrowthRange, getGrowthRangeStatus, getLastMeasurement, getMeasurementHistory, getWeightChange]);
 
   return <GrowthContext.Provider value={value}>{children}</GrowthContext.Provider>;
 }

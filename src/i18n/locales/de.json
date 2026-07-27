@@ -909,6 +909,8 @@
     "title": "Verlauf",
     "noEntries": "Noch keine Einträge",
     "startTracking": "Beginne mit der Erfassung der Aktivitäten deines Babys",
+    "loadingHistory": "Aktivitätsverlauf wird geladen...",
+    "historyLoadError": "Der Aktivitätsverlauf konnte nicht geladen werden. Versuche es erneut.",
     "timeSince": "vor {{time}}",
     "editEntry": "Eintrag bearbeiten",
     "deleteEntry": "Eintrag löschen",

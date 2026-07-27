@@ -913,6 +913,8 @@
     "title": "Cronologia",
     "noEntries": "Nessuna voce ancora",
     "startTracking": "Inizia a registrare le attività del tuo bambino",
+    "loadingHistory": "Caricamento della cronologia attività...",
+    "historyLoadError": "Impossibile caricare la cronologia attività. Riprova.",
     "timeSince": "{{time}} fa",
     "editEntry": "Modifica voce",
     "deleteEntry": "Elimina voce",

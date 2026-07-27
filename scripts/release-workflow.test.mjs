@@ -10,7 +10,6 @@ const appVersion = JSON.parse(readFileSync("app.json", "utf8")).expo.version;
 const deployWorkflow = parse(
   readFileSync(".github/workflows/deploy.yml", "utf8")
 );
-const testWorkflow = parse(readFileSync(".github/workflows/test.yml", "utf8"));
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 
 function resolveSubmission({
@@ -159,10 +158,9 @@ test("a manual run uses its selected version even when dispatched from a tag", (
   assert.match(result.stderr, /Select .* in the version input/);
 });
 
-test("release metadata validates the triggering source before complete checks", () => {
+test("release metadata validates the triggering source before builds", () => {
   const manualInputs = deployWorkflow.on.workflow_dispatch.inputs;
   const metadata = deployWorkflow.jobs["release-metadata"];
-  const checks = deployWorkflow.jobs.test;
   const serialized = JSON.stringify(deployWorkflow);
 
   assert.equal(manualInputs.version.required, true);
@@ -174,32 +172,7 @@ test("release metadata validates the triggering source before complete checks", 
   assert.equal(metadata.steps[0].with.ref, "${{ github.sha }}");
   assert.match(serialized, /node scripts\/validate-release\.mjs/);
   assert.doesNotMatch(serialized, /git (commit|push)/);
-  assert.equal(checks.needs, "release-metadata");
-  assert.equal(checks.uses, "./.github/workflows/test.yml");
-  assert.equal(
-    checks.with.ref,
-    "${{ needs.release-metadata.outputs.source-sha }}"
-  );
-});
-
-test("reusable non-device checks run against the requested source commit", () => {
-  assert.deepEqual(testWorkflow.on.workflow_call.inputs.ref, {
-    description: "Commit to validate",
-    required: false,
-    type: "string",
-    default: "",
-  });
-
-  for (const [jobName, job] of Object.entries(testWorkflow.jobs)) {
-    const checkout = job.steps.find(
-      (step) => step.uses === "actions/checkout@v4"
-    );
-    assert.equal(
-      checkout.with.ref,
-      "${{ inputs.ref || github.sha }}",
-      jobName
-    );
-  }
+  assert.equal(deployWorkflow.jobs.test, undefined);
 });
 
 test("the release harness runs in the canonical CI contract suite", () => {
@@ -211,7 +184,8 @@ test("the operator checklist gates release approval and records recovery evidenc
   const easConfig = JSON.parse(readFileSync("eas.json", "utf8"));
 
   assert.match(checklist, /production-release/);
-  assert.match(checklist, /Non-device checks required/);
+  assert.match(checklist, /npm run check/);
+  assert.match(checklist, /npm run audit:dependencies/);
   assert.match(checklist, /npm run e2e:household-timers:clean/);
   assert.match(checklist, /supabase_migrations\.schema_migrations/);
   assert.match(checklist, /pg_get_function_identity_arguments/);
@@ -301,8 +275,7 @@ test("protected build jobs use the validated source and record exact EAS IDs", (
     const expectedRef = "${{ needs.release-metadata.outputs.source-sha }}";
 
     assert.equal(build.environment, "production-release", `${platform} build`);
-    assert.ok(build.needs.includes("release-metadata"));
-    assert.ok(build.needs.includes("test"));
+    assert.equal(build.needs, "release-metadata");
     assert.equal(build.outputs["build-id"], "${{ steps.build.outputs.build-id }}");
     assert.equal(build.steps[0].with.ref, expectedRef);
     assert.equal(

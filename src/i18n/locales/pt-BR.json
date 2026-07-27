@@ -912,6 +912,8 @@
     "title": "Linha do Tempo",
     "noEntries": "Sem entradas ainda",
     "startTracking": "Comece a rastrear as atividades do seu bebê",
+    "loadingHistory": "Carregando histórico de atividades...",
+    "historyLoadError": "Não foi possível carregar o histórico de atividades. Tente novamente.",
     "timeSince": "Há {{time}}",
     "editEntry": "Editar Entrada",
     "deleteEntry": "Excluir Entrada",

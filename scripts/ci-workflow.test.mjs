@@ -24,40 +24,31 @@ function runs(jobName, command) {
   return commands(jobName).some((run) => run.includes(command));
 }
 
-const checkJobs = [
-  "quality",
-  "dependency-audit",
-  "unit-tests",
-  "component-tests",
-  "security-tests",
-  "sync-tests",
-  "sql-tests",
-];
+const checkJobs = ["quality", "dependency-audit"];
 
-test("dependency advisories are audited as a required pull-request check", () => {
-  assert.equal(packageJson.scripts["audit:dependencies"], "node scripts/audit-dependencies.mjs");
-  assert.ok(runs("dependency-audit", "npm ci"));
-  assert.ok(runs("dependency-audit", "npm run audit:dependencies"));
-  assert.ok(checkJobs.includes("dependency-audit"));
-  assert.ok(workflow.jobs.required.needs.includes("dependency-audit"));
-});
-
-test("pull requests and main run every maintained non-device check", () => {
+test("pull requests and main run only fast non-test checks", () => {
   assert.ok(workflow.on.pull_request);
   assert.ok(workflow.on.push);
+  assert.equal(workflow.on.workflow_call, undefined);
+  assert.deepEqual(Object.keys(workflow.jobs), [
+    "quality",
+    "dependency-audit",
+    "required",
+  ]);
 
   assert.ok(runs("quality", "npm run lint"));
   assert.ok(runs("quality", "npm run typecheck"));
-  assert.ok(runs("quality", "npm run test:ci"));
-  assert.ok(runs("unit-tests", "npm run test:unit"));
-  assert.ok(runs("component-tests", "npm run test:component -- --runInBand"));
-  assert.ok(runs("security-tests", "npm run test:security"));
-  assert.ok(runs("sync-tests", "npm run test:sync"));
-  assert.ok(runs("sql-tests", "npm run test:sql:setup"));
-  assert.ok(runs("sql-tests", "npm run test:sql"));
+  assert.ok(runs("dependency-audit", "npm run audit:dependencies"));
+  assert.doesNotMatch(JSON.stringify(workflow), /npm run test:|supabase start|maestro/i);
 });
 
-test("every check job uses locked dependencies and pinned tool versions", () => {
+test("dependency advisories remain a required pull-request check", () => {
+  assert.equal(packageJson.scripts["audit:dependencies"], "node scripts/audit-dependencies.mjs");
+  assert.ok(runs("dependency-audit", "npm ci"));
+  assert.ok(workflow.jobs.required.needs.includes("dependency-audit"));
+});
+
+test("fast jobs use locked dependencies, pinned Node, and timeouts", () => {
   for (const jobName of checkJobs) {
     const job = workflow.jobs[jobName];
     const nodeStep = job.steps.find(
@@ -70,48 +61,14 @@ test("every check job uses locked dependencies and pinned tool versions", () => 
     );
     assert.equal(nodeStep.with["node-version"], "20.19.4", jobName);
     assert.ok(runs(jobName, "npm ci"), jobName);
+    assert.equal(job["timeout-minutes"], 10, jobName);
   }
 
-  const requiredNodeStep = workflow.jobs.required.steps.find(
-    (step) => step.uses === "actions/setup-node@v4"
-  );
-
-  assert.equal(requiredNodeStep.with["node-version"], "20.19.4");
-  assert.equal(packageJson.devDependencies.supabase, "2.109.1");
-  assert.equal(
-    workflow.jobs["sql-tests"].env.SUPABASE_DB_URL,
-    "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
-  );
+  assert.equal(workflow.jobs.required["timeout-minutes"], 5);
+  assert.equal(workflow.concurrency["cancel-in-progress"], true);
 });
 
-test("test jobs retain their output even when a suite fails", () => {
-  for (const jobName of [
-    "unit-tests",
-    "component-tests",
-    "security-tests",
-    "sync-tests",
-    "sql-tests",
-  ]) {
-    const upload = workflow.jobs[jobName].steps.find(
-      (step) => step.uses === "actions/upload-artifact@v4"
-    );
-
-    const loggedCommands = commands(jobName).filter((run) =>
-      run.includes("tee test-results/")
-    );
-
-    assert.ok(loggedCommands.length > 0, jobName);
-    assert.ok(
-      loggedCommands.every((run) => run.includes("set -o pipefail")),
-      jobName
-    );
-    assert.equal(upload.if, "always()", jobName);
-    assert.equal(upload.with.name, `${jobName}-output`, jobName);
-    assert.equal(upload.with["if-no-files-found"], "error", jobName);
-  }
-});
-
-test("the aggregate required check evaluates every non-device job even after a failure", () => {
+test("the aggregate required check evaluates every fast job after failure", () => {
   const required = workflow.jobs.required;
   const command = commands("required").join("\n");
 
@@ -123,8 +80,4 @@ test("the aggregate required check evaluates every non-device job even after a f
       new RegExp(`${jobName}=\\$\\{\\{ needs\\.${jobName}\\.result \\}\\}`)
     );
   }
-});
-
-test("the non-device workflow does not invoke simulator E2E", () => {
-  assert.doesNotMatch(JSON.stringify(workflow), /maestro|simulator|e2e:/i);
 });

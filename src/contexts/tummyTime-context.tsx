@@ -40,6 +40,8 @@ import {
   type TimerLockReconciliationState,
 } from "@/services/timer-lock-reconciliation";
 import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
+import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface ActiveTummyTimeTimer extends TimerIdentity {
   isRunning: boolean;
@@ -220,6 +222,8 @@ interface TummyTimeContextValue extends TummyTimeState {
   ) => Promise<StoredTummyTimeEntry | null>;
   deleteTummyTime: (tummyTimeId: string) => Promise<boolean>;
   refreshTummyTimes: () => Promise<void>;
+  loadTummyTimeRange: (range: UtcActivityRange) => Promise<void>;
+  getTummyTimeRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastTummyTime: () => StoredTummyTimeEntry | null;
   getTodaysTotalSeconds: () => number;
   getDailyProgress: () => number;
@@ -245,6 +249,19 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const stopVersionRef = useRef(0);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
+  const acceptTummyTimeRange = useCallback((entries: StoredTummyTimeEntry[]) => {
+    dispatch({ type: "SET_TUMMY_TIMES", payload: entries });
+  }, []);
+  const {
+    loadRange: loadTummyTimeRange,
+    getRangeStatus: getTummyTimeRangeStatus,
+  } = useActivityRangeLoader({
+    table: "tummy_time_sessions",
+    babyId: selectedBaby?.id ?? null,
+    authenticated: Boolean(user?.householdId),
+    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+    acceptEntries: acceptTummyTimeRange,
+  });
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('tummy_time_sessions', (change: RemoteChange) => {
@@ -1074,6 +1091,8 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     updateTummyTime,
     deleteTummyTime,
     refreshTummyTimes: loadTummyTimes,
+    loadTummyTimeRange,
+    getTummyTimeRangeStatus,
     getLastTummyTime,
     getTodaysTotalSeconds,
     getDailyProgress,
@@ -1083,7 +1102,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     resetToAgeBasedGoal,
     dismissMilestoneSuggestion,
     acceptMilestoneSuggestion,
-  }), [state, babyBinding, isStopping, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
+  }), [state, babyBinding, isStopping, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, loadTummyTimeRange, getTummyTimeRangeStatus, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
 
   return (
     <TummyTimeContext.Provider value={value}>{children}</TummyTimeContext.Provider>
