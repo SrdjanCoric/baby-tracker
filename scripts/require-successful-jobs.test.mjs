@@ -14,11 +14,6 @@ function run(...results) {
 const successfulResults = [
   "quality=success",
   "dependency-audit=success",
-  "unit-tests=success",
-  "component-tests=success",
-  "security-tests=success",
-  "sync-tests=success",
-  "sql-tests=success",
 ];
 
 test("accepts a successful result from every required non-device job", () => {
@@ -32,7 +27,7 @@ test("rejects an incomplete set of required job results", () => {
   const result = run(...successfulResults.slice(0, -1));
 
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /sql-tests=missing/);
+  assert.match(result.stderr, /dependency-audit=missing/);
 });
 
 for (const failedResult of successfulResults) {

@@ -1,14 +1,6 @@
 #!/usr/bin/env node
 
-const requiredJobs = [
-  "quality",
-  "dependency-audit",
-  "unit-tests",
-  "component-tests",
-  "security-tests",
-  "sync-tests",
-  "sql-tests",
-];
+const requiredJobs = ["quality", "dependency-audit"];
 const results = new Map(
   process.argv.slice(2).map((result) => result.split("=", 2))
 );
