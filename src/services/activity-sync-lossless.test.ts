@@ -16,6 +16,7 @@ import {
   fetchPumpingFromDatabase,
   fetchSleepFromDatabase,
   fetchTummyTimeFromDatabase,
+  retainRemoteMilestoneResponse,
   syncGuestActivitiesToDatabase,
   updateDiaperInDatabase,
   updateFeedingInDatabase,
@@ -541,6 +542,68 @@ describe("lossless activity sync", () => {
 
     expect(restarted.getPendingEntityOperations("milestone_responses")).toEqual(new Map());
     expect(rpcMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("recovers a newer alternate-id selection from a Realtime canonical tombstone", async () => {
+    const engine = makeRealSyncEngine();
+    syncEngine = engine;
+    const canonicalId = "66666666-6666-4666-8666-666666666666";
+    const alternateId = "77777777-7777-4777-8777-777777777777";
+    const selectedAt = "2026-07-27T10:05:00.000Z";
+    const alternateResponse = {
+      id: alternateId,
+      babyId: "baby-1",
+      milestoneId: "milestone-1",
+      state: "yes" as const,
+      deleted: false,
+      respondedAt: selectedAt,
+      respondedBy: "user-1",
+      createdAt: selectedAt,
+      updatedAt: selectedAt,
+    };
+    await engine.enqueueOperationWithLocalMutation({
+      id: "realtime-alternate-create",
+      type: "CREATE",
+      table: "milestone_responses",
+      entityId: alternateId,
+      data: {
+        id: alternateId,
+        baby_id: "baby-1",
+        milestone_id: "milestone-1",
+        state: "yes",
+        responded_at: selectedAt,
+      },
+      timestamp: selectedAt,
+      retryCount: 0,
+    }, {
+      key: "@milestones:baby-1",
+      previousValue: null,
+      nextValue: JSON.stringify([alternateResponse]),
+    });
+
+    const retained = await retainRemoteMilestoneResponse({
+      id: canonicalId,
+      baby_id: "baby-1",
+      milestone_id: "milestone-1",
+      state: "not_sure",
+      responded_at: "2026-07-27T10:00:00.000Z",
+      responded_by: "user-2",
+      created_at: "2026-07-27T10:00:00.000Z",
+      updated_at: "2026-07-27T10:01:00.000Z",
+      deleted: true,
+      field_clocks: { deleted: "2026-07-27T10:01:00.000Z-0000-device-b" },
+    });
+
+    expect(retained).toEqual(expect.objectContaining({
+      id: canonicalId,
+      state: "yes",
+      deleted: false,
+    }));
+    expect(JSON.parse(storage.get("@milestones:baby-1")!)).toEqual([retained]);
+    expect(engine.getPendingEntityOperations("milestone_responses")).toEqual(new Map([
+      [alternateId, "CREATE"],
+      [canonicalId, "UPDATE"],
+    ]));
   });
 
   it("does not let an older alternate-id selection regress a newer caregiver clear", async () => {

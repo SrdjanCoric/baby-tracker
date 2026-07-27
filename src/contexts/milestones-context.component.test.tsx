@@ -23,7 +23,7 @@ const revivedResponse: StoredMilestoneResponse = {
 
 const mockFetchResponses = jest.fn(async () => [canonicalTombstone]);
 const mockUpsertResponse = jest.fn(async () => revivedResponse);
-const mockRetainRemoteResponse = jest.fn(async () => {});
+const mockRetainRemoteResponse = jest.fn(async () => canonicalTombstone);
 const mockSelectedBaby = { id: "baby-1", birthDate: timestamp };
 const mockUser = { id: "user-1", householdId: "household-1" };
 let mockRemoteListener: ((change: Record<string, unknown>) => Promise<void> | void) | null = null;

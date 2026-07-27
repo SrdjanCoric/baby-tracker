@@ -120,9 +120,9 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
         type: "REMOTE_INSERT" | "REMOTE_UPDATE",
         row: Record<string, unknown>
       ) => {
-        const response = transformFromRemote(row);
+        let response = transformFromRemote(row);
         try {
-          await retainRemoteMilestoneResponse(response);
+          response = await retainRemoteMilestoneResponse(row);
         } catch (error) {
           console.error("[MilestonesContext] Failed to retain remote response:", error);
         }

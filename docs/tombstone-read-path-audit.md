@@ -38,7 +38,8 @@ or an inline `deleted !== true` filter (babies).
 | `fetchHealthFromDatabase` | `activity-sync-service.ts` | ✅ `dropTombstoned` |
 | `fetchAndSyncHouseholdBabies` | `baby-sync-service.ts` | ✅ `deleted !== true` filter |
 
-Tested: `activity-sync-tombstone.test.ts` (all 8), `baby-sync-service.test.ts` (babies).
+Tested: `activity-sync-tombstone.test.ts` (seven filtered activity types plus milestone
+retention), `baby-sync-service.test.ts` (babies).
 
 ## Receive-side (Realtime)
 

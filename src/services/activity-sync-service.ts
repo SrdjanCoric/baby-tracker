@@ -145,6 +145,87 @@ function greatestClock(clocks: FieldClocks): string | null {
   return greatest;
 }
 
+function replaceLogicalMilestoneResponse(
+  responses: StoredMilestoneResponse[],
+  response: StoredMilestoneResponse
+): StoredMilestoneResponse[] {
+  return [
+    ...responses.filter((item) => item.milestoneId !== response.milestoneId),
+    response,
+  ];
+}
+
+interface MilestoneIdentityReconciliation {
+  responses: StoredMilestoneResponse[];
+  retained: StoredMilestoneResponse;
+  recoveryOperation: ActivityQueueOperation | null;
+}
+
+function reconcileMilestoneIdentity(
+  scope: ActivityPullScope,
+  responses: StoredMilestoneResponse[],
+  localResponses: StoredMilestoneResponse[],
+  pendingOperations: Map<string, OperationType>,
+  canonical: StoredMilestoneResponse,
+  canonicalClock: string | null
+): MilestoneIdentityReconciliation {
+  const alternate = localResponses.find((response) =>
+    response.milestoneId === canonical.milestoneId
+    && response.id !== canonical.id
+    && !response.deleted
+    && pendingOperations.get(response.id) === 'CREATE'
+  );
+  if (!alternate) {
+    return {
+      responses: replaceLogicalMilestoneResponse(responses, canonical),
+      retained: canonical,
+      recoveryOperation: null,
+    };
+  }
+
+  const alternateClock = scope.engine
+    ? greatestClock(
+        scope.engine.getPendingEntityFieldClocks('milestone_responses', alternate.id)
+      )
+    : null;
+  const alternateIsNewer = alternateClock && canonicalClock
+    ? compareClocks(alternateClock, canonicalClock) > 0
+    : Date.parse(alternate.updatedAt) > Date.parse(canonical.updatedAt);
+  if (!alternateIsNewer) {
+    return {
+      responses: replaceLogicalMilestoneResponse(responses, canonical),
+      retained: canonical,
+      recoveryOperation: null,
+    };
+  }
+
+  const recovered: StoredMilestoneResponse = {
+    ...alternate,
+    id: canonical.id,
+    babyId: canonical.babyId,
+    deleted: false,
+    createdAt: canonical.createdAt,
+  };
+  return {
+    responses: replaceLogicalMilestoneResponse(responses, recovered),
+    retained: recovered,
+    recoveryOperation: {
+      type: 'UPDATE',
+      table: 'milestone_responses',
+      entityId: canonical.id,
+      data: {
+        baby_id: recovered.babyId,
+        milestone_id: recovered.milestoneId,
+        state: recovered.state,
+        deleted: false,
+        responded_at: recovered.respondedAt,
+        responded_by: recovered.respondedBy,
+        updated_at: recovered.updatedAt,
+      },
+    },
+  };
+}
+
 async function commitPulledMilestoneResponses(
   scope: ActivityPullScope,
   serverResponses: StoredMilestoneResponse[],
@@ -162,57 +243,19 @@ async function commitPulledMilestoneResponses(
     let queuedRecovery = false;
 
     for (const canonical of serverResponses) {
-      const alternate = localResponses.find((response) =>
-        response.milestoneId === canonical.milestoneId
-        && response.id !== canonical.id
-        && !response.deleted
-        && pendingOperations.get(response.id) === 'CREATE'
+      const reconciliation = reconcileMilestoneIdentity(
+        scope,
+        responses,
+        localResponses,
+        pendingOperations,
+        canonical,
+        serverClocks.get(canonical.id) ?? null
       );
-      if (!alternate) continue;
+      responses = reconciliation.responses;
+      if (!reconciliation.recoveryOperation) continue;
 
-      const alternateClock = scope.engine
-        ? greatestClock(
-            scope.engine.getPendingEntityFieldClocks('milestone_responses', alternate.id)
-          )
-        : null;
-      const canonicalClock = serverClocks.get(canonical.id) ?? null;
-      const alternateIsNewer = alternateClock && canonicalClock
-        ? compareClocks(alternateClock, canonicalClock) > 0
-        : Date.parse(alternate.updatedAt) > Date.parse(canonical.updatedAt);
-      if (!alternateIsNewer) {
-        responses = [
-          ...responses.filter((response) => response.milestoneId !== canonical.milestoneId),
-          canonical,
-        ];
-        continue;
-      }
-
-      const recovered: StoredMilestoneResponse = {
-        ...alternate,
-        id: canonical.id,
-        babyId: canonical.babyId,
-        deleted: false,
-        createdAt: canonical.createdAt,
-      };
-      responses = [
-        ...responses.filter((response) => response.milestoneId !== canonical.milestoneId),
-        recovered,
-      ];
       const nextValue = JSON.stringify(responses);
-      await queueSyncOperation({
-        type: 'UPDATE',
-        table: 'milestone_responses',
-        entityId: canonical.id,
-        data: {
-          baby_id: recovered.babyId,
-          milestone_id: recovered.milestoneId,
-          state: recovered.state,
-          deleted: false,
-          responded_at: recovered.respondedAt,
-          responded_by: recovered.respondedBy,
-          updated_at: recovered.updatedAt,
-        },
-      }, 'required', {
+      await queueSyncOperation(reconciliation.recoveryOperation, 'required', {
         key: scope.key,
         previousValue,
         nextValue,
@@ -1492,17 +1535,43 @@ function transformMilestoneResponseFromDb(data: Record<string, unknown>): Stored
 }
 
 export async function retainRemoteMilestoneResponse(
-  response: StoredMilestoneResponse
-): Promise<void> {
-  await updateLocalMilestoneResponses(response.babyId, (responses) => {
-    const existingIndex = responses.findIndex(
-      (item) => item.milestoneId === response.milestoneId
+  row: Record<string, unknown>
+): Promise<StoredMilestoneResponse> {
+  const canonical = transformMilestoneResponseFromDb(row);
+  const scope = captureActivityPullScope(`${KEYS.milestones}${canonical.babyId}`);
+  return withStorageLock(scope.key, async () => {
+    assertActivityPullScope(scope);
+    const pendingOperations = await getPendingEntityOperations(
+      scope.engine,
+      'milestone_responses'
     );
-    if (existingIndex === -1) return [...responses, response];
-    return responses.flatMap((item, index) => {
-      if (item.milestoneId !== response.milestoneId) return [item];
-      return index === existingIndex ? [response] : [];
-    });
+    assertActivityPullScope(scope);
+    const localData = await AsyncStorage.getItem(scope.key);
+    const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
+    const clocks = row.field_clocks && typeof row.field_clocks === 'object'
+      ? row.field_clocks as FieldClocks
+      : {};
+    const reconciliation = reconcileMilestoneIdentity(
+      scope,
+      localResponses,
+      localResponses,
+      pendingOperations,
+      canonical,
+      greatestClock(clocks)
+    );
+    const nextValue = JSON.stringify(reconciliation.responses);
+
+    if (reconciliation.recoveryOperation) {
+      await queueSyncOperation(reconciliation.recoveryOperation, 'required', {
+        key: scope.key,
+        previousValue: localData,
+        nextValue,
+      });
+    } else {
+      await AsyncStorage.setItem(scope.key, nextValue);
+    }
+    assertActivityPullScope(scope);
+    return reconciliation.retained;
   });
 }
 

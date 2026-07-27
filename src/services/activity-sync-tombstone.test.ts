@@ -85,13 +85,14 @@ describe("activity-sync fetch excludes tombstoned rows", () => {
   it("persists a Realtime milestone tombstone for an offline restart", async () => {
     await retainRemoteMilestoneResponse({
       id: "canonical-1",
-      babyId: "b1",
-      milestoneId: "m1",
+      baby_id: "b1",
+      milestone_id: "m1",
       state: "yes",
       deleted: true,
-      respondedAt: "2026-07-01T00:00:00.000Z",
-      createdAt: "2026-07-01T00:00:00.000Z",
-      updatedAt: "2026-07-01T00:05:00.000Z",
+      responded_at: "2026-07-01T00:00:00.000Z",
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:05:00.000Z",
+      field_clocks: { deleted: clock },
     });
 
     expect(JSON.parse(asyncStore.get("@milestones:b1")!)).toEqual([
