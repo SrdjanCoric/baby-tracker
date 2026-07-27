@@ -21,6 +21,7 @@ import {
   HealthStatsView,
 } from "@/components/stats";
 import type { StatsCategory } from "@/components/stats";
+import { StatisticsActivityRange } from "@/components/stats/StatisticsActivityRange";
 
 type PeriodMap = Record<StatsCategory, string>;
 
@@ -145,7 +146,13 @@ export default function StatisticsScreen() {
         />
       )}
 
-      <View style={{ flex: 1 }}>{renderContent()}</View>
+      <View style={{ flex: 1 }}>
+        {activeCategory === "sleep" ? renderContent() : (
+          <StatisticsActivityRange category={activeCategory} period={activePeriod}>
+            {renderContent()}
+          </StatisticsActivityRange>
+        )}
+      </View>
     </SafeAreaView>
   );
 }

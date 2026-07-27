@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSleep } from "@/contexts/sleep-context";
 import { useBaby } from "@/contexts/baby-context";
@@ -6,6 +6,14 @@ import { useTimeFormat } from "@/contexts/time-format-context";
 import { useTimeRefresh } from "@/hooks";
 import { buildDayViewData, buildWeekViewData, getSleepDate, classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import { isUnderThreeMonths } from "@/utils/sleepGoals";
+import {
+  getSleepDayRange,
+  getSleepSummaryRange,
+  getSleepWeekRange,
+  sleepOverlapsActivityRange,
+} from "@/utils/statistics-ranges";
+import type { SleepSummaryPeriod } from "@/components/sleep-patterns/SummaryView";
+import { ActivityRangeBoundary } from "@/components/stats/ActivityRangeBoundary";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import {
   DayView,
@@ -24,7 +32,13 @@ interface SleepStatsContainerProps {
 export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
   const { i18n } = useTranslation();
   const colors = useSleepPatternColors();
-  const { sleeps, activeTimer, wakeWindowConfig } = useSleep();
+  const {
+    sleeps,
+    activeTimer,
+    wakeWindowConfig,
+    loadSleepRange,
+    getSleepRangeStatus,
+  } = useSleep();
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
   const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
   const { selectedBaby } = useBaby();
@@ -34,6 +48,19 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
 
   const [selectedDate, setSelectedDate] = useState(() => getSleepDate(new Date(), dayStartHour));
   const [weekEndDate, setWeekEndDate] = useState(() => getSleepDate(new Date(), dayStartHour));
+  const [summaryPeriod, setSummaryPeriod] = useState<SleepSummaryPeriod>(7);
+
+  const requestedRange = useMemo(() => {
+    if (activeTab === "day") return getSleepDayRange(selectedDate, dayStartHour);
+    if (activeTab === "week") return getSleepWeekRange(weekEndDate, dayStartHour);
+    return getSleepSummaryRange(summaryPeriod);
+  }, [activeTab, dayStartHour, selectedDate, summaryPeriod, weekEndDate]);
+  const rangeStatus = getSleepRangeStatus(requestedRange);
+
+  useEffect(() => {
+    if (rangeStatus !== "unverified") return;
+    loadSleepRange(requestedRange).catch(() => {});
+  }, [loadSleepRange, rangeStatus, requestedRange]);
 
   const sleepsWithOngoing = useMemo(() => {
     void refreshTick;
@@ -54,7 +81,12 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
     return [syntheticEntry, ...sleeps];
   }, [sleeps, activeTimer, selectedBaby, refreshTick, dayStartHour, dayEndHour]);
 
-  const hasSleepData = sleepsWithOngoing.length > 0;
+  const hasSleepData = sleepsWithOngoing.some((sleep) =>
+    sleepOverlapsActivityRange(sleep, requestedRange)
+  );
+  const retryRange = useCallback(() => {
+    loadSleepRange(requestedRange).catch(() => {});
+  }, [loadSleepRange, requestedRange]);
   const isNewborn = isUnderThreeMonths(selectedBaby?.birthDate);
 
   const dayViewData = useMemo(
@@ -79,12 +111,11 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
     setWeekEndDate(next);
   };
 
+  let content;
   if (!hasSleepData) {
-    return <EmptySleepPatterns />;
-  }
-
-  if (activeTab === "day") {
-    return (
+    content = <EmptySleepPatterns />;
+  } else if (activeTab === "day") {
+    content = (
       <DayView
         data={dayViewData}
         timeFormat={timeFormat}
@@ -94,10 +125,8 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
         colors={colors}
       />
     );
-  }
-
-  if (activeTab === "week") {
-    return (
+  } else if (activeTab === "week") {
+    content = (
       <WeekView
         data={weekViewData}
         timeFormat={timeFormat}
@@ -108,18 +137,30 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
         locale={locale}
       />
     );
+  } else {
+    content = (
+      <SummaryView
+        sleeps={sleeps}
+        timeFormat={timeFormat}
+        dayStartHour={dayStartHour}
+        dayEndHour={dayEndHour}
+        colors={colors}
+        isNewborn={isNewborn}
+        locale={locale}
+        birthDate={selectedBaby?.birthDate}
+        period={summaryPeriod}
+        onPeriodChange={setSummaryPeriod}
+      />
+    );
   }
 
   return (
-    <SummaryView
-      sleeps={sleeps}
-      timeFormat={timeFormat}
-      dayStartHour={dayStartHour}
-      dayEndHour={dayEndHour}
-      colors={colors}
-      isNewborn={isNewborn}
-      locale={locale}
-      birthDate={selectedBaby?.birthDate}
-    />
+    <ActivityRangeBoundary
+      status={rangeStatus}
+      hasCachedData={hasSleepData}
+      onRetry={retryRange}
+    >
+      {content}
+    </ActivityRangeBoundary>
   );
 }

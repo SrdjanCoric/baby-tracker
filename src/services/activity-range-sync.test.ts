@@ -159,6 +159,44 @@ describe("activity range sync", () => {
     expect(JSON.parse(storage.get("@feedings:baby-1:user-1")!)).toHaveLength(1_005);
   });
 
+  it.each([
+    {
+      table: "growth_measurements" as const,
+      timestampColumn: "measured_at",
+      rowData: { weight_kg: 8 },
+    },
+    {
+      table: "health_entries" as const,
+      timestampColumn: "logged_at",
+      rowData: { type: "temperature", temperature_celsius: 37 },
+    },
+  ])("retrieves complete paginated $table history", async ({ table, timestampColumn, rowData }) => {
+    for (let index = 0; index < 1_005; index += 1) {
+      const timestamp = `2026-01-01T${String(Math.floor(index / 60) % 24).padStart(2, "0")}:${String(index % 60).padStart(2, "0")}:00.000Z`;
+      serverRows.push({
+        id: `${table}-${index.toString().padStart(4, "0")}`,
+        baby_id: "baby-1",
+        [timestampColumn]: timestamp,
+        created_at: timestamp,
+        updated_at: timestamp,
+        field_clocks: {},
+        ...rowData,
+      });
+    }
+
+    const entries = await fetchActivityRangeFromDatabase(table, "baby-1", range);
+
+    expect(entries).toHaveLength(1_005);
+    expect(new Set(entries.map((entry) => entry.id))).toHaveLength(1_005);
+    expect(queriedLimits).toEqual([1_000, 1_000]);
+    expect(queriedOrders).toEqual([
+      timestampColumn,
+      "id",
+      timestampColumn,
+      "id",
+    ]);
+  });
+
   it("does not skip an existing row when an earlier row disappears between pages", async () => {
     for (let index = 0; index < 1_005; index += 1) {
       serverRows.push({
