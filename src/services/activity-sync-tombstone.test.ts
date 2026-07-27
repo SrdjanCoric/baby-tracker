@@ -8,6 +8,7 @@ import {
   fetchTummyTimeFromDatabase,
   fetchMilestoneResponsesFromDatabase,
   fetchHealthFromDatabase,
+  retainRemoteMilestoneResponse,
 } from "./activity-sync-service";
 import { __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
 import { __resetDeviceIdForTests } from "./sync/device-id";
@@ -80,6 +81,23 @@ describe("activity-sync fetch excludes tombstoned rows", () => {
       expect(rows.map((r) => r.id)).toEqual(["keep-1"]);
     });
   }
+
+  it("persists a Realtime milestone tombstone for an offline restart", async () => {
+    await retainRemoteMilestoneResponse({
+      id: "canonical-1",
+      babyId: "b1",
+      milestoneId: "m1",
+      state: "yes",
+      deleted: true,
+      respondedAt: "2026-07-01T00:00:00.000Z",
+      createdAt: "2026-07-01T00:00:00.000Z",
+      updatedAt: "2026-07-01T00:05:00.000Z",
+    });
+
+    expect(JSON.parse(asyncStore.get("@milestones:b1")!)).toEqual([
+      expect.objectContaining({ id: "canonical-1", milestoneId: "m1", deleted: true }),
+    ]);
+  });
 
   it("retains a tombstoned milestone response identity across pull and restart", async () => {
     selectData = [tombstoned("canonical-1", {

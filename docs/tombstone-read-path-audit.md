@@ -51,7 +51,7 @@ record is re-added rather than dropped.
 | Context | Status |
 |---------|--------|
 | feeding, diaper, sleep, pumping, growth, tummyTime, health, baby | ✅ `tombstonedId` + `upsertById` |
-| milestones | ✅ retains a tombstone as hidden context state and deduplicates live responses by `milestoneId`, preserving the canonical row ID for recheck |
+| milestones | ✅ persists Realtime tombstones, retains them as hidden context state, and deduplicates live responses by `milestoneId`, preserving the canonical row ID for recheck and restart |
 
 Tested: `tombstone.test.ts` (translation + upsert), `crdt-simulation.test.ts` (delete-vs-edit and
 restore convergence, both orderings).
@@ -66,9 +66,10 @@ Milestones are the deliberate exception. `(baby_id, milestone_id)` has one stabl
 `StoredMilestoneResponse` retains its `deleted` flag and canonical UUID across clear, pull,
 Realtime, and restart. `MilestonesProvider` exposes only live responses and every state/progress
 selector filters `deleted=true`. Rechecking writes `deleted=false` with a new HLC. If an older app
-already queued a create under another UUID, pull recovery first durably queues a canonical revival,
-then replaces local identity; migration 057 acknowledges the alternate operation against the same
-canonical row, leaving one active response and no retry loop.
+already queued a create under another UUID, pull recovery compares the queued and canonical HLCs,
+then durably queues a canonical revival only when the selection is newer. Migration 057
+acknowledges the alternate operation against the same canonical row, leaving one active response,
+no retry loop, and no regression of a newer caregiver clear.
 
 - `export-service.ts` — reads local AsyncStorage (`FeedingStorageService.getAllFeedings(babyId)`
   etc.), then filters by date. Activity storage holds only live rows, while milestones are not part

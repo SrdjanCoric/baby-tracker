@@ -8,6 +8,7 @@ import {
   fetchMilestoneResponsesFromDatabase,
   upsertMilestoneResponseInDatabase,
   deleteMilestoneResponseFromDatabase,
+  retainRemoteMilestoneResponse,
 } from "@/services/activity-sync-service";
 import { AGE_GROUPS, getCurrentAgeGroupKey, getAgeGroupByKey } from "@/constants/milestones";
 import type { AgeGroup } from "@/constants/milestones";
@@ -110,13 +111,26 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
   const { user } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = subscribeToRemoteChanges('milestone_responses', (change: RemoteChange) => {
+    const unsubscribe = subscribeToRemoteChanges('milestone_responses', async (change: RemoteChange) => {
       if (!selectedBaby) return;
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
 
+      const retainAndDispatch = async (
+        type: "REMOTE_INSERT" | "REMOTE_UPDATE",
+        row: Record<string, unknown>
+      ) => {
+        const response = transformFromRemote(row);
+        try {
+          await retainRemoteMilestoneResponse(response);
+        } catch (error) {
+          console.error("[MilestonesContext] Failed to retain remote response:", error);
+        }
+        dispatch({ type, payload: response });
+      };
+
       if (change.new?.deleted === true) {
-        dispatch({ type: "REMOTE_UPDATE", payload: transformFromRemote(change.new) });
+        await retainAndDispatch("REMOTE_UPDATE", change.new);
         return;
       }
 
@@ -128,10 +142,10 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
 
       switch (change.eventType) {
         case 'INSERT':
-          if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformFromRemote(change.new) });
+          if (change.new) await retainAndDispatch("REMOTE_INSERT", change.new);
           break;
         case 'UPDATE':
-          if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformFromRemote(change.new) });
+          if (change.new) await retainAndDispatch("REMOTE_UPDATE", change.new);
           break;
       }
     });

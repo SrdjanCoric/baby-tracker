@@ -23,11 +23,12 @@ const revivedResponse: StoredMilestoneResponse = {
 
 const mockFetchResponses = jest.fn(async () => [canonicalTombstone]);
 const mockUpsertResponse = jest.fn(async () => revivedResponse);
+const mockRetainRemoteResponse = jest.fn(async () => {});
 const mockSelectedBaby = { id: "baby-1", birthDate: timestamp };
 const mockUser = { id: "user-1", householdId: "household-1" };
-let mockRemoteListener: ((change: Record<string, unknown>) => void) | null = null;
+let mockRemoteListener: ((change: Record<string, unknown>) => Promise<void> | void) | null = null;
 const mockSubscribeToRemoteChanges = jest.fn(
-  (_table: string, listener: (change: Record<string, unknown>) => void) => {
+  (_table: string, listener: (change: Record<string, unknown>) => Promise<void> | void) => {
     mockRemoteListener = listener;
     return () => {};
   }
@@ -37,6 +38,7 @@ jest.mock("@/services/activity-sync-service", () => ({
   fetchMilestoneResponsesFromDatabase: (...args: unknown[]) => mockFetchResponses(...args),
   upsertMilestoneResponseInDatabase: (...args: unknown[]) => mockUpsertResponse(...args),
   deleteMilestoneResponseFromDatabase: jest.fn(),
+  retainRemoteMilestoneResponse: (...args: unknown[]) => mockRetainRemoteResponse(...args),
 }));
 
 jest.mock("./baby-context", () => ({
@@ -71,6 +73,7 @@ describe("MilestonesProvider tombstone revival", () => {
     mockFetchResponses.mockClear();
     mockFetchResponses.mockResolvedValue([canonicalTombstone]);
     mockUpsertResponse.mockClear();
+    mockRetainRemoteResponse.mockClear();
   });
 
   it("hides a pulled tombstone but reuses its canonical id when checked again", async () => {
@@ -108,8 +111,8 @@ describe("MilestonesProvider tombstone revival", () => {
     );
     await waitFor(() => expect(milestones?.responses).toEqual([revivedResponse]));
 
-    act(() => {
-      mockRemoteListener?.({
+    await act(async () => {
+      await mockRemoteListener?.({
         table: "milestone_responses",
         eventType: "UPDATE",
         new: {
@@ -126,6 +129,9 @@ describe("MilestonesProvider tombstone revival", () => {
       });
     });
 
+    expect(mockRetainRemoteResponse).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "canonical-response", deleted: true })
+    );
     expect(milestones?.responses).toEqual([]);
     expect(milestones?.getMilestoneState("2m-social-1")).toBe("not_yet");
 
