@@ -38,7 +38,9 @@ Free. No ads. No subscriptions.
 
 ### Offline-First Sync Engine
 
-All writes go to local storage first and are immediately reflected in the UI. A persistent sync queue handles server delivery with retry logic and exponential backoff. On foreground resume, the queue flushes before pulling server state to avoid overwriting optimistic updates. Activity pulls fetch remote rows before entering a per-user, per-baby storage lock. Inside the lock, they re-read pending operations and local entries so a refresh cannot replace a queued create or update or resurrect a queued delete.
+All writes go to local storage first and are immediately reflected in the UI. A persistent sync queue handles server delivery with retry logic and exponential backoff. On foreground resume, the queue flushes before pulling server state to avoid overwriting optimistic updates.
+
+Startup pulls read at most 1,000 recent rows per activity table. Timeline requests older UTC ranges when the caregiver navigates to them, then follows a timestamp-and-ID cursor until the visible interval is complete. Both paths reconcile under a per-user, per-baby storage lock, where pending creates, updates, and deletes are re-read before the local collection is written. Cached ranges remain available across foreground refreshes and offline sessions. See [`docs/ACTIVITY_HISTORY.md`](docs/ACTIVITY_HISTORY.md) for range coverage and reconciliation details.
 
 ```
 User action → Local storage → UI update (immediate)
