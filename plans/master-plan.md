@@ -128,7 +128,7 @@ Durable decisions that apply across all tasks:
 - [x] 0027 · Resolve fragmented morning sleep for predictions → tasks/done/0027-resolve-fragmented-morning-sleep.md
 - [ ] 0028 · Detect age-aware earlier morning drift (after 0027) → tasks/0028-detect-age-aware-morning-drift.md
 - [ ] 0029 · Warn and safely calculate overlapping manual sleep (after 0028) → tasks/0029-warn-and-union-overlapping-manual-sleep.md
-- [>] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/0026-repair-ios-date-picker-module-provider.md
+- [x] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/done/0026-repair-ios-date-picker-module-provider.md
 
 ## Workflow status
 
