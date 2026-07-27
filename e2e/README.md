@@ -1,6 +1,6 @@
 # End-to-end tests
 
-The maintained two-caregiver iOS suite starts a sleep timer without local Supabase API access. After restarting both apps, it reconnects the timer and runs the household handoff on separate simulators. Existing single-device Maestro flows cover general app smoke and regression scenarios.
+The maintained two-caregiver iOS suite starts a sleep timer without local Supabase API access. After restarting both apps, it reconnects the timer, runs the household handoff on separate simulators, and opens the native iOS time picker. Existing single-device Maestro flows cover general app smoke and regression scenarios.
 
 Run `npm run e2e:household-timers:clean` locally before each iOS release. GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase, so GitHub Actions does not run this suite.
 
@@ -17,6 +17,7 @@ The scenario verifies this household contract:
 7. The member starts sleep. After an owner restart, the owner sees the server lock.
 8. The member stops. After another owner restart, the sleep card is unlocked.
 9. PostgreSQL contains one completion from each caregiver and no sleep lock.
+10. The owner opens and closes the native iOS day-start picker.
 
 Feeding, pumping, and tummy-time use the same lock and completion services. Their completion retry, restoration, stale-lock, and idempotency checks stay in component and real-provider integration tests instead of this device suite.
 
@@ -91,7 +92,7 @@ A measured fast run on 2026-07-22 took 4 minutes 3 seconds with Xcode 26.6 and t
 
 The runner reads the API URL and keys from `supabase status`; it does not read or change `.env`. `SOFIBABY_E2E_LOCAL_ENV=1` enables a Babel transform that compiles those local values and a zero-second sleep minimum into the generated E2E bundle. The test-login launch argument also exposes a sleep-sheet close control so Maestro does not depend on simulator swipe recognition. Without that argument, the native sheet is unchanged. Production builds retain the 60-second minimum.
 
-Clean provisioning temporarily removes an invalid `react-native-date-picker` codegen provider from its installed package metadata. Cleanup restores the original file after Xcode finishes.
+`npm ci` applies the repository-maintained `react-native-date-picker` codegen patch before prebuild. If `ios/build/generated/ios/RCTModuleProviders.mm` maps `RNDatePicker` to `RNDatePickerManager`, rerun `npm ci` and `node --test scripts/date-picker-codegen.test.mjs` before rebuilding. Do not edit generated Pods or installed package metadata by hand.
 
 ### Failure diagnostics and cleanup
 

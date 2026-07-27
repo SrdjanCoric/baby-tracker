@@ -1,0 +1,33 @@
+appId: com.sofibaby.app
+---
+- scrollUntilVisible:
+    element:
+      id: "sleep-card"
+    direction: DOWN
+- tapOn:
+    id: "sleep-card"
+- assertVisible:
+    id: "sleep-screen"
+- tapOn:
+    id: "settings-button"
+- extendedWaitUntil:
+    visible: "Sleep Settings"
+    timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: "day-start-picker-button"
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: "day-start-picker-button"
+- scrollUntilVisible:
+    element:
+      id: "day-start-picker-done"
+    direction: DOWN
+    timeout: 10000
+- assertVisible:
+    id: "day-start-picker-done"
+- tapOn:
+    id: "day-start-picker-done"
+- assertNotVisible:
+    id: "day-start-picker-done"

@@ -941,6 +941,7 @@ export default function SleepSettingsScreen() {
                 <Pressable
                   onPress={() => setShowDayStartPicker(true)}
                   className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-input px-4 py-3 self-start"
+                  testID="day-start-picker-button"
                 >
                   <Text className="text-base font-medium" style={{ color: isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE }}>
                     {formatHour(dayStartHour)}
@@ -951,6 +952,7 @@ export default function SleepSettingsScreen() {
                     <Pressable
                       onPress={handleDayStartDone}
                       className="self-end px-4 py-2"
+                      testID="day-start-picker-done"
                     >
                       <Text className="text-base font-semibold" style={{ color: SLEEP_PURPLE }}>
                         {t("common.done")}

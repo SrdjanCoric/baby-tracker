@@ -15,7 +15,6 @@ import {
   getLocalApiRecoveryAction,
   getXcodebuildArgs,
   parseRunnerOptions,
-  prepareDatePickerCodegenConfig,
   selectNamedSimulators,
   stopProcessGroup,
 } from "./lib/household-runner.mjs";
@@ -52,58 +51,6 @@ test("household timer cleanup restores a stopped or paused local API", () => {
   assert.equal(getLocalApiRecoveryAction("running", false), null);
   assert.equal(getLocalApiRecoveryAction("running", true), "unpause");
   assert.equal(getLocalApiRecoveryAction("exited", false), "start");
-});
-
-test("E2E dependency preparation removes only the invalid date picker module provider", () => {
-  const packageJson = {
-    codegenConfig: {
-      ios: {
-        componentProvider: { RNDatePicker: "RNDatePicker" },
-        modulesProvider: { RNDatePicker: "RNDatePickerManager" },
-      },
-    },
-  };
-
-  prepareDatePickerCodegenConfig(packageJson);
-
-  assert.deepEqual(packageJson.codegenConfig.ios, {
-    componentProvider: { RNDatePicker: "RNDatePicker" },
-  });
-  assert.doesNotThrow(() => prepareDatePickerCodegenConfig(packageJson));
-});
-
-test("E2E dependency preparation preserves unrelated module providers", () => {
-  const packageJson = {
-    codegenConfig: {
-      ios: {
-        modulesProvider: {
-          RNDatePicker: "RNDatePickerManager",
-          OtherModule: "OtherModuleManager",
-        },
-      },
-    },
-  };
-
-  prepareDatePickerCodegenConfig(packageJson);
-
-  assert.deepEqual(packageJson.codegenConfig.ios.modulesProvider, {
-    OtherModule: "OtherModuleManager",
-  });
-});
-
-test("E2E dependency preparation refuses an unknown date picker provider", () => {
-  const packageJson = {
-    codegenConfig: {
-      ios: {
-        modulesProvider: { RNDatePicker: "UnexpectedManager" },
-      },
-    },
-  };
-
-  assert.throws(
-    () => prepareDatePickerCodegenConfig(packageJson),
-    /Unexpected react-native-date-picker module provider/
-  );
 });
 
 test("E2E Babel transform pins Supabase configuration without changing other environment variables", () => {
