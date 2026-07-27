@@ -17,6 +17,14 @@ The resolver derives these roles without changing stored sleep entries. Future s
 
 If there is neither a completed sleep crossing the anchor nor an eligible continuation, the dashboard asks the caregiver to track night sleep after the anchor. Before the anchor it shows the normal nighttime state.
 
+## Earlier morning drift
+
+Morning-boundary suggestions use the final wakes returned by the morning resolver. The detector examines the last seven recorded mornings. A morning qualifies when its final wake is at least 60 minutes before the configured day start and its first subsequent nap begins no more than 15 minutes before the age-based first wake window. A recorded morning without a first nap remains in the seven-morning history but does not qualify.
+
+At least five mornings must qualify. The banner suggests the median qualifying final wake and leaves the boundary unchanged until the caregiver accepts the update. Dismissing the banner keeps the configured boundary.
+
+Morning-drift detection uses only the first wake window and first nap; later naps, later wake windows, the final daytime wake window, and bedtime do not affect a suggestion.
+
 ## Shared consumers
 
 `resolveMorningSleep()` in `src/utils/sleepPredictions.ts` is the authoritative resolver. It supplies:
@@ -35,4 +43,4 @@ Later wake-window calculations and bedtime prediction use the existing model aft
 
 ## Verification
 
-The utility tests in `src/utils/__tests__/sleepPredictions.test.ts` cover the resolver boundaries and historical grouping. `src/components/SleepPredictionCard.component.test.tsx` covers the fragmented-morning production sequence and the midnight-to-anchor transition through the real resolver.
+The utility tests in `src/utils/__tests__/sleepPredictions.test.ts` cover resolver boundaries and historical grouping, including morning-drift histories. `src/components/SleepPredictionCard.component.test.tsx` covers the fragmented-morning production sequence and midnight-to-anchor transition. It also covers drift-banner actions.

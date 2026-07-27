@@ -1113,36 +1113,148 @@ describe("detectBedtimeDrift", () => {
 });
 
 describe("detectMorningDrift", () => {
-  function buildDaysWithMorningPattern(wwMin: number, napDurMin: number, dayCount: number): ProcessedSleep[] {
+  function buildMorningHistory(
+    wakeHours: number[],
+    naplessIndices: number[] = [],
+    firstNapGapMinutes: number = 180
+  ): ProcessedSleep[] {
     const sleeps: ProcessedSleep[] = [];
-    for (let d = 0; d < dayCount; d++) {
-      const day = 21 + d;
-      sleeps.push(ps(ld(2026, 4, day - 1, 20, 0), ld(2026, 4, day, 7, 0)));
-      const napStart = new Date(ld(2026, 4, day, 7, 0).getTime() + wwMin * 60 * 1000);
-      const napEnd = new Date(napStart.getTime() + napDurMin * 60 * 1000);
-      sleeps.push(ps(napStart, napEnd));
-      const secondStart = new Date(napEnd.getTime() + 90 * 60 * 1000);
-      sleeps.push(ps(secondStart, new Date(secondStart.getTime() + 45 * 60 * 1000)));
-    }
+
+    wakeHours.forEach((wakeHour, index) => {
+      const day = 21 + index;
+      const wakeTime = ld(
+        2026,
+        4,
+        day,
+        Math.floor(wakeHour),
+        Math.round((wakeHour % 1) * 60)
+      );
+      sleeps.push(ps(ld(2026, 4, day - 1, 20, 0), wakeTime));
+
+      if (naplessIndices.includes(index)) return;
+
+      const firstNapStart = new Date(
+        wakeTime.getTime() + firstNapGapMinutes * 60 * 1000
+      );
+      const firstNapEnd = new Date(firstNapStart.getTime() + 60 * 60 * 1000);
+      sleeps.push(ps(firstNapStart, firstNapEnd));
+
+      const secondNapStart = new Date(firstNapEnd.getTime() + 150 * 60 * 1000);
+      sleeps.push(ps(secondNapStart, new Date(secondNapStart.getTime() + 45 * 60 * 1000)));
+    });
+
     return sleeps;
   }
 
-  it("detects morning drift when WW < 30m and nap > 90m for 5 consecutive days", () => {
-    const result = detectMorningDrift(buildDaysWithMorningPattern(20, 120, 5), 7, 19);
-    expect(result).not.toBeNull();
-    expect(result!.type).toBe("morning");
+  it("suggests the median final wake when five of the last seven mornings qualify", () => {
+    const result = detectMorningDrift(
+      buildMorningHistory([6, 6.5, 7, 6.5, 6, 8.5, 8.5]),
+      9,
+      19,
+      ld(2025, 2, 1, 0),
+      ld(2026, 4, 28, 0)
+    );
+
+    expect(result).toEqual({
+      type: "morning",
+      suggestedHour: 6.5,
+      currentHour: 9,
+    });
   });
 
-  it("no drift when WW >= 30m", () => {
-    expect(detectMorningDrift(buildDaysWithMorningPattern(35, 120, 5), 7, 19)).toBeNull();
+  it("does not pull an older qualifying morning into a sparse seven-morning history", () => {
+    const result = detectMorningDrift(
+      buildMorningHistory([6, 6, 6, 6, 6, 6, 8.5, 8.5], [5]),
+      9,
+      19,
+      ld(2025, 2, 1, 0),
+      ld(2026, 4, 29, 0)
+    );
+
+    expect(result).toBeNull();
   });
 
-  it("no drift when nap duration <= 90m", () => {
-    expect(detectMorningDrift(buildDaysWithMorningPattern(20, 80, 5), 7, 19)).toBeNull();
+  it("allows the first nap to begin fifteen minutes before the age-based window", () => {
+    const result = detectMorningDrift(
+      buildMorningHistory([6.5, 6.5, 6.5, 6.5, 6.5], [], 165),
+      9,
+      19,
+      ld(2025, 2, 1, 0),
+      ld(2026, 4, 26, 0)
+    );
+
+    expect(result?.suggestedHour).toBe(6.5);
   });
 
-  it("no drift with fewer than 5 days", () => {
-    expect(detectMorningDrift(buildDaysWithMorningPattern(20, 120, 4), 7, 19)).toBeNull();
+  it("does not count an early wake followed by resumed night sleep", () => {
+    const sleeps = buildMorningHistory([6, 6, 6, 6, 6, 6, 6]);
+    for (let index = 0; index < 7; index++) {
+      const day = 21 + index;
+      sleeps.push(ps(ld(2026, 4, day, 7, 0), ld(2026, 4, day, 8, 30)));
+    }
+
+    const result = detectMorningDrift(
+      sleeps,
+      9,
+      19,
+      ld(2025, 2, 1, 0),
+      ld(2026, 4, 28, 0)
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("does not suggest drift after a one-off early morning", () => {
+    const result = detectMorningDrift(
+      buildMorningHistory([6.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5]),
+      9,
+      19,
+      ld(2025, 2, 1, 0),
+      ld(2026, 4, 28, 0)
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("ignores later naps and bedtime when validating morning drift", () => {
+    const baseline = buildMorningHistory([6.5, 6.5, 6.5, 6.5, 6.5]);
+    const changedLaterSleep = baseline.map((sleep, index) => {
+      if (index % 3 === 0) {
+        return ps(
+          new Date(sleep.startedAt.getTime() - 120 * 60 * 1000),
+          sleep.endedAt
+        );
+      }
+      if (index % 3 === 2) {
+        return ps(
+          new Date(sleep.startedAt.getTime() + 90 * 60 * 1000),
+          new Date(sleep.endedAt.getTime() + 90 * 60 * 1000)
+        );
+      }
+      return sleep;
+    });
+    const args = [
+      9,
+      19,
+      ld(2025, 2, 1, 0),
+      ld(2026, 4, 26, 0),
+    ] as const;
+
+    expect(detectMorningDrift(changedLaterSleep, ...args)).toEqual(
+      detectMorningDrift(baseline, ...args)
+    );
+  });
+
+  it("rejects a first nap that is too early for the baby's age group", () => {
+    const result = detectMorningDrift(
+      buildMorningHistory([6.5, 6.5, 6.5, 6.5, 6.5], [], 180),
+      9,
+      19,
+      ld(2024, 4, 1, 0),
+      ld(2026, 4, 26, 0)
+    );
+
+    expect(result).toBeNull();
   });
 });
 

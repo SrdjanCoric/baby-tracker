@@ -931,7 +931,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const isCustomWakeWindows = state.wakeWindowConfig?.source === "custom";
     if (qualifyingCount >= 5 && !isCustomWakeWindows) {
       drift = detectBedtimeDrift(processed, dayStartHour, dayEndHour)
-        ?? detectMorningDrift(processed, dayStartHour, dayEndHour);
+        ?? (birthDate
+          ? detectMorningDrift(processed, dayStartHour, dayEndHour, birthDate)
+          : null);
 
       if (drift && driftDismissedRef.current) {
         const dismissed = driftDismissedRef.current;
