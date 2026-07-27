@@ -18,6 +18,18 @@ const mockActiveTimer = {
 };
 
 let mockActiveTimerValue: typeof mockActiveTimer | null = mockActiveTimer;
+let mockSelectedBabyId = "baby-1";
+let mockBabyBinding = { babyId: "baby-1", status: "ready" as const };
+let mockSleeps: Array<{
+  id: string;
+  babyId: string;
+  type: "night";
+  startedAt: string;
+  endedAt: string;
+  durationSeconds: number;
+  createdAt: string;
+  updatedAt: string;
+}> = [];
 const mockLoadSleepRange = jest.fn(async () => {});
 const mockGetSleepRangeStatus = jest.fn(() => "loaded" as const);
 
@@ -30,8 +42,9 @@ jest.mock("react-i18next", () => ({
 
 jest.mock("@/contexts/sleep-context", () => ({
   useSleep: () => ({
-    sleeps: [],
+    sleeps: mockSleeps,
     activeTimer: mockActiveTimerValue,
+    babyBinding: mockBabyBinding,
     wakeWindowConfig: mockWakeWindowConfig,
     loadSleepRange: mockLoadSleepRange,
     getSleepRangeStatus: mockGetSleepRangeStatus,
@@ -41,7 +54,7 @@ jest.mock("@/contexts/sleep-context", () => ({
 jest.mock("@/contexts/baby-context", () => ({
   useBaby: () => ({
     selectedBaby: {
-      id: "baby-1",
+      id: mockSelectedBabyId,
       birthDate: "2026-05-01",
     },
   }),
@@ -65,7 +78,6 @@ jest.mock("@/utils/sleep-patterns", () => ({
     mockClassifySleepByTimeRange(...args),
   buildDayViewData: (sleeps: Array<{ type: string }>) => sleeps,
   buildWeekViewData: () => [],
-  sleepOverlapsActivityRange: () => mockActiveTimerValue !== null,
 }));
 
 jest.mock("@/utils/sleepGoals", () => ({
@@ -106,6 +118,9 @@ describe("SleepStatsContainer", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockActiveTimerValue = mockActiveTimer;
+    mockSelectedBabyId = "baby-1";
+    mockBabyBinding = { babyId: "baby-1", status: "ready" };
+    mockSleeps = [];
     mockGetSleepRangeStatus.mockReturnValue("loaded");
     mockWakeWindowConfig = {
       dayStartHour: 6,
@@ -181,6 +196,18 @@ describe("SleepStatsContainer", () => {
 
     render(<SleepStatsContainer activeTab="day" />);
 
+    expect(screen.getByTestId("statistics-range-loading")).toBeTruthy();
+  });
+
+  it("does not display sleep state retained from the previously selected baby", () => {
+    mockGetSleepRangeStatus.mockReturnValue("unverified");
+    const { rerender } = render(<SleepStatsContainer activeTab="day" />);
+    expect(screen.getByTestId("ongoing-sleep-type")).toBeTruthy();
+
+    mockSelectedBabyId = "baby-2";
+    rerender(<SleepStatsContainer activeTab="day" />);
+
+    expect(screen.queryByTestId("ongoing-sleep-type")).toBeNull();
     expect(screen.getByTestId("statistics-range-loading")).toBeTruthy();
   });
 

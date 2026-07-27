@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, type ReactNode } from "react";
 import {
+  useBaby,
   useDiaper,
   useFeeding,
   useGrowth,
@@ -28,6 +29,7 @@ export function StatisticsActivityRange({
   period,
   children,
 }: StatisticsActivityRangeProps) {
+  const { selectedBaby } = useBaby();
   const feeding = useFeeding();
   const diaper = useDiaper();
   const pumping = usePumping();
@@ -49,32 +51,44 @@ export function StatisticsActivityRange({
   let getRangeStatus: (requestedRange: UtcActivityRange) => ActivityRangeStatus;
   switch (category) {
     case "feeding":
-      timestamps = feeding.feedings.map((entry) => entry.startedAt);
+      timestamps = feeding.feedings
+        .filter((entry) => entry.babyId === selectedBaby?.id)
+        .map((entry) => entry.startedAt);
       loadRange = feeding.loadFeedingRange;
       getRangeStatus = feeding.getFeedingRangeStatus;
       break;
     case "diapers":
-      timestamps = diaper.diapers.map((entry) => entry.changedAt);
+      timestamps = diaper.diapers
+        .filter((entry) => entry.babyId === selectedBaby?.id)
+        .map((entry) => entry.changedAt);
       loadRange = diaper.loadDiaperRange;
       getRangeStatus = diaper.getDiaperRangeStatus;
       break;
     case "pumping":
-      timestamps = pumping.pumpings.map((entry) => entry.startedAt);
+      timestamps = pumping.pumpings
+        .filter((entry) => entry.babyId === selectedBaby?.id)
+        .map((entry) => entry.startedAt);
       loadRange = pumping.loadPumpingRange;
       getRangeStatus = pumping.getPumpingRangeStatus;
       break;
     case "tummyTime":
-      timestamps = tummyTime.tummyTimes.map((entry) => entry.startedAt);
+      timestamps = tummyTime.tummyTimes
+        .filter((entry) => entry.babyId === selectedBaby?.id)
+        .map((entry) => entry.startedAt);
       loadRange = tummyTime.loadTummyTimeRange;
       getRangeStatus = tummyTime.getTummyTimeRangeStatus;
       break;
     case "growth":
-      timestamps = growth.measurements.map((entry) => entry.measuredAt);
+      timestamps = growth.measurements
+        .filter((entry) => entry.babyId === selectedBaby?.id)
+        .map((entry) => entry.measuredAt);
       loadRange = growth.loadGrowthRange;
       getRangeStatus = growth.getGrowthRangeStatus;
       break;
     case "health":
-      timestamps = health.healthEntries.map((entry) => entry.loggedAt);
+      timestamps = health.healthEntries
+        .filter((entry) => entry.babyId === selectedBaby?.id)
+        .map((entry) => entry.loggedAt);
       loadRange = health.loadHealthRange;
       getRangeStatus = health.getHealthRangeStatus;
       break;

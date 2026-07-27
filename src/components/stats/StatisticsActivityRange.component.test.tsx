@@ -12,6 +12,8 @@ const mockLoad = {
   health: jest.fn(async () => {}),
 };
 const mockUnverified = () => "unverified" as const;
+let mockSelectedBabyId = "baby-1";
+let mockFeedings: Array<{ babyId: string; startedAt: string }> = [];
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -22,7 +24,8 @@ jest.mock("nativewind", () => ({
 }));
 
 jest.mock("@/contexts", () => ({
-  useFeeding: () => ({ feedings: [], loadFeedingRange: mockLoad.feeding, getFeedingRangeStatus: mockUnverified }),
+  useBaby: () => ({ selectedBaby: { id: mockSelectedBabyId } }),
+  useFeeding: () => ({ feedings: mockFeedings, loadFeedingRange: mockLoad.feeding, getFeedingRangeStatus: mockUnverified }),
   useDiaper: () => ({ diapers: [], loadDiaperRange: mockLoad.diapers, getDiaperRangeStatus: mockUnverified }),
   usePumping: () => ({ pumpings: [], loadPumpingRange: mockLoad.pumping, getPumpingRangeStatus: mockUnverified }),
   useTummyTime: () => ({ tummyTimes: [], loadTummyTimeRange: mockLoad.tummyTime, getTummyTimeRangeStatus: mockUnverified }),
@@ -33,6 +36,8 @@ jest.mock("@/contexts", () => ({
 describe("StatisticsActivityRange", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSelectedBabyId = "baby-1";
+    mockFeedings = [];
   });
 
   it("requests each active category's complete displayed interval", async () => {
@@ -100,5 +105,28 @@ describe("StatisticsActivityRange", () => {
     }
 
     jest.useRealTimers();
+  });
+
+  it("does not display the previous baby's cached statistics while selection changes", () => {
+    mockFeedings = [{
+      babyId: "baby-1",
+      startedAt: new Date().toISOString(),
+    }];
+    const { rerender, getByText, queryByText, getByTestId } = render(
+      <StatisticsActivityRange category="feeding" period="today">
+        <Text>baby statistics</Text>
+      </StatisticsActivityRange>
+    );
+    expect(getByText("baby statistics")).toBeTruthy();
+
+    mockSelectedBabyId = "baby-2";
+    rerender(
+      <StatisticsActivityRange category="feeding" period="today">
+        <Text>baby statistics</Text>
+      </StatisticsActivityRange>
+    );
+
+    expect(queryByText("baby statistics")).toBeNull();
+    expect(getByTestId("statistics-range-loading")).toBeTruthy();
   });
 });

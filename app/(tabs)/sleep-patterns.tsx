@@ -47,13 +47,17 @@ export default function SleepPatternsScreen() {
   const [weekEndDate, setWeekEndDate] = useState(() => getSleepDate(new Date(), dayStartHour));
   const [summaryPeriod, setSummaryPeriod] = useState<SleepSummaryPeriod>(7);
 
+  const selectedSleeps = useMemo(
+    () => sleeps.filter((sleep) => sleep.babyId === selectedBaby?.id),
+    [selectedBaby?.id, sleeps]
+  );
   const requestedRange = useMemo(() => {
     if (activeTab === "day") return getSleepDayRange(selectedDate, dayStartHour);
     if (activeTab === "week") return getSleepWeekRange(weekEndDate, dayStartHour);
     return getSleepSummaryRange(summaryPeriod);
   }, [activeTab, dayStartHour, selectedDate, summaryPeriod, weekEndDate]);
   const rangeStatus = getSleepRangeStatus(requestedRange);
-  const hasSleepData = sleeps.some((sleep) =>
+  const hasSleepData = selectedSleeps.some((sleep) =>
     sleepOverlapsActivityRange(sleep, requestedRange)
   );
   const retryRange = useCallback(() => {
@@ -67,13 +71,13 @@ export default function SleepPatternsScreen() {
   }, [loadSleepRange, rangeStatus, requestedRange]);
 
   const dayViewData = useMemo(
-    () => buildDayViewData(sleeps, selectedDate, PX_PER_HOUR, new Date(), dayStartHour, locale, dayEndHour),
-    [sleeps, selectedDate, dayStartHour, dayEndHour, locale]
+    () => buildDayViewData(selectedSleeps, selectedDate, PX_PER_HOUR, new Date(), dayStartHour, locale, dayEndHour),
+    [selectedSleeps, selectedDate, dayStartHour, dayEndHour, locale]
   );
 
   const weekViewData = useMemo(
-    () => buildWeekViewData(sleeps, weekEndDate, new Date(), dayStartHour, locale, dayEndHour),
-    [sleeps, weekEndDate, dayStartHour, dayEndHour, locale]
+    () => buildWeekViewData(selectedSleeps, weekEndDate, new Date(), dayStartHour, locale, dayEndHour),
+    [selectedSleeps, weekEndDate, dayStartHour, dayEndHour, locale]
   );
 
   const navigateDay = (offset: number) => {
@@ -131,7 +135,7 @@ export default function SleepPatternsScreen() {
           />
         ) : (
           <SummaryView
-            sleeps={sleeps}
+            sleeps={selectedSleeps}
             timeFormat={timeFormat}
             dayStartHour={dayStartHour}
             dayEndHour={dayEndHour}

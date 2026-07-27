@@ -35,6 +35,7 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
   const {
     sleeps,
     activeTimer,
+    babyBinding,
     wakeWindowConfig,
     loadSleepRange,
     getSleepRangeStatus,
@@ -62,9 +63,18 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
     loadSleepRange(requestedRange).catch(() => {});
   }, [loadSleepRange, rangeStatus, requestedRange]);
 
+  const selectedSleeps = useMemo(
+    () => sleeps.filter((sleep) => sleep.babyId === selectedBaby?.id),
+    [selectedBaby?.id, sleeps]
+  );
+
   const sleepsWithOngoing = useMemo(() => {
     void refreshTick;
-    if (!activeTimer?.isRunning || !selectedBaby) return sleeps;
+    const activeTimerIsCurrent = babyBinding.babyId === selectedBaby?.id
+      && babyBinding.status !== "loading";
+    if (!activeTimer?.isRunning || !selectedBaby || !activeTimerIsCurrent) {
+      return selectedSleeps;
+    }
     const now = new Date();
     const syntheticEntry: StoredSleepEntry = {
       id: `ongoing-${selectedBaby.id}`,
@@ -78,8 +88,8 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
       createdAt: activeTimer.startTime.toISOString(),
       updatedAt: now.toISOString(),
     };
-    return [syntheticEntry, ...sleeps];
-  }, [sleeps, activeTimer, selectedBaby, refreshTick, dayStartHour, dayEndHour]);
+    return [syntheticEntry, ...selectedSleeps];
+  }, [activeTimer, babyBinding, dayEndHour, dayStartHour, refreshTick, selectedBaby, selectedSleeps]);
 
   const hasSleepData = sleepsWithOngoing.some((sleep) =>
     sleepOverlapsActivityRange(sleep, requestedRange)
@@ -140,7 +150,7 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
   } else {
     content = (
       <SummaryView
-        sleeps={sleeps}
+        sleeps={selectedSleeps}
         timeFormat={timeFormat}
         dayStartHour={dayStartHour}
         dayEndHour={dayEndHour}
