@@ -913,6 +913,8 @@
     "title": "Cronología",
     "noEntries": "Sin entradas aún",
     "startTracking": "Comienza a registrar las actividades de tu bebé",
+    "loadingHistory": "Cargando historial de actividades...",
+    "historyLoadError": "No se pudo cargar el historial de actividades. Inténtalo de nuevo.",
     "timeSince": "hace {{time}}",
     "editEntry": "Editar entrada",
     "deleteEntry": "Eliminar entrada",

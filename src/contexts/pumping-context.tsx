@@ -34,6 +34,8 @@ import {
   type TimerLockReconciliationState,
 } from "@/services/timer-lock-reconciliation";
 import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
+import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface ActivePumpingTimer extends TimerIdentity {
   isRunning: boolean;
@@ -187,6 +189,8 @@ interface PumpingContextValue extends PumpingState {
   updatePumping: (pumpingId: string, input: UpdatePumpingInput) => Promise<StoredPumpingEntry | null>;
   deletePumping: (pumpingId: string) => Promise<boolean>;
   refreshPumpings: () => Promise<void>;
+  loadPumpingRange: (range: UtcActivityRange) => Promise<void>;
+  getPumpingRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastPumping: () => StoredPumpingEntry | null;
   getTodaysTotalVolume: () => number;
   getLastSide: () => BreastSide | null;
@@ -206,6 +210,19 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const stopVersionRef = useRef(0);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
+  const acceptPumpingRange = useCallback((entries: StoredPumpingEntry[]) => {
+    dispatch({ type: "SET_PUMPINGS", payload: entries });
+  }, []);
+  const {
+    loadRange: loadPumpingRange,
+    getRangeStatus: getPumpingRangeStatus,
+  } = useActivityRangeLoader({
+    table: "pumping_sessions",
+    babyId: selectedBaby?.id ?? null,
+    authenticated: Boolean(user?.householdId),
+    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+    acceptEntries: acceptPumpingRange,
+  });
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('pumping_sessions', (change: RemoteChange) => {
@@ -911,10 +928,12 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     updatePumping,
     deletePumping,
     refreshPumpings: loadPumpings,
+    loadPumpingRange,
+    getPumpingRangeStatus,
     getLastPumping,
     getTodaysTotalVolume,
     getLastSide,
-  }), [state, babyBinding, isStopping, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping, addPumping, updatePumping, deletePumping, loadPumpings, getLastPumping, getTodaysTotalVolume, getLastSide]);
+  }), [state, babyBinding, isStopping, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping, addPumping, updatePumping, deletePumping, loadPumpings, loadPumpingRange, getPumpingRangeStatus, getLastPumping, getTodaysTotalVolume, getLastSide]);
 
   return <PumpingContext.Provider value={value}>{children}</PumpingContext.Provider>;
 }

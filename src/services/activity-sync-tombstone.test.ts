@@ -39,6 +39,7 @@ function chain(): unknown {
   node.select = () => chain();
   node.eq = () => chain();
   node.order = () => chain();
+  node.limit = () => result;
   return node;
 }
 vi.mock("./supabase", () => ({ supabase: { from: () => chain() } }));

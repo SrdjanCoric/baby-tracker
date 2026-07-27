@@ -18,6 +18,8 @@ import { useAuth } from "./auth-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
+import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface DiaperState {
   diapers: StoredDiaperEntry[];
@@ -85,6 +87,8 @@ interface DiaperContextValue extends DiaperState {
   updateDiaper: (diaperId: string, input: UpdateDiaperInput) => Promise<StoredDiaperEntry | null>;
   deleteDiaper: (diaperId: string) => Promise<boolean>;
   refreshDiapers: () => Promise<void>;
+  loadDiaperRange: (range: UtcActivityRange) => Promise<void>;
+  getDiaperRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastDiaper: () => StoredDiaperEntry | null;
   getTodaysCounts: () => DiaperCounts;
 }
@@ -102,6 +106,19 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
     finishBabyBinding,
     isCurrentBabyBinding,
   } = useBabyProviderBinding(selectedBaby?.id ?? null);
+  const acceptDiaperRange = useCallback((entries: StoredDiaperEntry[]) => {
+    dispatch({ type: "SET_DIAPERS", payload: entries });
+  }, []);
+  const {
+    loadRange: loadDiaperRange,
+    getRangeStatus: getDiaperRangeStatus,
+  } = useActivityRangeLoader({
+    table: "diapers",
+    babyId: selectedBaby?.id ?? null,
+    authenticated: Boolean(user?.householdId),
+    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+    acceptEntries: acceptDiaperRange,
+  });
 
   useEffect(() => {
     const unsubscribe = subscribeToRemoteChanges('diapers', (change: RemoteChange) => {
@@ -275,9 +292,11 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
     updateDiaper,
     deleteDiaper,
     refreshDiapers: loadDiapers,
+    loadDiaperRange,
+    getDiaperRangeStatus,
     getLastDiaper,
     getTodaysCounts,
-  }), [state, babyBinding, addDiaper, updateDiaper, deleteDiaper, loadDiapers, getLastDiaper, getTodaysCounts]);
+  }), [state, babyBinding, addDiaper, updateDiaper, deleteDiaper, loadDiapers, loadDiaperRange, getDiaperRangeStatus, getLastDiaper, getTodaysCounts]);
 
   return <DiaperContext.Provider value={value}>{children}</DiaperContext.Provider>;
 }

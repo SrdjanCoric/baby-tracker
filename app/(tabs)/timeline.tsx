@@ -30,6 +30,7 @@ import type { StoredHealthEntry } from "@/services/health-storage";
 import type { ActivityType } from "@/constants/activities";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
 import { getHealthDisplayName } from "@/utils/health-display";
+import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 interface TimelineEntry {
   id: string;
@@ -91,13 +92,56 @@ function groupEntriesByDay(
 export default function TimelineScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { feedings, isLoading: feedingsLoading, refreshFeedings } = useFeeding();
-  const { sleeps, isLoading: sleepsLoading, refreshSleeps, wakeWindowConfig } = useSleep();
-  const { diapers, isLoading: diapersLoading, refreshDiapers } = useDiaper();
-  const { pumpings, isLoading: pumpingsLoading, refreshPumpings } = usePumping();
-  const { measurements, isLoading: growthLoading, refreshMeasurements } = useGrowth();
-  const { tummyTimes, isLoading: tummyTimesLoading, refreshTummyTimes } = useTummyTime();
-  const { healthEntries, isLoading: healthLoading, refreshHealth } = useHealth();
+  const {
+    feedings,
+    isLoading: feedingsLoading,
+    refreshFeedings,
+    loadFeedingRange,
+    getFeedingRangeStatus,
+  } = useFeeding();
+  const {
+    sleeps,
+    isLoading: sleepsLoading,
+    refreshSleeps,
+    wakeWindowConfig,
+    loadSleepRange,
+    getSleepRangeStatus,
+  } = useSleep();
+  const {
+    diapers,
+    isLoading: diapersLoading,
+    refreshDiapers,
+    loadDiaperRange,
+    getDiaperRangeStatus,
+  } = useDiaper();
+  const {
+    pumpings,
+    isLoading: pumpingsLoading,
+    refreshPumpings,
+    loadPumpingRange,
+    getPumpingRangeStatus,
+  } = usePumping();
+  const {
+    measurements,
+    isLoading: growthLoading,
+    refreshMeasurements,
+    loadGrowthRange,
+    getGrowthRangeStatus,
+  } = useGrowth();
+  const {
+    tummyTimes,
+    isLoading: tummyTimesLoading,
+    refreshTummyTimes,
+    loadTummyTimeRange,
+    getTummyTimeRangeStatus,
+  } = useTummyTime();
+  const {
+    healthEntries,
+    isLoading: healthLoading,
+    refreshHealth,
+    loadHealthRange,
+    getHealthRangeStatus,
+  } = useHealth();
   const { temperatureUnit, weightUnit, heightUnit, volumeUnit } = useUnits();
   const { members } = useHousehold();
   const { timeFormat } = useTimeFormat();
@@ -106,6 +150,7 @@ export default function TimelineScreen() {
   const isDark = colorScheme === "dark";
 
   const [refreshing, setRefreshing] = useState(false);
+  const [rangeLoadError, setRangeLoadError] = useState(false);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
@@ -506,6 +551,62 @@ export default function TimelineScreen() {
     return d;
   }, [anchorDate]);
 
+  const visibleRange = useMemo<UtcActivityRange>(() => {
+    const end = new Date(anchorDate);
+    end.setDate(end.getDate() + 1);
+    end.setHours(0, 0, 0, 0);
+    return {
+      start: cutoffDate.toISOString(),
+      end: end.toISOString(),
+    };
+  }, [anchorDate, cutoffDate]);
+
+  const rangeLoaders = useMemo(() => [
+    loadFeedingRange,
+    loadSleepRange,
+    loadDiaperRange,
+    loadPumpingRange,
+    loadGrowthRange,
+    loadTummyTimeRange,
+    loadHealthRange,
+  ], [loadFeedingRange, loadSleepRange, loadDiaperRange, loadPumpingRange, loadGrowthRange, loadTummyTimeRange, loadHealthRange]);
+
+  const requestVisibleRange = useCallback(async () => {
+    setRangeLoadError(false);
+    try {
+      await Promise.all(rangeLoaders.map((loadRange) => loadRange(visibleRange)));
+    } catch {
+      setRangeLoadError(true);
+    }
+  }, [rangeLoaders, visibleRange]);
+
+  useEffect(() => {
+    let active = true;
+    setRangeLoadError(false);
+    Promise.all(rangeLoaders.map((loadRange) => loadRange(visibleRange))).catch(() => {
+      if (active) setRangeLoadError(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [rangeLoaders, selectedBaby?.id, visibleRange]);
+
+  const rangeStatus = useMemo<ActivityRangeStatus>(() => {
+    const statuses = [
+      getFeedingRangeStatus(visibleRange),
+      getSleepRangeStatus(visibleRange),
+      getDiaperRangeStatus(visibleRange),
+      getPumpingRangeStatus(visibleRange),
+      getGrowthRangeStatus(visibleRange),
+      getTummyTimeRangeStatus(visibleRange),
+      getHealthRangeStatus(visibleRange),
+    ];
+    if (rangeLoadError || statuses.includes("error")) return "error";
+    if (statuses.every((status) => status === "loaded")) return "loaded";
+    if (statuses.some((status) => status === "loading")) return "loading";
+    return "unverified";
+  }, [getDiaperRangeStatus, getFeedingRangeStatus, getGrowthRangeStatus, getHealthRangeStatus, getPumpingRangeStatus, getSleepRangeStatus, getTummyTimeRangeStatus, rangeLoadError, visibleRange]);
+
   const paginatedEntries = useMemo(() => {
     return timelineEntries.filter(entry => entry.date >= cutoffDate && entry.date <= windowEndDate);
   }, [timelineEntries, cutoffDate, windowEndDate]);
@@ -529,10 +630,10 @@ export default function TimelineScreen() {
   }, [hasMoreData, paginatedEntries.length, daysToShow]);
 
   const handleLoadMore = useCallback(() => {
-    if (hasMoreData) {
+    if (hasMoreData || rangeStatus === "loaded") {
       setDaysToShow(prev => prev + 14);
     }
-  }, [hasMoreData]);
+  }, [hasMoreData, rangeStatus]);
 
   // Type cast for t function to match component interfaces
   const translate = t as (key: string, options?: Record<string, unknown>) => string;
@@ -654,8 +755,24 @@ export default function TimelineScreen() {
           className="flex-1"
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-          ListFooterComponent={hasMoreData ? (
-            <View className="py-4 items-center">
+          ListHeaderComponent={rangeStatus === "error" ? (
+            <View className="mx-4 my-2 p-3 rounded-xl bg-card dark:bg-card-dark" testID="timeline-range-error">
+              <Text className="text-text dark:text-text-dark text-center mb-2">
+                {t("timeline.historyLoadError")}
+              </Text>
+              <Pressable
+                onPress={requestVisibleRange}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.retry")}
+                className="self-center px-4 py-2 rounded-lg"
+                style={{ backgroundColor: getActionColor("primary", isDark) }}
+              >
+                <Text className="text-white font-semibold">{t("common.retry")}</Text>
+              </Pressable>
+            </View>
+          ) : null}
+          ListFooterComponent={rangeStatus === "loading" || rangeStatus === "unverified" || hasMoreData ? (
+            <View className="py-4 items-center" testID="timeline-range-loading">
               <ActivityIndicator size="small" color={getActionColor("primary", isDark)} />
             </View>
           ) : null}
@@ -668,6 +785,28 @@ export default function TimelineScreen() {
             />
           }
         />
+      ) : rangeStatus === "loading" || rangeStatus === "unverified" ? (
+        <View className="flex-1 items-center justify-center" testID="timeline-range-loading">
+          <ActivityIndicator size="large" color={getActionColor("primary", isDark)} />
+          <Text className="mt-3 text-text-secondary dark:text-text-secondary-dark">
+            {t("timeline.loadingHistory")}
+          </Text>
+        </View>
+      ) : rangeStatus === "error" ? (
+        <View className="flex-1 items-center justify-center px-8" testID="timeline-range-error">
+          <Text className="text-text dark:text-text-dark text-center mb-4">
+            {t("timeline.historyLoadError")}
+          </Text>
+          <Pressable
+            onPress={requestVisibleRange}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.retry")}
+            className="px-5 py-3 rounded-xl"
+            style={{ backgroundColor: getActionColor("primary", isDark) }}
+          >
+            <Text className="text-white font-semibold">{t("common.retry")}</Text>
+          </Pressable>
+        </View>
       ) : (
         <ScrollView
           className="flex-1"

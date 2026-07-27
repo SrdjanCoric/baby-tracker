@@ -909,6 +909,8 @@
     "title": "Chronologie",
     "noEntries": "Aucune entrée",
     "startTracking": "Commencez à suivre les activités de votre bébé",
+    "loadingHistory": "Chargement de l’historique des activités...",
+    "historyLoadError": "Impossible de charger l’historique des activités. Réessayez.",
     "timeSince": "il y a {{time}}",
     "editEntry": "Modifier l'entrée",
     "deleteEntry": "Supprimer l'entrée",
