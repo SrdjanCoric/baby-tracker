@@ -60,7 +60,7 @@ Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simul
 
 ### Sleep Predictions
 
-Sleep predictions use the configured day start and recent sleep history to estimate the next nap or bedtime. Morning qualification starts 3 hours 3 minutes before day start. The first eligible sleep that begins in this early window can continue the night even when stored as a nap, and its end becomes the final morning wake. The app derives this role without changing saved sleep types and reevaluates it at midnight and the next morning anchor. See [`docs/SLEEP_PREDICTIONS.md`](docs/SLEEP_PREDICTIONS.md) for the full rules.
+Sleep predictions use the configured day start and recent sleep history to estimate the next nap or bedtime. Morning qualification starts 3 hours 3 minutes before day start. The first eligible sleep that begins in this early window can continue the night even when stored as a nap, and its end becomes the final morning wake. The app derives this role without changing saved sleep types and reevaluates it at midnight and the next morning anchor. An earlier-day-start banner appears after at least five of the last seven recorded mornings end one hour early. Each qualifying morning's first nap must begin no more than 15 minutes before the baby's age-based first wake window. The banner suggests the median qualifying final wake, and the boundary changes only if the caregiver accepts. See [`docs/SLEEP_PREDICTIONS.md`](docs/SLEEP_PREDICTIONS.md) for the full rules.
 
 ### iOS Native Integrations
 

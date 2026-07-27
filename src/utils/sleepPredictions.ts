@@ -700,36 +700,80 @@ export function detectBedtimeDrift(
   };
 }
 
-export function detectMorningDrift(
+function getRecordedMorningDays(
   sleeps: ProcessedSleep[],
   dayStartHour: number,
   dayEndHour: number
-): DriftDetectionResult | null {
-  const days = groupSleepsByDay(sleeps, dayStartHour, dayEndHour);
-  if (days.length < 5) return null;
+): ProcessedDay[] {
+  const groupedDays = new Map(
+    groupSleepsByDay(sleeps, dayStartHour, dayEndHour)
+      .map((day) => [day.date, day])
+  );
+  const dates = new Set<string>();
 
-  const last5 = days.slice(-5);
-
-  if (!areDatesConsecutive(last5.map((d) => d.date))) return null;
-
-  for (const day of last5) {
-    if (day.naps.length === 0) return null;
-
-    const firstNap = day.naps[0];
-    const wakeWindow = minutesBetween(day.morningWakeTime, firstNap.startedAt);
-    const napDuration = firstNap.durationMinutes;
-
-    if (wakeWindow >= 30 || napDuration <= 90) return null;
+  for (const sleep of sleeps) {
+    dates.add(getDayKey(sleep.startedAt));
+    dates.add(getDayKey(sleep.endedAt));
   }
 
-  const firstNapEnds = last5.map((d) =>
-    dateToFractionalHour(d.naps[0].endedAt)
-  );
-  const suggestedHour = Math.round(median(firstNapEnds) * 2) / 2;
+  return [...dates]
+    .sort()
+    .flatMap((date) => {
+      const referenceDate = new Date(`${date}T12:00:00`);
+      referenceDate.setHours(23, 59, 59, 999);
+      const morningWakeTime = resolveMorningSleep(
+        sleeps,
+        dayStartHour,
+        referenceDate
+      ).morningWakeTime;
+      if (!morningWakeTime) return [];
+
+      const groupedDay = groupedDays.get(date);
+      return [{
+        date,
+        morningWakeTime,
+        naps: groupedDay?.naps ?? [],
+        bedtime: groupedDay?.bedtime ?? null,
+      }];
+    });
+}
+
+export function detectMorningDrift(
+  sleeps: ProcessedSleep[],
+  dayStartHour: number,
+  dayEndHour: number,
+  birthDate: Date,
+  referenceDate: Date = new Date()
+): DriftDetectionResult | null {
+  const ageGroup = getSleepAgeGroupForBaby(birthDate, referenceDate);
+  const firstWakeWindow = ageGroup
+    ? WAKE_WINDOW_PROGRESSIONS[ageGroup.label]?.windows[0]
+    : undefined;
+  if (firstWakeWindow === undefined) return null;
+
+  const days = getRecordedMorningDays(sleeps, dayStartHour, dayEndHour).slice(-7);
+  const qualifyingWakeHours = days
+    .filter((day) => {
+      const firstNap = day.naps[0];
+      if (!firstNap) return false;
+
+      const configuredDayStart = hourToDate(dayStartHour, day.morningWakeTime);
+      const minutesEarly = minutesBetween(day.morningWakeTime, configuredDayStart);
+      const firstWakeWindowMinutes = minutesBetween(
+        day.morningWakeTime,
+        firstNap.startedAt
+      );
+
+      return minutesEarly >= 60
+        && firstWakeWindowMinutes >= firstWakeWindow - 15;
+    })
+    .map((day) => dateToFractionalHour(day.morningWakeTime));
+
+  if (qualifyingWakeHours.length < 5) return null;
 
   return {
     type: "morning",
-    suggestedHour,
+    suggestedHour: median(qualifyingWakeHours),
     currentHour: dayStartHour,
   };
 }

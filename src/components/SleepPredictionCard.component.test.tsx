@@ -595,6 +595,24 @@ describe("SleepPredictionCard", () => {
       expect(screen.getByText(/Update to/)).toBeTruthy();
       expect(screen.getByText(/Keep/)).toBeTruthy();
     });
+
+    it("accepts the suggested morning boundary only after update is pressed", async () => {
+      render(<SleepPredictionCard babyName="Sofija" />);
+      await act(async () => {});
+
+      expect(mockAcceptDrift).not.toHaveBeenCalled();
+      fireEvent.press(screen.getByText(/Update to/));
+      expect(mockAcceptDrift).toHaveBeenCalledTimes(1);
+    });
+
+    it("dismisses the morning suggestion when keep is pressed", async () => {
+      render(<SleepPredictionCard babyName="Sofija" />);
+      await act(async () => {});
+
+      fireEvent.press(screen.getByText(/Keep/));
+      expect(mockDismissDrift).toHaveBeenCalledTimes(1);
+      expect(mockAcceptDrift).not.toHaveBeenCalled();
+    });
   });
 
   describe("State priority order", () => {
