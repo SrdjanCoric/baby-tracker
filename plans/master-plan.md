@@ -133,9 +133,9 @@ Durable decisions that apply across all tasks:
 - [x] 0027 · Resolve fragmented morning sleep for predictions → tasks/done/0027-resolve-fragmented-morning-sleep.md
 - [x] 0026 · Repair the production iOS date-picker module provider (after 0017) → tasks/done/0026-repair-ios-date-picker-module-provider.md
 - [x] 0030 · Revive cleared milestone responses (after 0005, 0007, 0021) → tasks/done/0030-revive-cleared-milestone-responses.md
-- [>] 0028 · Detect age-aware earlier morning drift (after 0027) → tasks/0028-detect-age-aware-morning-drift.md
+- [x] 0028 · Detect age-aware earlier morning drift (after 0027) → tasks/done/0028-detect-age-aware-morning-drift.md
 - [ ] 0029 · Warn and safely calculate overlapping manual sleep (after 0028) → tasks/0029-warn-and-union-overlapping-manual-sleep.md
 
 ## Workflow status
 
-Tasks 0001 through 0027 and task 0030 are merged. Repository-guideline evidence is recorded in their completed task files and in `plans/repository-guidelines-assessment.md`. Tasks 0028 and 0029 remain.
+Tasks 0001 through 0028 and task 0030 are merged. Repository-guideline evidence is recorded in their completed task files and in `plans/repository-guidelines-assessment.md`. Task 0029 remains.
