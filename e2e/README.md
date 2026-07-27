@@ -17,7 +17,7 @@ The scenario verifies this household contract:
 7. The member starts sleep. After an owner restart, the owner sees the server lock.
 8. The member stops. After another owner restart, the sleep card is unlocked.
 9. PostgreSQL contains one completion from each caregiver and no sleep lock.
-10. The owner opens, changes, and closes the native iOS day-start picker.
+10. The owner opens and closes the native iOS day-start picker.
 
 Feeding, pumping, and tummy-time use the same lock and completion services. Their completion retry, restoration, stale-lock, and idempotency checks stay in component and real-provider integration tests instead of this device suite.
 

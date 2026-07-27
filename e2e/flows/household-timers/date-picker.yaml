@@ -15,14 +15,19 @@ appId: com.sofibaby.app
     timeout: 10000
 - scrollUntilVisible:
     element:
-      text: "Day starts at"
+      id: "day-start-picker-button"
     direction: DOWN
     timeout: 30000
-- tapOn: "Day starts at"
-- assertVisible: "Done"
-- swipe:
-    start: 50%, 80%
-    end: 50%, 70%
-    duration: 500
-- tapOn: "Done"
-- assertNotVisible: "Done"
+- tapOn:
+    id: "day-start-picker-button"
+- scrollUntilVisible:
+    element:
+      id: "day-start-picker-done"
+    direction: DOWN
+    timeout: 10000
+- assertVisible:
+    id: "day-start-picker-done"
+- tapOn:
+    id: "day-start-picker-done"
+- assertNotVisible:
+    id: "day-start-picker-done"
