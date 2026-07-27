@@ -190,13 +190,34 @@ describe("SleepStatsContainer", () => {
     jest.useRealTimers();
   });
 
-  it("shows loading instead of an empty sleep day until its range is verified", () => {
+  it("replaces loading with a historical sleep after the selected day is verified", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 6, 14, 12, 0, 0));
     mockActiveTimerValue = null;
     mockGetSleepRangeStatus.mockReturnValue("unverified");
 
-    render(<SleepStatsContainer activeTab="day" />);
-
+    const { rerender } = render(<SleepStatsContainer activeTab="day" />);
     expect(screen.getByTestId("statistics-range-loading")).toBeTruthy();
+
+    const startedAt = new Date();
+    startedAt.setHours(7, 0, 0, 0);
+    const endedAt = new Date(startedAt);
+    endedAt.setHours(8, 0, 0, 0);
+    mockSleeps = [{
+      id: "historical-sleep",
+      babyId: "baby-1",
+      type: "night",
+      startedAt: startedAt.toISOString(),
+      endedAt: endedAt.toISOString(),
+      durationSeconds: 3_600,
+      createdAt: startedAt.toISOString(),
+      updatedAt: endedAt.toISOString(),
+    }];
+    mockGetSleepRangeStatus.mockReturnValue("loaded");
+    rerender(<SleepStatsContainer activeTab="day" />);
+
+    expect(screen.getByTestId("ongoing-sleep-type").props.children).toBe("night");
+    jest.useRealTimers();
   });
 
   it("does not display sleep state retained from the previously selected baby", () => {
