@@ -22,23 +22,6 @@ export function parseRunnerOptions(args) {
   return { cleanEnvironment: args.includes("--clean") };
 }
 
-export function prepareDatePickerCodegenConfig(packageJson) {
-  const iosCodegen = packageJson.codegenConfig?.ios;
-  const provider = iosCodegen?.modulesProvider?.RNDatePicker;
-
-  if (provider === undefined) return;
-  if (provider !== "RNDatePickerManager") {
-    throw new Error(
-      `Unexpected react-native-date-picker module provider: ${provider}`
-    );
-  }
-
-  delete iosCodegen.modulesProvider.RNDatePicker;
-  if (Object.keys(iosCodegen.modulesProvider).length === 0) {
-    delete iosCodegen.modulesProvider;
-  }
-}
-
 export function selectNamedSimulators(simctlOutput, runtimeIdentifier, names) {
   const runtimeDevices = simctlOutput.devices?.[runtimeIdentifier] ?? [];
   const selected = names.map((name) => {

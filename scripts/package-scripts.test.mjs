@@ -12,6 +12,10 @@ test("the declared npm version matches pinned Node 20 tooling", () => {
 });
 
 test("the canonical check command runs every maintained non-device suite", () => {
+  assert.match(
+    packageJson.scripts["test:ci"],
+    /scripts\/date-picker-codegen\.test\.mjs/
+  );
   assert.equal(
     packageJson.scripts["check:code"],
     "npm run lint && npm run typecheck && npm run test:unit && npm run test:component -- --runInBand && npm run test:security && npm run test:sync && npm run test:ci"

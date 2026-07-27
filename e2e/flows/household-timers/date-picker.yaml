@@ -1,0 +1,28 @@
+appId: com.sofibaby.app
+---
+- scrollUntilVisible:
+    element:
+      id: "sleep-card"
+    direction: DOWN
+- tapOn:
+    id: "sleep-card"
+- assertVisible:
+    id: "sleep-screen"
+- tapOn:
+    id: "settings-button"
+- extendedWaitUntil:
+    visible: "Sleep Settings"
+    timeout: 10000
+- scrollUntilVisible:
+    element:
+      text: "Day starts at"
+    direction: DOWN
+    timeout: 30000
+- tapOn: "Day starts at"
+- assertVisible: "Done"
+- swipe:
+    start: 50%, 80%
+    end: 50%, 70%
+    duration: 500
+- tapOn: "Done"
+- assertNotVisible: "Done"

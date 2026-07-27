@@ -32,10 +32,6 @@ const artifactDir = path.join(
   runId
 );
 const flowDir = path.join(projectDir, "e2e", "flows", "household-timers");
-const dependencyBackupPath = path.join(
-  artifactDir,
-  "react-native-date-picker-package.json.backup"
-);
 const ownerEmail = "e2e-owner@test.local";
 const memberEmail = "e2e-member@test.local";
 const primaryBabyId = "00000000-0000-0000-0001-000000000001";
@@ -584,22 +580,6 @@ async function runSleepHandoff(status, owner, member) {
   });
 }
 
-function restoreE2EDependencies() {
-  if (!cleanEnvironment || !fs.existsSync(dependencyBackupPath)) return;
-
-  const packagePath = path.join(
-    projectDir,
-    "node_modules",
-    "react-native-date-picker",
-    "package.json"
-  );
-  fs.copyFileSync(dependencyBackupPath, packagePath);
-  fs.writeFileSync(
-    path.join(artifactDir, "restore-e2e-dependencies.log"),
-    "Restored react-native-date-picker package metadata.\n"
-  );
-}
-
 function collectDiagnostics(status) {
   for (const simulator of simulators) {
     const slug = simulator.name.toLowerCase().replaceAll(" ", "-");
@@ -665,11 +645,6 @@ async function cleanup() {
     fs.closeSync(metroLogFd);
     metroLogFd = undefined;
   }
-  try {
-    restoreE2EDependencies();
-  } catch {
-    cleanupFailed = true;
-  }
   if (!cleanEnvironment) {
     fs.writeFileSync(
       path.join(artifactDir, "cleanup.log"),
@@ -731,11 +706,6 @@ async function main() {
 
     if (cleanEnvironment) {
       run("npm", ["ci"], "npm-ci", { timeout: 1_200_000 });
-      run(
-        "node",
-        ["e2e/scripts/prepare-e2e-dependencies.mjs", dependencyBackupPath],
-        "prepare-e2e-dependencies"
-      );
       run("npx", ["supabase", "start"], "supabase-start", {
         timeout: 1_200_000,
       });
@@ -804,6 +774,7 @@ async function main() {
     maestro(member, "login.yaml", { E2E_EMAIL: memberEmail });
 
     await runSleepHandoff(status, owner, member);
+    maestro(owner, "date-picker.yaml");
 
     console.log(
       `\nHousehold timer suite passed. Artifacts: ${path.relative(projectDir, artifactDir)}`
