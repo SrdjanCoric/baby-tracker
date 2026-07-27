@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { SURFACE } from "@/constants/colors";
@@ -13,15 +13,15 @@ import { MetricCard, AverageRow } from "./MetricCard";
 import type { SleepPatternColors } from "./useSleepPatternColors";
 
 const PERIOD_OPTIONS = [7, 14, 30] as const;
-type Period = (typeof PERIOD_OPTIONS)[number];
+export type SleepSummaryPeriod = (typeof PERIOD_OPTIONS)[number];
 
 function PeriodSelector({
   selectedPeriod,
   onSelect,
   colors,
 }: {
-  selectedPeriod: Period;
-  onSelect: (period: Period) => void;
+  selectedPeriod: SleepSummaryPeriod;
+  onSelect: (period: SleepSummaryPeriod) => void;
   colors: SleepPatternColors;
 }) {
   const { t } = useTranslation();
@@ -158,6 +158,8 @@ export function SummaryView({
   isNewborn,
   locale,
   birthDate,
+  period,
+  onPeriodChange,
 }: {
   sleeps: StoredSleepEntry[];
   timeFormat: TimeFormat;
@@ -167,10 +169,11 @@ export function SummaryView({
   isNewborn: boolean;
   locale: string;
   birthDate?: string;
+  period: SleepSummaryPeriod;
+  onPeriodChange: (period: SleepSummaryPeriod) => void;
 }) {
   const { t } = useTranslation();
   const tFn = t as TranslateFn;
-  const [period, setPeriod] = useState<Period>(7);
 
   const data = useMemo(
     () => calculateSleepSummary(sleeps, period, new Date(), dayStartHour, dayEndHour),
@@ -211,7 +214,7 @@ export function SummaryView({
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <PeriodSelector selectedPeriod={period} onSelect={setPeriod} colors={colors} />
+      <PeriodSelector selectedPeriod={period} onSelect={onPeriodChange} colors={colors} />
 
       <View style={{ flexDirection: "row", gap: 10 }}>
         <MetricCard

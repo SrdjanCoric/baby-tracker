@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,13 +16,26 @@ import {
   EmptySleepPatterns,
 } from "@/components/sleep-patterns";
 import type { TabView } from "@/components/sleep-patterns";
+import type { SleepSummaryPeriod } from "@/components/sleep-patterns/SummaryView";
+import {
+  getSleepDayRange,
+  getSleepSummaryRange,
+  getSleepWeekRange,
+  sleepOverlapsActivityRange,
+} from "@/utils/statistics-ranges";
+import { ActivityRangeBoundary } from "@/components/stats/ActivityRangeBoundary";
 
 const PX_PER_HOUR = 60;
 
 export default function SleepPatternsScreen() {
   const { t, i18n } = useTranslation();
   const colors = useSleepPatternColors();
-  const { sleeps, isLoading, wakeWindowConfig } = useSleep();
+  const {
+    sleeps,
+    wakeWindowConfig,
+    loadSleepRange,
+    getSleepRangeStatus,
+  } = useSleep();
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
   const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
   const { selectedBaby } = useBaby();
@@ -32,18 +45,39 @@ export default function SleepPatternsScreen() {
   const [activeTab, setActiveTab] = useState<TabView>("day");
   const [selectedDate, setSelectedDate] = useState(() => getSleepDate(new Date(), dayStartHour));
   const [weekEndDate, setWeekEndDate] = useState(() => getSleepDate(new Date(), dayStartHour));
+  const [summaryPeriod, setSummaryPeriod] = useState<SleepSummaryPeriod>(7);
 
-  const hasSleepData = sleeps.length > 0;
+  const selectedSleeps = useMemo(
+    () => sleeps.filter((sleep) => sleep.babyId === selectedBaby?.id),
+    [selectedBaby?.id, sleeps]
+  );
+  const requestedRange = useMemo(() => {
+    if (activeTab === "day") return getSleepDayRange(selectedDate, dayStartHour);
+    if (activeTab === "week") return getSleepWeekRange(weekEndDate, dayStartHour);
+    return getSleepSummaryRange(summaryPeriod);
+  }, [activeTab, dayStartHour, selectedDate, summaryPeriod, weekEndDate]);
+  const rangeStatus = getSleepRangeStatus(requestedRange);
+  const hasSleepData = selectedSleeps.some((sleep) =>
+    sleepOverlapsActivityRange(sleep, requestedRange)
+  );
+  const retryRange = useCallback(() => {
+    loadSleepRange(requestedRange).catch(() => {});
+  }, [loadSleepRange, requestedRange]);
   const isNewborn = isUnderThreeMonths(selectedBaby?.birthDate);
 
+  useEffect(() => {
+    if (rangeStatus !== "unverified") return;
+    loadSleepRange(requestedRange).catch(() => {});
+  }, [loadSleepRange, rangeStatus, requestedRange]);
+
   const dayViewData = useMemo(
-    () => buildDayViewData(sleeps, selectedDate, PX_PER_HOUR, new Date(), dayStartHour, locale, dayEndHour),
-    [sleeps, selectedDate, dayStartHour, dayEndHour, locale]
+    () => buildDayViewData(selectedSleeps, selectedDate, PX_PER_HOUR, new Date(), dayStartHour, locale, dayEndHour),
+    [selectedSleeps, selectedDate, dayStartHour, dayEndHour, locale]
   );
 
   const weekViewData = useMemo(
-    () => buildWeekViewData(sleeps, weekEndDate, new Date(), dayStartHour, locale, dayEndHour),
-    [sleeps, weekEndDate, dayStartHour, dayEndHour, locale]
+    () => buildWeekViewData(selectedSleeps, weekEndDate, new Date(), dayStartHour, locale, dayEndHour),
+    [selectedSleeps, weekEndDate, dayStartHour, dayEndHour, locale]
   );
 
   const navigateDay = (offset: number) => {
@@ -73,39 +107,47 @@ export default function SleepPatternsScreen() {
 
       <PillTabs activeTab={activeTab} onTabChange={setActiveTab} colors={colors} />
 
-      {!hasSleepData && !isLoading ? (
-        <EmptySleepPatterns />
-      ) : activeTab === "day" ? (
-        <DayView
-          data={dayViewData}
-          timeFormat={timeFormat}
-          selectedDate={selectedDate}
-          onNavigate={navigateDay}
-          dayStartHour={dayStartHour}
-          colors={colors}
-        />
-      ) : activeTab === "week" ? (
-        <WeekView
-          data={weekViewData}
-          timeFormat={timeFormat}
-          weekEndDate={weekEndDate}
-          onNavigate={navigateWeek}
-          dayStartHour={dayStartHour}
-          colors={colors}
-          locale={locale}
-        />
-      ) : (
-        <SummaryView
-          sleeps={sleeps}
-          timeFormat={timeFormat}
-          dayStartHour={dayStartHour}
-          dayEndHour={dayEndHour}
-          colors={colors}
-          isNewborn={isNewborn}
-          locale={locale}
-          birthDate={selectedBaby?.birthDate}
-        />
-      )}
+      <ActivityRangeBoundary
+        status={rangeStatus}
+        hasCachedData={hasSleepData}
+        onRetry={retryRange}
+      >
+        {!hasSleepData ? (
+          <EmptySleepPatterns />
+        ) : activeTab === "day" ? (
+          <DayView
+            data={dayViewData}
+            timeFormat={timeFormat}
+            selectedDate={selectedDate}
+            onNavigate={navigateDay}
+            dayStartHour={dayStartHour}
+            colors={colors}
+          />
+        ) : activeTab === "week" ? (
+          <WeekView
+            data={weekViewData}
+            timeFormat={timeFormat}
+            weekEndDate={weekEndDate}
+            onNavigate={navigateWeek}
+            dayStartHour={dayStartHour}
+            colors={colors}
+            locale={locale}
+          />
+        ) : (
+          <SummaryView
+            sleeps={selectedSleeps}
+            timeFormat={timeFormat}
+            dayStartHour={dayStartHour}
+            dayEndHour={dayEndHour}
+            colors={colors}
+            isNewborn={isNewborn}
+            locale={locale}
+            birthDate={selectedBaby?.birthDate}
+            period={summaryPeriod}
+            onPeriodChange={setSummaryPeriod}
+          />
+        )}
+      </ActivityRangeBoundary>
     </SafeAreaView>
   );
 }
