@@ -412,4 +412,91 @@ BEGIN
 END $$;
 \echo 'ok: old and new authenticated app versions can execute merge_record'
 
+-- ---- 16. milestone upgrade recovery: alternate ids merge into the canonical logical row ----
+DO $$
+DECLARE row_count int; row_id uuid; row_state text; row_deleted boolean;
+BEGIN
+  INSERT INTO milestone_responses (
+    id, baby_id, milestone_id, state, deleted, field_clocks
+  ) VALUES (
+    'd0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-0000-0000-000000000001',
+    '2m-social-1',
+    'not_sure',
+    true,
+    jsonb_build_object('deleted', '2026-07-27T10:01:00.000Z-0000-device-b')
+  );
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', '11111111-1111-1111-1111-111111111111')::text, true);
+  PERFORM merge_record(
+    'milestone_responses',
+    jsonb_build_object(
+      'id', 'd0000000-0000-4000-8000-000000000002',
+      'baby_id', 'a0000000-0000-0000-0000-000000000001',
+      'milestone_id', '2m-social-1',
+      'state', 'yes',
+      'responded_at', '2026-07-27T10:05:00Z',
+      'responded_by', '11111111-1111-1111-1111-111111111111'
+    ),
+    jsonb_build_object('state', '2026-07-27T10:05:00.000Z-0000-device-a'),
+    'milestone-alternate-create',
+    '11111111-1111-1111-1111-111111111111'
+  );
+  PERFORM merge_record(
+    'milestone_responses',
+    jsonb_build_object(
+      'id', 'd0000000-0000-4000-8000-000000000001',
+      'state', 'yes',
+      'deleted', false
+    ),
+    jsonb_build_object(
+      'state', '2026-07-27T10:06:00.000Z-0000-device-a',
+      'deleted', '2026-07-27T10:06:00.000Z-0000-device-a'
+    ),
+    'milestone-canonical-revive',
+    '11111111-1111-1111-1111-111111111111'
+  );
+
+  SELECT count(*), min(id::text)::uuid, min(state), bool_and(deleted)
+  INTO row_count, row_id, row_state, row_deleted
+  FROM milestone_responses
+  WHERE baby_id = 'a0000000-0000-0000-0000-000000000001'
+    AND milestone_id = '2m-social-1';
+
+  IF row_count <> 1 THEN RAISE EXCEPTION 'expected one logical milestone row, got %', row_count; END IF;
+  IF row_id <> 'd0000000-0000-4000-8000-000000000001' THEN
+    RAISE EXCEPTION 'alternate id replaced canonical id: %', row_id;
+  END IF;
+  IF row_state <> 'yes' OR row_deleted <> false THEN
+    RAISE EXCEPTION 'canonical milestone was not revived: state=% deleted=%', row_state, row_deleted;
+  END IF;
+END $$;
+\echo 'ok: alternate milestone create converges on and revives the canonical row'
+
+-- ---- 17. milestone canonical lookup retains cross-household authorization ----
+DO $$
+DECLARE raised boolean := false; row_state text;
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', '33333333-3333-3333-3333-333333333333')::text, true);
+  BEGIN
+    PERFORM merge_record(
+      'milestone_responses',
+      jsonb_build_object(
+        'id', 'd0000000-0000-4000-8000-000000000003',
+        'baby_id', 'a0000000-0000-0000-0000-000000000001',
+        'milestone_id', '2m-social-1',
+        'state', 'not_sure'
+      ),
+      jsonb_build_object('state', '2026-07-27T10:07:00.000Z-0000-device-x')
+    );
+  EXCEPTION WHEN insufficient_privilege THEN raised := true;
+  END;
+  IF NOT raised THEN RAISE EXCEPTION 'expected alternate-id cross-household rejection'; END IF;
+
+  SELECT state INTO row_state FROM milestone_responses
+  WHERE id = 'd0000000-0000-4000-8000-000000000001';
+  IF row_state <> 'yes' THEN RAISE EXCEPTION 'outsider changed canonical milestone state'; END IF;
+END $$;
+\echo 'ok: milestone canonical lookup rejects a cross-household alternate id'
+
 ROLLBACK;

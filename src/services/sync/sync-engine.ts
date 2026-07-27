@@ -14,7 +14,7 @@ import {
 import { supabase } from '../supabase';
 import { isCrdtTable } from './crdt-sync';
 import { getCrdtSync } from './crdt-sync-instance';
-import type { ClockedRecord, FieldClocks } from './crdt';
+import { compareClocks, type ClockedRecord, type FieldClocks } from './crdt';
 
 type SyncStateListener = (state: SyncState) => void;
 
@@ -805,6 +805,30 @@ export class SyncEngine {
       }
     }
     return operations;
+  }
+
+  getPendingEntityFieldClocks(table: SyncableTable, entityId: string): FieldClocks {
+    const clocks: FieldClocks = {};
+    for (const operation of this.queue.getAll()) {
+      if (
+        operation.table !== table
+        || operation.entityId !== entityId
+        || !this.validateOperation(operation).valid
+        || !this.isOperationCommitted(operation)
+        || !this.isOwnedByCurrentAuth(operation)
+      ) {
+        continue;
+      }
+      const operationClocks = operation.data?.field_clocks;
+      if (!operationClocks || typeof operationClocks !== 'object') continue;
+      for (const [field, clock] of Object.entries(operationClocks as FieldClocks)) {
+        const existing = clocks[field];
+        if (existing === undefined || compareClocks(clock, existing) > 0) {
+          clocks[field] = clock;
+        }
+      }
+    }
+    return clocks;
   }
 
   private isOwnedByCurrentAuth(operation: QueuedOperation): boolean {

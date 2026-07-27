@@ -115,6 +115,7 @@ function milestoneResponse(state: "yes" | "not_sure"): StoredMilestoneResponse {
     babyId: "baby-1",
     milestoneId: "milestone-1",
     state,
+    deleted: false,
     respondedAt: timestamp,
     createdAt: timestamp,
     updatedAt: timestamp,

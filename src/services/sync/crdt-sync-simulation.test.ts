@@ -141,6 +141,38 @@ describe("CRDT sync-layer convergence (real entry points, mock RPC)", () => {
     expect(server.row("feedings", "f1")).toMatchObject({ amount_ml: 50, notes: "b-note" });
   });
 
+  it("two caregivers converge on the newer milestone clear or recheck", async () => {
+    const server = new MockServer();
+    const firstCaregiver = new Device("caregiver-a", 1000);
+    const secondCaregiver = new Device("caregiver-b", 2000);
+    const devices = [firstCaregiver, secondCaregiver];
+
+    await firstCaregiver.edit("milestone_responses", "response-1", {
+      baby_id: "baby-1",
+      milestone_id: "2m-social-1",
+      state: "yes",
+      deleted: false,
+    });
+    await firstCaregiver.flush(server);
+    await broadcast(server, "milestone_responses", "response-1", devices);
+
+    await firstCaregiver.edit("milestone_responses", "response-1", { deleted: true });
+    await secondCaregiver.edit("milestone_responses", "response-1", {
+      state: "not_sure",
+      deleted: false,
+    });
+
+    await secondCaregiver.flush(server);
+    await firstCaregiver.flush(server);
+    await broadcast(server, "milestone_responses", "response-1", devices);
+
+    const firstView = await firstCaregiver.view("milestone_responses", "response-1");
+    const secondView = await secondCaregiver.view("milestone_responses", "response-1");
+    expect(firstView).toEqual(secondView);
+    expect(firstView).toMatchObject({ state: "not_sure", deleted: false });
+    expect(server.rows).toHaveLength(1);
+  });
+
   it("three devices editing different fields of one record all converge", async () => {
     const server = new MockServer();
     const devices = [new Device("d0", 1000), new Device("d1", 1500), new Device("d2", 2000)];

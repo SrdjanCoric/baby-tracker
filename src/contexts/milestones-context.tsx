@@ -8,13 +8,14 @@ import {
   fetchMilestoneResponsesFromDatabase,
   upsertMilestoneResponseInDatabase,
   deleteMilestoneResponseFromDatabase,
+  retainRemoteMilestoneResponse,
 } from "@/services/activity-sync-service";
 import { AGE_GROUPS, getCurrentAgeGroupKey, getAgeGroupByKey } from "@/constants/milestones";
 import type { AgeGroup } from "@/constants/milestones";
 import { useBaby } from "./baby-context";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
-import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
+import { RemoteChange, tombstonedId } from "@/services/sync";
 
 export interface MilestonesState {
   responses: StoredMilestoneResponse[];
@@ -24,7 +25,6 @@ export interface MilestonesState {
 export type MilestonesAction =
   | { type: "SET_RESPONSES"; payload: StoredMilestoneResponse[] }
   | { type: "UPSERT_RESPONSE"; payload: StoredMilestoneResponse }
-  | { type: "REMOVE_RESPONSE"; payload: string }
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "REMOTE_INSERT"; payload: StoredMilestoneResponse }
   | { type: "REMOTE_UPDATE"; payload: StoredMilestoneResponse }
@@ -39,11 +39,14 @@ function upsertMilestoneResponse(
   responses: StoredMilestoneResponse[],
   response: StoredMilestoneResponse
 ): StoredMilestoneResponse[] {
-  const existing = responses.find((item) => item.milestoneId === response.milestoneId);
-  if (existing && existing.id !== response.id) {
-    return responses.map((item) => item.milestoneId === response.milestoneId ? response : item);
-  }
-  return upsertById(responses, response);
+  const existingIndex = responses.findIndex(
+    (item) => item.milestoneId === response.milestoneId
+  );
+  if (existingIndex === -1) return [...responses, response];
+  return responses.flatMap((item, index) => {
+    if (item.milestoneId !== response.milestoneId) return [item];
+    return index === existingIndex ? [response] : [];
+  });
 }
 
 export function milestonesReducer(state: MilestonesState, action: MilestonesAction): MilestonesState {
@@ -57,12 +60,6 @@ export function milestonesReducer(state: MilestonesState, action: MilestonesActi
         responses: upsertMilestoneResponse(state.responses, action.payload),
       };
 
-    case "REMOVE_RESPONSE":
-      return {
-        ...state,
-        responses: state.responses.filter((r) => r.milestoneId !== action.payload),
-      };
-
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
 
@@ -73,7 +70,10 @@ export function milestonesReducer(state: MilestonesState, action: MilestonesActi
       };
 
     case "REMOTE_UPDATE": {
-      return { ...state, responses: upsertById(state.responses, action.payload) };
+      return {
+        ...state,
+        responses: upsertMilestoneResponse(state.responses, action.payload),
+      };
     }
 
     case "REMOTE_DELETE":
@@ -87,7 +87,9 @@ export function milestonesReducer(state: MilestonesState, action: MilestonesActi
   }
 }
 
-interface MilestonesContextValue extends MilestonesState {
+interface MilestonesContextValue {
+  responses: StoredMilestoneResponse[];
+  isLoading: boolean;
   setMilestoneState: (milestoneId: string, state: MilestoneState) => Promise<void>;
   clearMilestoneState: (milestoneId: string) => Promise<void>;
   getMilestoneState: (milestoneId: string) => "yes" | "not_sure" | "not_yet";
@@ -109,10 +111,28 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
   const { user } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = subscribeToRemoteChanges('milestone_responses', (change: RemoteChange) => {
+    const unsubscribe = subscribeToRemoteChanges('milestone_responses', async (change: RemoteChange) => {
       if (!selectedBaby) return;
       const data = change.new || change.old;
       if (data && data.baby_id !== selectedBaby.id) return;
+
+      const retainAndDispatch = async (
+        type: "REMOTE_INSERT" | "REMOTE_UPDATE",
+        row: Record<string, unknown>
+      ) => {
+        let response = transformFromRemote(row);
+        try {
+          response = await retainRemoteMilestoneResponse(row);
+        } catch (error) {
+          console.error("[MilestonesContext] Failed to retain remote response:", error);
+        }
+        dispatch({ type, payload: response });
+      };
+
+      if (change.new?.deleted === true) {
+        await retainAndDispatch("REMOTE_UPDATE", change.new);
+        return;
+      }
 
       const removeId = tombstonedId(change);
       if (removeId) {
@@ -122,10 +142,10 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
 
       switch (change.eventType) {
         case 'INSERT':
-          if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformFromRemote(change.new) });
+          if (change.new) await retainAndDispatch("REMOTE_INSERT", change.new);
           break;
         case 'UPDATE':
-          if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformFromRemote(change.new) });
+          if (change.new) await retainAndDispatch("REMOTE_UPDATE", change.new);
           break;
       }
     });
@@ -211,14 +231,21 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
         await MilestonesStorageService.clearMilestoneState(selectedBaby.id, milestoneId);
       }
 
-      dispatch({ type: "REMOVE_RESPONSE", payload: milestoneId });
+      if (existing) {
+        dispatch({
+          type: "UPSERT_RESPONSE",
+          payload: { ...existing, deleted: true, updatedAt: new Date().toISOString() },
+        });
+      }
     },
     [selectedBaby, user?.householdId, state.responses]
   );
 
   const getMilestoneState = useCallback(
     (milestoneId: string): "yes" | "not_sure" | "not_yet" => {
-      const response = state.responses.find((r) => r.milestoneId === milestoneId);
+      const response = state.responses.find(
+        (item) => item.milestoneId === milestoneId && !item.deleted
+      );
       return response?.state ?? "not_yet";
     },
     [state.responses]
@@ -229,7 +256,9 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
       const group = getAgeGroupByKey(ageKey);
       if (!group) return 0;
       return group.milestones.filter((m) => {
-        const r = state.responses.find((resp) => resp.milestoneId === m.id);
+        const r = state.responses.find(
+          (response) => response.milestoneId === m.id && !response.deleted
+        );
         return r?.state === "yes";
       }).length;
     },
@@ -241,7 +270,9 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
       const group = getAgeGroupByKey(ageKey);
       if (!group) return 0;
       return group.milestones.filter((m) => {
-        const r = state.responses.find((resp) => resp.milestoneId === m.id);
+        const r = state.responses.find(
+          (response) => response.milestoneId === m.id && !response.deleted
+        );
         return r?.state === "not_sure";
       }).length;
     },
@@ -276,9 +307,15 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
     return getAgeGroupByKey(key) ?? null;
   }, [selectedBaby?.birthDate]);
 
+  const visibleResponses = useMemo(
+    () => state.responses.filter((response) => !response.deleted),
+    [state.responses]
+  );
+
   const value: MilestonesContextValue = useMemo(
     () => ({
-      ...state,
+      responses: visibleResponses,
+      isLoading: state.isLoading,
       setMilestoneState: setMilestoneStateAction,
       clearMilestoneState: clearMilestoneStateAction,
       getMilestoneState,
@@ -291,7 +328,8 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
       refreshResponses: loadResponses,
     }),
     [
-      state,
+      visibleResponses,
+      state.isLoading,
       setMilestoneStateAction,
       clearMilestoneStateAction,
       getMilestoneState,
@@ -322,6 +360,7 @@ function transformFromRemote(data: Record<string, unknown>): StoredMilestoneResp
     babyId: data.baby_id as string,
     milestoneId: data.milestone_id as string,
     state: data.state as MilestoneState,
+    deleted: data.deleted === true,
     respondedAt: data.responded_at as string,
     respondedBy: data.responded_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),

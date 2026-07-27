@@ -9,6 +9,7 @@ import {
 import { getSyncEngine } from "@/contexts/sync-context";
 import type { LocalStorageMutation, OperationType, SyncableTable } from "./sync/types";
 import { reconcilePulled } from "./sync/crdt-sync-instance";
+import { compareClocks, type FieldClocks } from "./sync/crdt";
 import { dropTombstoned } from "./sync/tombstone";
 import type { StoredFeedingEntry, CreateFeedingInput, UpdateFeedingInput } from "./feeding-storage";
 import type { StoredDiaperEntry, CreateDiaperInput, UpdateDiaperInput } from "./diaper-storage";
@@ -131,6 +132,145 @@ async function commitPulledCollection<T extends { id: string }>(
     await AsyncStorage.setItem(scope.key, JSON.stringify(entries));
     assertActivityPullScope(scope);
     return entries;
+  });
+}
+
+function greatestClock(clocks: FieldClocks): string | null {
+  let greatest: string | null = null;
+  for (const clock of Object.values(clocks)) {
+    if (greatest === null || compareClocks(clock, greatest) > 0) {
+      greatest = clock;
+    }
+  }
+  return greatest;
+}
+
+function replaceLogicalMilestoneResponse(
+  responses: StoredMilestoneResponse[],
+  response: StoredMilestoneResponse
+): StoredMilestoneResponse[] {
+  return [
+    ...responses.filter((item) => item.milestoneId !== response.milestoneId),
+    response,
+  ];
+}
+
+interface MilestoneIdentityReconciliation {
+  responses: StoredMilestoneResponse[];
+  retained: StoredMilestoneResponse;
+  recoveryOperation: ActivityQueueOperation | null;
+}
+
+function reconcileMilestoneIdentity(
+  scope: ActivityPullScope,
+  responses: StoredMilestoneResponse[],
+  localResponses: StoredMilestoneResponse[],
+  pendingOperations: Map<string, OperationType>,
+  canonical: StoredMilestoneResponse,
+  canonicalClock: string | null
+): MilestoneIdentityReconciliation {
+  const alternate = localResponses.find((response) =>
+    response.milestoneId === canonical.milestoneId
+    && response.id !== canonical.id
+    && !response.deleted
+    && pendingOperations.get(response.id) === 'CREATE'
+  );
+  if (!alternate) {
+    return {
+      responses: replaceLogicalMilestoneResponse(responses, canonical),
+      retained: canonical,
+      recoveryOperation: null,
+    };
+  }
+
+  const alternateClock = scope.engine
+    ? greatestClock(
+        scope.engine.getPendingEntityFieldClocks('milestone_responses', alternate.id)
+      )
+    : null;
+  const alternateIsNewer = alternateClock && canonicalClock
+    ? compareClocks(alternateClock, canonicalClock) > 0
+    : Date.parse(alternate.updatedAt) > Date.parse(canonical.updatedAt);
+  if (!alternateIsNewer) {
+    return {
+      responses: replaceLogicalMilestoneResponse(responses, canonical),
+      retained: canonical,
+      recoveryOperation: null,
+    };
+  }
+
+  const recovered: StoredMilestoneResponse = {
+    ...alternate,
+    id: canonical.id,
+    babyId: canonical.babyId,
+    deleted: false,
+    createdAt: canonical.createdAt,
+  };
+  return {
+    responses: replaceLogicalMilestoneResponse(responses, recovered),
+    retained: recovered,
+    recoveryOperation: {
+      type: 'UPDATE',
+      table: 'milestone_responses',
+      entityId: canonical.id,
+      data: {
+        baby_id: recovered.babyId,
+        milestone_id: recovered.milestoneId,
+        state: recovered.state,
+        deleted: false,
+        responded_at: recovered.respondedAt,
+        responded_by: recovered.respondedBy,
+        updated_at: recovered.updatedAt,
+      },
+    },
+  };
+}
+
+async function commitPulledMilestoneResponses(
+  scope: ActivityPullScope,
+  serverResponses: StoredMilestoneResponse[],
+  serverClocks: Map<string, string | null>
+): Promise<StoredMilestoneResponse[]> {
+  return withStorageLock(scope.key, async () => {
+    assertActivityPullScope(scope);
+    const pendingOperations = await getPendingEntityOperations(scope.engine, 'milestone_responses');
+    assertActivityPullScope(scope);
+    const localData = await AsyncStorage.getItem(scope.key);
+    assertActivityPullScope(scope);
+    const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
+    let responses = mergeWithPendingLocal(serverResponses, localResponses, pendingOperations);
+    let previousValue = localData;
+    let queuedRecovery = false;
+
+    for (const canonical of serverResponses) {
+      const reconciliation = reconcileMilestoneIdentity(
+        scope,
+        responses,
+        localResponses,
+        pendingOperations,
+        canonical,
+        serverClocks.get(canonical.id) ?? null
+      );
+      responses = reconciliation.responses;
+      if (!reconciliation.recoveryOperation) continue;
+
+      const nextValue = JSON.stringify(responses);
+      await queueSyncOperation(reconciliation.recoveryOperation, 'required', {
+        key: scope.key,
+        previousValue,
+        nextValue,
+      });
+      previousValue = nextValue;
+      queuedRecovery = true;
+      assertActivityPullScope(scope);
+    }
+
+    const finalValue = JSON.stringify(responses);
+    if (!queuedRecovery || finalValue !== previousValue) {
+      await AsyncStorage.setItem(scope.key, finalValue);
+    }
+    assertActivityPullScope(scope);
+    return responses;
   });
 }
 
@@ -1263,8 +1403,14 @@ export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promi
   }
 
   const reconciled = await reconcilePulled("milestone_responses", (data || []) as Record<string, unknown>[]);
-  const serverResponses: StoredMilestoneResponse[] = dropTombstoned(reconciled).map(transformMilestoneResponseFromDb);
-  return commitPulledCollection(scope, 'milestone_responses', serverResponses);
+  const serverResponses = reconciled.map(transformMilestoneResponseFromDb);
+  const serverClocks = new Map(reconciled.map((row) => {
+    const clocks = row.field_clocks && typeof row.field_clocks === 'object'
+      ? row.field_clocks as FieldClocks
+      : {};
+    return [row.id as string, greatestClock(clocks)] as const;
+  }));
+  return commitPulledMilestoneResponses(scope, serverResponses, serverClocks);
 }
 
 export async function upsertMilestoneResponseInDatabase(
@@ -1284,17 +1430,20 @@ export async function upsertMilestoneResponseInDatabase(
     babyId: input.babyId,
     milestoneId: input.milestoneId,
     state: input.state,
+    deleted: false,
     respondedAt: now,
     respondedBy: input.respondedBy,
     createdAt: now,
     updatedAt: now,
   };
 
+  let storedResponse = response;
   const dbData: Record<string, unknown> = {
     id,
     baby_id: input.babyId,
     milestone_id: input.milestoneId,
     state: input.state,
+    deleted: false,
     responded_at: now,
     responded_by: input.respondedBy,
     created_at: now,
@@ -1306,11 +1455,21 @@ export async function upsertMilestoneResponseInDatabase(
     (responses) => {
       const existing = responses.find((r) => r.milestoneId === input.milestoneId);
       if (existing) {
-        return responses.map((r) =>
-          r.milestoneId === input.milestoneId
-            ? { ...r, state: input.state, respondedAt: now, updatedAt: now, respondedBy: input.respondedBy ?? r.respondedBy }
-            : r
-        );
+        storedResponse = {
+          ...existing,
+          state: input.state,
+          deleted: false,
+          respondedAt: now,
+          updatedAt: now,
+          respondedBy: input.respondedBy ?? existing.respondedBy,
+        };
+        let replaced = false;
+        return responses.flatMap((item) => {
+          if (item.milestoneId !== input.milestoneId) return [item];
+          if (replaced) return [];
+          replaced = true;
+          return [storedResponse];
+        });
       }
       return [...responses, response];
     },
@@ -1321,7 +1480,9 @@ export async function upsertMilestoneResponseInDatabase(
           entityId: id,
           data: {
             state: input.state,
+            deleted: false,
             responded_at: now,
+            responded_by: input.respondedBy,
             updated_at: now,
           },
         })
@@ -1333,7 +1494,7 @@ export async function upsertMilestoneResponseInDatabase(
         }))
   );
 
-  return response;
+  return storedResponse;
 }
 
 export async function deleteMilestoneResponseFromDatabase(
@@ -1343,7 +1504,11 @@ export async function deleteMilestoneResponseFromDatabase(
 ): Promise<boolean> {
   await updateLocalMilestoneResponses(
     babyId,
-    (responses) => responses.filter((r) => r.milestoneId !== milestoneId),
+    (responses) => responses.map((response) =>
+      response.milestoneId === milestoneId
+        ? { ...response, deleted: true }
+        : response
+    ),
     createDurableQueueCommit({
       type: 'DELETE',
       table: 'milestone_responses',
@@ -1361,11 +1526,53 @@ function transformMilestoneResponseFromDb(data: Record<string, unknown>): Stored
     babyId: data.baby_id as string,
     milestoneId: data.milestone_id as string,
     state: data.state as MilestoneState,
+    deleted: data.deleted === true,
     respondedAt: data.responded_at as string,
     respondedBy: data.responded_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
+}
+
+export async function retainRemoteMilestoneResponse(
+  row: Record<string, unknown>
+): Promise<StoredMilestoneResponse> {
+  const canonical = transformMilestoneResponseFromDb(row);
+  const scope = captureActivityPullScope(`${KEYS.milestones}${canonical.babyId}`);
+  return withStorageLock(scope.key, async () => {
+    assertActivityPullScope(scope);
+    const pendingOperations = await getPendingEntityOperations(
+      scope.engine,
+      'milestone_responses'
+    );
+    assertActivityPullScope(scope);
+    const localData = await AsyncStorage.getItem(scope.key);
+    const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
+    const clocks = row.field_clocks && typeof row.field_clocks === 'object'
+      ? row.field_clocks as FieldClocks
+      : {};
+    const reconciliation = reconcileMilestoneIdentity(
+      scope,
+      localResponses,
+      localResponses,
+      pendingOperations,
+      canonical,
+      greatestClock(clocks)
+    );
+    const nextValue = JSON.stringify(reconciliation.responses);
+
+    if (reconciliation.recoveryOperation) {
+      await queueSyncOperation(reconciliation.recoveryOperation, 'required', {
+        key: scope.key,
+        previousValue: localData,
+        nextValue,
+      });
+    } else {
+      await AsyncStorage.setItem(scope.key, nextValue);
+    }
+    assertActivityPullScope(scope);
+    return reconciliation.retained;
+  });
 }
 
 async function updateLocalMilestoneResponses(

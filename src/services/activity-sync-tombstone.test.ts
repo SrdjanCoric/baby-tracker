@@ -8,6 +8,7 @@ import {
   fetchTummyTimeFromDatabase,
   fetchMilestoneResponsesFromDatabase,
   fetchHealthFromDatabase,
+  retainRemoteMilestoneResponse,
 } from "./activity-sync-service";
 import { __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
 import { __resetDeviceIdForTests } from "./sync/device-id";
@@ -70,7 +71,6 @@ describe("activity-sync fetch excludes tombstoned rows", () => {
     { name: "pumping", fetch: fetchPumpingFromDatabase, fields: { started_at: "2026-07-01T00:00:00.000Z" } },
     { name: "growth", fetch: fetchGrowthFromDatabase, fields: { measured_at: "2026-07-01T00:00:00.000Z" } },
     { name: "tummyTime", fetch: fetchTummyTimeFromDatabase, fields: { started_at: "2026-07-01T00:00:00.000Z" } },
-    { name: "milestones", fetch: fetchMilestoneResponsesFromDatabase, fields: { milestone_id: "m1", achieved: true } },
     { name: "health", fetch: fetchHealthFromDatabase, fields: { type: "temperature", recorded_at: "2026-07-01T00:00:00.000Z" } },
   ];
 
@@ -81,4 +81,39 @@ describe("activity-sync fetch excludes tombstoned rows", () => {
       expect(rows.map((r) => r.id)).toEqual(["keep-1"]);
     });
   }
+
+  it("persists a Realtime milestone tombstone for an offline restart", async () => {
+    await retainRemoteMilestoneResponse({
+      id: "canonical-1",
+      baby_id: "b1",
+      milestone_id: "m1",
+      state: "yes",
+      deleted: true,
+      responded_at: "2026-07-01T00:00:00.000Z",
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:05:00.000Z",
+      field_clocks: { deleted: clock },
+    });
+
+    expect(JSON.parse(asyncStore.get("@milestones:b1")!)).toEqual([
+      expect.objectContaining({ id: "canonical-1", milestoneId: "m1", deleted: true }),
+    ]);
+  });
+
+  it("retains a tombstoned milestone response identity across pull and restart", async () => {
+    selectData = [tombstoned("canonical-1", {
+      milestone_id: "m1",
+      state: "yes",
+      responded_at: "2026-07-01T00:00:00.000Z",
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    })];
+
+    const pulled = await fetchMilestoneResponsesFromDatabase("b1");
+
+    expect(pulled).toEqual([
+      expect.objectContaining({ id: "canonical-1", milestoneId: "m1", deleted: true }),
+    ]);
+    expect(JSON.parse(asyncStore.get("@milestones:b1")!)).toEqual(pulled);
+  });
 });

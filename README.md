@@ -52,6 +52,8 @@ User action → Local storage → UI update (immediate)
 
 Supabase Realtime subscriptions push changes between household members instantly. Remote changes dispatch into React context reducers (`REMOTE_INSERT`, `REMOTE_UPDATE`, `REMOTE_DELETE`). Insert acknowledgements upsert by entity ID, so a server event and its matching local create result produce one activity regardless of arrival order. Device ID filtering prevents echo updates.
 
+A milestone response keeps one database identity as its state changes or clears. Clearing stores a hidden CRDT tombstone, and rechecking revives the same row with a newer clock. Pull and Realtime recovery map an older queued UUID back to the canonical row without showing tombstones in milestone state or progress.
+
 ### Timer Exclusivity
 
 Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. If the lock service is unavailable, feeding, sleep, pumping, and tummy-time timers continue locally and keep their reconciliation state through restart. Reconnect attempts to acquire the missing lock. When two offline timers compete, the first successful lock acquisition wins. The other timer is saved to the timeline, and its caregiver sees what happened. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. External Stop requests from widgets and Apple Watch stay in a versioned queue until matching timer completions are durable, even if several arrive while the app is closed. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
@@ -79,7 +81,7 @@ src/
 ├── components/             # UI components, charts, stats cards
 ├── contexts/               # ~20 feature-scoped context providers + reducers
 ├── services/
-│   ├── sync/               # Sync engine, real-time sync, queue, conflict resolver
+│   ├── sync/               # Sync engine, Realtime, queue, CRDT merge
 │   └── ...                 # Storage, notifications, watch, widget, household
 ├── hooks/                  # Timer alerts, duplicate detection, accessibility
 ├── i18n/                   # Translation files (en, sr, es + 3 more)
@@ -87,7 +89,7 @@ src/
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
-└── migrations/             # PostgreSQL migrations through 056
+└── migrations/             # PostgreSQL migrations through 057
 targets/widget/             # iOS WidgetKit extension (Swift)
 e2e/                        # Maestro E2E tests
 ```
