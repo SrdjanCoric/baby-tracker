@@ -543,14 +543,18 @@ function isValidUUID(id: string): boolean {
   return uuidRegex.test(id);
 }
 
-async function ensureUUID(id: string, namespace: SyncableTable): Promise<string> {
+async function ensureUUID(
+  id: string,
+  namespace: SyncableTable,
+  migrationScope = ""
+): Promise<string> {
   if (isValidUUID(id)) {
     return id;
   }
 
   const hash = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
-    `${namespace}:${id}`
+    `${namespace}:${migrationScope}:${id}`
   );
   const variant = ((Number.parseInt(hash[16], 16) & 0x3) | 0x8).toString(16);
   return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-5${hash.slice(13, 16)}-${variant}${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
@@ -1862,9 +1866,34 @@ async function getGuestActivities<T>(keyPrefix: string, babyId: string): Promise
   return JSON.parse(data) as T[];
 }
 
-async function clearGuestActivities(keyPrefix: string, babyId: string): Promise<void> {
-  const key = `${keyPrefix}${babyId}`;
-  await AsyncStorage.removeItem(key);
+const MIGRATED_GUEST_ACTIVITY_PREFIXES = [
+  KEYS.feedings,
+  KEYS.diapers,
+  KEYS.sleep,
+  KEYS.pumping,
+  KEYS.growth,
+  KEYS.tummyTime,
+  KEYS.health,
+  KEYS.milestones,
+] as const;
+
+export async function acknowledgeGuestActivityMigration(): Promise<void> {
+  const engine = getSyncEngine();
+  if (!engine?.getAuthContext()) {
+    throw new Error("Authenticated sync queue is not ready");
+  }
+  await engine.sync();
+  if (engine.getPendingCount() > 0) {
+    throw new Error("Guest activity migration is awaiting server acknowledgement");
+  }
+}
+
+export async function clearGuestActivitiesAfterMigration(babyIds: string[]): Promise<void> {
+  await Promise.all(babyIds.flatMap(babyId =>
+    MIGRATED_GUEST_ACTIVITY_PREFIXES.map(prefix =>
+      AsyncStorage.removeItem(`${prefix}${babyId}`)
+    )
+  ));
 }
 
 export async function syncGuestActivitiesToDatabase(
@@ -1901,6 +1930,8 @@ export async function syncGuestActivitiesToDatabase(
     await syncPumpingForBaby(oldBabyId, newBabyId, userId);
     await syncGrowthForBaby(oldBabyId, newBabyId, userId);
     await syncTummyTimeForBaby(oldBabyId, newBabyId, userId);
+    await syncHealthForBaby(oldBabyId, newBabyId, userId);
+    await syncMilestonesForBaby(oldBabyId, newBabyId, userId);
   }
 }
 
@@ -1911,7 +1942,7 @@ async function syncFeedingsForBaby(oldBabyId: string, newBabyId: string, userId:
   const migratedFeedings: StoredFeedingEntry[] = [];
 
   for (const feeding of feedings) {
-    const newId = await ensureUUID(feeding.id, 'feedings');
+    const newId = await ensureUUID(feeding.id, 'feedings', `${userId}:${oldBabyId}`);
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -1948,8 +1979,6 @@ async function syncFeedingsForBaby(oldBabyId: string, newBabyId: string, userId:
     getUserScopedKey(`${KEYS.feedings}${newBabyId}`),
     JSON.stringify(migratedFeedings)
   );
-
-  await clearGuestActivities(KEYS.feedings, oldBabyId);
 }
 
 async function syncDiapersForBaby(oldBabyId: string, newBabyId: string, userId: string): Promise<void> {
@@ -1959,7 +1988,7 @@ async function syncDiapersForBaby(oldBabyId: string, newBabyId: string, userId: 
   const migratedDiapers: StoredDiaperEntry[] = [];
 
   for (const diaper of diapers) {
-    const newId = await ensureUUID(diaper.id, 'diapers');
+    const newId = await ensureUUID(diaper.id, 'diapers', `${userId}:${oldBabyId}`);
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -1985,8 +2014,6 @@ async function syncDiapersForBaby(oldBabyId: string, newBabyId: string, userId: 
     getUserScopedKey(`${KEYS.diapers}${newBabyId}`),
     JSON.stringify(migratedDiapers)
   );
-
-  await clearGuestActivities(KEYS.diapers, oldBabyId);
 }
 
 async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: string): Promise<void> {
@@ -1996,7 +2023,7 @@ async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: st
   const migratedSleep: StoredSleepEntry[] = [];
 
   for (const sleep of sleepSessions) {
-    const newId = await ensureUUID(sleep.id, 'sleep_sessions');
+    const newId = await ensureUUID(sleep.id, 'sleep_sessions', `${userId}:${oldBabyId}`);
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -2026,8 +2053,6 @@ async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: st
     getUserScopedKey(`${KEYS.sleep}${newBabyId}`),
     JSON.stringify(migratedSleep)
   );
-
-  await clearGuestActivities(KEYS.sleep, oldBabyId);
 }
 
 async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: string): Promise<void> {
@@ -2037,7 +2062,7 @@ async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: 
   const migratedPumping: StoredPumpingEntry[] = [];
 
   for (const pumping of pumpingSessions) {
-    const newId = await ensureUUID(pumping.id, 'pumping_sessions');
+    const newId = await ensureUUID(pumping.id, 'pumping_sessions', `${userId}:${oldBabyId}`);
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -2065,8 +2090,6 @@ async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: 
     getUserScopedKey(`${KEYS.pumping}${newBabyId}`),
     JSON.stringify(migratedPumping)
   );
-
-  await clearGuestActivities(KEYS.pumping, oldBabyId);
 }
 
 async function syncGrowthForBaby(oldBabyId: string, newBabyId: string, userId: string): Promise<void> {
@@ -2076,7 +2099,7 @@ async function syncGrowthForBaby(oldBabyId: string, newBabyId: string, userId: s
   const migratedGrowth: StoredGrowthEntry[] = [];
 
   for (const growth of measurements) {
-    const newId = await ensureUUID(growth.id, 'growth_measurements');
+    const newId = await ensureUUID(growth.id, 'growth_measurements', `${userId}:${oldBabyId}`);
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -2103,8 +2126,6 @@ async function syncGrowthForBaby(oldBabyId: string, newBabyId: string, userId: s
     getUserScopedKey(`${KEYS.growth}${newBabyId}`),
     JSON.stringify(migratedGrowth)
   );
-
-  await clearGuestActivities(KEYS.growth, oldBabyId);
 }
 
 async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId: string): Promise<void> {
@@ -2114,7 +2135,7 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
   const migratedTummyTime: StoredTummyTimeEntry[] = [];
 
   for (const tummyTime of sessions) {
-    const newId = await ensureUUID(tummyTime.id, 'tummy_time_sessions');
+    const newId = await ensureUUID(tummyTime.id, 'tummy_time_sessions', `${userId}:${oldBabyId}`);
     const dbRecord = {
       id: newId,
       baby_id: newBabyId,
@@ -2140,8 +2161,82 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
     getUserScopedKey(`${KEYS.tummyTime}${newBabyId}`),
     JSON.stringify(migratedTummyTime)
   );
+}
 
-  await clearGuestActivities(KEYS.tummyTime, oldBabyId);
+async function syncHealthForBaby(oldBabyId: string, newBabyId: string, userId: string): Promise<void> {
+  const entries = await getGuestActivities<StoredHealthEntry>(KEYS.health, oldBabyId);
+  if (entries.length === 0) return;
+
+  const migratedEntries: StoredHealthEntry[] = [];
+  for (const entry of entries) {
+    const newId = await ensureUUID(entry.id, "health_entries", `${userId}:${oldBabyId}`);
+    await queueSyncOperation({
+      type: "CREATE",
+      table: "health_entries",
+      entityId: newId,
+      data: {
+        id: newId,
+        baby_id: newBabyId,
+        type: entry.type,
+        logged_at: entry.loggedAt,
+        notes: entry.notes,
+        medication_name: entry.medicationName,
+        dosage_amount: entry.dosageAmount,
+        dosage_unit: entry.dosageUnit,
+        dose_number: entry.doseNumber,
+        temperature_celsius: entry.temperatureCelsius,
+        measurement_method: entry.measurementMethod,
+        vaccine_name: entry.vaccineName,
+        symptoms: entry.symptoms,
+        logged_by: userId,
+        created_at: entry.createdAt,
+        updated_at: entry.updatedAt,
+      },
+    }, "required");
+    migratedEntries.push({ ...entry, id: newId, babyId: newBabyId, loggedBy: userId });
+  }
+
+  await AsyncStorage.setItem(
+    getUserScopedKey(`${KEYS.health}${newBabyId}`),
+    JSON.stringify(migratedEntries)
+  );
+}
+
+async function syncMilestonesForBaby(oldBabyId: string, newBabyId: string, userId: string): Promise<void> {
+  const responses = await getGuestActivities<StoredMilestoneResponse>(KEYS.milestones, oldBabyId);
+  if (responses.length === 0) return;
+
+  const migratedResponses: StoredMilestoneResponse[] = [];
+  for (const response of responses) {
+    const newId = await ensureUUID(response.id, "milestone_responses", `${userId}:${oldBabyId}`);
+    await queueSyncOperation({
+      type: "CREATE",
+      table: "milestone_responses",
+      entityId: newId,
+      data: {
+        id: newId,
+        baby_id: newBabyId,
+        milestone_id: response.milestoneId,
+        state: response.state,
+        deleted: response.deleted,
+        responded_at: response.respondedAt,
+        responded_by: userId,
+        created_at: response.createdAt,
+        updated_at: response.updatedAt,
+      },
+    }, "required");
+    migratedResponses.push({
+      ...response,
+      id: newId,
+      babyId: newBabyId,
+      respondedBy: userId,
+    });
+  }
+
+  await AsyncStorage.setItem(
+    getUserScopedKey(`${KEYS.milestones}${newBabyId}`),
+    JSON.stringify(migratedResponses)
+  );
 }
 
 // ============ HEALTH ============

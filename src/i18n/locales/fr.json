@@ -1116,7 +1116,8 @@
     "popupClosed": "La connexion a été annulée. Veuillez réessayer si vous souhaitez continuer.",
     "googleSignInError": "Impossible de se connecter avec Google. Veuillez réessayer.",
     "appleSignInError": "Impossible de se connecter avec Apple. Veuillez réessayer.",
-    "magicLinkError": "Impossible d'envoyer le lien magique. Veuillez réessayer."
+    "magicLinkError": "Impossible d'envoyer le lien magique. Veuillez réessayer.",
+    "profileNotReady": "Votre compte est encore en cours de préparation. Réessayez."
   },
   "notificationMessages": {
     "feedingTimerTitle": "Chronomètre d'alimentation",
@@ -2066,6 +2067,36 @@
       "message": "Votre première activité est disponible dans la chronologie.",
       "viewTimeline": "Voir ou modifier dans la chronologie",
       "continueHome": "Aller à l'accueil"
+    },
+    "account": {
+      "title": "Comment souhaitez-vous commencer ?",
+      "description": "Connectez-vous ou créez un compte pour inviter un proche et tout synchroniser. Sans compte, les données restent sur cet appareil.",
+      "signIn": "Se connecter",
+      "create": "Créer un compte",
+      "continueOnDevice": "Continuer sur cet appareil"
+    },
+    "auth": {
+      "createTitle": "Créez votre compte",
+      "createDescription": "Utilisez Apple, Google ou votre e-mail pour enregistrer les données du bébé et inviter un proche."
+    },
+    "invitation": {
+      "title": "Suivez ensemble",
+      "description": "Invitez un proche maintenant, ou passez cette étape et continuez la configuration.",
+      "email": "E-mail du proche",
+      "emailPlaceholder": "proche@example.com",
+      "create": "Créer une invitation",
+      "ready": "Invitation prête",
+      "share": "Partager le code",
+      "continue": "Continuer",
+      "notNow": "Pas maintenant",
+      "skipRemaining": "Ignorer le reste de la configuration"
+    },
+    "migration": {
+      "title": "Choisissez les données à conserver",
+      "message": "Ce compte contient déjà des données différentes. Conservez les données du compte ou utilisez un autre compte pour préserver celles de cet appareil.",
+      "useAnotherAccount": "Utiliser un autre compte",
+      "keepAccountData": "Conserver les données du compte",
+      "confirmDeletion": "Le bébé et les activités enregistrés sur cet appareil seront supprimés. Cette action est irréversible."
     }
   }
 }

@@ -134,48 +134,17 @@ function isValidUUID(id: string): boolean {
   return uuidRegex.test(id);
 }
 
-async function remapActivityBabyIds(oldId: string, newId: string): Promise<void> {
-  const activityKeys = [
-    "@feedings:",
-    "@diapers:",
-    "@sleeps:",
-    "@pumpings:",
-    "@growth:",
-    "@tummyTimes:",
-  ];
-
-  for (const keyPrefix of activityKeys) {
-    const key = `${keyPrefix}${oldId}`;
-    const data = await AsyncStorage.getItem(key);
-    if (data) {
-      const activities = JSON.parse(data) as Array<{ babyId: string }>;
-      const updated = activities.map((a) => ({ ...a, babyId: newId }));
-      await AsyncStorage.setItem(`${keyPrefix}${newId}`, JSON.stringify(updated));
-      await AsyncStorage.removeItem(key);
-    }
-  }
-
-  const selectedBabyId = await AsyncStorage.getItem("@selected_baby_id");
-  if (selectedBabyId === oldId) {
-    await AsyncStorage.setItem("@selected_baby_id", newId);
-  }
-}
-
 export async function syncLocalBabiesToDatabase(
   householdId: string,
-  babies?: StoredBabyProfile[]
+  babies?: StoredBabyProfile[],
+  targetIds: Map<string, string> = new Map()
 ): Promise<{ idMap: Map<string, string> }> {
   const babiesToSync = babies ?? await getLocalBabies();
   const idMap = new Map<string, string>();
 
   for (const baby of babiesToSync) {
-    let babyId = baby.id;
-
-    if (!isValidUUID(baby.id)) {
-      babyId = generateUUID();
-      await remapActivityBabyIds(baby.id, babyId);
-      idMap.set(baby.id, babyId);
-    }
+    const babyId = targetIds.get(baby.id) ?? (isValidUUID(baby.id) ? baby.id : generateUUID());
+    idMap.set(baby.id, babyId);
 
     const { error } = await mergeRecordWrite("babies", babyId, {
       id: babyId,
@@ -189,7 +158,8 @@ export async function syncLocalBabiesToDatabase(
     });
 
     if (error) {
-      console.error("[BabySyncService] Failed to sync baby:", babyId, error.message);
+      console.error("[BabySyncService] Failed to sync guest baby");
+      throw new Error("Failed to sync guest baby");
     }
   }
 

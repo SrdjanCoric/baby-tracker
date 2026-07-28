@@ -1,20 +1,19 @@
 # Guest Data Migration & Notification Preference Sync
 
-## Problem 1: Guest data migrated on every sign-in (not just first)
+## Problem 1: Guest data migrated on every sign-in
 
-**Symptom:** When a previously-authenticated user signed out, created random guest data (babies, feedings, etc.), then signed back in after an app restart, the guest data was pushed into their household — duplicating or polluting real data.
+**Symptom:** When a previously authenticated user signed out, created guest data, then signed back in after an app restart, the guest data could be pushed into the account's household and duplicate existing data.
 
-**Root cause:** The guest-to-database migration in `baby-context.tsx` only used a `hasMigratedRef` to prevent double-migration within a single session. After an app restart, the ref reset and migration ran again for returning users.
+**Root cause:** The guest-to-account migration in `baby-context.tsx` used an in-memory `hasMigratedRef`. The ref prevented repeated work in one session but reset when the app restarted. A later account-age check reduced the window but could still guess incorrectly and could not recover interrupted writes.
 
-**Fix:** Added a `createdAt` timestamp check. Only migrate if the user account was created within the last 2 minutes (i.e., brand new sign-up). Returning users skip migration entirely. `hasMigratedRef` is kept as a same-session guard.
+**Fix:** `guest-account-migration.ts` now stores a migration record in `@guest_account_migration_v1` before it writes authenticated data. The record contains the guest snapshot, selected baby, target account, target household, and stable baby ID map.
 
-```typescript
-const isNewUser = user.createdAt &&
-  (Date.now() - new Date(user.createdAt).getTime()) < 2 * 60 * 1000;
-if (isNewUser) {
-  // ... migrate guest data ...
-}
-```
+An account with one baby that matches normalized name, birth date, and gender reuses that account baby. A new account receives stable target IDs. Different or ambiguous account data pauses migration until the caregiver chooses one of these outcomes:
+
+- Use another account, which signs out and preserves all guest data.
+- Keep the account data, which requires confirmation before deleting the guest snapshot.
+
+Migration retries the remaining baby writes, queues activity upserts with stable IDs, persists the selected authenticated baby, and clears guest storage only after those operations succeed. The saved record makes callback replay, app restart, and Realtime acknowledgement safe to retry.
 
 ---
 
@@ -99,4 +98,4 @@ export default defineConfig({
 
 3. **Cross-screen feature sync requires explicit wiring.** A notification setting toggled on a settings screen must sync to the database immediately — not rely on a hook that only runs on the activity screen.
 
-4. **Time-based guards for migration need careful thresholds.** 2 minutes is tight but works for first-sign-up detection. Longer thresholds (1 hour) risk re-migrating stale guest data for users who sign out and back in quickly.
+4. **Account age is not a migration boundary.** Persist migration intent and stable ID mappings, retain the guest snapshot until server acknowledgement, and ask the caregiver when account data does not match.

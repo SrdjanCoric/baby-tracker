@@ -3,7 +3,7 @@
  * Warm, welcoming design matching the app's aesthetic
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Text,
@@ -17,13 +17,15 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth, useTheme } from "@/contexts";
 import { DisplayNamePrompt } from "@/components/DisplayNamePrompt";
 import { te } from "@/utils/translate-errors";
 import { validateEmail } from "@/validators";
 import { SURFACE, TEXT, ACTION, BORDER, SEMANTIC } from "@/constants/colors";
+import { resumeNewOwnerOnboardingAfterAuth } from "@/services/new-owner-auth-resume";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const BRAND_COLORS = {
   google: "#4285F4",
@@ -34,8 +36,15 @@ const BRAND_COLORS = {
 export default function SignInScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingIntent: rawOnboardingIntent, resumeOnboarding } = useLocalSearchParams<{
+    onboardingIntent?: string;
+    resumeOnboarding?: string;
+  }>();
+  const onboardingIntent = rawOnboardingIntent === "sign-in" || rawOnboardingIntent === "create-account"
+    ? rawOnboardingIntent
+    : null;
   const { isDark } = useTheme();
-  const { signIn, signUp, signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, refreshUserProfile } = useAuth();
+  const { user, isAuthenticated, signIn, signUp, signInWithMagicLink, signInWithGoogle, signInWithApple, isAppleSignInAvailable, refreshUserProfile } = useAuth();
 
   const [email, setEmail] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -45,34 +54,72 @@ export default function SignInScreen() {
   const [password, setPassword] = useState("");
   const [isDevLoading, setIsDevLoading] = useState(false);
 
-  // Display name prompt state
   const [showDisplayNamePrompt, setShowDisplayNamePrompt] = useState(false);
+  const [postDisplayNameRoute, setPostDisplayNameRoute] = useState<"baby-setup" | null>(null);
+  const [resumeAttempt, setResumeAttempt] = useState(0);
+  const hasResumedOnboardingRef = useRef(false);
+  const hasOnboardingIntent = Boolean(onboardingIntent || resumeOnboarding === "true");
+  const isAccountCreationIntent = onboardingIntent === "create-account";
 
-  // Helper to handle post-auth flow
   const handlePostAuth = useCallback(async () => {
     const profile = await refreshUserProfile();
-    if (!profile?.displayName) {
+    if (hasOnboardingIntent) {
+      try {
+        const result = await resumeNewOwnerOnboardingAfterAuth(profile.householdId);
+        if (result === "existing-account") {
+          router.replace("/(tabs)");
+          return;
+        }
+        if (result === "baby-setup") {
+          if (!profile.displayName) {
+            setPostDisplayNameRoute("baby-setup");
+            setShowDisplayNamePrompt(true);
+          } else {
+            router.replace("/onboarding/owner/baby");
+          }
+          return;
+        }
+        if (result === "profile-pending") throw new Error("Profile is not ready");
+      } catch {
+        hasResumedOnboardingRef.current = false;
+        Alert.alert(t("common.error"), t("auth.profileNotReady"), [
+          { text: t("common.retry"), onPress: () => setResumeAttempt(value => value + 1) },
+        ]);
+      }
+      return;
+    }
+    if (!profile.displayName) {
       setShowDisplayNamePrompt(true);
     } else {
       router.back();
     }
-  }, [router, refreshUserProfile]);
+  }, [hasOnboardingIntent, refreshUserProfile, router, t]);
 
-  // Handle display name prompt completion
+  useEffect(() => {
+    if (!isAuthenticated || !hasOnboardingIntent || hasResumedOnboardingRef.current) return;
+    hasResumedOnboardingRef.current = true;
+    void handlePostAuth();
+  }, [handlePostAuth, hasOnboardingIntent, isAuthenticated, resumeAttempt, user?.householdId]);
+
   const handleDisplayNameComplete = useCallback(() => {
     setShowDisplayNamePrompt(false);
+    if (postDisplayNameRoute === "baby-setup") {
+      setPostDisplayNameRoute(null);
+      router.replace("/onboarding/owner/baby");
+      return;
+    }
     router.back();
-  }, [router]);
+  }, [postDisplayNameRoute, router]);
 
   const handleGoogleSignIn = useCallback(async () => {
     setIsGoogleLoading(true);
     try {
-      const { error } = await signInWithGoogle();
+      const { error, cancelled } = await signInWithGoogle();
+      if (cancelled) return;
       if (error) {
         Alert.alert(t("common.error"), t("auth.googleSignInError"));
       } else {
-        // Show display name step (will check if needed)
-        handlePostAuth();
+        await handlePostAuth();
       }
     } catch {
       Alert.alert(t("common.error"), t("errors.generic"));
@@ -84,12 +131,12 @@ export default function SignInScreen() {
   const handleAppleSignIn = useCallback(async () => {
     setIsAppleLoading(true);
     try {
-      const { error } = await signInWithApple();
+      const { error, cancelled } = await signInWithApple();
+      if (cancelled) return;
       if (error) {
         Alert.alert(t("common.error"), t("auth.appleSignInError"));
       } else {
-        // Show display name step (will check if needed)
-        handlePostAuth();
+        await handlePostAuth();
       }
     } catch {
       Alert.alert(t("common.error"), t("errors.generic"));
@@ -109,7 +156,10 @@ export default function SignInScreen() {
     setIsMagicLinkLoading(true);
 
     try {
-      const { error: magicLinkError } = await signInWithMagicLink(validation.normalizedEmail!);
+      const { error: magicLinkError } = await signInWithMagicLink(
+        validation.normalizedEmail!,
+        { createAccount: onboardingIntent !== "sign-in" }
+      );
 
       if (magicLinkError) {
         Alert.alert(t("common.error"), t("auth.magicLinkError"));
@@ -125,7 +175,7 @@ export default function SignInScreen() {
     } finally {
       setIsMagicLinkLoading(false);
     }
-  }, [email, signInWithMagicLink, t]);
+  }, [email, onboardingIntent, signInWithMagicLink, t]);
 
   const handleDevSignIn = useCallback(async () => {
     setIsDevLoading(true);
@@ -159,9 +209,12 @@ export default function SignInScreen() {
     }
   }, [email, password, signUp, handlePostAuth]);
 
-  const handleClose = useCallback(() => {
+  const handleClose = useCallback(async () => {
+    if (hasOnboardingIntent && !isAuthenticated) {
+      await NewOwnerOnboardingStorageService.cancelAuthentication();
+    }
     router.back();
-  }, [router]);
+  }, [hasOnboardingIntent, isAuthenticated, router]);
 
   return (
     <SafeAreaView
@@ -211,7 +264,7 @@ export default function SignInScreen() {
                   fontFamily: "Nunito-Bold",
                 }}
               >
-                {t("auth.signIn")}
+                {t(isAccountCreationIntent ? "newOwnerOnboarding.auth.createTitle" : "auth.signIn")}
               </Text>
               <Text
                 className="text-base leading-6"
@@ -220,7 +273,9 @@ export default function SignInScreen() {
                   fontFamily: "Nunito-Regular",
                 }}
               >
-                {t("auth.signInDescription")}
+                {t(isAccountCreationIntent
+                  ? "newOwnerOnboarding.auth.createDescription"
+                  : "auth.signInDescription")}
               </Text>
             </View>
 
@@ -477,24 +532,25 @@ export default function SignInScreen() {
               </View>
             )}
 
-            {/* Guest option at bottom */}
-            <View className="mt-auto pt-6">
-              <Pressable
-                onPress={() => router.replace("/(tabs)")}
-                className="py-3 items-center active:opacity-70"
-                testID="continue-as-guest-button"
-              >
-                <Text
-                  className="text-base"
-                  style={{
-                    color: isDark ? TEXT.dark.secondary : TEXT.light.secondary,
-                    fontFamily: "Nunito-Medium",
-                  }}
+            {!hasOnboardingIntent && (
+              <View className="mt-auto pt-6">
+                <Pressable
+                  onPress={() => router.replace("/(tabs)")}
+                  className="py-3 items-center active:opacity-70"
+                  testID="continue-as-guest-button"
                 >
-                  {t("auth.continueAsGuest")}
-                </Text>
-              </Pressable>
-            </View>
+                  <Text
+                    className="text-base"
+                    style={{
+                      color: isDark ? TEXT.dark.secondary : TEXT.light.secondary,
+                      fontFamily: "Nunito-Medium",
+                    }}
+                  >
+                    {t("auth.continueAsGuest")}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

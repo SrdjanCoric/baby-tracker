@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
 import * as Crypto from "expo-crypto";
 import { BabyStorageService, StoredBabyProfile, CreateBabyInput, UpdateBabyInput } from "@/services/baby-storage";
 import {
@@ -7,9 +7,12 @@ import {
   createBabyInDatabase,
   updateBabyInDatabase,
   deleteBabyFromDatabase,
-  syncLocalBabiesToDatabase,
 } from "@/services/baby-sync-service";
-import { syncGuestActivitiesToDatabase } from "@/services/activity-sync-service";
+import {
+  discardGuestAccountMigration,
+  runGuestAccountMigration,
+} from "@/services/guest-account-migration";
+import i18n from "@/i18n";
 import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
@@ -130,23 +133,47 @@ interface BabyContextValue extends BabyState {
 
 const BabyContext = createContext<BabyContextValue | null>(null);
 
-const GUEST_BABIES_KEY = "@babies";
-
-async function getGuestBabies(): Promise<StoredBabyProfile[]> {
-  const data = await AsyncStorage.getItem(GUEST_BABIES_KEY);
-  if (!data) return [];
-  return JSON.parse(data) as StoredBabyProfile[];
-}
-
-async function clearGuestBabies(): Promise<void> {
-  await AsyncStorage.removeItem(GUEST_BABIES_KEY);
-  await AsyncStorage.removeItem("@selected_baby_id");
+export function presentGuestMigrationConflict({
+  useAnotherAccount,
+  discardGuestData,
+}: {
+  useAnotherAccount: () => void;
+  discardGuestData: () => void;
+}): void {
+  Alert.alert(
+    i18n.t("newOwnerOnboarding.migration.title"),
+    i18n.t("newOwnerOnboarding.migration.message"),
+    [
+      {
+        text: i18n.t("newOwnerOnboarding.migration.useAnotherAccount"),
+        onPress: useAnotherAccount,
+      },
+      {
+        text: i18n.t("newOwnerOnboarding.migration.keepAccountData"),
+        style: "destructive",
+        onPress: () => {
+          Alert.alert(
+            i18n.t("newOwnerOnboarding.migration.title"),
+            i18n.t("newOwnerOnboarding.migration.confirmDeletion"),
+            [
+              { text: i18n.t("common.cancel"), style: "cancel" },
+              {
+                text: i18n.t("newOwnerOnboarding.migration.keepAccountData"),
+                style: "destructive",
+                onPress: discardGuestData,
+              },
+            ]
+          );
+        },
+      },
+    ]
+  );
 }
 
 export function BabyProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(babyReducer, initialBabyState);
   const { subscribeToRemoteChanges } = useSync();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const authScope = user ? `${user.id}:${user.householdId ?? "no-household"}` : "guest";
   const authScopeRef = useRef(authScope);
   const authGenerationRef = useRef(0);
@@ -275,40 +302,43 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       let persistFetchedSnapshot = false;
 
       if (user?.householdId) {
-        if (!hasMigratedRef.current) {
-          hasMigratedRef.current = true;
-          const isNewUser = user.createdAt &&
-            (Date.now() - new Date(user.createdAt).getTime()) < 60 * 60 * 1000;
-          if (isNewUser) {
-            const guestBabies = await getGuestBabies();
-            if (guestBabies.length > 0) {
-              try {
-                const { idMap } = await syncLocalBabiesToDatabase(user.householdId, guestBabies);
-
-                const babyIdMap = new Map<string, string>();
-                for (const baby of guestBabies) {
-                  const newId = idMap.get(baby.id) || baby.id;
-                  babyIdMap.set(baby.id, newId);
-                }
-
-                await syncGuestActivitiesToDatabase(user.id, babyIdMap);
-                await clearGuestBabies();
-                if (isStaleLoad()) return;
-              } catch (error) {
-                console.error("[BabyContext] Failed to migrate guest data:", error);
-              }
-            }
-          }
-        }
-
+        let fetchedAccountBabies = false;
         try {
           babies = await fetchAndSyncHouseholdBabies(user.householdId);
           if (isStaleLoad()) return;
+          fetchedAccountBabies = true;
           persistFetchedSnapshot = true;
-        } catch (error) {
-          console.error("[BabyContext] Failed to fetch from database, using local:", error);
+        } catch {
+          console.error("[BabyContext] Failed to fetch account babies");
           babies = await BabyStorageService.getAllBabies(storageScope);
           if (isStaleLoad()) return;
+        }
+
+        if (fetchedAccountBabies && !hasMigratedRef.current) {
+          try {
+            const migration = await runGuestAccountMigration({
+              userId: user.id,
+              householdId: user.householdId,
+              accountBabies: babies,
+            });
+            if (migration.status === "completed") {
+              babies = await fetchAndSyncHouseholdBabies(user.householdId);
+              if (isStaleLoad()) return;
+            }
+            if (migration.status === "conflict") {
+              presentGuestMigrationConflict({
+                useAnotherAccount: () => {
+                  void signOut({ preserveGuestData: true });
+                },
+                discardGuestData: () => {
+                  void discardGuestAccountMigration();
+                },
+              });
+            }
+            hasMigratedRef.current = true;
+          } catch {
+            console.error("[BabyContext] Guest migration remains pending");
+          }
         }
       } else {
         hasMigratedRef.current = false;
@@ -348,7 +378,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }
-  }, [authScope, storageScope, user?.householdId, user?.id, user?.createdAt]);
+  }, [authScope, signOut, storageScope, user?.householdId, user?.id]);
 
   useEffect(() => {
     loadBabies();

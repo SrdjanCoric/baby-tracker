@@ -94,19 +94,32 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
             activitySegments.includes(currentSegment);
           const expectedRoute = previewState.screen === "welcome"
             ? "/onboarding/owner"
-            : previewState.screen === "owner-baby"
-              ? "/onboarding/owner/baby"
-              : previewState.screen === "activity-saved"
-                ? "/onboarding/owner/saved"
-                : "/onboarding/owner/activity";
+            : previewState.screen === "account-choice"
+              ? "/onboarding/owner/account"
+              : previewState.screen === "auth-pending"
+                ? "/auth/sign-in?resumeOnboarding=true"
+                : previewState.screen === "owner-baby"
+                  ? "/onboarding/owner/baby"
+                  : previewState.screen === "invitation"
+                    ? "/onboarding/owner/invitation"
+                    : previewState.screen === "activity-saved"
+                      ? "/onboarding/owner/saved"
+                      : "/onboarding/owner/activity";
           const expectedLeaf = previewState.screen === "welcome"
             ? undefined
-            : previewState.screen === "owner-baby"
-              ? "baby"
-              : previewState.screen === "activity-saved"
-                ? "saved"
-                : "activity";
+            : previewState.screen === "account-choice"
+              ? "account"
+              : previewState.screen === "auth-pending"
+                ? null
+                : previewState.screen === "owner-baby"
+                  ? "baby"
+                  : previewState.screen === "invitation"
+                    ? "invitation"
+                    : previewState.screen === "activity-saved"
+                      ? "saved"
+                      : "activity";
           const onExpectedOwnerRoute =
+            expectedLeaf !== null &&
             inNewOwnerGroup &&
             (expectedLeaf === undefined
               ? routeSegments[2] === undefined
@@ -224,8 +237,6 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
-      console.log("[DeepLink] Received URL:", url);
-
       const widgetActivities = ["feeding", "sleep", "diaper", "pumping", "growth", "tummyTime"];
       for (const activity of widgetActivities) {
         if (!url.includes(`sofibaby://${activity}`)) continue;
@@ -243,20 +254,16 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
           const hashIndex = url.indexOf('#');
           const queryIndex = url.indexOf('?');
 
-          console.log("[DeepLink] Hash index:", hashIndex, "Query index:", queryIndex);
-
           let params = new URLSearchParams();
 
           if (hashIndex !== -1) {
             const hashParams = url.substring(hashIndex + 1);
-            console.log("[DeepLink] Hash params:", hashParams);
             params = new URLSearchParams(hashParams);
           }
 
           if (queryIndex !== -1) {
             const endIndex = hashIndex !== -1 ? hashIndex : url.length;
             const queryParams = new URLSearchParams(url.substring(queryIndex + 1, endIndex));
-            console.log("[DeepLink] Query params:", url.substring(queryIndex + 1, endIndex));
             queryParams.forEach((value, key) => {
               if (!params.has(key)) params.set(key, value);
             });
@@ -268,60 +275,36 @@ function DeepLinkHandler({ children }: { children: React.ReactNode }) {
           const type = params.get('type');
           const code = params.get('code');
 
-          console.log("[DeepLink] Params found:", {
-            hasAccessToken: !!accessToken,
-            hasRefreshToken: !!refreshToken,
-            hasTokenHash: !!tokenHash,
-            hasCode: !!code,
-            type,
-          });
-
           // PKCE flow: exchange code for session
           if (code) {
-            console.log("[DeepLink] Exchanging PKCE code for session...");
             const { error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) {
-              console.error("[DeepLink] exchangeCodeForSession error:", error);
-            } else {
-              console.log("[DeepLink] PKCE code exchanged successfully");
-            }
+            if (error) console.error("[DeepLink] Authentication failed");
             return;
           }
 
           // Implicit flow: set session directly
           if (accessToken && refreshToken) {
-            console.log("[DeepLink] Setting session with tokens...");
             const { error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
-            if (error) {
-              console.error("[DeepLink] setSession error:", error);
-            } else {
-              console.log("[DeepLink] Session set successfully");
-            }
+            if (error) console.error("[DeepLink] Authentication failed");
             return;
           }
 
           // OTP verification
           if (tokenHash && type) {
-            console.log("[DeepLink] Verifying OTP...");
             const { error } = await supabase.auth.verifyOtp({
               token_hash: tokenHash,
               type: type as 'email' | 'magiclink',
             });
-            if (error) {
-              console.error("[DeepLink] verifyOtp error:", error);
-            } else {
-              console.log("[DeepLink] OTP verified successfully");
-            }
+            if (error) console.error("[DeepLink] Authentication failed");
             return;
           }
 
-          console.log("[DeepLink] No auth params found, trying getSession...");
           await supabase.auth.getSession();
-        } catch (error) {
-          console.error("[DeepLink] Error:", error);
+        } catch {
+          console.error("[DeepLink] Authentication failed");
         }
       }
     };

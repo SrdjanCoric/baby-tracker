@@ -1149,7 +1149,8 @@
     "popupClosed": "Prijava je otkazana. Molimo pokušajte ponovo ako želite da nastavite.",
     "googleSignInError": "Nije moguće prijaviti se sa Google. Molimo pokušajte ponovo.",
     "appleSignInError": "Nije moguće prijaviti se sa Apple. Molimo pokušajte ponovo.",
-    "magicLinkError": "Nije moguće poslati magični link. Molimo pokušajte ponovo."
+    "magicLinkError": "Nije moguće poslati magični link. Molimo pokušajte ponovo.",
+    "profileNotReady": "Vaš nalog se još priprema. Pokušajte ponovo."
   },
   "notificationMessages": {
     "feedingTimerTitle": "Tajmer za hranjenje",
@@ -2157,6 +2158,36 @@
       "message": "Vaša prva aktivnost je spremna na vremenskoj liniji.",
       "viewTimeline": "Prikaži ili izmeni na vremenskoj liniji",
       "continueHome": "Idi na početni ekran"
+    },
+    "account": {
+      "title": "Kako želite da počnete?",
+      "description": "Prijavite se ili napravite nalog da pozovete partnera ili negovatelja i sinhronizujete podatke. Bez naloga, podaci ostaju na ovom uređaju.",
+      "signIn": "Prijavi se",
+      "create": "Napravi nalog",
+      "continueOnDevice": "Nastavi na ovom uređaju"
+    },
+    "auth": {
+      "createTitle": "Napravite nalog",
+      "createDescription": "Koristite Apple, Google ili email da sačuvate podatke o bebi i pozovete negovatelja."
+    },
+    "invitation": {
+      "title": "Pratite zajedno",
+      "description": "Pozovite partnera ili negovatelja sada ili preskočite i nastavite podešavanje.",
+      "email": "Email negovatelja",
+      "emailPlaceholder": "negovatelj@example.com",
+      "create": "Napravi pozivnicu",
+      "ready": "Pozivnica je spremna",
+      "share": "Podeli kod",
+      "continue": "Nastavi",
+      "notNow": "Ne sada",
+      "skipRemaining": "Preskoči ostatak podešavanja"
+    },
+    "migration": {
+      "title": "Izaberite koje podatke želite da zadržite",
+      "message": "Ovaj nalog već ima drugačije podatke o bebi. Zadržite podatke naloga ili koristite drugi nalog da sačuvate podatke na ovom uređaju.",
+      "useAnotherAccount": "Koristi drugi nalog",
+      "keepAccountData": "Zadrži podatke naloga",
+      "confirmDeletion": "Beba i aktivnosti sačuvane na ovom uređaju biće obrisane. Ova radnja se ne može poništiti."
     }
   }
 }

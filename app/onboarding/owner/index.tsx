@@ -38,7 +38,13 @@ export default function NewOwnerWelcomeScreen() {
 
   const handleStart = useCallback(async () => {
     await NewOwnerOnboardingStorageService.beginOwnerPath(language);
-    router.push("/onboarding/owner/baby");
+    router.push("/onboarding/owner/account");
+  }, [language, router]);
+
+  const handleSignIn = useCallback(async () => {
+    await NewOwnerOnboardingStorageService.beginOwnerPath(language);
+    await NewOwnerOnboardingStorageService.beginAuthentication("sign-in");
+    router.push("/auth/sign-in?onboardingIntent=sign-in");
   }, [language, router]);
 
   return (
@@ -128,7 +134,7 @@ export default function NewOwnerWelcomeScreen() {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => router.push("/auth/sign-in")}
+            onPress={handleSignIn}
             className="py-3 items-center"
             accessibilityRole="button"
             testID="sign-in-button"

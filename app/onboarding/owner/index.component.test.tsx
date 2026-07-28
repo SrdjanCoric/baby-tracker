@@ -5,6 +5,7 @@ import NewOwnerWelcomeScreen from "./index";
 const mockPush = jest.fn();
 const mockSetLanguage = jest.fn();
 const mockBeginOwnerPath = jest.fn();
+const mockBeginAuthentication = jest.fn();
 const mockUpdateLanguage = jest.fn();
 
 jest.mock("expo-router", () => ({
@@ -22,6 +23,7 @@ jest.mock("@/contexts", () => ({
 jest.mock("@/services/new-owner-onboarding-storage", () => ({
   NewOwnerOnboardingStorageService: {
     beginOwnerPath: (...args: unknown[]) => mockBeginOwnerPath(...args),
+    beginAuthentication: (...args: unknown[]) => mockBeginAuthentication(...args),
     updateLanguage: (...args: unknown[]) => mockUpdateLanguage(...args),
   },
 }));
@@ -46,10 +48,11 @@ describe("NewOwnerWelcomeScreen", () => {
     jest.clearAllMocks();
     mockSetLanguage.mockResolvedValue(undefined);
     mockBeginOwnerPath.mockResolvedValue(undefined);
+    mockBeginAuthentication.mockResolvedValue(undefined);
     mockUpdateLanguage.mockResolvedValue(undefined);
   });
 
-  it("shows the product promise and starts the guest owner path", async () => {
+  it("shows the product promise and starts with an account choice", async () => {
     render(<NewOwnerWelcomeScreen />);
 
     expect(screen.getByText("Care for your baby with confidence")).toBeTruthy();
@@ -61,7 +64,19 @@ describe("NewOwnerWelcomeScreen", () => {
 
     await waitFor(() => {
       expect(mockBeginOwnerPath).toHaveBeenCalledWith("en");
-      expect(mockPush).toHaveBeenCalledWith("/onboarding/owner/baby");
+      expect(mockPush).toHaveBeenCalledWith("/onboarding/owner/account");
+    });
+  });
+
+  it("signs into a previous account with durable onboarding intent", async () => {
+    render(<NewOwnerWelcomeScreen />);
+
+    fireEvent.press(screen.getByTestId("sign-in-button"));
+
+    await waitFor(() => {
+      expect(mockBeginOwnerPath).toHaveBeenCalledWith("en");
+      expect(mockBeginAuthentication).toHaveBeenCalledWith("sign-in");
+      expect(mockPush).toHaveBeenCalledWith("/auth/sign-in?onboardingIntent=sign-in");
     });
   });
 

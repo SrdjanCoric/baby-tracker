@@ -1119,7 +1119,8 @@
     "popupClosed": "A conexão foi cancelada. Por favor, tente novamente se deseja continuar.",
     "googleSignInError": "Não foi possível conectar com Google. Por favor, tente novamente.",
     "appleSignInError": "Não foi possível conectar com Apple. Por favor, tente novamente.",
-    "magicLinkError": "Não foi possível enviar link mágico. Por favor, tente novamente."
+    "magicLinkError": "Não foi possível enviar link mágico. Por favor, tente novamente.",
+    "profileNotReady": "Sua conta ainda está sendo preparada. Tente novamente."
   },
   "notificationMessages": {
     "feedingTimerTitle": "Cronômetro de Alimentação",
@@ -2069,6 +2070,36 @@
       "message": "Sua primeira atividade já está na linha do tempo.",
       "viewTimeline": "Ver ou editar na linha do tempo",
       "continueHome": "Ir para o Início"
+    },
+    "account": {
+      "title": "Como você quer começar?",
+      "description": "Entre ou crie uma conta para convidar um parceiro ou cuidador e manter tudo sincronizado. Sem uma conta, os dados ficam neste dispositivo.",
+      "signIn": "Entrar",
+      "create": "Criar conta",
+      "continueOnDevice": "Continuar neste dispositivo"
+    },
+    "auth": {
+      "createTitle": "Crie sua conta",
+      "createDescription": "Use Apple, Google ou email para salvar os dados do bebê e convidar um cuidador."
+    },
+    "invitation": {
+      "title": "Acompanhem juntos",
+      "description": "Convide um parceiro ou cuidador agora ou pule e continue a configuração.",
+      "email": "Email do cuidador",
+      "emailPlaceholder": "cuidador@example.com",
+      "create": "Criar convite",
+      "ready": "Convite pronto",
+      "share": "Compartilhar código",
+      "continue": "Continuar",
+      "notNow": "Agora não",
+      "skipRemaining": "Pular o restante da configuração"
+    },
+    "migration": {
+      "title": "Escolha quais dados manter",
+      "message": "Esta conta já tem dados diferentes de um bebê. Mantenha os dados da conta ou use outra conta para preservar os dados deste dispositivo.",
+      "useAnotherAccount": "Usar outra conta",
+      "keepAccountData": "Manter dados da conta",
+      "confirmDeletion": "O bebê e as atividades salvos neste dispositivo serão excluídos. Essa ação não pode ser desfeita."
     }
   }
 }

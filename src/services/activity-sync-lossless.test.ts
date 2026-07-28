@@ -5,6 +5,7 @@ import {
   createPumpingInDatabase,
   createSleepInDatabase,
   createTummyTimeInDatabase,
+  clearGuestActivitiesAfterMigration,
   deleteFeedingFromDatabase,
   deleteHealthFromDatabase,
   deleteMilestoneResponseFromDatabase,
@@ -112,7 +113,9 @@ vi.mock("@react-native-community/netinfo", () => ({
 vi.mock("expo-crypto", () => ({
   CryptoDigestAlgorithm: { SHA256: "SHA-256" },
   digestStringAsync: async (_algorithm: string, value: string) => {
-    const fill = value.endsWith("guest-feeding-1") ? "a" : "b";
+    const fill = value.includes("user-2")
+      ? "c"
+      : value.endsWith("guest-feeding-1") ? "a" : "b";
     return fill.repeat(64);
   },
   randomUUID: () => "11111111-1111-4111-8111-111111111111",
@@ -1415,7 +1418,7 @@ describe("lossless activity sync", () => {
     retryRestart.destroy();
   });
 
-  it("moves guest activities only after their authenticated queue entries are durable", async () => {
+  it("retains guest activities after their authenticated queue entries are durable", async () => {
     syncEngine = makeSyncEngine();
     storage.set("@feedings:guest-baby", JSON.stringify([{
       ...localFeeding,
@@ -1434,9 +1437,64 @@ describe("lossless activity sync", () => {
       entityId: "22222222-2222-4222-8222-222222222222",
       data: expect.objectContaining({ baby_id: "server-baby" }),
     }));
-    expect(storage.has("@feedings:guest-baby")).toBe(false);
+    expect(storage.has("@feedings:guest-baby")).toBe(true);
     expect(JSON.parse(storage.get("@feedings:server-baby")!)).toHaveLength(1);
     expect(mergeRecordWriteMock).not.toHaveBeenCalled();
+  });
+
+  it("migrates guest health entries through the durable authenticated queue", async () => {
+    syncEngine = makeSyncEngine();
+    storage.set("@health:guest-baby", JSON.stringify([{
+      id: "44444444-4444-4444-8444-444444444444",
+      babyId: "guest-baby",
+      type: "temperature",
+      loggedAt: "2026-07-14T09:00:00.000Z",
+      temperatureCelsius: 38,
+      loggedBy: "guest",
+      createdAt: "2026-07-14T09:00:00.000Z",
+      updatedAt: "2026-07-14T09:00:00.000Z",
+    }]));
+
+    await syncGuestActivitiesToDatabase(
+      "user-1",
+      new Map([["guest-baby", "server-baby"]])
+    );
+
+    expect(syncEngine.enqueueOperation).toHaveBeenCalledWith(expect.objectContaining({
+      table: "health_entries",
+      entityId: "44444444-4444-4444-8444-444444444444",
+      data: expect.objectContaining({ baby_id: "server-baby", logged_by: "user-1" }),
+    }));
+    expect(storage.has("@health:guest-baby")).toBe(true);
+    expect(JSON.parse(storage.get("@health:server-baby")!)).toHaveLength(1);
+  });
+
+  it("migrates guest milestone responses through the durable authenticated queue", async () => {
+    syncEngine = makeSyncEngine();
+    storage.set("@milestones:guest-baby", JSON.stringify([{
+      id: "55555555-5555-4555-8555-555555555555",
+      babyId: "guest-baby",
+      milestoneId: "social-2m-smiles",
+      state: "yes",
+      deleted: false,
+      respondedAt: "2026-07-14T09:00:00.000Z",
+      respondedBy: "guest",
+      createdAt: "2026-07-14T09:00:00.000Z",
+      updatedAt: "2026-07-14T09:00:00.000Z",
+    }]));
+
+    await syncGuestActivitiesToDatabase(
+      "user-1",
+      new Map([["guest-baby", "server-baby"]])
+    );
+
+    expect(syncEngine.enqueueOperation).toHaveBeenCalledWith(expect.objectContaining({
+      table: "milestone_responses",
+      entityId: "55555555-5555-4555-8555-555555555555",
+      data: expect.objectContaining({ baby_id: "server-baby", responded_by: "user-1" }),
+    }));
+    expect(storage.has("@milestones:guest-baby")).toBe(true);
+    expect(JSON.parse(storage.get("@milestones:server-baby")!)).toHaveLength(1);
   });
 
   it("keeps migrated legacy guest sleeps distinguishable from versioned records", async () => {
@@ -1506,7 +1564,40 @@ describe("lossless activity sync", () => {
     expect(queuedEntityIds[2]).toBe(queuedEntityIds[0]);
     expect(queuedEntityIds[3]).toBe(queuedEntityIds[1]);
     expect(queuedEntityIds[0]).not.toBe(queuedEntityIds[1]);
-    expect(storage.has("@feedings:guest-baby")).toBe(false);
+    expect(storage.has("@feedings:guest-baby")).toBe(true);
     expect(JSON.parse(storage.get("@feedings:server-baby")!)).toHaveLength(2);
+  });
+
+  it("scopes deterministic legacy activity IDs to the migrating account", async () => {
+    syncEngine = makeSyncEngine();
+    storage.set("@feedings:guest-baby", JSON.stringify([
+      { ...localFeeding, id: "guest-feeding-1", babyId: "guest-baby" },
+    ]));
+
+    await syncGuestActivitiesToDatabase(
+      "user-1",
+      new Map([["guest-baby", "server-baby-1"]])
+    );
+    const firstId = syncEngine.enqueueOperation.mock.calls[0][0].entityId;
+    syncEngine.enqueueOperation.mockClear();
+    await syncGuestActivitiesToDatabase(
+      "user-2",
+      new Map([["guest-baby", "server-baby-2"]])
+    );
+    const secondId = syncEngine.enqueueOperation.mock.calls[0][0].entityId;
+
+    expect(secondId).not.toBe(firstId);
+  });
+
+  it("clears guest activity snapshots only after migration acknowledgement", async () => {
+    storage.set("@feedings:guest-baby", JSON.stringify([localFeeding]));
+    storage.set("@health:guest-baby", "[]");
+    storage.set("@feedings:account-baby", JSON.stringify([localFeeding]));
+
+    await clearGuestActivitiesAfterMigration(["guest-baby"]);
+
+    expect(storage.has("@feedings:guest-baby")).toBe(false);
+    expect(storage.has("@health:guest-baby")).toBe(false);
+    expect(storage.has("@feedings:account-baby")).toBe(true);
   });
 });

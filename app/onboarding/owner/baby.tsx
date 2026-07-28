@@ -14,7 +14,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components";
 import { OnboardingIllustration } from "@/components/onboarding";
-import { useBaby, useLanguage } from "@/contexts";
+import { useAuth, useBaby, useLanguage } from "@/contexts";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import type { BabyProfileDraft } from "@/types/new-owner-onboarding";
 import { validateNewBabyProfile } from "@/validators/baby";
@@ -29,6 +29,7 @@ export default function NewOwnerBabyScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { addBaby, selectBaby } = useBaby();
+  const { signOut } = useAuth();
   const { language, resolvedLanguage } = useLanguage();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -42,6 +43,7 @@ export default function NewOwnerBabyScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [accountMode, setAccountMode] = useState<"guest" | "authenticated">("guest");
   const submittingRef = useRef(false);
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function NewOwnerBabyScreen() {
         router.replace("/onboarding/owner");
         return;
       }
+      setAccountMode(state.accountMode);
       setName(state.babyDraft.name);
       setBirthDate(state.babyDraft.birthDate ? new Date(state.babyDraft.birthDate) : undefined);
       setGender(state.babyDraft.gender ?? undefined);
@@ -110,18 +113,21 @@ export default function NewOwnerBabyScreen() {
       const baby = await addBaby(validation.data);
       await selectBaby(baby.id);
       await NewOwnerOnboardingStorageService.markBabyCreated(baby.id);
-      router.push("/onboarding/owner/activity");
+      router.push(accountMode === "authenticated"
+        ? "/onboarding/owner/invitation"
+        : "/onboarding/owner/activity");
     } catch {
       setErrors({ submit: "newOwnerOnboarding.baby.createFailed" });
       setIsLoading(false);
       submittingRef.current = false;
     }
-  }, [addBaby, birthDate, gender, name, router, selectBaby]);
+  }, [accountMode, addBaby, birthDate, gender, name, router, selectBaby]);
 
   const handleStartOver = useCallback(async () => {
+    if (accountMode === "authenticated") await signOut();
     await NewOwnerOnboardingStorageService.startOver();
     router.replace("/onboarding/owner");
-  }, [router]);
+  }, [accountMode, router, signOut]);
 
   if (isLoading && !submittingRef.current) {
     return <SafeAreaView className="flex-1" style={{ backgroundColor }} testID="new-owner-baby-screen" />;
@@ -203,7 +209,7 @@ export default function NewOwnerBabyScreen() {
           )}
         </ScrollView>
 
-        <View className="px-6 pb-6 gap-3">
+        <View className="px-6 pb-10 gap-3">
           <Pressable
             onPress={handleContinue}
             disabled={isLoading}

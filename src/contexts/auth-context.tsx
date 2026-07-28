@@ -52,11 +52,22 @@ const APP_STORAGE_PREFIXES = [
   "@sync_queue",
 ];
 
-async function clearAppStorage(): Promise<void> {
+function isGuestStorageKey(key: string): boolean {
+  if (key === "@babies" || key === "@selected_baby_id") return true;
+  return APP_STORAGE_PREFIXES.some(prefix => {
+    if (!prefix.endsWith(":")) return false;
+    if (!key.startsWith(prefix)) return false;
+    const storageScope = key.slice(prefix.length);
+    return storageScope.length > 0 && !storageScope.includes(":");
+  });
+}
+
+async function clearAppStorage(preserveGuestData = false): Promise<void> {
   try {
     const allKeys = await AsyncStorage.getAllKeys();
     const appKeys = allKeys.filter((key) =>
-      APP_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix))
+      APP_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix)) &&
+      (!preserveGuestData || !isGuestStorageKey(key))
     );
     if (appKeys.length > 0) {
       await AsyncStorage.multiRemove(appKeys);
@@ -77,6 +88,11 @@ export interface AuthUser {
   createdAt: string | null;
 }
 
+interface SocialAuthResult {
+  error: Error | null;
+  cancelled: boolean;
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
   session: Session | null;
@@ -84,10 +100,13 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signInWithMagicLink: (email: string) => Promise<{ error: AuthError | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signInWithApple: () => Promise<{ error: Error | null }>;
-  signOut: () => Promise<{ error: AuthError | null }>;
+  signInWithMagicLink: (
+    email: string,
+    options?: { createAccount?: boolean }
+  ) => Promise<{ error: AuthError | null }>;
+  signInWithGoogle: () => Promise<SocialAuthResult>;
+  signInWithApple: () => Promise<SocialAuthResult>;
+  signOut: (options?: { preserveGuestData?: boolean }) => Promise<{ error: AuthError | null }>;
   updateDisplayName: (displayName: string) => Promise<{ error: Error | null }>;
   verifyPassword: (password: string) => Promise<{ verified: boolean; error: Error | null }>;
   refreshUserProfile: () => Promise<{ displayName: string | null; householdId: string | null; isOwner: boolean }>;
@@ -286,20 +305,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   }, []);
 
-  const signInWithMagicLink = useCallback(async (email: string) => {
+  const signInWithMagicLink = useCallback(async (
+    email: string,
+    options?: { createAccount?: boolean }
+  ) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: AUTH_CONFIG.OAUTH_REDIRECT_URI,
+        shouldCreateUser: options?.createAccount ?? true,
       },
     });
 
     return { error };
   }, []);
 
-  const signInWithGoogle = useCallback(async (): Promise<{ error: Error | null }> => {
+  const signInWithGoogle = useCallback(async (): Promise<SocialAuthResult> => {
     if (!GoogleSignin || !isErrorWithCode || !statusCodes) {
-      return { error: new Error("Google Sign-In not available (development build required)") };
+      return {
+        error: new Error("Google Sign-In not available (development build required)"),
+        cancelled: false,
+      };
     }
 
     try {
@@ -308,7 +334,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const idToken = userInfo.data?.idToken;
       if (!idToken) {
-        return { error: new Error("Google Sign-In: No ID token received") };
+        return { error: new Error("Google Sign-In: No ID token received"), cancelled: false };
       }
 
       const { error } = await supabase.auth.signInWithIdToken({
@@ -317,25 +343,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        return { error: new Error(`Google Sign-In failed: ${error.message}`) };
+        return { error: new Error(`Google Sign-In failed: ${error.message}`), cancelled: false };
       }
 
-      return { error: null };
+      return { error: null, cancelled: false };
     } catch (err) {
       if (isErrorWithCode(err)) {
         if (err.code === statusCodes.SIGN_IN_CANCELLED) {
-          return { error: null };
+          return { error: null, cancelled: true };
         } else if (err.code === statusCodes.IN_PROGRESS) {
-          return { error: null };
+          return { error: null, cancelled: true };
         } else if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-          return { error: new Error("Google Play Services not available") };
+          return { error: new Error("Google Play Services not available"), cancelled: false };
         }
       }
-      return { error: err instanceof Error ? err : new Error("Google sign-in failed") };
+      return {
+        error: err instanceof Error ? err : new Error("Google sign-in failed"),
+        cancelled: false,
+      };
     }
   }, []);
 
-  const signInWithApple = useCallback(async (): Promise<{ error: Error | null }> => {
+  const signInWithApple = useCallback(async (): Promise<SocialAuthResult> => {
     try {
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -345,7 +374,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!credential.identityToken) {
-        return { error: new Error("Apple Sign-In: No identity token received") };
+        return { error: new Error("Apple Sign-In: No identity token received"), cancelled: false };
       }
 
       const { error } = await supabase.auth.signInWithIdToken({
@@ -354,23 +383,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        return { error: new Error(`Apple Sign-In failed: ${error.message}`) };
+        return { error: new Error(`Apple Sign-In failed: ${error.message}`), cancelled: false };
       }
 
       // Don't auto-save Apple display name - always prompt user to set their own
-      return { error: null };
+      return { error: null, cancelled: false };
     } catch (err) {
       const errorCode = (err as { code?: string }).code;
       if (errorCode === "ERR_REQUEST_CANCELED") {
-        return { error: null };
+        return { error: null, cancelled: true };
       }
       const message = err instanceof Error ? err.message : "Apple sign-in failed";
-      return { error: new Error(`Apple Sign-In: ${message}`) };
+      return { error: new Error(`Apple Sign-In: ${message}`), cancelled: false };
     }
   }, []);
 
-  const signOut = useCallback(async () => {
-    await clearAppStorage();
+  const signOut = useCallback(async (options?: { preserveGuestData?: boolean }) => {
+    await clearAppStorage(options?.preserveGuestData ?? false);
     await clearSyncData();
     await clearWidgetData();
     setStorageUserId(null);

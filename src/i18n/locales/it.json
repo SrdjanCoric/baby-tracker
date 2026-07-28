@@ -1120,7 +1120,8 @@
     "popupClosed": "L'accesso è stato annullato. Riprova se desideri continuare.",
     "googleSignInError": "Impossibile accedere con Google. Riprova.",
     "appleSignInError": "Impossibile accedere con Apple. Riprova.",
-    "magicLinkError": "Impossibile inviare il link magico. Riprova."
+    "magicLinkError": "Impossibile inviare il link magico. Riprova.",
+    "profileNotReady": "Il tuo account è ancora in preparazione. Riprova."
   },
   "notificationMessages": {
     "feedingTimerTitle": "Timer poppata",
@@ -2070,6 +2071,36 @@
       "message": "La prima attività è disponibile nella cronologia.",
       "viewTimeline": "Visualizza o modifica nella cronologia",
       "continueHome": "Vai alla Home"
+    },
+    "account": {
+      "title": "Come vuoi iniziare?",
+      "description": "Accedi o crea un account per invitare un partner o caregiver e sincronizzare tutto. Senza account, i dati restano su questo dispositivo.",
+      "signIn": "Accedi",
+      "create": "Crea account",
+      "continueOnDevice": "Continua su questo dispositivo"
+    },
+    "auth": {
+      "createTitle": "Crea il tuo account",
+      "createDescription": "Usa Apple, Google o email per salvare i dati del bambino e invitare un caregiver."
+    },
+    "invitation": {
+      "title": "Registrate insieme",
+      "description": "Invita ora un partner o caregiver, oppure salta e continua la configurazione.",
+      "email": "Email del caregiver",
+      "emailPlaceholder": "caregiver@example.com",
+      "create": "Crea invito",
+      "ready": "Invito pronto",
+      "share": "Condividi codice",
+      "continue": "Continua",
+      "notNow": "Non ora",
+      "skipRemaining": "Salta il resto della configurazione"
+    },
+    "migration": {
+      "title": "Scegli quali dati conservare",
+      "message": "Questo account contiene già dati diversi. Conserva i dati dell’account oppure usa un altro account per mantenere i dati su questo dispositivo.",
+      "useAnotherAccount": "Usa un altro account",
+      "keepAccountData": "Conserva i dati dell’account",
+      "confirmDeletion": "Il bambino e le attività salvati su questo dispositivo verranno eliminati. Questa azione non può essere annullata."
     }
   }
 }

@@ -1,6 +1,7 @@
 jest.unmock("@/contexts/auth-context");
 
 import React, { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { render, screen, waitFor, act } from "@testing-library/react-native";
 import { Text, View } from "react-native";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
@@ -57,7 +58,7 @@ jest.mock("@/services/supabase", () => ({
       },
       signInWithPassword: () => mockSignInWithPassword(),
       signUp: () => mockSignUp(),
-      signInWithOtp: () => mockSignInWithOtp(),
+      signInWithOtp: (options: unknown) => mockSignInWithOtp(options),
       signInWithOAuth: jest.fn(),
       signInWithIdToken: jest.fn(),
       signOut: () => mockSignOut(),
@@ -421,6 +422,43 @@ describe("AuthContext", () => {
       expect(mockSignOut).toHaveBeenCalled();
     });
 
+    it("preserves unscoped guest data when switching away from a conflicting account", async () => {
+      let signOutFn: ((options?: { preserveGuestData?: boolean }) => Promise<{ error: Error | null }>) | undefined;
+      jest.spyOn(AsyncStorage, "getAllKeys").mockResolvedValue([
+        "@babies",
+        "@feedings:guest-baby",
+        "@babies:user-1:household-1",
+        "@feedings:account-baby:user-1",
+        "@sync_queue",
+      ]);
+      jest.spyOn(AsyncStorage, "multiRemove").mockResolvedValue(undefined);
+
+      function SignOutTestConsumer() {
+        const auth = useAuth();
+        useEffect(() => {
+          signOutFn = auth.signOut;
+        }, [auth.signOut]);
+        return <View />;
+      }
+
+      render(
+        <AuthProvider>
+          <SignOutTestConsumer />
+        </AuthProvider>
+      );
+      await waitFor(() => expect(signOutFn).toBeDefined());
+
+      await act(async () => {
+        await signOutFn?.({ preserveGuestData: true });
+      });
+
+      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith([
+        "@babies:user-1:household-1",
+        "@feedings:account-baby:user-1",
+        "@sync_queue",
+      ]);
+    });
+
     it("should clear storage user ID on signOut", async () => {
       let signOutFn: (() => Promise<{ error: Error | null }>) | undefined;
 
@@ -617,7 +655,7 @@ describe("AuthContext", () => {
       mockSignInWithOtp.mockResolvedValue({ error: null });
 
       let magicLinkFn:
-        | ((email: string) => Promise<{ error: Error | null }>)
+        | ((email: string, options?: { createAccount?: boolean }) => Promise<{ error: Error | null }>)
         | undefined;
 
       function MagicLinkTestConsumer() {
@@ -640,11 +678,14 @@ describe("AuthContext", () => {
 
       await act(async () => {
         if (magicLinkFn) {
-          await magicLinkFn("test@example.com");
+          await magicLinkFn("test@example.com", { createAccount: false });
         }
       });
 
-      expect(mockSignInWithOtp).toHaveBeenCalled();
+      expect(mockSignInWithOtp).toHaveBeenCalledWith(expect.objectContaining({
+        email: "test@example.com",
+        options: expect.objectContaining({ shouldCreateUser: false }),
+      }));
     });
   });
 
