@@ -158,7 +158,7 @@ Durable decisions that apply across all tasks:
 - [x] 0031 · Load historical activity ranges on demand in Timeline (after 0007, 0021) → tasks/done/0031-load-historical-activity-ranges-in-timeline.md
 - [x] 0032 · Load requested ranges before calculating statistics (after 0031) → tasks/done/0032-load-requested-statistics-ranges.md
 - [x] 0033 · Prevent duplicate bedtime predictions after evening night sleep → tasks/done/0033-prevent-duplicate-bedtime-predictions.md
-- [~] 0034 · Require complete profiles for new babies → tasks/0034-require-complete-new-baby-profiles.md
+- [>] 0034 · Require complete profiles for new babies → tasks/0034-require-complete-new-baby-profiles.md
 - [ ] 0035 · Share verified caregiver invitation links → tasks/0035-share-verified-caregiver-invitation-links.md
 - [ ] 0036 · Build the resumable new-owner onboarding path (after 0034) → tasks/0036-build-resumable-new-owner-onboarding.md
 - [ ] 0037 · Add optional account creation and caregiver invitation (after 0035, 0036) → tasks/0037-add-onboarding-caregiver-invitation.md
