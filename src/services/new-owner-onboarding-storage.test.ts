@@ -46,6 +46,69 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
+  it("asks for an account choice before starting guest baby setup", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginOwnerPath("de");
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "account-choice",
+      language: "de",
+      entryPath: "owner",
+    });
+
+    await NewOwnerOnboardingStorageService.continueOnDevice();
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "owner-baby",
+      accountMode: "guest",
+    });
+  });
+
+  it("resumes authenticated accounts without babies at baby setup", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "owner-baby",
+      accountMode: "authenticated",
+      babyDraft: { name: "", birthDate: null, gender: null },
+    });
+  });
+
+  it("completes onboarding when authentication restores an account with babies", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.beginAuthentication("sign-in");
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(true);
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "completed",
+      entryPath: "authenticated-existing",
+      firstActivity: { status: "existing-account" },
+    });
+    expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
+      hasCompleted: true,
+      skipped: false,
+    });
+  });
+
   it("persists the named owner baby state and partial profile", async () => {
     const storage = new Map<string, string>();
     vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
@@ -54,6 +117,7 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("de");
+    await NewOwnerOnboardingStorageService.continueOnDevice();
     await NewOwnerOnboardingStorageService.updateBabyDraft({
       name: "Mila",
       birthDate: "2026-06-12T00:00:00.000Z",
@@ -65,6 +129,7 @@ describe("NewOwnerOnboardingStorageService", () => {
       screen: "owner-baby",
       language: "de",
       entryPath: "owner",
+      accountMode: "guest",
       babyDraft: {
         name: "Mila",
         birthDate: "2026-06-12T00:00:00.000Z",
@@ -89,6 +154,7 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.continueOnDevice();
     const first = NewOwnerOnboardingStorageService.updateBabyDraft({
       name: "M",
       birthDate: null,
@@ -108,6 +174,45 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
+  it("offers an invitation after an authenticated baby is created", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+    await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "invitation",
+      babyId: "baby-1",
+      invitation: { status: "pending" },
+    });
+  });
+
+  it("continues from the optional invitation to first activity", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+    await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
+    await NewOwnerOnboardingStorageService.skipInvitation();
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "first-activity",
+      babyId: "baby-1",
+      firstActivity: { status: "pending" },
+    });
+  });
+
   it("resumes first-activity setup after a baby is created", async () => {
     const storage = new Map<string, string>();
     vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
@@ -116,6 +221,7 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("sr");
+    await NewOwnerOnboardingStorageService.continueOnDevice();
     await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
 
     await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toEqual({
@@ -136,6 +242,7 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.continueOnDevice();
     await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
     await NewOwnerOnboardingStorageService.markActivitySaved("diaper");
 
@@ -157,6 +264,7 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.continueOnDevice();
     await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
     await NewOwnerOnboardingStorageService.completeTimerStarted("sleep");
 
@@ -181,6 +289,27 @@ describe("NewOwnerOnboardingStorageService", () => {
 
     expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(1);
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@new_owner_onboarding_v2");
+  });
+
+  it("recovers an unfinished version 2 baby draft created before account choice", async () => {
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => {
+      if (key === "@new_owner_onboarding_v2") {
+        return JSON.stringify({
+          version: 2,
+          screen: "owner-baby",
+          language: "en",
+          entryPath: "owner",
+          babyDraft: { name: "Mila", birthDate: null, gender: null },
+        });
+      }
+      return null;
+    });
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "owner-baby",
+      accountMode: "guest",
+      babyDraft: { name: "Mila" },
+    });
   });
 
   it("treats legacy completed and skipped records as completed", async () => {

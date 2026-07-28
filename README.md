@@ -62,7 +62,7 @@ Household owners enter a caregiver's account email in Settings, then copy or sha
 
 ### New owner onboarding preview
 
-Development builds have a resumable new-owner flow behind the `onboardingPreview=true` launch argument. It creates a complete local guest baby profile before Home. The caregiver can then skip the remaining setup or record a first activity with the standard activity forms. Production builds continue to use the existing onboarding. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the state schema and validation commands.
+Development builds have a resumable new-owner flow behind the `onboardingPreview=true` launch argument. Account choice comes before the baby profile. The account options are Sign in and Create account. Continue on this device creates a local baby and proceeds to the first activity without an invitation prompt. Existing accounts with babies open the app, while accounts without babies continue through baby setup and an optional caregiver invitation. Later guest authentication retains local data until the account copy is acknowledged; differing account data requires the caregiver to choose which copy to keep. Production builds continue to use the existing onboarding. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the state schema and validation commands.
 
 ### Timer Exclusivity
 

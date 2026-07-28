@@ -1116,7 +1116,8 @@
     "popupClosed": "Sign-in was cancelled. Please try again if you want to continue.",
     "googleSignInError": "Could not sign in with Google. Please try again.",
     "appleSignInError": "Could not sign in with Apple. Please try again.",
-    "magicLinkError": "Could not send magic link. Please try again."
+    "magicLinkError": "Could not send magic link. Please try again.",
+    "profileNotReady": "Your account is still being prepared. Please try again."
   },
   "notificationMessages": {
     "feedingTimerTitle": "Feeding Timer",
@@ -2066,6 +2067,36 @@
       "message": "Your first activity is ready in Timeline.",
       "viewTimeline": "View or edit in Timeline",
       "continueHome": "Go to Home"
+    },
+    "account": {
+      "title": "How would you like to start?",
+      "description": "Sign in or create an account to invite a partner or caregiver and keep everyone in sync. Without an account, data stays on this device.",
+      "signIn": "Sign in",
+      "create": "Create account",
+      "continueOnDevice": "Continue on this device"
+    },
+    "auth": {
+      "createTitle": "Create your account",
+      "createDescription": "Use Apple, Google, or email to save your baby data and invite a caregiver."
+    },
+    "invitation": {
+      "title": "Track together",
+      "description": "Invite a partner or caregiver now, or skip and continue setting up.",
+      "email": "Caregiver email",
+      "emailPlaceholder": "caregiver@example.com",
+      "create": "Create invitation",
+      "ready": "Invitation ready",
+      "share": "Share code",
+      "continue": "Continue",
+      "notNow": "Not now",
+      "skipRemaining": "Skip remaining setup"
+    },
+    "migration": {
+      "title": "Choose which data to keep",
+      "message": "This account already has different baby data. Keep the account data, or use another account to preserve the data on this device.",
+      "useAnotherAccount": "Use another account",
+      "keepAccountData": "Keep account data",
+      "confirmDeletion": "The baby and activities stored on this device will be deleted. This cannot be undone."
     }
   }
 }

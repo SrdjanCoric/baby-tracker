@@ -6,6 +6,7 @@ const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockAddBaby = jest.fn();
 const mockSelectBaby = jest.fn();
+const mockSignOut = jest.fn();
 const mockGetState = jest.fn();
 const mockUpdateBabyDraft = jest.fn();
 const mockMarkBabyCreated = jest.fn();
@@ -17,6 +18,7 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/contexts", () => ({
   useBaby: () => ({ addBaby: mockAddBaby, selectBaby: mockSelectBaby }),
+  useAuth: () => ({ signOut: mockSignOut }),
   useLanguage: () => ({ language: "de", resolvedLanguage: "de" }),
 }));
 
@@ -42,6 +44,7 @@ const ownerBabyState = {
   screen: "owner-baby",
   language: "de",
   entryPath: "owner",
+  accountMode: "guest",
   babyDraft: { name: "", birthDate: null, gender: null },
 };
 
@@ -53,6 +56,7 @@ describe("NewOwnerBabyScreen", () => {
     mockMarkBabyCreated.mockResolvedValue(undefined);
     mockStartOver.mockResolvedValue(undefined);
     mockSelectBaby.mockResolvedValue(undefined);
+    mockSignOut.mockResolvedValue({ error: null });
     mockAddBaby.mockResolvedValue({ id: "baby-1" });
   });
 
@@ -75,6 +79,43 @@ describe("NewOwnerBabyScreen", () => {
     fireEvent.press(screen.getByTestId("owner-start-over"));
 
     await waitFor(() => {
+      expect(mockStartOver).toHaveBeenCalledTimes(1);
+      expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner");
+    });
+  });
+
+  it("offers an invitation after creating an authenticated baby", async () => {
+    const birthDate = new Date("2026-06-12T00:00:00.000Z");
+    mockGetState.mockResolvedValue({
+      ...ownerBabyState,
+      accountMode: "authenticated",
+      babyDraft: {
+        name: "Mila",
+        birthDate: birthDate.toISOString(),
+        gender: "female",
+      },
+    });
+
+    render(<NewOwnerBabyScreen />);
+
+    await waitFor(() => expect(screen.getByDisplayValue("Mila")).toBeTruthy());
+    fireEvent.press(screen.getByTestId("owner-baby-continue"));
+
+    await waitFor(() => {
+      expect(mockMarkBabyCreated).toHaveBeenCalledWith("baby-1");
+      expect(mockPush).toHaveBeenCalledWith("/onboarding/owner/invitation");
+    });
+  });
+
+  it("signs out before restarting authenticated baby setup", async () => {
+    mockGetState.mockResolvedValue({ ...ownerBabyState, accountMode: "authenticated" });
+    render(<NewOwnerBabyScreen />);
+
+    await waitFor(() => expect(screen.getByTestId("owner-start-over")).toBeTruthy());
+    fireEvent.press(screen.getByTestId("owner-start-over"));
+
+    await waitFor(() => {
+      expect(mockSignOut).toHaveBeenCalledTimes(1);
       expect(mockStartOver).toHaveBeenCalledTimes(1);
       expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner");
     });

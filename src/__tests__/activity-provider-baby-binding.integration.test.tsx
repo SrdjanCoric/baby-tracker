@@ -193,6 +193,7 @@ describe("real activity provider baby binding", () => {
     jest.spyOn(DiaperStorageService, "getAllDiapers").mockResolvedValue([]);
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.continueOnDevice();
     await NewOwnerOnboardingStorageService.markBabyCreated("baby-a");
 
     render(

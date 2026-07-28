@@ -6,6 +6,7 @@ import {
   type BabyProfileDraft,
   type FirstActivityType,
   type NewOwnerOnboardingState,
+  type OnboardingAuthIntent,
 } from "@/types/new-owner-onboarding";
 
 const NEW_OWNER_ONBOARDING_KEY = "@new_owner_onboarding_v2";
@@ -75,8 +76,30 @@ function isStoredState(value: unknown): value is NewOwnerOnboardingState {
   if (state.screen === "welcome") {
     return state.entryPath === null && isBabyDraft(state.babyDraft);
   }
+  if (state.screen === "account-choice") {
+    return state.entryPath === "owner";
+  }
+  if (state.screen === "auth-pending") {
+    return (
+      state.entryPath === "owner" &&
+      (state.authIntent === "sign-in" || state.authIntent === "create-account")
+    );
+  }
   if (state.screen === "owner-baby") {
-    return state.entryPath === "owner" && isBabyDraft(state.babyDraft);
+    return (
+      state.entryPath === "owner" &&
+      (state.accountMode === "guest" || state.accountMode === "authenticated") &&
+      isBabyDraft(state.babyDraft)
+    );
+  }
+  if (state.screen === "invitation") {
+    const invitation = state.invitation as Record<string, unknown> | undefined;
+    return (
+      state.entryPath === "owner" &&
+      typeof state.babyId === "string" &&
+      (invitation?.status === "pending" ||
+        (invitation?.status === "ready" && typeof invitation.invitationId === "string"))
+    );
   }
   if (state.screen === "first-activity") {
     const firstActivity = state.firstActivity as Record<string, unknown> | undefined;
@@ -107,7 +130,11 @@ function isStoredState(value: unknown): value is NewOwnerOnboardingState {
       state.entryPath === "legacy" &&
       state.babyId === null &&
       firstActivity?.status === "legacy-completed";
-    return hasOwnerCompletion || hasLegacyCompletion;
+    const hasExistingAccountCompletion =
+      state.entryPath === "authenticated-existing" &&
+      state.babyId === null &&
+      firstActivity?.status === "existing-account";
+    return hasOwnerCompletion || hasLegacyCompletion || hasExistingAccountCompletion;
   }
   return false;
 }
@@ -117,6 +144,26 @@ async function readStoredState(): Promise<NewOwnerOnboardingState | null> {
   if (!stored) return null;
   try {
     const parsed: unknown = JSON.parse(stored);
+    if (parsed && typeof parsed === "object") {
+      const legacyState = parsed as Record<string, unknown>;
+      if (
+        legacyState.version === NEW_OWNER_ONBOARDING_VERSION &&
+        legacyState.screen === "owner-baby" &&
+        legacyState.entryPath === "owner" &&
+        legacyState.accountMode === undefined &&
+        isLanguage(legacyState.language) &&
+        isBabyDraft(legacyState.babyDraft)
+      ) {
+        return {
+          version: NEW_OWNER_ONBOARDING_VERSION,
+          screen: "owner-baby",
+          language: legacyState.language,
+          entryPath: "owner",
+          accountMode: "guest",
+          babyDraft: legacyState.babyDraft,
+        };
+      }
+    }
     return isStoredState(parsed) ? parsed : null;
   } catch {
     return null;
@@ -165,11 +212,79 @@ export const NewOwnerOnboardingStorageService = {
   beginOwnerPath(language: LanguageCode): Promise<void> {
     return enqueueMutation(() => persistState({
       version: NEW_OWNER_ONBOARDING_VERSION,
-      screen: "owner-baby",
+      screen: "account-choice",
       language,
       entryPath: "owner",
-      babyDraft: createEmptyDraft(),
     }));
+  },
+
+  beginAuthentication(authIntent: OnboardingAuthIntent): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || (current.screen !== "account-choice" && current.screen !== "auth-pending")) return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "auth-pending",
+        language: current.language,
+        entryPath: "owner",
+        authIntent,
+      });
+    });
+  },
+
+  cancelAuthentication(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "auth-pending") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "account-choice",
+        language: current.language,
+        entryPath: "owner",
+      });
+    });
+  },
+
+  resumeAuthenticatedAccount(hasBabies: boolean): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "auth-pending") return;
+      if (hasBabies) {
+        await persistState({
+          version: NEW_OWNER_ONBOARDING_VERSION,
+          screen: "completed",
+          language: current.language,
+          entryPath: "authenticated-existing",
+          babyId: null,
+          firstActivity: { status: "existing-account" },
+        });
+        await OnboardingStorageService.markOnboardingComplete(false);
+        return;
+      }
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "owner-baby",
+        language: current.language,
+        entryPath: "owner",
+        accountMode: "authenticated",
+        babyDraft: createEmptyDraft(),
+      });
+    });
+  },
+
+  continueOnDevice(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "account-choice") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "owner-baby",
+        language: current.language,
+        entryPath: "owner",
+        accountMode: "guest",
+        babyDraft: createEmptyDraft(),
+      });
+    });
   },
 
   updateBabyDraft(draft: BabyProfileDraft): Promise<void> {
@@ -184,12 +299,65 @@ export const NewOwnerOnboardingStorageService = {
     return enqueueMutation(async () => {
       const current = await readStoredState();
       if (!current || current.screen !== "owner-baby") return;
+      if (current.accountMode === "authenticated") {
+        await persistState({
+          version: NEW_OWNER_ONBOARDING_VERSION,
+          screen: "invitation",
+          language: current.language,
+          entryPath: "owner",
+          babyId,
+          invitation: { status: "pending" },
+        });
+        return;
+      }
       await persistState({
         version: NEW_OWNER_ONBOARDING_VERSION,
         screen: "first-activity",
         language: current.language,
         entryPath: "owner",
         babyId,
+        firstActivity: { status: "pending" },
+      });
+    });
+  },
+
+  markInvitationReady(invitationId: string): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "invitation") return;
+      await persistState({
+        ...current,
+        invitation: { status: "ready", invitationId },
+      });
+    });
+  },
+
+  completeRemainingSetup(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "invitation") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "completed",
+        language: current.language,
+        entryPath: "owner",
+        babyId: current.babyId,
+        firstActivity: { status: "skipped" },
+      });
+      await OnboardingStorageService.markOnboardingComplete(false);
+    });
+  },
+
+  skipInvitation(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "invitation") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "first-activity",
+        language: current.language,
+        entryPath: "owner",
+        babyId: current.babyId,
         firstActivity: { status: "pending" },
       });
     });

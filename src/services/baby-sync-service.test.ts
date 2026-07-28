@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createBabyInDatabase, updateBabyInDatabase, fetchAndSyncHouseholdBabies, deleteBabyFromDatabase } from "./baby-sync-service";
+import {
+  createBabyInDatabase,
+  updateBabyInDatabase,
+  fetchAndSyncHouseholdBabies,
+  deleteBabyFromDatabase,
+  syncLocalBabiesToDatabase,
+} from "./baby-sync-service";
 import { __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
 import { __resetDeviceIdForTests } from "./sync/device-id";
 import { setStorageUserId } from "./storage-prefix";
@@ -61,6 +67,30 @@ describe("baby-sync-service CRDT writes", () => {
     __resetCrdtSyncForTests();
     __resetDeviceIdForTests();
     setStorageUserId(null);
+  });
+
+  it("reuses a durable target ID when retrying guest baby migration", async () => {
+    rpc.mockResolvedValue({
+      data: {
+        id: "22222222-2222-2222-2222-222222222222",
+        name: "Ada",
+        created_at: "2026-07-04T00:00:00.000Z",
+        updated_at: "2026-07-04T00:00:00.000Z",
+      },
+      error: null,
+    });
+    const guestBaby = {
+      id: "local-baby",
+      name: "Ada",
+      createdAt: "2026-07-04T00:00:00.000Z",
+      updatedAt: "2026-07-04T00:00:00.000Z",
+    };
+    const targetIds = new Map([[guestBaby.id, "22222222-2222-2222-2222-222222222222"]]);
+
+    const result = await syncLocalBabiesToDatabase("h1", [guestBaby], targetIds);
+
+    expect(result.idMap).toEqual(targetIds);
+    expect(rpc.mock.calls[0][1].p_record.id).toBe("22222222-2222-2222-2222-222222222222");
   });
 
   it("creates a baby through merge_record and maps the returned row", async () => {

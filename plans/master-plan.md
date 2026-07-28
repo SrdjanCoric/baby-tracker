@@ -163,7 +163,7 @@ Durable decisions that apply across all tasks:
 - [x] 0034 · Require complete profiles for new babies → tasks/done/0034-require-complete-new-baby-profiles.md
 - [x] 0035 · Create email-bound caregiver invitations → tasks/done/0035-share-verified-caregiver-invitation-links.md
 - [x] 0036 · Build the resumable new-owner onboarding path (after 0034) → tasks/done/0036-build-resumable-new-owner-onboarding.md
-- [ ] 0037 · Add optional account creation and caregiver invitation (after 0035, 0036) → tasks/0037-add-onboarding-caregiver-invitation.md
+- [~] 0037 · Add optional account creation and caregiver invitation (after 0035, 0036) → tasks/0037-add-onboarding-caregiver-invitation.md
 - [ ] 0038 · Add code-first invited-caregiver onboarding (after 0037) → tasks/0038-add-code-first-caregiver-join-onboarding.md
 - [ ] 0039 · Restore returning users before opening Home (after 0038) → tasks/0039-restore-returning-users-before-home.md
 - [ ] 0040 · Add development onboarding tools (after 0039) → tasks/0040-add-development-onboarding-tools.md

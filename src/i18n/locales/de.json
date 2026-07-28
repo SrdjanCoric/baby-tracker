@@ -1116,7 +1116,8 @@
     "popupClosed": "Anmeldung wurde abgebrochen. Bitte versuche es erneut, wenn du fortfahren möchtest.",
     "googleSignInError": "Anmeldung mit Google fehlgeschlagen. Bitte versuche es erneut.",
     "appleSignInError": "Anmeldung mit Apple fehlgeschlagen. Bitte versuche es erneut.",
-    "magicLinkError": "Magic Link konnte nicht gesendet werden. Bitte versuche es erneut."
+    "magicLinkError": "Magic Link konnte nicht gesendet werden. Bitte versuche es erneut.",
+    "profileNotReady": "Dein Konto wird noch vorbereitet. Bitte versuche es erneut."
   },
   "notificationMessages": {
     "feedingTimerTitle": "Fütterungs-Timer",
@@ -2066,6 +2067,36 @@
       "message": "Deine erste Aktivität ist jetzt in der Zeitleiste verfügbar.",
       "viewTimeline": "In der Zeitleiste ansehen oder bearbeiten",
       "continueHome": "Zur Startseite"
+    },
+    "account": {
+      "title": "Wie möchtest du beginnen?",
+      "description": "Melde dich an oder erstelle ein Konto, um eine Betreuungsperson einzuladen und alle Daten zu synchronisieren. Ohne Konto bleiben die Daten auf diesem Gerät.",
+      "signIn": "Anmelden",
+      "create": "Konto erstellen",
+      "continueOnDevice": "Auf diesem Gerät fortfahren"
+    },
+    "auth": {
+      "createTitle": "Erstelle dein Konto",
+      "createDescription": "Nutze Apple, Google oder E-Mail, um die Babydaten zu sichern und eine Betreuungsperson einzuladen."
+    },
+    "invitation": {
+      "title": "Gemeinsam dokumentieren",
+      "description": "Lade jetzt eine Betreuungsperson ein oder überspringe diesen Schritt und fahre fort.",
+      "email": "E-Mail der Betreuungsperson",
+      "emailPlaceholder": "betreuung@example.com",
+      "create": "Einladung erstellen",
+      "ready": "Einladung ist bereit",
+      "share": "Code teilen",
+      "continue": "Weiter",
+      "notNow": "Nicht jetzt",
+      "skipRemaining": "Restliche Einrichtung überspringen"
+    },
+    "migration": {
+      "title": "Wähle aus, welche Daten bleiben",
+      "message": "Dieses Konto enthält bereits andere Babydaten. Behalte die Kontodaten oder verwende ein anderes Konto, um die Daten auf diesem Gerät zu erhalten.",
+      "useAnotherAccount": "Anderes Konto verwenden",
+      "keepAccountData": "Kontodaten behalten",
+      "confirmDeletion": "Die auf diesem Gerät gespeicherten Baby- und Aktivitätsdaten werden gelöscht. Dies kann nicht rückgängig gemacht werden."
     }
   }
 }

@@ -25,6 +25,14 @@ tags:
 
 - extendedWaitUntil:
     visible:
+      id: "new-owner-account-screen"
+    timeout: 10000
+- assertVisible: "Melde dich an oder erstelle ein Konto, um eine Betreuungsperson einzuladen und alle Daten zu synchronisieren. Ohne Konto bleiben die Daten auf diesem Gerät."
+- tapOn:
+    id: "continue-on-device-button"
+
+- extendedWaitUntil:
+    visible:
       id: "new-owner-baby-screen"
     timeout: 10000
 - tapOn:
@@ -50,15 +58,8 @@ tags:
 - assertVisible: "Wähle Junge oder Mädchen aus"
 - waitForAnimationToEnd
 
-- longPressOn:
+- tapOn:
     id: "owner-start-over"
-- runFlow:
-    when:
-      visible:
-        id: "owner-start-over"
-    commands:
-      - longPressOn:
-          id: "owner-start-over"
 - extendedWaitUntil:
     visible:
       id: "new-owner-welcome-screen"

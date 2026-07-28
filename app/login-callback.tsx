@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import { useAuth } from "@/contexts";
 import { supabase } from "@/services/supabase";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import { SURFACE_COLORS, ACTION_COLORS } from "@/constants/design-tokens";
 import { useColorScheme } from "nativewind";
 
@@ -43,54 +44,30 @@ function parseAuthParams(url: string) {
 async function processAuthParams(url: string): Promise<boolean> {
   const { code, accessToken, refreshToken, tokenHash, type } = parseAuthParams(url);
 
-  console.log("[LoginCallback] Processing URL:", url);
-  console.log("[LoginCallback] Params found:", {
-    hasCode: !!code,
-    hasAccessToken: !!accessToken,
-    hasRefreshToken: !!refreshToken,
-    hasTokenHash: !!tokenHash,
-    type,
-  });
-
   // PKCE flow
   if (code) {
-    console.log("[LoginCallback] Exchanging PKCE code...");
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) {
-      console.error("[LoginCallback] exchangeCodeForSession error:", error);
-      return false;
-    }
-    console.log("[LoginCallback] PKCE code exchanged successfully");
+    if (error) return false;
     return true;
   }
 
   // Implicit flow
   if (accessToken && refreshToken) {
-    console.log("[LoginCallback] Setting session...");
     const { error } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     });
-    if (error) {
-      console.error("[LoginCallback] setSession error:", error);
-      return false;
-    }
-    console.log("[LoginCallback] Session set successfully");
+    if (error) return false;
     return true;
   }
 
   // OTP verification
   if (tokenHash && type) {
-    console.log("[LoginCallback] Verifying OTP...");
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type: type as 'email' | 'magiclink',
     });
-    if (error) {
-      console.error("[LoginCallback] verifyOtp error:", error);
-      return false;
-    }
-    console.log("[LoginCallback] OTP verified successfully");
+    if (error) return false;
     return true;
   }
 
@@ -116,11 +93,9 @@ export default function LoginCallbackScreen() {
 
       try {
         const success = await processAuthParams(urlToProcess);
-        if (!success) {
-          console.log("[LoginCallback] No tokens found or processing failed");
-        }
-      } catch (err) {
-        console.error("[LoginCallback] Error:", err);
+        if (!success) setError("Authentication failed. Please try again.");
+      } catch {
+        console.error("[LoginCallback] Authentication failed");
         setError("Authentication failed. Please try again.");
       }
     };
@@ -136,8 +111,6 @@ export default function LoginCallbackScreen() {
 
       for (let i = 0; i < 10; i++) {
         const initialUrl = await Linking.getInitialURL();
-        console.log(`[LoginCallback] Poll ${i + 1}: ${initialUrl}`);
-
         if (initialUrl && initialUrl.includes('login-callback')) {
           if (initialUrl.includes('access_token') || initialUrl.includes('token_hash')) {
             if (!hasProcessedRef.current) {
@@ -149,18 +122,25 @@ export default function LoginCallbackScreen() {
         }
         await new Promise(resolve => setTimeout(resolve, 300));
       }
-      console.log("[LoginCallback] Polling complete, no tokens found");
     };
 
     pollForUrl();
   }, []);
 
   useEffect(() => {
-    if (isLoading) return;
-
-    if (isAuthenticated) {
-      router.replace("/(tabs)");
-    }
+    if (isLoading || !isAuthenticated) return;
+    let active = true;
+    const finishAuthentication = async () => {
+      const state = await NewOwnerOnboardingStorageService.getState("system");
+      if (!active) return;
+      router.replace(state.screen === "auth-pending"
+        ? "/auth/sign-in?resumeOnboarding=true"
+        : "/(tabs)");
+    };
+    void finishAuthentication();
+    return () => {
+      active = false;
+    };
   }, [isAuthenticated, isLoading, router]);
 
   return (

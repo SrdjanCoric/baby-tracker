@@ -2,6 +2,12 @@
 
 Household owners authorize a caregiver's email before sharing an invitation code. The code uses the existing eight-character `XXXX-XXXX` format, expires after seven days, and works once. Owners may keep invitations pending for several email addresses, but a household has at most one current invitation for each normalized email.
 
+## Onboarding
+
+New owners choose an account before entering baby details. The account choice explains that caregiver invitations require an account because shared tracking must synchronize between devices. Continue on this device keeps the baby on that device and does not show another invitation prompt.
+
+After an authenticated owner creates a baby, onboarding offers one optional invitation. A missing caregiver display name must be saved before invitation creation. Not now and Skip remaining setup create no invitation and schedule no reminder. When an invitation is created, the screen shows the verified code returned by `create_caregiver_invitation`. Copying or opening the system share sheet is optional, and dismissing the share sheet does not block onboarding.
+
 ## Security model
 
 Migration `supabase/migrations/058_email_bound_caregiver_invitations.sql` creates `caregiver_invitations`. Clients cannot read or modify the table directly. Authenticated users call these RPCs:
