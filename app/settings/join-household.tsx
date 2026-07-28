@@ -22,6 +22,7 @@ type JoinErrorKey =
   | "household.householdNotFound"
   | "household.alreadyInHousehold"
   | "household.joinFailed"
+  | "household.invalidInvitation"
   | "household.rateLimitExceeded"
   | "errors.generic";
 
@@ -32,6 +33,7 @@ const ERROR_TRANSLATIONS: Record<string, JoinErrorKey> = {
   householdNotFound: "household.householdNotFound",
   alreadyInHousehold: "household.alreadyInHousehold",
   joinFailed: "household.joinFailed",
+  invalidInvitation: "household.invalidInvitation",
   rateLimitExceeded: "household.rateLimitExceeded",
 };
 

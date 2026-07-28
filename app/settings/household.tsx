@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -6,13 +6,20 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Share,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Clipboard from "expo-clipboard";
-import * as Sharing from "expo-sharing";
 import { useHousehold, useAuth } from "@/contexts";
+import {
+  CaregiverInvitation,
+  createCaregiverInvitation,
+  listCaregiverInvitations,
+  revokeCaregiverInvitation,
+} from "@/services/household-service";
 import { formatInviteCodeForDisplay } from "@/utils/inviteCode";
 
 type HouseholdErrorKey =
@@ -33,64 +40,101 @@ export default function HouseholdSettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const { household, members, isLoading, error, regenerateCode, leaveHousehold, isOwner } = useHousehold();
-  const [isCopied, setIsCopied] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
+  const { members, isLoading, error, leaveHousehold, isOwner } = useHousehold();
+  const [copiedInvitationId, setCopiedInvitationId] = useState<string | null>(null);
+  const copiedResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [caregiverEmail, setCaregiverEmail] = useState("");
+  const [invitations, setInvitations] = useState<CaregiverInvitation[]>([]);
+  const [isLoadingInvitations, setIsLoadingInvitations] = useState(false);
+  const [isCreatingInvitation, setIsCreatingInvitation] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  const inviteCode = household?.inviteCode ?? null;
   const isInMultiPersonHousehold = members.length > 1;
+  const commonErrorTitle = t("common.error");
+  const invitationsFetchFailedMessage = t("household.invitationsFetchFailed");
 
   const handleSignIn = useCallback(() => {
     router.dismissAll();
     router.push("/auth/sign-in");
   }, [router]);
 
-  const handleCopyCode = useCallback(async () => {
-    if (!inviteCode) return;
+  const loadInvitations = useCallback(async () => {
+    if (!isAuthenticated || !isOwner) return;
 
-    await Clipboard.setStringAsync(inviteCode);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-  }, [inviteCode]);
+    setIsLoadingInvitations(true);
+    const result = await listCaregiverInvitations();
+    setIsLoadingInvitations(false);
 
-  const handleShareCode = useCallback(async () => {
-    if (!inviteCode) return;
-
-    const message = t("household.shareMessage", { code: inviteCode });
-
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync("", {
-        dialogTitle: t("household.shareInviteCode"),
-        mimeType: "text/plain",
-      });
+    if (result.data) {
+      setInvitations(result.data);
     } else {
-      await Clipboard.setStringAsync(message);
-      Alert.alert(t("common.success"), t("household.copied"));
+      Alert.alert(commonErrorTitle, invitationsFetchFailedMessage);
     }
-  }, [inviteCode, t]);
+  }, [commonErrorTitle, invitationsFetchFailedMessage, isAuthenticated, isOwner]);
 
-  const handleRegenerateCode = useCallback(() => {
+  useEffect(() => {
+    void loadInvitations();
+  }, [loadInvitations]);
+
+  useEffect(() => () => {
+    if (copiedResetTimerRef.current) {
+      clearTimeout(copiedResetTimerRef.current);
+    }
+  }, []);
+
+  const handleCreateInvitation = useCallback(async (email = caregiverEmail) => {
+    setIsCreatingInvitation(true);
+    const result = await createCaregiverInvitation(email);
+    setIsCreatingInvitation(false);
+
+    if (!result.data) {
+      const errorKey = result.error === "invalidCaregiverEmail"
+        ? "household.invalidCaregiverEmail"
+        : "household.invitationCreateFailed";
+      Alert.alert(t("common.error"), t(errorKey));
+      return;
+    }
+
+    setCaregiverEmail("");
+    await loadInvitations();
+  }, [caregiverEmail, loadInvitations, t]);
+
+  const handleCopyCode = useCallback(async (invitation: CaregiverInvitation) => {
+    await Clipboard.setStringAsync(invitation.inviteCode);
+    setCopiedInvitationId(invitation.id);
+    if (copiedResetTimerRef.current) {
+      clearTimeout(copiedResetTimerRef.current);
+    }
+    copiedResetTimerRef.current = setTimeout(() => setCopiedInvitationId(null), 2000);
+  }, []);
+
+  const handleShareCode = useCallback(async (invitation: CaregiverInvitation) => {
+    await Share.share({
+      message: t("household.shareMessage", { code: invitation.inviteCode }),
+    });
+  }, [t]);
+
+  const handleRevokeInvitation = useCallback((invitation: CaregiverInvitation) => {
     Alert.alert(
-      t("household.regenerateCode"),
-      t("household.regenerateCodeConfirm"),
+      t("household.revokeInvitation"),
+      t("household.revokeInvitationConfirm", { email: invitation.invitedEmail }),
       [
         { text: t("common.cancel"), style: "cancel" },
         {
-          text: t("common.confirm"),
+          text: t("household.revokeInvitation"),
           style: "destructive",
           onPress: async () => {
-            setIsRegenerating(true);
-            const success = await regenerateCode();
-            setIsRegenerating(false);
-            if (success) {
-              Alert.alert(t("common.success"), t("household.codeRegenerated"));
+            const result = await revokeCaregiverInvitation(invitation.id);
+            if (!result.data) {
+              Alert.alert(t("common.error"), t("household.invitationRevokeFailed"));
+              return;
             }
+            await loadInvitations();
           },
         },
-      ]
+      ],
     );
-  }, [regenerateCode, t]);
+  }, [loadInvitations, t]);
 
   const handleJoinHousehold = useCallback(() => {
     router.push("/settings/join-household");
@@ -127,10 +171,6 @@ export default function HouseholdSettingsScreen() {
   const handleManageCaregivers = useCallback(() => {
     router.push("/settings/caregivers");
   }, [router]);
-
-  const formattedCode = inviteCode
-    ? formatInviteCodeForDisplay(inviteCode)
-    : "----";
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -172,66 +212,110 @@ export default function HouseholdSettingsScreen() {
         </View>
       ) : (
         <ScrollView className="flex-1 px-4 py-6">
-          {/* Invite Code Section */}
-          <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-6 mb-6">
-            <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mb-2">
-              {t("household.inviteCode")}
-            </Text>
-
-            <View className="items-center py-4">
-              <Text
-                className="text-4xl font-bold tracking-widest text-content-primary dark:text-content-dark-primary mb-2"
-                testID="invite-code-display"
-              >
-                {formattedCode}
+          {isOwner && (
+            <View className="bg-surface-card dark:bg-surface-dark-card rounded-card p-6 mb-6">
+              <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary mb-2">
+                {t("household.inviteCaregiver")}
               </Text>
-              <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary text-center">
-                {t("household.inviteCodeDescription")}
+              <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mb-4">
+                {t("household.invitationDescription")}
               </Text>
-            </View>
-
-            <View className="flex-row gap-3 mt-4">
+              <TextInput
+                testID="caregiver-invitation-email"
+                value={caregiverEmail}
+                onChangeText={setCaregiverEmail}
+                placeholder={t("household.caregiverEmailPlaceholder")}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                className="bg-surface-secondary dark:bg-surface-dark-secondary px-4 py-3 rounded-lg text-content-primary dark:text-content-dark-primary mb-3"
+                accessibilityLabel={t("household.caregiverEmail")}
+              />
               <Pressable
-                onPress={handleCopyCode}
-                className="flex-1 bg-surface-secondary dark:bg-surface-dark-secondary py-3 rounded-lg items-center active:opacity-80"
-                accessibilityRole="button"
-                accessibilityLabel={t("household.copyInviteCode")}
-                testID="copy-invite-code"
-              >
-                <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-                  {isCopied ? "✓ " + t("household.copied") : "📋 " + t("household.copyInviteCode")}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={handleShareCode}
-                className="flex-1 bg-action-primary dark:bg-action-dark-primary py-3 rounded-lg items-center active:opacity-80"
-                accessibilityRole="button"
-                accessibilityLabel={t("household.shareInviteCode")}
-              >
-                <Text className="text-base font-medium text-white">
-                  {"📤 " + t("household.shareInviteCode")}
-                </Text>
-              </Pressable>
-            </View>
-
-            {isOwner && (
-              <Pressable
-                onPress={handleRegenerateCode}
-                disabled={isRegenerating}
-                className="mt-4 py-2 items-center active:opacity-60"
+                onPress={() => void handleCreateInvitation()}
+                disabled={isCreatingInvitation}
+                className="bg-action-primary dark:bg-action-dark-primary py-3 rounded-lg items-center active:opacity-80 disabled:opacity-50"
                 accessibilityRole="button"
               >
-                {isRegenerating ? (
-                  <ActivityIndicator size="small" />
+                {isCreatingInvitation ? (
+                  <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
-                    {t("household.regenerateCode")}
+                  <Text className="text-base font-semibold text-white">
+                    {t("household.createInvitation")}
                   </Text>
                 )}
               </Pressable>
-            )}
-          </View>
+
+              <Text className="text-sm font-medium text-content-secondary dark:text-content-dark-secondary mt-6 mb-3">
+                {t("household.pendingInvitations")}
+              </Text>
+              {isLoadingInvitations ? (
+                <ActivityIndicator size="small" />
+              ) : invitations.length === 0 ? (
+                <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
+                  {t("household.noPendingInvitations")}
+                </Text>
+              ) : invitations.map((invitation) => (
+                <View
+                  key={invitation.id}
+                  className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-lg p-4 mb-3"
+                  testID={`caregiver-invitation-${invitation.id}`}
+                >
+                  <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-1">
+                    {invitation.invitedEmail}
+                  </Text>
+                  <Text className="text-2xl font-bold tracking-widest text-content-primary dark:text-content-dark-primary mb-1">
+                    {formatInviteCodeForDisplay(invitation.inviteCode)}
+                  </Text>
+                  <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary mb-3">
+                    {t("household.invitationExpires", {
+                      date: new Date(invitation.expiresAt).toLocaleDateString(),
+                    })}
+                  </Text>
+                  <View className="flex-row gap-2">
+                    <Pressable
+                      onPress={() => void handleCopyCode(invitation)}
+                      className="flex-1 py-2 rounded-lg items-center bg-surface-card dark:bg-surface-dark-card"
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-sm font-medium text-content-primary dark:text-content-dark-primary">
+                        {copiedInvitationId === invitation.id
+                          ? t("household.copied")
+                          : t("household.copyInviteCode")}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => void handleShareCode(invitation)}
+                      className="flex-1 py-2 rounded-lg items-center bg-action-primary dark:bg-action-dark-primary"
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-sm font-medium text-white">
+                        {t("household.shareInviteCode")}
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <View className="flex-row justify-center gap-4 mt-3">
+                    <Pressable
+                      onPress={() => void handleCreateInvitation(invitation.invitedEmail)}
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-sm text-primary dark:text-primary-dark">
+                        {t("household.replaceInvitation")}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleRevokeInvitation(invitation)}
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-sm text-red-500">
+                        {t("household.revokeInvitation")}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* Members Section */}
           <View className="bg-surface-card dark:bg-surface-dark-card rounded-card overflow-hidden">

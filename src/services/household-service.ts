@@ -22,6 +22,22 @@ export interface HouseholdMember {
   joinedAt?: string | null;
 }
 
+export interface CaregiverInvitation {
+  id: string;
+  invitedEmail: string;
+  inviteCode: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+interface CaregiverInvitationRow {
+  invitation_id: string;
+  invited_email: string;
+  invite_code: string;
+  expires_at: string;
+  created_at: string;
+}
+
 interface HouseholdResult<T> {
   data: T | null;
   error: string | null;
@@ -83,6 +99,56 @@ export async function getHouseholdMembers(
   return { data: members, error: null };
 }
 
+export async function listCaregiverInvitations(): Promise<
+  HouseholdResult<CaregiverInvitation[]>
+> {
+  const { data, error } = await supabase.rpc("list_caregiver_invitations");
+
+  if (error) {
+    return { data: null, error: "invitationsFetchFailed" };
+  }
+
+  const rows = (data ?? []) as CaregiverInvitationRow[];
+  return { data: rows.map(mapCaregiverInvitation), error: null };
+}
+
+export async function revokeCaregiverInvitation(
+  invitationId: string
+): Promise<HouseholdResult<boolean>> {
+  const { data, error } = await supabase.rpc("revoke_caregiver_invitation", {
+    p_invitation_id: invitationId,
+  });
+
+  if (error || data !== true) {
+    return { data: null, error: "invitationRevokeFailed" };
+  }
+
+  return { data: true, error: null };
+}
+
+export async function createCaregiverInvitation(
+  email: string
+): Promise<HouseholdResult<CaregiverInvitation>> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const { data, error } = await supabase.rpc("create_caregiver_invitation", {
+    p_email: normalizedEmail,
+  });
+
+  if (error) {
+    return {
+      data: null,
+      error: error.code === "22023" ? "invalidCaregiverEmail" : "invitationCreateFailed",
+    };
+  }
+
+  const rows = data as CaregiverInvitationRow[] | null;
+  if (!rows?.[0]) {
+    return { data: null, error: "invitationCreateFailed" };
+  }
+
+  return { data: mapCaregiverInvitation(rows[0]), error: null };
+}
+
 export async function regenerateInviteCode(
   householdId: string
 ): Promise<HouseholdResult<string>> {
@@ -132,6 +198,16 @@ export async function leaveHousehold(): Promise<HouseholdResult<Household>> {
       createdAt: household.household_created_at,
     },
     error: null,
+  };
+}
+
+function mapCaregiverInvitation(row: CaregiverInvitationRow): CaregiverInvitation {
+  return {
+    id: row.invitation_id,
+    invitedEmail: row.invited_email,
+    inviteCode: row.invite_code,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
   };
 }
 
@@ -190,7 +266,7 @@ export async function joinHouseholdViaInviteCode(
 
     return {
       data: null,
-      error: error.message?.includes("not found") ? "householdNotFound" : "joinFailed",
+      error: error.message?.includes("not found") ? "invalidInvitation" : "joinFailed",
       rateLimitInfo: {
         remainingAttempts: updated.remainingAttempts,
         resetAt: updated.resetAt,
@@ -205,7 +281,16 @@ export async function joinHouseholdViaInviteCode(
   }>;
 
   if (!rows || rows.length === 0) {
-    return { data: null, error: "joinFailed" };
+    await recordAttempt(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
+    const updated = await checkRateLimit(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
+    return {
+      data: null,
+      error: "invalidInvitation",
+      rateLimitInfo: {
+        remainingAttempts: updated.remainingAttempts,
+        resetAt: updated.resetAt,
+      },
+    };
   }
 
   await clearRateLimitRecord(RATE_LIMIT_KEY);
