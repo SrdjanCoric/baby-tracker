@@ -52,6 +52,10 @@ Keep the existing `join_household_by_invite_code` RPC signature so older recipie
 - [ ] No email-delivery, deferred-linking, or analytics dependency is added.
 - [ ] Automated verification covers valid, malformed, unauthorized, expired, revoked, replaced, consumed, rate-limited, and backward-compatible behavior.
 
+## Accepted security risks
+
+- `get_household_babies_by_invite_code(varchar)` remains executable for compatibility with current users. The user accepted that a caller with a legacy household code could use this unused RPC to read baby profile fields. The current app and repository history contain no client call to this function.
+
 ## Deferred work
 
 Verified HTTPS invitation links, the `sofibabytracker.com` landing page, Apple and Android association files, website deployment documentation, and onboarding invitation screens require future planning. The currently discovered `website/` directory is excluded through `.git/info/exclude` and is not an authoritative deployment source.

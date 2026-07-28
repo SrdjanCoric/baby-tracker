@@ -9,7 +9,8 @@ VALUES
   ('84444444-4444-4444-4444-444444444444', 'unverified@test.dev', NULL),
   ('85555555-5555-5555-5555-555555555555', 'expired@test.dev', pg_catalog.now()),
   ('86666666-6666-6666-6666-666666666666', 'household-member@test.dev', pg_catalog.now()),
-  ('87777777-7777-7777-7777-777777777777', 'revoked@test.dev', pg_catalog.now());
+  ('87777777-7777-7777-7777-777777777777', 'revoked@test.dev', pg_catalog.now()),
+  ('88888888-8888-8888-8888-888888888888', 'replacement-recipient@test.dev', pg_catalog.now());
 
 UPDATE public.users
 SET household_id = (
@@ -174,16 +175,32 @@ SELECT set_config(
 SET LOCAL ROLE authenticated;
 DO $$
 DECLARE
-  v_denied BOOLEAN := false;
+  v_create_denied BOOLEAN := false;
+  v_list_denied BOOLEAN := false;
+  v_revoke_denied BOOLEAN := false;
 BEGIN
   BEGIN
     PERFORM public.create_caregiver_invitation('unauthorized@test.dev');
   EXCEPTION WHEN insufficient_privilege THEN
-    v_denied := true;
+    v_create_denied := true;
   END;
 
-  IF NOT v_denied THEN
-    RAISE EXCEPTION 'a non-owner created a caregiver invitation';
+  BEGIN
+    PERFORM * FROM public.list_caregiver_invitations();
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_list_denied := true;
+  END;
+
+  BEGIN
+    PERFORM public.revoke_caregiver_invitation(
+      '00000000-0000-0000-0000-000000000001'
+    );
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_revoke_denied := true;
+  END;
+
+  IF NOT v_create_denied OR NOT v_list_denied OR NOT v_revoke_denied THEN
+    RAISE EXCEPTION 'a non-owner managed caregiver invitations';
   END IF;
 END
 $$;
@@ -234,6 +251,36 @@ BEGIN
 END
 $$;
 
+INSERT INTO public.households (invite_code)
+VALUES ('RPLYCOD1')
+RETURNING id AS replay_household_id
+\gset
+UPDATE public.users
+SET household_id = :'replay_household_id',
+    is_owner = true
+WHERE id = '82222222-2222-2222-2222-222222222222';
+
+SELECT set_config(
+  'request.jwt.claims',
+  json_build_object('sub', '82222222-2222-2222-2222-222222222222', 'role', 'authenticated')::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_result_count INTEGER;
+BEGIN
+  SELECT pg_catalog.count(*) INTO v_result_count
+  FROM public.join_household_by_invite_code(
+    pg_catalog.current_setting('test.recipient_invite_code')::VARCHAR(8)
+  );
+  IF v_result_count <> 0 THEN
+    RAISE EXCEPTION 'a consumed invitation was redeemed twice';
+  END IF;
+END
+$$;
+RESET ROLE;
+
 SELECT household.invite_code AS legacy_code
 FROM public.households AS household
 JOIN public.users AS owner ON owner.household_id = household.id
@@ -258,6 +305,12 @@ FROM public.create_caregiver_invitation('expired@test.dev')
 SELECT invitation_id AS revoked_id, invite_code AS revoked_code
 FROM public.create_caregiver_invitation('revoked@test.dev')
 \gset
+SELECT invite_code AS replaced_code
+FROM public.create_caregiver_invitation('replacement-recipient@test.dev')
+\gset
+SELECT invite_code AS replacement_code
+FROM public.create_caregiver_invitation(' REPLACEMENT-RECIPIENT@Test.Dev ')
+\gset
 SELECT public.revoke_caregiver_invitation(:'revoked_id');
 RESET ROLE;
 
@@ -265,12 +318,43 @@ SELECT set_config('test.wrong_email_code', :'wrong_email_code', true);
 SELECT set_config('test.unverified_code', :'unverified_code', true);
 SELECT set_config('test.expired_code', :'expired_code', true);
 SELECT set_config('test.revoked_code', :'revoked_code', true);
+SELECT set_config('test.replaced_code', :'replaced_code', true);
+SELECT set_config('test.replacement_code', :'replacement_code', true);
 SELECT set_config('test.legacy_code', :'legacy_code', true);
 
 UPDATE public.caregiver_invitations
 SET created_at = pg_catalog.now() - INTERVAL '8 days',
     expires_at = pg_catalog.now() - INTERVAL '1 day'
 WHERE invite_code = :'expired_code';
+
+SELECT set_config(
+  'request.jwt.claims',
+  json_build_object('sub', '88888888-8888-8888-8888-888888888888', 'role', 'authenticated')::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_result_count INTEGER;
+BEGIN
+  SELECT pg_catalog.count(*) INTO v_result_count
+  FROM public.join_household_by_invite_code(
+    pg_catalog.current_setting('test.replaced_code')::VARCHAR(8)
+  );
+  IF v_result_count <> 0 THEN
+    RAISE EXCEPTION 'a replaced invitation code was redeemed';
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_result_count
+  FROM public.join_household_by_invite_code(
+    pg_catalog.current_setting('test.replacement_code')::VARCHAR(8)
+  );
+  IF v_result_count <> 1 THEN
+    RAISE EXCEPTION 'the replacement invitation code was not redeemable';
+  END IF;
+END
+$$;
+RESET ROLE;
 
 SELECT set_config(
   'request.jwt.claims',

@@ -130,9 +130,9 @@ describe("HouseholdSettingsScreen caregiver invitations", () => {
     fireEvent.press(screen.getByText("Share code"));
 
     await waitFor(() => {
-      expect(Clipboard.setStringAsync).toHaveBeenCalledWith("ABCD2345");
+      expect(Clipboard.setStringAsync).toHaveBeenCalledWith("ABCD-2345");
       expect(shareSpy).toHaveBeenCalledWith({
-        message: expect.stringContaining("ABCD2345"),
+        message: expect.stringContaining("ABCD-2345"),
       });
     });
     expect(shareSpy.mock.calls[0][0].message).not.toContain("caregiver@example.com");

@@ -37,7 +37,7 @@ const ERROR_TRANSLATIONS: Record<string, HouseholdErrorKey> = {
 };
 
 export default function HouseholdSettingsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { members, isLoading, error, leaveHousehold, isOwner } = useHousehold();
@@ -100,7 +100,7 @@ export default function HouseholdSettingsScreen() {
   }, [caregiverEmail, loadInvitations, t]);
 
   const handleCopyCode = useCallback(async (invitation: CaregiverInvitation) => {
-    await Clipboard.setStringAsync(invitation.inviteCode);
+    await Clipboard.setStringAsync(formatInviteCodeForDisplay(invitation.inviteCode));
     setCopiedInvitationId(invitation.id);
     if (copiedResetTimerRef.current) {
       clearTimeout(copiedResetTimerRef.current);
@@ -110,7 +110,9 @@ export default function HouseholdSettingsScreen() {
 
   const handleShareCode = useCallback(async (invitation: CaregiverInvitation) => {
     await Share.share({
-      message: t("household.shareMessage", { code: invitation.inviteCode }),
+      message: t("household.shareMessage", {
+        code: formatInviteCodeForDisplay(invitation.inviteCode),
+      }),
     });
   }, [t]);
 
@@ -269,7 +271,7 @@ export default function HouseholdSettingsScreen() {
                   </Text>
                   <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary mb-3">
                     {t("household.invitationExpires", {
-                      date: new Date(invitation.expiresAt).toLocaleDateString(),
+                      date: new Date(invitation.expiresAt).toLocaleDateString(i18n.language),
                     })}
                   </Text>
                   <View className="flex-row gap-2">
