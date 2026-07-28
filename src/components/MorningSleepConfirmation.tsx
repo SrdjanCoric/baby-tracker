@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
 import { useTimeFormat } from "@/contexts/time-format-context";
 import { formatTime } from "@/utils/time";
+import { ACTIVITY, TEXT } from "@/constants/colors";
 
 interface MorningSleepConfirmationProps {
   startedAt: string | Date;
@@ -27,10 +28,10 @@ export function MorningSleepConfirmation({
     month: "short",
     day: "numeric",
   })} · ${formatTime(date, timeFormat)}`;
-  const accent = isDark ? "#A594CF" : "#6B5B95";
-  const background = isDark ? "#2E2840" : "#F0ECF7";
-  const textPrimary = isDark ? "#F1ECF8" : "#2D2A26";
-  const textSecondary = isDark ? "#C8BED7" : "#6F6878";
+  const accent = isDark ? ACTIVITY.sleep.textAccentDark : ACTIVITY.sleep.textAccent;
+  const background = isDark ? ACTIVITY.sleep.mutedDark : ACTIVITY.sleep.muted;
+  const textPrimary = isDark ? TEXT.dark.primary : TEXT.light.primary;
+  const textSecondary = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
 
   return (
     <View
@@ -87,7 +88,7 @@ export function MorningSleepConfirmation({
             opacity: disabled ? 0.6 : 1,
           }}
         >
-          <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>
+          <Text style={{ color: TEXT.light.inverse, fontSize: 14, fontWeight: "700" }}>
             {t("sleep.backToSleep")}
           </Text>
         </Pressable>

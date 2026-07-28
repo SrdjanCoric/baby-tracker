@@ -370,6 +370,11 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const isStoppingRef = useRef(false);
   const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
+  const activeMorningConfirmationRef = useRef<{
+    activityId: string;
+    sleepType: SleepType;
+    morningClassification: MorningClassificationState;
+  } | null>(null);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
   const acceptSleepRange = useCallback((entries: StoredSleepEntry[]) => {
@@ -1148,6 +1153,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     const startTime = customStartTime ?? new Date();
     const identity = requestedIdentity ?? createTimerIdentity();
+    activeMorningConfirmationRef.current = null;
     const morningClassification = classifyNewMorningSleep(
       state.sleeps,
       { startedAt: startTime },
@@ -1218,9 +1224,23 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const activeTimer = state.activeTimer;
     const timerStartTime = activeTimer.startTime;
     const babyId = selectedBaby.id;
+    const getEffectiveTimer = (): ActiveSleepTimer => {
+      const confirmation = activeMorningConfirmationRef.current;
+      if (!confirmation || confirmation.activityId !== activeTimer.activityId) {
+        return activeTimer;
+      }
+      return {
+        ...activeTimer,
+        sleepType: confirmation.sleepType,
+        morningClassification: confirmation.morningClassification,
+      };
+    };
     const finishTimer = async () => {
       dispatch({ type: "STOP_TIMER" });
       stopVersionRef.current++;
+      if (activeMorningConfirmationRef.current?.activityId === activeTimer.activityId) {
+        activeMorningConfirmationRef.current = null;
+      }
       removeLock(babyId, "sleep");
       try {
         await SleepStorageService.clearActiveTimer(babyId);
@@ -1273,7 +1293,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         babyId,
         "sleep",
         timerStartTime.toISOString(),
-        state.activeTimer,
+        getEffectiveTimer(),
         requestedStopTime
       );
       const endTime = new Date(completion.stoppedAt);
@@ -1286,9 +1306,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       const durationSeconds = Math.floor(
         (endTime.getTime() - timerStartTime.getTime() - state.activeTimer.totalPausedMs) / 1000
       );
-      const sleepType = activeTimer.morningClassification === "confirmed_first_nap"
+      const effectiveTimer = getEffectiveTimer();
+      const sleepType = effectiveTimer.morningClassification === "confirmed_first_nap"
         ? "nap"
-        : activeTimer.morningClassification === "confirmed_night_continuation"
+        : effectiveTimer.morningClassification === "confirmed_night_continuation"
           ? "night"
           : classifySleepByTimeRange(
             timerStartTime,
@@ -1303,8 +1324,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         startedAt: timerStartTime,
         endedAt: endTime,
         durationSeconds,
-        morningClassification: activeTimer.morningClassification,
-        morningClassificationVersion: activeTimer.morningClassificationVersion,
+        morningClassification: effectiveTimer.morningClassification,
+        morningClassificationVersion: effectiveTimer.morningClassificationVersion,
       };
 
       let lastSleep: StoredSleepEntry;
@@ -1549,6 +1570,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     if (selectedBaby && state.activeTimer?.activityId === sleepId) {
       const activeTimer = state.activeTimer;
+      const stopVersionAtStart = stopVersionRef.current;
+      activeMorningConfirmationRef.current = {
+        activityId: sleepId,
+        sleepType,
+        morningClassification,
+      };
       dispatch({
         type: "UPDATE_TIMER_TYPE",
         payload: { sleepType, morningClassification },
@@ -1566,6 +1593,15 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         morningClassification,
         morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
       });
+      if (stopVersionRef.current !== stopVersionAtStart) {
+        await SleepStorageService.clearActiveTimer(selectedBaby.id);
+        await updateSleep(sleepId, {
+          type: sleepType,
+          morningClassification,
+          morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+        });
+        return;
+      }
       if (liveActivityIdRef.current) {
         try {
           await updateTimerLiveActivity(liveActivityIdRef.current, sleepType);

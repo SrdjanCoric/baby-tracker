@@ -2006,8 +2006,8 @@ async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: st
       duration_seconds: sleep.durationSeconds,
       notes: sleep.notes,
       logged_by: userId,
-      morning_classification: sleep.morningClassification,
-      morning_classification_version: sleep.morningClassificationVersion,
+      morning_classification: sleep.morningClassification ?? null,
+      morning_classification_version: sleep.morningClassificationVersion ?? null,
       created_at: sleep.createdAt,
       updated_at: sleep.updatedAt,
     };

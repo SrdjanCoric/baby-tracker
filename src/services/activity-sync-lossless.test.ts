@@ -1439,6 +1439,32 @@ describe("lossless activity sync", () => {
     expect(mergeRecordWriteMock).not.toHaveBeenCalled();
   });
 
+  it("keeps migrated legacy guest sleeps distinguishable from versioned records", async () => {
+    syncEngine = makeSyncEngine();
+    storage.set("@sleeps:guest-baby", JSON.stringify([{
+      id: "33333333-3333-4333-8333-333333333333",
+      babyId: "guest-baby",
+      type: "night",
+      startedAt: "2026-07-14T08:30:00.000Z",
+      endedAt: "2026-07-14T09:30:00.000Z",
+      createdAt: "2026-07-14T08:30:00.000Z",
+      updatedAt: "2026-07-14T09:30:00.000Z",
+    }]));
+
+    await syncGuestActivitiesToDatabase(
+      "user-1",
+      new Map([["guest-baby", "server-baby"]])
+    );
+
+    expect(syncEngine.enqueueOperation).toHaveBeenCalledWith(expect.objectContaining({
+      table: "sleep_sessions",
+      data: expect.objectContaining({
+        morning_classification: null,
+        morning_classification_version: null,
+      }),
+    }));
+  });
+
   it("retains guest activities when their queue entry cannot be persisted", async () => {
     syncEngine = makeSyncEngine();
     syncEngine.enqueueOperation.mockRejectedValue(new Error("queue persistence failed"));
