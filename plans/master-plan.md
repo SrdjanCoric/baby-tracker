@@ -169,7 +169,8 @@ Durable decisions that apply across all tasks:
 - [ ] 0040 · Add development onboarding tools (after 0039) → tasks/0040-add-development-onboarding-tools.md
 - [ ] 0041 · Cut over to role-based onboarding (after 0040) → tasks/0041-cut-over-to-role-based-onboarding.md
 - [x] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/done/0042-confirm-ambiguous-morning-sleep.md
+- [ ] 0043 · Respect the selected time format when starting timers earlier → tasks/0043-respect-timer-start-time-format.md
 
 ## Workflow status
 
-Tasks 0001 through 0036 and 0042 are merged. Task 0037 is ready, and tasks 0038 through 0041 are dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0036 and 0042 are merged. Tasks 0037 and 0043 are ready, and tasks 0038 through 0041 are dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
