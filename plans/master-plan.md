@@ -161,7 +161,7 @@ Durable decisions that apply across all tasks:
 - [x] 0032 · Load requested ranges before calculating statistics (after 0031) → tasks/done/0032-load-requested-statistics-ranges.md
 - [x] 0033 · Prevent duplicate bedtime predictions after evening night sleep → tasks/done/0033-prevent-duplicate-bedtime-predictions.md
 - [x] 0034 · Require complete profiles for new babies → tasks/done/0034-require-complete-new-baby-profiles.md
-- [>] 0035 · Create email-bound caregiver invitations → tasks/0035-share-verified-caregiver-invitation-links.md
+- [x] 0035 · Create email-bound caregiver invitations → tasks/done/0035-share-verified-caregiver-invitation-links.md
 - [ ] 0036 · Build the resumable new-owner onboarding path (after 0034) → tasks/0036-build-resumable-new-owner-onboarding.md
 - [ ] 0037 · Add optional account creation and caregiver invitation (after 0035, 0036) → tasks/0037-add-onboarding-caregiver-invitation.md
 - [ ] 0038 · Add code-first invited-caregiver onboarding (after 0037) → tasks/0038-add-code-first-caregiver-join-onboarding.md
@@ -172,4 +172,4 @@ Durable decisions that apply across all tasks:
 
 ## Workflow status
 
-Tasks 0001 through 0034 are merged. Task 0035 is in progress; 0036 and 0042 are ready, and the remaining tasks are dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0035 are merged. Tasks 0036 and 0042 are ready, and the remaining tasks are dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
