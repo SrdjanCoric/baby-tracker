@@ -132,6 +132,27 @@ describe("SleepStorageService", () => {
       expect(result.notes).toBe("Slept well after feeding");
     });
 
+    it("persists a versioned unresolved morning classification", async () => {
+      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+
+      const result = await SleepStorageService.addSleep({
+        babyId: "baby-123",
+        type: "nap",
+        startedAt: new Date("2024-01-18T08:30:00.000Z"),
+        endedAt: new Date("2024-01-18T09:35:00.000Z"),
+        durationSeconds: 3900,
+        morningClassification: "unresolved",
+        morningClassificationVersion: 1,
+      });
+
+      expect(result.morningClassification).toBe("unresolved");
+      expect(result.morningClassificationVersion).toBe(1);
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+        "@sleeps:baby-123",
+        expect.stringContaining('"morningClassification":"unresolved"')
+      );
+    });
+
     it("should append to existing sleeps", async () => {
       const existingSleep: StoredSleepEntry = {
         id: "sleep-1",
@@ -331,6 +352,32 @@ describe("SleepStorageService", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe("sleep-2");
+    });
+  });
+
+  describe("wake-window continuation allowance", () => {
+    it("defaults missing values to 25 minutes while preserving an existing caregiver value", async () => {
+      vi.mocked(AsyncStorage.getItem)
+        .mockResolvedValueOnce(JSON.stringify({
+          enabled: true,
+          napCount: 2,
+          slots: [],
+          source: "custom",
+        }))
+        .mockResolvedValueOnce(JSON.stringify({
+          enabled: true,
+          napCount: 2,
+          slots: [],
+          source: "custom",
+          napContinuationMinutes: 15,
+        }));
+
+      await expect(SleepStorageService.getWakeWindowConfig("baby-new")).resolves.toEqual(
+        expect.objectContaining({ napContinuationMinutes: 25 })
+      );
+      await expect(SleepStorageService.getWakeWindowConfig("baby-existing")).resolves.toEqual(
+        expect.objectContaining({ napContinuationMinutes: 15 })
+      );
     });
   });
 

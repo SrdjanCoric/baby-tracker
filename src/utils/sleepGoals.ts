@@ -360,7 +360,7 @@ export function getDefaultWakeWindowConfig(
     dayStartHour: 6,
     dayEndHour: 19,
     dayBoundariesConfigured: false,
-    napContinuationMinutes: 15,
+    napContinuationMinutes: 25,
   };
 }
 

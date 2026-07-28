@@ -168,7 +168,7 @@ Durable decisions that apply across all tasks:
 - [ ] 0039 · Restore returning users before opening Home (after 0038) → tasks/0039-restore-returning-users-before-home.md
 - [ ] 0040 · Add development onboarding tools (after 0039) → tasks/0040-add-development-onboarding-tools.md
 - [ ] 0041 · Cut over to role-based onboarding (after 0040) → tasks/0041-cut-over-to-role-based-onboarding.md
-- [ ] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/0042-confirm-ambiguous-morning-sleep.md
+- [~] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/0042-confirm-ambiguous-morning-sleep.md
 
 ## Workflow status
 

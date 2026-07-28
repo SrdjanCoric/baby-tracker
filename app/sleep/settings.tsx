@@ -32,7 +32,7 @@ const SLEEP_PURPLE_MUTED_DARK = "#362E42";
 
 const QUICK_GOALS_HOURS = [11, 12, 13, 14, 15, 16];
 const NAP_COUNT_OPTIONS = [1, 2, 3, 4, 5];
-const NAP_CONTINUATION_OPTIONS = [10, 15, 20, 30];
+const NAP_CONTINUATION_OPTIONS = [10, 15, 20, 25, 30];
 
 export default function SleepSettingsScreen() {
   const { t } = useTranslation();
@@ -82,7 +82,7 @@ export default function SleepSettingsScreen() {
 
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
   const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
-  const napContinuationMinutes = wakeWindowConfig?.napContinuationMinutes ?? 15;
+  const napContinuationMinutes = wakeWindowConfig?.napContinuationMinutes ?? 25;
 
   const confirmHouseholdChange = useCallback(
     (onConfirm: () => void, options?: { title?: string; message?: string }) => {

@@ -134,6 +134,16 @@ function runCaregiverInvitationTests() {
   }
 }
 
+function runMorningClassificationTests() {
+  const file = join(ROOT, "scripts/sql/morning-classification-tests.sql");
+  try {
+    const out = psql(["-f", file]);
+    return { ok: true, out };
+  } catch (err) {
+    return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
+  }
+}
+
 // Two overlapping transactions merge the same row concurrently, each editing a different field
 // with a newer clock. The advisory lock in merge_record must serialize them so neither field is
 // lost. Worker A holds the lock (pg_sleep) so B provably waits and re-reads A's committed write.
@@ -376,6 +386,16 @@ if (caregiverInvitations.ok) {
 } else {
   console.log(`${RED}✗ caregiver invitation tests failed${RESET}`);
   process.stdout.write(caregiverInvitations.out);
+  hardFail = true;
+}
+
+console.log("");
+const morningClassification = runMorningClassificationTests();
+if (morningClassification.ok) {
+  console.log(`${GREEN}✓${RESET} morning classification: legacy compatibility, partial updates, defaults, and RLS`);
+} else {
+  console.log(`${RED}✗ morning classification tests failed${RESET}`);
+  process.stdout.write(morningClassification.out);
   hardFail = true;
 }
 

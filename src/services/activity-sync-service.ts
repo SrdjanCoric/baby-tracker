@@ -999,6 +999,8 @@ export async function createSleepInDatabase(
     durationSeconds: input.durationSeconds,
     notes: input.notes,
     loggedBy: userId,
+    morningClassification: input.morningClassification,
+    morningClassificationVersion: input.morningClassificationVersion,
     createdAt: now,
     updatedAt: now,
   };
@@ -1031,6 +1033,8 @@ export async function createSleepInDatabase(
             duration_seconds: input.durationSeconds,
             notes: input.notes,
             logged_by: userId,
+            morning_classification: input.morningClassification,
+            morning_classification_version: input.morningClassificationVersion,
             created_at: now,
             updated_at: now,
           },
@@ -1054,6 +1058,12 @@ export async function updateSleepInDatabase(
   if (input.durationSeconds !== undefined) updateData.duration_seconds = input.durationSeconds;
   if (input.notes !== undefined) updateData.notes = input.notes;
   if (input.type !== undefined) updateData.type = input.type;
+  if (input.morningClassification !== undefined) {
+    updateData.morning_classification = input.morningClassification;
+  }
+  if (input.morningClassificationVersion !== undefined) {
+    updateData.morning_classification_version = input.morningClassificationVersion;
+  }
 
   let updatedSleep: StoredSleepEntry | null = null;
 
@@ -1111,6 +1121,8 @@ function transformSleepFromDb(data: Record<string, unknown>): StoredSleepEntry {
     durationSeconds: data.duration_seconds as number | undefined,
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
+    morningClassification: data.morning_classification as StoredSleepEntry["morningClassification"],
+    morningClassificationVersion: data.morning_classification_version as number | null | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
@@ -1994,6 +2006,8 @@ async function syncSleepForBaby(oldBabyId: string, newBabyId: string, userId: st
       duration_seconds: sleep.durationSeconds,
       notes: sleep.notes,
       logged_by: userId,
+      morning_classification: sleep.morningClassification,
+      morning_classification_version: sleep.morningClassificationVersion,
       created_at: sleep.createdAt,
       updated_at: sleep.updatedAt,
     };
