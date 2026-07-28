@@ -45,6 +45,7 @@ jest.mock("react-i18next", () => ({
         "dashboard.napTimeNear": "Nap time near",
         "dashboard.bedtimeNear": "Bedtime near",
         "dashboard.napTimeAgo": `Nap time ${options?.time || ""} ago`,
+        "dashboard.bedtimeAgo": `Bedtime ${options?.time || ""} ago`,
         "dashboard.predictionInfo": "About predictions",
         "dashboard.predictionInfoDetail": `Predictions are based on ${options?.name || ""}'s recent sleep patterns.`,
         "dashboard.predictionInfoDetailGeneric": "Predictions are based on recent sleep patterns.",
@@ -119,6 +120,7 @@ jest.mock("@react-native-community/datetimepicker", () => {
   };
 });
 
+import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import { SleepPredictionCard } from "./SleepPredictionCard";
 
 const defaultSleepContext = () => ({
@@ -397,6 +399,29 @@ describe("SleepPredictionCard", () => {
       render(<SleepPredictionCard babyName="Sofija" />);
       await act(async () => {});
       expect(screen.getByText(/Nap time.*ago/)).toBeTruthy();
+    });
+
+    it("shows a genuine overdue bedtime after a daytime nap", async () => {
+      jest.setSystemTime(new Date(2026, 3, 27, 21, 0, 0));
+      const morningSleep = makeNightSleep(new Date(2026, 3, 27, 7, 0, 0));
+      const daytimeNap = makeNapSleep(new Date(2026, 3, 27, 17, 15, 0), 45);
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleeps: [morningSleep, daytimeNap],
+        qualifyingDayCount: 10,
+        sleepPredictionModel: makeModel({ medianBedtimeStart: 22 }),
+        wakeWindowConfig: { dayStartHour: 7, dayEndHour: 21, dayBoundariesConfigured: true },
+      };
+      mockGetLastSleep.mockReturnValue(daytimeNap);
+      mockPredictNextSleep.mockReturnValue({
+        predictedTime: new Date(2026, 3, 27, 20, 45, 0),
+        type: "bedtime",
+      });
+
+      render(<SleepPredictionCard babyName="Sofija" />);
+      await act(async () => {});
+
+      expect(screen.getByText(/Bedtime .* ago/)).toBeTruthy();
     });
 
   });
@@ -837,6 +862,75 @@ describe("SleepPredictionCard", () => {
   });
 
   describe("Nighttime edge cases", () => {
+    it("keeps a completed current-evening night sleep in the calm bedtime state", async () => {
+      jest.setSystemTime(new Date(2026, 3, 27, 23, 20, 0));
+      const morningSleep = makeNightSleep(new Date(2026, 3, 27, 7, 0, 0));
+      const startedAt = new Date(2026, 3, 27, 20, 30, 0);
+      const endedAt = new Date(2026, 3, 27, 23, 20, 0);
+      const eveningSleep = {
+        ...makeNapSleep(startedAt, 170),
+        type: classifySleepByTimeRange(startedAt, endedAt, 7, 21),
+      };
+
+      expect(eveningSleep.type).toBe("night");
+
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleeps: [morningSleep, eveningSleep],
+        qualifyingDayCount: 10,
+        sleepPredictionModel: makeModel({ medianBedtimeStart: 22 }),
+        wakeWindowConfig: { dayStartHour: 7, dayEndHour: 21, dayBoundariesConfigured: true },
+      };
+      mockGetLastSleep.mockReturnValue(eveningSleep);
+      mockPredictNextSleep.mockReturnValue({
+        predictedTime: new Date(2026, 3, 27, 22, 45, 0),
+        type: "bedtime",
+      });
+
+      render(<SleepPredictionCard babyName="Sofija" />);
+      await act(async () => {});
+
+      expect(screen.getByText("Bedtime")).toBeTruthy();
+      expect(screen.queryByText(/Bedtime .* ago/)).toBeNull();
+    });
+
+    it("expires the completed-evening state across midnight and the morning threshold", async () => {
+      jest.setSystemTime(new Date(2026, 3, 27, 23, 59, 0));
+      const morningSleep = makeNightSleep(new Date(2026, 3, 27, 7, 0, 0));
+      const startedAt = new Date(2026, 3, 27, 20, 30, 0);
+      const endedAt = new Date(2026, 3, 27, 23, 20, 0);
+      const eveningSleep = {
+        ...makeNapSleep(startedAt, 170),
+        type: classifySleepByTimeRange(startedAt, endedAt, 7, 21),
+      };
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleeps: [morningSleep, eveningSleep],
+        qualifyingDayCount: 10,
+        sleepPredictionModel: makeModel({ medianBedtimeStart: 22 }),
+        wakeWindowConfig: { dayStartHour: 7, dayEndHour: 21, dayBoundariesConfigured: true },
+      };
+      mockGetLastSleep.mockReturnValue(eveningSleep);
+      mockPredictNextSleep.mockReturnValue({
+        predictedTime: new Date(2026, 3, 27, 22, 45, 0),
+        type: "bedtime",
+      });
+
+      render(<SleepPredictionCard babyName="Sofija" />);
+      await act(async () => {});
+      expect(screen.getByText("Bedtime")).toBeTruthy();
+
+      act(() => {
+        jest.advanceTimersByTime(60 * 1000);
+      });
+      expect(screen.getByText("Nighttime")).toBeTruthy();
+
+      act(() => {
+        jest.advanceTimersByTime((3 * 60 + 57) * 60 * 1000);
+      });
+      expect(screen.getByText("Track sleep so we can predict nap times")).toBeTruthy();
+    });
+
     it("shows nighttime in bedtime zone when no prediction data", () => {
       jest.setSystemTime(new Date(2026, 3, 27, 19, 30, 0));
       mockUseSleepReturn = {

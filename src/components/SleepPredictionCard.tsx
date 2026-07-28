@@ -131,6 +131,26 @@ const SleepPredictionCardInner = ({
   const nighttimeThresholdHour = medianBedtimeHour ?? effectiveDayEnd;
   const bedtimeZoneStartHour = nighttimeThresholdHour - BEDTIME_ZONE_MINUTES / 60;
 
+  const hasCompletedCurrentEveningNightSleep = useMemo((): boolean => {
+    const now = new Date(
+      Math.max(Date.now(), morningReferenceTime.getTime())
+    );
+    const dayEnd = new Date(now);
+    dayEnd.setHours(
+      Math.floor(effectiveDayEnd),
+      Math.round((effectiveDayEnd % 1) * 60),
+      0,
+      0
+    );
+    if (now.getTime() < dayEnd.getTime()) return false;
+
+    const lastSleep = getLastSleep();
+    if (lastSleep?.type !== "night" || !lastSleep.endedAt) return false;
+
+    const endedAtMs = new Date(lastSleep.endedAt).getTime();
+    return endedAtMs >= dayEnd.getTime() && endedAtMs <= now.getTime();
+  }, [effectiveDayEnd, getLastSleep, morningReferenceTime]);
+
   const cardState = useMemo((): CardState | null => {
     if (!selectedBaby) {
       return "loading";
@@ -165,6 +185,10 @@ const SleepPredictionCardInner = ({
       return "nighttime";
     }
 
+    if (hasCompletedCurrentEveningNightSleep) {
+      return "nighttime";
+    }
+
     if (currentHour >= bedtimeZoneStartHour && !hasPredictionData) {
       return "nighttime";
     }
@@ -179,7 +203,7 @@ const SleepPredictionCardInner = ({
 
     return "prediction";
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasNightSleepToday, hasPredictionData, qualifyingDayCount, morningReferenceTime]);
+  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasCompletedCurrentEveningNightSleep, hasNightSleepToday, hasPredictionData, qualifyingDayCount, morningReferenceTime]);
 
 
 
