@@ -3,7 +3,11 @@ import { act, render, waitFor } from "@testing-library/react-native";
 import React, { useEffect } from "react";
 import { BabyProvider, useBaby } from "@/contexts/baby-context";
 import { useWatchMessageHandler } from "@/hooks/useWatchMessageHandler";
-import { BabyStorageService, StoredBabyProfile } from "@/services/baby-storage";
+import {
+  BabyStorageService,
+  StoredBabyProfile,
+  type CreateBabyInput,
+} from "@/services/baby-storage";
 import { setStorageUserId } from "@/services/storage-prefix";
 import type { RemoteChange } from "@/services/sync";
 
@@ -148,6 +152,12 @@ const babyB: StoredBabyProfile = {
   name: "Baby B",
   createdAt: "2026-02-01T00:00:00.000Z",
   updatedAt: "2026-02-01T00:00:00.000Z",
+};
+
+const babyBCreateInput: CreateBabyInput = {
+  name: babyB.name,
+  birthDate: new Date("2026-02-01T00:00:00.000Z"),
+  gender: "female",
 };
 
 const babyC: StoredBabyProfile = {
@@ -313,7 +323,7 @@ describe("Watch selection after Realtime baby changes", () => {
     await waitFor(() => expect(fetchAndSyncHouseholdBabies).toHaveBeenCalled());
 
     await act(async () => {
-      await babyContext?.addBaby({ name: babyB.name });
+      await babyContext?.addBaby(babyBCreateInput);
     });
     expect(babyContext?.getBabyById(babyB.id)).toEqual(babyB);
 
@@ -560,7 +570,7 @@ describe("Watch selection after Realtime baby changes", () => {
     );
     await waitFor(() => expect(babyContext?.selectedBaby?.id).toBe(babyA.id));
 
-    const addPromise = babyContext!.addBaby({ name: babyB.name });
+    const addPromise = babyContext!.addBaby(babyBCreateInput);
     const staleAddExpectation = expect(addPromise).rejects.toThrow(/account changed/i);
     mockUser = {
       id: "user-2",

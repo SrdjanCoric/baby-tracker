@@ -46,6 +46,25 @@ describe("BabySetupScreen", () => {
     expect(screen.getByText("validation.genderRequired")).toBeTruthy();
   });
 
+  it("rejects a name that becomes blank after sanitizing", async () => {
+    const today = new Date();
+
+    render(<BabySetupScreen />);
+
+    fireEvent.changeText(screen.getByTestId("baby-name-input"), "<script></script>");
+    fireEvent.press(screen.getByTestId("birth-date-picker"));
+    fireEvent(screen.getByTestId("birth-date-input"), "onChange", {
+      nativeEvent: { timestamp: today.getTime(), utcOffset: 0 },
+    });
+    fireEvent.press(screen.getByTestId("gender-male"));
+    fireEvent.press(screen.getByTestId("continue-button"));
+
+    await waitFor(() => {
+      expect(screen.getByText("validation.nameRequired")).toBeTruthy();
+    });
+    expect(mockAddBaby).not.toHaveBeenCalled();
+  });
+
   it("creates a complete onboarding profile born today", async () => {
     const today = new Date();
 

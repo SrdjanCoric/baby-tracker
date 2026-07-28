@@ -66,7 +66,11 @@ export default function BabySetupScreen() {
       return;
     }
 
-    const validation = validateNewBabyProfile({ name, birthDate, gender });
+    const validation = validateNewBabyProfile({
+      name: sanitizeName(name),
+      birthDate,
+      gender,
+    });
 
     setErrors(validation.errors);
 
@@ -79,10 +83,7 @@ export default function BabySetupScreen() {
     setErrors({});
 
     try {
-      const newBaby = await addBaby({
-        ...validation.data,
-        name: sanitizeName(validation.data.name),
-      });
+      const newBaby = await addBaby(validation.data);
       await selectBaby(newBaby.id);
       await completeOnboarding();
       router.replace("/(tabs)");

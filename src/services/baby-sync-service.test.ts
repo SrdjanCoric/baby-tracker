@@ -3,6 +3,7 @@ import { createBabyInDatabase, updateBabyInDatabase, fetchAndSyncHouseholdBabies
 import { __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
 import { __resetDeviceIdForTests } from "./sync/device-id";
 import { setStorageUserId } from "./storage-prefix";
+import type { CreateBabyInput } from "./baby-storage";
 
 const asyncStore = new Map<string, string>();
 vi.mock("@react-native-async-storage/async-storage", () => ({
@@ -25,6 +26,13 @@ const rpc = vi.fn();
 const insert = vi.fn();
 const update = vi.fn();
 const selectResult = { data: [] as unknown[], error: null as unknown };
+const completeBabyInput: CreateBabyInput = {
+  id: "b1",
+  name: "Ada",
+  birthDate: new Date("2025-01-01T00:00:00.000Z"),
+  gender: "female",
+};
+
 vi.mock("./supabase", () => ({
   supabase: {
     rpc: (...args: unknown[]) => rpc(...args),
@@ -69,7 +77,7 @@ describe("baby-sync-service CRDT writes", () => {
       error: null,
     });
 
-    const baby = await createBabyInDatabase({ id: "b1", name: "Ada" }, "h1");
+    const baby = await createBabyInDatabase(completeBabyInput, "h1");
 
     expect(insert).not.toHaveBeenCalled();
     expect(rpc).toHaveBeenCalledTimes(1);
@@ -102,7 +110,7 @@ describe("baby-sync-service CRDT writes", () => {
     rpc.mockImplementation(() => new Promise(resolve => { resolveRpc = resolve; }));
     setStorageUserId("user-a");
 
-    const create = createBabyInDatabase({ id: "b1", name: "Ada" }, "h1");
+    const create = createBabyInDatabase(completeBabyInput, "h1");
     await vi.waitFor(() => expect(resolveRpc).toBeDefined());
     setStorageUserId("user-b");
     resolveRpc?.({
