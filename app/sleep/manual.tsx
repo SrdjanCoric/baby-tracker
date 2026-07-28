@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useColorScheme } from "nativewind";
@@ -23,12 +23,14 @@ import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import { ACTIVITY } from "@/constants/colors";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const QUICK_DURATIONS = [15, 30, 45, 60, 90, 120];
 
 export default function ManualSleepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addSleep, sleeps, wakeWindowConfig } = useSleep();
@@ -163,7 +165,12 @@ export default function ManualSleepScreen() {
         durationSeconds: durationSeconds ?? 0,
         notes: notes || undefined,
       });
-      router.replace("/(tabs)");
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("sleep");
+        router.replace("/onboarding/owner/saved");
+      } else {
+        router.replace("/(tabs)");
+      }
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
@@ -176,6 +183,7 @@ export default function ManualSleepScreen() {
     addSleep,
     sleeps,
     checkAndConfirmSleep,
+    onboardingPreview,
     router,
     wakeWindowConfig?.dayStartHour,
     wakeWindowConfig?.dayEndHour,

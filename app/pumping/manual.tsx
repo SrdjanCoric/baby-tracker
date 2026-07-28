@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useColorScheme } from "nativewind";
@@ -24,6 +24,7 @@ import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const QUICK_DURATIONS = [5, 10, 15, 20, 30, 45];
 const QUICK_AMOUNTS_OZ = [1, 2, 3, 4, 5, 6];
@@ -34,6 +35,7 @@ type VolumeUnit = "ml" | "oz";
 export default function ManualPumpingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { selectedBaby } = useBaby();
   const { volumeUnit } = useUnits();
   const { timeFormat } = useTimeFormat();
@@ -196,7 +198,12 @@ export default function ManualPumpingScreen() {
         volumeMl: volumeMl ?? undefined,
         notes: notes || undefined,
       });
-      router.replace("/(tabs)");
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("pumping");
+        router.replace("/onboarding/owner/saved");
+      } else {
+        router.replace("/(tabs)");
+      }
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
@@ -209,6 +216,7 @@ export default function ManualPumpingScreen() {
     volumeMl,
     notes,
     addPumping,
+    onboardingPreview,
     router,
   ]);
 

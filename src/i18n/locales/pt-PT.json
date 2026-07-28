@@ -2019,5 +2019,50 @@
         "7plus": "Um testemunho do cérebro em crescimento do seu bebé. Seu ritmo circadiano é robusto, seus ciclos de sono estão amadurecendo para padrões semelhantes aos dos adultos, e sua capacidade natural de auto-acalmar se desenvolveu maravilhosamente."
       }
     }
+  },
+  "newOwnerOnboarding": {
+    "startOver": "Recomeçar",
+    "welcome": {
+      "title": "Cuide do seu bebé com confiança",
+      "promise": "Registe alimentação, sono, fraldas e muito mais, sozinho ou em conjunto com a família.",
+      "startTracking": "Começar a registar",
+      "joinFamily": "Juntar-se a uma família",
+      "signIn": "Iniciar sessão",
+      "language": "Idioma: {{language}}"
+    },
+    "baby": {
+      "requiredHint": "Perfil do bebé",
+      "title": "Fale-nos sobre o seu bebé",
+      "subtitle": "Assim, cada atividade fica associada ao perfil certo.",
+      "name": "Nome do bebé",
+      "namePlaceholder": "Introduza um nome",
+      "birthDate": "Data de nascimento",
+      "selectBirthDate": "Selecionar data de nascimento",
+      "gender": "Sexo",
+      "male": "Menino",
+      "female": "Menina",
+      "createFailed": "Não foi possível criar o perfil do bebé. Tente novamente."
+    },
+    "activity": {
+      "title": "Registe uma primeira atividade",
+      "subtitle": "Pode fazê-lo agora ou começar a partir do Início.",
+      "feeding": "Alimentação",
+      "sleep": "Sono",
+      "diaper": "Fralda",
+      "pumping": "Extração",
+      "growth": "Crescimento",
+      "tummyTime": "Tempo de barriga",
+      "health": "Saúde",
+      "milestones": "Marcos",
+      "seeAll": "Ver todos os tipos de atividade",
+      "notNow": "Agora não",
+      "skipRemaining": "Ignorar o resto da configuração"
+    },
+    "saved": {
+      "title": "Atividade guardada",
+      "message": "A primeira atividade já está na cronologia.",
+      "viewTimeline": "Ver ou editar na cronologia",
+      "continueHome": "Ir para o Início"
+    }
   }
 }

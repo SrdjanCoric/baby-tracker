@@ -1,0 +1,58 @@
+appId: com.sofibaby.app
+name: Development New Owner Onboarding Restart
+
+tags:
+  - development
+  - onboarding
+
+---
+- launchApp:
+    clearState: true
+    arguments:
+      onboardingPreview: "true"
+
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 15000
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-de"
+- assertVisible: "Kümmere dich mit Zuversicht um dein Baby"
+- tapOn:
+    id: "start-tracking-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-baby-screen"
+    timeout: 10000
+- tapOn:
+    id: "owner-baby-name"
+- inputText: "Mila"
+- tapOn:
+    id: "dismiss-keyboard"
+
+- stopApp
+- launchApp:
+    clearState: false
+    arguments:
+      onboardingPreview: "true"
+
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-baby-screen"
+    timeout: 15000
+- assertVisible: "Mila"
+- tapOn:
+    id: "owner-baby-continue"
+- assertVisible: "Geburtsdatum ist erforderlich"
+- assertVisible: "Wähle Junge oder Mädchen aus"
+
+- tapOn:
+    id: "owner-start-over"
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 10000
+- assertNotVisible: "Mila"

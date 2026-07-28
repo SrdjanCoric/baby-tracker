@@ -13,6 +13,9 @@ import { AchievementProvider } from "@/contexts/achievement-context";
 import { SyncAuthGate } from "@/components/SyncAuthGate";
 import { AuthScopeBoundary } from "@/components/AuthScopeBoundary";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { LanguageStorageService } from "@/services/language-storage";
+import { isNewOwnerOnboardingPreviewEnabled } from "@/utils/e2e-mode";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
@@ -50,12 +53,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
       if (!isMountedRef.current) return;
 
-      const currentSegment = segments[0];
+      const routeSegments = segments as readonly string[];
+      const currentSegment = routeSegments[0];
       const inAuthGroup = currentSegment === "auth";
       const inOnboardingGroup = currentSegment === "onboarding";
+      const inNewOwnerGroup = inOnboardingGroup && routeSegments[1] === "owner";
       const isAuthCallback = currentSegment === "login-callback";
+      const previewEnabled = isNewOwnerOnboardingPreviewEnabled();
 
-      // Skip navigation logic for login-callback route - it handles its own navigation
       if (isAuthCallback) {
         if (isMountedRef.current) {
           setIsReady(true);
@@ -63,7 +68,54 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (!hasCompletedOnboarding && !inOnboardingGroup && !inAuthGroup) {
+      if (inNewOwnerGroup && !previewEnabled) {
+        router.replace(hasCompletedOnboarding ? "/(tabs)" : "/onboarding");
+      } else if (previewEnabled && !inAuthGroup) {
+        const language = await LanguageStorageService.getLanguagePreference();
+        const previewState = await NewOwnerOnboardingStorageService.getState(language);
+        if (!isMountedRef.current) return;
+
+        if (previewState.screen === "completed") {
+          if (inOnboardingGroup) router.replace("/(tabs)");
+        } else {
+          const activitySegments = [
+            "feeding",
+            "sleep",
+            "diaper",
+            "pumping",
+            "growth",
+            "tummyTime",
+            "health",
+            "milestones",
+          ];
+          const inFirstActivityForm =
+            previewState.screen === "first-activity" &&
+            typeof currentSegment === "string" &&
+            activitySegments.includes(currentSegment);
+          const expectedRoute = previewState.screen === "welcome"
+            ? "/onboarding/owner"
+            : previewState.screen === "owner-baby"
+              ? "/onboarding/owner/baby"
+              : previewState.screen === "activity-saved"
+                ? "/onboarding/owner/saved"
+                : "/onboarding/owner/activity";
+          const expectedLeaf = previewState.screen === "welcome"
+            ? undefined
+            : previewState.screen === "owner-baby"
+              ? "baby"
+              : previewState.screen === "activity-saved"
+                ? "saved"
+                : "activity";
+          const onExpectedOwnerRoute =
+            inNewOwnerGroup &&
+            (expectedLeaf === undefined
+              ? routeSegments[2] === undefined
+              : routeSegments[2] === expectedLeaf);
+          if (!inFirstActivityForm && !onExpectedOwnerRoute) {
+            router.replace(expectedRoute);
+          }
+        }
+      } else if (!hasCompletedOnboarding && !inOnboardingGroup && !inAuthGroup) {
         router.replace("/onboarding");
       } else if (hasCompletedOnboarding && inOnboardingGroup) {
         router.replace("/(tabs)");

@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useColorScheme } from "nativewind";
@@ -20,12 +20,14 @@ import { formatTime as formatTimeUtil } from "@/utils/time";
 import { te } from "@/utils/translate-errors";
 import { validateManualTummyTime } from "@/validators/tummyTime";
 import { ACTIVITY } from "@/constants/colors";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const QUICK_DURATIONS = [1, 2, 3, 5, 10, 15];
 
 export default function ManualTummyTimeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addTummyTime } = useTummyTime();
@@ -136,12 +138,17 @@ export default function ManualTummyTimeScreen() {
         durationSeconds,
         notes: notes || undefined,
       });
-      router.replace("/(tabs)");
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("tummyTime");
+        router.replace("/onboarding/owner/saved");
+      } else {
+        router.replace("/(tabs)");
+      }
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, startTime, durationMinutes, notes, addTummyTime, router]);
+  }, [selectedBaby, startTime, durationMinutes, notes, addTummyTime, onboardingPreview, router]);
 
   const canSave = durationMinutes !== null && durationMinutes > 0;
 

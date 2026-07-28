@@ -2017,5 +2017,50 @@
         "7plus": "La preuve que le cerveau de votre bébé se développe bien. Son rythme circadien est robuste, ses cycles de sommeil mûrissent vers des modèles semblables à ceux de l'adulte, et sa capacité naturelle à se calmer s'est développée magnifiquement."
       }
     }
+  },
+  "newOwnerOnboarding": {
+    "startOver": "Recommencer",
+    "welcome": {
+      "title": "Prenez soin de votre bébé en toute confiance",
+      "promise": "Suivez les repas, le sommeil, les couches et bien plus, seul ou avec votre famille.",
+      "startTracking": "Commencer le suivi",
+      "joinFamily": "Rejoindre une famille",
+      "signIn": "Se connecter",
+      "language": "Langue : {{language}}"
+    },
+    "baby": {
+      "requiredHint": "Profil du bébé",
+      "title": "Parlez-nous de votre bébé",
+      "subtitle": "Chaque activité sera ainsi associée au bon profil.",
+      "name": "Prénom du bébé",
+      "namePlaceholder": "Saisissez un prénom",
+      "birthDate": "Date de naissance",
+      "selectBirthDate": "Sélectionner la date de naissance",
+      "gender": "Sexe",
+      "male": "Garçon",
+      "female": "Fille",
+      "createFailed": "Impossible de créer le profil du bébé. Réessayez."
+    },
+    "activity": {
+      "title": "Enregistrez une première activité",
+      "subtitle": "Vous pouvez le faire maintenant ou commencer depuis l'accueil.",
+      "feeding": "Repas",
+      "sleep": "Sommeil",
+      "diaper": "Couche",
+      "pumping": "Tirage",
+      "growth": "Croissance",
+      "tummyTime": "Temps sur le ventre",
+      "health": "Santé",
+      "milestones": "Étapes",
+      "seeAll": "Voir tous les types d'activité",
+      "notNow": "Pas maintenant",
+      "skipRemaining": "Ignorer le reste de la configuration"
+    },
+    "saved": {
+      "title": "Activité enregistrée",
+      "message": "Votre première activité est disponible dans la chronologie.",
+      "viewTimeline": "Voir ou modifier dans la chronologie",
+      "continueHome": "Aller à l'accueil"
+    }
   }
 }

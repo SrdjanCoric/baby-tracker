@@ -27,6 +27,7 @@ import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { formatTime as formatTimeUtil } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const QUICK_AMOUNTS_OZ = [1, 2, 3, 4, 5, 6];
 const QUICK_AMOUNTS_ML = [30, 60, 90, 120, 150, 180];
@@ -39,7 +40,10 @@ type FeedingTypeParam = "breastfeed" | "bottle" | "solids";
 export default function ManualFeedingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const params = useLocalSearchParams<{ type?: FeedingTypeParam }>();
+  const params = useLocalSearchParams<{
+    type?: FeedingTypeParam;
+    onboardingPreview?: string;
+  }>();
   const { selectedBaby } = useBaby();
   const { addFeeding, feedings } = useFeeding();
   const { volumeUnit } = useUnits();
@@ -264,6 +268,15 @@ export default function ManualFeedingScreen() {
     return food.charAt(0).toUpperCase() + food.slice(1).replace(/([A-Z])/g, " $1");
   };
 
+  const finishSave = useCallback(async () => {
+    if (params.onboardingPreview === "firstActivity") {
+      await NewOwnerOnboardingStorageService.markActivitySaved("feeding");
+      router.replace("/onboarding/owner/saved");
+      return;
+    }
+    router.replace("/(tabs)");
+  }, [params.onboardingPreview, router]);
+
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
     if (!selectedBaby) return;
@@ -300,7 +313,7 @@ export default function ManualFeedingScreen() {
           notes: notes || undefined,
         });
         await scheduleReminderAfterFeeding(startTime);
-        router.replace("/(tabs)");
+        await finishSave();
       } finally {
         isSavingRef.current = false;
         setIsSaving(false);
@@ -330,7 +343,7 @@ export default function ManualFeedingScreen() {
           notes: notes || undefined,
         });
         await scheduleReminderAfterFeeding(startTime);
-        router.replace("/(tabs)");
+        await finishSave();
       } finally {
         isSavingRef.current = false;
         setIsSaving(false);
@@ -354,7 +367,7 @@ export default function ManualFeedingScreen() {
           notes: notes || undefined,
         });
         await scheduleReminderAfterFeeding(startTime);
-        router.replace("/(tabs)");
+        await finishSave();
       } finally {
         isSavingRef.current = false;
         setIsSaving(false);
@@ -373,7 +386,7 @@ export default function ManualFeedingScreen() {
     notes,
     addFeeding,
     scheduleReminderAfterFeeding,
-    router,
+    finishSave,
     t,
   ]);
 

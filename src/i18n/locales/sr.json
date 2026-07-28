@@ -2108,5 +2108,50 @@
         "7plus": "Dokaz koliko je mozak tvoje bebe napredovao. Njen cirkadijalni ritam je robustan, ciklusi spavanja sazrevaju ka obrascima odraslih, i njena prirodna sposobnost samoumirivanja se divno razvila."
       }
     }
+  },
+  "newOwnerOnboarding": {
+    "startOver": "Počni ispočetka",
+    "welcome": {
+      "title": "Brinite o svojoj bebi sa sigurnošću",
+      "promise": "Pratite hranjenje, spavanje, pelene i još mnogo toga — sami ili zajedno sa porodicom.",
+      "startTracking": "Počni praćenje",
+      "joinFamily": "Pridruži se porodici",
+      "signIn": "Prijavi se",
+      "language": "Jezik: {{language}}"
+    },
+    "baby": {
+      "requiredHint": "Profil bebe",
+      "title": "Recite nam nešto o svojoj bebi",
+      "subtitle": "Tako će svaka aktivnost biti povezana sa pravim profilom.",
+      "name": "Ime bebe",
+      "namePlaceholder": "Unesite ime",
+      "birthDate": "Datum rođenja",
+      "selectBirthDate": "Izaberite datum rođenja",
+      "gender": "Pol",
+      "male": "Dečak",
+      "female": "Devojčica",
+      "createFailed": "Nismo uspeli da napravimo profil bebe. Pokušajte ponovo."
+    },
+    "activity": {
+      "title": "Zabeležite prvu aktivnost",
+      "subtitle": "Možete to uraditi sada ili početi sa početnog ekrana.",
+      "feeding": "Hranjenje",
+      "sleep": "Spavanje",
+      "diaper": "Pelena",
+      "pumping": "Izdajanje",
+      "growth": "Rast",
+      "tummyTime": "Vreme na stomaku",
+      "health": "Zdravlje",
+      "milestones": "Prekretnice",
+      "seeAll": "Prikaži sve vrste aktivnosti",
+      "notNow": "Ne sada",
+      "skipRemaining": "Preskoči preostalo podešavanje"
+    },
+    "saved": {
+      "title": "Aktivnost je sačuvana",
+      "message": "Vaša prva aktivnost je spremna na vremenskoj liniji.",
+      "viewTimeline": "Prikaži ili izmeni na vremenskoj liniji",
+      "continueHome": "Idi na početni ekran"
+    }
   }
 }

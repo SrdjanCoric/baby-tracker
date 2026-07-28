@@ -2021,5 +2021,50 @@
         "7plus": "Una testimonianza del cervello in crescita del tuo bambino. Il suo ritmo circadiano è robusto, i suoi cicli di sonno stanno maturando verso schemi simili a quelli adulti, e la sua naturale capacità di autoconsolarsi si è sviluppata meravigliosamente."
       }
     }
+  },
+  "newOwnerOnboarding": {
+    "startOver": "Ricomincia",
+    "welcome": {
+      "title": "Prenditi cura del tuo bambino con sicurezza",
+      "promise": "Registra poppate, sonno, pannolini e molto altro, da solo o insieme alla famiglia.",
+      "startTracking": "Inizia a registrare",
+      "joinFamily": "Unisciti a una famiglia",
+      "signIn": "Accedi",
+      "language": "Lingua: {{language}}"
+    },
+    "baby": {
+      "requiredHint": "Profilo del bambino",
+      "title": "Parlaci del tuo bambino",
+      "subtitle": "Così ogni attività sarà associata al profilo corretto.",
+      "name": "Nome del bambino",
+      "namePlaceholder": "Inserisci un nome",
+      "birthDate": "Data di nascita",
+      "selectBirthDate": "Seleziona la data di nascita",
+      "gender": "Sesso",
+      "male": "Bambino",
+      "female": "Bambina",
+      "createFailed": "Non è stato possibile creare il profilo del bambino. Riprova."
+    },
+    "activity": {
+      "title": "Registra una prima attività",
+      "subtitle": "Puoi farlo ora o iniziare dalla Home.",
+      "feeding": "Alimentazione",
+      "sleep": "Sonno",
+      "diaper": "Pannolino",
+      "pumping": "Tiralatte",
+      "growth": "Crescita",
+      "tummyTime": "Tempo a pancia in giù",
+      "health": "Salute",
+      "milestones": "Traguardi",
+      "seeAll": "Vedi tutti i tipi di attività",
+      "notNow": "Non ora",
+      "skipRemaining": "Salta il resto della configurazione"
+    },
+    "saved": {
+      "title": "Attività salvata",
+      "message": "La prima attività è disponibile nella cronologia.",
+      "viewTimeline": "Visualizza o modifica nella cronologia",
+      "continueHome": "Vai alla Home"
+    }
   }
 }

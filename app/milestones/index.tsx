@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import Animated, {
   useSharedValue,
@@ -19,6 +20,7 @@ import {
 } from "@/constants/milestones";
 import type { MilestoneCategory } from "@/constants/milestones";
 import { ACTIVITY, SURFACE, TEXT } from "@/constants/colors";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const GOLD = ACTIVITY.milestones.accent;
 const GOLD_DARK = ACTIVITY.milestones.accentDark;
@@ -35,6 +37,8 @@ const CATEGORY_LABELS: Record<MilestoneCategory, "milestones.social" | "mileston
 
 export default function MilestonesScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { selectedBaby } = useBaby();
@@ -98,8 +102,12 @@ export default function MilestonesScreen() {
           await clearMilestoneState(milestoneId);
           break;
       }
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("milestones");
+        router.replace("/onboarding/owner/saved");
+      }
     },
-    [getMilestoneState, setMilestoneState, clearMilestoneState]
+    [getMilestoneState, setMilestoneState, clearMilestoneState, onboardingPreview, router]
   );
 
   const accent = isDark ? GOLD_DARK : GOLD;

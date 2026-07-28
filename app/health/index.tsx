@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
 import { useHealth } from "@/contexts/health-context";
@@ -14,6 +14,7 @@ import { CDC_VACCINE_SCHEDULE, getNextDoseNumber } from "@/constants/vaccine-sch
 import { ACTIVITY, TEXT, SURFACE } from "@/constants/colors";
 import { getFeverStatus, getFeverColor, QUICK_TEMPS_CELSIUS, DEFAULT_TEMP_CELSIUS, TEMP_RANGE_CELSIUS, celsiusToFahrenheit } from "@/utils/temperature";
 import { getHealthDisplayName } from "@/utils/health-display";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const HEALTH_ACCENT = ACTIVITY.health.accent;
 const HEALTH_ACCENT_DARK = ACTIVITY.health.accentDark;
@@ -23,6 +24,7 @@ const HEALTH_BUTTON_DARK = ACTIVITY.health.buttonDark;
 export default function HealthScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { selectedBaby } = useBaby();
   const { addHealth, healthEntries, getCompletedVaccinations } = useHealth();
   const { colorScheme } = useColorScheme();
@@ -82,8 +84,10 @@ export default function HealthScreen() {
   }, []);
 
   const handleLogPastHealth = useCallback(() => {
-    router.push("/health/manual");
-  }, [router]);
+    router.push(onboardingPreview === "firstActivity"
+      ? "/health/manual?onboardingPreview=firstActivity"
+      : "/health/manual");
+  }, [onboardingPreview, router]);
 
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
@@ -133,14 +137,19 @@ export default function HealthScreen() {
     setIsSaving(true);
     try {
       await addHealth(base);
-      router.back();
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("health");
+        router.replace("/onboarding/owner/saved");
+      } else {
+        router.back();
+      }
     } catch {
       Alert.alert(t("common.error"), t("health.saveError"));
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, addHealth, router, getCompletedVaccinations, t]);
+  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, addHealth, onboardingPreview, router, getCompletedVaccinations, t]);
 
   const canSave = selectedType !== null && !isSaving && (
     (selectedType === "medication" && (medicationName === "custom" ? customMedicationName : medicationName)) ||

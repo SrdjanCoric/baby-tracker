@@ -12,6 +12,7 @@ import { SleepStorageService, type StoredSleepEntry } from "@/services/sleep-sto
 import { DiaperStorageService, type StoredDiaperEntry } from "@/services/diaper-storage";
 import { PumpingStorageService, type StoredPumpingEntry } from "@/services/pumping-storage";
 import { TummyTimeStorageService, type StoredTummyTimeEntry } from "@/services/tummyTime-storage";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 let mockSelectedBaby = { id: "baby-a", name: "Baby A" };
 let mockAuthUser: { id: string; householdId: string } | null = null;
@@ -186,6 +187,38 @@ describe("real activity provider baby binding", () => {
     mockSelectedBaby = { id: "baby-a", name: "Baby A" };
     mockAuthUser = null;
     await AsyncStorage.clear();
+  });
+
+  it("records the first guest activity through a production provider before confirmation", async () => {
+    jest.spyOn(DiaperStorageService, "getAllDiapers").mockResolvedValue([]);
+
+    await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.markBabyCreated("baby-a");
+
+    render(
+      <DiaperProvider>
+        <DiaperProbe />
+      </DiaperProvider>
+    );
+    await waitFor(() => {
+      expect(providerState?.diaper.babyBinding).toEqual({ babyId: "baby-a", status: "ready" });
+    });
+
+    await act(async () => {
+      await providerState!.diaper.addDiaper({
+        babyId: "baby-a",
+        type: "wet",
+        changedAt: new Date(timestamp),
+      });
+      await NewOwnerOnboardingStorageService.markActivitySaved("diaper");
+    });
+
+    expect(providerState?.diaper.diapers).toHaveLength(1);
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "activity-saved",
+      babyId: "baby-a",
+      firstActivity: { status: "saved", activityType: "diaper" },
+    });
   });
 
   it("does not dispatch an old account's completed activity into the new account provider", async () => {
