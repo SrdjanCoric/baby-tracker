@@ -105,6 +105,18 @@ Durable decisions that apply across all tasks:
   through every matching server row. Range reconciliation preserves queued mutations, tombstones,
   previously loaded intervals, and user/baby storage scope while distinguishing unverified, failed,
   verified-empty, and loaded ranges.
+- **Onboarding is role-based and activation-focused**: Welcome offers Start tracking, Join a family,
+  and Sign in with an immediately applied language selector. New owners may remain guests, must create
+  a complete baby profile before Home, and may then skip caregiver invitation and the first real
+  activity. Joined and returning caregivers restore household babies and bypass the first-activity
+  prompt. Generic feature, preference, permission, and pagination screens are excluded.
+- **Onboarding state is versioned, named, and resumable**: persist the selected path and unfinished
+  draft across restart and auth return instead of a numeric step. Legacy completed or skipped records
+  remain completed, and development-only preview and replay tools never require a remote flag.
+- **Caregiver invitations use verified HTTPS links plus readable codes**: installed apps prefill the
+  join route through Apple Universal Links or Android App Links; uninstalled recipients receive a
+  no-analytics store landing page and code fallback. Authentication and explicit confirmation remain
+  mandatory before joining, and no third-party deferred-linking SDK is used.
 
 ---
 
@@ -142,7 +154,16 @@ Durable decisions that apply across all tasks:
 - [x] 0029 · Warn and safely calculate overlapping manual sleep (after 0028) → tasks/done/0029-warn-and-union-overlapping-manual-sleep.md
 - [x] 0031 · Load historical activity ranges on demand in Timeline (after 0007, 0021) → tasks/done/0031-load-historical-activity-ranges-in-timeline.md
 - [x] 0032 · Load requested ranges before calculating statistics (after 0031) → tasks/done/0032-load-requested-statistics-ranges.md
+- [ ] 0033 · Prevent duplicate bedtime predictions after evening night sleep → tasks/0033-prevent-duplicate-bedtime-predictions.md
+- [ ] 0034 · Require complete profiles for new babies → tasks/0034-require-complete-new-baby-profiles.md
+- [ ] 0035 · Share verified caregiver invitation links → tasks/0035-share-verified-caregiver-invitation-links.md
+- [ ] 0036 · Build the resumable new-owner onboarding path (after 0034) → tasks/0036-build-resumable-new-owner-onboarding.md
+- [ ] 0037 · Add optional account creation and caregiver invitation (after 0035, 0036) → tasks/0037-add-onboarding-caregiver-invitation.md
+- [ ] 0038 · Add code-first invited-caregiver onboarding (after 0037) → tasks/0038-add-code-first-caregiver-join-onboarding.md
+- [ ] 0039 · Restore returning users before opening Home (after 0038) → tasks/0039-restore-returning-users-before-home.md
+- [ ] 0040 · Add development onboarding tools (after 0039) → tasks/0040-add-development-onboarding-tools.md
+- [ ] 0041 · Cut over to role-based onboarding (after 0040) → tasks/0041-cut-over-to-role-based-onboarding.md
 
 ## Workflow status
 
-Tasks 0001 through 0032 are merged. Repository-guideline evidence is recorded in their completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0032 are merged. Tasks 0033 through 0041 are planned; 0033, 0034, and 0035 are ready. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
