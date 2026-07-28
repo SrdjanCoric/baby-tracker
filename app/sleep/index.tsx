@@ -12,6 +12,7 @@ import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
 import { determineSleepType } from "@/validators/sleep";
 import { SleepMilestoneSuggestionModal, NoBabyScreen } from "@/components";
+import { MorningSleepConfirmation } from "@/components/MorningSleepConfirmation";
 import { useColorScheme } from "nativewind";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
@@ -45,6 +46,8 @@ export default function SleepScreen() {
     acceptMilestoneSuggestion,
     dismissMilestoneSuggestion,
     wakeWindowConfig,
+    pendingMorningConfirmations,
+    confirmMorningSleep,
   } = useSleep();
 
   const napAlert = useTimerAlertIntegration("nap");
@@ -55,6 +58,7 @@ export default function SleepScreen() {
   }, [napAlert, nightSleepAlert]);
 
   const [tick, setTick] = useState(0);
+  const [isConfirmingMorning, setIsConfirmingMorning] = useState(false);
 
   useEffect(() => {
     if (!activeTimer?.isRunning || activeTimer?.isPaused) {
@@ -144,6 +148,33 @@ export default function SleepScreen() {
     await dismissMilestoneSuggestion(false);
   }, [dismissMilestoneSuggestion]);
 
+  const pendingMorningConfirmation = useMemo(() => {
+    const stored = pendingMorningConfirmations?.[0] ?? null;
+    const active = activeTimer?.morningClassification === "unresolved"
+      ? {
+        id: activeTimer.activityId,
+        startedAt: activeTimer.startTime.toISOString(),
+      }
+      : null;
+    if (!stored) return active;
+    if (!active) return stored;
+    return new Date(stored.startedAt).getTime() <= activeTimer!.startTime.getTime()
+      ? stored
+      : active;
+  }, [activeTimer, pendingMorningConfirmations]);
+
+  const handleMorningAnswer = useCallback(async (
+    answer: "first_nap" | "night_continuation"
+  ) => {
+    if (!pendingMorningConfirmation || isConfirmingMorning) return;
+    setIsConfirmingMorning(true);
+    try {
+      await confirmMorningSleep(pendingMorningConfirmation.id, answer);
+    } finally {
+      setIsConfirmingMorning(false);
+    }
+  }, [confirmMorningSleep, isConfirmingMorning, pendingMorningConfirmation]);
+
   useEffect(() => {
     if (!action || !activeTimer?.isRunning) return;
     if (action === "pause" && !activeTimer.isPaused) {
@@ -213,6 +244,16 @@ export default function SleepScreen() {
             onStart={handleStartSleep}
             onLogPastSleep={handleLogPastSleep}
           />
+        )}
+        {pendingMorningConfirmation && (
+          <View className="w-full mt-5">
+            <MorningSleepConfirmation
+              startedAt={pendingMorningConfirmation.startedAt}
+              onFirstNap={() => handleMorningAnswer("first_nap")}
+              onBackToSleep={() => handleMorningAnswer("night_continuation")}
+              disabled={isConfirmingMorning}
+            />
+          </View>
         )}
       </View>
 

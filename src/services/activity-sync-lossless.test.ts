@@ -20,6 +20,7 @@ import {
   syncGuestActivitiesToDatabase,
   updateDiaperInDatabase,
   updateFeedingInDatabase,
+  updateSleepInDatabase,
   upsertMilestoneResponseInDatabase,
 } from "./activity-sync-service";
 import { setStorageUserId } from "./storage-prefix";
@@ -281,6 +282,95 @@ describe("lossless activity sync", () => {
     rpcMock.mockResolvedValue({ error: null });
     __resetCrdtSyncForTests();
     __resetDeviceIdForTests();
+  });
+
+  it("preserves confirmed sleep classification when pulling a caregiver update", async () => {
+    serverRows = [{
+      id: "sleep-remote-1",
+      baby_id: "baby-1",
+      type: "night",
+      started_at: "2026-07-14T08:30:00.000Z",
+      ended_at: "2026-07-14T09:35:00.000Z",
+      morning_classification: "confirmed_night_continuation",
+      morning_classification_version: 1,
+      field_clocks: {},
+    }];
+
+    const pulled = await fetchSleepFromDatabase("baby-1");
+
+    expect(pulled).toEqual([
+      expect.objectContaining({
+        id: "sleep-remote-1",
+        type: "night",
+        morningClassification: "confirmed_night_continuation",
+        morningClassificationVersion: 1,
+      }),
+    ]);
+    expect(JSON.parse(storage.get("@sleeps:baby-1")!)).toEqual(pulled);
+  });
+
+  it("updates sleep type and confirmed state in one durable operation", async () => {
+    storage.set("@sleeps:baby-1", JSON.stringify([{
+      id: "sleep-1",
+      babyId: "baby-1",
+      type: "night",
+      startedAt: "2026-07-14T08:30:00.000Z",
+      morningClassification: "unresolved",
+      morningClassificationVersion: 1,
+      createdAt: "2026-07-14T08:30:00.000Z",
+      updatedAt: "2026-07-14T08:30:00.000Z",
+    }]));
+
+    const updated = await updateSleepInDatabase("baby-1", "sleep-1", {
+      type: "nap",
+      morningClassification: "confirmed_first_nap",
+      morningClassificationVersion: 1,
+    });
+
+    expect(updated).toEqual(expect.objectContaining({
+      type: "nap",
+      morningClassification: "confirmed_first_nap",
+      morningClassificationVersion: 1,
+    }));
+    expect(vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "UPDATE",
+        data: expect.objectContaining({
+          type: "nap",
+          morning_classification: "confirmed_first_nap",
+          morning_classification_version: 1,
+        }),
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("stores and durably queues sleep morning-classification metadata", async () => {
+    const created = await createSleepInDatabase({
+      babyId: "baby-1",
+      type: "nap",
+      startedAt: new Date("2026-07-14T08:30:00.000Z"),
+      endedAt: new Date("2026-07-14T09:35:00.000Z"),
+      durationSeconds: 3900,
+      morningClassification: "unresolved",
+      morningClassificationVersion: 1,
+    }, "user-1");
+
+    expect(created).toEqual(expect.objectContaining({
+      morningClassification: "unresolved",
+      morningClassificationVersion: 1,
+    }));
+    expect(JSON.parse(storage.get("@sleeps:baby-1")!)).toEqual([created]);
+    expect(vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        table: "sleep_sessions",
+        data: expect.objectContaining({
+          morning_classification: "unresolved",
+          morning_classification_version: 1,
+        }),
+      }),
+      expect.any(Object)
+    );
   });
 
   it("keeps a create that becomes durable while a pull is reconciling", async () => {
@@ -1347,6 +1437,32 @@ describe("lossless activity sync", () => {
     expect(storage.has("@feedings:guest-baby")).toBe(false);
     expect(JSON.parse(storage.get("@feedings:server-baby")!)).toHaveLength(1);
     expect(mergeRecordWriteMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps migrated legacy guest sleeps distinguishable from versioned records", async () => {
+    syncEngine = makeSyncEngine();
+    storage.set("@sleeps:guest-baby", JSON.stringify([{
+      id: "33333333-3333-4333-8333-333333333333",
+      babyId: "guest-baby",
+      type: "night",
+      startedAt: "2026-07-14T08:30:00.000Z",
+      endedAt: "2026-07-14T09:30:00.000Z",
+      createdAt: "2026-07-14T08:30:00.000Z",
+      updatedAt: "2026-07-14T09:30:00.000Z",
+    }]));
+
+    await syncGuestActivitiesToDatabase(
+      "user-1",
+      new Map([["guest-baby", "server-baby"]])
+    );
+
+    expect(syncEngine.enqueueOperation).toHaveBeenCalledWith(expect.objectContaining({
+      table: "sleep_sessions",
+      data: expect.objectContaining({
+        morning_classification: null,
+        morning_classification_version: null,
+      }),
+    }));
   });
 
   it("retains guest activities when their queue entry cannot be persisted", async () => {

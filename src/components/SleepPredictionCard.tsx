@@ -21,6 +21,7 @@ import { isUnderTwoMonths } from "@/utils/sleepGoals";
 import { formatDurationShort, formatTime, type TranslateFn } from "@/utils/time";
 import { useTimeFormat } from "@/contexts/time-format-context";
 import { SleepStorageService } from "@/services/sleep-storage";
+import { MorningSleepConfirmation } from "./MorningSleepConfirmation";
 
 interface SleepPredictionCardProps {
   babyName?: string;
@@ -33,6 +34,7 @@ type CardState =
   | "setup_required"
   | "need_more_data"
   | "track_sleep"
+  | "morning_confirmation"
   | "computing"
   | "sleeping_nap"
   | "sleeping_night"
@@ -66,6 +68,8 @@ const SleepPredictionCardInner = ({
     driftDetection,
     dismissDrift,
     acceptDrift,
+    pendingMorningConfirmations,
+    confirmMorningSleep,
   } = useSleep();
 
   const { getLockForActivity } = useActiveTimers();
@@ -86,6 +90,8 @@ const SleepPredictionCardInner = ({
       startTime: new Date(remoteSleepLock.startedAt),
       sleepType,
       totalPausedMs: 0,
+      morningClassification: "automatic",
+      morningClassificationVersion: 1,
     };
   }, [activeTimer, remoteSleepLock]);
 
@@ -106,6 +112,7 @@ const SleepPredictionCardInner = ({
   const [pendingDayStart, setPendingDayStart] = useState<number | null>(null);
   const [pendingDayEnd, setPendingDayEnd] = useState<number | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [isConfirmingMorning, setIsConfirmingMorning] = useState(false);
 
   const overdueTickMinute = useTimeRefresh(60000);
 
@@ -115,10 +122,30 @@ const SleepPredictionCardInner = ({
     const referenceTime = new Date(
       Math.max(Date.now(), morningReferenceTime.getTime())
     );
-    return resolveMorningSleep(sleeps, effectiveDayStart, referenceTime);
-  }, [sleeps, effectiveDayStart, morningReferenceTime]);
+    return resolveMorningSleep(
+      sleeps,
+      effectiveDayStart,
+      referenceTime,
+      wakeWindowConfig?.napContinuationMinutes ?? 25
+    );
+  }, [sleeps, effectiveDayStart, morningReferenceTime, wakeWindowConfig?.napContinuationMinutes]);
   const hasNightSleepToday = morningSleep.morningWakeTime !== null
     || morningSleep.isContinuationActive;
+
+  const pendingMorningConfirmation = useMemo(() => {
+    const stored = pendingMorningConfirmations?.[0] ?? null;
+    const active = activeTimer?.morningClassification === "unresolved"
+      ? {
+        id: activeTimer.activityId,
+        startedAt: activeTimer.startTime.toISOString(),
+      }
+      : null;
+    if (!stored) return active;
+    if (!active) return stored;
+    return new Date(stored.startedAt).getTime() <= activeTimer!.startTime.getTime()
+      ? stored
+      : active;
+  }, [activeTimer, pendingMorningConfirmations]);
 
   const hasPredictionData = useMemo((): boolean => {
     if (!hasNightSleepToday) return false;
@@ -154,6 +181,10 @@ const SleepPredictionCardInner = ({
   const cardState = useMemo((): CardState | null => {
     if (!selectedBaby) {
       return "loading";
+    }
+
+    if (pendingMorningConfirmation) {
+      return "morning_confirmation";
     }
 
     if (!birthDate) {
@@ -203,7 +234,7 @@ const SleepPredictionCardInner = ({
 
     return "prediction";
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasCompletedCurrentEveningNightSleep, hasNightSleepToday, hasPredictionData, qualifyingDayCount, morningReferenceTime]);
+  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, pendingMorningConfirmation, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasCompletedCurrentEveningNightSleep, hasNightSleepToday, hasPredictionData, qualifyingDayCount, morningReferenceTime]);
 
 
 
@@ -354,6 +385,18 @@ const SleepPredictionCardInner = ({
   const handleInfoPress = useCallback(() => {
     setShowInfoModal(true);
   }, []);
+
+  const handleMorningAnswer = useCallback(async (
+    answer: "first_nap" | "night_continuation"
+  ) => {
+    if (!pendingMorningConfirmation || isConfirmingMorning) return;
+    setIsConfirmingMorning(true);
+    try {
+      await confirmMorningSleep(pendingMorningConfirmation.id, answer);
+    } finally {
+      setIsConfirmingMorning(false);
+    }
+  }, [confirmMorningSleep, isConfirmingMorning, pendingMorningConfirmation]);
 
   const handleManualWakeWindows = useCallback(() => {
     router.push("/sleep/settings" as Parameters<typeof router.push>[0]);
@@ -725,6 +768,20 @@ const SleepPredictionCardInner = ({
               {t("dashboard.setupButton")}
             </Text>
           </Pressable>
+        </>
+      );
+    }
+
+    if (cardState === "morning_confirmation" && pendingMorningConfirmation) {
+      return (
+        <>
+          {renderHeader()}
+          <MorningSleepConfirmation
+            startedAt={pendingMorningConfirmation.startedAt}
+            onFirstNap={() => handleMorningAnswer("first_nap")}
+            onBackToSleep={() => handleMorningAnswer("night_continuation")}
+            disabled={isConfirmingMorning}
+          />
         </>
       );
     }

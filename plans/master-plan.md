@@ -168,8 +168,8 @@ Durable decisions that apply across all tasks:
 - [ ] 0039 · Restore returning users before opening Home (after 0038) → tasks/0039-restore-returning-users-before-home.md
 - [ ] 0040 · Add development onboarding tools (after 0039) → tasks/0040-add-development-onboarding-tools.md
 - [ ] 0041 · Cut over to role-based onboarding (after 0040) → tasks/0041-cut-over-to-role-based-onboarding.md
-- [ ] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/0042-confirm-ambiguous-morning-sleep.md
+- [x] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/done/0042-confirm-ambiguous-morning-sleep.md
 
 ## Workflow status
 
-Tasks 0001 through 0035 are merged. Task 0036 is in progress, task 0042 is ready, and the remaining tasks are dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0035 and 0042 are merged. Task 0036 is ready, and tasks 0037 through 0041 are dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.

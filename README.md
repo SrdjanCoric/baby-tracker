@@ -70,7 +70,11 @@ Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simul
 
 ### Sleep Predictions
 
-Sleep predictions use the configured day start and recent sleep history to estimate the next nap or bedtime. When the latest completed sleep is the current evening's stored `night` session, the dashboard stays in its calm Bedtime state until midnight instead of predicting bedtime again from that session's end. The normal Nighttime state then lasts until the next morning anchor, when tracking and predictions resume. Morning qualification starts 3 hours 3 minutes before day start. The first eligible sleep that begins in this early window can continue the night even when stored as a nap, and its end becomes the final morning wake. The app derives this role without changing saved sleep types and reevaluates it at midnight and the next morning anchor. An earlier-day-start banner appears after at least five of the last seven recorded mornings end one hour early. Each qualifying morning's first nap must begin no more than 15 minutes before the baby's age-based first wake window. The banner suggests the median qualifying final wake, and the boundary changes only if the caregiver accepts. Logging past sleep warns when the proposed interval overlaps a completed session. Caregivers can cancel or keep both entries; prediction and statistics calculations count the overlap once without changing saved history. See [`docs/SLEEP_PREDICTIONS.md`](docs/SLEEP_PREDICTIONS.md) for the full rules.
+Sleep predictions use the configured day start and recent sleep history to estimate the next nap or bedtime. Morning qualification starts 3 hours 3 minutes before day start. A completed overnight sleep that crosses this anchor establishes a provisional wake. Pre-day-start sleep continues the night automatically when its awake gap is within the configured sleep-continuation allowance, including a gap equal to the limit. The setting defaults to 25 minutes and also joins fragmented naps.
+
+A longer gap prompts the caregiver to choose First nap or Back to sleep after tracking has started or the sleep has been saved. The question persists through restart and midnight without blocking timers or other activities. First nap keeps the provisional wake and stores the session as `nap`. Back to sleep stores it as `night`, moves morning wake to the session's end, and allows a later long gap to prompt again. Pending questions replace predictions and are excluded from model training and drift detection until resolved. A later Nap/Night edit corrects the confirmed role so timeline and statistics agree with predictions across caregiver devices. Sleep recorded before this classification state was introduced remains legacy data, receives no retroactive prompt, and keeps its prior morning behavior.
+
+When the latest completed sleep is the current evening's stored `night` session, the dashboard stays in its Bedtime state until midnight instead of predicting bedtime again from that session's end. An earlier-day-start banner appears after at least five of the last seven recorded mornings end one hour early. Each qualifying morning's first nap must begin no more than 15 minutes before the baby's age-based first wake window. The banner suggests the median qualifying final wake, and the boundary changes only if the caregiver accepts. Logging past sleep warns when the proposed interval overlaps a completed session. Caregivers can cancel or keep both entries; prediction and statistics calculations count the overlap once without changing saved history. See [`docs/SLEEP_PREDICTIONS.md`](docs/SLEEP_PREDICTIONS.md) for the full rules.
 
 ### iOS Native Integrations
 
@@ -99,7 +103,7 @@ src/
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
-└── migrations/             # PostgreSQL migrations through 058
+└── migrations/             # PostgreSQL migrations through 059
 targets/widget/             # iOS WidgetKit extension (Swift)
 e2e/                        # Maestro E2E tests
 ```

@@ -196,6 +196,34 @@ describe("activity acknowledgement reducers", () => {
     expect(afterLocal.sleeps).toEqual([sleepEntry("local create result")]);
   });
 
+  it("applies a confirmed morning type from another caregiver", () => {
+    const state = {
+      ...initialSleepState,
+      sleeps: [{
+        ...sleepEntry("awaiting confirmation"),
+        type: "night" as const,
+        morningClassification: "unresolved" as const,
+        morningClassificationVersion: 1,
+      }],
+    };
+
+    const afterRemote = sleepReducer(state, {
+      type: "REMOTE_UPDATE",
+      payload: {
+        ...sleepEntry("confirmed remotely"),
+        type: "nap",
+        morningClassification: "confirmed_first_nap",
+        morningClassificationVersion: 1,
+      },
+    });
+
+    expect(afterRemote.sleeps).toEqual([expect.objectContaining({
+      type: "nap",
+      morningClassification: "confirmed_first_nap",
+      morningClassificationVersion: 1,
+    })]);
+  });
+
   it("keeps one pumping with the local create result when Realtime inserts first", () => {
     const afterRemote = pumpingReducer(initialPumpingState, {
       type: "REMOTE_INSERT",
