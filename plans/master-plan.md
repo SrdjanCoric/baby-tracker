@@ -89,10 +89,13 @@ Durable decisions that apply across all tasks:
 - **Production database state is a human release checkpoint**: agents apply and verify migrations only
   on local Supabase. The owner performs the documented read-only production migration check before a
   store release.
-- **Morning sleep is resolved independently of persisted sleep type**: predictions keep the configured
-  day-start-minus-3h03 anchor, treat only the first sleep starting between that anchor and day start as
-  night continuation regardless of stored type or duration, preserve raw history, and never let a
-  sleep starting at or after day start replace morning wake.
+- **Ambiguous morning sleep is confirmed by a caregiver**: predictions keep the configured
+  day-start-minus-3h03 anchor. After a completed overnight sleep establishes a real wake, a return to
+  sleep within the caregiver's inclusive continuation allowance is night continuation. A later
+  pre-day-start sleep requires a nonblocking First nap or Back to sleep answer before predictions or
+  training continue. The answer synchronizes as the visible Nap/Night type and remains editable.
+  Legacy rows keep Task 0027 behavior without backfill or retroactive prompts, and sleeps starting at
+  or after day start remain naps.
 - **Earlier-morning drift is conservative and first-window-only**: suggest, but never automatically
   apply, the median earlier final wake only when at least five of the last seven recorded mornings are
   at least one hour early and their first nap follows the age-appropriate first wake window within a
@@ -163,7 +166,8 @@ Durable decisions that apply across all tasks:
 - [ ] 0039 · Restore returning users before opening Home (after 0038) → tasks/0039-restore-returning-users-before-home.md
 - [ ] 0040 · Add development onboarding tools (after 0039) → tasks/0040-add-development-onboarding-tools.md
 - [ ] 0041 · Cut over to role-based onboarding (after 0040) → tasks/0041-cut-over-to-role-based-onboarding.md
+- [ ] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/0042-confirm-ambiguous-morning-sleep.md
 
 ## Workflow status
 
-Tasks 0001 through 0033 are merged. Tasks 0034 through 0041 are planned; 0034 and 0035 are ready. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0033 are merged. Tasks 0034 through 0042 are planned; 0034, 0035, and 0042 are ready. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
