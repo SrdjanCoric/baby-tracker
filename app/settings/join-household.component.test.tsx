@@ -245,6 +245,20 @@ describe("JoinHouseholdScreen", () => {
   });
 
   describe("error handling", () => {
+    it("shows one generic message for a rejected invitation", async () => {
+      mockJoinHousehold.mockResolvedValue({ success: false, error: "invalidInvitation" });
+
+      render(<JoinHouseholdScreen />);
+
+      const input = screen.getByTestId("invite-code-input");
+      fireEvent.changeText(input, "WXYZ9876");
+      fireEvent.press(screen.getByText("Join"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid, expired, or not intended for this account/)).toBeTruthy();
+      });
+    });
+
     it("shows error when household not found", async () => {
       mockJoinHousehold.mockResolvedValue({ success: false, error: "householdNotFound" });
 

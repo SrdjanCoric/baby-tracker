@@ -124,6 +124,16 @@ function runActiveTimerAuthorizationTests() {
   }
 }
 
+function runCaregiverInvitationTests() {
+  const file = join(ROOT, "scripts/sql/caregiver-invitation-tests.sql");
+  try {
+    const out = psql(["-f", file]);
+    return { ok: true, out };
+  } catch (err) {
+    return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
+  }
+}
+
 // Two overlapping transactions merge the same row concurrently, each editing a different field
 // with a newer clock. The advisory lock in merge_record must serialize them so neither field is
 // lost. Worker A holds the lock (pg_sleep) so B provably waits and re-reads A's committed write.
@@ -356,6 +366,16 @@ if (timerAuthorization.ok) {
 } else {
   console.log(`${RED}✗ active timer authorization tests failed${RESET}`);
   process.stdout.write(timerAuthorization.out);
+  hardFail = true;
+}
+
+console.log("");
+const caregiverInvitations = runCaregiverInvitationTests();
+if (caregiverInvitations.ok) {
+  console.log(`${GREEN}✓${RESET} caregiver invitations: owner management, staged compatibility, email cutover, expiry, revocation, single use, and rate limiting`);
+} else {
+  console.log(`${RED}✗ caregiver invitation tests failed${RESET}`);
+  process.stdout.write(caregiverInvitations.out);
   hardFail = true;
 }
 

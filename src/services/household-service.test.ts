@@ -5,6 +5,9 @@ import {
   getHouseholdMembers,
   regenerateInviteCode,
   joinHouseholdViaInviteCode,
+  createCaregiverInvitation,
+  listCaregiverInvitations,
+  revokeCaregiverInvitation,
   HouseholdMember,
 } from "./household-service";
 
@@ -175,6 +178,76 @@ describe("HouseholdService", () => {
     });
   });
 
+  describe("caregiver invitations", () => {
+    it("lists pending invitations", async () => {
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: [{
+          invitation_id: "invite-123",
+          invited_email: "caregiver@example.com",
+          invite_code: "ABCD2345",
+          expires_at: "2026-08-08T12:00:00Z",
+          created_at: "2026-08-01T12:00:00Z",
+        }],
+        error: null,
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await listCaregiverInvitations();
+
+      expect(supabase.rpc).toHaveBeenCalledWith("list_caregiver_invitations");
+      expect(result.data).toEqual([{
+        id: "invite-123",
+        invitedEmail: "caregiver@example.com",
+        inviteCode: "ABCD2345",
+        expiresAt: "2026-08-08T12:00:00Z",
+        createdAt: "2026-08-01T12:00:00Z",
+      }]);
+      expect(result.error).toBeNull();
+    });
+
+    it("revokes a pending invitation", async () => {
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: true,
+        error: null,
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await revokeCaregiverInvitation("invite-123");
+
+      expect(supabase.rpc).toHaveBeenCalledWith("revoke_caregiver_invitation", {
+        p_invitation_id: "invite-123",
+      });
+      expect(result).toEqual({ data: true, error: null });
+    });
+
+    it("creates a normalized email-bound invitation", async () => {
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: [{
+          invitation_id: "invite-123",
+          invited_email: "caregiver@example.com",
+          invite_code: "ABCD2345",
+          expires_at: "2026-08-08T12:00:00Z",
+          created_at: "2026-08-01T12:00:00Z",
+        }],
+        error: null,
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await createCaregiverInvitation(" Caregiver@Example.com ");
+
+      expect(supabase.rpc).toHaveBeenCalledWith("create_caregiver_invitation", {
+        p_email: "caregiver@example.com",
+      });
+      expect(result).toEqual({
+        data: {
+          id: "invite-123",
+          invitedEmail: "caregiver@example.com",
+          inviteCode: "ABCD2345",
+          expiresAt: "2026-08-08T12:00:00Z",
+          createdAt: "2026-08-01T12:00:00Z",
+        },
+        error: null,
+      });
+    });
+  });
+
   describe("joinHouseholdViaInviteCode", () => {
     it("should return household data on successful join", async () => {
       const mockHousehold = [{
@@ -244,6 +317,18 @@ describe("HouseholdService", () => {
       expect(supabase.rpc).not.toHaveBeenCalled();
     });
 
+    it("returns a generic invalid-invitation error when redemption is rejected", async () => {
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: [],
+        error: null,
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await joinHouseholdViaInviteCode("WXYZ9876");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("invalidInvitation");
+    });
+
     it("should return error when household not found", async () => {
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: null,
@@ -253,7 +338,7 @@ describe("HouseholdService", () => {
       const result = await joinHouseholdViaInviteCode("WXYZ9876");
 
       expect(result.data).toBeNull();
-      expect(result.error).toBe("householdNotFound");
+      expect(result.error).toBe("invalidInvitation");
     });
 
     it("should return error when user already in household", async () => {

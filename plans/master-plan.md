@@ -116,10 +116,12 @@ Durable decisions that apply across all tasks:
 - **Onboarding state is versioned, named, and resumable**: persist the selected path and unfinished
   draft across restart and auth return instead of a numeric step. Legacy completed or skipped records
   remain completed, and development-only preview and replay tools never require a remote flag.
-- **Caregiver invitations use verified HTTPS links plus readable codes**: installed apps prefill the
-  join route through Apple Universal Links or Android App Links; uninstalled recipients receive a
-  no-analytics store landing page and code fallback. Authentication and explicit confirmation remain
-  mandatory before joining, and no third-party deferred-linking SDK is used.
+- **Caregiver invitations are email-bound before sharing**: owners create single-use, seven-day
+  invitations for a normalized caregiver email and manually share the readable code. Redemption
+  requires the matching verified account and explicit confirmation. Existing memberships remain
+  intact, and the legacy join RPC signature accepts new invitations for older recipient clients. The
+  migration starts in legacy-compatible mode; the release owner enables email enforcement after the
+  new app version is deployed. Verified HTTPS links and website deployment are deferred.
 
 ---
 
@@ -159,7 +161,7 @@ Durable decisions that apply across all tasks:
 - [x] 0032 · Load requested ranges before calculating statistics (after 0031) → tasks/done/0032-load-requested-statistics-ranges.md
 - [x] 0033 · Prevent duplicate bedtime predictions after evening night sleep → tasks/done/0033-prevent-duplicate-bedtime-predictions.md
 - [x] 0034 · Require complete profiles for new babies → tasks/done/0034-require-complete-new-baby-profiles.md
-- [ ] 0035 · Share verified caregiver invitation links → tasks/0035-share-verified-caregiver-invitation-links.md
+- [>] 0035 · Create email-bound caregiver invitations → tasks/0035-share-verified-caregiver-invitation-links.md
 - [ ] 0036 · Build the resumable new-owner onboarding path (after 0034) → tasks/0036-build-resumable-new-owner-onboarding.md
 - [ ] 0037 · Add optional account creation and caregiver invitation (after 0035, 0036) → tasks/0037-add-onboarding-caregiver-invitation.md
 - [ ] 0038 · Add code-first invited-caregiver onboarding (after 0037) → tasks/0038-add-code-first-caregiver-join-onboarding.md
@@ -170,4 +172,4 @@ Durable decisions that apply across all tasks:
 
 ## Workflow status
 
-Tasks 0001 through 0034 are merged. Tasks 0035 through 0042 are planned; 0035, 0036, and 0042 are ready. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0034 are merged. Task 0035 is in progress; 0036 and 0042 are ready, and the remaining tasks are dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.

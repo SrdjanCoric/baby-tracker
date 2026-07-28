@@ -70,7 +70,7 @@ describe('Invite Code Security', () => {
 
       for (let i = 0; i < 5; i++) {
         const result = await joinHouseholdViaInviteCode('ABCDEFGH');
-        expect(result.error).toBe('householdNotFound');
+        expect(result.error).toBe('invalidInvitation');
         expect(result.rateLimitInfo).toBeDefined();
         expect(result.rateLimitInfo!.remainingAttempts).toBe(4 - i);
       }
@@ -108,7 +108,7 @@ describe('Invite Code Security', () => {
         });
 
       const failResult = await joinHouseholdViaInviteCode('BADCDEFG');
-      expect(failResult.error).toBe('householdNotFound');
+      expect(failResult.error).toBe('invalidInvitation');
       expect(failResult.rateLimitInfo?.remainingAttempts).toBe(4);
 
       const successResult = await joinHouseholdViaInviteCode('ABCDEFGH');

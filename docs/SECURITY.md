@@ -4,53 +4,13 @@ This document outlines security configurations and considerations for the Baby T
 
 ## Rate Limiting
 
-### Household Invite Code Protection
+### Caregiver invitation protection
 
-The `join_household_by_invite_code` RPC function should be protected by rate limiting to prevent brute-force attacks on invite codes.
+Household owners create seven-day, single-use invitation codes for a specific normalized email. Redemption requires an authenticated account with that verified email. After the post-release enforcement switch is enabled, unknown, mismatched, expired, revoked, consumed, and legacy household-wide codes return no household data.
 
-#### Invite Code Entropy
+The database records failed attempts and allows five failures per authenticated user per hour. The app applies the same limit locally. Invite codes use a 32-character alphabet with eight characters, which provides about 40 bits of entropy, and omit ambiguous characters such as `0`, `O`, `1`, `I`, and `L`.
 
-Invite codes use a 32-character alphabet (uppercase letters and digits, excluding ambiguous characters like 0/O, 1/I/L) with 8 characters:
-- Total combinations: 32^8 = ~1.1 trillion possibilities
-- Entropy: ~40 bits
-
-While this provides reasonable security against random guessing, rate limiting adds defense-in-depth.
-
-#### Recommended Supabase Configuration
-
-Configure rate limiting in the Supabase Dashboard:
-
-1. Navigate to **Project Settings** > **API** > **Rate Limiting**
-2. Add a custom rate limit for the `join_household_by_invite_code` RPC:
-   - **Limit**: 5 requests per minute per IP
-   - **Scope**: Per IP address
-
-Alternatively, use Supabase Edge Functions with built-in rate limiting:
-
-```sql
--- Example: Track failed attempts in database
-CREATE TABLE invite_code_attempts (
-  ip_address inet PRIMARY KEY,
-  attempt_count integer DEFAULT 1,
-  last_attempt_at timestamptz DEFAULT now()
-);
-
--- Clean up old entries periodically
-CREATE OR REPLACE FUNCTION cleanup_old_attempts()
-RETURNS void AS $$
-BEGIN
-  DELETE FROM invite_code_attempts
-  WHERE last_attempt_at < now() - interval '1 hour';
-END;
-$$ LANGUAGE plpgsql;
-```
-
-#### Why Server-Side Rate Limiting
-
-Server-side rate limiting (via Supabase/infrastructure) is preferred over client-side rate limiting because:
-- Cannot be bypassed by modified clients
-- Centralized enforcement across all clients
-- Protects against distributed attacks from multiple devices
+Clients have no direct access to `caregiver_invitations` or the rollout switch. Security-definer RPCs enforce owner-only management and verified-email redemption. Migration 058 initially permits legacy household codes so old apps keep working before the new version is deployed. See [Caregiver invitations](CAREGIVER_INVITATIONS.md) for the cutover procedure, RPC contract, and verification commands.
 
 ## Row-Level Security (RLS)
 
