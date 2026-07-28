@@ -14,24 +14,36 @@ Keep this correction at the card's prediction-role/state boundary. Do not change
 
 **Applicable references**: `references/01-style-and-code-quality.md`, `references/02-testing.md`, `references/03-documentation.md`
 
-- [ ] Keep the evening-night role/state logic strictly typed, warning-free, and consistent with existing sleep-domain naming; prove with lint and typecheck.
-- [ ] Add a deterministic component regression at the real card seam using the production duration classifier and fake-clock transitions; preserve tests for legitimate overdue predictions.
-- [ ] Update the authoritative sleep-prediction documentation and relevant README summary with the completed-evening-night state rule and transition behavior.
+- [x] Keep the evening-night role/state logic strictly typed, warning-free, and consistent with existing sleep-domain naming; prove with lint and typecheck.
+- [x] Add a deterministic component regression at the real card seam using the production duration classifier and fake-clock transitions; preserve tests for legitimate overdue predictions.
+- [x] Update the authoritative sleep-prediction documentation and relevant README summary with the completed-evening-night state rule and transition behavior.
 
 ## Implementation work
 
-- [ ] Test-first, reproduce a 20:30–23:20 sleep with day end 21:00 and median bedtime 22:00, using `classifySleepByTimeRange` to prove the persisted role is `night`; assert that the card does not render `Bedtime … ago`.
-- [ ] Make the card recognize a completed current-evening night sleep before it enters next-sleep prediction, while retaining the existing calm Bedtime/Nighttime presentation.
-- [ ] Prove the time-sensitive state expires across midnight and the existing morning threshold so next-day tracking or predictions resume without navigation or a sleep-data mutation.
-- [ ] Preserve legitimate overdue nap and bedtime output and existing morning-resolution, wake-window, and bedtime-model behavior.
-- [ ] Update `docs/SLEEP_PREDICTIONS.md` and the relevant README sleep-prediction summary.
-- [ ] Run focused sleep-prediction utility and component tests, then the canonical lint, typecheck, and code checks.
+- [x] Test-first, reproduce a 20:30–23:20 sleep with day end 21:00 and median bedtime 22:00, using `classifySleepByTimeRange` to prove the persisted role is `night`; assert that the card does not render `Bedtime … ago`.
+- [x] Make the card recognize a completed current-evening night sleep before it enters next-sleep prediction, while retaining the existing calm Bedtime/Nighttime presentation.
+- [x] Prove the time-sensitive state expires across midnight and the existing morning threshold so next-day tracking or predictions resume without navigation or a sleep-data mutation.
+- [x] Preserve legitimate overdue nap and bedtime output and existing morning-resolution, wake-window, and bedtime-model behavior.
+- [x] Update `docs/SLEEP_PREDICTIONS.md` and the relevant README sleep-prediction summary.
+- [x] Run focused sleep-prediction utility and component tests, then the canonical lint, typecheck, and code checks.
 
 ## Acceptance criteria
 
-- [ ] A 20:30–23:20 sleep with night starting at 21:00 remains classified and persisted as `night`.
-- [ ] Immediately after that session stops, the prediction card shows the calm Bedtime/Nighttime state and never another overdue bedtime for the same evening.
-- [ ] The evening-night state is date-bounded and does not suppress the next morning's track-sleep prompt or valid next-sleep prediction.
-- [ ] Genuine overdue nap and bedtime predictions retain their current behavior.
-- [ ] Sleep history, duration classification, prediction-model anchors and caps, morning resolution, and wake-window calculations are otherwise unchanged.
-- [ ] Automated regression coverage exercises the production classification and card-state path with deterministic clock transitions.
+- [x] A 20:30–23:20 sleep with night starting at 21:00 remains classified and persisted as `night`.
+- [x] Immediately after that session stops, the prediction card shows the calm Bedtime/Nighttime state and never another overdue bedtime for the same evening.
+- [x] The evening-night state is date-bounded and does not suppress the next morning's track-sleep prompt or valid next-sleep prediction.
+- [x] Genuine overdue nap and bedtime predictions retain their current behavior.
+- [x] Sleep history, duration classification, prediction-model anchors and caps, morning resolution, and wake-window calculations are otherwise unchanged.
+- [x] Automated regression coverage exercises the production classification and card-state path with deterministic clock transitions.
+
+## Completion record
+
+- **Implementation**: `src/components/SleepPredictionCard.tsx` now recognizes the latest completed `night` session when it ends after the current date's configured day-end boundary. The existing midnight and morning-anchor clock updates clear this card state without changing sleep records or prediction calculations.
+- **Tests**: `src/components/SleepPredictionCard.component.test.tsx` covers the 20:30–23:20 production interval through `classifySleepByTimeRange`, the calm Bedtime result, midnight and morning-anchor transitions, and genuine overdue nap and bedtime output.
+- **TDD evidence**: The first focused run failed with `Bedtime 35m ago` and 1 failed test out of 61. The state guard made the regression green. Transition and overdue-preservation characterizations then passed, ending with 63 passing card tests.
+- **Guidelines**: Implement and review modes loaded `references/00-overview.md`, `references/01-style-and-code-quality.md`, `references/02-testing.md`, and `references/03-documentation.md`. Evidence is the strict card-state implementation, deterministic fake-clock component tests, `npm run lint`, `npm run typecheck`, and the documentation updates.
+- **Documentation**: `docs/SLEEP_PREDICTIONS.md` and the README Sleep Predictions section describe the completed-evening rule and its midnight-to-morning transition. Each affected section passed two `write-well` audit passes.
+- **Review**: `task-review` checked `2751523` against `main` with Standards, Spec, and Bug lenses. It found no supported issues, required no remediation pass, and skipped Security because the diff has no relevant trust-boundary surface.
+- **Proof**: Focused utility tests passed 193 tests; the final card run passed 63 tests. `npm run check:code` passed lint, strict typecheck, 2,310 unit tests, 667 component tests, 103 security tests, 244 sync tests, and 41 CI contract tests.
+- **Manual verification**: Not required. The deterministic component test exercises the user-visible card, production classifier, and clock transitions at the highest available automated seam.
+- **Security risks**: None found or accepted.
