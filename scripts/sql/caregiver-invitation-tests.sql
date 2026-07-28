@@ -10,7 +10,8 @@ VALUES
   ('85555555-5555-5555-5555-555555555555', 'expired@test.dev', pg_catalog.now()),
   ('86666666-6666-6666-6666-666666666666', 'household-member@test.dev', pg_catalog.now()),
   ('87777777-7777-7777-7777-777777777777', 'revoked@test.dev', pg_catalog.now()),
-  ('88888888-8888-8888-8888-888888888888', 'replacement-recipient@test.dev', pg_catalog.now());
+  ('88888888-8888-8888-8888-888888888888', 'replacement-recipient@test.dev', pg_catalog.now()),
+  ('89999999-9999-9999-9999-999999999999', 'legacy-recipient@test.dev', pg_catalog.now());
 
 UPDATE public.users
 SET household_id = (
@@ -22,7 +23,18 @@ SET household_id = (
 WHERE id = '86666666-6666-6666-6666-666666666666';
 
 DO $$
+DECLARE
+  v_email_binding_enforced BOOLEAN;
 BEGIN
+  SELECT email_binding_enforced
+  INTO v_email_binding_enforced
+  FROM public.caregiver_invitation_rollout
+  WHERE singleton = true;
+
+  IF v_email_binding_enforced IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'migration must default to legacy-compatible invitation rollout';
+  END IF;
+
   IF has_table_privilege('anon', 'public.caregiver_invitations', 'SELECT')
     OR has_table_privilege('authenticated', 'public.caregiver_invitations', 'SELECT')
     OR has_table_privilege('authenticated', 'public.caregiver_invitations', 'INSERT')
@@ -30,6 +42,13 @@ BEGIN
     OR has_table_privilege('authenticated', 'public.caregiver_invitations', 'DELETE')
   THEN
     RAISE EXCEPTION 'clients must not access caregiver invitation rows directly';
+  END IF;
+
+  IF has_table_privilege('anon', 'public.caregiver_invitation_rollout', 'SELECT')
+    OR has_table_privilege('authenticated', 'public.caregiver_invitation_rollout', 'SELECT')
+    OR has_table_privilege('authenticated', 'public.caregiver_invitation_rollout', 'UPDATE')
+  THEN
+    RAISE EXCEPTION 'clients must not access invitation rollout state directly';
   END IF;
 
   IF has_function_privilege('anon', 'public.create_caregiver_invitation(text)', 'EXECUTE')
@@ -286,6 +305,45 @@ FROM public.households AS household
 JOIN public.users AS owner ON owner.household_id = household.id
 WHERE owner.id = '81111111-1111-1111-1111-111111111111'
 \gset
+
+SELECT set_config('test.legacy_code', :'legacy_code', true);
+SELECT set_config(
+  'request.jwt.claims',
+  json_build_object('sub', '89999999-9999-9999-9999-999999999999', 'role', 'authenticated')::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_result_count INTEGER;
+BEGIN
+  SELECT pg_catalog.count(*) INTO v_result_count
+  FROM public.join_household_by_invite_code(
+    pg_catalog.current_setting('test.legacy_code')::VARCHAR(8)
+  );
+  IF v_result_count <> 1 THEN
+    RAISE EXCEPTION 'a legacy recipient could not join during compatibility rollout';
+  END IF;
+END
+$$;
+RESET ROLE;
+
+UPDATE public.caregiver_invitation_rollout
+SET email_binding_enforced = true,
+    updated_at = pg_catalog.now()
+WHERE singleton = true;
+
+DO $$
+BEGIN
+  IF NOT (
+    SELECT email_binding_enforced
+    FROM public.caregiver_invitation_rollout
+    WHERE singleton = true
+  ) THEN
+    RAISE EXCEPTION 'email-bound invitation rollout could not be enforced';
+  END IF;
+END
+$$;
 
 SELECT set_config(
   'request.jwt.claims',

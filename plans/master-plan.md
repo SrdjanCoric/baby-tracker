@@ -119,9 +119,9 @@ Durable decisions that apply across all tasks:
 - **Caregiver invitations are email-bound before sharing**: owners create single-use, seven-day
   invitations for a normalized caregiver email and manually share the readable code. Redemption
   requires the matching verified account and explicit confirmation. Existing memberships remain
-  intact, and the legacy join RPC signature accepts new invitations for older recipient clients while
-  legacy household-wide codes no longer authorize joins. Verified HTTPS links and website deployment
-  are deferred.
+  intact, and the legacy join RPC signature accepts new invitations for older recipient clients. The
+  migration starts in legacy-compatible mode; the release owner enables email enforcement after the
+  new app version is deployed. Verified HTTPS links and website deployment are deferred.
 
 ---
 

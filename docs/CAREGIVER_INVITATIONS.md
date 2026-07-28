@@ -11,15 +11,15 @@ Migration `supabase/migrations/058_email_bound_caregiver_invitations.sql` create
 - `revoke_caregiver_invitation(uuid)` revokes an invitation that belongs to the owner's household.
 - `join_household_by_invite_code(varchar)` redeems an invitation for the caller's verified auth email.
 
-Redemption locks the invitation row, checks its expiry and status, compares normalized email addresses, moves the caregiver, and records consumption in one transaction. Unknown codes, legacy household codes, wrong accounts, unverified accounts, expired invitations, revoked invitations, and consumed invitations return no household data. The response does not disclose the intended email or household.
+Redemption locks the invitation row, checks its expiry and status, compares normalized email addresses, moves the caregiver, and records consumption in one transaction. After the release owner enables email enforcement, unknown codes, legacy household codes, wrong accounts, unverified accounts, expired invitations, revoked invitations, and consumed invitations return no household data. The response does not disclose the intended email or household.
 
 The server permits five failed redemption attempts per authenticated user per hour. The app applies the same limit locally. Codes contain about 40 bits of entropy and exclude ambiguous characters. The intended email is not included in copied or shared text.
 
 ## Compatibility
 
-Existing household memberships do not change. The migration keeps the existing `join_household_by_invite_code(varchar)` signature, so an older recipient app can redeem a new email-bound code. Older owner apps cannot create email-bound invitations, and old household-wide codes no longer authorize joins.
+Existing household memberships do not change. The migration keeps the existing `join_household_by_invite_code(varchar)` signature, so an older recipient app can redeem a new email-bound code.
 
-Deploy migration 058 before releasing the app update. Do not restore household-wide code authorization as a rollback because that would reopen unauthorized joins.
+Migration 058 starts with `caregiver_invitation_rollout.email_binding_enforced` set to `false`. During this compatibility period, new email-bound codes and old household-wide codes both work. Older owner apps can continue inviting caregivers until the new app version is deployed. The release owner then enables email enforcement, which disables household-wide code joins.
 
 ## Local verification
 
@@ -44,9 +44,28 @@ SELECT to_regprocedure('public.create_caregiver_invitation(text)');
 SELECT to_regprocedure('public.list_caregiver_invitations()');
 SELECT to_regprocedure('public.revoke_caregiver_invitation(uuid)');
 SELECT to_regprocedure('public.join_household_by_invite_code(character varying)');
+SELECT to_regclass('public.caregiver_invitation_rollout');
+SELECT email_binding_enforced
+FROM public.caregiver_invitation_rollout
+WHERE singleton = true;
 ```
 
-Every query must return a non-null object name. If any result is null, stop the release and apply the missing migration through the normal database deployment process. If invitation creation or redemption fails after deployment, confirm migration 058 is present, run the local SQL suite, and revoke and recreate the affected invitation. Do not inspect or copy production invitation rows.
+Every object query must return a non-null name. Before the app release, `email_binding_enforced` must be `false`. If an object is missing or the switch is already enabled, stop the release and correct the database through the normal deployment process.
+
+After the new app version is deployed, the release owner enables email binding:
+
+```sql
+UPDATE public.caregiver_invitation_rollout
+SET email_binding_enforced = true,
+    updated_at = now()
+WHERE singleton = true;
+
+SELECT email_binding_enforced
+FROM public.caregiver_invitation_rollout
+WHERE singleton = true;
+```
+
+The final query must return `true`. If the app release is rolled back, setting the switch to `false` restores old-app invitation compatibility and also restores the legacy-code risk. Enable it again after the replacement app version is deployed. If invitation creation or redemption fails, run the local SQL suite and revoke and recreate the affected invitation. Do not inspect or copy production invitation rows.
 
 ## Deferred website work
 

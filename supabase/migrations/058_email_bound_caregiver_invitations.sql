@@ -27,6 +27,19 @@ ALTER TABLE public.caregiver_invitations ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.caregiver_invitations FROM PUBLIC, anon, authenticated;
 GRANT ALL ON TABLE public.caregiver_invitations TO service_role;
 
+CREATE TABLE public.caregiver_invitation_rollout (
+  singleton BOOLEAN PRIMARY KEY DEFAULT true CHECK (singleton = true),
+  email_binding_enforced BOOLEAN NOT NULL DEFAULT false,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT pg_catalog.now()
+);
+
+INSERT INTO public.caregiver_invitation_rollout (singleton, email_binding_enforced)
+VALUES (true, false);
+
+ALTER TABLE public.caregiver_invitation_rollout ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.caregiver_invitation_rollout FROM PUBLIC, anon, authenticated;
+GRANT SELECT, UPDATE ON TABLE public.caregiver_invitation_rollout TO service_role;
+
 CREATE OR REPLACE FUNCTION public.create_caregiver_invitation(p_email TEXT)
 RETURNS TABLE (
   invitation_id UUID,
@@ -211,7 +224,9 @@ DECLARE
   v_caller_email TEXT;
   v_email_confirmed_at TIMESTAMPTZ;
   v_current_household_id UUID;
+  v_target_household_id UUID;
   v_invitation public.caregiver_invitations%ROWTYPE;
+  v_email_binding_enforced BOOLEAN := true;
   v_attempt_count INTEGER;
 BEGIN
   IF v_caller_id IS NULL THEN
@@ -248,6 +263,12 @@ BEGIN
     RAISE EXCEPTION 'User already belongs to a household with other members';
   END IF;
 
+  SELECT rollout.email_binding_enforced
+  INTO v_email_binding_enforced
+  FROM public.caregiver_invitation_rollout AS rollout
+  WHERE rollout.singleton = true;
+  v_email_binding_enforced := COALESCE(v_email_binding_enforced, true);
+
   IF p_invite_code IS NOT NULL
     AND p_invite_code ~ '^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$'
   THEN
@@ -261,16 +282,25 @@ BEGIN
     FOR UPDATE;
   END IF;
 
-  IF v_invitation.id IS NULL
-    OR v_email_confirmed_at IS NULL
-    OR v_caller_email IS DISTINCT FROM v_invitation.invited_email
+  IF v_invitation.id IS NOT NULL
+    AND v_email_confirmed_at IS NOT NULL
+    AND v_caller_email = v_invitation.invited_email
   THEN
+    v_target_household_id := v_invitation.household_id;
+  ELSIF NOT v_email_binding_enforced THEN
+    SELECT household.id
+    INTO v_target_household_id
+    FROM public.households AS household
+    WHERE pg_catalog.upper(household.invite_code) = pg_catalog.upper(p_invite_code);
+  END IF;
+
+  IF v_target_household_id IS NULL THEN
     INSERT INTO public.join_attempt_logs (user_id, invite_code)
     VALUES (v_caller_id, COALESCE(pg_catalog.upper(p_invite_code), ''));
     RETURN;
   END IF;
 
-  IF v_invitation.household_id = v_current_household_id THEN
+  IF v_target_household_id = v_current_household_id THEN
     RAISE EXCEPTION 'User already belongs to this household';
   END IF;
 
@@ -280,14 +310,18 @@ BEGIN
   END IF;
 
   UPDATE public.users AS caregiver
-  SET household_id = v_invitation.household_id,
+  SET household_id = v_target_household_id,
       is_owner = false
   WHERE caregiver.id = v_caller_id;
 
-  UPDATE public.caregiver_invitations AS invitation
-  SET consumed_at = pg_catalog.now(),
-      consumed_by = v_caller_id
-  WHERE invitation.id = v_invitation.id;
+  IF v_invitation.id IS NOT NULL
+    AND v_target_household_id = v_invitation.household_id
+  THEN
+    UPDATE public.caregiver_invitations AS invitation
+    SET consumed_at = pg_catalog.now(),
+        consumed_by = v_caller_id
+    WHERE invitation.id = v_invitation.id;
+  END IF;
 
   IF v_current_household_id IS NOT NULL THEN
     DELETE FROM public.households AS household
@@ -305,7 +339,7 @@ BEGIN
   RETURN QUERY
   SELECT household.id, household.invite_code, household.created_at
   FROM public.households AS household
-  WHERE household.id = v_invitation.household_id;
+  WHERE household.id = v_target_household_id;
 END;
 $$;
 
@@ -317,6 +351,9 @@ TO authenticated;
 COMMENT ON TABLE public.caregiver_invitations IS
 'Owner-created, email-bound caregiver invitations. Direct client access is denied; security-definer RPCs enforce management and redemption authorization.';
 
+COMMENT ON TABLE public.caregiver_invitation_rollout IS
+'Single-row release switch. Legacy household codes remain valid while email_binding_enforced is false; the release owner enables it after the compatible app version is deployed.';
+
 COMMENT ON FUNCTION public.create_caregiver_invitation(TEXT) IS
 'Creates or replaces a seven-day invitation for a normalized email. Only the authenticated household owner may call it.';
 
@@ -327,4 +364,4 @@ COMMENT ON FUNCTION public.revoke_caregiver_invitation(UUID) IS
 'Revokes a pending invitation only when it belongs to the authenticated household owner.';
 
 COMMENT ON FUNCTION public.join_household_by_invite_code(VARCHAR(8)) IS
-'Redeems a current invitation only for the matching verified auth email. The legacy signature is retained for compatible older recipient clients; household-wide codes are not accepted.';
+'Redeems email-bound invitations for the matching verified auth email. The legacy signature and household-code fallback remain available until the post-release rollout switch enforces email binding.';

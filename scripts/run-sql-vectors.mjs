@@ -372,7 +372,7 @@ if (timerAuthorization.ok) {
 console.log("");
 const caregiverInvitations = runCaregiverInvitationTests();
 if (caregiverInvitations.ok) {
-  console.log(`${GREEN}✓${RESET} caregiver invitations: owner management, email authorization, expiry, revocation, single use, compatibility, and rate limiting`);
+  console.log(`${GREEN}✓${RESET} caregiver invitations: owner management, staged compatibility, email cutover, expiry, revocation, single use, and rate limiting`);
 } else {
   console.log(`${RED}✗ caregiver invitation tests failed${RESET}`);
   process.stdout.write(caregiverInvitations.out);

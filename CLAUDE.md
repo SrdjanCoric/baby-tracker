@@ -317,7 +317,7 @@ Migrations are in `supabase/migrations/`. Numbering may include lettered variant
 | 047 | Health entries table (medication, temperature, vaccination, symptom) |
 | 048 | Health dosage_unit, dose_number columns |
 | 049 | Add tsp dosage unit |
-| 058 | Email-bound, expiring caregiver invitations |
+| 058 | Email-bound caregiver invitations with a post-release enforcement switch |
 
 ## Android-Specific Setup
 

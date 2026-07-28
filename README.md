@@ -56,6 +56,10 @@ Supabase Realtime subscriptions push changes between household members instantly
 
 A milestone response keeps one database identity as its state changes or clears. Clearing stores a hidden CRDT tombstone, and rechecking revives the same row with a newer clock. Pull and Realtime recovery map an older queued UUID back to the canonical row without showing tombstones in milestone state or progress.
 
+### Caregiver Invitations
+
+Household owners enter a caregiver's account email in Settings, then copy or share the generated code. Each invitation expires after seven days and works once. The recipient must sign in with the matching verified email and submit the code before joining. Owners can keep invitations pending for different email addresses and can replace or revoke each code. Existing memberships stay unchanged, and older recipient app versions can redeem newly issued codes. See [`docs/CAREGIVER_INVITATIONS.md`](docs/CAREGIVER_INVITATIONS.md) for the security model and rollout checks.
+
 ### Timer Exclusivity
 
 Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. If the lock service is unavailable, feeding, sleep, pumping, and tummy-time timers continue locally and keep their reconciliation state through restart. Reconnect attempts to acquire the missing lock. When two offline timers compete, the first successful lock acquisition wins. The other timer is saved to the timeline, and its caregiver sees what happened. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. External Stop requests from widgets and Apple Watch stay in a versioned queue until matching timer completions are durable, even if several arrive while the app is closed. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
@@ -91,7 +95,7 @@ src/
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
-└── migrations/             # PostgreSQL migrations through 057
+└── migrations/             # PostgreSQL migrations through 058
 targets/widget/             # iOS WidgetKit extension (Swift)
 e2e/                        # Maestro E2E tests
 ```

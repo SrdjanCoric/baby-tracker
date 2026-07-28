@@ -6,11 +6,11 @@ This document outlines security configurations and considerations for the Baby T
 
 ### Caregiver invitation protection
 
-Household owners create seven-day, single-use invitation codes for a specific normalized email. Redemption requires an authenticated account with that verified email. Unknown, mismatched, expired, revoked, consumed, and legacy household-wide codes return no household data.
+Household owners create seven-day, single-use invitation codes for a specific normalized email. Redemption requires an authenticated account with that verified email. After the post-release enforcement switch is enabled, unknown, mismatched, expired, revoked, consumed, and legacy household-wide codes return no household data.
 
 The database records failed attempts and allows five failures per authenticated user per hour. The app applies the same limit locally. Invite codes use a 32-character alphabet with eight characters, which provides about 40 bits of entropy, and omit ambiguous characters such as `0`, `O`, `1`, `I`, and `L`.
 
-Clients have no direct access to `caregiver_invitations`. Security-definer RPCs enforce owner-only management and verified-email redemption. See [Caregiver invitations](CAREGIVER_INVITATIONS.md) for the RPC contract, compatibility behavior, verification commands, and release checks.
+Clients have no direct access to `caregiver_invitations` or the rollout switch. Security-definer RPCs enforce owner-only management and verified-email redemption. Migration 058 initially permits legacy household codes so old apps keep working before the new version is deployed. See [Caregiver invitations](CAREGIVER_INVITATIONS.md) for the cutover procedure, RPC contract, and verification commands.
 
 ## Row-Level Security (RLS)
 
