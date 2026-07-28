@@ -16,49 +16,64 @@ import * as ImagePicker from "expo-image-picker";
 import { Input } from "./Input";
 import { Button } from "./Button";
 import { te } from "@/utils/translate-errors";
-import { validateBabyName, validateBirthDate } from "@/validators/baby";
+import {
+  validateBabyName,
+  validateBabyProfile,
+  validateNewBabyProfile,
+  type BabyGender,
+  type CompleteNewBabyProfile,
+} from "@/validators/baby";
 
 const isAndroid = Platform.OS === "android";
-
-type Gender = "male" | "female";
 
 interface BabyProfileFormData {
   name: string;
   birthDate?: Date;
-  gender?: Gender;
+  gender?: BabyGender;
   photoUri?: string;
 }
 
-interface BabyProfileFormProps {
-  initialData?: BabyProfileFormData;
-  onSave: (data: BabyProfileFormData) => void;
+type CompleteBabyProfileFormData = CompleteNewBabyProfile;
+
+interface SharedBabyProfileFormProps {
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-function BabyProfileForm({
-  initialData,
-  onSave,
-  onCancel,
-  isLoading = false,
-}: BabyProfileFormProps) {
+interface NewBabyProfileFormProps extends SharedBabyProfileFormProps {
+  initialData?: undefined;
+  onSave: (data: CompleteBabyProfileFormData) => void;
+}
+
+interface EditBabyProfileFormProps extends SharedBabyProfileFormProps {
+  initialData: BabyProfileFormData;
+  onSave: (data: BabyProfileFormData) => void;
+}
+
+type BabyProfileFormProps = NewBabyProfileFormProps | EditBabyProfileFormProps;
+
+function BabyProfileForm(props: NewBabyProfileFormProps): React.JSX.Element;
+function BabyProfileForm(props: EditBabyProfileFormProps): React.JSX.Element;
+function BabyProfileForm(props: BabyProfileFormProps) {
+  const { initialData, onCancel, isLoading = false } = props;
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const GENDER_OPTIONS = [
-    { value: "male" as Gender, labelKey: "baby.boy" as const, emoji: "👦" },
-    { value: "female" as Gender, labelKey: "baby.girl" as const, emoji: "👧" },
+    { value: "male" as BabyGender, labelKey: "baby.boy" as const, emoji: "👦" },
+    { value: "female" as BabyGender, labelKey: "baby.girl" as const, emoji: "👧" },
   ];
 
   const [name, setName] = useState(initialData?.name ?? "");
   const [birthDate, setBirthDate] = useState<Date | undefined>(initialData?.birthDate);
-  const [gender, setGender] = useState<Gender | undefined>(initialData?.gender);
+  const [gender, setGender] = useState<BabyGender | undefined>(initialData?.gender);
   const [photoUri, setPhotoUri] = useState<string | undefined>(initialData?.photoUri);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const isCreate = initialData === undefined;
 
   const pickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -104,25 +119,24 @@ function BabyProfileForm({
     }
   }, [photoUri, pickImage, t]);
 
-  const validateForm = useCallback(() => {
-    const newErrors: Record<string, string> = {};
-
-    const nameError = validateBabyName(name);
-    if (nameError) newErrors.name = nameError;
-
-    const birthDateError = validateBirthDate(birthDate);
-    if (birthDateError) newErrors.birthDate = birthDateError;
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [name, birthDate]);
-
   const handleSave = useCallback(() => {
     setTouched({ name: true, birthDate: true, gender: true });
-    if (validateForm()) {
-      onSave({ name: name.trim(), birthDate, gender, photoUri });
+
+    if (props.initialData === undefined) {
+      const validation = validateNewBabyProfile({ name, birthDate, gender, photoUri });
+      setErrors(validation.errors);
+      if (validation.isValid) {
+        props.onSave(validation.data);
+      }
+      return;
     }
-  }, [name, birthDate, gender, photoUri, validateForm, onSave]);
+
+    const validation = validateBabyProfile({ name, birthDate, gender, photoUri });
+    setErrors(validation.errors);
+    if (validation.isValid) {
+      props.onSave({ name: name.trim(), birthDate, gender, photoUri });
+    }
+  }, [name, birthDate, gender, photoUri, props]);
 
   const handleDateChange = useCallback(
     (_event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -132,6 +146,7 @@ function BabyProfileForm({
       if (selectedDate) {
         setBirthDate(selectedDate);
         setTouched((prev) => ({ ...prev, birthDate: true }));
+        setErrors((prev) => ({ ...prev, birthDate: "" }));
       }
     },
     []
@@ -219,7 +234,7 @@ function BabyProfileForm({
                 : "text-gray-700"
           }`}
         >
-          {t("baby.birthDateOptional")}
+          {t(isCreate ? "baby.birthDate" : "baby.birthDateOptional")}
         </Text>
 
         <Pressable
@@ -237,7 +252,9 @@ function BabyProfileForm({
                   : "border-gray-200 bg-white"
             }
           `}
+          accessibilityRole="button"
           accessibilityLabel={t("baby.selectBirthDate")}
+          accessibilityHint={errors.birthDate ? te(t, errors.birthDate) : undefined}
           testID="birth-date-picker"
         >
           <Text
@@ -257,12 +274,15 @@ function BabyProfileForm({
         </Pressable>
 
         {touched.birthDate && errors.birthDate && (
-          <Text className="mt-1.5 text-sm text-red-600">{te(t, errors.birthDate)}</Text>
+          <Text accessibilityRole="alert" className="mt-1.5 text-sm text-red-600">
+            {te(t, errors.birthDate)}
+          </Text>
         )}
 
         {showDatePicker && (
           <View className={`mt-2 ${Platform.OS === "ios" ? "rounded-2xl overflow-hidden" : ""}`}>
             <DateTimePicker
+              testID="birth-date-input"
               value={birthDate ?? new Date()}
               mode="date"
               display={Platform.OS === "ios" ? "spinner" : "default"}
@@ -295,7 +315,7 @@ function BabyProfileForm({
         <Text
           className={`mb-3 text-sm font-medium ${isDark ? "text-content-dark-secondary" : "text-gray-700"}`}
         >
-          {t("baby.genderOptional")}
+          {t(isCreate ? "baby.gender" : "baby.genderOptional")}
         </Text>
 
         <View className="flex-row gap-3">
@@ -307,7 +327,9 @@ function BabyProfileForm({
                 key={option.value}
                 onPress={() => {
                   Keyboard.dismiss();
-                  setGender(isSelected ? undefined : option.value);
+                  setGender(isSelected && !isCreate ? undefined : option.value);
+                  setTouched((prev) => ({ ...prev, gender: true }));
+                  setErrors((prev) => ({ ...prev, gender: "" }));
                 }}
                 className={`
                   flex-1 min-h-[72px] rounded-2xl items-center justify-center py-3
@@ -322,7 +344,9 @@ function BabyProfileForm({
                         : "border-gray-200 bg-white"
                   }
                 `}
+                accessibilityRole="radio"
                 accessibilityLabel={label}
+                accessibilityHint={errors.gender ? te(t, errors.gender) : undefined}
                 accessibilityState={{ selected: isSelected }}
                 testID={`gender-${option.value}`}
               >
@@ -344,6 +368,11 @@ function BabyProfileForm({
             );
           })}
         </View>
+        {touched.gender && errors.gender && (
+          <Text accessibilityRole="alert" className="mt-1.5 text-sm text-red-600">
+            {te(t, errors.gender)}
+          </Text>
+        )}
       </View>
 
       <View className="gap-3 mt-4 w-full">
@@ -371,4 +400,9 @@ function BabyProfileForm({
   );
 }
 
-export { BabyProfileForm, type BabyProfileFormData, type BabyProfileFormProps };
+export {
+  BabyProfileForm,
+  type BabyProfileFormData,
+  type CompleteBabyProfileFormData,
+  type BabyProfileFormProps,
+};

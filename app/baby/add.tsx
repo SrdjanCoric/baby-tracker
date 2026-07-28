@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { View, useColorScheme, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { BabyProfileForm, type BabyProfileFormData } from "@/components";
+import { BabyProfileForm, type CompleteBabyProfileFormData } from "@/components";
 import { useBaby, useFeeding, useSleep, usePumping, useTummyTime } from "@/contexts";
 
 const isAndroid = Platform.OS === "android";
@@ -24,7 +24,7 @@ export default function AddBabyScreen() {
     tummyTimeTimer?.isRunning;
 
   const handleSave = useCallback(
-    async (data: BabyProfileFormData) => {
+    async (data: CompleteBabyProfileFormData) => {
       setIsLoading(true);
       try {
         const newBaby = await addBaby({

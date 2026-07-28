@@ -3,6 +3,7 @@ import {
   validateBabyName,
   validateBirthDate,
   validateBabyProfile,
+  validateNewBabyProfile,
   calculateBabyAge,
   calculateBabyAgeInWeeks,
   calculateBabyAgeInDays
@@ -55,6 +56,51 @@ describe("validateBirthDate", () => {
   it("accepts date exactly 5 years ago", () => {
     const fiveYearsAgo = new Date(2019, 5, 15);
     expect(validateBirthDate(fiveYearsAgo, now)).toBeNull();
+  });
+});
+
+describe("validateNewBabyProfile", () => {
+  const now = new Date(2024, 5, 15);
+
+  it("accepts a complete profile born today", () => {
+    const result = validateNewBabyProfile({
+      name: " Emma ",
+      birthDate: now,
+      gender: "female",
+    }, now);
+
+    expect(result).toEqual({
+      isValid: true,
+      errors: {},
+      data: {
+        name: "Emma",
+        birthDate: now,
+        gender: "female",
+        photoUri: undefined,
+      },
+    });
+  });
+
+  it("rejects an invalid birth date", () => {
+    const result = validateNewBabyProfile({
+      name: "Emma",
+      birthDate: new Date(Number.NaN),
+      gender: "female",
+    }, now);
+
+    expect(result.errors.birthDate).toBe("validation.birthDateInvalid");
+  });
+
+  it("rejects a creation draft without a birth date or gender", () => {
+    const result = validateNewBabyProfile({ name: "Emma" }, now);
+
+    expect(result).toEqual({
+      isValid: false,
+      errors: {
+        birthDate: "validation.birthDateRequired",
+        gender: "validation.genderRequired",
+      },
+    });
   });
 });
 
