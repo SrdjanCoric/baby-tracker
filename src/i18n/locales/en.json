@@ -2079,6 +2079,20 @@
       "createTitle": "Create your account",
       "createDescription": "Use Apple, Google, or email to save your baby data and invite a caregiver."
     },
+    "join": {
+      "title": "Join your family",
+      "description": "Enter the invitation code shared with you. We won't check or submit it until you sign in and choose Join family.",
+      "confirmDescription": "Check the invitation code, then choose Join family to open the shared baby.",
+      "submit": "Join family",
+      "joining": "Joining family…",
+      "loadingFamily": "Loading your family…",
+      "offline": "You're offline. Check your connection and try again.",
+      "refreshFailed": "You joined the family, but we couldn't finish loading it. Try again without re-entering the code.",
+      "ownHousehold": "You're already in the family for this invitation.",
+      "deleteDataTitle": "Delete your current baby data?",
+      "deleteDataWarning": "Joining will permanently delete the baby and activity data in your current account. This cannot be undone.",
+      "deleteDataAndJoin": "Delete my data and join"
+    },
     "invitation": {
       "title": "Track together",
       "description": "Invite a partner or caregiver now, or skip and continue setting up.",

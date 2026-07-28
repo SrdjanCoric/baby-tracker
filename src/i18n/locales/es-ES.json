@@ -2083,6 +2083,20 @@
       "createTitle": "Crea tu cuenta",
       "createDescription": "Usa Apple, Google o correo electrónico para guardar los datos de tu bebé e invitar a un cuidador."
     },
+    "join": {
+      "title": "Únete a tu familia",
+      "description": "Introduce el código de invitación que te han enviado. No lo comprobaremos ni enviaremos hasta que inicies sesión y elijas Unirme a la familia.",
+      "confirmDescription": "Comprueba el código y elige Unirme a la familia para abrir el perfil compartido del bebé.",
+      "submit": "Unirme a la familia",
+      "joining": "Uniéndote a la familia…",
+      "loadingFamily": "Cargando tu familia…",
+      "offline": "No tienes conexión. Comprueba tu conexión e inténtalo de nuevo.",
+      "refreshFailed": "Te has unido a la familia, pero no hemos podido terminar de cargarla. Inténtalo de nuevo sin volver a introducir el código.",
+      "ownHousehold": "Ya perteneces a la familia de esta invitación.",
+      "deleteDataTitle": "¿Eliminar los datos actuales del bebé?",
+      "deleteDataWarning": "Al unirte, se eliminarán para siempre los datos del bebé y de las actividades de tu cuenta actual. Esta acción no se puede deshacer.",
+      "deleteDataAndJoin": "Eliminar mis datos y unirme"
+    },
     "invitation": {
       "title": "Registrad juntos",
       "description": "Invita ahora a tu pareja o cuidador, o sáltalo y continúa la configuración.",

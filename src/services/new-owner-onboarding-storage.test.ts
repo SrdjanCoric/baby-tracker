@@ -69,6 +69,173 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
+  it("starts caregiver code entry without authentication or household access", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginCaregiverPath("fr");
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toEqual({
+      version: 2,
+      screen: "join-code",
+      language: "fr",
+      entryPath: "caregiver",
+      pendingCode: "",
+    });
+  });
+
+  it("validates and persists a normalized caregiver code through auth cancellation and restart", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginCaregiverPath("en");
+    await expect(
+      NewOwnerOnboardingStorageService.beginCaregiverAuthentication("bad")
+    ).resolves.toEqual({ success: false, error: "inviteCodeLength" });
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-code",
+      pendingCode: "",
+    });
+
+    await expect(
+      NewOwnerOnboardingStorageService.beginCaregiverAuthentication("abcd-2345")
+    ).resolves.toEqual({ success: true });
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-auth-pending",
+      pendingCode: "ABCD2345",
+    });
+
+    await NewOwnerOnboardingStorageService.cancelAuthentication();
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-code",
+      entryPath: "caregiver",
+      pendingCode: "ABCD2345",
+    });
+  });
+
+  it("lets an authenticated caregiver replace a rejected code without repeating authentication", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginCaregiverPath("en");
+    await NewOwnerOnboardingStorageService.beginCaregiverAuthentication("ABCD2345");
+    await NewOwnerOnboardingStorageService.resumeCaregiverAuthentication("solo-household");
+
+    await expect(
+      NewOwnerOnboardingStorageService.updateCaregiverCode("WXYZ-6789")
+    ).resolves.toEqual({ success: true, pendingCode: "WXYZ6789" });
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-confirmation",
+      pendingCode: "WXYZ6789",
+      sourceHouseholdId: "solo-household",
+    });
+  });
+
+  it("persists caregiver confirmation, joining, refresh failure, retry, and completion", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginCaregiverPath("en");
+    await NewOwnerOnboardingStorageService.beginCaregiverAuthentication("ABCD2345");
+    await NewOwnerOnboardingStorageService.resumeCaregiverAuthentication("solo-household");
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-confirmation",
+      pendingCode: "ABCD2345",
+      sourceHouseholdId: "solo-household",
+    });
+
+    await NewOwnerOnboardingStorageService.beginCaregiverJoin();
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "joining",
+      pendingCode: "ABCD2345",
+    });
+
+    await NewOwnerOnboardingStorageService.markCaregiverJoinRedeemed("shared-household");
+    await NewOwnerOnboardingStorageService.markCaregiverRefreshFailure();
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-failure",
+      recovery: "refresh",
+      reason: "refreshFailed",
+      householdId: "shared-household",
+    });
+
+    await NewOwnerOnboardingStorageService.retryCaregiverJoin();
+    await NewOwnerOnboardingStorageService.completeCaregiverJoin("shared-baby");
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toEqual({
+      version: 2,
+      screen: "completed",
+      language: "en",
+      entryPath: "caregiver",
+      babyId: "shared-baby",
+      firstActivity: { status: "joined-household" },
+    });
+    expect(storage.get("@new_owner_onboarding_v2")).not.toContain("ABCD2345");
+    expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
+      hasCompleted: true,
+      skipped: false,
+    });
+  });
+
+  it("persists reconciliation-only recovery when an interrupted join outcome is unknown", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginCaregiverPath("en");
+    await NewOwnerOnboardingStorageService.beginCaregiverAuthentication("ABCD2345");
+    await NewOwnerOnboardingStorageService.resumeCaregiverAuthentication("solo-household");
+    await NewOwnerOnboardingStorageService.beginCaregiverJoin();
+    await NewOwnerOnboardingStorageService.markCaregiverReconciliationFailure();
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-failure",
+      recovery: "reconcile",
+      reason: "offline",
+      householdId: "solo-household",
+    });
+
+    await NewOwnerOnboardingStorageService.retryCaregiverJoin();
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "joining",
+      sourceHouseholdId: "solo-household",
+    });
+  });
+
+  it("recovers an interrupted join without redeeming the invitation again", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginCaregiverPath("en");
+    await NewOwnerOnboardingStorageService.beginCaregiverAuthentication("ABCD2345");
+    await NewOwnerOnboardingStorageService.resumeCaregiverAuthentication("solo-household");
+    await NewOwnerOnboardingStorageService.beginCaregiverJoin();
+    await NewOwnerOnboardingStorageService.recoverInterruptedCaregiverJoin("shared-household");
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-refresh",
+      householdId: "shared-household",
+      pendingCode: "ABCD2345",
+    });
+  });
+
   it("resumes authenticated accounts without babies at baby setup", async () => {
     const storage = new Map<string, string>();
     vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);

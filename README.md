@@ -58,11 +58,11 @@ A milestone response keeps one database identity as its state changes or clears.
 
 ### Caregiver Invitations
 
-Household owners enter a caregiver's account email in Settings, then copy or share the generated code. Each invitation expires after seven days and works once. The recipient must sign in with the matching verified email and submit the code before joining. Owners can keep invitations pending for different email addresses and can replace or revoke each code. Existing memberships stay unchanged, and older recipient app versions can redeem newly issued codes. See [`docs/CAREGIVER_INVITATIONS.md`](docs/CAREGIVER_INVITATIONS.md) for the security model and rollout checks.
+Household owners enter a caregiver's account email in Settings, then copy or share the generated code. Each invitation expires after seven days and works once. In the onboarding preview, recipients enter the code before authentication; cancellation and restart preserve it. The matching verified account must explicitly submit the code after signing in. Joining from a solo account warns before deleting its current baby and activity data, and Home opens only after the shared baby is loaded. Owners can keep invitations pending for different email addresses and can replace or revoke each code. Existing memberships stay unchanged, and older recipient app versions can redeem newly issued codes. See [`docs/CAREGIVER_INVITATIONS.md`](docs/CAREGIVER_INVITATIONS.md) for the security model and rollout checks.
 
 ### New owner onboarding preview
 
-Development builds have a resumable new-owner flow behind the `onboardingPreview=true` launch argument. Account choice comes before the baby profile. The account options are Sign in and Create account. Continue on this device creates a local baby and proceeds to the first activity without an invitation prompt. Existing accounts with babies open the app, while accounts without babies continue through baby setup and an optional caregiver invitation. Later guest authentication retains local data until the account copy is acknowledged; differing account data requires the caregiver to choose which copy to keep. Production builds continue to use the existing onboarding. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the state schema and validation commands.
+Development builds have a resumable role-based flow behind the `onboardingPreview=true` launch argument. New owners choose an account mode before creating a baby. Continue on this device creates a local baby and proceeds to the first activity without an invitation prompt. Authenticated owners can create an optional caregiver invitation. Invited caregivers keep their normalized code through authentication and recover unknown redemption outcomes by checking household membership before retrying. Existing accounts with babies open the app. Later guest authentication retains local data until the account copy is acknowledged; differing account data requires the caregiver to choose which copy to keep. Production builds continue to use the existing onboarding. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the state schema and validation commands.
 
 ### Timer Exclusivity
 
@@ -144,7 +144,10 @@ npm run typecheck            # TypeScript strict mode
 npm run lint                 # ESLint (warnings fail the quality gate)
 npm run e2e:household-timers       # Fast iOS offline reconnect and caregiver handoff
 npm run e2e:household-timers:clean # Required local iOS device gate before release
-maestro test e2e/flows/onboarding/new-owner-preview-restart.yaml # Development onboarding preview
+maestro test e2e/flows/onboarding/new-owner-preview-restart.yaml # Development owner preview
+npm run e2e:prepare-caregiver-join
+npm run e2e:start-caregiver-join # Start local-Supabase Metro in another terminal
+maestro test e2e/flows/onboarding/caregiver-code-join.yaml # Development caregiver join
 ```
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.

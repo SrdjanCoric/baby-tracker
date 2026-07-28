@@ -2083,6 +2083,20 @@
       "createTitle": "Crea il tuo account",
       "createDescription": "Usa Apple, Google o email per salvare i dati del bambino e invitare un caregiver."
     },
+    "join": {
+      "title": "Unisciti alla tua famiglia",
+      "description": "Inserisci il codice di invito che hai ricevuto. Non lo verificheremo né invieremo finché non accedi e scegli Unisciti alla famiglia.",
+      "confirmDescription": "Controlla il codice e scegli Unisciti alla famiglia per aprire il profilo condiviso del bambino.",
+      "submit": "Unisciti alla famiglia",
+      "joining": "Accesso alla famiglia…",
+      "loadingFamily": "Caricamento della famiglia…",
+      "offline": "Sei offline. Controlla la connessione e riprova.",
+      "refreshFailed": "Ti sei unito alla famiglia, ma non siamo riusciti a completarne il caricamento. Riprova senza inserire di nuovo il codice.",
+      "ownHousehold": "Fai già parte della famiglia associata a questo invito.",
+      "deleteDataTitle": "Eliminare i dati attuali del bambino?",
+      "deleteDataWarning": "Unendoti, i dati del bambino e delle attività nel tuo account attuale verranno eliminati definitivamente. Questa azione non può essere annullata.",
+      "deleteDataAndJoin": "Elimina i miei dati e unisciti"
+    },
     "invitation": {
       "title": "Registrate insieme",
       "description": "Invita ora un partner o caregiver, oppure salta e continua la configurazione.",

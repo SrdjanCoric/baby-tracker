@@ -92,13 +92,20 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
             previewState.screen === "first-activity" &&
             typeof currentSegment === "string" &&
             activitySegments.includes(currentSegment);
+          const inCaregiverJoin = previewState.screen === "join-code" ||
+            previewState.screen === "join-confirmation" ||
+            previewState.screen === "joining" ||
+            previewState.screen === "join-refresh" ||
+            previewState.screen === "join-failure";
           const expectedRoute = previewState.screen === "welcome"
             ? "/onboarding/owner"
             : previewState.screen === "account-choice"
               ? "/onboarding/owner/account"
-              : previewState.screen === "auth-pending"
+              : previewState.screen === "auth-pending" || previewState.screen === "join-auth-pending"
                 ? "/auth/sign-in?resumeOnboarding=true"
-                : previewState.screen === "owner-baby"
+                : inCaregiverJoin
+                  ? "/onboarding/owner/join"
+                  : previewState.screen === "owner-baby"
                   ? "/onboarding/owner/baby"
                   : previewState.screen === "invitation"
                     ? "/onboarding/owner/invitation"
@@ -109,9 +116,11 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
             ? undefined
             : previewState.screen === "account-choice"
               ? "account"
-              : previewState.screen === "auth-pending"
+              : previewState.screen === "auth-pending" || previewState.screen === "join-auth-pending"
                 ? null
-                : previewState.screen === "owner-baby"
+                : inCaregiverJoin
+                  ? "join"
+                  : previewState.screen === "owner-baby"
                   ? "baby"
                   : previewState.screen === "invitation"
                     ? "invitation"

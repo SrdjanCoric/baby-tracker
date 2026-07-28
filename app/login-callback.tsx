@@ -11,6 +11,7 @@ import * as Linking from "expo-linking";
 import { useAuth } from "@/contexts";
 import { supabase } from "@/services/supabase";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { getOnboardingAuthCallbackRoute } from "@/services/new-owner-auth-resume";
 import { SURFACE_COLORS, ACTION_COLORS } from "@/constants/design-tokens";
 import { useColorScheme } from "nativewind";
 
@@ -133,9 +134,7 @@ export default function LoginCallbackScreen() {
     const finishAuthentication = async () => {
       const state = await NewOwnerOnboardingStorageService.getState("system");
       if (!active) return;
-      router.replace(state.screen === "auth-pending"
-        ? "/auth/sign-in?resumeOnboarding=true"
-        : "/(tabs)");
+      router.replace(getOnboardingAuthCallbackRoute(state));
     };
     void finishAuthentication();
     return () => {

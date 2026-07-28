@@ -15,6 +15,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -40,7 +41,9 @@ export default function SignInScreen() {
     onboardingIntent?: string;
     resumeOnboarding?: string;
   }>();
-  const onboardingIntent = rawOnboardingIntent === "sign-in" || rawOnboardingIntent === "create-account"
+  const onboardingIntent = rawOnboardingIntent === "sign-in" ||
+    rawOnboardingIntent === "create-account" ||
+    rawOnboardingIntent === "join-family"
     ? rawOnboardingIntent
     : null;
   const { isDark } = useTheme();
@@ -55,7 +58,7 @@ export default function SignInScreen() {
   const [isDevLoading, setIsDevLoading] = useState(false);
 
   const [showDisplayNamePrompt, setShowDisplayNamePrompt] = useState(false);
-  const [postDisplayNameRoute, setPostDisplayNameRoute] = useState<"baby-setup" | null>(null);
+  const [postDisplayNameRoute, setPostDisplayNameRoute] = useState<"baby-setup" | "caregiver-confirmation" | null>(null);
   const [resumeAttempt, setResumeAttempt] = useState(0);
   const hasResumedOnboardingRef = useRef(false);
   const hasOnboardingIntent = Boolean(onboardingIntent || resumeOnboarding === "true");
@@ -68,6 +71,19 @@ export default function SignInScreen() {
         const result = await resumeNewOwnerOnboardingAfterAuth(profile.householdId);
         if (result === "existing-account") {
           router.replace("/(tabs)");
+          return;
+        }
+        if (result === "caregiver-recovery") {
+          router.replace("/onboarding/owner/join");
+          return;
+        }
+        if (result === "caregiver-confirmation") {
+          if (!profile.displayName) {
+            setPostDisplayNameRoute("caregiver-confirmation");
+            setShowDisplayNamePrompt(true);
+          } else {
+            router.replace("/onboarding/owner/join");
+          }
           return;
         }
         if (result === "baby-setup") {
@@ -106,6 +122,11 @@ export default function SignInScreen() {
     if (postDisplayNameRoute === "baby-setup") {
       setPostDisplayNameRoute(null);
       router.replace("/onboarding/owner/baby");
+      return;
+    }
+    if (postDisplayNameRoute === "caregiver-confirmation") {
+      setPostDisplayNameRoute(null);
+      router.replace("/onboarding/owner/join");
       return;
     }
     router.back();
@@ -256,7 +277,11 @@ export default function SignInScreen() {
             </Pressable>
 
             {/* Title Section */}
-            <View className="mt-10 mb-8">
+            <Pressable
+              onPress={Keyboard.dismiss}
+              className="mt-10 mb-8"
+              testID="dismiss-keyboard"
+            >
               <Text
                 className="text-3xl mb-2"
                 style={{
@@ -277,7 +302,7 @@ export default function SignInScreen() {
                   ? "newOwnerOnboarding.auth.createDescription"
                   : "auth.signInDescription")}
               </Text>
-            </View>
+            </Pressable>
 
             {/* Social Sign-in Buttons */}
             <View className="mb-6">
@@ -487,6 +512,8 @@ export default function SignInScreen() {
                   onChangeText={setPassword}
                   secureTextEntry
                   autoCapitalize="none"
+                  returnKeyType="go"
+                  onSubmitEditing={handleDevSignIn}
                   testID="dev-password-input"
                 />
 

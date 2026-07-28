@@ -22,6 +22,23 @@ SET household_id = (
     is_owner = false
 WHERE id = '86666666-6666-6666-6666-666666666666';
 
+INSERT INTO public.babies (id, household_id, name)
+SELECT
+  '8aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  household_id,
+  'Solo baby'
+FROM public.users
+WHERE id = '82222222-2222-2222-2222-222222222222';
+
+INSERT INTO public.feedings (id, baby_id, logged_by, type, started_at)
+VALUES (
+  '8bbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  '8aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  '82222222-2222-2222-2222-222222222222',
+  'bottle',
+  pg_catalog.now()
+);
+
 DO $$
 DECLARE
   v_email_binding_enforced BOOLEAN;
@@ -69,6 +86,13 @@ BEGIN
   END IF;
 END
 $$;
+
+SELECT household.invite_code AS recipient_household_code
+FROM public.households AS household
+JOIN public.users AS caregiver ON caregiver.household_id = household.id
+WHERE caregiver.id = '82222222-2222-2222-2222-222222222222'
+\gset
+SELECT set_config('test.recipient_household_code', :'recipient_household_code', true);
 
 SELECT set_config(
   'request.jwt.claims',
@@ -186,6 +210,7 @@ FROM public.create_caregiver_invitation('recipient@test.dev')
 \gset
 
 RESET ROLE;
+SELECT set_config('test.recipient_invite_code', :'recipient_code', true);
 SELECT set_config(
   'request.jwt.claims',
   json_build_object('sub', '86666666-6666-6666-6666-666666666666', 'role', 'authenticated')::text,
@@ -197,6 +222,7 @@ DECLARE
   v_create_denied BOOLEAN := false;
   v_list_denied BOOLEAN := false;
   v_revoke_denied BOOLEAN := false;
+  v_join_denied BOOLEAN := false;
 BEGIN
   BEGIN
     PERFORM public.create_caregiver_invitation('unauthorized@test.dev');
@@ -218,20 +244,56 @@ BEGIN
     v_revoke_denied := true;
   END;
 
+  BEGIN
+    PERFORM * FROM public.join_household_by_invite_code(
+      pg_catalog.current_setting('test.recipient_invite_code')::VARCHAR(8)
+    );
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM = 'User already belongs to a household with other members' THEN
+      v_join_denied := true;
+    ELSE
+      RAISE;
+    END IF;
+  END;
+
   IF NOT v_create_denied OR NOT v_list_denied OR NOT v_revoke_denied THEN
     RAISE EXCEPTION 'a non-owner managed caregiver invitations';
+  END IF;
+  IF NOT v_join_denied THEN
+    RAISE EXCEPTION 'a caregiver moved out of an existing shared household';
   END IF;
 END
 $$;
 
 RESET ROLE;
-SELECT set_config('test.recipient_invite_code', :'recipient_code', true);
 SELECT set_config(
   'request.jwt.claims',
   json_build_object('sub', '82222222-2222-2222-2222-222222222222', 'role', 'authenticated')::text,
   true
 );
 SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  v_rejected BOOLEAN := false;
+BEGIN
+  BEGIN
+    PERFORM * FROM public.join_household_by_invite_code(
+      pg_catalog.current_setting('test.recipient_household_code')::VARCHAR(8)
+    );
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM = 'User already belongs to this household' THEN
+      v_rejected := true;
+    ELSE
+      RAISE;
+    END IF;
+  END;
+
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'a caregiver joined their own household';
+  END IF;
+END
+$$;
 
 DO $$
 DECLARE
@@ -266,6 +328,18 @@ BEGIN
       AND owner.id = '81111111-1111-1111-1111-111111111111'
   ) THEN
     RAISE EXCEPTION 'successful invitation was not consumed atomically';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.babies
+    WHERE id = '8aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+  ) OR EXISTS (
+    SELECT 1
+    FROM public.feedings
+    WHERE id = '8bbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+  ) THEN
+    RAISE EXCEPTION 'solo baby data was not deleted during the approved destructive join';
   END IF;
 END
 $$;

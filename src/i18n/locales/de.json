@@ -2079,6 +2079,20 @@
       "createTitle": "Erstelle dein Konto",
       "createDescription": "Nutze Apple, Google oder E-Mail, um die Babydaten zu sichern und eine Betreuungsperson einzuladen."
     },
+    "join": {
+      "title": "Deiner Familie beitreten",
+      "description": "Gib den Einladungscode ein, den du erhalten hast. Wir prüfen oder senden ihn erst, wenn du dich anmeldest und Familie beitreten wählst.",
+      "confirmDescription": "Prüfe den Einladungscode und wähle dann Familie beitreten, um das gemeinsame Babyprofil zu öffnen.",
+      "submit": "Familie beitreten",
+      "joining": "Familie wird beigetreten…",
+      "loadingFamily": "Familie wird geladen…",
+      "offline": "Du bist offline. Prüfe deine Verbindung und versuche es erneut.",
+      "refreshFailed": "Du bist der Familie beigetreten, aber wir konnten sie nicht vollständig laden. Versuche es erneut, ohne den Code noch einmal einzugeben.",
+      "ownHousehold": "Du gehörst bereits zu der Familie dieser Einladung.",
+      "deleteDataTitle": "Aktuelle Babydaten löschen?",
+      "deleteDataWarning": "Beim Beitritt werden die Baby- und Aktivitätsdaten in deinem aktuellen Konto dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
+      "deleteDataAndJoin": "Meine Daten löschen und beitreten"
+    },
     "invitation": {
       "title": "Gemeinsam dokumentieren",
       "description": "Lade jetzt eine Betreuungsperson ein oder überspringe diesen Schritt und fahre fort.",

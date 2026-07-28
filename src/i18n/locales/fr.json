@@ -2079,6 +2079,20 @@
       "createTitle": "Créez votre compte",
       "createDescription": "Utilisez Apple, Google ou votre e-mail pour enregistrer les données du bébé et inviter un proche."
     },
+    "join": {
+      "title": "Rejoignez votre famille",
+      "description": "Saisissez le code d’invitation reçu. Nous ne le vérifierons ni ne l’enverrons avant votre connexion et votre choix de rejoindre la famille.",
+      "confirmDescription": "Vérifiez le code, puis choisissez Rejoindre la famille pour ouvrir le profil partagé du bébé.",
+      "submit": "Rejoindre la famille",
+      "joining": "Connexion à la famille…",
+      "loadingFamily": "Chargement de votre famille…",
+      "offline": "Vous êtes hors ligne. Vérifiez votre connexion et réessayez.",
+      "refreshFailed": "Vous avez rejoint la famille, mais son chargement n’a pas abouti. Réessayez sans saisir à nouveau le code.",
+      "ownHousehold": "Vous appartenez déjà à la famille associée à cette invitation.",
+      "deleteDataTitle": "Supprimer les données actuelles du bébé ?",
+      "deleteDataWarning": "Rejoindre la famille supprimera définitivement les données du bébé et des activités de votre compte actuel. Cette action est irréversible.",
+      "deleteDataAndJoin": "Supprimer mes données et rejoindre"
+    },
     "invitation": {
       "title": "Suivez ensemble",
       "description": "Invitez un proche maintenant, ou passez cette étape et continuez la configuration.",

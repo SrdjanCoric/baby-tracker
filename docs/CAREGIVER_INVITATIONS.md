@@ -6,7 +6,13 @@ Household owners authorize a caregiver's email before sharing an invitation code
 
 New owners choose an account before entering baby details. The account choice explains that caregiver invitations require an account because shared tracking must synchronize between devices. Continue on this device keeps the baby on that device and does not show another invitation prompt.
 
-After an authenticated owner creates a baby, onboarding offers one optional invitation. A missing caregiver display name must be saved before invitation creation. Not now and Skip remaining setup create no invitation and schedule no reminder. When an invitation is created, the screen shows the verified code returned by `create_caregiver_invitation`. Copying or opening the system share sheet is optional, and dismissing the share sheet does not block onboarding.
+After an authenticated owner creates a baby, onboarding offers one optional invitation. A missing caregiver display name must be saved before invitation creation. Not now and Skip remaining setup create no invitation and schedule no reminder. When an invitation is created, the screen shows the code returned by `create_caregiver_invitation`. Copying or opening the system share sheet is optional, and dismissing the share sheet does not block onboarding.
+
+Invited caregivers enter the code before authentication. Continue validates and saves the normalized code locally without calling the invitation RPC. Social sign-in, a magic-link return, cancellation, restart, and retry keep the code. After authentication, a missing display name is required before the same code screen returns. The caregiver must press Join family to redeem the code.
+
+A solo account with baby data shows a separate irreversible warning before redemption. Cancel leaves the account untouched. Delete my data and join accepts the server's existing behavior, which removes the current solo household's baby and activity data. An account that already shares a household cannot move through this flow.
+
+After redemption, the app refreshes the user profile and household, then loads and selects a shared baby before opening Home. A failed refresh keeps a refresh-only retry state. That retry never submits the consumed invitation again.
 
 ## Security model
 
@@ -32,13 +38,23 @@ Migration 058 starts with `caregiver_invitation_rollout.email_binding_enforced` 
 Run these commands from the repository root:
 
 ```bash
+npm run test:unit -- src/services/household-service.test.ts src/services/new-owner-onboarding-storage.test.ts src/services/new-owner-auth-resume.test.ts src/i18n/caregiver-invitation-locales.test.ts src/i18n/new-owner-onboarding-locales.test.ts src/__tests__/security/invite-code-security.test.ts src/__tests__/security/caregiver-onboarding-security.test.ts
+npm run test:component -- app/settings/household.component.test.tsx app/settings/join-household.component.test.tsx app/onboarding/owner/join.component.test.tsx app/auth/sign-in.component.test.tsx --runInBand
 npm run test:sql:setup
 npm run test:sql
-npm run test:unit -- src/services/household-service.test.ts src/i18n/caregiver-invitation-locales.test.ts src/__tests__/security/invite-code-security.test.ts
-npm run test:component -- app/settings/household.component.test.tsx app/settings/join-household.component.test.tsx --runInBand
 ```
 
-The SQL test covers owner authorization, email normalization, replacement, multiple pending invitations, expiry, revocation, one-time consumption, verified-email matching, legacy-code rejection, the preserved RPC signature, and server rate limiting.
+Run the complete local caregiver journey against a development build:
+
+```bash
+npm run e2e:prepare-caregiver-join
+npm run e2e:start-caregiver-join # Keep Metro running in another terminal
+maestro test e2e/flows/onboarding/caregiver-code-join.yaml
+```
+
+The Metro command reads the local API URL and anonymous key from `supabase status`, enables the local E2E Babel environment, and refuses non-local endpoints. This keeps the app and fixture on the same backend even when `.env` points elsewhere.
+
+The SQL test covers owner authorization, email normalization, replacement, multiple pending invitations, expiry, revocation, one-time consumption, verified-email matching, legacy-code rejection, own-household and shared-household rejection, destructive solo-data deletion, the preserved RPC signature, and server rate limiting. The caregiver Maestro fixture uses only local Supabase and resets the invited account to an empty solo household before creating `E2EJ-2345`.
 
 ## Release check
 

@@ -1,9 +1,20 @@
 import { fetchAndSyncHouseholdBabies } from "@/services/baby-sync-service";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import type { NewOwnerOnboardingState } from "@/types/new-owner-onboarding";
+
+export function getOnboardingAuthCallbackRoute(
+  state: NewOwnerOnboardingState
+): "/auth/sign-in?resumeOnboarding=true" | "/(tabs)" {
+  return state.screen === "auth-pending" || state.screen === "join-auth-pending"
+    ? "/auth/sign-in?resumeOnboarding=true"
+    : "/(tabs)";
+}
 
 export type NewOwnerAuthResumeResult =
   | "not-pending"
   | "profile-pending"
+  | "caregiver-confirmation"
+  | "caregiver-recovery"
   | "existing-account"
   | "baby-setup";
 
@@ -11,8 +22,21 @@ export async function resumeNewOwnerOnboardingAfterAuth(
   householdId: string | null
 ): Promise<NewOwnerAuthResumeResult> {
   const state = await NewOwnerOnboardingStorageService.getState("system");
-  if (state.screen !== "auth-pending") return "not-pending";
+  const isPostSubmitCaregiverRecovery = state.screen === "joining" ||
+    state.screen === "join-refresh" ||
+    (state.screen === "join-failure" && state.recovery !== "confirmation");
+  if (isPostSubmitCaregiverRecovery) {
+    return householdId ? "caregiver-recovery" : "profile-pending";
+  }
+  if (state.screen !== "auth-pending" && state.screen !== "join-auth-pending") {
+    return "not-pending";
+  }
   if (!householdId) return "profile-pending";
+
+  if (state.screen === "join-auth-pending") {
+    await NewOwnerOnboardingStorageService.resumeCaregiverAuthentication(householdId);
+    return "caregiver-confirmation";
+  }
 
   const babies = await fetchAndSyncHouseholdBabies(householdId);
   const hasBabies = babies.length > 0;

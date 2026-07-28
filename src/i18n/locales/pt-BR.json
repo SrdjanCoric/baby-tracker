@@ -2082,6 +2082,20 @@
       "createTitle": "Crie sua conta",
       "createDescription": "Use Apple, Google ou email para salvar os dados do bebê e convidar um cuidador."
     },
+    "join": {
+      "title": "Entre na sua família",
+      "description": "Digite o código do convite que você recebeu. Não vamos verificar nem enviar o código até você entrar e escolher Entrar na família.",
+      "confirmDescription": "Confira o código e escolha Entrar na família para abrir o perfil compartilhado do bebê.",
+      "submit": "Entrar na família",
+      "joining": "Entrando na família…",
+      "loadingFamily": "Carregando sua família…",
+      "offline": "Você está offline. Confira sua conexão e tente novamente.",
+      "refreshFailed": "Você entrou na família, mas não conseguimos terminar de carregá-la. Tente novamente sem digitar o código outra vez.",
+      "ownHousehold": "Você já faz parte da família deste convite.",
+      "deleteDataTitle": "Excluir os dados atuais do bebê?",
+      "deleteDataWarning": "Ao entrar, os dados do bebê e das atividades da sua conta atual serão excluídos permanentemente. Isso não pode ser desfeito.",
+      "deleteDataAndJoin": "Excluir meus dados e entrar"
+    },
     "invitation": {
       "title": "Acompanhem juntos",
       "description": "Convide um parceiro ou cuidador agora ou pule e continue a configuração.",
