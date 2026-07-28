@@ -48,9 +48,17 @@ tags:
     id: "owner-baby-continue"
 - assertVisible: "Geburtsdatum ist erforderlich"
 - assertVisible: "Wähle Junge oder Mädchen aus"
+- waitForAnimationToEnd
 
 - tapOn:
     id: "owner-start-over"
+- runFlow:
+    when:
+      visible:
+        id: "owner-start-over"
+    commands:
+      - tapOn:
+          id: "owner-start-over"
 - extendedWaitUntil:
     visible:
       id: "new-owner-welcome-screen"

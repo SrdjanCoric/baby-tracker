@@ -3,14 +3,16 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import NewOwnerBabyScreen from "./baby";
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 const mockAddBaby = jest.fn();
 const mockSelectBaby = jest.fn();
 const mockGetState = jest.fn();
 const mockUpdateBabyDraft = jest.fn();
 const mockMarkBabyCreated = jest.fn();
+const mockStartOver = jest.fn();
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: mockPush, replace: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
 }));
 
 jest.mock("@/contexts", () => ({
@@ -23,7 +25,7 @@ jest.mock("@/services/new-owner-onboarding-storage", () => ({
     getState: (...args: unknown[]) => mockGetState(...args),
     updateBabyDraft: (...args: unknown[]) => mockUpdateBabyDraft(...args),
     markBabyCreated: (...args: unknown[]) => mockMarkBabyCreated(...args),
-    startOver: jest.fn(),
+    startOver: (...args: unknown[]) => mockStartOver(...args),
   },
 }));
 
@@ -49,6 +51,7 @@ describe("NewOwnerBabyScreen", () => {
     mockGetState.mockResolvedValue(ownerBabyState);
     mockUpdateBabyDraft.mockResolvedValue(undefined);
     mockMarkBabyCreated.mockResolvedValue(undefined);
+    mockStartOver.mockResolvedValue(undefined);
     mockSelectBaby.mockResolvedValue(undefined);
     mockAddBaby.mockResolvedValue({ id: "baby-1" });
   });
@@ -63,6 +66,18 @@ describe("NewOwnerBabyScreen", () => {
     expect(screen.getByText("validation.nameRequired")).toBeTruthy();
     expect(screen.getByText("validation.birthDateRequired")).toBeTruthy();
     expect(screen.getByText("validation.genderRequired")).toBeTruthy();
+  });
+
+  it("clears the draft and returns to Welcome when starting over", async () => {
+    render(<NewOwnerBabyScreen />);
+
+    await waitFor(() => expect(screen.getByTestId("owner-start-over")).toBeTruthy());
+    fireEvent.press(screen.getByTestId("owner-start-over"));
+
+    await waitFor(() => {
+      expect(mockStartOver).toHaveBeenCalledTimes(1);
+      expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner");
+    });
   });
 
   it("restores the draft, formats its date in the selected locale, and creates a guest baby", async () => {
