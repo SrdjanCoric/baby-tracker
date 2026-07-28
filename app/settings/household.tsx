@@ -8,6 +8,7 @@ import {
   Alert,
   Share,
   TextInput,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -176,12 +177,16 @@ export default function HouseholdSettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
-      <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
+      <Pressable
+        onPress={() => Keyboard.dismiss()}
+        className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle"
+        testID="dismiss-keyboard"
+      >
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
           {t("household.title")}
         </Text>
-      </View>
+      </Pressable>
 
       {!isAuthenticated ? (
         <View className="flex-1 items-center justify-center px-8">
