@@ -53,6 +53,7 @@ Keep Widget and Watch sleep starts functional. The phone owns the confirmation U
 - [ ] Unanswered confirmations survive navigation, offline restart, and midnight; they withhold sleep predictions and training data without blocking any activity tracking.
 - [ ] Confirmation and correction update local state, durable queue data, Supabase, Realtime caregivers, timeline, statistics, historical grouping, drift detection, and predictions consistently.
 - [ ] Timer, manual, Widget, Watch, old-client, and remote-caregiver recording paths can create a pending confirmation without losing or delaying the sleep record; confirmation remains phone-only.
+- [ ] The confirmation question, both answers, continuation-setting copy, and related accessibility text are translated in every supported locale file.
 - [ ] Existing sleep rows retain Task 0027 behavior with no backfill, rewrite, or retroactive prompt, and legacy clients cannot erase newer confirmation state through an unrelated partial update.
 - [ ] The 05:53 overnight end followed by 07:05 to 10:30 sleep remains continuation for a 09:00 day start, while a sleep starting at or after 09:00 remains a nap.
 - [ ] Automated tests cover every agreed sequence and boundary, database and in-app type updates, offline and cross-caregiver persistence, corrections, cleanup, and backwards compatibility.
