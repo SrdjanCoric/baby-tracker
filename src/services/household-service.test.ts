@@ -341,22 +341,37 @@ describe("HouseholdService", () => {
       expect(result.error).toBe("invalidInvitation");
     });
 
-    it("should return error when user already in household", async () => {
+    it.each([
+      ["User already belongs to this household", "alreadyInOwnHousehold"],
+      ["User already belongs to a household with other members", "alreadyInSharedHousehold"],
+    ])("classifies membership rejection %s", async (message, expectedError) => {
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: null,
-        error: { message: "User already belongs to a household", code: "P0002" },
+        error: { message, code: "P0002" },
       } as unknown as ReturnType<typeof supabase.rpc>);
 
       const result = await joinHouseholdViaInviteCode("ABCD2345");
 
       expect(result.data).toBeNull();
-      expect(result.error).toBe("alreadyInHousehold");
+      expect(result.error).toBe(expectedError);
+    });
+
+    it("classifies transport failures as offline", async () => {
+      vi.mocked(supabase.rpc).mockResolvedValue({
+        data: null,
+        error: { message: "Network request failed" },
+      } as unknown as ReturnType<typeof supabase.rpc>);
+
+      const result = await joinHouseholdViaInviteCode("ABCD2345");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("offline");
     });
 
     it("should return generic error on RPC failure", async () => {
       vi.mocked(supabase.rpc).mockResolvedValue({
         data: null,
-        error: { message: "Network error" },
+        error: { message: "Unexpected RPC failure" },
       } as unknown as ReturnType<typeof supabase.rpc>);
 
       const result = await joinHouseholdViaInviteCode("ABCD2345");

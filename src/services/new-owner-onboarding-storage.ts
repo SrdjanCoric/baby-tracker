@@ -4,10 +4,13 @@ import { OnboardingStorageService } from "@/services/onboarding-storage";
 import {
   NEW_OWNER_ONBOARDING_VERSION,
   type BabyProfileDraft,
+  type CaregiverCodeValidationReason,
+  type CaregiverJoinFailureReason,
   type FirstActivityType,
   type NewOwnerOnboardingState,
   type OnboardingAuthIntent,
 } from "@/types/new-owner-onboarding";
+import { normalizeInviteCode, validateInviteCode } from "@/utils/inviteCode";
 
 const NEW_OWNER_ONBOARDING_KEY = "@new_owner_onboarding_v2";
 const VALID_LANGUAGES: LanguageCode[] = [
@@ -68,6 +71,28 @@ function isBabyDraft(value: unknown): value is BabyProfileDraft {
   );
 }
 
+function isValidPendingCode(value: unknown, allowEmpty = false): value is string {
+  if (typeof value !== "string") return false;
+  if (allowEmpty && value === "") return true;
+  return validateInviteCode(value).isValid && normalizeInviteCode(value) === value;
+}
+
+function toCaregiverCodeValidationReason(error: string | undefined): CaregiverCodeValidationReason {
+  if (error === "inviteCodeRequired" || error === "inviteCodeLength") return error;
+  return "inviteCodeInvalidChars";
+}
+
+function isCaregiverJoinFailureReason(value: unknown): value is CaregiverJoinFailureReason {
+  return value === "invalidInvitation" ||
+    value === "alreadyInHousehold" ||
+    value === "ownHousehold" ||
+    value === "sharedHousehold" ||
+    value === "rateLimitExceeded" ||
+    value === "joinFailed" ||
+    value === "offline" ||
+    value === "refreshFailed";
+}
+
 function isStoredState(value: unknown): value is NewOwnerOnboardingState {
   if (!value || typeof value !== "object") return false;
   const state = value as Record<string, unknown>;
@@ -75,6 +100,33 @@ function isStoredState(value: unknown): value is NewOwnerOnboardingState {
 
   if (state.screen === "welcome") {
     return state.entryPath === null && isBabyDraft(state.babyDraft);
+  }
+  if (state.screen === "join-code") {
+    return state.entryPath === "caregiver" && isValidPendingCode(state.pendingCode, true);
+  }
+  if (state.screen === "join-auth-pending") {
+    return state.entryPath === "caregiver" &&
+      state.authIntent === "join-family" &&
+      isValidPendingCode(state.pendingCode);
+  }
+  if (state.screen === "join-confirmation" || state.screen === "joining") {
+    return state.entryPath === "caregiver" &&
+      typeof state.sourceHouseholdId === "string" &&
+      isValidPendingCode(state.pendingCode);
+  }
+  if (state.screen === "join-refresh") {
+    return state.entryPath === "caregiver" &&
+      typeof state.householdId === "string" &&
+      isValidPendingCode(state.pendingCode);
+  }
+  if (state.screen === "join-failure") {
+    return state.entryPath === "caregiver" &&
+      (state.recovery === "confirmation" ||
+        state.recovery === "refresh" ||
+        state.recovery === "reconcile") &&
+      isCaregiverJoinFailureReason(state.reason) &&
+      typeof state.householdId === "string" &&
+      isValidPendingCode(state.pendingCode);
   }
   if (state.screen === "account-choice") {
     return state.entryPath === "owner";
@@ -134,7 +186,11 @@ function isStoredState(value: unknown): value is NewOwnerOnboardingState {
       state.entryPath === "authenticated-existing" &&
       state.babyId === null &&
       firstActivity?.status === "existing-account";
-    return hasOwnerCompletion || hasLegacyCompletion || hasExistingAccountCompletion;
+    const hasCaregiverCompletion =
+      state.entryPath === "caregiver" &&
+      typeof state.babyId === "string" &&
+      firstActivity?.status === "joined-household";
+    return hasOwnerCompletion || hasLegacyCompletion || hasExistingAccountCompletion || hasCaregiverCompletion;
   }
   return false;
 }
@@ -174,6 +230,12 @@ async function persistState(state: NewOwnerOnboardingState): Promise<void> {
   await AsyncStorage.setItem(NEW_OWNER_ONBOARDING_KEY, JSON.stringify(state));
 }
 
+class CaregiverCodeValidationError extends Error {
+  constructor(readonly reason: CaregiverCodeValidationReason) {
+    super(reason);
+  }
+}
+
 let mutationTail = Promise.resolve();
 
 function enqueueMutation(operation: () => Promise<void>): Promise<void> {
@@ -209,6 +271,66 @@ export const NewOwnerOnboardingStorageService = {
     });
   },
 
+  beginCaregiverPath(language: LanguageCode): Promise<void> {
+    return enqueueMutation(() => persistState({
+      version: NEW_OWNER_ONBOARDING_VERSION,
+      screen: "join-code",
+      language,
+      entryPath: "caregiver",
+      pendingCode: "",
+    }));
+  },
+
+  beginCaregiverAuthentication(inviteCode: string): Promise<
+    { success: true } | { success: false; error: CaregiverCodeValidationReason }
+  > {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || (current.screen !== "join-code" && current.screen !== "join-confirmation")) {
+        return;
+      }
+      const validation = validateInviteCode(inviteCode);
+      if (!validation.isValid) {
+        throw new CaregiverCodeValidationError(toCaregiverCodeValidationReason(validation.error));
+      }
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "join-auth-pending",
+        language: current.language,
+        entryPath: "caregiver",
+        pendingCode: normalizeInviteCode(inviteCode),
+        authIntent: "join-family",
+      });
+    }).then(
+      () => ({ success: true as const }),
+      error => error instanceof CaregiverCodeValidationError
+        ? { success: false as const, error: error.reason }
+        : Promise.reject(error)
+    );
+  },
+
+  updateCaregiverCode(inviteCode: string): Promise<
+    | { success: true; pendingCode: string }
+    | { success: false; error: CaregiverCodeValidationReason }
+  > {
+    let pendingCode = "";
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "join-confirmation") return;
+      const validation = validateInviteCode(inviteCode);
+      if (!validation.isValid) {
+        throw new CaregiverCodeValidationError(toCaregiverCodeValidationReason(validation.error));
+      }
+      pendingCode = normalizeInviteCode(inviteCode);
+      await persistState({ ...current, pendingCode });
+    }).then(
+      () => ({ success: true as const, pendingCode }),
+      error => error instanceof CaregiverCodeValidationError
+        ? { success: false as const, error: error.reason }
+        : Promise.reject(error)
+    );
+  },
+
   beginOwnerPath(language: LanguageCode): Promise<void> {
     return enqueueMutation(() => persistState({
       version: NEW_OWNER_ONBOARDING_VERSION,
@@ -235,13 +357,181 @@ export const NewOwnerOnboardingStorageService = {
   cancelAuthentication(): Promise<void> {
     return enqueueMutation(async () => {
       const current = await readStoredState();
-      if (!current || current.screen !== "auth-pending") return;
+      if (!current) return;
+      if (current.screen === "join-auth-pending") {
+        await persistState({
+          version: NEW_OWNER_ONBOARDING_VERSION,
+          screen: "join-code",
+          language: current.language,
+          entryPath: "caregiver",
+          pendingCode: current.pendingCode,
+        });
+        return;
+      }
+      if (current.screen !== "auth-pending") return;
       await persistState({
         version: NEW_OWNER_ONBOARDING_VERSION,
         screen: "account-choice",
         language: current.language,
         entryPath: "owner",
       });
+    });
+  },
+
+  resumeCaregiverAuthentication(sourceHouseholdId: string): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "join-auth-pending") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "join-confirmation",
+        language: current.language,
+        entryPath: "caregiver",
+        pendingCode: current.pendingCode,
+        sourceHouseholdId,
+      });
+    });
+  },
+
+  beginCaregiverJoin(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "join-confirmation") return;
+      await persistState({ ...current, screen: "joining" });
+    });
+  },
+
+  recoverInterruptedCaregiverJoin(currentHouseholdId: string): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "joining") return;
+      if (currentHouseholdId !== current.sourceHouseholdId) {
+        await persistState({
+          version: NEW_OWNER_ONBOARDING_VERSION,
+          screen: "join-refresh",
+          language: current.language,
+          entryPath: "caregiver",
+          pendingCode: current.pendingCode,
+          householdId: currentHouseholdId,
+        });
+        return;
+      }
+      await persistState({ ...current, screen: "join-confirmation" });
+    });
+  },
+
+  markCaregiverJoinRedeemed(householdId: string): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "joining") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "join-refresh",
+        language: current.language,
+        entryPath: "caregiver",
+        pendingCode: current.pendingCode,
+        householdId,
+      });
+    });
+  },
+
+  markCaregiverJoinFailure(reason: CaregiverJoinFailureReason): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "joining") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "join-failure",
+        language: current.language,
+        entryPath: "caregiver",
+        pendingCode: current.pendingCode,
+        recovery: "confirmation",
+        reason,
+        householdId: current.sourceHouseholdId,
+      });
+    });
+  },
+
+  markCaregiverReconciliationFailure(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "joining") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "join-failure",
+        language: current.language,
+        entryPath: "caregiver",
+        pendingCode: current.pendingCode,
+        recovery: "reconcile",
+        reason: "offline",
+        householdId: current.sourceHouseholdId,
+      });
+    });
+  },
+
+  markCaregiverRefreshFailure(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "join-refresh") return;
+      await persistState({
+        ...current,
+        screen: "join-failure",
+        recovery: "refresh",
+        reason: "refreshFailed",
+      });
+    });
+  },
+
+  retryCaregiverJoin(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "join-failure") return;
+      if (current.recovery === "reconcile") {
+        await persistState({
+          version: NEW_OWNER_ONBOARDING_VERSION,
+          screen: "joining",
+          language: current.language,
+          entryPath: "caregiver",
+          pendingCode: current.pendingCode,
+          sourceHouseholdId: current.householdId,
+        });
+        return;
+      }
+      if (current.recovery === "refresh") {
+        await persistState({
+          version: NEW_OWNER_ONBOARDING_VERSION,
+          screen: "join-refresh",
+          language: current.language,
+          entryPath: "caregiver",
+          pendingCode: current.pendingCode,
+          householdId: current.householdId,
+        });
+        return;
+      }
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "join-confirmation",
+        language: current.language,
+        entryPath: "caregiver",
+        pendingCode: current.pendingCode,
+        sourceHouseholdId: current.householdId,
+      });
+    });
+  },
+
+  completeCaregiverJoin(babyId: string): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "join-refresh") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "completed",
+        language: current.language,
+        entryPath: "caregiver",
+        babyId,
+        firstActivity: { status: "joined-household" },
+      });
+      await OnboardingStorageService.markOnboardingComplete(false);
     });
   },
 

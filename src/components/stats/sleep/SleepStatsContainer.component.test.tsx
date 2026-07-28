@@ -221,6 +221,8 @@ describe("SleepStatsContainer", () => {
   });
 
   it("does not display sleep state retained from the previously selected baby", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 6, 14, 12, 0, 0));
     mockGetSleepRangeStatus.mockReturnValue("unverified");
     const { rerender } = render(<SleepStatsContainer activeTab="day" />);
     expect(screen.getByTestId("ongoing-sleep-type")).toBeTruthy();
@@ -230,9 +232,12 @@ describe("SleepStatsContainer", () => {
 
     expect(screen.queryByTestId("ongoing-sleep-type")).toBeNull();
     expect(screen.getByTestId("statistics-range-loading")).toBeTruthy();
+    jest.useRealTimers();
   });
 
   it("reclassifies an ongoing sleep when day boundaries change", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 6, 14, 12, 0, 0));
     const { rerender } = render(<SleepStatsContainer activeTab="day" />);
 
     expect(screen.getByTestId("ongoing-sleep-type").props.children).toBe("night");
@@ -250,5 +255,6 @@ describe("SleepStatsContainer", () => {
       8,
       20
     );
+    jest.useRealTimers();
   });
 });

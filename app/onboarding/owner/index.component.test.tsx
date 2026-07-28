@@ -5,6 +5,7 @@ import NewOwnerWelcomeScreen from "./index";
 const mockPush = jest.fn();
 const mockSetLanguage = jest.fn();
 const mockBeginOwnerPath = jest.fn();
+const mockBeginCaregiverPath = jest.fn();
 const mockBeginAuthentication = jest.fn();
 const mockUpdateLanguage = jest.fn();
 
@@ -23,6 +24,7 @@ jest.mock("@/contexts", () => ({
 jest.mock("@/services/new-owner-onboarding-storage", () => ({
   NewOwnerOnboardingStorageService: {
     beginOwnerPath: (...args: unknown[]) => mockBeginOwnerPath(...args),
+    beginCaregiverPath: (...args: unknown[]) => mockBeginCaregiverPath(...args),
     beginAuthentication: (...args: unknown[]) => mockBeginAuthentication(...args),
     updateLanguage: (...args: unknown[]) => mockUpdateLanguage(...args),
   },
@@ -48,6 +50,7 @@ describe("NewOwnerWelcomeScreen", () => {
     jest.clearAllMocks();
     mockSetLanguage.mockResolvedValue(undefined);
     mockBeginOwnerPath.mockResolvedValue(undefined);
+    mockBeginCaregiverPath.mockResolvedValue(undefined);
     mockBeginAuthentication.mockResolvedValue(undefined);
     mockUpdateLanguage.mockResolvedValue(undefined);
   });
@@ -66,6 +69,18 @@ describe("NewOwnerWelcomeScreen", () => {
       expect(mockBeginOwnerPath).toHaveBeenCalledWith("en");
       expect(mockPush).toHaveBeenCalledWith("/onboarding/owner/account");
     });
+  });
+
+  it("opens durable caregiver code entry before authentication", async () => {
+    render(<NewOwnerWelcomeScreen />);
+
+    fireEvent.press(screen.getByTestId("join-family-button"));
+
+    await waitFor(() => {
+      expect(mockBeginCaregiverPath).toHaveBeenCalledWith("en");
+      expect(mockPush).toHaveBeenCalledWith("/onboarding/owner/join");
+    });
+    expect(mockBeginAuthentication).not.toHaveBeenCalled();
   });
 
   it("signs into a previous account with durable onboarding intent", async () => {

@@ -43,12 +43,26 @@ interface HouseholdResult<T> {
   error: string | null;
 }
 
+export type JoinHouseholdError =
+  | "inviteCodeRequired"
+  | "inviteCodeLength"
+  | "inviteCodeInvalidChars"
+  | "invalidInvitation"
+  | "rateLimitExceeded"
+  | "alreadyInHousehold"
+  | "alreadyInOwnHousehold"
+  | "alreadyInSharedHousehold"
+  | "joinFailed"
+  | "offline";
+
 export interface RateLimitInfo {
   remainingAttempts: number;
   resetAt: number | null;
 }
 
-export interface JoinHouseholdServiceResult<T> extends HouseholdResult<T> {
+export interface JoinHouseholdServiceResult<T> {
+  data: T | null;
+  error: JoinHouseholdError | null;
   rateLimitInfo?: RateLimitInfo;
 }
 
@@ -232,9 +246,13 @@ export async function joinHouseholdViaInviteCode(
   if (!validation.isValid) {
     await recordAttempt(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
     const updated = await checkRateLimit(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);
+    const validationError: JoinHouseholdError =
+      validation.error === "inviteCodeRequired" || validation.error === "inviteCodeLength"
+        ? validation.error
+        : "inviteCodeInvalidChars";
     return {
       data: null,
-      error: validation.error ?? "inviteCodeInvalidChars",
+      error: validationError,
       rateLimitInfo: {
         remainingAttempts: updated.remainingAttempts,
         resetAt: updated.resetAt,
@@ -257,8 +275,17 @@ export async function joinHouseholdViaInviteCode(
       };
     }
 
+    if (error.message?.includes("already belongs to this household")) {
+      return { data: null, error: "alreadyInOwnHousehold" };
+    }
+    if (error.message?.includes("household with other members")) {
+      return { data: null, error: "alreadyInSharedHousehold" };
+    }
     if (error.message?.includes("already belongs")) {
       return { data: null, error: "alreadyInHousehold" };
+    }
+    if (/network|failed to fetch|offline|connection/i.test(error.message ?? "")) {
+      return { data: null, error: "offline" };
     }
 
     await recordAttempt(RATE_LIMIT_KEY, INVITE_CODE_ATTEMPT_LIMIT);

@@ -128,7 +128,7 @@ interface BabyContextValue extends BabyState {
   updateBaby: (id: string, input: UpdateBabyInput) => Promise<StoredBabyProfile | null>;
   deleteBaby: (id: string) => Promise<boolean>;
   selectBaby: (id: string | null) => Promise<StoredBabyProfile | null>;
-  refreshBabies: () => Promise<void>;
+  refreshBabies: (householdIdOverride?: string) => Promise<StoredBabyProfile[]>;
 }
 
 const BabyContext = createContext<BabyContextValue | null>(null);
@@ -289,11 +289,22 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     }
   }, [authScope, state.isLoading, state.selectedBaby?.id, storageScope]);
 
-  const loadBabies = useCallback(async () => {
+  const loadBabies = useCallback(async (
+    householdIdOverride?: string
+  ): Promise<StoredBabyProfile[]> => {
     const loadGeneration = authGenerationRef.current;
-    const loadScope = authScope;
-    const isStaleLoad = () =>
-      authGenerationRef.current !== loadGeneration || authScopeRef.current !== loadScope;
+    const authenticatedUserId = user?.id;
+    const targetHouseholdId = householdIdOverride ?? user?.householdId;
+    const isTargetedRefresh = householdIdOverride !== undefined;
+    const loadScope = isTargetedRefresh && authenticatedUserId
+      ? `${authenticatedUserId}:${householdIdOverride}`
+      : authScope;
+    const loadStorageScope = isTargetedRefresh
+      ? BabyStorageService.scopeForUser(authenticatedUserId ?? null, householdIdOverride ?? null)
+      : storageScope;
+    const isStaleLoad = () => isTargetedRefresh
+      ? !authenticatedUserId || !authScopeRef.current.startsWith(`${authenticatedUserId}:`)
+      : authGenerationRef.current !== loadGeneration || authScopeRef.current !== loadScope;
     const mutationSequenceAtStart = babyMutationSequenceRef.current;
     dispatch({ type: "SET_LOADING", payload: true });
 
@@ -301,29 +312,33 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       let babies: StoredBabyProfile[];
       let persistFetchedSnapshot = false;
 
-      if (user?.householdId) {
+      if (targetHouseholdId) {
+        if (!authenticatedUserId) {
+          throw new Error("Cannot refresh account babies without an authenticated user");
+        }
         let fetchedAccountBabies = false;
         try {
-          babies = await fetchAndSyncHouseholdBabies(user.householdId);
-          if (isStaleLoad()) return;
+          babies = await fetchAndSyncHouseholdBabies(targetHouseholdId);
+          if (isStaleLoad()) return [];
           fetchedAccountBabies = true;
           persistFetchedSnapshot = true;
-        } catch {
+        } catch (error) {
           console.error("[BabyContext] Failed to fetch account babies");
-          babies = await BabyStorageService.getAllBabies(storageScope);
-          if (isStaleLoad()) return;
+          if (householdIdOverride) throw error;
+          babies = await BabyStorageService.getAllBabies(loadStorageScope);
+          if (isStaleLoad()) return [];
         }
 
-        if (fetchedAccountBabies && !hasMigratedRef.current) {
+        if (fetchedAccountBabies && !isTargetedRefresh && !hasMigratedRef.current) {
           try {
             const migration = await runGuestAccountMigration({
-              userId: user.id,
-              householdId: user.householdId,
+              userId: authenticatedUserId,
+              householdId: targetHouseholdId,
               accountBabies: babies,
             });
             if (migration.status === "completed") {
-              babies = await fetchAndSyncHouseholdBabies(user.householdId);
-              if (isStaleLoad()) return;
+              babies = await fetchAndSyncHouseholdBabies(targetHouseholdId);
+              if (isStaleLoad()) return [];
             }
             if (migration.status === "conflict") {
               presentGuestMigrationConflict({
@@ -342,8 +357,8 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         hasMigratedRef.current = false;
-        babies = await BabyStorageService.getAllBabies(storageScope);
-        if (isStaleLoad()) return;
+        babies = await BabyStorageService.getAllBabies(loadStorageScope);
+        if (isStaleLoad()) return [];
       }
 
       if (persistFetchedSnapshot) {
@@ -351,28 +366,31 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
           mutation => mutation.scope === loadScope && mutation.sequence > mutationSequenceAtStart
         );
         babies = applyBabyMutations(babies, concurrentMutations);
-        await BabyStorageService.replaceAllBabies(babies, storageScope);
-        if (isStaleLoad()) return;
+        await BabyStorageService.replaceAllBabies(babies, loadStorageScope);
+        if (isStaleLoad()) return [];
       }
 
       committedScopeRef.current = loadScope;
       dispatch({ type: "SET_BABIES", payload: babies });
 
-      const selectedBabyId = await BabyStorageService.getSelectedBabyId(storageScope);
-      if (isStaleLoad()) return;
+      const selectedBabyId = await BabyStorageService.getSelectedBabyId(loadStorageScope);
+      if (isStaleLoad()) return [];
       const selectedBaby = selectedBabyId
         ? babies.find(b => b.id === selectedBabyId) ?? null
         : null;
 
       if (!selectedBaby && babies.length > 0) {
-        await BabyStorageService.setSelectedBabyId(babies[0].id, storageScope);
-        if (isStaleLoad()) return;
+        await BabyStorageService.setSelectedBabyId(babies[0].id, loadStorageScope);
+        if (isStaleLoad()) return [];
         dispatch({ type: "SET_SELECTED_BABY", payload: babies[0] });
       } else {
         dispatch({ type: "SET_SELECTED_BABY", payload: selectedBaby });
       }
+      return babies;
     } catch (error) {
       console.error("[BabyContext] Failed to load babies:", error);
+      if (householdIdOverride) throw error;
+      return [];
     } finally {
       if (!isStaleLoad()) {
         dispatch({ type: "SET_LOADING", payload: false });

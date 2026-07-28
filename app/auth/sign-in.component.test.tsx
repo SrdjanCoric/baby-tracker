@@ -8,6 +8,7 @@ import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboardin
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
 const mockRefreshUserProfile = jest.fn();
+const mockSignIn = jest.fn();
 const mockSignInWithGoogle = jest.fn();
 let mockIsAuthenticated = true;
 let mockSearchParams: { onboardingIntent?: string; resumeOnboarding?: string } = {
@@ -23,7 +24,7 @@ jest.mock("@/contexts", () => ({
   useTheme: () => ({ isDark: false }),
   useAuth: () => ({
     isAuthenticated: mockIsAuthenticated,
-    signIn: jest.fn(),
+    signIn: mockSignIn,
     signUp: jest.fn(),
     signInWithMagicLink: jest.fn(),
     signInWithGoogle: mockSignInWithGoogle,
@@ -63,6 +64,7 @@ describe("SignInScreen onboarding return", () => {
     jest.clearAllMocks();
     mockSearchParams = { resumeOnboarding: "true" };
     mockIsAuthenticated = true;
+    mockSignIn.mockResolvedValue({ error: null });
     mockSignInWithGoogle.mockResolvedValue({ error: null, cancelled: false });
     jest.mocked(NewOwnerOnboardingStorageService.cancelAuthentication).mockResolvedValue(undefined);
     mockRefreshUserProfile.mockResolvedValue({
@@ -83,6 +85,20 @@ describe("SignInScreen onboarding return", () => {
     await waitFor(() => {
       expect(NewOwnerOnboardingStorageService.cancelAuthentication).toHaveBeenCalledTimes(1);
       expect(mockBack).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("submits development credentials from the password keyboard", async () => {
+    mockSearchParams = { onboardingIntent: "join-family" };
+    mockIsAuthenticated = false;
+
+    const view = render(<SignInScreen />);
+    fireEvent.changeText(view.getByTestId("email-input"), "e2e-test@test.local");
+    fireEvent.changeText(view.getByTestId("dev-password-input"), "testpassword123");
+    fireEvent(view.getByTestId("dev-password-input"), "submitEditing");
+
+    await waitFor(() => {
+      expect(mockSignIn).toHaveBeenCalledWith("e2e-test@test.local", "testpassword123");
     });
   });
 
@@ -116,6 +132,32 @@ describe("SignInScreen onboarding return", () => {
 
     expect(view.getByText("newOwnerOnboarding.auth.createTitle")).toBeTruthy();
     expect(view.queryByTestId("continue-as-guest-button")).toBeNull();
+  });
+
+  it("requires a display name before returning an invited caregiver to code confirmation", async () => {
+    mockRefreshUserProfile.mockResolvedValue({
+      householdId: "solo-household",
+      displayName: null,
+      isOwner: true,
+    });
+    jest.mocked(resumeNewOwnerOnboardingAfterAuth).mockResolvedValue("caregiver-confirmation");
+
+    const view = render(<SignInScreen />);
+    await waitFor(() => expect(view.getByTestId("display-name-prompt")).toBeTruthy());
+    expect(mockReplace).not.toHaveBeenCalledWith("/onboarding/owner/join");
+
+    fireEvent.press(view.getByTestId("display-name-prompt"));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner/join"));
+  });
+
+  it("returns reauthenticated post-submit recovery to the caregiver join screen", async () => {
+    jest.mocked(resumeNewOwnerOnboardingAfterAuth).mockResolvedValue("caregiver-recovery");
+
+    render(<SignInScreen />);
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner/join");
+    });
   });
 
   it("requires a display name before authenticated baby setup", async () => {

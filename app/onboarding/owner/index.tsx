@@ -41,6 +41,11 @@ export default function NewOwnerWelcomeScreen() {
     router.push("/onboarding/owner/account");
   }, [language, router]);
 
+  const handleJoin = useCallback(async () => {
+    await NewOwnerOnboardingStorageService.beginCaregiverPath(language);
+    router.push("/onboarding/owner/join");
+  }, [language, router]);
+
   const handleSignIn = useCallback(async () => {
     await NewOwnerOnboardingStorageService.beginOwnerPath(language);
     await NewOwnerOnboardingStorageService.beginAuthentication("sign-in");
@@ -123,7 +128,7 @@ export default function NewOwnerWelcomeScreen() {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => router.push("/auth/sign-in")}
+            onPress={handleJoin}
             className="rounded-button-lg py-4 items-center border"
             style={{ borderColor: isDark ? "#4B4743" : "#DDD7D2" }}
             accessibilityRole="button"

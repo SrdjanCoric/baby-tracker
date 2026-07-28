@@ -2170,6 +2170,20 @@
       "createTitle": "Napravite nalog",
       "createDescription": "Koristite Apple, Google ili email da sačuvate podatke o bebi i pozovete negovatelja."
     },
+    "join": {
+      "title": "Pridružite se porodici",
+      "description": "Unesite kod pozivnice koji ste dobili. Nećemo ga proveriti niti poslati dok se ne prijavite i izaberete Pridruži se porodici.",
+      "confirmDescription": "Proverite kod i izaberite Pridruži se porodici da otvorite zajednički profil bebe.",
+      "submit": "Pridruži se porodici",
+      "joining": "Pridruživanje porodici…",
+      "loadingFamily": "Učitavanje porodice…",
+      "offline": "Niste povezani na internet. Proverite vezu i pokušajte ponovo.",
+      "refreshFailed": "Pridružili ste se porodici, ali nismo uspeli da je učitamo do kraja. Pokušajte ponovo bez ponovnog unosa koda.",
+      "ownHousehold": "Već pripadate porodici iz ove pozivnice.",
+      "deleteDataTitle": "Obrisati trenutne podatke o bebi?",
+      "deleteDataWarning": "Pridruživanjem će podaci o bebi i aktivnostima na trenutnom nalogu biti trajno obrisani. Ovo se ne može poništiti.",
+      "deleteDataAndJoin": "Obriši moje podatke i pridruži se"
+    },
     "invitation": {
       "title": "Pratite zajedno",
       "description": "Pozovite partnera ili negovatelja sada ili preskočite i nastavite podešavanje.",
