@@ -7,6 +7,7 @@ import type { WakeWindowConfig } from "@/types/wake-windows";
 import { getUserScopedKey } from "./storage-prefix";
 import type { TimerIdentity } from "./timer-completion-service";
 import type { TimerLockReconciliationSnapshot } from "./timer-lock-reconciliation";
+import type { MorningClassificationState } from "@/types/sleep";
 
 const SLEEPS_KEY_PREFIX = "@sleeps:";
 const ACTIVE_TIMER_KEY_PREFIX = "@active_sleep_timer:";
@@ -33,6 +34,8 @@ export interface StoredSleepEntry {
   createdAt: string;
   updatedAt: string;
   loggedBy?: string;
+  morningClassification?: MorningClassificationState | null;
+  morningClassificationVersion?: number | null;
 }
 
 export interface CreateSleepInput {
@@ -43,6 +46,8 @@ export interface CreateSleepInput {
   endedAt?: Date;
   durationSeconds?: number;
   notes?: string;
+  morningClassification?: MorningClassificationState | null;
+  morningClassificationVersion?: number | null;
 }
 
 export interface UpdateSleepInput {
@@ -50,6 +55,8 @@ export interface UpdateSleepInput {
   durationSeconds?: number;
   notes?: string;
   type?: SleepType;
+  morningClassification?: MorningClassificationState | null;
+  morningClassificationVersion?: number | null;
 }
 
 export interface ActiveSleepTimerData extends Partial<TimerIdentity>, TimerLockReconciliationSnapshot {
@@ -59,6 +66,8 @@ export interface ActiveSleepTimerData extends Partial<TimerIdentity>, TimerLockR
   isPaused?: boolean;
   pausedAt?: string;
   totalPausedMs?: number;
+  morningClassification?: MorningClassificationState | null;
+  morningClassificationVersion?: number | null;
 }
 
 function generateId(): string {
@@ -149,6 +158,8 @@ export const SleepStorageService = {
       endedAt: input.endedAt?.toISOString(),
       durationSeconds: input.durationSeconds,
       notes: input.notes,
+      morningClassification: input.morningClassification,
+      morningClassificationVersion: input.morningClassificationVersion,
       createdAt: now,
       updatedAt: now,
     };
@@ -175,6 +186,12 @@ export const SleepStorageService = {
       ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
       ...(input.notes !== undefined && { notes: input.notes }),
       ...(input.type !== undefined && { type: input.type }),
+      ...(input.morningClassification !== undefined && {
+        morningClassification: input.morningClassification,
+      }),
+      ...(input.morningClassificationVersion !== undefined && {
+        morningClassificationVersion: input.morningClassificationVersion,
+      }),
       updatedAt: new Date().toISOString(),
     };
 
@@ -281,7 +298,7 @@ export const SleepStorageService = {
       ...config,
       dayStartHour: config.dayStartHour ?? 6,
       dayEndHour: config.dayEndHour ?? 19,
-      napContinuationMinutes: config.napContinuationMinutes ?? 15,
+      napContinuationMinutes: config.napContinuationMinutes ?? 25,
     };
   },
 

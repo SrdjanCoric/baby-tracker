@@ -6,6 +6,7 @@ const mockDismissPredictionBanner = jest.fn();
 const mockSetDayNightBoundary = jest.fn().mockResolvedValue(undefined);
 const mockDismissDrift = jest.fn();
 const mockAcceptDrift = jest.fn();
+const mockConfirmMorningSleep = jest.fn().mockResolvedValue(undefined);
 const mockGetCompletedNapsSinceNightSleep = jest.fn().mockReturnValue([]);
 const mockGetLastSleep = jest.fn().mockReturnValue(null);
 
@@ -61,6 +62,10 @@ jest.mock("react-i18next", () => ({
         "dashboard.driftMorningBody": `Over the last 5 days, the morning routine has been starting around ${options?.time || ""}`,
         "dashboard.driftMorningUpdate": `Update to ${options?.time || ""}`,
         "dashboard.driftMorningKeep": `Keep ${options?.time || ""}`,
+        "sleep.morningConfirmationQuestion": "Was this the first nap or back to sleep?",
+        "sleep.firstNap": "First nap",
+        "sleep.backToSleep": "Back to sleep",
+        "sleep.morningConfirmationAccessibility": "Classify morning sleep",
       };
 
       if (key === "dashboard.ageBasedNote") {
@@ -138,6 +143,8 @@ const defaultSleepContext = () => ({
   driftDetection: null,
   dismissDrift: mockDismissDrift,
   acceptDrift: mockAcceptDrift,
+  pendingMorningConfirmations: [],
+  confirmMorningSleep: mockConfirmMorningSleep,
 });
 
 const defaultBabyContext = () => ({
@@ -202,6 +209,56 @@ afterEach(() => {
 });
 
 describe("SleepPredictionCard", () => {
+  describe("Morning confirmation", () => {
+    it("replaces predictions with the oldest unanswered morning and applies the selected answer", async () => {
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        sleepPredictionModel: makeModel(),
+        qualifyingDayCount: 5,
+        pendingMorningConfirmations: [
+          {
+            id: "pending-1",
+            startedAt: new Date(2026, 3, 27, 8, 30).toISOString(),
+            morningClassification: "unresolved",
+            morningClassificationVersion: 1,
+          },
+        ],
+      };
+
+      render(<SleepPredictionCard babyName="Sofija" />);
+
+      expect(screen.getByText("Was this the first nap or back to sleep?")).toBeTruthy();
+      expect(screen.queryByText("Nap time near")).toBeNull();
+
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "First nap" }));
+      });
+
+      expect(mockConfirmMorningSleep).toHaveBeenCalledWith("pending-1", "first_nap");
+    });
+
+    it("stays visible when prediction setup or age would otherwise hide the card", () => {
+      mockIsUnderTwoMonths = true;
+      mockUseBabyReturn = {
+        selectedBaby: { id: "baby-1", name: "Sofija", birthDate: undefined },
+      };
+      mockUseSleepReturn = {
+        ...defaultSleepContext(),
+        pendingMorningConfirmations: [{
+          id: "pending-1",
+          startedAt: new Date(2026, 3, 27, 8, 30).toISOString(),
+          morningClassification: "unresolved",
+          morningClassificationVersion: 1,
+        }],
+      };
+
+      render(<SleepPredictionCard babyName="Sofija" />);
+
+      expect(screen.getByText("Was this the first nap or back to sleep?")).toBeTruthy();
+      expect(screen.queryByText("dashboard.addBirthdate")).toBeNull();
+    });
+  });
+
   describe("State 0: Under two months", () => {
     beforeEach(() => {
       mockIsUnderTwoMonths = true;

@@ -51,6 +51,7 @@ struct WatchActivityData: Codable {
         var wakeWindowMinutes: Int?
         var lastSleepEndedAt: String?
         var napCountToday: Int?
+        var morningConfirmationPending: Bool?
     }
 
     struct DiaperData: Codable {
@@ -2099,6 +2100,13 @@ struct SleepDetailView: View {
 
     var body: some View {
         VStack(spacing: 10) {
+            if data.morningConfirmationPending == true {
+                Text("Confirm in SofiBaby")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(WatchActivityType.sleep.primaryColor)
+                    .multilineTextAlignment(.center)
+            }
+
             if let timer = sleepTimer {
                 ActiveTimerCard(timer: timer, connector: connector)
             } else {

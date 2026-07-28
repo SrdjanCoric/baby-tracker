@@ -22,39 +22,68 @@ Keep Widget and Watch sleep starts functional. The phone owns the confirmation U
 
 **Applicable references**: `references/01-style-and-code-quality.md`, `references/02-testing.md`, `references/03-documentation.md`, `references/07-security.md`
 
-- [ ] Keep classification states, resolver outputs, storage inputs, timer payloads, and sync transforms strictly typed and consistently named; prove with warning-free lint and strict typecheck.
-- [ ] Add deterministic tests at the resolver, storage, sync, migration, component, and extension-message seams; use real production utilities in the highest-level regressions and prove with focused suites plus the canonical code checks.
-- [ ] Update the authoritative sleep-prediction documentation and README section with the confirmation state, continuation allowance, legacy behavior, prediction withholding, and correction rules.
-- [ ] Preserve existing household access controls and sleep-session RLS while adding synchronized state; prove that the migration grants no broader read or update capability and passes the security suite.
+- [x] Keep classification states, resolver outputs, storage inputs, timer payloads, and sync transforms strictly typed and consistently named; prove with warning-free lint and strict typecheck.
+- [x] Add deterministic tests at the resolver, storage, sync, migration, component, and extension-message seams; use real production utilities in the highest-level regressions and prove with focused suites plus the canonical code checks.
+- [x] Update the authoritative sleep-prediction documentation and README section with the confirmation state, continuation allowance, legacy behavior, prediction withholding, and correction rules.
+- [x] Preserve existing household access controls and sleep-session RLS while adding synchronized state; prove that the migration grants no broader read or update capability and passes the security suite.
 
 ## Implementation work
 
-- [ ] Test-first, encode a table of morning sequences for a 09:00 day start, 05:57 anchor, and 25-minute allowance: the original no-qualifying-wake continuation; 15-minute and exact-25-minute automatic continuations; a gap just above 25 minutes; 07:00 wake followed by 08:30 to 09:35 sleep; short and long ambiguous sleeps; 08:59 versus 09:00 starts; active sleep; repeated Back to sleep; and First nap finality.
-- [ ] Add boundary and failure cases for future and stale sessions, deleted source sleeps, deleted pending sleeps, edited types, multiple unanswered mornings, restart, midnight, offline creation, and out-of-order or remote updates.
-- [ ] Normalize new sleep-continuation defaults to 25 minutes, expose 25 among the setting choices, preserve existing caregiver values, and apply the configured allowance inclusively to nap and morning continuation.
-- [ ] Add backwards-compatible local, database, active-timer, queue, and Realtime representations for automatic, unresolved, confirmed-first-nap, and confirmed-night-continuation states while leaving legacy rows distinguishable and untouched.
-- [ ] Extend the shared morning resolver so every consumer receives the same provisional wake, continuation, confirmation requirement, confirmed role, and unresolved state without mutating legacy records.
-- [ ] Start or save ambiguous sleeps before presenting a localized, accessible inline confirmation on the running sleep and prediction surfaces. Keep other activity navigation available and show the oldest pending question first without a dismiss or Decide later action.
-- [ ] Withhold sleep predictions and exclude unresolved mornings from model training and drift detection, then recompute immediately after confirmation, correction, deletion, or a qualifying remote update.
-- [ ] Persist First nap as visible `nap` and Back to sleep as visible `night`; carry active answers into the completed session and make later Nap/Night edits authoritative where the morning sequence applies.
-- [ ] Cover in-app timer, manual entry, widget deep link, Watch action, old-client-compatible insert, and another-caregiver sync paths without adding confirmation controls to Widget or Watch.
-- [ ] Add storage and sync tests that assert immediate local updates, durable queued payloads, local-Supabase writes and reads, Realtime reducer updates, offline restart recovery, confirmed-state preservation under partial legacy updates, and consistent type changes on a second caregiver.
-- [ ] Add component tests proving that tracking starts before the question appears, unrelated activities remain usable, unanswered state replaces predictions across midnight, each answer resolves the correct wake and nap count, repeated fragmentation follows the agreed rules, and edit correction updates the app.
-- [ ] Add migration and security tests for defaults, legacy null state, allowed values, mixed-version partial updates, RLS preservation, and no historical backfill. Run migrations only on local Supabase.
-- [ ] Add or update confirmation, continuation-setting, and Watch-instruction translations in all nine locale files.
-- [ ] Update sleep-prediction documentation and the README, then run focused utility, storage, sync, component, migration, and security tests followed by the canonical warning-free code checks.
+- [x] Test-first, encode a table of morning sequences for a 09:00 day start, 05:57 anchor, and 25-minute allowance: the original no-qualifying-wake continuation; 15-minute and exact-25-minute automatic continuations; a gap just above 25 minutes; 07:00 wake followed by 08:30 to 09:35 sleep; short and long ambiguous sleeps; 08:59 versus 09:00 starts; active sleep; repeated Back to sleep; and First nap finality.
+- [x] Add boundary and failure cases for future and stale sessions, deleted source sleeps, deleted pending sleeps, edited types, multiple unanswered mornings, restart, midnight, offline creation, and out-of-order or remote updates.
+- [x] Normalize new sleep-continuation defaults to 25 minutes, expose 25 among the setting choices, preserve existing caregiver values, and apply the configured allowance inclusively to nap and morning continuation.
+- [x] Add backwards-compatible local, database, active-timer, queue, and Realtime representations for automatic, unresolved, confirmed-first-nap, and confirmed-night-continuation states while leaving legacy rows distinguishable and untouched.
+- [x] Extend the shared morning resolver so every consumer receives the same provisional wake, continuation, confirmation requirement, confirmed role, and unresolved state without mutating legacy records.
+- [x] Start or save ambiguous sleeps before presenting a localized, accessible inline confirmation on the running sleep and prediction surfaces. Keep other activity navigation available and show the oldest pending question first without a dismiss or Decide later action.
+- [x] Withhold sleep predictions and exclude unresolved mornings from model training and drift detection, then recompute immediately after confirmation, correction, deletion, or a qualifying remote update.
+- [x] Persist First nap as visible `nap` and Back to sleep as visible `night`; carry active answers into the completed session and make later Nap/Night edits authoritative where the morning sequence applies.
+- [x] Cover in-app timer, manual entry, widget deep link, Watch action, old-client-compatible insert, and another-caregiver sync paths without adding confirmation controls to Widget or Watch.
+- [x] Add storage and sync tests that assert immediate local updates, durable queued payloads, local-Supabase writes and reads, Realtime reducer updates, offline restart recovery, confirmed-state preservation under partial legacy updates, and consistent type changes on a second caregiver.
+- [x] Add component tests proving that tracking starts before the question appears, unrelated activities remain usable, unanswered state replaces predictions across midnight, each answer resolves the correct wake and nap count, repeated fragmentation follows the agreed rules, and edit correction updates the app.
+- [x] Add migration and security tests for defaults, legacy null state, allowed values, mixed-version partial updates, RLS preservation, and no historical backfill. Run migrations only on local Supabase.
+- [x] Add or update confirmation, continuation-setting, and Watch-instruction translations in all nine locale files.
+- [x] Update sleep-prediction documentation and the README, then run focused utility, storage, sync, component, migration, and security tests followed by the canonical warning-free code checks.
 
 ## Acceptance criteria
 
-- [ ] A qualifying overnight wake followed by a pre-day-start sleep within the configured allowance resolves automatically as night continuation; exactly the configured number of minutes is included.
-- [ ] A qualifying wake followed by a later pre-day-start sleep starts or saves normally and then shows the nonblocking First nap or Back to sleep question.
-- [ ] First nap preserves the preceding morning wake, counts the sleep as nap 1, updates its visible and persisted type to `nap`, and prevents another question that morning.
-- [ ] Back to sleep updates the visible and persisted type to `night`, uses that sleep's end as morning wake, and permits another question only after a later qualifying gap before day start.
-- [ ] Unanswered confirmations survive navigation, offline restart, and midnight; they withhold sleep predictions and training data without blocking any activity tracking.
-- [ ] Confirmation and correction update local state, durable queue data, Supabase, Realtime caregivers, timeline, statistics, historical grouping, drift detection, and predictions consistently.
-- [ ] Timer, manual, Widget, Watch, old-client, and remote-caregiver recording paths can create a pending confirmation without losing or delaying the sleep record; confirmation remains phone-only.
-- [ ] The confirmation question, both answers, continuation-setting copy, and related accessibility text are translated in every supported locale file.
-- [ ] Existing sleep rows retain Task 0027 behavior with no backfill, rewrite, or retroactive prompt, and legacy clients cannot erase newer confirmation state through an unrelated partial update.
-- [ ] The 05:53 overnight end followed by 07:05 to 10:30 sleep remains continuation for a 09:00 day start, while a sleep starting at or after 09:00 remains a nap.
-- [ ] Automated tests cover every agreed sequence and boundary, database and in-app type updates, offline and cross-caregiver persistence, corrections, cleanup, and backwards compatibility.
-- [ ] Later wake windows and bedtime prediction remain unchanged.
+- [x] A qualifying overnight wake followed by a pre-day-start sleep within the configured allowance resolves automatically as night continuation; exactly the configured number of minutes is included.
+- [x] A qualifying wake followed by a later pre-day-start sleep starts or saves normally and then shows the nonblocking First nap or Back to sleep question.
+- [x] First nap preserves the preceding morning wake, counts the sleep as nap 1, updates its visible and persisted type to `nap`, and prevents another question that morning.
+- [x] Back to sleep updates the visible and persisted type to `night`, uses that sleep's end as morning wake, and permits another question only after a later qualifying gap before day start.
+- [x] Unanswered confirmations survive navigation, offline restart, and midnight; they withhold sleep predictions and training data without blocking any activity tracking.
+- [x] Confirmation and correction update local state, durable queue data, Supabase, Realtime caregivers, timeline, statistics, historical grouping, drift detection, and predictions consistently.
+- [x] Timer, manual, Widget, Watch, old-client, and remote-caregiver recording paths can create a pending confirmation without losing or delaying the sleep record; confirmation remains phone-only.
+- [x] The confirmation question, both answers, continuation-setting copy, and related accessibility text are translated in every supported locale file.
+- [x] Existing sleep rows retain Task 0027 behavior with no backfill, rewrite, or retroactive prompt, and legacy clients cannot erase newer confirmation state through an unrelated partial update.
+- [x] The 05:53 overnight end followed by 07:05 to 10:30 sleep remains continuation for a 09:00 day start, while a sleep starting at or after 09:00 remains a nap.
+- [x] Automated tests cover every agreed sequence and boundary, database and in-app type updates, offline and cross-caregiver persistence, corrections, cleanup, and backwards compatibility.
+- [x] Later wake windows and bedtime prediction remain unchanged.
+
+## Completion evidence
+
+### Implementation
+
+- `src/utils/sleepPredictions.ts` owns the versioned morning resolver, inclusive continuation boundary, chronological pending list, historical grouping, and model or drift exclusions.
+- `src/contexts/sleep-context.tsx` classifies timer and manual starts, restores pending state, persists answers, handles correction and deletion, and carries active answers into timer completion without racing Stop.
+- `src/services/sleep-storage.ts`, `src/services/activity-sync-service.ts`, and migration `059_morning_sleep_classification.sql` preserve classification through local storage, the durable CRDT queue, Supabase, and Realtime. Legacy guest history is migrated with null provenance, while old-client inserts receive version 1 from the database default.
+- `MorningSleepConfirmation` appears on the sleep and prediction surfaces with date and time context. Watch receives a phone-confirmation signal but keeps timer controls available.
+- All nine locale files include the question, answer labels, accessibility text, Watch instruction, and revised continuation-setting copy.
+
+### Decisions
+
+- Existing rows remain null-version legacy records. There is no historical backfill.
+- New and old-client-created rows are distinguishable through version 1 provenance. Partial legacy updates omit the new fields, so confirmed state survives.
+- The configured nap-continuation allowance also controls morning continuation. New defaults are 25 minutes, and stored caregiver values are unchanged.
+- Pending questions suppress prediction output, model training, and drift detection until the relevant sleep is answered or deleted. Other activity tracking continues.
+
+### Review and documentation
+
+Task review checked the style, testing, documentation, and security references listed above. One remediation pass removed component color literals, preserved legacy guest provenance during account migration, added a remote-caregiver reducer assertion, and protected confirmation from a concurrent timer Stop. The second review pass had no remaining findings. The SQL migration retained existing RLS and introduced no broader grant or policy. There are no accepted security risks.
+
+`docs/SLEEP_PREDICTIONS.md` now documents classification state, the 25-minute inclusive allowance, legacy handling, prediction withholding, and correction rules. The README Sleep Predictions and migration-range sections were updated after review. Both documents passed two write-well audit passes.
+
+### Verification
+
+- Focused resolver, storage, sync, locale, Watch, widget, sleep-screen, prediction-card, and confirmation-component suites passed during implementation.
+- `npm run check` passed on 2026-07-28. This included warning-free lint and strict typecheck, 2,372 unit tests, 685 component tests, 106 security tests, 244 sync tests, and 41 CI contract tests.
+- The same check reset local Supabase, applied all 61 migrations through 059, and passed every SQL vector, mixed-version classification assertion, RLS assertion, and concurrency test. No shared or production database was used.

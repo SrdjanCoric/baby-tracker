@@ -244,6 +244,7 @@ struct WidgetActivityData: Codable {
         var wakeWindowSlotLabel: String?
         var lastSleepEndedAt: String?
         var napCountToday: Int?
+        var morningConfirmationPending: Bool?
     }
 
     struct DiaperData: Codable {

@@ -25,6 +25,7 @@ export interface WidgetActivityData {
     wakeWindowSlotLabel: string | null;
     lastSleepEndedAt: string | null;
     napCountToday: number;
+    morningConfirmationPending: boolean;
   };
   diaper: {
     lastTime: string | null;
@@ -119,6 +120,7 @@ const DEFAULT_WIDGET_ACTIVITY_DATA: WidgetActivityData = {
     wakeWindowSlotLabel: null,
     lastSleepEndedAt: null,
     napCountToday: 0,
+    morningConfirmationPending: false,
   },
   diaper: {
     lastTime: null,
@@ -274,7 +276,8 @@ export function updateSleepWidgetData(
   wakeWindowMinutes: number | null = null,
   wakeWindowSlotLabel: string | null = null,
   lastSleepEndedAt: string | null = null,
-  napCountToday: number = 0
+  napCountToday: number = 0,
+  morningConfirmationPending: boolean = false
 ): WidgetActivityData {
   return {
     ...current,
@@ -289,6 +292,7 @@ export function updateSleepWidgetData(
       wakeWindowSlotLabel,
       lastSleepEndedAt,
       napCountToday,
+      morningConfirmationPending,
     },
   };
 }

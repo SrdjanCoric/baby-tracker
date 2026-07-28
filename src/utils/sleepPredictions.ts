@@ -1,4 +1,8 @@
 import { StoredSleepEntry } from "../services/sleep-storage";
+import {
+  MORNING_CLASSIFICATION_VERSION,
+  type MorningClassificationState,
+} from "../types/sleep";
 import { unionCompletedSleepIntervals } from "./sleep-intervals";
 import {
   WAKE_WINDOW_PROGRESSIONS,
@@ -22,6 +26,8 @@ export interface ProcessedSleep {
   startedAt: Date;
   endedAt: Date;
   durationMinutes: number;
+  morningClassification?: MorningClassificationState | null;
+  morningClassificationVersion?: number | null;
 }
 
 export interface ProcessedDay {
@@ -61,6 +67,9 @@ export function getMorningThreshold(dayStartHour: number): number {
 export interface MorningSleepSession {
   startedAt: Date | string;
   endedAt?: Date | string | null;
+  morningClassification?: MorningClassificationState | null;
+  morningClassificationVersion?: number | null;
+  deleted?: boolean;
 }
 
 export interface MorningSleepResolution<T extends MorningSleepSession> {
@@ -68,20 +77,25 @@ export interface MorningSleepResolution<T extends MorningSleepSession> {
   dayStart: Date;
   overnightSleep: T | null;
   continuation: T | null;
+  continuations: T[];
+  pendingConfirmations: T[];
   morningWakeTime: Date | null;
   isContinuationActive: boolean;
+  hasUnresolvedMorning: boolean;
 }
 
 export function resolveMorningSleep<T extends MorningSleepSession>(
   sleeps: readonly T[],
   dayStartHour: number,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES
 ): MorningSleepResolution<T> {
   const dayStart = hourToDate(dayStartHour, referenceDate);
   const anchor = new Date(dayStart.getTime() - 183 * 60 * 1000);
   const nowMs = referenceDate.getTime();
+  const validSleeps = sleeps.filter((sleep) => !sleep.deleted);
 
-  const overnightSleep = [...sleeps]
+  const overnightSleep = [...validSleeps]
     .filter((sleep) => {
       if (!sleep.endedAt) return false;
       const startedAt = new Date(sleep.startedAt).getTime();
@@ -92,38 +106,132 @@ export function resolveMorningSleep<T extends MorningSleepSession>(
     })
     .sort((a, b) => new Date(b.endedAt!).getTime() - new Date(a.endedAt!).getTime())[0] ?? null;
 
-  const continuationStartMs = overnightSleep?.endedAt
-    ? new Date(overnightSleep.endedAt).getTime()
-    : anchor.getTime();
-  const continuation = [...sleeps]
+  const overnightEnd = overnightSleep?.endedAt
+    ? new Date(overnightSleep.endedAt)
+    : null;
+  const earlySleeps = [...validSleeps]
     .filter((sleep) => {
       const startedAt = new Date(sleep.startedAt).getTime();
       const endedAt = sleep.endedAt ? new Date(sleep.endedAt).getTime() : null;
-      return startedAt >= continuationStartMs
+      const earliestStart = overnightEnd?.getTime() ?? anchor.getTime();
+      return sleep !== overnightSleep
+        && startedAt >= earliestStart
         && startedAt < dayStart.getTime()
         && startedAt <= nowMs
         && (endedAt === null || endedAt <= nowMs);
     })
-    .sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime())[0] ?? null;
+    .sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime());
 
-  const continuationEnd = continuation?.endedAt
-    ? new Date(continuation.endedAt)
-    : null;
-  const hasCompletedContinuation = continuationEnd !== null
-    && continuationEnd.getTime() <= nowMs;
+  const continuations: T[] = [];
+  const pendingConfirmations: T[] = [];
+  let morningWakeTime = overnightEnd;
+  let lastRelevantEnd = overnightEnd;
+  let firstNapSettled = false;
 
-  const overnightEnd = overnightSleep?.endedAt
-    ? new Date(overnightSleep.endedAt)
-    : null;
+  for (const sleep of earlySleeps) {
+    const startedAt = new Date(sleep.startedAt);
+    const endedAt = sleep.endedAt ? new Date(sleep.endedAt) : null;
+    const isLegacy = sleep.morningClassificationVersion == null;
+    const state = sleep.morningClassification ?? null;
+
+    if (state === "confirmed_first_nap") {
+      firstNapSettled = true;
+      continue;
+    }
+    if (firstNapSettled) continue;
+    if (isLegacy && continuations.length > 0) continue;
+
+    const gapMinutes = lastRelevantEnd
+      ? minutesBetween(lastRelevantEnd, startedAt)
+      : 0;
+    const isAutomaticContinuation = !overnightSleep
+      ? continuations.length === 0
+      : gapMinutes <= continuationAllowanceMinutes;
+    const isNightContinuation = state === "confirmed_night_continuation"
+      || !overnightSleep && continuations.length === 0
+      || state === "automatic" && isAutomaticContinuation
+      || state === null && (isLegacy || isAutomaticContinuation);
+
+    if (isNightContinuation) {
+      continuations.push(sleep);
+      if (endedAt) {
+        morningWakeTime = endedAt;
+        lastRelevantEnd = endedAt;
+      }
+      continue;
+    }
+
+    pendingConfirmations.push(sleep);
+    if (endedAt) lastRelevantEnd = endedAt;
+  }
 
   return {
     anchor,
     dayStart,
     overnightSleep,
-    continuation,
-    morningWakeTime: hasCompletedContinuation ? continuationEnd : overnightEnd,
-    isContinuationActive: continuation !== null && continuationEnd === null,
+    continuation: continuations[0] ?? null,
+    continuations,
+    pendingConfirmations,
+    morningWakeTime,
+    isContinuationActive: continuations.some((sleep) => !sleep.endedAt),
+    hasUnresolvedMorning: pendingConfirmations.length > 0,
   };
+}
+
+export function findPendingMorningConfirmations<T extends MorningSleepSession>(
+  sleeps: readonly T[],
+  dayStartHour: number,
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES,
+  referenceDate: Date = new Date()
+): T[] {
+  const pending = new Set<T>();
+  const dateKeys = new Set<string>();
+
+  for (const sleep of sleeps) {
+    if (sleep.deleted || sleep.morningClassificationVersion == null) continue;
+    const startedAt = new Date(sleep.startedAt);
+    if (startedAt.getTime() > referenceDate.getTime()) continue;
+    dateKeys.add(getDayKey(startedAt));
+  }
+
+  for (const dateKey of dateKeys) {
+    const endOfDay = new Date(`${dateKey}T23:59:59.999`);
+    const resolution = resolveMorningSleep(
+      sleeps,
+      dayStartHour,
+      endOfDay.getTime() > referenceDate.getTime() ? referenceDate : endOfDay,
+      continuationAllowanceMinutes
+    );
+    for (const sleep of resolution.pendingConfirmations) pending.add(sleep);
+  }
+
+  return [...pending].sort(
+    (a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime()
+  );
+}
+
+export function classifyNewMorningSleep<T extends MorningSleepSession>(
+  sleeps: readonly T[],
+  candidate: MorningSleepSession,
+  dayStartHour: number,
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES,
+  referenceDate: Date = new Date()
+): MorningClassificationState {
+  const versionedCandidate: MorningSleepSession = {
+    ...candidate,
+    morningClassification: "automatic",
+    morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+  };
+  const resolution = resolveMorningSleep(
+    [...sleeps, versionedCandidate],
+    dayStartHour,
+    referenceDate,
+    continuationAllowanceMinutes
+  );
+
+  return resolution.pendingConfirmations.includes(versionedCandidate)
+    ? "unresolved"
+    : "automatic";
 }
 
 function hourToDate(fractionalHour: number, referenceDate: Date): Date {
@@ -203,6 +311,8 @@ export function processSleepData(
       durationMinutes:
         (new Date(s.endedAt!).getTime() - new Date(s.startedAt).getTime()) /
         (1000 * 60),
+      morningClassification: s.morningClassification,
+      morningClassificationVersion: s.morningClassificationVersion,
     }))
     .sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
 
@@ -215,7 +325,7 @@ export function processSleepData(
     const curr = completed[i];
     const gap = minutesBetween(prev.endedAt, curr.startedAt);
 
-    if (gap < mergeThreshold) {
+    if (gap <= mergeThreshold) {
       if (curr.endedAt > prev.endedAt) {
         prev.endedAt = curr.endedAt;
       }
@@ -245,7 +355,8 @@ function areDatesConsecutive(dates: string[]): boolean {
 export function groupSleepsByDay(
   sleeps: ProcessedSleep[],
   dayStartHour: number,
-  dayEndHour: number
+  dayEndHour: number,
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES
 ): ProcessedDay[] {
   const sorted = [...sleeps].sort(
     (a, b) => a.startedAt.getTime() - b.startedAt.getTime()
@@ -262,7 +373,12 @@ export function groupSleepsByDay(
   for (const dateStr of dates) {
     const referenceDate = new Date(`${dateStr}T12:00:00`);
     referenceDate.setHours(23, 59, 59, 999);
-    const morning = resolveMorningSleep(sorted, dayStartHour, referenceDate);
+    const morning = resolveMorningSleep(
+      sorted,
+      dayStartHour,
+      referenceDate,
+      continuationAllowanceMinutes
+    );
     const morningWakeTime = morning.morningWakeTime;
     const naps: ProcessedSleep[] = [];
     let bedtime: Date | null = null;
@@ -281,7 +397,7 @@ export function groupSleepsByDay(
         dayEndHour
       );
 
-      if (sleep !== morning.continuation && isDay) {
+      if (!morning.continuations.includes(sleep) && isDay) {
         naps.push(sleep);
       }
 
@@ -312,9 +428,15 @@ export function computeSleepModel(
   sleeps: ProcessedSleep[],
   dayStartHour: number,
   dayEndHour: number,
-  babyAgeMonths: number = 0
+  babyAgeMonths: number = 0,
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES
 ): SleepPredictionModel | null {
-  const days = groupSleepsByDay(sleeps, dayStartHour, dayEndHour);
+  const days = groupSleepsByDay(
+    sleeps,
+    dayStartHour,
+    dayEndHour,
+    continuationAllowanceMinutes
+  );
 
   const minNaps = babyAgeMonths >= 13 ? 1 : 2;
   const qualifyingDays = days.filter((d) => d.naps.length >= minNaps);
@@ -429,9 +551,15 @@ export function getQualifyingDayCount(
   sleeps: ProcessedSleep[],
   dayStartHour: number,
   dayEndHour: number,
-  babyAgeMonths: number
+  babyAgeMonths: number,
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES
 ): number {
-  const days = groupSleepsByDay(sleeps, dayStartHour, dayEndHour);
+  const days = groupSleepsByDay(
+    sleeps,
+    dayStartHour,
+    dayEndHour,
+    continuationAllowanceMinutes
+  );
   const minNaps = babyAgeMonths >= 13 ? 1 : 2;
   return days.filter((d) => d.naps.length >= minNaps).length;
 }
@@ -653,9 +781,15 @@ function isBeforeDayStart(time: Date, dayStartHour: number): boolean {
 export function detectBedtimeDrift(
   sleeps: ProcessedSleep[],
   dayStartHour: number,
-  dayEndHour: number
+  dayEndHour: number,
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES
 ): DriftDetectionResult | null {
-  const days = groupSleepsByDay(sleeps, dayStartHour, dayEndHour);
+  const days = groupSleepsByDay(
+    sleeps,
+    dayStartHour,
+    dayEndHour,
+    continuationAllowanceMinutes
+  );
   if (days.length < 5) return null;
 
   const last5 = days.slice(-5);
@@ -706,10 +840,16 @@ export function detectBedtimeDrift(
 function getRecordedMorningDays(
   sleeps: ProcessedSleep[],
   dayStartHour: number,
-  dayEndHour: number
+  dayEndHour: number,
+  continuationAllowanceMinutes: number
 ): ProcessedDay[] {
   const groupedDays = new Map(
-    groupSleepsByDay(sleeps, dayStartHour, dayEndHour)
+    groupSleepsByDay(
+      sleeps,
+      dayStartHour,
+      dayEndHour,
+      continuationAllowanceMinutes
+    )
       .map((day) => [day.date, day])
   );
   const dates = new Set<string>();
@@ -727,7 +867,8 @@ function getRecordedMorningDays(
       const morningWakeTime = resolveMorningSleep(
         sleeps,
         dayStartHour,
-        referenceDate
+        referenceDate,
+        continuationAllowanceMinutes
       ).morningWakeTime;
       if (!morningWakeTime) return [];
 
@@ -746,7 +887,8 @@ export function detectMorningDrift(
   dayStartHour: number,
   dayEndHour: number,
   birthDate: Date,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES
 ): DriftDetectionResult | null {
   const ageGroup = getSleepAgeGroupForBaby(birthDate, referenceDate);
   const firstWakeWindow = ageGroup
@@ -754,7 +896,12 @@ export function detectMorningDrift(
     : undefined;
   if (firstWakeWindow === undefined) return null;
 
-  const days = getRecordedMorningDays(sleeps, dayStartHour, dayEndHour).slice(-7);
+  const days = getRecordedMorningDays(
+    sleeps,
+    dayStartHour,
+    dayEndHour,
+    continuationAllowanceMinutes
+  ).slice(-7);
   const qualifyingWakeHours = days
     .filter((day) => {
       const firstNap = day.naps[0];

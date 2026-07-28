@@ -3,6 +3,8 @@ import {
   median,
   getMorningThreshold,
   resolveMorningSleep,
+  classifyNewMorningSleep,
+  findPendingMorningConfirmations,
   processSleepData,
   computeSleepModel,
   getQualifyingDayCount,
@@ -123,6 +125,133 @@ describe("resolveMorningSleep", () => {
 
     expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 6, 15));
     expect(result.overnightSleep).toBe(sleep);
+  });
+
+  it("requires confirmation when a pre-day-start sleep follows a qualifying wake after the continuation allowance", () => {
+    const overnight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const ambiguous = {
+      ...makeSleep(
+        ld(2026, 7, 25, 8, 30).toISOString(),
+        ld(2026, 7, 25, 9, 35).toISOString(),
+        { type: "nap" }
+      ),
+      morningClassificationVersion: 1,
+    };
+
+    const result = resolveMorningSleep(
+      [overnight, ambiguous],
+      9,
+      ld(2026, 7, 25, 10, 0),
+      25
+    );
+
+    expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 7, 0));
+    expect(result.pendingConfirmations).toEqual([ambiguous]);
+    expect(result.hasUnresolvedMorning).toBe(true);
+  });
+
+  it("treats a sleep starting exactly at the continuation allowance as automatic night continuation", () => {
+    const overnight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const continuation = {
+      ...makeSleep(
+        ld(2026, 7, 25, 7, 25).toISOString(),
+        ld(2026, 7, 25, 8, 0).toISOString(),
+        { type: "night" }
+      ),
+      morningClassificationVersion: 1,
+      morningClassification: "automatic" as const,
+    };
+
+    const result = resolveMorningSleep(
+      [overnight, continuation],
+      9,
+      ld(2026, 7, 25, 10, 0),
+      25
+    );
+
+    expect(result.pendingConfirmations).toEqual([]);
+    expect(result.continuations).toEqual([continuation]);
+    expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 8, 0));
+  });
+
+  it("treats a confirmed first nap as final for that morning", () => {
+    const overnight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const firstNap = {
+      ...makeSleep(
+        ld(2026, 7, 25, 8, 0).toISOString(),
+        ld(2026, 7, 25, 8, 20).toISOString(),
+        { type: "nap" }
+      ),
+      morningClassificationVersion: 1,
+      morningClassification: "confirmed_first_nap" as const,
+    };
+    const laterEarlySleep = {
+      ...makeSleep(
+        ld(2026, 7, 25, 8, 50).toISOString(),
+        ld(2026, 7, 25, 9, 20).toISOString(),
+        { type: "nap" }
+      ),
+      morningClassificationVersion: 1,
+    };
+
+    const result = resolveMorningSleep(
+      [overnight, firstNap, laterEarlySleep],
+      10,
+      ld(2026, 7, 25, 11, 0),
+      25
+    );
+
+    expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 7, 0));
+    expect(result.pendingConfirmations).toEqual([]);
+    expect(result.continuations).toEqual([]);
+  });
+
+  it("permits another confirmation after Back to sleep and a later gap above the allowance", () => {
+    const overnight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const resumedNight = {
+      ...makeSleep(
+        ld(2026, 7, 25, 8, 0).toISOString(),
+        ld(2026, 7, 25, 8, 20).toISOString(),
+        { type: "night" }
+      ),
+      morningClassificationVersion: 1,
+      morningClassification: "confirmed_night_continuation" as const,
+    };
+    const later = {
+      ...makeSleep(
+        ld(2026, 7, 25, 8, 46).toISOString(),
+        ld(2026, 7, 25, 9, 20).toISOString(),
+        { type: "nap" }
+      ),
+      morningClassificationVersion: 1,
+      morningClassification: "unresolved" as const,
+    };
+
+    const result = resolveMorningSleep(
+      [later, overnight, resumedNight],
+      10,
+      ld(2026, 7, 25, 11, 0),
+      25
+    );
+
+    expect(result.morningWakeTime).toEqual(ld(2026, 7, 25, 8, 20));
+    expect(result.pendingConfirmations).toEqual([later]);
   });
 
   it("does not qualify sessions with future timestamps", () => {
@@ -248,6 +377,163 @@ describe("resolveMorningSleep", () => {
   });
 });
 
+describe("classifyNewMorningSleep", () => {
+  it.each([
+    ["15-minute gap", 7, 15, 30, "automatic"],
+    ["exact 25-minute gap", 7, 25, 30, "automatic"],
+    ["gap just above 25 minutes", 7, 26, 30, "unresolved"],
+    ["short ambiguous sleep", 8, 30, 10, "unresolved"],
+    ["long ambiguous sleep", 8, 30, 65, "unresolved"],
+    ["08:59 start", 8, 59, 20, "unresolved"],
+    ["09:00 start", 9, 0, 20, "automatic"],
+  ] as const)("classifies %s without using duration as a proxy", (
+    _name,
+    hour,
+    minute,
+    durationMinutes,
+    expected
+  ) => {
+    const overnight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const startedAt = ld(2026, 7, 25, hour, minute);
+    const endedAt = new Date(startedAt.getTime() + durationMinutes * 60 * 1000);
+
+    expect(classifyNewMorningSleep(
+      [overnight],
+      { startedAt, endedAt },
+      9,
+      25,
+      new Date(Math.max(endedAt.getTime(), ld(2026, 7, 25, 10, 0).getTime()))
+    )).toBe(expected);
+  });
+
+  it("marks an ambiguous new sleep unresolved after it has started", () => {
+    const overnight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const candidate = {
+      startedAt: ld(2026, 7, 25, 8, 30),
+      endedAt: null,
+    };
+
+    expect(classifyNewMorningSleep(
+      [overnight],
+      candidate,
+      9,
+      25,
+      ld(2026, 7, 25, 8, 31)
+    )).toBe("unresolved");
+  });
+});
+
+describe("findPendingMorningConfirmations", () => {
+  it("derives a prompt for a post-migration old-client insert without prompting for legacy history", () => {
+    const overnight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const legacy = makeSleep(
+      ld(2026, 7, 25, 7, 30).toISOString(),
+      ld(2026, 7, 25, 7, 50).toISOString(),
+      { type: "nap" }
+    );
+    const oldClientInsert = {
+      ...makeSleep(
+        ld(2026, 7, 25, 8, 30).toISOString(),
+        ld(2026, 7, 25, 9, 35).toISOString(),
+        { type: "night" }
+      ),
+      morningClassificationVersion: 1,
+      morningClassification: null,
+    };
+
+    expect(findPendingMorningConfirmations(
+      [oldClientInsert, legacy, overnight],
+      10,
+      25,
+      ld(2026, 7, 25, 12, 0)
+    )).toEqual([oldClientInsert]);
+  });
+
+  it("removes a pending question when its source wake or pending sleep is deleted", () => {
+    const overnight = {
+      ...makeSleep(
+        ld(2026, 7, 24, 21, 0).toISOString(),
+        ld(2026, 7, 25, 7, 0).toISOString(),
+        { type: "night" }
+      ),
+      deleted: true,
+    };
+    const pending = {
+      ...makeSleep(
+        ld(2026, 7, 25, 8, 30).toISOString(),
+        ld(2026, 7, 25, 9, 35).toISOString(),
+        { type: "nap" }
+      ),
+      morningClassificationVersion: 1,
+      morningClassification: "unresolved" as const,
+    };
+
+    expect(findPendingMorningConfirmations(
+      [overnight, pending],
+      10,
+      25,
+      ld(2026, 7, 25, 12, 0)
+    )).toEqual([]);
+    expect(findPendingMorningConfirmations(
+      [{ ...overnight, deleted: false }, { ...pending, deleted: true }],
+      10,
+      25,
+      ld(2026, 7, 25, 12, 0)
+    )).toEqual([]);
+  });
+
+  it("keeps unanswered mornings pending after midnight and orders them chronologically", () => {
+    const later = {
+      ...makeSleep(
+        ld(2026, 7, 26, 8, 20).toISOString(),
+        ld(2026, 7, 26, 8, 50).toISOString(),
+        { type: "nap" }
+      ),
+      morningClassification: "unresolved" as const,
+      morningClassificationVersion: 1,
+    };
+    const earlier = {
+      ...makeSleep(
+        ld(2026, 7, 25, 8, 30).toISOString(),
+        ld(2026, 7, 25, 9, 35).toISOString(),
+        { type: "nap" }
+      ),
+      morningClassification: "unresolved" as const,
+      morningClassificationVersion: 1,
+    };
+
+    const firstOvernight = makeSleep(
+      ld(2026, 7, 24, 21, 0).toISOString(),
+      ld(2026, 7, 25, 7, 0).toISOString(),
+      { type: "night" }
+    );
+    const secondOvernight = makeSleep(
+      ld(2026, 7, 25, 21, 0).toISOString(),
+      ld(2026, 7, 26, 7, 0).toISOString(),
+      { type: "night" }
+    );
+
+    expect(findPendingMorningConfirmations(
+      [later, secondOvernight, earlier, firstOvernight],
+      10,
+      25,
+      ld(2026, 7, 27, 12, 0)
+    )).toEqual([earlier, later]);
+  });
+});
+
 describe("processSleepData", () => {
   it("merges two sleeps with < 15min gap", () => {
     const sleeps = [
@@ -261,14 +547,15 @@ describe("processSleepData", () => {
     expect(result[0].endedAt).toEqual(new Date("2026-04-20T11:10:00"));
   });
 
-  it("keeps two sleeps with >= 25min gap separate", () => {
+  it("merges two sleeps with a gap exactly equal to the 25-minute continuation allowance", () => {
     const sleeps = [
       makeSleep("2026-04-20T10:00:00", "2026-04-20T10:30:00"),
       makeSleep("2026-04-20T10:55:00", "2026-04-20T11:25:00"),
     ];
 
     const result = processSleepData(sleeps);
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(1);
+    expect(result[0].endedAt).toEqual(new Date("2026-04-20T11:25:00"));
   });
 
   it("counts partially overlapping sleeps as their interval union", () => {
@@ -371,6 +658,53 @@ describe("groupSleepsByDay", () => {
     const july25 = days.find((day) => day.date === "2026-07-25");
 
     expect(july25?.morningWakeTime).toEqual(ld(2026, 7, 25, 10, 30));
+    expect(july25?.naps).toEqual([firstNap]);
+  });
+
+  it("counts a confirmed first nap while preserving the preceding overnight wake", () => {
+    const overnight = {
+      ...ps(ld(2026, 7, 24, 21, 0), ld(2026, 7, 25, 7, 0)),
+      morningClassificationVersion: 1,
+      morningClassification: "automatic" as const,
+    };
+    const firstNap = {
+      ...ps(ld(2026, 7, 25, 8, 30), ld(2026, 7, 25, 9, 35)),
+      morningClassificationVersion: 1,
+      morningClassification: "confirmed_first_nap" as const,
+    };
+
+    const july25 = groupSleepsByDay([overnight, firstNap], 9, 19)
+      .find((day) => day.date === "2026-07-25");
+
+    expect(july25?.morningWakeTime).toEqual(ld(2026, 7, 25, 7, 0));
+    expect(july25?.naps).toEqual([firstNap]);
+  });
+
+  it("excludes every confirmed night continuation before counting the first nap", () => {
+    const firstContinuation = {
+      ...ps(ld(2026, 7, 25, 7, 45), ld(2026, 7, 25, 8, 0)),
+      morningClassificationVersion: 1,
+      morningClassification: "confirmed_night_continuation" as const,
+    };
+    const secondContinuation = {
+      ...ps(ld(2026, 7, 25, 8, 30), ld(2026, 7, 25, 8, 45)),
+      morningClassificationVersion: 1,
+      morningClassification: "confirmed_night_continuation" as const,
+    };
+    const firstNap = {
+      ...ps(ld(2026, 7, 25, 10, 0), ld(2026, 7, 25, 10, 45)),
+      morningClassificationVersion: 1,
+      morningClassification: "confirmed_first_nap" as const,
+    };
+
+    const july25 = groupSleepsByDay([
+      ps(ld(2026, 7, 24, 21, 0), ld(2026, 7, 25, 7, 0)),
+      firstContinuation,
+      secondContinuation,
+      firstNap,
+    ], 10, 19).find((day) => day.date === "2026-07-25");
+
+    expect(july25?.morningWakeTime).toEqual(ld(2026, 7, 25, 8, 45));
     expect(july25?.naps).toEqual([firstNap]);
   });
 

@@ -1,5 +1,6 @@
 import { SyncableEntry } from './sync/types';
 import type { SleepType } from '@/constants/activities';
+import type { MorningClassificationState } from '@/types/sleep';
 
 export interface SyncedSleepEntry extends SyncableEntry {
   babyId: string;
@@ -8,4 +9,6 @@ export interface SyncedSleepEntry extends SyncableEntry {
   endedAt?: string;
   durationSeconds?: number;
   notes?: string;
+  morningClassification?: MorningClassificationState | null;
+  morningClassificationVersion?: number | null;
 }
