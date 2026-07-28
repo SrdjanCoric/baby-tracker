@@ -50,14 +50,14 @@ tags:
 - assertVisible: "Wähle Junge oder Mädchen aus"
 - waitForAnimationToEnd
 
-- tapOn:
+- longPressOn:
     id: "owner-start-over"
 - runFlow:
     when:
       visible:
         id: "owner-start-over"
     commands:
-      - tapOn:
+      - longPressOn:
           id: "owner-start-over"
 - extendedWaitUntil:
     visible:

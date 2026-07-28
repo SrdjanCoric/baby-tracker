@@ -64,8 +64,8 @@ Persist named onboarding states and drafts rather than numeric step indexes. Res
 
 - Loaded `references/00-overview.md`, `references/01-style-and-code-quality.md`, `references/02-testing.md`, and `references/03-documentation.md` in implement and review modes.
 - `npm run lint` and `npm run typecheck` pass with the new strict state types and route names.
-- `npm run check:code` passes: 2,354 unit tests, 689 component and integration tests, 103 security tests, 244 sync tests, and 41 CI contract tests.
-- After hardening the Maestro Start over interaction, the focused baby-screen component suite passes all 3 tests, including ordinary-press reset and navigation coverage.
+- After merging the task 0042 changes from `origin/main`, `npm run check:code` passes: 2,391 unit tests, 695 component and integration tests, 106 security tests, 244 sync tests, and 41 CI contract tests.
+- The baby-screen component suite includes ordinary-press reset and navigation coverage.
 - Preview setup, storage schema, isolation, and focused commands are documented in `docs/NEW_OWNER_ONBOARDING_PREVIEW.md`.
 
 ## Review and documentation
@@ -75,4 +75,4 @@ Persist named onboarding states and drafts rather than numeric step indexes. Res
 
 ## Highest-level proof
 
-- `maestro test --device BCEDA10A-7DB7-477E-B592-0DC31AC088AD e2e/flows/onboarding/new-owner-preview-restart.yaml` passes on iPhone 17 Pro with iOS 26.5. The flow changes Welcome to German, enters Mila, terminates and relaunches the app, restores the exact baby draft, shows both required-field errors, clears the unfinished draft with Start over, and returns to Welcome without Mila.
+- `maestro test --device BCEDA10A-7DB7-477E-B592-0DC31AC088AD e2e/flows/onboarding/new-owner-preview-restart.yaml` passed twice consecutively on iPhone 17 Pro with iOS 26.5 after merging `origin/main`. The flow changes Welcome to German, enters Mila, terminates and relaunches the app, restores the exact baby draft, shows both required-field errors, clears the unfinished draft with Start over, and returns to Welcome without Mila.
