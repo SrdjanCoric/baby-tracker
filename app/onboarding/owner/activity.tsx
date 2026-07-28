@@ -5,7 +5,8 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import type { FirstActivityType } from "@/types/new-owner-onboarding";
-import { ACTION } from "@/constants/colors";
+import { ACTION, BORDER, SURFACE, TEXT } from "@/constants/colors";
+import { useColorScheme } from "nativewind";
 
 const PRIMARY_ACTIVITIES: Array<{ type: FirstActivityType; icon: string }> = [
   { type: "feeding", icon: "🍼" },
@@ -35,6 +36,13 @@ const ACTIVITY_ROUTES: Record<FirstActivityType, string> = {
 export default function NewOwnerActivityScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
+  const secondaryBackgroundColor = isDark ? SURFACE.dark.secondary : SURFACE.light.secondary;
+  const primaryTextColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
+  const secondaryTextColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
+  const borderColor = isDark ? BORDER.dark.default : BORDER.light.default;
   const [showAll, setShowAll] = useState(false);
 
   const handleNotNow = useCallback(async () => {
@@ -45,12 +53,12 @@ export default function NewOwnerActivityScreen() {
   const activities = showAll ? [...PRIMARY_ACTIVITIES, ...MORE_ACTIVITIES] : PRIMARY_ACTIVITIES;
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="first-activity-screen">
+    <SafeAreaView className="flex-1" style={{ backgroundColor }} testID="first-activity-screen">
       <ScrollView contentContainerClassName="px-6 py-8">
-        <Text className="text-3xl font-bold text-content-primary dark:text-content-dark-primary mb-3">
+        <Text className="text-3xl font-bold mb-3" style={{ color: primaryTextColor }}>
           {t("newOwnerOnboarding.activity.title")}
         </Text>
-        <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-7">
+        <Text className="text-base mb-7" style={{ color: secondaryTextColor }}>
           {t("newOwnerOnboarding.activity.subtitle")}
         </Text>
 
@@ -59,12 +67,13 @@ export default function NewOwnerActivityScreen() {
             <Pressable
               key={activity.type}
               onPress={() => router.push(ACTIVITY_ROUTES[activity.type] as never)}
-              className="flex-row items-center rounded-card px-5 py-4 bg-surface-secondary dark:bg-surface-dark-secondary"
+              className="flex-row items-center rounded-card px-5 py-4"
+              style={{ backgroundColor: secondaryBackgroundColor }}
               accessibilityRole="button"
               testID={`first-activity-${activity.type}`}
             >
               <Text className="text-2xl mr-4">{activity.icon}</Text>
-              <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+              <Text className="text-lg font-semibold" style={{ color: primaryTextColor }}>
                 {t(`newOwnerOnboarding.activity.${activity.type}`)}
               </Text>
             </Pressable>
@@ -88,11 +97,12 @@ export default function NewOwnerActivityScreen() {
       <View className="px-6 pb-6">
         <Pressable
           onPress={handleNotNow}
-          className="py-4 items-center rounded-button-lg border border-border dark:border-border-dark"
+          className="py-4 items-center rounded-button-lg border"
+          style={{ borderColor }}
           accessibilityRole="button"
           testID="not-now-button"
         >
-          <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary">
+          <Text className="text-base font-semibold" style={{ color: primaryTextColor }}>
             {t("newOwnerOnboarding.activity.notNow")}
           </Text>
         </Pressable>
@@ -102,7 +112,7 @@ export default function NewOwnerActivityScreen() {
           accessibilityRole="button"
           testID="skip-remaining-setup-button"
         >
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary text-center">
+          <Text className="text-sm text-center" style={{ color: secondaryTextColor }}>
             {t("newOwnerOnboarding.activity.skipRemaining")}
           </Text>
         </Pressable>

@@ -5,12 +5,19 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
-import { ACTION } from "@/constants/colors";
+import { ACTION, SURFACE, TEXT } from "@/constants/colors";
+import { useColorScheme } from "nativewind";
 
 export default function ActivitySavedScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { language } = useLanguage();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
+  const cardColor = isDark ? SURFACE.dark.secondary : SURFACE.light.secondary;
+  const primaryTextColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
+  const secondaryTextColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -34,15 +41,15 @@ export default function ActivitySavedScreen() {
   }, [router]);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="activity-saved-screen">
+    <SafeAreaView className="flex-1" style={{ backgroundColor }} testID="activity-saved-screen">
       {isReady && (
         <View className="flex-1 justify-center px-6">
-          <View className="rounded-card p-6 bg-surface-secondary dark:bg-surface-dark-secondary">
+          <View className="rounded-card p-6" style={{ backgroundColor: cardColor }}>
             <Text className="text-3xl mb-3">✓</Text>
-            <Text className="text-2xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
+            <Text className="text-2xl font-bold mb-2" style={{ color: primaryTextColor }}>
               {t("newOwnerOnboarding.saved.title")}
             </Text>
-            <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-6">
+            <Text className="text-base mb-6" style={{ color: secondaryTextColor }}>
               {t("newOwnerOnboarding.saved.message")}
             </Text>
             <Pressable
@@ -60,7 +67,7 @@ export default function ActivitySavedScreen() {
               accessibilityRole="button"
               testID="continue-home-button"
             >
-              <Text className="text-content-primary dark:text-content-dark-primary font-semibold">
+              <Text className="font-semibold" style={{ color: primaryTextColor }}>
                 {t("newOwnerOnboarding.saved.continueHome")}
               </Text>
             </Pressable>

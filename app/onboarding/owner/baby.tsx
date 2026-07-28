@@ -20,7 +20,8 @@ import type { BabyProfileDraft } from "@/types/new-owner-onboarding";
 import { validateNewBabyProfile } from "@/validators/baby";
 import { sanitizeName } from "@/utils/sanitize";
 import { te } from "@/utils/translate-errors";
-import { ACTION } from "@/constants/colors";
+import { ACTION, BORDER, SURFACE, TEXT } from "@/constants/colors";
+import { useColorScheme } from "nativewind";
 
 type Gender = "male" | "female";
 
@@ -29,6 +30,12 @@ export default function NewOwnerBabyScreen() {
   const router = useRouter();
   const { addBaby, selectBaby } = useBaby();
   const { language, resolvedLanguage } = useLanguage();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
+  const primaryTextColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
+  const secondaryTextColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
+  const borderColor = isDark ? BORDER.dark.default : BORDER.light.default;
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [gender, setGender] = useState<Gender | undefined>();
@@ -117,27 +124,27 @@ export default function NewOwnerBabyScreen() {
   }, [router]);
 
   if (isLoading && !submittingRef.current) {
-    return <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="new-owner-baby-screen" />;
+    return <SafeAreaView className="flex-1" style={{ backgroundColor }} testID="new-owner-baby-screen" />;
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="new-owner-baby-screen">
+    <SafeAreaView className="flex-1" style={{ backgroundColor }} testID="new-owner-baby-screen">
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
         <Pressable onPress={Keyboard.dismiss} className="items-center py-3" testID="dismiss-keyboard">
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+          <Text className="text-sm" style={{ color: secondaryTextColor }}>
             {t("newOwnerOnboarding.baby.requiredHint")}
           </Text>
         </Pressable>
         <ScrollView contentContainerClassName="px-6 pb-8" keyboardShouldPersistTaps="handled">
           <View className="items-center mb-5"><OnboardingIllustration type="baby-profile" /></View>
-          <Text className="text-3xl font-bold text-content-primary dark:text-content-dark-primary mb-2">
+          <Text className="text-3xl font-bold mb-2" style={{ color: primaryTextColor }}>
             {t("newOwnerOnboarding.baby.title")}
           </Text>
-          <Text className="text-base text-content-secondary dark:text-content-dark-secondary mb-7">
+          <Text className="text-base mb-7" style={{ color: secondaryTextColor }}>
             {t("newOwnerOnboarding.baby.subtitle")}
           </Text>
 
-          <Text className="text-sm font-semibold text-content-primary dark:text-content-dark-primary mb-2">
+          <Text className="text-sm font-semibold mb-2" style={{ color: primaryTextColor }}>
             {t("newOwnerOnboarding.baby.name")}
           </Text>
           <Input
@@ -150,16 +157,17 @@ export default function NewOwnerBabyScreen() {
             testID="owner-baby-name"
           />
 
-          <Text className="text-sm font-semibold text-content-primary dark:text-content-dark-primary mt-5 mb-2">
+          <Text className="text-sm font-semibold mt-5 mb-2" style={{ color: primaryTextColor }}>
             {t("newOwnerOnboarding.baby.birthDate")}
           </Text>
           <Pressable
             onPress={() => setShowDatePicker(true)}
-            className="rounded-lg border border-border dark:border-border-dark px-4 py-4"
+            className="rounded-lg border px-4 py-4"
+            style={{ borderColor }}
             accessibilityRole="button"
             testID="owner-baby-birth-date"
           >
-            <Text className="text-content-primary dark:text-content-dark-primary">
+            <Text style={{ color: primaryTextColor }}>
               {birthDate
                 ? birthDate.toLocaleDateString(resolvedLanguage, { month: "long", day: "numeric", year: "numeric" })
                 : t("newOwnerOnboarding.baby.selectBirthDate")}
@@ -167,7 +175,7 @@ export default function NewOwnerBabyScreen() {
           </Pressable>
           {errors.birthDate && <Text className="text-red-500 mt-1">{te(t, errors.birthDate)}</Text>}
 
-          <Text className="text-sm font-semibold text-content-primary dark:text-content-dark-primary mt-5 mb-2">
+          <Text className="text-sm font-semibold mt-5 mb-2" style={{ color: primaryTextColor }}>
             {t("newOwnerOnboarding.baby.gender")}
           </Text>
           <View className="flex-row gap-3">
@@ -176,12 +184,12 @@ export default function NewOwnerBabyScreen() {
                 key={value}
                 onPress={() => handleGender(value)}
                 className="flex-1 rounded-lg border px-4 py-4 items-center"
-                style={{ borderColor: gender === value ? ACTION.light.primary : "#CCC" }}
+                style={{ borderColor: gender === value ? ACTION.light.primary : borderColor }}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: gender === value }}
                 testID={`owner-baby-gender-${value}`}
               >
-                <Text className="text-content-primary dark:text-content-dark-primary">
+                <Text style={{ color: primaryTextColor }}>
                   {t(`newOwnerOnboarding.baby.${value}`)}
                 </Text>
               </Pressable>
@@ -207,7 +215,7 @@ export default function NewOwnerBabyScreen() {
             <Text className="text-white text-lg font-bold">{t("common.continue")}</Text>
           </Pressable>
           <Pressable onPress={handleStartOver} className="py-3 items-center" accessibilityRole="button" testID="owner-start-over">
-            <Text className="text-content-secondary dark:text-content-dark-secondary">
+            <Text style={{ color: secondaryTextColor }}>
               {t("newOwnerOnboarding.startOver")}
             </Text>
           </Pressable>
