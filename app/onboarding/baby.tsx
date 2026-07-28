@@ -12,7 +12,7 @@ import { Input } from "@/components";
 import { useOnboarding, useBaby } from "@/contexts";
 import { te } from "@/utils/translate-errors";
 import { OnboardingPagination, OnboardingIllustration } from "@/components/onboarding";
-import { validateBabyName, validateBirthDate } from "@/validators/baby";
+import { validateNewBabyProfile } from "@/validators/baby";
 import { sanitizeName } from "@/utils/sanitize";
 
 const PRIMARY_COLOR = "#6B9E6E";
@@ -66,17 +66,15 @@ export default function BabySetupScreen() {
       return;
     }
 
-    const newErrors: Record<string, string> = {};
+    const validation = validateNewBabyProfile({
+      name: sanitizeName(name),
+      birthDate,
+      gender,
+    });
 
-    const nameError = validateBabyName(name);
-    if (nameError) newErrors.name = nameError;
+    setErrors(validation.errors);
 
-    const birthDateError = validateBirthDate(birthDate);
-    if (birthDateError) newErrors.birthDate = birthDateError;
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length > 0) {
+    if (!validation.isValid) {
       return;
     }
 
@@ -85,12 +83,7 @@ export default function BabySetupScreen() {
     setErrors({});
 
     try {
-      const sanitizedName = sanitizeName(name);
-      const newBaby = await addBaby({
-        name: sanitizedName,
-        birthDate,
-        gender,
-      });
+      const newBaby = await addBaby(validation.data);
       await selectBaby(newBaby.id);
       await completeOnboarding();
       router.replace("/(tabs)");
@@ -181,7 +174,7 @@ export default function BabySetupScreen() {
                   setErrors((prev) => ({ ...prev, name: "" }));
                 }}
                 placeholder={t("onboarding.babyNamePlaceholder")}
-                error={errors.name}
+                error={errors.name ? te(t, errors.name) : undefined}
                 autoCapitalize="words"
                 maxLength={100}
                 testID="baby-name-input"
@@ -195,6 +188,10 @@ export default function BabySetupScreen() {
               </Text>
               <Pressable
                 onPress={() => setShowDatePicker(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t("onboarding.selectBirthDate")}
+                accessibilityHint={errors.birthDate ? te(t, errors.birthDate) : undefined}
+                testID="birth-date-picker"
                 className={`px-4 py-4 rounded-lg border ${
                   errors.birthDate
                     ? "border-red-500"
@@ -214,7 +211,9 @@ export default function BabySetupScreen() {
                 </Text>
               </Pressable>
               {errors.birthDate && (
-                <Text className="text-red-500 text-sm mt-1">{te(t, errors.birthDate)}</Text>
+                <Text accessibilityRole="alert" className="text-red-500 text-sm mt-1">
+                  {te(t, errors.birthDate)}
+                </Text>
               )}
             </View>
 
@@ -225,7 +224,12 @@ export default function BabySetupScreen() {
               </Text>
               <View className="flex-row gap-3">
                 <Pressable
-                  onPress={() => setGender("male")}
+                  onPress={() => {
+                    setGender("male");
+                    setErrors((prev) => ({ ...prev, gender: "" }));
+                  }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: gender === "male" }}
                   className={`flex-1 py-3 rounded-lg items-center border ${
                     gender === "male"
                       ? "border-green-600 bg-green-50 dark:bg-green-900/20"
@@ -247,7 +251,12 @@ export default function BabySetupScreen() {
                   </Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => setGender("female")}
+                  onPress={() => {
+                    setGender("female");
+                    setErrors((prev) => ({ ...prev, gender: "" }));
+                  }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: gender === "female" }}
                   className={`flex-1 py-3 rounded-lg items-center border ${
                     gender === "female"
                       ? "border-green-600 bg-green-50 dark:bg-green-900/20"
@@ -269,6 +278,11 @@ export default function BabySetupScreen() {
                   </Text>
                 </Pressable>
               </View>
+              {errors.gender && (
+                <Text accessibilityRole="alert" className="text-red-500 text-sm mt-1">
+                  {te(t, errors.gender)}
+                </Text>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -315,6 +329,7 @@ export default function BabySetupScreen() {
               </View>
             )}
             <DateTimePicker
+              testID="birth-date-input"
               value={birthDate || new Date()}
               mode="date"
               display={Platform.OS === "ios" ? "spinner" : "default"}

@@ -6,13 +6,20 @@ interface Baby {
   id: string;
   name: string;
   birthDate?: string;
+  gender?: "male" | "female";
+}
+
+interface CreateBabyInput {
+  name: string;
+  birthDate: string;
+  gender: "male" | "female";
 }
 
 interface BabyContextValue {
   babies: Baby[];
   selectedBaby: Baby | null;
   isLoading: boolean;
-  addBaby: (baby: Omit<Baby, "id">) => Promise<Baby>;
+  addBaby: (baby: CreateBabyInput) => Promise<Baby>;
   selectBaby: (id: string) => Promise<void>;
 }
 
@@ -38,6 +45,7 @@ function createMockBabyContext(): BabyContextValue {
         id: `baby-${Date.now()}-${Math.random()}`,
         name: baby.name,
         birthDate: baby.birthDate,
+        gender: baby.gender,
       };
       state.babies = [...state.babies, newBaby];
       if (!state.selectedBaby) {
@@ -73,13 +81,21 @@ function TestBabySelection({ context, feedingsByBaby = {} }: TestComponentProps)
       <Text testID="feeding-count">{feedingCount}</Text>
       <Pressable
         testID="add-emma"
-        onPress={() => context.addBaby({ name: "Emma", birthDate: "2025-06-15" })}
+        onPress={() => context.addBaby({
+          name: "Emma",
+          birthDate: "2025-06-15",
+          gender: "female",
+        })}
       >
         <Text>Add Emma</Text>
       </Pressable>
       <Pressable
         testID="add-oliver"
-        onPress={() => context.addBaby({ name: "Oliver", birthDate: "2025-08-20" })}
+        onPress={() => context.addBaby({
+          name: "Oliver",
+          birthDate: "2025-08-20",
+          gender: "male",
+        })}
       >
         <Text>Add Oliver</Text>
       </Pressable>

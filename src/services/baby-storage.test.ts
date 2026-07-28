@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   BabyStorageService,
   StoredBabyProfile,
+  type CreateBabyInput,
 } from "./baby-storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setStorageUserId } from "./storage-prefix";
@@ -31,6 +32,15 @@ let uuidCounter = 0;
 vi.mock("expo-crypto", () => ({
   randomUUID: vi.fn(() => `test-uuid-${++uuidCounter}`),
 }));
+
+const completeBabyInput = (
+  name: string,
+  gender: CreateBabyInput["gender"] = "female"
+): CreateBabyInput => ({
+  name,
+  birthDate: new Date("2024-06-15T00:00:00.000Z"),
+  gender,
+});
 
 describe("BabyStorageService", () => {
   beforeEach(() => {
@@ -88,10 +98,7 @@ describe("BabyStorageService", () => {
 
   describe("addBaby", () => {
     it("should add a new baby with generated id", async () => {
-      const newBaby = await BabyStorageService.addBaby({
-        name: "Oliver",
-        gender: "male",
-      });
+      const newBaby = await BabyStorageService.addBaby(completeBabyInput("Oliver", "male"));
 
       expect(newBaby.id).toBeDefined();
       expect(newBaby.name).toBe("Oliver");
@@ -108,7 +115,7 @@ describe("BabyStorageService", () => {
     it("should add baby with birth date", async () => {
       const birthDate = new Date("2024-06-15");
       const newBaby = await BabyStorageService.addBaby({
-        name: "Emma",
+        ...completeBabyInput("Emma"),
         birthDate,
       });
 
@@ -116,8 +123,8 @@ describe("BabyStorageService", () => {
     });
 
     it("should add multiple babies", async () => {
-      await BabyStorageService.addBaby({ name: "Emma" });
-      await BabyStorageService.addBaby({ name: "Oliver" });
+      await BabyStorageService.addBaby(completeBabyInput("Emma"));
+      await BabyStorageService.addBaby(completeBabyInput("Oliver", "male"));
 
       const babies = await BabyStorageService.getAllBabies();
       expect(babies).toHaveLength(2);
@@ -130,7 +137,7 @@ describe("BabyStorageService", () => {
       const initialTime = new Date("2024-01-01T10:00:00.000Z");
       vi.setSystemTime(initialTime);
 
-      const baby = await BabyStorageService.addBaby({ name: "Emma" });
+      const baby = await BabyStorageService.addBaby(completeBabyInput("Emma"));
 
       // Advance time to ensure updatedAt changes
       vi.setSystemTime(new Date("2024-01-01T10:00:01.000Z"));
@@ -154,10 +161,7 @@ describe("BabyStorageService", () => {
     });
 
     it("should preserve unmodified fields", async () => {
-      const baby = await BabyStorageService.addBaby({
-        name: "Emma",
-        gender: "female",
-      });
+      const baby = await BabyStorageService.addBaby(completeBabyInput("Emma"));
 
       const updated = await BabyStorageService.updateBaby(baby.id, {
         name: "Emma Grace",
@@ -169,7 +173,7 @@ describe("BabyStorageService", () => {
 
   describe("deleteBaby", () => {
     it("should delete existing baby", async () => {
-      const baby = await BabyStorageService.addBaby({ name: "Emma" });
+      const baby = await BabyStorageService.addBaby(completeBabyInput("Emma"));
 
       const result = await BabyStorageService.deleteBaby(baby.id);
       expect(result).toBe(true);
@@ -184,7 +188,7 @@ describe("BabyStorageService", () => {
     });
 
     it("should clear selected baby when deleting selected baby", async () => {
-      const baby = await BabyStorageService.addBaby({ name: "Emma" });
+      const baby = await BabyStorageService.addBaby(completeBabyInput("Emma"));
       await BabyStorageService.setSelectedBabyId(baby.id);
 
       await BabyStorageService.deleteBaby(baby.id);
@@ -201,7 +205,7 @@ describe("BabyStorageService", () => {
     });
 
     it("should set and get selected baby id", async () => {
-      const baby = await BabyStorageService.addBaby({ name: "Emma" });
+      const baby = await BabyStorageService.addBaby(completeBabyInput("Emma"));
       await BabyStorageService.setSelectedBabyId(baby.id);
 
       const selectedId = await BabyStorageService.getSelectedBabyId();
@@ -209,7 +213,7 @@ describe("BabyStorageService", () => {
     });
 
     it("should clear selected baby", async () => {
-      const baby = await BabyStorageService.addBaby({ name: "Emma" });
+      const baby = await BabyStorageService.addBaby(completeBabyInput("Emma"));
       await BabyStorageService.setSelectedBabyId(baby.id);
       await BabyStorageService.setSelectedBabyId(null);
 
@@ -218,7 +222,7 @@ describe("BabyStorageService", () => {
     });
 
     it("should get selected baby object", async () => {
-      const baby = await BabyStorageService.addBaby({ name: "Emma" });
+      const baby = await BabyStorageService.addBaby(completeBabyInput("Emma"));
       await BabyStorageService.setSelectedBabyId(baby.id);
 
       const selectedBaby = await BabyStorageService.getSelectedBaby();

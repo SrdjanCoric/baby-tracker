@@ -4,6 +4,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import { getStorageUserId, getUserScopedKeyFor } from "./storage-prefix";
+import type { CompleteNewBabyProfile } from "@/validators/baby";
 
 const BABIES_KEY_BASE = "@babies";
 const SELECTED_BABY_KEY_BASE = "@selected_baby_id";
@@ -40,12 +41,8 @@ export interface StoredBabyProfile {
   updatedAt: string;
 }
 
-export interface CreateBabyInput {
+export interface CreateBabyInput extends CompleteNewBabyProfile {
   id?: string;
-  name: string;
-  birthDate?: Date;
-  gender?: "male" | "female";
-  photoUri?: string;
 }
 
 export interface UpdateBabyInput {

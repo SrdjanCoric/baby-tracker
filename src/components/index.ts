@@ -43,6 +43,7 @@ export {
 export {
   BabyProfileForm,
   type BabyProfileFormData,
+  type CompleteBabyProfileFormData,
   type BabyProfileFormProps,
 } from "./BabyProfileForm";
 export { BabySelector, type BabySelectorProps } from "./BabySelector";

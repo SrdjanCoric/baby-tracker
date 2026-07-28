@@ -96,6 +96,7 @@ const Input = forwardRef<TextInput, InputProps>(
 
         {(error || hint) && (
           <Text
+            accessibilityRole={hasError ? "alert" : undefined}
             className={`mt-1.5 text-sm ${hasError ? "text-red-600" : isDark ? "text-content-dark-tertiary" : "text-gray-500"}`}
           >
             {error || hint}

@@ -3,11 +3,20 @@
  */
 import type { TFunction } from "i18next";
 
+export type BabyGender = "male" | "female";
+
 export interface BabyProfile {
   id?: string;
   name: string;
   birthDate?: Date;
-  gender?: "male" | "female";
+  gender?: BabyGender;
+  photoUri?: string;
+}
+
+export interface CompleteNewBabyProfile {
+  name: string;
+  birthDate: Date;
+  gender: BabyGender;
   photoUri?: string;
 }
 
@@ -15,6 +24,10 @@ export interface ValidationResult {
   isValid: boolean;
   errors: Record<string, string>;
 }
+
+export type NewBabyValidationResult =
+  | { isValid: false; errors: Record<string, string> }
+  | { isValid: true; errors: Record<string, string>; data: CompleteNewBabyProfile };
 
 /**
  * Validates a baby name
@@ -39,6 +52,10 @@ export function validateBabyName(name: string): string | null {
 export function validateBirthDate(date: Date | undefined, now: Date = new Date()): string | null {
   if (!date) {
     return null; // Birth date is optional
+  }
+
+  if (Number.isNaN(date.getTime())) {
+    return "validation.birthDateInvalid";
   }
 
   // Check if date is in the future
@@ -75,6 +92,35 @@ export function validateBabyProfile(profile: Partial<BabyProfile>, now: Date = n
   return {
     isValid: Object.keys(errors).length === 0,
     errors
+  };
+}
+
+export function validateNewBabyProfile(
+  profile: Partial<BabyProfile>,
+  now: Date = new Date()
+): NewBabyValidationResult {
+  const { errors } = validateBabyProfile(profile, now);
+
+  if (!profile.birthDate) {
+    errors.birthDate = "validation.birthDateRequired";
+  }
+  if (!profile.gender) {
+    errors.gender = "validation.genderRequired";
+  }
+
+  if (Object.keys(errors).length > 0 || !profile.name || !profile.birthDate || !profile.gender) {
+    return { isValid: false, errors };
+  }
+
+  return {
+    isValid: true,
+    errors,
+    data: {
+      name: profile.name.trim(),
+      birthDate: profile.birthDate,
+      gender: profile.gender,
+      photoUri: profile.photoUri,
+    },
   };
 }
 
