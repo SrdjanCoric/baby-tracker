@@ -39,6 +39,10 @@ Persisted sleep types remain unchanged. The resolver assigns prediction-only rol
 
 The prediction card reevaluates morning qualification at local midnight and at the next morning anchor. This prevents the previous day's wake from carrying into a new date and allows the track-sleep prompt to appear at the anchor without requiring navigation or a sleep-data mutation.
 
+After the configured day end, the latest completed sleep keeps the card in its calm Bedtime state when that sleep is stored as `night` and ends after the current date's day-end boundary. The card does not treat that session's end as a new wake for another bedtime prediction. This card state expires at midnight. The normal Nighttime state then remains until the morning anchor, when morning qualification resumes.
+
+This rule does not change stored sleep types or prediction calculations. Overdue nap and bedtime predictions still appear when the latest completed sleep is not the current evening's night sleep.
+
 Later wake-window calculations and bedtime prediction use the existing model after morning wake and nap count have been resolved.
 
 ## Verification
