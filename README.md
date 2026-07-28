@@ -60,6 +60,10 @@ A milestone response keeps one database identity as its state changes or clears.
 
 Household owners enter a caregiver's account email in Settings, then copy or share the generated code. Each invitation expires after seven days and works once. The recipient must sign in with the matching verified email and submit the code before joining. Owners can keep invitations pending for different email addresses and can replace or revoke each code. Existing memberships stay unchanged, and older recipient app versions can redeem newly issued codes. See [`docs/CAREGIVER_INVITATIONS.md`](docs/CAREGIVER_INVITATIONS.md) for the security model and rollout checks.
 
+### New owner onboarding preview
+
+Development builds have a resumable new-owner flow behind the `onboardingPreview=true` launch argument. It creates a complete local guest baby profile before Home. The caregiver can then skip the remaining setup or record a first activity with the standard activity forms. Production builds continue to use the existing onboarding. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the state schema and validation commands.
+
 ### Timer Exclusivity
 
 Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. If the lock service is unavailable, feeding, sleep, pumping, and tummy-time timers continue locally and keep their reconciliation state through restart. Reconnect attempts to acquire the missing lock. When two offline timers compete, the first successful lock acquisition wins. The other timer is saved to the timeline, and its caregiver sees what happened. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. External Stop requests from widgets and Apple Watch stay in a versioned queue until matching timer completions are durable, even if several arrive while the app is closed. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
@@ -94,7 +98,7 @@ src/
 │   ├── sync/               # Sync engine, Realtime, queue, CRDT merge
 │   └── ...                 # Storage, notifications, watch, widget, household
 ├── hooks/                  # Timer alerts, duplicate detection, accessibility
-├── i18n/                   # Translation files (en, sr, es + 3 more)
+├── i18n/                   # Nine locale files with regional variants
 ├── utils/                  # Growth helpers, temperature, retry logic
 └── types/                  # TypeScript definitions
 supabase/
@@ -140,6 +144,7 @@ npm run typecheck            # TypeScript strict mode
 npm run lint                 # ESLint (warnings fail the quality gate)
 npm run e2e:household-timers       # Fast iOS offline reconnect and caregiver handoff
 npm run e2e:household-timers:clean # Required local iOS device gate before release
+maestro test e2e/flows/onboarding/new-owner-preview-restart.yaml # Development onboarding preview
 ```
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.

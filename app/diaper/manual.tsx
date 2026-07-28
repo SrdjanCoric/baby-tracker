@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useColorScheme } from "nativewind";
@@ -12,6 +12,7 @@ import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { STOOL_COLORS } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const STOOL_COLOR_MAP: Record<StoolColor, string> = {
   yellow: "#F4D03F",
@@ -26,6 +27,7 @@ const STOOL_COLOR_MAP: Record<StoolColor, string> = {
 export default function ManualDiaperScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addDiaper } = useDiaper();
@@ -98,12 +100,17 @@ export default function ManualDiaperScreen() {
         stoolColor: selectedType !== "wet" ? selectedColor ?? undefined : undefined,
         changedAt: changeTime,
       });
-      router.replace("/(tabs)");
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("diaper");
+        router.replace("/onboarding/owner/saved");
+      } else {
+        router.replace("/(tabs)");
+      }
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, selectedColor, changeTime, addDiaper, router]);
+  }, [selectedBaby, selectedType, selectedColor, changeTime, addDiaper, onboardingPreview, router]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, {

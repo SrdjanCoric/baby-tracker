@@ -20,6 +20,7 @@ jest.mock("@/contexts", () => ({
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ replace: mockReplace }),
+  useLocalSearchParams: () => ({}),
 }));
 
 describe("ManualSleepScreen overlap warning", () => {

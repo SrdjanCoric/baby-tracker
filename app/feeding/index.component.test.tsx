@@ -3,13 +3,24 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react-nativ
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
+let mockSearchParams: { onboardingPreview?: string } = {};
+const mockCompleteTimerStarted = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: mockPush,
     back: mockBack,
+    replace: mockReplace,
   }),
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => mockSearchParams,
+}));
+
+jest.mock("@/services/new-owner-onboarding-storage", () => ({
+  NewOwnerOnboardingStorageService: {
+    completeTimerStarted: (...args: unknown[]) => mockCompleteTimerStarted(...args),
+    markActivitySaved: jest.fn(),
+  },
 }));
 
 jest.mock("react-i18next", () => ({
@@ -136,7 +147,10 @@ import FeedingScreen from "./index";
 describe("FeedingScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSearchParams = {};
     mockAddFeeding.mockResolvedValue({ id: "new-feeding" });
+    mockStartBreastfeeding.mockResolvedValue({ success: true });
+    mockCompleteTimerStarted.mockResolvedValue(undefined);
   });
 
   describe("rendering", () => {
@@ -226,6 +240,18 @@ describe("FeedingScreen", () => {
       fireEvent.press(screen.getByText("Both Sides"));
       await waitFor(() => {
         expect(mockStartBreastfeeding).toHaveBeenCalledWith("both", undefined);
+      });
+    });
+
+    it("completes onboarding as soon as a timer starts", async () => {
+      mockSearchParams = { onboardingPreview: "firstActivity" };
+      render(<FeedingScreen />);
+
+      fireEvent.press(screen.getByText("L"));
+
+      await waitFor(() => {
+        expect(mockCompleteTimerStarted).toHaveBeenCalledWith("feeding");
+        expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
       });
     });
 

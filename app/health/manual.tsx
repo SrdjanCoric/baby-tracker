@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useColorScheme } from "nativewind";
@@ -15,12 +15,14 @@ import { COMMON_MEDICATION_KEYS, COMMON_VACCINE_KEYS, SYMPTOM_OPTIONS, MEASUREME
 import { CDC_VACCINE_SCHEDULE, getNextDoseNumber } from "@/constants/vaccine-schedule";
 import { ACTIVITY, TEXT } from "@/constants/colors";
 import { getFeverStatus, getFeverColor, QUICK_TEMPS_CELSIUS, DEFAULT_TEMP_CELSIUS, TEMP_RANGE_CELSIUS, celsiusToFahrenheit } from "@/utils/temperature";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 const HEALTH_ACCENT = ACTIVITY.health.accent;
 const HEALTH_ACCENT_DARK = ACTIVITY.health.accentDark;
 
 export default function ManualHealthScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addHealth, getCompletedVaccinations } = useHealth();
@@ -154,14 +156,19 @@ export default function ManualHealthScreen() {
     setIsSaving(true);
     try {
       await addHealth(base);
-      router.replace("/(tabs)");
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("health");
+        router.replace("/onboarding/owner/saved");
+      } else {
+        router.replace("/(tabs)");
+      }
     } catch {
       Alert.alert(t("common.error"), t("health.saveError"));
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, loggedAt, addHealth, router, getCompletedVaccinations, t]);
+  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, loggedAt, addHealth, onboardingPreview, router, getCompletedVaccinations, t]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, {

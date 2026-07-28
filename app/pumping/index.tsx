@@ -12,6 +12,7 @@ import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const PUMPING_BLUE = "#7B9BC9";
 const PUMPING_BLUE_MUTED = "#E8EDF5";
@@ -26,7 +27,11 @@ type VolumeUnit = "ml" | "oz";
 export default function PumpingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { showVolumeInput: showVolumeInputParam, action } = useLocalSearchParams<{ showVolumeInput?: string; action?: string }>();
+  const { showVolumeInput: showVolumeInputParam, action, onboardingPreview } = useLocalSearchParams<{
+    showVolumeInput?: string;
+    action?: string;
+    onboardingPreview?: string;
+  }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
   const isAuthenticated = !!session?.access_token;
@@ -88,8 +93,12 @@ export default function PumpingScreen() {
   }, [getLastSide]);
 
   const handleStartPumping = useCallback(async (side: BreastSide, customStartTime?: Date) => {
-    await startPumping(side, customStartTime);
-  }, [startPumping]);
+    const result = await startPumping(side, customStartTime);
+    if (result.success && onboardingPreview === "firstActivity") {
+      await NewOwnerOnboardingStorageService.completeTimerStarted("pumping");
+      router.replace("/(tabs)");
+    }
+  }, [onboardingPreview, router, startPumping]);
 
   const handleRequestStop = useCallback(() => {
     setShowVolumeInput(true);
@@ -141,8 +150,10 @@ export default function PumpingScreen() {
   }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pausePumping, resumePumping, router]);
 
   const handleLogPastPumping = useCallback(() => {
-    router.push("/pumping/manual");
-  }, [router]);
+    router.push(onboardingPreview === "firstActivity"
+      ? "/pumping/manual?onboardingPreview=firstActivity"
+      : "/pumping/manual");
+  }, [onboardingPreview, router]);
 
   const handleQuickAmountSelect = useCallback((amount: number) => {
     if (unit === "oz") {

@@ -9,6 +9,7 @@ export default function OnboardingLayout() {
         <Stack.Screen name="features" />
         <Stack.Screen name="sync" />
         <Stack.Screen name="baby" />
+        <Stack.Screen name="owner" />
       </Stack>
     </OnboardingProvider>
   );

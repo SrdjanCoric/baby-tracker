@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Pressable, Text, View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
 import { useDiaper } from "@/contexts/diaper-context";
@@ -10,6 +10,7 @@ import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { STOOL_COLORS } from "@/constants/activities";
 import { ACTIVITY, TEXT, SURFACE } from "@/constants/colors";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const DIAPER_ACCENT = ACTIVITY.diaper.accent;
 const DIAPER_ACCENT_DARK = ACTIVITY.diaper.accentDark;
@@ -29,6 +30,7 @@ const STOOL_COLOR_MAP: Record<StoolColor, string> = {
 export default function DiaperScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { selectedBaby } = useBaby();
   const { addDiaper } = useDiaper();
   const { colorScheme } = useColorScheme();
@@ -57,8 +59,10 @@ export default function DiaperScreen() {
   }, []);
 
   const handleLogPastDiaper = useCallback(() => {
-    router.push("/diaper/manual");
-  }, [router]);
+    router.push(onboardingPreview === "firstActivity"
+      ? "/diaper/manual?onboardingPreview=firstActivity"
+      : "/diaper/manual");
+  }, [onboardingPreview, router]);
 
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
@@ -73,12 +77,17 @@ export default function DiaperScreen() {
         stoolColor: selectedType !== "wet" ? selectedColor ?? undefined : undefined,
         changedAt: new Date(),
       });
-      router.back();
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("diaper");
+        router.replace("/onboarding/owner/saved");
+      } else {
+        router.back();
+      }
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, selectedColor, addDiaper, router]);
+  }, [selectedBaby, selectedType, selectedColor, addDiaper, onboardingPreview, router]);
 
   const canSave = selectedType !== null && !isSaving;
 

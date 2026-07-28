@@ -9,6 +9,7 @@ import { formatDuration } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { MilestoneSuggestionModal } from "@/components";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const TUMMY_ORANGE = "#E67E22";
 const TUMMY_ORANGE_MUTED = "#FEF3E2";
@@ -18,7 +19,10 @@ const PAUSED_AMBER = "#D4A017";
 export default function TummyTimeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { action } = useLocalSearchParams<{ action?: string }>();
+  const { action, onboardingPreview } = useLocalSearchParams<{
+    action?: string;
+    onboardingPreview?: string;
+  }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
   const isAuthenticated = !!session?.access_token;
@@ -74,8 +78,12 @@ export default function TummyTimeScreen() {
 
 
   const handleStartTummyTime = useCallback(async (customStartTime?: Date) => {
-    await startTummyTime(customStartTime);
-  }, [startTummyTime]);
+    const result = await startTummyTime(customStartTime);
+    if (result.success && onboardingPreview === "firstActivity") {
+      await NewOwnerOnboardingStorageService.completeTimerStarted("tummyTime");
+      router.replace("/(tabs)");
+    }
+  }, [onboardingPreview, router, startTummyTime]);
 
   const handlePause = useCallback(async () => {
     await pauseTummyTime();
@@ -99,8 +107,10 @@ export default function TummyTimeScreen() {
   }, [resetAlert, stopTummyTime, router]);
 
   const handleLogPastTummyTime = useCallback(() => {
-    router.push("/tummyTime/manual");
-  }, [router]);
+    router.push(onboardingPreview === "firstActivity"
+      ? "/tummyTime/manual?onboardingPreview=firstActivity"
+      : "/tummyTime/manual");
+  }, [onboardingPreview, router]);
 
   const handleGoalSettings = useCallback(() => {
     router.push("/tummyTime/settings");

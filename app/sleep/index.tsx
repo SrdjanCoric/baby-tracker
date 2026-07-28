@@ -14,6 +14,7 @@ import { determineSleepType } from "@/validators/sleep";
 import { SleepMilestoneSuggestionModal, NoBabyScreen } from "@/components";
 import { MorningSleepConfirmation } from "@/components/MorningSleepConfirmation";
 import { useColorScheme } from "nativewind";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_LIGHT = "#A594CF";
@@ -24,7 +25,10 @@ const PAUSED_AMBER = "#D4A017";
 export default function SleepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { action } = useLocalSearchParams<{ action?: string }>();
+  const { action, onboardingPreview } = useLocalSearchParams<{
+    action?: string;
+    onboardingPreview?: string;
+  }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
   const isAuthenticated = !!session?.access_token;
@@ -94,7 +98,11 @@ export default function SleepScreen() {
     const autoType = determineSleepType(timeToCheck, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour);
     const result = await startSleep(autoType, customStartTime);
     console.log("[SleepScreen] startSleep result:", JSON.stringify(result));
-  }, [startSleep, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
+    if (result.success && onboardingPreview === "firstActivity") {
+      await NewOwnerOnboardingStorageService.completeTimerStarted("sleep");
+      router.replace("/(tabs)");
+    }
+  }, [onboardingPreview, router, startSleep, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
 
   const isStoppingRef = useRef(false);
   const handleStopSleep = useCallback(async () => {
@@ -119,8 +127,10 @@ export default function SleepScreen() {
   }, [resumeSleep]);
 
   const handleLogPastSleep = useCallback(() => {
-    router.push("/sleep/manual");
-  }, [router]);
+    router.push(onboardingPreview === "firstActivity"
+      ? "/sleep/manual?onboardingPreview=firstActivity"
+      : "/sleep/manual");
+  }, [onboardingPreview, router]);
 
   const handleSettings = useCallback(() => {
     router.push("/sleep/settings");

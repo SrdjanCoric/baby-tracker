@@ -1,16 +1,18 @@
 import { Platform, NativeModules, Settings } from "react-native";
 import { LaunchArguments } from "react-native-launch-arguments";
+import { canLaunchNewOwnerOnboardingPreview } from "./development-onboarding";
 
 interface E2ELaunchArgs {
   e2eMode?: string | boolean;
   e2eEmail?: string;
   e2ePassword?: string;
+  onboardingPreview?: string | boolean;
 }
 
 function getArgs(): E2ELaunchArgs {
   try {
     const args = LaunchArguments.value<E2ELaunchArgs>();
-    if (args.e2eMode) {
+    if (args.e2eMode || args.onboardingPreview) {
       return args;
     }
   } catch {
@@ -19,12 +21,14 @@ function getArgs(): E2ELaunchArgs {
 
   if (Platform.OS === "ios") {
     try {
-      const allSettings = Settings.get("e2eMode");
-      if (allSettings) {
+      const e2eMode = Settings.get("e2eMode");
+      const onboardingPreview = Settings.get("onboardingPreview");
+      if (e2eMode || onboardingPreview) {
         return {
-          e2eMode: String(allSettings),
+          e2eMode: e2eMode ? String(e2eMode) : undefined,
           e2eEmail: Settings.get("e2eEmail"),
           e2ePassword: Settings.get("e2ePassword"),
+          onboardingPreview: onboardingPreview ? String(onboardingPreview) : undefined,
         };
       }
     } catch {
@@ -33,11 +37,16 @@ function getArgs(): E2ELaunchArgs {
 
     try {
       const { SettingsManager } = NativeModules;
-      if (SettingsManager?.settings?.e2eMode) {
+      if (SettingsManager?.settings?.e2eMode || SettingsManager?.settings?.onboardingPreview) {
         return {
-          e2eMode: String(SettingsManager.settings.e2eMode),
+          e2eMode: SettingsManager.settings.e2eMode
+            ? String(SettingsManager.settings.e2eMode)
+            : undefined,
           e2eEmail: SettingsManager.settings.e2eEmail,
           e2ePassword: SettingsManager.settings.e2ePassword,
+          onboardingPreview: SettingsManager.settings.onboardingPreview
+            ? String(SettingsManager.settings.onboardingPreview)
+            : undefined,
         };
       }
     } catch {
@@ -51,6 +60,10 @@ function getArgs(): E2ELaunchArgs {
 export function isE2EMode(): boolean {
   const args = getArgs();
   return args.e2eMode === "true" || args.e2eMode === true;
+}
+
+export function isNewOwnerOnboardingPreviewEnabled(): boolean {
+  return canLaunchNewOwnerOnboardingPreview(__DEV__, getArgs().onboardingPreview);
 }
 
 export function getE2ECredentials(): { email: string; password: string } | null {

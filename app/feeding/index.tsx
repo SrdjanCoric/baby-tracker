@@ -14,6 +14,7 @@ import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/a
 import { ACTIVITY, TEXT } from "@/constants/colors";
 import { useColorScheme } from "nativewind";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const FEEDING_GREEN = ACTIVITY.feeding.accent;
 const FEEDING_GREEN_LIGHT = ACTIVITY.feeding.accentDark;
@@ -29,7 +30,10 @@ type VolumeUnit = "ml" | "oz";
 export default function FeedingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { action } = useLocalSearchParams<{ action?: string }>();
+  const { action, onboardingPreview } = useLocalSearchParams<{
+    action?: string;
+    onboardingPreview?: string;
+  }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
   const isAuthenticated = !!session?.access_token;
@@ -89,13 +93,29 @@ export default function FeedingScreen() {
   }, []);
 
   const handleLogPast = useCallback(() => {
-    router.push(`/feeding/manual?type=${activeTab === "breast" ? "breastfeed" : activeTab}`);
-  }, [router, activeTab]);
+    const previewParam = onboardingPreview === "firstActivity"
+      ? "&onboardingPreview=firstActivity"
+      : "";
+    router.push(`/feeding/manual?type=${activeTab === "breast" ? "breastfeed" : activeTab}${previewParam}`);
+  }, [router, activeTab, onboardingPreview]);
+
+  const handleActivitySaved = useCallback(async () => {
+    if (onboardingPreview === "firstActivity") {
+      await NewOwnerOnboardingStorageService.markActivitySaved("feeding");
+      router.replace("/onboarding/owner/saved");
+      return;
+    }
+    router.back();
+  }, [onboardingPreview, router]);
 
   // Breastfeeding handlers
   const handleStartBreastfeeding = useCallback(async (side: BreastSide, customStartTime?: Date) => {
-    await startBreastfeeding(side, customStartTime);
-  }, [startBreastfeeding]);
+    const result = await startBreastfeeding(side, customStartTime);
+    if (result.success && onboardingPreview === "firstActivity") {
+      await NewOwnerOnboardingStorageService.completeTimerStarted("feeding");
+      router.replace("/(tabs)");
+    }
+  }, [onboardingPreview, router, startBreastfeeding]);
 
   const isStoppingRef = useRef(false);
   const handleStopBreastfeeding = useCallback(async () => {
@@ -224,7 +244,7 @@ export default function FeedingScreen() {
           selectedBaby={selectedBaby}
           addFeeding={addFeeding}
           onLogPast={handleLogPast}
-          onComplete={() => router.back()}
+          onComplete={handleActivitySaved}
           accentColor={accentColor}
           buttonBgColor={buttonBgColor}
           mutedBg={mutedBg}
@@ -238,7 +258,7 @@ export default function FeedingScreen() {
           addFeeding={addFeeding}
           feedings={feedings}
           onLogPast={handleLogPast}
-          onComplete={() => router.back()}
+          onComplete={handleActivitySaved}
           accentColor={accentColor}
           buttonBgColor={buttonBgColor}
           mutedBg={mutedBg}

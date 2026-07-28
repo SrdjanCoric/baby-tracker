@@ -2022,5 +2022,50 @@
         "7plus": "A testament to your baby's growing brain. Their circadian rhythm is robust, their sleep cycles are maturing toward adult-like patterns, and their natural self-soothing ability has developed beautifully."
       }
     }
+  },
+  "newOwnerOnboarding": {
+    "startOver": "Start over",
+    "welcome": {
+      "title": "Care for your baby with confidence",
+      "promise": "Track feeding, sleep, diapers, and more—on your own or together with family.",
+      "startTracking": "Start tracking",
+      "joinFamily": "Join a family",
+      "signIn": "Sign in",
+      "language": "Language: {{language}}"
+    },
+    "baby": {
+      "requiredHint": "Baby profile",
+      "title": "Tell us about your baby",
+      "subtitle": "This helps keep every activity attached to the right profile.",
+      "name": "Baby's name",
+      "namePlaceholder": "Enter a name",
+      "birthDate": "Birth date",
+      "selectBirthDate": "Select birth date",
+      "gender": "Gender",
+      "male": "Boy",
+      "female": "Girl",
+      "createFailed": "We couldn't create the baby profile. Please try again."
+    },
+    "activity": {
+      "title": "Record a first activity",
+      "subtitle": "You can do this now or start from Home.",
+      "feeding": "Feeding",
+      "sleep": "Sleep",
+      "diaper": "Diaper",
+      "pumping": "Pumping",
+      "growth": "Growth",
+      "tummyTime": "Tummy time",
+      "health": "Health",
+      "milestones": "Milestones",
+      "seeAll": "See all activity types",
+      "notNow": "Not now",
+      "skipRemaining": "Skip remaining setup"
+    },
+    "saved": {
+      "title": "Activity saved",
+      "message": "Your first activity is ready in Timeline.",
+      "viewTimeline": "View or edit in Timeline",
+      "continueHome": "Go to Home"
+    }
   }
 }

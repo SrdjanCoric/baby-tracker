@@ -2022,5 +2022,50 @@
         "7plus": "Ein Beweis für das wachsende Gehirn deines Babys. Sein zirkadianer Rhythmus ist robust, seine Schlafzyklen reifen zu erwachsenenähnlichen Mustern heran, und seine natürliche Selbstberuhigungsfähigkeit hat sich wunderbar entwickelt."
       }
     }
+  },
+  "newOwnerOnboarding": {
+    "startOver": "Neu beginnen",
+    "welcome": {
+      "title": "Kümmere dich mit Zuversicht um dein Baby",
+      "promise": "Erfasse Füttern, Schlaf, Windeln und mehr – allein oder gemeinsam mit deiner Familie.",
+      "startTracking": "Tracking starten",
+      "joinFamily": "Einer Familie beitreten",
+      "signIn": "Anmelden",
+      "language": "Sprache: {{language}}"
+    },
+    "baby": {
+      "requiredHint": "Babyprofil",
+      "title": "Erzähl uns von deinem Baby",
+      "subtitle": "So wird jede Aktivität dem richtigen Profil zugeordnet.",
+      "name": "Name des Babys",
+      "namePlaceholder": "Name eingeben",
+      "birthDate": "Geburtsdatum",
+      "selectBirthDate": "Geburtsdatum auswählen",
+      "gender": "Geschlecht",
+      "male": "Junge",
+      "female": "Mädchen",
+      "createFailed": "Das Babyprofil konnte nicht erstellt werden. Versuch es erneut."
+    },
+    "activity": {
+      "title": "Erste Aktivität erfassen",
+      "subtitle": "Du kannst das jetzt tun oder auf der Startseite beginnen.",
+      "feeding": "Füttern",
+      "sleep": "Schlaf",
+      "diaper": "Windel",
+      "pumping": "Abpumpen",
+      "growth": "Wachstum",
+      "tummyTime": "Bauchlage",
+      "health": "Gesundheit",
+      "milestones": "Meilensteine",
+      "seeAll": "Alle Aktivitätstypen anzeigen",
+      "notNow": "Nicht jetzt",
+      "skipRemaining": "Restliche Einrichtung überspringen"
+    },
+    "saved": {
+      "title": "Aktivität gespeichert",
+      "message": "Deine erste Aktivität ist jetzt in der Zeitleiste verfügbar.",
+      "viewTimeline": "In der Zeitleiste ansehen oder bearbeiten",
+      "continueHome": "Zur Startseite"
+    }
   }
 }

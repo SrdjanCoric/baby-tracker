@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View, ScrollView, Keyboard, Platform, KeyboardAvoidingView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useGrowth } from "@/contexts/growth-context";
@@ -12,6 +12,7 @@ import { validateGrowthMeasurement } from "@/validators/growth";
 import { formatTime as formatTimeUtil } from "@/utils/time";
 import { lbsToKg, inchesToCm } from "@/utils/growth";
 import { isUnderTwoYears } from "@/utils/growth-helpers";
+import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const GROWTH_TEAL = "#009B77";
 const GROWTH_TEAL_MUTED = "#E0F5EF";
@@ -20,6 +21,7 @@ const GROWTH_TEAL_DARK = "#007A5E";
 export default function GrowthScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
   const { selectedBaby } = useBaby();
   const { addMeasurement } = useGrowth();
   const { weightUnit, heightUnit } = useUnits();
@@ -130,12 +132,17 @@ export default function GrowthScreen() {
         headCircumferenceCm,
         notes: notes || undefined,
       });
-      router.back();
+      if (onboardingPreview === "firstActivity") {
+        await NewOwnerOnboardingStorageService.markActivitySaved("growth");
+        router.replace("/onboarding/owner/saved");
+      } else {
+        router.back();
+      }
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, weightValue, heightValue, headCircumferenceValue, notes, weightUnit, heightUnit, measuredAt, addMeasurement, router]);
+  }, [selectedBaby, weightValue, heightValue, headCircumferenceValue, notes, weightUnit, heightUnit, measuredAt, addMeasurement, onboardingPreview, router]);
 
   const hasAnyMeasurement = weightValue !== "" || heightValue !== "" || headCircumferenceValue !== "";
   const canSave = hasAnyMeasurement && !isSaving;
