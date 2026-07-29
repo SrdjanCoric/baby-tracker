@@ -1,16 +1,18 @@
 import { fetchAndSyncHouseholdBabies } from "@/services/baby-sync-service";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { getNewOwnerPreviewDestination } from "@/services/new-owner-onboarding-routing";
 import type { NewOwnerOnboardingState } from "@/types/new-owner-onboarding";
 
 export function getOnboardingAuthCallbackRoute(
   state: NewOwnerOnboardingState
-): "/auth/sign-in?resumeOnboarding=true" | "/(tabs)" {
-  return state.screen === "auth-pending" ||
+): ReturnType<typeof getNewOwnerPreviewDestination>["route"] {
+  if (state.screen === "auth-pending" ||
     state.screen === "join-auth-pending" ||
     state.screen === "returning-auth" ||
-    state.screen === "returning-restoring"
-    ? "/auth/sign-in?resumeOnboarding=true"
-    : "/(tabs)";
+    state.screen === "returning-restoring") {
+    return "/auth/sign-in?resumeOnboarding=true";
+  }
+  return getNewOwnerPreviewDestination(state).route;
 }
 
 export type NewOwnerAuthResumeResult =

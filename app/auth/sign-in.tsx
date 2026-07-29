@@ -73,15 +73,8 @@ export default function SignInScreen() {
     if (hasOnboardingIntent && isReturningUserIntent) {
       try {
         const result = await resumeNewOwnerOnboardingAfterAuth(null);
-        if (result !== "returning-restoration") return;
-        let profile;
-        try {
-          profile = await refreshUserProfile();
-        } catch {
-          router.replace("/onboarding/owner/restore");
-          return;
-        }
-        if (!profile.displayName) {
+        if (result !== "returning-restoration" || !user?.householdId) return;
+        if (!user.displayName) {
           setPostDisplayNameRoute("returning-restoration");
           setShowDisplayNamePrompt(true);
         } else {
@@ -96,9 +89,9 @@ export default function SignInScreen() {
       return;
     }
 
-    const profile = await refreshUserProfile();
     if (hasOnboardingIntent) {
       try {
+        const profile = await refreshUserProfile();
         const result = await resumeNewOwnerOnboardingAfterAuth(profile.householdId);
         if (result === "returning-restoration") {
           if (!profile.displayName) {
@@ -144,12 +137,22 @@ export default function SignInScreen() {
       }
       return;
     }
+
+    const profile = await refreshUserProfile();
     if (!profile.displayName) {
       setShowDisplayNamePrompt(true);
     } else {
       router.back();
     }
-  }, [hasOnboardingIntent, isReturningUserIntent, refreshUserProfile, router, t]);
+  }, [
+    hasOnboardingIntent,
+    isReturningUserIntent,
+    refreshUserProfile,
+    router,
+    t,
+    user?.displayName,
+    user?.householdId,
+  ]);
 
   const handlePostAuth = useCallback((): Promise<void> => {
     if (postAuthPromiseRef.current) return postAuthPromiseRef.current;

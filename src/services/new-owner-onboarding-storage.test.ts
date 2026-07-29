@@ -351,6 +351,26 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
+  it("revalidates a persisted restoration result with a new attempt", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginReturningAuthentication("en");
+    const attempt = await NewOwnerOnboardingStorageService.beginReturningRestoration();
+    await NewOwnerOnboardingStorageService.attachReturningHousehold(attempt, "household-1");
+    await NewOwnerOnboardingStorageService.markReturningVerifiedEmpty(attempt, "household-1");
+
+    await expect(NewOwnerOnboardingStorageService.revalidateReturningRestoration()).resolves.toBe(2);
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "returning-restoring",
+      attempt: 2,
+      householdId: null,
+    });
+  });
+
   it("records the selected baby and ignores stale restoration completion", async () => {
     const storage = new Map<string, string>();
     vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);

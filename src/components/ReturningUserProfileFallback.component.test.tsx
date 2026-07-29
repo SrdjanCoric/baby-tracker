@@ -27,6 +27,7 @@ jest.mock("@/services/new-owner-onboarding-storage", () => ({
     attachReturningHousehold: jest.fn(),
     markReturningUnavailable: jest.fn(),
     retryReturningRestoration: jest.fn(),
+    revalidateReturningRestoration: jest.fn(),
     markReturningSignedOut: jest.fn(),
   },
 }));
@@ -61,6 +62,7 @@ describe("ReturningUserProfileFallback", () => {
     jest.mocked(NewOwnerOnboardingStorageService.attachReturningHousehold).mockResolvedValue(undefined);
     jest.mocked(NewOwnerOnboardingStorageService.markReturningUnavailable).mockResolvedValue(undefined);
     jest.mocked(NewOwnerOnboardingStorageService.retryReturningRestoration).mockResolvedValue(2);
+    jest.mocked(NewOwnerOnboardingStorageService.revalidateReturningRestoration).mockResolvedValue(2);
     jest.mocked(NewOwnerOnboardingStorageService.markReturningSignedOut).mockResolvedValue(undefined);
     mockSignOut.mockResolvedValue({ error: null });
   });
@@ -78,6 +80,30 @@ describe("ReturningUserProfileFallback", () => {
       expect(NewOwnerOnboardingStorageService.beginReturningRestoration).toHaveBeenCalledTimes(1);
       expect(NewOwnerOnboardingStorageService.attachReturningHousehold)
         .toHaveBeenCalledWith(1, "household-1");
+    });
+  });
+
+  it("revalidates a persisted terminal result before reopening the provider tree", async () => {
+    jest.mocked(NewOwnerOnboardingStorageService.getState).mockResolvedValue({
+      version: 2,
+      screen: "returning-verified-empty",
+      language: "en",
+      entryPath: "returning",
+      attempt: 1,
+      householdId: "household-1",
+    });
+    mockRefreshUserProfile.mockResolvedValue({
+      householdId: "household-1",
+      displayName: "Caregiver",
+      isOwner: false,
+    });
+
+    render(<ReturningUserProfileFallback />);
+
+    await waitFor(() => {
+      expect(NewOwnerOnboardingStorageService.revalidateReturningRestoration).toHaveBeenCalledTimes(1);
+      expect(NewOwnerOnboardingStorageService.attachReturningHousehold)
+        .toHaveBeenCalledWith(2, "household-1");
     });
   });
 

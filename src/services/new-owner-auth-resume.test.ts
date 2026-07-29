@@ -40,6 +40,32 @@ describe("resumeNewOwnerOnboardingAfterAuth", () => {
 
     expect(getOnboardingAuthCallbackRoute({
       version: 2,
+      screen: "returning-unavailable",
+      language: "en",
+      entryPath: "returning",
+      attempt: 1,
+      householdId: null,
+      reason: "profile",
+    })).toBe("/onboarding/owner/restore");
+
+    expect(getOnboardingAuthCallbackRoute({
+      version: 2,
+      screen: "returning-verified-empty",
+      language: "en",
+      entryPath: "returning",
+      attempt: 1,
+      householdId: "household-1",
+    })).toBe("/onboarding/owner/restore");
+
+    expect(getOnboardingAuthCallbackRoute({
+      version: 2,
+      screen: "returning-signed-out",
+      language: "en",
+      entryPath: "returning",
+    })).toBe("/onboarding/owner");
+
+    expect(getOnboardingAuthCallbackRoute({
+      version: 2,
       screen: "join-auth-pending",
       language: "en",
       entryPath: "caregiver",

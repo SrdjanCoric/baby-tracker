@@ -90,6 +90,25 @@ describe("restoreReturningUserAccount", () => {
     expect(BabyStorageService.getSelectedBabyId).not.toHaveBeenCalled();
   });
 
+  it("keeps missing auth and household identities unavailable", async () => {
+    const missingAuth = { ...createDependencies(), userId: null };
+    await expect(restoreReturningUserAccount(missingAuth)).resolves.toEqual({
+      status: "unavailable",
+      reason: "auth",
+    });
+
+    const missingHousehold = createDependencies();
+    missingHousehold.refreshUserProfile.mockResolvedValue({
+      householdId: null,
+      displayName: "Caregiver",
+      isOwner: false,
+    });
+    await expect(restoreReturningUserAccount(missingHousehold)).resolves.toEqual({
+      status: "unavailable",
+      reason: "profile",
+    });
+  });
+
   it.each([
     ["profile", "refreshUserProfile"],
     ["household", "refreshHousehold"],
@@ -101,6 +120,23 @@ describe("restoreReturningUserAccount", () => {
     await expect(restoreReturningUserAccount(dependencies)).resolves.toEqual({
       status: "unavailable",
       reason,
+    });
+  });
+
+  it("keeps selected-baby storage failures unavailable", async () => {
+    const readFailure = createDependencies();
+    vi.mocked(BabyStorageService.getSelectedBabyId).mockRejectedValueOnce(new Error("storage"));
+    await expect(restoreReturningUserAccount(readFailure)).resolves.toEqual({
+      status: "unavailable",
+      reason: "selection",
+    });
+
+    const writeFailure = createDependencies();
+    vi.mocked(BabyStorageService.getSelectedBabyId).mockResolvedValueOnce(null);
+    vi.mocked(BabyStorageService.setSelectedBabyId).mockRejectedValueOnce(new Error("storage"));
+    await expect(restoreReturningUserAccount(writeFailure)).resolves.toEqual({
+      status: "unavailable",
+      reason: "selection",
     });
   });
 });

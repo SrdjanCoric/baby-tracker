@@ -403,12 +403,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async (options?: { preserveGuestData?: boolean }) => {
+    const { error } = await supabase.auth.signOut();
+    if (error) return { error };
     await clearAppStorage(options?.preserveGuestData ?? false);
     await clearSyncData();
     await clearWidgetData();
     setStorageUserId(null);
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    return { error: null };
   }, []);
 
   const updateDisplayName = useCallback(async (displayName: string) => {

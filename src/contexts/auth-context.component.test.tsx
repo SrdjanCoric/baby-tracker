@@ -463,6 +463,40 @@ describe("AuthContext", () => {
       expect(mockSignOut).toHaveBeenCalled();
     });
 
+    it("keeps local account data when remote sign out fails", async () => {
+      let signOutFn: (() => Promise<{ error: Error | null }>) | undefined;
+      mockSignOut.mockResolvedValueOnce({ error: new Error("offline") });
+      jest.spyOn(AsyncStorage, "getAllKeys").mockResolvedValue(["@babies:user-1:household-1"]);
+      jest.spyOn(AsyncStorage, "multiRemove").mockResolvedValue(undefined);
+
+      function SignOutTestConsumer() {
+        const auth = useAuth();
+        useEffect(() => {
+          signOutFn = auth.signOut;
+        }, [auth.signOut]);
+        return <View />;
+      }
+
+      render(
+        <AuthProvider>
+          <SignOutTestConsumer />
+        </AuthProvider>
+      );
+      await waitFor(() => expect(signOutFn).toBeDefined());
+      mockSetStorageUserId.mockClear();
+      mockClearSyncData.mockClear();
+
+      let result: { error: Error | null } | undefined;
+      await act(async () => {
+        result = await signOutFn?.();
+      });
+
+      expect(result?.error).toEqual(new Error("offline"));
+      expect(AsyncStorage.multiRemove).not.toHaveBeenCalled();
+      expect(mockClearSyncData).not.toHaveBeenCalled();
+      expect(mockSetStorageUserId).not.toHaveBeenCalledWith(null);
+    });
+
     it("preserves unscoped guest data when switching away from a conflicting account", async () => {
       let signOutFn: ((options?: { preserveGuestData?: boolean }) => Promise<{ error: Error | null }>) | undefined;
       jest.spyOn(AsyncStorage, "getAllKeys").mockResolvedValue([

@@ -147,6 +147,34 @@ describe("ReturningUserRestoreScreen", () => {
     });
   });
 
+  it("retries unavailable data through the current attempt before opening Home", async () => {
+    const retryState = { ...restoringState, attempt: 2 };
+    jest.mocked(NewOwnerOnboardingStorageService.getState)
+      .mockResolvedValueOnce(unavailableState)
+      .mockResolvedValueOnce(retryState)
+      .mockResolvedValueOnce({
+        ...retryState,
+        screen: "returning-restored",
+        householdId: "household-1",
+        babyId: "baby-1",
+      });
+    jest.mocked(restoreReturningUserAccount).mockResolvedValue({
+      status: "restored",
+      householdId: "household-1",
+      babyId: "baby-1",
+    });
+
+    render(<ReturningUserRestoreScreen />);
+    await waitFor(() => expect(screen.getByTestId("returning-retry-button")).toBeTruthy());
+    fireEvent.press(screen.getByTestId("returning-retry-button"));
+
+    await waitFor(() => {
+      expect(NewOwnerOnboardingStorageService.markReturningRestored)
+        .toHaveBeenCalledWith(2, "household-1", "baby-1");
+      expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+    });
+  });
+
   it("invalidates restoration before signing out and returns to Welcome", async () => {
     jest.mocked(NewOwnerOnboardingStorageService.getState).mockResolvedValue(unavailableState);
 

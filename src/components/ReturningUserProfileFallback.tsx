@@ -50,6 +50,9 @@ export function ReturningUserProfileFallback() {
         attempt = await NewOwnerOnboardingStorageService.beginReturningRestoration();
       } else if (current.screen === "returning-restoring") {
         attempt = current.attempt;
+      } else if (current.screen === "returning-verified-empty" ||
+        current.screen === "returning-restored") {
+        attempt = await NewOwnerOnboardingStorageService.revalidateReturningRestoration();
       }
       if (active && attempt !== null) void restoreProfile(attempt);
     };
@@ -112,7 +115,10 @@ export function ReturningUserProfileFallback() {
     );
   }
 
-  if (state?.screen !== "returning-auth" && state?.screen !== "returning-restoring") {
+  if (state?.screen !== "returning-auth" &&
+    state?.screen !== "returning-restoring" &&
+    state?.screen !== "returning-verified-empty" &&
+    state?.screen !== "returning-restored") {
     return null;
   }
 

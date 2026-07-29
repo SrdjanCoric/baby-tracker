@@ -382,6 +382,25 @@ export const NewOwnerOnboardingStorageService = {
     }).then(() => attempt);
   },
 
+  revalidateReturningRestoration(): Promise<number | null> {
+    let attempt: number | null = null;
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current ||
+        (current.screen !== "returning-verified-empty" &&
+          current.screen !== "returning-restored")) return;
+      attempt = current.attempt + 1;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "returning-restoring",
+        language: current.language,
+        entryPath: "returning",
+        attempt,
+        householdId: null,
+      });
+    }).then(() => attempt);
+  },
+
   markReturningVerifiedEmpty(attempt: number, householdId: string): Promise<void> {
     return enqueueMutation(async () => {
       const current = await readStoredState();

@@ -17,12 +17,22 @@ tags:
       id: "new-owner-welcome-screen"
     timeout: 60000
 - tapOn:
-    id: "sign-in-button"
+    point: "50%,90%"
 
 - extendedWaitUntil:
     visible:
       id: "email-input"
     timeout: 10000
+
+- stopApp
+- launchApp:
+    clearState: false
+    arguments:
+      onboardingPreview: "true"
+- extendedWaitUntil:
+    visible:
+      id: "email-input"
+    timeout: 30000
 - tapOn:
     id: "email-input"
 - inputText: "e2e-owner@test.local"
@@ -37,6 +47,9 @@ tags:
     id: "dev-password-input"
 - inputText: "testpassword123"
 - pressKey: Enter
+- tapOn:
+    text: "Not Now"
+    optional: true
 
 - extendedWaitUntil:
     visible:
