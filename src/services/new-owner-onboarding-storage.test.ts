@@ -236,7 +236,7 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
-  it("resumes authenticated accounts without babies at baby setup", async () => {
+  it("resumes authenticated account creation without babies at baby setup", async () => {
     const storage = new Map<string, string>();
     vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
     vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
@@ -254,21 +254,131 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
-  it("completes onboarding when authentication restores an account with babies", async () => {
+  it("persists returning authentication through restoring, unavailable, retry, and sign out", async () => {
     const storage = new Map<string, string>();
     vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
     vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
       storage.set(key, value);
     });
 
-    await NewOwnerOnboardingStorageService.beginOwnerPath("en");
-    await NewOwnerOnboardingStorageService.beginAuthentication("sign-in");
-    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(true);
+    await NewOwnerOnboardingStorageService.beginReturningAuthentication("en");
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "returning-auth",
+      entryPath: "returning",
+      authIntent: "returning-user",
+    });
+
+    const firstAttempt = await NewOwnerOnboardingStorageService.beginReturningRestoration();
+    expect(firstAttempt).toBe(1);
+    await NewOwnerOnboardingStorageService.markReturningUnavailable(firstAttempt, "profile");
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "returning-unavailable",
+      attempt: 1,
+      reason: "profile",
+    });
+
+    const retryAttempt = await NewOwnerOnboardingStorageService.retryReturningRestoration();
+    expect(retryAttempt).toBe(2);
+    await NewOwnerOnboardingStorageService.markReturningSignedOut();
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "returning-signed-out",
+      entryPath: "returning",
+    });
+  });
+
+  it("returns cancelled returning authentication to Welcome", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginReturningAuthentication("fr");
+    await NewOwnerOnboardingStorageService.cancelAuthentication();
 
     await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
-      screen: "completed",
-      entryPath: "authenticated-existing",
-      firstActivity: { status: "existing-account" },
+      screen: "welcome",
+      language: "fr",
+      entryPath: null,
+    });
+  });
+
+  it("does not offer creation transitions from unavailable returning data", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginReturningAuthentication("en");
+    const attempt = await NewOwnerOnboardingStorageService.beginReturningRestoration();
+    await NewOwnerOnboardingStorageService.markReturningUnavailable(attempt, "babies");
+    await NewOwnerOnboardingStorageService.continueReturningWithBaby();
+    await NewOwnerOnboardingStorageService.continueReturningWithFamilyJoin();
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "returning-unavailable",
+      reason: "babies",
+    });
+  });
+
+  it("allows baby setup or family joining only from a verified-empty returning account", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginReturningAuthentication("en");
+    const attempt = await NewOwnerOnboardingStorageService.beginReturningRestoration();
+    await NewOwnerOnboardingStorageService.attachReturningHousehold(attempt, "household-1");
+    await NewOwnerOnboardingStorageService.markReturningVerifiedEmpty(attempt, "household-1");
+
+    await NewOwnerOnboardingStorageService.continueReturningWithBaby();
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "owner-baby",
+      accountMode: "authenticated",
+    });
+
+    await NewOwnerOnboardingStorageService.beginReturningAuthentication("en");
+    const joinAttempt = await NewOwnerOnboardingStorageService.beginReturningRestoration();
+    await NewOwnerOnboardingStorageService.attachReturningHousehold(joinAttempt, "household-1");
+    await NewOwnerOnboardingStorageService.markReturningVerifiedEmpty(joinAttempt, "household-1");
+    await NewOwnerOnboardingStorageService.continueReturningWithFamilyJoin();
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "join-code",
+      entryPath: "caregiver",
+    });
+  });
+
+  it("records the selected baby and ignores stale restoration completion", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+
+    await NewOwnerOnboardingStorageService.beginReturningAuthentication("en");
+    const firstAttempt = await NewOwnerOnboardingStorageService.beginReturningRestoration();
+    await NewOwnerOnboardingStorageService.markReturningUnavailable(firstAttempt, "babies");
+    const currentAttempt = await NewOwnerOnboardingStorageService.retryReturningRestoration();
+    await NewOwnerOnboardingStorageService.attachReturningHousehold(currentAttempt, "household-1");
+
+    await NewOwnerOnboardingStorageService.markReturningRestored(
+      firstAttempt,
+      "household-1",
+      "stale-baby"
+    );
+    await NewOwnerOnboardingStorageService.markReturningRestored(
+      currentAttempt,
+      "household-1",
+      "baby-2"
+    );
+
+    await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
+      screen: "returning-restored",
+      householdId: "household-1",
+      babyId: "baby-2",
     });
     expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
       hasCompleted: true,

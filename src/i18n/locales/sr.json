@@ -2170,6 +2170,16 @@
       "createTitle": "Napravite nalog",
       "createDescription": "Koristite Apple, Google ili email da sačuvate podatke o bebi i pozovete negovatelja."
     },
+    "restoration": {
+      "loadingTitle": "Vraćamo podatke o vašoj porodici",
+      "loadingDescription": "Učitavamo vaš profil, porodicu i bebe pre otvaranja početnog ekrana.",
+      "emptyTitle": "Nema pronađenih beba",
+      "emptyDescription": "Ovaj nalog još nema bebu. Dodajte bebu ili se pridružite postojećoj porodici.",
+      "addBaby": "Dodaj bebu",
+      "joinFamily": "Pridruži se porodici",
+      "unavailableTitle": "Nismo uspeli da učitamo vašu porodicu",
+      "unavailableDescription": "Podaci naloga možda trenutno nisu dostupni. Pokušajte ponovo ili se odjavite; ništa nije promenjeno."
+    },
     "join": {
       "title": "Pridružite se porodici",
       "description": "Unesite kod pozivnice koji ste dobili. Nećemo ga proveriti niti poslati dok se ne prijavite i izaberete Pridruži se porodici.",

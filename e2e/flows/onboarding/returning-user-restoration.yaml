@@ -1,0 +1,47 @@
+appId: com.sofibaby.app
+name: Development Returning User Restoration
+
+tags:
+  - development
+  - onboarding
+  - returning-user
+
+---
+- launchApp:
+    clearState: true
+    arguments:
+      onboardingPreview: "true"
+
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
+- tapOn:
+    id: "sign-in-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "email-input"
+    timeout: 10000
+- tapOn:
+    id: "email-input"
+- inputText: "e2e-owner@test.local"
+- tapOn:
+    id: "dismiss-keyboard"
+- scrollUntilVisible:
+    element:
+      id: "dev-password-input"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "dev-password-input"
+- inputText: "testpassword123"
+- pressKey: Enter
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+- assertVisible: "E2E Baby"
+- assertNotVisible:
+    id: "new-owner-baby-screen"

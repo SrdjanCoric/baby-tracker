@@ -2083,6 +2083,16 @@
       "createTitle": "Crea tu cuenta",
       "createDescription": "Usa Apple, Google o correo electrónico para guardar los datos de tu bebé e invitar a un cuidador."
     },
+    "restoration": {
+      "loadingTitle": "Restaurando tu familia",
+      "loadingDescription": "Estamos cargando tu perfil, tu familia y los bebés antes de abrir Inicio.",
+      "emptyTitle": "No se han encontrado bebés",
+      "emptyDescription": "Esta cuenta todavía no tiene un bebé. Añade uno o únete a una familia existente.",
+      "addBaby": "Añadir un bebé",
+      "joinFamily": "Unirse a una familia",
+      "unavailableTitle": "No hemos podido cargar tu familia",
+      "unavailableDescription": "Es posible que los datos de tu cuenta no estén disponibles temporalmente. Inténtalo de nuevo o cierra sesión; no se ha realizado ningún cambio."
+    },
     "join": {
       "title": "Únete a tu familia",
       "description": "Introduce el código de invitación que te han enviado. No lo comprobaremos ni enviaremos hasta que inicies sesión y elijas Unirme a la familia.",

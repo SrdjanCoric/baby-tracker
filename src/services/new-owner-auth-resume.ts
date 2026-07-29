@@ -5,7 +5,10 @@ import type { NewOwnerOnboardingState } from "@/types/new-owner-onboarding";
 export function getOnboardingAuthCallbackRoute(
   state: NewOwnerOnboardingState
 ): "/auth/sign-in?resumeOnboarding=true" | "/(tabs)" {
-  return state.screen === "auth-pending" || state.screen === "join-auth-pending"
+  return state.screen === "auth-pending" ||
+    state.screen === "join-auth-pending" ||
+    state.screen === "returning-auth" ||
+    state.screen === "returning-restoring"
     ? "/auth/sign-in?resumeOnboarding=true"
     : "/(tabs)";
 }
@@ -15,6 +18,7 @@ export type NewOwnerAuthResumeResult =
   | "profile-pending"
   | "caregiver-confirmation"
   | "caregiver-recovery"
+  | "returning-restoration"
   | "existing-account"
   | "baby-setup";
 
@@ -27,6 +31,13 @@ export async function resumeNewOwnerOnboardingAfterAuth(
     (state.screen === "join-failure" && state.recovery !== "confirmation");
   if (isPostSubmitCaregiverRecovery) {
     return householdId ? "caregiver-recovery" : "profile-pending";
+  }
+  if (state.screen === "returning-auth") {
+    await NewOwnerOnboardingStorageService.beginReturningRestoration();
+    return "returning-restoration";
+  }
+  if (state.screen === "returning-restoring") {
+    return "returning-restoration";
   }
   if (state.screen !== "auth-pending" && state.screen !== "join-auth-pending") {
     return "not-pending";

@@ -58,20 +58,21 @@ describe("SyncAuthGate", () => {
     expect(queryByText("Activity providers ready")).not.toBeNull();
   });
 
-  it("waits for the authenticated user's household before configuring sync", () => {
+  it("waits for the authenticated user's household and renders only the restricted fallback", () => {
     mockIsInitialized = true;
     mockUser = {
       id: "test-user-123",
       householdId: null,
     };
 
-    const { queryByText } = render(
-      <SyncAuthGate>
+    const { queryByText, getByText } = render(
+      <SyncAuthGate blockedFallback={<Text>Restricted restoration</Text>}>
         <Text>Activity providers ready</Text>
       </SyncAuthGate>
     );
 
     expect(queryByText("Activity providers ready")).toBeNull();
+    expect(getByText("Restricted restoration")).toBeTruthy();
     expect(mockSetAuthContext).not.toHaveBeenCalled();
   });
 

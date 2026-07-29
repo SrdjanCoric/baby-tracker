@@ -2079,6 +2079,16 @@
       "createTitle": "Create your account",
       "createDescription": "Use Apple, Google, or email to save your baby data and invite a caregiver."
     },
+    "restoration": {
+      "loadingTitle": "Restoring your family",
+      "loadingDescription": "We're loading your profile, family, and babies before opening Home.",
+      "emptyTitle": "No babies found",
+      "emptyDescription": "This account doesn't have a baby yet. Add one or join an existing family.",
+      "addBaby": "Add a baby",
+      "joinFamily": "Join a family",
+      "unavailableTitle": "We couldn't load your family",
+      "unavailableDescription": "Your account data may be temporarily unavailable. Retry or sign out; no changes have been made."
+    },
     "join": {
       "title": "Join your family",
       "description": "Enter the invitation code shared with you. We won't check or submit it until you sign in and choose Join family.",

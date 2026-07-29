@@ -2079,6 +2079,16 @@
       "createTitle": "Erstelle dein Konto",
       "createDescription": "Nutze Apple, Google oder E-Mail, um die Babydaten zu sichern und eine Betreuungsperson einzuladen."
     },
+    "restoration": {
+      "loadingTitle": "Deine Familie wird wiederhergestellt",
+      "loadingDescription": "Wir laden dein Profil, deine Familie und die Babys, bevor die Startseite geöffnet wird.",
+      "emptyTitle": "Keine Babys gefunden",
+      "emptyDescription": "Dieses Konto hat noch kein Baby. Füge eines hinzu oder tritt einer bestehenden Familie bei.",
+      "addBaby": "Baby hinzufügen",
+      "joinFamily": "Familie beitreten",
+      "unavailableTitle": "Deine Familie konnte nicht geladen werden",
+      "unavailableDescription": "Deine Kontodaten sind möglicherweise vorübergehend nicht verfügbar. Versuche es erneut oder melde dich ab. Es wurden keine Änderungen vorgenommen."
+    },
     "join": {
       "title": "Deiner Familie beitreten",
       "description": "Gib den Einladungscode ein, den du erhalten hast. Wir prüfen oder senden ihn erst, wenn du dich anmeldest und Familie beitreten wählst.",

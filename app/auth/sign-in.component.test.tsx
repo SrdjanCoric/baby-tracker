@@ -103,7 +103,7 @@ describe("SignInScreen onboarding return", () => {
   });
 
   it("keeps pending onboarding unchanged when social authentication is cancelled", async () => {
-    mockSearchParams = { onboardingIntent: "sign-in" };
+    mockSearchParams = { onboardingIntent: "returning-user" };
     mockIsAuthenticated = false;
     mockSignInWithGoogle.mockResolvedValue({ error: null, cancelled: true });
 
@@ -132,6 +132,58 @@ describe("SignInScreen onboarding return", () => {
 
     expect(view.getByText("newOwnerOnboarding.auth.createTitle")).toBeTruthy();
     expect(view.queryByTestId("continue-as-guest-button")).toBeNull();
+  });
+
+  it("requires a missing display name before continuing returning-user restoration", async () => {
+    mockSearchParams = { onboardingIntent: "returning-user" };
+    mockRefreshUserProfile.mockResolvedValue({
+      householdId: "household-1",
+      displayName: null,
+      isOwner: false,
+    });
+    jest.mocked(resumeNewOwnerOnboardingAfterAuth).mockResolvedValue("returning-restoration");
+
+    const view = render(<SignInScreen />);
+    await waitFor(() => expect(view.getByTestId("display-name-prompt")).toBeTruthy());
+    expect(mockReplace).not.toHaveBeenCalledWith("/onboarding/owner/restore");
+
+    fireEvent.press(view.getByTestId("display-name-prompt"));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner/restore"));
+  });
+
+  it("resumes returning restoration from a magic-link callback without a route intent", async () => {
+    mockSearchParams = { resumeOnboarding: "true" };
+    jest.mocked(resumeNewOwnerOnboardingAfterAuth).mockResolvedValue("returning-restoration");
+
+    render(<SignInScreen />);
+
+    await waitFor(() => {
+      expect(resumeNewOwnerOnboardingAfterAuth).toHaveBeenCalled();
+      expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner/restore");
+    });
+  });
+
+  it("serializes repeated returning-user auth completions", async () => {
+    mockSearchParams = { onboardingIntent: "returning-user" };
+    mockIsAuthenticated = false;
+    let resolveProfile: ((profile: { householdId: string; displayName: string; isOwner: boolean }) => void) | undefined;
+    mockRefreshUserProfile.mockImplementation(() => new Promise(resolve => {
+      resolveProfile = resolve;
+    }));
+    jest.mocked(resumeNewOwnerOnboardingAfterAuth).mockResolvedValue("returning-restoration");
+
+    const view = render(<SignInScreen />);
+    fireEvent.press(view.getByTestId("google-signin-button"));
+    fireEvent.press(view.getByTestId("google-signin-button"));
+    await waitFor(() => expect(mockRefreshUserProfile).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      resolveProfile?.({ householdId: "household-1", displayName: "Caregiver", isOwner: false });
+    });
+
+    await waitFor(() => {
+      expect(resumeNewOwnerOnboardingAfterAuth).toHaveBeenCalledTimes(1);
+      expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner/restore");
+    });
   });
 
   it("requires a display name before returning an invited caregiver to code confirmation", async () => {

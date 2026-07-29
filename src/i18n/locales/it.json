@@ -2083,6 +2083,16 @@
       "createTitle": "Crea il tuo account",
       "createDescription": "Usa Apple, Google o email per salvare i dati del bambino e invitare un caregiver."
     },
+    "restoration": {
+      "loadingTitle": "Ripristino della famiglia",
+      "loadingDescription": "Stiamo caricando il profilo, la famiglia e i bambini prima di aprire la Home.",
+      "emptyTitle": "Nessun bambino trovato",
+      "emptyDescription": "Questo account non ha ancora un bambino. Aggiungine uno o unisciti a una famiglia esistente.",
+      "addBaby": "Aggiungi un bambino",
+      "joinFamily": "Unisciti a una famiglia",
+      "unavailableTitle": "Non è stato possibile caricare la famiglia",
+      "unavailableDescription": "I dati dell'account potrebbero essere temporaneamente non disponibili. Riprova o esci; non è stata apportata alcuna modifica."
+    },
     "join": {
       "title": "Unisciti alla tua famiglia",
       "description": "Inserisci il codice di invito che hai ricevuto. Non lo verificheremo né invieremo finché non accedi e scegli Unisciti alla famiglia.",

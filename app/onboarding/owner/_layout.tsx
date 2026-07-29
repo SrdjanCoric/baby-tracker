@@ -5,6 +5,7 @@ export default function NewOwnerOnboardingLayout() {
     <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="account" />
+      <Stack.Screen name="restore" />
       <Stack.Screen name="join" />
       <Stack.Screen name="baby" />
       <Stack.Screen name="invitation" />

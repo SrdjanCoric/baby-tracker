@@ -2082,6 +2082,16 @@
       "createTitle": "Crie sua conta",
       "createDescription": "Use Apple, Google ou email para salvar os dados do bebê e convidar um cuidador."
     },
+    "restoration": {
+      "loadingTitle": "Restaurando sua família",
+      "loadingDescription": "Estamos carregando seu perfil, sua família e os bebês antes de abrir o Início.",
+      "emptyTitle": "Nenhum bebê encontrado",
+      "emptyDescription": "Esta conta ainda não tem um bebê. Adicione um ou entre em uma família existente.",
+      "addBaby": "Adicionar um bebê",
+      "joinFamily": "Entrar em uma família",
+      "unavailableTitle": "Não foi possível carregar sua família",
+      "unavailableDescription": "Os dados da sua conta podem estar temporariamente indisponíveis. Tente novamente ou saia; nenhuma alteração foi feita."
+    },
     "join": {
       "title": "Entre na sua família",
       "description": "Digite o código do convite que você recebeu. Não vamos verificar nem enviar o código até você entrar e escolher Entrar na família.",

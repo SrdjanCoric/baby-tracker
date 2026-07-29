@@ -42,6 +42,7 @@ export default function SignInScreen() {
     resumeOnboarding?: string;
   }>();
   const onboardingIntent = rawOnboardingIntent === "sign-in" ||
+    rawOnboardingIntent === "returning-user" ||
     rawOnboardingIntent === "create-account" ||
     rawOnboardingIntent === "join-family"
     ? rawOnboardingIntent
@@ -58,17 +59,56 @@ export default function SignInScreen() {
   const [isDevLoading, setIsDevLoading] = useState(false);
 
   const [showDisplayNamePrompt, setShowDisplayNamePrompt] = useState(false);
-  const [postDisplayNameRoute, setPostDisplayNameRoute] = useState<"baby-setup" | "caregiver-confirmation" | null>(null);
+  const [postDisplayNameRoute, setPostDisplayNameRoute] = useState<
+    "baby-setup" | "caregiver-confirmation" | "returning-restoration" | null
+  >(null);
   const [resumeAttempt, setResumeAttempt] = useState(0);
   const hasResumedOnboardingRef = useRef(false);
+  const postAuthPromiseRef = useRef<Promise<void> | null>(null);
   const hasOnboardingIntent = Boolean(onboardingIntent || resumeOnboarding === "true");
   const isAccountCreationIntent = onboardingIntent === "create-account";
+  const isReturningUserIntent = onboardingIntent === "returning-user";
 
-  const handlePostAuth = useCallback(async () => {
+  const performPostAuth = useCallback(async () => {
+    if (hasOnboardingIntent && isReturningUserIntent) {
+      try {
+        const result = await resumeNewOwnerOnboardingAfterAuth(null);
+        if (result !== "returning-restoration") return;
+        let profile;
+        try {
+          profile = await refreshUserProfile();
+        } catch {
+          router.replace("/onboarding/owner/restore");
+          return;
+        }
+        if (!profile.displayName) {
+          setPostDisplayNameRoute("returning-restoration");
+          setShowDisplayNamePrompt(true);
+        } else {
+          router.replace("/onboarding/owner/restore");
+        }
+      } catch {
+        hasResumedOnboardingRef.current = false;
+        Alert.alert(t("common.error"), t("auth.profileNotReady"), [
+          { text: t("common.retry"), onPress: () => setResumeAttempt(value => value + 1) },
+        ]);
+      }
+      return;
+    }
+
     const profile = await refreshUserProfile();
     if (hasOnboardingIntent) {
       try {
         const result = await resumeNewOwnerOnboardingAfterAuth(profile.householdId);
+        if (result === "returning-restoration") {
+          if (!profile.displayName) {
+            setPostDisplayNameRoute("returning-restoration");
+            setShowDisplayNamePrompt(true);
+          } else {
+            router.replace("/onboarding/owner/restore");
+          }
+          return;
+        }
         if (result === "existing-account") {
           router.replace("/(tabs)");
           return;
@@ -109,7 +149,18 @@ export default function SignInScreen() {
     } else {
       router.back();
     }
-  }, [hasOnboardingIntent, refreshUserProfile, router, t]);
+  }, [hasOnboardingIntent, isReturningUserIntent, refreshUserProfile, router, t]);
+
+  const handlePostAuth = useCallback((): Promise<void> => {
+    if (postAuthPromiseRef.current) return postAuthPromiseRef.current;
+    const operation = performPostAuth().finally(() => {
+      if (postAuthPromiseRef.current === operation) {
+        postAuthPromiseRef.current = null;
+      }
+    });
+    postAuthPromiseRef.current = operation;
+    return operation;
+  }, [performPostAuth]);
 
   useEffect(() => {
     if (!isAuthenticated || !hasOnboardingIntent || hasResumedOnboardingRef.current) return;
@@ -127,6 +178,11 @@ export default function SignInScreen() {
     if (postDisplayNameRoute === "caregiver-confirmation") {
       setPostDisplayNameRoute(null);
       router.replace("/onboarding/owner/join");
+      return;
+    }
+    if (postDisplayNameRoute === "returning-restoration") {
+      setPostDisplayNameRoute(null);
+      router.replace("/onboarding/owner/restore");
       return;
     }
     router.back();
@@ -179,7 +235,7 @@ export default function SignInScreen() {
     try {
       const { error: magicLinkError } = await signInWithMagicLink(
         validation.normalizedEmail!,
-        { createAccount: onboardingIntent !== "sign-in" }
+        { createAccount: onboardingIntent !== "sign-in" && onboardingIntent !== "returning-user" }
       );
 
       if (magicLinkError) {

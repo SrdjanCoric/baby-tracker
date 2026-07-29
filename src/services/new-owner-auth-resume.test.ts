@@ -13,13 +13,31 @@ vi.mock("./baby-sync-service", () => ({
 vi.mock("./new-owner-onboarding-storage", () => ({
   NewOwnerOnboardingStorageService: {
     getState: vi.fn(),
+    beginReturningRestoration: vi.fn(),
     resumeAuthenticatedAccount: vi.fn(),
     resumeCaregiverAuthentication: vi.fn(),
   },
 }));
 
 describe("resumeNewOwnerOnboardingAfterAuth", () => {
-  it("returns a magic-link caregiver to the persisted auth resume boundary", () => {
+  it("returns magic-link authentication to persisted caregiver and returning boundaries", () => {
+    expect(getOnboardingAuthCallbackRoute({
+      version: 2,
+      screen: "returning-auth",
+      language: "en",
+      entryPath: "returning",
+      authIntent: "returning-user",
+    })).toBe("/auth/sign-in?resumeOnboarding=true");
+
+    expect(getOnboardingAuthCallbackRoute({
+      version: 2,
+      screen: "returning-restoring",
+      language: "en",
+      entryPath: "returning",
+      attempt: 1,
+      householdId: "household-1",
+    })).toBe("/auth/sign-in?resumeOnboarding=true");
+
     expect(getOnboardingAuthCallbackRoute({
       version: 2,
       screen: "join-auth-pending",
@@ -39,7 +57,39 @@ describe("resumeNewOwnerOnboardingAfterAuth", () => {
       entryPath: "owner",
       authIntent: "create-account",
     });
+    vi.mocked(NewOwnerOnboardingStorageService.beginReturningRestoration).mockResolvedValue(1);
     vi.mocked(NewOwnerOnboardingStorageService.resumeAuthenticatedAccount).mockResolvedValue(undefined);
+  });
+
+  it("starts returning-user restoration once without loading babies before providers refresh", async () => {
+    vi.mocked(NewOwnerOnboardingStorageService.getState).mockResolvedValue({
+      version: 2,
+      screen: "returning-auth",
+      language: "en",
+      entryPath: "returning",
+      authIntent: "returning-user",
+    });
+
+    await expect(resumeNewOwnerOnboardingAfterAuth(null)).resolves.toBe("returning-restoration");
+
+    expect(NewOwnerOnboardingStorageService.beginReturningRestoration).toHaveBeenCalledTimes(1);
+    expect(fetchAndSyncHouseholdBabies).not.toHaveBeenCalled();
+  });
+
+  it("resumes an already-started returning restoration idempotently", async () => {
+    vi.mocked(NewOwnerOnboardingStorageService.getState).mockResolvedValue({
+      version: 2,
+      screen: "returning-restoring",
+      language: "en",
+      entryPath: "returning",
+      attempt: 1,
+      householdId: null,
+    });
+
+    await expect(resumeNewOwnerOnboardingAfterAuth(null)).resolves.toBe("returning-restoration");
+
+    expect(NewOwnerOnboardingStorageService.beginReturningRestoration).not.toHaveBeenCalled();
+    expect(fetchAndSyncHouseholdBabies).not.toHaveBeenCalled();
   });
 
   it("returns invited caregivers to explicit code confirmation without loading household babies", async () => {

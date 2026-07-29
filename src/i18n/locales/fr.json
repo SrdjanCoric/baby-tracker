@@ -2079,6 +2079,16 @@
       "createTitle": "Créez votre compte",
       "createDescription": "Utilisez Apple, Google ou votre e-mail pour enregistrer les données du bébé et inviter un proche."
     },
+    "restoration": {
+      "loadingTitle": "Restauration de votre famille",
+      "loadingDescription": "Nous chargeons votre profil, votre famille et les bébés avant d'ouvrir l'accueil.",
+      "emptyTitle": "Aucun bébé trouvé",
+      "emptyDescription": "Ce compte n'a pas encore de bébé. Ajoutez-en un ou rejoignez une famille existante.",
+      "addBaby": "Ajouter un bébé",
+      "joinFamily": "Rejoindre une famille",
+      "unavailableTitle": "Impossible de charger votre famille",
+      "unavailableDescription": "Les données de votre compte sont peut-être temporairement indisponibles. Réessayez ou déconnectez-vous ; aucune modification n'a été effectuée."
+    },
     "join": {
       "title": "Rejoignez votre famille",
       "description": "Saisissez le code d’invitation reçu. Nous ne le vérifierons ni ne l’enverrons avant votre connexion et votre choix de rejoindre la famille.",
