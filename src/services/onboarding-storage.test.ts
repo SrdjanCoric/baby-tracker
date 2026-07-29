@@ -126,6 +126,22 @@ describe("OnboardingStorageService", () => {
     });
   });
 
+  describe("development replay clearing", () => {
+    it("clears the legacy draft without changing completion", async () => {
+      await OnboardingStorageService.clearCurrentStep();
+
+      expect(AsyncStorage.removeItem).toHaveBeenCalledOnce();
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@onboarding_current_step");
+    });
+
+    it("can clear completion as the final replay mutation", async () => {
+      await OnboardingStorageService.resetOnboarding();
+
+      expect(AsyncStorage.removeItem).toHaveBeenCalledOnce();
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@onboarding_status");
+    });
+  });
+
   describe("hasCompletedOnboarding", () => {
     it("should return false if onboarding not completed", async () => {
       vi.mocked(AsyncStorage.getItem).mockResolvedValueOnce(null);

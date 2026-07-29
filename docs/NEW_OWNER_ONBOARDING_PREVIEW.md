@@ -1,16 +1,36 @@
-# New owner onboarding preview
+# Development onboarding tools
 
-The replacement owner and invited-caregiver flows are available only in development builds with the `onboardingPreview=true` launch argument. Production builds ignore the argument and redirect `/onboarding/owner` to the existing onboarding or Home.
+Use one of three modes depending on what you need to test.
 
-## Open the preview
+## Isolated preview
 
-The owner flow checks draft recovery after a language change and restart:
+Open Settings in a development build, then choose **Developer Tools > Preview onboarding**. Select Start tracking, Join a family, or Returning user, followed by the UI state you want to inspect. The preview uses fixed sample data and does not call authentication, Supabase, baby storage, activity storage, preferences, or onboarding storage. Exit closes the preview and returns to Settings without changing the app route.
+
+Use this mode for layout, copy, loading, recoverable-error, cancellation, skip, and completion checks. It cannot prove that providers, persistence, authentication, or Supabase work together.
+
+## Real routing replay
+
+Choose **Developer Tools > Run first-launch routing again** to test the upcoming role-based guard against the account and household already loaded in the development app. The warning must be confirmed before the tool clears these onboarding records:
+
+- `@onboarding_status`
+- `@onboarding_current_step`
+- `@new_owner_onboarding_v2`
+
+The tool preserves authentication, household membership, babies, activities, language, units, time format, theme, and other preferences. A signed-in account enters returning-user restoration; a signed-out app opens the role-based Welcome screen. Work completed after replay uses the real onboarding stores and services, so this mode can create a baby, redeem an invitation, or change onboarding completion.
+
+Choose **Clear unfinished onboarding draft** when you need to remove only a resumable `@new_owner_onboarding_v2` state. Completed and returning-restored states are preserved, along with legacy completion and every non-onboarding record.
+
+## Fresh-state Maestro integration tests
+
+Maestro flows clear the app sandbox and use disposable local Supabase fixtures. Use them to prove restart recovery and integration across real providers, persistence, authentication, and the local database. Do not point these commands at shared or production Supabase.
+
+The owner restart flow checks draft recovery after a language change:
 
 ```bash
 maestro test e2e/flows/onboarding/new-owner-preview-restart.yaml
 ```
 
-The caregiver flow needs a disposable local invitation fixture. It checks code entry before authentication, auth cancellation, restart recovery, explicit redemption, and loading the shared baby before Home:
+The caregiver flow creates a local invitation, checks auth cancellation and restart recovery, redeems the invitation, then loads the shared baby:
 
 ```bash
 npm run test:sql:setup
@@ -18,7 +38,7 @@ npm run e2e:prepare-caregiver-join
 maestro test e2e/flows/onboarding/caregiver-code-join.yaml
 ```
 
-The returning-user flow signs in with a seeded account, restarts while authentication is pending, restores the household and selected baby, and opens Home without owner setup:
+The returning-user flow uses a seeded local account and restores its household and selected baby:
 
 ```bash
 npm run test:sql:setup
@@ -27,13 +47,13 @@ npm run e2e:seed
 maestro test e2e/flows/onboarding/returning-user-restoration.yaml
 ```
 
-To open the installed iOS development build without Maestro, boot a simulator and run:
+The existing Maestro flows still enable the role-based guard with the development launch argument. To launch the same real flow without Maestro, boot an iOS simulator and run:
 
 ```bash
 xcrun simctl launch booted com.sofibaby.app -onboardingPreview true
 ```
 
-Clear the app's local data first when a legacy onboarding record is already complete. The version 2 reader upgrades legacy drafts to account choice and treats legacy completed or skipped records as complete.
+This launch-argument mode uses real storage and services. Clear the simulator app state before using it when a completed onboarding record should not be reused.
 
 ## Persisted state
 
@@ -85,20 +105,25 @@ The account names are in `e2e/config/maestro.yaml`. `e2e-owner@test.local` and `
 
 ## Production isolation
 
-`isNewOwnerOnboardingPreviewEnabled()` requires both `__DEV__` and the launch argument. `AuthGuard` keeps the existing production routing when that check is false. During a preview, the guard restores account choice, pending authentication, returning-user restoration, caregiver join, baby setup, invitation, or first-activity routing from persisted state. Returning accounts open Home only after the profile, household, babies, and selected baby are available. Joined caregivers open Home only after the shared household has at least one loaded and selected baby.
+The Settings section and its preview component return no UI when `__DEV__` is false. There is no developer-tools route in the Expo Router tree. The role-based guard requires a development build plus either the launch argument or the in-memory replay request, so restarting the app clears replay mode. Production builds ignore both paths and keep the existing onboarding guard until the production cutover.
+
+The isolated preview adapters do not import real onboarding providers, and opening the preview does not invoke the storage actions owned by the surrounding developer-tools component. The launch-argument and replay modes use persisted state and can restore account choice, pending authentication, returning-user restoration, caregiver join, baby setup, invitation, or first-activity routing. Returning accounts open Home only after the profile, household, babies, and selected baby are available. Joined caregivers open Home only after the shared household has a loaded and selected baby.
 
 ## Validation
 
 Run the focused checks from the repository root:
 
 ```bash
-npm run test:unit -- src/services/new-owner-onboarding-storage.test.ts src/services/new-owner-auth-resume.test.ts src/services/new-owner-onboarding-routing.test.ts src/services/returning-user-restoration.test.ts src/services/guest-account-migration.test.ts src/services/baby-sync-service.test.ts src/services/activity-sync-lossless.test.ts src/utils/development-onboarding.test.ts src/i18n/new-owner-onboarding-locales.test.ts src/__tests__/security/auth-callback-logging.security.test.ts src/__tests__/security/caregiver-onboarding-security.test.ts
-npm run test:component -- --runInBand app/onboarding/owner app/auth/sign-in.component.test.tsx src/components/ReturningUserProfileFallback.component.test.tsx src/contexts/auth-context.component.test.tsx src/__tests__/returning-user-restoration.integration.test.tsx src/__tests__/sync-auth-setup.integration.test.tsx src/__tests__/activity-provider-baby-binding.integration.test.tsx app/feeding/index.component.test.tsx
+npm run test:unit -- src/services/development-onboarding-preview.test.ts src/services/development-onboarding-tools.test.ts src/services/onboarding-storage.test.ts src/services/new-owner-onboarding-storage.test.ts src/services/new-owner-auth-resume.test.ts src/services/new-owner-onboarding-routing.test.ts src/services/returning-user-restoration.test.ts src/services/guest-account-migration.test.ts src/services/baby-sync-service.test.ts src/services/activity-sync-lossless.test.ts src/utils/development-onboarding.test.ts src/i18n/new-owner-onboarding-locales.test.ts src/__tests__/security/auth-callback-logging.security.test.ts src/__tests__/security/caregiver-onboarding-security.test.ts
+npm run test:component -- --runInBand src/components/settings/DevelopmentOnboardingTools.component.test.tsx app/onboarding/owner app/auth/sign-in.component.test.tsx src/components/ReturningUserProfileFallback.component.test.tsx src/contexts/auth-context.component.test.tsx src/__tests__/returning-user-restoration.integration.test.tsx src/__tests__/sync-auth-setup.integration.test.tsx src/__tests__/activity-provider-baby-binding.integration.test.tsx app/feeding/index.component.test.tsx
 npm run test:sql:setup
 npm run test:sql
 npm run lint
 npm run typecheck
+npm run test:production-gating
 ```
+
+`test:production-gating` runs an iOS production export with `EXPO_NO_DOTENV=1` and fails when the Hermes bundle contains a developer label or test ID.
 
 Run the canonical non-device gate before opening a pull request:
 

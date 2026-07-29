@@ -928,6 +928,16 @@ export const NewOwnerOnboardingStorageService = {
     });
   },
 
+  clearUnfinishedDraft(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen === "completed" || current.screen === "returning-restored") {
+        return;
+      }
+      await AsyncStorage.removeItem(NEW_OWNER_ONBOARDING_KEY);
+    });
+  },
+
   startOver(): Promise<void> {
     return enqueueMutation(() => AsyncStorage.removeItem(NEW_OWNER_ONBOARDING_KEY));
   },

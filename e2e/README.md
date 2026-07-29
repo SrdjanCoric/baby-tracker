@@ -123,6 +123,12 @@ Run orchestration tests without Xcode or Maestro:
 npm run e2e:household-timers:test
 ```
 
+## Onboarding testing modes
+
+Use the Settings preview in a development build for UI checks that must leave storage and services untouched. Use **Run first-launch routing again** when you want the role-based guard to inspect the current development account while preserving its household, babies, activities, and preferences. Both tools are unavailable in production.
+
+Use Maestro when the test needs real providers, restart recovery, authentication, or database behavior. Onboarding Maestro flows clear simulator state and may reset or change disposable local Supabase fixtures. They are not safe for a shared or production project. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](../docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the preserved keys, limits, and focused commands.
+
 ## Existing single-device suites
 
 The existing Maestro suites expect a built app and local fixtures:
