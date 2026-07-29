@@ -126,6 +126,16 @@ describe("OnboardingStorageService", () => {
     });
   });
 
+  describe("clearOnboardingProgress", () => {
+    it("clears only legacy completion and draft state", async () => {
+      await OnboardingStorageService.clearOnboardingProgress();
+
+      expect(AsyncStorage.removeItem).toHaveBeenNthCalledWith(1, "@onboarding_status");
+      expect(AsyncStorage.removeItem).toHaveBeenNthCalledWith(2, "@onboarding_current_step");
+      expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe("hasCompletedOnboarding", () => {
     it("should return false if onboarding not completed", async () => {
       vi.mocked(AsyncStorage.getItem).mockResolvedValueOnce(null);

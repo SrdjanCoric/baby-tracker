@@ -1,8 +1,15 @@
+import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useTheme, useUnits, useTimeFormat, useAuth, useLanguage } from "@/contexts";
+let DevelopmentOnboardingTools: ComponentType | null = null;
+if (__DEV__) {
+  DevelopmentOnboardingTools = require(
+    "@/components/settings/DevelopmentOnboardingTools"
+  ).DevelopmentOnboardingTools;
+}
 
 interface SettingsRowProps {
   icon: string;
@@ -264,6 +271,8 @@ export default function SettingsScreen() {
             </>
           )}
         </SettingsSection>
+
+        {DevelopmentOnboardingTools && <DevelopmentOnboardingTools />}
 
         {/* Bottom spacing */}
         <View className="h-8" />

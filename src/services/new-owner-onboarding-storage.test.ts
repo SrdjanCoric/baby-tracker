@@ -579,7 +579,7 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
-  it("starts over by clearing only the unfinished versioned draft", async () => {
+  it("starts over by clearing the versioned onboarding state", async () => {
     vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
 
     await NewOwnerOnboardingStorageService.startOver();
@@ -587,6 +587,42 @@ describe("NewOwnerOnboardingStorageService", () => {
     expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(1);
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@new_owner_onboarding_v2");
   });
+
+  it("clears an unfinished versioned draft without touching other storage", async () => {
+    vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify({
+      version: 2,
+      screen: "owner-baby",
+      language: "en",
+      entryPath: "owner",
+      accountMode: "guest",
+      babyDraft: { name: "Mila", birthDate: null, gender: null },
+    }));
+
+    await NewOwnerOnboardingStorageService.clearUnfinishedDraft();
+
+    expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(1);
+    expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@new_owner_onboarding_v2");
+  });
+
+  it.each(["completed", "returning-restored"])(
+    "preserves terminal %s onboarding state when clearing a draft",
+    async screen => {
+      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify({
+        version: 2,
+        screen,
+        language: "en",
+        entryPath: screen === "completed" ? "owner" : "returning",
+        babyId: "baby-1",
+        firstActivity: { status: "skipped" },
+        attempt: 1,
+        householdId: "household-1",
+      }));
+
+      await NewOwnerOnboardingStorageService.clearUnfinishedDraft();
+
+      expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+    }
+  );
 
   it("recovers an unfinished version 2 baby draft created before account choice", async () => {
     vi.mocked(AsyncStorage.getItem).mockImplementation(async key => {

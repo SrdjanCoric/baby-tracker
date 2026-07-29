@@ -58,6 +58,11 @@ export const OnboardingStorageService = {
     await AsyncStorage.removeItem(ONBOARDING_STATUS_KEY);
   },
 
+  async clearOnboardingProgress(): Promise<void> {
+    await AsyncStorage.removeItem(ONBOARDING_STATUS_KEY);
+    await AsyncStorage.removeItem(ONBOARDING_CURRENT_STEP_KEY);
+  },
+
   async hasCompletedOnboarding(): Promise<boolean> {
     const status = await this.getOnboardingStatus();
     return status.hasCompleted;

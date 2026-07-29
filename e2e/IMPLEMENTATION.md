@@ -28,7 +28,7 @@ e2e/
 │   ├── setup-baby.yaml        # Baby creation helper
 │   └── navigation.yaml        # Common navigation patterns
 ├── flows/
-│   ├── onboarding/            # 5 tests
+│   ├── onboarding/            # 8 tests
 │   ├── auth/                  # 4 tests
 │   ├── activities/
 │   │   ├── feeding/           # 4 tests
@@ -58,14 +58,19 @@ e2e/
 
 ## Test Coverage
 
-### Onboarding (5 tests)
+### Onboarding (8 tests)
 | Test | Description |
 |------|-------------|
-| welcome.yaml | Verify welcome screen displays correctly |
-| guest-flow.yaml | Complete onboarding as guest user |
-| complete-onboarding.yaml | Full 6-step onboarding flow |
-| skip-onboarding.yaml | Skip optional onboarding steps |
-| baby-validation.yaml | Form validation for baby creation |
+| welcome.yaml | Verify the current production welcome screen |
+| guest-flow.yaml | Complete the current production onboarding as a guest |
+| complete-onboarding.yaml | Complete the current six-step production flow |
+| skip-onboarding.yaml | Skip the optional production steps |
+| baby-validation.yaml | Check baby-profile validation |
+| new-owner-preview-restart.yaml | Recover the role-based owner draft after restart |
+| caregiver-code-join.yaml | Join through a local email-bound invitation |
+| returning-user-restoration.yaml | Restore a seeded local household before Home |
+
+The three role-based flows use the development launch argument, clear app state, and call real providers against local Supabase. They are fresh-state integration tests, not the isolated Settings preview. The Settings replay tool preserves account data but clears onboarding progress before running the development role-based guard.
 
 ### Authentication (4 tests)
 | Test | Description |

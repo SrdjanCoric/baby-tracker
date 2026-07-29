@@ -1,6 +1,9 @@
 import { Platform, NativeModules, Settings } from "react-native";
 import { LaunchArguments } from "react-native-launch-arguments";
-import { canLaunchNewOwnerOnboardingPreview } from "./development-onboarding";
+import {
+  canUseRoleBasedDevelopmentOnboarding,
+  isDevelopmentOnboardingReplayEnabled,
+} from "./development-onboarding";
 
 interface E2ELaunchArgs {
   e2eMode?: string | boolean;
@@ -63,7 +66,11 @@ export function isE2EMode(): boolean {
 }
 
 export function isNewOwnerOnboardingPreviewEnabled(): boolean {
-  return canLaunchNewOwnerOnboardingPreview(__DEV__, getArgs().onboardingPreview);
+  return canUseRoleBasedDevelopmentOnboarding(
+    __DEV__,
+    getArgs().onboardingPreview,
+    isDevelopmentOnboardingReplayEnabled(__DEV__)
+  );
 }
 
 export function getE2ECredentials(): { email: string; password: string } | null {
