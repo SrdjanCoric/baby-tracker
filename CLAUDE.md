@@ -217,6 +217,14 @@ Supports Magic Link, native Google Sign-In, and Apple Sign-In. Auth flow uses Su
 
 ### Maestro E2E Testing Patterns
 
+**Standalone Flow Preflight:**
+Before running a standalone Maestro flow, confirm that the Metro process on port 8081 belongs to
+the current checkout. Reuse it when it does; otherwise stop the stale process, start
+`npx expo start --dev-client --clear`, and wait until `http://127.0.0.1:8081/status` reports
+`packager-status:running`. Give the flow's first screen up to 60 seconds for a cold bundle. When
+tailing logs after Maestro, save and return Maestro's exit code instead of letting `tail` mask a
+failure.
+
 **Keyboard Dismissal:**
 To dismiss the keyboard in Maestro tests, tap on an element with `testID="dismiss-keyboard"` rather than using Maestro's `hideKeyboard` command. Screens that have text inputs should wrap their header in a Pressable that calls `Keyboard.dismiss()`:
 ```tsx
