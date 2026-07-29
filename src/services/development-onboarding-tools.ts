@@ -3,7 +3,8 @@ import { OnboardingStorageService } from "./onboarding-storage";
 import type { LanguageCode } from "./language-storage";
 
 export interface DevelopmentOnboardingToolDependencies {
-  clearLegacyProgress: () => Promise<void>;
+  clearLegacyDraft: () => Promise<void>;
+  clearLegacyCompletion: () => Promise<void>;
   clearVersionedState: () => Promise<void>;
   clearUnfinishedDraft: () => Promise<void>;
   beginReturningAuthentication: (language: LanguageCode) => Promise<void>;
@@ -11,7 +12,8 @@ export interface DevelopmentOnboardingToolDependencies {
 }
 
 const defaultDependencies: DevelopmentOnboardingToolDependencies = {
-  clearLegacyProgress: () => OnboardingStorageService.clearOnboardingProgress(),
+  clearLegacyDraft: () => OnboardingStorageService.clearCurrentStep(),
+  clearLegacyCompletion: () => OnboardingStorageService.resetOnboarding(),
   clearVersionedState: () => NewOwnerOnboardingStorageService.startOver(),
   clearUnfinishedDraft: () => NewOwnerOnboardingStorageService.clearUnfinishedDraft(),
   beginReturningAuthentication: language =>
@@ -29,13 +31,15 @@ export async function runFirstLaunchRoutingAgain(
   options: FirstLaunchReplayOptions,
   dependencies: DevelopmentOnboardingToolDependencies = defaultDependencies
 ): Promise<void> {
-  await dependencies.clearLegacyProgress();
+  await dependencies.clearLegacyDraft();
   await dependencies.clearVersionedState();
 
   if (options.isAuthenticated) {
     await dependencies.beginReturningAuthentication(options.language);
     await dependencies.beginReturningRestoration();
   }
+
+  await dependencies.clearLegacyCompletion();
 }
 
 export function clearUnfinishedOnboardingDraft(

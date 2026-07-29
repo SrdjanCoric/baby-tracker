@@ -18,6 +18,7 @@ jest.mock("expo-router", () => ({
 jest.mock("@/contexts", () => ({
   useAuth: () => ({ isAuthenticated: true }),
   useLanguage: () => ({ language: "en" }),
+  useTheme: () => ({ isDark: false }),
 }));
 
 jest.mock("@/services/development-onboarding-tools", () => ({
@@ -48,19 +49,43 @@ describe("DevelopmentOnboardingTools", () => {
 
     fireEvent.press(screen.getByTestId("preview-onboarding"));
     expect(screen.getByText("Isolated onboarding preview")).toBeTruthy();
-    expect(screen.getAllByText(/sample data/i)).toHaveLength(2);
+    expect(screen.getByText(/sample data/i)).toBeTruthy();
 
-    for (const path of ["start-tracking", "join-family", "returning-user"]) {
+    const expectedTitles = {
+      "start-tracking": {
+        initial: "How would you like to start?",
+        loading: "Creating the baby profile",
+        "recoverable-error": "We couldn't create the baby profile",
+        cancelled: "Account setup cancelled",
+        success: "Baby profile created",
+        skipped: "Remaining setup skipped",
+      },
+      "join-family": {
+        initial: "Join your family",
+        loading: "Joining the family",
+        "recoverable-error": "We couldn't join the family",
+        cancelled: "Joining cancelled",
+        success: "Family restored",
+      },
+      "returning-user": {
+        initial: "Sign in to restore your family",
+        loading: "Restoring your family",
+        "recoverable-error": "We couldn't load your family",
+        cancelled: "Sign-in cancelled",
+        success: "Welcome back",
+      },
+    } as const;
+
+    for (const [path, scenarios] of Object.entries(expectedTitles)) {
       fireEvent.press(screen.getByTestId(`preview-path-${path}`));
-      for (const scenario of ["loading", "recoverable-error", "cancelled", "success"]) {
+      for (const [scenario, title] of Object.entries(scenarios)) {
         fireEvent.press(screen.getByTestId(`preview-scenario-${scenario}`));
-        expect(screen.getByTestId("preview-state-card")).toBeTruthy();
+        expect(screen.getByText(title)).toBeTruthy();
+        expect(screen.getByTestId(`preview-state-${path}-${scenario}`)).toBeTruthy();
+        expect(screen.getByTestId(`preview-scenario-${scenario}`).props.accessibilityState)
+          .toEqual({ selected: true });
       }
     }
-
-    fireEvent.press(screen.getByTestId("preview-path-start-tracking"));
-    fireEvent.press(screen.getByTestId("preview-scenario-skipped"));
-    expect(screen.getByText("Remaining setup skipped")).toBeTruthy();
 
     expect(mockRunFirstLaunchRoutingAgain).not.toHaveBeenCalled();
     expect(mockClearUnfinishedOnboardingDraft).not.toHaveBeenCalled();
@@ -99,8 +124,50 @@ describe("DevelopmentOnboardingTools", () => {
         language: "en",
       });
       expect(mockRouter.dismissAll).toHaveBeenCalled();
-      expect(mockRouter.replace).toHaveBeenCalledWith("/onboarding/owner");
+      expect(mockRouter.replace).toHaveBeenCalledWith("/onboarding/owner/restore");
     });
+  });
+
+  it("prevents another developer action from interleaving with replay", async () => {
+    let finishReplay: (() => void) | undefined;
+    mockRunFirstLaunchRoutingAgain.mockImplementationOnce(() => new Promise(resolve => {
+      finishReplay = resolve;
+    }));
+    const alertSpy = jest.spyOn(Alert, "alert");
+    render(<DevelopmentOnboardingTools />);
+
+    fireEvent.press(screen.getByTestId("replay-first-launch"));
+    const confirm = alertSpy.mock.calls[0][2]?.find(button => button.text === "Run again");
+    void confirm?.onPress?.();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("clear-onboarding-draft").props.accessibilityState)
+        .toEqual({ disabled: true });
+    });
+    fireEvent.press(screen.getByTestId("clear-onboarding-draft"));
+    expect(mockClearUnfinishedOnboardingDraft).not.toHaveBeenCalled();
+
+    finishReplay?.();
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalled());
+  });
+
+  it("does not navigate when replay setup fails", async () => {
+    mockRunFirstLaunchRoutingAgain.mockRejectedValueOnce(new Error("storage failed"));
+    const alertSpy = jest.spyOn(Alert, "alert");
+    render(<DevelopmentOnboardingTools />);
+
+    fireEvent.press(screen.getByTestId("replay-first-launch"));
+    const confirm = alertSpy.mock.calls[0][2]?.find(button => button.text === "Run again");
+    await confirm?.onPress?.();
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Replay failed",
+        "Onboarding state could not be cleared. No routing was changed."
+      );
+    });
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+    expect(mockRouter.dismissAll).not.toHaveBeenCalled();
   });
 
   it("clears only the unfinished draft", async () => {
@@ -112,6 +179,22 @@ describe("DevelopmentOnboardingTools", () => {
       expect(mockClearUnfinishedOnboardingDraft).toHaveBeenCalledTimes(1);
     });
     expect(mockRunFirstLaunchRoutingAgain).not.toHaveBeenCalled();
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+  });
+
+  it("reports draft-clearing failure without navigating", async () => {
+    mockClearUnfinishedOnboardingDraft.mockRejectedValueOnce(new Error("storage failed"));
+    const alertSpy = jest.spyOn(Alert, "alert");
+    render(<DevelopmentOnboardingTools />);
+
+    fireEvent.press(screen.getByTestId("clear-onboarding-draft"));
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Draft not cleared",
+        "The unfinished onboarding draft could not be removed."
+      );
+    });
     expect(mockRouter.replace).not.toHaveBeenCalled();
   });
 

@@ -7,7 +7,8 @@ import {
 
 function createDependencies(): DevelopmentOnboardingToolDependencies {
   return {
-    clearLegacyProgress: vi.fn().mockResolvedValue(undefined),
+    clearLegacyDraft: vi.fn().mockResolvedValue(undefined),
+    clearLegacyCompletion: vi.fn().mockResolvedValue(undefined),
     clearVersionedState: vi.fn().mockResolvedValue(undefined),
     clearUnfinishedDraft: vi.fn().mockResolvedValue(undefined),
     beginReturningAuthentication: vi.fn().mockResolvedValue(undefined),
@@ -24,13 +25,17 @@ describe("development onboarding tools", () => {
       dependencies
     );
 
-    expect(dependencies.clearLegacyProgress).toHaveBeenCalledOnce();
+    expect(dependencies.clearLegacyDraft).toHaveBeenCalledOnce();
     expect(dependencies.clearVersionedState).toHaveBeenCalledOnce();
     expect(dependencies.beginReturningAuthentication).toHaveBeenCalledWith("en");
     expect(dependencies.beginReturningRestoration).toHaveBeenCalledOnce();
+    expect(dependencies.clearLegacyCompletion).toHaveBeenCalledOnce();
     expect(dependencies.clearUnfinishedDraft).not.toHaveBeenCalled();
-    expect(vi.mocked(dependencies.clearVersionedState).mock.invocationCallOrder[0])
-      .toBeLessThan(vi.mocked(dependencies.beginReturningAuthentication).mock.invocationCallOrder[0]);
+    const completionOrder = vi.mocked(dependencies.clearLegacyCompletion).mock.invocationCallOrder[0];
+    expect(vi.mocked(dependencies.clearLegacyDraft).mock.invocationCallOrder[0])
+      .toBeLessThan(completionOrder);
+    expect(vi.mocked(dependencies.beginReturningRestoration).mock.invocationCallOrder[0])
+      .toBeLessThan(completionOrder);
   });
 
   it("replays signed-out first launch at Welcome without creating a draft", async () => {
@@ -41,8 +46,9 @@ describe("development onboarding tools", () => {
       dependencies
     );
 
-    expect(dependencies.clearLegacyProgress).toHaveBeenCalledOnce();
+    expect(dependencies.clearLegacyDraft).toHaveBeenCalledOnce();
     expect(dependencies.clearVersionedState).toHaveBeenCalledOnce();
+    expect(dependencies.clearLegacyCompletion).toHaveBeenCalledOnce();
     expect(dependencies.beginReturningAuthentication).not.toHaveBeenCalled();
     expect(dependencies.beginReturningRestoration).not.toHaveBeenCalled();
   });
@@ -53,9 +59,27 @@ describe("development onboarding tools", () => {
     await clearUnfinishedOnboardingDraft(dependencies);
 
     expect(dependencies.clearUnfinishedDraft).toHaveBeenCalledOnce();
-    expect(dependencies.clearLegacyProgress).not.toHaveBeenCalled();
+    expect(dependencies.clearLegacyDraft).not.toHaveBeenCalled();
+    expect(dependencies.clearLegacyCompletion).not.toHaveBeenCalled();
     expect(dependencies.clearVersionedState).not.toHaveBeenCalled();
     expect(dependencies.beginReturningAuthentication).not.toHaveBeenCalled();
     expect(dependencies.beginReturningRestoration).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "clearLegacyDraft",
+    "clearVersionedState",
+    "beginReturningAuthentication",
+    "beginReturningRestoration",
+  ] as const)("does not clear completion when %s fails", async operation => {
+    const dependencies = createDependencies();
+    vi.mocked(dependencies[operation]).mockRejectedValueOnce(new Error("storage failed"));
+
+    await expect(runFirstLaunchRoutingAgain(
+      { isAuthenticated: true, language: "en" },
+      dependencies
+    )).rejects.toThrow("storage failed");
+
+    expect(dependencies.clearLegacyCompletion).not.toHaveBeenCalled();
   });
 });

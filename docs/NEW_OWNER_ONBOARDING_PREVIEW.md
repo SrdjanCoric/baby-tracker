@@ -120,7 +120,10 @@ npm run test:sql:setup
 npm run test:sql
 npm run lint
 npm run typecheck
+npm run test:production-gating
 ```
+
+`test:production-gating` runs an iOS production export with `EXPO_NO_DOTENV=1` and fails when the Hermes bundle contains a developer label or test ID.
 
 Run the canonical non-device gate before opening a pull request:
 

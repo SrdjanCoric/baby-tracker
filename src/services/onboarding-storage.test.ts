@@ -126,13 +126,19 @@ describe("OnboardingStorageService", () => {
     });
   });
 
-  describe("clearOnboardingProgress", () => {
-    it("clears only legacy completion and draft state", async () => {
-      await OnboardingStorageService.clearOnboardingProgress();
+  describe("development replay clearing", () => {
+    it("clears the legacy draft without changing completion", async () => {
+      await OnboardingStorageService.clearCurrentStep();
 
-      expect(AsyncStorage.removeItem).toHaveBeenNthCalledWith(1, "@onboarding_status");
-      expect(AsyncStorage.removeItem).toHaveBeenNthCalledWith(2, "@onboarding_current_step");
-      expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(2);
+      expect(AsyncStorage.removeItem).toHaveBeenCalledOnce();
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@onboarding_current_step");
+    });
+
+    it("can clear completion as the final replay mutation", async () => {
+      await OnboardingStorageService.resetOnboarding();
+
+      expect(AsyncStorage.removeItem).toHaveBeenCalledOnce();
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@onboarding_status");
     });
   });
 

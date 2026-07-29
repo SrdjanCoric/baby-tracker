@@ -11,11 +11,18 @@ export type DevelopmentOnboardingPreviewScenario =
   | "skipped"
   | "success";
 
+export interface DevelopmentOnboardingPreviewField {
+  label: string;
+  value: string;
+}
+
 export interface DevelopmentOnboardingPreviewModel {
   status: DevelopmentOnboardingPreviewScenario;
   title: string;
   description: string;
   primaryAction: string | null;
+  secondaryAction?: string;
+  fields?: readonly DevelopmentOnboardingPreviewField[];
 }
 
 export interface DevelopmentOnboardingPreviewAdapter {
@@ -48,19 +55,18 @@ function createAdapter(
   };
 }
 
-const sharedInitial = {
-  status: "initial",
-  title: "Choose how to continue",
-  description: "This screen uses sample data. No app data will change.",
-  primaryAction: "Continue",
-} as const;
-
 export const DEVELOPMENT_ONBOARDING_PREVIEW_ADAPTERS: Record<
   DevelopmentOnboardingPreviewPath,
   DevelopmentOnboardingPreviewAdapter
 > = {
   "start-tracking": createAdapter("Start tracking", {
-    initial: sharedInitial,
+    initial: {
+      status: "initial",
+      title: "How would you like to start?",
+      description: "Choose an account or continue on this device before creating the sample baby.",
+      primaryAction: "Continue on this device",
+      secondaryAction: "Sign in or create account",
+    },
     loading: {
       status: "loading",
       title: "Creating the baby profile",
@@ -93,7 +99,13 @@ export const DEVELOPMENT_ONBOARDING_PREVIEW_ADAPTERS: Record<
     },
   }),
   "join-family": createAdapter("Join a family", {
-    initial: sharedInitial,
+    initial: {
+      status: "initial",
+      title: "Join your family",
+      description: "Enter the invitation shared by the family owner, then sign in to confirm.",
+      primaryAction: "Continue",
+      fields: [{ label: "Invitation code", value: "SOFI-2026" }],
+    },
     loading: {
       status: "loading",
       title: "Joining the family",
@@ -105,6 +117,7 @@ export const DEVELOPMENT_ONBOARDING_PREVIEW_ADAPTERS: Record<
       title: "We couldn't join the family",
       description: "The sample invitation was not used. Check the connection and retry.",
       primaryAction: "Try again",
+      secondaryAction: "Cancel",
     },
     cancelled: {
       status: "cancelled",
@@ -120,7 +133,12 @@ export const DEVELOPMENT_ONBOARDING_PREVIEW_ADAPTERS: Record<
     },
   }),
   "returning-user": createAdapter("Returning user", {
-    initial: sharedInitial,
+    initial: {
+      status: "initial",
+      title: "Sign in to restore your family",
+      description: "Use the sample returning account to load its profile, household, and babies.",
+      primaryAction: "Sign in",
+    },
     loading: {
       status: "loading",
       title: "Restoring your family",
@@ -132,6 +150,7 @@ export const DEVELOPMENT_ONBOARDING_PREVIEW_ADAPTERS: Record<
       title: "We couldn't load your family",
       description: "The sample account is unchanged. Retry or cancel safely.",
       primaryAction: "Try again",
+      secondaryAction: "Sign out",
     },
     cancelled: {
       status: "cancelled",
