@@ -173,4 +173,4 @@ Durable decisions that apply across all tasks:
 
 ## Workflow status
 
-Tasks 0001 through 0039 and 0042 are merged. Task 0043 is ready, task 0040 is ready to begin, and task 0041 is dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0039 and 0042 are merged. Task 0040 is in progress, Task 0043 is ready, and Task 0041 is dependency-blocked. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
