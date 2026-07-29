@@ -10,7 +10,7 @@ Make the new role-based onboarding state machine authoritative in production. We
 
 Treat every legacy onboarding record marked completed or skipped as completed so existing installations do not see the redesign after updating. New installations without completion enter the new flow. Signed-in installations restore account data through the returning path. Replace the old numeric-step guard and remove obsolete onboarding screens, pagination, constants, translations, tests, and navigation branches rather than leaving two competing flows.
 
-Replace stale Maestro onboarding flows with final production-route scenarios for guest owner, optional account invitation, code and link joining, returning restoration, skip after baby, app restart, auth cancellation, network failure, destructive join confirmation, legacy upgrade, and all supported locales. Update authoritative README, E2E, deep-link, and onboarding documentation. Analytics, automatic deferred linking through store installation, household-history merging, and legacy profile remediation remain out of scope.
+Replace stale Maestro onboarding flows with final production-route scenarios for guest owner, optional account invitation, manual-code joining, returning restoration, skip after baby, app restart, auth cancellation, network failure, destructive join confirmation, legacy upgrade, and all supported locales. Update authoritative README, E2E, deep-link, and onboarding documentation. Invitation links, analytics, deferred linking through store installation, household-history merging, and legacy profile remediation remain out of scope.
 
 ## Software Repository Guidelines
 
@@ -29,7 +29,7 @@ Replace stale Maestro onboarding flows with final production-route scenarios for
 - [ ] Remove the old feature, preferences, generic sync, pagination, numeric-step, duplicate skip, and auth-bypass implementations after all callers move.
 - [ ] Remove stale translation keys while preserving complete parity for every final string across all nine locale files.
 - [ ] Replace obsolete unit, component, integration, and Maestro assumptions, including the current full-flow test that omits required profile data.
-- [ ] Add final production-route Maestro flows for fresh owner, owner invitation, manual/link join, returning restore, restart, skip, destructive confirmation, and failure recovery on iOS and Android.
+- [ ] Add final production-route Maestro flows for fresh owner, owner invitation, manual-code join, returning restore, restart, skip, destructive confirmation, and failure recovery on iOS and Android.
 - [ ] Prove a completed or skipped legacy installation opens Home after upgrade without seeing onboarding.
 - [ ] Update README and authoritative onboarding, E2E, and deep-link documentation; remove stale plan-era descriptions from active docs.
 - [ ] Run focused validation, lint, typecheck, unit, component, security, integration, and final Maestro checks.
