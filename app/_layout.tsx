@@ -11,9 +11,11 @@ import * as Linking from "expo-linking";
 import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, DashboardConfigProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useNotifications, useWidget } from "@/contexts";
 import { AchievementProvider } from "@/contexts/achievement-context";
 import { SyncAuthGate } from "@/components/SyncAuthGate";
+import { ReturningUserProfileFallback } from "@/components/ReturningUserProfileFallback";
 import { AuthScopeBoundary } from "@/components/AuthScopeBoundary";
 import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { getNewOwnerPreviewDestination } from "@/services/new-owner-onboarding-routing";
 import { LanguageStorageService } from "@/services/language-storage";
 import { isNewOwnerOnboardingPreviewEnabled } from "@/utils/e2e-mode";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
@@ -75,7 +77,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         const previewState = await NewOwnerOnboardingStorageService.getState(language);
         if (!isMountedRef.current) return;
 
-        if (previewState.screen === "completed") {
+        const destination = getNewOwnerPreviewDestination(previewState);
+        if (destination.route === "/(tabs)") {
           if (inOnboardingGroup) router.replace("/(tabs)");
         } else {
           const activitySegments = [
@@ -92,49 +95,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
             previewState.screen === "first-activity" &&
             typeof currentSegment === "string" &&
             activitySegments.includes(currentSegment);
-          const inCaregiverJoin = previewState.screen === "join-code" ||
-            previewState.screen === "join-confirmation" ||
-            previewState.screen === "joining" ||
-            previewState.screen === "join-refresh" ||
-            previewState.screen === "join-failure";
-          const expectedRoute = previewState.screen === "welcome"
-            ? "/onboarding/owner"
-            : previewState.screen === "account-choice"
-              ? "/onboarding/owner/account"
-              : previewState.screen === "auth-pending" || previewState.screen === "join-auth-pending"
-                ? "/auth/sign-in?resumeOnboarding=true"
-                : inCaregiverJoin
-                  ? "/onboarding/owner/join"
-                  : previewState.screen === "owner-baby"
-                  ? "/onboarding/owner/baby"
-                  : previewState.screen === "invitation"
-                    ? "/onboarding/owner/invitation"
-                    : previewState.screen === "activity-saved"
-                      ? "/onboarding/owner/saved"
-                      : "/onboarding/owner/activity";
-          const expectedLeaf = previewState.screen === "welcome"
-            ? undefined
-            : previewState.screen === "account-choice"
-              ? "account"
-              : previewState.screen === "auth-pending" || previewState.screen === "join-auth-pending"
-                ? null
-                : inCaregiverJoin
-                  ? "join"
-                  : previewState.screen === "owner-baby"
-                  ? "baby"
-                  : previewState.screen === "invitation"
-                    ? "invitation"
-                    : previewState.screen === "activity-saved"
-                      ? "saved"
-                      : "activity";
           const onExpectedOwnerRoute =
-            expectedLeaf !== null &&
+            destination.ownerLeaf !== null &&
             inNewOwnerGroup &&
-            (expectedLeaf === undefined
+            (destination.ownerLeaf === undefined
               ? routeSegments[2] === undefined
-              : routeSegments[2] === expectedLeaf);
+              : routeSegments[2] === destination.ownerLeaf);
           if (!inFirstActivityForm && !onExpectedOwnerRoute) {
-            router.replace(expectedRoute);
+            router.replace(destination.route);
           }
         }
       } else if (!hasCompletedOnboarding && !inOnboardingGroup && !inAuthGroup) {
@@ -415,7 +383,7 @@ export default function RootLayout() {
           <AuthGuard>
             <SyncProvider>
               <HouseholdProvider>
-                <SyncAuthGate>
+                <SyncAuthGate blockedFallback={<ReturningUserProfileFallback />}>
                 <UnitProvider>
                 <TimeFormatProvider>
                 <DashboardConfigProvider>

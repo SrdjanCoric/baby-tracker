@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useSync } from "@/contexts/sync-context";
 
-export function SyncAuthGate({ children }: { children: ReactNode }) {
+export function SyncAuthGate({
+  children,
+  blockedFallback = null,
+}: {
+  children: ReactNode;
+  blockedFallback?: ReactNode;
+}) {
   const { user } = useAuth();
   const { clearAuthContext, isInitialized, setAuthContext } = useSync();
   const identity = useMemo(() => {
@@ -29,7 +35,7 @@ export function SyncAuthGate({ children }: { children: ReactNode }) {
   }, [clearAuthContext, configuredIdentityKey, identity, setAuthContext, user]);
 
   if (user && (!identity || !isInitialized || configuredIdentityKey !== identity.key)) {
-    return null;
+    return <>{blockedFallback}</>;
   }
 
   if (!user && configuredIdentityKey !== null) {

@@ -18,6 +18,13 @@ export interface NewOwnerWelcomeState {
 
 export type OnboardingAuthIntent = "sign-in" | "create-account";
 
+export type ReturningRestorationFailureReason =
+  | "auth"
+  | "profile"
+  | "household"
+  | "babies"
+  | "selection";
+
 export type CaregiverCodeValidationReason =
   | "inviteCodeRequired"
   | "inviteCodeLength"
@@ -69,6 +76,47 @@ export interface CaregiverJoinFailureState extends CaregiverJoinStateBase {
   recovery: "confirmation" | "refresh" | "reconcile";
   reason: CaregiverJoinFailureReason;
   householdId: string;
+}
+
+interface ReturningUserStateBase {
+  version: typeof NEW_OWNER_ONBOARDING_VERSION;
+  language: LanguageCode;
+  entryPath: "returning";
+}
+
+export interface ReturningUserAuthState extends ReturningUserStateBase {
+  screen: "returning-auth";
+  authIntent: "returning-user";
+}
+
+export interface ReturningUserRestoringState extends ReturningUserStateBase {
+  screen: "returning-restoring";
+  attempt: number;
+  householdId: string | null;
+}
+
+export interface ReturningUserRestoredState extends ReturningUserStateBase {
+  screen: "returning-restored";
+  attempt: number;
+  householdId: string;
+  babyId: string;
+}
+
+export interface ReturningUserVerifiedEmptyState extends ReturningUserStateBase {
+  screen: "returning-verified-empty";
+  attempt: number;
+  householdId: string;
+}
+
+export interface ReturningUserUnavailableState extends ReturningUserStateBase {
+  screen: "returning-unavailable";
+  attempt: number;
+  householdId: string | null;
+  reason: ReturningRestorationFailureReason;
+}
+
+export interface ReturningUserSignedOutState extends ReturningUserStateBase {
+  screen: "returning-signed-out";
 }
 
 export interface NewOwnerAccountChoiceState {
@@ -151,6 +199,12 @@ export type FirstActivityType =
 
 export type NewOwnerOnboardingState =
   | NewOwnerWelcomeState
+  | ReturningUserAuthState
+  | ReturningUserRestoringState
+  | ReturningUserRestoredState
+  | ReturningUserVerifiedEmptyState
+  | ReturningUserUnavailableState
+  | ReturningUserSignedOutState
   | CaregiverJoinCodeState
   | CaregiverJoinAuthPendingState
   | CaregiverJoinConfirmationState

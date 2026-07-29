@@ -62,7 +62,7 @@ Household owners enter a caregiver's account email in Settings, then copy or sha
 
 ### New owner onboarding preview
 
-Development builds have a resumable role-based flow behind the `onboardingPreview=true` launch argument. New owners choose an account mode before creating a baby. Continue on this device creates a local baby and proceeds to the first activity without an invitation prompt. Authenticated owners can create an optional caregiver invitation. Invited caregivers keep their normalized code through authentication and recover unknown redemption outcomes by checking household membership before retrying. Existing accounts with babies open the app. Later guest authentication retains local data until the account copy is acknowledged; differing account data requires the caregiver to choose which copy to keep. Production builds continue to use the existing onboarding. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the state schema and validation commands.
+Development builds have a resumable role-based flow behind the `onboardingPreview=true` launch argument. New owners choose an account mode before creating a baby. Continue on this device creates a local baby and proceeds to the first activity without an invitation prompt. Authenticated owners can create an optional caregiver invitation. Invited caregivers keep their normalized code through authentication and recover unknown redemption outcomes by checking household membership before retrying. Sign in from Welcome refreshes the returning caregiver's profile, household, babies, and saved baby selection before Home opens. A confirmed empty account can add a baby or join a family; failed or ambiguous refreshes offer only Retry and Sign out. Later guest authentication retains local data until the account copy is acknowledged; differing account data requires the caregiver to choose which copy to keep. Production builds continue to use the existing onboarding. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the state schema and validation commands.
 
 ### Timer Exclusivity
 
@@ -132,7 +132,7 @@ npx expo prebuild --platform android --clean && npx expo run:android
 npm run check                # Complete local non-device gate before production release
 npm run check:code           # The same validation without local database checks
 npm run audit:dependencies   # Fail on unapproved high or critical advisories
-npm run test:unit            # 2,200+ Vitest unit tests
+npm run test:unit            # 2,400+ Vitest unit tests
 npm run test:component -- --runInBand # Jest component tests
 npm run test:security        # Security tests
 npm run test:sync            # Sync tests
@@ -148,6 +148,7 @@ maestro test e2e/flows/onboarding/new-owner-preview-restart.yaml # Development o
 npm run e2e:prepare-caregiver-join
 npm run e2e:start-caregiver-join # Start local-Supabase Metro in another terminal
 maestro test e2e/flows/onboarding/caregiver-code-join.yaml # Development caregiver join
+maestro test e2e/flows/onboarding/returning-user-restoration.yaml # Development returning-user restoration
 ```
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.

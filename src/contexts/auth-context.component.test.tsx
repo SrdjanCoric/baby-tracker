@@ -2,7 +2,7 @@ jest.unmock("@/contexts/auth-context");
 
 import React, { useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { render, screen, waitFor, act } from "@testing-library/react-native";
+import { render, screen, waitFor, act, fireEvent } from "@testing-library/react-native";
 import { Text, View } from "react-native";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 
@@ -41,6 +41,7 @@ const mockGetSession = jest
   .mockResolvedValue({ data: { session: null }, error: null });
 const mockSetSession = jest.fn();
 const mockGetUser = jest.fn();
+const mockProfileSingle = jest.fn();
 
 jest.mock("@/services/supabase", () => ({
   supabase: {
@@ -68,7 +69,7 @@ jest.mock("@/services/supabase", () => ({
     from: jest.fn().mockReturnValue({
       select: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null }),
+      single: () => mockProfileSingle(),
       update: jest.fn().mockReturnThis(),
     }),
   },
@@ -142,6 +143,17 @@ function TestConsumer({ testID }: { testID: string }) {
       </Text>
       <Text testID="user-email">{auth.user?.email || "no-user"}</Text>
       <Text testID="user-id">{auth.user?.id || "no-id"}</Text>
+      <Text
+        testID="refresh-profile"
+        onPress={() => {
+          void auth.refreshUserProfile().then(
+            () => AsyncStorage.setItem("profile-result", "available"),
+            () => AsyncStorage.setItem("profile-result", "unavailable")
+          );
+        }}
+      >
+        Refresh profile
+      </Text>
     </View>
   );
 }
@@ -151,6 +163,10 @@ describe("AuthContext", () => {
     jest.clearAllMocks();
     authStateCallback = null;
     mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+    mockProfileSingle.mockResolvedValue({
+      data: { household_id: "household-1", display_name: "Caregiver", is_owner: true },
+      error: null,
+    });
   });
 
   describe("useAuth hook", () => {
@@ -251,6 +267,31 @@ describe("AuthContext", () => {
       });
 
       expect(mockSetStorageUserId).toHaveBeenCalledWith("test-user-id");
+    });
+  });
+
+  describe("profile refresh", () => {
+    it("rejects an unavailable profile instead of returning empty account fields", async () => {
+      mockGetSession.mockResolvedValueOnce({ data: { session: mockSession }, error: null });
+      mockProfileSingle
+        .mockResolvedValueOnce({
+          data: { household_id: "household-1", display_name: "Caregiver", is_owner: true },
+          error: null,
+        })
+        .mockResolvedValueOnce({ data: null, error: new Error("offline") });
+
+      render(
+        <AuthProvider>
+          <TestConsumer testID="test" />
+        </AuthProvider>
+      );
+      await waitFor(() => expect(screen.getByTestId("loading").props.children).toBe("ready"));
+
+      fireEvent.press(screen.getByTestId("refresh-profile"));
+
+      await waitFor(() => {
+        expect(AsyncStorage.setItem).toHaveBeenCalledWith("profile-result", "unavailable");
+      });
     });
   });
 
@@ -420,6 +461,40 @@ describe("AuthContext", () => {
       });
 
       expect(mockSignOut).toHaveBeenCalled();
+    });
+
+    it("keeps local account data when remote sign out fails", async () => {
+      let signOutFn: (() => Promise<{ error: Error | null }>) | undefined;
+      mockSignOut.mockResolvedValueOnce({ error: new Error("offline") });
+      jest.spyOn(AsyncStorage, "getAllKeys").mockResolvedValue(["@babies:user-1:household-1"]);
+      jest.spyOn(AsyncStorage, "multiRemove").mockResolvedValue(undefined);
+
+      function SignOutTestConsumer() {
+        const auth = useAuth();
+        useEffect(() => {
+          signOutFn = auth.signOut;
+        }, [auth.signOut]);
+        return <View />;
+      }
+
+      render(
+        <AuthProvider>
+          <SignOutTestConsumer />
+        </AuthProvider>
+      );
+      await waitFor(() => expect(signOutFn).toBeDefined());
+      mockSetStorageUserId.mockClear();
+      mockClearSyncData.mockClear();
+
+      let result: { error: Error | null } | undefined;
+      await act(async () => {
+        result = await signOutFn?.();
+      });
+
+      expect(result?.error).toEqual(new Error("offline"));
+      expect(AsyncStorage.multiRemove).not.toHaveBeenCalled();
+      expect(mockClearSyncData).not.toHaveBeenCalled();
+      expect(mockSetStorageUserId).not.toHaveBeenCalledWith(null);
     });
 
     it("preserves unscoped guest data when switching away from a conflicting account", async () => {

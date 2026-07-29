@@ -47,9 +47,8 @@ export default function NewOwnerWelcomeScreen() {
   }, [language, router]);
 
   const handleSignIn = useCallback(async () => {
-    await NewOwnerOnboardingStorageService.beginOwnerPath(language);
-    await NewOwnerOnboardingStorageService.beginAuthentication("sign-in");
-    router.push("/auth/sign-in?onboardingIntent=sign-in");
+    await NewOwnerOnboardingStorageService.beginReturningAuthentication(language);
+    router.push("/auth/sign-in?onboardingIntent=returning-user");
   }, [language, router]);
 
   return (

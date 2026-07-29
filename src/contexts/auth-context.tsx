@@ -115,7 +115,10 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function fetchUserProfile(userId: string): Promise<{ householdId: string | null; displayName: string | null; isOwner: boolean }> {
+async function fetchUserProfile(
+  userId: string,
+  requireAvailable = false
+): Promise<{ householdId: string | null; displayName: string | null; isOwner: boolean }> {
   const { data, error } = await supabase
     .from("users")
     .select("household_id, display_name, is_owner")
@@ -123,6 +126,7 @@ async function fetchUserProfile(userId: string): Promise<{ householdId: string |
     .single();
 
   if (error || !data) {
+    if (requireAvailable) throw new Error("User profile is unavailable");
     return { householdId: null, displayName: null, isOwner: false };
   }
 
@@ -399,12 +403,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async (options?: { preserveGuestData?: boolean }) => {
+    const { error } = await supabase.auth.signOut();
+    if (error) return { error };
     await clearAppStorage(options?.preserveGuestData ?? false);
     await clearSyncData();
     await clearWidgetData();
     setStorageUserId(null);
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    return { error: null };
   }, []);
 
   const updateDisplayName = useCallback(async (displayName: string) => {
@@ -456,7 +461,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (!userId) return { displayName: null, householdId: null, isOwner: false };
 
-    const profile = await fetchUserProfile(userId);
+    const profile = await fetchUserProfile(userId, true);
     setUser(prev => prev ? { ...prev, ...profile } : prev);
     return profile;
   }, [user?.id]);

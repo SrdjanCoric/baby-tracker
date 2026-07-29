@@ -1,13 +1,18 @@
 import { fetchAndSyncHouseholdBabies } from "@/services/baby-sync-service";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { getNewOwnerPreviewDestination } from "@/services/new-owner-onboarding-routing";
 import type { NewOwnerOnboardingState } from "@/types/new-owner-onboarding";
 
 export function getOnboardingAuthCallbackRoute(
   state: NewOwnerOnboardingState
-): "/auth/sign-in?resumeOnboarding=true" | "/(tabs)" {
-  return state.screen === "auth-pending" || state.screen === "join-auth-pending"
-    ? "/auth/sign-in?resumeOnboarding=true"
-    : "/(tabs)";
+): ReturnType<typeof getNewOwnerPreviewDestination>["route"] {
+  if (state.screen === "auth-pending" ||
+    state.screen === "join-auth-pending" ||
+    state.screen === "returning-auth" ||
+    state.screen === "returning-restoring") {
+    return "/auth/sign-in?resumeOnboarding=true";
+  }
+  return getNewOwnerPreviewDestination(state).route;
 }
 
 export type NewOwnerAuthResumeResult =
@@ -15,6 +20,7 @@ export type NewOwnerAuthResumeResult =
   | "profile-pending"
   | "caregiver-confirmation"
   | "caregiver-recovery"
+  | "returning-restoration"
   | "existing-account"
   | "baby-setup";
 
@@ -27,6 +33,13 @@ export async function resumeNewOwnerOnboardingAfterAuth(
     (state.screen === "join-failure" && state.recovery !== "confirmation");
   if (isPostSubmitCaregiverRecovery) {
     return householdId ? "caregiver-recovery" : "profile-pending";
+  }
+  if (state.screen === "returning-auth") {
+    await NewOwnerOnboardingStorageService.beginReturningRestoration();
+    return "returning-restoration";
+  }
+  if (state.screen === "returning-restoring") {
+    return "returning-restoration";
   }
   if (state.screen !== "auth-pending" && state.screen !== "join-auth-pending") {
     return "not-pending";

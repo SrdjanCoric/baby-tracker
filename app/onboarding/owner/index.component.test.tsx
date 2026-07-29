@@ -6,6 +6,7 @@ const mockPush = jest.fn();
 const mockSetLanguage = jest.fn();
 const mockBeginOwnerPath = jest.fn();
 const mockBeginCaregiverPath = jest.fn();
+const mockBeginReturningAuthentication = jest.fn();
 const mockBeginAuthentication = jest.fn();
 const mockUpdateLanguage = jest.fn();
 
@@ -25,6 +26,7 @@ jest.mock("@/services/new-owner-onboarding-storage", () => ({
   NewOwnerOnboardingStorageService: {
     beginOwnerPath: (...args: unknown[]) => mockBeginOwnerPath(...args),
     beginCaregiverPath: (...args: unknown[]) => mockBeginCaregiverPath(...args),
+    beginReturningAuthentication: (...args: unknown[]) => mockBeginReturningAuthentication(...args),
     beginAuthentication: (...args: unknown[]) => mockBeginAuthentication(...args),
     updateLanguage: (...args: unknown[]) => mockUpdateLanguage(...args),
   },
@@ -51,6 +53,7 @@ describe("NewOwnerWelcomeScreen", () => {
     mockSetLanguage.mockResolvedValue(undefined);
     mockBeginOwnerPath.mockResolvedValue(undefined);
     mockBeginCaregiverPath.mockResolvedValue(undefined);
+    mockBeginReturningAuthentication.mockResolvedValue(undefined);
     mockBeginAuthentication.mockResolvedValue(undefined);
     mockUpdateLanguage.mockResolvedValue(undefined);
   });
@@ -89,9 +92,10 @@ describe("NewOwnerWelcomeScreen", () => {
     fireEvent.press(screen.getByTestId("sign-in-button"));
 
     await waitFor(() => {
-      expect(mockBeginOwnerPath).toHaveBeenCalledWith("en");
-      expect(mockBeginAuthentication).toHaveBeenCalledWith("sign-in");
-      expect(mockPush).toHaveBeenCalledWith("/auth/sign-in?onboardingIntent=sign-in");
+      expect(mockBeginReturningAuthentication).toHaveBeenCalledWith("en");
+      expect(mockBeginOwnerPath).not.toHaveBeenCalled();
+      expect(mockBeginAuthentication).not.toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith("/auth/sign-in?onboardingIntent=returning-user");
     });
   });
 

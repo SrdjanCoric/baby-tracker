@@ -9,6 +9,7 @@ import {
   type FirstActivityType,
   type NewOwnerOnboardingState,
   type OnboardingAuthIntent,
+  type ReturningRestorationFailureReason,
 } from "@/types/new-owner-onboarding";
 import { normalizeInviteCode, validateInviteCode } from "@/utils/inviteCode";
 
@@ -100,6 +101,42 @@ function isStoredState(value: unknown): value is NewOwnerOnboardingState {
 
   if (state.screen === "welcome") {
     return state.entryPath === null && isBabyDraft(state.babyDraft);
+  }
+  if (state.screen === "returning-auth") {
+    return state.entryPath === "returning" && state.authIntent === "returning-user";
+  }
+  if (state.screen === "returning-restoring") {
+    return state.entryPath === "returning" &&
+      Number.isInteger(state.attempt) &&
+      Number(state.attempt) > 0 &&
+      (state.householdId === null || typeof state.householdId === "string");
+  }
+  if (state.screen === "returning-restored") {
+    return state.entryPath === "returning" &&
+      Number.isInteger(state.attempt) &&
+      Number(state.attempt) > 0 &&
+      typeof state.householdId === "string" &&
+      typeof state.babyId === "string";
+  }
+  if (state.screen === "returning-verified-empty") {
+    return state.entryPath === "returning" &&
+      Number.isInteger(state.attempt) &&
+      Number(state.attempt) > 0 &&
+      typeof state.householdId === "string";
+  }
+  if (state.screen === "returning-unavailable") {
+    return state.entryPath === "returning" &&
+      Number.isInteger(state.attempt) &&
+      Number(state.attempt) > 0 &&
+      (state.householdId === null || typeof state.householdId === "string") &&
+      (state.reason === "auth" ||
+        state.reason === "profile" ||
+        state.reason === "household" ||
+        state.reason === "babies" ||
+        state.reason === "selection");
+  }
+  if (state.screen === "returning-signed-out") {
+    return state.entryPath === "returning";
   }
   if (state.screen === "join-code") {
     return state.entryPath === "caregiver" && isValidPendingCode(state.pendingCode, true);
@@ -250,7 +287,9 @@ export const NewOwnerOnboardingStorageService = {
       readStoredState(),
       OnboardingStorageService.getOnboardingStatus(),
     ]);
-    if (storedState?.screen === "completed") return storedState;
+    if (storedState?.screen === "completed" || storedState?.screen === "returning-restored") {
+      return storedState;
+    }
     if (legacyStatus.hasCompleted || legacyStatus.skipped) {
       return {
         version: NEW_OWNER_ONBOARDING_VERSION,
@@ -268,6 +307,175 @@ export const NewOwnerOnboardingStorageService = {
     return enqueueMutation(async () => {
       const current = await readStoredState();
       await persistState(current ? { ...current, language } : createInitialState(language));
+    });
+  },
+
+  beginReturningAuthentication(language: LanguageCode): Promise<void> {
+    return enqueueMutation(() => persistState({
+      version: NEW_OWNER_ONBOARDING_VERSION,
+      screen: "returning-auth",
+      language,
+      entryPath: "returning",
+      authIntent: "returning-user",
+    }));
+  },
+
+  beginReturningRestoration(): Promise<number | null> {
+    let attempt: number | null = null;
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current) return;
+      if (current.screen === "returning-restoring") {
+        attempt = current.attempt;
+        return;
+      }
+      if (current.screen !== "returning-auth") return;
+      attempt = 1;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "returning-restoring",
+        language: current.language,
+        entryPath: "returning",
+        attempt,
+        householdId: null,
+      });
+    }).then(() => attempt);
+  },
+
+  attachReturningHousehold(attempt: number, householdId: string): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "returning-restoring" || current.attempt !== attempt) return;
+      await persistState({ ...current, householdId });
+    });
+  },
+
+  markReturningUnavailable(
+    attempt: number,
+    reason: ReturningRestorationFailureReason
+  ): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "returning-restoring" || current.attempt !== attempt) return;
+      await persistState({
+        ...current,
+        screen: "returning-unavailable",
+        reason,
+      });
+    });
+  },
+
+  retryReturningRestoration(): Promise<number | null> {
+    let attempt: number | null = null;
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "returning-unavailable") return;
+      attempt = current.attempt + 1;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "returning-restoring",
+        language: current.language,
+        entryPath: "returning",
+        attempt,
+        householdId: null,
+      });
+    }).then(() => attempt);
+  },
+
+  revalidateReturningRestoration(): Promise<number | null> {
+    let attempt: number | null = null;
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current ||
+        (current.screen !== "returning-verified-empty" &&
+          current.screen !== "returning-restored")) return;
+      attempt = current.attempt + 1;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "returning-restoring",
+        language: current.language,
+        entryPath: "returning",
+        attempt,
+        householdId: null,
+      });
+    }).then(() => attempt);
+  },
+
+  markReturningVerifiedEmpty(attempt: number, householdId: string): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current ||
+        current.screen !== "returning-restoring" ||
+        current.attempt !== attempt ||
+        current.householdId !== householdId) return;
+      await persistState({
+        ...current,
+        screen: "returning-verified-empty",
+        householdId,
+      });
+    });
+  },
+
+  markReturningRestored(
+    attempt: number,
+    householdId: string,
+    babyId: string
+  ): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current ||
+        current.screen !== "returning-restoring" ||
+        current.attempt !== attempt ||
+        current.householdId !== householdId) return;
+      await persistState({
+        ...current,
+        screen: "returning-restored",
+        householdId,
+        babyId,
+      });
+      await OnboardingStorageService.markOnboardingComplete(false);
+    });
+  },
+
+  continueReturningWithBaby(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "returning-verified-empty") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "owner-baby",
+        language: current.language,
+        entryPath: "owner",
+        accountMode: "authenticated",
+        babyDraft: createEmptyDraft(),
+      });
+    });
+  },
+
+  continueReturningWithFamilyJoin(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || current.screen !== "returning-verified-empty") return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "join-code",
+        language: current.language,
+        entryPath: "caregiver",
+        pendingCode: "",
+      });
+    });
+  },
+
+  markReturningSignedOut(): Promise<void> {
+    return enqueueMutation(async () => {
+      const current = await readStoredState();
+      if (!current || !current.screen.startsWith("returning-")) return;
+      await persistState({
+        version: NEW_OWNER_ONBOARDING_VERSION,
+        screen: "returning-signed-out",
+        language: current.language,
+        entryPath: "returning",
+      });
     });
   },
 
@@ -358,6 +566,10 @@ export const NewOwnerOnboardingStorageService = {
     return enqueueMutation(async () => {
       const current = await readStoredState();
       if (!current) return;
+      if (current.screen === "returning-auth") {
+        await persistState(createInitialState(current.language));
+        return;
+      }
       if (current.screen === "join-auth-pending") {
         await persistState({
           version: NEW_OWNER_ONBOARDING_VERSION,
