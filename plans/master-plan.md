@@ -165,7 +165,7 @@ Durable decisions that apply across all tasks:
 - [x] 0036 · Build the resumable new-owner onboarding path (after 0034) → tasks/done/0036-build-resumable-new-owner-onboarding.md
 - [x] 0037 · Add optional account creation and caregiver invitation (after 0035, 0036) → tasks/done/0037-add-onboarding-caregiver-invitation.md
 - [x] 0038 · Add code-first invited-caregiver onboarding (after 0037) → tasks/done/0038-add-code-first-caregiver-join-onboarding.md
-- [~] 0039 · Restore returning users before opening Home (after 0038) → tasks/0039-restore-returning-users-before-home.md
+- [>] 0039 · Restore returning users before opening Home (after 0038) → tasks/0039-restore-returning-users-before-home.md
 - [ ] 0040 · Add development onboarding tools (after 0039) → tasks/0040-add-development-onboarding-tools.md
 - [ ] 0041 · Cut over to role-based onboarding (after 0040) → tasks/0041-cut-over-to-role-based-onboarding.md
 - [x] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/done/0042-confirm-ambiguous-morning-sleep.md
