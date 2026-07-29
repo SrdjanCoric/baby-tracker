@@ -1,4 +1,10 @@
 appId: com.sofibaby.app
+name: Production fresh guest owner and post-baby skip
+
+tags:
+  - smoke
+  - onboarding
+  - owner
 
 ---
 - launchApp:
@@ -11,9 +17,13 @@ appId: com.sofibaby.app
     id: "start-tracking-button"
 - tapOn:
     id: "continue-on-device-button"
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-baby-screen"
+    timeout: 10000
 - tapOn:
     id: "owner-baby-name"
-- inputText: "Test Baby"
+- inputText: "Fresh Baby"
 - tapOn:
     id: "dismiss-keyboard"
 - tapOn:
@@ -34,9 +44,14 @@ appId: com.sofibaby.app
     id: "owner-baby-gender-female"
 - tapOn:
     id: "owner-baby-continue"
+- extendedWaitUntil:
+    visible:
+      id: "first-activity-screen"
+    timeout: 15000
 - tapOn:
     id: "skip-remaining-setup-button"
 - extendedWaitUntil:
     visible:
       id: "home-screen"
     timeout: 15000
+- assertVisible: "Fresh Baby"

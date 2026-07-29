@@ -5,11 +5,7 @@ tags:
   - settings
 
 ---
-- launchApp:
-    clearState: true
-
-- tapOn:
-    id: "skip-button"
+- runFlow: ../../helpers/setup-with-baby.yaml
 
 # Navigate to settings
 - tapOn:

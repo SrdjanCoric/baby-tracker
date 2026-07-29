@@ -13,11 +13,12 @@ import { AchievementProvider } from "@/contexts/achievement-context";
 import { SyncAuthGate } from "@/components/SyncAuthGate";
 import { ReturningUserProfileFallback } from "@/components/ReturningUserProfileFallback";
 import { AuthScopeBoundary } from "@/components/AuthScopeBoundary";
-import { OnboardingStorageService } from "@/services/onboarding-storage";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
-import { getNewOwnerPreviewDestination } from "@/services/new-owner-onboarding-routing";
 import { LanguageStorageService } from "@/services/language-storage";
-import { isNewOwnerOnboardingPreviewEnabled } from "@/utils/e2e-mode";
+import {
+  getOnboardingRedirect,
+  shouldStartReturningRestoration,
+} from "@/services/onboarding-guard";
 import { useWidgetStopHandler } from "@/hooks/useWidgetStopHandler";
 import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
@@ -38,7 +39,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const [isReady, setIsReady] = useState(false);
   const isMountedRef = useRef(true);
-  const lastAuthStateRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -51,78 +51,32 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (authLoading) return;
 
     const handleNavigation = async () => {
-      const hasCompletedOnboarding = await OnboardingStorageService.hasCompletedOnboarding();
-
-      if (!isMountedRef.current) return;
-
       const routeSegments = segments as readonly string[];
-      const currentSegment = routeSegments[0];
-      const inAuthGroup = currentSegment === "auth";
-      const inOnboardingGroup = currentSegment === "onboarding";
-      const inNewOwnerGroup = inOnboardingGroup && routeSegments[1] === "owner";
-      const isAuthCallback = currentSegment === "login-callback";
-      const previewEnabled = isNewOwnerOnboardingPreviewEnabled();
-
-      if (isAuthCallback) {
-        if (isMountedRef.current) {
-          setIsReady(true);
-        }
+      if (routeSegments[0] === "login-callback") {
+        if (isMountedRef.current) setIsReady(true);
         return;
       }
 
-      if (inNewOwnerGroup && !previewEnabled) {
-        router.replace(hasCompletedOnboarding ? "/(tabs)" : "/onboarding");
-      } else if (previewEnabled && !inAuthGroup) {
-        const language = await LanguageStorageService.getLanguagePreference();
-        const previewState = await NewOwnerOnboardingStorageService.getState(language);
+      const language = await LanguageStorageService.getLanguagePreference();
+      let state = await NewOwnerOnboardingStorageService.getState(language);
+      if (!isMountedRef.current) return;
+
+      if (shouldStartReturningRestoration(state, isAuthenticated)) {
+        await NewOwnerOnboardingStorageService.beginReturningAuthentication(language);
+        await NewOwnerOnboardingStorageService.beginReturningRestoration();
+        state = await NewOwnerOnboardingStorageService.getState(language);
         if (!isMountedRef.current) return;
-
-        const destination = getNewOwnerPreviewDestination(previewState);
-        if (destination.route === "/(tabs)") {
-          if (inOnboardingGroup) router.replace("/(tabs)");
-        } else {
-          const activitySegments = [
-            "feeding",
-            "sleep",
-            "diaper",
-            "pumping",
-            "growth",
-            "tummyTime",
-            "health",
-            "milestones",
-          ];
-          const inFirstActivityForm =
-            previewState.screen === "first-activity" &&
-            typeof currentSegment === "string" &&
-            activitySegments.includes(currentSegment);
-          const onExpectedOwnerRoute =
-            destination.ownerLeaf !== null &&
-            inNewOwnerGroup &&
-            (destination.ownerLeaf === undefined
-              ? routeSegments[2] === undefined
-              : routeSegments[2] === destination.ownerLeaf);
-          if (!inFirstActivityForm && !onExpectedOwnerRoute) {
-            router.replace(destination.route);
-          }
-        }
-      } else if (!hasCompletedOnboarding && !inOnboardingGroup && !inAuthGroup) {
-        router.replace("/onboarding");
-      } else if (hasCompletedOnboarding && inOnboardingGroup) {
-        router.replace("/(tabs)");
-      } else if (isAuthenticated && inAuthGroup && hasCompletedOnboarding) {
-        // Only redirect to tabs if onboarding is complete AND user has a display name
-        // If no display name, stay on auth screen to show the display name prompt
-        if (user?.displayName) {
-          router.replace("/(tabs)");
-        }
-        // If no displayName, stay on auth screen - sign-in.tsx will show DisplayNamePrompt
       }
 
-      lastAuthStateRef.current = isAuthenticated;
-
-      if (isMountedRef.current) {
-        setIsReady(true);
+      const redirect = getOnboardingRedirect(state, routeSegments);
+      const waitingForDisplayName = routeSegments[0] === "auth" &&
+        redirect === "/(tabs)" &&
+        !user?.displayName;
+      if (redirect && !waitingForDisplayName) {
+        router.replace(redirect);
       }
+
+      if (isMountedRef.current) setIsReady(true);
     };
 
     handleNavigation();

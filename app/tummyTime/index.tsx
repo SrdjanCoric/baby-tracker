@@ -19,9 +19,9 @@ const PAUSED_AMBER = "#D4A017";
 export default function TummyTimeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { action, onboardingPreview } = useLocalSearchParams<{
+  const { action, onboardingActivity } = useLocalSearchParams<{
     action?: string;
-    onboardingPreview?: string;
+    onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
@@ -79,11 +79,11 @@ export default function TummyTimeScreen() {
 
   const handleStartTummyTime = useCallback(async (customStartTime?: Date) => {
     const result = await startTummyTime(customStartTime);
-    if (result.success && onboardingPreview === "firstActivity") {
+    if (result.success && onboardingActivity === "first") {
       await NewOwnerOnboardingStorageService.completeTimerStarted("tummyTime");
       router.replace("/(tabs)");
     }
-  }, [onboardingPreview, router, startTummyTime]);
+  }, [onboardingActivity, router, startTummyTime]);
 
   const handlePause = useCallback(async () => {
     await pauseTummyTime();
@@ -107,10 +107,10 @@ export default function TummyTimeScreen() {
   }, [resetAlert, stopTummyTime, router]);
 
   const handleLogPastTummyTime = useCallback(() => {
-    router.push(onboardingPreview === "firstActivity"
-      ? "/tummyTime/manual?onboardingPreview=firstActivity"
+    router.push(onboardingActivity === "first"
+      ? "/tummyTime/manual?onboardingActivity=first"
       : "/tummyTime/manual");
-  }, [onboardingPreview, router]);
+  }, [onboardingActivity, router]);
 
   const handleGoalSettings = useCallback(() => {
     router.push("/tummyTime/settings");

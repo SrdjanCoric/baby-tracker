@@ -9,10 +9,11 @@ tags:
 
 # === ONBOARDING ===
 - runFlow: ../flows/onboarding/welcome.yaml
-- runFlow: ../flows/onboarding/guest-flow.yaml
-- runFlow: ../flows/onboarding/complete-onboarding.yaml
-- runFlow: ../flows/onboarding/skip-onboarding.yaml
-- runFlow: ../flows/onboarding/baby-validation.yaml
+- runFlow: ../flows/onboarding/fresh-owner.yaml
+- runFlow: ../flows/onboarding/owner-restart.yaml
+- runFlow: ../flows/onboarding/auth-cancellation.yaml
+- runFlow: ../flows/onboarding/returning-user-restoration.yaml
+- runFlow: ../flows/onboarding/locales.yaml
 
 # === AUTHENTICATION ===
 - runFlow: ../flows/auth/magic-link.yaml

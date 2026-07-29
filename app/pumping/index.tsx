@@ -27,10 +27,10 @@ type VolumeUnit = "ml" | "oz";
 export default function PumpingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { showVolumeInput: showVolumeInputParam, action, onboardingPreview } = useLocalSearchParams<{
+  const { showVolumeInput: showVolumeInputParam, action, onboardingActivity } = useLocalSearchParams<{
     showVolumeInput?: string;
     action?: string;
-    onboardingPreview?: string;
+    onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
@@ -94,11 +94,11 @@ export default function PumpingScreen() {
 
   const handleStartPumping = useCallback(async (side: BreastSide, customStartTime?: Date) => {
     const result = await startPumping(side, customStartTime);
-    if (result.success && onboardingPreview === "firstActivity") {
+    if (result.success && onboardingActivity === "first") {
       await NewOwnerOnboardingStorageService.completeTimerStarted("pumping");
       router.replace("/(tabs)");
     }
-  }, [onboardingPreview, router, startPumping]);
+  }, [onboardingActivity, router, startPumping]);
 
   const handleRequestStop = useCallback(() => {
     setShowVolumeInput(true);
@@ -150,10 +150,10 @@ export default function PumpingScreen() {
   }, [action, activeTimer?.isRunning, activeTimer?.isPaused, pausePumping, resumePumping, router]);
 
   const handleLogPastPumping = useCallback(() => {
-    router.push(onboardingPreview === "firstActivity"
-      ? "/pumping/manual?onboardingPreview=firstActivity"
+    router.push(onboardingActivity === "first"
+      ? "/pumping/manual?onboardingActivity=first"
       : "/pumping/manual");
-  }, [onboardingPreview, router]);
+  }, [onboardingActivity, router]);
 
   const handleQuickAmountSelect = useCallback((amount: number) => {
     if (unit === "oz") {

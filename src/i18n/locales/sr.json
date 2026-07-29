@@ -1114,7 +1114,6 @@
     "magicLinkHint": "Poslaćemo vam link za brzu prijavu",
     "sendMagicLink": "Pošalji magični link",
     "continueWithoutAccount": "Nastavite bez naloga",
-    "continueAsGuest": "Nastavite kao gost",
     "guestDescription": "Možete kreirati nalog kasnije za sinhronizaciju na svim uređajima",
     "createAccount": "Kreiraj nalog",
     "welcomeTitle": "Dobrodošli u Baby Tracker",
@@ -1246,76 +1245,6 @@
     "cereal": "Žitarice",
     "yogurt": "Jogurt",
     "cheese": "Sir"
-  },
-  "onboarding": {
-    "welcome": {
-      "title": "Dobrodošli u Sofi Baby Tracker",
-      "subtitle": "Jednostavan način da pratite dan vaše bebe"
-    },
-    "features": {
-      "title": "Pratite sve",
-      "subtitle": "Hranjenje, spavanje, pelene, rast i još mnogo toga - sve na jednom mestu",
-      "interactiveSubtitle": "Dodirnite svaku aktivnost za više informacija",
-      "customizeTitle": "Prilagodite kontrolnu tablu",
-      "customizeSubtitle": "Izaberite koje aktivnosti želite da vidite",
-      "customizeHint": "Ovo možete promeniti u bilo kom trenutku u Podešavanjima"
-    },
-    "activityDesc": {
-      "feeding": "Pratite dojenje, flašicu i čvrstu hranu sa tajmerima i količinama",
-      "sleep": "Pratite dremke i noćni san sa automatskim praćenjem vremena budnosti",
-      "diaper": "Beležite mokre, prljave i mešovite pelene sa opcionalnim beleškama",
-      "pumping": "Pratite sesije izdajanja sa izborom strane i količinom mleka",
-      "growth": "Beležite težinu, visinu i obim glave sa grafikonima rasta",
-      "tummyTime": "Merite vreme na stomaku za podršku razvoju bebe"
-    },
-    "preferences": {
-      "title": "Vaše postavke",
-      "subtitle": "Prilagodite vaše iskustvo",
-      "language": "Jezik",
-      "units": "Merenja",
-      "theme": "Izgled",
-      "hint": "Ovo možete promeniti bilo kada u Podešavanjima"
-    },
-    "timeFormat": "Format vremena",
-    "sync": {
-      "title": "Sinhronizujte sa porodicom",
-      "subtitle": "Delite obaveze praćenja sa partnerom ili negovateljima u realnom vremenu"
-    },
-    "authChoice": {
-      "title": "Pridružite se ili nastavite",
-      "subtitle": "Napravite nalog za sinhronizaciju između uređaja i deljenje sa negovateljima",
-      "guestHint": "Možete napraviti nalog kasnije u Podešavanjima",
-      "signInMethodsIos": "Apple, Google i Email",
-      "signInMethodsAndroid": "Google i Email"
-    },
-    "baby": {
-      "title": "Dodajte vašu bebu",
-      "subtitle": "Hajde da počnemo dodavanjem tvoje bebe"
-    },
-    "getStarted": "Započni",
-    "next": "Dalje",
-    "skip": "Preskoči",
-    "continue": "Nastavi",
-    "addBaby": "Dodaj bebu",
-    "babyName": "Ime bebe",
-    "babyNamePlaceholder": "Unesite ime bebe",
-    "birthDate": "Datum rođenja",
-    "selectBirthDate": "Izaberite datum rođenja",
-    "addPhoto": "Dodaj fotografiju (opciono)",
-    "changePhoto": "Promeni fotografiju",
-    "gender": "Pol",
-    "male": "Dečak",
-    "female": "Devojčica",
-    "genderUnspecified": "Ne želim da navedem",
-    "validation": {
-      "nameRequired": "Molimo unesite ime bebe",
-      "dateRequired": "Molimo izaberite datum rođenja",
-      "dateFuture": "Datum rođenja ne može biti u budućnosti"
-    },
-    "errors": {
-      "createBabyFailed": "Kreiranje profila bebe nije uspelo. Molimo pokušajte ponovo.",
-      "networkError": "Greška mreže. Molimo proveri internet vezu i pokušaj ponovo."
-    }
   },
   "export": {
     "title": "Preuzmi podatke",

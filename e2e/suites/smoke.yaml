@@ -9,7 +9,7 @@ tags:
 
 # Onboarding
 - runFlow: ../flows/onboarding/welcome.yaml
-- runFlow: ../flows/onboarding/guest-flow.yaml
+- runFlow: ../flows/onboarding/fresh-owner.yaml
 
 # Core activities (most used features)
 - runFlow: ../flows/activities/feeding/breastfeeding-timer.yaml

@@ -27,7 +27,7 @@ const QUICK_DURATIONS = [1, 2, 3, 5, 10, 15];
 export default function ManualTummyTimeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addTummyTime } = useTummyTime();
@@ -138,7 +138,7 @@ export default function ManualTummyTimeScreen() {
         durationSeconds,
         notes: notes || undefined,
       });
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("tummyTime");
         router.replace("/onboarding/owner/saved");
       } else {
@@ -148,7 +148,7 @@ export default function ManualTummyTimeScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, startTime, durationMinutes, notes, addTummyTime, onboardingPreview, router]);
+  }, [selectedBaby, startTime, durationMinutes, notes, addTummyTime, onboardingActivity, router]);
 
   const canSave = durationMinutes !== null && durationMinutes > 0;
 

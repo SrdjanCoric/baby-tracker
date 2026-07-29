@@ -1,10 +1,10 @@
 appId: com.sofibaby.app
-name: Production returning user restoration
+name: Production caregiver join failure recovery
 
 tags:
   - regression
   - onboarding
-  - returning-user
+  - failure-recovery
 
 ---
 - launchApp:
@@ -14,21 +14,15 @@ tags:
       id: "new-owner-welcome-screen"
     timeout: 60000
 - tapOn:
-    id: "sign-in-button"
-- extendedWaitUntil:
-    visible:
-      id: "email-input"
-    timeout: 10000
-- stopApp
-- launchApp:
-    clearState: false
-- extendedWaitUntil:
-    visible:
-      id: "email-input"
-    timeout: 30000
+    id: "join-family-button"
+- tapOn:
+    id: "join-code-input"
+- inputText: "FAIL2345"
+- tapOn:
+    id: "continue-to-auth-button"
 - tapOn:
     id: "email-input"
-- inputText: "e2e-owner@test.local"
+- inputText: "e2e-member@test.local"
 - tapOn:
     id: "dismiss-keyboard"
 - scrollUntilVisible:
@@ -45,8 +39,15 @@ tags:
     optional: true
 - extendedWaitUntil:
     visible:
-      id: "home-screen"
+      id: "join-family-submit-button"
     timeout: 30000
-- assertVisible: "E2E Baby"
-- assertNotVisible:
-    id: "new-owner-baby-screen"
+- tapOn:
+    id: "join-family-submit-button"
+- extendedWaitUntil:
+    visible:
+      id: "retry-join-button"
+    timeout: 15000
+- tapOn:
+    id: "retry-join-button"
+- assertVisible:
+    id: "join-family-submit-button"

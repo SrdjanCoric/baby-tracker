@@ -35,7 +35,7 @@ type VolumeUnit = "ml" | "oz";
 export default function ManualPumpingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { volumeUnit } = useUnits();
   const { timeFormat } = useTimeFormat();
@@ -198,7 +198,7 @@ export default function ManualPumpingScreen() {
         volumeMl: volumeMl ?? undefined,
         notes: notes || undefined,
       });
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("pumping");
         router.replace("/onboarding/owner/saved");
       } else {
@@ -216,7 +216,7 @@ export default function ManualPumpingScreen() {
     volumeMl,
     notes,
     addPumping,
-    onboardingPreview,
+    onboardingActivity,
     router,
   ]);
 

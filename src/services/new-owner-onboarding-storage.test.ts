@@ -183,10 +183,7 @@ describe("NewOwnerOnboardingStorageService", () => {
       firstActivity: { status: "joined-household" },
     });
     expect(storage.get("@new_owner_onboarding_v2")).not.toContain("ABCD2345");
-    expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
-      hasCompleted: true,
-      skipped: false,
-    });
+    expect(storage.has("@onboarding_status")).toBe(false);
   });
 
   it("persists reconciliation-only recovery when an interrupted join outcome is unknown", async () => {
@@ -245,7 +242,7 @@ describe("NewOwnerOnboardingStorageService", () => {
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
     await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
-    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(null);
 
     await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
       screen: "owner-baby",
@@ -400,10 +397,7 @@ describe("NewOwnerOnboardingStorageService", () => {
       householdId: "household-1",
       babyId: "baby-2",
     });
-    expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
-      hasCompleted: true,
-      skipped: false,
-    });
+    expect(storage.has("@onboarding_status")).toBe(false);
   });
 
   it("persists the named owner baby state and partial profile", async () => {
@@ -480,7 +474,7 @@ describe("NewOwnerOnboardingStorageService", () => {
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
     await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
-    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(null);
     await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
 
     await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
@@ -499,7 +493,7 @@ describe("NewOwnerOnboardingStorageService", () => {
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
     await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
-    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(null);
     await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
     await NewOwnerOnboardingStorageService.skipInvitation();
 
@@ -573,10 +567,7 @@ describe("NewOwnerOnboardingStorageService", () => {
       babyId: "baby-1",
       firstActivity: { status: "timer-started", activityType: "sleep" },
     });
-    expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
-      hasCompleted: true,
-      skipped: false,
-    });
+    expect(storage.has("@onboarding_status")).toBe(false);
   });
 
   it("starts over by clearing the versioned onboarding state", async () => {
@@ -657,13 +648,23 @@ describe("NewOwnerOnboardingStorageService", () => {
       return null;
     });
 
-    await expect(NewOwnerOnboardingStorageService.getState("en")).resolves.toEqual({
-      version: 2,
-      screen: "completed",
-      language: "en",
-      entryPath: "legacy",
+    const expectedState = {
+      version: 2 as const,
+      screen: "completed" as const,
+      language: "en" as const,
+      entryPath: "legacy" as const,
       babyId: null,
-      firstActivity: { status: "legacy-completed" },
-    });
+      firstActivity: { status: "legacy-completed" as const },
+    };
+
+    await expect(NewOwnerOnboardingStorageService.getState("en")).resolves.toEqual(expectedState);
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      "@new_owner_onboarding_v2",
+      JSON.stringify(expectedState)
+    );
+    expect(AsyncStorage.setItem).not.toHaveBeenCalledWith(
+      "@onboarding_status",
+      expect.any(String)
+    );
   });
 });

@@ -41,10 +41,12 @@
           "en",
           "sr",
           "es",
+          "es-ES",
           "fr",
           "pt-PT",
           "pt-BR",
-          "de"
+          "de",
+          "it"
         ],
         "NSSupportsLiveActivities": true
       }

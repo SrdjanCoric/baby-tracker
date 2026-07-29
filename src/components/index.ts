@@ -89,9 +89,4 @@ export { DisplayNamePrompt } from "./DisplayNamePrompt";
 export { NoBabyScreen } from "./NoBabyScreen";
 
 // Onboarding components
-export {
-  OnboardingScreen,
-  OnboardingPagination,
-  OnboardingIllustration,
-  type IllustrationType,
-} from "./onboarding";
+export { OnboardingIllustration, type IllustrationType } from "./onboarding";

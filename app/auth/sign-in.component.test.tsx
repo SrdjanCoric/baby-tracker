@@ -122,13 +122,13 @@ describe("SignInScreen onboarding return", () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it("ignores an unknown onboarding intent from route parameters", () => {
+  it("does not offer a direct Home bypass for an unknown onboarding intent", () => {
     mockSearchParams = { onboardingIntent: "unknown" };
     mockIsAuthenticated = false;
 
     const view = render(<SignInScreen />);
 
-    expect(view.getByTestId("continue-as-guest-button")).toBeTruthy();
+    expect(view.queryByTestId("continue-as-guest-button")).toBeNull();
     expect(resumeNewOwnerOnboardingAfterAuth).not.toHaveBeenCalled();
   });
 

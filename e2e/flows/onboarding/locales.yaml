@@ -1,0 +1,66 @@
+appId: com.sofibaby.app
+name: Production Welcome supports every locale
+
+tags:
+  - regression
+  - onboarding
+  - localization
+
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-en"
+- assertVisible: "Care for your baby with confidence"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-sr"
+- assertVisible: "Brinite o svojoj bebi sa sigurnošću"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-es"
+- assertVisible:
+    id: "start-tracking-button"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-es-ES"
+- assertVisible:
+    id: "join-family-button"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-fr"
+- assertVisible:
+    id: "sign-in-button"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-pt-PT"
+- assertVisible:
+    id: "start-tracking-button"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-pt-BR"
+- assertVisible:
+    id: "join-family-button"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-de"
+- assertVisible: "Kümmere dich mit Zuversicht um dein Baby"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-it"
+- assertVisible:
+    id: "sign-in-button"

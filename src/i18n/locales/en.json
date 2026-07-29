@@ -1081,7 +1081,6 @@
     "magicLinkHint": "We'll email you a link to sign in instantly",
     "sendMagicLink": "Send Magic Link",
     "continueWithoutAccount": "Continue without account",
-    "continueAsGuest": "Continue as Guest",
     "guestDescription": "You can create an account later to sync across devices",
     "createAccount": "Create Account",
     "welcomeTitle": "Welcome to Baby Tracker",
@@ -1211,76 +1210,6 @@
     "cereal": "Cereal",
     "yogurt": "Yogurt",
     "cheese": "Cheese"
-  },
-  "onboarding": {
-    "welcome": {
-      "title": "Welcome to Sofi Baby Tracker",
-      "subtitle": "The simple way to track your baby's day"
-    },
-    "features": {
-      "title": "Track Everything",
-      "subtitle": "Feeding, sleep, diapers, growth, and more - all in one place",
-      "interactiveSubtitle": "Tap each activity to learn more",
-      "customizeTitle": "Customize Your Dashboard",
-      "customizeSubtitle": "Choose which activities to show on your dashboard",
-      "customizeHint": "You can change this anytime in Settings"
-    },
-    "activityDesc": {
-      "feeding": "Track breastfeeding, bottle feeds, and solid foods with timers and amounts",
-      "sleep": "Monitor naps and night sleep with automatic wake window tracking",
-      "diaper": "Log wet, dirty, and mixed diapers with optional notes",
-      "pumping": "Track pumping sessions with side selection and milk amounts",
-      "growth": "Record weight, height, and head measurements with growth charts",
-      "tummyTime": "Time tummy time sessions to support baby's development"
-    },
-    "preferences": {
-      "title": "Your Preferences",
-      "subtitle": "Customize your experience",
-      "language": "Language",
-      "units": "Measurements",
-      "theme": "Appearance",
-      "hint": "You can change these anytime in Settings"
-    },
-    "timeFormat": "Time Format",
-    "sync": {
-      "title": "Sync with Family",
-      "subtitle": "Share tracking duties with your partner or caregivers in real-time"
-    },
-    "authChoice": {
-      "title": "Join or Continue",
-      "subtitle": "Create an account to sync across devices and share with caregivers",
-      "guestHint": "You can create an account later in Settings",
-      "signInMethodsIos": "Apple, Google & Email",
-      "signInMethodsAndroid": "Google & Email"
-    },
-    "baby": {
-      "title": "Add Your Baby",
-      "subtitle": "Let's get started by adding your little one"
-    },
-    "getStarted": "Get Started",
-    "next": "Next",
-    "skip": "Skip",
-    "continue": "Continue",
-    "addBaby": "Add Baby",
-    "babyName": "Baby's Name",
-    "babyNamePlaceholder": "Enter baby's name",
-    "birthDate": "Birth Date",
-    "selectBirthDate": "Select birth date",
-    "addPhoto": "Add Photo (Optional)",
-    "changePhoto": "Change Photo",
-    "gender": "Gender",
-    "male": "Boy",
-    "female": "Girl",
-    "genderUnspecified": "Prefer not to say",
-    "validation": {
-      "nameRequired": "Please enter baby's name",
-      "dateRequired": "Please select birth date",
-      "dateFuture": "Birth date cannot be in the future"
-    },
-    "errors": {
-      "createBabyFailed": "Failed to create baby profile. Please try again.",
-      "networkError": "Network error. Please check your connection and try again."
-    }
   },
   "export": {
     "title": "Export Data",

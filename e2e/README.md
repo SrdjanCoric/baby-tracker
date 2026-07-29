@@ -127,7 +127,7 @@ npm run e2e:household-timers:test
 
 Use the Settings preview in a development build for UI checks that must leave storage and services untouched. Use **Run first-launch routing again** when you want the role-based guard to inspect the current development account while preserving its household, babies, activities, and preferences. Both tools are unavailable in production.
 
-Use Maestro when the test needs real providers, restart recovery, authentication, or database behavior. Onboarding Maestro flows clear simulator state and may reset or change disposable local Supabase fixtures. They are not safe for a shared or production project. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](../docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the preserved keys, limits, and focused commands.
+Use Maestro when the test needs real providers, restart recovery, authentication, or database behavior. Onboarding Maestro flows clear simulator state and may reset or change disposable local Supabase fixtures. They are not safe for a shared or production project. See [`docs/ROLE_BASED_ONBOARDING.md`](../docs/ROLE_BASED_ONBOARDING.md) for persisted states, failure policy, development tools, and focused commands.
 
 ## Existing single-device suites
 
@@ -141,12 +141,14 @@ npm run e2e:seed
 
 npm run e2e:smoke
 npm run e2e:regression
+maestro test e2e/suites/onboarding-ios.yaml
+maestro test e2e/suites/onboarding-android.yaml
 ```
 
 Run one flow with:
 
 ```bash
-npm run e2e:flow e2e/flows/onboarding/guest-flow.yaml
+npm run e2e:flow e2e/flows/onboarding/fresh-owner.yaml
 ```
 
 Remove fixtures when finished:

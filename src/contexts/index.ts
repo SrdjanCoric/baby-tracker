@@ -41,9 +41,6 @@ export type { SyncState, SyncAction } from "./sync-context";
 
 export { NotificationProvider, useNotifications } from "./notification-context";
 
-export { OnboardingProvider, useOnboarding, onboardingReducer, initialOnboardingState } from "./onboarding-context";
-export type { OnboardingState, OnboardingAction } from "./onboarding-reducer";
-
 export { LanguageProvider, useLanguage } from "./language-context";
 export type { LanguageCode } from "./language-context";
 

@@ -1081,7 +1081,6 @@
     "magicLinkHint": "Wir senden dir per E-Mail einen Link zur sofortigen Anmeldung",
     "sendMagicLink": "Magic Link senden",
     "continueWithoutAccount": "Ohne Konto fortfahren",
-    "continueAsGuest": "Als Gast fortfahren",
     "guestDescription": "Du kannst später ein Konto erstellen, um geräteübergreifend zu synchronisieren",
     "createAccount": "Konto erstellen",
     "welcomeTitle": "Willkommen beim Baby Tracker",
@@ -1211,76 +1210,6 @@
     "cereal": "Getreidebrei",
     "yogurt": "Joghurt",
     "cheese": "Käse"
-  },
-  "onboarding": {
-    "welcome": {
-      "title": "Willkommen beim Sofi Baby Tracker",
-      "subtitle": "Die einfache Art, den Tag deines Babys zu verfolgen"
-    },
-    "features": {
-      "title": "Alles erfassen",
-      "subtitle": "Fütterung, Schlaf, Windeln, Wachstum und mehr – alles an einem Ort",
-      "interactiveSubtitle": "Tippe auf jede Aktivität, um mehr zu erfahren",
-      "customizeTitle": "Dein Dashboard anpassen",
-      "customizeSubtitle": "Wähle, welche Aktivitäten auf deinem Dashboard erscheinen",
-      "customizeHint": "Du kannst dies jederzeit in den Einstellungen ändern"
-    },
-    "activityDesc": {
-      "feeding": "Erfasse Stillen, Flaschenfütterungen und Beikost mit Timern und Mengen",
-      "sleep": "Erfasse Nickerchen und Nachtschlaf mit automatischer Wachfenster-Erfassung",
-      "diaper": "Erfasse nasse, verschmutzte und gemischte Windeln mit optionalen Notizen",
-      "pumping": "Erfasse Pump-Sitzungen mit Seitenauswahl und Milchmengen",
-      "growth": "Erfasse Gewicht, Größe und Kopfumfang mit Wachstumskurven",
-      "tummyTime": "Erfasse Bauchlage-Sitzungen, um die Entwicklung deines Babys zu unterstützen"
-    },
-    "preferences": {
-      "title": "Deine Einstellungen",
-      "subtitle": "Passe dein Erlebnis an",
-      "language": "Sprache",
-      "units": "Maßeinheiten",
-      "theme": "Aussehen",
-      "hint": "Du kannst dies jederzeit in den Einstellungen ändern"
-    },
-    "timeFormat": "Zeitformat",
-    "sync": {
-      "title": "Mit der Familie synchronisieren",
-      "subtitle": "Teile die Erfassung mit deinem Partner oder Betreuungspersonen in Echtzeit"
-    },
-    "authChoice": {
-      "title": "Beitreten oder Fortfahren",
-      "subtitle": "Erstelle ein Konto, um geräteübergreifend zu synchronisieren und mit Betreuungspersonen zu teilen",
-      "guestHint": "Du kannst später in den Einstellungen ein Konto erstellen",
-      "signInMethodsIos": "Apple, Google & E-Mail",
-      "signInMethodsAndroid": "Google & E-Mail"
-    },
-    "baby": {
-      "title": "Dein Baby hinzufügen",
-      "subtitle": "Lass uns damit beginnen, deinen kleinen Schatz hinzuzufügen"
-    },
-    "getStarted": "Los geht's",
-    "next": "Weiter",
-    "skip": "Überspringen",
-    "continue": "Weiter",
-    "addBaby": "Baby hinzufügen",
-    "babyName": "Name des Babys",
-    "babyNamePlaceholder": "Name des Babys eingeben",
-    "birthDate": "Geburtsdatum",
-    "selectBirthDate": "Geburtsdatum wählen",
-    "addPhoto": "Foto hinzufügen (Optional)",
-    "changePhoto": "Foto ändern",
-    "gender": "Geschlecht",
-    "male": "Junge",
-    "female": "Mädchen",
-    "genderUnspecified": "Keine Angabe",
-    "validation": {
-      "nameRequired": "Bitte gib den Namen des Babys ein",
-      "dateRequired": "Bitte wähle ein Geburtsdatum",
-      "dateFuture": "Das Geburtsdatum kann nicht in der Zukunft liegen"
-    },
-    "errors": {
-      "createBabyFailed": "Babyprofil konnte nicht erstellt werden. Bitte versuche es erneut.",
-      "networkError": "Netzwerkfehler. Bitte prüfe deine Verbindung und versuche es erneut."
-    }
   },
   "export": {
     "title": "Daten exportieren",

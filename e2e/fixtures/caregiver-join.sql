@@ -55,12 +55,20 @@ BEGIN
     name,
     birth_date,
     gender
-  ) VALUES (
+  ) VALUES
+  (
     'e2e00000-0000-4000-8000-000000000038',
     v_owner_household_id,
     'Shared Baby',
     CURRENT_DATE - INTERVAL '100 days',
     'female'
+  ),
+  (
+    'e2e00000-0000-4000-8000-000000000041',
+    v_source_household_id,
+    'Solo Baby',
+    CURRENT_DATE - INTERVAL '50 days',
+    'male'
   );
 
   DELETE FROM public.join_attempt_logs

@@ -1083,7 +1083,6 @@
     "magicLinkHint": "Enviaremos um email com um link para iniciar sessão instantaneamente",
     "sendMagicLink": "Enviar Link Mágico",
     "continueWithoutAccount": "Continuar sem conta",
-    "continueAsGuest": "Continuar como Convidado",
     "guestDescription": "Você pode criar uma conta depois para sincronizar entre dispositivos",
     "createAccount": "Criar Conta",
     "welcomeTitle": "Bem-vindo ao Baby Tracker",
@@ -1213,76 +1212,6 @@
     "cereais": "Cereais",
     "yogurt": "Iogurte",
     "cheese": "Queijo"
-  },
-  "onboarding": {
-    "welcome": {
-      "title": "Bem-vindo ao Sofi Baby Tracker",
-      "subtitle": "A forma simples de monitorizar o dia do seu bebé"
-    },
-    "features": {
-      "title": "Monitorize Tudo",
-      "subtitle": "Alimentação, sono, fraldas, crescimento e muito mais - tudo em um só lugar",
-      "interactiveSubtitle": "Toque em cada atividade para aprender mais",
-      "customizeTitle": "Personalize Seu Painel",
-      "customizeSubtitle": "Escolha quais atividades mostrar no seu painel",
-      "customizeHint": "Você pode mudar isso a qualquer momento em Definições"
-    },
-    "activityDesc": {
-      "feeding": "Monitorize amamentação, biberões e alimentos sólidos com temporizadores e quantidades",
-      "sleep": "Monitorize sestas e sono noturno com monitorização automática de janelas de vigília",
-      "diaper": "Registe fraldas molhadas, sujas e mistas com notas opcionais",
-      "pumping": "Monitorize sessões de extração com seleção de lado e quantidades de leite",
-      "growth": "Registe peso, altura e medições de cabeça com gráficos de crescimento",
-      "tummyTime": "Cronometra sessões de tempo de barriga para apoiar o desenvolvimento do bebé"
-    },
-    "preferences": {
-      "title": "Suas Preferências",
-      "subtitle": "Personalize sua experiência",
-      "language": "Idioma",
-      "units": "Medidas",
-      "theme": "Aparência",
-      "hint": "Você pode mudar isso a qualquer momento em Definições"
-    },
-    "timeFormat": "Formato de Hora",
-    "sync": {
-      "title": "Sincronizar com a Família",
-      "subtitle": "Partilhe as tarefas de monitorização com seu parceiro ou cuidadores em tempo real"
-    },
-    "authChoice": {
-      "title": "Entrar ou Continuar",
-      "subtitle": "Crie uma conta para sincronizar entre dispositivos e partilhar com cuidadores",
-      "guestHint": "Você pode criar uma conta depois em Definições",
-      "signInMethodsIos": "Apple, Google e Email",
-      "signInMethodsAndroid": "Google e Email"
-    },
-    "baby": {
-      "title": "Adicione Seu Bebé",
-      "subtitle": "Vamos começar adicionando seu pequeno"
-    },
-    "getStarted": "Começar",
-    "next": "Próximo",
-    "skip": "Saltar",
-    "continue": "Continuar",
-    "addBaby": "Adicionar Bebé",
-    "babyName": "Nome do Bebé",
-    "babyNamePlaceholder": "Introduza o nome do bebé",
-    "birthDate": "Data de Nascimento",
-    "selectBirthDate": "Selecionar data de nascimento",
-    "addPhoto": "Adicionar Foto (Opcional)",
-    "changePhoto": "Alterar Foto",
-    "gender": "Género",
-    "male": "Menino",
-    "female": "Menina",
-    "genderUnspecified": "Prefiro não dizer",
-    "validation": {
-      "nameRequired": "Por favor, digite o nome do bebé",
-      "dateRequired": "Por favor, selecione uma data de nascimento",
-      "dateFuture": "A data de nascimento não pode ser no futuro"
-    },
-    "errors": {
-      "createBabyFailed": "Falha ao criar perfil do bebé. Por favor, tente novamente.",
-      "networkError": "Erro de rede. Por favor, verifique sua ligação e tente novamente."
-    }
   },
   "export": {
     "title": "Exportar Dados",

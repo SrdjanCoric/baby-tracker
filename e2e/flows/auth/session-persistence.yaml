@@ -1,55 +1,19 @@
 appId: com.sofibaby.app
-name: Session Persistence After App Restart
+name: Session persistence after app restart
+
 tags:
   - regression
   - auth
 
 ---
-# First launch - go through onboarding as guest
-- launchApp:
-    clearState: true
-
-# Welcome screen
-- assertVisible:
-    id: "welcome-screen"
-- tapOn:
-    text: "Get Started"
-
-# Auth choice - continue as guest
-- tapOn:
-    id: "continue-as-guest-button"
-
-# Features - next
-- tapOn:
-    id: "next-button"
-
-# Preferences - next
-- tapOn:
-    id: "next-button"
-
-# Sync screen - next
-- assertVisible:
-    id: "sync-screen"
-- tapOn:
-    id: "continue-button"
-
-# Baby setup
-- assertVisible:
-    id: "baby-setup-screen"
-- tapOn:
-    id: "baby-name-input"
-- inputText: "Persistence Test Baby"
-- tapOn:
-    id: "continue-button"
-
-- assertVisible:
-    id: "home-screen"
-
-# Close and reopen app (without clearing state)
+- runFlow: ../../helpers/setup-with-baby.yaml
 - stopApp
-- launchApp
-
-# Should go directly to home, not welcome
-- assertVisible:
-    id: "home-screen"
-- assertVisible: "Persistence Test Baby"
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000
+- assertVisible: "Test Baby"
+- assertNotVisible:
+    id: "new-owner-welcome-screen"

@@ -1,32 +1,21 @@
 appId: com.sofibaby.app
 name: Toggle Theme Setting
+
 tags:
   - regression
   - settings
 
 ---
-- launchApp:
-    clearState: true
-
-- tapOn:
-    id: "skip-button"
-
-# Navigate to settings
+- runFlow: ../../helpers/setup-with-baby.yaml
 - tapOn:
     id: "settings-button"
-
-# Find theme option
 - scrollUntilVisible:
     element:
       id: "theme-setting"
     direction: DOWN
-
 - tapOn:
     id: "theme-setting"
-
-# Select dark mode
 - tapOn:
     id: "theme-dark"
-
 - assertVisible:
     text: "Currently using dark mode"

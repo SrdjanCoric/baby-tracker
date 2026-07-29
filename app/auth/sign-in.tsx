@@ -618,25 +618,6 @@ export default function SignInScreen() {
               </View>
             )}
 
-            {!hasOnboardingIntent && (
-              <View className="mt-auto pt-6">
-                <Pressable
-                  onPress={() => router.replace("/(tabs)")}
-                  className="py-3 items-center active:opacity-70"
-                  testID="continue-as-guest-button"
-                >
-                  <Text
-                    className="text-base"
-                    style={{
-                      color: isDark ? TEXT.dark.secondary : TEXT.light.secondary,
-                      fontFamily: "Nunito-Medium",
-                    }}
-                  >
-                    {t("auth.continueAsGuest")}
-                  </Text>
-                </Pressable>
-              </View>
-            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

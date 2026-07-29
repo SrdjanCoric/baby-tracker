@@ -1,6 +1,6 @@
 import type { NewOwnerOnboardingState } from "@/types/new-owner-onboarding";
 
-type PreviewOwnerLeaf =
+type OnboardingOwnerLeaf =
   | undefined
   | null
   | "account"
@@ -11,7 +11,7 @@ type PreviewOwnerLeaf =
   | "saved"
   | "activity";
 
-type PreviewRoute =
+type OnboardingRoute =
   | "/(tabs)"
   | "/auth/sign-in?resumeOnboarding=true"
   | "/onboarding/owner"
@@ -23,14 +23,14 @@ type PreviewRoute =
   | "/onboarding/owner/saved"
   | "/onboarding/owner/activity";
 
-export interface NewOwnerPreviewDestination {
-  route: PreviewRoute;
-  ownerLeaf: PreviewOwnerLeaf;
+export interface OnboardingDestination {
+  route: OnboardingRoute;
+  ownerLeaf: OnboardingOwnerLeaf;
 }
 
-export function getNewOwnerPreviewDestination(
+export function getOnboardingDestination(
   state: NewOwnerOnboardingState
-): NewOwnerPreviewDestination {
+): OnboardingDestination {
   if (state.screen === "completed" || state.screen === "returning-restored") {
     return { route: "/(tabs)", ownerLeaf: null };
   }

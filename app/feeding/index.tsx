@@ -30,9 +30,9 @@ type VolumeUnit = "ml" | "oz";
 export default function FeedingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { action, onboardingPreview } = useLocalSearchParams<{
+  const { action, onboardingActivity } = useLocalSearchParams<{
     action?: string;
-    onboardingPreview?: string;
+    onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
@@ -93,29 +93,29 @@ export default function FeedingScreen() {
   }, []);
 
   const handleLogPast = useCallback(() => {
-    const previewParam = onboardingPreview === "firstActivity"
-      ? "&onboardingPreview=firstActivity"
+    const onboardingParam = onboardingActivity === "first"
+      ? "&onboardingActivity=first"
       : "";
-    router.push(`/feeding/manual?type=${activeTab === "breast" ? "breastfeed" : activeTab}${previewParam}`);
-  }, [router, activeTab, onboardingPreview]);
+    router.push(`/feeding/manual?type=${activeTab === "breast" ? "breastfeed" : activeTab}${onboardingParam}`);
+  }, [router, activeTab, onboardingActivity]);
 
   const handleActivitySaved = useCallback(async () => {
-    if (onboardingPreview === "firstActivity") {
+    if (onboardingActivity === "first") {
       await NewOwnerOnboardingStorageService.markActivitySaved("feeding");
       router.replace("/onboarding/owner/saved");
       return;
     }
     router.back();
-  }, [onboardingPreview, router]);
+  }, [onboardingActivity, router]);
 
   // Breastfeeding handlers
   const handleStartBreastfeeding = useCallback(async (side: BreastSide, customStartTime?: Date) => {
     const result = await startBreastfeeding(side, customStartTime);
-    if (result.success && onboardingPreview === "firstActivity") {
+    if (result.success && onboardingActivity === "first") {
       await NewOwnerOnboardingStorageService.completeTimerStarted("feeding");
       router.replace("/(tabs)");
     }
-  }, [onboardingPreview, router, startBreastfeeding]);
+  }, [onboardingActivity, router, startBreastfeeding]);
 
   const isStoppingRef = useRef(false);
   const handleStopBreastfeeding = useCallback(async () => {

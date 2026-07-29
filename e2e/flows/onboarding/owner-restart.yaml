@@ -1,0 +1,36 @@
+appId: com.sofibaby.app
+name: Production owner restart recovery
+
+tags:
+  - regression
+  - onboarding
+  - restart
+
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
+- tapOn:
+    id: "start-tracking-button"
+- tapOn:
+    id: "continue-on-device-button"
+- tapOn:
+    id: "owner-baby-name"
+- inputText: "Mila"
+- tapOn:
+    id: "dismiss-keyboard"
+- stopApp
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-baby-screen"
+    timeout: 60000
+- assertVisible: "Mila"
+- tapOn:
+    id: "owner-baby-continue"
+- assertVisible: "Birth date is required"
+- assertVisible: "Select boy or girl"

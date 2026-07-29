@@ -258,6 +258,8 @@ exp://127.0.0.1:8081
 
 4. Click **"Save"** after adding all URLs
 
+See [`DEEP_LINKS.md`](DEEP_LINKS.md) for callback routing, onboarding resume behavior, timer action links, and focused tests.
+
 ---
 
 ## Part B: Expo/EAS Setup (Build Service)
