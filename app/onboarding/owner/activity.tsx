@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import type { FirstActivityType } from "@/types/new-owner-onboarding";
-import { ACTION, BORDER, SURFACE, TEXT } from "@/constants/colors";
+import { SURFACE, TEXT } from "@/constants/colors";
+import { Button } from "@/components/Button";
+import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
 import { useColorScheme } from "nativewind";
 
 const PRIMARY_ACTIVITIES: Array<{ type: FirstActivityType; icon: string }> = [
@@ -38,11 +39,8 @@ export default function NewOwnerActivityScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
   const secondaryBackgroundColor = isDark ? SURFACE.dark.secondary : SURFACE.light.secondary;
   const primaryTextColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
-  const secondaryTextColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
-  const borderColor = isDark ? BORDER.dark.default : BORDER.light.default;
   const [showAll, setShowAll] = useState(false);
 
   const handleSkipRemainingSetup = useCallback(async () => {
@@ -53,58 +51,36 @@ export default function NewOwnerActivityScreen() {
   const activities = showAll ? [...PRIMARY_ACTIVITIES, ...MORE_ACTIVITIES] : PRIMARY_ACTIVITIES;
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor }} testID="first-activity-screen">
-      <ScrollView contentContainerClassName="px-6 py-8">
-        <Text className="text-3xl font-bold mb-3" style={{ color: primaryTextColor }}>
-          {t("newOwnerOnboarding.activity.title")}
-        </Text>
-        <Text className="text-base mb-7" style={{ color: secondaryTextColor }}>
-          {t("newOwnerOnboarding.activity.subtitle")}
-        </Text>
-
-        <View className="gap-3">
-          {activities.map(activity => (
-            <Pressable
-              key={activity.type}
-              onPress={() => router.push(ACTIVITY_ROUTES[activity.type] as never)}
-              className="flex-row items-center rounded-card px-5 py-4"
-              style={{ backgroundColor: secondaryBackgroundColor }}
-              accessibilityRole="button"
-              testID={`first-activity-${activity.type}`}
-            >
-              <Text className="text-2xl mr-4">{activity.icon}</Text>
-              <Text className="text-lg font-semibold" style={{ color: primaryTextColor }}>
-                {t(`newOwnerOnboarding.activity.${activity.type}`)}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {!showAll && (
+    <OnboardingScreen
+      testID="first-activity-screen"
+      title={t("newOwnerOnboarding.activity.title")}
+      description={t("newOwnerOnboarding.activity.subtitle")}
+    >
+      <View className="gap-3">
+        {activities.map(activity => (
           <Pressable
-            onPress={() => setShowAll(true)}
-            className="py-4 items-center mt-2"
+            key={activity.type}
+            onPress={() => router.push(ACTIVITY_ROUTES[activity.type] as never)}
+            className="flex-row items-center rounded-card px-5 py-4"
+            style={{ backgroundColor: secondaryBackgroundColor }}
             accessibilityRole="button"
-            testID="see-all-activity-types"
+            testID={`first-activity-${activity.type}`}
           >
-            <Text className="font-semibold" style={{ color: ACTION.light.primary }}>
-              {t("newOwnerOnboarding.activity.seeAll")}
+            <Text className="text-2xl mr-4">{activity.icon}</Text>
+            <Text className="flex-1 text-lg font-semibold" style={{ color: primaryTextColor }}>
+              {t(`newOwnerOnboarding.activity.${activity.type}`)}
             </Text>
           </Pressable>
-        )}
-
-        <Pressable
-          onPress={handleSkipRemainingSetup}
-          className="py-4 mt-6 items-center rounded-button-lg border"
-          style={{ borderColor }}
-          accessibilityRole="button"
-          testID="skip-remaining-setup-button"
-        >
-          <Text className="text-base font-semibold" style={{ color: primaryTextColor }}>
-            {t("newOwnerOnboarding.activity.skipRemaining")}
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+        ))}
+      </View>
+      {!showAll && (
+        <Button wrapText variant="ghost" onPress={() => setShowAll(true)} testID="see-all-activity-types">
+          {t("newOwnerOnboarding.activity.seeAll")}
+        </Button>
+      )}
+      <Button wrapText variant="secondary" onPress={handleSkipRemainingSetup} testID="skip-remaining-setup-button">
+        {t("newOwnerOnboarding.activity.skipRemaining")}
+      </Button>
+    </OnboardingScreen>
   );
 }

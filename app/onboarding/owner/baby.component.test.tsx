@@ -36,6 +36,7 @@ jest.mock("@/components", () => ({
 }));
 
 jest.mock("@/components/onboarding", () => ({
+  ...jest.requireActual("@/components/onboarding"),
   OnboardingIllustration: () => null,
 }));
 
@@ -70,6 +71,14 @@ describe("NewOwnerBabyScreen", () => {
     expect(screen.getByText("validation.nameRequired")).toBeTruthy();
     expect(screen.getByText("validation.birthDateRequired")).toBeTruthy();
     expect(screen.getByText("validation.genderRequired")).toBeTruthy();
+    expect(screen.getAllByRole("alert")).toHaveLength(3);
+    expect(screen.getByTestId("owner-baby-name").props.accessibilityLabel).toBe(
+      "newOwnerOnboarding.baby.name"
+    );
+    expect(screen.getByTestId("owner-baby-gender-male").props.accessibilityState).toEqual({
+      selected: false,
+    });
+    expect(screen.getByText("common.continue").props.adjustsFontSizeToFit).toBe(false);
   });
 
   it("dismisses the iOS birth-date picker before continuing", async () => {

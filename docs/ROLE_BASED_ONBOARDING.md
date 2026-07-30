@@ -53,11 +53,27 @@ npm run test:component -- --runInBand app/onboarding/owner app/auth/sign-in.comp
 npm run test:production-gating
 ```
 
-Production-route Maestro suites are shared by both platforms:
+Production-route Maestro suites are shared by both platforms. Run them through the resumable runner:
 
 ```bash
-maestro test e2e/suites/onboarding-ios.yaml
-maestro test e2e/suites/onboarding-android.yaml
+npm run e2e:onboarding:ios -- --reset
+npm run e2e:onboarding:android -- --reset
 ```
 
 The authenticated flows require disposable local Supabase fixtures. Prepare them with the commands in [`e2e/README.md`](../e2e/README.md). The manual-code flow also requires `npm run e2e:prepare-caregiver-join`. Run `npm run e2e:onboarding-network` to stop the local API during caregiver redemption and verify recovery after restart.
+
+## Visual review matrix
+
+Review the production routes after the automated suites pass. Use one small and one large device on each platform, switch between light and dark mode, enable a large accessibility text size, and repeat the route inventory in every supported locale: `en`, `sr`, `es`, `es-ES`, `fr`, `pt-PT`, `pt-BR`, `de`, and `it`.
+
+| Route or state | What to exercise |
+| --- | --- |
+| Welcome | Open and close the language list, select each locale, and reach all three actions. |
+| Account | Reach Sign in, Create account, and Continue on this device. |
+| Baby profile | Focus the name field, dismiss the keyboard from the header, open and close the date picker, trigger all required errors, select each gender, and reach Continue and Start over. Confirm that the controls match Add/Edit baby and that no photo control appears. |
+| Invitation | Review the email form, loading, error, restored invitation, and ready-to-share states. |
+| First activity and saved | Expand the activity list, reach every activity, skip setup, and review both saved-state actions. |
+| Join family | Review code entry, confirmation, destructive-data warning, joining, refresh, and each recoverable failure state. |
+| Returning account | Review loading, verified-empty, unavailable, retry, and sign-out states. |
+
+For every row, scroll from the first heading to the last action with the keyboard both closed and open where a field exists. Text may wrap and controls may grow vertically. Fail the review for clipped or overlapping text, untranslated copy, low contrast, misaligned controls, an unreachable action, a missing accessibility state, or a changed route transition.

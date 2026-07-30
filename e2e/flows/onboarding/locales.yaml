@@ -18,43 +18,52 @@ tags:
 - tapOn:
     id: "welcome-language-en"
 - assertVisible: "Care for your baby with confidence"
+- assertVisible: "Track feeding, sleep, diapers, and more, either on your own or together with family."
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-sr"
 - assertVisible: "Brinite o svojoj bebi sa sigurnošću"
+- assertVisible: "Pratite hranjenje, spavanje, pelene i još mnogo toga, sami ili zajedno sa porodicom."
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-es"
 - assertVisible: "Cuida a tu bebé con confianza"
+- assertVisible: "Registra tomas, sueño, pañales y mucho más, tanto por tu cuenta como en familia."
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-es-ES"
 - assertVisible: "Cuida de tu bebé con confianza"
+- assertVisible: "Registra tomas, sueño, pañales y mucho más, tanto por tu cuenta como en familia."
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-fr"
 - assertVisible: "Prenez soin de votre bébé en toute confiance"
+- assertVisible: "Suivez les repas, le sommeil, les couches et bien plus, seul ou en famille."
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-pt-PT"
 - assertVisible: "Cuide do seu bebé com confiança"
+- assertVisible: "Registe alimentação, sono, fraldas e muito mais, por sua conta ou em família."
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-pt-BR"
 - assertVisible: "Cuide do seu bebê com confiança"
+- assertVisible: "Registre mamadas, sono, fraldas e muito mais, por conta própria ou em família."
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-de"
 - assertVisible: "Kümmere dich mit Zuversicht um dein Baby"
+- assertVisible: "Erfasse Füttern, Schlaf, Windeln und mehr, allein oder gemeinsam mit deiner Familie."
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-it"
 - assertVisible: "Prenditi cura del tuo bambino con sicurezza"
+- assertVisible: "Registra poppate, sonno, pannolini e molto altro, sia da solo sia insieme alla famiglia."

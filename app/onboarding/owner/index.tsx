@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useLanguage, type LanguageCode } from "@/contexts";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import { ACTION, SURFACE, TEXT } from "@/constants/colors";
+import { Button } from "@/components/Button";
+import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
 import { useColorScheme } from "nativewind";
 
 const LANGUAGE_OPTIONS = [
@@ -51,104 +52,66 @@ export default function NewOwnerWelcomeScreen() {
     router.push("/auth/sign-in?onboardingIntent=returning-user");
   }, [language, router]);
 
+  const languageSelector = (
+    <View className="items-end mb-5">
+      <Button
+        variant="secondary"
+        size="default"
+        wrapText
+        onPress={() => setShowLanguages(value => !value)}
+        accessibilityLabel={t("newOwnerOnboarding.welcome.language", {
+          language: t(currentLanguage.labelKey),
+        })}
+        accessibilityState={{ expanded: showLanguages }}
+        testID="current-language-button"
+        className="w-auto"
+      >
+        {`🌐 ${t(currentLanguage.labelKey)}`}
+      </Button>
+    </View>
+  );
+
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: isDark ? SURFACE.dark.background : SURFACE.light.background }}
+    <OnboardingScreen
       testID="new-owner-welcome-screen"
+      title={t("newOwnerOnboarding.welcome.title")}
+      description={t("newOwnerOnboarding.welcome.promise")}
+      headerAccessory={languageSelector}
+      contentClassName="gap-3"
     >
-      <ScrollView contentContainerClassName="flex-grow px-6 py-8" showsVerticalScrollIndicator={false}>
-        <View className="items-end mb-8">
-          <Pressable
-            onPress={() => setShowLanguages(value => !value)}
-            className="rounded-full px-4 py-3 border"
-            style={{ borderColor: isDark ? "#4B4743" : "#DDD7D2" }}
-            accessibilityRole="button"
-            accessibilityLabel={t("newOwnerOnboarding.welcome.language", {
-              language: t(currentLanguage.labelKey),
-            })}
-            accessibilityState={{ expanded: showLanguages }}
-            testID="current-language-button"
-          >
-            <Text style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}>
-              🌐 {t(currentLanguage.labelKey)}
-            </Text>
-          </Pressable>
+      {showLanguages && (
+        <View
+          className="rounded-card p-2 mb-3"
+          style={{ backgroundColor: isDark ? SURFACE.dark.secondary : SURFACE.light.secondary }}
+        >
+          {LANGUAGE_OPTIONS.map(option => (
+            <Pressable
+              key={option.value}
+              onPress={() => handleLanguage(option.value)}
+              className="flex-row items-center justify-between px-4 py-3 rounded-lg"
+              accessibilityRole="radio"
+              accessibilityState={{ selected: option.value === language }}
+              testID={`welcome-language-${option.value}`}
+            >
+              <Text className="flex-1" style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}>
+                {t(option.labelKey)}
+              </Text>
+              {option.value === language && (
+                <Text style={{ color: isDark ? ACTION.dark.primary : ACTION.light.primary }}>✓</Text>
+              )}
+            </Pressable>
+          ))}
         </View>
-
-        {showLanguages && (
-          <View
-            className="rounded-card p-2 mb-6"
-            style={{ backgroundColor: isDark ? SURFACE.dark.secondary : SURFACE.light.secondary }}
-          >
-            {LANGUAGE_OPTIONS.map(option => (
-              <Pressable
-                key={option.value}
-                onPress={() => handleLanguage(option.value)}
-                className="flex-row items-center justify-between px-4 py-3 rounded-lg"
-                accessibilityRole="radio"
-                accessibilityState={{ selected: option.value === language }}
-                testID={`welcome-language-${option.value}`}
-              >
-                <Text style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}>
-                  {t(option.labelKey)}
-                </Text>
-                {option.value === language && <Text style={{ color: ACTION.light.primary }}>✓</Text>}
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        <View className="flex-1 justify-center pb-10">
-          <Text
-            className="text-4xl font-bold mb-5"
-            style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}
-          >
-            {t("newOwnerOnboarding.welcome.title")}
-          </Text>
-          <Text
-            className="text-lg leading-7"
-            style={{ color: isDark ? TEXT.dark.secondary : TEXT.light.secondary }}
-          >
-            {t("newOwnerOnboarding.welcome.promise")}
-          </Text>
-        </View>
-
-        <View className="gap-3 pb-12">
-          <Pressable
-            onPress={handleStart}
-            className="rounded-button-lg py-4 items-center"
-            style={{ backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary }}
-            accessibilityRole="button"
-            testID="start-tracking-button"
-          >
-            <Text className="text-white text-lg font-bold">
-              {t("newOwnerOnboarding.welcome.startTracking")}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={handleJoin}
-            className="rounded-button-lg py-4 items-center border"
-            style={{ borderColor: isDark ? "#4B4743" : "#DDD7D2" }}
-            accessibilityRole="button"
-            testID="join-family-button"
-          >
-            <Text className="text-base font-semibold" style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}>
-              {t("newOwnerOnboarding.welcome.joinFamily")}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={handleSignIn}
-            className="py-3 items-center"
-            accessibilityRole="button"
-            testID="sign-in-button"
-          >
-            <Text className="text-base font-semibold" style={{ color: isDark ? ACTION.dark.primary : ACTION.light.primary }}>
-              {t("newOwnerOnboarding.welcome.signIn")}
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      )}
+      <Button wrapText size="large" onPress={handleStart} testID="start-tracking-button">
+        {t("newOwnerOnboarding.welcome.startTracking")}
+      </Button>
+      <Button wrapText variant="secondary" onPress={handleJoin} testID="join-family-button">
+        {t("newOwnerOnboarding.welcome.joinFamily")}
+      </Button>
+      <Button wrapText variant="ghost" onPress={handleSignIn} testID="sign-in-button">
+        {t("newOwnerOnboarding.welcome.signIn")}
+      </Button>
+    </OnboardingScreen>
   );
 }

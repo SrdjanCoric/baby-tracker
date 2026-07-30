@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuth, useBaby, useHousehold, useTheme } from "@/contexts";
-import { ACTION, SURFACE, TEXT } from "@/constants/colors";
+import { ACTION, TEXT } from "@/constants/colors";
+import { Button } from "@/components/Button";
+import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import { restoreReturningUserAccount } from "@/services/returning-user-restoration";
 import type { NewOwnerOnboardingState } from "@/types/new-owner-onboarding";
@@ -125,89 +126,65 @@ export default function ReturningUserRestoreScreen() {
     router.replace("/onboarding/owner/join");
   }, [router]);
 
-  const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
-  const primaryText = isDark ? TEXT.dark.primary : TEXT.light.primary;
-  const secondaryText = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
-
   if (!state || state.screen === "returning-restoring") {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-6" style={{ backgroundColor }} testID="returning-restoring-screen">
-        <ActivityIndicator size="large" color={isDark ? ACTION.dark.primary : ACTION.light.primary} />
-        <Text className="text-xl font-bold mt-6 text-center" style={{ color: primaryText }}>
-          {t("newOwnerOnboarding.restoration.loadingTitle")}
-        </Text>
-        <Text className="text-base mt-3 text-center" style={{ color: secondaryText }}>
-          {t("newOwnerOnboarding.restoration.loadingDescription")}
-        </Text>
-      </SafeAreaView>
+      <OnboardingScreen
+        testID="returning-restoring-screen"
+        title={t("newOwnerOnboarding.restoration.loadingTitle")}
+        description={t("newOwnerOnboarding.restoration.loadingDescription")}
+        contentClassName="items-center justify-center"
+      >
+        <View accessibilityState={{ busy: true }}>
+          <ActivityIndicator size="large" color={isDark ? ACTION.dark.primary : ACTION.light.primary} />
+        </View>
+      </OnboardingScreen>
     );
   }
 
   if (state.screen === "returning-verified-empty") {
     return (
-      <SafeAreaView className="flex-1 px-6 justify-center" style={{ backgroundColor }} testID="returning-verified-empty-screen">
-        <Text className="text-3xl font-bold text-center" style={{ color: primaryText }}>
-          {t("newOwnerOnboarding.restoration.emptyTitle")}
-        </Text>
-        <Text className="text-base mt-3 mb-8 text-center" style={{ color: secondaryText }}>
-          {t("newOwnerOnboarding.restoration.emptyDescription")}
-        </Text>
-        <View className="gap-3">
-          <Pressable
-            onPress={handleAddBaby}
-            className="rounded-button-lg py-4 items-center"
-            style={{ backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary }}
-            testID="returning-add-baby-button"
-          >
-            <Text className="text-white text-base font-bold">
-              {t("newOwnerOnboarding.restoration.addBaby")}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={handleJoinFamily}
-            className="rounded-button-lg py-4 items-center border"
-            style={{ borderColor: secondaryText }}
-            testID="returning-join-family-button"
-          >
-            <Text className="text-base font-semibold" style={{ color: primaryText }}>
-              {t("newOwnerOnboarding.restoration.joinFamily")}
-            </Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+      <OnboardingScreen
+        testID="returning-verified-empty-screen"
+        title={t("newOwnerOnboarding.restoration.emptyTitle")}
+        description={t("newOwnerOnboarding.restoration.emptyDescription")}
+        contentClassName="gap-3 justify-center"
+      >
+        <Button wrapText onPress={handleAddBaby} testID="returning-add-baby-button">
+          {t("newOwnerOnboarding.restoration.addBaby")}
+        </Button>
+        <Button wrapText variant="secondary" onPress={handleJoinFamily} testID="returning-join-family-button">
+          {t("newOwnerOnboarding.restoration.joinFamily")}
+        </Button>
+      </OnboardingScreen>
     );
   }
 
   if (state.screen === "returning-unavailable") {
     return (
-      <SafeAreaView className="flex-1 px-6 justify-center" style={{ backgroundColor }} testID="returning-unavailable-screen">
-        <Text className="text-3xl font-bold text-center" style={{ color: primaryText }}>
-          {t("newOwnerOnboarding.restoration.unavailableTitle")}
-        </Text>
-        <Text className="text-base mt-3 mb-8 text-center" style={{ color: secondaryText }}>
+      <OnboardingScreen
+        testID="returning-unavailable-screen"
+        title={t("newOwnerOnboarding.restoration.unavailableTitle")}
+        contentClassName="gap-3 justify-center"
+      >
+        <Text
+          accessibilityRole="alert"
+          className="text-base mb-5"
+          style={{ color: isDark ? TEXT.dark.secondary : TEXT.light.secondary }}
+        >
           {t("newOwnerOnboarding.restoration.unavailableDescription")}
         </Text>
-        <View className="gap-3">
-          <Pressable
-            onPress={handleRetry}
-            className="rounded-button-lg py-4 items-center"
-            style={{ backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary }}
-            testID="returning-retry-button"
-          >
-            <Text className="text-white text-base font-bold">{t("common.retry")}</Text>
-          </Pressable>
-          <Pressable onPress={handleSignOut} className="py-4 items-center" testID="returning-sign-out-button">
-            <Text className="text-base font-semibold" style={{ color: secondaryText }}>
-              {t("auth.signOut")}
-            </Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+        <Button wrapText onPress={handleRetry} testID="returning-retry-button">
+          {t("common.retry")}
+        </Button>
+        <Button wrapText variant="ghost" onPress={handleSignOut} testID="returning-sign-out-button">
+          {t("auth.signOut")}
+        </Button>
+      </OnboardingScreen>
     );
   }
 
   if (!RETURNING_SCREENS.has(state.screen)) {
     router.replace("/onboarding/owner");
   }
-  return <View className="flex-1" style={{ backgroundColor }} />;
+  return <View className="flex-1" />;
 }

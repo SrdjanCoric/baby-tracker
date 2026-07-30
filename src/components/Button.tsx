@@ -16,6 +16,7 @@ interface ButtonProps extends Omit<PressableProps, "children"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  wrapText?: boolean;
   children: React.ReactNode;
 }
 
@@ -33,6 +34,7 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
       size = "default",
       loading = false,
       disabled = false,
+      wrapText = false,
       children,
       className,
       style,
@@ -113,9 +115,9 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
           <ActivityIndicator size="small" color={spinnerColor} />
         ) : typeof children === "string" ? (
           <Text
-            className={`font-semibold ${textVariantClasses[variant]} ${textSizeClasses[size]} text-center`}
-            adjustsFontSizeToFit
-            minimumFontScale={0.6}
+            className={`font-semibold ${textVariantClasses[variant]} ${textSizeClasses[size]} text-center ${wrapText ? "flex-shrink" : ""}`}
+            adjustsFontSizeToFit={!wrapText}
+            minimumFontScale={wrapText ? undefined : 0.6}
           >
             {children}
           </Text>

@@ -23,6 +23,14 @@ describe("Button", () => {
       );
       screen.getByTestId("parent-button");
     });
+
+    it("allows labels to wrap without shrinking when requested", () => {
+      render(<Button wrapText>Continue without an account</Button>);
+
+      const label = screen.getByText("Continue without an account");
+      expect(label.props.adjustsFontSizeToFit).toBe(false);
+      expect(label.props.numberOfLines).toBeUndefined();
+    });
   });
 
   describe("disabled state", () => {

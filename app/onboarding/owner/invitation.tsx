@@ -1,17 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Share,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, Share, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useColorScheme } from "nativewind";
@@ -23,7 +11,10 @@ import {
   type CaregiverInvitation,
 } from "@/services/household-service";
 import { formatInviteCodeForDisplay } from "@/utils/inviteCode";
-import { ACTION, BORDER, SURFACE, TEXT } from "@/constants/colors";
+import { ACTION, SURFACE, TEXT } from "@/constants/colors";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
 
 export default function NewOwnerInvitationScreen() {
   const { t } = useTranslation();
@@ -31,10 +22,8 @@ export default function NewOwnerInvitationScreen() {
   const { language } = useLanguage();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
   const primaryTextColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
   const secondaryTextColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
-  const borderColor = isDark ? BORDER.dark.default : BORDER.light.default;
   const [email, setEmail] = useState("");
   const [invitation, setInvitation] = useState<CaregiverInvitation | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -103,137 +92,81 @@ export default function NewOwnerInvitationScreen() {
     }
   }, [invitation, t]);
 
+  const inputError = error
+    ? t(error === "invalidCaregiverEmail"
+      ? "household.invalidCaregiverEmail"
+      : "household.invitationCreateFailed")
+    : undefined;
+
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor }} testID="new-owner-invitation-screen">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
-        <Pressable onPress={Keyboard.dismiss} className="py-3" testID="dismiss-keyboard" />
-        <ScrollView contentContainerClassName="flex-grow justify-center px-6" keyboardShouldPersistTaps="handled">
-        <Text className="text-3xl font-bold mb-3" style={{ color: primaryTextColor }}>
-          {t("newOwnerOnboarding.invitation.title")}
-        </Text>
-        <Text className="text-base leading-6 mb-8" style={{ color: secondaryTextColor }}>
-          {t("newOwnerOnboarding.invitation.description")}
-        </Text>
-        {isRestoring ? (
-          <ActivityIndicator className="mb-4" />
-        ) : restoreFailed ? (
-          <View className="mb-4">
-            <Text className="text-red-500 mb-3">
-              {t("household.invitationCreateFailed")}
-            </Text>
-            <Pressable
-              onPress={() => setRestoreAttempt(attempt => attempt + 1)}
-              className="rounded-button-lg py-4 items-center"
-              style={{ backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary }}
-              accessibilityRole="button"
-              testID="retry-invitation-restore-button"
-            >
-              <Text className="text-white text-base font-semibold">{t("common.retry")}</Text>
-            </Pressable>
-          </View>
-        ) : invitation ? (
-          <View className="rounded-card p-5 mb-4" style={{ backgroundColor: isDark ? SURFACE.dark.secondary : SURFACE.light.secondary }}>
-            <Text className="text-base font-semibold mb-2" style={{ color: primaryTextColor }}>
-              {t("newOwnerOnboarding.invitation.ready")}
-            </Text>
-            <Text className="text-3xl font-bold tracking-widest" style={{ color: primaryTextColor }}>
-              {formatInviteCodeForDisplay(invitation.inviteCode)}
-            </Text>
-          </View>
-        ) : (
-          <>
-            <Text className="text-sm font-semibold mb-2" style={{ color: primaryTextColor }}>
-              {t("newOwnerOnboarding.invitation.email")}
-            </Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder={t("newOwnerOnboarding.invitation.emailPlaceholder")}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              className="rounded-lg border px-4 py-4 mb-3"
-              style={{ borderColor, color: primaryTextColor }}
-              testID="onboarding-caregiver-email"
-            />
-            {error && (
-              <Text className="text-red-500 mb-3">
-                {t(error === "invalidCaregiverEmail"
-                  ? "household.invalidCaregiverEmail"
-                  : "household.invitationCreateFailed")}
-              </Text>
-            )}
-            <Pressable
-              onPress={handleCreate}
-              disabled={isCreating}
-              className="rounded-button-lg py-4 items-center mb-3"
-              style={{
-                backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary,
-                opacity: isCreating ? 0.5 : 1,
-              }}
-              accessibilityRole="button"
-              testID="create-onboarding-invitation-button"
-            >
-              {isCreating ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white text-base font-semibold">
-                  {t("newOwnerOnboarding.invitation.create")}
-                </Text>
-              )}
-            </Pressable>
-          </>
-        )}
-        {invitation ? (
-          <>
-            <Pressable
-              onPress={handleShare}
-              className="rounded-button-lg py-4 items-center mb-3"
-              style={{ backgroundColor: ACTION.light.primary }}
-              accessibilityRole="button"
-              testID="share-onboarding-invitation-button"
-            >
-              <Text className="text-white text-base font-semibold">
-                {t("newOwnerOnboarding.invitation.share")}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={handleNotNow}
-              className="rounded-button-lg border py-4 items-center"
-              style={{ borderColor }}
-              accessibilityRole="button"
-              testID="continue-after-invitation-button"
-            >
-              <Text className="text-base font-semibold" style={{ color: primaryTextColor }}>
-                {t("newOwnerOnboarding.invitation.continue")}
-              </Text>
-            </Pressable>
-          </>
-        ) : (
-          <Pressable
-            onPress={handleNotNow}
-            className="rounded-button-lg border py-4 items-center"
-            style={{ borderColor }}
-            accessibilityRole="button"
-            testID="invitation-not-now-button"
-          >
-            <Text className="text-base font-semibold" style={{ color: primaryTextColor }}>
-              {t("newOwnerOnboarding.invitation.notNow")}
-            </Text>
-          </Pressable>
-        )}
-        <Pressable
-          onPress={handleSkipRemaining}
-          className="py-4 items-center"
-          accessibilityRole="button"
-          testID="invitation-skip-remaining-button"
-        >
-          <Text className="text-sm" style={{ color: secondaryTextColor }}>
-            {t("newOwnerOnboarding.invitation.skipRemaining")}
+    <OnboardingScreen
+      testID="new-owner-invitation-screen"
+      title={t("newOwnerOnboarding.invitation.title")}
+      description={t("newOwnerOnboarding.invitation.description")}
+    >
+      {isRestoring ? (
+        <View className="items-center py-4" accessibilityState={{ busy: true }}>
+          <ActivityIndicator color={isDark ? ACTION.dark.primary : ACTION.light.primary} />
+        </View>
+      ) : restoreFailed ? (
+        <View className="gap-3">
+          <Text accessibilityRole="alert" style={{ color: secondaryTextColor }}>
+            {t("household.invitationCreateFailed")}
           </Text>
-        </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          <Button wrapText onPress={() => setRestoreAttempt(attempt => attempt + 1)} testID="retry-invitation-restore-button">
+            {t("common.retry")}
+          </Button>
+        </View>
+      ) : invitation ? (
+        <View className="rounded-card p-5" style={{ backgroundColor: isDark ? SURFACE.dark.secondary : SURFACE.light.secondary }}>
+          <Text className="text-base font-semibold mb-2" style={{ color: primaryTextColor }}>
+            {t("newOwnerOnboarding.invitation.ready")}
+          </Text>
+          <Text className="text-3xl font-bold tracking-widest" style={{ color: primaryTextColor }}>
+            {formatInviteCodeForDisplay(invitation.inviteCode)}
+          </Text>
+        </View>
+      ) : (
+        <>
+          <Input
+            label={t("newOwnerOnboarding.invitation.email")}
+            error={inputError}
+            value={email}
+            onChangeText={setEmail}
+            placeholder={t("newOwnerOnboarding.invitation.emailPlaceholder")}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            testID="onboarding-caregiver-email"
+          />
+          <Button
+            wrapText
+            onPress={handleCreate}
+            loading={isCreating}
+            disabled={isCreating}
+            testID="create-onboarding-invitation-button"
+          >
+            {t("newOwnerOnboarding.invitation.create")}
+          </Button>
+        </>
+      )}
+      {invitation ? (
+        <>
+          <Button wrapText onPress={handleShare} testID="share-onboarding-invitation-button">
+            {t("newOwnerOnboarding.invitation.share")}
+          </Button>
+          <Button wrapText variant="secondary" onPress={handleNotNow} testID="continue-after-invitation-button">
+            {t("newOwnerOnboarding.invitation.continue")}
+          </Button>
+        </>
+      ) : (
+        <Button wrapText variant="secondary" onPress={handleNotNow} testID="invitation-not-now-button">
+          {t("newOwnerOnboarding.invitation.notNow")}
+        </Button>
+      )}
+      <Button wrapText variant="ghost" onPress={handleSkipRemaining} testID="invitation-skip-remaining-button">
+        {t("newOwnerOnboarding.invitation.skipRemaining")}
+      </Button>
+    </OnboardingScreen>
   );
 }
