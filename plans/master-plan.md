@@ -173,4 +173,4 @@ Durable decisions that apply across all tasks:
 
 ## Workflow status
 
-Tasks 0001 through 0042 are merged. Task 0043 is ready. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0043 are merged. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
