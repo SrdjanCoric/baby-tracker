@@ -170,7 +170,7 @@ Durable decisions that apply across all tasks:
 - [x] 0041 · Cut over to role-based onboarding (after 0040) → tasks/done/0041-cut-over-to-role-based-onboarding.md
 - [x] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/done/0042-confirm-ambiguous-morning-sleep.md
 - [x] 0043 · Respect the selected time format when starting timers earlier → tasks/done/0043-respect-timer-start-time-format.md
-- [~] 0044 · Match onboarding to the current app UI (after 0041) → tasks/0044-match-onboarding-current-app-ui.md
+- [>] 0044 · Match onboarding to the current app UI (after 0041) → tasks/0044-match-onboarding-current-app-ui.md
 - [ ] 0045 · Prove onboarding recovery after network failure (after 0044) → tasks/0045-prove-onboarding-network-recovery.md
 
 ## Workflow status
