@@ -169,7 +169,7 @@ Durable decisions that apply across all tasks:
 - [x] 0040 · Add development onboarding tools (after 0039) → tasks/done/0040-add-development-onboarding-tools.md
 - [x] 0041 · Cut over to role-based onboarding (after 0040) → tasks/done/0041-cut-over-to-role-based-onboarding.md
 - [x] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/done/0042-confirm-ambiguous-morning-sleep.md
-- [ ] 0043 · Respect the selected time format when starting timers earlier → tasks/0043-respect-timer-start-time-format.md
+- [>] 0043 · Respect the selected time format when starting timers earlier → tasks/0043-respect-timer-start-time-format.md
 
 ## Workflow status
 

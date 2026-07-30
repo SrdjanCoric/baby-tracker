@@ -4,8 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useTummyTime, useBaby, useAuth } from "@/contexts";
-import { formatDuration } from "@/utils/time";
+import { useTummyTime, useBaby, useAuth, useTimeFormat } from "@/contexts";
+import { formatDuration, formatTime } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { MilestoneSuggestionModal } from "@/components";
@@ -212,6 +212,7 @@ function StartView({
   onLogPast,
 }: StartViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
 
@@ -268,14 +269,6 @@ function StartView({
     setCustomStartTime(null);
   }, []);
 
-  const formatCustomTime = (date: Date): string => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   return (
     <View className="items-center w-full">
       {/* Started Earlier Button */}
@@ -296,7 +289,7 @@ function StartView({
         <View className="flex-row items-center mb-8 py-3 px-5 rounded-full" style={{ backgroundColor: TUMMY_ORANGE_MUTED }}>
           <Text className="text-lg mr-2">🕐</Text>
           <Text className="text-base font-medium mr-2" style={{ color: TUMMY_ORANGE_DARK }}>
-            {t("tummyTime.startTime")}: {formatCustomTime(customStartTime)}
+            {t("tummyTime.startTime")}: {formatTime(customStartTime, timeFormat)}
           </Text>
           <Pressable
             onPress={handleClearCustomTime}
@@ -359,6 +352,7 @@ function StartView({
             mode={Platform.OS === "ios" ? "datetime" : "time"}
             display="spinner"
             onChange={handleTimeChange}
+            is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
             minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
             maximumDate={Platform.OS === "ios" ? new Date() : undefined}
           />

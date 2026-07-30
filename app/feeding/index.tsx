@@ -4,9 +4,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useFeeding, useBaby, useUnits, useAuth } from "@/contexts";
+import { useFeeding, useBaby, useUnits, useAuth, useTimeFormat } from "@/contexts";
 import type { CreateFeedingInput, StoredFeedingEntry } from "@/services/feeding-storage";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, formatTime } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { getLastFeedingType, feedingTypeToTab } from "@/utils/feeding";
 import { COMMON_FOODS } from "@/constants/foods";
@@ -314,6 +314,7 @@ interface BreastfeedingFormProps {
 
 function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, buttonBgColor, secondaryBg }: BreastfeedingFormProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -372,14 +373,6 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
     setCustomStartTime(null);
   }, []);
 
-  const formatCustomTime = (date: Date): string => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   return (
     <View className="flex-1 items-center justify-center px-6">
       <View className="items-center w-full">
@@ -417,7 +410,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
           <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: secondaryBg }}>
             <Text className="text-lg mr-2">🕐</Text>
             <Text className="text-base font-medium mr-2" style={{ color: accentColor }}>
-              {t("feeding.startTime")}: {formatCustomTime(customStartTime)}
+              {t("feeding.startTime")}: {formatTime(customStartTime, timeFormat)}
             </Text>
             <Pressable
               onPress={handleClearCustomTime}
@@ -512,6 +505,7 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
               mode={Platform.OS === "ios" ? "datetime" : "time"}
               display="spinner"
               onChange={handleTimeChange}
+              is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
               minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
               maximumDate={Platform.OS === "ios" ? new Date() : undefined}
             />
