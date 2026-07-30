@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import PumpingScreen from "./index";
 
 const mockBack = jest.fn();
@@ -67,6 +67,7 @@ describe("PumpingScreen stop confirmation", () => {
     mockActiveTimer = runningTimer;
     mockIsStopping = false;
     mockTimeFormat = "12h";
+    mockStartPumping.mockResolvedValue({ success: true });
   });
 
   it("enters a disabled stopping state only after confirming a volume", () => {
@@ -86,18 +87,14 @@ describe("PumpingScreen stop confirmation", () => {
     expect(mockStopPumping).toHaveBeenCalledTimes(1);
   });
 
-  it("reacts to the current 24-hour or 12-hour custom start preference", () => {
+  it("reacts to the current custom start preference and uses the selected time", async () => {
     mockActiveTimer = null;
     mockTimeFormat = "24h";
+    const selectedTime = new Date(2020, 0, 1, 14, 30);
     const { rerender } = render(<PumpingScreen />);
 
     fireEvent.press(screen.getByRole("button", { name: "pumping.startedEarlier" }));
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      new Date(2020, 0, 1, 14, 30)
-    );
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, selectedTime);
 
     expect(screen.getByText("pumping.startTime: 14:30")).toBeTruthy();
 
@@ -105,6 +102,30 @@ describe("PumpingScreen stop confirmation", () => {
     rerender(<PumpingScreen />);
 
     expect(screen.getByText("pumping.startTime: 2:30 PM")).toBeTruthy();
+    fireEvent.press(screen.getByTestId("side-both"));
+
+    await waitFor(() => {
+      expect(mockStartPumping).toHaveBeenCalledWith("both", selectedTime);
+    });
+  });
+
+  it("configures the Android custom start picker from the current preference", () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+    mockActiveTimer = null;
+    mockTimeFormat = "24h";
+
+    try {
+      const { rerender } = render(<PumpingScreen />);
+      fireEvent.press(screen.getByRole("button", { name: "pumping.startedEarlier" }));
+      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(true);
+
+      mockTimeFormat = "12h";
+      rerender(<PumpingScreen />);
+      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(false);
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
   });
 
   it("reports a completion failure without leaving the screen", async () => {

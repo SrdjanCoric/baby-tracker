@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
+import { Platform } from "react-native";
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
@@ -272,17 +273,13 @@ describe("FeedingScreen", () => {
       });
     });
 
-    it("reacts to the current 24-hour or 12-hour custom start preference", () => {
+    it("reacts to the current custom start preference and uses the selected time", async () => {
       mockTimeFormat = "24h";
+      const selectedTime = new Date(2020, 0, 1, 14, 30);
       const { rerender } = render(<FeedingScreen />);
 
       fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
-      fireEvent(
-        screen.getByTestId("datetime-picker"),
-        "change",
-        {},
-        new Date(2020, 0, 1, 14, 30)
-      );
+      fireEvent(screen.getByTestId("datetime-picker"), "change", {}, selectedTime);
 
       expect(screen.getByText("Start time: 14:30")).toBeTruthy();
 
@@ -290,6 +287,29 @@ describe("FeedingScreen", () => {
       rerender(<FeedingScreen />);
 
       expect(screen.getByText("Start time: 2:30 PM")).toBeTruthy();
+      fireEvent.press(screen.getByText("L"));
+
+      await waitFor(() => {
+        expect(mockStartBreastfeeding).toHaveBeenCalledWith("left", selectedTime);
+      });
+    });
+
+    it("configures the Android custom start picker from the current preference", () => {
+      const originalPlatformOS = Platform.OS;
+      Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+      mockTimeFormat = "24h";
+
+      try {
+        const { rerender } = render(<FeedingScreen />);
+        fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+        expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(true);
+
+        mockTimeFormat = "12h";
+        rerender(<FeedingScreen />);
+        expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(false);
+      } finally {
+        Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+      }
     });
 
     it("navigates to manual entry", () => {

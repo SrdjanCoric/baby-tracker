@@ -1,6 +1,8 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { Platform } from "react-native";
 
+const mockStartTummyTime = jest.fn().mockResolvedValue({ success: true });
 let mockTimeFormat: "12h" | "24h" = "12h";
 
 jest.mock("expo-router", () => ({
@@ -16,7 +18,7 @@ jest.mock("expo-router", () => ({
 jest.mock("@/contexts", () => ({
   useTummyTime: () => ({
     activeTimer: null,
-    startTummyTime: jest.fn(),
+    startTummyTime: mockStartTummyTime,
     stopTummyTime: jest.fn(),
     pauseTummyTime: jest.fn(),
     resumeTummyTime: jest.fn(),
@@ -65,20 +67,18 @@ import TummyTimeScreen from "./index";
 
 describe("TummyTimeScreen custom start time", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
+    mockStartTummyTime.mockResolvedValue({ success: true });
     mockTimeFormat = "12h";
   });
 
-  it("reacts to the current 24-hour or 12-hour preference", () => {
+  it("reacts to the current preference and starts at the selected time", async () => {
     mockTimeFormat = "24h";
+    const selectedTime = new Date(2020, 0, 1, 14, 30);
     const { rerender } = render(<TummyTimeScreen />);
 
     fireEvent.press(screen.getByRole("button", { name: "tummyTime.startedEarlier" }));
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      new Date(2020, 0, 1, 14, 30)
-    );
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, selectedTime);
 
     expect(screen.getByText("tummyTime.startTime: 14:30")).toBeTruthy();
 
@@ -86,5 +86,28 @@ describe("TummyTimeScreen custom start time", () => {
     rerender(<TummyTimeScreen />);
 
     expect(screen.getByText("tummyTime.startTime: 2:30 PM")).toBeTruthy();
+    fireEvent.press(screen.getByTestId("start-timer-button"));
+
+    await waitFor(() => {
+      expect(mockStartTummyTime).toHaveBeenCalledWith(selectedTime);
+    });
+  });
+
+  it("configures the Android picker from the current preference", () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+    mockTimeFormat = "24h";
+
+    try {
+      const { rerender } = render(<TummyTimeScreen />);
+      fireEvent.press(screen.getByRole("button", { name: "tummyTime.startedEarlier" }));
+      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(true);
+
+      mockTimeFormat = "12h";
+      rerender(<TummyTimeScreen />);
+      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(false);
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
   });
 });

@@ -1,7 +1,9 @@
 import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { Platform } from "react-native";
 
 const mockConfirmMorningSleep = jest.fn().mockResolvedValue(undefined);
+const mockStartSleep = jest.fn().mockResolvedValue({ success: true });
 const mockStopSleep = jest.fn().mockResolvedValue(undefined);
 const mockBack = jest.fn();
 let mockTimeFormat: "12h" | "24h" = "12h";
@@ -52,7 +54,7 @@ let mockActiveTimer: typeof runningTimer | null = runningTimer;
 jest.mock("@/contexts", () => ({
   useSleep: () => ({
     activeTimer: mockActiveTimer,
-    startSleep: jest.fn(),
+    startSleep: mockStartSleep,
     stopSleep: mockStopSleep,
     pauseSleep: jest.fn(),
     resumeSleep: jest.fn(),
@@ -128,16 +130,12 @@ describe("SleepScreen custom start time", () => {
     mockTimeFormat = "24h";
   });
 
-  it("reacts to the current 24-hour or 12-hour preference", () => {
+  it("reacts to the current preference and starts at the selected time", async () => {
+    const selectedTime = new Date(2020, 0, 1, 14, 30);
     const { rerender } = render(<SleepScreen />);
 
     fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      new Date(2020, 0, 1, 14, 30)
-    );
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, selectedTime);
 
     expect(screen.getByText("Start time: 14:30")).toBeTruthy();
 
@@ -145,5 +143,81 @@ describe("SleepScreen custom start time", () => {
     rerender(<SleepScreen />);
 
     expect(screen.getByText("Start time: 2:30 PM")).toBeTruthy();
+    fireEvent.press(screen.getByRole("button", { name: "Start sleep" }));
+
+    await waitFor(() => {
+      expect(mockStartSleep).toHaveBeenCalledWith("nap", selectedTime);
+    });
+  });
+
+  it("configures the Android picker from the current preference", () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+
+    try {
+      const { rerender } = render(<SleepScreen />);
+      fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(true);
+
+      mockTimeFormat = "12h";
+      rerender(<SleepScreen />);
+      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(false);
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
+  });
+
+  it("keeps Android future-time rollover when selecting a custom start", async () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 2, 10, 0));
+
+    try {
+      render(<SleepScreen />);
+      fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+      fireEvent(
+        screen.getByTestId("datetime-picker"),
+        "change",
+        {},
+        new Date(2026, 0, 2, 14, 30)
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Start sleep" }));
+
+      await waitFor(() => {
+        expect(mockStartSleep).toHaveBeenCalledWith(
+          "nap",
+          new Date(2026, 0, 1, 14, 30)
+        );
+      });
+    } finally {
+      jest.useRealTimers();
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
+  });
+
+  it("keeps the iOS datetime bounds and Done dismissal", () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "ios", configurable: true });
+    jest.useFakeTimers();
+    const now = new Date(2026, 0, 2, 10, 0);
+    jest.setSystemTime(now);
+
+    try {
+      render(<SleepScreen />);
+      fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+
+      const picker = screen.getByTestId("datetime-picker");
+      expect(picker.props.mode).toBe("datetime");
+      expect(picker.props.minimumDate).toEqual(new Date(2026, 0, 1, 0, 0));
+      expect(picker.props.maximumDate).toEqual(now);
+      expect(picker.props.is24Hour).toBeUndefined();
+
+      fireEvent.press(screen.getByRole("button", { name: "Done" }));
+      expect(screen.queryByTestId("datetime-picker")).toBeNull();
+    } finally {
+      jest.useRealTimers();
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
   });
 });
