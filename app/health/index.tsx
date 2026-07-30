@@ -24,7 +24,7 @@ const HEALTH_BUTTON_DARK = ACTIVITY.health.buttonDark;
 export default function HealthScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { addHealth, healthEntries, getCompletedVaccinations } = useHealth();
   const { colorScheme } = useColorScheme();
@@ -84,10 +84,10 @@ export default function HealthScreen() {
   }, []);
 
   const handleLogPastHealth = useCallback(() => {
-    router.push(onboardingPreview === "firstActivity"
-      ? "/health/manual?onboardingPreview=firstActivity"
+    router.push(onboardingActivity === "first"
+      ? "/health/manual?onboardingActivity=first"
       : "/health/manual");
-  }, [onboardingPreview, router]);
+  }, [onboardingActivity, router]);
 
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
@@ -137,7 +137,7 @@ export default function HealthScreen() {
     setIsSaving(true);
     try {
       await addHealth(base);
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("health");
         router.replace("/onboarding/owner/saved");
       } else {
@@ -149,7 +149,7 @@ export default function HealthScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, addHealth, onboardingPreview, router, getCompletedVaccinations, t]);
+  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, addHealth, onboardingActivity, router, getCompletedVaccinations, t]);
 
   const canSave = selectedType !== null && !isSaving && (
     (selectedType === "medication" && (medicationName === "custom" ? customMedicationName : medicationName)) ||

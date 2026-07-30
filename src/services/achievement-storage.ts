@@ -19,12 +19,19 @@ async function getLocalAchievements(babyId: string): Promise<StoredAchievement[]
   return JSON.parse(raw) as StoredAchievement[];
 }
 
-export async function getDetectedAchievementIds(babyId: string): Promise<Set<AchievementId>> {
+export async function getDetectedAchievementIds(
+  babyId: string,
+  shouldSync = true
+): Promise<Set<AchievementId>> {
   let achievements: StoredAchievement[];
-  try {
-    achievements = await fetchAchievementsFromDatabase(babyId);
-  } catch {
+  if (!shouldSync) {
     achievements = await getLocalAchievements(babyId);
+  } else {
+    try {
+      achievements = await fetchAchievementsFromDatabase(babyId);
+    } catch {
+      achievements = await getLocalAchievements(babyId);
+    }
   }
   return new Set(achievements.map((a) => a.id));
 }
@@ -41,9 +48,11 @@ export async function saveAchievement(
   const key = getStorageKey(babyId);
   await AsyncStorage.setItem(key, JSON.stringify(existing));
 
-  insertAchievementInDatabase(babyId, id, detectedBy).catch((err) => {
-    console.error("[Achievements] Failed to sync to database:", err);
-  });
+  if (detectedBy) {
+    insertAchievementInDatabase(babyId, id, detectedBy).catch((err) => {
+      console.error("[Achievements] Failed to sync to database:", err);
+    });
+  }
 }
 
 export async function clearAchievements(babyId: string): Promise<void> {

@@ -1,0 +1,88 @@
+appId: com.sofibaby.app
+name: Production owner account and caregiver invitation
+
+tags:
+  - regression
+  - onboarding
+  - invitation
+
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
+- tapOn:
+    id: "start-tracking-button"
+- tapOn:
+    id: "onboarding-create-account-button"
+- tapOn:
+    id: "email-input"
+- inputText: "e2e-new-owner@test.local"
+- tapOn:
+    id: "dismiss-keyboard"
+- scrollUntilVisible:
+    element:
+      id: "dev-password-input"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "dev-password-input"
+- inputText: "testpassword123"
+- pressKey: Enter
+- tapOn:
+    text: "Not Now"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-baby-screen"
+    timeout: 30000
+- tapOn:
+    id: "owner-baby-name"
+- inputText: "Account Baby"
+- tapOn:
+    id: "dismiss-keyboard"
+- tapOn:
+    id: "owner-baby-birth-date"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          start: "60%,85%"
+          end: "60%,75%"
+      - tapOn:
+          id: "owner-baby-birth-date-done"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: "owner-baby-gender-male"
+- tapOn:
+    id: "owner-baby-continue"
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-invitation-screen"
+    timeout: 15000
+- tapOn:
+    id: "onboarding-caregiver-email"
+- inputText: "caregiver@example.com"
+- tapOn:
+    id: "dismiss-keyboard"
+- tapOn:
+    id: "create-onboarding-invitation-button"
+- extendedWaitUntil:
+    visible:
+      id: "continue-after-invitation-button"
+    timeout: 15000
+- tapOn:
+    id: "continue-after-invitation-button"
+- tapOn:
+    id: "skip-remaining-setup-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

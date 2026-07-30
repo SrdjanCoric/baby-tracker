@@ -1,0 +1,60 @@
+appId: com.sofibaby.app
+name: Production Welcome supports every locale
+
+tags:
+  - regression
+  - onboarding
+  - localization
+
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-en"
+- assertVisible: "Care for your baby with confidence"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-sr"
+- assertVisible: "Brinite o svojoj bebi sa sigurnošću"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-es"
+- assertVisible: "Cuida a tu bebé con confianza"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-es-ES"
+- assertVisible: "Cuida de tu bebé con confianza"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-fr"
+- assertVisible: "Prenez soin de votre bébé en toute confiance"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-pt-PT"
+- assertVisible: "Cuide do seu bebé com confiança"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-pt-BR"
+- assertVisible: "Cuide do seu bebê com confiança"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-de"
+- assertVisible: "Kümmere dich mit Zuversicht um dein Baby"
+- tapOn:
+    id: "current-language-button"
+- tapOn:
+    id: "welcome-language-it"
+- assertVisible: "Prenditi cura del tuo bambino con sicurezza"

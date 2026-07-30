@@ -22,10 +22,7 @@ import {
   type DevelopmentOnboardingPreviewPath,
   type DevelopmentOnboardingPreviewScenario,
 } from "@/services/development-onboarding-preview";
-import {
-  canRenderDevelopmentOnboardingTools,
-  enableDevelopmentOnboardingReplay,
-} from "@/utils/development-onboarding";
+import { canRenderDevelopmentOnboardingTools } from "@/utils/development-onboarding";
 
 const PATHS = Object.keys(
   DEVELOPMENT_ONBOARDING_PREVIEW_ADAPTERS
@@ -279,7 +276,6 @@ function DevelopmentOnboardingToolsContent() {
     setIsMutating(true);
     try {
       await runFirstLaunchRoutingAgain({ isAuthenticated, language });
-      enableDevelopmentOnboardingReplay(__DEV__);
       router.dismissAll();
       router.replace(
         isAuthenticated ? "/onboarding/owner/restore" : "/onboarding/owner"
@@ -296,7 +292,7 @@ function DevelopmentOnboardingToolsContent() {
     if (mutationRef.current) return;
     Alert.alert(
       "Run first-launch routing again?",
-      "This clears onboarding completion and drafts, then runs the upcoming role-based router using the current account. Your account, household, babies, activities, and preferences are preserved.",
+      "This clears onboarding completion and drafts, then runs the production role-based router using the current account. Your account, household, babies, activities, and preferences are preserved.",
       [
         { text: "Cancel", style: "cancel" },
         { text: "Run again", style: "destructive", onPress: replayFirstLaunch },

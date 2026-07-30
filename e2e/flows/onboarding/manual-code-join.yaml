@@ -1,59 +1,25 @@
 appId: com.sofibaby.app
-name: Development Caregiver Code Join
+name: Production manual-code join and destructive confirmation
 
 tags:
-  - development
+  - regression
   - onboarding
   - caregiver
 
 ---
 - launchApp:
     clearState: true
-    arguments:
-      onboardingPreview: "true"
-
 - extendedWaitUntil:
     visible:
       id: "new-owner-welcome-screen"
     timeout: 60000
 - tapOn:
     id: "join-family-button"
-
-- extendedWaitUntil:
-    visible:
-      id: "join-family-screen"
-    timeout: 10000
 - tapOn:
     id: "join-code-input"
 - inputText: "E2EJ2345"
 - tapOn:
     id: "continue-to-auth-button"
-
-- extendedWaitUntil:
-    visible:
-      id: "close-button"
-    timeout: 10000
-- tapOn:
-    id: "close-button"
-- extendedWaitUntil:
-    visible: "E2EJ-2345"
-    timeout: 10000
-
-- stopApp
-- launchApp:
-    clearState: false
-    arguments:
-      onboardingPreview: "true"
-
-- extendedWaitUntil:
-    visible: "E2EJ-2345"
-    timeout: 60000
-- tapOn:
-    id: "continue-to-auth-button"
-- extendedWaitUntil:
-    visible:
-      id: "email-input"
-    timeout: 10000
 - tapOn:
     id: "email-input"
 - inputText: "e2e-test@test.local"
@@ -71,17 +37,21 @@ tags:
 - tapOn:
     text: "Not Now"
     optional: true
-
 - extendedWaitUntil:
     visible:
       id: "join-family-submit-button"
     timeout: 30000
-- assertVisible: "E2EJ-2345"
 - tapOn:
     id: "join-family-submit-button"
-
+- assertVisible: "Delete your current baby data?"
+- tapOn: "Cancel"
+- assertVisible:
+    id: "join-family-submit-button"
+- tapOn:
+    id: "join-family-submit-button"
+- tapOn: "Delete my data and join"
 - extendedWaitUntil:
     visible:
       id: "home-screen"
     timeout: 30000
-- assertVisible: "Shared Baby"
+- assertVisible: "E2E Baby"

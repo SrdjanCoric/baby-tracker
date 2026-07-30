@@ -1,0 +1,14 @@
+appId: com.sofibaby.app
+name: Production onboarding - iOS
+
+---
+- runFlow: ../flows/onboarding/welcome.yaml
+- runFlow: ../flows/onboarding/fresh-owner.yaml
+- runFlow: ../flows/onboarding/owner-invitation.yaml
+- runFlow: ../flows/onboarding/manual-code-join.yaml
+- runFlow: ../flows/onboarding/returning-user-restoration.yaml
+- runFlow: ../flows/onboarding/owner-restart.yaml
+- runFlow: ../flows/onboarding/auth-cancellation.yaml
+- runFlow: ../flows/onboarding/join-failure-recovery.yaml
+- runFlow: ../flows/onboarding/locales.yaml
+- runFlow: ../flows/onboarding/legacy-upgrade.yaml

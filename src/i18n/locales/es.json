@@ -1085,7 +1085,6 @@
     "magicLinkHint": "Te enviaremos un enlace para iniciar sesión al instante",
     "sendMagicLink": "Enviar enlace mágico",
     "continueWithoutAccount": "Continuar sin cuenta",
-    "continueAsGuest": "Continuar como invitado",
     "guestDescription": "Puedes crear una cuenta después para sincronizar entre dispositivos",
     "createAccount": "Crear cuenta",
     "welcomeTitle": "Bienvenido/a a Baby Tracker",
@@ -1215,76 +1214,6 @@
     "cereal": "Cereal",
     "yogurt": "Yogur",
     "cheese": "Queso"
-  },
-  "onboarding": {
-    "welcome": {
-      "title": "Bienvenido/a a Sofi Baby Tracker",
-      "subtitle": "La forma sencilla de registrar el día de tu bebé"
-    },
-    "features": {
-      "title": "Registra todo",
-      "subtitle": "Alimentación, sueño, pañales, crecimiento y más - todo en un solo lugar",
-      "interactiveSubtitle": "Toca cada actividad para saber más",
-      "customizeTitle": "Personaliza tu panel",
-      "customizeSubtitle": "Elige qué actividades mostrar en tu panel",
-      "customizeHint": "Puedes cambiar esto en cualquier momento en Ajustes"
-    },
-    "activityDesc": {
-      "feeding": "Registra lactancia, biberón y sólidos con temporizadores y cantidades",
-      "sleep": "Monitorea siestas y sueño nocturno con seguimiento automático del tiempo despierto",
-      "diaper": "Registra pañales mojados, sucios y mixtos con notas opcionales",
-      "pumping": "Registra sesiones de extracción con selección de lado y cantidades de leche",
-      "growth": "Registra peso, estatura y circunferencia de cabeza con gráficos de crecimiento",
-      "tummyTime": "Mide las sesiones de tiempo boca abajo para apoyar el desarrollo del bebé"
-    },
-    "preferences": {
-      "title": "Tus preferencias",
-      "subtitle": "Personaliza tu experiencia",
-      "language": "Idioma",
-      "units": "Medidas",
-      "theme": "Apariencia",
-      "hint": "Puedes cambiar esto en cualquier momento en Ajustes"
-    },
-    "timeFormat": "Formato de hora",
-    "sync": {
-      "title": "Sincroniza con la familia",
-      "subtitle": "Comparte las tareas de seguimiento con tu pareja o cuidadores en tiempo real"
-    },
-    "authChoice": {
-      "title": "Únete o continúa",
-      "subtitle": "Crea una cuenta para sincronizar entre dispositivos y compartir con cuidadores",
-      "guestHint": "Puedes crear una cuenta después en Ajustes",
-      "signInMethodsIos": "Apple, Google y correo electrónico",
-      "signInMethodsAndroid": "Google y correo electrónico"
-    },
-    "baby": {
-      "title": "Agrega a tu bebé",
-      "subtitle": "Comencemos agregando a tu pequeño"
-    },
-    "getStarted": "Comenzar",
-    "next": "Siguiente",
-    "skip": "Omitir",
-    "continue": "Continuar",
-    "addBaby": "Agregar bebé",
-    "babyName": "Nombre del bebé",
-    "babyNamePlaceholder": "Ingresa el nombre del bebé",
-    "birthDate": "Fecha de nacimiento",
-    "selectBirthDate": "Selecciona la fecha de nacimiento",
-    "addPhoto": "Agregar foto (opcional)",
-    "changePhoto": "Cambiar foto",
-    "gender": "Género",
-    "male": "Niño",
-    "female": "Niña",
-    "genderUnspecified": "Prefiero no decir",
-    "validation": {
-      "nameRequired": "Por favor ingresa el nombre del bebé",
-      "dateRequired": "Por favor selecciona la fecha de nacimiento",
-      "dateFuture": "La fecha de nacimiento no puede ser en el futuro"
-    },
-    "errors": {
-      "createBabyFailed": "No se pudo crear el perfil del bebé. Por favor intenta de nuevo.",
-      "networkError": "Error de red. Por favor verifica tu conexión e intenta de nuevo."
-    }
   },
   "export": {
     "title": "Exportar datos",

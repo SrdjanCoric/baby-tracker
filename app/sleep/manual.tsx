@@ -30,7 +30,7 @@ const QUICK_DURATIONS = [15, 30, 45, 60, 90, 120];
 export default function ManualSleepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addSleep, sleeps, wakeWindowConfig } = useSleep();
@@ -165,7 +165,7 @@ export default function ManualSleepScreen() {
         durationSeconds: durationSeconds ?? 0,
         notes: notes || undefined,
       });
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("sleep");
         router.replace("/onboarding/owner/saved");
       } else {
@@ -183,7 +183,7 @@ export default function ManualSleepScreen() {
     addSleep,
     sleeps,
     checkAndConfirmSleep,
-    onboardingPreview,
+    onboardingActivity,
     router,
     wakeWindowConfig?.dayStartHour,
     wakeWindowConfig?.dayEndHour,

@@ -142,7 +142,7 @@ Multi-caregiver support with household management:
 ### Navigation Structure
 - `app/(tabs)/` - Main tab navigation (home, timeline, stats)
 - `app/auth/` - Authentication screens (sign-in)
-- `app/onboarding/` - Onboarding flow with auth choice
+- `app/onboarding/owner/` - Production role-based onboarding for new owners, invited caregivers, and returning users
 - `app/settings/` - Settings screens (household, caregivers, notifications, about, theme, language, units, time-format, widget-config, dashboard, export, reports, join-household, delete-account)
 - Activity screens: `app/feeding/`, `app/sleep/`, `app/diaper/`, `app/pumping/`, `app/growth/`, `app/tummyTime/`, `app/health/`
 - `app/milestones/` - Milestone tracking
@@ -224,6 +224,16 @@ the current checkout. Reuse it when it does; otherwise stop the stale process, s
 `packager-status:running`. Give the flow's first screen up to 60 seconds for a cold bundle. When
 tailing logs after Maestro, save and return Maestro's exit code instead of letting `tail` mask a
 failure.
+
+**Resumable Onboarding Suites:**
+Run onboarding E2E through `npm run e2e:onboarding:ios` or
+`npm run e2e:onboarding:android`, not by passing the monolithic onboarding suite YAML directly to
+Maestro. The runner saves the device ID and each successful flow under the ignored
+`e2e/artifacts/` directory, force-stops the app between flows, and resumes at the first unverified
+flow. Use `--only <flow>` to run or rerun one scenario regardless of its checkpoint. Use `--reset`
+after broad onboarding changes, after resetting local Supabase for a new verification cycle, or
+before final release proof. Do not edit checkpoint files to claim a pass. If a failed flow may have
+changed a fixture account before its final assertion, restore the local fixture before rerunning it.
 
 **Keyboard Dismissal:**
 To dismiss the keyboard in Maestro tests, tap on an element with `testID="dismiss-keyboard"` rather than using Maestro's `hideKeyboard` command. Screens that have text inputs should wrap their header in a Pressable that calls `Keyboard.dismiss()`:

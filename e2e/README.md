@@ -127,26 +127,61 @@ npm run e2e:household-timers:test
 
 Use the Settings preview in a development build for UI checks that must leave storage and services untouched. Use **Run first-launch routing again** when you want the role-based guard to inspect the current development account while preserving its household, babies, activities, and preferences. Both tools are unavailable in production.
 
-Use Maestro when the test needs real providers, restart recovery, authentication, or database behavior. Onboarding Maestro flows clear simulator state and may reset or change disposable local Supabase fixtures. They are not safe for a shared or production project. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](../docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for the preserved keys, limits, and focused commands.
+Use Maestro when the test needs real providers, restart recovery, authentication, or database behavior. Onboarding Maestro flows clear simulator state and may reset or change disposable local Supabase fixtures. They are not safe for a shared or production project. See [`docs/ROLE_BASED_ONBOARDING.md`](../docs/ROLE_BASED_ONBOARDING.md) for persisted states, failure policy, development tools, and focused commands.
 
 ## Existing single-device suites
 
-The existing Maestro suites expect a built app and local fixtures:
+The single-device suites expect a built app and local fixtures:
 
 ```bash
 npx supabase start
 npx supabase db reset --no-seed
 node scripts/apply-migrations.mjs
 npm run e2e:seed
+npm run e2e:prepare-caregiver-join
+
+# Start one of these in a separate terminal
+npm run e2e:start-caregiver-join
+SOFIBABY_E2E_PLATFORM=android npm run e2e:start-caregiver-join
 
 npm run e2e:smoke
 npm run e2e:regression
+npm run e2e:onboarding:ios
+npm run e2e:onboarding:android
+npm run e2e:onboarding-network
 ```
 
-Run one flow with:
+The onboarding commands run each flow separately. A successful flow is recorded in
+`e2e/artifacts/onboarding-<platform>.passed`, and the selected device is saved in
+`e2e/artifacts/onboarding-<platform>.env`. Both files are local and ignored by Git. The runner also
+force-stops the app before each flow, which avoids simulator clear-state failures between scenarios.
+If a flow fails, fix it and run the same command again. Earlier passes are skipped.
+
+Run or rerun one onboarding flow while debugging. `--only` ignores an existing checkpoint for that
+flow:
 
 ```bash
-npm run e2e:flow e2e/flows/onboarding/guest-flow.yaml
+npm run e2e:onboarding:ios -- --only fresh-owner
+```
+
+Start a new verification cycle after broad onboarding changes or a local database reset:
+
+```bash
+npm run e2e:onboarding:ios -- --reset
+```
+
+A flow can change a fixture account before its final assertion. If that happens, reseed or restore
+that fixture before rerunning the failed flow. Do not add a flow to the checkpoint file by hand.
+
+Set `MAESTRO_DEVICE` to override the saved device. The runner otherwise reuses its saved device or
+the first booted device for that platform.
+
+Set `MAESTRO_DEVICE` before `npm run e2e:onboarding-network` to target a named simulator or emulator. The command refuses non-local Supabase endpoints, stops only the local API container, restores it on exit, and verifies join recovery after the API returns.
+
+Run another standalone flow with:
+
+```bash
+npm run e2e:flow e2e/flows/onboarding/fresh-owner.yaml
 ```
 
 Remove fixtures when finished:

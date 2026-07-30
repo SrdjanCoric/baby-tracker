@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react-nativ
 const mockPush = jest.fn();
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
-let mockSearchParams: { onboardingPreview?: string } = {};
+let mockSearchParams: { onboardingActivity?: string } = {};
 const mockCompleteTimerStarted = jest.fn();
 
 jest.mock("expo-router", () => ({
@@ -244,7 +244,7 @@ describe("FeedingScreen", () => {
     });
 
     it("completes onboarding as soon as a timer starts", async () => {
-      mockSearchParams = { onboardingPreview: "firstActivity" };
+      mockSearchParams = { onboardingActivity: "first" };
       render(<FeedingScreen />);
 
       fireEvent.press(screen.getByText("L"));

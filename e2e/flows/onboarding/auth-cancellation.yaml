@@ -1,0 +1,27 @@
+appId: com.sofibaby.app
+name: Production onboarding auth cancellation
+
+tags:
+  - regression
+  - onboarding
+  - auth
+
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
+- tapOn:
+    id: "sign-in-button"
+- extendedWaitUntil:
+    visible:
+      id: "close-button"
+    timeout: 10000
+- tapOn:
+    id: "close-button"
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 10000

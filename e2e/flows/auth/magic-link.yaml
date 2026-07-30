@@ -1,5 +1,6 @@
 appId: com.sofibaby.app
 name: Magic Link Sign In
+
 tags:
   - regression
   - auth
@@ -7,32 +8,17 @@ tags:
 ---
 - launchApp:
     clearState: true
-
-# Welcome screen
-- assertVisible:
-    id: "welcome-screen"
-- tapOn:
-    text: "Get Started"
-
-# Auth choice - tap sign in
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
 - tapOn:
     id: "sign-in-button"
-
-# Sign in screen
-- assertVisible:
-    id: "email-input"
 - tapOn:
     id: "email-input"
 - inputText: "test@example.com"
-
-# Submit
 - tapOn:
     id: "send-magic-link-button"
-
-# Should show confirmation
 - assertVisible:
     text: "Check your email"
     optional: true
-
-# Note: Actual magic link callback requires deep link simulation
-# which is handled separately in integration tests

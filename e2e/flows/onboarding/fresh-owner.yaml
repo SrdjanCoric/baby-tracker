@@ -1,0 +1,59 @@
+appId: com.sofibaby.app
+name: Production fresh guest owner and post-baby skip
+
+tags:
+  - smoke
+  - onboarding
+  - owner
+
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
+- tapOn:
+    id: "start-tracking-button"
+- tapOn:
+    id: "continue-on-device-button"
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-baby-screen"
+    timeout: 10000
+- tapOn:
+    id: "owner-baby-name"
+- inputText: "Fresh Baby"
+- tapOn:
+    id: "dismiss-keyboard"
+- tapOn:
+    id: "owner-baby-birth-date"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          start: "60%,85%"
+          end: "60%,75%"
+      - tapOn:
+          id: "owner-baby-birth-date-done"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: "owner-baby-gender-female"
+- tapOn:
+    id: "owner-baby-continue"
+- extendedWaitUntil:
+    visible:
+      id: "first-activity-screen"
+    timeout: 15000
+- tapOn:
+    id: "skip-remaining-setup-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- assertVisible: "Fresh Baby"

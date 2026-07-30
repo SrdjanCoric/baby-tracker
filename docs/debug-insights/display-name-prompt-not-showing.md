@@ -1,98 +1,26 @@
-# DisplayNamePrompt Modal Not Showing After Authentication
+# Display name prompt during authentication
 
-## Problem
+The sign-in screen owns `DisplayNamePrompt`. It collects a missing name before onboarding resumes or navigation leaves authentication.
 
-After a user signed in (via Google, Apple, or any OAuth provider), the `DisplayNamePrompt` modal was supposed to appear if the user had no `displayName` set. However, the modal was not rendering - the app became unresponsive with touches not registering, but no visible modal.
+## Navigation contract
 
-## Root Cause
+`AuthGuard` may route a completed onboarding state from `/auth` to Home only when `user.displayName` exists. Without a display name, the guard leaves the sign-in screen mounted so its modal can render.
 
-The issue was a **navigation timing conflict**. Multiple components were racing to handle the post-authentication flow:
+The sign-in screen serializes post-auth work. After the name is saved, it resumes the persisted onboarding intent:
 
-### 1. AuthGuard Navigation Race
+- returning users continue account restoration
+- invited caregivers return to code confirmation or interrupted-join recovery
+- owners with an existing baby complete onboarding
+- owners without a baby continue to required baby setup
 
-In `app/_layout.tsx`, the `AuthGuard` component had this logic:
+Authentication cancellation calls `cancelAuthentication()` and returns to the named state that opened sign-in. There is no separate onboarding auto-advance effect.
 
-```typescript
-if (isAuthenticated && inAuthGroup && hasCompletedOnboarding) {
-  router.replace("/(tabs)");
-}
-```
+## Why the prompt stays on sign-in
 
-As soon as `isAuthenticated` became `true`, AuthGuard would navigate away from the sign-in screen to the tabs. This unmounted the sign-in screen before the `DisplayNamePrompt` modal could render.
+Rendering a React Native modal while its screen is unmounting can leave an invisible modal that still intercepts touches. Keeping the prompt on the sign-in screen avoids a navigation race and gives auth completion one owner.
 
-### 2. Onboarding Auto-Advance Race
+Use refs for delayed or asynchronous auth callbacks that need the latest user value. Do not add another root-level display-name modal or a second post-auth navigation branch.
 
-In `app/onboarding/auth-choice.tsx`, there was similar auto-navigation:
+## Regression test
 
-```typescript
-useEffect(() => {
-  if (isAuthenticated && !hasAdvancedRef.current) {
-    hasAdvancedRef.current = true;
-    nextStep();
-    router.push("/onboarding/features");
-  }
-}, [isAuthenticated, nextStep, router]);
-```
-
-This would navigate to the next onboarding step immediately after authentication, again unmounting the sign-in screen.
-
-### 3. Modal Rendering During Navigation Transition
-
-React Native's `Modal` component has issues when it tries to render during a navigation transition. Even though `visible={true}` was set, the modal would be "invisible" - blocking touches but not rendering any content.
-
-## Solution
-
-### 1. AuthGuard: Wait for displayName
-
-Modified AuthGuard to only navigate away if the user has a `displayName`:
-
-```typescript
-if (isAuthenticated && inAuthGroup && hasCompletedOnboarding) {
-  if (user?.displayName) {
-    router.replace("/(tabs)");
-  }
-  // If no displayName, stay on auth screen - sign-in.tsx will show DisplayNamePrompt
-}
-```
-
-### 2. Onboarding: Wait for displayName
-
-Modified the auto-advance effect to also check for `displayName`:
-
-```typescript
-useEffect(() => {
-  if (isAuthenticated && user?.displayName && !hasAdvancedRef.current) {
-    hasAdvancedRef.current = true;
-    nextStep();
-    router.push("/onboarding/features");
-  }
-}, [isAuthenticated, user?.displayName, nextStep, router]);
-```
-
-### 3. Show Modal on Sign-In Screen
-
-Instead of showing `DisplayNamePrompt` after navigation (in `_layout.tsx`), we show it directly on the sign-in screen before any navigation occurs:
-
-```typescript
-// sign-in.tsx
-const handlePostAuth = useCallback(() => {
-  setTimeout(() => {
-    const currentUser = userRef.current;
-    if (!currentUser?.displayName) {
-      setShowDisplayNamePrompt(true);  // Show modal on current screen
-    } else {
-      router.back();  // Only navigate if displayName exists
-    }
-  }, 500);
-}, [router]);
-```
-
-## Key Takeaways
-
-1. **Avoid showing modals during navigation transitions** - React Native's Modal can become invisible but still block touches.
-
-2. **Use refs for async callbacks** - When checking user state in a delayed callback, use a ref to get the latest value instead of relying on closure capture.
-
-3. **Coordinate navigation guards** - When multiple components can trigger navigation based on auth state, ensure they all check the same conditions to avoid races.
-
-4. **Show prompts before navigation, not after** - If you need user input after authentication, collect it before navigating away from the auth screen.
+`app/auth/sign-in.component.test.tsx` covers missing names for returning users, invited caregivers, and authenticated owner setup. It also verifies cancellation and serialized auth completion.

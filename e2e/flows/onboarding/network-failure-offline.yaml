@@ -1,0 +1,17 @@
+appId: com.sofibaby.app
+name: Caregiver join fails while local API is offline
+
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "join-family-submit-button"
+    timeout: 60000
+- tapOn:
+    id: "join-family-submit-button"
+- tapOn: "Delete my data and join"
+- extendedWaitUntil:
+    visible:
+      id: "retry-join-button"
+    timeout: 30000

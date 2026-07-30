@@ -38,7 +38,7 @@ const CATEGORY_LABELS: Record<MilestoneCategory, "milestones.social" | "mileston
 export default function MilestonesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { selectedBaby } = useBaby();
@@ -102,12 +102,12 @@ export default function MilestonesScreen() {
           await clearMilestoneState(milestoneId);
           break;
       }
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("milestones");
         router.replace("/onboarding/owner/saved");
       }
     },
-    [getMilestoneState, setMilestoneState, clearMilestoneState, onboardingPreview, router]
+    [getMilestoneState, setMilestoneState, clearMilestoneState, onboardingActivity, router]
   );
 
   const accent = isDark ? GOLD_DARK : GOLD;

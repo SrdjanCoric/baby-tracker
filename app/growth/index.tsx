@@ -21,7 +21,7 @@ const GROWTH_TEAL_DARK = "#007A5E";
 export default function GrowthScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { addMeasurement } = useGrowth();
   const { weightUnit, heightUnit } = useUnits();
@@ -132,7 +132,7 @@ export default function GrowthScreen() {
         headCircumferenceCm,
         notes: notes || undefined,
       });
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("growth");
         router.replace("/onboarding/owner/saved");
       } else {
@@ -142,7 +142,7 @@ export default function GrowthScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, weightValue, heightValue, headCircumferenceValue, notes, weightUnit, heightUnit, measuredAt, addMeasurement, onboardingPreview, router]);
+  }, [selectedBaby, weightValue, heightValue, headCircumferenceValue, notes, weightUnit, heightUnit, measuredAt, addMeasurement, onboardingActivity, router]);
 
   const hasAnyMeasurement = weightValue !== "" || heightValue !== "" || headCircumferenceValue !== "";
   const canSave = hasAnyMeasurement && !isSaving;

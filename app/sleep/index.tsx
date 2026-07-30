@@ -25,9 +25,9 @@ const PAUSED_AMBER = "#D4A017";
 export default function SleepScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { action, onboardingPreview } = useLocalSearchParams<{
+  const { action, onboardingActivity } = useLocalSearchParams<{
     action?: string;
-    onboardingPreview?: string;
+    onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
   const { session } = useAuth();
@@ -98,11 +98,11 @@ export default function SleepScreen() {
     const autoType = determineSleepType(timeToCheck, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour);
     const result = await startSleep(autoType, customStartTime);
     console.log("[SleepScreen] startSleep result:", JSON.stringify(result));
-    if (result.success && onboardingPreview === "firstActivity") {
+    if (result.success && onboardingActivity === "first") {
       await NewOwnerOnboardingStorageService.completeTimerStarted("sleep");
       router.replace("/(tabs)");
     }
-  }, [onboardingPreview, router, startSleep, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
+  }, [onboardingActivity, router, startSleep, wakeWindowConfig?.dayStartHour, wakeWindowConfig?.dayEndHour]);
 
   const isStoppingRef = useRef(false);
   const handleStopSleep = useCallback(async () => {
@@ -127,10 +127,10 @@ export default function SleepScreen() {
   }, [resumeSleep]);
 
   const handleLogPastSleep = useCallback(() => {
-    router.push(onboardingPreview === "firstActivity"
-      ? "/sleep/manual?onboardingPreview=firstActivity"
+    router.push(onboardingActivity === "first"
+      ? "/sleep/manual?onboardingActivity=first"
       : "/sleep/manual");
-  }, [onboardingPreview, router]);
+  }, [onboardingActivity, router]);
 
   const handleSettings = useCallback(() => {
     router.push("/sleep/settings");

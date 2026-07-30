@@ -154,7 +154,7 @@ describe("resumeNewOwnerOnboardingAfterAuth", () => {
     vi.mocked(fetchAndSyncHouseholdBabies).mockResolvedValue([]);
 
     await expect(resumeNewOwnerOnboardingAfterAuth("household-1")).resolves.toBe("baby-setup");
-    expect(NewOwnerOnboardingStorageService.resumeAuthenticatedAccount).toHaveBeenCalledWith(false);
+    expect(NewOwnerOnboardingStorageService.resumeAuthenticatedAccount).toHaveBeenCalledWith(null);
   });
 
   it("opens the app when the authenticated account already has a baby", async () => {
@@ -167,6 +167,6 @@ describe("resumeNewOwnerOnboardingAfterAuth", () => {
 
     await expect(resumeNewOwnerOnboardingAfterAuth("household-1")).resolves.toBe("existing-account");
     expect(fetchAndSyncHouseholdBabies).toHaveBeenCalledWith("household-1");
-    expect(NewOwnerOnboardingStorageService.resumeAuthenticatedAccount).toHaveBeenCalledWith(true);
+    expect(NewOwnerOnboardingStorageService.resumeAuthenticatedAccount).toHaveBeenCalledWith("baby-1");
   });
 });

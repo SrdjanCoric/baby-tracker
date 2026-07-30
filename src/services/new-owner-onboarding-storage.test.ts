@@ -183,10 +183,7 @@ describe("NewOwnerOnboardingStorageService", () => {
       firstActivity: { status: "joined-household" },
     });
     expect(storage.get("@new_owner_onboarding_v2")).not.toContain("ABCD2345");
-    expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
-      hasCompleted: true,
-      skipped: false,
-    });
+    expect(storage.has("@onboarding_status")).toBe(false);
   });
 
   it("persists reconciliation-only recovery when an interrupted join outcome is unknown", async () => {
@@ -245,7 +242,7 @@ describe("NewOwnerOnboardingStorageService", () => {
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
     await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
-    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(null);
 
     await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
       screen: "owner-baby",
@@ -400,10 +397,7 @@ describe("NewOwnerOnboardingStorageService", () => {
       householdId: "household-1",
       babyId: "baby-2",
     });
-    expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
-      hasCompleted: true,
-      skipped: false,
-    });
+    expect(storage.has("@onboarding_status")).toBe(false);
   });
 
   it("persists the named owner baby state and partial profile", async () => {
@@ -480,7 +474,7 @@ describe("NewOwnerOnboardingStorageService", () => {
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
     await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
-    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(null);
     await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
 
     await expect(NewOwnerOnboardingStorageService.getState("system")).resolves.toMatchObject({
@@ -499,7 +493,7 @@ describe("NewOwnerOnboardingStorageService", () => {
 
     await NewOwnerOnboardingStorageService.beginOwnerPath("en");
     await NewOwnerOnboardingStorageService.beginAuthentication("create-account");
-    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(false);
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(null);
     await NewOwnerOnboardingStorageService.markBabyCreated("baby-1");
     await NewOwnerOnboardingStorageService.skipInvitation();
 
@@ -573,10 +567,7 @@ describe("NewOwnerOnboardingStorageService", () => {
       babyId: "baby-1",
       firstActivity: { status: "timer-started", activityType: "sleep" },
     });
-    expect(JSON.parse(storage.get("@onboarding_status") ?? "null")).toMatchObject({
-      hasCompleted: true,
-      skipped: false,
-    });
+    expect(storage.has("@onboarding_status")).toBe(false);
   });
 
   it("starts over by clearing the versioned onboarding state", async () => {
@@ -586,6 +577,17 @@ describe("NewOwnerOnboardingStorageService", () => {
 
     expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(1);
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@new_owner_onboarding_v2");
+  });
+
+  it("clears legacy completion before versioned state for development replay", async () => {
+    vi.mocked(AsyncStorage.removeItem).mockResolvedValue(undefined);
+
+    await NewOwnerOnboardingStorageService.resetForDevelopment();
+
+    expect(vi.mocked(AsyncStorage.removeItem).mock.calls).toEqual([
+      ["@onboarding_status"],
+      ["@new_owner_onboarding_v2"],
+    ]);
   });
 
   it("clears an unfinished versioned draft without touching other storage", async () => {
@@ -645,25 +647,61 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
-  it("treats legacy completed and skipped records as completed", async () => {
-    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => {
-      if (key === "@onboarding_status") {
-        return JSON.stringify({
-          hasCompleted: true,
-          completedAt: "2026-07-28T12:00:00.000Z",
-          skipped: true,
-        });
-      }
-      return null;
+  it("round-trips authenticated completion with the restored baby ID", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
     });
 
-    await expect(NewOwnerOnboardingStorageService.getState("en")).resolves.toEqual({
-      version: 2,
+    await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.beginAuthentication("sign-in");
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount("baby-1");
+
+    await expect(NewOwnerOnboardingStorageService.getState("en")).resolves.toMatchObject({
       screen: "completed",
-      language: "en",
-      entryPath: "legacy",
-      babyId: null,
-      firstActivity: { status: "legacy-completed" },
+      entryPath: "authenticated-existing",
+      babyId: "baby-1",
+      firstActivity: { status: "existing-account" },
     });
+  });
+
+  it.each([
+    { hasCompleted: true, completedAt: "2026-07-28T12:00:00.000Z", skipped: false },
+    { hasCompleted: false, completedAt: null, skipped: true },
+  ])("migrates legacy completed and skipped records: %j", async legacyStatus => {
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key =>
+      key === "@onboarding_status" ? JSON.stringify(legacyStatus) : null
+    );
+
+    const expectedState = {
+      version: 2 as const,
+      screen: "completed" as const,
+      language: "en" as const,
+      entryPath: "legacy" as const,
+      babyId: null,
+      firstActivity: { status: "legacy-completed" as const },
+    };
+
+    await expect(NewOwnerOnboardingStorageService.getState("en")).resolves.toEqual(expectedState);
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      "@new_owner_onboarding_v2",
+      JSON.stringify(expectedState)
+    );
+    expect(AsyncStorage.setItem).not.toHaveBeenCalledWith(
+      "@onboarding_status",
+      expect.any(String)
+    );
+  });
+
+  it("ignores malformed legacy completion records", async () => {
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key =>
+      key === "@onboarding_status" ? JSON.stringify({ hasCompleted: true }) : null
+    );
+
+    await expect(NewOwnerOnboardingStorageService.getState("en")).resolves.toMatchObject({
+      screen: "welcome",
+    });
+    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
   });
 });

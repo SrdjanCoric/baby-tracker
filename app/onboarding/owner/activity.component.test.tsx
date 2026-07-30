@@ -30,6 +30,7 @@ describe("NewOwnerActivityScreen", () => {
     expect(screen.getByTestId("first-activity-diaper")).toBeTruthy();
     expect(screen.getByTestId("first-activity-pumping")).toBeTruthy();
     expect(screen.getByTestId("skip-remaining-setup-button")).toBeTruthy();
+    expect(screen.queryByTestId("not-now-button")).toBeNull();
     expect(screen.queryByTestId("first-activity-growth")).toBeNull();
 
     fireEvent.press(screen.getByTestId("see-all-activity-types"));
@@ -44,9 +45,9 @@ describe("NewOwnerActivityScreen", () => {
     render(<NewOwnerActivityScreen />);
 
     fireEvent.press(screen.getByTestId("first-activity-feeding"));
-    expect(mockPush).toHaveBeenCalledWith("/feeding?onboardingPreview=firstActivity");
+    expect(mockPush).toHaveBeenCalledWith("/feeding?onboardingActivity=first");
 
-    fireEvent.press(screen.getByTestId("not-now-button"));
+    fireEvent.press(screen.getByTestId("skip-remaining-setup-button"));
     await waitFor(() => {
       expect(mockCompleteWithoutActivity).toHaveBeenCalledTimes(1);
       expect(mockReplace).toHaveBeenCalledWith("/(tabs)");

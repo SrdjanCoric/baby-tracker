@@ -30,7 +30,7 @@ const STOOL_COLOR_MAP: Record<StoolColor, string> = {
 export default function DiaperScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { addDiaper } = useDiaper();
   const { colorScheme } = useColorScheme();
@@ -59,10 +59,10 @@ export default function DiaperScreen() {
   }, []);
 
   const handleLogPastDiaper = useCallback(() => {
-    router.push(onboardingPreview === "firstActivity"
-      ? "/diaper/manual?onboardingPreview=firstActivity"
+    router.push(onboardingActivity === "first"
+      ? "/diaper/manual?onboardingActivity=first"
       : "/diaper/manual");
-  }, [onboardingPreview, router]);
+  }, [onboardingActivity, router]);
 
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
@@ -77,7 +77,7 @@ export default function DiaperScreen() {
         stoolColor: selectedType !== "wet" ? selectedColor ?? undefined : undefined,
         changedAt: new Date(),
       });
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("diaper");
         router.replace("/onboarding/owner/saved");
       } else {
@@ -87,7 +87,7 @@ export default function DiaperScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, selectedColor, addDiaper, onboardingPreview, router]);
+  }, [selectedBaby, selectedType, selectedColor, addDiaper, onboardingActivity, router]);
 
   const canSave = selectedType !== null && !isSaving;
 

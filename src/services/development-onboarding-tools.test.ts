@@ -7,9 +7,7 @@ import {
 
 function createDependencies(): DevelopmentOnboardingToolDependencies {
   return {
-    clearLegacyDraft: vi.fn().mockResolvedValue(undefined),
-    clearLegacyCompletion: vi.fn().mockResolvedValue(undefined),
-    clearVersionedState: vi.fn().mockResolvedValue(undefined),
+    resetOnboardingState: vi.fn().mockResolvedValue(undefined),
     clearUnfinishedDraft: vi.fn().mockResolvedValue(undefined),
     beginReturningAuthentication: vi.fn().mockResolvedValue(undefined),
     beginReturningRestoration: vi.fn().mockResolvedValue(1),
@@ -17,7 +15,7 @@ function createDependencies(): DevelopmentOnboardingToolDependencies {
 }
 
 describe("development onboarding tools", () => {
-  it("replays signed-in first launch after clearing only onboarding state", async () => {
+  it("replays signed-in first launch after resetting onboarding state", async () => {
     const dependencies = createDependencies();
 
     await runFirstLaunchRoutingAgain(
@@ -25,17 +23,12 @@ describe("development onboarding tools", () => {
       dependencies
     );
 
-    expect(dependencies.clearLegacyDraft).toHaveBeenCalledOnce();
-    expect(dependencies.clearVersionedState).toHaveBeenCalledOnce();
+    expect(dependencies.resetOnboardingState).toHaveBeenCalledOnce();
     expect(dependencies.beginReturningAuthentication).toHaveBeenCalledWith("en");
     expect(dependencies.beginReturningRestoration).toHaveBeenCalledOnce();
-    expect(dependencies.clearLegacyCompletion).toHaveBeenCalledOnce();
     expect(dependencies.clearUnfinishedDraft).not.toHaveBeenCalled();
-    const completionOrder = vi.mocked(dependencies.clearLegacyCompletion).mock.invocationCallOrder[0];
-    expect(vi.mocked(dependencies.clearLegacyDraft).mock.invocationCallOrder[0])
-      .toBeLessThan(completionOrder);
-    expect(vi.mocked(dependencies.beginReturningRestoration).mock.invocationCallOrder[0])
-      .toBeLessThan(completionOrder);
+    expect(vi.mocked(dependencies.resetOnboardingState).mock.invocationCallOrder[0])
+      .toBeLessThan(vi.mocked(dependencies.beginReturningAuthentication).mock.invocationCallOrder[0]);
   });
 
   it("replays signed-out first launch at Welcome without creating a draft", async () => {
@@ -46,9 +39,7 @@ describe("development onboarding tools", () => {
       dependencies
     );
 
-    expect(dependencies.clearLegacyDraft).toHaveBeenCalledOnce();
-    expect(dependencies.clearVersionedState).toHaveBeenCalledOnce();
-    expect(dependencies.clearLegacyCompletion).toHaveBeenCalledOnce();
+    expect(dependencies.resetOnboardingState).toHaveBeenCalledOnce();
     expect(dependencies.beginReturningAuthentication).not.toHaveBeenCalled();
     expect(dependencies.beginReturningRestoration).not.toHaveBeenCalled();
   });
@@ -59,27 +50,21 @@ describe("development onboarding tools", () => {
     await clearUnfinishedOnboardingDraft(dependencies);
 
     expect(dependencies.clearUnfinishedDraft).toHaveBeenCalledOnce();
-    expect(dependencies.clearLegacyDraft).not.toHaveBeenCalled();
-    expect(dependencies.clearLegacyCompletion).not.toHaveBeenCalled();
-    expect(dependencies.clearVersionedState).not.toHaveBeenCalled();
+    expect(dependencies.resetOnboardingState).not.toHaveBeenCalled();
     expect(dependencies.beginReturningAuthentication).not.toHaveBeenCalled();
     expect(dependencies.beginReturningRestoration).not.toHaveBeenCalled();
   });
 
-  it.each([
-    "clearLegacyDraft",
-    "clearVersionedState",
-    "beginReturningAuthentication",
-    "beginReturningRestoration",
-  ] as const)("does not clear completion when %s fails", async operation => {
+  it("does not begin returning restoration when reset fails", async () => {
     const dependencies = createDependencies();
-    vi.mocked(dependencies[operation]).mockRejectedValueOnce(new Error("storage failed"));
+    vi.mocked(dependencies.resetOnboardingState).mockRejectedValueOnce(new Error("storage failed"));
 
     await expect(runFirstLaunchRoutingAgain(
       { isAuthenticated: true, language: "en" },
       dependencies
     )).rejects.toThrow("storage failed");
 
-    expect(dependencies.clearLegacyCompletion).not.toHaveBeenCalled();
+    expect(dependencies.beginReturningAuthentication).not.toHaveBeenCalled();
+    expect(dependencies.beginReturningRestoration).not.toHaveBeenCalled();
   });
 });

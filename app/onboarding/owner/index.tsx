@@ -114,7 +114,7 @@ export default function NewOwnerWelcomeScreen() {
           </Text>
         </View>
 
-        <View className="gap-3">
+        <View className="gap-3 pb-12">
           <Pressable
             onPress={handleStart}
             className="rounded-button-lg py-4 items-center"

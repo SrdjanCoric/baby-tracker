@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { LanguageCode } from "@/services/language-storage";
-import { OnboardingStorageService } from "@/services/onboarding-storage";
 import {
   NEW_OWNER_ONBOARDING_VERSION,
   type BabyProfileDraft,
@@ -14,6 +13,7 @@ import {
 import { normalizeInviteCode, validateInviteCode } from "@/utils/inviteCode";
 
 const NEW_OWNER_ONBOARDING_KEY = "@new_owner_onboarding_v2";
+const LEGACY_ONBOARDING_STATUS_KEY = "@onboarding_status";
 const VALID_LANGUAGES: LanguageCode[] = [
   "en",
   "sr",
@@ -221,7 +221,7 @@ function isStoredState(value: unknown): value is NewOwnerOnboardingState {
       firstActivity?.status === "legacy-completed";
     const hasExistingAccountCompletion =
       state.entryPath === "authenticated-existing" &&
-      state.babyId === null &&
+      typeof state.babyId === "string" &&
       firstActivity?.status === "existing-account";
     const hasCaregiverCompletion =
       state.entryPath === "caregiver" &&
@@ -267,6 +267,24 @@ async function persistState(state: NewOwnerOnboardingState): Promise<void> {
   await AsyncStorage.setItem(NEW_OWNER_ONBOARDING_KEY, JSON.stringify(state));
 }
 
+async function hasLegacyCompletion(): Promise<boolean> {
+  const stored = await AsyncStorage.getItem(LEGACY_ONBOARDING_STATUS_KEY);
+  if (!stored) return false;
+
+  try {
+    const parsed: unknown = JSON.parse(stored);
+    if (!parsed || typeof parsed !== "object") return false;
+    const status = parsed as Record<string, unknown>;
+    const isValid =
+      typeof status.hasCompleted === "boolean" &&
+      (status.completedAt === null || typeof status.completedAt === "string") &&
+      typeof status.skipped === "boolean";
+    return isValid && (status.hasCompleted === true || status.skipped === true);
+  } catch {
+    return false;
+  }
+}
+
 class CaregiverCodeValidationError extends Error {
   constructor(readonly reason: CaregiverCodeValidationReason) {
     super(reason);
@@ -283,15 +301,15 @@ function enqueueMutation(operation: () => Promise<void>): Promise<void> {
 
 export const NewOwnerOnboardingStorageService = {
   async getState(language: LanguageCode): Promise<NewOwnerOnboardingState> {
-    const [storedState, legacyStatus] = await Promise.all([
+    const [storedState, legacyCompleted] = await Promise.all([
       readStoredState(),
-      OnboardingStorageService.getOnboardingStatus(),
+      hasLegacyCompletion(),
     ]);
     if (storedState?.screen === "completed" || storedState?.screen === "returning-restored") {
       return storedState;
     }
-    if (legacyStatus.hasCompleted || legacyStatus.skipped) {
-      return {
+    if (legacyCompleted) {
+      const migratedState: NewOwnerOnboardingState = {
         version: NEW_OWNER_ONBOARDING_VERSION,
         screen: "completed",
         language: storedState?.language ?? language,
@@ -299,6 +317,8 @@ export const NewOwnerOnboardingStorageService = {
         babyId: null,
         firstActivity: { status: "legacy-completed" },
       };
+      await persistState(migratedState);
+      return migratedState;
     }
     return storedState ?? createInitialState(language);
   },
@@ -433,7 +453,6 @@ export const NewOwnerOnboardingStorageService = {
         householdId,
         babyId,
       });
-      await OnboardingStorageService.markOnboardingComplete(false);
     });
   },
 
@@ -743,24 +762,22 @@ export const NewOwnerOnboardingStorageService = {
         babyId,
         firstActivity: { status: "joined-household" },
       });
-      await OnboardingStorageService.markOnboardingComplete(false);
     });
   },
 
-  resumeAuthenticatedAccount(hasBabies: boolean): Promise<void> {
+  resumeAuthenticatedAccount(babyId: string | null): Promise<void> {
     return enqueueMutation(async () => {
       const current = await readStoredState();
       if (!current || current.screen !== "auth-pending") return;
-      if (hasBabies) {
+      if (babyId) {
         await persistState({
           version: NEW_OWNER_ONBOARDING_VERSION,
           screen: "completed",
           language: current.language,
           entryPath: "authenticated-existing",
-          babyId: null,
+          babyId,
           firstActivity: { status: "existing-account" },
         });
-        await OnboardingStorageService.markOnboardingComplete(false);
         return;
       }
       await persistState({
@@ -846,7 +863,6 @@ export const NewOwnerOnboardingStorageService = {
         babyId: current.babyId,
         firstActivity: { status: "skipped" },
       });
-      await OnboardingStorageService.markOnboardingComplete(false);
     });
   },
 
@@ -892,7 +908,6 @@ export const NewOwnerOnboardingStorageService = {
         babyId: current.babyId,
         firstActivity: current.firstActivity,
       });
-      await OnboardingStorageService.markOnboardingComplete(false);
     });
   },
 
@@ -908,7 +923,6 @@ export const NewOwnerOnboardingStorageService = {
         babyId: current.babyId,
         firstActivity: { status: "skipped" },
       });
-      await OnboardingStorageService.markOnboardingComplete(false);
     });
   },
 
@@ -924,7 +938,6 @@ export const NewOwnerOnboardingStorageService = {
         babyId: current.babyId,
         firstActivity: { status: "timer-started", activityType },
       });
-      await OnboardingStorageService.markOnboardingComplete(false);
     });
   },
 
@@ -940,5 +953,12 @@ export const NewOwnerOnboardingStorageService = {
 
   startOver(): Promise<void> {
     return enqueueMutation(() => AsyncStorage.removeItem(NEW_OWNER_ONBOARDING_KEY));
+  },
+
+  resetForDevelopment(): Promise<void> {
+    return enqueueMutation(async () => {
+      await AsyncStorage.removeItem(LEGACY_ONBOARDING_STATUS_KEY);
+      await AsyncStorage.removeItem(NEW_OWNER_ONBOARDING_KEY);
+    });
   },
 };

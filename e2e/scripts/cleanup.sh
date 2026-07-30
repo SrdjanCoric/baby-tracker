@@ -16,7 +16,7 @@ psql "$DB_URL" -f "$E2E_DIR/fixtures/cleanup.sql"
 remaining="$(psql "$DB_URL" -Atqc "
   SELECT count(*)
   FROM auth.users
-  WHERE email IN ('e2e-owner@test.local', 'e2e-member@test.local', 'e2e-test@test.local')
+  WHERE email IN ('e2e-owner@test.local', 'e2e-member@test.local', 'e2e-test@test.local', 'e2e-new-owner@test.local')
 ")"
 
 if [[ "$remaining" != "0" ]]; then

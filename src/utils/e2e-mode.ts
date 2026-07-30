@@ -1,21 +1,16 @@
 import { Platform, NativeModules, Settings } from "react-native";
 import { LaunchArguments } from "react-native-launch-arguments";
-import {
-  canUseRoleBasedDevelopmentOnboarding,
-  isDevelopmentOnboardingReplayEnabled,
-} from "./development-onboarding";
-
 interface E2ELaunchArgs {
   e2eMode?: string | boolean;
   e2eEmail?: string;
   e2ePassword?: string;
-  onboardingPreview?: string | boolean;
+  legacyOnboardingStatus?: string;
 }
 
 function getArgs(): E2ELaunchArgs {
   try {
     const args = LaunchArguments.value<E2ELaunchArgs>();
-    if (args.e2eMode || args.onboardingPreview) {
+    if (args.e2eMode) {
       return args;
     }
   } catch {
@@ -25,13 +20,12 @@ function getArgs(): E2ELaunchArgs {
   if (Platform.OS === "ios") {
     try {
       const e2eMode = Settings.get("e2eMode");
-      const onboardingPreview = Settings.get("onboardingPreview");
-      if (e2eMode || onboardingPreview) {
+      if (e2eMode) {
         return {
-          e2eMode: e2eMode ? String(e2eMode) : undefined,
+          e2eMode: String(e2eMode),
           e2eEmail: Settings.get("e2eEmail"),
           e2ePassword: Settings.get("e2ePassword"),
-          onboardingPreview: onboardingPreview ? String(onboardingPreview) : undefined,
+          legacyOnboardingStatus: Settings.get("legacyOnboardingStatus"),
         };
       }
     } catch {
@@ -40,16 +34,12 @@ function getArgs(): E2ELaunchArgs {
 
     try {
       const { SettingsManager } = NativeModules;
-      if (SettingsManager?.settings?.e2eMode || SettingsManager?.settings?.onboardingPreview) {
+      if (SettingsManager?.settings?.e2eMode) {
         return {
-          e2eMode: SettingsManager.settings.e2eMode
-            ? String(SettingsManager.settings.e2eMode)
-            : undefined,
+          e2eMode: String(SettingsManager.settings.e2eMode),
           e2eEmail: SettingsManager.settings.e2eEmail,
           e2ePassword: SettingsManager.settings.e2ePassword,
-          onboardingPreview: SettingsManager.settings.onboardingPreview
-            ? String(SettingsManager.settings.onboardingPreview)
-            : undefined,
+          legacyOnboardingStatus: SettingsManager.settings.legacyOnboardingStatus,
         };
       }
     } catch {
@@ -65,12 +55,9 @@ export function isE2EMode(): boolean {
   return args.e2eMode === "true" || args.e2eMode === true;
 }
 
-export function isNewOwnerOnboardingPreviewEnabled(): boolean {
-  return canUseRoleBasedDevelopmentOnboarding(
-    __DEV__,
-    getArgs().onboardingPreview,
-    isDevelopmentOnboardingReplayEnabled(__DEV__)
-  );
+export function getLegacyOnboardingFixture(): "completed" | "skipped" | null {
+  const status = getArgs().legacyOnboardingStatus;
+  return status === "completed" || status === "skipped" ? status : null;
 }
 
 export function getE2ECredentials(): { email: string; password: string } | null {

@@ -1,0 +1,63 @@
+# Role-based onboarding
+
+Production onboarding starts at `/onboarding/owner`. The `/onboarding` route redirects there for compatibility.
+
+Welcome applies language changes immediately and offers three paths:
+
+- **Start tracking** creates a complete baby profile before Home can open. The owner may use the app as a guest or authenticate first. Authenticated owners may invite a caregiver.
+- **Join a family** keeps the manually entered invitation code through authentication, asks for confirmation, then loads and selects a baby from the joined household.
+- **Sign in** restores the profile, household, babies, and selected baby before Home opens.
+
+A new owner may skip caregiver invitation and the first activity after creating a baby. Joined and returning caregivers do not see the first-activity prompt.
+
+## Persisted state
+
+AsyncStorage key `@new_owner_onboarding_v2` contains a discriminated version 2 state. The `screen` field records the current boundary:
+
+- `welcome`, `account-choice`, `auth-pending`, or `owner-baby` for owner setup
+- `invitation`, `first-activity`, or `activity-saved` after baby creation
+- `join-code`, `join-auth-pending`, `join-confirmation`, `joining`, `join-refresh`, or `join-failure` for caregivers
+- `returning-auth`, `returning-restoring`, `returning-verified-empty`, `returning-unavailable`, `returning-restored`, or `returning-signed-out` for returning accounts
+- `completed` for owner, caregiver, authenticated-existing, or legacy completion
+
+Draft writes are serialized. Terminal owner and caregiver states contain a baby ID. Returning completion contains the restored household and baby IDs.
+
+Older releases stored completion in `@onboarding_status`. The first version 2 load imports a legacy completed or skipped record into a terminal `completed` state. Production code does not write the legacy key or read the old numeric-step key.
+
+## Failure and restart policy
+
+Owner profile drafts, authentication intent, invitation codes, join progress, and restoration attempts survive an app restart. Authentication cancellation returns to the state that opened authentication.
+
+Caregiver redemption happens only after explicit confirmation. When a solo household has baby data, the app warns that joining will delete that local household data. A transport failure with an unknown redemption result first reconciles the current profile. A successful redemption followed by a refresh failure resumes from `join-refresh` without submitting the consumed invitation again.
+
+Returning restoration refreshes profile, household, babies, and selected-baby storage in that order. A verified empty household offers Add a baby and Join a family. An unavailable result offers Retry and Sign out. Stale restoration attempts cannot complete a newer attempt.
+
+## Development tools
+
+Development builds expose three Settings tools:
+
+- **Preview onboarding** renders isolated sample states without calling storage, authentication, or Supabase.
+- **Run first-launch routing again** clears versioned onboarding state and legacy completion, then opens production routing with the current authentication state. Account, household, babies, activities, and preferences remain intact.
+
+**Clear unfinished onboarding draft** removes only a nonterminal version 2 draft.
+
+The Settings tools are excluded from production bundles. Production routing does not depend on a launch argument or remote flag.
+
+## Automated checks
+
+Run focused checks from the repository root:
+
+```bash
+npm run test:unit -- src/services/onboarding-guard.test.ts src/services/new-owner-onboarding-storage.test.ts src/services/new-owner-auth-resume.test.ts src/services/new-owner-onboarding-routing.test.ts src/services/returning-user-restoration.test.ts src/services/development-onboarding-tools.test.ts src/i18n/new-owner-onboarding-locales.test.ts src/__tests__/security/caregiver-onboarding-security.test.ts
+npm run test:component -- --runInBand app/onboarding/owner app/auth/sign-in.component.test.tsx src/components/ReturningUserProfileFallback.component.test.tsx src/__tests__/returning-user-restoration.integration.test.tsx src/__tests__/activity-provider-baby-binding.integration.test.tsx app/feeding/index.component.test.tsx
+npm run test:production-gating
+```
+
+Production-route Maestro suites are shared by both platforms:
+
+```bash
+maestro test e2e/suites/onboarding-ios.yaml
+maestro test e2e/suites/onboarding-android.yaml
+```
+
+The authenticated flows require disposable local Supabase fixtures. Prepare them with the commands in [`e2e/README.md`](../e2e/README.md). The manual-code flow also requires `npm run e2e:prepare-caregiver-join`. Run `npm run e2e:onboarding-network` to stop the local API during caregiver redemption and verify recovery after restart.

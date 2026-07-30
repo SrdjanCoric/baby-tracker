@@ -42,7 +42,7 @@ export default function ManualFeedingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     type?: FeedingTypeParam;
-    onboardingPreview?: string;
+    onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
   const { addFeeding, feedings } = useFeeding();
@@ -269,13 +269,13 @@ export default function ManualFeedingScreen() {
   };
 
   const finishSave = useCallback(async () => {
-    if (params.onboardingPreview === "firstActivity") {
+    if (params.onboardingActivity === "first") {
       await NewOwnerOnboardingStorageService.markActivitySaved("feeding");
       router.replace("/onboarding/owner/saved");
       return;
     }
     router.replace("/(tabs)");
-  }, [params.onboardingPreview, router]);
+  }, [params.onboardingActivity, router]);
 
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;

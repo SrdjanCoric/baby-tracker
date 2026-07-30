@@ -1,18 +1,18 @@
 import { fetchAndSyncHouseholdBabies } from "@/services/baby-sync-service";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
-import { getNewOwnerPreviewDestination } from "@/services/new-owner-onboarding-routing";
+import { getOnboardingDestination } from "@/services/new-owner-onboarding-routing";
 import type { NewOwnerOnboardingState } from "@/types/new-owner-onboarding";
 
 export function getOnboardingAuthCallbackRoute(
   state: NewOwnerOnboardingState
-): ReturnType<typeof getNewOwnerPreviewDestination>["route"] {
+): ReturnType<typeof getOnboardingDestination>["route"] {
   if (state.screen === "auth-pending" ||
     state.screen === "join-auth-pending" ||
     state.screen === "returning-auth" ||
     state.screen === "returning-restoring") {
     return "/auth/sign-in?resumeOnboarding=true";
   }
-  return getNewOwnerPreviewDestination(state).route;
+  return getOnboardingDestination(state).route;
 }
 
 export type NewOwnerAuthResumeResult =
@@ -52,7 +52,7 @@ export async function resumeNewOwnerOnboardingAfterAuth(
   }
 
   const babies = await fetchAndSyncHouseholdBabies(householdId);
-  const hasBabies = babies.length > 0;
-  await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(hasBabies);
-  return hasBabies ? "existing-account" : "baby-setup";
+  const babyId = babies[0]?.id ?? null;
+  await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount(babyId);
+  return babyId ? "existing-account" : "baby-setup";
 }

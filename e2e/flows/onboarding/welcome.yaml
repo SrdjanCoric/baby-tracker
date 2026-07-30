@@ -1,5 +1,6 @@
 appId: com.sofibaby.app
-name: Welcome Screen Display
+name: Production onboarding welcome
+
 tags:
   - smoke
   - onboarding
@@ -7,14 +8,15 @@ tags:
 ---
 - launchApp:
     clearState: true
-
-# Verify welcome screen is displayed
+- extendedWaitUntil:
+    visible:
+      id: "new-owner-welcome-screen"
+    timeout: 60000
 - assertVisible:
-    id: "welcome-screen"
-
-# Check welcome screen content
+    id: "current-language-button"
 - assertVisible:
-    text: "Welcome to Sofi Baby Tracker"
-
+    id: "start-tracking-button"
 - assertVisible:
-    text: "Get Started"
+    id: "join-family-button"
+- assertVisible:
+    id: "sign-in-button"

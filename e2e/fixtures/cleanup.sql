@@ -8,7 +8,8 @@ FROM public.users
 WHERE email IN (
   'e2e-owner@test.local',
   'e2e-member@test.local',
-  'e2e-test@test.local'
+  'e2e-test@test.local',
+  'e2e-new-owner@test.local'
 )
 UNION
 SELECT id
@@ -16,7 +17,8 @@ FROM public.households
 WHERE id IN (
   '00000000-0000-0000-0000-000000000001'::uuid,
   '00000000-0000-0000-0000-000000000002'::uuid,
-  '00000000-0000-0000-0000-000000000003'::uuid
+  '00000000-0000-0000-0000-000000000003'::uuid,
+  '00000000-0000-0000-0000-000000000004'::uuid
 );
 
 DELETE FROM public.active_timers
@@ -38,7 +40,8 @@ DELETE FROM auth.users
 WHERE email IN (
   'e2e-owner@test.local',
   'e2e-member@test.local',
-  'e2e-test@test.local'
+  'e2e-test@test.local',
+  'e2e-new-owner@test.local'
 );
 
 DELETE FROM public.households h
@@ -55,14 +58,16 @@ BEGIN
     WHERE email IN (
       'e2e-owner@test.local',
       'e2e-member@test.local',
-      'e2e-test@test.local'
+      'e2e-test@test.local',
+      'e2e-new-owner@test.local'
     )
   ) OR EXISTS (
     SELECT 1 FROM public.users
     WHERE email IN (
       'e2e-owner@test.local',
       'e2e-member@test.local',
-      'e2e-test@test.local'
+      'e2e-test@test.local',
+      'e2e-new-owner@test.local'
     )
   ) OR EXISTS (
     SELECT 1 FROM public.babies
@@ -76,7 +81,8 @@ BEGIN
     WHERE id IN (
       '00000000-0000-0000-0000-000000000001'::uuid,
       '00000000-0000-0000-0000-000000000002'::uuid,
-      '00000000-0000-0000-0000-000000000003'::uuid
+      '00000000-0000-0000-0000-000000000003'::uuid,
+      '00000000-0000-0000-0000-000000000004'::uuid
     )
   ) THEN
     RAISE EXCEPTION 'E2E cleanup left fixture rows behind';

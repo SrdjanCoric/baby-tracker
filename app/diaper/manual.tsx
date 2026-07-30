@@ -27,7 +27,7 @@ const STOOL_COLOR_MAP: Record<StoolColor, string> = {
 export default function ManualDiaperScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addDiaper } = useDiaper();
@@ -100,7 +100,7 @@ export default function ManualDiaperScreen() {
         stoolColor: selectedType !== "wet" ? selectedColor ?? undefined : undefined,
         changedAt: changeTime,
       });
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("diaper");
         router.replace("/onboarding/owner/saved");
       } else {
@@ -110,7 +110,7 @@ export default function ManualDiaperScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, selectedColor, changeTime, addDiaper, onboardingPreview, router]);
+  }, [selectedBaby, selectedType, selectedColor, changeTime, addDiaper, onboardingActivity, router]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, {

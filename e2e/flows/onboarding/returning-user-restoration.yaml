@@ -1,34 +1,27 @@
 appId: com.sofibaby.app
-name: Development Returning User Restoration
+name: Production returning user restoration
 
 tags:
-  - development
+  - regression
   - onboarding
   - returning-user
 
 ---
 - launchApp:
     clearState: true
-    arguments:
-      onboardingPreview: "true"
-
 - extendedWaitUntil:
     visible:
       id: "new-owner-welcome-screen"
     timeout: 60000
 - tapOn:
-    point: "50%,90%"
-
+    id: "sign-in-button"
 - extendedWaitUntil:
     visible:
       id: "email-input"
     timeout: 10000
-
 - stopApp
 - launchApp:
     clearState: false
-    arguments:
-      onboardingPreview: "true"
 - extendedWaitUntil:
     visible:
       id: "email-input"
@@ -50,7 +43,6 @@ tags:
 - tapOn:
     text: "Not Now"
     optional: true
-
 - extendedWaitUntil:
     visible:
       id: "home-screen"

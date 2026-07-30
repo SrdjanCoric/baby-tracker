@@ -22,7 +22,7 @@ const HEALTH_ACCENT_DARK = ACTIVITY.health.accentDark;
 export default function ManualHealthScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { onboardingPreview } = useLocalSearchParams<{ onboardingPreview?: string }>();
+  const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { addHealth, getCompletedVaccinations } = useHealth();
@@ -156,7 +156,7 @@ export default function ManualHealthScreen() {
     setIsSaving(true);
     try {
       await addHealth(base);
-      if (onboardingPreview === "firstActivity") {
+      if (onboardingActivity === "first") {
         await NewOwnerOnboardingStorageService.markActivitySaved("health");
         router.replace("/onboarding/owner/saved");
       } else {
@@ -168,7 +168,7 @@ export default function ManualHealthScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, loggedAt, addHealth, onboardingPreview, router, getCompletedVaccinations, t]);
+  }, [selectedBaby, selectedType, medicationName, customMedicationName, dosageAmount, dosageUnit, temperatureCelsius, measurementMethod, vaccineName, customVaccineName, doseNumber, selectedSymptoms, notes, loggedAt, addHealth, onboardingActivity, router, getCompletedVaccinations, t]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, {

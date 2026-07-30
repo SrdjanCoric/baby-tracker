@@ -37,7 +37,8 @@ $$;
 INSERT INTO households (id, invite_code, created_at) VALUES
   ('00000000-0000-0000-0000-000000000001'::uuid, 'E2E1TEST', NOW()),
   ('00000000-0000-0000-0000-000000000002'::uuid, 'E2E2TEST', NOW()),
-  ('00000000-0000-0000-0000-000000000003'::uuid, 'E2E3TEST', NOW())
+  ('00000000-0000-0000-0000-000000000003'::uuid, 'E2E3TEST', NOW()),
+  ('00000000-0000-0000-0000-000000000004'::uuid, 'E2E4TEST', NOW())
 ON CONFLICT (id) DO UPDATE
 SET invite_code = EXCLUDED.invite_code;
 
@@ -47,11 +48,13 @@ FROM users
 WHERE email IN (
   'e2e-owner@test.local',
   'e2e-member@test.local',
-  'e2e-test@test.local'
+  'e2e-test@test.local',
+  'e2e-new-owner@test.local'
 )
   AND household_id NOT IN (
     '00000000-0000-0000-0000-000000000001'::uuid,
-    '00000000-0000-0000-0000-000000000003'::uuid
+    '00000000-0000-0000-0000-000000000003'::uuid,
+    '00000000-0000-0000-0000-000000000004'::uuid
   );
 
 UPDATE users
@@ -68,6 +71,12 @@ SET household_id = '00000000-0000-0000-0000-000000000003'::uuid,
     display_name = 'E2E Test User',
     is_owner = true
 WHERE email = 'e2e-test@test.local';
+
+UPDATE users
+SET household_id = '00000000-0000-0000-0000-000000000004'::uuid,
+    display_name = 'E2E New Owner',
+    is_owner = true
+WHERE email = 'e2e-new-owner@test.local';
 
 DELETE FROM households h
 WHERE h.id IN (SELECT id FROM e2e_generated_households)

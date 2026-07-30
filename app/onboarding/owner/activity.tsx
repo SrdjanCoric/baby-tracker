@@ -23,14 +23,14 @@ const MORE_ACTIVITIES: Array<{ type: FirstActivityType; icon: string }> = [
 ];
 
 const ACTIVITY_ROUTES: Record<FirstActivityType, string> = {
-  feeding: "/feeding?onboardingPreview=firstActivity",
-  sleep: "/sleep?onboardingPreview=firstActivity",
-  diaper: "/diaper?onboardingPreview=firstActivity",
-  pumping: "/pumping?onboardingPreview=firstActivity",
-  growth: "/growth?onboardingPreview=firstActivity",
-  tummyTime: "/tummyTime?onboardingPreview=firstActivity",
-  health: "/health?onboardingPreview=firstActivity",
-  milestones: "/milestones?onboardingPreview=firstActivity",
+  feeding: "/feeding?onboardingActivity=first",
+  sleep: "/sleep?onboardingActivity=first",
+  diaper: "/diaper?onboardingActivity=first",
+  pumping: "/pumping?onboardingActivity=first",
+  growth: "/growth?onboardingActivity=first",
+  tummyTime: "/tummyTime?onboardingActivity=first",
+  health: "/health?onboardingActivity=first",
+  milestones: "/milestones?onboardingActivity=first",
 };
 
 export default function NewOwnerActivityScreen() {
@@ -45,7 +45,7 @@ export default function NewOwnerActivityScreen() {
   const borderColor = isDark ? BORDER.dark.default : BORDER.light.default;
   const [showAll, setShowAll] = useState(false);
 
-  const handleNotNow = useCallback(async () => {
+  const handleSkipRemainingSetup = useCallback(async () => {
     await NewOwnerOnboardingStorageService.completeWithoutActivity();
     router.replace("/(tabs)");
   }, [router]);
@@ -92,31 +92,19 @@ export default function NewOwnerActivityScreen() {
             </Text>
           </Pressable>
         )}
-      </ScrollView>
 
-      <View className="px-6 pb-6">
         <Pressable
-          onPress={handleNotNow}
-          className="py-4 items-center rounded-button-lg border"
+          onPress={handleSkipRemainingSetup}
+          className="py-4 mt-6 items-center rounded-button-lg border"
           style={{ borderColor }}
-          accessibilityRole="button"
-          testID="not-now-button"
-        >
-          <Text className="text-base font-semibold" style={{ color: primaryTextColor }}>
-            {t("newOwnerOnboarding.activity.notNow")}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={handleNotNow}
-          className="py-3 items-center"
           accessibilityRole="button"
           testID="skip-remaining-setup-button"
         >
-          <Text className="text-sm text-center" style={{ color: secondaryTextColor }}>
+          <Text className="text-base font-semibold" style={{ color: primaryTextColor }}>
             {t("newOwnerOnboarding.activity.skipRemaining")}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
