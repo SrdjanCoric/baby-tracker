@@ -171,8 +171,8 @@ Durable decisions that apply across all tasks:
 - [x] 0042 · Confirm ambiguous morning sleep (after 0028) → tasks/done/0042-confirm-ambiguous-morning-sleep.md
 - [x] 0043 · Respect the selected time format when starting timers earlier → tasks/done/0043-respect-timer-start-time-format.md
 - [x] 0044 · Match onboarding to the current app UI (after 0041) → tasks/done/0044-match-onboarding-current-app-ui.md
-- [>] 0045 · Prove onboarding recovery after network failure (after 0044) → tasks/0045-prove-onboarding-network-recovery.md
+- [x] 0045 · Prove onboarding recovery after network failure (after 0044) → tasks/done/0045-prove-onboarding-network-recovery.md
 
 ## Workflow status
 
-Tasks 0001 through 0044 are merged. Task 0045 is ready. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0045 are merged. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
