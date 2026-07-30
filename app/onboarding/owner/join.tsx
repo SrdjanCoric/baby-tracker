@@ -1,15 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, Alert, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuth, useBaby, useHousehold, useTheme } from "@/contexts";
@@ -24,6 +14,9 @@ import type {
   NewOwnerOnboardingState,
 } from "@/types/new-owner-onboarding";
 import { formatInviteCodeForDisplay } from "@/utils/inviteCode";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
 
 const JOIN_ERROR_KEYS: Record<CaregiverJoinFailureReason, string> = {
   invalidInvitation: "household.invalidInvitation",
@@ -333,9 +326,11 @@ export default function JoinFamilyOnboardingScreen() {
 
   if (!state) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center" testID="join-family-screen">
-        <ActivityIndicator />
-      </SafeAreaView>
+      <OnboardingScreen testID="join-family-screen" title="" contentClassName="items-center justify-center">
+        <View accessibilityState={{ busy: true }}>
+          <ActivityIndicator color={isDark ? ACTION.dark.primary : ACTION.light.primary} />
+        </View>
+      </OnboardingScreen>
     );
   }
 
@@ -350,108 +345,77 @@ export default function JoinFamilyOnboardingScreen() {
       : null;
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: isDark ? SURFACE.dark.background : SURFACE.light.background }}
+    <OnboardingScreen
       testID="join-family-screen"
+      title={t("newOwnerOnboarding.join.title")}
+      description={t(isConfirmation
+        ? "newOwnerOnboarding.join.confirmDescription"
+        : "newOwnerOnboarding.join.description")}
+      contentClassName="gap-4 justify-center"
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 justify-center px-6"
+      <View
+        className="rounded-card p-6 gap-4"
+        style={{ backgroundColor: isDark ? SURFACE.dark.card : SURFACE.light.card }}
       >
-        <View
-          className="rounded-card p-6"
-          style={{ backgroundColor: isDark ? SURFACE.dark.card : SURFACE.light.card }}
-        >
-          <Text
-            className="text-3xl font-bold mb-3"
-            style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}
-          >
-            {t("newOwnerOnboarding.join.title")}
-          </Text>
-          <Text
-            className="text-base leading-6 mb-6"
-            style={{ color: isDark ? TEXT.dark.secondary : TEXT.light.secondary }}
-          >
-            {t(isConfirmation
-              ? "newOwnerOnboarding.join.confirmDescription"
-              : "newOwnerOnboarding.join.description")}
-          </Text>
+        <Input
+          testID="join-code-input"
+          value={displayCode}
+          onChangeText={handleCodeChange}
+          editable={isCodeEntry || isConfirmation}
+          placeholder={t("household.inviteCodePlaceholder")}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={9}
+          className="w-full"
+          inputMode="text"
+        />
 
-          <TextInput
-            testID="join-code-input"
-            value={displayCode}
-            onChangeText={handleCodeChange}
-            editable={isCodeEntry || isConfirmation}
-            placeholder={t("household.inviteCodePlaceholder")}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            maxLength={9}
-            className="px-4 py-4 rounded-xl text-center text-2xl font-bold tracking-widest"
-            style={{
-              color: isDark ? TEXT.dark.primary : TEXT.light.primary,
-              backgroundColor: isDark ? SURFACE.dark.secondary : SURFACE.light.secondary,
-            }}
-          />
+        {errorKey && (
+          <Text
+            accessibilityRole="alert"
+            className="text-sm text-center"
+            style={{ color: isDark ? SEMANTIC.error.dark : SEMANTIC.error.light }}
+            testID="join-error"
+          >
+            {t(errorKey, { defaultValue: t("errors.generic") })}
+          </Text>
+        )}
 
-          {errorKey && (
-            <Text
-              className="text-sm text-center mt-4"
-              style={{ color: isDark ? SEMANTIC.error.dark : SEMANTIC.error.light }}
-              testID="join-error"
-            >
-              {t(errorKey, { defaultValue: t("errors.generic") })}
+        {isCodeEntry && (
+          <Button wrapText onPress={handleContinue} testID="continue-to-auth-button">
+            {t("common.continue")}
+          </Button>
+        )}
+
+        {isConfirmation && (
+          <Button
+            wrapText
+            onPress={handleJoin}
+            disabled={babiesLoading || householdLoading || isSubmitting}
+            loading={isSubmitting}
+            testID="join-family-submit-button"
+          >
+            {t("newOwnerOnboarding.join.submit")}
+          </Button>
+        )}
+
+        {failure && (
+          <Button wrapText onPress={handleRetry} testID="retry-join-button">
+            {t("common.retry")}
+          </Button>
+        )}
+
+        {isBusy && (
+          <View className="flex-row items-center justify-center gap-3" accessibilityState={{ busy: true }}>
+            <ActivityIndicator color={isDark ? ACTION.dark.primary : ACTION.light.primary} />
+            <Text className="flex-shrink" style={{ color: isDark ? TEXT.dark.secondary : TEXT.light.secondary }}>
+              {t(state.screen === "joining"
+                ? "newOwnerOnboarding.join.joining"
+                : "newOwnerOnboarding.join.loadingFamily")}
             </Text>
-          )}
-
-          {isCodeEntry && (
-            <Pressable
-              onPress={handleContinue}
-              className="rounded-button-lg py-4 items-center mt-6"
-              style={{ backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary }}
-              testID="continue-to-auth-button"
-            >
-              <Text className="text-white text-base font-bold">{t("common.continue")}</Text>
-            </Pressable>
-          )}
-
-          {isConfirmation && (
-            <Pressable
-              onPress={handleJoin}
-              disabled={babiesLoading || householdLoading || isSubmitting}
-              className="rounded-button-lg py-4 items-center mt-6 disabled:opacity-50"
-              style={{ backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary }}
-              testID="join-family-submit-button"
-            >
-              <Text className="text-white text-base font-bold">
-                {t("newOwnerOnboarding.join.submit")}
-              </Text>
-            </Pressable>
-          )}
-
-          {failure && (
-            <Pressable
-              onPress={handleRetry}
-              className="rounded-button-lg py-4 items-center mt-6"
-              style={{ backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary }}
-              testID="retry-join-button"
-            >
-              <Text className="text-white text-base font-bold">{t("common.retry")}</Text>
-            </Pressable>
-          )}
-
-          {isBusy && (
-            <View className="flex-row items-center justify-center gap-3 mt-6">
-              <ActivityIndicator color={isDark ? ACTION.dark.primary : ACTION.light.primary} />
-              <Text style={{ color: isDark ? TEXT.dark.secondary : TEXT.light.secondary }}>
-                {t(state.screen === "joining"
-                  ? "newOwnerOnboarding.join.joining"
-                  : "newOwnerOnboarding.join.loadingFamily")}
-              </Text>
-            </View>
-          )}
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </View>
+        )}
+      </View>
+    </OnboardingScreen>
   );
 }

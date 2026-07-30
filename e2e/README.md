@@ -176,6 +176,8 @@ that fixture before rerunning the failed flow. Do not add a flow to the checkpoi
 Set `MAESTRO_DEVICE` to override the saved device. The runner otherwise reuses its saved device or
 the first booted device for that platform.
 
+After the suites pass, complete the cross-device onboarding review in [`docs/ROLE_BASED_ONBOARDING.md`](../docs/ROLE_BASED_ONBOARDING.md#visual-review-matrix). The matrix covers every production route and state across device sizes, themes, large text, keyboards, and all supported locales. Record the devices and OS versions used with the task or release evidence.
+
 Set `MAESTRO_DEVICE` before `npm run e2e:onboarding-network` to target a named simulator or emulator. The command refuses non-local Supabase endpoints, stops only the local API container, restores it on exit, and verifies join recovery after the API returns.
 
 Run another standalone flow with:

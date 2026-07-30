@@ -1,5 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
+import { ACTION } from "@/constants/colors";
 import { Button } from "./Button";
 
 describe("Button", () => {
@@ -9,10 +11,11 @@ describe("Button", () => {
       screen.getByText("Click me");
     });
 
-    it("renders with button accessibility role", () => {
+    it("renders with button accessibility role and current action color", () => {
       render(<Button testID="test-button">Click me</Button>);
       const button = screen.getByTestId("test-button");
       expect(button.props.accessibilityRole).toBe("button");
+      expect(StyleSheet.flatten(button.props.style).backgroundColor).toBe(ACTION.light.primary);
     });
 
     it("renders custom children elements", () => {
@@ -22,6 +25,14 @@ describe("Button", () => {
         </Button>
       );
       screen.getByTestId("parent-button");
+    });
+
+    it("allows labels to wrap without shrinking when requested", () => {
+      render(<Button wrapText>Continue without an account</Button>);
+
+      const label = screen.getByText("Continue without an account");
+      expect(label.props.adjustsFontSizeToFit).toBe(false);
+      expect(label.props.numberOfLines).toBeUndefined();
     });
   });
 
@@ -59,13 +70,14 @@ describe("Button", () => {
       expect(button.props.accessibilityState.busy).toBe(true);
     });
 
-    it("hides button text when loading", () => {
+    it("hides button text while preserving its accessible name when loading", () => {
       render(
         <Button loading testID="loading-btn">
           Loading Text
         </Button>
       );
       expect(screen.queryByText("Loading Text")).toBeNull();
+      expect(screen.getByTestId("loading-btn").props.accessibilityLabel).toBe("Loading Text");
     });
 
     it("is disabled when loading", () => {

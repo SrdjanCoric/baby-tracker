@@ -58,6 +58,17 @@ describe("NewOwnerAccountScreen", () => {
     });
   });
 
+  it("keeps translated actions scrollable, keyboard-dismissible, and accessible", () => {
+    render(<NewOwnerAccountScreen />);
+
+    expect(screen.getByTestId("onboarding-scroll-view")).toBeTruthy();
+    expect(screen.getByTestId("dismiss-keyboard")).toBeTruthy();
+
+    const createAccount = screen.getByRole("button", { name: "Create account" });
+    expect(createAccount.props.accessibilityState.disabled).toBe(false);
+    expect(screen.getByText("Create account").props.adjustsFontSizeToFit).toBe(false);
+  });
+
   it("explains the account requirement and continues without an account", async () => {
     render(<NewOwnerAccountScreen />);
 

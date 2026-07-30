@@ -36,7 +36,7 @@ jest.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => ({
       "newOwnerOnboarding.welcome.title": "Care for your baby with confidence",
-      "newOwnerOnboarding.welcome.promise": "Track feeding, sleep, diapers, and more—on your own or together with family.",
+      "newOwnerOnboarding.welcome.promise": "Track feeding, sleep, diapers, and more on your own or with family.",
       "newOwnerOnboarding.welcome.startTracking": "Start tracking",
       "newOwnerOnboarding.welcome.joinFamily": "Join a family",
       "newOwnerOnboarding.welcome.signIn": "Sign in",
@@ -62,7 +62,7 @@ describe("NewOwnerWelcomeScreen", () => {
     render(<NewOwnerWelcomeScreen />);
 
     expect(screen.getByText("Care for your baby with confidence")).toBeTruthy();
-    expect(screen.getByText("Track feeding, sleep, diapers, and more—on your own or together with family.")).toBeTruthy();
+    expect(screen.getByText("Track feeding, sleep, diapers, and more on your own or with family.")).toBeTruthy();
     expect(screen.getByText("Join a family")).toBeTruthy();
     expect(screen.getByText("Sign in")).toBeTruthy();
 

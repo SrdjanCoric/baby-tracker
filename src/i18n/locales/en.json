@@ -1957,7 +1957,7 @@
     "startOver": "Start over",
     "welcome": {
       "title": "Care for your baby with confidence",
-      "promise": "Track feeding, sleep, diapers, and more—on your own or together with family.",
+      "promise": "Track feeding, sleep, diapers, and more on your own or with family.",
       "startTracking": "Start tracking",
       "joinFamily": "Join a family",
       "signIn": "Sign in",
@@ -1966,7 +1966,7 @@
     "baby": {
       "requiredHint": "Baby profile",
       "title": "Tell us about your baby",
-      "subtitle": "This helps keep every activity attached to the right profile.",
+      "subtitle": "Your baby's activities will stay with this profile.",
       "name": "Baby's name",
       "namePlaceholder": "Enter a name",
       "birthDate": "Birth date",

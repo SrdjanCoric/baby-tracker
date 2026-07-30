@@ -35,6 +35,16 @@ describe("ActivitySavedScreen", () => {
     mockCompleteSavedActivity.mockResolvedValue(undefined);
   });
 
+  it("announces the initial saved-activity loading state", () => {
+    mockGetState.mockReturnValue(new Promise(() => undefined));
+
+    render(<ActivitySavedScreen />);
+
+    expect(screen.getByTestId("onboarding-loading-indicator").props.accessibilityState).toEqual({
+      busy: true,
+    });
+  });
+
   it("offers Timeline before completing at Home", async () => {
     render(<ActivitySavedScreen />);
 

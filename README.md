@@ -64,6 +64,8 @@ Household owners enter a caregiver's account email in Settings, then copy or sha
 
 New installations open Welcome with immediate language selection and three routes: Start tracking, Join a family, and Sign in. New owners choose guest or authenticated tracking and create a baby before Home becomes available. Authenticated owners may invite a caregiver. After baby creation, owners may record a first activity or skip the remaining setup. Invited caregivers keep their code through authentication, while returning caregivers restore their household and selected baby before entering Home. Completed and skipped records from the previous onboarding model migrate directly to completed state.
 
+Onboarding uses the app's standard controls and theme colors. Screens scroll with large text or an open keyboard, and action labels wrap instead of shrinking. Baby setup matches Add baby for name, birth date, gender, and required-field errors, but omits photos.
+
 Development Settings includes an isolated preview for the three entry routes. It uses sample adapters for loading, recoverable errors, cancellation, skip, and completion without calling storage or services. A separate replay action clears only onboarding progress and runs the production guard against the current account. It preserves authentication, household membership, babies, activities, and preferences. Production builds exclude both tools. See [`docs/ROLE_BASED_ONBOARDING.md`](docs/ROLE_BASED_ONBOARDING.md) for persisted states, recovery rules, and development commands.
 
 ### Timer Exclusivity

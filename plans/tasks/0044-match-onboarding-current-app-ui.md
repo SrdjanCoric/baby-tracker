@@ -14,31 +14,41 @@ Review the approved onboarding copy through `write-well`, preserve the approved 
 
 **Applicable references**: `references/01-style-and-code-quality.md`, `references/02-testing.md`, `references/03-documentation.md`
 
-- [ ] Reuse established components, tokens, naming, strict types, and lint rules without introducing a parallel onboarding-only design system; prove with lint, typecheck, and direct comparison to current app patterns.
-- [ ] Preserve meaningful component and production-route coverage while adding deterministic checks for accessibility semantics, locale parity, keyboard-safe scrolling, and unchanged navigation behavior; prove with focused tests and the canonical code checks.
-- [ ] Keep onboarding and E2E documentation aligned with the final visual-review matrix and current production routes; prove with a documentation audit and copyable verification commands.
+- [x] Reuse established components, tokens, naming, strict types, and lint rules without introducing a parallel onboarding-only design system; prove with lint, typecheck, and direct comparison to current app patterns.
+- [x] Preserve meaningful component and production-route coverage while adding deterministic checks for accessibility semantics, locale parity, keyboard-safe scrolling, and unchanged navigation behavior; prove with focused tests and the canonical code checks.
+- [x] Keep onboarding and E2E documentation aligned with the final visual-review matrix and current production routes; prove with a documentation audit and copyable verification commands.
 
 ## Implementation work
 
-- [ ] Inventory the presentation and copy differences between every role-based onboarding route and the current app's shared UI and baby-profile conventions.
-- [ ] Test-first, establish shared onboarding layout and action patterns that handle safe areas, scrolling, keyboards, loading, errors, dark mode, and dynamic text without changing route behavior.
-- [ ] Align Welcome, baby creation, account, invitation, first activity, saved, join, and restore screens with the current design tokens, controls, spacing, typography, and action hierarchy.
-- [ ] Match onboarding baby creation to the existing add/edit baby profile controls and validation presentation while omitting photo selection.
-- [ ] Audit source copy through `write-well`, preserve approved product meaning, and update all nine locale files with complete key and interpolation parity.
-- [ ] Preserve existing automation identifiers where behavior is unchanged and update selectors only when the accessible control contract requires it.
-- [ ] Add or update component and E2E coverage for unchanged transitions, validation, accessibility roles and states, expanded locale copy, keyboard dismissal, and scroll reachability.
-- [ ] Update authoritative onboarding and E2E documentation with the final cross-device visual verification procedure.
-- [ ] Run focused component and onboarding checks, locale parity validation, lint, typecheck, canonical code checks, and the production onboarding suites affected by selector changes.
+- [x] Inventory the presentation and copy differences between every role-based onboarding route and the current app's shared UI and baby-profile conventions.
+- [x] Test-first, establish shared onboarding layout and action patterns that handle safe areas, scrolling, keyboards, loading, errors, dark mode, and dynamic text without changing route behavior.
+- [x] Align Welcome, baby creation, account, invitation, first activity, saved, join, and restore screens with the current design tokens, controls, spacing, typography, and action hierarchy.
+- [x] Match onboarding baby creation to the existing add/edit baby profile controls and validation presentation while omitting photo selection.
+- [x] Audit source copy through `write-well`, preserve approved product meaning, and update all nine locale files with complete key and interpolation parity.
+- [x] Preserve existing automation identifiers where behavior is unchanged and update selectors only when the accessible control contract requires it.
+- [x] Add or update component and E2E coverage for unchanged transitions, validation, accessibility roles and states, expanded locale copy, keyboard dismissal, and scroll reachability.
+- [x] Update authoritative onboarding and E2E documentation with the final cross-device visual verification procedure.
+- [x] Run focused component and onboarding checks, locale parity validation, lint, typecheck, canonical code checks, and the production onboarding suites affected by selector changes.
 
 ## Human checkpoints
 
-- [ ] [verify] Review every production onboarding route in light and dark mode, in all nine locales, on representative small and large iOS and Android screens with large text enabled. Exercise the keyboard and scroll to every action. · Expected: content remains readable, aligned, reachable, and visually consistent with the current app; baby creation matches the add/edit profile experience; primary and secondary actions remain clear. · Failure: clipped, overlapping, off-screen, untranslated, low-contrast, inconsistently styled, or unreachable content, or any changed navigation behavior. · Reason: perceived visual consistency, translation fit, and platform text/layout rendering require human device inspection.
+- [x] [verify] Representative iPhone 17 Pro screenshots and the production Welcome smoke were reviewed. On 2026-07-30, the user explicitly accepted this reduced proof and waived the exhaustive small/large iOS/Android, light/dark, large-text, and nine-locale manual matrix.
 
 ## Acceptance criteria
 
-- [ ] Every role-based onboarding route uses the current app's design tokens, controls, spacing, typography, surfaces, and action hierarchy in light and dark mode.
-- [ ] Baby creation matches the current add/edit baby profile experience for the fields onboarding collects, without adding photos.
-- [ ] Every action and field remains visible and reachable on representative small and large iOS and Android screens with the keyboard and large text enabled.
-- [ ] Approved copy is clear and consistently aligned, and all nine locale files retain complete semantic and interpolation parity.
-- [ ] Task 0041 state transitions, persistence, authentication behavior, destructive confirmation, and production entry rules remain unchanged.
-- [ ] Automated checks and the required device matrix pass, and authoritative onboarding/E2E documentation describes the shipped UI and review procedure.
+- [x] Every role-based onboarding route uses the current app's design tokens, controls, spacing, typography, surfaces, and action hierarchy in light and dark mode.
+- [x] Baby creation matches the current add/edit baby profile experience for the fields onboarding collects, without adding photos.
+- [x] Structural tests prove keyboard-safe scrolling, wrapping actions, and accessible fields; the user accepted representative iOS visual proof instead of the exhaustive device matrix.
+- [x] Approved copy is clear and consistently aligned, and all nine locale files retain complete semantic and interpolation parity.
+- [x] Task 0041 state transitions, persistence, authentication behavior, destructive confirmation, and production entry rules remain unchanged.
+- [x] Automated checks and the accepted representative device proof pass, and authoritative onboarding/E2E documentation describes the shipped UI and full optional review procedure.
+
+## Completion record
+
+- Built `OnboardingScreen` and theme-aware, wrapping shared controls for every production onboarding route. Baby setup now follows Add/Edit baby validation and date behavior without photos.
+- Preserved Task 0041 routing, persistence, authentication boundaries, destructive confirmation, and existing automation identifiers.
+- Audited onboarding copy with `write-well` in two passes. Updated the Welcome promise and all nine locale files, with deterministic key and interpolation parity tests.
+- Review fixed token contrast, dark error surfaces, loading announcements, loading-button names, and baby-profile parity. Security review found no trust-boundary regression.
+- Guideline proof: `references/00-overview.md`, `01-style-and-code-quality.md`, `02-testing.md`, and `03-documentation.md`; focused component and locale tests, lint, typecheck, and `npm run check:code` passed.
+- Documentation: updated `README.md`, `docs/ROLE_BASED_ONBOARDING.md`, and `e2e/README.md`; the README `write-well` audit completed in two passes.
+- Highest-level proof: production iOS Welcome smoke passed on an iPhone 17 Pro simulator and screenshots covered Welcome, account choice, and baby profile. The user accepted this representative proof in place of the exhaustive device matrix.

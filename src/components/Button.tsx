@@ -4,10 +4,11 @@ import {
   ActivityIndicator,
   type PressableProps,
   type ViewStyle,
+  useColorScheme,
 } from "react-native";
-import { forwardRef, useCallback } from "react";
+import { forwardRef, useCallback, useState } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
-import { ACTION_COLORS, CONTENT_COLORS } from "@/constants/design-tokens";
+import { ACTION, BORDER, SURFACE, TEXT } from "@/constants/colors";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
 type ButtonSize = "default" | "large" | "icon";
@@ -16,6 +17,7 @@ interface ButtonProps extends Omit<PressableProps, "children"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  wrapText?: boolean;
   children: React.ReactNode;
 }
 
@@ -33,36 +35,67 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
       size = "default",
       loading = false,
       disabled = false,
+      wrapText = false,
       children,
       className,
       style,
       onPressIn,
       onPressOut,
+      accessibilityLabel,
+      accessibilityState,
       ...props
     },
     ref
   ) => {
+    const isDark = useColorScheme() === "dark";
     const scale = useSharedValue(1);
+    const [isPressed, setIsPressed] = useState(false);
     const isDisabled = disabled || loading;
 
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
     }));
 
-    const handlePressIn = useCallback((e: Parameters<NonNullable<PressableProps["onPressIn"]>>[0]) => {
+    const handlePressIn = useCallback((event: Parameters<NonNullable<PressableProps["onPressIn"]>>[0]) => {
       if (!isDisabled) {
+        setIsPressed(true);
         scale.value = withSpring(0.96, SPRING_CONFIG);
       }
-      onPressIn?.(e);
+      onPressIn?.(event);
     }, [scale, isDisabled, onPressIn]);
 
-    const handlePressOut = useCallback((e: Parameters<NonNullable<PressableProps["onPressOut"]>>[0]) => {
+    const handlePressOut = useCallback((event: Parameters<NonNullable<PressableProps["onPressOut"]>>[0]) => {
+      setIsPressed(false);
       scale.value = withSpring(1, SPRING_CONFIG);
-      onPressOut?.(e);
+      onPressOut?.(event);
     }, [scale, onPressOut]);
 
-    const baseClasses =
-      "flex-row items-center justify-center rounded-2xl w-full";
+    const action = isDark ? ACTION.dark : ACTION.light;
+    const border = isDark ? BORDER.dark : BORDER.light;
+    const surface = isDark ? SURFACE.dark : SURFACE.light;
+    const text = isDark ? TEXT.dark : TEXT.light;
+
+    let backgroundColor = "transparent";
+    let borderColor = "transparent";
+    let textColor: string = action.primary;
+
+    if (variant === "primary") {
+      backgroundColor = isDisabled
+        ? surface.secondary
+        : isPressed
+          ? action.primaryPressed
+          : action.primary;
+      textColor = isDisabled ? text.tertiary : text.inverse;
+    } else if (variant === "secondary") {
+      backgroundColor = isPressed && !isDisabled ? surface.secondary : "transparent";
+      borderColor = isDisabled ? border.default : action.primary;
+      textColor = isDisabled ? text.tertiary : action.primary;
+    } else {
+      backgroundColor = isPressed && !isDisabled ? surface.secondary : "transparent";
+      textColor = isDisabled ? text.tertiary : action.primary;
+    }
+
+    const baseClasses = "flex-row items-center justify-center rounded-2xl w-full";
 
     const sizeClasses: Record<ButtonSize, string> = {
       default: "min-h-[52px] px-6 py-3",
@@ -71,21 +104,9 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
     };
 
     const variantClasses: Record<ButtonVariant, string> = {
-      primary: isDisabled
-        ? "bg-gray-300"
-        : "bg-primary-500 active:bg-primary-600 shadow-lg shadow-primary-500/30",
-      secondary: isDisabled
-        ? "border-2 border-gray-300 bg-transparent"
-        : "border-2 border-primary-500 bg-transparent active:bg-primary-50",
-      ghost: isDisabled
-        ? "bg-transparent"
-        : "bg-transparent active:bg-gray-100",
-    };
-
-    const textVariantClasses: Record<ButtonVariant, string> = {
-      primary: isDisabled ? "text-gray-500" : "text-white",
-      secondary: isDisabled ? "text-gray-400" : "text-primary-600",
-      ghost: isDisabled ? "text-gray-400" : "text-primary-600",
+      primary: "",
+      secondary: "border-2",
+      ghost: "",
     };
 
     const textSizeClasses: Record<ButtonSize, string> = {
@@ -94,28 +115,32 @@ const Button = forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
       icon: "text-base",
     };
 
-    const spinnerColor =
-      variant === "primary" ? "#ffffff" : isDisabled ? CONTENT_COLORS.light.tertiary : ACTION_COLORS.light.primary;
+    const buttonStyle: ViewStyle = {
+      backgroundColor,
+      borderColor,
+    };
 
     return (
       <AnimatedPressable
         ref={ref}
         disabled={isDisabled}
         className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className ?? ""}`}
-        style={[animatedStyle, style as ViewStyle]}
+        style={[animatedStyle, buttonStyle, style as ViewStyle]}
         accessibilityRole="button"
-        accessibilityState={{ disabled: isDisabled, busy: loading }}
+        accessibilityLabel={accessibilityLabel ?? (typeof children === "string" ? children : undefined)}
+        accessibilityState={{ ...accessibilityState, disabled: isDisabled, busy: loading }}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         {...props}
       >
         {loading ? (
-          <ActivityIndicator size="small" color={spinnerColor} />
+          <ActivityIndicator size="small" color={textColor} />
         ) : typeof children === "string" ? (
           <Text
-            className={`font-semibold ${textVariantClasses[variant]} ${textSizeClasses[size]} text-center`}
-            adjustsFontSizeToFit
-            minimumFontScale={0.6}
+            className={`font-semibold ${textSizeClasses[size]} text-center ${wrapText ? "flex-shrink" : ""}`}
+            style={{ color: textColor }}
+            adjustsFontSizeToFit={!wrapText}
+            minimumFontScale={wrapText ? undefined : 0.6}
           >
             {children}
           </Text>
