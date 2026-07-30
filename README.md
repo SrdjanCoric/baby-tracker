@@ -156,6 +156,8 @@ npm run e2e:start-caregiver-join   # Start local-Supabase Metro for iOS
 SOFIBABY_E2E_PLATFORM=android npm run e2e:start-caregiver-join # Android Metro
 npm run e2e:onboarding:ios         # Resumable production onboarding suite
 npm run e2e:onboarding:android     # Resumable production onboarding suite
+MAESTRO_DEVICE=<ios-device-id> npm run e2e:onboarding-network
+SOFIBABY_E2E_PLATFORM=android MAESTRO_DEVICE=<android-device-id> npm run e2e:onboarding-network
 ```
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.
@@ -163,6 +165,8 @@ npm run e2e:onboarding:android     # Resumable production onboarding suite
 Pull requests and pushes to `main` run only lint, strict type checking, and the dependency audit. Test suites stay out of the routine CI path and run locally through `npm run check` before a production release. The required dependency audit blocks unapproved high or critical advisories. Dependabot opens npm update pull requests each week. Configure `Non-device checks required` as the required branch-protection check. See [`docs/DEPENDENCY_SECURITY.md`](docs/DEPENDENCY_SECURITY.md) for advisory triage and temporary exception rules.
 
 Run `npm run e2e:household-timers:clean` before each iOS release. GitHub Actions does not run iOS device tests because GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase.
+
+The onboarding network command requires a built development app, a selected simulator or emulator, local Supabase, Docker, Maestro, `jq`, and `psql`. Port 8081 must be free. The command starts Metro with local Supabase configuration and resets dedicated fixtures. It stops the local API during caregiver joining, restarts the app, and verifies the recovered UI and database state. The exit handler restores the API and writes evidence under `e2e/artifacts/onboarding-network/`.
 
 The fast iOS command reuses the installed E2E app and local fixtures. The scenario stops local Supabase API access while the owner starts sleep. It restores the API, restarts each observing app before checking server state, and continues the two-caregiver handoff. The clean command resets local Supabase, builds the app for two named simulators, runs the same timer scenario, and opens the native day-start picker. It removes fixture accounts when finished. A build, fixture, assertion, Maestro, or cleanup failure exits nonzero and blocks the release. Both commands require Docker, Xcode, Maestro, and `psql`; clean provisioning also needs `jq` and CocoaPods. See [`e2e/README.md`](e2e/README.md) for setup and diagnostics, including the local-only safeguards.
 
