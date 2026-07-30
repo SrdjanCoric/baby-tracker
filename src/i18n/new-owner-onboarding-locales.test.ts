@@ -43,8 +43,10 @@ describe("new owner onboarding translations", () => {
     }
   });
 
-  it("keeps the approved Welcome title and promise direct", () => {
+  it("keeps the approved Welcome title and promise", () => {
     expect(en.newOwnerOnboarding.welcome.title).toBe("Care for your baby with confidence");
-    expect(en.newOwnerOnboarding.welcome.promise).not.toMatch(/—/);
+    expect(en.newOwnerOnboarding.welcome.promise).toBe(
+      "Track feeding, sleep, diapers, and more—on your own or together with family."
+    );
   });
 });

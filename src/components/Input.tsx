@@ -40,7 +40,7 @@ const Input = forwardRef<TextInput, InputProps>(
     const containerClasses = `
       flex-row items-center min-h-[48px] px-4 rounded-2xl border-2
       ${hasError
-        ? "border-red-400 bg-red-50"
+        ? isDark ? "border-red-400 bg-surface-dark-card" : "border-red-400 bg-red-50"
         : isFocused
           ? isDark ? "border-primary-400 bg-surface-dark-card" : "border-primary-500 bg-white"
           : isDisabled

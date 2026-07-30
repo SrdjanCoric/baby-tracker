@@ -61,6 +61,16 @@ describe("NewOwnerBabyScreen", () => {
     mockAddBaby.mockResolvedValue({ id: "baby-1" });
   });
 
+  it("announces the initial profile loading state", () => {
+    mockGetState.mockReturnValue(new Promise(() => undefined));
+
+    render(<NewOwnerBabyScreen />);
+
+    expect(screen.getByTestId("onboarding-loading-indicator").props.accessibilityState).toEqual({
+      busy: true,
+    });
+  });
+
   it("does not create a baby until the complete profile is valid", async () => {
     render(<NewOwnerBabyScreen />);
 
@@ -81,7 +91,7 @@ describe("NewOwnerBabyScreen", () => {
     expect(screen.getByText("common.continue").props.adjustsFontSizeToFit).toBe(false);
   });
 
-  it("dismisses the iOS birth-date picker before continuing", async () => {
+  it("commits the displayed iOS birth date before dismissing the picker", async () => {
     render(<NewOwnerBabyScreen />);
 
     await waitFor(() => expect(screen.getByTestId("owner-baby-birth-date")).toBeTruthy());
@@ -89,7 +99,20 @@ describe("NewOwnerBabyScreen", () => {
     expect(screen.getByTestId("owner-baby-birth-date-done")).toBeTruthy();
 
     fireEvent.press(screen.getByTestId("owner-baby-birth-date-done"));
+
     expect(screen.queryByTestId("owner-baby-birth-date-input")).toBeNull();
+    expect(mockUpdateBabyDraft).toHaveBeenCalledWith(expect.objectContaining({
+      birthDate: expect.any(String),
+    }));
+  });
+
+  it("shows name validation when leaving the field empty", async () => {
+    render(<NewOwnerBabyScreen />);
+
+    await waitFor(() => expect(screen.getByTestId("owner-baby-name")).toBeTruthy());
+    fireEvent(screen.getByTestId("owner-baby-name"), "blur");
+
+    expect(screen.getByText("validation.nameRequired")).toBeTruthy();
   });
 
   it("clears the draft and returns to Welcome when starting over", async () => {

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Keyboard, Platform, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Keyboard, Platform, Pressable, Text, View } from "react-native";
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/Input";
@@ -10,7 +9,7 @@ import { OnboardingIllustration, OnboardingScreen } from "@/components/onboardin
 import { useAuth, useBaby, useLanguage } from "@/contexts";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import type { BabyProfileDraft } from "@/types/new-owner-onboarding";
-import { validateNewBabyProfile, type BabyGender } from "@/validators/baby";
+import { validateBabyName, validateNewBabyProfile, type BabyGender } from "@/validators/baby";
 import { sanitizeName } from "@/utils/sanitize";
 import { te } from "@/utils/translate-errors";
 import { ACTION, BORDER, SEMANTIC, SURFACE, TEXT } from "@/constants/colors";
@@ -24,12 +23,12 @@ export default function NewOwnerBabyScreen() {
   const { language, resolvedLanguage } = useLanguage();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
   const primaryTextColor = isDark ? TEXT.dark.primary : TEXT.light.primary;
   const secondaryTextColor = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
   const borderColor = isDark ? BORDER.dark.default : BORDER.light.default;
   const selectedColor = isDark ? ACTION.dark.primary : ACTION.light.primary;
   const cardColor = isDark ? SURFACE.dark.card : SURFACE.light.card;
+  const selectedCardColor = isDark ? SURFACE.dark.secondary : SURFACE.light.muted;
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [gender, setGender] = useState<BabyGender | undefined>();
@@ -80,6 +79,16 @@ export default function NewOwnerBabyScreen() {
     persistDraft({ name, birthDate: value.toISOString(), gender: gender ?? null });
   }, [gender, name, persistDraft]);
 
+  const handleDateDone = useCallback(() => {
+    const confirmedDate = birthDate ?? new Date();
+    if (!birthDate) {
+      setBirthDate(confirmedDate);
+      setErrors(current => ({ ...current, birthDate: "" }));
+      persistDraft({ name, birthDate: confirmedDate.toISOString(), gender: gender ?? null });
+    }
+    setShowDatePicker(false);
+  }, [birthDate, gender, name, persistDraft]);
+
   const handleGender = useCallback((value: BabyGender) => {
     setGender(value);
     setErrors(current => ({ ...current, gender: "" }));
@@ -123,7 +132,18 @@ export default function NewOwnerBabyScreen() {
   }, [accountMode, router, signOut]);
 
   if (isLoading && !submittingRef.current) {
-    return <SafeAreaView className="flex-1" style={{ backgroundColor }} testID="new-owner-baby-screen" />;
+    return (
+      <OnboardingScreen
+        testID="new-owner-baby-screen"
+        title={t("newOwnerOnboarding.baby.title")}
+        description={t("newOwnerOnboarding.baby.requiredHint")}
+        contentClassName="flex-1 items-center justify-center"
+      >
+        <View testID="onboarding-loading-indicator" accessibilityState={{ busy: true }}>
+          <ActivityIndicator color={selectedColor} />
+        </View>
+      </OnboardingScreen>
+    );
   }
 
   return (
@@ -140,6 +160,10 @@ export default function NewOwnerBabyScreen() {
         label={t("newOwnerOnboarding.baby.name")}
         value={name}
         onChangeText={handleName}
+        onBlur={() => {
+          const error = validateBabyName(name);
+          setErrors(current => ({ ...current, name: error ?? "" }));
+        }}
         placeholder={t("newOwnerOnboarding.baby.namePlaceholder")}
         error={errors.name ? te(t, errors.name) : undefined}
         autoCapitalize="words"
@@ -203,7 +227,7 @@ export default function NewOwnerBabyScreen() {
                 className="flex-1 min-h-[72px] rounded-2xl border-2 px-4 py-3 items-center justify-center"
                 style={{
                   borderColor: selected ? selectedColor : borderColor,
-                  backgroundColor: cardColor,
+                  backgroundColor: selected ? selectedCardColor : cardColor,
                 }}
                 accessibilityRole="radio"
                 accessibilityLabel={t(`newOwnerOnboarding.baby.${value}`)}
@@ -241,7 +265,7 @@ export default function NewOwnerBabyScreen() {
             <Button
               variant="ghost"
               wrapText
-              onPress={() => setShowDatePicker(false)}
+              onPress={handleDateDone}
               testID="owner-baby-birth-date-done"
             >
               {t("common.done")}
