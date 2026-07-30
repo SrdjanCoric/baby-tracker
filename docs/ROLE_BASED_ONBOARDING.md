@@ -60,7 +60,9 @@ npm run e2e:onboarding:ios -- --reset
 npm run e2e:onboarding:android -- --reset
 ```
 
-The authenticated flows require disposable local Supabase fixtures. Prepare them with the commands in [`e2e/README.md`](../e2e/README.md). The manual-code flow also requires `npm run e2e:prepare-caregiver-join`. Run `npm run e2e:onboarding-network` to stop the local API during caregiver redemption and verify recovery after restart.
+The authenticated flows require disposable local Supabase fixtures. Prepare them with the commands in [`e2e/README.md`](../e2e/README.md). The manual-code flow also requires `npm run e2e:prepare-caregiver-join`.
+
+`npm run e2e:onboarding-network` is the authoritative transport-recovery scenario. It reaches destructive join confirmation, stops the local Supabase API, submits while offline, restarts the app without clearing state, restores the API, presses the persisted Retry action, and completes the confirmed join. The command then checks the local database for one consumed invitation, the caregiver's single target-household assignment, the two shared babies, deletion of the confirmed solo data, and preservation of unrelated fixtures. It refuses non-loopback Supabase endpoints and restores the API after success, failure, or cancellation. Use `MAESTRO_DEVICE=<device-id>` for either platform; Android also requires Metro to have been started with `SOFIBABY_E2E_PLATFORM=android` as described in [`e2e/README.md`](../e2e/README.md).
 
 ## Visual review matrix
 

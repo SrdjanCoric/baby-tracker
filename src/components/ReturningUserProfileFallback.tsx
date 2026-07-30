@@ -6,6 +6,7 @@ import { useAuth, useTheme } from "@/contexts";
 import { ACTION, SURFACE, TEXT } from "@/constants/colors";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import type { NewOwnerOnboardingState } from "@/types/new-owner-onboarding";
+import { withRetry } from "@/utils/retry";
 
 export function ReturningUserProfileFallback() {
   const { t } = useTranslation();
@@ -13,6 +14,7 @@ export function ReturningUserProfileFallback() {
   const { isDark } = useTheme();
   const { refreshUserProfile, signOut } = useAuth();
   const [state, setState] = useState<NewOwnerOnboardingState | null>(null);
+  const [isCaregiverRetrying, setIsCaregiverRetrying] = useState(false);
   const operationRef = useRef(0);
 
   const reloadState = useCallback(async () => {
@@ -73,6 +75,28 @@ export function ReturningUserProfileFallback() {
     }
   }, [reloadState, restoreProfile]);
 
+  const handleCaregiverRetry = useCallback(async () => {
+    if (state?.screen !== "join-failure" || state.recovery !== "reconcile") return;
+    setIsCaregiverRetrying(true);
+    try {
+      await NewOwnerOnboardingStorageService.retryCaregiverJoin();
+      const profile = await withRetry(refreshUserProfile, {
+        maxRetries: 2,
+        baseDelayMs: 500,
+        maxDelayMs: 1500,
+        retryableErrors: ["network", "timeout", "unavailable", "ECONNREFUSED", "ETIMEDOUT"],
+      });
+      if (!profile.householdId) throw new Error("Profile household is unavailable");
+      await NewOwnerOnboardingStorageService.recoverInterruptedCaregiverJoin(profile.householdId);
+      router.replace("/onboarding/owner/join");
+    } catch {
+      await NewOwnerOnboardingStorageService.markCaregiverReconciliationFailure();
+      await reloadState();
+    } finally {
+      setIsCaregiverRetrying(false);
+    }
+  }, [refreshUserProfile, reloadState, router, state]);
+
   const handleSignOut = useCallback(async () => {
     operationRef.current += 1;
     const { error } = await signOut();
@@ -84,6 +108,33 @@ export function ReturningUserProfileFallback() {
   const backgroundColor = isDark ? SURFACE.dark.background : SURFACE.light.background;
   const primaryText = isDark ? TEXT.dark.primary : TEXT.light.primary;
   const secondaryText = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
+
+  if (state?.screen === "join-failure" && state.recovery === "reconcile") {
+    return (
+      <View className="flex-1 px-6 justify-center" style={{ backgroundColor }} testID="join-family-recovery-fallback">
+        <Text className="text-3xl font-bold text-center" style={{ color: primaryText }}>
+          {t("newOwnerOnboarding.join.title")}
+        </Text>
+        <Text className="text-base mt-3 mb-8 text-center" style={{ color: secondaryText }}>
+          {t("newOwnerOnboarding.join.offline")}
+        </Text>
+        <Pressable
+          onPress={handleCaregiverRetry}
+          disabled={isCaregiverRetrying}
+          accessibilityState={{ busy: isCaregiverRetrying, disabled: isCaregiverRetrying }}
+          className="rounded-button-lg py-4 items-center"
+          style={{ backgroundColor: isDark ? ACTION.dark.primary : ACTION.light.primary }}
+          testID="retry-join-button"
+        >
+          {isCaregiverRetrying ? (
+            <ActivityIndicator color={TEXT.dark.primary} />
+          ) : (
+            <Text className="text-white text-base font-bold">{t("common.retry")}</Text>
+          )}
+        </Pressable>
+      </View>
+    );
+  }
 
   if (state?.screen === "returning-unavailable") {
     return (
