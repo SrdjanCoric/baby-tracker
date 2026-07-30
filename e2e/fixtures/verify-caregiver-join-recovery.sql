@@ -103,13 +103,100 @@ BEGIN
       AND household_id = '00000000-0000-0000-0000-000000000002'::uuid
       AND name = 'Member Baby'
       AND deleted = false
-  ) OR (
+  ) OR NOT EXISTS (
+    SELECT 1
+    FROM public.households
+    WHERE id = '00000000-0000-0000-0000-000000000002'::uuid
+  ) OR NOT EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE email = 'e2e-new-owner@test.local'
+      AND household_id = '00000000-0000-0000-0000-000000000004'::uuid
+      AND is_owner = true
+  ) THEN
+    RAISE EXCEPTION 'Unrelated household fixtures changed during caregiver recovery';
+  END IF;
+
+  IF (
     SELECT pg_catalog.count(*)
     FROM public.feedings
-    WHERE baby_id = '00000000-0000-0000-0001-000000000001'::uuid
+    WHERE deleted = false
+      AND (id, type, duration_seconds, side) IN (
+        ('00000000-0000-0000-0002-000000000001'::uuid, 'breast', 600, 'left'),
+        ('00000000-0000-0000-0002-000000000003'::uuid, 'breast', 720, 'right')
+      )
+  ) <> 2 OR NOT EXISTS (
+    SELECT 1
+    FROM public.feedings
+    WHERE id = '00000000-0000-0000-0002-000000000002'::uuid
+      AND type = 'bottle'
+      AND duration_seconds = 900
+      AND side IS NULL
       AND deleted = false
+  ) THEN
+    RAISE EXCEPTION 'Feeding fixtures changed during caregiver recovery';
+  END IF;
+
+  IF (
+    SELECT pg_catalog.count(*)
+    FROM public.sleep_sessions
+    WHERE deleted = false
+      AND (id, type, duration_seconds) IN (
+        ('00000000-0000-0000-0003-000000000001'::uuid, 'nap', 3600),
+        ('00000000-0000-0000-0003-000000000002'::uuid, 'night', 28800)
+      )
+  ) <> 2 OR (
+    SELECT pg_catalog.count(*)
+    FROM public.diapers
+    WHERE deleted = false
+      AND (id, type) IN (
+        ('00000000-0000-0000-0004-000000000001'::uuid, 'wet'),
+        ('00000000-0000-0000-0004-000000000002'::uuid, 'dirty'),
+        ('00000000-0000-0000-0004-000000000003'::uuid, 'mixed')
+      )
   ) <> 3 THEN
-    RAISE EXCEPTION 'Unrelated fixture data changed during caregiver recovery';
+    RAISE EXCEPTION 'Sleep or diaper fixtures changed during caregiver recovery';
+  END IF;
+
+  IF (
+    SELECT pg_catalog.count(*)
+    FROM public.growth_measurements
+    WHERE deleted = false
+      AND (id, weight_kg, height_cm, head_cm) IN (
+        ('00000000-0000-0000-0005-000000000001'::uuid, 7.5, 68.0, 43.0),
+        ('00000000-0000-0000-0005-000000000002'::uuid, 7.2, 66.5, 42.5)
+      )
+  ) <> 2 OR NOT EXISTS (
+    SELECT 1
+    FROM public.tummy_time_sessions
+    WHERE id = '00000000-0000-0000-0006-000000000001'::uuid
+      AND duration_seconds = 300
+      AND deleted = false
+  ) OR NOT EXISTS (
+    SELECT 1
+    FROM public.pumping_sessions
+    WHERE id = '00000000-0000-0000-0007-000000000001'::uuid
+      AND duration_seconds = 1200
+      AND amount_ml = 120
+      AND side = 'both'
+      AND deleted = false
+  ) THEN
+    RAISE EXCEPTION 'Growth, tummy-time, or pumping fixtures changed during caregiver recovery';
+  END IF;
+
+  IF (
+    SELECT pg_catalog.count(*)
+    FROM public.achievements
+    WHERE baby_id IN (
+      '00000000-0000-0000-0001-000000000001'::uuid,
+      '00000000-0000-0000-0001-000000000002'::uuid
+    )
+      AND achievement_id IN (
+        'sleep_6h', 'sleep_8h', 'sleep_10h', 'tummy_5min',
+        'tummy_10min', 'tummy_15min', 'tummy_20min', 'first_solid'
+      )
+  ) <> 16 THEN
+    RAISE EXCEPTION 'Achievement fixtures changed during caregiver recovery';
   END IF;
 END
 $$;

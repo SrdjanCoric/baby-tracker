@@ -97,6 +97,14 @@ export function ReturningUserProfileFallback() {
     }
   }, [refreshUserProfile, reloadState, router, state]);
 
+  const handleCaregiverSignOut = useCallback(async () => {
+    operationRef.current += 1;
+    const { error } = await signOut();
+    if (error) return;
+    await NewOwnerOnboardingStorageService.clearUnfinishedDraft();
+    router.replace("/onboarding/owner");
+  }, [router, signOut]);
+
   const handleSignOut = useCallback(async () => {
     operationRef.current += 1;
     const { error } = await signOut();
@@ -131,6 +139,15 @@ export function ReturningUserProfileFallback() {
           ) : (
             <Text className="text-white text-base font-bold">{t("common.retry")}</Text>
           )}
+        </Pressable>
+        <Pressable
+          onPress={handleCaregiverSignOut}
+          className="py-4 items-center"
+          testID="caregiver-recovery-sign-out-button"
+        >
+          <Text className="text-base font-semibold" style={{ color: secondaryText }}>
+            {t("auth.signOut")}
+          </Text>
         </Pressable>
       </View>
     );

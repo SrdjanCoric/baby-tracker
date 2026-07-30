@@ -31,6 +31,7 @@ jest.mock("@/services/new-owner-onboarding-storage", () => ({
     retryCaregiverJoin: jest.fn(),
     recoverInterruptedCaregiverJoin: jest.fn(),
     markCaregiverReconciliationFailure: jest.fn(),
+    clearUnfinishedDraft: jest.fn(),
     markReturningSignedOut: jest.fn(),
   },
 }));
@@ -80,6 +81,7 @@ describe("ReturningUserProfileFallback", () => {
     jest.mocked(NewOwnerOnboardingStorageService.retryCaregiverJoin).mockResolvedValue(undefined);
     jest.mocked(NewOwnerOnboardingStorageService.recoverInterruptedCaregiverJoin).mockResolvedValue(undefined);
     jest.mocked(NewOwnerOnboardingStorageService.markCaregiverReconciliationFailure).mockResolvedValue(undefined);
+    jest.mocked(NewOwnerOnboardingStorageService.clearUnfinishedDraft).mockResolvedValue(undefined);
     jest.mocked(NewOwnerOnboardingStorageService.markReturningSignedOut).mockResolvedValue(undefined);
     mockSignOut.mockResolvedValue({ error: null });
   });
@@ -157,6 +159,20 @@ describe("ReturningUserProfileFallback", () => {
       expect(NewOwnerOnboardingStorageService.recoverInterruptedCaregiverJoin)
         .toHaveBeenCalledWith("source-household");
       expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner/join");
+    });
+  });
+
+  it("can leave caregiver recovery by signing out without opening the provider tree", async () => {
+    jest.mocked(NewOwnerOnboardingStorageService.getState).mockResolvedValue(caregiverJoinFailureState);
+
+    render(<ReturningUserProfileFallback />);
+    await waitFor(() => expect(screen.getByTestId("caregiver-recovery-sign-out-button")).toBeTruthy());
+    fireEvent.press(screen.getByTestId("caregiver-recovery-sign-out-button"));
+
+    await waitFor(() => {
+      expect(mockSignOut).toHaveBeenCalledTimes(1);
+      expect(NewOwnerOnboardingStorageService.clearUnfinishedDraft).toHaveBeenCalledTimes(1);
+      expect(mockReplace).toHaveBeenCalledWith("/onboarding/owner");
     });
   });
 
