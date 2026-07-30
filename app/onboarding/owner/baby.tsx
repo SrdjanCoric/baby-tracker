@@ -228,14 +228,28 @@ export default function NewOwnerBabyScreen() {
         </View>
 
         {showDatePicker && (
-          <DateTimePicker
-            testID="owner-baby-birth-date-input"
-            value={birthDate ?? new Date()}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={handleDate}
-            maximumDate={new Date()}
-          />
+          <View>
+            {Platform.OS === "ios" && (
+              <Pressable
+                onPress={() => setShowDatePicker(false)}
+                className="items-end px-6 py-2"
+                accessibilityRole="button"
+                testID="owner-baby-birth-date-done"
+              >
+                <Text className="font-semibold" style={{ color: ACTION.light.primary }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            )}
+            <DateTimePicker
+              testID="owner-baby-birth-date-input"
+              value={birthDate ?? new Date()}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleDate}
+              maximumDate={new Date()}
+            />
+          </View>
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>

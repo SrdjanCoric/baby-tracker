@@ -1,0 +1,32 @@
+appId: com.sofibaby.app
+name: Production legacy completion upgrade
+
+tags:
+  - regression
+  - onboarding
+  - upgrade
+
+---
+- launchApp:
+    clearState: true
+    arguments:
+      e2eMode: "true"
+      legacyOnboardingStatus: "completed"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000
+- assertNotVisible:
+    id: "new-owner-welcome-screen"
+- stopApp
+- launchApp:
+    clearState: true
+    arguments:
+      e2eMode: "true"
+      legacyOnboardingStatus: "skipped"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000
+- assertNotVisible:
+    id: "new-owner-welcome-screen"

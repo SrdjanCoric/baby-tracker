@@ -35,7 +35,7 @@ BEGIN
   END IF;
 
   DELETE FROM public.babies
-  WHERE household_id IN (v_owner_household_id, v_source_household_id);
+  WHERE household_id = v_source_household_id;
 
   UPDATE public.users
   SET household_id = v_owner_household_id,
@@ -55,15 +55,7 @@ BEGIN
     name,
     birth_date,
     gender
-  ) VALUES
-  (
-    'e2e00000-0000-4000-8000-000000000038',
-    v_owner_household_id,
-    'Shared Baby',
-    CURRENT_DATE - INTERVAL '100 days',
-    'female'
-  ),
-  (
+  ) VALUES (
     'e2e00000-0000-4000-8000-000000000041',
     v_source_household_id,
     'Solo Baby',

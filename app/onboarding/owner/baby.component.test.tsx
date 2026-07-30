@@ -72,6 +72,17 @@ describe("NewOwnerBabyScreen", () => {
     expect(screen.getByText("validation.genderRequired")).toBeTruthy();
   });
 
+  it("dismisses the iOS birth-date picker before continuing", async () => {
+    render(<NewOwnerBabyScreen />);
+
+    await waitFor(() => expect(screen.getByTestId("owner-baby-birth-date")).toBeTruthy());
+    fireEvent.press(screen.getByTestId("owner-baby-birth-date"));
+    expect(screen.getByTestId("owner-baby-birth-date-done")).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId("owner-baby-birth-date-done"));
+    expect(screen.queryByTestId("owner-baby-birth-date-input")).toBeNull();
+  });
+
   it("clears the draft and returns to Welcome when starting over", async () => {
     render(<NewOwnerBabyScreen />);
 

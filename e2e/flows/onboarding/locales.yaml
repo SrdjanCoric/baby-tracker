@@ -27,32 +27,27 @@ tags:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-es"
-- assertVisible:
-    id: "start-tracking-button"
+- assertVisible: "Cuida a tu bebé con confianza"
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-es-ES"
-- assertVisible:
-    id: "join-family-button"
+- assertVisible: "Cuida de tu bebé con confianza"
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-fr"
-- assertVisible:
-    id: "sign-in-button"
+- assertVisible: "Prenez soin de votre bébé en toute confiance"
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-pt-PT"
-- assertVisible:
-    id: "start-tracking-button"
+- assertVisible: "Cuide do seu bebé com confiança"
 - tapOn:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-pt-BR"
-- assertVisible:
-    id: "join-family-button"
+- assertVisible: "Cuide do seu bebê com confiança"
 - tapOn:
     id: "current-language-button"
 - tapOn:
@@ -62,5 +57,4 @@ tags:
     id: "current-language-button"
 - tapOn:
     id: "welcome-language-it"
-- assertVisible:
-    id: "sign-in-button"
+- assertVisible: "Prenditi cura del tuo bambino con sicurezza"

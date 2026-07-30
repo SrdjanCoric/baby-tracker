@@ -34,7 +34,7 @@ Returning restoration refreshes profile, household, babies, and selected-baby st
 
 ## Development tools
 
-Development builds expose two Settings tools:
+Development builds expose three Settings tools:
 
 - **Preview onboarding** renders isolated sample states without calling storage, authentication, or Supabase.
 - **Run first-launch routing again** clears versioned onboarding state and legacy completion, then opens production routing with the current authentication state. Account, household, babies, activities, and preferences remain intact.
@@ -60,4 +60,4 @@ maestro test e2e/suites/onboarding-ios.yaml
 maestro test e2e/suites/onboarding-android.yaml
 ```
 
-The authenticated flows require disposable local Supabase fixtures. Prepare them with the commands in [`e2e/README.md`](../e2e/README.md). The manual-code flow also requires `npm run e2e:prepare-caregiver-join`.
+The authenticated flows require disposable local Supabase fixtures. Prepare them with the commands in [`e2e/README.md`](../e2e/README.md). The manual-code flow also requires `npm run e2e:prepare-caregiver-join`. Run `npm run e2e:onboarding-network` to stop the local API during caregiver redemption and verify recovery after restart.

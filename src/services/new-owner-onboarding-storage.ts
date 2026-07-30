@@ -221,7 +221,7 @@ function isStoredState(value: unknown): value is NewOwnerOnboardingState {
       firstActivity?.status === "legacy-completed";
     const hasExistingAccountCompletion =
       state.entryPath === "authenticated-existing" &&
-      state.babyId === null &&
+      typeof state.babyId === "string" &&
       firstActivity?.status === "existing-account";
     const hasCaregiverCompletion =
       state.entryPath === "caregiver" &&
@@ -275,7 +275,11 @@ async function hasLegacyCompletion(): Promise<boolean> {
     const parsed: unknown = JSON.parse(stored);
     if (!parsed || typeof parsed !== "object") return false;
     const status = parsed as Record<string, unknown>;
-    return status.hasCompleted === true || status.skipped === true;
+    const isValid =
+      typeof status.hasCompleted === "boolean" &&
+      (status.completedAt === null || typeof status.completedAt === "string") &&
+      typeof status.skipped === "boolean";
+    return isValid && (status.hasCompleted === true || status.skipped === true);
   } catch {
     return false;
   }
@@ -953,8 +957,8 @@ export const NewOwnerOnboardingStorageService = {
 
   resetForDevelopment(): Promise<void> {
     return enqueueMutation(async () => {
-      await AsyncStorage.removeItem(NEW_OWNER_ONBOARDING_KEY);
       await AsyncStorage.removeItem(LEGACY_ONBOARDING_STATUS_KEY);
+      await AsyncStorage.removeItem(NEW_OWNER_ONBOARDING_KEY);
     });
   },
 };

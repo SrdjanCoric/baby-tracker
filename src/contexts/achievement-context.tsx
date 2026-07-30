@@ -87,7 +87,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
 
     const birthDate = selectedBaby.birthDate;
     const babyId = selectedBaby.id;
-    getDetectedAchievementIds(babyId).then((storedIds) => {
+    getDetectedAchievementIds(babyId, Boolean(session?.user?.id)).then((storedIds) => {
       if (seededBabyRef.current !== babyId) return;
 
       const allIds = seedExistingAchievements(

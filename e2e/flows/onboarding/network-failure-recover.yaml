@@ -1,0 +1,18 @@
+appId: com.sofibaby.app
+name: Caregiver join recovers after local API restart
+
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "join-family-submit-button"
+    timeout: 60000
+- tapOn:
+    id: "join-family-submit-button"
+- tapOn: "Delete my data and join"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+- assertVisible: "E2E Baby"

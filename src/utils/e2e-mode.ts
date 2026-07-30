@@ -4,6 +4,7 @@ interface E2ELaunchArgs {
   e2eMode?: string | boolean;
   e2eEmail?: string;
   e2ePassword?: string;
+  legacyOnboardingStatus?: string;
 }
 
 function getArgs(): E2ELaunchArgs {
@@ -24,6 +25,7 @@ function getArgs(): E2ELaunchArgs {
           e2eMode: String(e2eMode),
           e2eEmail: Settings.get("e2eEmail"),
           e2ePassword: Settings.get("e2ePassword"),
+          legacyOnboardingStatus: Settings.get("legacyOnboardingStatus"),
         };
       }
     } catch {
@@ -37,6 +39,7 @@ function getArgs(): E2ELaunchArgs {
           e2eMode: String(SettingsManager.settings.e2eMode),
           e2eEmail: SettingsManager.settings.e2eEmail,
           e2ePassword: SettingsManager.settings.e2ePassword,
+          legacyOnboardingStatus: SettingsManager.settings.legacyOnboardingStatus,
         };
       }
     } catch {
@@ -50,6 +53,11 @@ function getArgs(): E2ELaunchArgs {
 export function isE2EMode(): boolean {
   const args = getArgs();
   return args.e2eMode === "true" || args.e2eMode === true;
+}
+
+export function getLegacyOnboardingFixture(): "completed" | "skipped" | null {
+  const status = getArgs().legacyOnboardingStatus;
+  return status === "completed" || status === "skipped" ? status : null;
 }
 
 export function getE2ECredentials(): { email: string; password: string } | null {

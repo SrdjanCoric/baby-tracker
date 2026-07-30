@@ -11,3 +11,4 @@ name: Production onboarding - Android
 - runFlow: ../flows/onboarding/auth-cancellation.yaml
 - runFlow: ../flows/onboarding/join-failure-recovery.yaml
 - runFlow: ../flows/onboarding/locales.yaml
+- runFlow: ../flows/onboarding/legacy-upgrade.yaml

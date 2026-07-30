@@ -92,12 +92,10 @@ export default function NewOwnerActivityScreen() {
             </Text>
           </Pressable>
         )}
-      </ScrollView>
 
-      <View className="px-6 pb-6">
         <Pressable
           onPress={handleSkipRemainingSetup}
-          className="py-4 items-center rounded-button-lg border"
+          className="py-4 mt-6 items-center rounded-button-lg border"
           style={{ borderColor }}
           accessibilityRole="button"
           testID="skip-remaining-setup-button"
@@ -106,7 +104,7 @@ export default function NewOwnerActivityScreen() {
             {t("newOwnerOnboarding.activity.skipRemaining")}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

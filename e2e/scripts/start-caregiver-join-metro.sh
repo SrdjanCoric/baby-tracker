@@ -14,6 +14,11 @@ if [[ -z "$API_URL" || -z "$ANON_KEY" ]]; then
   exit 1
 fi
 
+if [[ "${SOFIBABY_E2E_PLATFORM:-ios}" == "android" ]]; then
+  API_URL="${API_URL/127.0.0.1/10.0.2.2}"
+fi
+
+export EXPO_NO_DOTENV=1
 export SOFIBABY_E2E_LOCAL_ENV=1
 export EXPO_PUBLIC_SUPABASE_URL="$API_URL"
 export EXPO_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"

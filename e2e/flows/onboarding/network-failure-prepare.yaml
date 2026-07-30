@@ -1,10 +1,5 @@
 appId: com.sofibaby.app
-name: Production manual-code join and destructive confirmation
-
-tags:
-  - regression
-  - onboarding
-  - caregiver
+name: Prepare caregiver join network failure
 
 ---
 - launchApp:
@@ -41,17 +36,3 @@ tags:
     visible:
       id: "join-family-submit-button"
     timeout: 30000
-- tapOn:
-    id: "join-family-submit-button"
-- assertVisible: "Delete your current baby data?"
-- tapOn: "Cancel"
-- assertVisible:
-    id: "join-family-submit-button"
-- tapOn:
-    id: "join-family-submit-button"
-- tapOn: "Delete my data and join"
-- extendedWaitUntil:
-    visible:
-      id: "home-screen"
-    timeout: 30000
-- assertVisible: "E2E Baby"

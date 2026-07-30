@@ -14,6 +14,7 @@ import { SyncAuthGate } from "@/components/SyncAuthGate";
 import { ReturningUserProfileFallback } from "@/components/ReturningUserProfileFallback";
 import { AuthScopeBoundary } from "@/components/AuthScopeBoundary";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { seedLegacyOnboardingFixture } from "@/services/e2e-onboarding-fixture";
 import { LanguageStorageService } from "@/services/language-storage";
 import {
   getOnboardingRedirect,
@@ -57,6 +58,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      await seedLegacyOnboardingFixture(__DEV__);
       const language = await LanguageStorageService.getLanguagePreference();
       let state = await NewOwnerOnboardingStorageService.getState(language);
       if (!isMountedRef.current) return;

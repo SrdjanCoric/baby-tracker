@@ -579,6 +579,17 @@ describe("NewOwnerOnboardingStorageService", () => {
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith("@new_owner_onboarding_v2");
   });
 
+  it("clears legacy completion before versioned state for development replay", async () => {
+    vi.mocked(AsyncStorage.removeItem).mockResolvedValue(undefined);
+
+    await NewOwnerOnboardingStorageService.resetForDevelopment();
+
+    expect(vi.mocked(AsyncStorage.removeItem).mock.calls).toEqual([
+      ["@onboarding_status"],
+      ["@new_owner_onboarding_v2"],
+    ]);
+  });
+
   it("clears an unfinished versioned draft without touching other storage", async () => {
     vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify({
       version: 2,
@@ -636,17 +647,32 @@ describe("NewOwnerOnboardingStorageService", () => {
     });
   });
 
-  it("treats legacy completed and skipped records as completed", async () => {
-    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => {
-      if (key === "@onboarding_status") {
-        return JSON.stringify({
-          hasCompleted: true,
-          completedAt: "2026-07-28T12:00:00.000Z",
-          skipped: true,
-        });
-      }
-      return null;
+  it("round-trips authenticated completion with the restored baby ID", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
     });
+
+    await NewOwnerOnboardingStorageService.beginOwnerPath("en");
+    await NewOwnerOnboardingStorageService.beginAuthentication("sign-in");
+    await NewOwnerOnboardingStorageService.resumeAuthenticatedAccount("baby-1");
+
+    await expect(NewOwnerOnboardingStorageService.getState("en")).resolves.toMatchObject({
+      screen: "completed",
+      entryPath: "authenticated-existing",
+      babyId: "baby-1",
+      firstActivity: { status: "existing-account" },
+    });
+  });
+
+  it.each([
+    { hasCompleted: true, completedAt: "2026-07-28T12:00:00.000Z", skipped: false },
+    { hasCompleted: false, completedAt: null, skipped: true },
+  ])("migrates legacy completed and skipped records: %j", async legacyStatus => {
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key =>
+      key === "@onboarding_status" ? JSON.stringify(legacyStatus) : null
+    );
 
     const expectedState = {
       version: 2 as const,
@@ -666,5 +692,16 @@ describe("NewOwnerOnboardingStorageService", () => {
       "@onboarding_status",
       expect.any(String)
     );
+  });
+
+  it("ignores malformed legacy completion records", async () => {
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key =>
+      key === "@onboarding_status" ? JSON.stringify({ hasCompleted: true }) : null
+    );
+
+    await expect(NewOwnerOnboardingStorageService.getState("en")).resolves.toMatchObject({
+      screen: "welcome",
+    });
+    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
   });
 });

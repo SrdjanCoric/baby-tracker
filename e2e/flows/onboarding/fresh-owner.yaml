@@ -33,8 +33,10 @@ tags:
       platform: iOS
     commands:
       - swipe:
-          start: "50%,92%"
-          end: "50%,82%"
+          start: "60%,85%"
+          end: "60%,75%"
+      - tapOn:
+          id: "owner-baby-birth-date-done"
 - runFlow:
     when:
       platform: Android

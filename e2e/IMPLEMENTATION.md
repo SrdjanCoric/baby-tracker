@@ -17,10 +17,11 @@ The production onboarding flows are under `e2e/flows/onboarding/`:
 | `auth-cancellation.yaml` | Authentication cancellation returns to Welcome |
 | `join-failure-recovery.yaml` | Invalid invitation failure and retry |
 | `locales.yaml` | Immediate switching across all supported locales |
+| `legacy-upgrade.yaml` | Completed-only and skipped-only legacy migration |
 
 `e2e/suites/onboarding-ios.yaml` and `e2e/suites/onboarding-android.yaml` run the same production-route matrix on each platform. The flows do not use an onboarding feature flag or preview launch argument.
 
-The manual-code flow expects the invitation and solo-household baby created by:
+The owner-invitation flow uses the empty `e2e-new-owner@test.local` account. The manual-code flow uses `e2e-test@test.local` and expects the invitation and solo-household baby created by:
 
 ```bash
 npm run test:sql:setup
@@ -30,6 +31,14 @@ npm run e2e:prepare-caregiver-join
 ```
 
 The fixture gives the joining caregiver local baby data so the flow can cancel the destructive warning once, submit again, and confirm deletion before joining.
+
+Run the transport-failure scenario on either platform with:
+
+```bash
+MAESTRO_DEVICE=<device-id> npm run e2e:onboarding-network
+```
+
+The runner prepares the invitation, authenticates the caregiver, stops the local Supabase API during redemption, verifies the reconciliation retry state, restarts the API, and completes the join.
 
 ## Shared helpers
 

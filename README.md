@@ -58,13 +58,13 @@ A milestone response keeps one database identity as its state changes or clears.
 
 ### Caregiver Invitations
 
-Household owners enter a caregiver's account email in Settings, then copy or share the generated code. Each invitation expires after seven days and works once. In the onboarding preview, recipients enter the code before authentication; cancellation and restart preserve it. The matching verified account must explicitly submit the code after signing in. Joining from a solo account warns before deleting its current baby and activity data, and Home opens only after the shared baby is loaded. Owners can keep invitations pending for different email addresses and can replace or revoke each code. Existing memberships stay unchanged, and older recipient app versions can redeem newly issued codes. See [`docs/CAREGIVER_INVITATIONS.md`](docs/CAREGIVER_INVITATIONS.md) for the security model and rollout checks.
+Household owners enter a caregiver's account email in Settings, then copy or share the generated code. Each invitation expires after seven days and works once. During onboarding, recipients enter the code before authentication; cancellation and restart preserve it. The matching verified account must explicitly submit the code after signing in. Joining from a solo account warns before deleting its current baby and activity data, and Home opens only after the shared baby is loaded. Owners can keep invitations pending for different email addresses and can replace or revoke each code. Existing memberships stay unchanged, and older recipient app versions can redeem newly issued codes. See [`docs/CAREGIVER_INVITATIONS.md`](docs/CAREGIVER_INVITATIONS.md) for the security model and rollout checks.
 
-### Development onboarding tools
+### Role-based onboarding
 
-Development Settings includes an isolated preview for Start tracking, Join a family, and Returning user. It uses sample adapters for loading, recoverable errors, cancellation, skip, and completion without calling real storage or services. A separate replay action clears only onboarding progress and runs the role-based guard against the current account. It preserves authentication, household membership, babies, activities, and preferences. Clearing an unfinished draft leaves completion unchanged.
+New installations open Welcome with immediate language selection and three routes: Start tracking, Join a family, and Sign in. New owners choose guest or authenticated tracking and create a baby before Home becomes available. Authenticated owners may invite a caregiver. After baby creation, owners may record a first activity or skip the remaining setup. Invited caregivers keep their code through authentication, while returning caregivers restore their household and selected baby before entering Home. Completed and skipped records from the previous onboarding model migrate directly to completed state.
 
-Fresh-state Maestro flows use the `onboardingPreview=true` launch argument and real local Supabase fixtures. New owners choose an account mode before creating a baby. Authenticated owners can create an optional caregiver invitation, invited caregivers keep their code through authentication, and returning caregivers restore the household and selected baby before Home opens. Production builds continue to use the existing onboarding and exclude all developer controls from the bundle. See [`docs/NEW_OWNER_ONBOARDING_PREVIEW.md`](docs/NEW_OWNER_ONBOARDING_PREVIEW.md) for safe usage, preserved data, and validation commands.
+Development Settings includes an isolated preview for the three entry routes. It uses sample adapters for loading, recoverable errors, cancellation, skip, and completion without calling storage or services. A separate replay action clears only onboarding progress and runs the production guard against the current account. It preserves authentication, household membership, babies, activities, and preferences. Production builds exclude both tools. See [`docs/ROLE_BASED_ONBOARDING.md`](docs/ROLE_BASED_ONBOARDING.md) for persisted states, recovery rules, and development commands.
 
 ### Timer Exclusivity
 
@@ -147,11 +147,11 @@ npm run typecheck            # TypeScript strict mode
 npm run lint                 # ESLint (warnings fail the quality gate)
 npm run e2e:household-timers       # Fast iOS offline reconnect and caregiver handoff
 npm run e2e:household-timers:clean # Required local iOS device gate before release
-maestro test e2e/flows/onboarding/new-owner-preview-restart.yaml # Fresh-state owner integration
 npm run e2e:prepare-caregiver-join
-npm run e2e:start-caregiver-join # Start local-Supabase Metro in another terminal
-maestro test e2e/flows/onboarding/caregiver-code-join.yaml # Development caregiver join
-maestro test e2e/flows/onboarding/returning-user-restoration.yaml # Development returning-user restoration
+npm run e2e:start-caregiver-join   # Start local-Supabase Metro for iOS
+SOFIBABY_E2E_PLATFORM=android npm run e2e:start-caregiver-join # Android Metro
+npm run e2e:onboarding:ios         # Resumable production onboarding suite
+npm run e2e:onboarding:android     # Resumable production onboarding suite
 ```
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.

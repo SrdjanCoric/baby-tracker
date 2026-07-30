@@ -17,7 +17,7 @@ tags:
     id: "join-family-button"
 - tapOn:
     id: "join-code-input"
-- inputText: "FAIL2345"
+- inputText: "BADX2345"
 - tapOn:
     id: "continue-to-auth-button"
 - tapOn:

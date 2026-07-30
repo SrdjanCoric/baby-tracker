@@ -50,11 +50,12 @@ Run the complete local caregiver journey against a development build:
 npm run e2e:prepare-caregiver-join
 npm run e2e:start-caregiver-join # Keep Metro running in another terminal
 maestro test e2e/flows/onboarding/manual-code-join.yaml
+MAESTRO_DEVICE=<device-id> npm run e2e:onboarding-network
 ```
 
 The Metro command reads the local API URL and anonymous key from `supabase status`, enables the local E2E Babel environment, and refuses non-local endpoints. This keeps the app and fixture on the same backend even when `.env` points elsewhere.
 
-The SQL test covers owner authorization, email normalization, replacement, multiple pending invitations, expiry, revocation, one-time consumption, verified-email matching, legacy-code rejection, own-household and shared-household rejection, destructive solo-data deletion, the preserved RPC signature, and server rate limiting. The caregiver Maestro fixture uses only local Supabase and resets the invited account to a solo household with `Solo Baby` before creating `E2EJ-2345`. The flow verifies the destructive warning before loading `Shared Baby`.
+The SQL test covers owner authorization, email normalization, replacement, multiple pending invitations, expiry, revocation, one-time consumption, verified-email matching, legacy-code rejection, own-household and shared-household rejection, destructive solo-data deletion, the preserved RPC signature, and server rate limiting. The caregiver Maestro fixture uses only local Supabase and resets the invited account to a solo household with `Solo Baby` before creating `E2EJ-2345`. The flow verifies the destructive warning before loading the shared household baby.
 
 ## Release check
 
