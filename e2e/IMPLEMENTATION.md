@@ -38,7 +38,7 @@ Run the transport-failure scenario on either platform with:
 MAESTRO_DEVICE=<device-id> npm run e2e:onboarding-network
 ```
 
-The runner prepares the invitation, authenticates the caregiver, stops the local Supabase API during redemption, verifies the reconciliation retry state, restarts the API, and completes the join.
+The runner resets dedicated fixtures, reaches destructive confirmation, stops the local Supabase API, submits the join, and observes the recoverable Retry state. It then restarts the app without clearing storage while the API is still unavailable, restores the API, retries through production UI, and opens Home. A final SQL check proves one invitation consumption, one target membership, both target babies, the confirmed solo-data deletion, and preservation of unrelated fixtures. It refuses non-local endpoints and an existing Metro process, starts a guarded local Metro for the current checkout, restores the API on every normal or signaled exit, and writes timestamped phase logs and failure diagnostics under `e2e/artifacts/onboarding-network/`.
 
 ## Shared helpers
 

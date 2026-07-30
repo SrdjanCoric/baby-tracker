@@ -6,8 +6,16 @@ name: Caregiver join recovers after local API restart
     clearState: false
 - extendedWaitUntil:
     visible:
-      id: "join-family-submit-button"
+      id: "join-code-input"
     timeout: 60000
+- assertVisible:
+    id: "retry-join-button"
+- tapOn:
+    id: "retry-join-button"
+- extendedWaitUntil:
+    visible:
+      id: "join-family-submit-button"
+    timeout: 30000
 - tapOn:
     id: "join-family-submit-button"
 - tapOn: "Delete my data and join"
@@ -15,4 +23,4 @@ name: Caregiver join recovers after local API restart
     visible:
       id: "home-screen"
     timeout: 30000
-- assertVisible: "E2E Baby"
+- assertVisible: "E2E Baby( Two)?"

@@ -148,7 +148,6 @@ npm run e2e:smoke
 npm run e2e:regression
 npm run e2e:onboarding:ios
 npm run e2e:onboarding:android
-npm run e2e:onboarding-network
 ```
 
 The onboarding commands run each flow separately. A successful flow is recorded in
@@ -178,7 +177,29 @@ the first booted device for that platform.
 
 After the suites pass, complete the cross-device onboarding review in [`docs/ROLE_BASED_ONBOARDING.md`](../docs/ROLE_BASED_ONBOARDING.md#visual-review-matrix). The matrix covers every production route and state across device sizes, themes, large text, keyboards, and all supported locales. Record the devices and OS versions used with the task or release evidence.
 
-Set `MAESTRO_DEVICE` before `npm run e2e:onboarding-network` to target a named simulator or emulator. The command refuses non-local Supabase endpoints, stops only the local API container, restores it on exit, and verifies join recovery after the API returns.
+## Onboarding network recovery
+
+The network scenario requires a built development app, a running migrated local Supabase instance, Docker, Maestro, `jq`, and `psql`. Stop any process on port 8081 before running it. The command starts Metro from the current checkout with local Supabase configuration and refuses non-local API or database endpoints.
+
+Choose the installed development device:
+
+```bash
+# iOS
+MAESTRO_DEVICE=<simulator-id> npm run e2e:onboarding-network
+
+# Android
+SOFIBABY_E2E_PLATFORM=android MAESTRO_DEVICE=<emulator-id> npm run e2e:onboarding-network
+```
+
+Each run resets the dedicated accounts and invitation. It reaches destructive join confirmation and stops the local API before submitting the join. Retry must remain available after the command restarts the app. The command then restores the API and retries through the production screen. After Home opens with a target-household baby, SQL checks require one consumed invitation, one caregiver assignment to the target household, the expected shared babies, removal of the confirmed solo household, and preservation of the other seeded data.
+
+The exit trap restores a stopped or paused API after success, failure, `SIGINT`, or `SIGTERM`. Successful fixture state remains available for inspection and is reset by the next run. Timestamped phase logs, Maestro output, cleanup status, and database diagnostics are written to:
+
+```text
+e2e/artifacts/onboarding-network/<timestamp>-<runner-pid>/
+```
+
+On failure, start with the phase named in the terminal message. Read that phase's log, `failure-summary.log`, and `database-diagnostics.log`. If API restoration fails, the command reports `api-restoration.log` and exits nonzero. Rerun the same command after correcting the failure; no checkpoint file needs editing.
 
 Run another standalone flow with:
 
