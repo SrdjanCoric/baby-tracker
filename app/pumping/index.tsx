@@ -5,8 +5,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { usePumping } from "@/contexts/pumping-context";
-import { useBaby, useUnits, useAuth } from "@/contexts";
-import { formatDuration } from "@/utils/time";
+import { useBaby, useUnits, useAuth, useTimeFormat } from "@/contexts";
+import { formatDuration, formatTime } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
@@ -258,6 +258,7 @@ interface SideSelectionViewProps {
 
 function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: SideSelectionViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
 
@@ -314,14 +315,6 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
     setCustomStartTime(null);
   }, []);
 
-  const formatCustomTime = (date: Date): string => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   return (
     <View className="items-center w-full">
       {/* Illustration/Icon */}
@@ -358,7 +351,7 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
         <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: PUMPING_BLUE_MUTED }}>
           <Text className="text-lg mr-2">🕐</Text>
           <Text className="text-base font-medium mr-2" style={{ color: PUMPING_BLUE_DARK }}>
-            {t("pumping.startTime")}: {formatCustomTime(customStartTime)}
+            {t("pumping.startTime")}: {formatTime(customStartTime, timeFormat)}
           </Text>
           <Pressable
             onPress={handleClearCustomTime}
@@ -455,6 +448,7 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
             mode={Platform.OS === "ios" ? "datetime" : "time"}
             display="spinner"
             onChange={handleTimeChange}
+            is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
             minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
             maximumDate={Platform.OS === "ios" ? new Date() : undefined}
           />

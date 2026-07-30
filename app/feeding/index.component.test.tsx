@@ -6,6 +6,7 @@ const mockBack = jest.fn();
 const mockReplace = jest.fn();
 let mockSearchParams: { onboardingActivity?: string } = {};
 const mockCompleteTimerStarted = jest.fn();
+let mockTimeFormat: "12h" | "24h" = "12h";
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -46,6 +47,8 @@ jest.mock("react-i18next", () => ({
         "feeding.timerRunning": "Timer running",
         "feeding.tapToStop": "Tap to stop",
         "feeding.logPastBreastfeeding": "Log Past Breastfeeding",
+        "feeding.startedEarlier": "Started earlier",
+        "feeding.startTime": "Start time",
         "feeding.selectContentType": "Select content type",
         "feeding.breastMilk": "Breast Milk",
         "feeding.formula": "Formula",
@@ -117,15 +120,28 @@ jest.mock("@/contexts", () => ({
   useAuth: () => ({
     session: { access_token: "test-token" },
   }),
+  useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
 }));
 
-jest.mock("@/utils/time", () => ({
-  formatDuration: (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  },
-}));
+jest.mock("@/utils/time", () => {
+  const actual = jest.requireActual("@/utils/time");
+  return {
+    ...actual,
+    formatDuration: (seconds: number) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    },
+  };
+});
+
+jest.mock("@react-native-community/datetimepicker", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: (props: Record<string, unknown>) => <View testID="datetime-picker" {...props} />,
+  };
+});
 
 jest.mock("@/utils/volume", () => ({
   formatVolume: (ml: number, unit: string) => `${ml} ${unit}`,
@@ -151,6 +167,7 @@ describe("FeedingScreen", () => {
     mockAddFeeding.mockResolvedValue({ id: "new-feeding" });
     mockStartBreastfeeding.mockResolvedValue({ success: true });
     mockCompleteTimerStarted.mockResolvedValue(undefined);
+    mockTimeFormat = "12h";
   });
 
   describe("rendering", () => {
@@ -253,6 +270,26 @@ describe("FeedingScreen", () => {
         expect(mockCompleteTimerStarted).toHaveBeenCalledWith("feeding");
         expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
       });
+    });
+
+    it("reacts to the current 24-hour or 12-hour custom start preference", () => {
+      mockTimeFormat = "24h";
+      const { rerender } = render(<FeedingScreen />);
+
+      fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+      fireEvent(
+        screen.getByTestId("datetime-picker"),
+        "change",
+        {},
+        new Date(2020, 0, 1, 14, 30)
+      );
+
+      expect(screen.getByText("Start time: 14:30")).toBeTruthy();
+
+      mockTimeFormat = "12h";
+      rerender(<FeedingScreen />);
+
+      expect(screen.getByText("Start time: 2:30 PM")).toBeTruthy();
     });
 
     it("navigates to manual entry", () => {

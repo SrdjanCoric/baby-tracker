@@ -4,10 +4,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useSleep, useAuth } from "@/contexts";
-import { useBaby } from "@/contexts";
+import { useSleep, useAuth, useBaby, useTimeFormat } from "@/contexts";
 import { isE2EMode } from "@/utils/e2e-mode";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, formatTime } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
 import { determineSleepType } from "@/validators/sleep";
@@ -277,6 +276,7 @@ interface SleepStartViewProps {
 
 function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const accent = isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE;
@@ -337,14 +337,6 @@ function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
     setCustomStartTime(null);
   }, []);
 
-  const formatCustomTime = (date: Date): string => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   return (
     <View className="items-center w-full">
       {!customStartTime ? (
@@ -364,7 +356,7 @@ function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
         <View className="flex-row items-center mb-6 py-3 px-5 rounded-full" style={{ backgroundColor: mutedBg }}>
           <Text className="text-lg mr-2">🕐</Text>
           <Text className="text-base font-medium mr-2" style={{ color: accent }}>
-            {t("sleep.startTime")}: {formatCustomTime(customStartTime)}
+            {t("sleep.startTime")}: {formatTime(customStartTime, timeFormat)}
           </Text>
           <Pressable
             onPress={handleClearCustomTime}
@@ -428,6 +420,7 @@ function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
             mode={Platform.OS === "ios" ? "datetime" : "time"}
             display="spinner"
             onChange={handleTimeChange}
+            is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
             minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
             maximumDate={Platform.OS === "ios" ? new Date() : undefined}
           />

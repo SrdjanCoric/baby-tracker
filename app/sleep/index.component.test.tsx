@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react-native";
 const mockConfirmMorningSleep = jest.fn().mockResolvedValue(undefined);
 const mockStopSleep = jest.fn().mockResolvedValue(undefined);
 const mockBack = jest.fn();
+let mockTimeFormat: "12h" | "24h" = "12h";
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: mockBack, push: jest.fn(), setParams: jest.fn() }),
@@ -18,7 +19,14 @@ jest.mock("react-i18next", () => ({
       "sleep.timerRunning": "Timer running",
       "sleep.wakeUp": "Wake up",
       "sleep.goalSettings": "Sleep settings",
+      "sleep.startedEarlier": "Started earlier",
+      "sleep.startTime": "Start time",
+      "sleep.startSleep": "Start sleep",
+      "sleep.logPastSleep": "Log past sleep",
+      "sleep.autoDetectHint": "Timer hint",
       "sleep.morningConfirmationQuestion": "Was this the first nap or back to sleep?",
+      "common.reset": "Reset",
+      "common.done": "Done",
       "sleep.firstNap": "First nap",
       "sleep.backToSleep": "Back to sleep",
       "sleep.morningConfirmationAccessibility": "Classify morning sleep",
@@ -27,7 +35,7 @@ jest.mock("react-i18next", () => ({
   }),
 }));
 
-const mockActiveTimer = {
+const runningTimer = {
   isRunning: true,
   isPaused: false,
   lockState: "owned",
@@ -39,6 +47,7 @@ const mockActiveTimer = {
   morningClassification: "unresolved",
   morningClassificationVersion: 1,
 };
+let mockActiveTimer: typeof runningTimer | null = runningTimer;
 
 jest.mock("@/contexts", () => ({
   useSleep: () => ({
@@ -59,6 +68,7 @@ jest.mock("@/contexts", () => ({
   }),
   useAuth: () => ({ session: { access_token: "token" } }),
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
+  useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
 }));
 
 jest.mock("@/hooks", () => ({
@@ -74,19 +84,30 @@ jest.mock("@/components", () => ({
 }));
 
 jest.mock("@/contexts/time-format-context", () => ({
-  useTimeFormat: () => ({ timeFormat: "12h" }),
+  useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
 }));
 
 jest.mock("nativewind", () => ({
   useColorScheme: () => ({ colorScheme: "light" }),
 }));
 
-jest.mock("@react-native-community/datetimepicker", () => () => null);
+jest.mock("@react-native-community/datetimepicker", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: (props: Record<string, unknown>) => <View testID="datetime-picker" {...props} />,
+  };
+});
 jest.mock("@/utils/e2e-mode", () => ({ isE2EMode: () => false }));
 
 import SleepScreen from "./index";
 
 describe("SleepScreen morning confirmation", () => {
+  beforeEach(() => {
+    mockActiveTimer = runningTimer;
+    mockTimeFormat = "12h";
+  });
+
   it("keeps the running timer usable while answering the inline question", async () => {
     render(<SleepScreen />);
 
@@ -98,5 +119,31 @@ describe("SleepScreen morning confirmation", () => {
     });
 
     expect(mockConfirmMorningSleep).toHaveBeenCalledWith("sleep-1", "night_continuation");
+  });
+});
+
+describe("SleepScreen custom start time", () => {
+  beforeEach(() => {
+    mockActiveTimer = null;
+    mockTimeFormat = "24h";
+  });
+
+  it("reacts to the current 24-hour or 12-hour preference", () => {
+    const { rerender } = render(<SleepScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date(2020, 0, 1, 14, 30)
+    );
+
+    expect(screen.getByText("Start time: 14:30")).toBeTruthy();
+
+    mockTimeFormat = "12h";
+    rerender(<SleepScreen />);
+
+    expect(screen.getByText("Start time: 2:30 PM")).toBeTruthy();
   });
 });
