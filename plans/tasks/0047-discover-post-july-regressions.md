@@ -1,12 +1,12 @@
 # Task 0047: Discover and confirm all post-July 5 regressions before fixes
 
 **Branch**: `feature/discover-post-july-regressions`
-**Depends on**: 0046
+**Depends on**: none
 **Source**: regression-planning conversation 2026-07-31 · **User stories**: the release owner can review every credible behavior regression introduced after the July 5 deployment before any fix begins; every confirmed bug becomes an independently prioritized task; intentional new behavior is not mistaken for a defect
 
 ## What to build
 
-Perform a comprehensive changed-capability regression audit between the July 5 deployed source `cdbbb1e8cced61c52bc78ca4eb4531e90647218e` and the current implementation at audit start. Use the isolated, production-derived local fixtures from Task 0046 to compare equivalent household data while keeping both versions off production. Cover all changed product, persistence, synchronization, native, extension, authentication, onboarding, database-contract, Edge Function, testing, build, and release capabilities—not only issues already reported by the user.
+Perform a comprehensive changed-capability regression audit between the July 5 deployed source `cdbbb1e8cced61c52bc78ca4eb4531e90647218e` and the current implementation at audit start. Use the prepared production-derived local fixture to create isolated comparison data for both versions while keeping them off production. Cover all changed product, persistence, synchronization, native, extension, authentication, onboarding, database-contract, Edge Function, testing, build, and release capabilities—not only issues already reported by the user.
 
 Start with a complete inventory of post-baseline commits, merged tasks, changed capabilities, intended behavior, tests, migrations, and external/native boundaries. Differences are candidates, not automatically bugs: behavior intentionally added after July 5 must be judged against its approved task or product contract. Rank every changed capability by user impact, data-loss or duplication risk, authorization/security impact, cross-device or offline complexity, change density, and weakness of existing proof. Exercise each capability through the cheapest reliable differential feedback loop, escalating from pure/unit comparisons to real providers, local Supabase, controlled interruption, simulators, and physical iPhone/Watch verification only when required.
 

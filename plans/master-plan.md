@@ -182,9 +182,8 @@ Durable decisions that apply across all tasks:
 - [x] 0043 · Respect the selected time format when starting timers earlier → tasks/done/0043-respect-timer-start-time-format.md
 - [x] 0044 · Match onboarding to the current app UI (after 0041) → tasks/done/0044-match-onboarding-current-app-ui.md
 - [x] 0045 · Prove onboarding recovery after network failure (after 0044) → tasks/done/0045-prove-onboarding-network-recovery.md
-- [ ] 0046 · Reproduce a household safely from production → tasks/0046-reproduce-household-from-production.md
-- [ ] 0047 · Discover and confirm all post-July 5 regressions before fixes (after 0046) → tasks/0047-discover-post-july-regressions.md
+- [ ] 0047 · Discover and confirm all post-July 5 regressions before fixes → tasks/0047-discover-post-july-regressions.md
 
 ## Workflow status
 
-Tasks 0001 through 0045 are merged. Tasks 0046 and 0047 form the required production-derived local reproduction and regression-discovery gate; concrete fix tasks are added only after Task 0047 presents each candidate for owner verification. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0045 are merged. Task 0047 is the production-derived local regression-discovery gate; concrete fix tasks are added only after it presents each candidate for owner verification. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
