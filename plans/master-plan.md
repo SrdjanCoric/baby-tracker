@@ -182,8 +182,13 @@ Durable decisions that apply across all tasks:
 - [x] 0043 · Respect the selected time format when starting timers earlier → tasks/done/0043-respect-timer-start-time-format.md
 - [x] 0044 · Match onboarding to the current app UI (after 0041) → tasks/done/0044-match-onboarding-current-app-ui.md
 - [x] 0045 · Prove onboarding recovery after network failure (after 0044) → tasks/done/0045-prove-onboarding-network-recovery.md
-- [ ] 0047 · Discover and confirm all post-July 5 regressions before fixes → tasks/0047-discover-post-july-regressions.md
+- [x] 0047 · Discover and confirm all post-July 5 regressions before fixes → tasks/done/0047-discover-post-july-regressions.md
+- [ ] 0048 · Attribute feeding stop, Timeline, and Live Activity regressions (after 0047) → tasks/0048-attribute-feeding-stop-regressions.md
+- [ ] 0049 · Attribute Watch timer and history regressions (after 0047) → tasks/0049-attribute-watch-regressions.md
+- [ ] 0050 · Attribute sleep-summary regressions (after 0047) → tasks/0050-attribute-sleep-summary-regressions.md
+- [ ] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0049, 0050) → tasks/0051-sweep-post-release-app-regressions.md
+- [ ] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
 
 ## Workflow status
 
-Tasks 0001 through 0045 are merged. Task 0047 is the production-derived local regression-discovery gate; concrete fix tasks are added only after it presents each candidate for owner verification. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0045 and Task 0047 are closed. Tasks 0048 through 0050 are the next eligible focused regression-attribution tasks; Tasks 0051 and 0052 complete the adjacent application, native, and sync sweeps. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
