@@ -5,6 +5,7 @@ module.exports = {
   displayName: "SofiBaby",
   deploymentTarget: "10.0",
   frameworks: ["SwiftUI", "WatchConnectivity", "WidgetKit"],
+  icon: "./Assets.xcassets/AppIcon.appiconset/appicon.png",
   images: {},
   colors: {
     $accent: "#8CB369",
