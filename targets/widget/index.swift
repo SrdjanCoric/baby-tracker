@@ -2040,20 +2040,32 @@ struct ActivityRowView: View {
     }
 }
 
-func formatTimeAgoLong(_ date: Date, now: Date = Date()) -> String {
-    let interval = now.timeIntervalSince(date)
-    let totalMinutes = Int(interval) / 60
+func formatRelativeTime(_ date: Date, now: Date, long: Bool, includesAgo: Bool) -> String {
+    let totalMinutes = max(0, Int(now.timeIntervalSince(date)) / 60)
     let hours = totalMinutes / 60
     let minutes = totalMinutes % 60
+    let days = hours / 24
+    let value: String
 
-    if hours >= 24 {
-        let days = hours / 24
-        return "\(days) day\(days == 1 ? "" : "s") ago"
+    if days >= 365 {
+        let years = days / 365
+        value = long ? "\(years) year\(years == 1 ? "" : "s")" : "\(years)y"
+    } else if days >= 60 {
+        let months = min(11, days / 30)
+        value = long ? "\(months) month\(months == 1 ? "" : "s")" : "\(months)mo"
+    } else if days >= 1 {
+        value = long ? "\(days) day\(days == 1 ? "" : "s")" : "\(days)d"
     } else if hours > 0 {
-        return "\(hours) hr, \(minutes) min ago"
+        value = long ? "\(hours) hr, \(minutes) min" : "\(hours)h \(minutes)m"
     } else {
-        return "\(totalMinutes) min ago"
+        value = long ? "\(totalMinutes) min" : "\(totalMinutes)m"
     }
+
+    return includesAgo ? "\(value) ago" : value
+}
+
+func formatTimeAgoLong(_ date: Date, now: Date = Date()) -> String {
+    formatRelativeTime(date, now: now, long: true, includesAgo: true)
 }
 
 // SummaryCard removed - replaced by ActivityRowView for Huckleberry-style layout
@@ -2133,48 +2145,15 @@ func getAwakeTimeText(data: WidgetDataModel, now: Date = Date()) -> String? {
 }
 
 func formatRelative(_ date: Date, now: Date = Date()) -> String {
-    let interval = now.timeIntervalSince(date)
-    let totalMinutes = Int(interval) / 60
-    let hours = totalMinutes / 60
-    let minutes = totalMinutes % 60
-
-    if hours > 0 {
-        return "\(hours)h \(minutes)m ago"
-    } else {
-        return "\(totalMinutes)m ago"
-    }
+    formatRelativeTime(date, now: now, long: false, includesAgo: true)
 }
 
 func formatTimeAgo(_ date: Date, now: Date = Date()) -> String {
-    let interval = now.timeIntervalSince(date)
-    let totalMinutes = Int(interval) / 60
-    let hours = totalMinutes / 60
-    let minutes = totalMinutes % 60
-
-    if hours >= 24 {
-        let days = hours / 24
-        return "\(days)d ago"
-    } else if hours > 0 {
-        return "\(hours)h \(minutes)m ago"
-    } else {
-        return "\(totalMinutes) min ago"
-    }
+    formatRelativeTime(date, now: now, long: false, includesAgo: true)
 }
 
 func formatTimeAgoShort(_ date: Date, now: Date = Date()) -> String {
-    let interval = now.timeIntervalSince(date)
-    let totalMinutes = Int(interval) / 60
-    let hours = totalMinutes / 60
-    let minutes = totalMinutes % 60
-
-    if hours >= 24 {
-        let days = hours / 24
-        return "\(days)d"
-    } else if hours > 0 {
-        return "\(hours)h \(minutes)m"
-    } else {
-        return "\(totalMinutes)m"
-    }
+    formatRelativeTime(date, now: now, long: false, includesAgo: false)
 }
 
 // MARK: - Lock Screen Widgets

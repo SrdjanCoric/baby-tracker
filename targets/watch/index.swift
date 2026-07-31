@@ -1395,16 +1395,7 @@ func formatTimeSince(_ dateString: String?) -> String {
     }
 
     guard let parsedDate = date else { return "--" }
-
-    let interval = Date().timeIntervalSince(parsedDate)
-    let hours = Int(interval) / 3600
-    let minutes = (Int(interval) % 3600) / 60
-
-    if hours > 0 {
-        return "\(hours)h \(minutes)m"
-    } else {
-        return "\(minutes)m"
-    }
+    return formatTimeSinceDate(parsedDate)
 }
 
 func parseDate(_ dateString: String) -> Date? {
@@ -1690,16 +1681,27 @@ struct ActivityRowView: View {
     }
 }
 
-func formatTimeSinceDate(_ date: Date) -> String {
-    let interval = Date().timeIntervalSince(date)
-    let hours = Int(interval) / 3600
-    let minutes = (Int(interval) % 3600) / 60
+func formatTimeSinceDate(_ date: Date, now: Date = Date()) -> String {
+    let totalMinutes = max(0, Int(now.timeIntervalSince(date)) / 60)
+    let hours = totalMinutes / 60
+    let minutes = totalMinutes % 60
+    let days = hours / 24
 
+    if days >= 365 {
+        let years = days / 365
+        return "\(years) year\(years == 1 ? "" : "s")"
+    }
+    if days >= 60 {
+        let months = min(11, days / 30)
+        return "\(months) month\(months == 1 ? "" : "s")"
+    }
+    if days >= 1 {
+        return "\(days) day\(days == 1 ? "" : "s")"
+    }
     if hours > 0 {
         return "\(hours)h \(minutes)m"
-    } else {
-        return "\(minutes)m"
     }
+    return "\(totalMinutes)m"
 }
 
 // MARK: - Active Timer Card

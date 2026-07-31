@@ -35,6 +35,8 @@ Build deterministic tests or diagnostic harnesses with pinned `now`, timezone, l
 
 ## Human checkpoints
 
+**Manual device policy**: The agent may prepare, build, and launch iOS, Watch, or Android simulators, but must not execute Maestro or other E2E interactions or assertions. The release owner performs and classifies every device/E2E scenario.
+
 - [ ] [verify] Open Past 7 Days Sleep Statistics in the July 5 and current simulator builds using the imported fixture and compare the visible total-sleep average and average bedtime with the audit ledger · Expected: displayed values and included nights match the recorded baseline/current calculations · Failure: values differ from the ledger or a production night cannot be represented by the privacy-safe fixture · Reason: final screen configuration and visual period selection require human confirmation.
 
 ## Acceptance criteria

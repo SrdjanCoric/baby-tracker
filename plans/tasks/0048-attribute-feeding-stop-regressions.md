@@ -33,7 +33,21 @@ Construct a repeatable simulator/integration feedback loop first, then use an iP
 - [ ] Classify each symptom separately and state whether the symptoms share a cause or require separate future fix tasks.
 - [ ] Remove temporary instrumentation, publish a redacted diagnosis, and run focused provider, sync, Timeline, native-contract, and canonical checks.
 
+## Diagnostic findings
+
+### Dashboard time-after-deletion observation
+
+Manual local-fixture verification found that deleting the newest feeding correctly exposed the prior feeding's 200-second duration on the phone card and its relative time on Watch, while the phone card displayed `0m ago`. This is not mixed feeding identity: the phone card derives both values from `getLastFeeding()`, but passes `new Date(timeTick)` as the current time. `useTimeRefresh()` returns an incrementing render counter starting at zero, not an epoch timestamp, so `timeSince()` receives a 1970 date and clamps the negative difference to `0m`. The same misuse affects feeding, sleep, diaper, pumping, growth, and health dashboard calculations.
+
+The causal change is `559ae97d804bb41c48df9e638b6dccaa39f37243` (`chore(quality): enforce warning-free lint gate`), which replaced real/default current-time calculations with the refresh counter. Existing dashboard component tests mock `timeSince`, masking the invalid time argument. At the user's direction, this finding was corrected in Task 0048 by making `useTimeRefresh()` return a refreshed epoch timestamp, preserving its rerender behavior while supplying a valid current time to dashboard calculations. The user explicitly waived a new automated regression test.
+
+### Cross-provider timer cleanup correction
+
+The Live Activity cleanup defects are structurally shared by feeding, sleep, pumping, and tummy-time providers. At the user's direction, each provider now ends a persisted Live Activity when restoration finds an already-secured completion and falls back to cleanup by activity type when ID-based native cleanup returns `false`. The same fallback is applied to ordinary stop and lock-conflict completion paths. Stale provider-binding cleanup remains ID-only so it cannot terminate a newer same-type activity.
+
 ## Human checkpoints
+
+**Manual device policy**: The agent may prepare, build, and launch iOS, Watch, or Android simulators, but must not execute Maestro or other E2E interactions or assertions. The release owner performs and classifies every device/E2E scenario.
 
 - [ ] [verify] On a supported iPhone or Dynamic Island simulator, start one fresh local feeding timer, run the documented stop sequence on July 5 and current builds, inspect Timeline, delete the visible completion, and inspect Dynamic Island · Expected: observations and identity counts match the audit report · Failure: the sequence differs, the timer cannot be reproduced, or native activity state is ambiguous · Reason: Dynamic Island lifecycle and historical native builds cannot be proved completely in JavaScript tests.
 

@@ -313,6 +313,14 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           activeTimer
         );
         if (await isTimerCompletionSecured(selectedBaby.id, "pumping", identity, pumpings)) {
+          const liveActivityId = activeTimer.liveActivityId ?? liveActivityIdRef.current;
+          const endedById = liveActivityId
+            ? await endTimerLiveActivity(liveActivityId)
+            : false;
+          if (!endedById) {
+            await endLiveActivityByType("pumping");
+          }
+          liveActivityIdRef.current = null;
           await PumpingStorageService.clearActiveTimer(selectedBaby.id);
           dispatch({ type: "STOP_TIMER" });
           if (user?.id) {
@@ -415,9 +423,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             dispatch({ type: "STOP_TIMER" });
             isStale = true;
             await PumpingStorageService.clearActiveTimer(selectedBaby.id);
-            if (activeTimer.liveActivityId) {
-              await endTimerLiveActivity(activeTimer.liveActivityId);
-            } else {
+            const endedById = activeTimer.liveActivityId
+              ? await endTimerLiveActivity(activeTimer.liveActivityId)
+              : false;
+            if (!endedById) {
               await endLiveActivityByType("pumping");
             }
             liveActivityIdRef.current = null;
@@ -620,12 +629,13 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         console.error("[PumpingContext] Failed to clear completed timer snapshot:", error);
       }
       try {
-        if (liveActivityIdRef.current) {
-          await endTimerLiveActivity(liveActivityIdRef.current);
-          liveActivityIdRef.current = null;
-        } else {
+        const endedById = liveActivityIdRef.current
+          ? await endTimerLiveActivity(liveActivityIdRef.current)
+          : false;
+        if (!endedById) {
           await endLiveActivityByType("pumping");
         }
+        liveActivityIdRef.current = null;
       } catch (error) {
         console.error("[PumpingContext] Failed to end completed Live Activity:", error);
       }

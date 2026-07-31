@@ -35,6 +35,8 @@ Produce a consolidated, privacy-safe regression matrix. Every reviewed surface m
 
 ## Human checkpoints
 
+**Manual device policy**: The agent may prepare, build, and launch iOS, Watch, or Android simulators, but must not execute Maestro or other E2E interactions or assertions. The release owner performs and classifies every device/E2E scenario.
+
 - [ ] [verify] Review the completed regression matrix and manually spot-check each critical/high user-facing finding in the simulator using the imported household fixture · Expected: findings reproduce as documented and every omitted surface has an explicit rationale · Failure: a critical finding cannot be reproduced, expected behavior lacks a source, or a changed capability is silently unassessed · Reason: prioritization and visual confirmation across a broad product surface require release-owner judgment.
 
 ## Acceptance criteria

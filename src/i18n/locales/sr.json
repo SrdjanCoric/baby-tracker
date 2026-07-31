@@ -1869,7 +1869,13 @@
     "yesterday": "Juče",
     "dayCount_one": "{{count}} dan",
     "dayCount_few": "{{count}} dana",
-    "dayCount_other": "{{count}} dana"
+    "dayCount_other": "{{count}} dana",
+    "monthCount_one": "{{count}} mesec",
+    "monthCount_few": "{{count}} meseca",
+    "monthCount_other": "{{count}} meseci",
+    "yearCount_one": "{{count}} godina",
+    "yearCount_few": "{{count}} godine",
+    "yearCount_other": "{{count}} godina"
   },
   "accessibility": {
     "breastfeeding": "Dojenje",

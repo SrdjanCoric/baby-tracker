@@ -1792,7 +1792,11 @@
     "today": "Hoje",
     "yesterday": "Ontem",
     "dayCount_one": "{{count}} dia",
-    "dayCount_other": "{{count}} dias"
+    "dayCount_other": "{{count}} dias",
+    "monthCount_one": "{{count}} mês",
+    "monthCount_other": "{{count}} meses",
+    "yearCount_one": "{{count}} ano",
+    "yearCount_other": "{{count}} anos"
   },
   "accessibility": {
     "breastfeeding": "Amamentação",

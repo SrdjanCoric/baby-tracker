@@ -430,6 +430,14 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
           activeTimer
         );
         if (await isTimerCompletionSecured(selectedBaby.id, "tummy_time", identity, tummyTimes)) {
+          const liveActivityId = activeTimer.liveActivityId ?? liveActivityIdRef.current;
+          const endedById = liveActivityId
+            ? await endTimerLiveActivity(liveActivityId)
+            : false;
+          if (!endedById) {
+            await endLiveActivityByType("tummyTime");
+          }
+          liveActivityIdRef.current = null;
           await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
           dispatch({ type: "STOP_TIMER" });
           if (user?.id) {
@@ -530,9 +538,10 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
             dispatch({ type: "STOP_TIMER" });
             isStale = true;
             await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
-            if (activeTimer.liveActivityId) {
-              await endTimerLiveActivity(activeTimer.liveActivityId);
-            } else {
+            const endedById = activeTimer.liveActivityId
+              ? await endTimerLiveActivity(activeTimer.liveActivityId)
+              : false;
+            if (!endedById) {
               await endLiveActivityByType("tummyTime");
             }
             liveActivityIdRef.current = null;
@@ -730,12 +739,13 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         console.error("[TummyTimeContext] Failed to clear completed timer snapshot:", error);
       }
       try {
-        if (liveActivityIdRef.current) {
-          await endTimerLiveActivity(liveActivityIdRef.current);
-          liveActivityIdRef.current = null;
-        } else {
+        const endedById = liveActivityIdRef.current
+          ? await endTimerLiveActivity(liveActivityIdRef.current)
+          : false;
+        if (!endedById) {
           await endLiveActivityByType("tummyTime");
         }
+        liveActivityIdRef.current = null;
       } catch (error) {
         console.error("[TummyTimeContext] Failed to end completed Live Activity:", error);
       }
