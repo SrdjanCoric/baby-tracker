@@ -89,6 +89,16 @@ Durable decisions that apply across all tasks:
 - **Production database state is a human release checkpoint**: agents apply and verify migrations only
   on local Supabase. The owner performs the documented read-only production migration check before a
   store release.
+- **Post-release regression discovery is evidence-first and production-read-only**: a runtime-selected
+  account may be exported through an enforced read-only production session into ignored, anonymized,
+  isolated local fixtures for the July 5 deployed source and current source. Every post-July changed
+  capability is audited before fixes begin; each potential regression receives an individual owner
+  disposition, and each confirmed bug gets its own approved task dependent on the completed audit.
+- **Bug PRs prove the reported behavior narrowly; deployment proves the complete product**: every bug
+  fix keeps the smallest permanent automated regression test at the lowest reliable seam and runs only
+  the focused device/E2E scenario needed for that boundary. PRs retain complete non-device CI, but do
+  not rerun the broad E2E suites. Comprehensive onboarding, activity, household, multi-device, and
+  platform E2E remain maintained and run as the pre-deployment release gate.
 - **Ambiguous morning sleep is confirmed by a caregiver**: predictions keep the configured
   day-start-minus-3h03 anchor. After a completed overnight sleep establishes a real wake, a return to
   sleep within the caregiver's inclusive continuation allowance is night continuation. A later
@@ -172,7 +182,9 @@ Durable decisions that apply across all tasks:
 - [x] 0043 · Respect the selected time format when starting timers earlier → tasks/done/0043-respect-timer-start-time-format.md
 - [x] 0044 · Match onboarding to the current app UI (after 0041) → tasks/done/0044-match-onboarding-current-app-ui.md
 - [x] 0045 · Prove onboarding recovery after network failure (after 0044) → tasks/done/0045-prove-onboarding-network-recovery.md
+- [ ] 0046 · Reproduce a household safely from production → tasks/0046-reproduce-household-from-production.md
+- [ ] 0047 · Discover and confirm all post-July 5 regressions before fixes (after 0046) → tasks/0047-discover-post-july-regressions.md
 
 ## Workflow status
 
-Tasks 0001 through 0045 are merged. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0045 are merged. Tasks 0046 and 0047 form the required production-derived local reproduction and regression-discovery gate; concrete fix tasks are added only after Task 0047 presents each candidate for owner verification. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
