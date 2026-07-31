@@ -1,6 +1,7 @@
 # Task 0049: Attribute Watch timer and history regressions
 
 **Branch**: `feature/attribute-watch-regressions`
+**Status**: Deferred by the release owner because current Watch behavior appears to be working. Do not claim or implement this task without a new explicit owner decision or a reproducible regression.
 **Depends on**: 0047
 **Source**: regression-planning conversation 2026-07-31 · **User stories**: a caregiver can start a timer on Apple Watch and stop it from iPhone with both devices converging; Watch history uses useful age units instead of hundreds of hours; maintainers know which behavior regressed after July 5
 
