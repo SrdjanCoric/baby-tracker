@@ -1,7 +1,7 @@
 appId: com.sofibaby.app
-name: Night Sleep Timer Flow
+name: Sleep Timer Flow
 tags:
-  - regression
+  - smoke
   - activities
   - sleep
 
@@ -15,7 +15,7 @@ tags:
     id: "sleep-screen"
 
 - tapOn:
-    id: "type-night"
+    id: "start-sleep-button"
 
 - extendedWaitUntil:
     visible:
@@ -25,5 +25,7 @@ tags:
 - tapOn:
     id: "stop-timer-button"
 
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

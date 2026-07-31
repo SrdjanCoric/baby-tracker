@@ -24,16 +24,18 @@ tags:
 - tapOn:
     id: "quick-amount-120"
 
-# Dismiss keyboard if open
-- hideKeyboard
-
-# Verify we can see the save button before tapping
-- assertVisible:
-    id: "save-bottle-button"
+# Reveal the save button without sending an Android Back action
+- scrollUntilVisible:
+    element:
+      id: "save-bottle-button"
+    direction: DOWN
+    timeout: 10000
 
 # Save bottle feeding
 - tapOn:
     id: "save-bottle-button"
 
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

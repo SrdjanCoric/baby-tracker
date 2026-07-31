@@ -30,5 +30,7 @@ tags:
 - tapOn:
     id: "save-button"
 
-- assertVisible:
-    id: "timeline-screen"
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 15000

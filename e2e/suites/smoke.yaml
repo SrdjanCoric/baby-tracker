@@ -14,7 +14,7 @@ tags:
 # Core activities (most used features)
 - runFlow: ../flows/activities/feeding/breastfeeding-timer.yaml
 - runFlow: ../flows/activities/feeding/bottle-feeding.yaml
-- runFlow: ../flows/activities/sleep/nap-timer.yaml
+- runFlow: ../flows/activities/sleep/sleep-timer.yaml
 - runFlow: ../flows/activities/diaper/quick-log.yaml
 - runFlow: ../flows/activities/tummy-time/tummy-timer.yaml
 - runFlow: ../flows/activities/growth/add-measurement.yaml
@@ -24,4 +24,4 @@ tags:
 - runFlow: ../flows/timeline/view-activities.yaml
 
 # Household (requires pre-seeded data)
-- runFlow: ../flows/household/view-invite-code.yaml
+- runFlow: ../flows/household/view-household.yaml

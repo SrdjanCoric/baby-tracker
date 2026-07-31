@@ -34,11 +34,27 @@ appId: com.sofibaby.app
       - tapOn: "OK"
 - tapOn:
     id: "owner-baby-gender-female"
+- scrollUntilVisible:
+    element:
+      id: "owner-baby-continue"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "owner-baby-continue"
+- extendedWaitUntil:
+    visible:
+      id: "skip-remaining-setup-button"
+    timeout: 15000
 - tapOn:
     id: "skip-remaining-setup-button"
 - extendedWaitUntil:
     visible:
       id: "home-screen"
     timeout: 15000
+- runFlow:
+    when:
+      visible: ".*Open debugger to view warnings.*"
+    commands:
+      - tapOn:
+          point: "95%,92%"
+- waitForAnimationToEnd

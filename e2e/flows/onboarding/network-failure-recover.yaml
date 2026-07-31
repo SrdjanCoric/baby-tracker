@@ -23,4 +23,6 @@ name: Caregiver join recovers after local API restart
     visible:
       id: "home-screen"
     timeout: 30000
-- assertVisible: "E2E Baby( Two)?"
+- assertVisible:
+    id: "selected-baby-name"
+    text: "^E2E Baby( Two)?$"

@@ -16,6 +16,8 @@ tags:
 - tapOn:
     id: "household-settings"
 
-# Verify household screen is displayed
-- assertVisible:
-    id: "invite-code-display"
+# Verify owner invitation controls are displayed
+- extendedWaitUntil:
+    visible:
+      id: "caregiver-invitation-email"
+    timeout: 15000

@@ -49,7 +49,11 @@ export function OnboardingScreen({
           showsVerticalScrollIndicator={false}
         >
           {headerAccessory}
-          <Pressable onPress={Keyboard.dismiss} testID="dismiss-keyboard">
+          <Pressable
+            accessible={false}
+            onPress={Keyboard.dismiss}
+            testID="dismiss-keyboard"
+          >
             <Text
               className="text-3xl font-bold mb-3"
               style={{ color: isDark ? TEXT.dark.primary : TEXT.light.primary }}

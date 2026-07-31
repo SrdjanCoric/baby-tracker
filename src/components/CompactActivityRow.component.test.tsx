@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
 import { CompactActivityRow } from "./CompactActivityRow";
 
 describe("CompactActivityRow", () => {
@@ -53,6 +53,34 @@ describe("CompactActivityRow", () => {
       />
     );
     expect(screen.getByTestId("row-own-active")).toBeTruthy();
+  });
+
+  it("exposes active timer controls separately from row navigation", () => {
+    render(
+      <CompactActivityRow
+        activity="pumping"
+        label="Pumping"
+        timeSince="Now"
+        isActive
+        onActionPress={jest.fn()}
+        onPausePress={jest.fn()}
+        testID="row"
+      />
+    );
+
+    const row = screen.getByRole("button", {
+      name: "accessibility.cardTimeSince",
+    });
+
+    expect(within(row).getByText("Pumping")).toBeTruthy();
+    expect(
+      within(row).queryByRole("button", { name: "common.pause" })
+    ).toBeNull();
+    expect(
+      within(row).queryByRole("button", { name: "common.stop" })
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "common.pause" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "common.stop" })).toBeTruthy();
   });
 
   it("replaces active controls with an accessible stopping state", () => {

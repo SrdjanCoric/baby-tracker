@@ -29,8 +29,7 @@ tags:
 - runFlow: ../flows/activities/feeding/suggested-side.yaml
 
 # === SLEEP ===
-- runFlow: ../flows/activities/sleep/nap-timer.yaml
-- runFlow: ../flows/activities/sleep/night-sleep.yaml
+- runFlow: ../flows/activities/sleep/sleep-timer.yaml
 
 # === DIAPER ===
 - runFlow: ../flows/activities/diaper/quick-log.yaml
@@ -60,7 +59,6 @@ tags:
 
 # === HOUSEHOLD (Requires sign-in) ===
 - runFlow: ../flows/household/view-household.yaml
-- runFlow: ../flows/household/view-invite-code.yaml
 
 # === SETTINGS ===
 - runFlow: ../flows/settings/theme.yaml

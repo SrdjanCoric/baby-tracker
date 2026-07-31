@@ -29,7 +29,7 @@ tags:
 - inputText: "Second E2E Baby"
 
 # Dismiss keyboard
-- hideKeyboard
+- pressKey: Enter
 
 # Fill in baby details
 
@@ -44,8 +44,10 @@ tags:
     id: "save-baby-button"
 
 # Should return to home screen
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
 
 # Tap on baby to edit
 - tapOn:
@@ -58,7 +60,7 @@ tags:
 - inputText: "Updated Baby Name"
 
 # Dismiss keyboard
-- hideKeyboard
+- pressKey: Enter
 # Save
 - tapOn:
     id: "save-baby-button"

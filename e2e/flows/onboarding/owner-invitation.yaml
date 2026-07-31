@@ -61,6 +61,11 @@ tags:
       - tapOn: "OK"
 - tapOn:
     id: "owner-baby-gender-male"
+- scrollUntilVisible:
+    element:
+      id: "owner-baby-continue"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "owner-baby-continue"
 - extendedWaitUntil:
