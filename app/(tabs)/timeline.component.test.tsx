@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import TimelineScreen from "./timeline";
 
 let mockFeedings: Array<Record<string, unknown>> = [];
+const mockRouterPush = jest.fn();
 const mockRangeLoaders = {
   feeding: jest.fn(async () => {}),
   sleep: jest.fn(async () => {}),
@@ -14,7 +15,7 @@ const mockRangeLoaders = {
 };
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: mockRouterPush }),
 }));
 
 jest.mock("react-native/Libraries/Interaction/InteractionManager", () => {
@@ -42,9 +43,13 @@ jest.mock("react-native-safe-area-context", () => ({
 }));
 
 jest.mock("@/components", () => ({
-  TimelineItem: ({ title }: { title: string }) => {
-    const { Text } = require("react-native");
-    return <Text testID="timeline-item">{title}</Text>;
+  TimelineItem: ({ title, onPress }: { title: string; onPress: () => void }) => {
+    const { Pressable, Text } = require("react-native");
+    return (
+      <Pressable testID="timeline-item" onPress={onPress}>
+        <Text>{title}</Text>
+      </Pressable>
+    );
   },
   TimelineDayHeader: () => null,
   EmptyState: () => {
@@ -215,6 +220,29 @@ describe("Timeline historical ranges", () => {
       expect(screen.getByTestId("timeline-item")).toBeTruthy();
       expect(screen.getByTestId("timeline-range-loading")).toBeTruthy();
     });
+  });
+
+  it("projects duplicate provider entries and routes both presentations to one feeding id", async () => {
+    const duplicate = {
+      id: "same-feeding-id",
+      babyId: "baby-1",
+      type: "breast",
+      side: "left",
+      startedAt: new Date(2026, 0, 20, 8).toISOString(),
+      createdAt: new Date(2026, 0, 20, 8).toISOString(),
+      updatedAt: new Date(2026, 0, 20, 8).toISOString(),
+    };
+    mockFeedings = [duplicate, { ...duplicate }];
+
+    render(<TimelineScreen />);
+    jest.runOnlyPendingTimers();
+
+    const items = await screen.findAllByTestId("timeline-item");
+    expect(items).toHaveLength(2);
+    fireEvent.press(items[0]);
+    fireEvent.press(items[1]);
+    expect(mockRouterPush).toHaveBeenNthCalledWith(1, "/edit/feeding?id=same-feeding-id");
+    expect(mockRouterPush).toHaveBeenNthCalledWith(2, "/edit/feeding?id=same-feeding-id");
   });
 
   it("offers a retry when the visible interval cannot be read", async () => {

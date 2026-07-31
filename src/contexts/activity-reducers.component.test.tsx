@@ -182,6 +182,23 @@ describe("activity acknowledgement reducers", () => {
     expect(afterLocal.feedings).toEqual([feedingEntry("local create result")]);
   });
 
+  it("removes every same-id feeding presentation when that logical id is deleted", () => {
+    const duplicateState = {
+      ...initialFeedingState,
+      feedings: [
+        feedingEntry("remote acknowledgement"),
+        feedingEntry("local create result"),
+      ],
+    };
+
+    const afterDelete = feedingReducer(duplicateState, {
+      type: "DELETE_FEEDING",
+      payload: "feeding-1",
+    });
+
+    expect(afterDelete.feedings).toEqual([]);
+  });
+
   it("keeps one sleep with the local create result when Realtime inserts first", () => {
     const afterRemote = sleepReducer(initialSleepState, {
       type: "REMOTE_INSERT",

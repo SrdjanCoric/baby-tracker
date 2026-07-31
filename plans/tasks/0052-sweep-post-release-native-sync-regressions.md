@@ -36,6 +36,8 @@ Produce a consolidated, privacy-safe native/sync regression matrix. Map every sc
 
 ## Human checkpoints
 
+**Manual device policy**: The agent may prepare, build, and launch iOS, Watch, or Android simulators, but must not execute Maestro or other E2E interactions or assertions. The release owner performs and classifies every device/E2E scenario.
+
 - [ ] [confirm-security] Review any proposed auth, authorization, token-routing, invitation, Edge Function, or native trust-boundary test before it runs; all credentials and endpoints must be synthetic and local.
 - [ ] [verify] Execute the documented physical iPhone/Watch checks for critical/high findings that cannot be reproduced on simulators · Expected: device state, cleanup, retry, and convergence match the matrix · Failure: a finding cannot be reproduced, leaves stale native/timer state, or requires production mutation · Reason: WatchConnectivity, Dynamic Island, extension, and APNs-adjacent behavior cannot be fully proved in local JavaScript or simulator tests.
 

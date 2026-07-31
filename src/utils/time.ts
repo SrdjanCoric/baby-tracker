@@ -84,9 +84,19 @@ export function timeSince(date: Date, now: Date = new Date(), t?: TFunction): st
 
   const diffSeconds = Math.floor(diffMs / 1000);
   const hours = Math.floor(diffSeconds / 3600);
+  const days = Math.floor(hours / 24);
 
-  if (hours >= 24) {
-    const days = Math.floor(hours / 24);
+  if (days >= 365) {
+    const years = Math.floor(days / 365);
+    return t ? t("time.yearCount", { count: years }) : `${years}y`;
+  }
+
+  if (days >= 60) {
+    const months = Math.min(11, Math.floor(days / 30));
+    return t ? t("time.monthCount", { count: months }) : `${months}mo`;
+  }
+
+  if (days >= 1) {
     return t ? t("time.dayCount", { count: days }) : `${days}d`;
   }
 

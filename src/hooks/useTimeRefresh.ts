@@ -5,14 +5,14 @@ import { useState, useEffect } from "react";
  * Useful for components displaying relative time (e.g., "5 minutes ago").
  *
  * @param intervalMs - Refresh interval in milliseconds (default: 60000 = 1 minute)
- * @returns A tick value that changes every interval, can be used as a useMemo dependency
+ * @returns The current timestamp, refreshed at the configured interval
  */
 export function useTimeRefresh(intervalMs: number = 60000): number {
-  const [tick, setTick] = useState(0);
+  const [tick, setTick] = useState(() => Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTick((prev) => prev + 1);
+      setTick(Date.now());
     }, intervalMs);
 
     return () => clearInterval(interval);

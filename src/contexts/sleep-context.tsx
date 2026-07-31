@@ -684,6 +684,14 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             activeTimer
           );
           if (await isTimerCompletionSecured(selectedBaby.id, "sleep", identity, sleeps)) {
+            const liveActivityId = activeTimer.liveActivityId ?? liveActivityIdRef.current;
+            const endedById = liveActivityId
+              ? await endTimerLiveActivity(liveActivityId)
+              : false;
+            if (!endedById) {
+              await endLiveActivityByType("sleep");
+            }
+            liveActivityIdRef.current = null;
             await SleepStorageService.clearActiveTimer(selectedBaby.id);
             dispatch({ type: "STOP_TIMER" });
             removeLock(selectedBaby.id, "sleep");
@@ -789,9 +797,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               dispatch({ type: "ADD_SLEEP", payload: sleep });
               isStale = true;
               await SleepStorageService.clearActiveTimer(selectedBaby.id);
-              if (activeTimer.liveActivityId) {
-                await endTimerLiveActivity(activeTimer.liveActivityId);
-              } else {
+              const endedById = activeTimer.liveActivityId
+                ? await endTimerLiveActivity(activeTimer.liveActivityId)
+                : false;
+              if (!endedById) {
                 await endLiveActivityByType("sleep");
               }
               liveActivityIdRef.current = null;
@@ -1248,12 +1257,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         console.error("[SleepContext] Failed to clear completed timer snapshot:", error);
       }
       try {
-        if (liveActivityIdRef.current) {
-          await endTimerLiveActivity(liveActivityIdRef.current);
-          liveActivityIdRef.current = null;
-        } else {
+        const endedById = liveActivityIdRef.current
+          ? await endTimerLiveActivity(liveActivityIdRef.current)
+          : false;
+        if (!endedById) {
           await endLiveActivityByType("sleep");
         }
+        liveActivityIdRef.current = null;
       } catch (error) {
         console.error("[SleepContext] Failed to end completed Live Activity:", error);
       }

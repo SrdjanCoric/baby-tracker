@@ -54,6 +54,9 @@ e2e-results.xml
 e2e/artifacts/
 .maestro/
 
+# Local production-derived reproduction snapshots
+docs/plans/data.json
+
 # mockups
 mockups/
 .claude/mockups/

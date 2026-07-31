@@ -23,6 +23,7 @@ import {
   acceptTimerCompletion,
   markTimerCompletionDurable,
 } from "@/services/timer-completion-service";
+import type { RemoteChange } from "@/services/sync";
 
 const mockExtensionStorageData = new Map<string, string>();
 const mockRouterPush = jest.fn();
@@ -72,7 +73,13 @@ jest.mock("@/contexts/auth-context", () => ({
 jest.mock("@/contexts/sync-context", () => ({
   useSync: () => ({
     foregroundRefreshKey: 0,
-    subscribeToRemoteChanges: jest.fn(() => jest.fn()),
+    subscribeToRemoteChanges: (
+      table: string,
+      callback: (change: RemoteChange) => void
+    ) => {
+      mockRemoteSubscribers.set(table, callback);
+      return () => mockRemoteSubscribers.delete(table);
+    },
   }),
 }));
 
@@ -148,6 +155,7 @@ let sleepState: ReturnType<typeof useSleep> | null = null;
 let pumpingState: ReturnType<typeof usePumping> | null = null;
 let tummyTimeState: ReturnType<typeof useTummyTime> | null = null;
 let mockAppStateHandler: ((state: AppStateStatus) => void) | undefined;
+const mockRemoteSubscribers = new Map<string, (change: RemoteChange) => void>();
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -221,6 +229,7 @@ describe("external timer stops through production providers", () => {
     mockSelectedBaby = { id: "baby-1", name: "Baby One" };
     mockAuthUser = { id: "user-1", householdId: "household-1" };
     mockExtensionStorageData.clear();
+    mockRemoteSubscribers.clear();
     await AsyncStorage.clear();
     setStorageUserId("user-1");
 
@@ -323,6 +332,140 @@ describe("external timer stops through production providers", () => {
 
     expect(feedingState?.isStopping).toBe(false);
     expect(feedingState?.activeTimer?.isRunning).toBe(true);
+  });
+
+  it("keeps one feeding identity when Realtime acknowledges before the local stop returns", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(feedingState?.isLoading).toBe(false));
+
+    const identity = {
+      timerInstanceId: "timer-instance-1",
+      activityId: "11111111-1111-4111-8111-111111111111",
+    };
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt), identity);
+    });
+
+    const localReturnGate = deferred<void>();
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+    };
+    activitySync.createFeedingInDatabase.mockImplementation(async (input: CreateFeedingInput) => {
+      const remote = storedFeeding(input);
+      mockRemoteSubscribers.get("feedings")?.({
+        table: "feedings",
+        eventType: "INSERT",
+        new: {
+          id: remote.id,
+          baby_id: remote.babyId,
+          type: remote.type,
+          side: remote.side,
+          started_at: remote.startedAt,
+          ended_at: remote.endedAt,
+          duration_seconds: remote.durationSeconds,
+          left_duration_seconds: remote.leftDurationSeconds,
+          right_duration_seconds: remote.rightDurationSeconds,
+          created_at: remote.createdAt,
+          updated_at: remote.updatedAt,
+          logged_by: remote.loggedBy,
+        },
+        old: null,
+      });
+      await localReturnGate.promise;
+      return FeedingStorageService.addFeeding(input);
+    });
+
+    let stopPromise!: ReturnType<ReturnType<typeof useFeeding>["stopBreastfeeding"]>;
+    await act(async () => {
+      stopPromise = feedingState!.stopBreastfeeding(new Date(stoppedAt));
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(feedingState?.feedings).toHaveLength(1));
+
+    expect(feedingState?.feedings.map(({ id }) => id)).toEqual([identity.activityId]);
+    await expect(FeedingStorageService.getAllFeedings("baby-1")).resolves.toEqual([]);
+
+    localReturnGate.resolve();
+    await act(async () => {
+      await stopPromise;
+    });
+
+    expect(feedingState?.feedings.map(({ id }) => id)).toEqual([identity.activityId]);
+    await expect(FeedingStorageService.getAllFeedings("baby-1")).resolves.toEqual([
+      expect.objectContaining({ id: identity.activityId }),
+    ]);
+  });
+
+  it("ends the persisted feeding Live Activity when restart finds a secured completion", async () => {
+    const identity = {
+      timerInstanceId: "timer-instance-1",
+      activityId: "11111111-1111-4111-8111-111111111111",
+    };
+    await FeedingStorageService.setActiveTimer("baby-1", {
+      ...identity,
+      startedAt,
+      side: "left",
+      type: "breast",
+      leftAccumulatedSeconds: 300,
+      rightAccumulatedSeconds: 0,
+      currentSideStartedAt: startedAt,
+      liveActivityId: "live-feeding-1",
+    });
+    await FeedingStorageService.addFeeding({
+      id: identity.activityId,
+      babyId: "baby-1",
+      type: "breast",
+      side: "left",
+      startedAt: new Date(startedAt),
+      endedAt: new Date(stoppedAt),
+      durationSeconds: 300,
+    });
+    await markTimerCompletionDurable({
+      ...identity,
+      babyId: "baby-1",
+      activityType: "feeding",
+      startedAt,
+      stoppedAt,
+      status: "pending",
+    });
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      fetchFeedingsFromDatabase: jest.Mock;
+    };
+    activitySync.fetchFeedingsFromDatabase.mockImplementation(() =>
+      FeedingStorageService.getAllFeedings("baby-1")
+    );
+
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(feedingState?.isLoading).toBe(false));
+    await waitFor(() => expect(feedingState?.activeTimer).toBeNull());
+
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      endTimerLiveActivity: jest.Mock;
+    };
+    expect(liveActivities.endTimerLiveActivity).toHaveBeenCalledWith("live-feeding-1");
+    await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
+  });
+
+  it("falls back by type when native cleanup cannot find the persisted Live Activity id", async () => {
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      startTimerLiveActivity: jest.Mock;
+      endTimerLiveActivity: jest.Mock;
+      endLiveActivityByType: jest.Mock;
+    };
+    liveActivities.startTimerLiveActivity.mockResolvedValue("stale-live-id");
+    liveActivities.endTimerLiveActivity.mockResolvedValue(false);
+
+    render(<RealTimerProviders />);
+    await waitFor(() => expect(feedingState?.isLoading).toBe(false));
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+    });
+    await act(async () => {
+      await feedingState!.stopBreastfeeding(new Date(stoppedAt));
+    });
+
+    expect(liveActivities.endTimerLiveActivity).toHaveBeenCalledWith("stale-live-id");
+    expect(liveActivities.endLiveActivityByType).toHaveBeenCalledWith("feeding");
   });
 
   it("records one feeding at the pending stop timestamp after its server lock is gone", async () => {

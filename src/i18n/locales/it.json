@@ -1793,7 +1793,11 @@
     "today": "Oggi",
     "yesterday": "Ieri",
     "dayCount_one": "{{count}} giorno",
-    "dayCount_other": "{{count}} giorni"
+    "dayCount_other": "{{count}} giorni",
+    "monthCount_one": "{{count}} mese",
+    "monthCount_other": "{{count}} mesi",
+    "yearCount_one": "{{count}} anno",
+    "yearCount_other": "{{count}} anni"
   },
   "accessibility": {
     "breastfeeding": "Allattamento",

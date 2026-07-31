@@ -34,6 +34,8 @@ All activity generation and synchronization must use local Supabase and dedicate
 
 ## Human checkpoints
 
+**Manual device policy**: The agent may prepare, build, and launch iOS, Watch, or Android simulators, but must not execute Maestro or other E2E interactions or assertions. The release owner performs and classifies every device/E2E scenario.
+
 - [ ] [verify] Pair a supported Apple Watch with the iPhone test build, start a fresh timer on Watch, stop it on iPhone, and inspect both devices plus a fixed 959-hour historical entry on July 5 and current builds · Expected: the observed convergence and age labels match the audit's state trace and classification · Failure: device state differs from the trace, fallback path is unknown, or historical output cannot be reproduced · Reason: real WatchConnectivity scheduling and watchOS presentation require paired-device confirmation.
 
 ## Acceptance criteria
