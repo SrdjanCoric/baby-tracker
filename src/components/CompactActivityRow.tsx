@@ -160,101 +160,114 @@ const CompactActivityRowInner = ({
       : isActive
         ? `${testID}-own-active`
         : testID;
+  const accessibilityLabel = isLockedByOther
+    ? t("accessibility.lockedByOther", { label, name: lockedByName })
+    : timeSince
+      ? t("accessibility.cardTimeSince", { label, time: timeSince })
+      : t("accessibility.cardNoTime", { label });
 
   return (
-    <AnimatedPressable
-      onPress={isLockedByOther ? undefined : onPress}
-      onPressIn={isLockedByOther ? undefined : handlePressIn}
-      onPressOut={isLockedByOther ? undefined : handlePressOut}
-      disabled={isLockedByOther}
-      testID={resolvedTestID}
-      style={[
-        rowAnimatedStyle,
-        {
+    <Animated.View style={rowAnimatedStyle}>
+      <AnimatedPressable
+        onPress={isLockedByOther ? undefined : onPress}
+        onPressIn={isLockedByOther ? undefined : handlePressIn}
+        onPressOut={isLockedByOther ? undefined : handlePressOut}
+        disabled={isLockedByOther}
+        testID={resolvedTestID}
+        style={{
           borderRadius: ROW_BORDER_RADIUS,
           borderLeftWidth: 3,
           borderLeftColor: accentColor,
-        },
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={
-        isLockedByOther
-          ? t("accessibility.lockedByOther", { label, name: lockedByName })
-          : timeSince
-            ? t("accessibility.cardTimeSince", { label, time: timeSince })
-            : t("accessibility.cardNoTime", { label })
-      }
-    >
-      <LinearGradient
-        colors={gradientColors}
-        locations={gradientLocations}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          borderRadius: ROW_BORDER_RADIUS - 1,
-          overflow: "hidden",
-          paddingVertical: 10,
-          paddingRight: 12,
-          paddingLeft: 12,
-          gap: 10,
         }}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
       >
-        <Text style={{ fontSize: 17, flexShrink: 0 }}>{config.icon}</Text>
-
-        <View
+        <LinearGradient
+          colors={gradientColors}
+          locations={gradientLocations}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
           style={{
-            flex: 1,
-            minWidth: 0,
             flexDirection: "row",
-            alignItems: "baseline",
-            gap: 6,
-            flexWrap: "wrap",
+            alignItems: "center",
+            borderRadius: ROW_BORDER_RADIUS - 1,
+            overflow: "hidden",
+            paddingVertical: 10,
+            paddingRight: 12,
+            paddingLeft: 12,
+            gap: 10,
           }}
         >
-          <Text
-            style={{
-              fontSize: 11,
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: 0.8,
-              color: accentColor,
-            }}
-            numberOfLines={1}
-          >
-            {label}
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "800",
-              color: isActive ? accentColor : textPrimary,
-            }}
-            numberOfLines={1}
-          >
-            {displayValue}
-          </Text>
-          {secondaryValue && !isActive && (
-            <Text
-              style={{ fontSize: 11, color: textSecondary }}
-              numberOfLines={1}
-            >
-              {secondaryValue}
-            </Text>
-          )}
-          {isActive && isPaused && (
-            <Text
-              style={{ fontSize: 11, color: textSecondary }}
-              numberOfLines={1}
-            >
-              {t("common.pause")}
-            </Text>
-          )}
-        </View>
+          <Text style={{ fontSize: 17, flexShrink: 0 }}>{config.icon}</Text>
 
+          <View
+            style={{
+              flex: 1,
+              minWidth: 0,
+              flexDirection: "row",
+              alignItems: "baseline",
+              gap: 6,
+              flexWrap: "wrap",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: 0.8,
+                color: accentColor,
+              }}
+              numberOfLines={1}
+            >
+              {label}
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "800",
+                color: isActive ? accentColor : textPrimary,
+              }}
+              numberOfLines={1}
+            >
+              {displayValue}
+            </Text>
+            {secondaryValue && !isActive && (
+              <Text
+                style={{ fontSize: 11, color: textSecondary }}
+                numberOfLines={1}
+              >
+                {secondaryValue}
+              </Text>
+            )}
+            {isActive && isPaused && (
+              <Text
+                style={{ fontSize: 11, color: textSecondary }}
+                numberOfLines={1}
+              >
+                {t("common.pause")}
+              </Text>
+            )}
+          </View>
+
+          <View
+            style={{
+              width: isActive && onPausePress ? 58 : 26,
+              height: 26,
+              flexShrink: 0,
+            }}
+          />
+        </LinearGradient>
+      </AnimatedPressable>
+
+      <View
+        pointerEvents="box-none"
+        style={{ position: "absolute", right: 12, top: 10 }}
+      >
         {isLockedByOther ? (
           <View
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
             style={{
               width: 26,
               height: 26,
@@ -262,7 +275,6 @@ const CompactActivityRowInner = ({
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: buttonBgColor,
-              flexShrink: 0,
             }}
           >
             <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
@@ -280,7 +292,6 @@ const CompactActivityRowInner = ({
               justifyContent: "center",
               backgroundColor: buttonBgColor,
               opacity: 0.6,
-              flexShrink: 0,
             }}
             accessibilityRole="button"
             accessibilityLabel={t("common.stopping")}
@@ -292,19 +303,9 @@ const CompactActivityRowInner = ({
             </Text>
           </Pressable>
         ) : isActive && onPausePress ? (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              flexShrink: 0,
-            }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Pressable
-              onPress={(e) => {
-                e.stopPropagation?.();
-                onPausePress();
-              }}
+              onPress={onPausePress}
               style={{
                 width: 26,
                 height: 26,
@@ -331,10 +332,7 @@ const CompactActivityRowInner = ({
               </Text>
             </Pressable>
             <Pressable
-              onPress={(e) => {
-                e.stopPropagation?.();
-                onActionPress?.();
-              }}
+              onPress={onActionPress}
               style={{
                 width: 26,
                 height: 26,
@@ -355,10 +353,7 @@ const CompactActivityRowInner = ({
           </View>
         ) : (
           <Pressable
-            onPress={(e) => {
-              e.stopPropagation?.();
-              onActionPress?.();
-            }}
+            onPress={onActionPress}
             style={{
               width: 26,
               height: 26,
@@ -366,7 +361,6 @@ const CompactActivityRowInner = ({
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: buttonBgColor,
-              flexShrink: 0,
             }}
             accessibilityRole="button"
             accessibilityLabel={
@@ -380,8 +374,8 @@ const CompactActivityRowInner = ({
             </Text>
           </Pressable>
         )}
-      </LinearGradient>
-    </AnimatedPressable>
+      </View>
+    </Animated.View>
   );
 };
 

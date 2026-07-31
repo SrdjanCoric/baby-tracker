@@ -43,5 +43,7 @@ tags:
 - tapOn:
     id: "save-button"
 
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

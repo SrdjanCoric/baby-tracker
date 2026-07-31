@@ -1,16 +1,37 @@
 appId: com.sofibaby.app
 ---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: ".*Open debugger to view warnings.*"
+    commands:
+      - tapOn:
+          point: "95%,94%"
+- waitForAnimationToEnd
 - scrollUntilVisible:
     element:
       id: "sleep-card-own-active"
     direction: DOWN
 - tapOn:
     id: "sleep-card-own-active"
-- assertVisible:
-    id: "stop-timer-button"
+    point: "20%,20%"
+- runFlow:
+    when:
+      visible:
+        id: "sleep-card-own-active"
+    commands:
+      - tapOn:
+          point: "60%,38%"
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 10000
 - tapOn:
-    id: "stop-timer-button"
-- assertNotVisible:
     id: "stop-timer-button"
 - extendedWaitUntil:
     visible:

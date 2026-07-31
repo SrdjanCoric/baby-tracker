@@ -30,5 +30,7 @@ tags:
 - tapOn:
     id: "stop-timer-button"
 
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

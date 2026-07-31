@@ -1,5 +1,5 @@
 import React, { createRef } from "react";
-import { render, screen, fireEvent } from "@testing-library/react-native";
+import { render, screen, fireEvent, within } from "@testing-library/react-native";
 import { View } from "react-native";
 import { DashboardCard } from "./DashboardCard";
 
@@ -138,7 +138,9 @@ describe("DashboardCard", () => {
       render(
         <DashboardCard {...defaultProps} onPress={onPressMock} testID="card" />
       );
-      fireEvent.press(screen.getByTestId("card"));
+      fireEvent.press(
+        screen.getByRole("button", { name: "accessibility.cardTimeSince" })
+      );
       expect(onPressMock).toHaveBeenCalledTimes(1);
     });
 
@@ -210,14 +212,61 @@ describe("DashboardCard", () => {
   describe("accessibility", () => {
     it("has correct accessibility label", () => {
       render(<DashboardCard {...defaultProps} testID="card" />);
-      const card = screen.getByTestId("card");
+      const card = screen.getByRole("button", {
+        name: "accessibility.cardTimeSince",
+      });
       expect(card.props.accessibilityLabel).toBe("accessibility.cardTimeSince");
     });
 
     it("has button accessibility role", () => {
       render(<DashboardCard {...defaultProps} testID="card" />);
-      const card = screen.getByTestId("card");
+      const card = screen.getByRole("button", {
+        name: "accessibility.cardTimeSince",
+      });
       expect(card.props.accessibilityRole).toBe("button");
+    });
+
+    it("exposes Add separately from card navigation", () => {
+      render(<DashboardCard {...defaultProps} testID="card" />);
+
+      const card = screen.getByRole("button", {
+        name: "accessibility.cardTimeSince",
+      });
+
+      expect(
+        within(card).queryByRole("button", {
+          name: "accessibility.addActivity",
+        })
+      ).toBeNull();
+      expect(
+        screen.getByRole("button", { name: "accessibility.addActivity" })
+      ).toBeTruthy();
+    });
+
+    it("exposes active timer controls separately from card navigation", () => {
+      render(
+        <DashboardCard
+          {...defaultProps}
+          isActive
+          onPausePress={jest.fn()}
+          onActionPress={jest.fn()}
+          testID="card"
+        />
+      );
+
+      const card = screen.getByRole("button", {
+        name: "accessibility.cardTimeSince",
+      });
+
+      expect(within(card).getByText("Feeding")).toBeTruthy();
+      expect(
+        within(card).queryByRole("button", { name: "common.pause" })
+      ).toBeNull();
+      expect(
+        within(card).queryByRole("button", { name: "common.stop" })
+      ).toBeNull();
+      expect(screen.getByRole("button", { name: "common.pause" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "common.stop" })).toBeTruthy();
     });
   });
 

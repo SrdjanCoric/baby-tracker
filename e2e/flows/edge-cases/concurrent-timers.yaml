@@ -27,16 +27,18 @@ tags:
 - tapOn:
     id: "stop-timer-button"
 
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
 
 # Try to start sleep timer
 - tapOn:
     id: "sleep-card"
 
-# Start nap (this starts the timer automatically)
+# Start sleep
 - tapOn:
-    id: "type-nap"
+    id: "start-sleep-button"
 
 # Timer should start - verify stop button appears
 - extendedWaitUntil:
@@ -48,5 +50,7 @@ tags:
 - tapOn:
     id: "stop-timer-button"
 
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

@@ -16,6 +16,7 @@ describe("OnboardingScreen", () => {
     );
 
     expect(screen.getByRole("header", { name: "Set up your family" })).toBeTruthy();
+    expect(screen.getByTestId("dismiss-keyboard").props.accessible).toBe(false);
     expect(screen.getByTestId("onboarding-scroll-view").props.keyboardShouldPersistTaps).toBe(
       "handled"
     );

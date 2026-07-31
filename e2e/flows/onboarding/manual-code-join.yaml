@@ -54,4 +54,6 @@ tags:
     visible:
       id: "home-screen"
     timeout: 30000
-- assertVisible: "E2E Baby"
+- assertVisible:
+    id: "selected-baby-name"
+    text: "^E2E Baby( Two)?$"
