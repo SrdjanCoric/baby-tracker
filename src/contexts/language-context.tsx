@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useCallback, useMemo, useS
 import * as Localization from "expo-localization";
 import i18n from "@/i18n";
 import { LanguageStorageService, type LanguageCode } from "@/services/language-storage";
+import { publishNativeLanguage } from "@/services/native-language-service";
 
 export type { LanguageCode };
 
@@ -40,6 +41,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
       const resolvedLang = storedLanguage === "system" ? getDeviceLanguage() : storedLanguage;
       await i18n.changeLanguage(resolvedLang);
+      // The Watch and the widget cannot read "system"; they get the resolved code.
+      await publishNativeLanguage(resolvedLang);
 
       setIsLoading(false);
     };
@@ -52,6 +55,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
     const resolvedLang = newLanguage === "system" ? getDeviceLanguage() : newLanguage;
     await i18n.changeLanguage(resolvedLang);
+    await publishNativeLanguage(resolvedLang);
   }, []);
 
   const resolvedLanguage = language === "system" ? getDeviceLanguage() : language;

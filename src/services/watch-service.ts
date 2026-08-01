@@ -41,6 +41,34 @@ async function getWatchConnectivityModule(): Promise<WatchConnectivityModule | n
   return null;
 }
 
+// The Watch is a separate device, so the App Group cannot carry the caregiver's
+// language to it. It rides the application context instead. That context replaces
+// the whole dictionary on every call, so a language-only update would erase the
+// widget data and Supabase credentials the Watch depends on; a language change
+// republishes the last context with the new value rather than a bare one.
+let currentLanguage: string | null = null;
+let lastContext: WatchPayload | null = null;
+
+export async function setWatchLanguage(language: string): Promise<void> {
+  currentLanguage = language;
+
+  if (!lastContext) {
+    return;
+  }
+
+  await publishApplicationContext({ ...lastContext, language });
+}
+
+async function publishApplicationContext(context: WatchPayload): Promise<void> {
+  const module = await getWatchConnectivityModule();
+  if (!module) {
+    return;
+  }
+
+  lastContext = context;
+  module.updateApplicationContext(context);
+}
+
 export async function syncToWatch(data: WidgetData, watchData?: WatchData, authContext?: WatchAuthContext): Promise<void> {
   const module = await getWatchConnectivityModule();
   if (!module) {
@@ -51,6 +79,10 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
     const context: WatchPayload = {
       widgetData: JSON.stringify(data),
     };
+
+    if (currentLanguage) {
+      context.language = currentLanguage;
+    }
 
     if (watchData) {
       context.watchData = JSON.stringify(watchData);
@@ -69,6 +101,7 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
       }
     }
 
+    lastContext = context;
     module.updateApplicationContext(context);
     console.log("[WatchService] Synced data to watch");
   } catch (error) {

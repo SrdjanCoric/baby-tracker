@@ -119,11 +119,21 @@ enum ActivityType: String, CaseIterable, AppEnum {
 
     var label: String {
         switch self {
-        case .feeding: return "Feeding"
-        case .sleep: return "Sleep"
-        case .diaper: return "Diaper"
-        case .pumping: return "Pumping"
-        case .tummyTime: return "Tummy Time"
+        case .feeding: return L.feeding
+        case .sleep: return L.sleep
+        case .diaper: return L.diaper
+        case .pumping: return L.pumping
+        case .tummyTime: return L.tummyTime
+        }
+    }
+
+    func runningSentence(for context: String) -> String {
+        switch self {
+        case .feeding: return String(format: L.timerRunningFeeding, context)
+        case .sleep: return String(format: L.timerRunningSleep, context)
+        case .diaper: return String(format: L.timerRunningDiaper, context)
+        case .pumping: return String(format: L.timerRunningPumping, context)
+        case .tummyTime: return String(format: L.timerRunningTummyTime, context)
         }
     }
 
@@ -1071,9 +1081,9 @@ func formatStalenessIndicator(data: WidgetDataModel?, now: Date = Date()) -> Str
     let hours = Int(interval) / 3600
     if hours >= 24 {
         let days = hours / 24
-        return "Synced \(days)d ago"
+        return String(format: L.syncedDaysAgo, days)
     } else {
-        return "Synced \(hours)h ago"
+        return String(format: L.syncedHoursAgo, hours)
     }
 }
 
@@ -1348,7 +1358,7 @@ struct SmallWidgetView: View {
                             .frame(maxWidth: .infinity)
                             .multilineTextAlignment(.center)
 
-                            Text("Paused")
+                            Text(L.paused)
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.7))
                                 .frame(maxWidth: .infinity)
@@ -1368,7 +1378,7 @@ struct SmallWidgetView: View {
                                     .frame(maxWidth: .infinity)
                                     .multilineTextAlignment(.center)
                             } else {
-                                Text("In progress")
+                                Text(L.inProgress)
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundStyle(.white.opacity(0.8))
                                     .frame(maxWidth: .infinity)
@@ -1394,7 +1404,7 @@ struct SmallWidgetView: View {
                     Text(activity.label)
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white)
-                    Text("Open app to sync")
+                    Text(L.openAppToSync)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -1409,7 +1419,7 @@ struct SmallWidgetView: View {
                 HStack(spacing: 6) {
                     Text("⏳")
                         .font(.system(size: 14))
-                    Text("In use")
+                    Text(L.inUse)
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                 }
                 .foregroundStyle(.white.opacity(0.9))
@@ -1477,12 +1487,12 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
         if let lastType = data.activities.feeding.lastType,
            (lastType == "breast" || lastType == "nursing"),
            let lastSide = data.activities.feeding.lastSide {
-            let nextSide = lastSide.lowercased() == "left" ? "Right" : "Left"
-            return "Next: \(nextSide) side"
+            let nextSide = lastSide.lowercased() == "left" ? L.right : L.left
+            return String(format: L.nextSideText, nextSide)
         } else if let lastType = data.activities.feeding.lastType {
-            return lastType == "bottle" ? "Bottle" : lastType.capitalized
+            return lastType == "bottle" ? L.bottle : lastType.capitalized
         }
-        return "Feeding"
+        return L.feeding
 
     case .sleep:
         if let awakeText = getAwakeTimeText(data: data) {
@@ -1490,34 +1500,34 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
         }
         let todayMins = data.activities.sleep.todayMinutes
         if todayMins > 0 {
-            return "\(formatDuration(minutes: todayMins)) today"
+            return String(format: L.durationToday, formatDuration(minutes: todayMins))
         }
-        return "Sleep"
+        return L.sleep
 
     case .diaper:
         let counts = data.activities.diaper.todayCounts
         let total = counts.wet + counts.dirty + counts.mixed + counts.dry
         if total > 0 {
-            return "\(total) diapers today"
+            return L.diapersTodayCount(total)
         }
-        return "Diaper"
+        return L.diaper
 
     case .pumping:
         let volume = data.activities.pumping.todayVolumeMl
         if volume > 0 {
-            return "\(Int(volume)) ml today"
+            return String(format: L.mlTodayCount, Int(volume))
         }
-        return "Pumping"
+        return L.pumping
 
     case .tummyTime:
         let mins = data.activities.tummyTime.todayMinutes
         let goal = data.activities.tummyTime.goalMinutes
         if goal > 0 && mins > 0 {
-            return "\(mins) of \(goal) min"
+            return String(format: L.minOfGoalMin, mins, goal)
         } else if mins > 0 {
-            return "\(mins) min today"
+            return String(format: L.minTodayCount, mins)
         }
-        return "Tummy Time"
+        return L.tummyTime
     }
 }
 
@@ -1525,33 +1535,33 @@ func getSmallWidgetSubtext(for activity: ActivityType, data: WidgetDataModel) ->
     switch activity {
     case .feeding:
         let count = data.activities.feeding.todayCount
-        return count > 0 ? "\(count) feeds today" : "No feeds yet"
+        return count > 0 ? L.feedsTodayCount(count) : L.noFeedsYet
 
     case .sleep:
         if let wakeWindowText = getWakeWindowCountdown(data: data) {
             return wakeWindowText
         }
         if let type = data.activities.sleep.sleepType {
-            return type == "nap" ? "Last: Nap" : "Last: Night"
+            return type == "nap" ? L.lastNap : L.lastNight
         }
-        return "Tap to log"
+        return L.tapToLog
 
     case .diaper:
         let c = data.activities.diaper.todayCounts
         if c.wet + c.dirty + c.mixed > 0 {
             return "💧\(c.wet) 💩\(c.dirty)"
         }
-        return "Tap to log"
+        return L.tapToLog
 
     case .pumping:
         let sessions = data.activities.pumping.sessionCount
-        return sessions > 0 ? "\(sessions) sessions" : "Tap to log"
+        return sessions > 0 ? L.sessionsCount(sessions) : L.tapToLog
 
     case .tummyTime:
         if let lastDuration = data.activities.tummyTime.lastDurationMinutes, lastDuration > 0 {
-            return "Last: \(lastDuration) min"
+            return String(format: L.lastMinCount, lastDuration)
         }
-        return "Tap to start"
+        return L.tapToStart
     }
 }
 
@@ -1559,11 +1569,11 @@ func formatTimerContext(_ context: String, for activity: ActivityType) -> String
     switch activity {
     case .feeding:
         if context.lowercased() == "left" || context.lowercased() == "right" {
-            return "\(context.capitalized) side"
+            return String(format: L.sideText, context.capitalized)
         }
         return context.capitalized
     case .sleep:
-        return context == "nap" ? "Nap time" : "Night sleep"
+        return context == "nap" ? L.napTime : L.nightSleep
     case .pumping:
         return context.capitalized
     default:
@@ -1578,45 +1588,45 @@ func getLastActivityDetailText(for activity: ActivityType, data: WidgetDataModel
         if let lastType = data.activities.feeding.lastType {
             if lastType == "breast" || lastType == "nursing" {
                 if let side = data.activities.feeding.lastSide {
-                    return "\(side.capitalized) breast"
+                    return String(format: L.sideBreast, side.capitalized)
                 }
-                return "Breastfeeding"
+                return L.breastfeeding
             } else if lastType == "bottle" {
-                return "Bottle"
+                return L.bottle
             } else if lastType == "solid" {
-                return "Solid food"
+                return L.solidFood
             }
             return lastType.capitalized
         }
-        return "No feeds yet"
+        return L.noFeedsYet
     case .sleep:
         if let type = data.activities.sleep.sleepType {
-            return type == "nap" ? "Nap" : "Night sleep"
+            return type == "nap" ? L.nap : L.nightSleep
         }
-        return "Last sleep"
+        return L.lastSleep
     case .diaper:
         if let type = data.activities.diaper.lastType {
             switch type {
-            case "wet": return "Wet diaper"
-            case "dirty": return "Dirty diaper"
-            case "mixed": return "Mixed diaper"
-            case "dry": return "Dry diaper"
+            case "wet": return L.wetDiaper
+            case "dirty": return L.dirtyDiaper
+            case "mixed": return L.mixedDiaper
+            case "dry": return L.dryDiaper
             default: return type.capitalized
             }
         }
-        return "Last diaper"
+        return L.lastDiaper
     case .pumping:
         let volume = data.activities.pumping.todayVolumeMl
         if volume > 0 {
-            return "\(Int(volume)) ml today"
+            return String(format: L.mlTodayCount, Int(volume))
         }
-        return "Last pump"
+        return L.lastPump
     case .tummyTime:
         let mins = data.activities.tummyTime.todayMinutes
         if mins > 0 {
-            return "\(mins) min today"
+            return String(format: L.minTodayCount, mins)
         }
-        return "Last tummy time"
+        return L.lastTummyTime
     }
 }
 
@@ -1644,7 +1654,7 @@ struct MediumWidgetView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     if let babyName = entry.widgetData?.babyName {
-                        Text("\(babyName)'s activity")
+                        Text(String(format: L.babyActivity, babyName))
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .foregroundStyle(.primary)
                     }
@@ -1782,11 +1792,11 @@ struct LargeWidgetView: View {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 1) {
                     if let babyName = entry.widgetData?.babyName {
-                        Text("\(babyName)'s recent activity")
+                        Text(String(format: L.babyRecentActivity, babyName))
                             .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundStyle(.primary)
                     } else {
-                        Text("Recent activity")
+                        Text(L.recentActivity)
                             .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundStyle(.primary)
                     }
@@ -1844,13 +1854,15 @@ struct ActivityRowView: View {
                 if let data = data {
                     if isActive && isRemoteLock {
                         if let context = getTimerContext(for: activity, data: data) {
-                            let pausedSuffix = isTimerPausedForActivity(activity, data: data) ? " (paused)" : ""
-                            Text("\(context) is \(activity.label.lowercased())ing\(pausedSuffix)")
+                            let sentence = activity.runningSentence(for: context)
+                            Text(isTimerPausedForActivity(activity, data: data)
+                                 ? String(format: L.timerRunningPausedSuffix, sentence)
+                                 : sentence)
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
                                 .lineLimit(1)
                         } else {
-                            Text("In use")
+                            Text(L.inUse)
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
                         }
@@ -1875,7 +1887,7 @@ struct ActivityRowView: View {
                                     .monospacedDigit()
                                     .foregroundStyle(.white)
                             }
-                            Text("Paused")
+                            Text(L.paused)
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.8))
                         } else {
@@ -1888,7 +1900,7 @@ struct ActivityRowView: View {
                                     .fill(Color.white)
                                     .frame(width: 6, height: 6)
                             }
-                            Text("In progress")
+                            Text(L.inProgress)
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.8))
                         }
@@ -1901,10 +1913,10 @@ struct ActivityRowView: View {
                             .foregroundStyle(.white.opacity(0.8))
                             .lineLimit(1)
                     } else {
-                        Text("No data yet")
+                        Text(L.noDataYet)
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.white.opacity(0.8))
-                        Text("Tap to log")
+                        Text(L.tapToLog)
                             .font(.system(size: 11))
                             .foregroundStyle(.white.opacity(0.7))
                     }
@@ -1994,17 +2006,17 @@ struct ActivityRowView: View {
             if let lastType = data.activities.feeding.lastType {
                 if lastType == "breast" || lastType == "nursing" {
                     if let side = data.activities.feeding.lastSide {
-                        let nextSide = side.lowercased() == "left" ? "Right" : "Left"
-                        return "Next: \(nextSide) side"
+                        let nextSide = side.lowercased() == "left" ? L.right : L.left
+                        return String(format: L.nextSideText, nextSide)
                     }
-                    return "Breastfeeding"
+                    return L.breastfeeding
                 } else if lastType == "bottle" {
-                    return "Bottle"
+                    return L.bottle
                 } else if lastType == "solid" {
-                    return "Solid food"
+                    return L.solidFood
                 }
             }
-            return "\(data.activities.feeding.todayCount) today"
+            return String(format: L.countToday, data.activities.feeding.todayCount)
 
         case .sleep:
             if let awakeText = getAwakeTimeText(data: data, now: currentDate) {
@@ -2012,12 +2024,12 @@ struct ActivityRowView: View {
             }
             let mins = data.activities.sleep.todayMinutes
             if mins > 0 {
-                return "\(formatDuration(minutes: mins)) today"
+                return String(format: L.durationToday, formatDuration(minutes: mins))
             }
             if let lastDuration = data.activities.sleep.lastDurationMinutes, lastDuration > 0 {
                 return formatDuration(minutes: lastDuration)
             }
-            return "No sleep yet"
+            return L.noSleepYet
 
         case .diaper:
             let c = data.activities.diaper.todayCounts
@@ -2025,17 +2037,17 @@ struct ActivityRowView: View {
 
         case .pumping:
             if data.activities.pumping.todayVolumeMl > 0 {
-                return "\(Int(data.activities.pumping.todayVolumeMl))ml today"
+                return String(format: L.mlTodayCountCompact, Int(data.activities.pumping.todayVolumeMl))
             }
-            return "\(data.activities.pumping.sessionCount) sessions"
+            return L.sessionsCount(data.activities.pumping.sessionCount)
 
         case .tummyTime:
             let mins = data.activities.tummyTime.todayMinutes
             let goal = data.activities.tummyTime.goalMinutes
             if goal > 0 {
-                return "\(mins)m of \(goal)m"
+                return String(format: L.minOfGoalCompact, mins, goal)
             }
-            return "\(mins)m today"
+            return String(format: L.minTodayCompact, mins)
         }
     }
 }
@@ -2049,19 +2061,19 @@ func formatRelativeTime(_ date: Date, now: Date, long: Bool, includesAgo: Bool) 
 
     if days >= 365 {
         let years = days / 365
-        value = long ? "\(years) year\(years == 1 ? "" : "s")" : "\(years)y"
+        value = long ? L.yearsCount(years) : String(format: L.ageYearsShort, years)
     } else if days >= 60 {
         let months = min(11, days / 30)
-        value = long ? "\(months) month\(months == 1 ? "" : "s")" : "\(months)mo"
+        value = long ? L.monthsCount(months) : String(format: L.ageMonthsShort, months)
     } else if days >= 1 {
-        value = long ? "\(days) day\(days == 1 ? "" : "s")" : "\(days)d"
+        value = long ? L.daysCount(days) : String(format: L.ageDaysShort, days)
     } else if hours > 0 {
-        value = long ? "\(hours) hr, \(minutes) min" : "\(hours)h \(minutes)m"
+        value = long ? String(format: L.durationHoursMinutesLong, hours, minutes) : String(format: L.durationHoursMinutesShort, hours, minutes)
     } else {
-        value = long ? "\(totalMinutes) min" : "\(totalMinutes)m"
+        value = long ? String(format: L.durationMinutesLong, totalMinutes) : String(format: L.durationMinutesShort, totalMinutes)
     }
 
-    return includesAgo ? "\(value) ago" : value
+    return includesAgo ? String(format: L.durationAgo, value) : value
 }
 
 func formatTimeAgoLong(_ date: Date, now: Date = Date()) -> String {
@@ -2074,9 +2086,9 @@ func formatDuration(minutes: Int) -> String {
     let hours = minutes / 60
     let mins = minutes % 60
     if hours > 0 {
-        return "\(hours)h \(mins)m"
+        return String(format: L.durationHoursMinutesShort, hours, mins)
     }
-    return "\(mins)m"
+    return String(format: L.durationMinutesShort, mins)
 }
 
 func getWakeWindowCountdown(data: WidgetDataModel) -> String? {
@@ -2104,16 +2116,16 @@ func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?) 
     let remainingMinutes = Int(remainingSeconds / 60.0)
 
     let isBedtime = label == "bedtime"
-    let prefix = isBedtime ? "Bedtime" : "Nap"
+    let prefix = isBedtime ? L.bedtime : L.nap
 
     if remainingMinutes <= 0 {
-        return "\(prefix) time!"
+        return String(format: L.prefixTimeExclaim, prefix)
     } else if remainingMinutes >= 60 {
         let h = remainingMinutes / 60
         let m = remainingMinutes % 60
-        return m > 0 ? "\(prefix) in \(h)h \(m)m" : "\(prefix) in \(h)h"
+        return m > 0 ? String(format: L.prefixInHoursMinutes, prefix, h, m) : String(format: L.prefixInHours, prefix, h)
     } else {
-        return "\(prefix) in \(remainingMinutes)m"
+        return String(format: L.prefixInMinutes, prefix, remainingMinutes)
     }
 }
 
@@ -2139,9 +2151,9 @@ func getAwakeTimeText(data: WidgetDataModel, now: Date = Date()) -> String? {
     let hours = awakeMinutes / 60
     let mins = awakeMinutes % 60
     if hours > 0 {
-        return "Awake \(hours)h \(mins)m"
+        return String(format: L.awakeHoursMinutes, hours, mins)
     }
-    return "Awake \(awakeMinutes)m"
+    return String(format: L.awakeMinutesOnly, awakeMinutes)
 }
 
 func formatRelative(_ date: Date, now: Date = Date()) -> String {
@@ -2248,7 +2260,7 @@ struct LockScreenRectangularView: View {
                             HStack(spacing: 2) {
                                 Text("⏳")
                                     .font(.system(size: 10))
-                                Text("In use")
+                                Text(L.inUse)
                                     .font(.system(size: 11, weight: .medium))
                             }
                         } else if let startDate = getActiveTimerStartDate(for: activity, data: data) {

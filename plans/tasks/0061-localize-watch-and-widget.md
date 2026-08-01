@@ -52,9 +52,44 @@ translations.
 - [ ] Add a check that every string key referenced by the two targets resolves in all nine locales, in the spirit of `scripts/audit/locale-key-parity.mjs`, and verify it fails against a deliberately missing key.
 - [ ] Run `npm run lint`, `npm run typecheck`, `npm run test:unit` and `npm run test:component`.
 
+## Decisions
+
+**Language transport (resolved 2026-08-01, `talk-it-through`).** The phone publishes
+`resolvedLanguage` from `src/contexts/language-context.tsx`, never the raw stored preference. The
+stored value under `@language_preference` is frequently the literal `"system"` — that is the default
+when nothing was ever set (`src/services/language-storage.ts:19`) — so matching on the stored value
+would ship `"system"` to both targets. `resolvedLanguage` always yields one of the nine
+region-preserving codes.
+
+The App Group only reaches the widget. The Watch is separate hardware, so `group.com.sofibaby.app`
+cannot carry anything to it; the Watch is reached by `WCSession.updateApplicationContext` and
+persists what it receives into its own container, exactly as it already does for Supabase
+credentials (`targets/watch/index.swift:169`, parsed at `:513`). The language rides that existing
+payload. Both surfaces are refreshed whenever the caregiver changes language, so neither needs a
+reinstall.
+
+**String storage (resolved 2026-08-01, `talk-it-through`).** Nine JSON locale files under
+`localization/native/` are the source of truth, code-generated into a `GeneratedStrings.swift` per
+target. `targets/watch` and `targets/widget` are built by `@bacons/apple-targets` as
+`PBXFileSystemSynchronizedRootGroup` folders and no plugin sets Xcode `knownRegions`, so `.lproj`
+and `.xcstrings` resources can fail to reach the built bundle while the build still succeeds —
+shipping English that looks correct. Apple's machinery would not have satisfied the requirement
+anyway: rendering a language other than the device's requires an explicit per-language `Bundle`
+load regardless. Rejected: `.xcstrings` and hand-written `.lproj`. Consequence: the targets'
+`Info.plist` display names stay unlocalized, and the generated Swift is checked in, so drift needs
+a CI guard.
+
+**First launch (resolved 2026-08-01, `talk-it-through`).** Before the phone has ever sent a
+language, both surfaces resolve the device locale through a Swift port of `getDeviceLanguage()`'s
+exact mapping — `pt`→`pt-PT`, `pt`+BR→`pt-BR`, `es`+ES→`es-ES`, anything unrecognized→`en`. This is
+what the phone itself renders when no preference was stored, so the surfaces agree by default
+rather than diverging. The phone's payload overrides it on arrival. Rejected: English-until-sync
+(reproduces the reported defect at first launch) and a blocked placeholder (unusable Watch, and the
+placeholder itself needs a language).
+
 ## Human checkpoints
 
-- [ ] [decision] Decide how the selected language reaches the two targets and what each renders before the phone has ever written it — device locale, English, or a blocked state (`talk-it-through`).
+- [x] [decision] Decide how the selected language reaches the two targets and what each renders before the phone has ever written it — device locale, English, or a blocked state (`talk-it-through`).
 - [ ] [verify] Confirm on hardware that both surfaces follow the app's language · Steps: set the app language to Português (Portugal), then check the Watch timer screens and the home-screen widget; change the language to Deutsch and check both again without reinstalling · Expected: both surfaces render the selected language and update after the change · Failure: either surface stays English, shows a different language than the app, or needs a reinstall to update · Reason: Watch and widget rendering cannot be proved in JavaScript tests, and the language handoff crosses a process boundary that a simulator does not exercise the same way.
 
 ## Acceptance criteria
