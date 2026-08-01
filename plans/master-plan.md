@@ -186,9 +186,9 @@ Durable decisions that apply across all tasks:
 - [x] 0048 · Attribute feeding stop, Timeline, and Live Activity regressions (after 0047) → tasks/done/0048-attribute-feeding-stop-regressions.md
 - [-] 0049 · Attribute Watch timer and history regressions (deferred by owner; after 0047) → tasks/0049-attribute-watch-regressions.md
 - [x] 0050 · Fix incomplete-day and fragmented-night sleep summaries (after 0047) → tasks/done/0050-fix-sleep-summary-averages.md
-- [ ] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0049, 0050) → tasks/0051-sweep-post-release-app-regressions.md
+- [ ] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0050) → tasks/0051-sweep-post-release-app-regressions.md
 - [ ] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
 
 ## Workflow status
 
-Tasks 0001 through 0045 and Tasks 0047, 0048, and 0050 are closed. Task 0049 is deferred by the release owner and must not be claimed without an explicit owner decision. Tasks 0051 and 0052 complete the adjacent application, native, and sync sweeps. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+Tasks 0001 through 0045 and Tasks 0047, 0048, and 0050 are closed. Task 0049 is deferred by the release owner and must not be claimed without an explicit owner decision. On 2026-08-01 the owner removed 0049 from Task 0051's prerequisites, because 0051 audits TypeScript/React Native product surfaces while Watch native synchronization already falls inside Task 0052's scope. Task 0052 never listed 0049 as a prerequisite; its implementation work no longer consumes 0049 evidence and instead audits Watch boundaries directly, recording the missing attribution trace as a stated limitation. No remaining task depends on 0049. Tasks 0051 and 0052 complete the adjacent application, native, and sync sweeps. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.

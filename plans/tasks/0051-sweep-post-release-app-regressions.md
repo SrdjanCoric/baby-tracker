@@ -1,7 +1,7 @@
 # Task 0051: Sweep adjacent app regressions introduced after July 5
 
 **Branch**: `feature/sweep-post-release-app-regressions`
-**Depends on**: 0047, 0048, 0049, 0050
+**Depends on**: 0047, 0048, 0050 (0049 removed by owner decision 2026-08-01; Watch native synchronization is audited by Task 0052)
 **Source**: regression-planning conversation 2026-07-31 · **User stories**: the release owner can see which adjacent user-facing behaviors may have regressed after July 5 before prioritizing fixes; maintainers have evidence rather than relying only on already reported symptoms
 
 ## What to build
