@@ -6,7 +6,7 @@
 
 ## What to build
 
-Perform a bounded, risk-based differential audit of user-facing application changes after the July 5 deployed source `cdbbb1e8cced61c52bc78ca4eb4531e90647218e`, using the imported household snapshot and the feedback loops established by Tasks 0047–0050. Cover changed TypeScript/React Native product surfaces not already resolved by those diagnoses, including Home, Timeline and deletion/editing, activity entry and history, Statistics and range loading, Health and Growth, sleep views and predictions, onboarding and household restoration, localization, accessibility, and preference-derived presentation.
+Perform a bounded, risk-based differential audit of user-facing application changes after the July 5 deployed source `cdbbb1e8cced61c52bc78ca4eb4531e90647218e`, using the imported household snapshot and the evidence or completed fixes from Tasks 0047–0050. Cover changed TypeScript/React Native product surfaces not already resolved by those tasks, including Home, Timeline and deletion/editing, activity entry and history, Statistics and range loading, Health and Growth, sleep views and predictions, onboarding and household restoration, localization, accessibility, and preference-derived presentation. Treat Task 0050's completed-day and fragmented-night summary contract as fixed behavior: do not repeat its historical attribution or rebuild a diagnostic ledger, and inspect only adjacent sleep surfaces not covered by its regression tests.
 
 Inventory post-baseline commits and completed tasks by changed capability rather than treating raw file count as proof. Rank surfaces by user impact, data-loss potential, change density, weak historical coverage, and adjacency to confirmed causes. For each high-risk surface, compare current behavior with July 5 or an explicit post-July intended contract using deterministic automated checks where possible and controlled simulator scenarios where necessary. Existing post-July features should be checked against their approved task behavior rather than automatically labeled regressions merely because they differ from July 5.
 
@@ -23,7 +23,7 @@ Produce a consolidated, privacy-safe regression matrix. Every reviewed surface m
 ## Implementation work
 
 - [ ] Build a capability-level inventory of all user-facing changes between the July 5 baseline and audit-start current source, mapping merged tasks, commits, tests, and affected screens or state providers.
-- [ ] Incorporate the confirmed causes, discarded hypotheses, harnesses, and uncovered adjacent call sites from Tasks 0047–0050 without repeating disproven work.
+- [ ] Incorporate confirmed fixes, remaining findings, and uncovered adjacent call sites from Tasks 0047–0050 without repeating resolved attribution work or re-auditing Task 0050's fixed sleep-summary scenarios.
 - [ ] Rank capabilities by credible data loss, incorrect caregiver decisions, broken primary workflows, historical-data dependence, change density, and missing differential coverage.
 - [ ] Define a finite audit matrix with explicit expected behavior sourced from July 5 behavior or approved post-July task contracts.
 - [ ] Run focused unit/component/integration differentials for pure and provider behavior before spending device time.
