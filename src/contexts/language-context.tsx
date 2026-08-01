@@ -1,20 +1,24 @@
-import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import * as Localization from "expo-localization";
 import i18n from "@/i18n";
 import { LanguageStorageService, type LanguageCode } from "@/services/language-storage";
+import { publishNativeLanguage } from "@/services/native-language-service";
 
 export type { LanguageCode };
 
+/** A concrete shipped locale — never the stored "system" preference. */
+type ResolvedLanguage = Exclude<LanguageCode, "system">;
+
 interface LanguageContextValue {
   language: LanguageCode;
-  resolvedLanguage: "en" | "sr" | "es" | "es-ES" | "fr" | "pt-PT" | "pt-BR" | "de" | "it";
+  resolvedLanguage: ResolvedLanguage;
   isLoading: boolean;
   setLanguage: (language: LanguageCode) => Promise<void>;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-function getDeviceLanguage(): "en" | "sr" | "es" | "es-ES" | "fr" | "pt-PT" | "pt-BR" | "de" | "it" {
+function getDeviceLanguage(): ResolvedLanguage {
   const locales = Localization.getLocales()[0];
   const deviceLocale = locales?.languageCode ?? "en";
   const regionCode = locales?.regionCode;
@@ -32,27 +36,53 @@ function getDeviceLanguage(): "en" | "sr" | "es" | "es-ES" | "fr" | "pt-PT" | "p
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<LanguageCode>("system");
   const [isLoading, setIsLoading] = useState(true);
+  // Nothing gates the UI on isLoading, so a caregiver can choose a language
+  // while the stored preference is still being read. The slower startup read
+  // must not then publish the old language over the newer choice.
+  const latestRequest = useRef(0);
+
+  const applyLanguage = useCallback(
+    async (resolved: ResolvedLanguage, requestId: number) => {
+      if (requestId !== latestRequest.current) return;
+      await i18n.changeLanguage(resolved);
+      if (requestId !== latestRequest.current) return;
+      // The Watch and the widget cannot read "system"; they get the resolved code.
+      await publishNativeLanguage(resolved);
+    },
+    []
+  );
 
   useEffect(() => {
+    const requestId = ++latestRequest.current;
     const loadPreference = async () => {
       const storedLanguage = await LanguageStorageService.getLanguagePreference();
+
+      // A choice made while this read was in flight wins over the stored value.
+      if (requestId !== latestRequest.current) {
+        setIsLoading(false);
+        return;
+      }
       setLanguageState(storedLanguage);
 
       const resolvedLang = storedLanguage === "system" ? getDeviceLanguage() : storedLanguage;
-      await i18n.changeLanguage(resolvedLang);
+      await applyLanguage(resolvedLang, requestId);
 
       setIsLoading(false);
     };
     loadPreference();
-  }, []);
+  }, [applyLanguage]);
 
-  const handleSetLanguage = useCallback(async (newLanguage: LanguageCode) => {
-    await LanguageStorageService.setLanguagePreference(newLanguage);
-    setLanguageState(newLanguage);
+  const handleSetLanguage = useCallback(
+    async (newLanguage: LanguageCode) => {
+      const requestId = ++latestRequest.current;
+      await LanguageStorageService.setLanguagePreference(newLanguage);
+      setLanguageState(newLanguage);
 
-    const resolvedLang = newLanguage === "system" ? getDeviceLanguage() : newLanguage;
-    await i18n.changeLanguage(resolvedLang);
-  }, []);
+      const resolvedLang = newLanguage === "system" ? getDeviceLanguage() : newLanguage;
+      await applyLanguage(resolvedLang, requestId);
+    },
+    [applyLanguage]
+  );
 
   const resolvedLanguage = language === "system" ? getDeviceLanguage() : language;
 

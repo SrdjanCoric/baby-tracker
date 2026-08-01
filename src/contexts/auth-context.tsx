@@ -25,6 +25,7 @@ import { supabase } from "@/services/supabase";
 import { setStorageUserId } from "@/services/storage-prefix";
 import { clearSyncData } from "@/contexts/sync-context";
 import { clearWidgetData } from "@/services/widget-data-service";
+import { clearWatchContext } from "@/services/watch-service";
 import { AUTH_CONFIG } from "@/constants/auth";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
 
@@ -232,6 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await clearAppStorage();
           await clearSyncData();
           await clearWidgetData();
+          // Keep the expired token out of any later language republish.
+          clearWatchContext();
         }
         return;
       }
@@ -408,6 +411,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await clearAppStorage(options?.preserveGuestData ?? false);
     await clearSyncData();
     await clearWidgetData();
+    // The cached watch context holds this session's access token.
+    clearWatchContext();
     setStorageUserId(null);
     return { error: null };
   }, []);

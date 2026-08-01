@@ -6,10 +6,16 @@ const source = readFileSync(
   "utf8"
 );
 
+const englishStrings = JSON.parse(
+  readFileSync(new URL("../../../localization/native/en.json", import.meta.url), "utf8")
+);
+
 describe("Watch morning sleep confirmation handoff", () => {
   it("decodes the optional phone-owned confirmation signal and keeps sleep start available", () => {
     expect(source).toContain("var morningConfirmationPending: Bool?");
-    expect(source).toContain('Text("Confirm in SofiBaby")');
+    // The prompt is localized now, so the wording lives in the string table.
+    expect(source).toContain("Text(L.confirmInSofiBaby)");
+    expect(englishStrings.confirmInSofiBaby).toBe("Confirm in SofiBaby");
     expect(source).toContain('connector.startTimer(activityType: "sleep", context: "auto")');
 
     const detailStart = source.indexOf("struct SleepDetailView");

@@ -100,11 +100,11 @@ enum WatchActivityType: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .feeding: return "Feeding"
-        case .sleep: return "Sleep"
-        case .diaper: return "Diaper"
-        case .pumping: return "Pumping"
-        case .tummyTime: return "Tummy Time"
+        case .feeding: return L.feeding
+        case .sleep: return L.sleep
+        case .diaper: return L.diaper
+        case .pumping: return L.pumping
+        case .tummyTime: return L.tummyTime
         }
     }
 
@@ -165,6 +165,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             }
         }
     }
+
+    // The language chosen in the phone app, received via applicationContext and
+    // persisted like the credentials below so a cold launch renders the caregiver's
+    // language before the phone reconnects. Published so switching language on the
+    // phone re-renders these views instead of requiring a relaunch or reinstall.
+    @Published var language: String = NativeLanguageResolver.current
 
     // Supabase auth credentials (received via applicationContext, persisted to UserDefaults)
     private var supabaseUrl: String?
@@ -419,6 +425,19 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func parseApplicationContext(_ context: [String: Any]) {
+        // The phone sends the language it resolved, never its stored "system"
+        // preference, so an unrecognized value means a version mismatch and the
+        // existing selection is kept rather than falling back to English.
+        if let language = context["language"] as? String,
+           L.supportedLanguages.contains(language) {
+            UserDefaults(suiteName: "group.com.sofibaby.app")?
+                .set(language, forKey: NativeLanguageResolver.storageKey)
+            DispatchQueue.main.async {
+                self.language = language
+            }
+            print("[WatchConnector] parseApplicationContext: stored language")
+        }
+
         // Extract and persist auth credentials
         if let url = context["supabaseUrl"] as? String,
            let anonKey = context["supabaseAnonKey"] as? String,
@@ -1262,7 +1281,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken,
               let ptsToken = pushToStartToken, !ptsToken.isEmpty else { return }
 
-        let babyName = currentBaby?.name ?? widgetData?.babyName ?? "Baby"
+        let babyName = currentBaby?.name ?? widgetData?.babyName ?? L.baby
         let urlString = "\(supabaseUrl)/functions/v1/start-live-activity"
         guard let url = URL(string: urlString) else { return }
 
@@ -1411,6 +1430,28 @@ func suggestedSide(lastSide: String?) -> String {
     return last == "left" ? "right" : "left"
 }
 
+/// Maps a raw data token (side, sleep type, diaper type, feeding type, etc.)
+/// to its localized display string. Falls back to a capitalized version of
+/// the raw token for values that aren't part of the known vocabulary.
+func localizedToken(_ token: String) -> String {
+    switch token.lowercased() {
+    case "left": return L.left
+    case "right": return L.right
+    case "both": return L.both
+    case "nap": return L.nap
+    case "night": return L.night
+    case "wet": return L.wet
+    case "dirty": return L.dirty
+    case "mixed": return L.mixed
+    case "dry": return L.dry
+    case "breast", "nursing": return L.breast
+    case "bottle": return L.bottle
+    case "solid": return L.solid
+    case "formula": return L.formula
+    default: return token.capitalized
+    }
+}
+
 // MARK: - Content View
 
 struct ContentView: View {
@@ -1430,15 +1471,15 @@ struct ContentView: View {
                     Image(systemName: "iphone.and.arrow.forward")
                         .font(.largeTitle)
                         .foregroundStyle(.secondary)
-                    Text("Open SofiBaby")
+                    Text(L.openSofiBaby)
                         .font(.headline)
-                    Text("on your iPhone to sync")
+                    Text(L.onYourIPhoneToSync)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button {
                         connector.requestFreshData()
                     } label: {
-                        Label("Retry", systemImage: "arrow.clockwise")
+                        Label(L.retry, systemImage: "arrow.clockwise")
                             .font(.caption)
                     }
                     .buttonStyle(.bordered)
@@ -1472,7 +1513,7 @@ struct MainView: View {
     }
 
     var babyName: String {
-        currentBabyData?.name ?? legacyData?.babyName ?? "Baby"
+        currentBabyData?.name ?? legacyData?.babyName ?? L.baby
     }
 
     var activities: WatchActivityData {
@@ -1506,7 +1547,7 @@ struct MainView: View {
                 }
 
                 if connector.isTokenStale {
-                    Text("Open iPhone app to refresh")
+                    Text(L.openIPhoneAppToRefresh)
                         .font(.system(.caption2))
                         .foregroundColor(.orange)
                         .multilineTextAlignment(.center)
@@ -1558,7 +1599,7 @@ struct BabySelectorView: View {
     @ObservedObject var connector: PhoneConnector
 
     var currentBabyName: String {
-        connector.currentBaby?.name ?? connector.widgetData?.babyName ?? "Select Baby"
+        connector.currentBaby?.name ?? connector.widgetData?.babyName ?? L.selectBaby
     }
 
     var body: some View {
@@ -1606,7 +1647,7 @@ struct BabyPickerView: View {
                 }
             }
         }
-        .navigationTitle("Select Baby")
+        .navigationTitle(L.selectBaby)
     }
 }
 
@@ -1636,12 +1677,12 @@ struct ActivityRowView: View {
                 Text(activity.label)
                     .font(.system(size: 11, weight: .medium))
                 if isActive {
-                    Text("Active")
+                    Text(L.active)
                         .font(.system(size: 9))
                         .foregroundStyle(activity.primaryColor)
                 } else {
                     TimelineView(.periodic(from: .now, by: 60)) { _ in
-                        Text(getTimeSince() + " ago")
+                        Text(String(format: L.timeAgo, getTimeSince()))
                             .font(.system(size: 9))
                             .foregroundStyle(.secondary)
                     }
@@ -1689,26 +1730,26 @@ func formatTimeSinceDate(_ date: Date, now: Date = Date()) -> String {
 
     if days >= 365 {
         let years = days / 365
-        return "\(years) year\(years == 1 ? "" : "s")"
+        return L.yearsCount(years)
     }
     if days >= 60 {
         let months = min(11, days / 30)
-        return "\(months) month\(months == 1 ? "" : "s")"
+        return L.monthsCount(months)
     }
     if days >= 1 {
-        return "\(days) day\(days == 1 ? "" : "s")"
+        return L.daysCount(days)
     }
     if hours > 0 {
-        return "\(hours)h \(minutes)m"
+        return String(format: L.durationHoursMinutesShort, hours, minutes)
     }
-    return "\(totalMinutes)m"
+    return String(format: L.durationMinutesShort, totalMinutes)
 }
 
 // MARK: - Active Timer Card
 
 struct ActiveTimerCard: View {
     let timer: WatchActiveTimer
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var activityType: WatchActivityType? {
         WatchActivityType(rawValue: timer.type)
@@ -1761,12 +1802,12 @@ struct ActiveTimerCard: View {
 
             HStack(spacing: 4) {
                 if let context = timer.context {
-                    Text(isRemote ? context : context.capitalized)
+                    Text(isRemote ? context : localizedToken(context))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
                 if isPaused {
-                    Text("Paused")
+                    Text(L.paused)
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(.orange)
                 }
@@ -1782,7 +1823,7 @@ struct ActiveTimerCard: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "arrow.left.arrow.right")
                                     .font(.system(size: 8))
-                                Text("Switch")
+                                Text(L.switchLabel)
                                     .font(.system(size: 10, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)
@@ -1798,7 +1839,7 @@ struct ActiveTimerCard: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "play.fill")
                                     .font(.system(size: 8))
-                                Text("Resume")
+                                Text(L.resume)
                                     .font(.system(size: 10, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)
@@ -1813,7 +1854,7 @@ struct ActiveTimerCard: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "pause.fill")
                                     .font(.system(size: 8))
-                                Text("Pause")
+                                Text(L.pause)
                                     .font(.system(size: 10, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)
@@ -1825,7 +1866,7 @@ struct ActiveTimerCard: View {
                     Button {
                         connector.stopTimer(activityType: timer.type)
                     } label: {
-                        Text("Stop")
+                        Text(L.stop)
                             .font(.system(size: 10, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
@@ -1856,7 +1897,7 @@ func formatElapsedSeconds(_ seconds: Int) -> String {
 struct FeedingMenuView: View {
     let data: WatchActivityData.FeedingData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var feedingTimer: WatchActiveTimer? {
         allTimers.first { $0.type == "feeding" }
@@ -1870,29 +1911,29 @@ struct FeedingMenuView: View {
                 }
 
                 TimelineView(.periodic(from: .now, by: 60)) { _ in
-                    InfoRow(label: "Last", value: formatTimeSince(data.lastTime) + " ago")
+                    InfoRow(label: L.last, value: String(format: L.timeAgo, formatTimeSince(data.lastTime)))
                 }
-                InfoRow(label: "Today", value: "\(data.todayCount) feedings")
+                InfoRow(label: L.today, value: L.todayFeedingsCount(data.todayCount))
 
                 Divider().padding(.vertical, 2)
 
                 NavigationLink {
                     BreastFeedingView(data: data, allTimers: allTimers, connector: connector)
                 } label: {
-                    OptionRow(emoji: "🤱", label: "Breast", color: WatchActivityType.feeding.primaryColor)
+                    OptionRow(emoji: "🤱", label: L.breast, color: WatchActivityType.feeding.primaryColor)
                 }
                 .buttonStyle(.plain)
 
                 NavigationLink {
                     BottleFeedingView(connector: connector)
                 } label: {
-                    OptionRow(emoji: "🍼", label: "Bottle", color: WatchActivityType.feeding.primaryColor)
+                    OptionRow(emoji: "🍼", label: L.bottle, color: WatchActivityType.feeding.primaryColor)
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 4)
         }
-        .navigationTitle("Feeding")
+        .navigationTitle(L.feeding)
     }
 }
 
@@ -1930,7 +1971,7 @@ struct OptionRow: View {
 struct BreastFeedingView: View {
     let data: WatchActivityData.FeedingData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var feedingTimer: WatchActiveTimer? {
         allTimers.first { $0.type == "feeding" }
@@ -1945,14 +1986,14 @@ struct BreastFeedingView: View {
             if let timer = feedingTimer {
                 ActiveTimerCard(timer: timer, connector: connector)
             } else {
-                Text("\(suggested.capitalized) suggested")
+                Text(String(format: L.suggestedSide, localizedToken(suggested)))
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(WatchActivityType.feeding.primaryColor)
 
                 HStack(spacing: 20) {
                     SideButton(
                         letter: "L",
-                        label: "Left",
+                        label: L.left,
                         color: WatchActivityType.feeding.primaryColor,
                         isHighlighted: suggested == "left"
                     ) {
@@ -1961,7 +2002,7 @@ struct BreastFeedingView: View {
 
                     SideButton(
                         letter: "R",
-                        label: "Right",
+                        label: L.right,
                         color: WatchActivityType.feeding.primaryColor,
                         isHighlighted: suggested == "right"
                     ) {
@@ -1972,21 +2013,21 @@ struct BreastFeedingView: View {
 
             TimelineView(.periodic(from: .now, by: 60)) { _ in
                 if let side = data.lastSide {
-                    Text("Last: \(side.capitalized) \u{2022} \(formatTimeSince(data.lastTime)) ago")
+                    Text(String(format: L.lastSideAgo, localizedToken(side), formatTimeSince(data.lastTime)))
                         .font(.system(size: 9))
                         .foregroundStyle(.secondary)
                 }
             }
         }
         .padding()
-        .navigationTitle("Breast")
+        .navigationTitle(L.breast)
     }
 }
 
 // MARK: - Bottle Feeding View
 
 struct BottleFeedingView: View {
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     @State private var volumeDouble: Double = 120
     var volumeMl: Int { Int(volumeDouble) }
@@ -1999,7 +2040,7 @@ struct BottleFeedingView: View {
                 Text("\(volumeMl)")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .monospacedDigit()
-                + Text(" ml")
+                + Text(L.ml)
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
 
@@ -2027,15 +2068,15 @@ struct BottleFeedingView: View {
                     .buttonStyle(.plain)
                 }
 
-                Text("Use Digital Crown")
+                Text(L.useDigitalCrown)
                     .font(.system(size: 8))
                     .foregroundStyle(.secondary)
 
                 HStack(spacing: 4) {
-                    ToggleButton(label: "Formula", isActive: contentType == "formula", color: WatchActivityType.feeding.primaryColor) {
+                    ToggleButton(label: L.formula, isActive: contentType == "formula", color: WatchActivityType.feeding.primaryColor) {
                         contentType = "formula"
                     }
-                    ToggleButton(label: "Breast Milk", isActive: contentType == "breastMilk", color: WatchActivityType.feeding.primaryColor) {
+                    ToggleButton(label: L.breastMilk, isActive: contentType == "breastMilk", color: WatchActivityType.feeding.primaryColor) {
                         contentType = "breastMilk"
                     }
                 }
@@ -2047,7 +2088,7 @@ struct BottleFeedingView: View {
                     connector.logBottleFeeding(volumeMl: volumeMl, contentType: contentType)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
                 } label: {
-                    Text("Save")
+                    Text(L.save)
                         .font(.system(size: 11, weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -2059,7 +2100,7 @@ struct BottleFeedingView: View {
         }
         .focusable()
         .digitalCrownRotation($volumeDouble, from: 0, through: 500, by: 5)
-        .navigationTitle("Bottle")
+        .navigationTitle(L.bottle)
     }
 }
 
@@ -2088,7 +2129,7 @@ struct ToggleButton: View {
 struct SleepDetailView: View {
     let data: WatchActivityData.SleepData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var sleepTimer: WatchActiveTimer? {
         allTimers.first { $0.type == "sleep" }
@@ -2103,7 +2144,7 @@ struct SleepDetailView: View {
     var body: some View {
         VStack(spacing: 10) {
             if data.morningConfirmationPending == true {
-                Text("Confirm in SofiBaby")
+                Text(L.confirmInSofiBaby)
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(WatchActivityType.sleep.primaryColor)
                     .multilineTextAlignment(.center)
@@ -2115,22 +2156,22 @@ struct SleepDetailView: View {
                 TimelineView(.periodic(from: .now, by: 60)) { _ in
                     if let awake = awakeMinutes, let window = data.wakeWindowMinutes, window > 0 {
                         VStack(spacing: 4) {
-                            Text("Awake \(formatSleepDuration(awake))")
+                            Text(String(format: L.awakeDuration, formatSleepDuration(awake)))
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(awake >= window ? .red : .primary)
-                            Text("Next nap in \(formatSleepDuration(max(0, window - awake)))")
+                            Text(String(format: L.nextNapIn, formatSleepDuration(max(0, window - awake))))
                                 .font(.system(size: 10))
                                 .foregroundStyle(awake >= window ? .red : WatchActivityType.sleep.primaryColor)
                         }
                     } else if let awake = awakeMinutes {
-                        Text("Awake \(formatSleepDuration(awake))")
+                        Text(String(format: L.awakeDuration, formatSleepDuration(awake)))
                             .font(.system(size: 12, weight: .semibold))
                     }
                 }
 
                 SideButton(
                     letter: "😴",
-                    label: "Sleep",
+                    label: L.sleep,
                     color: WatchActivityType.sleep.primaryColor,
                     isHighlighted: true,
                     isEmoji: true
@@ -2141,14 +2182,14 @@ struct SleepDetailView: View {
 
             TimelineView(.periodic(from: .now, by: 60)) { _ in
                 if sleepTimer == nil, awakeMinutes == nil, let window = data.wakeWindowMinutes, window > 0 {
-                    Text("Wake window: \(formatSleepDuration(window))")
+                    Text(String(format: L.wakeWindowDuration, formatSleepDuration(window)))
                         .font(.system(size: 9))
                         .foregroundStyle(.secondary)
                 }
             }
         }
         .padding()
-        .navigationTitle("Sleep")
+        .navigationTitle(L.sleep)
     }
 }
 
@@ -2156,9 +2197,9 @@ func formatSleepDuration(_ minutes: Int) -> String {
     let h = minutes / 60
     let m = minutes % 60
     if h > 0 {
-        return "\(h)h \(m)m"
+        return String(format: L.durationHoursMinutesShort, h, m)
     }
-    return "\(m)m"
+    return String(format: L.durationMinutesShort, m)
 }
 
 // MARK: - Diaper Detail View
@@ -2177,10 +2218,10 @@ struct DiaperDetailView: View {
 
     var lastDiaperTimeText: String? {
         if let localTime = connector.lastLocalDiaperTime {
-            return "Last: \(formatTimeSinceDate(localTime)) ago"
+            return String(format: L.lastTimeAgo, formatTimeSinceDate(localTime))
         }
         if let lastTime = data.lastTime {
-            return "Last: \(formatTimeSince(lastTime)) ago"
+            return String(format: L.lastTimeAgo, formatTimeSince(lastTime))
         }
         return nil
     }
@@ -2192,7 +2233,7 @@ struct DiaperDetailView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 10))
-                        Text("Syncing...")
+                        Text(L.syncing)
                             .font(.system(size: 10))
                     }
                     .foregroundStyle(.secondary)
@@ -2208,9 +2249,9 @@ struct DiaperDetailView: View {
                 }
 
                 HStack(spacing: 3) {
-                    StatBadge(value: "\(combinedCounts.wet)", label: "Wet", color: WatchActivityType.diaper.primaryColor)
-                    StatBadge(value: "\(combinedCounts.dirty)", label: "Dirty", color: WatchActivityType.diaper.primaryColor)
-                    StatBadge(value: "\(combinedCounts.mixed)", label: "Mixed", color: WatchActivityType.diaper.primaryColor)
+                    StatBadge(value: "\(combinedCounts.wet)", label: L.wet, color: WatchActivityType.diaper.primaryColor)
+                    StatBadge(value: "\(combinedCounts.dirty)", label: L.dirty, color: WatchActivityType.diaper.primaryColor)
+                    StatBadge(value: "\(combinedCounts.mixed)", label: L.mixed, color: WatchActivityType.diaper.primaryColor)
                 }
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
@@ -2235,7 +2276,7 @@ struct DiaperDetailView: View {
             }
             .padding(.horizontal, 4)
         }
-        .navigationTitle("Diaper")
+        .navigationTitle(L.diaper)
         .navigationDestination(isPresented: $showColorPicker) {
             StoolColorPickerView(diaperType: colorPickerDiaperType, connector: connector, navigationPath: $navigationPath)
         }
@@ -2275,7 +2316,7 @@ struct StoolColorPickerView: View {
             }
             .padding(.horizontal, 6)
         }
-        .navigationTitle("Color")
+        .navigationTitle(L.color)
     }
 }
 
@@ -2322,7 +2363,7 @@ struct StatBadge: View {
 // MARK: - Pumping Volume Entry View
 
 struct PumpingVolumeEntryView: View {
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
     @Environment(\.dismiss) private var dismiss
     @State private var volumeDouble: Double = 0
     var volumeMl: Int { Int(volumeDouble) }
@@ -2332,7 +2373,7 @@ struct PumpingVolumeEntryView: View {
             Text("\(volumeMl)")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .monospacedDigit()
-            + Text(" ml")
+            + Text(L.ml)
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
 
@@ -2360,7 +2401,7 @@ struct PumpingVolumeEntryView: View {
                 .buttonStyle(.plain)
             }
 
-            Text("Use Digital Crown")
+            Text(L.useDigitalCrown)
                 .font(.system(size: 8))
                 .foregroundStyle(.secondary)
 
@@ -2368,7 +2409,7 @@ struct PumpingVolumeEntryView: View {
                 connector.stopPumpingWithVolume(volumeMl: volumeMl)
                 dismiss()
             } label: {
-                Text("Save")
+                Text(L.save)
                     .font(.system(size: 11, weight: .semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -2378,7 +2419,7 @@ struct PumpingVolumeEntryView: View {
         }
         .focusable()
         .digitalCrownRotation($volumeDouble, from: 0, through: 500, by: 5)
-        .navigationTitle("Volume")
+        .navigationTitle(L.volume)
     }
 }
 
@@ -2386,7 +2427,7 @@ struct PumpingVolumeEntryView: View {
 
 struct PumpingActiveCard: View {
     let timer: WatchActiveTimer
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
     @Binding var showVolumeEntry: Bool
 
     var startDate: Date? {
@@ -2430,12 +2471,12 @@ struct PumpingActiveCard: View {
 
             HStack(spacing: 4) {
                 if let context = timer.context {
-                    Text(isRemote ? context : context.capitalized)
+                    Text(isRemote ? context : localizedToken(context))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
                 if isPaused {
-                    Text("Paused")
+                    Text(L.paused)
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(.orange)
                 }
@@ -2451,7 +2492,7 @@ struct PumpingActiveCard: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "arrow.left.arrow.right")
                                     .font(.system(size: 8))
-                                Text("Switch")
+                                Text(L.switchLabel)
                                     .font(.system(size: 10, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)
@@ -2467,7 +2508,7 @@ struct PumpingActiveCard: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "play.fill")
                                     .font(.system(size: 8))
-                                Text("Resume")
+                                Text(L.resume)
                                     .font(.system(size: 10, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)
@@ -2482,7 +2523,7 @@ struct PumpingActiveCard: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "pause.fill")
                                     .font(.system(size: 8))
-                                Text("Pause")
+                                Text(L.pause)
                                     .font(.system(size: 10, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)
@@ -2494,7 +2535,7 @@ struct PumpingActiveCard: View {
                     Button {
                         showVolumeEntry = true
                     } label: {
-                        Text("Stop")
+                        Text(L.stop)
                             .font(.system(size: 10, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
@@ -2515,7 +2556,7 @@ struct PumpingActiveCard: View {
 struct PumpingDetailView: View {
     let data: WatchActivityData.PumpingData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
     @State private var showVolumeEntry = false
 
     var pumpingTimer: WatchActiveTimer? {
@@ -2531,14 +2572,14 @@ struct PumpingDetailView: View {
             if let timer = pumpingTimer {
                 PumpingActiveCard(timer: timer, connector: connector, showVolumeEntry: $showVolumeEntry)
             } else {
-                Text("\(suggested.capitalized) suggested")
+                Text(String(format: L.suggestedSide, localizedToken(suggested)))
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(WatchActivityType.pumping.primaryColor)
 
                 HStack(spacing: 24) {
                     SideButton(
                         letter: "L",
-                        label: "Left",
+                        label: L.left,
                         color: WatchActivityType.pumping.primaryColor,
                         isHighlighted: suggested == "left"
                     ) {
@@ -2547,7 +2588,7 @@ struct PumpingDetailView: View {
 
                     SideButton(
                         letter: "R",
-                        label: "Right",
+                        label: L.right,
                         color: WatchActivityType.pumping.primaryColor,
                         isHighlighted: suggested == "right"
                     ) {
@@ -2556,12 +2597,12 @@ struct PumpingDetailView: View {
                 }
             }
 
-            Text("Today: \(data.todayVolumeMl) ml")
+            Text(String(format: L.todayVolumeMl, data.todayVolumeMl))
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .navigationTitle("Pumping")
+        .navigationTitle(L.pumping)
         .navigationDestination(isPresented: $showVolumeEntry) {
             PumpingVolumeEntryView(connector: connector)
         }
@@ -2573,7 +2614,7 @@ struct PumpingDetailView: View {
 struct TummyTimeDetailView: View {
     let data: WatchActivityData.TummyTimeData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var tummyTimer: WatchActiveTimer? {
         allTimers.first { $0.type == "tummyTime" }
@@ -2590,7 +2631,7 @@ struct TummyTimeDetailView: View {
                     VStack(spacing: 4) {
                         Image(systemName: "play.fill")
                             .font(.system(size: 22))
-                        Text("Start")
+                        Text(L.start)
                             .font(.system(size: 11, weight: .medium))
                     }
                     .foregroundStyle(.white)
@@ -2601,12 +2642,12 @@ struct TummyTimeDetailView: View {
                 .buttonStyle(.plain)
             }
 
-            Text("Today: \(data.todayMinutes)m")
+            Text(String(format: L.todayMinutes, data.todayMinutes))
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .navigationTitle("Tummy Time")
+        .navigationTitle(L.tummyTime)
     }
 }
 

@@ -11,6 +11,7 @@ interface WatchConnectivityModule {
     errCb?: (error: Error) => void
   ) => void;
   getReachability: () => Promise<boolean>;
+  getIsWatchAppInstalled: () => Promise<boolean>;
 }
 
 let watchModule: WatchConnectivityModule | null = null;
@@ -31,6 +32,7 @@ async function getWatchConnectivityModule(): Promise<WatchConnectivityModule | n
         updateApplicationContext: connectivity.updateApplicationContext,
         sendMessage: connectivity.sendMessage,
         getReachability: connectivity.getReachability,
+        getIsWatchAppInstalled: connectivity.getIsWatchAppInstalled,
       };
       return watchModule;
     }
@@ -39,6 +41,74 @@ async function getWatchConnectivityModule(): Promise<WatchConnectivityModule | n
   }
 
   return null;
+}
+
+// The Watch is a separate device, so the App Group cannot carry the caregiver's
+// language to it. It rides the application context instead. That context replaces
+// the whole dictionary on every call, so a language-only update would erase the
+// widget data and Supabase credentials the Watch depends on; a language change
+// republishes the last context with the new value rather than a bare one.
+let currentLanguage: string | null = null;
+let lastContext: WatchPayload | null = null;
+
+let languageAwaitingWatch = false;
+
+export async function setWatchLanguage(language: string): Promise<void> {
+  currentLanguage = language;
+
+  const module = await getWatchConnectivityModule();
+  if (!module) return;
+
+  // The provider publishes during launch, while WCSession is still activating.
+  // A context sent then is discarded and nothing reports the failure to JS, so
+  // the language would be lost until some later sync happened to carry it.
+  if (!(await watchCanReceive(module))) {
+    languageAwaitingWatch = true;
+    return;
+  }
+
+  // With no cached context there is nothing to preserve, so the language travels
+  // on its own. The Watch persists credentials on receipt, so a context without
+  // them does not revoke what it already stored.
+  await publishApplicationContext(lastContext ? { ...lastContext, language } : { language });
+}
+
+/** Deliver a language that was set before the watch could receive it. */
+export async function flushPendingWatchLanguage(): Promise<void> {
+  if (!languageAwaitingWatch || !currentLanguage) return;
+  languageAwaitingWatch = false;
+  await setWatchLanguage(currentLanguage);
+}
+
+async function watchCanReceive(module: WatchConnectivityModule): Promise<boolean> {
+  try {
+    return await module.getIsWatchAppInstalled();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Forget the cached application context.
+ *
+ * The cache holds the signed-in session's access token so a language change can
+ * republish it instead of erasing it. Once the session ends that token must not
+ * be sent again: on a shared device the next caregiver changing language would
+ * otherwise hand the Watch the previous account's still-valid credentials, and
+ * the Watch treats any received credentials as fresh.
+ */
+export function clearWatchContext(): void {
+  lastContext = null;
+}
+
+async function publishApplicationContext(context: WatchPayload): Promise<void> {
+  const module = await getWatchConnectivityModule();
+  if (!module) {
+    return;
+  }
+
+  lastContext = context;
+  module.updateApplicationContext(context);
 }
 
 export async function syncToWatch(data: WidgetData, watchData?: WatchData, authContext?: WatchAuthContext): Promise<void> {
@@ -51,6 +121,10 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
     const context: WatchPayload = {
       widgetData: JSON.stringify(data),
     };
+
+    if (currentLanguage) {
+      context.language = currentLanguage;
+    }
 
     if (watchData) {
       context.watchData = JSON.stringify(watchData);
@@ -69,6 +143,7 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
       }
     }
 
+    lastContext = context;
     module.updateApplicationContext(context);
     console.log("[WatchService] Synced data to watch");
   } catch (error) {
@@ -167,8 +242,17 @@ export async function startWatchMessageListening(): Promise<(() => void) | null>
       }
     );
 
+    // The watch reports itself installed once its session is up, which is the
+    // point a language held back during launch can actually be delivered.
+    const unsubscribeInstalled = connectivity.watchEvents.addListener("installed", () => {
+      void flushPendingWatchLanguage();
+    });
+
+    void flushPendingWatchLanguage();
+
     console.log("[WatchService] Watch message listening started");
     return () => {
+      unsubscribeInstalled();
       unsubscribeMessage();
       unsubscribeUserInfo();
     };

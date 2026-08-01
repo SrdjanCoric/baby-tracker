@@ -71,11 +71,11 @@ func activityEmoji(for type: String) -> String {
 
 func activityLabel(for type: String) -> String {
     switch type {
-    case "feeding": return "Feeding"
-    case "sleep": return "Sleeping"
-    case "pumping": return "Pumping"
-    case "tummyTime": return "Tummy Time"
-    default: return "Activity"
+    case "feeding": return L.feeding
+    case "sleep": return L.sleeping
+    case "pumping": return L.pumping
+    case "tummyTime": return L.tummyTime
+    default: return L.activityGeneric
     }
 }
 
@@ -85,19 +85,19 @@ func contextLabel(for context: String?, activityType: String) -> String {
     switch activityType {
     case "feeding", "pumping":
         switch context {
-        case "left": return "Left side"
-        case "right": return "Right side"
-        case "both": return "Both sides"
-        default: return context
+        case "left": return L.leftSide
+        case "right": return L.rightSide
+        case "both": return L.bothSides
+        default: return localizedToken(context)
         }
     case "sleep":
         switch context {
-        case "nap": return "Nap"
-        case "night": return "Night sleep"
-        default: return context
+        case "nap": return L.nap
+        case "night": return L.nightSleep
+        default: return localizedToken(context)
         }
     default:
-        return context
+        return localizedToken(context)
     }
 }
 
@@ -120,7 +120,7 @@ struct TimerLiveActivity: Widget {
                                 .font(.caption)
                                 .fontWeight(.semibold)
                             if context.state.isPaused {
-                                Text("Paused")
+                                Text(L.paused)
                                     .font(.caption2)
                                     .fontWeight(.medium)
                                     .foregroundStyle(pausedAmberColor)
@@ -162,7 +162,7 @@ struct TimerLiveActivity: Widget {
                         Spacer()
 
                         Link(destination: URL(string: "sofibaby://\(context.attributes.activityType)")!) {
-                            Text("Open")
+                            Text(L.openLabel)
                                 .font(.caption)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.white)
@@ -221,7 +221,7 @@ struct LockScreenLiveActivityView: View {
                     .foregroundStyle(.secondary)
 
                 if context.state.isPaused {
-                    Text("Paused")
+                    Text(L.paused)
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(pausedAmberColor)
@@ -251,7 +251,7 @@ struct LockScreenLiveActivityView: View {
                         .foregroundStyle(activityAccentColor(for: context.attributes.activityType))
                 }
 
-                Text("Started \(context.attributes.startTime, style: .time)")
+                (Text(L.started) + Text(verbatim: " ") + Text(context.attributes.startTime, style: .time))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
