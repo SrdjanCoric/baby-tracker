@@ -676,6 +676,37 @@ describe("calculateSleepSummary", () => {
     expect(result.nightWakingsPerNight).toBe(1);
   });
 
+  it("excludes the incomplete current night before day-start", () => {
+    const now = new Date(2026, 7, 1, 8, 0, 0);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2026, 7, 30, 21, 0),
+        endedAt: localISO(2026, 7, 31, 7, 0),
+        type: "night",
+        durationSeconds: 10 * 3600,
+      }),
+      makeSleep({
+        startedAt: localISO(2026, 7, 31, 20, 35),
+        endedAt: localISO(2026, 8, 1, 0, 20),
+        type: "night",
+        durationSeconds: 3 * 3600 + 45 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2026, 8, 1, 2, 15),
+        endedAt: localISO(2026, 8, 1, 6, 55),
+        type: "night",
+        durationSeconds: 4 * 3600 + 40 * 60,
+      }),
+    ];
+
+    const result = calculateSleepSummary(sleeps, 7, now, 9, 21);
+
+    expect(result.bedtimeTrend).toHaveLength(1);
+    expect(result.wakeTimeTrend).toHaveLength(1);
+    expect(result.avgBedtime?.getHours()).toBe(21);
+    expect(result.avgWakeTime?.getHours()).toBe(7);
+  });
+
   it("assigns an oldest-boundary overlap to the selected window without an eighth night", () => {
     const now = new Date(2026, 7, 1, 18, 0, 0);
     const sleeps = Array.from({ length: 6 }, (_, index) => {

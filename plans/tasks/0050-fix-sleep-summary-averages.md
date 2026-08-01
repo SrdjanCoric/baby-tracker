@@ -27,22 +27,22 @@ Preserve the existing interval-union behavior, automatic Nap/Night classificatio
 
 **Applicable references**: `references/02-testing.md`, `references/10-definition-of-done.md`
 
-- [ ] Add deterministic, timezone-controlled regression tests through production calculation and range-loading interfaces.
-- [ ] Cover completed-window selection, incomplete day and night exclusion, exact range boundaries, fragmented nights, boundary overlap, circular arithmetic, and both time formats.
-- [ ] Keep the permanent proof synthetic, focused, and runnable through existing root test commands.
+- [x] Add deterministic, timezone-controlled regression tests through production calculation and range-loading interfaces.
+- [x] Cover completed-window selection, incomplete day and night exclusion, exact range boundaries, fragmented nights, boundary overlap, circular arithmetic, and both time formats.
+- [x] Keep the permanent proof synthetic, focused, and runnable through existing root test commands.
 
 ## Implementation work
 
-- [ ] Add a pure helper that derives the seven most recent completed sleep-day keys and their exact local start/end boundaries from pinned `now` and `dayStartHour`.
-- [ ] Update sleep-summary range loading to request the complete selected window while retaining overlap-query support for a session that starts before the oldest boundary and ends inside it.
-- [ ] Make summary totals, daily bars, and denominator selection use the same seven completed sleep-day keys; never add the current incomplete key.
-- [ ] Preserve existing missing-data semantics by averaging only selected completed days that contain sleep data.
-- [ ] Group calculated night sessions by their selected sleep-day key rather than deriving a second key from `dayEndHour` and the raw start hour.
-- [ ] Restrict bedtime, wake-time, trend, and night-waking inputs to nights belonging to the selected completed-day window.
-- [ ] Select the earliest start and latest end across every included fragment of a night, including a night-classified session that begins shortly before `dayEndHour`.
-- [ ] Keep interval union, local timezone behavior, circular means, and stored-type-independent automatic classification unchanged.
-- [ ] Add focused utility, statistics-range, and Sleep Statistics component regressions, then run canonical non-device checks.
-- [ ] Inspect README behavior documentation after implementation and update it only if the completed-day summary contract belongs in existing user-facing sleep documentation.
+- [x] Add a pure helper that derives the seven most recent completed sleep-day keys and their exact local start/end boundaries from pinned `now` and `dayStartHour`.
+- [x] Update sleep-summary range loading to request the complete selected window while retaining overlap-query support for a session that starts before the oldest boundary and ends inside it.
+- [x] Make summary totals, daily bars, and denominator selection use the same seven completed sleep-day keys; never add the current incomplete key.
+- [x] Preserve existing missing-data semantics by averaging only selected completed days that contain sleep data.
+- [x] Group calculated night sessions by their selected sleep-day key rather than deriving a second key from `dayEndHour` and the raw start hour.
+- [x] Restrict bedtime, wake-time, trend, and night-waking inputs to nights belonging to the selected completed-day window.
+- [x] Select the earliest start and latest end across every included fragment of a night, including a night-classified session that begins shortly before `dayEndHour`.
+- [x] Keep interval union, local timezone behavior, circular means, and stored-type-independent automatic classification unchanged.
+- [x] Add focused utility, statistics-range, and Sleep Statistics component regressions, then run canonical non-device checks.
+- [x] Inspect README behavior documentation after implementation and update it only if the completed-day summary contract belongs in existing user-facing sleep documentation.
 
 ## Human checkpoints
 
@@ -52,12 +52,22 @@ Preserve the existing interval-union behavior, automatic Nap/Night classificatio
 
 ## Acceptance criteria
 
-- [ ] At any time before the next configured day-start boundary, the current sleep day and current night are excluded from Past 7 Days aggregates and trends.
-- [ ] Past 7 Days uses the seven most recent completed sleep-day keys and cannot produce an eighth bedtime or wake input.
-- [ ] With `dayStartHour=9`, `dayEndHour=21`, and synthetic now at 18:00 on August 1, the selected completed keys are July 25 through July 31; August 1 is excluded.
-- [ ] A night-classified session from 20:35 to 00:20 plus a later fragment from 02:15 to 06:55 is one night whose selected bedtime is 20:35 and selected wake is 06:55.
-- [ ] A record overlapping the oldest selected boundary contributes only to an included selected night and never creates a preceding eighth night.
-- [ ] Bedtimes `21:00`, `23:00`, and `01:00` still average circularly to `23:00`, with correct local-time grouping and 12/24-hour display.
-- [ ] Overlapping completed sleeps remain unioned once, unfinished sleeps remain excluded, and complete empty days retain existing missing-data behavior.
-- [ ] Focused utility, range, and component tests fail against the old behavior and pass with the fix; canonical non-device validation passes.
-- [ ] No production-derived sleep data, diagnostic ledger, baseline-comparison harness, or unrelated sleep-prediction behavior is added.
+- [x] At any time before the next configured day-start boundary, the current sleep day and current night are excluded from Past 7 Days aggregates and trends.
+- [x] Past 7 Days uses the seven most recent completed sleep-day keys and cannot produce an eighth bedtime or wake input.
+- [x] With `dayStartHour=9`, `dayEndHour=21`, and synthetic now at 18:00 on August 1, the selected completed keys are July 25 through July 31; August 1 is excluded.
+- [x] A night-classified session from 20:35 to 00:20 plus a later fragment from 02:15 to 06:55 is one night whose selected bedtime is 20:35 and selected wake is 06:55.
+- [x] A record overlapping the oldest selected boundary contributes only to an included selected night and never creates a preceding eighth night.
+- [x] Bedtimes `21:00`, `23:00`, and `01:00` still average circularly to `23:00`, with correct local-time grouping and 12/24-hour display.
+- [x] Overlapping completed sleeps remain unioned once, unfinished sleeps remain excluded, and complete empty days retain existing missing-data behavior.
+- [x] Focused utility, range, and component tests fail against the old behavior and pass with the fix; canonical non-device validation passes.
+- [x] No production-derived sleep data, diagnostic ledger, baseline-comparison harness, or unrelated sleep-prediction behavior is added.
+
+## Completion record
+
+- **Implementation**: `src/utils/sleep-summary-window.ts` now owns completed local sleep-day keys and boundaries for 7/14/30-day periods. `src/utils/sleep-patterns.ts` uses that window for totals, bars, nap averages, fragmented-night grouping, trends, and boundary overlaps. Both summary screens load the same exact range and refresh it when day-start passes.
+- **Decision**: Completed-day semantics apply consistently to all selectable 7, 14, and 30-day periods. The adjacent average audit confirmed that every affected displayed sleep average shares these helpers; no non-sleep statistic uses the faulty calculation.
+- **Repository guidelines**: Loaded `references/00-overview.md`, `references/02-testing.md`, and `references/10-definition-of-done.md`. Synthetic production-interface regressions cover the declared boundary, average, formatting, and determinism requirements.
+- **Review**: One compact Standards/Spec/Bug panel ran; security was skipped because no relevant trust-boundary surface changed. Remediation added day-start refresh consistency, explicit incomplete-night proof, a timezone-controlled focused root command, and timezone-independent component range setup. All findings are fixed; no accepted risks or deferred concerns remain.
+- **README**: No update. Existing sleep documentation describes predictions and overlap union; the internal completed-day summary denominator does not change setup or usage documentation.
+- **Automated proof**: `npm run test:sleep-summary` passed (104 unit tests and 9 component tests). `npm run check:code` passed the complete canonical non-device suite. Focused lint and typecheck also passed.
+- **Manual proof**: Pending the release-owner checkpoint below.

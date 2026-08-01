@@ -20,6 +20,7 @@
     "test:unit:watch": "vitest",
     "test:component": "jest",
     "test:component:watch": "jest --watch",
+    "test:sleep-summary": "TZ=America/New_York vitest run src/utils/statistics-ranges.test.ts src/utils/sleep-patterns.test.ts && TZ=America/New_York jest --runInBand --runTestsByPath src/components/sleep-patterns/SummaryView.component.test.tsx src/components/stats/sleep/SleepStatsContainer.component.test.tsx 'app/(tabs)/sleep-patterns.component.test.tsx'",
     "test:security": "vitest run src/__tests__/security/",
     "test:sync": "vitest run src/services/sync/",
     "test:sql": "node scripts/run-sql-vectors.mjs",

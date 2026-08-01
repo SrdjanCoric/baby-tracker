@@ -151,6 +151,7 @@ function SleepSplitBar({
 
 export function SummaryView({
   sleeps,
+  now,
   timeFormat,
   dayStartHour,
   dayEndHour,
@@ -162,6 +163,7 @@ export function SummaryView({
   onPeriodChange,
 }: {
   sleeps: StoredSleepEntry[];
+  now: Date;
   timeFormat: TimeFormat;
   dayStartHour: number;
   dayEndHour: number;
@@ -176,7 +178,6 @@ export function SummaryView({
   const tFn = t as TranslateFn;
 
   const { data, dailyBars } = useMemo(() => {
-    const now = new Date();
     return {
       data: calculateSleepSummary(sleeps, period, now, dayStartHour, dayEndHour),
       dailyBars: buildDailySleepBars(
@@ -188,7 +189,7 @@ export function SummaryView({
         locale
       ),
     };
-  }, [sleeps, period, dayStartHour, dayEndHour, locale]);
+  }, [sleeps, period, now, dayStartHour, dayEndHour, locale]);
 
   const goalRange = useMemo(
     () => (birthDate ? getDefaultSleepGoalForAge(new Date(birthDate)) : null),

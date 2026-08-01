@@ -96,6 +96,7 @@ function renderSummary(timeFormat: "12h" | "24h") {
   return render(
     <SummaryView
       sleeps={sleeps}
+      now={new Date(2026, 7, 1, 18, 0, 0)}
       timeFormat={timeFormat}
       dayStartHour={9}
       dayEndHour={21}
@@ -113,6 +114,7 @@ describe("SummaryView", () => {
     jest.useRealTimers();
   });
 
+
   it("shows only completed sleep days and the evening fragment as bedtime in both formats", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(2026, 7, 1, 18, 0, 0));
@@ -129,6 +131,7 @@ describe("SummaryView", () => {
     rerender(
       <SummaryView
         sleeps={sleeps}
+        now={new Date(2026, 7, 1, 18, 0, 0)}
         timeFormat="12h"
         dayStartHour={9}
         dayEndHour={21}

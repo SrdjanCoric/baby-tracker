@@ -45,6 +45,10 @@ jest.mock("@/contexts/time-format-context", () => ({
   useTimeFormat: () => ({ timeFormat: "24h" }),
 }));
 
+jest.mock("@/hooks", () => ({
+  useTimeRefresh: () => 0,
+}));
+
 jest.mock("@/utils/sleepGoals", () => ({
   isUnderThreeMonths: () => true,
 }));
