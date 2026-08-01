@@ -188,6 +188,7 @@ Durable decisions that apply across all tasks:
 - [x] 0050 · Fix incomplete-day and fragmented-night sleep summaries (after 0047) → tasks/done/0050-fix-sleep-summary-averages.md
 - [~] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0050) → tasks/0051-sweep-post-release-app-regressions.md
 - [ ] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
+- [ ] 0053 · Include the full selected range in exports and reports (after 0051) → tasks/0053-resolve-export-report-ranges.md
 
 ## Workflow status
 

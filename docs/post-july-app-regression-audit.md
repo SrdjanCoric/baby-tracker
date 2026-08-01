@@ -143,10 +143,12 @@ household fixture already qualifies (1,660 feedings, 1,367 sleep sessions).
 6. Confirming step: browse Timeline back through that range, re-export, and the missing records appear — which
    also demonstrates the data is present server-side and only the export path is at fault.
 
-**Recommended follow-up boundary.** One task: make export and reports resolve their selected range
-through the activity range loader before reading storage, and derive the displayed count from the same
-resolved set. Fixing the export path alone is sufficient — the loader itself is correct, so the truncated
-initial pull needs no change.
+**Recommended follow-up boundary.** Planned as **Task 0053 · Include the full selected range in exports
+and reports** (`plans/tasks/0053-resolve-export-report-ranges.md`). It makes export and reports resolve
+their selected range through the per-collection loaders before reading storage, and derives the displayed
+count from the same resolved set. Fixing the export path alone is sufficient — the loader itself is
+correct, so the truncated initial pull needs no change. `scripts/audit/export-range-coverage.mjs` exits 0
+once that task lands.
 
 **Existing coverage**: none. Export tests mock the storage layer, so the truncation is invisible to them.
 
