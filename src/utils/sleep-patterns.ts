@@ -1,5 +1,6 @@
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import { unionCompletedSleepIntervals } from "@/utils/sleep-intervals";
+import { getCompletedSleepDayWindow } from "@/utils/sleep-summary-window";
 
 export interface DayBlock {
   topPx: number;
@@ -325,23 +326,6 @@ export function buildWeekViewData(
   return columns;
 }
 
-function getNightKey(
-  startDate: Date,
-  dayStartHour: number,
-  dayEndHour: number
-): string | null {
-  const hour = startDate.getHours();
-  if (hour >= dayEndHour) {
-    return localDateKey(startDate);
-  }
-  if (hour < dayStartHour) {
-    const prev = new Date(startDate);
-    prev.setDate(prev.getDate() - 1);
-    return localDateKey(prev);
-  }
-  return null;
-}
-
 function circularTimeMean(minutesArray: number[]): number {
   const n = minutesArray.length;
   if (n === 0) return 0;
@@ -380,13 +364,13 @@ export function calculateSleepSummary(
   dayStartHour: number = 6,
   dayEndHour: number = 19
 ): SleepSummary {
-  const cutoff = new Date(now);
-  cutoff.setDate(cutoff.getDate() - days);
-  cutoff.setHours(0, 0, 0, 0);
-
-  const recentSleeps = unionCompletedSleepIntervals(sleeps).filter((s) => {
-    const start = new Date(s.startedAt);
-    return start >= cutoff && s.endedAt;
+  const window = getCompletedSleepDayWindow(days, now, dayStartHour);
+  const selectedKeys = new Set(window.keys);
+  const recentSleeps = unionCompletedSleepIntervals(sleeps).filter((sleep) => {
+    if (!sleep.endedAt) return false;
+    const start = new Date(sleep.startedAt);
+    const end = new Date(sleep.endedAt);
+    return start < window.end && end > window.start;
   });
 
   if (recentSleeps.length === 0) {
@@ -413,21 +397,17 @@ export function calculateSleepSummary(
       nightSeconds: number;
       napCount: number;
       napSeconds: number;
-      nightSessions: number;
     }
   > = new Map();
 
-  for (let i = 0; i < days; i++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const key = sleepDayKey(d, dayStartHour);
+  for (const key of window.keys) {
+    const [year, month, day] = key.split("-").map(Number);
     dailyData.set(key, {
-      date: new Date(d),
+      date: new Date(year, month - 1, day, 12, 0, 0),
       totalSeconds: 0,
       nightSeconds: 0,
       napCount: 0,
       napSeconds: 0,
-      nightSessions: 0,
     });
   }
 
@@ -447,15 +427,18 @@ export function calculateSleepSummary(
     }
 
     const startDate = new Date(sleep.startedAt);
-    const startKey = sleepDayKey(startDate, dayStartHour);
-    const startDay = dailyData.get(startKey);
-    if (startDay) {
-      const autoType = classifySleepByTimeRange(startDate, new Date(sleep.endedAt!), dayStartHour, dayEndHour);
-      if (autoType === "night") {
-        startDay.nightSessions++;
-      } else {
-        startDay.napCount++;
-      }
+    const groupingStart = new Date(
+      Math.max(startDate.getTime(), window.start.getTime())
+    );
+    const startDay = dailyData.get(sleepDayKey(groupingStart, dayStartHour));
+    const autoType = classifySleepByTimeRange(
+      startDate,
+      new Date(sleep.endedAt!),
+      dayStartHour,
+      dayEndHour
+    );
+    if (startDay && autoType === "nap") {
+      startDay.napCount++;
     }
   }
 
@@ -469,8 +452,11 @@ export function calculateSleepSummary(
   });
   for (const sleep of nightSleeps) {
     const startDate = new Date(sleep.startedAt);
-    const nightKey = getNightKey(startDate, dayStartHour, dayEndHour);
-    if (!nightKey) continue;
+    const groupingStart = new Date(
+      Math.max(startDate.getTime(), window.start.getTime())
+    );
+    const nightKey = sleepDayKey(groupingStart, dayStartHour);
+    if (!selectedKeys.has(nightKey)) continue;
 
     let entry = nightlyData.get(nightKey);
     if (!entry) {
@@ -589,21 +575,18 @@ export function buildDailySleepBars(
   dayEndHour: number = 19,
   _locale: string = "en"
 ): DailySleepBar[] {
-  const cutoff = new Date(now);
-  cutoff.setDate(cutoff.getDate() - days);
-  cutoff.setHours(0, 0, 0, 0);
-
-  const recentSleeps = unionCompletedSleepIntervals(sleeps).filter((s) => {
-    const start = new Date(s.startedAt);
-    return start >= cutoff && s.endedAt;
+  const window = getCompletedSleepDayWindow(days, now, dayStartHour);
+  const recentSleeps = unionCompletedSleepIntervals(sleeps).filter((sleep) => {
+    if (!sleep.endedAt) return false;
+    const start = new Date(sleep.startedAt);
+    const end = new Date(sleep.endedAt);
+    return start < window.end && end > window.start;
   });
 
   const dailyMap = new Map<string, { nightSeconds: number; napSeconds: number }>();
 
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    dailyMap.set(sleepDayKey(d, dayStartHour), { nightSeconds: 0, napSeconds: 0 });
+  for (const key of window.keys) {
+    dailyMap.set(key, { nightSeconds: 0, napSeconds: 0 });
   }
 
   for (const sleep of recentSleeps) {

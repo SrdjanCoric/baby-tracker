@@ -54,7 +54,7 @@ export default function SleepPatternsScreen() {
   const requestedRange = useMemo(() => {
     if (activeTab === "day") return getSleepDayRange(selectedDate, dayStartHour);
     if (activeTab === "week") return getSleepWeekRange(weekEndDate, dayStartHour);
-    return getSleepSummaryRange(summaryPeriod);
+    return getSleepSummaryRange(summaryPeriod, new Date(), dayStartHour);
   }, [activeTab, dayStartHour, selectedDate, summaryPeriod, weekEndDate]);
   const rangeStatus = getSleepRangeStatus(requestedRange);
   const hasSleepData = selectedSleeps.some((sleep) =>

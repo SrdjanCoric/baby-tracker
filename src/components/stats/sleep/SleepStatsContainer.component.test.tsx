@@ -174,16 +174,16 @@ describe("SleepStatsContainer", () => {
 
     await waitFor(() => {
       expect(mockLoadSleepRange).toHaveBeenCalledWith({
-        start: new Date(2026, 6, 7, 0, 0, 0, 0).toISOString(),
-        end: new Date(2026, 6, 15, 0, 0, 0, 0).toISOString(),
+        start: new Date(2026, 6, 7, 6, 0, 0, 0).toISOString(),
+        end: new Date(2026, 6, 14, 6, 0, 0, 0).toISOString(),
       });
     });
 
     fireEvent.press(screen.getByTestId("select-30-days"));
     await waitFor(() => {
       expect(mockLoadSleepRange).toHaveBeenLastCalledWith({
-        start: new Date(2026, 5, 14, 0, 0, 0, 0).toISOString(),
-        end: new Date(2026, 6, 15, 0, 0, 0, 0).toISOString(),
+        start: new Date(2026, 5, 14, 6, 0, 0, 0).toISOString(),
+        end: new Date(2026, 6, 14, 6, 0, 0, 0).toISOString(),
       });
     });
 

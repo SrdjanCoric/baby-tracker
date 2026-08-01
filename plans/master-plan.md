@@ -185,7 +185,7 @@ Durable decisions that apply across all tasks:
 - [x] 0047 · Discover and confirm all post-July 5 regressions before fixes → tasks/done/0047-discover-post-july-regressions.md
 - [x] 0048 · Attribute feeding stop, Timeline, and Live Activity regressions (after 0047) → tasks/done/0048-attribute-feeding-stop-regressions.md
 - [-] 0049 · Attribute Watch timer and history regressions (deferred by owner; after 0047) → tasks/0049-attribute-watch-regressions.md
-- [ ] 0050 · Fix incomplete-day and fragmented-night sleep summaries (after 0047) → tasks/0050-fix-sleep-summary-averages.md
+- [~] 0050 · Fix incomplete-day and fragmented-night sleep summaries (after 0047) → tasks/0050-fix-sleep-summary-averages.md
 - [ ] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0049, 0050) → tasks/0051-sweep-post-release-app-regressions.md
 - [ ] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
 

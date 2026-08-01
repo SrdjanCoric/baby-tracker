@@ -175,15 +175,20 @@ export function SummaryView({
   const { t } = useTranslation();
   const tFn = t as TranslateFn;
 
-  const data = useMemo(
-    () => calculateSleepSummary(sleeps, period, new Date(), dayStartHour, dayEndHour),
-    [sleeps, period, dayStartHour, dayEndHour]
-  );
-
-  const dailyBars = useMemo(
-    () => buildDailySleepBars(sleeps, period, new Date(), dayStartHour, dayEndHour, locale),
-    [sleeps, period, dayStartHour, dayEndHour, locale]
-  );
+  const { data, dailyBars } = useMemo(() => {
+    const now = new Date();
+    return {
+      data: calculateSleepSummary(sleeps, period, now, dayStartHour, dayEndHour),
+      dailyBars: buildDailySleepBars(
+        sleeps,
+        period,
+        now,
+        dayStartHour,
+        dayEndHour,
+        locale
+      ),
+    };
+  }, [sleeps, period, dayStartHour, dayEndHour, locale]);
 
   const goalRange = useMemo(
     () => (birthDate ? getDefaultSleepGoalForAge(new Date(birthDate)) : null),

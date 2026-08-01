@@ -479,7 +479,7 @@ describe("calculateSleepSummary", () => {
   });
 
   it("calculates nap averages", () => {
-    const now = new Date(2025, 2, 5, 18, 0, 0);
+    const now = new Date(2025, 2, 6, 18, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 5, 10, 0),
@@ -500,7 +500,7 @@ describe("calculateSleepSummary", () => {
   });
 
   it("handles days with no sleep data", () => {
-    const now = new Date(2025, 2, 5, 12, 0, 0);
+    const now = new Date(2025, 2, 6, 12, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 5, 10, 0),
@@ -514,8 +514,58 @@ describe("calculateSleepSummary", () => {
     expect(result.avgTotalSleepSeconds).toBe(3600);
   });
 
+  it.each([7, 14, 30])(
+    "uses the %i most recent completed sleep days for every average and bar",
+    (days) => {
+      const now = new Date(2026, 7, 1, 18, 0, 0);
+      const completedSleeps = Array.from({ length: days }, (_, index) => {
+        const date = new Date(2026, 6, 31 - index, 21, 0, 0);
+        const end = new Date(date);
+        end.setDate(end.getDate() + 1);
+        end.setHours(7, 0, 0, 0);
+        return makeSleep({
+          startedAt: date.toISOString(),
+          endedAt: end.toISOString(),
+          type: "night",
+          durationSeconds: 10 * 3600,
+        });
+      });
+      const partialCurrentDay = makeSleep({
+        startedAt: localISO(2026, 8, 1, 12, 0),
+        endedAt: localISO(2026, 8, 1, 13, 0),
+        type: "nap",
+        durationSeconds: 3600,
+      });
+
+      const summary = calculateSleepSummary(
+        [...completedSleeps, partialCurrentDay],
+        days,
+        now,
+        9,
+        21
+      );
+      const bars = buildDailySleepBars(
+        [...completedSleeps, partialCurrentDay],
+        days,
+        now,
+        9,
+        21
+      );
+
+      expect(summary.avgTotalSleepSeconds).toBe(10 * 3600);
+      expect(summary.avgNapsPerDay).toBe(0);
+      expect(summary.avgNapDurationSeconds).toBe(0);
+      expect(bars).toHaveLength(days);
+      expect(bars[0].dateKey).toBe(
+        days === 7 ? "2026-07-25" : days === 14 ? "2026-07-18" : "2026-07-02"
+      );
+      expect(bars.at(-1)?.dateKey).toBe("2026-07-31");
+      expect(bars.some((bar) => bar.dateKey === "2026-08-01")).toBe(false);
+    }
+  );
+
   it("uses interval union for overlapping sleep averages", () => {
-    const now = new Date(2025, 2, 5, 18, 0, 0);
+    const now = new Date(2025, 2, 6, 18, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 5, 10, 0),
@@ -598,6 +648,105 @@ describe("calculateSleepSummary", () => {
     expect(result.nightWakingsPerNight).toBe(1);
   });
 
+  it("groups every fragment by its selected sleep-day key", () => {
+    const now = new Date(2026, 7, 1, 18, 0, 0);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2026, 7, 31, 20, 35),
+        endedAt: localISO(2026, 8, 1, 0, 20),
+        type: "nap",
+        durationSeconds: 3 * 3600 + 45 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2026, 8, 1, 2, 15),
+        endedAt: localISO(2026, 8, 1, 6, 55),
+        type: "nap",
+        durationSeconds: 4 * 3600 + 40 * 60,
+      }),
+    ];
+
+    const result = calculateSleepSummary(sleeps, 7, now, 9, 21);
+
+    expect(result.bedtimeTrend).toHaveLength(1);
+    expect(result.wakeTimeTrend).toHaveLength(1);
+    expect(result.avgBedtime?.getHours()).toBe(20);
+    expect(result.avgBedtime?.getMinutes()).toBe(35);
+    expect(result.avgWakeTime?.getHours()).toBe(6);
+    expect(result.avgWakeTime?.getMinutes()).toBe(55);
+    expect(result.nightWakingsPerNight).toBe(1);
+  });
+
+  it("assigns an oldest-boundary overlap to the selected window without an eighth night", () => {
+    const now = new Date(2026, 7, 1, 18, 0, 0);
+    const sleeps = Array.from({ length: 6 }, (_, index) => {
+      const start = new Date(2026, 6, 26 + index, 21, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      end.setHours(7, 0, 0, 0);
+      return makeSleep({
+        startedAt: start.toISOString(),
+        endedAt: end.toISOString(),
+        type: "night",
+        durationSeconds: 10 * 3600,
+      });
+    });
+    sleeps.unshift(
+      makeSleep({
+        startedAt: localISO(2026, 7, 25, 7, 30),
+        endedAt: localISO(2026, 7, 25, 9, 30),
+        type: "night",
+        durationSeconds: 2 * 3600,
+      })
+    );
+
+    const result = calculateSleepSummary(sleeps, 7, now, 9, 21);
+
+    expect(result.bedtimeTrend).toHaveLength(7);
+    expect(result.bedtimeTrend[0].date).toEqual(
+      new Date(2026, 6, 25, 12, 0, 0)
+    );
+  });
+
+  it("counts the selected portion of a nap overlapping the oldest boundary", () => {
+    const now = new Date(2026, 7, 1, 18, 0, 0);
+    const sleep = makeSleep({
+      startedAt: localISO(2026, 7, 25, 8, 30),
+      endedAt: localISO(2026, 7, 25, 10, 0),
+      type: "night",
+      durationSeconds: 90 * 60,
+    });
+
+    const result = calculateSleepSummary([sleep], 7, now, 9, 21);
+
+    expect(result.avgTotalSleepSeconds).toBe(60 * 60);
+    expect(result.avgNapsPerDay).toBe(1);
+    expect(result.avgNapDurationSeconds).toBe(60 * 60);
+  });
+
+  it("averages 21:00, 23:00, and 01:00 circularly to 23:00", () => {
+    const now = new Date(2026, 7, 1, 18, 0, 0);
+    const sleeps = [
+      [28, 21],
+      [29, 23],
+      [31, 1],
+    ].map(([day, hour]) => {
+      const start = new Date(2026, 6, day, hour, 0, 0);
+      const end = new Date(start);
+      end.setHours(end.getHours() + 4);
+      return makeSleep({
+        startedAt: start.toISOString(),
+        endedAt: end.toISOString(),
+        type: "night",
+        durationSeconds: 4 * 3600,
+      });
+    });
+
+    const result = calculateSleepSummary(sleeps, 7, now, 9, 21);
+
+    expect(result.avgBedtime?.getHours()).toBe(23);
+    expect(result.avgBedtime?.getMinutes()).toBe(0);
+  });
+
   it("averages bedtimes across multiple nights correctly", () => {
     const now = new Date(2025, 2, 7, 12, 0, 0);
     const sleeps = [
@@ -663,7 +812,7 @@ describe("calculateSleepSummary", () => {
   });
 
   it("averages correctly when all sleeps fall on the same day", () => {
-    const now = new Date(2025, 2, 5, 22, 0, 0);
+    const now = new Date(2025, 2, 6, 12, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 5, 10, 0),
@@ -712,7 +861,7 @@ describe("calculateSleepSummary", () => {
   });
 
   it("splits overnight sleep at dayStartHour between two sleep days", () => {
-    const now = new Date(2025, 2, 6, 12, 0, 0);
+    const now = new Date(2025, 2, 7, 12, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 5, 23, 50),
@@ -856,7 +1005,7 @@ describe("buildDailySleepBars", () => {
   });
 
   it("aggregates night and nap hours per day", () => {
-    const now = new Date(2025, 2, 7, 18, 0, 0);
+    const now = new Date(2025, 2, 8, 18, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 7, 10, 0),
@@ -886,7 +1035,7 @@ describe("buildDailySleepBars", () => {
   });
 
   it("uses interval union for overlapping daily bars", () => {
-    const now = new Date(2025, 2, 7, 18, 0, 0);
+    const now = new Date(2025, 2, 8, 18, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 7, 10, 0),
@@ -919,13 +1068,13 @@ describe("buildDailySleepBars", () => {
   it("uses day number as label", () => {
     const now = new Date(2025, 2, 7, 12, 0, 0);
     const bars = buildDailySleepBars([], 7, now);
-    expect(bars[bars.length - 1].label).toBe("7");
+    expect(bars[bars.length - 1].label).toBe("6");
   });
 
   it("includes dateKey in YYYY-MM-DD format", () => {
     const now = new Date(2025, 2, 7, 12, 0, 0);
     const bars = buildDailySleepBars([], 7, now);
-    expect(bars[bars.length - 1].dateKey).toBe("2025-03-07");
+    expect(bars[bars.length - 1].dateKey).toBe("2025-03-06");
     for (const bar of bars) {
       expect(bar.dateKey).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
@@ -946,7 +1095,7 @@ describe("buildDailySleepBars", () => {
   });
 
   it("splits overnight sleep at dayStartHour between two sleep days", () => {
-    const now = new Date(2025, 2, 7, 12, 0, 0);
+    const now = new Date(2025, 2, 8, 12, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 6, 22, 0),
