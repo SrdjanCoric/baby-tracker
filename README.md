@@ -104,13 +104,17 @@ src/
 │   ├── sync/               # Sync engine, Realtime, queue, CRDT merge
 │   └── ...                 # Storage, notifications, watch, widget, household
 ├── hooks/                  # Timer alerts, duplicate detection, accessibility
-├── i18n/                   # Nine locale files with regional variants
+├── i18n/                   # Nine locale files with regional variants (phone app)
 ├── utils/                  # Growth helpers, temperature, retry logic
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
 └── migrations/             # PostgreSQL migrations through 059
-targets/widget/             # iOS WidgetKit extension (Swift)
+localization/native/        # Nine locale files the Watch app and widget render from;
+                            # npm run native:strings rebuilds targets/*/GeneratedStrings.swift
+targets/
+├── watch/                  # watchOS app (Swift)
+└── widget/                 # iOS WidgetKit extension and Live Activity (Swift)
 e2e/                        # Maestro E2E tests
 ```
 
@@ -138,6 +142,9 @@ npx expo prebuild --platform android --clean && npx expo run:android
 npm run check                # Complete local non-device gate before production release
 npm run check:code           # The same validation without local database checks
 npm run audit:dependencies   # Fail on unapproved high or critical advisories
+npm run audit:native-locales # Fail when a Watch or widget string is missing from a locale
+npm run native:strings       # Rebuild the Swift string tables from localization/native
+npm run native:strings:check # Fail when the generated tables no longer match the locale files
 npm run test:unit            # 2,400+ Vitest unit tests
 npm run test:component -- --runInBand # Jest component tests
 npm run test:security        # Security tests

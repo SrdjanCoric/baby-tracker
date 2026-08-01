@@ -15,30 +15,44 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { SHIPPED_LOCALES } from "./generate-native-strings.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-
-export const SHIPPED_LOCALES = [
-  "en",
-  "sr",
-  "es",
-  "es-ES",
-  "fr",
-  "pt-PT",
-  "pt-BR",
-  "de",
-  "it",
-];
 
 // Members of the generated accessor that are not translatable keys.
 const RESERVED_MEMBERS = new Set([
   "t",
+  "p",
   "language",
   "supportedLanguages",
   "table",
   "pluralTable",
   "pluralCategory",
 ]);
+
+/**
+ * The conversion characters a string hands to String(format:), position-independent.
+ *
+ * Order is deliberately ignored: a locale may reorder positional specifiers such
+ * as %1$d and %2$d to suit its grammar. What must not change is which arguments
+ * are consumed and how — Swift's String(format:) is a varargs bridge, so a %@
+ * where the call site passes an Int makes Foundation read that integer as an
+ * object pointer instead of merely printing the wrong text.
+ */
+function formatSpecifiers(value) {
+  const found = [];
+  for (const match of value.matchAll(/%(%|(?:\d+\$)?[-+ #0]*[\d.]*([a-zA-Z@]))/g)) {
+    if (match[1] === "%") continue;
+    found.push(match[2]);
+  }
+  return found.sort();
+}
+
+function specifiersMatch(candidate, expected) {
+  const a = formatSpecifiers(candidate);
+  const b = formatSpecifiers(expected);
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
 
 // CLDR cardinal categories each locale actually inflects. Serbian takes a
 // distinct form for 2-4, 22-24 and so on, so two forms would be wrong there.
@@ -47,11 +61,11 @@ const REQUIRED_PLURAL_CATEGORIES = {
 };
 const DEFAULT_PLURAL_CATEGORIES = ["one", "other"];
 
-export function requiredCategories(locale) {
+function requiredCategories(locale) {
   return REQUIRED_PLURAL_CATEGORIES[locale] ?? DEFAULT_PLURAL_CATEGORIES;
 }
 
-export function isPluralForm(value) {
+function isPluralForm(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
@@ -102,7 +116,7 @@ function swiftFiles(dir) {
   return found;
 }
 
-export function collectReferencedKeys(source) {
+function collectReferencedKeys(source) {
   const keys = new Set();
   for (const match of source.matchAll(/\bL\.([A-Za-z][A-Za-z0-9_]*)/g)) {
     const key = match[1];
@@ -175,7 +189,13 @@ for (const locale of SHIPPED_LOCALES) {
     const value = table[key];
 
     if (!pluralKeys.has(key)) {
-      if (typeof value !== "string" || value === "") missing.push(key);
+      if (typeof value !== "string" || value === "") {
+        missing.push(key);
+      } else if (!specifiersMatch(value, english[key])) {
+        missing.push(
+          `${key} (format specifiers ${formatSpecifiers(value).join("")} != en ${formatSpecifiers(english[key]).join("")})`
+        );
+      }
       continue;
     }
 
@@ -184,9 +204,17 @@ for (const locale of SHIPPED_LOCALES) {
       continue;
     }
 
+    // English may not carry every category a locale needs, so its "other" form
+    // is the reference for what the call site will pass.
+    const reference = english[key].other ?? english[key].one ?? "";
     for (const category of requiredCategories(locale)) {
-      if (typeof value[category] !== "string" || value[category] === "") {
+      const form = value[category];
+      if (typeof form !== "string" || form === "") {
         missing.push(`${key}.${category}`);
+      } else if (!specifiersMatch(form, reference)) {
+        missing.push(
+          `${key}.${category} (format specifiers ${formatSpecifiers(form).join("")} != en ${formatSpecifiers(reference).join("")})`
+        );
       }
     }
   }

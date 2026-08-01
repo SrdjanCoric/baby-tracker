@@ -1479,6 +1479,28 @@ struct SmallWidgetView: View {
     }
 }
 
+// Maps a raw data token (side, sleep type, diaper type, feeding type, etc.)
+// to its localized display string. Falls back to a capitalized version of
+// the raw token for values that aren't part of the known vocabulary.
+func localizedToken(_ token: String) -> String {
+    switch token.lowercased() {
+    case "left": return L.left
+    case "right": return L.right
+    case "both": return L.both
+    case "nap": return L.nap
+    case "night": return L.night
+    case "wet": return L.wet
+    case "dirty": return L.dirty
+    case "mixed": return L.mixed
+    case "dry": return L.dry
+    case "breast", "nursing": return L.breast
+    case "bottle": return L.bottle
+    case "solid": return L.solid
+    case "formula": return L.formula
+    default: return token.capitalized
+    }
+}
+
 // Helper functions for small widget contextual text
 func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -> String {
     switch activity {
@@ -1490,7 +1512,7 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
             let nextSide = lastSide.lowercased() == "left" ? L.right : L.left
             return String(format: L.nextSideText, nextSide)
         } else if let lastType = data.activities.feeding.lastType {
-            return lastType == "bottle" ? L.bottle : lastType.capitalized
+            return lastType == "bottle" ? L.bottle : localizedToken(lastType)
         }
         return L.feeding
 
@@ -1569,15 +1591,15 @@ func formatTimerContext(_ context: String, for activity: ActivityType) -> String
     switch activity {
     case .feeding:
         if context.lowercased() == "left" || context.lowercased() == "right" {
-            return String(format: L.sideText, context.capitalized)
+            return String(format: L.sideText, localizedToken(context))
         }
-        return context.capitalized
+        return localizedToken(context)
     case .sleep:
         return context == "nap" ? L.napTime : L.nightSleep
     case .pumping:
-        return context.capitalized
+        return localizedToken(context)
     default:
-        return context.capitalized
+        return localizedToken(context)
     }
 }
 
@@ -1588,7 +1610,7 @@ func getLastActivityDetailText(for activity: ActivityType, data: WidgetDataModel
         if let lastType = data.activities.feeding.lastType {
             if lastType == "breast" || lastType == "nursing" {
                 if let side = data.activities.feeding.lastSide {
-                    return String(format: L.sideBreast, side.capitalized)
+                    return String(format: L.sideBreast, localizedToken(side))
                 }
                 return L.breastfeeding
             } else if lastType == "bottle" {
@@ -1596,7 +1618,7 @@ func getLastActivityDetailText(for activity: ActivityType, data: WidgetDataModel
             } else if lastType == "solid" {
                 return L.solidFood
             }
-            return lastType.capitalized
+            return localizedToken(lastType)
         }
         return L.noFeedsYet
     case .sleep:
@@ -1611,7 +1633,7 @@ func getLastActivityDetailText(for activity: ActivityType, data: WidgetDataModel
             case "dirty": return L.dirtyDiaper
             case "mixed": return L.mixedDiaper
             case "dry": return L.dryDiaper
-            default: return type.capitalized
+            default: return localizedToken(type)
             }
         }
         return L.lastDiaper

@@ -86,6 +86,26 @@ describe("language context native publishing", () => {
     await waitFor(() => expect(mockPublish).toHaveBeenCalledWith("de"));
   });
 
+  it("does not let the startup load revert a language the caregiver just chose", async () => {
+    let releaseStoredPreference: (value: string) => void = () => {};
+    mockGetPreference.mockReturnValue(
+      new Promise<string>((resolve) => {
+        releaseStoredPreference = resolve;
+      })
+    );
+
+    const { getByTestId } = renderProvider();
+    fireEvent.press(getByTestId("pick-german"));
+    await waitFor(() => expect(mockPublish).toHaveBeenCalledWith("de"));
+
+    // The slower startup read now finishes and must not undo the choice.
+    releaseStoredPreference("en");
+
+    await waitFor(() => expect(mockGetPreference).toHaveBeenCalled());
+    expect(mockPublish).not.toHaveBeenCalledWith("en");
+    expect(mockPublish.mock.calls.at(-1)?.[0]).toBe("de");
+  });
+
   it("publishes the resolved device language when the caregiver switches back to system", async () => {
     mockGetPreference.mockResolvedValue("de");
     mockGetLocales.mockReturnValue([{ languageCode: "es", regionCode: "ES" }]);

@@ -197,6 +197,101 @@ test("fails when a locale declares a plural key as a flat string", () => {
   }
 });
 
+function scaffoldFormat({ valueByLocale, swift }) {
+  const root = mkdtempSync(join(tmpdir(), "native-format-"));
+  const stringsDir = join(root, "strings");
+  const targetsDir = join(root, "targets", "watch");
+  mkdirSync(stringsDir, { recursive: true });
+  mkdirSync(targetsDir, { recursive: true });
+  for (const locale of LOCALES) {
+    writeFileSync(join(stringsDir, `${locale}.json`), JSON.stringify(valueByLocale(locale), null, 2));
+  }
+  writeFileSync(join(targetsDir, "index.swift"), swift);
+  return { root, stringsDir, targetsDir };
+}
+
+test("fails when a locale drops a format specifier the target will pass an argument for", () => {
+  const fixture = scaffoldFormat({
+    valueByLocale: (locale) => ({
+      // pt-PT loses the %d, so String(format:) receives an unused argument.
+      durationMinutes: locale === "pt-PT" ? "minutos" : "%d min",
+    }),
+    swift: "Text(String(format: L.durationMinutes, minutes))",
+  });
+  try {
+    const { status, output } = run(fixture);
+    assert.equal(status, 1);
+    assert.match(output, /pt-PT/);
+    assert.match(output, /durationMinutes/);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("fails when a locale swaps a numeric specifier for an object specifier", () => {
+  const fixture = scaffoldFormat({
+    valueByLocale: (locale) => ({
+      // %@ against an Int argument makes Foundation read it as a pointer.
+      countToday: locale === "de" ? "%@ heute" : "%d today",
+    }),
+    swift: "Text(String(format: L.countToday, count))",
+  });
+  try {
+    const { status, output } = run(fixture);
+    assert.equal(status, 1);
+    assert.match(output, /de/);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("fails when a plural form's specifiers disagree with English", () => {
+  const fixture = scaffoldFormat({
+    valueByLocale: (locale) => ({
+      napsCount:
+        locale === "sr"
+          ? { one: "%d dremka", few: "dremke", other: "%d dremki" }
+          : { one: "%d nap", few: "%d naps", other: "%d naps" },
+    }),
+    swift: "Text(L.napsCount(count))",
+  });
+  try {
+    const { status, output } = run(fixture);
+    assert.equal(status, 1);
+    assert.match(output, /sr/);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("allows a locale to reorder positional specifiers for its own grammar", () => {
+  const fixture = scaffoldFormat({
+    valueByLocale: (locale) => ({
+      hoursMinutes: locale === "de" ? "%2$dm %1$dh" : "%1$dh %2$dm",
+    }),
+    swift: "Text(String(format: L.hoursMinutes, hours, minutes))",
+  });
+  try {
+    const { status, output } = run(fixture);
+    assert.equal(status, 0, output);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("treats the plural helper as a reserved member rather than a missing key", () => {
+  const fixture = scaffold({
+    keys: ["start"],
+    swift: '        Text(L.start)\n        Text(L.p("start", count))',
+  });
+  try {
+    const { status, output } = run(fixture);
+    assert.equal(status, 0, output);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test("ignores the generated accessor's own members when collecting referenced keys", () => {
   const fixture = scaffold({
     keys: ["start"],

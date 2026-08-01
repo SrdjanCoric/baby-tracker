@@ -51,13 +51,59 @@ export function swiftLiteral(value) {
     .replace(/\\/g, "\\\\")
     .replace(/"/g, '\\"')
     .replace(/\n/g, "\\n")
-    .replace(/\t/g, "\\t")}"`;
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t")
+    // A bare control character inside a Swift literal either terminates the
+    // line or is invisible in review; \u{..} keeps the file compilable.
+    // Matching control characters is the point here, so the rule is off.
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u2028\u2029]/g, (character) =>
+      `\\u{${character.codePointAt(0).toString(16)}}`
+    )}"`;
 }
 
-function loadLocales() {
+// Reserved because the generated enum declares them itself.
+const RESERVED_MEMBERS = new Set([
+  "t",
+  "p",
+  "language",
+  "supportedLanguages",
+  "table",
+  "pluralTable",
+  "pluralCategory",
+]);
+
+const SWIFT_KEYWORDS = new Set([
+  "associatedtype", "class", "deinit", "enum", "extension", "fileprivate", "func", "import",
+  "init", "inout", "internal", "let", "open", "operator", "private", "precedencegroup",
+  "protocol", "public", "rethrows", "static", "struct", "subscript", "typealias", "var",
+  "break", "case", "catch", "continue", "default", "defer", "do", "else", "fallthrough",
+  "for", "guard", "if", "in", "repeat", "return", "throw", "switch", "where", "while",
+  "Any", "as", "await", "false", "is", "nil", "self", "Self", "super", "throws", "true", "try",
+]);
+
+/**
+ * Keys are emitted into Swift declaration positions, so an unchecked key is a
+ * code-injection seam: a translation-only change carrying a crafted key would
+ * produce compiling Swift inside the Watch and widget processes, which hold the
+ * caregiver's Supabase credentials.
+ */
+export function assertUsableKey(key) {
+  if (!/^[a-z][A-Za-z0-9]*$/.test(key)) {
+    fail(`${JSON.stringify(key)}: key must be a plain lowerCamelCase Swift identifier`);
+  }
+  if (RESERVED_MEMBERS.has(key)) {
+    fail(`${key}: key collides with a member the generated accessor declares`);
+  }
+  if (SWIFT_KEYWORDS.has(key)) {
+    fail(`${key}: key is a Swift keyword`);
+  }
+}
+
+function loadLocales(stringsDir) {
   const tables = new Map();
   for (const locale of SHIPPED_LOCALES) {
-    const path = join(STRINGS_DIR, `${locale}.json`);
+    const path = join(stringsDir, `${locale}.json`);
     let parsed;
     try {
       parsed = JSON.parse(readFileSync(path, "utf8"));
@@ -95,8 +141,12 @@ export function renderSwift(tables, keys) {
   lines.push(`    static let appGroup = ${swiftLiteral(APP_GROUP)}`);
   lines.push(`    static let storageKey = ${swiftLiteral(STORAGE_KEY)}`);
   lines.push("");
+  lines.push("    /// Held once: every rendered label resolves the language, and building");
+  lines.push("    /// the shared suite by name allocates a new instance on each call.");
+  lines.push("    static let defaults = UserDefaults(suiteName: appGroup)");
+  lines.push("");
   lines.push("    static var current: String {");
-  lines.push("        if let stored = UserDefaults(suiteName: appGroup)?.string(forKey: storageKey),");
+  lines.push("        if let stored = defaults?.string(forKey: storageKey),");
   lines.push("           L.supportedLanguages.contains(stored) {");
   lines.push("            return stored");
   lines.push("        }");
@@ -149,8 +199,11 @@ export function renderSwift(tables, keys) {
   lines.push("            if mod10 == 1 && mod100 != 11 { return \"one\" }");
   lines.push("            if (2...4).contains(mod10) && !(12...14).contains(mod100) { return \"few\" }");
   lines.push("            return \"other\"");
-  lines.push("        case \"fr\", \"pt-PT\", \"pt-BR\":");
+  lines.push("        case \"fr\", \"pt-BR\":");
   lines.push("            return n <= 1 ? \"one\" : \"other\"");
+  lines.push("        case \"pt-PT\":");
+  lines.push("            // CLDR pt_PT overrides pt: only exactly one is singular.");
+  lines.push("            return n == 1 ? \"one\" : \"other\"");
   lines.push("        default:");
   lines.push("            return n == 1 ? \"one\" : \"other\"");
   lines.push("        }");
@@ -220,36 +273,69 @@ export function renderSwift(tables, keys) {
   return lines.join("\n");
 }
 
-const checkOnly = process.argv.includes("--check");
-const tables = loadLocales();
-const keys = Object.keys(tables.get("en")).sort();
-
-if (keys.length === 0) fail("localization/native/en.json declares no keys");
-
-const rendered = renderSwift(tables, keys);
-let stale = 0;
-
-for (const target of TARGETS) {
-  const path = join(target, "GeneratedStrings.swift");
-  let existing = null;
-  try {
-    existing = readFileSync(path, "utf8");
-  } catch {
-    existing = null;
+function parseArgs(argv) {
+  const options = { strings: STRINGS_DIR, targets: [], checkOnly: false };
+  for (let index = 0; index < argv.length; index += 1) {
+    const flag = argv[index];
+    if (flag === "--check") {
+      options.checkOnly = true;
+    } else if (flag === "--strings" || flag === "--target") {
+      const value = argv[index + 1];
+      if (!value) fail(`${flag} requires a directory`);
+      if (flag === "--strings") options.strings = resolve(value);
+      else options.targets.push(resolve(value));
+      index += 1;
+    } else {
+      // A mistyped --check must never fall through to the write path and then
+      // report success, which would make the drift guard silently useless.
+      fail(`Unknown argument: ${flag}`);
+    }
   }
-
-  if (existing === rendered) continue;
-
-  if (checkOnly) {
-    console.error(`${path} is out of date; run: node scripts/generate-native-strings.mjs`);
-    stale += 1;
-    continue;
-  }
-
-  mkdirSync(target, { recursive: true });
-  writeFileSync(path, rendered);
-  console.log(`wrote ${path} (${keys.length} keys × ${SHIPPED_LOCALES.length} locales)`);
+  if (options.targets.length === 0) options.targets = TARGETS;
+  return options;
 }
 
-if (stale) process.exit(EXIT_STALE);
-if (checkOnly) console.log(`Generated string tables are up to date (${keys.length} keys).`);
+function main() {
+  const options = parseArgs(process.argv.slice(2));
+  const tables = loadLocales(options.strings);
+  const keys = Object.keys(tables.get("en")).sort();
+
+  if (keys.length === 0) fail(`${options.strings}/en.json declares no keys`);
+  for (const key of keys) assertUsableKey(key);
+
+  const rendered = renderSwift(tables, keys);
+  let stale = 0;
+
+  for (const target of options.targets) {
+    const path = join(target, "GeneratedStrings.swift");
+    let existing = null;
+    try {
+      existing = readFileSync(path, "utf8");
+    } catch {
+      existing = null;
+    }
+
+    if (existing === rendered) continue;
+
+    if (options.checkOnly) {
+      console.error(`${path} is out of date; run: node scripts/generate-native-strings.mjs`);
+      stale += 1;
+      continue;
+    }
+
+    mkdirSync(target, { recursive: true });
+    writeFileSync(path, rendered);
+    console.log(`wrote ${path} (${keys.length} keys × ${SHIPPED_LOCALES.length} locales)`);
+  }
+
+  if (stale) process.exit(EXIT_STALE);
+  if (options.checkOnly) {
+    console.log(`Generated string tables are up to date (${keys.length} keys).`);
+  }
+}
+
+// Importing this module must not generate anything; the parity gate reads
+// SHIPPED_LOCALES from here so the two scripts cannot disagree about the set.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}

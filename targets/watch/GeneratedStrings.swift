@@ -13,8 +13,12 @@ enum NativeLanguageResolver {
     static let appGroup = "group.com.sofibaby.app"
     static let storageKey = "appLanguage"
 
+    /// Held once: every rendered label resolves the language, and building
+    /// the shared suite by name allocates a new instance on each call.
+    static let defaults = UserDefaults(suiteName: appGroup)
+
     static var current: String {
-        if let stored = UserDefaults(suiteName: appGroup)?.string(forKey: storageKey),
+        if let stored = defaults?.string(forKey: storageKey),
            L.supportedLanguages.contains(stored) {
             return stored
         }
@@ -65,8 +69,11 @@ enum L {
             if mod10 == 1 && mod100 != 11 { return "one" }
             if (2...4).contains(mod10) && !(12...14).contains(mod100) { return "few" }
             return "other"
-        case "fr", "pt-PT", "pt-BR":
+        case "fr", "pt-BR":
             return n <= 1 ? "one" : "other"
+        case "pt-PT":
+            // CLDR pt_PT overrides pt: only exactly one is singular.
+            return n == 1 ? "one" : "other"
         default:
             return n == 1 ? "one" : "other"
         }
@@ -93,6 +100,7 @@ enum L {
     static var babyActivity: String { t("babyActivity") }
     static var babyRecentActivity: String { t("babyRecentActivity") }
     static var bedtime: String { t("bedtime") }
+    static var both: String { t("both") }
     static var bothSides: String { t("bothSides") }
     static var bottle: String { t("bottle") }
     static var breast: String { t("breast") }
@@ -104,6 +112,7 @@ enum L {
     static var diaper: String { t("diaper") }
     static var dirty: String { t("dirty") }
     static var dirtyDiaper: String { t("dirtyDiaper") }
+    static var dry: String { t("dry") }
     static var dryDiaper: String { t("dryDiaper") }
     static var durationAgo: String { t("durationAgo") }
     static var durationHoursMinutesLong: String { t("durationHoursMinutesLong") }
@@ -140,6 +149,7 @@ enum L {
     static var napTime: String { t("napTime") }
     static var nextNapIn: String { t("nextNapIn") }
     static var nextSideText: String { t("nextSideText") }
+    static var night: String { t("night") }
     static var nightSleep: String { t("nightSleep") }
     static var noDataYet: String { t("noDataYet") }
     static var noFeedsYet: String { t("noFeedsYet") }
@@ -167,6 +177,7 @@ enum L {
     static var sideText: String { t("sideText") }
     static var sleep: String { t("sleep") }
     static var sleeping: String { t("sleeping") }
+    static var solid: String { t("solid") }
     static var solidFood: String { t("solidFood") }
     static var start: String { t("start") }
     static var started: String { t("started") }
@@ -216,6 +227,7 @@ enum L {
             "babyActivity": "%@'s activity",
             "babyRecentActivity": "%@'s recent activity",
             "bedtime": "Bedtime",
+            "both": "Both",
             "bothSides": "Both sides",
             "bottle": "Bottle",
             "breast": "Breast",
@@ -227,6 +239,7 @@ enum L {
             "diaper": "Diaper",
             "dirty": "Dirty",
             "dirtyDiaper": "Dirty diaper",
+            "dry": "Dry",
             "dryDiaper": "Dry diaper",
             "durationAgo": "%@ ago",
             "durationHoursMinutesLong": "%1$d hr, %2$d min",
@@ -263,6 +276,7 @@ enum L {
             "napTime": "Nap time",
             "nextNapIn": "Next nap in %@",
             "nextSideText": "Next: %@ side",
+            "night": "Night",
             "nightSleep": "Night sleep",
             "noDataYet": "No data yet",
             "noFeedsYet": "No feeds yet",
@@ -290,6 +304,7 @@ enum L {
             "sideText": "%@ side",
             "sleep": "Sleep",
             "sleeping": "Sleeping",
+            "solid": "Solid",
             "solidFood": "Solid food",
             "start": "Start",
             "started": "Started",
@@ -331,6 +346,7 @@ enum L {
             "babyActivity": "Aktivnost za %@",
             "babyRecentActivity": "Nedavna aktivnost za %@",
             "bedtime": "Vreme za spavanje",
+            "both": "Obe",
             "bothSides": "Obe strane",
             "bottle": "Flašica",
             "breast": "Dojenje",
@@ -342,6 +358,7 @@ enum L {
             "diaper": "Pelena",
             "dirty": "Prljava",
             "dirtyDiaper": "Prljava pelena",
+            "dry": "Suva",
             "dryDiaper": "Suva pelena",
             "durationAgo": "pre %@",
             "durationHoursMinutesLong": "%1$d č, %2$d min",
@@ -378,6 +395,7 @@ enum L {
             "napTime": "Vreme za dremku",
             "nextNapIn": "Sledeća dremka za %@",
             "nextSideText": "Sledeće: %@ strana",
+            "night": "Noć",
             "nightSleep": "Noćno spavanje",
             "noDataYet": "Još nema podataka",
             "noFeedsYet": "Još nema hranjenja",
@@ -405,6 +423,7 @@ enum L {
             "sideText": "%@ strana",
             "sleep": "Spavanje",
             "sleeping": "Spava",
+            "solid": "Čvrsta hrana",
             "solidFood": "Čvrsta hrana",
             "start": "Započni",
             "started": "Započeto",
@@ -446,6 +465,7 @@ enum L {
             "babyActivity": "Actividad de %@",
             "babyRecentActivity": "Actividad reciente de %@",
             "bedtime": "Hora de dormir",
+            "both": "Ambos",
             "bothSides": "Ambos lados",
             "bottle": "Mamadera",
             "breast": "Pecho",
@@ -457,6 +477,7 @@ enum L {
             "diaper": "Pañal",
             "dirty": "Sucio",
             "dirtyDiaper": "Pañal sucio",
+            "dry": "Seco",
             "dryDiaper": "Pañal seco",
             "durationAgo": "Hace %@",
             "durationHoursMinutesLong": "%1$d h, %2$d min",
@@ -493,6 +514,7 @@ enum L {
             "napTime": "Hora de la siesta",
             "nextNapIn": "Próxima siesta en %@",
             "nextSideText": "Siguiente: lado %@",
+            "night": "Noche",
             "nightSleep": "Sueño nocturno",
             "noDataYet": "Sin datos aún",
             "noFeedsYet": "Sin tomas aún",
@@ -520,6 +542,7 @@ enum L {
             "sideText": "Lado %@",
             "sleep": "Sueño",
             "sleeping": "Durmiendo",
+            "solid": "Sólido",
             "solidFood": "Alimento sólido",
             "start": "Iniciar",
             "started": "Iniciado",
@@ -561,6 +584,7 @@ enum L {
             "babyActivity": "Actividad de %@",
             "babyRecentActivity": "Actividad reciente de %@",
             "bedtime": "Hora de dormir",
+            "both": "Ambos",
             "bothSides": "Ambos lados",
             "bottle": "Biberón",
             "breast": "Pecho",
@@ -572,6 +596,7 @@ enum L {
             "diaper": "Pañal",
             "dirty": "Sucio",
             "dirtyDiaper": "Pañal sucio",
+            "dry": "Seco",
             "dryDiaper": "Pañal seco",
             "durationAgo": "Hace %@",
             "durationHoursMinutesLong": "%1$d h, %2$d min",
@@ -608,6 +633,7 @@ enum L {
             "napTime": "Hora de la siesta",
             "nextNapIn": "Próxima siesta en %@",
             "nextSideText": "Siguiente: lado %@",
+            "night": "Noche",
             "nightSleep": "Sueño nocturno",
             "noDataYet": "Sin datos aún",
             "noFeedsYet": "Sin tomas aún",
@@ -635,6 +661,7 @@ enum L {
             "sideText": "Lado %@",
             "sleep": "Sueño",
             "sleeping": "Durmiendo",
+            "solid": "Sólido",
             "solidFood": "Alimento sólido",
             "start": "Iniciar",
             "started": "Iniciado",
@@ -676,6 +703,7 @@ enum L {
             "babyActivity": "Activité de %@",
             "babyRecentActivity": "Activité récente de %@",
             "bedtime": "Coucher",
+            "both": "Les deux",
             "bothSides": "Les deux côtés",
             "bottle": "Biberon",
             "breast": "Allaitement",
@@ -687,6 +715,7 @@ enum L {
             "diaper": "Couche",
             "dirty": "Sale",
             "dirtyDiaper": "Couche sale",
+            "dry": "Sèche",
             "dryDiaper": "Couche sèche",
             "durationAgo": "il y a %@",
             "durationHoursMinutesLong": "%1$d h, %2$d min",
@@ -723,6 +752,7 @@ enum L {
             "napTime": "Heure de la sieste",
             "nextNapIn": "Prochaine sieste dans %@",
             "nextSideText": "Suivant : côté %@",
+            "night": "Nuit",
             "nightSleep": "Sommeil nocturne",
             "noDataYet": "Pas encore de données",
             "noFeedsYet": "Pas encore de repas",
@@ -750,6 +780,7 @@ enum L {
             "sideText": "Côté %@",
             "sleep": "Sommeil",
             "sleeping": "Dort",
+            "solid": "Solide",
             "solidFood": "Aliments solides",
             "start": "Démarrer",
             "started": "Démarré",
@@ -791,6 +822,7 @@ enum L {
             "babyActivity": "Atividade de %@",
             "babyRecentActivity": "Atividade recente de %@",
             "bedtime": "Hora de dormir",
+            "both": "Ambos",
             "bothSides": "Ambos os lados",
             "bottle": "Biberão",
             "breast": "Peito",
@@ -802,6 +834,7 @@ enum L {
             "diaper": "Fralda",
             "dirty": "Suja",
             "dirtyDiaper": "Fralda suja",
+            "dry": "Seca",
             "dryDiaper": "Fralda seca",
             "durationAgo": "Há %@",
             "durationHoursMinutesLong": "%1$d h, %2$d min",
@@ -838,6 +871,7 @@ enum L {
             "napTime": "Hora da sesta",
             "nextNapIn": "Próxima sesta em %@",
             "nextSideText": "Próximo: lado %@",
+            "night": "Noite",
             "nightSleep": "Sono noturno",
             "noDataYet": "Ainda sem dados",
             "noFeedsYet": "Ainda sem mamadas",
@@ -865,6 +899,7 @@ enum L {
             "sideText": "Lado %@",
             "sleep": "Sono",
             "sleeping": "A dormir",
+            "solid": "Sólido",
             "solidFood": "Alimento sólido",
             "start": "Iniciar",
             "started": "Iniciado",
@@ -906,6 +941,7 @@ enum L {
             "babyActivity": "Atividade de %@",
             "babyRecentActivity": "Atividade recente de %@",
             "bedtime": "Hora de dormir",
+            "both": "Ambos",
             "bothSides": "Os dois lados",
             "bottle": "Mamadeira",
             "breast": "Peito",
@@ -917,6 +953,7 @@ enum L {
             "diaper": "Fralda",
             "dirty": "Suja",
             "dirtyDiaper": "Fralda suja",
+            "dry": "Seca",
             "dryDiaper": "Fralda seca",
             "durationAgo": "Há %@",
             "durationHoursMinutesLong": "%1$d h, %2$d min",
@@ -953,6 +990,7 @@ enum L {
             "napTime": "Hora do cochilo",
             "nextNapIn": "Próximo cochilo em %@",
             "nextSideText": "Próximo: lado %@",
+            "night": "Noite",
             "nightSleep": "Sono noturno",
             "noDataYet": "Ainda sem dados",
             "noFeedsYet": "Ainda sem mamadas",
@@ -980,6 +1018,7 @@ enum L {
             "sideText": "Lado %@",
             "sleep": "Sono",
             "sleeping": "Dormindo",
+            "solid": "Sólido",
             "solidFood": "Alimento sólido",
             "start": "Iniciar",
             "started": "Iniciado",
@@ -1021,6 +1060,7 @@ enum L {
             "babyActivity": "Aktivität von %@",
             "babyRecentActivity": "Letzte Aktivität von %@",
             "bedtime": "Schlafenszeit",
+            "both": "Beide",
             "bothSides": "Beide Seiten",
             "bottle": "Flasche",
             "breast": "Stillen",
@@ -1032,6 +1072,7 @@ enum L {
             "diaper": "Windel",
             "dirty": "Stuhl",
             "dirtyDiaper": "Stuhlwindel",
+            "dry": "Trocken",
             "dryDiaper": "Trockene Windel",
             "durationAgo": "vor %@",
             "durationHoursMinutesLong": "%1$d Std., %2$d Min.",
@@ -1068,6 +1109,7 @@ enum L {
             "napTime": "Nickerchenzeit",
             "nextNapIn": "Nächstes Nickerchen in %@",
             "nextSideText": "Nächste Seite: %@",
+            "night": "Nacht",
             "nightSleep": "Nachtschlaf",
             "noDataYet": "Noch keine Daten",
             "noFeedsYet": "Noch keine Fütterungen",
@@ -1095,6 +1137,7 @@ enum L {
             "sideText": "Seite: %@",
             "sleep": "Schlaf",
             "sleeping": "Schläft",
+            "solid": "Beikost",
             "solidFood": "Beikost",
             "start": "Start",
             "started": "Gestartet",
@@ -1136,6 +1179,7 @@ enum L {
             "babyActivity": "Attività di %@",
             "babyRecentActivity": "Attività recente di %@",
             "bedtime": "Nanna",
+            "both": "Entrambi",
             "bothSides": "Entrambi i lati",
             "bottle": "Biberon",
             "breast": "Allattamento",
@@ -1147,6 +1191,7 @@ enum L {
             "diaper": "Pannolino",
             "dirty": "Sporco",
             "dirtyDiaper": "Pannolino sporco",
+            "dry": "Asciutto",
             "dryDiaper": "Pannolino asciutto",
             "durationAgo": "%@ fa",
             "durationHoursMinutesLong": "%1$d h, %2$d min",
@@ -1183,6 +1228,7 @@ enum L {
             "napTime": "Ora del pisolino",
             "nextNapIn": "Prossimo pisolino tra %@",
             "nextSideText": "Prossimo lato: %@",
+            "night": "Notte",
             "nightSleep": "Sonno notturno",
             "noDataYet": "Nessun dato ancora",
             "noFeedsYet": "Nessuna poppata ancora",
@@ -1210,6 +1256,7 @@ enum L {
             "sideText": "Lato: %@",
             "sleep": "Sonno",
             "sleeping": "Sta dormendo",
+            "solid": "Solido",
             "solidFood": "Solidi",
             "start": "Avvia",
             "started": "Avviato",

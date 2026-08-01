@@ -1281,7 +1281,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken,
               let ptsToken = pushToStartToken, !ptsToken.isEmpty else { return }
 
-        let babyName = currentBaby?.name ?? widgetData?.babyName ?? "Baby"
+        let babyName = currentBaby?.name ?? widgetData?.babyName ?? L.baby
         let urlString = "\(supabaseUrl)/functions/v1/start-live-activity"
         guard let url = URL(string: urlString) else { return }
 
@@ -1428,6 +1428,28 @@ func parseDate(_ dateString: String) -> Date? {
 func suggestedSide(lastSide: String?) -> String {
     guard let last = lastSide else { return "left" }
     return last == "left" ? "right" : "left"
+}
+
+/// Maps a raw data token (side, sleep type, diaper type, feeding type, etc.)
+/// to its localized display string. Falls back to a capitalized version of
+/// the raw token for values that aren't part of the known vocabulary.
+func localizedToken(_ token: String) -> String {
+    switch token.lowercased() {
+    case "left": return L.left
+    case "right": return L.right
+    case "both": return L.both
+    case "nap": return L.nap
+    case "night": return L.night
+    case "wet": return L.wet
+    case "dirty": return L.dirty
+    case "mixed": return L.mixed
+    case "dry": return L.dry
+    case "breast", "nursing": return L.breast
+    case "bottle": return L.bottle
+    case "solid": return L.solid
+    case "formula": return L.formula
+    default: return token.capitalized
+    }
 }
 
 // MARK: - Content View
@@ -1727,7 +1749,7 @@ func formatTimeSinceDate(_ date: Date, now: Date = Date()) -> String {
 
 struct ActiveTimerCard: View {
     let timer: WatchActiveTimer
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var activityType: WatchActivityType? {
         WatchActivityType(rawValue: timer.type)
@@ -1780,7 +1802,7 @@ struct ActiveTimerCard: View {
 
             HStack(spacing: 4) {
                 if let context = timer.context {
-                    Text(isRemote ? context : context.capitalized)
+                    Text(isRemote ? context : localizedToken(context))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -1875,7 +1897,7 @@ func formatElapsedSeconds(_ seconds: Int) -> String {
 struct FeedingMenuView: View {
     let data: WatchActivityData.FeedingData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var feedingTimer: WatchActiveTimer? {
         allTimers.first { $0.type == "feeding" }
@@ -1949,7 +1971,7 @@ struct OptionRow: View {
 struct BreastFeedingView: View {
     let data: WatchActivityData.FeedingData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var feedingTimer: WatchActiveTimer? {
         allTimers.first { $0.type == "feeding" }
@@ -1964,7 +1986,7 @@ struct BreastFeedingView: View {
             if let timer = feedingTimer {
                 ActiveTimerCard(timer: timer, connector: connector)
             } else {
-                Text(String(format: L.suggestedSide, suggested.capitalized))
+                Text(String(format: L.suggestedSide, localizedToken(suggested)))
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(WatchActivityType.feeding.primaryColor)
 
@@ -1991,7 +2013,7 @@ struct BreastFeedingView: View {
 
             TimelineView(.periodic(from: .now, by: 60)) { _ in
                 if let side = data.lastSide {
-                    Text(String(format: L.lastSideAgo, side.capitalized, formatTimeSince(data.lastTime)))
+                    Text(String(format: L.lastSideAgo, localizedToken(side), formatTimeSince(data.lastTime)))
                         .font(.system(size: 9))
                         .foregroundStyle(.secondary)
                 }
@@ -2005,7 +2027,7 @@ struct BreastFeedingView: View {
 // MARK: - Bottle Feeding View
 
 struct BottleFeedingView: View {
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     @State private var volumeDouble: Double = 120
     var volumeMl: Int { Int(volumeDouble) }
@@ -2107,7 +2129,7 @@ struct ToggleButton: View {
 struct SleepDetailView: View {
     let data: WatchActivityData.SleepData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var sleepTimer: WatchActiveTimer? {
         allTimers.first { $0.type == "sleep" }
@@ -2341,7 +2363,7 @@ struct StatBadge: View {
 // MARK: - Pumping Volume Entry View
 
 struct PumpingVolumeEntryView: View {
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
     @Environment(\.dismiss) private var dismiss
     @State private var volumeDouble: Double = 0
     var volumeMl: Int { Int(volumeDouble) }
@@ -2405,7 +2427,7 @@ struct PumpingVolumeEntryView: View {
 
 struct PumpingActiveCard: View {
     let timer: WatchActiveTimer
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
     @Binding var showVolumeEntry: Bool
 
     var startDate: Date? {
@@ -2449,7 +2471,7 @@ struct PumpingActiveCard: View {
 
             HStack(spacing: 4) {
                 if let context = timer.context {
-                    Text(isRemote ? context : context.capitalized)
+                    Text(isRemote ? context : localizedToken(context))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -2534,7 +2556,7 @@ struct PumpingActiveCard: View {
 struct PumpingDetailView: View {
     let data: WatchActivityData.PumpingData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
     @State private var showVolumeEntry = false
 
     var pumpingTimer: WatchActiveTimer? {
@@ -2550,7 +2572,7 @@ struct PumpingDetailView: View {
             if let timer = pumpingTimer {
                 PumpingActiveCard(timer: timer, connector: connector, showVolumeEntry: $showVolumeEntry)
             } else {
-                Text(String(format: L.suggestedSide, suggested.capitalized))
+                Text(String(format: L.suggestedSide, localizedToken(suggested)))
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(WatchActivityType.pumping.primaryColor)
 
@@ -2592,7 +2614,7 @@ struct PumpingDetailView: View {
 struct TummyTimeDetailView: View {
     let data: WatchActivityData.TummyTimeData
     let allTimers: [WatchActiveTimer]
-    let connector: PhoneConnector
+    @ObservedObject var connector: PhoneConnector
 
     var tummyTimer: WatchActiveTimer? {
         allTimers.first { $0.type == "tummyTime" }

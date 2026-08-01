@@ -88,16 +88,16 @@ func contextLabel(for context: String?, activityType: String) -> String {
         case "left": return L.leftSide
         case "right": return L.rightSide
         case "both": return L.bothSides
-        default: return context
+        default: return localizedToken(context)
         }
     case "sleep":
         switch context {
         case "nap": return L.nap
         case "night": return L.nightSleep
-        default: return context
+        default: return localizedToken(context)
         }
     default:
-        return context
+        return localizedToken(context)
     }
 }
 

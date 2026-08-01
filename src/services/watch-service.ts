@@ -52,11 +52,23 @@ let lastContext: WatchPayload | null = null;
 export async function setWatchLanguage(language: string): Promise<void> {
   currentLanguage = language;
 
-  if (!lastContext) {
-    return;
-  }
+  // With no cached context there is nothing to preserve, so the language travels
+  // on its own. The Watch persists credentials on receipt, so a context without
+  // them does not revoke what it already stored.
+  await publishApplicationContext(lastContext ? { ...lastContext, language } : { language });
+}
 
-  await publishApplicationContext({ ...lastContext, language });
+/**
+ * Forget the cached application context.
+ *
+ * The cache holds the signed-in session's access token so a language change can
+ * republish it instead of erasing it. Once the session ends that token must not
+ * be sent again: on a shared device the next caregiver changing language would
+ * otherwise hand the Watch the previous account's still-valid credentials, and
+ * the Watch treats any received credentials as fresh.
+ */
+export function clearWatchContext(): void {
+  lastContext = null;
 }
 
 async function publishApplicationContext(context: WatchPayload): Promise<void> {

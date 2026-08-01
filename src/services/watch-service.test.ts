@@ -34,9 +34,9 @@ describe("watch language transport", () => {
     await setWatchLanguage("pt-PT");
     await syncToWatch(widgetData, undefined, authContext);
 
-    expect(updateApplicationContext).toHaveBeenCalledTimes(1);
-    expect(updateApplicationContext.mock.calls[0][0]).toEqual(
-      expect.objectContaining({ language: "pt-PT" })
+    // The sync carries the language alongside the data and credentials.
+    expect(updateApplicationContext.mock.calls.at(-1)?.[0]).toEqual(
+      expect.objectContaining({ language: "pt-PT", accessToken: "access-token" })
     );
   });
 
@@ -62,12 +62,31 @@ describe("watch language transport", () => {
     expect(republished.widgetData).toBe(JSON.stringify(widgetData));
   });
 
-  it("does not publish a context before any data has been synced", async () => {
+  it("still delivers the language before any data has been synced", async () => {
     const { setWatchLanguage } = await loadWatchService();
 
     await setWatchLanguage("fr");
 
-    expect(updateApplicationContext).not.toHaveBeenCalled();
+    expect(updateApplicationContext).toHaveBeenCalledTimes(1);
+    const published = updateApplicationContext.mock.calls[0][0];
+    expect(published).toEqual({ language: "fr" });
+  });
+
+  it("stops republishing a signed-out session's credentials to the watch", async () => {
+    const { clearWatchContext, setWatchLanguage, syncToWatch } = await loadWatchService();
+
+    await syncToWatch(widgetData, undefined, authContext);
+    clearWatchContext();
+    updateApplicationContext.mockClear();
+
+    await setWatchLanguage("de");
+
+    const published = updateApplicationContext.mock.calls[0][0];
+    expect(published).toEqual({ language: "de" });
+    expect(published.accessToken).toBeUndefined();
+    expect(published.supabaseAnonKey).toBeUndefined();
+    expect(published.userId).toBeUndefined();
+    expect(published.widgetData).toBeUndefined();
   });
 
   it("keeps the latest language on subsequent syncs without repeating the language call", async () => {

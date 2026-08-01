@@ -73,6 +73,21 @@ describe("native language publishing", () => {
     );
   });
 
+  it("still reaches the Watch when the App Group write fails", async () => {
+    const { publishNativeLanguage, syncToWatch } = await loadModules();
+
+    await syncToWatch(widgetData, undefined, authContext);
+    updateApplicationContext.mockClear();
+    setExtensionValue.mockRejectedValueOnce(new Error("app group unavailable"));
+
+    await publishNativeLanguage("de");
+
+    // A widget-side failure must not strand the Watch in the old language.
+    expect(updateApplicationContext.mock.calls.at(-1)?.[0]).toEqual(
+      expect.objectContaining({ language: "de" })
+    );
+  });
+
   it("applies a later language change to both surfaces", async () => {
     const { publishNativeLanguage, syncToWatch, NATIVE_LANGUAGE_KEY } = await loadModules();
 
