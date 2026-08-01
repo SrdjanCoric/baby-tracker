@@ -69,12 +69,29 @@ Produce a consolidated, privacy-safe regression matrix. Every reviewed surface m
 
 **Manual device policy**: The agent may prepare, build, and launch iOS, Watch, or Android simulators, but must not execute Maestro or other E2E interactions or assertions. The release owner performs and classifies every device/E2E scenario.
 
-- [ ] [verify] Review the completed regression matrix and manually spot-check each critical/high user-facing finding in the simulator using the imported household fixture · Expected: findings reproduce as documented and every omitted surface has an explicit rationale · Failure: a critical finding cannot be reproduced, expected behavior lacks a source, or a changed capability is silently unassessed · Reason: prioritization and visual confirmation across a broad product surface require release-owner judgment.
+- [-] [verify] Review the completed regression matrix and manually spot-check each critical/high user-facing finding in the simulator using the imported household fixture · Expected: findings reproduce as documented and every omitted surface has an explicit rationale · Failure: a critical finding cannot be reproduced, expected behavior lacks a source, or a changed capability is silently unassessed · Reason: prioritization and visual confirmation across a broad product surface require release-owner judgment. — **Waived by the release owner on 2026-08-01**, who declined the device check for F-1. F-1 therefore rests on the committed probe and the traced code path, not on an observed device symptom. See "Outstanding verification" below.
 
 ## Acceptance criteria
 
-- [ ] Every scoped post-July user-facing capability is mapped to its commits/tasks and classified as exercised, statically reviewed, already covered, deferred, or a finding.
-- [ ] Differences from July 5 that implement approved post-July behavior are not mislabeled as regressions.
-- [ ] Every reported new issue has a minimal reproduction, expected basis, severity, likely introduction range, and recommended follow-up boundary.
-- [ ] Critical and high findings are manually spot-checked against the local household fixture.
-- [ ] The matrix is privacy-safe, repeatable, and contains no product fixes, source account identifier, or production-derived raw data.
+- [x] Every scoped post-July user-facing capability is mapped to its commits/tasks and classified as exercised, statically reviewed, already covered, deferred, or a finding.
+- [x] Differences from July 5 that implement approved post-July behavior are not mislabeled as regressions.
+- [x] Every reported new issue has a minimal reproduction, expected basis, severity, likely introduction range, and recommended follow-up boundary.
+- [-] Critical and high findings are manually spot-checked against the local household fixture. — **Not satisfied.** Waived by the release owner on 2026-08-01.
+- [x] The matrix is privacy-safe, repeatable, and contains no product fixes, source account identifier, or production-derived raw data.
+
+## Outstanding verification
+
+F-1's device-level symptom was never observed. The release owner declined the check on 2026-08-01, so
+this task closes with its one manual acceptance criterion unmet rather than passed.
+
+What F-1 does rest on: the traced code path (export and reports call `*StorageService.getAll*` and reach
+no range loader, while the seven per-collection fetches cap at 1,000 rows with no pagination loop), the
+baseline revision containing no `.limit(` at all, `README.md:43` stating that a surface requests the range
+it displays, and `scripts/audit/export-range-coverage.mjs` reproducing the asymmetry from committed source.
+That evidence is strong enough to justify Task 0053, and it is why the finding is recorded as high rather
+than critical.
+
+What it does not establish: that a caregiver actually sees records missing from an export under real
+conditions. Whoever implements 0053 should confirm the symptom reproduces before treating the fix as
+proven, because a fix verified only against the probe proves the code path changed, not that the
+user-visible defect is gone. 0053's own `[verify]` checkpoint covers this.
