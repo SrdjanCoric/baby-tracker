@@ -1,5 +1,6 @@
 import type { UtcActivityRange } from "@/services/activity-range-loader";
 import type { StatisticsPeriod } from "@/utils/statistics";
+import { getCompletedSleepDayWindow } from "@/utils/sleep-summary-window";
 
 const ALL_HISTORY_START = "0001-01-01T00:00:00.000Z";
 const ALL_HISTORY_END = "9999-12-31T23:59:59.999Z";
@@ -49,14 +50,13 @@ export function getSleepWeekRange(
 
 export function getSleepSummaryRange(
   days: 7 | 14 | 30,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  dayStartHour: number = 6
 ): UtcActivityRange {
-  const start = new Date(referenceDate);
-  start.setDate(start.getDate() - days);
-  start.setHours(0, 0, 0, 0);
+  const window = getCompletedSleepDayWindow(days, referenceDate, dayStartHour);
   return {
-    start: start.toISOString(),
-    end: nextLocalMidnight(referenceDate).toISOString(),
+    start: window.start.toISOString(),
+    end: window.end.toISOString(),
   };
 }
 

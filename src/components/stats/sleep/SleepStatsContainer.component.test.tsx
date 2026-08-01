@@ -20,6 +20,7 @@ const mockActiveTimer = {
 let mockActiveTimerValue: typeof mockActiveTimer | null = mockActiveTimer;
 let mockSelectedBabyId = "baby-1";
 let mockBabyBinding = { babyId: "baby-1", status: "ready" as const };
+let mockRefreshTick = 0;
 let mockSleeps: Array<{
   id: string;
   babyId: string;
@@ -31,7 +32,9 @@ let mockSleeps: Array<{
   updatedAt: string;
 }> = [];
 const mockLoadSleepRange = jest.fn(async () => {});
-const mockGetSleepRangeStatus = jest.fn(() => "loaded" as const);
+const mockGetSleepRangeStatus = jest.fn(
+  (_range?: { start: string; end: string }) => "loaded" as const
+);
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -65,7 +68,7 @@ jest.mock("@/contexts/time-format-context", () => ({
 }));
 
 jest.mock("@/hooks", () => ({
-  useTimeRefresh: () => 0,
+  useTimeRefresh: () => mockRefreshTick,
 }));
 
 jest.mock("@/utils/sleep-patterns", () => ({
@@ -120,6 +123,7 @@ describe("SleepStatsContainer", () => {
     mockActiveTimerValue = mockActiveTimer;
     mockSelectedBabyId = "baby-1";
     mockBabyBinding = { babyId: "baby-1", status: "ready" };
+    mockRefreshTick = 0;
     mockSleeps = [];
     mockGetSleepRangeStatus.mockReturnValue("loaded");
     mockWakeWindowConfig = {
@@ -170,20 +174,70 @@ describe("SleepStatsContainer", () => {
     jest.setSystemTime(new Date(2026, 6, 14, 12, 0, 0));
     mockGetSleepRangeStatus.mockReturnValue("unverified");
 
-    render(<SleepStatsContainer activeTab="summary" />);
+    const initialRange = {
+      start: new Date(2026, 6, 7, 6, 0, 0, 0).toISOString(),
+      end: new Date(2026, 6, 14, 6, 0, 0, 0).toISOString(),
+    };
+    const { rerender } = render(<SleepStatsContainer activeTab="summary" />);
 
     await waitFor(() => {
-      expect(mockLoadSleepRange).toHaveBeenCalledWith({
-        start: new Date(2026, 6, 7, 0, 0, 0, 0).toISOString(),
-        end: new Date(2026, 6, 15, 0, 0, 0, 0).toISOString(),
-      });
+      expect(mockLoadSleepRange).toHaveBeenCalledWith(initialRange);
     });
+
+    const startedAt = new Date(2026, 6, 13, 21, 0, 0).toISOString();
+    const endedAt = new Date(2026, 6, 14, 5, 0, 0).toISOString();
+    mockSleeps = [{
+      id: "summary-sleep",
+      babyId: "baby-1",
+      type: "night",
+      startedAt,
+      endedAt,
+      durationSeconds: 8 * 3600,
+      createdAt: startedAt,
+      updatedAt: endedAt,
+    }];
+    mockGetSleepRangeStatus.mockImplementation((range) =>
+      range?.start === initialRange.start ? "loaded" : "unverified"
+    );
+    rerender(<SleepStatsContainer activeTab="summary" />);
 
     fireEvent.press(screen.getByTestId("select-30-days"));
     await waitFor(() => {
       expect(mockLoadSleepRange).toHaveBeenLastCalledWith({
-        start: new Date(2026, 5, 14, 0, 0, 0, 0).toISOString(),
-        end: new Date(2026, 6, 15, 0, 0, 0, 0).toISOString(),
+        start: new Date(2026, 5, 14, 6, 0, 0, 0).toISOString(),
+        end: new Date(2026, 6, 14, 6, 0, 0, 0).toISOString(),
+      });
+    });
+
+    jest.useRealTimers();
+  });
+
+  it("advances the completed summary window when day-start passes", async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 6, 14, 8, 59, 0));
+    mockWakeWindowConfig = {
+      dayStartHour: 9,
+      dayEndHour: 21,
+    };
+    mockGetSleepRangeStatus.mockReturnValue("unverified");
+
+    const { rerender } = render(<SleepStatsContainer activeTab="summary" />);
+
+    await waitFor(() => {
+      expect(mockLoadSleepRange).toHaveBeenLastCalledWith({
+        start: new Date(2026, 6, 6, 9, 0, 0, 0).toISOString(),
+        end: new Date(2026, 6, 13, 9, 0, 0, 0).toISOString(),
+      });
+    });
+
+    jest.setSystemTime(new Date(2026, 6, 14, 9, 0, 0));
+    mockRefreshTick = 1;
+    rerender(<SleepStatsContainer activeTab="summary" />);
+
+    await waitFor(() => {
+      expect(mockLoadSleepRange).toHaveBeenLastCalledWith({
+        start: new Date(2026, 6, 7, 9, 0, 0, 0).toISOString(),
+        end: new Date(2026, 6, 14, 9, 0, 0, 0).toISOString(),
       });
     });
 

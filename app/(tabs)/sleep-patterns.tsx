@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSleep } from "@/contexts/sleep-context";
 import { useBaby } from "@/contexts/baby-context";
 import { useTimeFormat } from "@/contexts/time-format-context";
+import { useTimeRefresh } from "@/hooks";
 import { buildDayViewData, buildWeekViewData, getSleepDate } from "@/utils/sleep-patterns";
 import { isUnderThreeMonths } from "@/utils/sleepGoals";
 import {
@@ -41,6 +42,11 @@ export default function SleepPatternsScreen() {
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const locale = i18n.language;
+  const refreshTick = useTimeRefresh(60000);
+  const summaryNow = useMemo(() => {
+    void refreshTick;
+    return new Date();
+  }, [refreshTick]);
 
   const [activeTab, setActiveTab] = useState<TabView>("day");
   const [selectedDate, setSelectedDate] = useState(() => getSleepDate(new Date(), dayStartHour));
@@ -54,8 +60,8 @@ export default function SleepPatternsScreen() {
   const requestedRange = useMemo(() => {
     if (activeTab === "day") return getSleepDayRange(selectedDate, dayStartHour);
     if (activeTab === "week") return getSleepWeekRange(weekEndDate, dayStartHour);
-    return getSleepSummaryRange(summaryPeriod);
-  }, [activeTab, dayStartHour, selectedDate, summaryPeriod, weekEndDate]);
+    return getSleepSummaryRange(summaryPeriod, summaryNow, dayStartHour);
+  }, [activeTab, dayStartHour, selectedDate, summaryNow, summaryPeriod, weekEndDate]);
   const rangeStatus = getSleepRangeStatus(requestedRange);
   const hasSleepData = selectedSleeps.some((sleep) =>
     sleepOverlapsActivityRange(sleep, requestedRange)
@@ -136,6 +142,7 @@ export default function SleepPatternsScreen() {
         ) : (
           <SummaryView
             sleeps={selectedSleeps}
+            now={summaryNow}
             timeFormat={timeFormat}
             dayStartHour={dayStartHour}
             dayEndHour={dayEndHour}

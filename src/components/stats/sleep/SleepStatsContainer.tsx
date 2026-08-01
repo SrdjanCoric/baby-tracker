@@ -46,6 +46,10 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
   const { timeFormat } = useTimeFormat();
   const locale = i18n.language;
   const refreshTick = useTimeRefresh(60000);
+  const summaryNow = useMemo(() => {
+    void refreshTick;
+    return new Date();
+  }, [refreshTick]);
 
   const [selectedDate, setSelectedDate] = useState(() => getSleepDate(new Date(), dayStartHour));
   const [weekEndDate, setWeekEndDate] = useState(() => getSleepDate(new Date(), dayStartHour));
@@ -54,8 +58,8 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
   const requestedRange = useMemo(() => {
     if (activeTab === "day") return getSleepDayRange(selectedDate, dayStartHour);
     if (activeTab === "week") return getSleepWeekRange(weekEndDate, dayStartHour);
-    return getSleepSummaryRange(summaryPeriod);
-  }, [activeTab, dayStartHour, selectedDate, summaryPeriod, weekEndDate]);
+    return getSleepSummaryRange(summaryPeriod, summaryNow, dayStartHour);
+  }, [activeTab, dayStartHour, selectedDate, summaryNow, summaryPeriod, weekEndDate]);
   const rangeStatus = getSleepRangeStatus(requestedRange);
 
   useEffect(() => {
@@ -151,6 +155,7 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
     content = (
       <SummaryView
         sleeps={selectedSleeps}
+        now={summaryNow}
         timeFormat={timeFormat}
         dayStartHour={dayStartHour}
         dayEndHour={dayEndHour}

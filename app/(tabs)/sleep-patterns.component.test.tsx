@@ -45,6 +45,10 @@ jest.mock("@/contexts/time-format-context", () => ({
   useTimeFormat: () => ({ timeFormat: "24h" }),
 }));
 
+jest.mock("@/hooks", () => ({
+  useTimeRefresh: () => 0,
+}));
+
 jest.mock("@/utils/sleepGoals", () => ({
   isUnderThreeMonths: () => true,
 }));
@@ -125,8 +129,8 @@ describe("SleepPatternsScreen historical ranges", () => {
 
     await waitFor(() => {
       expect(mockLoadSleepRange).toHaveBeenLastCalledWith({
-        start: new Date(2026, 5, 14, 0, 0, 0, 0).toISOString(),
-        end: new Date(2026, 6, 15, 0, 0, 0, 0).toISOString(),
+        start: new Date(2026, 5, 14, 6, 0, 0, 0).toISOString(),
+        end: new Date(2026, 6, 14, 6, 0, 0, 0).toISOString(),
       });
     });
 
