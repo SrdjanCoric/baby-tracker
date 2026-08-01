@@ -195,6 +195,7 @@ Durable decisions that apply across all tasks:
 - [ ] 0057 · Bind Live Activity identity to the timer, not the activity type → tasks/0057-bind-live-activity-to-timer-identity.md
 - [ ] 0058 · Recover a queued activity write that the server denies → tasks/0058-recover-denied-queued-activity-writes.md
 - [ ] 0059 · Cover WatchConnectivity delivery failures → tasks/0059-cover-watchconnectivity-delivery-failures.md
+- [ ] 0060 · Resolve the Portuguese (Portugal) solid-food label → tasks/0060-resolve-pt-pt-solid-food-label.md
 
 ## Workflow status
 
