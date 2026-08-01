@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const updateApplicationContext = vi.fn();
+const getIsWatchAppInstalled = vi.fn(async () => true);
 
 vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
 vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
   sendMessage: vi.fn(),
   getReachability: vi.fn(async () => true),
+  getIsWatchAppInstalled,
   watchEvents: { addListener: vi.fn(() => vi.fn()) },
 }));
 
@@ -26,6 +28,40 @@ async function loadWatchService() {
 describe("watch language transport", () => {
   beforeEach(() => {
     updateApplicationContext.mockClear();
+    getIsWatchAppInstalled.mockResolvedValue(true);
+  });
+
+  it("holds the language until the watch session can receive it", async () => {
+    // WCSession activates asynchronously during launch, and a context published
+    // before it is ready is discarded with no error the JS side can observe.
+    getIsWatchAppInstalled.mockResolvedValue(false);
+    const { setWatchLanguage } = await loadWatchService();
+
+    await setWatchLanguage("pt-PT");
+
+    expect(updateApplicationContext).not.toHaveBeenCalled();
+  });
+
+  it("delivers the held language once the watch becomes available", async () => {
+    getIsWatchAppInstalled.mockResolvedValue(false);
+    const { setWatchLanguage, flushPendingWatchLanguage } = await loadWatchService();
+    await setWatchLanguage("pt-PT");
+
+    getIsWatchAppInstalled.mockResolvedValue(true);
+    await flushPendingWatchLanguage();
+
+    expect(updateApplicationContext).toHaveBeenCalledTimes(1);
+    expect(updateApplicationContext.mock.calls[0][0]).toEqual({ language: "pt-PT" });
+  });
+
+  it("does nothing on flush when no language was held back", async () => {
+    const { setWatchLanguage, flushPendingWatchLanguage } = await loadWatchService();
+    await setWatchLanguage("de");
+    updateApplicationContext.mockClear();
+
+    await flushPendingWatchLanguage();
+
+    expect(updateApplicationContext).not.toHaveBeenCalled();
   });
 
   it("carries the resolved language in the application context", async () => {

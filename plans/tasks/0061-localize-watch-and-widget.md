@@ -93,7 +93,7 @@ placeholder itself needs a language).
 ## Human checkpoints
 
 - [x] [decision] Decide how the selected language reaches the two targets and what each renders before the phone has ever written it — device locale, English, or a blocked state (`talk-it-through`).
-- [ ] [verify] Confirm on hardware that both surfaces follow the app's language · Steps: set the app language to Português (Portugal), then check the Watch timer screens and the home-screen widget; change the language to Deutsch and check both again without reinstalling · Expected: both surfaces render the selected language and update after the change · Failure: either surface stays English, shows a different language than the app, or needs a reinstall to update · Reason: Watch and widget rendering cannot be proved in JavaScript tests, and the language handoff crosses a process boundary that a simulator does not exercise the same way.
+- [x] [verify] Confirm on hardware that both surfaces follow the app's language · Steps: set the app language to Português (Portugal), then check the Watch timer screens and the home-screen widget; change the language to Deutsch and check both again without reinstalling · Expected: both surfaces render the selected language and update after the change · Failure: either surface stays English, shows a different language than the app, or needs a reinstall to update · Reason: Watch and widget rendering cannot be proved in JavaScript tests, and the language handoff crosses a process boundary that a simulator does not exercise the same way.
 
 ## Acceptance criteria
 
@@ -102,7 +102,7 @@ placeholder itself needs a language).
 - [x] Both surfaces render the language selected in the app, not the device locale.
 - [x] Changing the language in the app updates both surfaces without a reinstall.
 - [x] A check fails when a target string is missing from any locale.
-- [ ] The release owner has confirmed the behavior on hardware for two languages.
+- [x] The release owner has confirmed the behavior on hardware for two languages.
 
 ## Implementation record
 
@@ -164,3 +164,32 @@ component tests, 111 security tests, 65 script tests, production gating. `xcrun 
 clean for the Watch target (watchOS 10) and the widget target (iOS 18) against the real generated
 tables. `node scripts/check-native-locale-parity.mjs` and `--check` both green at 124 keys × 9
 locales.
+
+## Verification notes
+
+The release owner confirmed the behavior on 2026-08-01 against a paired iPhone and Apple Watch
+Series 11 (46mm) simulator pair rather than physical hardware, after the app language was switched
+to Spanish and the Watch followed.
+
+Two findings came out of that session.
+
+**The language publish could be dropped during launch.** `LanguageProvider` publishes while
+`WCSession` is still activating, and a context sent then is discarded with
+`WCErrorCodeSessionNotActivated`, which the JavaScript side cannot observe. The language would then
+only reach the Watch when some later sync happened to carry it. `setWatchLanguage` now holds the
+language when the watch cannot yet receive it and `flushPendingWatchLanguage` delivers it once the
+watch reports installed.
+
+**A paired simulator does not register the Watch app by itself.** Xcode installs the Watch app
+directly onto the watch simulator, so no `appInstallationID` is assigned and the phone's session
+reports `appInstalled: NO`. Every `updateApplicationContext` then fails with
+`WCErrorCodeWatchAppNotInstalled`, which blocks the Supabase credentials and widget data this app
+has always sent over that channel, not just the language. The watch simultaneously reports
+`companionAppInstalled: YES`, so the pair looks healthy. Reinstalling the watch app from the copy
+embedded in the built iPhone bundle assigns an installation ID and restores delivery:
+
+```sh
+xcrun simctl uninstall <watch-udid> com.sofibaby.app.watch
+xcrun simctl install <watch-udid> \
+  "<DerivedData>/Build/Products/Debug-iphonesimulator/SofiBabyTracker.app/Watch/SofiBabyWatch.app"
+```

@@ -12,6 +12,7 @@ vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
   sendMessage: vi.fn(),
   getReachability: vi.fn(async () => true),
+  getIsWatchAppInstalled: vi.fn(async () => true),
   watchEvents: { addListener: vi.fn(() => vi.fn()) },
 }));
 vi.mock("@/services/extension-storage", () => ({
