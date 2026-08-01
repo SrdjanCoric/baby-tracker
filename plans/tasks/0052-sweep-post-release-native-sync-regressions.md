@@ -24,7 +24,7 @@ Produce a consolidated, privacy-safe native/sync regression matrix. Map every sc
 ## Implementation work
 
 - [ ] Build a capability-level inventory of synchronization, migration, Edge Function, widget, Live Activity, Watch, native date, notification, auth-restoration, and timer changes after the July 5 baseline.
-- [ ] Incorporate the identity traces, causal evidence, and discarded hypotheses from Tasks 0048 and 0049 plus relevant findings from Task 0051.
+- [ ] Incorporate the identity traces, causal evidence, and discarded hypotheses from Task 0048 plus relevant findings from Task 0051. Task 0049 is deferred by the release owner, so no prior Watch attribution evidence exists: audit WatchConnectivity and direct Watch fallback directly against the July 5 baseline or the approved post-July contract, and record the absence of a 0049 trace as a stated limitation rather than a gap to fill.
 - [ ] Rank boundaries by credible data loss, duplicate completion, authorization failure, stale cross-device state, unrecoverable offline work, native cleanup failure, and weak device coverage.
 - [ ] Define expected behavior from July 5 where safely comparable or from approved post-July task and migration contracts where the capability is intentionally new.
 - [ ] Run existing and targeted local unit, integration, SQL-vector, security, interruption, and multi-caregiver checks, adding temporary stress harnesses where needed to raise intermittent reproduction rates.
