@@ -16,22 +16,45 @@ Produce a consolidated, privacy-safe regression matrix. Every reviewed surface m
 
 **Applicable references**: `references/02-testing.md`, `references/03-documentation.md`, `references/10-definition-of-done.md`
 
-- [ ] Use risk-ranked, deterministic automated and simulator checks with explicit expected bases; do not equate code change with regression without behavioral evidence.
-- [ ] Publish a navigable matrix covering every scoped capability, commands and evidence, findings, deferrals, and recommended follow-up tasks.
-- [ ] Leave sufficient version-controlled instructions and privacy-safe fixtures for another contributor to repeat each finding.
+- [x] Use risk-ranked, deterministic automated and simulator checks with explicit expected bases; do not equate code change with regression without behavioral evidence.
+- [x] Publish a navigable matrix covering every scoped capability, commands and evidence, findings, deferrals, and recommended follow-up tasks.
+- [x] Leave sufficient version-controlled instructions and privacy-safe fixtures for another contributor to repeat each finding.
 
 ## Implementation work
 
-- [ ] Build a capability-level inventory of all user-facing changes between the July 5 baseline and audit-start current source, mapping merged tasks, commits, tests, and affected screens or state providers.
-- [ ] Incorporate confirmed fixes, remaining findings, and uncovered adjacent call sites from Tasks 0047–0050 without repeating resolved attribution work or re-auditing Task 0050's fixed sleep-summary scenarios.
-- [ ] Rank capabilities by credible data loss, incorrect caregiver decisions, broken primary workflows, historical-data dependence, change density, and missing differential coverage.
-- [ ] Define a finite audit matrix with explicit expected behavior sourced from July 5 behavior or approved post-July task contracts.
-- [ ] Run focused unit/component/integration differentials for pure and provider behavior before spending device time.
-- [ ] Exercise high-risk visual flows with the local household fixture on current and baseline/intended builds, capturing redacted results and exact configuration.
-- [ ] Check adjacent latest-record selection, history ranges, deletion/editing, aggregate denominators, preference refresh, localization boundaries, accessibility actions, and onboarding restoration where post-July changes touched them.
-- [ ] Record every scoped capability as exercised, statically reviewed, previously covered, deferred, or a reproducible finding; do not leave silent gaps.
-- [ ] For every finding, state severity, regression/pre-existing/contract classification, minimal reproduction, likely introduction range, data risk, and recommended follow-up task boundary.
-- [ ] Publish the matrix, remove temporary instrumentation and raw artifacts, and run applicable canonical documentation and test checks.
+- [x] Build a capability-level inventory of all user-facing changes between the July 5 baseline and audit-start current source, mapping merged tasks, commits, tests, and affected screens or state providers.
+- [x] Incorporate confirmed fixes, remaining findings, and uncovered adjacent call sites from Tasks 0047–0050 without repeating resolved attribution work or re-auditing Task 0050's fixed sleep-summary scenarios.
+- [x] Rank capabilities by credible data loss, incorrect caregiver decisions, broken primary workflows, historical-data dependence, change density, and missing differential coverage.
+- [x] Define a finite audit matrix with explicit expected behavior sourced from July 5 behavior or approved post-July task contracts.
+- [x] Run focused unit/component/integration differentials for pure and provider behavior before spending device time.
+- [~] Exercise high-risk visual flows with the local household fixture on current and baseline/intended builds, capturing redacted results and exact configuration. — Deferred to the release owner by this task's manual device policy: the agent may build and launch simulators but must not execute E2E interactions or classify device results. Exact steps, expected results, and failure signals are in the matrix's "Manual verification for the release owner" section.
+- [x] Check adjacent latest-record selection, history ranges, deletion/editing, aggregate denominators, preference refresh, localization boundaries, accessibility actions, and onboarding restoration where post-July changes touched them.
+- [x] Record every scoped capability as exercised, statically reviewed, previously covered, deferred, or a reproducible finding; do not leave silent gaps.
+- [x] For every finding, state severity, regression/pre-existing/contract classification, minimal reproduction, likely introduction range, data risk, and recommended follow-up task boundary.
+- [x] Publish the matrix, remove temporary instrumentation and raw artifacts, and run applicable canonical documentation and test checks.
+
+## Implementation record
+
+**Deliverables**
+- `docs/post-july-app-regression-audit.md` — the regression matrix: scope, exclusions with owning task, method, baseline suite state, 23-row capability matrix, 3 findings, repeatability commands, owner verification checklist.
+- `scripts/audit/locale-key-parity.mjs` — version-controlled locale key differential across all 9 locales; reproduces finding F-2. Not wired into any npm script, so CI is unaffected.
+
+**Baseline and scope**: baseline `cdbbb1e` (2026-07-05) to audit head `73100d6` (2026-08-01); 258 commits, 283 changed files under `src/`/`app/` (+33,623 / −7,156), 115 of them tests.
+
+**Audit approach**: capability inventory from git plumbing, then five isolated risk-ranked differential passes (range/statistics loading; Timeline deletion/editing/latest-record; adjacent sleep surfaces; preferences/accessibility/onboarding; export/reports/health/growth/milestones/account). Every claimed finding was re-verified in the parent against the actual code path and the baseline revision before being recorded — one agent-reported finding was materially narrowed by that check (see F-1 below).
+
+**Findings**
+- **F-1 (high, regression)** — Export (CSV) and reports (PDF) silently omit records older than the locally cached window. Introduced by `c1b9cc1` (2026-07-27). Seven per-collection fetches cap the initial pull at 1,000 records with no pagination loop, while export/reports read AsyncStorage directly and never resolve the selected range through `fetchActivityRangeFromDatabase` (which paginates correctly). The pre-export record count is drawn from the same truncated cache, so it confirms the wrong number. No data is destroyed — `commitPulledRecentCollection` merges rather than replaces. The 1,000-row cap is itself intended and documented at `README.md:43`, which states that surfaces request the ranges they display; export and reports are the only scoped historical-data consumers absent from that contract. Recommended follow-up: one task scoped to the export/report path only.
+- **F-2 (low, pre-existing)** — `pt-PT` lacks `foods.cereal` and carries orphan `foods.cereais`; three feeding screens fall back to English. Predates the baseline (`6144e30`, 2026-05-16), so not a regression.
+- **F-3 (low, new-code gap)** — Four `Pressable` controls in `ReturningUserProfileFallback.tsx` have no accessibility label or role. Component postdates the baseline (Task 0039), so not a regression.
+
+**Verified non-regressions**: adjacent sleep surfaces, Timeline deletion and tombstone read path, activity range and statistics loading with baby scoping, preference-derived presentation, and onboarding/household restoration all passed. Post-July differences trace to approved contracts (0033, 0034, 0036–0045, 0050, age-aware morning drift, overlap warning) and are recorded as intended rather than flagged. Post-July localization is clean: 115 new `en` keys, all translated across all 9 locales.
+
+**Decisions**: none required escalation. No `[decision]`, `[confirm-db]`, or `[confirm-security]` items were declared and no unexpected out-of-task obstacle arose.
+
+**Automated proof**: full canonical `check:code` chain green at the audit head before any audit change (lint, typecheck, unit 2,459, component 778, security 13, sync 20, ci, production-gating), establishing that no finding is explained by a pre-existing suite failure. `git diff --check` clean; `node scripts/audit/locale-key-parity.mjs` reproduces F-2.
+
+**Privacy**: no production-derived data, account identifier, or raw export is committed. The household snapshot at `e2e/artifacts/reproduction/household.json` is gitignored and stays local; the matrix states that F-1 reproduces with any baby exceeding 1,000 records in one collection, so the snapshot is not required to repeat it.
 
 ## Human checkpoints
 
