@@ -48,7 +48,7 @@ Preserve the existing interval-union behavior, automatic Nap/Night classificatio
 
 **Manual device policy**: The agent may prepare, build, and launch iOS or Android simulators, but must not execute Maestro or other E2E interactions or assertions. The release owner performs and classifies device/E2E scenarios.
 
-- [ ] [verify] Open Past 7 Days Sleep Statistics with a synthetic history containing seven completed days, a partial current day, and one fragmented night · Expected: the partial current day is absent, exactly seven completed day bars are shown, the fragmented night's evening start supplies bedtime, and the visible averages match the focused tests · Failure: the current day lowers an average, an eighth night contributes, or an after-midnight fragment replaces the evening bedtime.
+- [x] [verify] Open Past 7 Days Sleep Statistics with a synthetic history containing seven completed days, a partial current day, and one fragmented night · Expected: the partial current day is absent, exactly seven completed day bars are shown, the fragmented night's evening start supplies bedtime, and the visible averages match the focused tests · Failure: the current day lowers an average, an eighth night contributes, or an after-midnight fragment replaces the evening bedtime.
 
 ## Acceptance criteria
 
@@ -70,4 +70,4 @@ Preserve the existing interval-union behavior, automatic Nap/Night classificatio
 - **Review**: One compact Standards/Spec/Bug panel ran; security was skipped because no relevant trust-boundary surface changed. Remediation added day-start refresh consistency, explicit incomplete-night proof, a timezone-controlled focused root command, and timezone-independent component range setup. All findings are fixed; no accepted risks or deferred concerns remain.
 - **README**: No update. Existing sleep documentation describes predictions and overlap union; the internal completed-day summary denominator does not change setup or usage documentation.
 - **Automated proof**: `npm run test:sleep-summary` passed (104 unit tests and 9 component tests). `npm run check:code` passed the complete canonical non-device suite. Focused lint and typecheck also passed.
-- **Manual proof**: Pending the release-owner checkpoint below.
+- **Manual proof**: Release owner confirmed the Past 7 Days synthetic-history checkpoint passed: seven completed bars, current partial day excluded, evening fragment used for bedtime, and visible averages matched.
