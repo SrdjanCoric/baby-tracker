@@ -187,9 +187,17 @@ Durable decisions that apply across all tasks:
 - [-] 0049 · Attribute Watch timer and history regressions (deferred by owner; after 0047) → tasks/0049-attribute-watch-regressions.md
 - [x] 0050 · Fix incomplete-day and fragmented-night sleep summaries (after 0047) → tasks/done/0050-fix-sleep-summary-averages.md
 - [x] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0050) → tasks/done/0051-sweep-post-release-app-regressions.md
-- [ ] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
+- [-] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (audit ran 2026-08-01; output withheld from the repository by owner decision; after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
 - [ ] 0053 · Include the full selected range in exports and reports (after 0051) → tasks/0053-resolve-export-report-ranges.md
+- [ ] 0054 · Restrict the wake-window reminder RPC to the service role → tasks/0054-restrict-wake-window-reminder-rpc.md
+- [ ] 0055 · Prevent self-assignment of household and owner role (after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
+- [ ] 0056 · Keep an active timer lock reclaimable (after 0055) → tasks/0056-keep-active-timer-locks-reclaimable.md
+- [ ] 0057 · Bind Live Activity identity to the timer, not the activity type → tasks/0057-bind-live-activity-to-timer-identity.md
+- [ ] 0058 · Recover a queued activity write that the server denies → tasks/0058-recover-denied-queued-activity-writes.md
+- [ ] 0059 · Cover WatchConnectivity delivery failures → tasks/0059-cover-watchconnectivity-delivery-failures.md
 
 ## Workflow status
 
 Tasks 0001 through 0045 and Tasks 0047, 0048, and 0050 are closed. Task 0049 is deferred by the release owner and must not be claimed without an explicit owner decision. On 2026-08-01 the owner removed 0049 from Task 0051's prerequisites, because 0051 audits TypeScript/React Native product surfaces while Watch native synchronization already falls inside Task 0052's scope. Task 0052 never listed 0049 as a prerequisite; its implementation work no longer consumes 0049 evidence and instead audits Watch boundaries directly, recording the missing attribution trace as a stated limitation. No remaining task depends on 0049. Tasks 0051 and 0052 complete the adjacent application, native, and sync sweeps. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+
+Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054 through 0057 and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Tasks 0055 and 0056 depend on their predecessors only because all three add migrations and would otherwise collide on the next migration ordinal.
