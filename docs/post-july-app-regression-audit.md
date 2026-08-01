@@ -5,7 +5,7 @@ deployed source. It reports what was checked, how, and what it found. It contain
 
 - **Baseline**: `cdbbb1e8cced61c52bc78ca4eb4531e90647218e` — 2026-07-05, "Merge pull request #109 … crdt-tombstone-deletes"
 - **Audit head**: `73100d6` — 2026-08-01
-- **Scope**: 258 commits; 283 changed files under `src/` and `app/` (+33,623 / −7,156). 115 of those are test files.
+- **Scope**: 258 commits repo-wide, 63 of them touching `src/` or `app/`; 283 changed files under `src/` and `app/` (+33,623 / −7,156), 114 of them test files.
 - **Environment**: Node v26.5.0, TypeScript 5.9.3, macOS. No device or E2E interaction was performed by the agent.
 
 ## What this audit does and does not cover
@@ -71,7 +71,8 @@ baseline revision with rationale; **covered**: resolved by a merged task; **find
 | 7 | Timeline and lazy activity history | high | exercised | `commitPulledRange` retains out-of-range local entries; keyset pagination in `fetchActivityRangeFromDatabase` |
 | 8 | Timeline deletion and tombstone read path | high | exercised | `dropTombstoned()` at `activity-sync-service.ts:193`; `REMOTE_DELETE` reducers |
 | 9 | Activity entry — feeding, pumping, diaper, tummy time | med | exercised | `upsertById()` applied consistently across `ADD_*`, `REMOTE_INSERT`, `REMOTE_UPDATE` |
-| 10 | Latest-record selection and Dashboard cards | med | exercised + covered | Consistent `startedAt DESC`; time-after-deletion covered by 0048 |
+| 10 | Home and Dashboard, including latest-record selection | high | exercised + covered | `app/(tabs)/index.tsx` +78 lines and `src/components/DashboardCard.tsx` +558 lines — the highest-churn changed screen component. Latest-record selection uses a consistent `startedAt DESC`; timer stop-progress state added by `50dbaa6` renders from the same provider state it gates on; time-after-deletion refresh covered by Task 0048 |
+| 10a | Activity edit screens | none | reviewed — unchanged since baseline | `git diff --name-only cdbbb1e..HEAD -- app/edit` returns 0 files; all 8 edit screens are byte-identical to the baseline, so no post-July regression is possible in them |
 | 11 | Activity range and statistics loading | high | exercised | Half-open `[start, end)` ranges; `withStorageLock` serializes concurrent commits |
 | 12 | Statistics baby scoping and denominators | high | exercised | `StatisticsActivityRange.tsx:55-56` filters by `selectedBaby`; render gated on `hasCachedData` so partial ranges do not render as totals |
 | 13 | Health and growth tracking | low | exercised | Unit conversion, memoized convert, `upsertById` on add |
@@ -88,9 +89,16 @@ baseline revision with rationale; **covered**: resolved by a merged task; **find
 
 ### Localization differential
 
-Post-July localization is clean. 115 keys were added to `en.json` since the baseline; all 9 locales
-carry every one, with no key left equal to its English source and no stale translation against
-changed English copy. The only defect predates the baseline (F-2).
+Post-July localization is effectively clean. 115 keys were added to `en.json` since the baseline and
+every locale resolves all of them — none is missing. Two keys had their English copy changed, and both
+were retranslated everywhere. One added key is byte-identical to English in `it.json`:
+`newOwnerOnboarding.invitation.emailPlaceholder` stays `caregiver@example.com`, where `fr`, `de`, and
+the others localise the local part. That is defensible for an Italian example address and is recorded
+here rather than raised as a finding.
+
+Note when reading the script output: the per-locale `identical-to-en` counts (38–55) are dominated by
+strings that predate the baseline and by legitimately identical short labels. Only the one key above is
+both post-baseline and identical.
 
 ## Findings
 
@@ -99,7 +107,9 @@ changed English copy. The only defect predates the baseline (F-2).
 - **Capability**: data export (CSV) and reports (PDF)
 - **Classification**: regression
 - **Introduced by**: `c1b9cc1` "Load Timeline activity history on demand", 2026-07-27, hardened in `0eb52cc`
-- **Where**: `src/services/export-service.ts:69-74`, `src/services/pdf-service.ts:59-64`, `app/settings/export.tsx:67`
+- **Where**: `ExportService.exportToCSV` (`src/services/export-service.ts:149`, storage reads at :157-172),
+  `ExportService.getRecordCountsInRange` (`src/services/export-service.ts:87`, storage reads at :94-99),
+  `PDFService` (`src/services/pdf-service.ts:59-64`), called from `app/settings/export.tsx:67`
 - **Data risk**: no data is destroyed — `commitPulledRecentCollection` merges rather than replaces — but a
   user-facing export that a caregiver may take to a pediatrician can be silently incomplete, and the
   record count shown before export comes from the same truncated cache, so it confirms the wrong number.
@@ -151,7 +161,17 @@ initial pull needs no change.
 `pt-PT` has no `foods.cereal` key; it carries an orphan `foods.cereais` that nothing reads.
 `t("foods.cereal")` is called from `app/feeding/index.tsx:1054`, `app/feeding/solids.tsx:138`, and
 `app/feeding/manual.tsx:261`, so Portuguese (Portugal) users see the English "Cereal". Every other
-locale resolves the key. Repeat with the locale key differential described under Repeatability.
+locale resolves the key.
+
+- **Minimal reproduction**: `node scripts/audit/locale-key-parity.mjs` prints
+  `pt-PT.json: … missing 1` and names `foods.cereal`. In the app, set the language to Português (Portugal)
+  and open a solid-food picker (Feeding → Solids): the entry reads "Cereal" while its neighbours are translated.
+- **Expected basis**: the explicit invariant that every key referenced by `t()` resolves in every shipped
+  locale — the other eight locales satisfy it for this key.
+- **Recommended follow-up boundary**: a one-key locale fix — rename `foods.cereais` to `foods.cereal` in
+  `pt-PT.json`. Optionally wire `scripts/audit/locale-key-parity.mjs` into `check:code` so an unresolved
+  key fails a check rather than silently falling back; that wiring is a separate decision, since exit 1
+  would then gate the suite.
 
 ### F-3 — low — Post-baseline returning-user fallback has unlabeled controls
 
@@ -163,6 +183,16 @@ locale resolves the key. Repeat with the locale key differential described under
 Four `Pressable` controls carry no `accessibilityLabel` or `accessibilityRole`, so a screen-reader user
 reaches the returning-user recovery path without announced actions. Introduced with Task 0039.
 
+- **Minimal reproduction**: `grep -n "accessibilityLabel\|accessibilityRole" src/components/ReturningUserProfileFallback.tsx`
+  returns nothing, against four `Pressable` elements at lines 129, 143, 165, and 173. On device: enable
+  VoiceOver, reach the returning-user profile fallback, and swipe through the controls — they announce as
+  unlabeled buttons, so the recovery choice is not conveyed.
+- **Expected basis**: the explicit invariant that an interactive control exposes an accessible name and
+  role. Sibling components in the same tree follow it, so this is an internal consistency gap, not a new standard.
+- **Recommended follow-up boundary**: add localized labels and roles to those four controls. Scope it to
+  this component unless the owner wants a broader accessibility sweep, which would be its own task —
+  several changed screens delegate labeling to child components and were not individually exercised here.
+
 ## Repeatability
 
 Everything above is reproducible from this repository.
@@ -171,39 +201,63 @@ Everything above is reproducible from this repository.
 # Suite state at the audit head
 npm run check:code
 
-# What changed since the baseline, by capability
+# What changed since the baseline (63 commits touch src/ or app/; 258 repo-wide)
 git log --oneline cdbbb1e8cced61c52bc78ca4eb4531e90647218e..HEAD -- src app
 git diff --stat cdbbb1e8cced61c52bc78ca4eb4531e90647218e..HEAD -- src app
 
-# F-1: the truncation, and the correct paginated path to compare against
+# F-1: which consumers resolve their range — reproduces the finding from source alone
+node scripts/audit/export-range-coverage.mjs
+
+# F-1 supporting detail: the baseline had no cap; the range loader does paginate
 git show cdbbb1e8cced61c52bc78ca4eb4531e90647218e:src/services/activity-sync-service.ts | grep -c 'limit('
 grep -n 'limit(ACTIVITY_RANGE_PAGE_SIZE)' src/services/activity-sync-service.ts
 
 # F-2: locale key differential across all 9 locales
 node scripts/audit/locale-key-parity.mjs
+
+# F-3: the unlabeled controls
+grep -n 'accessibilityLabel\|accessibilityRole' src/components/ReturningUserProfileFallback.tsx
 ```
 
-### Household fixture
+`scripts/audit/export-range-coverage.mjs` is the committed reproduction of F-1. It needs no database,
+simulator, or fixture: it reports that Export and Reports read `*StorageService.getAll*` with no range
+resolution, while Statistics and Timeline reach the on-demand loader. It exits 1 while the defect is
+present and 0 once every consumer resolves its range, so the eventual fix can be confirmed with it.
 
-The simulator scenarios below use `e2e/artifacts/reproduction/household.json` (2 users, 1 baby, 1,660
-feedings, 1,367 sleep sessions, latest 2026-07-31). `e2e/artifacts/` is gitignored, so this snapshot is
-**local-only and is not distributed with the repository** — it is production-derived and deliberately not
-committed. A contributor without it reproduces F-1 by seeding any baby with more than 1,000 records in one
-collection; the specific snapshot is not required. Load the local fixture with
-`npm run e2e:household-timers:clean`, or pass the `e2eMode=true` launch argument to the simulator
-(`src/utils/e2e-mode.ts`).
+That probe proves the code path, not the user-visible symptom. Reproducing the symptom needs a baby with
+more than 1,000 records in one collection and is a release-owner step (see below).
 
-The Maestro flows from Tasks 0047 and 0048 live under the same gitignored path and are therefore also
-local-only.
+### On fixtures
+
+**No committed fixture produces a collection larger than the 1,000-row cap.** `e2e/fixtures/seed-data.sql`
+inserts on the order of tens of rows, and `npm run e2e:household-timers:clean` seeds *that* file — it does
+**not** load a large household. Nothing in the repository reads
+`e2e/artifacts/reproduction/household.json`: `grep -rn reproduction e2e/scripts/ scripts/ src/` returns
+nothing, so that snapshot has no committed loader at all.
+
+The snapshot (2 users, 1 baby, 1,660 feedings, 1,367 sleep sessions, latest 2026-07-31) exists only on the
+release owner's machine under the gitignored `e2e/artifacts/`. It is production-derived and deliberately
+not committed. The Maestro flows from Tasks 0047 and 0048 live under the same gitignored path and are
+likewise local-only.
+
+So the device-level symptom check for F-1 requires either that local snapshot or a synthetic collection of
+more than 1,000 records built by hand. Committing a synthetic high-volume seed would remove that
+dependency and is worth doing, but it is a change to the E2E fixtures rather than audit evidence, so it is
+recommended to the owner rather than made here. The structural probe above is what keeps F-1 repeatable
+from the repository alone in the meantime.
 
 ## Manual verification for the release owner
 
 The agent may build and launch simulators but does not execute E2E interactions or classify device
 results. These are yours.
 
-- [ ] **F-1, critical path.** Reproduce the export gap with the household fixture using the six steps above.
+- [ ] **F-1, critical path.** Reproduce the export gap using the six steps above, with your local household
+      snapshot or any baby seeded past 1,000 records in one collection. `node scripts/audit/export-range-coverage.mjs`
+      already proves the code path, so this step confirms the user-visible symptom.
       Failure signal: the export is complete on a fresh install, which would mean the cause is
       mis-attributed and F-1 needs re-diagnosis before a fix task is opened.
+- [ ] **Decide on a committed high-volume seed.** Whether to add a synthetic >1,000-record fixture so F-1's
+      symptom is reproducible without the local production-derived snapshot.
 - [ ] **Statistics baby scoping.** With two babies, switch selection on Statistics and confirm no figure
       from the previous baby persists while the new range loads.
 - [ ] **Timeline lazy history.** Scroll back through a page boundary and confirm no record is dropped or duplicated.
