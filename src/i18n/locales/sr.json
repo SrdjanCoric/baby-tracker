@@ -1265,6 +1265,7 @@
     "recordsSummary": "{{count}} zapisa će biti izvezeno",
     "exportButton": "Preuzmi CSV",
     "loadingCounts": "Učitavanje podataka...",
+    "rangeLoadError": "Nije moguće učitati sve zapise za izabrani opseg. Proverite vezu i pokušajte ponovo.",
     "noBabySelected": "Molimo izaberite bebu za izvoz podataka",
     "exportFailed": "Izvoz nije uspeo",
     "unknownError": "Došlo je do neočekivane greške",

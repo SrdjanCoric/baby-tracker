@@ -87,8 +87,11 @@ export const ExportService = {
   async getRecordCountsInRange(
     babyId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
+    ensureRangesLoaded: () => Promise<void>
   ): Promise<ExportRecordCounts> {
+    await ensureRangesLoaded();
+
     const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
       await Promise.all([
         FeedingStorageService.getAllFeedings(babyId),
@@ -150,6 +153,8 @@ export const ExportService = {
     try {
       const { dataTypes, startDate, endDate, babyId, babyName, includeNotes } =
         options;
+
+      await options.ensureRangesLoaded();
 
       const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
         await Promise.all([

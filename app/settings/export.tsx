@@ -12,6 +12,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useBaby, useUnits } from "@/contexts";
 import { ExportService } from "@/services/export-service";
+import {
+  toInclusiveUtcRange,
+  useActivityRangeResolver,
+} from "@/hooks/useActivityRangeResolver";
 import { DataTypeSelector, DateRangePicker } from "@/components/export";
 import type {
   ExportDataType,
@@ -42,6 +46,7 @@ export default function ExportScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [rangeLoadError, setRangeLoadError] = useState(false);
   const [recordCounts, setRecordCounts] = useState<ExportRecordCounts>(
     EMPTY_RECORD_COUNTS
   );
@@ -56,6 +61,15 @@ export default function ExportScreen() {
   const [dateRange, setDateRange] = useState<DateRange>(getInitialDateRange());
   const [includeNotes, setIncludeNotes] = useState(true);
 
+  const resolveRanges = useActivityRangeResolver();
+  const ensureRangesLoaded = useCallback(
+    () =>
+      resolveRanges(
+        toInclusiveUtcRange(dateRange.startDate, dateRange.endDate)
+      ),
+    [resolveRanges, dateRange.startDate, dateRange.endDate]
+  );
+
   const loadRecordCounts = useCallback(async () => {
     if (!selectedBaby) {
       setIsLoading(false);
@@ -63,19 +77,22 @@ export default function ExportScreen() {
     }
 
     setIsLoading(true);
+    setRangeLoadError(false);
     try {
       const counts = await ExportService.getRecordCountsInRange(
         selectedBaby.id,
         dateRange.startDate,
-        dateRange.endDate
+        dateRange.endDate,
+        ensureRangesLoaded
       );
       setRecordCounts(counts);
     } catch (error) {
       console.error("Failed to load record counts:", error);
+      setRangeLoadError(true);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedBaby, dateRange.startDate, dateRange.endDate]);
+  }, [selectedBaby, dateRange.startDate, dateRange.endDate, ensureRangesLoaded]);
 
   useEffect(() => {
     loadRecordCounts();
@@ -96,6 +113,7 @@ export default function ExportScreen() {
         volumeUnit,
         weightUnit,
         heightUnit,
+        ensureRangesLoaded,
       });
 
       if (result.success && result.content && result.fileName) {
@@ -115,7 +133,7 @@ export default function ExportScreen() {
     } finally {
       setIsExporting(false);
     }
-  }, [selectedBaby, selectedTypes, dateRange, includeNotes, volumeUnit, weightUnit, heightUnit, t]);
+  }, [selectedBaby, selectedTypes, dateRange, includeNotes, volumeUnit, weightUnit, heightUnit, ensureRangesLoaded, t]);
 
   const totalSelectedRecords = selectedTypes.reduce(
     (sum, type) => sum + recordCounts[type],
@@ -173,6 +191,23 @@ export default function ExportScreen() {
             <Text className="text-content-secondary dark:text-content-dark-secondary mt-2">
               {t("export.loadingCounts")}
             </Text>
+          </View>
+        ) : rangeLoadError ? (
+          <View className="py-8 items-center" testID="export-range-error">
+            <Text className="text-content-secondary dark:text-content-dark-secondary text-center">
+              {t("export.rangeLoadError")}
+            </Text>
+            <Pressable
+              onPress={loadRecordCounts}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.retry")}
+              testID="export-range-retry"
+              className="mt-3 py-2 px-6 rounded-button-lg bg-primary-500 active:bg-primary-600"
+            >
+              <Text className="text-white font-semibold">
+                {t("common.retry")}
+              </Text>
+            </Pressable>
           </View>
         ) : (
           <>

@@ -27,6 +27,8 @@ export interface ExportOptions {
   babyId: string;
   babyName: string;
   includeNotes: boolean;
+  /** Resolves the selected range from the server into local storage before any read. */
+  ensureRangesLoaded: () => Promise<void>;
   volumeUnit?: "ml" | "oz";
   weightUnit?: "kg" | "lbs";
   heightUnit?: "cm" | "in";

@@ -1230,6 +1230,7 @@
     "recordsSummary": "{{count}} Einträge werden exportiert",
     "exportButton": "CSV exportieren",
     "loadingCounts": "Lade Daten...",
+    "rangeLoadError": "Nicht alle Einträge für den ausgewählten Zeitraum konnten geladen werden. Prüfe deine Verbindung und versuche es erneut.",
     "noBabySelected": "Bitte wähle ein Baby zum Exportieren",
     "exportFailed": "Export fehlgeschlagen",
     "unknownError": "Ein unerwarteter Fehler ist aufgetreten",

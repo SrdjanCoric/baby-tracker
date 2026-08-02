@@ -1230,6 +1230,7 @@
     "recordsSummary": "{{count}} records will be exported",
     "exportButton": "Export CSV",
     "loadingCounts": "Loading data...",
+    "rangeLoadError": "Could not load all records for the selected range. Check your connection and try again.",
     "noBabySelected": "Please select a baby to export data",
     "exportFailed": "Export Failed",
     "unknownError": "An unexpected error occurred",

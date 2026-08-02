@@ -1234,6 +1234,7 @@
     "recordsSummary": "{{count}} record verranno esportati",
     "exportButton": "Esporta CSV",
     "loadingCounts": "Caricamento dati...",
+    "rangeLoadError": "Impossibile caricare tutti i record per l'intervallo selezionato. Controlla la connessione e riprova.",
     "noBabySelected": "Seleziona un bambino per esportare i dati",
     "exportFailed": "Esportazione fallita",
     "unknownError": "Si è verificato un errore imprevisto",

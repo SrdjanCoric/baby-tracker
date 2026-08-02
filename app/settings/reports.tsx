@@ -12,6 +12,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useBaby, useUnits } from "@/contexts";
 import { PDFService } from "@/services/pdf-service";
+import {
+  toInclusiveUtcRange,
+  useActivityRangeResolver,
+} from "@/hooks/useActivityRangeResolver";
 import { SectionSelector } from "@/components/reports";
 import { DateRangePicker } from "@/components/export";
 import type { ReportSection } from "@/types/report";
@@ -46,6 +50,15 @@ export default function ReportsScreen() {
   const [dateRange, setDateRange] = useState<DateRange>(getInitialDateRange());
   const [includeCharts, setIncludeCharts] = useState(true);
 
+  const resolveRanges = useActivityRangeResolver();
+  const ensureRangesLoaded = useCallback(
+    () =>
+      resolveRanges(
+        toInclusiveUtcRange(dateRange.startDate, dateRange.endDate)
+      ),
+    [resolveRanges, dateRange.startDate, dateRange.endDate]
+  );
+
   const handleGenerate = useCallback(async () => {
     if (!selectedBaby || selectedSections.length === 0) return;
 
@@ -64,6 +77,7 @@ export default function ReportsScreen() {
         includeCharts,
         weightUnit,
         heightUnit,
+        ensureRangesLoaded,
       });
 
       if (result.success && result.filePath && result.fileName) {
@@ -89,7 +103,7 @@ export default function ReportsScreen() {
     } finally {
       setIsGenerating(false);
     }
-  }, [selectedBaby, selectedSections, dateRange, includeCharts, weightUnit, heightUnit, t]);
+  }, [selectedBaby, selectedSections, dateRange, includeCharts, weightUnit, heightUnit, ensureRangesLoaded, t]);
 
   const canGenerate = selectedSections.length > 0;
 

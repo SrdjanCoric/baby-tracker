@@ -52,8 +52,11 @@ export const PDFService = {
   async fetchReportData(
     babyId: string,
     _startDate: Date,
-    _endDate: Date
+    _endDate: Date,
+    ensureRangesLoaded: () => Promise<void>
   ): Promise<RawReportData> {
+    await ensureRangesLoaded();
+
     const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
       await Promise.all([
         FeedingStorageService.getAllFeedings(babyId),
@@ -213,7 +216,8 @@ export const PDFService = {
       const rawData = await this.fetchReportData(
         options.babyId,
         options.startDate,
-        options.endDate
+        options.endDate,
+        options.ensureRangesLoaded
       );
 
       const aggregatedData = this.aggregateReportData(rawData, options);

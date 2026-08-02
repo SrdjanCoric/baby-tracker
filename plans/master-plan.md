@@ -188,7 +188,7 @@ Durable decisions that apply across all tasks:
 - [x] 0050 · Fix incomplete-day and fragmented-night sleep summaries (after 0047) → tasks/done/0050-fix-sleep-summary-averages.md
 - [x] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0050) → tasks/done/0051-sweep-post-release-app-regressions.md
 - [-] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (audit ran 2026-08-01; output withheld from the repository by owner decision; after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
-- [ ] 0053 · Include the full selected range in exports and reports (after 0051) → tasks/0053-resolve-export-report-ranges.md
+- [~] 0053 · Include the full selected range in exports and reports (after 0051) → tasks/0053-resolve-export-report-ranges.md
 - [ ] 0054 · Restrict the wake-window reminder RPC to the service role → tasks/0054-restrict-wake-window-reminder-rpc.md
 - [ ] 0055 · Prevent self-assignment of household and owner role (after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
 - [ ] 0056 · Keep an active timer lock reclaimable (after 0055) → tasks/0056-keep-active-timer-locks-reclaimable.md
