@@ -16,7 +16,10 @@ import {
   CombinedExportData,
   type ExportUnitPreferences,
 } from "@/utils/csv-generator";
-import { ACTIVITY_RANGE_LOAD_ERROR } from "@/constants/activity-range";
+import {
+  ActivityRangeLoadError,
+  ensureActivityRangesLoaded,
+} from "./activity-range-error";
 import type {
   ExportOptions,
   ExportResult,
@@ -91,7 +94,7 @@ export const ExportService = {
     endDate: Date,
     ensureRangesLoaded: () => Promise<void>
   ): Promise<ExportRecordCounts> {
-    await ensureRangesLoaded();
+    await ensureActivityRangesLoaded(ensureRangesLoaded);
 
     const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
       await Promise.all([
@@ -155,7 +158,7 @@ export const ExportService = {
       const { dataTypes, startDate, endDate, babyId, babyName, includeNotes } =
         options;
 
-      await options.ensureRangesLoaded();
+      await ensureActivityRangesLoaded(options.ensureRangesLoaded);
 
       const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
         await Promise.all([
@@ -259,7 +262,7 @@ export const ExportService = {
       return {
         success: false,
         error: message,
-        errorKind: message === ACTIVITY_RANGE_LOAD_ERROR ? "rangeLoad" : undefined,
+        errorKind: error instanceof ActivityRangeLoadError ? "rangeLoad" : undefined,
         recordCount: 0,
       };
     }

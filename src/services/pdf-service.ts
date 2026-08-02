@@ -39,7 +39,10 @@ import {
   renderTummyTimeSection,
 } from "@/utils/pdf-templates";
 import { PDF_MIME_TYPE } from "@/constants/report";
-import { ACTIVITY_RANGE_LOAD_ERROR } from "@/constants/activity-range";
+import {
+  ActivityRangeLoadError,
+  ensureActivityRangesLoaded,
+} from "./activity-range-error";
 
 function sanitizeFileName(name: string): string {
   return name.replace(/[/\\?%*:|"<>]/g, "-").replace(/\s+/g, "_");
@@ -56,7 +59,7 @@ export const PDFService = {
     _endDate: Date,
     ensureRangesLoaded: () => Promise<void>
   ): Promise<RawReportData> {
-    await ensureRangesLoaded();
+    await ensureActivityRangesLoaded(ensureRangesLoaded);
 
     const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
       await Promise.all([
@@ -242,7 +245,7 @@ export const PDFService = {
       return {
         success: false,
         error: message,
-        errorKind: message === ACTIVITY_RANGE_LOAD_ERROR ? "rangeLoad" : undefined,
+        errorKind: error instanceof ActivityRangeLoadError ? "rangeLoad" : undefined,
       };
     }
   },

@@ -145,10 +145,12 @@ describe("PDFService", () => {
       expect(FeedingStorageService.getAllFeedings).toHaveBeenCalled();
     });
 
-    it("reports failure instead of a partial report when range resolution fails", async () => {
+    it("classifies any resolver failure as a range-load failure", async () => {
       const ensureRangesLoaded = vi
         .fn()
-        .mockRejectedValue(new Error("Failed to fetch activity range"));
+        .mockRejectedValue(
+          new Error("Activity pull storage scope changed during reconciliation")
+        );
 
       const result = await PDFService.generateReport({
         ...baseOptions,
@@ -156,7 +158,9 @@ describe("PDFService", () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("Failed to fetch activity range");
+      expect(result.error).toContain(
+        "Activity pull storage scope changed during reconciliation"
+      );
       expect(result.errorKind).toBe("rangeLoad");
       expect(result.filePath).toBeUndefined();
       expect(FeedingStorageService.getAllFeedings).not.toHaveBeenCalled();

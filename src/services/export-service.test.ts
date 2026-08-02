@@ -494,10 +494,12 @@ describe("ExportService", () => {
       expect(FeedingStorageService.getAllFeedings).toHaveBeenCalled();
     });
 
-    it("exportToCSV reports failure instead of a partial export when range resolution fails", async () => {
+    it("exportToCSV classifies any resolver failure as a range-load failure", async () => {
       const ensureRangesLoaded = vi
         .fn()
-        .mockRejectedValue(new Error("Failed to fetch activity range"));
+        .mockRejectedValue(
+          new Error("Activity pull storage scope changed during reconciliation")
+        );
 
       const result = await ExportService.exportToCSV({
         ...baseOptions,
@@ -505,7 +507,9 @@ describe("ExportService", () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("Failed to fetch activity range");
+      expect(result.error).toContain(
+        "Activity pull storage scope changed during reconciliation"
+      );
       expect(result.errorKind).toBe("rangeLoad");
       expect(result.content).toBeUndefined();
       expect(FeedingStorageService.getAllFeedings).not.toHaveBeenCalled();
