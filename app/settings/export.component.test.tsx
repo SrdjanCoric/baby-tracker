@@ -1,5 +1,7 @@
 import React from "react";
+import { Alert } from "react-native";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { ActivityRangeLoadError } from "@/services/activity-range-error";
 import type { DateRange } from "@/types/export";
 
 const mockExportToCSV = jest.fn();
@@ -147,7 +149,9 @@ describe("ExportScreen", () => {
   });
 
   it("shows an error, disables export, and retries when range resolution fails", async () => {
-    mockLoadRange.mockRejectedValueOnce(new Error("Failed to fetch activity range"));
+    mockGetRecordCountsInRange.mockRejectedValueOnce(
+      new ActivityRangeLoadError(new Error("Failed to fetch activity range"))
+    );
 
     render(<ExportScreen />);
 
@@ -164,6 +168,27 @@ describe("ExportScreen", () => {
       expect(screen.getByText("export.recordsSummary")).toBeTruthy();
     });
     expect(screen.queryByTestId("export-range-error")).toBeNull();
+  });
+
+  it("does not offer range retry when reading cached counts fails", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    mockGetRecordCountsInRange.mockRejectedValueOnce(
+      new SyntaxError("Unexpected end of JSON input")
+    );
+
+    render(<ExportScreen />);
+
+    await waitFor(() => {
+      expect(alert).toHaveBeenCalledWith(
+        "export.exportFailed",
+        "export.unknownError"
+      );
+    });
+    expect(screen.queryByTestId("export-range-error")).toBeNull();
+    expect(screen.queryByTestId("export-range-retry")).toBeNull();
+    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(
+      true
+    );
   });
 
   it("hides stale counts and disables export as soon as the range changes", async () => {

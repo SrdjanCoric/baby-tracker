@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useBaby, useUnits } from "@/contexts";
+import { ActivityRangeLoadError } from "@/services/activity-range-error";
 import { ExportService } from "@/services/export-service";
 import {
   toHalfOpenUtcRange,
@@ -99,12 +100,16 @@ export default function ExportScreen() {
     } catch (error) {
       console.error("Failed to load record counts:", error);
       if (requestId !== loadRequestRef.current) return;
-      setRecordCounts(EMPTY_RECORD_COUNTS);
-      setRangeLoadError(true);
+      if (error instanceof ActivityRangeLoadError) {
+        setRangeLoadError(true);
+      } else {
+        setRecordCounts(EMPTY_RECORD_COUNTS);
+        Alert.alert(t("export.exportFailed"), t("export.unknownError"));
+      }
     } finally {
       if (requestId === loadRequestRef.current) setIsLoading(false);
     }
-  }, [selectedBaby, dateRange.startDate, dateRange.endDate, ensureRangesLoaded]);
+  }, [selectedBaby, dateRange.startDate, dateRange.endDate, ensureRangesLoaded, t]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
