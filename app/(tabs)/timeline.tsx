@@ -114,7 +114,8 @@ export default function TimelineScreen() {
   } = useSleep();
   const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
   const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
-  const summaryRefreshTick = useTimeRefresh(60000);
+  // Only tick while a sleep is actually running; otherwise nothing on this screen ages.
+  const summaryRefreshTick = useTimeRefresh(activeSleepTimer?.isRunning ? 60000 : null);
   const {
     diapers,
     isLoading: diapersLoading,

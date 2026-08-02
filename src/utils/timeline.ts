@@ -11,7 +11,7 @@ import type { StoredGrowthEntry } from "@/services/growth-storage";
 import { formatDurationShort } from "@/utils/time";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import type { ActivityType } from "@/constants/activities";
-import { localDateKey, splitSleepAtDayBoundary } from "@/utils/sleep-patterns";
+import { classifySleepByTimeRange, localDateKey, splitSleepAtDayBoundary } from "@/utils/sleep-patterns";
 import { unionCompletedSleepIntervals } from "@/utils/sleep-intervals";
 
 export interface DailySummary {
@@ -114,27 +114,45 @@ export function calculateDailySummary(
   let sleepSeconds = 0;
   let napCount = 0;
   let nightSleepCount = 0;
-  const countedNaps = new Set<string>();
-  const countedNights = new Set<string>();
 
-  // Union first: overlapping and duplicate entries are permitted by design, and every
+  // Only sleeps touching the day before through the day after can put seconds in this day,
+  // and any entry that would union with one of them overlaps the same window. Narrowing
+  // first keeps the union off the whole loaded history on every recomputation.
+  const windowStart = new Date(targetDate);
+  windowStart.setDate(windowStart.getDate() - 1);
+  windowStart.setHours(dayStartHour, 0, 0, 0);
+  const windowEnd = new Date(targetDate);
+  windowEnd.setDate(windowEnd.getDate() + 2);
+  windowEnd.setHours(dayStartHour, 0, 0, 0);
+
+  const windowSleeps = data.sleeps.filter((sleep) => {
+    if (!sleep.endedAt) return false;
+    return (
+      new Date(sleep.endedAt).getTime() > windowStart.getTime() &&
+      new Date(sleep.startedAt).getTime() < windowEnd.getTime()
+    );
+  });
+
+  // Union next: overlapping and duplicate entries are permitted by design, and every
   // statistics surface reports the unioned intervals rather than the raw entries.
-  for (const sleep of unionCompletedSleepIntervals(data.sleeps)) {
+  for (const sleep of unionCompletedSleepIntervals(windowSleeps)) {
     const segments = splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour);
     const daySegments = segments.filter((seg) => seg.dateKey === targetDayKey);
     if (daySegments.length === 0) continue;
 
+    // Seconds come from the day's segments, but the sleep is classified as a whole, the
+    // way the statistics screens classify it — one sleep is one nap or one night, even
+    // when it straddles the day/night boundary.
     sleepSeconds += daySegments.reduce((sum, seg) => sum + seg.seconds, 0);
 
-    for (const seg of daySegments) {
-      if (seg.type === "nap" && !countedNaps.has(sleep.id)) {
-        countedNaps.add(sleep.id);
-        napCount++;
-      } else if (seg.type === "night" && !countedNights.has(sleep.id)) {
-        countedNights.add(sleep.id);
-        nightSleepCount++;
-      }
-    }
+    const type = classifySleepByTimeRange(
+      new Date(sleep.startedAt),
+      new Date(sleep.endedAt!),
+      dayStartHour,
+      dayEndHour
+    );
+    if (type === "nap") napCount++;
+    else nightSleepCount++;
   }
   const sleepMinutes = Math.round(sleepSeconds / 60);
 

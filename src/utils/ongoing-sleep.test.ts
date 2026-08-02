@@ -34,6 +34,38 @@ describe("buildOngoingSleepEntry", () => {
     expect(entry!.durationSeconds).toBe(50 * 60);
   });
 
+  it("shortens the entry interval by completed pauses, so surfaces that measure the interval report unpaused time", () => {
+    const entry = build({ timer: { isRunning: true, startTime: START, totalPausedMs: 600_000 } });
+
+    expect(entry!.startedAt).toBe(new Date(2026, 6, 15, 10, 10, 0).toISOString());
+    expect(entry!.endedAt).toBe(NOW.toISOString());
+    expect(
+      (new Date(entry!.endedAt!).getTime() - new Date(entry!.startedAt).getTime()) / 60000
+    ).toBe(50);
+  });
+
+  it("stops growing while the timer is paused", () => {
+    const pausedAt = new Date(2026, 6, 15, 10, 50, 0);
+    const timer = {
+      isRunning: true,
+      startTime: START,
+      totalPausedMs: 0,
+      isPaused: true,
+      pausedAt,
+    };
+
+    const atPause = build({ timer, now: new Date(2026, 6, 15, 10, 50, 0) });
+    const halfHourLater = build({ timer, now: new Date(2026, 6, 15, 11, 20, 0) });
+
+    expect(atPause!.durationSeconds).toBe(50 * 60);
+    expect(halfHourLater!.durationSeconds).toBe(50 * 60);
+    expect(
+      (new Date(halfHourLater!.endedAt!).getTime() -
+        new Date(halfHourLater!.startedAt).getTime()) /
+        60000
+    ).toBe(50);
+  });
+
   it("classifies by the configured day boundary", () => {
     const entry = build({ dayEndHour: 9 });
 

@@ -46,29 +46,72 @@ reported daily total, and changing its block set would change what the overlay d
 
 ## Implementation work
 
-- [ ] Add failing tests for `calculateDailySummary` covering: overlapping entries, duplicated
+- [x] Add failing tests for `calculateDailySummary` covering: overlapping entries, duplicated
       entries, adjacent entries that split a night, a sleep crossing the day-start boundary,
       non-overlapping entries, a configured `dayEndHour` other than 19, and a running sleep.
       Assert the sleep total against `buildDayViewData` totals for the same fixtures.
-- [ ] Union completed sleep intervals in `calculateDailySummary` before segmenting, so that the
+      → `src/utils/timeline.test.ts` (10 cases, each asserting parity with `buildDayViewData`).
+- [x] Union completed sleep intervals in `calculateDailySummary` before segmenting, so that the
       total and the nap and night counts all derive from the unioned set.
-- [ ] Thread the configured `dayEndHour` from the Timeline screen through `DailySummaryCard` into
+      → `src/utils/timeline.ts:120-138`.
+- [x] Thread the configured `dayEndHour` from the Timeline screen through `DailySummaryCard` into
       `calculateDailySummary`, keeping 19 as the fallback when no wake-window config is loaded.
-- [ ] Include the active sleep timer in the Timeline daily total using the same synthetic-entry
+      → `app/(tabs)/timeline.tsx`, `src/components/timeline/DailySummaryCard.tsx`.
+- [x] Include the active sleep timer in the Timeline daily total using the same synthetic-entry
       approach the Statistics sleep container uses, including its baby binding and paused-time
       handling.
-- [ ] Add or extend `DailySummaryCard` component tests proving the card renders the deduplicated
+      → new shared helper `src/utils/ongoing-sleep.ts`, used by the Timeline screen and by
+      `SleepStatsContainer` (its inline copy was removed).
+- [x] Add or extend `DailySummaryCard` component tests proving the card renders the deduplicated
       total and the boundary-aware nap and night counts.
+      → `src/components/timeline/DailySummaryCard.component.test.tsx`.
 
 ## Acceptance criteria
 
-- [ ] For a day containing overlapping or duplicated sleep entries, the Timeline summary card total
+- [x] For a day containing overlapping or duplicated sleep entries, the Timeline summary card total
       equals the Statistics day-view total for that day.
-- [ ] Nap and night counts on the card count each unioned sleep once.
-- [ ] With `dayEndHour` configured away from 19, an evening sleep is classified on the Timeline card
+- [x] Nap and night counts on the card count each unioned sleep once.
+- [x] With `dayEndHour` configured away from 19, an evening sleep is classified on the Timeline card
       the same way the Statistics screens classify it.
-- [ ] While a sleep timer is running, the Timeline total for the current day includes the elapsed
+- [x] While a sleep timer is running, the Timeline total for the current day includes the elapsed
       unpaused time, matching the Statistics day view.
-- [ ] Days with no overlapping entries report exactly the totals they report today, proving the fix
+- [x] Days with no overlapping entries report exactly the totals they report today, proving the fix
       changes only the overlapping case.
-- [ ] `calculateDailySummary` regression tests pass and cover every case listed above.
+- [x] `calculateDailySummary` regression tests pass and cover every case listed above.
+
+## Decisions
+
+- **Adjacent entries stay two sleeps.** The spec listed "adjacent entries that split a night" as a
+  fixture without prescribing a count. `unionCompletedSleepIntervals` merges strict overlaps only
+  (`sleepStart >= previousEnd` is treated as non-overlapping), so adjacent entries remain two
+  unioned intervals — which is also what `buildDayViewData` and `calculateSleepSummary` report.
+  The regression test asserts `nightSleepCount` 2.
+- **A sleep straddling the boundary is classified once, as a whole.** Segmenting produced one nap
+  segment and one night segment for a single 18:00–20:00 sleep with `dayEndHour` 19, so the card
+  showed "Naps 1× / Night 1×" where the Statistics screens show one nap. Counts now come from
+  `classifySleepByTimeRange` over the whole unioned interval; seconds still come from the day's
+  segments.
+- **The running sleep is emitted with a pause-adjusted start.** Every surface that totals sleep
+  measures `endedAt - startedAt` and ignores `durationSeconds`, so subtracting pauses from
+  `durationSeconds` alone left the total inflated — and because `totalPausedMs` only accumulates on
+  resume (`src/contexts/sleep-context.tsx:257-268`), the total kept growing during an open pause.
+  `buildOngoingSleepEntry` now shifts `startedAt` by `totalPausedMs` plus any open pause and keeps
+  `endedAt` at now, matching the existing `effectiveStartTime` idiom at `sleep-context.tsx:836`.
+  The day-view block still reaches the current time, and the interval carries unpaused time only.
+  This corrects the same defect on the Statistics surfaces, which share the helper.
+- **The Timeline refresh tick is gated on a running timer.** `useTimeRefresh` now accepts `null` to
+  stop refreshing; the Timeline passes `null` unless a sleep is running, so the screen no longer
+  re-renders its whole list once a minute for nothing.
+- **The summary unions a three-day window, not the whole history.** Timeline pagination can load
+  months of entries; only sleeps overlapping [day − 1, day + 2) at the day-start hour can put
+  seconds in the selected day, and any entry that would union with one of those overlaps the same
+  window.
+
+## Deferred
+
+- **A stale active timer from a previously selected baby can be attributed to the new baby**
+  (review finding BUG-3, minor). `ActiveSleepTimer` carries no `babyId`, so the ownership guard can
+  only check the provider binding. On a local-only account with no household, switching babies while
+  a timer runs leaves the previous baby's timer in state. This is pre-existing behavior shared with
+  the Statistics sleep screens; fixing it means carrying the owning `babyId` on the timer, which is
+  a context change outside this task. Worth its own task.
