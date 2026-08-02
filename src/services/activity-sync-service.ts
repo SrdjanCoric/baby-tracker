@@ -22,7 +22,6 @@ import type { StoredHealthEntry, CreateHealthInput, UpdateHealthInput } from "./
 import type { AchievementId } from "./achievement-detection";
 import type { SyncEngine } from "./sync/sync-engine";
 import type { UtcActivityRange } from "./activity-range-loader";
-import { ACTIVITY_RANGE_LOAD_ERROR } from "@/constants/activity-range";
 
 export type { UtcActivityRange } from "./activity-range-loader";
 
@@ -74,7 +73,7 @@ export async function fetchActivityRangeFromDatabase<T extends TimelineActivityT
 
     if (error) {
       console.error("[ActivitySync] Failed to fetch activity range:", error.message);
-      throw new Error(ACTIVITY_RANGE_LOAD_ERROR);
+      throw new Error("Failed to fetch activity range");
     }
 
     const page = (data || []) as Record<string, unknown>[];
