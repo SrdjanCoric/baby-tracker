@@ -62,20 +62,45 @@ jest.mock("@/components", () => ({
   },
 }));
 
+const mockSummaryCardProps: Record<string, any>[] = [];
+
 jest.mock("@/components/timeline", () => ({
   ActivityFilterTabs: () => null,
-  DailySummaryCard: ({ onDateChange }: { onDateChange: (date: Date) => void }) => {
-    const { Pressable, Text } = require("react-native");
+  // Stands in for the card, but summarizes through the real production path so the screen's
+  // own wiring — the data it collects and the boundary it passes — is what gets asserted.
+  DailySummaryCard: (props: any) => {
+    const { Pressable, Text, View } = require("react-native");
+    const { calculateDailySummary } = require("@/utils/timeline");
+    mockSummaryCardProps.push(props);
+    const summary = calculateDailySummary(
+      props.selectedDate,
+      props.allData,
+      props.dayStartHour,
+      props.dayEndHour
+    );
     return (
-      <Pressable
-        testID="jump-to-old-date"
-        onPress={() => onDateChange(new Date(2025, 5, 15, 0, 0, 0, 0))}
-      >
-        <Text>Jump</Text>
-      </Pressable>
+      <View>
+        <Pressable
+          testID="jump-to-old-date"
+          onPress={() => props.onDateChange(new Date(2025, 5, 15, 0, 0, 0, 0))}
+        >
+          <Text>Jump</Text>
+        </Pressable>
+        <Text testID="summary-sleep-minutes">{String(summary.sleepMinutes)}</Text>
+        <Text testID="summary-nap-count">{String(summary.napCount)}</Text>
+        <Text testID="summary-night-count">{String(summary.nightSleepCount)}</Text>
+      </View>
     );
   },
 }));
+
+const emptySleepState = () => ({
+  sleeps: [] as Array<Record<string, unknown>>,
+  wakeWindowConfig: null as Record<string, unknown> | null,
+  activeTimer: null as Record<string, unknown> | null,
+  babyBinding: { babyId: "baby-1", status: "bound" } as Record<string, unknown>,
+});
+let mockSleepState = emptySleepState();
 
 let mockRangeStatus: "unverified" | "loading" | "loaded" | "error" = "unverified";
 const mockGetRangeStatus = () => mockRangeStatus;
@@ -89,10 +114,12 @@ jest.mock("@/contexts", () => ({
     getFeedingRangeStatus: mockGetRangeStatus,
   }),
   useSleep: () => ({
-    sleeps: [],
+    sleeps: mockSleepState.sleeps,
     isLoading: false,
     refreshSleeps: jest.fn(async () => {}),
-    wakeWindowConfig: null,
+    wakeWindowConfig: mockSleepState.wakeWindowConfig,
+    activeTimer: mockSleepState.activeTimer,
+    babyBinding: mockSleepState.babyBinding,
     loadSleepRange: mockRangeLoaders.sleep,
     getSleepRangeStatus: mockGetRangeStatus,
   }),
@@ -149,6 +176,8 @@ describe("Timeline historical ranges", () => {
     jest.clearAllMocks();
     mockRangeStatus = "unverified";
     mockFeedings = [];
+    mockSleepState = emptySleepState();
+    mockSummaryCardProps.length = 0;
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-01-20T12:00:00.000Z"));
   });
@@ -259,5 +288,120 @@ describe("Timeline historical ranges", () => {
     await waitFor(() => {
       expect(mockRangeLoaders.feeding).toHaveBeenCalledTimes(2);
     });
+  });
+});
+
+describe("Timeline daily summary wiring", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRangeStatus = "loaded";
+    mockFeedings = [];
+    mockSleepState = emptySleepState();
+    mockSummaryCardProps.length = 0;
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 20, 12, 0, 0));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  function lastSummaryProps() {
+    return mockSummaryCardProps[mockSummaryCardProps.length - 1];
+  }
+
+  it("passes the configured day and night boundary to the summary card", async () => {
+    mockSleepState.wakeWindowConfig = { dayStartHour: 7, dayEndHour: 20 };
+
+    render(<TimelineScreen />);
+    jest.runOnlyPendingTimers();
+
+    await waitFor(() => {
+      expect(lastSummaryProps()).toBeTruthy();
+    });
+    expect(lastSummaryProps().dayStartHour).toBe(7);
+    expect(lastSummaryProps().dayEndHour).toBe(20);
+  });
+
+  it("falls back to the default boundary when no wake window config is loaded", async () => {
+    render(<TimelineScreen />);
+    jest.runOnlyPendingTimers();
+
+    await waitFor(() => {
+      expect(lastSummaryProps()).toBeTruthy();
+    });
+    expect(lastSummaryProps().dayStartHour).toBe(6);
+    expect(lastSummaryProps().dayEndHour).toBe(19);
+  });
+
+  it("summarizes a running sleep as unpaused elapsed time", async () => {
+    mockSleepState.activeTimer = {
+      isRunning: true,
+      startTime: new Date(2026, 0, 20, 11, 0, 0),
+      totalPausedMs: 600_000,
+    };
+
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("50");
+    expect(screen.getByTestId("summary-nap-count").props.children).toBe("1");
+  });
+
+  it("holds the running total steady while the sleep is paused", async () => {
+    mockSleepState.activeTimer = {
+      isRunning: true,
+      startTime: new Date(2026, 0, 20, 11, 0, 0),
+      totalPausedMs: 0,
+      isPaused: true,
+      pausedAt: new Date(2026, 0, 20, 11, 50, 0),
+    };
+
+    const first = render(<TimelineScreen />);
+    expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("50");
+    first.unmount();
+
+    jest.setSystemTime(new Date(2026, 0, 20, 12, 30, 0));
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("50");
+  });
+
+  it("adds a running sleep to the completed sleeps already logged that day", async () => {
+    mockSleepState.sleeps = [
+      {
+        id: "completed-1",
+        babyId: "baby-1",
+        type: "nap",
+        startedAt: new Date(2026, 0, 20, 9, 0, 0).toISOString(),
+        endedAt: new Date(2026, 0, 20, 10, 0, 0).toISOString(),
+        durationSeconds: 3600,
+        createdAt: new Date(2026, 0, 20, 9, 0, 0).toISOString(),
+        updatedAt: new Date(2026, 0, 20, 10, 0, 0).toISOString(),
+      },
+    ];
+    mockSleepState.activeTimer = {
+      isRunning: true,
+      startTime: new Date(2026, 0, 20, 11, 0, 0),
+      totalPausedMs: 0,
+    };
+
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("120");
+    expect(screen.getByTestId("summary-nap-count").props.children).toBe("2");
+  });
+
+  it("omits a running sleep that belongs to another baby", async () => {
+    mockSleepState.activeTimer = {
+      isRunning: true,
+      startTime: new Date(2026, 0, 20, 11, 0, 0),
+      totalPausedMs: 0,
+    };
+    mockSleepState.babyBinding = { babyId: "baby-2", status: "bound" };
+
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("0");
+    expect(lastSummaryProps().allData.sleeps).toHaveLength(0);
   });
 });
