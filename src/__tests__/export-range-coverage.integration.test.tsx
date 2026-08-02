@@ -3,14 +3,19 @@
  * reaches earlier than the 1,000-row startup cap must contain every record in
  * that range, and the pre-export count must agree with the exported content.
  *
- * Real modules: ActivityRangeLoader, fetchActivityRangeFromDatabase,
- * FeedingStorageService, ExportService, csv-generator. Mocked boundaries:
+ * Real modules: useActivityRangeResolver, ActivityRangeLoader,
+ * fetchActivityRangeFromDatabase, FeedingStorageService, ExportService,
+ * csv-generator. Mocked boundaries:
  * AsyncStorage (in-memory), supabase (paginated row source), sync engine,
  * expo-file-system / expo-sharing.
  */
 import { ExportService } from "@/services/export-service";
 import { FeedingStorageService } from "@/services/feeding-storage";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import {
+  toHalfOpenUtcRange,
+  useActivityRangeResolver,
+} from "@/hooks/useActivityRangeResolver";
 import { act, renderHook } from "@testing-library/react-native";
 import {
   type UtcActivityRange,
@@ -24,6 +29,25 @@ import { __resetDeviceIdForTests } from "@/services/sync/device-id";
 const mockStorage = new Map<string, string>();
 const mockServerRows: Record<string, unknown>[] = [];
 const mockQueryFilters: Array<[string, string]> = [];
+const mockUseFeeding = jest.fn();
+const mockLoadFeedingRange = jest.fn(async () => {});
+const mockLoadSleepRange = jest.fn(async () => {});
+const mockLoadDiaperRange = jest.fn(async () => {});
+const mockLoadPumpingRange = jest.fn(async () => {});
+const mockLoadGrowthRange = jest.fn(async () => {});
+const mockLoadTummyTimeRange = jest.fn(async () => {});
+
+jest.mock("@/contexts", () => ({
+  useAuth: () => ({
+    user: { id: "user-1", householdId: "household-1" },
+  }),
+  useFeeding: () => mockUseFeeding(),
+  useSleep: () => ({ loadSleepRange: mockLoadSleepRange }),
+  useDiaper: () => ({ loadDiaperRange: mockLoadDiaperRange }),
+  usePumping: () => ({ loadPumpingRange: mockLoadPumpingRange }),
+  useGrowth: () => ({ loadGrowthRange: mockLoadGrowthRange }),
+  useTummyTime: () => ({ loadTummyTimeRange: mockLoadTummyTimeRange }),
+}));
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(async (key: string) => mockStorage.get(key) ?? null),
@@ -137,6 +161,17 @@ const exportRange: UtcActivityRange = {
   end: "2026-08-02T00:00:00.000Z",
 };
 
+function useRealFeedingContext() {
+  const { loadRange } = useActivityRangeLoader({
+    table: "feedings",
+    babyId: BABY_ID,
+    authenticated: true,
+    storageScope: `${USER_ID}:household-1:${BABY_ID}`,
+    acceptEntries: () => {},
+  });
+  return { loadFeedingRange: loadRange };
+}
+
 function remoteFeedingRow(id: string, startedAt: string) {
   return {
     id,
@@ -191,6 +226,8 @@ async function seedLocalCacheWithStartupRows() {
 
 describe("export range coverage (F-1)", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseFeeding.mockReturnValue({ loadFeedingRange: mockLoadFeedingRange });
     mockQueryFilters.length = 0;
     setStorageUserId("user-1");
     __resetCrdtSyncForTests();
@@ -219,25 +256,30 @@ describe("export range coverage (F-1)", () => {
   it("resolving the range first exports every record and the count agrees with the file", async () => {
     await seedLocalCacheWithStartupRows();
 
-    const { result: hook } = renderHook(() =>
-      useActivityRangeLoader({
-        table: "feedings",
-        babyId: BABY_ID,
-        authenticated: true,
-        storageScope: `${USER_ID}:household-1:${BABY_ID}`,
-        acceptEntries: () => {},
-      })
-    );
+    mockUseFeeding.mockImplementation(useRealFeedingContext);
+    const { result: resolver } = renderHook(() => useActivityRangeResolver());
+    const selectedStart = new Date(exportRange.start);
+    const selectedEnd = new Date("2026-08-01T23:59:59.999Z");
+    const resolvedRange = toHalfOpenUtcRange(selectedStart, selectedEnd);
     const ensureRangesLoaded = async () => {
       await act(async () => {
-        await hook.current.loadRange(exportRange);
+        await resolver.current(resolvedRange);
       });
     };
 
+    await ensureRangesLoaded();
+
+    expect(resolvedRange).toEqual(exportRange);
+    expect(mockLoadSleepRange).toHaveBeenCalledWith(exportRange);
+    expect(mockLoadDiaperRange).toHaveBeenCalledWith(exportRange);
+    expect(mockLoadPumpingRange).toHaveBeenCalledWith(exportRange);
+    expect(mockLoadGrowthRange).toHaveBeenCalledWith(exportRange);
+    expect(mockLoadTummyTimeRange).toHaveBeenCalledWith(exportRange);
+
     const counts = await ExportService.getRecordCountsInRange(
       BABY_ID,
-      new Date(exportRange.start),
-      new Date("2026-08-01T23:59:59.999Z"),
+      selectedStart,
+      selectedEnd,
       ensureRangesLoaded
     );
 
@@ -247,8 +289,8 @@ describe("export range coverage (F-1)", () => {
 
     const result = await ExportService.exportToCSV({
       dataTypes: ["feedings"],
-      startDate: new Date(exportRange.start),
-      endDate: new Date("2026-08-01T23:59:59.999Z"),
+      startDate: selectedStart,
+      endDate: selectedEnd,
       babyId: BABY_ID,
       babyName: "Sofi",
       includeNotes: false,
