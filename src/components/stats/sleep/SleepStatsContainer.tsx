@@ -4,7 +4,8 @@ import { useSleep } from "@/contexts/sleep-context";
 import { useBaby } from "@/contexts/baby-context";
 import { useTimeFormat } from "@/contexts/time-format-context";
 import { useTimeRefresh } from "@/hooks";
-import { buildDayViewData, buildWeekViewData, getSleepDate, classifySleepByTimeRange } from "@/utils/sleep-patterns";
+import { buildDayViewData, buildWeekViewData, getSleepDate } from "@/utils/sleep-patterns";
+import { buildOngoingSleepEntry } from "@/utils/ongoing-sleep";
 import { isUnderThreeMonths } from "@/utils/sleepGoals";
 import {
   getSleepDayRange,
@@ -14,7 +15,6 @@ import {
 } from "@/utils/statistics-ranges";
 import type { SleepSummaryPeriod } from "@/components/sleep-patterns/SummaryView";
 import { ActivityRangeBoundary } from "@/components/stats/ActivityRangeBoundary";
-import type { StoredSleepEntry } from "@/services/sleep-storage";
 import {
   DayView,
   WeekView,
@@ -74,25 +74,16 @@ export function SleepStatsContainer({ activeTab }: SleepStatsContainerProps) {
 
   const sleepsWithOngoing = useMemo(() => {
     void refreshTick;
-    const activeTimerIsCurrent = babyBinding.babyId === selectedBaby?.id
-      && babyBinding.status !== "loading";
-    if (!activeTimer?.isRunning || !selectedBaby || !activeTimerIsCurrent) {
-      return selectedSleeps;
-    }
-    const now = new Date();
-    const syntheticEntry: StoredSleepEntry = {
-      id: `ongoing-${selectedBaby.id}`,
-      babyId: selectedBaby.id,
-      type: classifySleepByTimeRange(activeTimer.startTime, now, dayStartHour, dayEndHour),
-      startedAt: activeTimer.startTime.toISOString(),
-      endedAt: now.toISOString(),
-      durationSeconds: Math.floor(
-        (now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000
-      ),
-      createdAt: activeTimer.startTime.toISOString(),
-      updatedAt: now.toISOString(),
-    };
-    return [syntheticEntry, ...selectedSleeps];
+    const ongoing = buildOngoingSleepEntry({
+      timer: activeTimer,
+      babyId: selectedBaby?.id,
+      isCurrentBaby:
+        babyBinding.babyId === selectedBaby?.id && babyBinding.status !== "loading",
+      now: new Date(),
+      dayStartHour,
+      dayEndHour,
+    });
+    return ongoing ? [ongoing, ...selectedSleeps] : selectedSleeps;
   }, [activeTimer, babyBinding, dayEndHour, dayStartHour, refreshTick, selectedBaby, selectedSleeps]);
 
   const hasSleepData = sleepsWithOngoing.some((sleep) =>

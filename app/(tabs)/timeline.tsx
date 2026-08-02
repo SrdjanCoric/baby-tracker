@@ -21,6 +21,8 @@ import { formatDualSideDuration } from "@/utils/feeding";
 import {
   type TimelineDataByDate,
 } from "@/utils/timeline";
+import { buildOngoingSleepEntry } from "@/utils/ongoing-sleep";
+import { useTimeRefresh } from "@/hooks/useTimeRefresh";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
@@ -105,9 +107,14 @@ export default function TimelineScreen() {
     isLoading: sleepsLoading,
     refreshSleeps,
     wakeWindowConfig,
+    activeTimer: activeSleepTimer,
+    babyBinding: sleepBabyBinding,
     loadSleepRange,
     getSleepRangeStatus,
   } = useSleep();
+  const dayStartHour = wakeWindowConfig?.dayStartHour ?? 6;
+  const dayEndHour = wakeWindowConfig?.dayEndHour ?? 19;
+  const summaryRefreshTick = useTimeRefresh(60000);
   const {
     diapers,
     isLoading: diapersLoading,
@@ -236,15 +243,39 @@ export default function TimelineScreen() {
     setActiveFilter(filter);
   }, []);
 
+  // A running sleep is reported as a sleep ending now, so the summary keeps pace with the
+  // Statistics screens instead of lagging until the timer is stopped.
+  const summarySleeps = useMemo(() => {
+    void summaryRefreshTick;
+    const ongoing = buildOngoingSleepEntry({
+      timer: activeSleepTimer,
+      babyId: selectedBaby?.id,
+      isCurrentBaby:
+        sleepBabyBinding?.babyId === selectedBaby?.id && sleepBabyBinding?.status !== "loading",
+      now: new Date(),
+      dayStartHour,
+      dayEndHour,
+    });
+    return ongoing ? [ongoing, ...sleeps] : sleeps;
+  }, [
+    activeSleepTimer,
+    dayEndHour,
+    dayStartHour,
+    selectedBaby?.id,
+    sleepBabyBinding,
+    sleeps,
+    summaryRefreshTick,
+  ]);
+
   // Collect all data for summary calculations
   const allData: TimelineDataByDate = useMemo(() => ({
     feedings,
-    sleeps,
+    sleeps: summarySleeps,
     diapers,
     pumpings,
     growths: measurements,
     tummyTimes,
-  }), [feedings, sleeps, diapers, pumpings, measurements, tummyTimes]);
+  }), [feedings, summarySleeps, diapers, pumpings, measurements, tummyTimes]);
 
   const feedingToTimelineEntry = useCallback((feeding: StoredFeedingEntry): TimelineEntry => {
     const date = new Date(feeding.startedAt);
@@ -689,7 +720,8 @@ export default function TimelineScreen() {
         filter={activeFilter}
         allData={allData}
         birthDate={selectedBaby?.birthDate}
-        dayStartHour={wakeWindowConfig?.dayStartHour ?? 6}
+        dayStartHour={dayStartHour}
+        dayEndHour={dayEndHour}
         timeFormat={timeFormat}
         t={translate}
         selectedDate={summaryDate}

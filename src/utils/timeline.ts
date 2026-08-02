@@ -12,6 +12,7 @@ import { formatDurationShort } from "@/utils/time";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import type { ActivityType } from "@/constants/activities";
 import { localDateKey, splitSleepAtDayBoundary } from "@/utils/sleep-patterns";
+import { unionCompletedSleepIntervals } from "@/utils/sleep-intervals";
 
 export interface DailySummary {
   date: Date;
@@ -116,7 +117,9 @@ export function calculateDailySummary(
   const countedNaps = new Set<string>();
   const countedNights = new Set<string>();
 
-  for (const sleep of data.sleeps) {
+  // Union first: overlapping and duplicate entries are permitted by design, and every
+  // statistics surface reports the unioned intervals rather than the raw entries.
+  for (const sleep of unionCompletedSleepIntervals(data.sleeps)) {
     const segments = splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour);
     const daySegments = segments.filter((seg) => seg.dateKey === targetDayKey);
     if (daySegments.length === 0) continue;
