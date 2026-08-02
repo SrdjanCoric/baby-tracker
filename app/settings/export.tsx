@@ -60,6 +60,7 @@ export default function ExportScreen() {
   ]);
   const [dateRange, setDateRange] = useState<DateRange>(getInitialDateRange());
   const [includeNotes, setIncludeNotes] = useState(true);
+  const loadRequestRef = useRef(0);
 
   const resolveRanges = useActivityRangeResolver();
   const ensureRangesLoaded = useCallback(
@@ -70,7 +71,13 @@ export default function ExportScreen() {
     [resolveRanges, dateRange.startDate, dateRange.endDate]
   );
 
-  const loadRequestRef = useRef(0);
+  const handleDateRangeChange = useCallback((nextRange: DateRange) => {
+    ++loadRequestRef.current;
+    setIsLoading(true);
+    setRangeLoadError(false);
+    setDateRange(nextRange);
+  }, []);
+
   const loadRecordCounts = useCallback(async () => {
     if (!selectedBaby) {
       setIsLoading(false);
@@ -154,7 +161,11 @@ export default function ExportScreen() {
     0
   );
 
-  const canExport = selectedTypes.length > 0 && totalSelectedRecords > 0;
+  const canExport =
+    !isLoading &&
+    !rangeLoadError &&
+    selectedTypes.length > 0 &&
+    totalSelectedRecords > 0;
 
   if (!selectedBaby) {
     return (
@@ -195,7 +206,7 @@ export default function ExportScreen() {
         <View className="mb-6">
           <DateRangePicker
             dateRange={dateRange}
-            onDateRangeChange={setDateRange}
+            onDateRangeChange={handleDateRangeChange}
           />
         </View>
 
@@ -256,7 +267,7 @@ export default function ExportScreen() {
       </ScrollView>
 
       <View className="px-4 pb-4 pt-2 border-t border-border-subtle dark:border-border-dark-subtle">
-        {totalSelectedRecords > 0 && (
+        {!isLoading && !rangeLoadError && totalSelectedRecords > 0 && (
           <Text className="text-sm text-content-secondary dark:text-content-dark-secondary text-center mb-3">
             {t("export.recordsSummary", { count: totalSelectedRecords })}
           </Text>

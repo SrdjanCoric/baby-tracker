@@ -166,6 +166,31 @@ describe("ExportScreen", () => {
     expect(screen.queryByTestId("export-range-error")).toBeNull();
   });
 
+  it("hides stale counts and disables export as soon as the range changes", async () => {
+    jest.useFakeTimers();
+
+    render(<ExportScreen />);
+
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
+    expect(screen.getByText("export.recordsSummary")).toBeTruthy();
+    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(
+      false
+    );
+
+    fireEvent.press(screen.getByTestId("change-range"));
+
+    expect(screen.queryByText("export.recordsSummary")).toBeNull();
+    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(
+      true
+    );
+
+    fireEvent.press(screen.getByTestId("export-button"));
+    expect(mockExportToCSV).not.toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
   it("debounces rapid range changes so each iOS spinner tick does not fetch", async () => {
     jest.useFakeTimers();
     mockGetRecordCountsInRange.mockClear();
