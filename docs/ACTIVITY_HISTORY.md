@@ -29,6 +29,10 @@ Statistics and Sleep Patterns use the same range service as Timeline.
 
 These requests do not run during startup. Switching controls reuses loaded or compatible in-flight coverage. The service fetches only missing subranges.
 
+## Export and Reports ranges
+
+Export (CSV) and PDF reports use the same on-demand range service, but resolve the selected range into local storage without dispatching the fetched history into the activity context reducers. The pre-export record count is derived from the resolved range, so it matches the exported file. A failed range read is surfaced as an error instead of producing a silently incomplete export.
+
 ## Reconciliation
 
 A range result enters the same per-user, per-baby storage lock used by local mutations and startup pulls. Reconciliation replaces the authoritative part of the requested interval while retaining:
@@ -45,4 +49,4 @@ The merged collection is written to AsyncStorage before the context receives it.
 
 Each activity context tracks loaded and in-flight UTC coverage for the selected baby and storage scope. Loaded ranges are reused. Overlapping requests wait for existing work and query only uncovered subranges. Results from an earlier baby or authentication scope are ignored.
 
-Guest mode marks the requested range as locally verified and does not query Supabase. For authenticated users, Timeline, Statistics, and Sleep Patterns keep cached entries visible while a range is loading. A range without cached rows shows progress until coverage is confirmed. A failed read leaves cached data in place and shows a retry action. Zero values and empty states appear only after the requested range is confirmed. Statistics results are filtered to the selected baby while context state changes between babies.
+Guest mode marks the requested range as locally verified and does not query Supabase. For authenticated users, Timeline, Statistics, Sleep Patterns, Export, and Reports keep cached entries visible while a range is loading. A range without cached rows shows progress until coverage is confirmed. A failed read leaves cached data in place and shows a retry action. Zero values and empty states appear only after the requested range is confirmed. Statistics results are filtered to the selected baby while context state changes between babies.

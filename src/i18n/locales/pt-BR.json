@@ -1250,6 +1250,7 @@
     "sectionsSummary": "{{count}} seções selecionadas",
     "noBabySelected": "Por favor, selecione um bebê para gerar um relatório",
     "generateFailed": "Falha na Geração de Relatório",
+    "rangeLoadError": "Não foi possível carregar todos os registros do período selecionado. Verifique sua conexão e tente novamente.",
     "unknownError": "Um erro inesperado ocorreu",
     "sectionLabels": {
       "summary": "Resumo",

@@ -344,6 +344,7 @@ describe("ExportService", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
+      expect(result.errorKind).toBeUndefined();
     });
 
     it("should respect includeNotes option", async () => {
@@ -505,6 +506,7 @@ describe("ExportService", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain("Failed to fetch activity range");
+      expect(result.errorKind).toBe("rangeLoad");
       expect(result.content).toBeUndefined();
       expect(FeedingStorageService.getAllFeedings).not.toHaveBeenCalled();
     });

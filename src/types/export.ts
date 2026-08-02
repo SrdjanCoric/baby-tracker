@@ -39,6 +39,8 @@ export interface ExportResult {
   filePath?: string;
   fileName?: string;
   error?: string;
+  /** "rangeLoad" when range resolution failed before any storage read. */
+  errorKind?: "rangeLoad";
   recordCount: number;
 }
 

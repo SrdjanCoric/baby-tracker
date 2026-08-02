@@ -44,6 +44,8 @@ export interface ReportResult {
   filePath?: string;
   fileName?: string;
   error?: string;
+  /** "rangeLoad" when range resolution failed before any storage read. */
+  errorKind?: "rangeLoad";
 }
 
 export interface ReportMetadata {

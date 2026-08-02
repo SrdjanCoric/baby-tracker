@@ -1247,6 +1247,7 @@
     "sectionsSummary": "{{count}} sections sélectionnées",
     "noBabySelected": "Veuillez sélectionner un bébé pour générer un rapport",
     "generateFailed": "Échec de la génération du rapport",
+    "rangeLoadError": "Impossible de charger tous les enregistrements de la période sélectionnée. Vérifiez votre connexion et réessayez.",
     "unknownError": "Une erreur inattendue est survenue",
     "sectionLabels": {
       "summary": "Résumé",

@@ -16,6 +16,7 @@ import {
   CombinedExportData,
   type ExportUnitPreferences,
 } from "@/utils/csv-generator";
+import { ACTIVITY_RANGE_LOAD_ERROR } from "@/constants/activity-range";
 import type {
   ExportOptions,
   ExportResult,
@@ -254,9 +255,11 @@ export const ExportService = {
         content: csvContent,
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Export failed";
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Export failed",
+        error: message,
+        errorKind: message === ACTIVITY_RANGE_LOAD_ERROR ? "rangeLoad" : undefined,
         recordCount: 0,
       };
     }

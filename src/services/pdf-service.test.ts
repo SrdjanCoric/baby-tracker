@@ -157,6 +157,7 @@ describe("PDFService", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain("Failed to fetch activity range");
+      expect(result.errorKind).toBe("rangeLoad");
       expect(result.filePath).toBeUndefined();
       expect(FeedingStorageService.getAllFeedings).not.toHaveBeenCalled();
       expect(Print.printToFileAsync).not.toHaveBeenCalled();

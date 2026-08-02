@@ -1282,6 +1282,7 @@
     "sectionsSummary": "{{count}} sekcija izabrano",
     "noBabySelected": "Molimo izaberite bebu za generisanje izveštaja",
     "generateFailed": "Generisanje izveštaja nije uspelo",
+    "rangeLoadError": "Nije moguće učitati sve zapise u izabranom opsegu. Proverite vezu i pokušajte ponovo.",
     "unknownError": "Došlo je do neočekivane greške",
     "sectionLabels": {
       "summary": "Pregled",

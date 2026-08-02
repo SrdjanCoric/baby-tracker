@@ -1,0 +1,1 @@
+export const ACTIVITY_RANGE_LOAD_ERROR = "Failed to fetch activity range";

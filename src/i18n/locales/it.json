@@ -1251,6 +1251,7 @@
     "sectionsSummary": "{{count}} sezioni selezionate",
     "noBabySelected": "Seleziona un bambino per generare un rapporto",
     "generateFailed": "Generazione rapporto fallita",
+    "rangeLoadError": "Impossibile caricare tutti i record dell'intervallo selezionato. Controlla la connessione e riprova.",
     "unknownError": "Si è verificato un errore imprevisto",
     "sectionLabels": {
       "summary": "Riepilogo",

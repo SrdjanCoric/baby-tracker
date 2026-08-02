@@ -1247,6 +1247,7 @@
     "sectionsSummary": "{{count}} sections selected",
     "noBabySelected": "Please select a baby to generate a report",
     "generateFailed": "Report Generation Failed",
+    "rangeLoadError": "Could not load every record in the selected range. Check your connection and try again.",
     "unknownError": "An unexpected error occurred",
     "sectionLabels": {
       "summary": "Summary",

@@ -10,9 +10,9 @@
  */
 import { ExportService } from "@/services/export-service";
 import { FeedingStorageService } from "@/services/feeding-storage";
-import { ActivityRangeLoader } from "@/services/activity-range-loader";
+import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
+import { act, renderHook } from "@testing-library/react-native";
 import {
-  fetchActivityRangeFromDatabase,
   type UtcActivityRange,
 } from "@/services/activity-sync-service";
 import { setStorageUserId } from "@/services/storage-prefix";
@@ -129,7 +129,8 @@ jest.mock("expo-sharing", () => ({
 }));
 
 const BABY_ID = "baby-1";
-const FEEDINGS_STORAGE_KEY = `@feedings:${BABY_ID}:user-1`;
+const USER_ID = "user-1";
+const FEEDINGS_STORAGE_KEY = `@feedings:${BABY_ID}:${USER_ID}`;
 
 const exportRange: UtcActivityRange = {
   start: "2026-04-01T00:00:00.000Z",
@@ -218,12 +219,20 @@ describe("export range coverage (F-1)", () => {
   it("resolving the range first exports every record and the count agrees with the file", async () => {
     await seedLocalCacheWithStartupRows();
 
-    const loader = new ActivityRangeLoader(
-      (range: UtcActivityRange) =>
-        fetchActivityRangeFromDatabase("feedings", BABY_ID, range),
-      () => {}
+    const { result: hook } = renderHook(() =>
+      useActivityRangeLoader({
+        table: "feedings",
+        babyId: BABY_ID,
+        authenticated: true,
+        storageScope: `${USER_ID}:household-1:${BABY_ID}`,
+        acceptEntries: () => {},
+      })
     );
-    const ensureRangesLoaded = () => loader.load(exportRange);
+    const ensureRangesLoaded = async () => {
+      await act(async () => {
+        await hook.current.loadRange(exportRange);
+      });
+    };
 
     const counts = await ExportService.getRecordCountsInRange(
       BABY_ID,

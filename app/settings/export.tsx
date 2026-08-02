@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useBaby, useUnits } from "@/contexts";
 import { ExportService } from "@/services/export-service";
 import {
-  toInclusiveUtcRange,
+  toHalfOpenUtcRange,
   useActivityRangeResolver,
 } from "@/hooks/useActivityRangeResolver";
 import { DataTypeSelector, DateRangePicker } from "@/components/export";
@@ -65,17 +65,19 @@ export default function ExportScreen() {
   const ensureRangesLoaded = useCallback(
     () =>
       resolveRanges(
-        toInclusiveUtcRange(dateRange.startDate, dateRange.endDate)
+        toHalfOpenUtcRange(dateRange.startDate, dateRange.endDate)
       ),
     [resolveRanges, dateRange.startDate, dateRange.endDate]
   );
 
+  const loadRequestRef = useRef(0);
   const loadRecordCounts = useCallback(async () => {
     if (!selectedBaby) {
       setIsLoading(false);
       return;
     }
 
+    const requestId = ++loadRequestRef.current;
     setIsLoading(true);
     setRangeLoadError(false);
     try {
@@ -85,17 +87,23 @@ export default function ExportScreen() {
         dateRange.endDate,
         ensureRangesLoaded
       );
+      if (requestId !== loadRequestRef.current) return;
       setRecordCounts(counts);
     } catch (error) {
       console.error("Failed to load record counts:", error);
+      if (requestId !== loadRequestRef.current) return;
+      setRecordCounts(EMPTY_RECORD_COUNTS);
       setRangeLoadError(true);
     } finally {
-      setIsLoading(false);
+      if (requestId === loadRequestRef.current) setIsLoading(false);
     }
   }, [selectedBaby, dateRange.startDate, dateRange.endDate, ensureRangesLoaded]);
 
   useEffect(() => {
-    loadRecordCounts();
+    const timer = setTimeout(() => {
+      void loadRecordCounts();
+    }, 350);
+    return () => clearTimeout(timer);
   }, [loadRecordCounts]);
 
   const handleExport = useCallback(async () => {
@@ -119,9 +127,15 @@ export default function ExportScreen() {
       if (result.success && result.content && result.fileName) {
         await ExportService.shareCSV(result.content, result.fileName);
       } else if (!result.success) {
+        if (result.errorKind === "rangeLoad") {
+          setRangeLoadError(true);
+          setRecordCounts(EMPTY_RECORD_COUNTS);
+        }
         Alert.alert(
           t("export.exportFailed"),
-          result.error || t("export.unknownError")
+          result.errorKind === "rangeLoad"
+            ? t("export.rangeLoadError")
+            : result.error || t("export.unknownError")
         );
       }
     } catch (error) {

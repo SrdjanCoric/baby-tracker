@@ -33,20 +33,20 @@ startup cap or the range loader, and Timeline or Statistics, which already resol
 
 ## Implementation work
 
-- [ ] Resolve the user's selected date range for every collection included in a CSV export before
+- [x] Resolve the user's selected date range for every collection included in a CSV export before
       reading storage, awaiting completion so no read races the fetch.
-- [ ] Do the same for PDF reports, which read through the same storage services.
-- [ ] Derive the pre-export record count from the resolved range rather than the unresolved local
+- [x] Do the same for PDF reports, which read through the same storage services.
+- [x] Derive the pre-export record count from the resolved range rather than the unresolved local
       cache, so the displayed count and the exported file agree.
-- [ ] Surface loading state while a range resolves, and handle a failed range read without producing
+- [x] Surface loading state while a range resolves, and handle a failed range read without producing
       a silently partial export. A failed export must report the failure rather than emit an
       incomplete file.
-- [ ] Add an integration test seeding one collection past the 1,000-row cap and asserting that an
+- [x] Add an integration test seeding one collection past the 1,000-row cap and asserting that an
       export over a range reaching earlier than the cap contains every record in that range, and
       that the reported count matches the exported content.
-- [ ] Add component tests asserting every required range resolves before the export and report
+- [x] Add component tests asserting every required range resolves before the export and report
       services read storage.
-- [ ] Confirm no export path reads a collection whose range was not resolved.
+- [x] Confirm no export path reads a collection whose range was not resolved.
 
 ## Human checkpoints
 
@@ -61,11 +61,11 @@ startup cap or the range loader, and Timeline or Statistics, which already resol
 
 ## Acceptance criteria
 
-- [ ] `node scripts/audit/export-range-coverage.mjs` exits 0, reporting that every historical-data
+- [x] `node scripts/audit/export-range-coverage.mjs` exits 0, reporting that every historical-data
       consumer resolves its range.
-- [ ] An export over a range extending past the startup cap contains every record in that range.
-- [ ] The record count shown before export matches the exported file's contents.
-- [ ] PDF reports cover the selected range on the same terms as CSV export.
-- [ ] A failed range read surfaces an error instead of producing a silently incomplete export.
-- [ ] The 1,000-row startup cap and `fetchActivityRangeFromDatabase` are unchanged, and
+- [x] An export over a range extending past the startup cap contains every record in that range.
+- [x] The record count shown before export matches the exported file's contents.
+- [x] PDF reports cover the selected range on the same terms as CSV export.
+- [x] A failed range read surfaces an error instead of producing a silently incomplete export.
+- [x] The 1,000-row startup cap and `fetchActivityRangeFromDatabase` are unchanged, and
       `README.md:43` still describes the shipped behavior.

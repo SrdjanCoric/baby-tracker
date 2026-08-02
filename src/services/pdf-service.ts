@@ -39,6 +39,7 @@ import {
   renderTummyTimeSection,
 } from "@/utils/pdf-templates";
 import { PDF_MIME_TYPE } from "@/constants/report";
+import { ACTIVITY_RANGE_LOAD_ERROR } from "@/constants/activity-range";
 
 function sanitizeFileName(name: string): string {
   return name.replace(/[/\\?%*:|"<>]/g, "-").replace(/\s+/g, "_");
@@ -237,9 +238,11 @@ export const PDFService = {
         fileName,
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Report generation failed";
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Report generation failed",
+        error: message,
+        errorKind: message === ACTIVITY_RANGE_LOAD_ERROR ? "rangeLoad" : undefined,
       };
     }
   },

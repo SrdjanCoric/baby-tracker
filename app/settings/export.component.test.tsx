@@ -1,18 +1,16 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import type { DateRange } from "@/types/export";
 
 const mockExportToCSV = jest.fn();
 const mockShareCSV = jest.fn();
 const mockGetRecordCountsInRange = jest.fn();
+const mockLoadRange = jest.fn(async () => {});
 
-const mockLoadRanges = {
-  feeding: jest.fn(async () => {}),
-  sleep: jest.fn(async () => {}),
-  diapers: jest.fn(async () => {}),
-  pumping: jest.fn(async () => {}),
-  growth: jest.fn(async () => {}),
-  tummyTime: jest.fn(async () => {}),
-};
+let mockUser: {
+  id: string | null;
+  householdId: string | null;
+} = { id: "user-1", householdId: "household-1" };
 
 let mockUnits: {
   volumeUnit: "ml" | "oz";
@@ -42,18 +40,40 @@ jest.mock("@/contexts", () => ({
     selectedBaby: mockSelectedBaby,
   }),
   useUnits: () => mockUnits,
-  useFeeding: () => ({ loadFeedingRange: mockLoadRanges.feeding }),
-  useSleep: () => ({ loadSleepRange: mockLoadRanges.sleep }),
-  useDiaper: () => ({ loadDiaperRange: mockLoadRanges.diapers }),
-  usePumping: () => ({ loadPumpingRange: mockLoadRanges.pumping }),
-  useGrowth: () => ({ loadGrowthRange: mockLoadRanges.growth }),
-  useTummyTime: () => ({ loadTummyTimeRange: mockLoadRanges.tummyTime }),
+  useAuth: () => ({ user: mockUser }),
 }));
 
-jest.mock("@/components/export", () => ({
-  DataTypeSelector: () => null,
-  DateRangePicker: () => null,
+jest.mock("@/hooks/useActivityRangeLoader", () => ({
+  useActivityRangeLoader: () => ({
+    loadRange: mockLoadRange,
+    getRangeStatus: () => "loaded",
+  }),
 }));
+
+jest.mock("@/components/export", () => {
+  const { Pressable, Text } = require("react-native");
+  return {
+    DataTypeSelector: () => null,
+    DateRangePicker: ({
+      onDateRangeChange,
+    }: {
+      onDateRangeChange: (range: DateRange) => void;
+    }) => (
+      <Pressable
+        testID="change-range"
+        onPress={() =>
+          onDateRangeChange({
+            startDate: new Date(2026, 0, 1),
+            endDate: new Date(2026, 0, 2),
+            preset: "custom",
+          })
+        }
+      >
+        <Text>change-range</Text>
+      </Pressable>
+    ),
+  };
+});
 
 jest.mock("@/services/export-service", () => ({
   ExportService: {
@@ -73,33 +93,15 @@ import ExportScreen from "./export";
 describe("ExportScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
+    mockUser = { id: "user-1", householdId: "household-1" };
     mockUnits = {
       volumeUnit: "ml",
       weightUnit: "kg",
       heightUnit: "cm",
     };
-    for (const loadRange of Object.values(mockLoadRanges)) {
-      loadRange.mockClear();
-      loadRange.mockImplementation(async () => {});
-    }
-    mockGetRecordCountsInRange.mockResolvedValue({
-      feedings: 1,
-      sleep: 0,
-      diapers: 0,
-      pumping: 0,
-      growth: 0,
-      tummyTime: 0,
-      health: 0,
-    });
-    mockExportToCSV.mockResolvedValue({
-      success: true,
-      content: "csv",
-      fileName: "export.csv",
-    });
-    mockShareCSV.mockResolvedValue(undefined);
-  });
-
-  it("resolves every collection's selected range before loading record counts", async () => {
+    mockLoadRange.mockClear();
+    mockLoadRange.mockImplementation(async () => {});
     mockGetRecordCountsInRange.mockImplementation(
       async (_babyId: string, _s: Date, _e: Date, ensure?: () => Promise<void>) => {
         await ensure?.();
@@ -110,10 +112,19 @@ describe("ExportScreen", () => {
           pumping: 0,
           growth: 0,
           tummyTime: 0,
+          health: 0,
         };
       }
     );
+    mockExportToCSV.mockResolvedValue({
+      success: true,
+      content: "csv",
+      fileName: "export.csv",
+    });
+    mockShareCSV.mockResolvedValue(undefined);
+  });
 
+  it("resolves every collection's selected range before loading record counts", async () => {
     render(<ExportScreen />);
 
     await waitFor(() => {
@@ -126,29 +137,16 @@ describe("ExportScreen", () => {
     expectedStart.setHours(0, 0, 0, 0);
     expectedStart.setDate(expectedStart.getDate() - 29);
 
-    for (const loadRange of Object.values(mockLoadRanges)) {
-      expect(loadRange).toHaveBeenCalledTimes(1);
-      const range = loadRange.mock.calls[0][0] as { start: string; end: string };
+    expect(mockLoadRange).toHaveBeenCalledTimes(6);
+    for (const call of mockLoadRange.mock.calls) {
+      const range = call[0] as { start: string; end: string };
       expect(Date.parse(range.start)).toBe(expectedStart.getTime());
       expect(Date.parse(range.end)).toBe(expectedEnd.getTime() + 1);
     }
   });
 
-  it("shows an error and retries when range resolution fails", async () => {
-    mockLoadRanges.feeding.mockRejectedValueOnce(new Error("Failed to fetch activity range"));
-    mockGetRecordCountsInRange.mockImplementation(
-      async (_babyId: string, _s: Date, _e: Date, ensure?: () => Promise<void>) => {
-        await ensure?.();
-        return {
-          feedings: 1,
-          sleep: 0,
-          diapers: 0,
-          pumping: 0,
-          growth: 0,
-          tummyTime: 0,
-        };
-      }
-    );
+  it("shows an error, disables export, and retries when range resolution fails", async () => {
+    mockLoadRange.mockRejectedValueOnce(new Error("Failed to fetch activity range"));
 
     render(<ExportScreen />);
 
@@ -156,6 +154,8 @@ describe("ExportScreen", () => {
       expect(screen.getByTestId("export-range-error")).toBeTruthy();
     });
     expect(screen.queryByText("export.recordsSummary")).toBeNull();
+    // TR-2: Export button is disabled while the range is in the error state.
+    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(true);
 
     fireEvent.press(screen.getByTestId("export-range-retry"));
 
@@ -165,6 +165,37 @@ describe("ExportScreen", () => {
     expect(screen.queryByTestId("export-range-error")).toBeNull();
   });
 
+  it("debounces rapid range changes so each iOS spinner tick does not fetch", async () => {
+    jest.useFakeTimers();
+    mockGetRecordCountsInRange.mockClear();
+    mockLoadRange.mockClear();
+
+    render(<ExportScreen />);
+
+    // Let the initial debounced load resolve.
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
+    expect(mockLoadRange).toHaveBeenCalledTimes(6);
+    mockLoadRange.mockClear();
+
+    // Rapid changes — an iOS spinner fires one onChange per scrolled value.
+    fireEvent.press(screen.getByTestId("change-range"));
+    fireEvent.press(screen.getByTestId("change-range"));
+    fireEvent.press(screen.getByTestId("change-range"));
+
+    // No fetch before the debounce window fires.
+    expect(mockLoadRange).not.toHaveBeenCalled();
+
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
+
+    // One debounced resolution => six collection loads, not 18.
+    expect(mockLoadRange).toHaveBeenCalledTimes(6);
+    jest.useRealTimers();
+  });
+
   it("resolves the selected range before exporting", async () => {
     render(<ExportScreen />);
 
@@ -172,26 +203,33 @@ describe("ExportScreen", () => {
       expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(false);
     });
 
-    for (const loadRange of Object.values(mockLoadRanges)) loadRange.mockClear();
+    // The export path must invoke the resolver itself, not rely on the earlier count load.
+    mockExportToCSV.mockImplementation(async (options: { ensureRangesLoaded: () => Promise<void> }) => {
+      await options.ensureRangesLoaded();
+      return { success: true, content: "csv", fileName: "export.csv" };
+    });
+
+    mockLoadRange.mockClear();
+    mockShareCSV.mockClear();
 
     fireEvent.press(screen.getByTestId("export-button"));
 
     await waitFor(() => {
       expect(mockExportToCSV).toHaveBeenCalled();
+      expect(mockLoadRange).toHaveBeenCalledTimes(6);
+      expect(mockShareCSV).toHaveBeenCalledWith("csv", "export.csv");
     });
 
-    const options = mockExportToCSV.mock.calls[0][0] as {
-      ensureRangesLoaded: () => Promise<void>;
-    };
-    expect(typeof options.ensureRangesLoaded).toBe("function");
+    const expectedEnd = new Date();
+    expectedEnd.setHours(23, 59, 59, 999);
+    const expectedStart = new Date();
+    expectedStart.setHours(0, 0, 0, 0);
+    expectedStart.setDate(expectedStart.getDate() - 29);
 
-    await options.ensureRangesLoaded();
-
-    for (const loadRange of Object.values(mockLoadRanges)) {
-      expect(loadRange).toHaveBeenCalledWith({
-        start: expect.any(String),
-        end: expect.any(String),
-      });
+    for (const call of mockLoadRange.mock.calls) {
+      const range = call[0] as { start: string; end: string };
+      expect(Date.parse(range.start)).toBe(expectedStart.getTime());
+      expect(Date.parse(range.end)).toBe(expectedEnd.getTime() + 1);
     }
   });
 

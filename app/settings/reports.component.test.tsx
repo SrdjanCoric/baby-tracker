@@ -3,14 +3,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 
 const mockGenerateReport = jest.fn();
 const mockShareReport = jest.fn();
+const mockLoadRange = jest.fn(async () => {});
 
-const mockLoadRanges = {
-  feeding: jest.fn(async () => {}),
-  sleep: jest.fn(async () => {}),
-  diapers: jest.fn(async () => {}),
-  pumping: jest.fn(async () => {}),
-  growth: jest.fn(async () => {}),
-  tummyTime: jest.fn(async () => {}),
+let mockUser: { id: string | null; householdId: string | null } = {
+  id: "user-1",
+  householdId: "household-1",
 };
 
 let mockUnits: {
@@ -41,12 +38,14 @@ jest.mock("@/contexts", () => ({
     selectedBaby: mockSelectedBaby,
   }),
   useUnits: () => mockUnits,
-  useFeeding: () => ({ loadFeedingRange: mockLoadRanges.feeding }),
-  useSleep: () => ({ loadSleepRange: mockLoadRanges.sleep }),
-  useDiaper: () => ({ loadDiaperRange: mockLoadRanges.diapers }),
-  usePumping: () => ({ loadPumpingRange: mockLoadRanges.pumping }),
-  useGrowth: () => ({ loadGrowthRange: mockLoadRanges.growth }),
-  useTummyTime: () => ({ loadTummyTimeRange: mockLoadRanges.tummyTime }),
+  useAuth: () => ({ user: mockUser }),
+}));
+
+jest.mock("@/hooks/useActivityRangeLoader", () => ({
+  useActivityRangeLoader: () => ({
+    loadRange: mockLoadRange,
+    getRangeStatus: () => "loaded",
+  }),
 }));
 
 jest.mock("@/components/reports", () => ({
@@ -70,14 +69,13 @@ import ReportsScreen from "./reports";
 describe("ReportsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUser = { id: "user-1", householdId: "household-1" };
     mockUnits = {
       weightUnit: "kg",
       heightUnit: "cm",
     };
-    for (const loadRange of Object.values(mockLoadRanges)) {
-      loadRange.mockClear();
-      loadRange.mockImplementation(async () => {});
-    }
+    mockLoadRange.mockClear();
+    mockLoadRange.mockImplementation(async () => {});
     mockGenerateReport.mockResolvedValue({
       success: true,
       filePath: "/tmp/report.pdf",
@@ -87,20 +85,21 @@ describe("ReportsScreen", () => {
   });
 
   it("resolves the selected range for every report collection before generating", async () => {
+    mockGenerateReport.mockImplementation(
+      async (options: { ensureRangesLoaded: () => Promise<void> }) => {
+        await options.ensureRangesLoaded();
+        return { success: true, filePath: "/tmp/report.pdf", fileName: "report.pdf" };
+      }
+    );
+
     render(<ReportsScreen />);
 
     fireEvent.press(screen.getByTestId("generate-report-button"));
 
     await waitFor(() => {
-      expect(mockGenerateReport).toHaveBeenCalled();
+      expect(mockLoadRange).toHaveBeenCalledTimes(6);
+      expect(mockShareReport).toHaveBeenCalledWith("/tmp/report.pdf", "report.pdf");
     });
-
-    const options = mockGenerateReport.mock.calls[0][0] as {
-      ensureRangesLoaded: () => Promise<void>;
-    };
-    expect(typeof options.ensureRangesLoaded).toBe("function");
-
-    await options.ensureRangesLoaded();
 
     const expectedEnd = new Date();
     expectedEnd.setHours(23, 59, 59, 999);
@@ -108,26 +107,21 @@ describe("ReportsScreen", () => {
     expectedStart.setHours(0, 0, 0, 0);
     expectedStart.setDate(expectedStart.getDate() - 29);
 
-    for (const loadRange of Object.values(mockLoadRanges)) {
-      expect(loadRange).toHaveBeenCalledTimes(1);
-      const range = loadRange.mock.calls[0][0] as { start: string; end: string };
+    for (const call of mockLoadRange.mock.calls) {
+      const range = call[0] as { start: string; end: string };
       expect(Date.parse(range.start)).toBe(expectedStart.getTime());
       expect(Date.parse(range.end)).toBe(expectedEnd.getTime() + 1);
     }
   });
 
-  it("reports failure when range resolution fails before generating", async () => {
-    mockLoadRanges.sleep.mockRejectedValueOnce(new Error("Failed to fetch activity range"));
-    mockGenerateReport.mockImplementation(
-      async (options: { ensureRangesLoaded: () => Promise<void> }) => {
-        try {
-          await options.ensureRangesLoaded();
-          return { success: true, filePath: "/tmp/report.pdf", fileName: "report.pdf" };
-        } catch (error) {
-          return { success: false, error: (error as Error).message };
-        }
-      }
-    );
+  it("shows the failure alert when report generation fails", async () => {
+    // The PDF service maps a failed range read to { success: false, errorKind: "rangeLoad" }.
+    // That mapping is proved in pdf-service.test.ts; here we only assert the screen surfaces it.
+    mockGenerateReport.mockResolvedValue({
+      success: false,
+      error: "Failed to fetch activity range",
+      errorKind: "rangeLoad",
+    });
     const alertSpy = jest.spyOn(require("react-native").Alert, "alert");
 
     render(<ReportsScreen />);
@@ -137,7 +131,7 @@ describe("ReportsScreen", () => {
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(
         "reports.generateFailed",
-        "Failed to fetch activity range"
+        "reports.rangeLoadError"
       );
     });
     expect(mockShareReport).not.toHaveBeenCalled();

@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useBaby, useUnits } from "@/contexts";
 import { PDFService } from "@/services/pdf-service";
 import {
-  toInclusiveUtcRange,
+  toHalfOpenUtcRange,
   useActivityRangeResolver,
 } from "@/hooks/useActivityRangeResolver";
 import { SectionSelector } from "@/components/reports";
@@ -54,7 +54,7 @@ export default function ReportsScreen() {
   const ensureRangesLoaded = useCallback(
     () =>
       resolveRanges(
-        toInclusiveUtcRange(dateRange.startDate, dateRange.endDate)
+        toHalfOpenUtcRange(dateRange.startDate, dateRange.endDate)
       ),
     [resolveRanges, dateRange.startDate, dateRange.endDate]
   );
@@ -85,7 +85,9 @@ export default function ReportsScreen() {
       } else if (!result.success) {
         Alert.alert(
           t("reports.generateFailed"),
-          result.error || t("reports.unknownError")
+          result.errorKind === "rangeLoad"
+            ? t("reports.rangeLoadError")
+            : result.error || t("reports.unknownError")
         );
       }
     } catch (error) {

@@ -1247,6 +1247,7 @@
     "sectionsSummary": "{{count}} Abschnitte ausgewählt",
     "noBabySelected": "Bitte wähle ein Baby, um einen Bericht zu erstellen",
     "generateFailed": "Berichterstellung fehlgeschlagen",
+    "rangeLoadError": "Nicht alle Einträge für den ausgewählten Zeitraum konnten geladen werden. Prüfe deine Verbindung und versuche es erneut.",
     "unknownError": "Ein unerwarteter Fehler ist aufgetreten",
     "sectionLabels": {
       "summary": "Zusammenfassung",
