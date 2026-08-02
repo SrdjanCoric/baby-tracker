@@ -31,7 +31,7 @@ These requests do not run during startup. Switching controls reuses loaded or co
 
 ## Export and Reports ranges
 
-Export (CSV) and PDF reports use the same on-demand range service, but resolve the selected range into local storage without dispatching the fetched history into the activity context reducers. The pre-export record count is derived from the resolved range, so it matches the exported file. A failed range read is surfaced as an error instead of producing a silently incomplete export.
+Export (CSV) and PDF reports resolve the selected range through the same context-bound range loaders as Timeline and Statistics, so coverage resolved for an export is reused by the other surfaces and the contexts stay consistent with what the export reads. The pre-export record count is derived from the resolved range, so it matches the exported file. A failed range read is surfaced as an error instead of producing a silently incomplete export. A signed-in user whose household profile could not be resolved is treated as unverified rather than falling back to the startup-capped cache.
 
 ## Reconciliation
 

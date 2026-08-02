@@ -1,6 +1,13 @@
 import { useCallback } from "react";
-import { useAuth, useBaby } from "@/contexts";
-import { useActivityRangeLoader } from "./useActivityRangeLoader";
+import {
+  useAuth,
+  useDiaper,
+  useFeeding,
+  useGrowth,
+  usePumping,
+  useSleep,
+  useTummyTime,
+} from "@/contexts";
 import { ACTIVITY_RANGE_LOAD_ERROR } from "@/constants/activity-range";
 import type { UtcActivityRange } from "@/services/activity-range-loader";
 
@@ -20,11 +27,11 @@ export function toHalfOpenUtcRange(startDate: Date, endDate: Date): UtcActivityR
  * storage, so export and report readers see the full selected range instead of
  * the startup-capped cache.
  *
- * Unlike the context-bound range loaders used by Timeline and Statistics, this
- * resolver commits fetched ranges to storage without dispatching the full
- * merged collection into the activity context reducers, so opening an export or
- * report does not repopulate every timeline and dashboard consumer with the
- * entire fetched history.
+ * This uses the same context-bound range loaders as Timeline and Statistics, so
+ * coverage resolved for an export is reused by the other surfaces and the
+ * contexts stay consistent with what the export reads. `commitPulledRange`
+ * prunes local rows the server no longer returns, so a resolver that skipped
+ * the context dispatch would leave Timeline showing entries the export omits.
  *
  * Rejects when any collection fails to load, so callers surface the failure
  * instead of producing a partial export. A signed-in user whose household
@@ -33,65 +40,15 @@ export function toHalfOpenUtcRange(startDate: Date, endDate: Date): UtcActivityR
  * a silently incomplete export.
  */
 export function useActivityRangeResolver(): (range: UtcActivityRange) => Promise<void> {
-  const { selectedBaby } = useBaby();
   const { user } = useAuth();
-  const babyId = selectedBaby?.id ?? null;
   const householdId = user?.householdId ?? null;
-  const authenticated = Boolean(householdId);
-  const storageScope = `${user?.id ?? "guest"}:${householdId ?? "local"}:${
-    selectedBaby?.id ?? "none"
-  }`;
-  const acceptEntries = useCallback(() => {}, []);
 
-  const feedingsLoader = useActivityRangeLoader({
-    table: "feedings",
-    babyId,
-    authenticated,
-    storageScope,
-    acceptEntries,
-  });
-  const sleepLoader = useActivityRangeLoader({
-    table: "sleep_sessions",
-    babyId,
-    authenticated,
-    storageScope,
-    acceptEntries,
-  });
-  const diapersLoader = useActivityRangeLoader({
-    table: "diapers",
-    babyId,
-    authenticated,
-    storageScope,
-    acceptEntries,
-  });
-  const pumpingLoader = useActivityRangeLoader({
-    table: "pumping_sessions",
-    babyId,
-    authenticated,
-    storageScope,
-    acceptEntries,
-  });
-  const growthLoader = useActivityRangeLoader({
-    table: "growth_measurements",
-    babyId,
-    authenticated,
-    storageScope,
-    acceptEntries,
-  });
-  const tummyTimeLoader = useActivityRangeLoader({
-    table: "tummy_time_sessions",
-    babyId,
-    authenticated,
-    storageScope,
-    acceptEntries,
-  });
-
-  const loadFeedingsRange = feedingsLoader.loadRange;
-  const loadSleepRange = sleepLoader.loadRange;
-  const loadDiapersRange = diapersLoader.loadRange;
-  const loadPumpingRange = pumpingLoader.loadRange;
-  const loadGrowthRange = growthLoader.loadRange;
-  const loadTummyTimeRange = tummyTimeLoader.loadRange;
+  const { loadFeedingRange } = useFeeding();
+  const { loadSleepRange } = useSleep();
+  const { loadDiaperRange } = useDiaper();
+  const { loadPumpingRange } = usePumping();
+  const { loadGrowthRange } = useGrowth();
+  const { loadTummyTimeRange } = useTummyTime();
 
   return useCallback(
     async (range: UtcActivityRange) => {
@@ -99,9 +56,9 @@ export function useActivityRangeResolver(): (range: UtcActivityRange) => Promise
         throw new Error(ACTIVITY_RANGE_LOAD_ERROR);
       }
       await Promise.all([
-        loadFeedingsRange(range),
+        loadFeedingRange(range),
         loadSleepRange(range),
-        loadDiapersRange(range),
+        loadDiaperRange(range),
         loadPumpingRange(range),
         loadGrowthRange(range),
         loadTummyTimeRange(range),
@@ -110,9 +67,9 @@ export function useActivityRangeResolver(): (range: UtcActivityRange) => Promise
     [
       user,
       householdId,
-      loadFeedingsRange,
+      loadFeedingRange,
       loadSleepRange,
-      loadDiapersRange,
+      loadDiaperRange,
       loadPumpingRange,
       loadGrowthRange,
       loadTummyTimeRange,

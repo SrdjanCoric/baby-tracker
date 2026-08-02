@@ -2,24 +2,40 @@ import { act, renderHook } from "@testing-library/react-native";
 import { useActivityRangeResolver } from "./useActivityRangeResolver";
 import type { UtcActivityRange } from "@/services/activity-range-loader";
 
-const mockLoadRange = jest.fn(async () => {});
+const mockLoadFeedingRange = jest.fn(async () => {});
+const mockLoadSleepRange = jest.fn(async () => {});
+const mockLoadDiaperRange = jest.fn(async () => {});
+const mockLoadPumpingRange = jest.fn(async () => {});
+const mockLoadGrowthRange = jest.fn(async () => {});
+const mockLoadTummyTimeRange = jest.fn(async () => {});
 
-let mockSelectedBaby: { id: string | null } = { id: "baby-1" };
+/**
+ * Every collection the CSV export and PDF report include. A loader dropped from
+ * the resolver must fail here, because a collection that is never resolved is
+ * silently truncated to the startup-capped cache.
+ */
+const COLLECTION_LOADERS = {
+  feeding: mockLoadFeedingRange,
+  sleep: mockLoadSleepRange,
+  diaper: mockLoadDiaperRange,
+  pumping: mockLoadPumpingRange,
+  growth: mockLoadGrowthRange,
+  tummyTime: mockLoadTummyTimeRange,
+} as const;
+
 let mockUser: { id: string | null; householdId: string | null } | null = {
   id: "user-1",
   householdId: "household-1",
 };
 
 jest.mock("@/contexts", () => ({
-  useBaby: () => ({ selectedBaby: mockSelectedBaby }),
   useAuth: () => ({ user: mockUser }),
-}));
-
-jest.mock("./useActivityRangeLoader", () => ({
-  useActivityRangeLoader: () => ({
-    loadRange: mockLoadRange,
-    getRangeStatus: () => "loaded",
-  }),
+  useFeeding: () => ({ loadFeedingRange: mockLoadFeedingRange }),
+  useSleep: () => ({ loadSleepRange: mockLoadSleepRange }),
+  useDiaper: () => ({ loadDiaperRange: mockLoadDiaperRange }),
+  usePumping: () => ({ loadPumpingRange: mockLoadPumpingRange }),
+  useGrowth: () => ({ loadGrowthRange: mockLoadGrowthRange }),
+  useTummyTime: () => ({ loadTummyTimeRange: mockLoadTummyTimeRange }),
 }));
 
 const range: UtcActivityRange = {
@@ -30,35 +46,50 @@ const range: UtcActivityRange = {
 describe("useActivityRangeResolver", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSelectedBaby = { id: "baby-1" };
     mockUser = { id: "user-1", householdId: "household-1" };
-    mockLoadRange.mockImplementation(async () => {});
+    for (const loader of Object.values(COLLECTION_LOADERS)) {
+      loader.mockImplementation(async () => {});
+    }
   });
 
-  it("resolves every collection for an authenticated user", async () => {
+  it.each(Object.entries(COLLECTION_LOADERS))(
+    "resolves the selected range for the %s collection",
+    async (_name, loader) => {
+      const { result } = renderHook(() => useActivityRangeResolver());
+
+      await act(async () => {
+        await result.current(range);
+      });
+
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledWith(range);
+    }
+  );
+
+  it("resolves through the shared context loaders, not a private loader stack", async () => {
+    // Coverage resolved for an export must be visible to Timeline and
+    // Statistics, and the contexts must see the same pruning the export reads.
     const { result } = renderHook(() => useActivityRangeResolver());
 
     await act(async () => {
       await result.current(range);
     });
 
-    expect(mockLoadRange).toHaveBeenCalledTimes(6);
-    for (const call of mockLoadRange.mock.calls) {
-      expect(call[0]).toEqual(range);
+    for (const loader of Object.values(COLLECTION_LOADERS)) {
+      expect(loader).toHaveBeenCalledWith(range);
     }
   });
 
-  it("resolves locally for a guest without querying the server", async () => {
+  it("does not reject for a guest user", async () => {
     mockUser = null;
 
     const { result } = renderHook(() => useActivityRangeResolver());
 
     await act(async () => {
-      await result.current(range);
+      await expect(result.current(range)).resolves.toBeUndefined();
     });
 
-    // Guest markLoaded path still calls loadRange (which short-circuits to markLoaded).
-    expect(mockLoadRange).toHaveBeenCalledTimes(6);
+    expect(mockLoadFeedingRange).toHaveBeenCalledWith(range);
   });
 
   it("rejects when the user is signed in but the household profile is missing", async () => {
@@ -70,6 +101,18 @@ describe("useActivityRangeResolver", () => {
       await expect(result.current(range)).rejects.toThrow("Failed to fetch activity range");
     });
 
-    expect(mockLoadRange).not.toHaveBeenCalled();
+    for (const loader of Object.values(COLLECTION_LOADERS)) {
+      expect(loader).not.toHaveBeenCalled();
+    }
+  });
+
+  it("rejects when any single collection fails to resolve", async () => {
+    mockLoadDiaperRange.mockRejectedValueOnce(new Error("Failed to fetch activity range"));
+
+    const { result } = renderHook(() => useActivityRangeResolver());
+
+    await act(async () => {
+      await expect(result.current(range)).rejects.toThrow("Failed to fetch activity range");
+    });
   });
 });

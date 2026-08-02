@@ -41,13 +41,14 @@ jest.mock("@/contexts", () => ({
   }),
   useUnits: () => mockUnits,
   useAuth: () => ({ user: mockUser }),
-}));
-
-jest.mock("@/hooks/useActivityRangeLoader", () => ({
-  useActivityRangeLoader: () => ({
-    loadRange: mockLoadRange,
-    getRangeStatus: () => "loaded",
-  }),
+  // The resolver goes through the shared context loaders; every collection
+  // delegates to one spy so the six-collection assertions below stay readable.
+  useFeeding: () => ({ loadFeedingRange: mockLoadRange }),
+  useSleep: () => ({ loadSleepRange: mockLoadRange }),
+  useDiaper: () => ({ loadDiaperRange: mockLoadRange }),
+  usePumping: () => ({ loadPumpingRange: mockLoadRange }),
+  useGrowth: () => ({ loadGrowthRange: mockLoadRange }),
+  useTummyTime: () => ({ loadTummyTimeRange: mockLoadRange }),
 }));
 
 jest.mock("@/components/export", () => {
