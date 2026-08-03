@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -11,7 +11,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useBaby, useUnits } from "@/contexts";
+import { ActivityRangeLoadError } from "@/services/activity-range-error";
 import { ExportService } from "@/services/export-service";
+import {
+  toHalfOpenUtcRange,
+  useActivityRangeResolver,
+} from "@/hooks/useActivityRangeResolver";
 import { DataTypeSelector, DateRangePicker } from "@/components/export";
 import type {
   ExportDataType,
@@ -42,6 +47,7 @@ export default function ExportScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [rangeLoadError, setRangeLoadError] = useState(false);
   const [recordCounts, setRecordCounts] = useState<ExportRecordCounts>(
     EMPTY_RECORD_COUNTS
   );
@@ -55,6 +61,31 @@ export default function ExportScreen() {
   ]);
   const [dateRange, setDateRange] = useState<DateRange>(getInitialDateRange());
   const [includeNotes, setIncludeNotes] = useState(true);
+  const loadRequestRef = useRef(0);
+
+  const resolveRanges = useActivityRangeResolver();
+  const ensureRangesLoaded = useCallback(
+    () =>
+      resolveRanges(
+        toHalfOpenUtcRange(dateRange.startDate, dateRange.endDate)
+      ),
+    [resolveRanges, dateRange.startDate, dateRange.endDate]
+  );
+
+  const handleDateRangeChange = useCallback((nextRange: DateRange) => {
+    if (
+      nextRange.startDate.getTime() === dateRange.startDate.getTime() &&
+      nextRange.endDate.getTime() === dateRange.endDate.getTime()
+    ) {
+      setDateRange(nextRange);
+      return;
+    }
+
+    ++loadRequestRef.current;
+    setIsLoading(true);
+    setRangeLoadError(false);
+    setDateRange(nextRange);
+  }, [dateRange.startDate, dateRange.endDate]);
 
   const loadRecordCounts = useCallback(async () => {
     if (!selectedBaby) {
@@ -62,23 +93,37 @@ export default function ExportScreen() {
       return;
     }
 
+    const requestId = ++loadRequestRef.current;
     setIsLoading(true);
+    setRangeLoadError(false);
     try {
       const counts = await ExportService.getRecordCountsInRange(
         selectedBaby.id,
         dateRange.startDate,
-        dateRange.endDate
+        dateRange.endDate,
+        ensureRangesLoaded
       );
+      if (requestId !== loadRequestRef.current) return;
       setRecordCounts(counts);
     } catch (error) {
       console.error("Failed to load record counts:", error);
+      if (requestId !== loadRequestRef.current) return;
+      if (error instanceof ActivityRangeLoadError) {
+        setRangeLoadError(true);
+      } else {
+        setRecordCounts(EMPTY_RECORD_COUNTS);
+        Alert.alert(t("export.exportFailed"), t("export.unknownError"));
+      }
     } finally {
-      setIsLoading(false);
+      if (requestId === loadRequestRef.current) setIsLoading(false);
     }
-  }, [selectedBaby, dateRange.startDate, dateRange.endDate]);
+  }, [selectedBaby, dateRange.startDate, dateRange.endDate, ensureRangesLoaded, t]);
 
   useEffect(() => {
-    loadRecordCounts();
+    const timer = setTimeout(() => {
+      void loadRecordCounts();
+    }, 350);
+    return () => clearTimeout(timer);
   }, [loadRecordCounts]);
 
   const handleExport = useCallback(async () => {
@@ -96,14 +141,21 @@ export default function ExportScreen() {
         volumeUnit,
         weightUnit,
         heightUnit,
+        ensureRangesLoaded,
       });
 
       if (result.success && result.content && result.fileName) {
         await ExportService.shareCSV(result.content, result.fileName);
       } else if (!result.success) {
+        if (result.errorKind === "rangeLoad") {
+          setRangeLoadError(true);
+          setRecordCounts(EMPTY_RECORD_COUNTS);
+        }
         Alert.alert(
           t("export.exportFailed"),
-          result.error || t("export.unknownError")
+          result.errorKind === "rangeLoad"
+            ? t("export.rangeLoadError")
+            : result.error || t("export.unknownError")
         );
       }
     } catch (error) {
@@ -115,14 +167,18 @@ export default function ExportScreen() {
     } finally {
       setIsExporting(false);
     }
-  }, [selectedBaby, selectedTypes, dateRange, includeNotes, volumeUnit, weightUnit, heightUnit, t]);
+  }, [selectedBaby, selectedTypes, dateRange, includeNotes, volumeUnit, weightUnit, heightUnit, ensureRangesLoaded, t]);
 
   const totalSelectedRecords = selectedTypes.reduce(
     (sum, type) => sum + recordCounts[type],
     0
   );
 
-  const canExport = selectedTypes.length > 0 && totalSelectedRecords > 0;
+  const canExport =
+    !isLoading &&
+    !rangeLoadError &&
+    selectedTypes.length > 0 &&
+    totalSelectedRecords > 0;
 
   if (!selectedBaby) {
     return (
@@ -163,7 +219,7 @@ export default function ExportScreen() {
         <View className="mb-6">
           <DateRangePicker
             dateRange={dateRange}
-            onDateRangeChange={setDateRange}
+            onDateRangeChange={handleDateRangeChange}
           />
         </View>
 
@@ -173,6 +229,23 @@ export default function ExportScreen() {
             <Text className="text-content-secondary dark:text-content-dark-secondary mt-2">
               {t("export.loadingCounts")}
             </Text>
+          </View>
+        ) : rangeLoadError ? (
+          <View className="py-8 items-center" testID="export-range-error">
+            <Text className="text-content-secondary dark:text-content-dark-secondary text-center">
+              {t("export.rangeLoadError")}
+            </Text>
+            <Pressable
+              onPress={loadRecordCounts}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.retry")}
+              testID="export-range-retry"
+              className="mt-3 py-2 px-6 rounded-button-lg bg-primary-500 active:bg-primary-600"
+            >
+              <Text className="text-white font-semibold">
+                {t("common.retry")}
+              </Text>
+            </Pressable>
           </View>
         ) : (
           <>
@@ -207,7 +280,7 @@ export default function ExportScreen() {
       </ScrollView>
 
       <View className="px-4 pb-4 pt-2 border-t border-border-subtle dark:border-border-dark-subtle">
-        {totalSelectedRecords > 0 && (
+        {!isLoading && !rangeLoadError && totalSelectedRecords > 0 && (
           <Text className="text-sm text-content-secondary dark:text-content-dark-secondary text-center mb-3">
             {t("export.recordsSummary", { count: totalSelectedRecords })}
           </Text>

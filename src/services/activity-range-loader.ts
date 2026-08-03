@@ -7,9 +7,14 @@ export type ActivityRangeStatus = "unverified" | "loading" | "loaded" | "error";
 
 type Listener = () => void;
 
+export interface ActivityRangeLoadOptions {
+  failureState?: "shared" | "caller";
+}
+
 interface InFlightRange {
   range: UtcActivityRange;
   promise: Promise<void>;
+  publishFailure: boolean;
 }
 
 function intersects(left: UtcActivityRange, right: UtcActivityRange): boolean {
@@ -76,20 +81,32 @@ export class ActivityRangeLoader<T> {
     return "unverified";
   }
 
-  async load(range: UtcActivityRange): Promise<void> {
+  async load(
+    range: UtcActivityRange,
+    options: ActivityRangeLoadOptions = {}
+  ): Promise<void> {
     if (range.start >= range.end) throw new Error("Activity range must be half-open and non-empty");
 
-    this.failed = this.failed.filter((failed) => !intersects(failed, range));
-    const existingPromises = this.inFlight
-      .filter((pending) => intersects(pending.range, range))
-      .map((pending) => pending.promise);
+    const publishFailure = options.failureState !== "caller";
+    if (publishFailure) {
+      this.failed = this.failed.filter((failed) => !intersects(failed, range));
+    }
+    const existingRequests = this.inFlight.filter((pending) =>
+      intersects(pending.range, range)
+    );
+    if (publishFailure) {
+      for (const pending of existingRequests) pending.publishFailure = true;
+    }
+    const existingPromises = existingRequests.map((pending) => pending.promise);
     const coverage = [
       ...this.loaded,
       ...this.inFlight.map((pending) => pending.range),
     ];
     const missing = subtractRange(range, coverage);
     const generation = this.generation;
-    const started = missing.map((missingRange) => this.start(missingRange, generation));
+    const started = missing.map((missingRange) =>
+      this.start(missingRange, generation, publishFailure)
+    );
     this.emit();
     await Promise.all([...existingPromises, ...started]);
   }
@@ -115,15 +132,26 @@ export class ActivityRangeLoader<T> {
     this.emit();
   }
 
-  private start(range: UtcActivityRange, generation: number): Promise<void> {
+  private start(
+    range: UtcActivityRange,
+    generation: number,
+    publishFailure: boolean
+  ): Promise<void> {
     const promise = this.fetchRange(range)
       .then((entries) => {
         if (generation !== this.generation) return;
         this.acceptEntries(entries);
         this.loaded = mergeRanges([...this.loaded, range]);
+        this.failed = this.failed.filter((failed) => !intersects(failed, range));
       })
       .catch((error: unknown) => {
-        if (generation === this.generation) {
+        const pending = this.inFlight.find(
+          (request) => request.promise === promise
+        );
+        if (
+          generation === this.generation &&
+          (pending?.publishFailure ?? publishFailure)
+        ) {
           this.failed = mergeRanges([...this.failed, range]);
         }
         throw error;
@@ -135,7 +163,7 @@ export class ActivityRangeLoader<T> {
         }
       });
 
-    this.inFlight.push({ range, promise });
+    this.inFlight.push({ range, promise, publishFailure });
     return promise;
   }
 

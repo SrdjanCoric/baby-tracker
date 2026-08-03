@@ -33,20 +33,20 @@ startup cap or the range loader, and Timeline or Statistics, which already resol
 
 ## Implementation work
 
-- [ ] Resolve the user's selected date range for every collection included in a CSV export before
+- [x] Resolve the user's selected date range for every collection included in a CSV export before
       reading storage, awaiting completion so no read races the fetch.
-- [ ] Do the same for PDF reports, which read through the same storage services.
-- [ ] Derive the pre-export record count from the resolved range rather than the unresolved local
+- [x] Do the same for PDF reports, which read through the same storage services.
+- [x] Derive the pre-export record count from the resolved range rather than the unresolved local
       cache, so the displayed count and the exported file agree.
-- [ ] Surface loading state while a range resolves, and handle a failed range read without producing
+- [x] Surface loading state while a range resolves, and handle a failed range read without producing
       a silently partial export. A failed export must report the failure rather than emit an
       incomplete file.
-- [ ] Add an integration test seeding one collection past the 1,000-row cap and asserting that an
+- [x] Add an integration test seeding one collection past the 1,000-row cap and asserting that an
       export over a range reaching earlier than the cap contains every record in that range, and
       that the reported count matches the exported content.
-- [ ] Add component tests asserting every required range resolves before the export and report
+- [x] Add component tests asserting every required range resolves before the export and report
       services read storage.
-- [ ] Confirm no export path reads a collection whose range was not resolved.
+- [x] Confirm no export path reads a collection whose range was not resolved.
 
 ## Human checkpoints
 
@@ -61,11 +61,39 @@ startup cap or the range loader, and Timeline or Statistics, which already resol
 
 ## Acceptance criteria
 
-- [ ] `node scripts/audit/export-range-coverage.mjs` exits 0, reporting that every historical-data
+- [x] `node scripts/audit/export-range-coverage.mjs` exits 0, reporting that every historical-data
       consumer resolves its range.
-- [ ] An export over a range extending past the startup cap contains every record in that range.
-- [ ] The record count shown before export matches the exported file's contents.
-- [ ] PDF reports cover the selected range on the same terms as CSV export.
-- [ ] A failed range read surfaces an error instead of producing a silently incomplete export.
-- [ ] The 1,000-row startup cap and `fetchActivityRangeFromDatabase` are unchanged, and
+- [x] An export over a range extending past the startup cap contains every record in that range.
+- [x] The record count shown before export matches the exported file's contents.
+- [x] PDF reports cover the selected range on the same terms as CSV export.
+- [x] A failed range read surfaces an error instead of producing a silently incomplete export.
+- [x] The 1,000-row startup cap and `fetchActivityRangeFromDatabase` are unchanged, and
       `README.md:43` still describes the shipped behavior.
+
+## Review decisions
+
+- deferred out of scope: TR-3 — A superseded all-time fetch can block a narrower range — user deferred the fenced range-loader change because it was suggested as optional scope.
+- accepted (security risk): TR-6 — Unbounded shared-history loads may exhaust memory — user considers this a non-issue and accepted it because skipping was suggested.
+- skipped (minor): TR-8 — Export duplicates the established range boundary and translations — user skipped this minor refactor because skipping was suggested.
+- accepted (security risk): TR-12 — CSV escaping does not handle leading TAB or CR — user accepted this pre-existing risk because skipping was suggested.
+- accepted (security risk): TR-13 — Baby name reaches PDF HTML without escaping — user accepted this pre-existing risk because skipping was suggested.
+- skipped (minor): TR-2 — Integration test pre-resolves range before service calls — user requested major-only remediation.
+- skipped (minor): TR-3 — Non-range count failure shows zero records without retry — user requested major-only remediation.
+- skipped (minor): TR-4 — Reports resolve collections excluded from selected sections — user requested major-only remediation.
+- skipped (minor): TR-5 — Resolver docs conflate unresolved and not-yet-loaded household profiles — user requested major-only remediation.
+- skipped (minor): TR-6 — README attributes pre-export count and retry behavior to Reports — user requested major-only remediation.
+- skipped (minor): TR-7 — Initial record count load is debounced — user requested major-only remediation.
+- skipped (minor): TR-8 — Range-load error literal is duplicated — user requested major-only remediation.
+- skipped (minor): TR-9 — Resolver collection coverage is hand-maintained — user requested major-only remediation.
+- skipped (minor): TR-11 — Local parse failures are exposed as retriable range-load failures — user requested major-only remediation.
+- skipped (minor): TR-12 — Master plan omits Export and Reports from range-aware surfaces — user requested major-only remediation.
+- skipped (minor): TR-13 — Selectors remain interactive during export or report generation — user requested major-only remediation.
+- skipped (minor): TR-14 — Public getRecordCounts API reads unresolved cached collections — user requested major-only remediation.
+- skipped (minor): TR-15 — Pure range helper lives in hooks module — user requested major-only remediation.
+
+## Finish-task record
+
+- README disposition: `README.md` line 43 was inspected after implementation. Existing export/report range contract remains in place; no additional prose edit was made. The affected paragraph passed two `write-well` audit passes. Pass 1 found the previously recorded minor ambiguity that the pre-export count and retry wording also describes Reports; retained under the user's skipped TR-6 decision. Pass 2 found no new issues.
+- Review outcome: both retained review files are closed. Findings are recorded above as fixed, skipped-minor, deferred-out-of-scope, or accepted-security-risk.
+- Automated proof: `node scripts/audit/export-range-coverage.mjs`, `npm run lint`, `npm run typecheck`, focused Vitest (35 tests), and focused Jest (27 tests) passed. Canonical `npm run check` passed lint, typecheck, unit (2,498 tests), component (813 tests), security, sync, and CI stages before interruption; resumed `npm run test:production-gating`, `npm run test:sql:setup`, and `npm run test:sql` passed, completing its remaining stages. PR CI then exposed newly published high-severity advisories in pinned transitive dependencies; `brace-expansion` and `fast-uri` were updated to patched releases within their existing semver ranges, the obsolete temporary exception was removed, and clean-install `npm run audit:dependencies` plus `npm run check:code` passed.
+- Manual verification: deferred by owner. The `[verify]` checkpoint requiring a local household snapshot with more than 1,000 records was not performed before PR creation; manual real-data confirmation remains a release-owner follow-up.

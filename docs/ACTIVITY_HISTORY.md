@@ -29,6 +29,10 @@ Statistics and Sleep Patterns use the same range service as Timeline.
 
 These requests do not run during startup. Switching controls reuses loaded or compatible in-flight coverage. The service fetches only missing subranges.
 
+## Export and Reports ranges
+
+Export (CSV) and PDF reports resolve the selected range through the same context-bound range loaders as Timeline and Statistics, so coverage resolved for an export is reused by the other surfaces and the contexts stay consistent with what the export reads. The pre-export record count is derived from the resolved range, so it matches the exported file. A failed range read is surfaced as an error instead of producing a silently incomplete export. A signed-in user whose household profile could not be resolved is treated as unverified rather than falling back to the startup-capped cache.
+
 ## Reconciliation
 
 A range result enters the same per-user, per-baby storage lock used by local mutations and startup pulls. Reconciliation replaces the authoritative part of the requested interval while retaining:

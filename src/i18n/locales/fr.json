@@ -1230,6 +1230,7 @@
     "recordsSummary": "{{count}} enregistrements seront exportés",
     "exportButton": "Exporter en CSV",
     "loadingCounts": "Chargement des données...",
+    "rangeLoadError": "Impossible de charger tous les enregistrements de la période sélectionnée. Vérifiez votre connexion et réessayez.",
     "noBabySelected": "Veuillez sélectionner un bébé pour exporter les données",
     "exportFailed": "Échec de l'exportation",
     "unknownError": "Une erreur inattendue est survenue",
@@ -1246,6 +1247,7 @@
     "sectionsSummary": "{{count}} sections sélectionnées",
     "noBabySelected": "Veuillez sélectionner un bébé pour générer un rapport",
     "generateFailed": "Échec de la génération du rapport",
+    "rangeLoadError": "Impossible de charger tous les enregistrements de la période sélectionnée. Vérifiez votre connexion et réessayez.",
     "unknownError": "Une erreur inattendue est survenue",
     "sectionLabels": {
       "summary": "Résumé",

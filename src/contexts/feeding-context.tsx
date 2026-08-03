@@ -37,7 +37,7 @@ import {
 } from "@/services/timer-lock-reconciliation";
 import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
-import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
+import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface ActiveTimer extends TimerIdentity {
   isRunning: boolean;
@@ -261,7 +261,10 @@ interface FeedingContextValue extends FeedingState {
   updateFeeding: (feedingId: string, input: UpdateFeedingInput) => Promise<StoredFeedingEntry | null>;
   deleteFeeding: (feedingId: string) => Promise<boolean>;
   refreshFeedings: () => Promise<void>;
-  loadFeedingRange: (range: UtcActivityRange) => Promise<void>;
+  loadFeedingRange: (
+    range: UtcActivityRange,
+    options?: ActivityRangeLoadOptions
+  ) => Promise<void>;
   getFeedingRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastFeeding: () => StoredFeedingEntry | null;
 }

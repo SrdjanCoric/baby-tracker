@@ -70,6 +70,19 @@ describe("ActivityRangeLoader", () => {
     expect(accepted).toEqual([["recovered"]]);
   });
 
+  it("does not publish caller-local failures to shared range status", async () => {
+    const loader = new ActivityRangeLoader(
+      vi.fn().mockRejectedValue(new Error("offline")),
+      vi.fn()
+    );
+
+    await expect(
+      loader.load(firstDay, { failureState: "caller" })
+    ).rejects.toThrow("offline");
+
+    expect(loader.status(firstDay)).toBe("unverified");
+  });
+
   it("ignores completion from a reset baby or storage scope", async () => {
     const pending = deferred<string[]>();
     const accepted: string[][] = [];

@@ -35,7 +35,7 @@ import {
 } from "@/services/timer-lock-reconciliation";
 import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
-import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
+import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface ActivePumpingTimer extends TimerIdentity {
   isRunning: boolean;
@@ -189,7 +189,10 @@ interface PumpingContextValue extends PumpingState {
   updatePumping: (pumpingId: string, input: UpdatePumpingInput) => Promise<StoredPumpingEntry | null>;
   deletePumping: (pumpingId: string) => Promise<boolean>;
   refreshPumpings: () => Promise<void>;
-  loadPumpingRange: (range: UtcActivityRange) => Promise<void>;
+  loadPumpingRange: (
+    range: UtcActivityRange,
+    options?: ActivityRangeLoadOptions
+  ) => Promise<void>;
   getPumpingRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastPumping: () => StoredPumpingEntry | null;
   getTodaysTotalVolume: () => number;

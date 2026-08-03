@@ -50,7 +50,7 @@ import {
 import type { SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
 import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
-import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
+import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
 import {
   acceptTimerCompletion,
@@ -327,7 +327,10 @@ interface SleepContextValue extends SleepState {
   updateSleep: (sleepId: string, input: UpdateSleepInput) => Promise<StoredSleepEntry | null>;
   deleteSleep: (sleepId: string) => Promise<boolean>;
   refreshSleeps: () => Promise<void>;
-  loadSleepRange: (range: UtcActivityRange) => Promise<void>;
+  loadSleepRange: (
+    range: UtcActivityRange,
+    options?: ActivityRangeLoadOptions
+  ) => Promise<void>;
   getSleepRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastSleep: () => StoredSleepEntry | null;
   getTodaysTotalSleepMinutes: () => number;

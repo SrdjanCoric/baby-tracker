@@ -39,6 +39,10 @@ import {
   renderTummyTimeSection,
 } from "@/utils/pdf-templates";
 import { PDF_MIME_TYPE } from "@/constants/report";
+import {
+  ActivityRangeLoadError,
+  ensureActivityRangesLoaded,
+} from "./activity-range-error";
 
 function sanitizeFileName(name: string): string {
   return name.replace(/[/\\?%*:|"<>]/g, "-").replace(/\s+/g, "_");
@@ -52,8 +56,11 @@ export const PDFService = {
   async fetchReportData(
     babyId: string,
     _startDate: Date,
-    _endDate: Date
+    _endDate: Date,
+    ensureRangesLoaded: () => Promise<void>
   ): Promise<RawReportData> {
+    await ensureActivityRangesLoaded(ensureRangesLoaded);
+
     const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
       await Promise.all([
         FeedingStorageService.getAllFeedings(babyId),
@@ -213,7 +220,8 @@ export const PDFService = {
       const rawData = await this.fetchReportData(
         options.babyId,
         options.startDate,
-        options.endDate
+        options.endDate,
+        options.ensureRangesLoaded
       );
 
       const aggregatedData = this.aggregateReportData(rawData, options);
@@ -233,9 +241,11 @@ export const PDFService = {
         fileName,
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Report generation failed";
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Report generation failed",
+        error: message,
+        errorKind: error instanceof ActivityRangeLoadError ? "rangeLoad" : undefined,
       };
     }
   },

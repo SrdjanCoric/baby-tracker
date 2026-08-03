@@ -1233,6 +1233,7 @@
     "recordsSummary": "{{count}} registros serão exportados",
     "exportButton": "Exportar CSV",
     "loadingCounts": "Carregando dados...",
+    "rangeLoadError": "Não foi possível carregar todos os registros do período selecionado. Verifique sua conexão e tente novamente.",
     "noBabySelected": "Por favor, selecione um bebê para exportar dados",
     "exportFailed": "Exportação Falhou",
     "unknownError": "Um erro inesperado ocorreu",
@@ -1249,6 +1250,7 @@
     "sectionsSummary": "{{count}} seções selecionadas",
     "noBabySelected": "Por favor, selecione um bebê para gerar um relatório",
     "generateFailed": "Falha na Geração de Relatório",
+    "rangeLoadError": "Não foi possível carregar todos os registros do período selecionado. Verifique sua conexão e tente novamente.",
     "unknownError": "Um erro inesperado ocorreu",
     "sectionLabels": {
       "summary": "Resumo",

@@ -16,7 +16,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
-import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
+import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface GrowthState {
   measurements: StoredGrowthEntry[];
@@ -86,7 +86,10 @@ interface GrowthContextValue extends GrowthState {
   ) => Promise<StoredGrowthEntry | null>;
   deleteMeasurement: (measurementId: string) => Promise<boolean>;
   refreshMeasurements: () => Promise<void>;
-  loadGrowthRange: (range: UtcActivityRange) => Promise<void>;
+  loadGrowthRange: (
+    range: UtcActivityRange,
+    options?: ActivityRangeLoadOptions
+  ) => Promise<void>;
   getGrowthRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastMeasurement: () => StoredGrowthEntry | null;
   getMeasurementHistory: (limit?: number) => StoredGrowthEntry[];

@@ -231,6 +231,8 @@ describe("ExportService", () => {
   });
 
   describe("getRecordCountsInRange", () => {
+    const ensureRangesLoaded = () => Promise.resolve();
+
     it("should filter counts by date range", async () => {
       const startDate = new Date("2024-03-14T00:00:00Z");
       const endDate = new Date("2024-03-16T23:59:59Z");
@@ -238,7 +240,8 @@ describe("ExportService", () => {
       const counts = await ExportService.getRecordCountsInRange(
         mockBabyId,
         startDate,
-        endDate
+        endDate,
+        ensureRangesLoaded
       );
 
       expect(counts.feedings).toBe(1);
@@ -253,7 +256,8 @@ describe("ExportService", () => {
       const counts = await ExportService.getRecordCountsInRange(
         mockBabyId,
         startDate,
-        endDate
+        endDate,
+        ensureRangesLoaded
       );
 
       expect(counts.feedings).toBe(0);
@@ -270,6 +274,7 @@ describe("ExportService", () => {
       babyId: mockBabyId,
       babyName: mockBabyName,
       includeNotes: true,
+      ensureRangesLoaded: () => Promise.resolve(),
     };
 
     it("should generate valid CSV content", async () => {
@@ -339,6 +344,7 @@ describe("ExportService", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
+      expect(result.errorKind).toBeUndefined();
     });
 
     it("should respect includeNotes option", async () => {
@@ -405,6 +411,108 @@ describe("ExportService", () => {
       await expect(
         ExportService.shareCSV(content, filename)
       ).resolves.not.toThrow();
+    });
+  });
+
+  describe("range resolution", () => {
+    const startDate = new Date("2024-03-01T00:00:00Z");
+    const endDate = new Date("2024-03-31T23:59:59Z");
+    const baseOptions = {
+      dataTypes: ["feedings", "sleep"] as const,
+      startDate,
+      endDate,
+      babyId: mockBabyId,
+      babyName: mockBabyName,
+      includeNotes: true,
+    };
+
+    function deferred() {
+      let resolve!: () => void;
+      let reject!: (error: Error) => void;
+      const promise = new Promise<void>((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+      return { promise, resolve, reject };
+    }
+
+    it("getRecordCountsInRange awaits range resolution before reading storage", async () => {
+      const gate = deferred();
+      const ensureRangesLoaded = vi.fn(() => gate.promise);
+
+      const promise = ExportService.getRecordCountsInRange(
+        mockBabyId,
+        startDate,
+        endDate,
+        ensureRangesLoaded
+      );
+      await Promise.resolve();
+
+      expect(ensureRangesLoaded).toHaveBeenCalledTimes(1);
+      expect(FeedingStorageService.getAllFeedings).not.toHaveBeenCalled();
+
+      gate.resolve();
+      const counts = await promise;
+
+      expect(FeedingStorageService.getAllFeedings).toHaveBeenCalled();
+      expect(counts.feedings).toBeGreaterThan(0);
+    });
+
+    it("getRecordCountsInRange rejects when range resolution fails", async () => {
+      const ensureRangesLoaded = vi
+        .fn()
+        .mockRejectedValue(new Error("Failed to fetch activity range"));
+
+      await expect(
+        ExportService.getRecordCountsInRange(
+          mockBabyId,
+          startDate,
+          endDate,
+          ensureRangesLoaded
+        )
+      ).rejects.toThrow("Failed to fetch activity range");
+      expect(FeedingStorageService.getAllFeedings).not.toHaveBeenCalled();
+    });
+
+    it("exportToCSV awaits range resolution before reading storage", async () => {
+      const gate = deferred();
+      const ensureRangesLoaded = vi.fn(() => gate.promise);
+
+      const promise = ExportService.exportToCSV({
+        ...baseOptions,
+        ensureRangesLoaded,
+      });
+      await Promise.resolve();
+
+      expect(ensureRangesLoaded).toHaveBeenCalledTimes(1);
+      expect(FeedingStorageService.getAllFeedings).not.toHaveBeenCalled();
+
+      gate.resolve();
+      const result = await promise;
+
+      expect(result.success).toBe(true);
+      expect(FeedingStorageService.getAllFeedings).toHaveBeenCalled();
+    });
+
+    it("exportToCSV classifies any resolver failure as a range-load failure", async () => {
+      const ensureRangesLoaded = vi
+        .fn()
+        .mockRejectedValue(
+          new Error("Activity pull storage scope changed during reconciliation")
+        );
+
+      const result = await ExportService.exportToCSV({
+        ...baseOptions,
+        ensureRangesLoaded,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain(
+        "Activity pull storage scope changed during reconciliation"
+      );
+      expect(result.errorKind).toBe("rangeLoad");
+      expect(result.content).toBeUndefined();
+      expect(FeedingStorageService.getAllFeedings).not.toHaveBeenCalled();
     });
   });
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityRangeLoader,
+  type ActivityRangeLoadOptions,
   type ActivityRangeStatus,
   type UtcActivityRange,
 } from "@/services/activity-range-loader";
@@ -19,7 +20,10 @@ interface UseActivityRangeLoaderOptions<T extends TimelineActivityTable> {
 }
 
 interface ActivityRangeLoaderValue {
-  loadRange: (range: UtcActivityRange) => Promise<void>;
+  loadRange: (
+    range: UtcActivityRange,
+    options?: ActivityRangeLoadOptions
+  ) => Promise<void>;
   getRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
 }
 
@@ -65,12 +69,15 @@ export function useActivityRangeLoader<T extends TimelineActivityTable>({
     };
   }, [loader]);
 
-  const loadRange = useCallback(async (range: UtcActivityRange) => {
+  const loadRange = useCallback(async (
+    range: UtcActivityRange,
+    options?: ActivityRangeLoadOptions
+  ) => {
     if (!babyId || !authenticated) {
       loader.markLoaded(range);
       return;
     }
-    await loader.load(range);
+    await loader.load(range, options);
   }, [authenticated, babyId, loader]);
 
   const getRangeStatus = useCallback(

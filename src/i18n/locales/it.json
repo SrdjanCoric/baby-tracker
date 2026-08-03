@@ -1234,6 +1234,7 @@
     "recordsSummary": "{{count}} record verranno esportati",
     "exportButton": "Esporta CSV",
     "loadingCounts": "Caricamento dati...",
+    "rangeLoadError": "Impossibile caricare tutti i record per l'intervallo selezionato. Controlla la connessione e riprova.",
     "noBabySelected": "Seleziona un bambino per esportare i dati",
     "exportFailed": "Esportazione fallita",
     "unknownError": "Si è verificato un errore imprevisto",
@@ -1250,6 +1251,7 @@
     "sectionsSummary": "{{count}} sezioni selezionate",
     "noBabySelected": "Seleziona un bambino per generare un rapporto",
     "generateFailed": "Generazione rapporto fallita",
+    "rangeLoadError": "Impossibile caricare tutti i record dell'intervallo selezionato. Controlla la connessione e riprova.",
     "unknownError": "Si è verificato un errore imprevisto",
     "sectionLabels": {
       "summary": "Riepilogo",

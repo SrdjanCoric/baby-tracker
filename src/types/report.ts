@@ -35,6 +35,8 @@ export interface ReportOptions {
   includeCharts: boolean;
   weightUnit?: "kg" | "lbs";
   heightUnit?: "cm" | "in";
+  /** Resolves the selected range from the server into local storage before any read. */
+  ensureRangesLoaded: () => Promise<void>;
 }
 
 export interface ReportResult {
@@ -42,6 +44,8 @@ export interface ReportResult {
   filePath?: string;
   fileName?: string;
   error?: string;
+  /** "rangeLoad" when range resolution failed before any storage read. */
+  errorKind?: "rangeLoad";
 }
 
 export interface ReportMetadata {

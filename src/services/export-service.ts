@@ -16,6 +16,10 @@ import {
   CombinedExportData,
   type ExportUnitPreferences,
 } from "@/utils/csv-generator";
+import {
+  ActivityRangeLoadError,
+  ensureActivityRangesLoaded,
+} from "./activity-range-error";
 import type {
   ExportOptions,
   ExportResult,
@@ -87,8 +91,11 @@ export const ExportService = {
   async getRecordCountsInRange(
     babyId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
+    ensureRangesLoaded: () => Promise<void>
   ): Promise<ExportRecordCounts> {
+    await ensureActivityRangesLoaded(ensureRangesLoaded);
+
     const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
       await Promise.all([
         FeedingStorageService.getAllFeedings(babyId),
@@ -150,6 +157,8 @@ export const ExportService = {
     try {
       const { dataTypes, startDate, endDate, babyId, babyName, includeNotes } =
         options;
+
+      await ensureActivityRangesLoaded(options.ensureRangesLoaded);
 
       const [feedings, sleeps, diapers, pumpings, growth, tummyTimes] =
         await Promise.all([
@@ -249,9 +258,11 @@ export const ExportService = {
         content: csvContent,
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Export failed";
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Export failed",
+        error: message,
+        errorKind: error instanceof ActivityRangeLoadError ? "rangeLoad" : undefined,
         recordCount: 0,
       };
     }

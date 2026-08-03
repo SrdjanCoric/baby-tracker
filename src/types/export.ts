@@ -27,6 +27,8 @@ export interface ExportOptions {
   babyId: string;
   babyName: string;
   includeNotes: boolean;
+  /** Resolves the selected range from the server into local storage before any read. */
+  ensureRangesLoaded: () => Promise<void>;
   volumeUnit?: "ml" | "oz";
   weightUnit?: "kg" | "lbs";
   heightUnit?: "cm" | "in";
@@ -37,6 +39,8 @@ export interface ExportResult {
   filePath?: string;
   fileName?: string;
   error?: string;
+  /** "rangeLoad" when range resolution failed before any storage read. */
+  errorKind?: "rangeLoad";
   recordCount: number;
 }
 
