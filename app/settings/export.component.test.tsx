@@ -148,19 +148,32 @@ describe("ExportScreen", () => {
     }
   });
 
-  it("shows an error, disables export, and retries when range resolution fails", async () => {
+  it("disables export with stale non-zero counts after a range refresh fails", async () => {
+    jest.useFakeTimers();
+    render(<ExportScreen />);
+
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
+    expect(screen.getByText("export.recordsSummary")).toBeTruthy();
+    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(
+      false
+    );
+
     mockGetRecordCountsInRange.mockRejectedValueOnce(
       new ActivityRangeLoadError(new Error("Failed to fetch activity range"))
     );
-
-    render(<ExportScreen />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("export-range-error")).toBeTruthy();
+    fireEvent.press(screen.getByTestId("change-range"));
+    await act(async () => {
+      jest.advanceTimersByTime(400);
     });
+
+    expect(screen.getByTestId("export-range-error")).toBeTruthy();
+    expect(screen.getByText("export.rangeLoadError")).toBeTruthy();
     expect(screen.queryByText("export.recordsSummary")).toBeNull();
-    // TR-2: Export button is disabled while the range is in the error state.
-    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(true);
+    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(
+      true
+    );
 
     fireEvent.press(screen.getByTestId("export-range-retry"));
 
@@ -168,6 +181,7 @@ describe("ExportScreen", () => {
       expect(screen.getByText("export.recordsSummary")).toBeTruthy();
     });
     expect(screen.queryByTestId("export-range-error")).toBeNull();
+    jest.useRealTimers();
   });
 
   it("does not offer range retry when reading cached counts fails", async () => {
