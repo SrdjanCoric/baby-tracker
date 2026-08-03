@@ -77,3 +77,16 @@ startup cap or the range loader, and Timeline or Statistics, which already resol
 - skipped (minor): TR-8 — Export duplicates the established range boundary and translations — user skipped this minor refactor because skipping was suggested.
 - accepted (security risk): TR-12 — CSV escaping does not handle leading TAB or CR — user accepted this pre-existing risk because skipping was suggested.
 - accepted (security risk): TR-13 — Baby name reaches PDF HTML without escaping — user accepted this pre-existing risk because skipping was suggested.
+- skipped (minor): TR-2 — Integration test pre-resolves range before service calls — user requested major-only remediation.
+- skipped (minor): TR-3 — Non-range count failure shows zero records without retry — user requested major-only remediation.
+- skipped (minor): TR-4 — Reports resolve collections excluded from selected sections — user requested major-only remediation.
+- skipped (minor): TR-5 — Resolver docs conflate unresolved and not-yet-loaded household profiles — user requested major-only remediation.
+- skipped (minor): TR-6 — README attributes pre-export count and retry behavior to Reports — user requested major-only remediation.
+- skipped (minor): TR-7 — Initial record count load is debounced — user requested major-only remediation.
+- skipped (minor): TR-8 — Range-load error literal is duplicated — user requested major-only remediation.
+- skipped (minor): TR-9 — Resolver collection coverage is hand-maintained — user requested major-only remediation.
+- skipped (minor): TR-11 — Local parse failures are exposed as retriable range-load failures — user requested major-only remediation.
+- skipped (minor): TR-12 — Master plan omits Export and Reports from range-aware surfaces — user requested major-only remediation.
+- skipped (minor): TR-13 — Selectors remain interactive during export or report generation — user requested major-only remediation.
+- skipped (minor): TR-14 — Public getRecordCounts API reads unresolved cached collections — user requested major-only remediation.
+- skipped (minor): TR-15 — Pure range helper lives in hooks module — user requested major-only remediation.
