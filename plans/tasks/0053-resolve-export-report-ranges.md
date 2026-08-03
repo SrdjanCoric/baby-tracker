@@ -69,3 +69,11 @@ startup cap or the range loader, and Timeline or Statistics, which already resol
 - [x] A failed range read surfaces an error instead of producing a silently incomplete export.
 - [x] The 1,000-row startup cap and `fetchActivityRangeFromDatabase` are unchanged, and
       `README.md:43` still describes the shipped behavior.
+
+## Review decisions
+
+- deferred out of scope: TR-3 — A superseded all-time fetch can block a narrower range — user deferred the fenced range-loader change because it was suggested as optional scope.
+- accepted (security risk): TR-6 — Unbounded shared-history loads may exhaust memory — user considers this a non-issue and accepted it because skipping was suggested.
+- skipped (minor): TR-8 — Export duplicates the established range boundary and translations — user skipped this minor refactor because skipping was suggested.
+- accepted (security risk): TR-12 — CSV escaping does not handle leading TAB or CR — user accepted this pre-existing risk because skipping was suggested.
+- accepted (security risk): TR-13 — Baby name reaches PDF HTML without escaping — user accepted this pre-existing risk because skipping was suggested.
