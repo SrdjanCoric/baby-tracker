@@ -161,6 +161,8 @@ const exportRange: UtcActivityRange = {
   end: "2026-08-02T00:00:00.000Z",
 };
 
+const callerLocalFailure = { failureState: "caller" };
+
 function useRealFeedingContext() {
   const { loadRange } = useActivityRangeLoader({
     table: "feedings",
@@ -270,11 +272,26 @@ describe("export range coverage (F-1)", () => {
     await ensureRangesLoaded();
 
     expect(resolvedRange).toEqual(exportRange);
-    expect(mockLoadSleepRange).toHaveBeenCalledWith(exportRange);
-    expect(mockLoadDiaperRange).toHaveBeenCalledWith(exportRange);
-    expect(mockLoadPumpingRange).toHaveBeenCalledWith(exportRange);
-    expect(mockLoadGrowthRange).toHaveBeenCalledWith(exportRange);
-    expect(mockLoadTummyTimeRange).toHaveBeenCalledWith(exportRange);
+    expect(mockLoadSleepRange).toHaveBeenCalledWith(
+      exportRange,
+      callerLocalFailure
+    );
+    expect(mockLoadDiaperRange).toHaveBeenCalledWith(
+      exportRange,
+      callerLocalFailure
+    );
+    expect(mockLoadPumpingRange).toHaveBeenCalledWith(
+      exportRange,
+      callerLocalFailure
+    );
+    expect(mockLoadGrowthRange).toHaveBeenCalledWith(
+      exportRange,
+      callerLocalFailure
+    );
+    expect(mockLoadTummyTimeRange).toHaveBeenCalledWith(
+      exportRange,
+      callerLocalFailure
+    );
 
     const counts = await ExportService.getRecordCountsInRange(
       BABY_ID,
