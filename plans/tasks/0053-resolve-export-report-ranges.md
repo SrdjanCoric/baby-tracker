@@ -90,3 +90,10 @@ startup cap or the range loader, and Timeline or Statistics, which already resol
 - skipped (minor): TR-13 — Selectors remain interactive during export or report generation — user requested major-only remediation.
 - skipped (minor): TR-14 — Public getRecordCounts API reads unresolved cached collections — user requested major-only remediation.
 - skipped (minor): TR-15 — Pure range helper lives in hooks module — user requested major-only remediation.
+
+## Finish-task record
+
+- README disposition: `README.md` line 43 was inspected after implementation. Existing export/report range contract remains in place; no additional prose edit was made. The affected paragraph passed two `write-well` audit passes. Pass 1 found the previously recorded minor ambiguity that the pre-export count and retry wording also describes Reports; retained under the user's skipped TR-6 decision. Pass 2 found no new issues.
+- Review outcome: both retained review files are closed. Findings are recorded above as fixed, skipped-minor, deferred-out-of-scope, or accepted-security-risk.
+- Automated proof: `node scripts/audit/export-range-coverage.mjs`, `npm run lint`, `npm run typecheck`, focused Vitest (35 tests), and focused Jest (27 tests) passed. Canonical `npm run check` passed lint, typecheck, unit (2,498 tests), component (813 tests), security, sync, and CI stages before interruption; resumed `npm run test:production-gating`, `npm run test:sql:setup`, and `npm run test:sql` passed, completing its remaining stages.
+- Manual verification: deferred by owner. The `[verify]` checkpoint requiring a local household snapshot with more than 1,000 records was not performed before PR creation; manual real-data confirmation remains a release-owner follow-up.
