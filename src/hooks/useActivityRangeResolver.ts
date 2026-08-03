@@ -11,6 +11,8 @@ import {
 import { ACTIVITY_RANGE_LOAD_ERROR } from "@/constants/activity-range";
 import type { UtcActivityRange } from "@/services/activity-range-loader";
 
+const CALLER_LOCAL_FAILURE = { failureState: "caller" } as const;
+
 /**
  * Converts an inclusive local date range (as picked in export/report screens)
  * into the half-open UTC range the activity range loaders expect.
@@ -56,12 +58,12 @@ export function useActivityRangeResolver(): (range: UtcActivityRange) => Promise
         throw new Error(ACTIVITY_RANGE_LOAD_ERROR);
       }
       await Promise.all([
-        loadFeedingRange(range),
-        loadSleepRange(range),
-        loadDiaperRange(range),
-        loadPumpingRange(range),
-        loadGrowthRange(range),
-        loadTummyTimeRange(range),
+        loadFeedingRange(range, CALLER_LOCAL_FAILURE),
+        loadSleepRange(range, CALLER_LOCAL_FAILURE),
+        loadDiaperRange(range, CALLER_LOCAL_FAILURE),
+        loadPumpingRange(range, CALLER_LOCAL_FAILURE),
+        loadGrowthRange(range, CALLER_LOCAL_FAILURE),
+        loadTummyTimeRange(range, CALLER_LOCAL_FAILURE),
       ]);
     },
     [

@@ -19,7 +19,7 @@ import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
-import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
+import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface DiaperState {
   diapers: StoredDiaperEntry[];
@@ -87,7 +87,10 @@ interface DiaperContextValue extends DiaperState {
   updateDiaper: (diaperId: string, input: UpdateDiaperInput) => Promise<StoredDiaperEntry | null>;
   deleteDiaper: (diaperId: string) => Promise<boolean>;
   refreshDiapers: () => Promise<void>;
-  loadDiaperRange: (range: UtcActivityRange) => Promise<void>;
+  loadDiaperRange: (
+    range: UtcActivityRange,
+    options?: ActivityRangeLoadOptions
+  ) => Promise<void>;
   getDiaperRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastDiaper: () => StoredDiaperEntry | null;
   getTodaysCounts: () => DiaperCounts;

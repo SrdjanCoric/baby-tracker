@@ -43,6 +43,8 @@ const range: UtcActivityRange = {
   end: "2026-02-01T00:00:00.000Z",
 };
 
+const callerLocalFailure = { failureState: "caller" };
+
 describe("useActivityRangeResolver", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -62,7 +64,7 @@ describe("useActivityRangeResolver", () => {
       });
 
       expect(loader).toHaveBeenCalledTimes(1);
-      expect(loader).toHaveBeenCalledWith(range);
+      expect(loader).toHaveBeenCalledWith(range, callerLocalFailure);
     }
   );
 
@@ -76,7 +78,7 @@ describe("useActivityRangeResolver", () => {
     });
 
     for (const loader of Object.values(COLLECTION_LOADERS)) {
-      expect(loader).toHaveBeenCalledWith(range);
+      expect(loader).toHaveBeenCalledWith(range, callerLocalFailure);
     }
   });
 
@@ -89,7 +91,7 @@ describe("useActivityRangeResolver", () => {
       await expect(result.current(range)).resolves.toBeUndefined();
     });
 
-    expect(mockLoadFeedingRange).toHaveBeenCalledWith(range);
+    expect(mockLoadFeedingRange).toHaveBeenCalledWith(range, callerLocalFailure);
   });
 
   it("rejects when the user is signed in but the household profile is missing", async () => {
@@ -114,5 +116,7 @@ describe("useActivityRangeResolver", () => {
     await act(async () => {
       await expect(result.current(range)).rejects.toThrow("Failed to fetch activity range");
     });
+
+    expect(mockLoadDiaperRange).toHaveBeenCalledWith(range, callerLocalFailure);
   });
 });

@@ -48,6 +48,25 @@ describe("useActivityRangeLoader", () => {
     expect(result.current.getRangeStatus(range)).toBe("loaded");
   });
 
+  it("keeps caller-local failures out of shared context status", async () => {
+    mockFetchActivityRange.mockRejectedValue(new Error("offline"));
+    const { result } = renderHook(() => useActivityRangeLoader({
+      table: "diapers",
+      babyId: "baby-1",
+      authenticated: true,
+      storageScope: "user-1:household-1:baby-1",
+      acceptEntries: jest.fn(),
+    }));
+
+    await act(async () => {
+      await expect(
+        result.current.loadRange(range, { failureState: "caller" })
+      ).rejects.toThrow("offline");
+    });
+
+    expect(result.current.getRangeStatus(range)).toBe("unverified");
+  });
+
   it("reuses verified coverage when returning to a previously selected baby", async () => {
     mockFetchActivityRange.mockResolvedValue([diaper]);
     const acceptEntries = jest.fn();

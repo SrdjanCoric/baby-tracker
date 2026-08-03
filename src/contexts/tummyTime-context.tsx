@@ -41,7 +41,7 @@ import {
 } from "@/services/timer-lock-reconciliation";
 import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
-import type { ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
+import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
 
 export interface ActiveTummyTimeTimer extends TimerIdentity {
   isRunning: boolean;
@@ -222,7 +222,10 @@ interface TummyTimeContextValue extends TummyTimeState {
   ) => Promise<StoredTummyTimeEntry | null>;
   deleteTummyTime: (tummyTimeId: string) => Promise<boolean>;
   refreshTummyTimes: () => Promise<void>;
-  loadTummyTimeRange: (range: UtcActivityRange) => Promise<void>;
+  loadTummyTimeRange: (
+    range: UtcActivityRange,
+    options?: ActivityRangeLoadOptions
+  ) => Promise<void>;
   getTummyTimeRangeStatus: (range: UtcActivityRange) => ActivityRangeStatus;
   getLastTummyTime: () => StoredTummyTimeEntry | null;
   getTodaysTotalSeconds: () => number;
