@@ -73,11 +73,19 @@ export default function ExportScreen() {
   );
 
   const handleDateRangeChange = useCallback((nextRange: DateRange) => {
+    if (
+      nextRange.startDate.getTime() === dateRange.startDate.getTime() &&
+      nextRange.endDate.getTime() === dateRange.endDate.getTime()
+    ) {
+      setDateRange(nextRange);
+      return;
+    }
+
     ++loadRequestRef.current;
     setIsLoading(true);
     setRangeLoadError(false);
     setDateRange(nextRange);
-  }, []);
+  }, [dateRange.startDate, dateRange.endDate]);
 
   const loadRecordCounts = useCallback(async () => {
     if (!selectedBaby) {

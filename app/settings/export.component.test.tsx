@@ -24,8 +24,10 @@ let mockUnits: {
   heightUnit: "cm",
 };
 
+const mockT = (key: string) => key;
+
 jest.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: mockT }),
 }));
 
 jest.mock("react-native-safe-area-context", () => ({
@@ -54,26 +56,36 @@ jest.mock("@/contexts", () => ({
 }));
 
 jest.mock("@/components/export", () => {
-  const { Pressable, Text } = require("react-native");
+  const { Pressable, Text, View } = require("react-native");
   return {
     DataTypeSelector: () => null,
     DateRangePicker: ({
+      dateRange,
       onDateRangeChange,
     }: {
+      dateRange: DateRange;
       onDateRangeChange: (range: DateRange) => void;
     }) => (
-      <Pressable
-        testID="change-range"
-        onPress={() =>
-          onDateRangeChange({
-            startDate: new Date(2026, 0, 1),
-            endDate: new Date(2026, 0, 2),
-            preset: "custom",
-          })
-        }
-      >
-        <Text>change-range</Text>
-      </Pressable>
+      <View>
+        <Pressable
+          testID="change-range"
+          onPress={() =>
+            onDateRangeChange({
+              startDate: new Date(2026, 0, 1),
+              endDate: new Date(2026, 0, 2),
+              preset: "custom",
+            })
+          }
+        >
+          <Text>change-range</Text>
+        </Pressable>
+        <Pressable
+          testID="select-custom"
+          onPress={() => onDateRangeChange({ ...dateRange, preset: "custom" })}
+        >
+          <Text>select-custom</Text>
+        </Pressable>
+      </View>
     ),
   };
 });
@@ -146,6 +158,31 @@ describe("ExportScreen", () => {
       expect(Date.parse(range.start)).toBe(expectedStart.getTime());
       expect(Date.parse(range.end)).toBe(expectedEnd.getTime() + 1);
     }
+  });
+
+  it("keeps loaded counts when Custom keeps the current date values", async () => {
+    jest.useFakeTimers();
+    render(<ExportScreen />);
+
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
+    expect(mockGetRecordCountsInRange).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(
+      false
+    );
+
+    fireEvent.press(screen.getByTestId("select-custom"));
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
+
+    expect(mockGetRecordCountsInRange).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("export.recordsSummary")).toBeTruthy();
+    expect(screen.getByTestId("export-button").props.accessibilityState.disabled).toBe(
+      false
+    );
+    jest.useRealTimers();
   });
 
   it("disables export with stale non-zero counts after a range refresh fails", async () => {
