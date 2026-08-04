@@ -134,7 +134,12 @@ export default function LoginCallbackScreen() {
     const finishAuthentication = async () => {
       const state = await NewOwnerOnboardingStorageService.getState("system");
       if (!active) return;
-      router.replace(getOnboardingAuthCallbackRoute(state));
+      const destination = getOnboardingAuthCallbackRoute(state);
+      if (destination === "/(tabs)") {
+        router.dismissAll();
+        return;
+      }
+      router.replace(destination);
     };
     void finishAuthentication();
     return () => {
