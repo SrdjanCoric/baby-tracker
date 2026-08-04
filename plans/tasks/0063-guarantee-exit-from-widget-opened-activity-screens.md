@@ -91,3 +91,10 @@ presentation or deep-link routing in general.
 - RED/GREEN component cycles cover the shared close control, production Sleep close, Sleep stop, Feeding close/save/stop, Diaper close/save, Pumping close/stop, and Tummy Time close/stop. The final component suite passed 86 files / 826 tests (`component.log`).
 - The unit suite passed 133 files / 2,498 tests (`unit.log`); typecheck and warning-free lint also passed (`typecheck.log`, `lint.log`). Logs are retained in `/tmp/agent-workflows/e2f8af45fd34/710e44f25adb`.
 - The required Maestro flow was attempted three times on `iPhone 17 Pro - iOS 26.5`. Its existing setup passed on the first and third attempts, and the first attempt reached `openLink: sofibaby://sleep`; every run then lost the Maestro XCUITest localhost transport at a different point. The latest failure is retained in `widget-cold-open-e2e.log`. Because the driver never completed the flow, the cold-launch/swipe and Maestro acceptance items remain unchecked.
+
+## Review-fix pass 0063 (minor skips)
+
+- skipped (minor): TR-5 — No-baby cold-open state shows no close control — deferred; the (tabs) anchor restores swipe-down as an exit, and a dedicated close affordance for the no-baby state belongs in a separate task.
+- skipped (minor): TR-6 — Keyboard-dismiss hit target shrank to the drag handle — deferred; the dismiss Pressable keeps the same testID and stays tappable; revisit if an E2E flow flakes on the smaller handle.
+- skipped (minor): TR-7 — Acceptance criterion wording vs unguarded `router.back()` in the auth modal — deferred; the authentication modal is intentionally outside this task, the wording is a documentation-only refinement for a later planning batch.
+- skipped (minor): TR-8 — Durable navigation invariant not recorded in master-plan/DEEP_LINKS — deferred; documentation-only, belongs in the next master-plan/DEEP_LINKS update rather than this remediation pass.
