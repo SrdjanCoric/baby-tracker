@@ -189,18 +189,21 @@ Durable decisions that apply across all tasks:
 - [x] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0050) → tasks/done/0051-sweep-post-release-app-regressions.md
 - [-] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (audit ran 2026-08-01; output withheld from the repository by owner decision; after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
 - [x] 0053 · Include the full selected range in exports and reports (after 0051) → tasks/done/0053-resolve-export-report-ranges.md
-- [ ] 0054 · Restrict the wake-window reminder RPC to the service role → tasks/0054-restrict-wake-window-reminder-rpc.md
-- [ ] 0055 · Prevent self-assignment of household and owner role (after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
-- [ ] 0056 · Keep an active timer lock reclaimable (after 0055) → tasks/0056-keep-active-timer-locks-reclaimable.md
-- [ ] 0057 · Bind Live Activity identity to the timer, not the activity type → tasks/0057-bind-live-activity-to-timer-identity.md
-- [ ] 0058 · Recover a queued activity write that the server denies → tasks/0058-recover-denied-queued-activity-writes.md
-- [ ] 0059 · Cover WatchConnectivity delivery failures → tasks/0059-cover-watchconnectivity-delivery-failures.md
-- [ ] 0060 · Resolve the Portuguese (Portugal) solid-food label → tasks/0060-resolve-pt-pt-solid-food-label.md
+- [-] 0054 · Restrict the wake-window reminder RPC to the service role (deferred by owner 2026-08-04) → tasks/0054-restrict-wake-window-reminder-rpc.md
+- [-] 0055 · Prevent self-assignment of household and owner role (deferred by owner 2026-08-04; after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
+- [-] 0056 · Keep an active timer lock reclaimable (deferred by owner 2026-08-04; after 0055) → tasks/0056-keep-active-timer-locks-reclaimable.md
+- [-] 0057 · Bind Live Activity identity to the timer, not the activity type (deferred by owner 2026-08-04) → tasks/0057-bind-live-activity-to-timer-identity.md
+- [-] 0058 · Recover a queued activity write that the server denies (deferred by owner 2026-08-04) → tasks/0058-recover-denied-queued-activity-writes.md
+- [-] 0059 · Cover WatchConnectivity delivery failures (deferred by owner 2026-08-04) → tasks/0059-cover-watchconnectivity-delivery-failures.md
+- [-] 0060 · Resolve the Portuguese (Portugal) solid-food label (deferred by owner 2026-08-04) → tasks/0060-resolve-pt-pt-solid-food-label.md
 - [x] 0061 · Localize the Apple Watch app and the iOS widget → tasks/done/0061-localize-watch-and-widget.md
 - [x] 0062 · Fix the Timeline daily sleep total → tasks/done/0062-fix-timeline-daily-sleep-total.md
+- [ ] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/0063-guarantee-exit-from-widget-opened-activity-screens.md
 
 ## Workflow status
 
 Tasks 0001 through 0045 and Tasks 0047, 0048, and 0050 are closed. Task 0049 is deferred by the release owner and must not be claimed without an explicit owner decision. On 2026-08-01 the owner removed 0049 from Task 0051's prerequisites, because 0051 audits TypeScript/React Native product surfaces while Watch native synchronization already falls inside Task 0052's scope. Task 0052 never listed 0049 as a prerequisite; its implementation work no longer consumes 0049 evidence and instead audits Watch boundaries directly, recording the missing attribution trace as a stated limitation. No remaining task depends on 0049. Tasks 0051 and 0052 complete the adjacent application, native, and sync sweeps. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
+
+On 2026-08-04 the owner deferred Tasks 0054 through 0060 so that Task 0063 takes priority. Task 0063 fixes a trap the owner hit in real usage: opening an activity screen from the iOS widget on a cold launch leaves the caregiver unable to return to the app, which makes the app unusable until it is force-quit. Those deferred tasks keep their existing dependency suffixes and are not claimable without an explicit owner decision; none of them is a prerequisite of 0063. Task 0063 is therefore the only claimable pointer. A separate widget defect found the same day — the configuration intent's activity parameter resolving to nil, so the widget always renders Feeding regardless of the Edit Widget selection — is still under diagnosis and is deliberately outside Task 0063's scope.
 
 Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054 through 0057 and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Tasks 0055 and 0056 depend on their predecessors only because all three add migrations and would otherwise collide on the next migration ordinal.
