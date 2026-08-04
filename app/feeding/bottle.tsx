@@ -8,6 +8,7 @@ import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useNotificationIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { BottleContentType } from "@/constants/activities";
+import { exitModal } from "@/navigation";
 
 const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
@@ -104,7 +105,7 @@ export default function BottleFeedingScreen() {
         notes: notes || undefined,
       });
       await scheduleReminderAfterFeeding(new Date());
-      router.back();
+      exitModal(router);
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);

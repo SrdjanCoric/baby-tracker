@@ -3,13 +3,25 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import { Platform } from "react-native";
 
 const mockStartTummyTime = jest.fn().mockResolvedValue({ success: true });
+const mockStopTummyTime = jest.fn().mockResolvedValue(undefined);
+const mockBack = jest.fn();
+const mockReplace = jest.fn();
+let mockCanGoBack = false;
+const runningTimer = {
+  isRunning: true,
+  isPaused: false,
+  startTime: new Date("2026-08-04T08:00:00.000Z"),
+  totalPausedMs: 0,
+};
+let mockActiveTimer: typeof runningTimer | null = null;
 let mockTimeFormat: "12h" | "24h" = "12h";
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
-    back: jest.fn(),
+    back: mockBack,
+    canGoBack: () => mockCanGoBack,
     push: jest.fn(),
-    replace: jest.fn(),
+    replace: mockReplace,
     setParams: jest.fn(),
   }),
   useLocalSearchParams: () => ({}),
@@ -17,9 +29,9 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/contexts", () => ({
   useTummyTime: () => ({
-    activeTimer: null,
+    activeTimer: mockActiveTimer,
     startTummyTime: mockStartTummyTime,
-    stopTummyTime: jest.fn(),
+    stopTummyTime: mockStopTummyTime,
     pauseTummyTime: jest.fn(),
     resumeTummyTime: jest.fn(),
     dailyGoalSeconds: 30,
@@ -68,8 +80,31 @@ import TummyTimeScreen from "./index";
 describe("TummyTimeScreen custom start time", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockActiveTimer = null;
+    mockCanGoBack = false;
     mockStartTummyTime.mockResolvedValue({ success: true });
     mockTimeFormat = "12h";
+  });
+
+  it("lets a caregiver close a cold-opened tummy-time screen", () => {
+    render(<TummyTimeScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "common.close" }));
+
+    expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+    expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  it("returns to tabs after stopping a cold-opened tummy-time timer", async () => {
+    mockActiveTimer = runningTimer;
+    render(<TummyTimeScreen />);
+    fireEvent.press(screen.getByTestId("stop-timer-button"));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+    });
+    expect(mockStopTummyTime).toHaveBeenCalledTimes(1);
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
   it("reacts to the current preference and starts at the selected time", async () => {

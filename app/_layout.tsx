@@ -32,6 +32,11 @@ import {
 } from "@/services/external-timer-command-service";
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
+
+export const unstable_settings = {
+  anchor: "(tabs)",
+};
+
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AuthGuard({ children }: { children: React.ReactNode }) {

@@ -15,6 +15,7 @@ import { AccountDeletionService } from "@/services/account-deletion-service";
 import { DeletionWarning, DeletionConfirmation } from "@/components/account";
 import { validateDeletionConfirmation } from "@/utils/account-deletion";
 import type { DeletionPreview } from "@/types/account-deletion";
+import { exitModal } from "@/navigation";
 
 const EMPTY_PREVIEW: DeletionPreview = {
   feedings: 0,
@@ -78,7 +79,7 @@ export default function DeleteAccountScreen() {
   }, [loadPreview]);
 
   const handleBack = useCallback(() => {
-    router.back();
+    exitModal(router);
   }, [router]);
 
   const handleDelete = useCallback(async () => {

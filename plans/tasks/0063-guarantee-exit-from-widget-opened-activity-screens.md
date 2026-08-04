@@ -55,17 +55,21 @@ presentation or deep-link routing in general.
 **Applicable references**: `references/02-testing.md`, `references/03-documentation.md`, `references/10-definition-of-done.md`
 
 - [ ] Prove the fix through the path the caregiver actually hits — a cold launch from the widget URL — not by reading the router config.
-- [ ] Keep the E2E dismiss affordance working for the existing suites while removing its production gate.
+- [x] Keep the E2E dismiss affordance working for the existing suites while removing its production gate.
 
 ## Implementation work
 
-- [ ] Add the `(tabs)` anchor to the root layout so deep-linked activity routes stack on top of the tabs instead of replacing them.
-- [ ] Add a shared exit helper that returns to the previous screen when history exists and replaces to `/(tabs)` when it does not, and route every activity-modal exit through it.
-- [ ] Render a close control in every activity modal in production: `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime`.
-- [ ] Route the post-action exits through the same helper, including stopping a sleep timer, so completing the action always leaves the screen.
-- [ ] Extend the same guarantee to the remaining deep-linkable modal routes, or record in this task why a route stays outside it.
-- [ ] Add component tests proving each exit path falls back to `/(tabs)` when `canGoBack()` is false and uses `back()` when it is true.
-- [ ] Add a Maestro flow under `e2e/flows/activities/` that terminates the app, cold-opens `sofibaby://sleep`, and asserts the caregiver reaches the tabs again through the close control.
+**Implementation classification**: `mixed` · **Validation tier**: `canonical` · **TDD applicable**: yes. The task changes production navigation behavior, component tests, and a declarative Maestro flow, so the mixed/canonical classification preserves every executable surface.
+
+**Modal coverage decision**: the root `(tabs)` anchor protects every registered modal group. `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime`, `growth`, `health`, `milestones`, and `settings` also receive an explicit production close control. Deep-linkable `edit/*` and `baby/*` screens keep their existing save/cancel controls, now routed through the same history-aware helper; bare `/edit` and `/baby` are layout groups rather than concrete screens. No named modal route is left outside the guarantee. The separate authentication modal is outside this activity-navigation task because its cancellation and restoration destinations are governed by the onboarding/authentication flow.
+
+- [x] Add the `(tabs)` anchor to the root layout so deep-linked activity routes stack on top of the tabs instead of replacing them.
+- [x] Add a shared exit helper that returns to the previous screen when history exists and replaces to `/(tabs)` when it does not, and route every activity-modal exit through it.
+- [x] Render a close control in every activity modal in production: `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime`.
+- [x] Route the post-action exits through the same helper, including stopping a sleep timer, so completing the action always leaves the screen.
+- [x] Extend the same guarantee to the remaining deep-linkable modal routes, or record in this task why a route stays outside it.
+- [x] Add component tests proving each exit path falls back to `/(tabs)` when `canGoBack()` is false and uses `back()` when it is true.
+- [x] Add a Maestro flow under `e2e/flows/activities/` that terminates the app, cold-opens `sofibaby://sleep`, and asserts the caregiver reaches the tabs again through the close control.
 - [ ] Run `npm run test:unit`, `npm run test:component`, and the new E2E flow.
 
 ## Human checkpoints
@@ -75,9 +79,15 @@ presentation or deep-link routing in general.
 ## Acceptance criteria
 
 - [ ] Cold-launching from `sofibaby://sleep` shows the sleep screen with the tabs beneath it, and swipe-down returns to the tabs.
-- [ ] Every activity modal — `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime` — shows a close control in a production build.
-- [ ] Stopping a sleep timer always leaves the sleep screen, including when the screen was the stack root.
-- [ ] No exit path calls `router.back()` without a no-history fallback.
-- [ ] Component tests fail if any exit path loses its fallback.
+- [x] Every activity modal — `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime` — shows a close control in a production build.
+- [x] Stopping a sleep timer always leaves the sleep screen, including when the screen was the stack root.
+- [x] No exit path calls `router.back()` without a no-history fallback.
+- [x] Component tests fail if any exit path loses its fallback.
 - [ ] The Maestro flow fails if a cold-opened activity screen becomes inescapable again.
-- [ ] Any deep-linkable modal route left outside the guarantee is named in this task with the reason.
+- [x] Any deep-linkable modal route left outside the guarantee is named in this task with the reason.
+
+## Implementation evidence
+
+- RED/GREEN component cycles cover the shared close control, production Sleep close, Sleep stop, Feeding close/save/stop, Diaper close/save, Pumping close/stop, and Tummy Time close/stop. The final component suite passed 86 files / 826 tests (`component.log`).
+- The unit suite passed 133 files / 2,498 tests (`unit.log`); typecheck and warning-free lint also passed (`typecheck.log`, `lint.log`). Logs are retained in `/tmp/agent-workflows/e2f8af45fd34/710e44f25adb`.
+- The required Maestro flow was attempted three times on `iPhone 17 Pro - iOS 26.5`. Its existing setup passed on the first and third attempts, and the first attempt reached `openLink: sofibaby://sleep`; every run then lost the Maestro XCUITest localhost transport at a different point. The latest failure is retained in `widget-cold-open-e2e.log`. Because the driver never completed the flow, the cold-launch/swipe and Maestro acceptance items remain unchecked.

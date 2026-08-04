@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Text, View, Alert, Linking } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useTheme, useUnits, useTimeFormat, useAuth, useLanguage } from "@/contexts";
+import { ModalCloseButton } from "@/components/ModalCloseButton";
 let DevelopmentOnboardingTools: ComponentType | null = null;
 if (__DEV__) {
   DevelopmentOnboardingTools = require(
@@ -130,9 +131,13 @@ export default function SettingsScreen() {
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
       <View className="items-center pt-2 pb-3 border-b border-border-subtle dark:border-border-dark-subtle">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
-        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-          {t("navigation.settings")}
-        </Text>
+        <View className="flex-row items-center w-full px-4">
+          <ModalCloseButton accessibilityLabel={t("common.close")} />
+          <Text className="flex-1 text-center text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+            {t("navigation.settings")}
+          </Text>
+          <View className="w-touch" />
+        </View>
       </View>
 
       <ScrollView className="flex-1 px-4 pt-4">

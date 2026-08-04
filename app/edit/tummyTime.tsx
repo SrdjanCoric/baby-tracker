@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useTummyTime } from "@/contexts/tummyTime-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
+import { exitModal } from "@/navigation";
 
 const TUMMY_TIME_ORANGE = "#E67E22";
 const TUMMY_TIME_ORANGE_MUTED = "#FEF3E2";
@@ -80,7 +81,7 @@ export default function EditTummyTimeScreen() {
         notes: notes || undefined,
       });
       setIsInitialized(false);
-      router.back();
+      exitModal(router);
     } finally {
       setIsSaving(false);
     }
@@ -99,7 +100,7 @@ export default function EditTummyTimeScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteTummyTime(tummyTime.id);
-            router.back();
+            exitModal(router);
           },
         },
       ]

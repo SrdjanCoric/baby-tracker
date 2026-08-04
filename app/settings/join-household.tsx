@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useHousehold, useAuth, useBaby } from "@/contexts";
 import { validateInviteCode, normalizeInviteCode, formatInviteCodeForDisplay } from "@/utils/inviteCode";
+import { exitModal } from "@/navigation";
 
 type JoinErrorKey =
   | "household.inviteCodeRequired"
@@ -150,7 +151,7 @@ export default function JoinHouseholdScreen() {
       Alert.alert(
         t("common.success"),
         t("household.joinSuccess"),
-        [{ text: t("common.ok"), onPress: () => router.back() }]
+        [{ text: t("common.ok"), onPress: () => exitModal(router) }]
       );
     } else if (result.error) {
       setError(result.error);

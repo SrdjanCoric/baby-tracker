@@ -8,6 +8,8 @@ import { useTummyTime, useBaby, useAuth, useTimeFormat } from "@/contexts";
 import { formatDuration, formatTime } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { ModalCloseButton } from "@/components/ModalCloseButton";
+import { exitModal } from "@/navigation";
 import { MilestoneSuggestionModal } from "@/components";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
@@ -100,7 +102,7 @@ export default function TummyTimeScreen() {
     try {
       resetAlert();
       await stopTummyTime();
-      router.back();
+      exitModal(router);
     } finally {
       isStoppingRef.current = false;
     }
@@ -150,7 +152,7 @@ export default function TummyTimeScreen() {
       <View className="items-center pt-2 pb-3">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
         <View className="flex-row items-center w-full px-4">
-          <View className="w-touch" />
+          <ModalCloseButton accessibilityLabel={t("common.close")} />
           <View className="flex-1 items-center">
             <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
               {t("tummyTime.title")}

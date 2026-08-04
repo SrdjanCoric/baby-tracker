@@ -20,6 +20,7 @@ const mockDismissAll = jest.fn();
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     back: mockBack,
+    canGoBack: () => true,
     push: jest.fn(),
     replace: mockReplace,
     dismissAll: mockDismissAll,
@@ -89,6 +90,7 @@ describe("JoinHouseholdScreen", () => {
       const mockDismissAllLocal = jest.fn();
       jest.spyOn(require("expo-router"), "useRouter").mockReturnValue({
         back: mockBack,
+        canGoBack: () => true,
         push: mockPush,
         replace: mockReplace,
         dismissAll: mockDismissAllLocal,

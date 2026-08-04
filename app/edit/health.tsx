@@ -15,6 +15,7 @@ import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/c
 import { SYMPTOM_OPTIONS, MEASUREMENT_METHODS, DOSAGE_UNITS } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
 import { getHealthDisplayName } from "@/utils/health-display";
+import { exitModal } from "@/navigation";
 
 const HEALTH_COLORS = {
   accent: { light: ACTIVITY.health.accent, dark: ACTIVITY.health.accentDark },
@@ -178,7 +179,7 @@ export default function EditHealthScreen() {
 
       await updateHealth(health.id, updateData);
       setIsInitialized(false);
-      router.back();
+      exitModal(router);
     } finally {
       setIsSaving(false);
     }
@@ -204,7 +205,7 @@ export default function EditHealthScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteHealth(health.id);
-            router.back();
+            exitModal(router);
           },
         },
       ]

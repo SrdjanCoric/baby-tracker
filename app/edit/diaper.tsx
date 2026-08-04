@@ -8,6 +8,7 @@ import { useDiaper } from "@/contexts/diaper-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import type { DiaperType, StoolColor } from "@/constants/activities";
+import { exitModal } from "@/navigation";
 
 const DIAPER_CORAL = "#D4837D";
 const DIAPER_CORAL_MUTED = "#FDF0EF";
@@ -80,7 +81,7 @@ export default function EditDiaperScreen() {
         notes: notes || undefined,
       });
       setIsInitialized(false);
-      router.back();
+      exitModal(router);
     } finally {
       setIsSaving(false);
     }
@@ -99,7 +100,7 @@ export default function EditDiaperScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteDiaper(diaper.id);
-            router.back();
+            exitModal(router);
           },
         },
       ]

@@ -8,6 +8,7 @@ import { useFeeding } from "@/contexts/feeding-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
+import { exitModal } from "@/navigation";
 
 const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
@@ -109,7 +110,7 @@ export default function EditFeedingScreen() {
         notes: notes || undefined,
       });
       setIsInitialized(false);
-      router.back();
+      exitModal(router);
     } finally {
       setIsSaving(false);
     }
@@ -128,7 +129,7 @@ export default function EditFeedingScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteFeeding(feeding.id);
-            router.back();
+            exitModal(router);
           },
         },
       ]

@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { BabyProfileForm, Button, type BabyProfileFormData } from "@/components";
 import { useBaby } from "@/contexts";
+import { exitModal } from "@/navigation";
 
 export default function EditBabyScreen() {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ export default function EditBabyScreen() {
           gender: data.gender,
           photoUri: data.photoUri,
         });
-        router.back();
+        exitModal(router);
       } catch {
         setIsLoading(false);
       }
@@ -50,7 +51,7 @@ export default function EditBabyScreen() {
             setIsLoading(true);
             const success = await deleteBaby(id);
             if (success) {
-              router.back();
+              exitModal(router);
             } else {
               setIsLoading(false);
               Alert.alert(
@@ -65,7 +66,7 @@ export default function EditBabyScreen() {
   }, [id, baby, deleteBaby, t]);
 
   const handleCancel = useCallback(() => {
-    router.back();
+    exitModal(router);
   }, []);
 
   if (!baby) {
