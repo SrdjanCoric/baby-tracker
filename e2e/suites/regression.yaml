@@ -30,6 +30,7 @@ tags:
 
 # === SLEEP ===
 - runFlow: ../flows/activities/sleep/sleep-timer.yaml
+- runFlow: ../flows/activities/sleep/widget-cold-open-exit.yaml
 
 # === DIAPER ===
 - runFlow: ../flows/activities/diaper/quick-log.yaml
