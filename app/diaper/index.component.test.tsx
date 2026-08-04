@@ -65,4 +65,26 @@ describe("DiaperScreen exits", () => {
     });
     expect(mockBack).not.toHaveBeenCalled();
   });
+
+  it("returns to the previous screen after saving a diaper change when history exists", async () => {
+    mockCanGoBack = true;
+    render(<DiaperScreen />);
+    fireEvent.press(screen.getByTestId("type-wet"));
+    fireEvent.press(screen.getByTestId("save-button"));
+
+    await waitFor(() => {
+      expect(mockBack).toHaveBeenCalledTimes(1);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("returns to the previous screen when a caregiver closes the diaper screen with history", () => {
+    mockCanGoBack = true;
+    render(<DiaperScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "Close" }));
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
 });

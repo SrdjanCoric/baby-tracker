@@ -107,6 +107,28 @@ describe("TummyTimeScreen custom start time", () => {
     expect(mockBack).not.toHaveBeenCalled();
   });
 
+  it("returns to the previous screen after stopping a tummy-time timer when history exists", async () => {
+    mockCanGoBack = true;
+    mockActiveTimer = runningTimer;
+    render(<TummyTimeScreen />);
+    fireEvent.press(screen.getByTestId("stop-timer-button"));
+
+    await waitFor(() => {
+      expect(mockBack).toHaveBeenCalledTimes(1);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("returns to the previous screen when a caregiver closes the tummy-time screen with history", () => {
+    mockCanGoBack = true;
+    render(<TummyTimeScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "common.close" }));
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   it("reacts to the current preference and starts at the selected time", async () => {
     mockTimeFormat = "24h";
     const selectedTime = new Date(2020, 0, 1, 14, 30);

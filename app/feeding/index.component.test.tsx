@@ -369,6 +369,20 @@ describe("FeedingScreen", () => {
       expect(mockBack).not.toHaveBeenCalled();
     });
 
+    it("returns to the previous screen after saving a bottle feeding when history exists", async () => {
+      mockCanGoBack = true;
+      render(<FeedingScreen />);
+      fireEvent.press(screen.getByText("Bottle"));
+      fireEvent.press(screen.getByTestId("content-breast-milk"));
+      fireEvent.press(screen.getByTestId("quick-amount-30"));
+      fireEvent.press(screen.getByTestId("save-bottle-button"));
+
+      await waitFor(() => {
+        expect(mockBack).toHaveBeenCalledTimes(1);
+      });
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
     it("renders content type selection", () => {
       render(<FeedingScreen />);
       fireEvent.press(screen.getByText("Bottle"));

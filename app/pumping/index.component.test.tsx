@@ -96,6 +96,29 @@ describe("PumpingScreen stop confirmation", () => {
     expect(mockBack).not.toHaveBeenCalled();
   });
 
+  it("returns to the previous screen after stopping a pumping timer when history exists", async () => {
+    mockCanGoBack = true;
+    mockStopPumping.mockResolvedValueOnce(undefined);
+    render(<PumpingScreen />);
+    fireEvent.changeText(screen.getByTestId("volume-input"), "90");
+    fireEvent.press(screen.getByTestId("save-button"));
+
+    await waitFor(() => {
+      expect(mockBack).toHaveBeenCalledTimes(1);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("returns to the previous screen when a caregiver closes the pumping screen with history", () => {
+    mockCanGoBack = true;
+    render(<PumpingScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "common.close" }));
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   it("enters a disabled stopping state only after confirming a volume", () => {
     const { rerender } = render(<PumpingScreen />);
 

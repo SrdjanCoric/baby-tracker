@@ -142,6 +142,28 @@ describe("SleepScreen morning confirmation", () => {
     expect(mockBack).not.toHaveBeenCalled();
   });
 
+  it("returns to the previous screen after stopping a sleep timer when history exists", async () => {
+    mockCanGoBack = true;
+    render(<SleepScreen />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Wake up" }));
+    });
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("returns to the previous screen when a caregiver closes the sleep screen with history", () => {
+    mockCanGoBack = true;
+    render(<SleepScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "Close" }));
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   it("keeps the running timer usable while answering the inline question", async () => {
     render(<SleepScreen />);
 
