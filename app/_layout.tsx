@@ -33,9 +33,7 @@ import {
 import { supabase } from "@/services/supabase";
 import { SURFACE } from "@/constants/colors";
 
-export const unstable_settings = {
-  anchor: "(tabs)",
-};
+export { unstable_settings } from "@/navigation/root-anchor";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
