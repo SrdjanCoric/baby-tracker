@@ -115,6 +115,48 @@ describe("sleep timer adapter", () => {
     );
   });
 
+  it("dispatches every restored sleep timer field", () => {
+    const dispatchRestoreTimer = vi.fn();
+    const adapter = createSleepTimerAdapter({
+      babyId: "baby-1",
+      resolveMorningClassification,
+      dispatchRestoreTimer,
+    });
+    const startedAt = new Date("2026-08-05T12:00:00.000Z");
+    const pausedAt = "2026-08-05T12:00:45.000Z";
+
+    adapter.dispatchRestoreTimer({
+      startedAt,
+      lockState: "owned",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        type: "night",
+        isPaused: true,
+        totalPausedMs: 45_000,
+        pausedAt,
+        morningClassification: "confirmed_night_continuation",
+        morningClassificationVersion: 4,
+      },
+    });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith({
+      isRunning: true,
+      isPaused: true,
+      lockState: "owned",
+      startTime: startedAt,
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      sleepType: "night",
+      totalPausedMs: 45_000,
+      pausedAt: new Date(pausedAt),
+      morningClassification: "confirmed_night_continuation",
+      morningClassificationVersion: 4,
+    });
+  });
+
   it("matches only sleeps starting within 5000 ms of the lock", () => {
     const adapter = createAdapter();
     const lockStartedAt = "2026-08-05T12:00:00.000Z";

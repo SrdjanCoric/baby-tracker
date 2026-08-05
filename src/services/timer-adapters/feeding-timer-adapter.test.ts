@@ -184,4 +184,47 @@ describe("feeding timer adapter", () => {
       })
     );
   });
+
+  it("dispatches restored feeding fields and falls back to the timer start", () => {
+    const dispatchRestoreTimer = vi.fn();
+    const adapter = createFeedingTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer,
+    });
+    const pausedAt = "2026-08-05T12:00:45.000Z";
+
+    adapter.dispatchRestoreTimer({
+      startedAt,
+      lockState: "owned",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        side: "both",
+        type: "breast",
+        leftAccumulatedSeconds: 12,
+        rightAccumulatedSeconds: 34,
+        currentSideStartedAt: "",
+        isPaused: true,
+        totalPausedMs: 45_000,
+        pausedAt,
+      },
+    });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith({
+      isRunning: true,
+      isPaused: true,
+      lockState: "owned",
+      startTime: startedAt,
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      side: "both",
+      leftAccumulatedSeconds: 12,
+      rightAccumulatedSeconds: 34,
+      currentSideStartedAt: startedAt,
+      totalPausedMs: 45_000,
+      pausedAt: new Date(pausedAt),
+    });
+  });
 });

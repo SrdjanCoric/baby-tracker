@@ -111,4 +111,57 @@ describe("pumping timer adapter", () => {
       expect.objectContaining({ pausedAt: undefined })
     );
   });
+
+  it("dispatches paused and unpaused restored pumping timers", () => {
+    const startedAt = new Date("2026-08-05T12:00:00.000Z");
+    const pausedAt = "2026-08-05T12:00:45.000Z";
+
+    for (const timer of [
+      {
+        isPaused: true,
+        totalPausedMs: 45_000,
+        pausedAt,
+        expectedPausedAt: new Date(pausedAt),
+      },
+      {
+        isPaused: false,
+        totalPausedMs: 0,
+        pausedAt: undefined,
+        expectedPausedAt: undefined,
+      },
+    ]) {
+      const dispatchRestoreTimer = vi.fn();
+      const adapter = createPumpingTimerAdapter({
+        babyId: "baby-1",
+        dispatchRestoreTimer,
+      });
+
+      adapter.dispatchRestoreTimer({
+        startedAt,
+        lockState: "owned",
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        payload: {
+          timerInstanceId: "timer-1",
+          activityId: "activity-1",
+          side: "right",
+          isPaused: timer.isPaused,
+          totalPausedMs: timer.totalPausedMs,
+          ...(timer.pausedAt ? { pausedAt: timer.pausedAt } : {}),
+        },
+      });
+
+      expect(dispatchRestoreTimer).toHaveBeenCalledWith({
+        isRunning: true,
+        isPaused: timer.isPaused,
+        lockState: "owned",
+        startTime: startedAt,
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        side: "right",
+        totalPausedMs: timer.totalPausedMs,
+        pausedAt: timer.expectedPausedAt,
+      });
+    }
+  });
 });
