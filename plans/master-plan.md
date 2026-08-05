@@ -220,7 +220,7 @@ Durable decisions that apply across all tasks:
 - [x] 0061 · Localize the Apple Watch app and the iOS widget → tasks/done/0061-localize-watch-and-widget.md
 - [x] 0062 · Fix the Timeline daily sleep total → tasks/done/0062-fix-timeline-daily-sleep-total.md
 - [x] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/done/0063-guarantee-exit-from-widget-opened-activity-screens.md
-- [>] 0064 · Add the Avg Nap Time card → tasks/0064-add-avg-nap-time-card.md
+- [x] 0064 · Add the Avg Nap Time card → tasks/done/0064-add-avg-nap-time-card.md
 - [ ] 0065 · Add the Nap Schedule panel (after 0064) → tasks/0065-add-nap-schedule-panel.md
 - [ ] 0066 · Let caregivers turn the Live Activity off → tasks/0066-let-caregivers-turn-live-activity-off.md
 
@@ -230,22 +230,20 @@ Tasks 0001 through 0045 and Tasks 0047, 0048, and 0050 are closed. Task 0049 is 
 
 On 2026-08-04 the owner deferred Tasks 0054 through 0060 so that Task 0063 takes priority. Task 0063 fixes a trap the owner hit in real usage: opening an activity screen from the iOS widget on a cold launch leaves the caregiver unable to return to the app, which makes the app unusable until it is force-quit. Those deferred tasks keep their existing dependency suffixes and are not claimable without an explicit owner decision; none of them is a prerequisite of 0063. Task 0063 is therefore the only claimable pointer. A separate widget defect found the same day — the configuration intent's activity parameter resolving to nil, so the widget always renders Feeding regardless of the Edit Widget selection — is still under diagnosis and is deliberately outside Task 0063's scope.
 
-Task 0063 merged on 2026-08-05. Task 0064 was added the same day from the resolved decision
-`plans/decision-maps/unified-timer-contract/decisions/resolved/012-daily-nap-total-average.md`, has
-no prerequisites, and is the only claimable pointer; Tasks 0049 and 0052 through 0060 remain deferred
-and are not claimable without an explicit owner decision.
+Tasks 0063 and 0064 merged on 2026-08-05. Tasks 0049 and 0052 through 0060 remain deferred and are
+not claimable without an explicit owner decision.
 
 Task 0065 was added on 2026-08-05 from the resolved decision
 `plans/decision-maps/unified-timer-contract/decisions/resolved/014-per-nap-slot-statistics.md`, which
 depends on the decision behind Task 0064. It depends on 0064 because both tasks extend the
 `SleepSummary` contract and `calculateSleepSummary` in `src/utils/sleep-patterns.ts`, both add a
 section to `SummaryView`, and both add keys to the `sleepPatterns` namespace across the same nine
-locale files. Task 0064 therefore remains the only claimable pointer until it merges.
+locale files. Task 0064 has merged, so Task 0065 is claimable.
 
 Task 0066 was added on 2026-08-05 from the resolved decision
 `plans/decision-maps/unified-timer-contract/decisions/resolved/011-live-activity-visibility-toggle.md`.
 It has no prerequisites: it touches the Live Activity service seam, a new preference storage module,
 a new settings screen, and the `settings` locale namespace, none of which Tasks 0064 and 0065 touch.
-Tasks 0064 and 0066 are both claimable.
+Tasks 0065 and 0066 are both claimable.
 
 Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054 through 0057 and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Tasks 0055 and 0056 depend on their predecessors only because all three add migrations and would otherwise collide on the next migration ordinal.
