@@ -258,7 +258,7 @@ Durable decisions that apply across all tasks:
 - [x] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/done/0063-guarantee-exit-from-widget-opened-activity-screens.md
 - [x] 0064 · Add the Avg Nap Time card → tasks/done/0064-add-avg-nap-time-card.md
 - [x] 0065 · Add the Nap Schedule panel (after 0064) → tasks/done/0065-add-nap-schedule-panel.md
-- [ ] 0066 · Extract the shared timer lifecycle module and migrate tummy time → tasks/0066-extract-shared-timer-lifecycle-tummy-time.md
+- [>] 0066 · Extract the shared timer lifecycle module and migrate tummy time → tasks/0066-extract-shared-timer-lifecycle-tummy-time.md
 - [ ] 0067 · Migrate pumping, feeding, and sleep onto the shared timer lifecycle (after 0066) → tasks/0067-migrate-remaining-timers-to-shared-lifecycle.md
 - [ ] 0068 · Count a resumed pause and end a stopped paused timer at `pausedAt` (after 0067) → tasks/0068-count-resumed-pause-in-recorded-activity.md
 - [ ] 0069 · Show what stopping would record on every running-timer surface (after 0068) → tasks/0069-show-counted-pause-on-running-timer-surfaces.md

@@ -15,7 +15,7 @@ import { TummyTimeStorageService, type StoredTummyTimeEntry } from "@/services/t
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 let mockSelectedBaby = { id: "baby-a", name: "Baby A" };
-let mockAuthUser: { id: string; householdId: string } | null = null;
+let mockAuthUser: { id: string; householdId: string; displayName?: string } | null = null;
 const mockRemoveLock = jest.fn();
 
 jest.mock("@/contexts/baby-context", () => ({
@@ -157,6 +157,18 @@ function DiaperProbe() {
   return null;
 }
 
+function TummyTimeProbe() {
+  const tummyTime = useTummyTime();
+  providerState = {
+    feeding: null as never,
+    sleep: null as never,
+    diaper: null as never,
+    pumping: null as never,
+    tummyTime,
+  };
+  return null;
+}
+
 function RealActivityProviders() {
   return (
     <FeedingProvider>
@@ -273,6 +285,51 @@ describe("real activity provider baby binding", () => {
     });
 
     expect(providerState?.diaper.diapers).toEqual([]);
+  });
+
+  it("does not reload tummy time when only the auth profile object changes", async () => {
+    mockAuthUser = {
+      id: "user-a",
+      householdId: "household-a",
+      displayName: "Caregiver A",
+    };
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      fetchTummyTimeFromDatabase: jest.Mock;
+    };
+    const activityGoals = jest.requireMock("@/services/activity-goal-service") as {
+      fetchActivityGoal: jest.Mock;
+    };
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      getActiveTimerLock: jest.Mock;
+    };
+    activitySync.fetchTummyTimeFromDatabase.mockResolvedValue([]);
+    activityGoals.fetchActivityGoal.mockResolvedValue({ data: null });
+    activeTimers.getActiveTimerLock.mockResolvedValue(null);
+    jest.spyOn(TummyTimeStorageService, "getActiveTimer").mockResolvedValue(null);
+
+    const view = render(
+      <TummyTimeProvider>
+        <TummyTimeProbe />
+      </TummyTimeProvider>
+    );
+    await waitFor(() => {
+      expect(providerState?.tummyTime.babyBinding).toEqual({
+        babyId: "baby-a",
+        status: "ready",
+      });
+    });
+    expect(activitySync.fetchTummyTimeFromDatabase).toHaveBeenCalledTimes(1);
+
+    mockAuthUser = { ...mockAuthUser, displayName: "Caregiver B" };
+    await act(async () => {
+      view.rerender(
+        <TummyTimeProvider>
+          <TummyTimeProbe />
+        </TummyTimeProvider>
+      );
+    });
+
+    expect(activitySync.fetchTummyTimeFromDatabase).toHaveBeenCalledTimes(1);
   });
 
   it("keeps every provider on the new baby when the old baby's load resolves last", async () => {
