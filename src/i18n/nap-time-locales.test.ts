@@ -34,8 +34,8 @@ const keys = [
 
 describe("nap statistics translations", () => {
   it("keeps the approved nap schedule headers", () => {
-    expect(en.sleepPatterns.napLength).toBe("Length");
-    expect(en.sleepPatterns.napStarts).toBe("Starts");
+    expect(en.sleepPatterns.napLength).toBe("Avg. Length");
+    expect(en.sleepPatterns.napStarts).toBe("Avg. Start");
   });
 
   it.each(Object.entries(locales))(

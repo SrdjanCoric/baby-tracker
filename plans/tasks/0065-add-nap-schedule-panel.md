@@ -63,8 +63,9 @@ files. Build on its merged output; do not reopen its decisions.
 ### Reference
 
 Approved mock: `plans/decision-maps/unified-timer-contract/prototypes/nap-stats-mock.html`, markers B
-and C. Marker B draws the row layout and the column headers (`Nap` · `Length` · `Starts`); marker C
-gives the appearance test as a table of worked cases.
+and C. Marker B draws the row layout and the column headers (`Nap` · `Avg. Length` · `Avg. Start`)
+so both calculated values are explicit averages; marker C gives the appearance test as a table of
+worked cases.
 
 ## Implementation work
 
