@@ -83,14 +83,15 @@ presentation or deep-link routing in general.
 - [x] Stopping a sleep timer always leaves the sleep screen, including when the screen was the stack root.
 - [x] No exit path calls `router.back()` without a no-history fallback.
 - [x] Component tests fail if any exit path loses its fallback.
-- [ ] The Maestro flow fails if a cold-opened activity screen becomes inescapable again.
+- [x] The Maestro flow fails if a cold-opened activity screen becomes inescapable again.
 - [x] Any deep-linkable modal route left outside the guarantee is named in this task with the reason.
 
 ## Implementation evidence
 
 - RED/GREEN component cycles cover the shared close control, production Sleep close, Sleep stop, Feeding close/save/stop, Diaper close/save, Pumping close/stop, and Tummy Time close/stop. The final component suite passed 86 files / 826 tests (`component.log`).
 - The unit suite passed 133 files / 2,498 tests (`unit.log`); typecheck and warning-free lint also passed (`typecheck.log`, `lint.log`). Logs are retained in `/tmp/agent-workflows/e2f8af45fd34/710e44f25adb`.
-- The required Maestro flow was attempted three times on `iPhone 17 Pro - iOS 26.5`. Its existing setup passed on the first and third attempts, and the first attempt reached `openLink: sofibaby://sleep`; every run then lost the Maestro XCUITest localhost transport at a different point. The latest failure is retained in `widget-cold-open-e2e.log`. Because the driver never completed the flow, the cold-launch/swipe and Maestro acceptance items remain unchecked.
+- The required Maestro flow was attempted three times on `iPhone 17 Pro - iOS 26.5`. Its existing setup passed on the first and third attempts, and the first attempt reached `openLink: sofibaby://sleep`; every run then lost the Maestro XCUITest localhost transport at a different point. The latest failure is retained in `widget-cold-open-e2e.log`. Because the driver never completed the flow, the cold-launch/swipe and Maestro acceptance items were left unchecked after those attempts.
+- The follow-up Maestro run completed green on `iPhone 17 Pro - iOS 26.5` after the flow learned to accept iOS's first-use deep-link confirmation. It cold-opened `sofibaby://sleep`, observed `sleep-screen`, used the close control, and observed `home-screen` (`tr3-maestro.log`).
 
 ## Review-fix pass 0063 (minor skips)
 
@@ -98,3 +99,10 @@ presentation or deep-link routing in general.
 - skipped (minor): TR-6 — Keyboard-dismiss hit target shrank to the drag handle — deferred; the dismiss Pressable keeps the same testID and stays tappable; revisit if an E2E flow flakes on the smaller handle.
 - skipped (minor): TR-7 — Acceptance criterion wording vs unguarded `router.back()` in the auth modal — deferred; the authentication modal is intentionally outside this task, the wording is a documentation-only refinement for a later planning batch.
 - skipped (minor): TR-8 — Durable navigation invariant not recorded in master-plan/DEEP_LINKS — deferred; documentation-only, belongs in the next master-plan/DEEP_LINKS update rather than this remediation pass.
+
+## Review-fix pass 0063 follow-up (minor skips)
+
+- skipped (minor): TR-4 — Root anchor lets an unfinished-onboarding caregiver navigate back into tabs — user requested fixing only major issues.
+- skipped (minor): TR-5 — Breastfeeding-stop lacks the `canGoBack() === true` component case — user requested fixing only major issues.
+- skipped (minor): TR-6 — Recorded implementation evidence predates the review-fix commits — user requested fixing only major issues.
+- skipped (minor): TR-7 — Six new files lack trailing newlines — user requested fixing only major issues.
