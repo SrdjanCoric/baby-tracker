@@ -546,20 +546,20 @@ describe("calculateSleepSummary", () => {
     expect(result.nappingDays).toBe(0);
   });
 
-  it("counts the sleep day receiving the nap segment across day start", () => {
+  it("counts the full duration of a nap classified across day start", () => {
     const now = new Date(2025, 2, 8, 12, 0, 0);
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 7, 5, 30),
         endedAt: localISO(2025, 3, 7, 7, 0),
-        type: "night",
+        type: "nap",
         durationSeconds: 90 * 60,
       }),
     ];
 
     const result = calculateSleepSummary(sleeps, 7, now, 6, 19);
 
-    expect(result.avgNapTimeSeconds).toBe(60 * 60);
+    expect(result.avgNapTimeSeconds).toBe(90 * 60);
     expect(result.nappingDays).toBe(1);
   });
 
