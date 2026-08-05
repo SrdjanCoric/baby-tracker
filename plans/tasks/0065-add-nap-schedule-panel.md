@@ -117,6 +117,10 @@ locale resources.
 
 ## Implementation evidence
 
+- README disposition: unchanged. The README describes the application and architecture at a broader
+  level and does not enumerate individual Statistics or Sleep Summary cards, so the Nap Schedule
+  panel does not require README prose.
+
 - Calculation RED/GREEN: the first slot assertion failed on a missing `napSchedule`, then passed with
   per-slot duration/start accumulation and filtering (`unit-slot-red.log`, `unit-slot-green.log`). A
   second RED/GREEN cycle separated the new sleep-day slot grouping from Task 0064's unchanged
@@ -133,6 +137,29 @@ locale resources.
 - Current-code reconciliation: Task 0064 intentionally keeps legacy nap metrics on calendar dates.
   Task 0065 therefore uses a separate `splitSleepAtDayBoundary` sleep-day counter for slot ordering
   and its appearance-test denominator, leaving every existing summary field's behavior unchanged.
+
+## Completion record
+
+- Built the Nap Schedule summary panel and its `SleepSummary` slot data in
+  `src/components/sleep-patterns/SummaryView.tsx` and `src/utils/sleep-patterns.ts`, with localized
+  panel copy across all nine phone locales. Each qualifying row reports its occurrence count, full
+  average duration, and circular-mean average start time.
+- Final owner decision: the approved headers are explicitly average-labelled (`Nap` ·
+  `Avg. Length` · `Avg. Start`) in the decision, mock, task, English copy, and localized equivalents.
+- README: unchanged after one impact audit. It documents the application and architecture at a
+  broader level and does not enumerate individual Statistics or Sleep Summary cards.
+- Review outcome: TR-1 through TR-4 fixed. TR-5, TR-6, and TR-7 were skipped by the user on
+  2026-08-05 without remediation. TR-D1 and TR-D2 remain deferred out of scope. The review found no
+  relevant security surface and no security risk was accepted.
+- Final automated proof: `npm run check:code` passed lint, strict type checking, 2,518 Vitest tests
+  in 134 files, 850 Jest tests in 92 suites, and 65 CI-contract tests. The production-bundle stage
+  was rerun separately after the log harness's file-size limit caused `EFBIG`; the retry passed and
+  confirmed that the production bundle excludes development onboarding tools. Logs:
+  `/tmp/agent-workflows/e2f8af45fd34/da1ea81f56d7/finish-canonical.log` and
+  `/tmp/agent-workflows/e2f8af45fd34/da1ea81f56d7/finish-production-gating.log`.
+- Manual verification: none required. The task has no `[verify]` checkpoints, and its observable
+  calculation, rendering, empty-state, localization, and threshold behavior is covered by the
+  automated utility and component suites included in the canonical gate.
 
 ## Non-goals
 
