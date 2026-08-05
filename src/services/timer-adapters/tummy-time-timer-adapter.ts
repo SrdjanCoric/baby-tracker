@@ -7,16 +7,13 @@ import {
 import {
   calculateTimerDurationSeconds,
   type RestoredTimer,
+  type SharedTimerPayload,
   type TimerLifecycleAdapter,
 } from "../timer-lifecycle";
 import type { TimerIdentity } from "../timer-completion-service";
 import type { TimerLockReconciliationState } from "../timer-lock-reconciliation";
 
-export interface TummyTimeTimerPayload extends Partial<TimerIdentity> {
-  isPaused: boolean;
-  totalPausedMs: number;
-  pausedAt?: string;
-}
+export type TummyTimeTimerPayload = SharedTimerPayload;
 
 export interface RestoredTummyTimeTimer extends TimerIdentity {
   isRunning: true;
