@@ -61,9 +61,10 @@ interface TimerLifecycleUser {
   householdId?: string;
 }
 
-export interface TimerDataCodec<TPayload> {
+export interface TimerDataCodec<TPayload, TActiveTimer> {
   encode(payload: TPayload): Record<string, unknown>;
   decode(timerData: Record<string, unknown>): TPayload;
+  fromActiveTimer(activeTimer: TActiveTimer): TPayload;
 }
 
 type HydratedActiveTimer<TPayload extends SharedTimerPayload> =
@@ -91,7 +92,7 @@ export interface TimerLifecycleAdapter<
 > {
   activityType: TimerActivityType;
   storage: TimerLifecycleStorage<TPayload, TActiveTimer, TRecord>;
-  timerDataCodec: TimerDataCodec<TPayload>;
+  timerDataCodec: TimerDataCodec<TPayload, TActiveTimer>;
   buildRecord(
     startedAt: Date,
     endedAt: Date,
@@ -286,9 +287,7 @@ export async function restoreTimerLifecycle<
       return;
     }
 
-    const payload = adapter.timerDataCodec.decode(
-      activeTimer as unknown as Record<string, unknown>
-    );
+    const payload = adapter.timerDataCodec.fromActiveTimer(activeTimer);
     const payloadWithIdentity = { ...payload, ...identity };
 
     if (!activeTimer.timerInstanceId || !activeTimer.activityId) {

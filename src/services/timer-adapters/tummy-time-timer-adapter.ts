@@ -79,6 +79,17 @@ export function createTummyTimeTimerAdapter({
           ? { pausedAt: timerData.pausedAt }
           : {}),
       }),
+      fromActiveTimer: activeTimer => ({
+        ...(activeTimer.timerInstanceId
+          ? { timerInstanceId: activeTimer.timerInstanceId }
+          : {}),
+        ...(activeTimer.activityId
+          ? { activityId: activeTimer.activityId }
+          : {}),
+        isPaused: activeTimer.isPaused === true,
+        totalPausedMs: activeTimer.totalPausedMs ?? 0,
+        ...(activeTimer.pausedAt ? { pausedAt: activeTimer.pausedAt } : {}),
+      }),
     },
     buildRecord: (startedAt, endedAt, payload) => ({
       id: payload.activityId,

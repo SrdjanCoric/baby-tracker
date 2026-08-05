@@ -110,6 +110,7 @@ describe("tummy time timer adapter", () => {
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
     });
+    const decodeTimerData = vi.spyOn(adapter.timerDataCodec, "decode");
     adapter.storage.getActiveTimer = vi.fn().mockResolvedValue({
       timerInstanceId: "timer-1",
       activityId: "resolved-activity",
@@ -183,6 +184,7 @@ describe("tummy time timer adapter", () => {
     expect(persistRecord).toHaveBeenCalledWith(
       expect.objectContaining({ id: "accepted-activity" })
     );
+    expect(decodeTimerData).not.toHaveBeenCalled();
   });
 });
 
