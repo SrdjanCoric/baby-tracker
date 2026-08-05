@@ -586,6 +586,24 @@ describe("calculateSleepSummary", () => {
     ]);
   });
 
+  it("uses a nap's full duration when its sleep-day is inside the range", () => {
+    const now = new Date(2025, 2, 8, 12, 0, 0);
+    const sleeps = [6, 7, 8].map((day) =>
+      makeSleep({
+        startedAt: localISO(2025, 3, day, 5, 30),
+        endedAt: localISO(2025, 3, day, 7, 0),
+        type: "nap",
+        durationSeconds: 90 * 60,
+      })
+    );
+
+    const result = calculateSleepSummary(sleeps, 7, now, 6, 19);
+
+    expect(result.napSchedule).toMatchObject([
+      { ordinal: 1, avgDurationSeconds: 90 * 60, occurrenceCount: 3 },
+    ]);
+  });
+
   it("shifts later naps up when a sleep-day skips its first usual nap", () => {
     const now = new Date(2025, 2, 8, 12, 0, 0);
     const sleeps = [

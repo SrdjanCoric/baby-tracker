@@ -484,7 +484,10 @@ export function calculateSleepSummary(
           startMinutes: [],
           occurrenceCount: 0,
         };
-        slot.totalDurationSeconds += selectedSeconds;
+        slot.totalDurationSeconds += segments.reduce(
+          (total, segment) => total + segment.seconds,
+          0
+        );
         slot.startMinutes.push(
           startDate.getHours() * 60 + startDate.getMinutes()
         );
