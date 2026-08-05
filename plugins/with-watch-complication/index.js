@@ -85,6 +85,7 @@ function withWatchComplication(config) {
     mod: MOD_NAME,
     async action(config) {
       const project = config.modResults;
+      const versionSettings = getVersionSettings(config);
 
       const nativeTargets = project.pbxNativeTargetSection();
       for (const key in nativeTargets) {
@@ -102,13 +103,15 @@ function withWatchComplication(config) {
           }
           addEmbedAndDependency(project, nativeTargets, key);
           fixWidgetTargetPlatforms(project, nativeTargets);
+          applyVersionSettings(project, nativeTargets, versionSettings);
           console.log(`[WatchComplication] Fixed existing target`);
           return config;
         }
       }
 
-      createComplicationTarget(project, nativeTargets);
+      createComplicationTarget(project, nativeTargets, versionSettings);
       fixWidgetTargetPlatforms(project, nativeTargets);
+      applyVersionSettings(project, nativeTargets, versionSettings);
       return config;
     },
   });
@@ -144,7 +147,40 @@ function withWatchComplication(config) {
   return config;
 }
 
-function createComplicationTarget(project, nativeTargets) {
+// The complication is embedded in the watch app, so App Store validation and
+// on-device install require its version strings to match the containing app.
+function getVersionSettings(config) {
+  return {
+    MARKETING_VERSION: config.version ?? "1.0",
+    CURRENT_PROJECT_VERSION: String(config.ios?.buildNumber ?? "1"),
+  };
+}
+
+function applyVersionSettings(project, nativeTargets, versionSettings) {
+  const buildConfigSection =
+    project.hash.project.objects["XCBuildConfiguration"];
+  const buildConfigListSection =
+    project.hash.project.objects["XCConfigurationList"];
+
+  for (const key in nativeTargets) {
+    if (key.endsWith("_comment")) continue;
+    const target = nativeTargets[key];
+    if (target?.name !== TARGET_NAME) continue;
+
+    const configList = buildConfigListSection?.[target.buildConfigurationList];
+    for (const entry of configList?.buildConfigurations ?? []) {
+      const buildConfig = buildConfigSection?.[entry.value];
+      if (!buildConfig?.buildSettings) continue;
+      Object.assign(buildConfig.buildSettings, versionSettings);
+    }
+  }
+
+  console.log(
+    `[WatchComplication] Set ${TARGET_NAME} version to ${versionSettings.MARKETING_VERSION} (${versionSettings.CURRENT_PROJECT_VERSION})`
+  );
+}
+
+function createComplicationTarget(project, nativeTargets, versionSettings) {
   const swiftFileRefUuid = project.generateUuid();
   const swiftBuildFileUuid = project.generateUuid();
   const infoPlistFileRefUuid = project.generateUuid();
@@ -349,7 +385,7 @@ function createComplicationTarget(project, nativeTargets) {
     CLANG_WARN_UNGUARDED_AVAILABILITY: "YES_AGGRESSIVE",
     CODE_SIGN_ENTITLEMENTS: `${TARGET_NAME}/Complication.entitlements`,
     CODE_SIGN_STYLE: "Automatic",
-    CURRENT_PROJECT_VERSION: 1,
+    CURRENT_PROJECT_VERSION: versionSettings?.CURRENT_PROJECT_VERSION ?? 1,
     DEVELOPMENT_TEAM: "743WPPWD3W",
     GENERATE_INFOPLIST_FILE: "YES",
     INFOPLIST_FILE: `${TARGET_NAME}/Info.plist`,
@@ -357,7 +393,7 @@ function createComplicationTarget(project, nativeTargets) {
     INFOPLIST_KEY_NSHumanReadableCopyright: '""',
     LD_RUNPATH_SEARCH_PATHS:
       '"$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"',
-    MARKETING_VERSION: "1.0",
+    MARKETING_VERSION: versionSettings?.MARKETING_VERSION ?? "1.0",
     PRODUCT_BUNDLE_IDENTIFIER: `"${BUNDLE_ID}"`,
     PRODUCT_NAME: `"$(TARGET_NAME)"`,
     SDKROOT: "watchos",
