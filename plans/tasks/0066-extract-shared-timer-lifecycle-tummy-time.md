@@ -168,3 +168,26 @@ yes.
 - skipped (minor): TR-8 — Local stop constructs a full adapter only to call `buildRecord` — User limited remediation to major and minor findings.
 - skipped (minor): TR-9 — Shared restore lifecycle has no colocated unit test — User limited remediation to major and minor findings.
 - skipped (minor): TR-10 — Adapter tests declare broader mocks than their imports require — User limited remediation to major and minor findings.
+
+## Completion record
+
+- **Implementation:** Added the shared lifecycle in `src/services/timer-lifecycle.ts`, the tummy-time
+  adapter in `src/services/timer-adapters/tummy-time-timer-adapter.ts`, and migrated the provider's
+  restore and record-construction paths without changing its public API or the protected external
+  timer integration test.
+- **Review:** TR-1 through TR-7 were fixed. TR-8 through TR-10 were skipped at the user's request
+  because remediation was limited to major and minor findings. The security lens reported no
+  findings and no security risks were accepted.
+- **Approved additional PR content:** Replicated the exact file changes from watchOS hotfix
+  `62c22b5` in commit `30a9264`, updating `app.json` and
+  `plugins/with-watch-complication/index.js`. Added root `AGENTS.md` with the durable project-state
+  guidance from `CLAUDE.md` and safe finish-task log limiting for Metro/Hermes.
+- **Documentation:** `README.md` is unchanged. The timer extraction is internal, and the watch fix
+  corrects embedded bundle version propagation without changing setup, configuration, or usage
+  instructions. No README prose audit was needed (`write-well` audit passes: 0).
+- **Automated proof:** `npm run check:code` passed on 2026-08-05, including lint, strict TypeScript,
+  all Vitest unit tests, all Jest component tests, CI contract tests, and the production bundle
+  gate. Log: `/tmp/agent-workflows/e2f8af45fd34/e46442ca0b75/canonical.log`.
+- **Focused watch proof:** The two hotfix paths matched `62c22b5` exactly; the plugin syntax check
+  (`node --check`) and JSON parsing of `app.json` both passed.
+- **Manual verification:** No task-specific manual checkpoint was required.
