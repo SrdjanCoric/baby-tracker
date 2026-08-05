@@ -129,7 +129,7 @@ locale resources.
 - Localization RED/GREEN: all nine locales initially failed on missing keys, then passed with
   localized panel, header, slot, and occurrence copy (`locales-red.log`, `locales-green.log`).
 - Focused pre-review proof: the sleep-summary suite passes 113 utility tests and 13 component tests;
-  all 10 locale tests, targeted warning-free lint, repository typecheck, and `git diff --check` pass.
+  all 11 locale tests, targeted warning-free lint, repository typecheck, and `git diff --check` pass.
   Logs are retained in `/tmp/agent-workflows/e2f8af45fd34/da1ea81f56d7`.
 - Current-code reconciliation: Task 0064 intentionally keeps legacy nap metrics on calendar dates.
   Task 0065 therefore uses a separate `splitSleepAtDayBoundary` sleep-day counter for slot ordering

@@ -38,6 +38,28 @@ describe("nap statistics translations", () => {
     expect(en.sleepPatterns.napStarts).toBe("Avg. Start");
   });
 
+  it("uses compact native average labels in the narrow schedule columns", () => {
+    expect({
+      de: [de.sleepPatterns.napLength, de.sleepPatterns.napStarts],
+      es: [es.sleepPatterns.napLength, es.sleepPatterns.napStarts],
+      "es-ES": [esES.sleepPatterns.napLength, esES.sleepPatterns.napStarts],
+      fr: [fr.sleepPatterns.napLength, fr.sleepPatterns.napStarts],
+      it: [italian.sleepPatterns.napLength, italian.sleepPatterns.napStarts],
+      "pt-BR": [ptBR.sleepPatterns.napLength, ptBR.sleepPatterns.napStarts],
+      "pt-PT": [ptPT.sleepPatterns.napLength, ptPT.sleepPatterns.napStarts],
+      sr: [sr.sleepPatterns.napLength, sr.sleepPatterns.napStarts],
+    }).toEqual({
+      de: ["Ø Dauer", "Ø Beginn"],
+      es: ["Dur. media", "Inicio med."],
+      "es-ES": ["Dur. media", "Inicio med."],
+      fr: ["Durée moy.", "Début moy."],
+      it: ["Dur. media", "Inizio med."],
+      "pt-BR": ["Duração méd.", "Início méd."],
+      "pt-PT": ["Duração méd.", "Início méd."],
+      sr: ["Pros. trajanje", "Pros. početak"],
+    });
+  });
+
   it.each(Object.entries(locales))(
     "provides localized card copy for %s",
     (locale, translations) => {
