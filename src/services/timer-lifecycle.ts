@@ -254,7 +254,7 @@ export async function restoreTimerLifecycle<
   const pendingStop = activeTimer
     ? await readPendingTimerStop(adapter.activityType, baby.id)
     : null;
-  if (!isCurrentBabyBinding()) return;
+  if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
   const hasPendingStop = activeTimer
     ? isPendingStopForTimer(
         pendingStop,
