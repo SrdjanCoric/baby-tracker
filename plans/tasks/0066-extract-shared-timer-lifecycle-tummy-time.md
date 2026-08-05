@@ -162,3 +162,9 @@ yes.
 - The start, pause, and resume paths do not move into the module.
 - No `stopped_at` handling, no remote-stop finalization, and no new `timer_data` field.
 - No other type is migrated; pumping, feeding, and sleep keep their current code.
+
+## Review decisions
+
+- skipped (minor): TR-8 — Local stop constructs a full adapter only to call `buildRecord` — User limited remediation to major and minor findings.
+- skipped (minor): TR-9 — Shared restore lifecycle has no colocated unit test — User limited remediation to major and minor findings.
+- skipped (minor): TR-10 — Adapter tests declare broader mocks than their imports require — User limited remediation to major and minor findings.
