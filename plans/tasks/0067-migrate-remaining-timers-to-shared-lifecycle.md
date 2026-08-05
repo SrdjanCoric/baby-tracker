@@ -134,12 +134,20 @@ yes.
   sleep; the final run passed all 42 tests.
 - Focused validation passed: TypeScript, targeted ESLint, all 138 unit files (2,535 tests), and all
   92 component files (851 tests).
-- The two-account iOS sleep smoke remains the declared manual `[verify]` checkpoint for
-  `finish-task`.
+- The clean two-account iOS sleep smoke passed on 2026-08-05. Both caregivers alternated lock
+  ownership, the non-owner had no Stop control, both saved records were visible, and local fixture
+  cleanup succeeded. Evidence: `e2e/artifacts/household-timers/2026-08-05T20-54-06-577Z/`.
+
+## Documentation
+
+- README inspected after review remediation. No update is required because the task changes the
+  internal timer lifecycle implementation and edge-case resilience without changing application
+  setup, configuration, or usage; the existing Timer Exclusivity section already describes the
+  current behavior.
 
 ## Human checkpoints
 
-- [ ] [verify] After sleep migrates, run the two-account sleep smoke: `npm run e2e:household-timers`
+- [x] [verify] After sleep migrates, run the two-account sleep smoke: `npm run e2e:household-timers`
       against local Supabase with two iOS simulators and the separate caregiver accounts it
       provisions. · Expected: the suite passes, the second account keeps seeing a timer it cannot
       control, and it keeps seeing the record the starter's device writes. · Failure: any suite
@@ -166,7 +174,7 @@ yes.
       exactly once, inside its adapter.
 - [x] The full component and unit suites pass unchanged; no test file is edited to accommodate the
       move.
-- [ ] The two-account sleep smoke `[verify]` checkpoint is confirmed passed.
+- [x] The two-account sleep smoke `[verify]` checkpoint is confirmed passed.
 
 ## Non-goals
 
@@ -183,3 +191,22 @@ yes.
 - skipped (minor): TR-11 — Stop paths construct full adapters only to call `buildRecord` — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
 - skipped (minor): TR-12 — Conflicted sleep restore dispatches `STOP_TIMER` twice — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
 - skipped (minor): TR-13 — Two unrelated master-plan continuation lines were de-indented — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+
+## Completion record
+
+- Built the pumping, feeding, and sleep timer adapters and routed their restore sequences and record
+  construction through `src/services/timer-lifecycle.ts`, with context-specific behavior retained in
+  `src/contexts/feeding-context.tsx`, `src/contexts/pumping-context.tsx`, and
+  `src/contexts/sleep-context.tsx`.
+- Retained the implementation decisions above for feeding current-side clamping, shared duration
+  clamping, and sleep restore obsolescence; no security risk was accepted.
+- README disposition: inspected after review remediation; no prose change was required because
+  setup, configuration, and usage are unchanged and Timer Exclusivity already describes the current
+  application behavior.
+- Review outcome: TR-1 through TR-8 fixed; TR-9 through TR-13 skipped as low-impact cleanup to keep
+  remediation focused on TR-1 through TR-8. No finding remains open.
+- Automated proof: `npm run check:code` passed on 2026-08-05. The final focused lifecycle/adapter
+  batch passed 25 tests, and the unchanged real-provider integration contract passed all 42 tests.
+- Device proof: `npm run e2e:household-timers:clean` passed on 2026-08-05 with two iOS simulators and
+  disposable local Supabase fixtures; lock ownership, non-owner controls, restart recovery, saved
+  record visibility, the native day-start picker, and fixture cleanup all completed successfully.
