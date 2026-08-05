@@ -191,3 +191,4 @@ yes.
 - **Focused watch proof:** The two hotfix paths matched `62c22b5` exactly; the plugin syntax check
   (`node --check`) and JSON parsing of `app.json` both passed.
 - **Manual verification:** No task-specific manual checkpoint was required.
+- **Workflow status:** PR #213 merged into `main` as `5ebba6f` on 2026-08-05.
