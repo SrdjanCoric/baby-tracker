@@ -244,6 +244,8 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
   const { user } = useAuth();
+  const userId = user?.id;
+  const householdId = user?.householdId ?? undefined;
   const { refreshLocks } = useActiveTimers();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
@@ -328,9 +330,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     await restoreTimerLifecycle({
       adapter,
       baby: selectedBaby,
-      user: user
-        ? { id: user.id, householdId: user.householdId ?? undefined }
-        : user,
+      user: userId ? { id: userId, householdId } : null,
       completedRecords: tummyTimes,
       stopVersionAtStart,
       currentStopVersion: () => stopVersionRef.current,
@@ -339,14 +339,14 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       liveActivityIdRef,
       refreshLocks,
       persistRecord: input =>
-        user?.householdId && user.id
-          ? createTummyTimeInDatabase(input, user.id)
+        householdId && userId
+          ? createTummyTimeInDatabase(input, userId)
           : TummyTimeStorageService.addTummyTime(input),
       dispatchStopTimer: () => dispatch({ type: "STOP_TIMER" }),
       dispatchAddRecord: record => dispatch({ type: "ADD_TUMMY_TIME", payload: record }),
       errorLabel: "[TummyTimeContext]",
     });
-  }, [isCurrentBabyBinding, refreshLocks, selectedBaby, user]);
+  }, [householdId, isCurrentBabyBinding, refreshLocks, selectedBaby, userId]);
 
   const loadTummyTimes = useCallback(async () => {
     const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
