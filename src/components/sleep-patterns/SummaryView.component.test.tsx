@@ -1,11 +1,14 @@
 import React from "react";
-import { render, screen } from "@testing-library/react-native";
+import { render, screen, within } from "@testing-library/react-native";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { SleepPatternColors } from "./useSleepPatternColors";
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, options?: Record<string, number>) =>
+      key === "sleepPatterns.avgNapTimeSubtitle"
+        ? `per napping day · ${options?.nappingDays} of ${options?.days}`
+        : key,
   }),
 }));
 
@@ -121,7 +124,10 @@ describe("SummaryView", () => {
 
     const { rerender } = renderSummary("24h");
 
-    expect(screen.getByText("8h 25m")).toBeTruthy();
+    const avgTotalSleepCard = screen.getByText(
+      "sleepPatterns.avgTotalSleep"
+    ).parent!.parent!;
+    expect(within(avgTotalSleepCard).getByText("8h 25m")).toBeTruthy();
     expect(screen.getByText("20:35")).toBeTruthy();
     expect(screen.getByTestId("daily-bar-count").props.children).toBe(7);
     expect(screen.getByTestId("daily-bar-keys").props.children).toBe(
@@ -144,5 +150,76 @@ describe("SummaryView", () => {
     );
 
     expect(screen.getByText("8:35 PM")).toBeTruthy();
+  });
+
+  it("shows average nap time with its napping-day divisor", () => {
+    const divergentSleeps = [
+      makeSleep(
+        "night-only",
+        localISO(2025, 3, 4, 20),
+        localISO(2025, 3, 4, 23)
+      ),
+      makeSleep(
+        "first-short-nap",
+        localISO(2025, 3, 5, 10),
+        localISO(2025, 3, 5, 10, 30)
+      ),
+      makeSleep(
+        "second-short-nap",
+        localISO(2025, 3, 5, 14),
+        localISO(2025, 3, 5, 14, 30)
+      ),
+      makeSleep(
+        "long-nap",
+        localISO(2025, 3, 6, 10),
+        localISO(2025, 3, 6, 12)
+      ),
+    ];
+
+    render(
+      <SummaryView
+        sleeps={divergentSleeps}
+        now={new Date(2025, 2, 8, 12, 0, 0)}
+        timeFormat="24h"
+        dayStartHour={6}
+        dayEndHour={19}
+        colors={colors}
+        isNewborn={false}
+        locale="en"
+        period={7}
+        onPeriodChange={() => {}}
+      />
+    );
+
+    expect(screen.getByText("sleepPatterns.avgNapTime")).toBeTruthy();
+    expect(screen.getByText("1h 30m")).toBeTruthy();
+    expect(screen.getByText("2h")).toBeTruthy();
+    expect(screen.getByText("per napping day · 2 of 7")).toBeTruthy();
+  });
+
+  it("shows a zero napping-day divisor when the range has no naps", () => {
+    render(
+      <SummaryView
+        sleeps={[
+          makeSleep(
+            "night-only",
+            localISO(2025, 3, 6, 20),
+            localISO(2025, 3, 6, 23)
+          ),
+        ]}
+        now={new Date(2025, 2, 8, 12, 0, 0)}
+        timeFormat="24h"
+        dayStartHour={6}
+        dayEndHour={19}
+        colors={colors}
+        isNewborn={false}
+        locale="en"
+        period={7}
+        onPeriodChange={() => {}}
+      />
+    );
+
+    expect(screen.getAllByText("0m").length).toBeGreaterThan(0);
+    expect(screen.getByText("per napping day · 0 of 7")).toBeTruthy();
   });
 });

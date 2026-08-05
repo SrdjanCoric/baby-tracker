@@ -159,6 +159,8 @@
     "longestStretch": "Período Mais Longo",
     "avgNightSleep": "Sono Noturno",
     "avgNapsPerDay": "Sonecas/Dia",
+    "avgNapTime": "Tempo Médio de Soneca",
+    "avgNapTimeSubtitle": "por dia com soneca · {{nappingDays}} de {{days}}",
     "avgNapDuration": "Duração da Soneca",
     "nightWakings": "Despertares Noturnos",
     "bedtimeWakeTrends": "Tendências de Hora de Dormir e Acordar",

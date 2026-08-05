@@ -499,6 +499,76 @@ describe("calculateSleepSummary", () => {
     expect(result.avgNapDurationSeconds).toBe(3600);
   });
 
+  it("averages nap time over napping days instead of all days with sleep", () => {
+    const now = new Date(2025, 2, 8, 12, 0, 0);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2025, 3, 4, 20, 0),
+        endedAt: localISO(2025, 3, 4, 23, 0),
+        type: "night",
+        durationSeconds: 3 * 3600,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 5, 10, 0),
+        endedAt: localISO(2025, 3, 5, 11, 0),
+        type: "nap",
+        durationSeconds: 3600,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 6, 10, 0),
+        endedAt: localISO(2025, 3, 6, 12, 0),
+        type: "nap",
+        durationSeconds: 2 * 3600,
+      }),
+    ];
+
+    const result = calculateSleepSummary(sleeps, 7, now);
+
+    expect(result.avgNapTimeSeconds).toBe(90 * 60);
+    expect(result.nappingDays).toBe(2);
+    expect(result.avgTotalSleepSeconds).toBe(2 * 3600);
+  });
+
+  it("returns zero nap time and napping days when the range has only night sleep", () => {
+    const now = new Date(2025, 2, 8, 12, 0, 0);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2025, 3, 6, 20, 0),
+        endedAt: localISO(2025, 3, 7, 7, 0),
+        type: "night",
+        durationSeconds: 11 * 3600,
+      }),
+    ];
+
+    const result = calculateSleepSummary(sleeps, 7, now);
+
+    expect(result.avgNapTimeSeconds).toBe(0);
+    expect(result.nappingDays).toBe(0);
+  });
+
+  it("attributes an after-midnight nap to its calendar day", () => {
+    const now = new Date(2025, 2, 8, 12, 0, 0);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2025, 3, 6, 10, 0),
+        endedAt: localISO(2025, 3, 6, 11, 0),
+        type: "nap",
+        durationSeconds: 60 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 7, 5, 30),
+        endedAt: localISO(2025, 3, 7, 7, 0),
+        type: "nap",
+        durationSeconds: 90 * 60,
+      }),
+    ];
+
+    const result = calculateSleepSummary(sleeps, 7, now, 6, 19);
+
+    expect(result.avgNapTimeSeconds).toBe(75 * 60);
+    expect(result.nappingDays).toBe(2);
+  });
+
   it("handles days with no sleep data", () => {
     const now = new Date(2025, 2, 6, 12, 0, 0);
     const sleeps = [

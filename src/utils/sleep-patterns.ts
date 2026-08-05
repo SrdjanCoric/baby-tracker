@@ -30,6 +30,8 @@ export interface SleepSummary {
   avgTotalSleepSeconds: number;
   avgNightSleepSeconds: number;
   avgNapsPerDay: number;
+  avgNapTimeSeconds: number;
+  nappingDays: number;
   avgNapDurationSeconds: number;
   longestStretchSeconds: number;
   nightWakingsPerNight: number;
@@ -380,6 +382,8 @@ export function calculateSleepSummary(
       avgTotalSleepSeconds: 0,
       avgNightSleepSeconds: 0,
       avgNapsPerDay: 0,
+      avgNapTimeSeconds: 0,
+      nappingDays: 0,
       avgNapDurationSeconds: 0,
       longestStretchSeconds: 0,
       nightWakingsPerNight: 0,
@@ -412,33 +416,39 @@ export function calculateSleepSummary(
   }
 
   for (const sleep of recentSleeps) {
+    const startDate = new Date(sleep.startedAt);
+    const endDate = new Date(sleep.endedAt!);
+    const autoType = classifySleepByTimeRange(
+      startDate,
+      endDate,
+      dayStartHour,
+      dayEndHour
+    );
     const segments = splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour);
+    let selectedSeconds = 0;
     for (const seg of segments) {
       const day = dailyData.get(seg.dateKey);
       if (!day) continue;
 
       day.totalSeconds += seg.seconds;
-
-      if (seg.type === "night") {
-        day.nightSeconds += seg.seconds;
-      } else {
-        day.napSeconds += seg.seconds;
-      }
+      selectedSeconds += seg.seconds;
     }
 
-    const startDate = new Date(sleep.startedAt);
     const groupingStart = new Date(
       Math.max(startDate.getTime(), window.start.getTime())
     );
-    const startDay = dailyData.get(sleepDayKey(groupingStart, dayStartHour));
-    const autoType = classifySleepByTimeRange(
-      startDate,
-      new Date(sleep.endedAt!),
-      dayStartHour,
-      dayEndHour
-    );
-    if (startDay && autoType === "nap") {
-      startDay.napCount++;
+    const summaryDayKey =
+      autoType === "nap"
+        ? localDateKey(startDate)
+        : sleepDayKey(groupingStart, dayStartHour);
+    const summaryDay = dailyData.get(summaryDayKey);
+    if (summaryDay) {
+      if (autoType === "nap") {
+        summaryDay.napCount++;
+        summaryDay.napSeconds += selectedSeconds;
+      } else {
+        summaryDay.nightSeconds += selectedSeconds;
+      }
     }
   }
 
@@ -472,6 +482,7 @@ export function calculateSleepSummary(
   const daysWithData = Array.from(dailyData.values()).filter(
     (d) => d.totalSeconds > 0
   );
+  const daysWithNaps = daysWithData.filter((d) => d.napSeconds > 0);
   const activeDays = Math.max(daysWithData.length, 1);
 
   const totalSleepSeconds = daysWithData.reduce(
@@ -552,6 +563,11 @@ export function calculateSleepSummary(
     avgTotalSleepSeconds: Math.round(totalSleepSeconds / activeDays),
     avgNightSleepSeconds: Math.round(totalNightSeconds / activeDays),
     avgNapsPerDay: Math.round((totalNaps / activeDays) * 10) / 10,
+    avgNapTimeSeconds:
+      daysWithNaps.length > 0
+        ? Math.round(totalNapSeconds / daysWithNaps.length)
+        : 0,
+    nappingDays: daysWithNaps.length,
     avgNapDurationSeconds:
       totalNaps > 0 ? Math.round(totalNapSeconds / totalNaps) : 0,
     longestStretchSeconds: longestStretch,

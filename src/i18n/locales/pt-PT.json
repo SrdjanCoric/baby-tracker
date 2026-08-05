@@ -158,6 +158,8 @@
     "longestStretch": "Período Mais Longo",
     "avgNightSleep": "Sono Noturno",
     "avgNapsPerDay": "Sestas/Dia",
+    "avgNapTime": "Tempo Médio de Sesta",
+    "avgNapTimeSubtitle": "por dia com sesta · {{nappingDays}} de {{days}}",
     "avgNapDuration": "Duração da Sesta",
     "nightWakings": "Despertares Noturnos",
     "bedtimeWakeTrends": "Tendências de Hora de Dormir e Acordar",
