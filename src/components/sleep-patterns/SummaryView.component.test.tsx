@@ -3,9 +3,22 @@ import { render, screen, within } from "@testing-library/react-native";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { SleepPatternColors } from "./useSleepPatternColors";
 
+let mockLanguage = "en";
+
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, options?: Record<string, number>) => {
+      if (key === "common.durationHM") {
+        return mockLanguage === "de"
+          ? `${options?.h}Std ${options?.m}Min`
+          : `${options?.h}h ${options?.m}m`;
+      }
+      if (key === "common.durationH") {
+        return mockLanguage === "de" ? `${options?.h}Std` : `${options?.h}h`;
+      }
+      if (key === "common.durationM") {
+        return mockLanguage === "de" ? `${options?.m}Min` : `${options?.m}m`;
+      }
       if (key === "sleepPatterns.avgNapTimeSubtitle") {
         return `per napping day · ${options?.nappingDays} of ${options?.days}`;
       }
@@ -122,6 +135,7 @@ function renderSummary(timeFormat: "12h" | "24h") {
 
 describe("SummaryView", () => {
   afterEach(() => {
+    mockLanguage = "en";
     jest.useRealTimers();
   });
 
@@ -276,6 +290,34 @@ describe("SummaryView", () => {
     expect(screen.getByText("1h")).toBeTruthy();
     expect(screen.getByText("9:00")).toBeTruthy();
     expect(screen.queryByText("Nap 2")).toBeNull();
+  });
+
+  it("localizes a nap schedule duration", () => {
+    mockLanguage = "de";
+    const scheduleSleeps = [3, 4, 5].map((day) =>
+      makeSleep(
+        `nap-${day}`,
+        localISO(2025, 3, day, 9),
+        localISO(2025, 3, day, 10, 30)
+      )
+    );
+
+    render(
+      <SummaryView
+        sleeps={scheduleSleeps}
+        now={new Date(2025, 2, 8, 12, 0, 0)}
+        timeFormat="24h"
+        dayStartHour={6}
+        dayEndHour={19}
+        colors={colors}
+        isNewborn={false}
+        locale="de"
+        period={7}
+        onPeriodChange={() => {}}
+      />
+    );
+
+    expect(screen.getByText("1Std 30Min")).toBeTruthy();
   });
 
   it("omits the nap schedule panel when no slot qualifies", () => {

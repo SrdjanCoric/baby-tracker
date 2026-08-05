@@ -468,7 +468,7 @@ export function SummaryView({
                 count: slot.occurrenceCount,
                 nappingDays: data.napScheduleNappingDays,
               })}
-              duration={formatDuration(slot.avgDurationSeconds, "short")}
+              duration={formatDuration(slot.avgDurationSeconds, "short", tFn)}
               startTime={formatTime(slot.avgStartTime, timeFormat)}
               colors={colors}
               isLast={index === data.napSchedule.length - 1}
