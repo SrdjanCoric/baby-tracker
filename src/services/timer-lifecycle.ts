@@ -64,7 +64,7 @@ interface TimerLifecycleUser {
 
 export interface TimerDataCodec<TPayload, TActiveTimer> {
   encode(payload: TPayload): Record<string, unknown>;
-  decode(timerData: Record<string, unknown>, startedAt?: string): TPayload;
+  decode(timerData: Record<string, unknown>, startedAt: string): TPayload;
   fromActiveTimer(activeTimer: TActiveTimer): TPayload;
 }
 

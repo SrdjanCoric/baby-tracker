@@ -105,7 +105,7 @@ export function createFeedingTimerAdapter({
         currentSideStartedAt:
           typeof timerData.currentSideStartedAt === "string"
             ? timerData.currentSideStartedAt
-            : (startedAt ?? ""),
+            : startedAt,
         isPaused: timerData.isPaused === true,
         totalPausedMs:
           typeof timerData.totalPausedMs === "number"

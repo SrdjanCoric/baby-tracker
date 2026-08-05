@@ -76,7 +76,9 @@ describe("pumping timer adapter", () => {
       const encoded = adapter.timerDataCodec.encode(payload);
 
       expect(encoded).toEqual(payload);
-      expect(adapter.timerDataCodec.decode(encoded)).toEqual(payload);
+      expect(
+        adapter.timerDataCodec.decode(encoded, "2026-08-05T12:00:00.000Z")
+      ).toEqual(payload);
     }
     expect(adapter.timerDataCodec.encode(payloads[0])).not.toHaveProperty(
       "pausedAt"

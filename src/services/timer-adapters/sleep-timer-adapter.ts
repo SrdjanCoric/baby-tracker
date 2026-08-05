@@ -89,7 +89,7 @@ export function createSleepTimerAdapter({
         morningClassification: payload.morningClassification,
         morningClassificationVersion: payload.morningClassificationVersion,
       }),
-      decode: (timerData, startedAt = "") => ({
+      decode: (timerData, startedAt) => ({
         ...(typeof timerData.timerInstanceId === "string"
           ? { timerInstanceId: timerData.timerInstanceId }
           : {}),
