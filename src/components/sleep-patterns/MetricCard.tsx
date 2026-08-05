@@ -74,3 +74,60 @@ export function AverageRow({
     </View>
   );
 }
+
+export function NapScheduleRow({
+  label,
+  occurrenceLabel,
+  duration,
+  startTime,
+  colors,
+  isLast = false,
+}: {
+  label: string;
+  occurrenceLabel: string;
+  duration: string;
+  startTime: string;
+  colors: SleepPatternColors;
+  isLast?: boolean;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 10,
+        borderBottomWidth: isLast ? 0 : 1,
+        borderBottomColor: colors.borderSubtle,
+      }}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14, color: colors.textPrimary }}>{label}</Text>
+        <Text style={{ fontSize: 11, color: colors.textTertiary, marginTop: 2 }}>
+          {occurrenceLabel}
+        </Text>
+      </View>
+      <Text
+        style={{
+          flex: 1,
+          fontSize: 14,
+          fontWeight: "600",
+          color: colors.textPrimary,
+          textAlign: "right",
+        }}
+      >
+        {duration}
+      </Text>
+      <Text
+        style={{
+          flex: 1,
+          fontSize: 14,
+          fontWeight: "600",
+          color: colors.textPrimary,
+          textAlign: "right",
+        }}
+      >
+        {startTime}
+      </Text>
+    </View>
+  );
+}

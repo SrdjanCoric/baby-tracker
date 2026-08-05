@@ -499,6 +499,239 @@ describe("calculateSleepSummary", () => {
     expect(result.avgNapDurationSeconds).toBe(3600);
   });
 
+  it("computes each nap slot over the days when that slot occurred", () => {
+    const now = new Date(2025, 2, 9, 12, 0, 0);
+    const sleeps = [
+      makeSleep({
+        startedAt: localISO(2025, 3, 5, 10, 0),
+        endedAt: localISO(2025, 3, 5, 10, 30),
+        type: "nap",
+        durationSeconds: 30 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 5, 14, 0),
+        endedAt: localISO(2025, 3, 5, 14, 45),
+        type: "nap",
+        durationSeconds: 45 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 6, 10, 30),
+        endedAt: localISO(2025, 3, 6, 11, 30),
+        type: "nap",
+        durationSeconds: 60 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 6, 14, 30),
+        endedAt: localISO(2025, 3, 6, 15, 30),
+        type: "nap",
+        durationSeconds: 60 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 7, 11, 0),
+        endedAt: localISO(2025, 3, 7, 12, 30),
+        type: "nap",
+        durationSeconds: 90 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, 7, 15, 0),
+        endedAt: localISO(2025, 3, 7, 16, 15),
+        type: "nap",
+        durationSeconds: 75 * 60,
+      }),
+    ];
+
+    const result = calculateSleepSummary(sleeps, 7, now);
+
+    expect(result.napSchedule).toHaveLength(2);
+    expect(result.napSchedule[0]).toMatchObject({
+      ordinal: 1,
+      avgDurationSeconds: 60 * 60,
+      occurrenceCount: 3,
+    });
+    expect(result.napSchedule[0].avgStartTime.getHours()).toBe(10);
+    expect(result.napSchedule[0].avgStartTime.getMinutes()).toBe(30);
+    expect(result.napSchedule[1]).toMatchObject({
+      ordinal: 2,
+      avgDurationSeconds: 60 * 60,
+      occurrenceCount: 3,
+    });
+    expect(result.napSchedule[1].avgStartTime.getHours()).toBe(14);
+    expect(result.napSchedule[1].avgStartTime.getMinutes()).toBe(30);
+  });
+
+  it("orders naps within the sleep-day without changing calendar-day nap metrics", () => {
+    const now = new Date(2025, 2, 8, 12, 0, 0);
+    const sleeps = [3, 4, 5].flatMap((day) => [
+      makeSleep({
+        startedAt: localISO(2025, 3, day, 10, 0),
+        endedAt: localISO(2025, 3, day, 10, 30),
+        type: "nap",
+        durationSeconds: 30 * 60,
+      }),
+      makeSleep({
+        startedAt: localISO(2025, 3, day + 1, 5, 30),
+        endedAt: localISO(2025, 3, day + 1, 7, 0),
+        type: "nap",
+        durationSeconds: 90 * 60,
+      }),
+    ]);
+
+    const result = calculateSleepSummary(sleeps, 7, now, 6, 19);
+
+    expect(result.nappingDays).toBe(4);
+    expect(result.napScheduleNappingDays).toBe(3);
+    expect(result.napSchedule).toMatchObject([
+      { ordinal: 1, avgDurationSeconds: 30 * 60, occurrenceCount: 3 },
+      { ordinal: 2, avgDurationSeconds: 90 * 60, occurrenceCount: 3 },
+    ]);
+  });
+
+  it("uses a nap's full duration when its sleep-day is inside the range", () => {
+    const now = new Date(2025, 2, 8, 12, 0, 0);
+    const sleeps = [6, 7, 8].map((day) =>
+      makeSleep({
+        startedAt: localISO(2025, 3, day, 5, 30),
+        endedAt: localISO(2025, 3, day, 7, 0),
+        type: "nap",
+        durationSeconds: 90 * 60,
+      })
+    );
+
+    const result = calculateSleepSummary(sleeps, 7, now, 6, 19);
+
+    expect(result.napSchedule).toMatchObject([
+      { ordinal: 1, avgDurationSeconds: 90 * 60, occurrenceCount: 3 },
+    ]);
+  });
+
+  it("shifts later naps up when a sleep-day skips its first usual nap", () => {
+    const now = new Date(2025, 2, 8, 12, 0, 0);
+    const sleeps = [
+      ...[3, 4].flatMap((day) => [
+        makeSleep({
+          startedAt: localISO(2025, 3, day, 9, 0),
+          endedAt: localISO(2025, 3, day, 9, 30),
+          type: "nap",
+          durationSeconds: 30 * 60,
+        }),
+        makeSleep({
+          startedAt: localISO(2025, 3, day, 13, 0),
+          endedAt: localISO(2025, 3, day, 14, 0),
+          type: "nap",
+          durationSeconds: 60 * 60,
+        }),
+      ]),
+      makeSleep({
+        startedAt: localISO(2025, 3, 5, 13, 0),
+        endedAt: localISO(2025, 3, 5, 15, 0),
+        type: "nap",
+        durationSeconds: 2 * 60 * 60,
+      }),
+    ];
+
+    const result = calculateSleepSummary(sleeps, 7, now);
+
+    expect(result.napSchedule).toMatchObject([
+      { ordinal: 1, avgDurationSeconds: 60 * 60, occurrenceCount: 3 },
+    ]);
+  });
+
+  it("includes a slot at exactly three occurrences and thirty percent", () => {
+    const now = new Date(2025, 2, 15, 12, 0, 0);
+    const sleeps = Array.from({ length: 10 }, (_, index) => index + 1).flatMap(
+      (day) => {
+        const naps = [
+          makeSleep({
+            startedAt: localISO(2025, 3, day, 9, 0),
+            endedAt: localISO(2025, 3, day, 9, 30),
+            type: "nap",
+            durationSeconds: 30 * 60,
+          }),
+        ];
+        if (day <= 3) {
+          naps.push(
+            makeSleep({
+              startedAt: localISO(2025, 3, day, 13, 0),
+              endedAt: localISO(2025, 3, day, 14, 0),
+              type: "nap",
+              durationSeconds: 60 * 60,
+            })
+          );
+        }
+        return naps;
+      }
+    );
+
+    const result = calculateSleepSummary(sleeps, 30, now);
+
+    expect(result.napScheduleNappingDays).toBe(10);
+    expect(result.napSchedule.map(({ ordinal, occurrenceCount }) => ({
+      ordinal,
+      occurrenceCount,
+    }))).toEqual([
+      { ordinal: 1, occurrenceCount: 10 },
+      { ordinal: 2, occurrenceCount: 3 },
+    ]);
+  });
+
+  it("filters slots that fail either the count floor or the napping-day share", () => {
+    const now = new Date(2025, 2, 15, 12, 0, 0);
+    const buildRange = (nappingDays: number, secondNapDays: number) =>
+      Array.from({ length: nappingDays }, (_, index) => index + 1).flatMap(
+        (day) => {
+          const naps = [
+            makeSleep({
+              startedAt: localISO(2025, 3, day, 9, 0),
+              endedAt: localISO(2025, 3, day, 9, 30),
+              type: "nap",
+              durationSeconds: 30 * 60,
+            }),
+          ];
+          if (day <= secondNapDays) {
+            naps.push(
+              makeSleep({
+                startedAt: localISO(2025, 3, day, 13, 0),
+                endedAt: localISO(2025, 3, day, 14, 0),
+                type: "nap",
+                durationSeconds: 60 * 60,
+              })
+            );
+          }
+          return naps;
+        }
+      );
+
+    const belowCount = calculateSleepSummary(buildRange(3, 2), 30, now);
+    const belowShare = calculateSleepSummary(buildRange(11, 3), 30, now);
+
+    expect(belowCount.napSchedule.map((slot) => slot.ordinal)).toEqual([1]);
+    expect(belowShare.napSchedule.map((slot) => slot.ordinal)).toEqual([1]);
+  });
+
+  it("uses the circular time mean for nap starts around midnight", () => {
+    const now = new Date(2025, 2, 8, 12, 0, 0);
+    const sleeps = [
+      [3, 23, 50],
+      [5, 0, 10],
+      [6, 0, 0],
+    ].map(([day, hour, minute]) => {
+      const startedAt = new Date(2025, 2, day, hour, minute, 0);
+      const endedAt = new Date(startedAt.getTime() + 30 * 60 * 1000);
+      return makeSleep({
+        startedAt: startedAt.toISOString(),
+        endedAt: endedAt.toISOString(),
+        type: "nap",
+        durationSeconds: 30 * 60,
+      });
+    });
+
+    const result = calculateSleepSummary(sleeps, 7, now, 22, 2);
+
+    expect(result.napSchedule).toHaveLength(1);
+    expect(result.napSchedule[0].avgStartTime.getHours()).toBe(0);
+    expect(result.napSchedule[0].avgStartTime.getMinutes()).toBe(0);
+  });
+
   it("averages nap time over napping days instead of all days with sleep", () => {
     const now = new Date(2025, 2, 8, 12, 0, 0);
     const sleeps = [

@@ -21,9 +21,23 @@ const locales = {
   sr,
 };
 
-const keys = ["avgNapTime", "avgNapTimeSubtitle"] as const;
+const keys = [
+  "avgNapTime",
+  "avgNapTimeSubtitle",
+  "napSchedule",
+  "napColumn",
+  "napLength",
+  "napStarts",
+  "napSlot",
+  "napOccurrenceCount",
+] as const;
 
-describe("average nap time translations", () => {
+describe("nap statistics translations", () => {
+  it("keeps the approved nap schedule headers", () => {
+    expect(en.sleepPatterns.napLength).toBe("Avg. Length");
+    expect(en.sleepPatterns.napStarts).toBe("Avg. Start");
+  });
+
   it.each(Object.entries(locales))(
     "provides localized card copy for %s",
     (locale, translations) => {
@@ -38,6 +52,11 @@ describe("average nap time translations", () => {
         "{{nappingDays}}"
       );
       expect(translations.sleepPatterns.avgNapTimeSubtitle).toContain("{{days}}");
+      expect(translations.sleepPatterns.napSlot).toContain("{{slotNumber}}");
+      expect(translations.sleepPatterns.napOccurrenceCount).toContain("{{count}}");
+      expect(translations.sleepPatterns.napOccurrenceCount).toContain(
+        "{{nappingDays}}"
+      );
     }
   );
 });

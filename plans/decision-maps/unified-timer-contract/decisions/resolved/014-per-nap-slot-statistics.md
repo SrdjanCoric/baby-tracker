@@ -50,9 +50,10 @@ length of an average nap without saying which nap. This decision does not replac
   the nth nap started within a sleep-day, counted forward from the start of the day. Each row shows
   the average duration and the average start time for that slot, each divided by the number of days
   the slot actually occurred, and carries that occurrence count as `4 of 5 days`. Average start time
-  uses `circularTimeMean`. A row renders only when its slot occurred at least 3 times **and** on at
-  least 30% of the napping days in the range. When no slot clears both tests the panel does not
-  render at all.
+  uses `circularTimeMean`. The column headers are `Nap`, `Avg. Length`, and `Avg. Start`, making the
+  two calculated values explicit averages. A row renders only when its slot occurred at least 3
+  times **and** on at least 30% of the napping days in the range. When no slot clears both tests the
+  panel does not render at all.
 - **Rationale:** Chronological numbering matches how the caregiver already describes the day and is
   the only rule that needs no configuration per age. The two-part appearance test comes from the same
   answer. The count floor binds on the 7-day range, where 3 of 5 napping days is already meaningful,

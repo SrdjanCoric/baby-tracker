@@ -221,7 +221,7 @@ Durable decisions that apply across all tasks:
 - [x] 0062 · Fix the Timeline daily sleep total → tasks/done/0062-fix-timeline-daily-sleep-total.md
 - [x] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/done/0063-guarantee-exit-from-widget-opened-activity-screens.md
 - [x] 0064 · Add the Avg Nap Time card → tasks/done/0064-add-avg-nap-time-card.md
-- [ ] 0065 · Add the Nap Schedule panel (after 0064) → tasks/0065-add-nap-schedule-panel.md
+- [>] 0065 · Add the Nap Schedule panel (after 0064) → tasks/0065-add-nap-schedule-panel.md
 - [ ] 0066 · Let caregivers turn the Live Activity off → tasks/0066-let-caregivers-turn-live-activity-off.md
 
 ## Workflow status

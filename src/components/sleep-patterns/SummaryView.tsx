@@ -9,7 +9,7 @@ import type { StoredSleepEntry } from "@/services/sleep-storage";
 import { getDefaultSleepGoalForAge } from "@/utils/sleepGoals";
 import { SleepDailyChart } from "./SleepDailyChart";
 import { TrendChart } from "./TrendChart";
-import { MetricCard, AverageRow } from "./MetricCard";
+import { MetricCard, AverageRow, NapScheduleRow } from "./MetricCard";
 import type { SleepPatternColors } from "./useSleepPatternColors";
 
 const PERIOD_OPTIONS = [7, 14, 30] as const;
@@ -415,6 +415,67 @@ export function SummaryView({
           />
         </View>
       </View>
+
+      {data.napSchedule.length > 0 && (
+        <View style={{ backgroundColor: colors.cardBg, borderRadius: 12, padding: 16 }}>
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: "600",
+              color: colors.textPrimary,
+              marginBottom: 12,
+            }}
+          >
+            {t("sleepPatterns.napSchedule")}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              paddingBottom: 6,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.borderSubtle,
+            }}
+          >
+            <Text style={{ flex: 1, fontSize: 11, color: colors.textTertiary }}>
+              {t("sleepPatterns.napColumn")}
+            </Text>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 11,
+                color: colors.textTertiary,
+                textAlign: "right",
+              }}
+            >
+              {t("sleepPatterns.napLength")}
+            </Text>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 11,
+                color: colors.textTertiary,
+                textAlign: "right",
+              }}
+            >
+              {t("sleepPatterns.napStarts")}
+            </Text>
+          </View>
+          {data.napSchedule.map((slot, index) => (
+            <NapScheduleRow
+              key={slot.ordinal}
+              label={t("sleepPatterns.napSlot", { slotNumber: slot.ordinal })}
+              occurrenceLabel={t("sleepPatterns.napOccurrenceCount", {
+                count: slot.occurrenceCount,
+                nappingDays: data.napScheduleNappingDays,
+              })}
+              duration={formatDuration(slot.avgDurationSeconds, "short", tFn)}
+              startTime={formatTime(slot.avgStartTime, timeFormat)}
+              colors={colors}
+              isLast={index === data.napSchedule.length - 1}
+            />
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }

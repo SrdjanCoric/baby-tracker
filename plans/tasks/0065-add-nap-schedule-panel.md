@@ -63,52 +63,103 @@ files. Build on its merged output; do not reopen its decisions.
 ### Reference
 
 Approved mock: `plans/decision-maps/unified-timer-contract/prototypes/nap-stats-mock.html`, markers B
-and C. Marker B draws the row layout and the column headers (`Nap` · `Length` · `Starts`); marker C
-gives the appearance test as a table of worked cases.
+and C. Marker B draws the row layout and the column headers (`Nap` · `Avg. Length` · `Avg. Start`)
+so both calculated values are explicit averages; marker C gives the appearance test as a table of
+worked cases.
 
 ## Implementation work
 
-- [ ] Extend the `SleepSummary` contract with the per-slot data the panel needs — for each slot, its
+**Implementation classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**:
+yes. The task changes production calculation and rendering behavior, component and utility tests, and
+locale resources.
+
+- [x] Extend the `SleepSummary` contract with the per-slot data the panel needs — for each slot, its
       ordinal, average duration in seconds, average start time, and occurrence count — plus the
       napping-day count the share test divides by. Leave every existing field untouched.
-- [ ] Accumulate per-slot nap durations and start times inside the existing per-day loop in
+- [x] Accumulate per-slot nap durations and start times inside the existing per-day loop in
       `calculateSleepSummary`, assigning each nap its slot from the order it starts within its
       sleep-day. Use the day assignment `splitSleepAtDayBoundary` already produces.
-- [ ] Compute each slot's average duration and average start time over that slot's own occurrence
+- [x] Compute each slot's average duration and average start time over that slot's own occurrence
       count, using `circularTimeMean` for the start time.
-- [ ] Apply the appearance test in the computation: keep a slot only when its occurrence count is at
+- [x] Apply the appearance test in the computation: keep a slot only when its occurrence count is at
       least 3 **and** its share of napping days is at least 30%, both inclusive. Return an empty slot
       list when none qualifies.
-- [ ] Add a three-column row component for the panel alongside the existing `AverageRow`, showing the
+- [x] Add a three-column row component for the panel alongside the existing `AverageRow`, showing the
       slot label with its occurrence count, the average duration, and the average start time.
-- [ ] Render the `Nap Schedule` panel in `SummaryView` below the `Averages` panel, with the column
+- [x] Render the `Nap Schedule` panel in `SummaryView` below the `Averages` panel, with the column
       headers from the mock, and render nothing when the slot list is empty.
-- [ ] Format durations and clock times with the existing shared time helpers, honoring the
+- [x] Format durations and clock times with the existing shared time helpers, honoring the
       `timeFormat` `SummaryView` already receives.
-- [ ] Add the panel title, slot label, the two column headers, and the occurrence-count keys under
+- [x] Add the panel title, slot label, the two column headers, and the occurrence-count keys under
       `sleepPatterns` to all nine locale files (`de`, `en`, `es`, `es-ES`, `fr`, `it`, `pt-BR`,
       `pt-PT`, `sr`), with real translations rather than copies of the English string.
 
 ## Acceptance criteria
 
-- [ ] Over a range where every day holds the same nap count, each slot's average duration and average
+- [x] Over a range where every day holds the same nap count, each slot's average duration and average
       start time are computed over all those days, and each row's occurrence count equals the range's
       napping-day count.
-- [ ] Over a range where one day skips its first nap, that day's later naps shift up a slot, and the
+- [x] Over a range where one day skips its first nap, that day's later naps shift up a slot, and the
       resulting slot averages and occurrence counts reflect the shift.
-- [ ] A slot at exactly 3 occurrences and exactly 30% of napping days renders — both bounds are
+- [x] A slot at exactly 3 occurrences and exactly 30% of napping days renders — both bounds are
       inclusive.
-- [ ] A slot passing the share test but failing the count test does not render, and a slot passing
+- [x] A slot passing the share test but failing the count test does not render, and a slot passing
       the count test but failing the share test does not render.
-- [ ] Average start time is correct for a slot whose start times straddle an hour boundary, proved
+- [x] Average start time is correct for a slot whose start times straddle an hour boundary, proved
       against `circularTimeMean` semantics.
-- [ ] A component test asserts a failing slot renders no row, that the panel is absent entirely when
+- [x] A component test asserts a failing slot renders no row, that the panel is absent entirely when
       no slot qualifies, and that each rendered row shows its occurrence count.
-- [ ] A locale test asserts every new key is present and non-empty in all nine locales and differs
+- [x] A locale test asserts every new key is present and non-empty in all nine locales and differs
       from English in the non-English ones, following the existing per-feature locale-test pattern.
-- [ ] `Avg Naps/Day`, `Avg Nap Duration`, `Avg Nap Time`, `Avg Total Sleep`, and nap-versus-night
+- [x] `Avg Naps/Day`, `Avg Nap Duration`, `Avg Nap Time`, `Avg Total Sleep`, and nap-versus-night
       classification are unchanged, proved by the existing `calculateSleepSummary` tests continuing
       to pass unmodified.
+
+## Implementation evidence
+
+- README disposition: unchanged. The README describes the application and architecture at a broader
+  level and does not enumerate individual Statistics or Sleep Summary cards, so the Nap Schedule
+  panel does not require README prose.
+
+- Calculation RED/GREEN: the first slot assertion failed on a missing `napSchedule`, then passed with
+  per-slot duration/start accumulation and filtering (`unit-slot-red.log`, `unit-slot-green.log`). A
+  second RED/GREEN cycle separated the new sleep-day slot grouping from Task 0064's unchanged
+  calendar-day nap metrics (`unit-sleep-day-red.log`, `unit-sleep-day-green.log`).
+- Rendering RED/GREEN: the component could not find the `Nap Schedule` panel before it was added;
+  the completed component file passes all 5 tests, including a filtered row, occurrence divisor,
+  shared duration/time formatting, and the absent-panel state (`component-schedule-red.log`,
+  `component.log`).
+- Localization RED/GREEN: all nine locales initially failed on missing keys, then passed with
+  localized panel, header, slot, and occurrence copy (`locales-red.log`, `locales-green.log`).
+- Focused pre-review proof: the sleep-summary suite passes 113 utility tests and 13 component tests;
+  all 11 locale tests, targeted warning-free lint, repository typecheck, and `git diff --check` pass.
+  Logs are retained in `/tmp/agent-workflows/e2f8af45fd34/da1ea81f56d7`.
+- Current-code reconciliation: Task 0064 intentionally keeps legacy nap metrics on calendar dates.
+  Task 0065 therefore uses a separate `splitSleepAtDayBoundary` sleep-day counter for slot ordering
+  and its appearance-test denominator, leaving every existing summary field's behavior unchanged.
+
+## Completion record
+
+- Built the Nap Schedule summary panel and its `SleepSummary` slot data in
+  `src/components/sleep-patterns/SummaryView.tsx` and `src/utils/sleep-patterns.ts`, with localized
+  panel copy across all nine phone locales. Each qualifying row reports its occurrence count, full
+  average duration, and circular-mean average start time.
+- Final owner decision: the approved headers are explicitly average-labelled (`Nap` ·
+  `Avg. Length` · `Avg. Start`) in the decision, mock, task, English copy, and localized equivalents.
+- README: unchanged after one impact audit. It documents the application and architecture at a
+  broader level and does not enumerate individual Statistics or Sleep Summary cards.
+- Review outcome: TR-1 through TR-4 fixed. TR-5, TR-6, and TR-7 were skipped by the user on
+  2026-08-05 without remediation. TR-D1 and TR-D2 remain deferred out of scope. The review found no
+  relevant security surface and no security risk was accepted.
+- Final automated proof: `npm run check:code` passed lint, strict type checking, 2,518 Vitest tests
+  in 134 files, 850 Jest tests in 92 suites, and 65 CI-contract tests. The production-bundle stage
+  was rerun separately after the log harness's file-size limit caused `EFBIG`; the retry passed and
+  confirmed that the production bundle excludes development onboarding tools. Logs:
+  `/tmp/agent-workflows/e2f8af45fd34/da1ea81f56d7/finish-canonical.log` and
+  `/tmp/agent-workflows/e2f8af45fd34/da1ea81f56d7/finish-production-gating.log`.
+- Manual verification: none required. The task has no `[verify]` checkpoints, and its observable
+  calculation, rendering, empty-state, localization, and threshold behavior is covered by the
+  automated utility and component suites included in the canonical gate.
 
 ## Non-goals
 
