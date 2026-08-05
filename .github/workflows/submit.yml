@@ -43,7 +43,7 @@ jobs:
       android-build-id: ${{ steps.resolve.outputs.android-build-id }}
     steps:
       - name: Checkout submission controls
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
@@ -113,7 +113,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout validated source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.resolve-release.outputs.source-sha }}
 
@@ -148,7 +148,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout validated source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.resolve-release.outputs.source-sha }}
 
