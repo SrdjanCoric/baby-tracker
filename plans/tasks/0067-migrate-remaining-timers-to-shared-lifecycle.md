@@ -175,3 +175,11 @@ yes.
 - The start, pause, and resume paths do not move into the module.
 - No `stopped_at` handling, no remote-stop finalization, and no new `timer_data` field.
 - No change to how pumping volume reaches a record: it stays on the stop command.
+
+## Review decisions
+
+- skipped (minor): TR-9 — Feeding's round-trip assertion is vacuous for the hardcoded `type` field — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+- skipped (minor): TR-10 — The feeding tie-case test name asserts the `both` branch — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+- skipped (minor): TR-11 — Stop paths construct full adapters only to call `buildRecord` — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+- skipped (minor): TR-12 — Conflicted sleep restore dispatches `STOP_TIMER` twice — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+- skipped (minor): TR-13 — Two unrelated master-plan continuation lines were de-indented — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
