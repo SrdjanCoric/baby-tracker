@@ -198,7 +198,7 @@ Durable decisions that apply across all tasks:
 - [-] 0060 · Resolve the Portuguese (Portugal) solid-food label (deferred by owner 2026-08-04) → tasks/0060-resolve-pt-pt-solid-food-label.md
 - [x] 0061 · Localize the Apple Watch app and the iOS widget → tasks/done/0061-localize-watch-and-widget.md
 - [x] 0062 · Fix the Timeline daily sleep total → tasks/done/0062-fix-timeline-daily-sleep-total.md
-- [~] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/0063-guarantee-exit-from-widget-opened-activity-screens.md
+- [>] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/0063-guarantee-exit-from-widget-opened-activity-screens.md
 
 ## Workflow status
 
