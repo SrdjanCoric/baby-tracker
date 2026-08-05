@@ -199,6 +199,7 @@ export function SummaryView({
   const avgTotalStr = formatDuration(data.avgTotalSleepSeconds, "short");
   const longestStr = formatDuration(data.longestStretchSeconds, "short");
   const avgNightStr = formatDuration(data.avgNightSleepSeconds, "short");
+  const avgNapTimeStr = formatDuration(data.avgNapTimeSeconds, "short");
   const avgNapDurStr = formatDuration(data.avgNapDurationSeconds, "short");
 
   const goalSubtitle = goalRange
@@ -209,6 +210,11 @@ export function SummaryView({
     data.bedtimeStdDevMinutes !== null
       ? t("sleepPatterns.consistency", { minutes: data.bedtimeStdDevMinutes })
       : undefined;
+
+  const avgNapTimeSubtitle = t("sleepPatterns.avgNapTimeSubtitle", {
+    nappingDays: data.nappingDays,
+    days: period,
+  });
 
   const nightPct =
     data.avgTotalSleepSeconds > 0
@@ -255,6 +261,16 @@ export function SummaryView({
           )}
         </View>
       )}
+
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        <MetricCard
+          label={t("sleepPatterns.avgNapTime")}
+          value={avgNapTimeStr}
+          colors={colors}
+          subtitle={avgNapTimeSubtitle}
+        />
+        <View style={{ flex: 1 }} />
+      </View>
 
       {dailyBars.length > 0 && (
         <View style={{ backgroundColor: colors.cardBg, borderRadius: 12, padding: 16 }}>

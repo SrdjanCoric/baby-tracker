@@ -156,6 +156,8 @@
     "longestStretch": "Plus longue période",
     "avgNightSleep": "Sommeil nocturne",
     "avgNapsPerDay": "Siestes/jour",
+    "avgNapTime": "Temps de sieste moy.",
+    "avgNapTimeSubtitle": "par jour avec sieste · {{nappingDays}} sur {{days}}",
     "avgNapDuration": "Durée de sieste",
     "nightWakings": "Réveils nocturnes",
     "bedtimeWakeTrends": "Tendances coucher et réveil",

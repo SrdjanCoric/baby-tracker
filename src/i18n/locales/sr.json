@@ -164,6 +164,8 @@
     "longestStretch": "Najduži period",
     "avgNightSleep": "Noćni san",
     "avgNapsPerDay": "Dremke/dan",
+    "avgNapTime": "Prosečno vreme dremanja",
+    "avgNapTimeSubtitle": "po danu sa dremkom · {{nappingDays}} od {{days}}",
     "avgNapDuration": "Trajanje dremke",
     "nightWakings": "Noćna buđenja",
     "bedtimeWakeTrends": "Trendovi spavanja i buđenja",

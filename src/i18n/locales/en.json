@@ -156,6 +156,8 @@
     "longestStretch": "Longest Stretch",
     "avgNightSleep": "Night Sleep",
     "avgNapsPerDay": "Naps/Day",
+    "avgNapTime": "Avg Nap Time",
+    "avgNapTimeSubtitle": "per napping day · {{nappingDays}} of {{days}}",
     "avgNapDuration": "Nap Duration",
     "nightWakings": "Night Wakings",
     "bedtimeWakeTrends": "Bedtime & Wake Time Trends",

@@ -160,6 +160,8 @@
     "longestStretch": "Periodo più lungo",
     "avgNightSleep": "Sonno notturno",
     "avgNapsPerDay": "Pisolini/giorno",
+    "avgNapTime": "Tempo medio di pisolino",
+    "avgNapTimeSubtitle": "per giorno con pisolino · {{nappingDays}} su {{days}}",
     "avgNapDuration": "Durata pisolino",
     "nightWakings": "Risvegli notturni",
     "bedtimeWakeTrends": "Tendenze nanna e sveglia",
