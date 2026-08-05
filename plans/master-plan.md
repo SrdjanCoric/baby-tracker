@@ -35,7 +35,7 @@ Durable decisions that apply across all tasks:
   existing flat Postgres rows. No CRDT library, no PowerSync (both removed). The transport is
   untouched; only the merge decision changes.
 - **Clocks: hybrid logical clocks (HLC)** — sortable string `"<ISO-8601 UTC ms>-<counter, 4-digit
-  zero-padded>-<deviceId>"`, e.g. `2026-07-04T12:00:00.000Z-0003-a1b2c3`. Winner = greater string
+zero-padded>-<deviceId>"`, e.g. `2026-07-04T12:00:00.000Z-0003-a1b2c3`. Winner = greater string
   (plain lexicographic compare). HLC ticks lazily on local mutations and on receipt of remote
   clocks only; persisted so it survives restarts. Per-field clocks are sync metadata only —
   user-facing timestamps (startTime, updatedAt, …) are unaffected.
@@ -137,7 +137,7 @@ Durable decisions that apply across all tasks:
   days. Night-only and empty days are excluded from both the numerator and the divisor. Because the
   sleep summary screen then carries more than one divisor, any such card states its own divisor in
   the form `per napping day · 5 of 7`. Existing metrics keep their current divisors: `Avg Total
-  Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and `Avg Nap Duration`
+Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and `Avg Nap Duration`
   divides by nap count.
 - **One shared timer lifecycle module with a per-type adapter**: feeding, sleep, pumping, and tummy
   time run one implementation of the timer restore sequence — obsolescence guards, pending-stop read
@@ -259,7 +259,7 @@ Durable decisions that apply across all tasks:
 - [x] 0064 · Add the Avg Nap Time card → tasks/done/0064-add-avg-nap-time-card.md
 - [x] 0065 · Add the Nap Schedule panel (after 0064) → tasks/done/0065-add-nap-schedule-panel.md
 - [x] 0066 · Extract the shared timer lifecycle module and migrate tummy time → tasks/done/0066-extract-shared-timer-lifecycle-tummy-time.md
-- [ ] 0067 · Migrate pumping, feeding, and sleep onto the shared timer lifecycle (after 0066) → tasks/0067-migrate-remaining-timers-to-shared-lifecycle.md
+- [~] 0067 · Migrate pumping, feeding, and sleep onto the shared timer lifecycle (after 0066) → tasks/0067-migrate-remaining-timers-to-shared-lifecycle.md
 - [ ] 0068 · Count a resumed pause and end a stopped paused timer at `pausedAt` (after 0067) → tasks/0068-count-resumed-pause-in-recorded-activity.md
 - [ ] 0069 · Show what stopping would record on every running-timer surface (after 0068) → tasks/0069-show-counted-pause-on-running-timer-surfaces.md
 - [ ] 0070 · Guard `active_timers.started_at` against out-of-horizon writes → tasks/0070-guard-active-timer-start-bounds.md

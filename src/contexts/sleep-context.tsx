@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   SleepStorageService,
   StoredSleepEntry,
@@ -18,9 +27,20 @@ import { useAuth } from "./auth-context";
 import { useActiveTimers } from "./active-timers-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
-import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock, queuePendingLockRelease } from "@/services/active-timer-service";
-import { fetchWakeWindowPreference, upsertWakeWindowPreference } from "@/services/push-token-service";
-import { fetchActivityGoal, upsertActivityGoal } from "@/services/activity-goal-service";
+import {
+  acquireTimerLock,
+  releaseTimerLock,
+  updateTimerData,
+  queuePendingLockRelease,
+} from "@/services/active-timer-service";
+import {
+  fetchWakeWindowPreference,
+  upsertWakeWindowPreference,
+} from "@/services/push-token-service";
+import {
+  fetchActivityGoal,
+  upsertActivityGoal,
+} from "@/services/activity-goal-service";
 import {
   SleepAgeGroup,
   GoalSource,
@@ -33,8 +53,14 @@ import {
 } from "@/utils/sleepGoals";
 import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 import { isNightTime } from "@/utils/day-night-boundary";
-import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
-import { isPendingStopForTimer, readPendingTimerStop } from "@/services/timer-stop-coordinator";
+import {
+  startTimerLiveActivity,
+  endTimerLiveActivity,
+  endLiveActivityByType,
+  updateTimerLiveActivity,
+  pauseTimerLiveActivity,
+  resumeTimerLiveActivity,
+} from "@/services/live-activity-service";
 import {
   processSleepData,
   computeSleepModel,
@@ -47,24 +73,31 @@ import {
   findPendingMorningConfirmations,
   getMorningThreshold,
 } from "@/utils/sleepPredictions";
-import type { SleepPredictionModel, DriftDetectionResult } from "@/utils/sleepPredictions";
-import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
+import type {
+  SleepPredictionModel,
+  DriftDetectionResult,
+} from "@/utils/sleepPredictions";
+import {
+  BabyProviderBinding,
+  type BabyProviderBindingToken,
+  useBabyProviderBinding,
+} from "@/hooks/useBabyProviderBinding";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
-import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
+import type {
+  ActivityRangeLoadOptions,
+  ActivityRangeStatus,
+  UtcActivityRange,
+} from "@/services/activity-range-loader";
 import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
 import {
   acceptTimerCompletion,
   createTimerIdentity,
-  isTimerCompletionSecured,
   markTimerCompletionDurable,
-  resolveTimerIdentity,
   type TimerIdentity,
 } from "@/services/timer-completion-service";
-import {
-  reconcileTimerLock,
-  type TimerLockReconciliationState,
-} from "@/services/timer-lock-reconciliation";
-import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
+import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
+import { restoreTimerLifecycle } from "@/services/timer-lifecycle";
+import { createSleepTimerAdapter } from "@/services/timer-adapters/sleep-timer-adapter";
 import {
   MORNING_CLASSIFICATION_VERSION,
   type MorningClassificationState,
@@ -109,9 +142,24 @@ export type SleepAction =
   | { type: "UPDATE_SLEEP"; payload: StoredSleepEntry }
   | { type: "DELETE_SLEEP"; payload: string }
   | { type: "SET_LOADING"; payload: boolean }
-  | { type: "START_TIMER"; payload: { startTime: Date; sleepType: SleepType; lockState: TimerLockReconciliationState; morningClassification: MorningClassificationState; morningClassificationVersion: number } & TimerIdentity }
+  | {
+      type: "START_TIMER";
+      payload: {
+        startTime: Date;
+        sleepType: SleepType;
+        lockState: TimerLockReconciliationState;
+        morningClassification: MorningClassificationState;
+        morningClassificationVersion: number;
+      } & TimerIdentity;
+    }
   | { type: "STOP_TIMER" }
-  | { type: "UPDATE_TIMER_TYPE"; payload: { sleepType: SleepType; morningClassification?: MorningClassificationState } }
+  | {
+      type: "UPDATE_TIMER_TYPE";
+      payload: {
+        sleepType: SleepType;
+        morningClassification?: MorningClassificationState;
+      };
+    }
   | { type: "SET_DAILY_GOAL"; payload: number }
   | { type: "SET_GOAL_SOURCE"; payload: GoalSource }
   | { type: "SET_AGE_GROUP"; payload: SleepAgeGroup | null }
@@ -156,24 +204,48 @@ export const initialSleepState: SleepState = {
   sleepsLoadVersion: 0,
 };
 
-export function sleepReducer(state: SleepState, action: SleepAction): SleepState {
+export function sleepReducer(
+  state: SleepState,
+  action: SleepAction
+): SleepState {
   switch (action.type) {
     case "SET_SLEEPS":
-      return { ...state, sleeps: action.payload, sleepsLoadVersion: state.sleepsLoadVersion + 1 };
+      return {
+        ...state,
+        sleeps: action.payload,
+        sleepsLoadVersion: state.sleepsLoadVersion + 1,
+      };
 
     case "ADD_SLEEP":
-      return { ...state, sleeps: upsertById(state.sleeps, action.payload), modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
+      return {
+        ...state,
+        sleeps: upsertById(state.sleeps, action.payload),
+        modelRecomputeVersion: state.modelRecomputeVersion + 1,
+        isComputingModel: true,
+      };
 
     case "UPDATE_SLEEP": {
-      const updatedSleeps = state.sleeps.map(s =>
+      const updatedSleeps = state.sleeps.map((s) =>
         s.id === action.payload.id ? action.payload : s
       );
-      return { ...state, sleeps: updatedSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
+      return {
+        ...state,
+        sleeps: updatedSleeps,
+        modelRecomputeVersion: state.modelRecomputeVersion + 1,
+        isComputingModel: true,
+      };
     }
 
     case "DELETE_SLEEP": {
-      const filteredSleeps = state.sleeps.filter(s => s.id !== action.payload);
-      return { ...state, sleeps: filteredSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
+      const filteredSleeps = state.sleeps.filter(
+        (s) => s.id !== action.payload
+      );
+      return {
+        ...state,
+        sleeps: filteredSleeps,
+        modelRecomputeVersion: state.modelRecomputeVersion + 1,
+        isComputingModel: true,
+      };
     }
 
     case "SET_LOADING":
@@ -192,7 +264,8 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
           sleepType: action.payload.sleepType,
           totalPausedMs: 0,
           morningClassification: action.payload.morningClassification,
-          morningClassificationVersion: action.payload.morningClassificationVersion,
+          morningClassificationVersion:
+            action.payload.morningClassificationVersion,
         },
       };
 
@@ -239,7 +312,9 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
       return {
         ...state,
         wakeWindowConfig: action.payload,
-        ...(boundariesChanged ? { modelRecomputeVersion: state.modelRecomputeVersion + 1 } : {}),
+        ...(boundariesChanged
+          ? { modelRecomputeVersion: state.modelRecomputeVersion + 1 }
+          : {}),
       };
     }
 
@@ -279,15 +354,32 @@ export function sleepReducer(state: SleepState, action: SleepAction): SleepState
       return { ...state, newbornNapOptIn: action.payload };
 
     case "REMOTE_INSERT":
-      return { ...state, sleeps: upsertById(state.sleeps, action.payload), modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
+      return {
+        ...state,
+        sleeps: upsertById(state.sleeps, action.payload),
+        modelRecomputeVersion: state.modelRecomputeVersion + 1,
+        isComputingModel: true,
+      };
 
     case "REMOTE_UPDATE": {
-      return { ...state, sleeps: upsertById(state.sleeps, action.payload), modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
+      return {
+        ...state,
+        sleeps: upsertById(state.sleeps, action.payload),
+        modelRecomputeVersion: state.modelRecomputeVersion + 1,
+        isComputingModel: true,
+      };
     }
 
     case "REMOTE_DELETE": {
-      const filteredSleeps = state.sleeps.filter(s => s.id !== action.payload);
-      return { ...state, sleeps: filteredSleeps, modelRecomputeVersion: state.modelRecomputeVersion + 1, isComputingModel: true };
+      const filteredSleeps = state.sleeps.filter(
+        (s) => s.id !== action.payload
+      );
+      return {
+        ...state,
+        sleeps: filteredSleeps,
+        modelRecomputeVersion: state.modelRecomputeVersion + 1,
+        isComputingModel: true,
+      };
     }
 
     case "SET_PREDICTION_MODEL":
@@ -318,13 +410,23 @@ export interface TimerLockResult {
 interface SleepContextValue extends SleepState {
   babyBinding: BabyProviderBinding;
   isStopping: boolean;
-  startSleep: (sleepType: SleepType, customStartTime?: Date, requestedIdentity?: TimerIdentity) => Promise<TimerLockResult>;
+  startSleep: (
+    sleepType: SleepType,
+    customStartTime?: Date,
+    requestedIdentity?: TimerIdentity
+  ) => Promise<TimerLockResult>;
   stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
   changeSleepType: (sleepType: SleepType) => void;
   pauseSleep: (requestedPauseTime?: Date) => Promise<void>;
-  resumeSleep: (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => Promise<void>;
+  resumeSleep: (
+    requestedResumeTime?: Date,
+    widgetPauseDurationMs?: number
+  ) => Promise<void>;
   addSleep: (input: CreateSleepInput) => Promise<StoredSleepEntry>;
-  updateSleep: (sleepId: string, input: UpdateSleepInput) => Promise<StoredSleepEntry | null>;
+  updateSleep: (
+    sleepId: string,
+    input: UpdateSleepInput
+  ) => Promise<StoredSleepEntry | null>;
   deleteSleep: (sleepId: string) => Promise<boolean>;
   refreshSleeps: () => Promise<void>;
   loadSleepRange: (
@@ -347,7 +449,10 @@ interface SleepContextValue extends SleepState {
   resetToAgeBasedWakeWindows: () => Promise<void>;
   setNapCount: (count: number) => Promise<void>;
   isCurrentlyNightTime: () => boolean;
-  setDayNightBoundary: (dayStartHour: number, dayEndHour: number) => Promise<void>;
+  setDayNightBoundary: (
+    dayStartHour: number,
+    dayEndHour: number
+  ) => Promise<void>;
   setNapContinuationMinutes: (minutes: number) => Promise<void>;
   setWakeWindowsEnabled: (enabled: boolean) => Promise<void>;
   setNewbornNapOptIn: (optIn: boolean) => Promise<void>;
@@ -378,111 +483,193 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     sleepType: SleepType;
     morningClassification: MorningClassificationState;
   } | null>(null);
-  const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
-    useBabyProviderBinding(selectedBaby?.id ?? null);
+  const {
+    babyBinding,
+    beginBabyBinding,
+    finishBabyBinding,
+    isCurrentBabyBinding,
+  } = useBabyProviderBinding(selectedBaby?.id ?? null);
   const acceptSleepRange = useCallback((entries: StoredSleepEntry[]) => {
     dispatch({ type: "SET_SLEEPS", payload: entries });
   }, []);
-  const {
-    loadRange: loadSleepRange,
-    getRangeStatus: getSleepRangeStatus,
-  } = useActivityRangeLoader({
-    table: "sleep_sessions",
-    babyId: selectedBaby?.id ?? null,
-    authenticated: Boolean(user?.householdId),
-    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
-    acceptEntries: acceptSleepRange,
-  });
-
-  useEffect(() => {
-    const unsubscribe = subscribeToRemoteChanges('sleep_sessions', (change: RemoteChange) => {
-      if (!selectedBaby) return;
-      const data = change.new || change.old;
-      if (data && data.baby_id !== selectedBaby.id) return;
-
-      const removeId = tombstonedId(change);
-      if (removeId) {
-        dispatch({ type: "REMOTE_DELETE", payload: removeId });
-        return;
-      }
-
-      switch (change.eventType) {
-        case 'INSERT':
-          if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformSleepFromRemote(change.new) });
-          break;
-        case 'UPDATE':
-          if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformSleepFromRemote(change.new) });
-          break;
-      }
+  const { loadRange: loadSleepRange, getRangeStatus: getSleepRangeStatus } =
+    useActivityRangeLoader({
+      table: "sleep_sessions",
+      babyId: selectedBaby?.id ?? null,
+      authenticated: Boolean(user?.householdId),
+      storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+      acceptEntries: acceptSleepRange,
     });
-    return unsubscribe;
-  }, [subscribeToRemoteChanges, selectedBaby]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToRemoteChanges('wake_window_preferences', (change: RemoteChange) => {
-      if (!selectedBaby) return;
-      const data = change.new;
-      if (!data || data.baby_id !== selectedBaby.id) return;
+    const unsubscribe = subscribeToRemoteChanges(
+      "sleep_sessions",
+      (change: RemoteChange) => {
+        if (!selectedBaby) return;
+        const data = change.new || change.old;
+        if (data && data.baby_id !== selectedBaby.id) return;
 
-      if (change.eventType === 'INSERT' || change.eventType === 'UPDATE') {
-        const source = data.source as "age_based" | "custom";
-        const config: WakeWindowConfig = {
-          enabled: (data.enabled as boolean | undefined) ?? (source === "custom"),
-          napCount: data.nap_count as number,
-          slots: data.wake_window_slots as NapSlotWindow[],
-          source,
-          dayStartHour: (data.day_start_hour as number | undefined) ?? 6,
-          dayEndHour: (data.day_end_hour as number | undefined) ?? 19,
-          dayBoundariesConfigured: data.day_start_hour != null && data.day_end_hour != null,
-          napContinuationMinutes: (data.nap_continuation_minutes as number | undefined) ?? 25,
-          driftDismissed: (data.drift_dismissed as { type: string; suggestedHour: number } | null) ?? null,
-        };
-        dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-        SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-        if (config.driftDismissed) {
-          driftDismissedRef.current = config.driftDismissed;
-          dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
-        } else {
-          driftDismissedRef.current = null;
+        const removeId = tombstonedId(change);
+        if (removeId) {
+          dispatch({ type: "REMOTE_DELETE", payload: removeId });
+          return;
+        }
+
+        switch (change.eventType) {
+          case "INSERT":
+            if (change.new)
+              dispatch({
+                type: "REMOTE_INSERT",
+                payload: transformSleepFromRemote(change.new),
+              });
+            break;
+          case "UPDATE":
+            if (change.new)
+              dispatch({
+                type: "REMOTE_UPDATE",
+                payload: transformSleepFromRemote(change.new),
+              });
+            break;
         }
       }
-    });
+    );
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToRemoteChanges('activity_goals', (change: RemoteChange) => {
-      if (!selectedBaby) return;
-      const data = change.new;
-      if (!data || data.baby_id !== selectedBaby.id || data.goal_type !== 'sleep') return;
+    const unsubscribe = subscribeToRemoteChanges(
+      "wake_window_preferences",
+      (change: RemoteChange) => {
+        if (!selectedBaby) return;
+        const data = change.new;
+        if (!data || data.baby_id !== selectedBaby.id) return;
 
-      if (change.eventType === 'INSERT' || change.eventType === 'UPDATE') {
-        const targetMinutes = data.target_value as number;
-        const source = data.source as GoalSource;
-        dispatch({ type: "SET_DAILY_GOAL", payload: targetMinutes });
-        dispatch({ type: "SET_GOAL_SOURCE", payload: source });
-        SleepStorageService.setDailyGoal(selectedBaby.id, targetMinutes);
-        if (source === 'custom') {
-          SleepStorageService.setCustomGoal(selectedBaby.id, targetMinutes);
-        } else {
-          SleepStorageService.clearCustomGoal(selectedBaby.id);
+        if (change.eventType === "INSERT" || change.eventType === "UPDATE") {
+          const source = data.source as "age_based" | "custom";
+          const config: WakeWindowConfig = {
+            enabled:
+              (data.enabled as boolean | undefined) ?? source === "custom",
+            napCount: data.nap_count as number,
+            slots: data.wake_window_slots as NapSlotWindow[],
+            source,
+            dayStartHour: (data.day_start_hour as number | undefined) ?? 6,
+            dayEndHour: (data.day_end_hour as number | undefined) ?? 19,
+            dayBoundariesConfigured:
+              data.day_start_hour != null && data.day_end_hour != null,
+            napContinuationMinutes:
+              (data.nap_continuation_minutes as number | undefined) ?? 25,
+            driftDismissed:
+              (data.drift_dismissed as {
+                type: string;
+                suggestedHour: number;
+              } | null) ?? null,
+          };
+          dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+          SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+          if (config.driftDismissed) {
+            driftDismissedRef.current = config.driftDismissed;
+            dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
+          } else {
+            driftDismissedRef.current = null;
+          }
         }
       }
-    });
+    );
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToRemoteChanges(
+      "activity_goals",
+      (change: RemoteChange) => {
+        if (!selectedBaby) return;
+        const data = change.new;
+        if (
+          !data ||
+          data.baby_id !== selectedBaby.id ||
+          data.goal_type !== "sleep"
+        )
+          return;
+
+        if (change.eventType === "INSERT" || change.eventType === "UPDATE") {
+          const targetMinutes = data.target_value as number;
+          const source = data.source as GoalSource;
+          dispatch({ type: "SET_DAILY_GOAL", payload: targetMinutes });
+          dispatch({ type: "SET_GOAL_SOURCE", payload: source });
+          SleepStorageService.setDailyGoal(selectedBaby.id, targetMinutes);
+          if (source === "custom") {
+            SleepStorageService.setCustomGoal(selectedBaby.id, targetMinutes);
+          } else {
+            SleepStorageService.clearCustomGoal(selectedBaby.id);
+          }
+        }
+      }
+    );
+    return unsubscribe;
+  }, [subscribeToRemoteChanges, selectedBaby]);
+
+  const restoreSleepTimer = useCallback(
+    async (
+      sleeps: StoredSleepEntry[],
+      bindingToken: BabyProviderBindingToken,
+      stopVersionAtStart: number,
+      wakeConfig: WakeWindowConfig | null
+    ) => {
+      if (!selectedBaby) return;
+
+      const adapter = createSleepTimerAdapter({
+        babyId: selectedBaby.id,
+        resolveMorningClassification: (startedAt, stored) =>
+          stored ??
+          classifyNewMorningSleep(
+            sleeps,
+            { startedAt },
+            wakeConfig?.dayStartHour ?? 6,
+            wakeConfig?.napContinuationMinutes ?? 25,
+            new Date(Math.max(Date.now(), new Date(startedAt).getTime()))
+          ),
+        dispatchRestoreTimer: (restoredTimer) => {
+          dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+        },
+      });
+
+      await restoreTimerLifecycle({
+        adapter,
+        baby: selectedBaby,
+        user: user?.id
+          ? { id: user.id, householdId: user.householdId ?? undefined }
+          : null,
+        completedRecords: sleeps,
+        stopVersionAtStart,
+        currentStopVersion: () => stopVersionRef.current,
+        isStopping: () => isStoppingRef.current,
+        isCurrentBabyBinding: () => isCurrentBabyBinding(bindingToken),
+        liveActivityIdRef,
+        refreshLocks,
+        persistRecord: (input) =>
+          user?.householdId && user.id
+            ? createSleepInDatabase(input, user.id)
+            : SleepStorageService.addSleep(input),
+        dispatchStopTimer: () => dispatch({ type: "STOP_TIMER" }),
+        dispatchAddRecord: (record) =>
+          dispatch({ type: "ADD_SLEEP", payload: record }),
+        onCompletionSecured: () => removeLock(selectedBaby.id, "sleep"),
+        errorLabel: "[SleepContext]",
+      });
+    },
+    [
+      isCurrentBabyBinding,
+      refreshLocks,
+      removeLock,
+      selectedBaby,
+      user?.householdId,
+      user?.id,
+    ]
+  );
 
   const loadSleeps = useCallback(async () => {
     const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
     const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
-    const acceptStartedLiveActivity = async (activityId: string | null) => {
-      if (!isCurrentBinding()) {
-        if (activityId) await endTimerLiveActivity(activityId);
-        return false;
-      }
-      if (activityId) liveActivityIdRef.current = activityId;
-      return true;
-    };
     if (!selectedBaby) {
       dispatch({ type: "SET_SLEEPS", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
@@ -503,7 +690,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           sleeps = await fetchSleepFromDatabase(selectedBaby.id);
         } catch (error) {
           if (!isCurrentBinding()) return;
-          console.error("[SleepContext] Failed to fetch from database, using local:", error);
+          console.error(
+            "[SleepContext] Failed to fetch from database, using local:",
+            error
+          );
           sleeps = await SleepStorageService.getAllSleeps(selectedBaby.id);
         }
       } else {
@@ -513,11 +703,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       if (!isCurrentBinding()) return;
       dispatch({ type: "SET_SLEEPS", payload: sleeps });
 
-      const hasCustomGoal = await SleepStorageService.hasCustomGoal(selectedBaby.id);
-      const storedGoal = await SleepStorageService.getDailyGoal(selectedBaby.id);
+      const hasCustomGoal = await SleepStorageService.hasCustomGoal(
+        selectedBaby.id
+      );
+      const storedGoal = await SleepStorageService.getDailyGoal(
+        selectedBaby.id
+      );
       if (!isCurrentBinding()) return;
 
-      const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+      const birthDate = selectedBaby.birthDate
+        ? new Date(selectedBaby.birthDate)
+        : undefined;
       const goalInfo = getSleepGoalInfo(
         birthDate,
         hasCustomGoal ? storedGoal : null
@@ -529,15 +725,27 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
       if (user?.householdId) {
         try {
-          const { data: dbGoal } = await fetchActivityGoal(selectedBaby.id, 'sleep');
+          const { data: dbGoal } = await fetchActivityGoal(
+            selectedBaby.id,
+            "sleep"
+          );
           if (!isCurrentBinding()) return;
           if (dbGoal) {
             dispatch({ type: "SET_DAILY_GOAL", payload: dbGoal.target_value });
-            dispatch({ type: "SET_GOAL_SOURCE", payload: dbGoal.source as GoalSource });
-            await SleepStorageService.setDailyGoal(selectedBaby.id, dbGoal.target_value);
+            dispatch({
+              type: "SET_GOAL_SOURCE",
+              payload: dbGoal.source as GoalSource,
+            });
+            await SleepStorageService.setDailyGoal(
+              selectedBaby.id,
+              dbGoal.target_value
+            );
             if (!isCurrentBinding()) return;
-            if (dbGoal.source === 'custom') {
-              await SleepStorageService.setCustomGoal(selectedBaby.id, dbGoal.target_value);
+            if (dbGoal.source === "custom") {
+              await SleepStorageService.setCustomGoal(
+                selectedBaby.id,
+                dbGoal.target_value
+              );
             } else {
               await SleepStorageService.clearCustomGoal(selectedBaby.id);
             }
@@ -545,48 +753,68 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           }
         } catch (error) {
           if (!isCurrentBinding()) return;
-          console.error("[SleepContext] Failed to fetch activity goal from DB:", error);
+          console.error(
+            "[SleepContext] Failed to fetch activity goal from DB:",
+            error
+          );
         }
       }
 
       if (birthDate) {
         const wakeWindowInfo = getWakeWindowForAge(birthDate);
-        dispatch({ type: "SET_WAKE_WINDOW", payload: wakeWindowInfo.targetMinutes });
+        dispatch({
+          type: "SET_WAKE_WINDOW",
+          payload: wakeWindowInfo.targetMinutes,
+        });
       }
 
       let wakeConfig: WakeWindowConfig | null = null;
 
       if (user?.householdId) {
         try {
-          const { data: dbPref } = await fetchWakeWindowPreference(selectedBaby.id);
+          const { data: dbPref } = await fetchWakeWindowPreference(
+            selectedBaby.id
+          );
           if (!isCurrentBinding()) return;
           if (dbPref) {
             const source = dbPref.source as "age_based" | "custom";
             wakeConfig = {
-              enabled: dbPref.enabled ?? (source === "custom"),
+              enabled: dbPref.enabled ?? source === "custom",
               napCount: dbPref.nap_count,
               slots: dbPref.wake_window_slots,
               source,
               dayStartHour: dbPref.day_start_hour ?? 6,
               dayEndHour: dbPref.day_end_hour ?? 19,
-              dayBoundariesConfigured: dbPref.day_start_hour != null && dbPref.day_end_hour != null,
+              dayBoundariesConfigured:
+                dbPref.day_start_hour != null && dbPref.day_end_hour != null,
               napContinuationMinutes: dbPref.nap_continuation_minutes ?? 25,
               driftDismissed: dbPref.drift_dismissed ?? null,
             };
-            await SleepStorageService.setWakeWindowConfig(selectedBaby.id, wakeConfig);
+            await SleepStorageService.setWakeWindowConfig(
+              selectedBaby.id,
+              wakeConfig
+            );
             if (!isCurrentBinding()) return;
           }
         } catch (error) {
           if (!isCurrentBinding()) return;
-          console.error("[SleepContext] Failed to fetch wake window prefs from DB:", error);
+          console.error(
+            "[SleepContext] Failed to fetch wake window prefs from DB:",
+            error
+          );
         }
       }
 
       if (!wakeConfig) {
-        wakeConfig = await SleepStorageService.getWakeWindowConfig(selectedBaby.id);
+        wakeConfig = await SleepStorageService.getWakeWindowConfig(
+          selectedBaby.id
+        );
         if (!isCurrentBinding()) return;
         if (wakeConfig && wakeConfig.enabled === undefined) {
-          wakeConfig = { ...wakeConfig, enabled: wakeConfig.source === "custom" };
+          wakeConfig = {
+            ...wakeConfig,
+            enabled: wakeConfig.source === "custom",
+          };
         }
       }
 
@@ -595,39 +823,60 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       } else if (birthDate) {
         const defaultConfig = getDefaultWakeWindowConfig(birthDate);
         dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: defaultConfig });
-        await SleepStorageService.setWakeWindowConfig(selectedBaby.id, defaultConfig);
+        await SleepStorageService.setWakeWindowConfig(
+          selectedBaby.id,
+          defaultConfig
+        );
         if (!isCurrentBinding()) return;
       }
 
-      const newbornOptIn = await SleepStorageService.getNewbornNapOptIn(selectedBaby.id);
+      const newbornOptIn = await SleepStorageService.getNewbornNapOptIn(
+        selectedBaby.id
+      );
       if (!isCurrentBinding()) return;
       dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: newbornOptIn });
 
-      const cachedModel = await SleepStorageService.getSleepPredictionModel(selectedBaby.id);
+      const cachedModel = await SleepStorageService.getSleepPredictionModel(
+        selectedBaby.id
+      );
       if (!isCurrentBinding()) return;
       if (cachedModel) {
-        dispatch({ type: "SET_PREDICTION_MODEL", payload: cachedModel as unknown as SleepPredictionModel });
+        dispatch({
+          type: "SET_PREDICTION_MODEL",
+          payload: cachedModel as unknown as SleepPredictionModel,
+        });
       }
 
-      const bannerDismissed = await SleepStorageService.getPredictionBannerDismissed(selectedBaby.id);
+      const bannerDismissed =
+        await SleepStorageService.getPredictionBannerDismissed(selectedBaby.id);
       if (!isCurrentBinding()) return;
-      dispatch({ type: "SET_PREDICTION_BANNER_DISMISSED", payload: bannerDismissed });
+      dispatch({
+        type: "SET_PREDICTION_BANNER_DISMISSED",
+        payload: bannerDismissed,
+      });
 
       if (wakeConfig?.driftDismissed) {
         driftDismissedRef.current = wakeConfig.driftDismissed;
       } else {
-        const driftDismissed = await SleepStorageService.getDriftDismissed(selectedBaby.id);
+        const driftDismissed = await SleepStorageService.getDriftDismissed(
+          selectedBaby.id
+        );
         if (!isCurrentBinding()) return;
         driftDismissedRef.current = driftDismissed;
       }
 
       if (birthDate && !hasCustomGoal) {
-        const lastCheckDate = await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
-        const dismissedMilestones = await SleepStorageService.getDismissedMilestones(selectedBaby.id);
+        const lastCheckDate =
+          await SleepStorageService.getLastMilestoneCheckDate(selectedBaby.id);
+        const dismissedMilestones =
+          await SleepStorageService.getDismissedMilestones(selectedBaby.id);
         if (!isCurrentBinding()) return;
 
         if (lastCheckDate) {
-          const milestoneCrossing = checkSleepMilestoneCrossing(birthDate, lastCheckDate);
+          const milestoneCrossing = checkSleepMilestoneCrossing(
+            birthDate,
+            lastCheckDate
+          );
           if (
             milestoneCrossing?.shouldSuggestGoalUpdate &&
             !dismissedMilestones.includes(milestoneCrossing.newGroup.label)
@@ -642,324 +891,19 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        await SleepStorageService.setLastMilestoneCheckDate(selectedBaby.id, new Date());
+        await SleepStorageService.setLastMilestoneCheckDate(
+          selectedBaby.id,
+          new Date()
+        );
         if (!isCurrentBinding()) return;
       }
 
-      const stopOccurred = isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart;
-      if (stopOccurred) {
-        return;
-      }
-
-      const activeTimer = await SleepStorageService.getActiveTimer(selectedBaby.id);
-      const pendingStop = activeTimer
-        ? await readPendingTimerStop("sleep", selectedBaby.id)
-        : null;
-      if (!isCurrentBinding()) return;
-      const hasPendingStop = activeTimer
-        ? isPendingStopForTimer(
-            pendingStop,
-            "sleep",
-            new Date(activeTimer.startedAt),
-            selectedBaby.id,
-            activeTimer.timerInstanceId
-          )
-        : false;
-
-      if (activeTimer) {
-        const restoredMorningClassification = activeTimer.morningClassification
-          ?? classifyNewMorningSleep(
-            sleeps,
-            { startedAt: activeTimer.startedAt },
-            wakeConfig?.dayStartHour ?? 6,
-            wakeConfig?.napContinuationMinutes ?? 25,
-            new Date(Math.max(Date.now(), new Date(activeTimer.startedAt).getTime()))
-          );
-        const restoredMorningClassificationVersion = activeTimer.morningClassificationVersion
-          ?? MORNING_CLASSIFICATION_VERSION;
-        if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) {
-          // skip — a stop completed during this loadSleeps run
-        } else {
-          const identity = await resolveTimerIdentity(
-            selectedBaby.id,
-            "sleep",
-            activeTimer.startedAt,
-            activeTimer
-          );
-          if (await isTimerCompletionSecured(selectedBaby.id, "sleep", identity, sleeps)) {
-            const liveActivityId = activeTimer.liveActivityId ?? liveActivityIdRef.current;
-            const endedById = liveActivityId
-              ? await endTimerLiveActivity(liveActivityId)
-              : false;
-            if (!endedById) {
-              await endLiveActivityByType("sleep");
-            }
-            liveActivityIdRef.current = null;
-            await SleepStorageService.clearActiveTimer(selectedBaby.id);
-            dispatch({ type: "STOP_TIMER" });
-            removeLock(selectedBaby.id, "sleep");
-            if (user?.id) {
-              try {
-                await releaseTimerLock(
-                  selectedBaby.id,
-                  "sleep",
-                  user.id,
-                  identity.timerInstanceId,
-                  activeTimer.startedAt
-                );
-              } catch {
-                await queuePendingLockRelease(
-                  selectedBaby.id,
-                  "sleep",
-                  user.id,
-                  identity.timerInstanceId,
-                  activeTimer.startedAt
-                );
-              }
-            }
-            return;
-          }
-          if (!activeTimer.timerInstanceId || !activeTimer.activityId) {
-            await SleepStorageService.setActiveTimer(selectedBaby.id, {
-              ...activeTimer,
-              ...identity,
-            });
-          }
-
-          let isStale = false;
-          let lockState: TimerLockReconciliationState = activeTimer.lockState ?? "offline";
-          if (user?.id && user?.householdId && !hasPendingStop) {
-            const persistLockState = async (nextLockState: TimerLockReconciliationState) => {
-              if (!isCurrentBinding()) return;
-              if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) return;
-              lockState = nextLockState;
-              await SleepStorageService.setActiveTimer(selectedBaby.id, {
-                ...activeTimer,
-                ...identity,
-                lockState: nextLockState,
-              });
-            };
-            const reconciliation = await reconcileTimerLock({
-              babyId: selectedBaby.id,
-              activityType: "sleep",
-              userId: user.id,
-              startedAt: activeTimer.startedAt,
-              timerInstanceId: identity.timerInstanceId,
-              timerData: {
-                ...identity,
-                type: activeTimer.type,
-                isPaused: activeTimer.isPaused ?? false,
-                totalPausedMs: activeTimer.totalPausedMs ?? 0,
-                pausedAt: activeTimer.pausedAt,
-                morningClassification: restoredMorningClassification,
-                morningClassificationVersion: restoredMorningClassificationVersion,
-              },
-              persistState: persistLockState,
-            });
-            if (!isCurrentBinding()) return;
-            if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) return;
-            if (reconciliation.state !== "offline") await refreshLocks();
-            if (reconciliation.state === "conflicted") {
-              const completion = await acceptTimerCompletion(
-                selectedBaby.id,
-                "sleep",
-                activeTimer.startedAt,
-                identity,
-                new Date(Date.now())
-              );
-              dispatch({ type: "STOP_TIMER" });
-              let sleep = await SleepStorageService.getSleepById(
-                selectedBaby.id,
-                completion.activityId
-              );
-
-              if (!sleep) {
-                const endTime = new Date(completion.stoppedAt);
-                const sleepInput: CreateSleepInput = {
-                  id: completion.activityId,
-                  babyId: selectedBaby.id,
-                  type: activeTimer.type,
-                  startedAt: new Date(activeTimer.startedAt),
-                  endedAt: endTime,
-                  durationSeconds: Math.max(
-                    0,
-                    Math.floor(
-                      (endTime.getTime() - new Date(activeTimer.startedAt).getTime() -
-                        (activeTimer.totalPausedMs ?? 0)) / 1000
-                    )
-                  ),
-                  morningClassification: restoredMorningClassification,
-                  morningClassificationVersion: restoredMorningClassificationVersion,
-                };
-                sleep = user.householdId
-                  ? await createSleepInDatabase(sleepInput, user.id)
-                  : await SleepStorageService.addSleep(sleepInput);
-                await markTimerCompletionDurable(completion);
-              }
-
-              dispatch({ type: "ADD_SLEEP", payload: sleep });
-              isStale = true;
-              await SleepStorageService.clearActiveTimer(selectedBaby.id);
-              const endedById = activeTimer.liveActivityId
-                ? await endTimerLiveActivity(activeTimer.liveActivityId)
-                : false;
-              if (!endedById) {
-                await endLiveActivityByType("sleep");
-              }
-              liveActivityIdRef.current = null;
-              showTimerConflictNotice(reconciliation.lockHolderName);
-              if (!isCurrentBinding()) return;
-            }
-          }
-
-          if (!isStale) {
-            dispatch({
-              type: "RESTORE_TIMER",
-              payload: {
-                isRunning: true,
-                isPaused: activeTimer.isPaused ?? false,
-                lockState,
-                startTime: new Date(activeTimer.startedAt),
-                ...identity,
-                sleepType: activeTimer.type,
-                totalPausedMs: activeTimer.totalPausedMs ?? 0,
-                pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
-                morningClassification: restoredMorningClassification,
-                morningClassificationVersion: restoredMorningClassificationVersion,
-              },
-            });
-
-            if (!hasPendingStop && activeTimer.liveActivityId) {
-              const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
-              if (!isCurrentBinding()) return;
-              if (isRunning) {
-                liveActivityIdRef.current = activeTimer.liveActivityId;
-              } else if (!(activeTimer.isPaused ?? false)) {
-                const totalPausedMs = activeTimer.totalPausedMs ?? 0;
-                const effectiveStartTime = totalPausedMs > 0
-                  ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
-                  : new Date(activeTimer.startedAt);
-                const activityId = await startTimerLiveActivity(
-                  "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
-                );
-                if (!await acceptStartedLiveActivity(activityId)) return;
-              }
-            } else if (!hasPendingStop && !(activeTimer.isPaused ?? false)) {
-              const totalPausedMs = activeTimer.totalPausedMs ?? 0;
-              const effectiveStartTime = totalPausedMs > 0
-                ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
-                : new Date(activeTimer.startedAt);
-              const activityId = await startTimerLiveActivity(
-                "sleep", selectedBaby.name, activeTimer.type, effectiveStartTime
-              );
-              if (!await acceptStartedLiveActivity(activityId)) return;
-            }
-          }
-        }
-      } else if (user?.id && user?.householdId) {
-        try {
-          const lock = await getActiveTimerLock(selectedBaby.id, "sleep");
-          if (!isCurrentBinding()) return;
-          if (lock && lock.startedBy === user.id) {
-            if (isStoppingRef.current || stopVersionRef.current !== stopVersionAtStart) {
-              // skip — a stop completed during this loadSleeps run
-            } else {
-              const td = lock.timerData || {};
-              const identity = await resolveTimerIdentity(
-                selectedBaby.id,
-                "sleep",
-                lock.startedAt,
-                td
-              );
-              const lockStartTime = new Date(lock.startedAt).getTime();
-              const alreadyStopped =
-                await isTimerCompletionSecured(selectedBaby.id, "sleep", identity, sleeps) ||
-                sleeps.some(s => {
-                  const entryStart = new Date(s.startedAt).getTime();
-                  return Math.abs(entryStart - lockStartTime) < 5000;
-                });
-
-              if (alreadyStopped) {
-                try {
-                  await releaseTimerLock(
-                    selectedBaby.id,
-                    "sleep",
-                    user.id,
-                    identity.timerInstanceId,
-                    lock.startedAt
-                  );
-                } catch {
-                  await queuePendingLockRelease(
-                    selectedBaby.id,
-                    "sleep",
-                    user.id,
-                    identity.timerInstanceId,
-                    lock.startedAt
-                  );
-                }
-                if (!isCurrentBinding()) return;
-              } else {
-                const sleepType = (td.type === "night" ? "night" : "nap") as SleepType;
-                const isPaused = td.isPaused === true;
-                const totalPausedMs = typeof td.totalPausedMs === "number" ? td.totalPausedMs : 0;
-                const pausedAt = typeof td.pausedAt === "string" ? td.pausedAt : undefined;
-                const morningClassification = typeof td.morningClassification === "string"
-                  ? td.morningClassification as MorningClassificationState
-                  : classifyNewMorningSleep(
-                    sleeps,
-                    { startedAt: lock.startedAt },
-                    wakeConfig?.dayStartHour ?? 6,
-                    wakeConfig?.napContinuationMinutes ?? 25,
-                    new Date(Math.max(Date.now(), new Date(lock.startedAt).getTime()))
-                  );
-                const morningClassificationVersion = typeof td.morningClassificationVersion === "number"
-                  ? td.morningClassificationVersion
-                  : MORNING_CLASSIFICATION_VERSION;
-
-                dispatch({
-                  type: "RESTORE_TIMER",
-                  payload: {
-                    isRunning: true,
-                    isPaused,
-                    lockState: "owned",
-                    startTime: new Date(lock.startedAt),
-                    ...identity,
-                    sleepType,
-                    totalPausedMs,
-                    pausedAt: pausedAt ? new Date(pausedAt) : undefined,
-                    morningClassification,
-                    morningClassificationVersion,
-                  },
-                });
-
-                await SleepStorageService.setActiveTimer(selectedBaby.id, {
-                  startedAt: lock.startedAt,
-                  ...identity,
-                  type: sleepType,
-                  isPaused,
-                  totalPausedMs,
-                  pausedAt,
-                  lockState: "owned",
-                  morningClassification,
-                  morningClassificationVersion,
-                });
-                if (!isCurrentBinding()) return;
-
-                if (!isPaused) {
-                  const effectiveStartTime = totalPausedMs > 0
-                    ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
-                    : new Date(lock.startedAt);
-                  const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType, effectiveStartTime);
-                  if (!await acceptStartedLiveActivity(activityId)) return;
-                }
-              }
-            }
-          }
-        } catch (error) {
-          if (!isCurrentBinding()) return;
-          console.error("[SleepContext] Failed to restore from server:", error);
-        }
-      }
+      await restoreSleepTimer(
+        sleeps,
+        bindingToken,
+        stopVersionAtStart,
+        wakeConfig
+      );
     } catch (error) {
       if (!isCurrentBinding()) return;
       bindingStatus = "error";
@@ -970,129 +914,165 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         finishBabyBinding(bindingToken, bindingStatus);
       }
     }
-  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId, user?.id, removeLock, refreshLocks]);
+  }, [
+    beginBabyBinding,
+    finishBabyBinding,
+    isCurrentBabyBinding,
+    restoreSleepTimer,
+    selectedBaby,
+    user?.householdId,
+  ]);
 
   useEffect(() => {
     loadSleeps();
   }, [loadSleeps, foregroundRefreshKey]);
 
   const computingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const driftDismissedRef = useRef<{ suggestedHour: number; type: string } | null>(null);
+  const driftDismissedRef = useRef<{
+    suggestedHour: number;
+    type: string;
+  } | null>(null);
   const lastRecomputeVersionRef = useRef(0);
 
-  useEffect(() => () => {
-    if (computingTimerRef.current) {
-      clearTimeout(computingTimerRef.current);
-    }
-  }, []);
+  useEffect(
+    () => () => {
+      if (computingTimerRef.current) {
+        clearTimeout(computingTimerRef.current);
+      }
+    },
+    []
+  );
 
-  const runModelComputation = useCallback((showComputing: boolean) => {
-    if (!selectedBaby || state.sleeps.length === 0) return;
+  const runModelComputation = useCallback(
+    (showComputing: boolean) => {
+      if (!selectedBaby || state.sleeps.length === 0) return;
 
-    if (showComputing) {
-      dispatch({ type: "SET_COMPUTING_MODEL", payload: true });
-    }
+      if (showComputing) {
+        dispatch({ type: "SET_COMPUTING_MODEL", payload: true });
+      }
 
-    const computeStart = Date.now();
+      const computeStart = Date.now();
 
-    const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
-    const dayEndHour = state.wakeWindowConfig?.dayEndHour ?? 19;
-    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
-    const continuationAllowance = state.wakeWindowConfig?.napContinuationMinutes ?? 25;
-    const hasUnresolvedMorning = findPendingMorningConfirmations(
-      state.sleeps,
-      dayStartHour,
-      continuationAllowance
-    ).length > 0;
-    const babyAgeMonths = birthDate
-      ? Math.floor((Date.now() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44))
-      : 0;
+      const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
+      const dayEndHour = state.wakeWindowConfig?.dayEndHour ?? 19;
+      const birthDate = selectedBaby.birthDate
+        ? new Date(selectedBaby.birthDate)
+        : undefined;
+      const continuationAllowance =
+        state.wakeWindowConfig?.napContinuationMinutes ?? 25;
+      const hasUnresolvedMorning =
+        findPendingMorningConfirmations(
+          state.sleeps,
+          dayStartHour,
+          continuationAllowance
+        ).length > 0;
+      const babyAgeMonths = birthDate
+        ? Math.floor(
+            (Date.now() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
+          )
+        : 0;
 
-    const processed = processSleepData(state.sleeps, continuationAllowance);
-    const qualifyingCount = hasUnresolvedMorning
-      ? 0
-      : getQualifyingDayCount(
-        processed,
-        dayStartHour,
-        dayEndHour,
-        babyAgeMonths,
-        continuationAllowance
-      );
+      const processed = processSleepData(state.sleeps, continuationAllowance);
+      const qualifyingCount = hasUnresolvedMorning
+        ? 0
+        : getQualifyingDayCount(
+            processed,
+            dayStartHour,
+            dayEndHour,
+            babyAgeMonths,
+            continuationAllowance
+          );
 
-    let model: SleepPredictionModel | null = null;
+      let model: SleepPredictionModel | null = null;
 
-    if (hasUnresolvedMorning) {
-      model = null;
-    } else if (qualifyingCount >= 5) {
-      model = computeSleepModel(
-        processed,
-        dayStartHour,
-        dayEndHour,
-        babyAgeMonths,
-        continuationAllowance
-      );
-    } else if (birthDate) {
-      model = getAgeFallbackModel(birthDate);
-    }
-
-
-
-    let drift: DriftDetectionResult | null = null;
-    const isCustomWakeWindows = state.wakeWindowConfig?.source === "custom";
-    if (!hasUnresolvedMorning && !isCustomWakeWindows) {
-      const bedtimeDrift = qualifyingCount >= 5
-        ? detectBedtimeDrift(
+      if (hasUnresolvedMorning) {
+        model = null;
+      } else if (qualifyingCount >= 5) {
+        model = computeSleepModel(
           processed,
           dayStartHour,
           dayEndHour,
+          babyAgeMonths,
           continuationAllowance
-        )
-        : null;
-      drift = bedtimeDrift ?? (birthDate
-        ? detectMorningDrift(
-          processed,
-          dayStartHour,
-          dayEndHour,
-          birthDate,
-          new Date(),
-          continuationAllowance
-        )
-        : null);
+        );
+      } else if (birthDate) {
+        model = getAgeFallbackModel(birthDate);
+      }
 
-      if (drift && driftDismissedRef.current) {
-        const dismissed = driftDismissedRef.current;
-        if (dismissed.type === drift.type && Math.abs(dismissed.suggestedHour - drift.suggestedHour) < 0.5) {
-          drift = null;
+      let drift: DriftDetectionResult | null = null;
+      const isCustomWakeWindows = state.wakeWindowConfig?.source === "custom";
+      if (!hasUnresolvedMorning && !isCustomWakeWindows) {
+        const bedtimeDrift =
+          qualifyingCount >= 5
+            ? detectBedtimeDrift(
+                processed,
+                dayStartHour,
+                dayEndHour,
+                continuationAllowance
+              )
+            : null;
+        drift =
+          bedtimeDrift ??
+          (birthDate
+            ? detectMorningDrift(
+                processed,
+                dayStartHour,
+                dayEndHour,
+                birthDate,
+                new Date(),
+                continuationAllowance
+              )
+            : null);
+
+        if (drift && driftDismissedRef.current) {
+          const dismissed = driftDismissedRef.current;
+          if (
+            dismissed.type === drift.type &&
+            Math.abs(dismissed.suggestedHour - drift.suggestedHour) < 0.5
+          ) {
+            drift = null;
+          }
         }
       }
-    }
 
-    const applyModel = () => {
-      dispatch({ type: "SET_PREDICTION_MODEL", payload: model });
-      dispatch({ type: "SET_QUALIFYING_DAY_COUNT", payload: qualifyingCount });
-      dispatch({ type: "SET_DRIFT_DETECTION", payload: drift });
+      const applyModel = () => {
+        dispatch({ type: "SET_PREDICTION_MODEL", payload: model });
+        dispatch({
+          type: "SET_QUALIFYING_DAY_COUNT",
+          payload: qualifyingCount,
+        });
+        dispatch({ type: "SET_DRIFT_DETECTION", payload: drift });
+        if (showComputing) {
+          dispatch({ type: "SET_COMPUTING_MODEL", payload: false });
+        }
+      };
+
       if (showComputing) {
-        dispatch({ type: "SET_COMPUTING_MODEL", payload: false });
+        const elapsed = Date.now() - computeStart;
+        const minDisplayMs = 2000;
+        const remaining = Math.max(0, minDisplayMs - elapsed);
+        if (computingTimerRef.current) clearTimeout(computingTimerRef.current);
+        computingTimerRef.current = setTimeout(applyModel, remaining);
+      } else {
+        applyModel();
       }
-    };
 
-    if (showComputing) {
-      const elapsed = Date.now() - computeStart;
-      const minDisplayMs = 2000;
-      const remaining = Math.max(0, minDisplayMs - elapsed);
-      if (computingTimerRef.current) clearTimeout(computingTimerRef.current);
-      computingTimerRef.current = setTimeout(applyModel, remaining);
-    } else {
-      applyModel();
-    }
-
-    if (model && selectedBaby) {
-      SleepStorageService.setSleepPredictionModel(
-        selectedBaby.id,
-        model as unknown as Record<string, unknown>
-      ).catch(() => {});
-    }
-  }, [state.sleeps, selectedBaby, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, state.wakeWindowConfig?.napContinuationMinutes, state.wakeWindowConfig?.source]);
+      if (model && selectedBaby) {
+        SleepStorageService.setSleepPredictionModel(
+          selectedBaby.id,
+          model as unknown as Record<string, unknown>
+        ).catch(() => {});
+      }
+    },
+    [
+      state.sleeps,
+      selectedBaby,
+      state.wakeWindowConfig?.dayStartHour,
+      state.wakeWindowConfig?.dayEndHour,
+      state.wakeWindowConfig?.napContinuationMinutes,
+      state.wakeWindowConfig?.source,
+    ]
+  );
 
   // Silent recompute on bulk load (SET_SLEEPS) — skip until wake window config is loaded
   const lastSleepsLoadVersionRef = useRef(0);
@@ -1102,8 +1082,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     if (state.sleepsLoadVersion === lastSleepsLoadVersionRef.current) return;
     lastSleepsLoadVersionRef.current = state.sleepsLoadVersion;
     runModelComputation(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.sleepsLoadVersion, selectedBaby, state.wakeWindowConfig, runModelComputation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    state.sleepsLoadVersion,
+    selectedBaby,
+    state.wakeWindowConfig,
+    runModelComputation,
+  ]);
 
   // Animated recompute on mutations (ADD_SLEEP, UPDATE_SLEEP, DELETE_SLEEP, REMOTE_*)
   useEffect(() => {
@@ -1158,515 +1143,678 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (boundaryTimerRef.current) clearTimeout(boundaryTimerRef.current);
     };
-  }, [state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, state.activeTimer, runModelComputation]);
+  }, [
+    state.wakeWindowConfig?.dayStartHour,
+    state.wakeWindowConfig?.dayEndHour,
+    state.activeTimer,
+    runModelComputation,
+  ]);
 
-  const startSleep = useCallback(async (sleepType: SleepType, customStartTime?: Date, requestedIdentity?: TimerIdentity): Promise<{ success: boolean; lockedByName?: string }> => {
-    if (!selectedBaby) return { success: false };
+  const startSleep = useCallback(
+    async (
+      sleepType: SleepType,
+      customStartTime?: Date,
+      requestedIdentity?: TimerIdentity
+    ): Promise<{ success: boolean; lockedByName?: string }> => {
+      if (!selectedBaby) return { success: false };
 
-    const startTime = customStartTime ?? new Date();
-    const identity = requestedIdentity ?? createTimerIdentity();
-    activeMorningConfirmationRef.current = null;
-    const morningClassification = classifyNewMorningSleep(
-      state.sleeps,
-      { startedAt: startTime },
-      state.wakeWindowConfig?.dayStartHour ?? 6,
-      state.wakeWindowConfig?.napContinuationMinutes ?? 25,
-      new Date(Math.max(Date.now(), startTime.getTime()))
-    );
-    let lockState: TimerLockReconciliationState = "offline";
-    if (user?.id) {
-      try {
-        const lockResult = await acquireTimerLock(
-          selectedBaby.id,
-          "sleep",
-          user.id,
-          {
-            type: sleepType,
-            ...identity,
-            morningClassification,
-            morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
-          },
-          startTime
-        );
-        if (!lockResult.success) {
-          return { success: false, lockedByName: lockResult.lockHolderName };
-        }
-        lockState = "owned";
-      } catch (error) {
-        console.error("[SleepContext] Failed to acquire timer lock (proceeding offline):", error);
-      }
-    }
-
-    dispatch({
-      type: "START_TIMER",
-      payload: {
-        startTime,
-        sleepType,
-        lockState,
-        ...identity,
-        morningClassification,
-        morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
-      },
-    });
-
-    const activityId = await startTimerLiveActivity("sleep", selectedBaby.name, sleepType, startTime);
-    if (activityId) {
-      liveActivityIdRef.current = activityId;
-    }
-
-    await SleepStorageService.setActiveTimer(selectedBaby.id, {
-      ...identity,
-      startedAt: startTime.toISOString(),
-      type: sleepType,
-      liveActivityId: activityId ?? undefined,
-      lockState,
-      morningClassification,
-      morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
-    });
-
-    return { success: true };
-  }, [selectedBaby, user?.id, state.sleeps, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.napContinuationMinutes]);
-
-  const stopSleep = useCallback(async (requestedEndTime?: Date): Promise<StoredSleepEntry | null> => {
-    if (!selectedBaby || !state.activeTimer) return null;
-    if (isStoppingRef.current) return null;
-    isStoppingRef.current = true;
-    setIsStopping(true);
-
-    const activeTimer = state.activeTimer;
-    const timerStartTime = activeTimer.startTime;
-    const babyId = selectedBaby.id;
-    const getEffectiveTimer = (): ActiveSleepTimer => {
-      const confirmation = activeMorningConfirmationRef.current;
-      if (!confirmation || confirmation.activityId !== activeTimer.activityId) {
-        return activeTimer;
-      }
-      return {
-        ...activeTimer,
-        sleepType: confirmation.sleepType,
-        morningClassification: confirmation.morningClassification,
-      };
-    };
-    const finishTimer = async () => {
-      dispatch({ type: "STOP_TIMER" });
-      stopVersionRef.current++;
-      if (activeMorningConfirmationRef.current?.activityId === activeTimer.activityId) {
-        activeMorningConfirmationRef.current = null;
-      }
-      removeLock(babyId, "sleep");
-      try {
-        await SleepStorageService.clearActiveTimer(babyId);
-      } catch (error) {
-        console.error("[SleepContext] Failed to clear completed timer snapshot:", error);
-      }
-      try {
-        const endedById = liveActivityIdRef.current
-          ? await endTimerLiveActivity(liveActivityIdRef.current)
-          : false;
-        if (!endedById) {
-          await endLiveActivityByType("sleep");
-        }
-        liveActivityIdRef.current = null;
-      } catch (error) {
-        console.error("[SleepContext] Failed to end completed Live Activity:", error);
-      }
+      const startTime = customStartTime ?? new Date();
+      const identity = requestedIdentity ?? createTimerIdentity();
+      activeMorningConfirmationRef.current = null;
+      const morningClassification = classifyNewMorningSleep(
+        state.sleeps,
+        { startedAt: startTime },
+        state.wakeWindowConfig?.dayStartHour ?? 6,
+        state.wakeWindowConfig?.napContinuationMinutes ?? 25,
+        new Date(Math.max(Date.now(), startTime.getTime()))
+      );
+      let lockState: TimerLockReconciliationState = "offline";
       if (user?.id) {
         try {
-          await releaseTimerLock(
-            babyId,
+          const lockResult = await acquireTimerLock(
+            selectedBaby.id,
             "sleep",
             user.id,
-            activeTimer.timerInstanceId,
-            activeTimer.startTime.toISOString()
+            {
+              type: sleepType,
+              ...identity,
+              morningClassification,
+              morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+            },
+            startTime
           );
+          if (!lockResult.success) {
+            return { success: false, lockedByName: lockResult.lockHolderName };
+          }
+          lockState = "owned";
         } catch (error) {
-          console.error("[SleepContext] Failed to release timer lock, queuing retry:", error);
-          await queuePendingLockRelease(
-            babyId,
-            "sleep",
-            user.id,
-            activeTimer.timerInstanceId,
-            activeTimer.startTime.toISOString()
+          console.error(
+            "[SleepContext] Failed to acquire timer lock (proceeding offline):",
+            error
           );
         }
       }
-    };
 
-    try {
-      const requestedStopTime = requestedEndTime ?? new Date();
-      const requestedDurationSeconds = Math.floor(
-        (requestedStopTime.getTime() - timerStartTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-      );
-      if (shouldDiscardTimerDuration(requestedDurationSeconds)) {
-        await finishTimer();
-        return null;
-      }
+      dispatch({
+        type: "START_TIMER",
+        payload: {
+          startTime,
+          sleepType,
+          lockState,
+          ...identity,
+          morningClassification,
+          morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+        },
+      });
 
-      const completion = await acceptTimerCompletion(
-        babyId,
+      const activityId = await startTimerLiveActivity(
         "sleep",
-        timerStartTime.toISOString(),
-        getEffectiveTimer(),
-        requestedStopTime
+        selectedBaby.name,
+        sleepType,
+        startTime
       );
-      const endTime = new Date(completion.stoppedAt);
-      if (completion.status === "completed") {
-        const existing = await SleepStorageService.getSleepById(babyId, completion.activityId);
-        await finishTimer();
-        return existing;
+      if (activityId) {
+        liveActivityIdRef.current = activityId;
       }
 
-      const durationSeconds = Math.floor(
-        (endTime.getTime() - timerStartTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-      );
-      const effectiveTimer = getEffectiveTimer();
-      const sleepType = effectiveTimer.morningClassification === "confirmed_first_nap"
-        ? "nap"
-        : effectiveTimer.morningClassification === "confirmed_night_continuation"
-          ? "night"
-          : classifySleepByTimeRange(
-            timerStartTime,
-            endTime,
-            state.wakeWindowConfig?.dayStartHour ?? 6,
-            state.wakeWindowConfig?.dayEndHour ?? 19
-          );
-      const sleepInput: CreateSleepInput = {
-        id: completion.activityId,
-        babyId,
+      await SleepStorageService.setActiveTimer(selectedBaby.id, {
+        ...identity,
+        startedAt: startTime.toISOString(),
         type: sleepType,
-        startedAt: timerStartTime,
-        endedAt: endTime,
-        durationSeconds,
-        morningClassification: effectiveTimer.morningClassification,
-        morningClassificationVersion: effectiveTimer.morningClassificationVersion,
+        liveActivityId: activityId ?? undefined,
+        lockState,
+        morningClassification,
+        morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+      });
+
+      return { success: true };
+    },
+    [
+      selectedBaby,
+      user?.id,
+      state.sleeps,
+      state.wakeWindowConfig?.dayStartHour,
+      state.wakeWindowConfig?.napContinuationMinutes,
+    ]
+  );
+
+  const stopSleep = useCallback(
+    async (requestedEndTime?: Date): Promise<StoredSleepEntry | null> => {
+      if (!selectedBaby || !state.activeTimer) return null;
+      if (isStoppingRef.current) return null;
+      isStoppingRef.current = true;
+      setIsStopping(true);
+
+      const activeTimer = state.activeTimer;
+      const timerStartTime = activeTimer.startTime;
+      const babyId = selectedBaby.id;
+      const getEffectiveTimer = (): ActiveSleepTimer => {
+        const confirmation = activeMorningConfirmationRef.current;
+        if (
+          !confirmation ||
+          confirmation.activityId !== activeTimer.activityId
+        ) {
+          return activeTimer;
+        }
+        return {
+          ...activeTimer,
+          sleepType: confirmation.sleepType,
+          morningClassification: confirmation.morningClassification,
+        };
+      };
+      const finishTimer = async () => {
+        dispatch({ type: "STOP_TIMER" });
+        stopVersionRef.current++;
+        if (
+          activeMorningConfirmationRef.current?.activityId ===
+          activeTimer.activityId
+        ) {
+          activeMorningConfirmationRef.current = null;
+        }
+        removeLock(babyId, "sleep");
+        try {
+          await SleepStorageService.clearActiveTimer(babyId);
+        } catch (error) {
+          console.error(
+            "[SleepContext] Failed to clear completed timer snapshot:",
+            error
+          );
+        }
+        try {
+          const endedById = liveActivityIdRef.current
+            ? await endTimerLiveActivity(liveActivityIdRef.current)
+            : false;
+          if (!endedById) {
+            await endLiveActivityByType("sleep");
+          }
+          liveActivityIdRef.current = null;
+        } catch (error) {
+          console.error(
+            "[SleepContext] Failed to end completed Live Activity:",
+            error
+          );
+        }
+        if (user?.id) {
+          try {
+            await releaseTimerLock(
+              babyId,
+              "sleep",
+              user.id,
+              activeTimer.timerInstanceId,
+              activeTimer.startTime.toISOString()
+            );
+          } catch (error) {
+            console.error(
+              "[SleepContext] Failed to release timer lock, queuing retry:",
+              error
+            );
+            await queuePendingLockRelease(
+              babyId,
+              "sleep",
+              user.id,
+              activeTimer.timerInstanceId,
+              activeTimer.startTime.toISOString()
+            );
+          }
+        }
       };
 
-      let lastSleep: StoredSleepEntry;
       try {
-        if (user?.householdId && user?.id) {
-          lastSleep = await createSleepInDatabase(sleepInput, user.id);
-        } else {
-          lastSleep = await SleepStorageService.addSleep(sleepInput);
+        const requestedStopTime = requestedEndTime ?? new Date();
+        const requestedDurationSeconds = Math.floor(
+          (requestedStopTime.getTime() -
+            timerStartTime.getTime() -
+            state.activeTimer.totalPausedMs) /
+            1000
+        );
+        if (shouldDiscardTimerDuration(requestedDurationSeconds)) {
+          await finishTimer();
+          return null;
         }
-      } catch (saveError) {
-        console.error("[SleepContext] Failed to durably complete timer:", saveError);
-        throw saveError;
+
+        const completion = await acceptTimerCompletion(
+          babyId,
+          "sleep",
+          timerStartTime.toISOString(),
+          getEffectiveTimer(),
+          requestedStopTime
+        );
+        const endTime = new Date(completion.stoppedAt);
+        if (completion.status === "completed") {
+          const existing = await SleepStorageService.getSleepById(
+            babyId,
+            completion.activityId
+          );
+          await finishTimer();
+          return existing;
+        }
+
+        const effectiveTimer = getEffectiveTimer();
+        const sleepType =
+          effectiveTimer.morningClassification === "confirmed_first_nap"
+            ? "nap"
+            : effectiveTimer.morningClassification ===
+                "confirmed_night_continuation"
+              ? "night"
+              : classifySleepByTimeRange(
+                  timerStartTime,
+                  endTime,
+                  state.wakeWindowConfig?.dayStartHour ?? 6,
+                  state.wakeWindowConfig?.dayEndHour ?? 19
+                );
+        const adapter = createSleepTimerAdapter({
+          babyId,
+          resolveMorningClassification: (_startedAt, stored) =>
+            stored ?? effectiveTimer.morningClassification,
+          dispatchRestoreTimer: (restoredTimer) => {
+            dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+          },
+        });
+        const sleepInput = adapter.buildRecord(timerStartTime, endTime, {
+          timerInstanceId: effectiveTimer.timerInstanceId,
+          activityId: completion.activityId,
+          type: sleepType,
+          isPaused: effectiveTimer.isPaused,
+          totalPausedMs: effectiveTimer.totalPausedMs,
+          pausedAt: effectiveTimer.pausedAt?.toISOString(),
+          morningClassification: effectiveTimer.morningClassification,
+          morningClassificationVersion:
+            effectiveTimer.morningClassificationVersion,
+        });
+
+        let lastSleep: StoredSleepEntry;
+        try {
+          if (user?.householdId && user?.id) {
+            lastSleep = await createSleepInDatabase(sleepInput, user.id);
+          } else {
+            lastSleep = await SleepStorageService.addSleep(sleepInput);
+          }
+        } catch (saveError) {
+          console.error(
+            "[SleepContext] Failed to durably complete timer:",
+            saveError
+          );
+          throw saveError;
+        }
+
+        await markTimerCompletionDurable(completion);
+        dispatch({ type: "ADD_SLEEP", payload: lastSleep });
+        await finishTimer();
+        return lastSleep;
+      } finally {
+        isStoppingRef.current = false;
+        setIsStopping(false);
+      }
+    },
+    [
+      selectedBaby,
+      state.activeTimer,
+      state.wakeWindowConfig?.dayStartHour,
+      state.wakeWindowConfig?.dayEndHour,
+      user?.householdId,
+      user?.id,
+      removeLock,
+    ]
+  );
+
+  const changeSleepType = useCallback(
+    (sleepType: SleepType) => {
+      if (state.activeTimer?.isPaused) return;
+      dispatch({ type: "UPDATE_TIMER_TYPE", payload: { sleepType } });
+      if (selectedBaby && state.activeTimer) {
+        SleepStorageService.setActiveTimer(selectedBaby.id, {
+          timerInstanceId: state.activeTimer.timerInstanceId,
+          activityId: state.activeTimer.activityId,
+          startedAt: state.activeTimer.startTime.toISOString(),
+          type: sleepType,
+          liveActivityId: liveActivityIdRef.current ?? undefined,
+          isPaused: state.activeTimer.isPaused,
+          totalPausedMs: state.activeTimer.totalPausedMs,
+          pausedAt: state.activeTimer.pausedAt?.toISOString(),
+          lockState: state.activeTimer.lockState,
+          morningClassification: state.activeTimer.morningClassification,
+          morningClassificationVersion:
+            state.activeTimer.morningClassificationVersion,
+        });
+        if (liveActivityIdRef.current) {
+          updateTimerLiveActivity(liveActivityIdRef.current, sleepType);
+        }
+        if (user?.id) {
+          updateTimerData(selectedBaby.id, "sleep", user.id, {
+            timerInstanceId: state.activeTimer.timerInstanceId,
+            activityId: state.activeTimer.activityId,
+            type: sleepType,
+            morningClassification: state.activeTimer.morningClassification,
+            morningClassificationVersion:
+              state.activeTimer.morningClassificationVersion,
+          }).catch((error) =>
+            console.error("[SleepContext] Failed to update timer data:", error)
+          );
+        }
+      }
+    },
+    [selectedBaby, state.activeTimer, user?.id]
+  );
+
+  const pauseSleep = useCallback(
+    async (requestedPauseTime?: Date) => {
+      if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused)
+        return;
+
+      const now = requestedPauseTime ?? new Date();
+
+      dispatch({ type: "PAUSE_TIMER" });
+
+      if (liveActivityIdRef.current) {
+        const activeElapsedSeconds = Math.floor(
+          (now.getTime() -
+            state.activeTimer.startTime.getTime() -
+            state.activeTimer.totalPausedMs) /
+            1000
+        );
+        await pauseTimerLiveActivity(
+          liveActivityIdRef.current,
+          activeElapsedSeconds
+        );
       }
 
-      await markTimerCompletionDurable(completion);
-      dispatch({ type: "ADD_SLEEP", payload: lastSleep });
-      await finishTimer();
-      return lastSleep;
-    } finally {
-      isStoppingRef.current = false;
-      setIsStopping(false);
-    }
-  }, [selectedBaby, state.activeTimer, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, user?.householdId, user?.id, removeLock]);
-
-  const changeSleepType = useCallback((sleepType: SleepType) => {
-    if (state.activeTimer?.isPaused) return;
-    dispatch({ type: "UPDATE_TIMER_TYPE", payload: { sleepType } });
-    if (selectedBaby && state.activeTimer) {
-      SleepStorageService.setActiveTimer(selectedBaby.id, {
+      await SleepStorageService.setActiveTimer(selectedBaby.id, {
         timerInstanceId: state.activeTimer.timerInstanceId,
         activityId: state.activeTimer.activityId,
         startedAt: state.activeTimer.startTime.toISOString(),
-        type: sleepType,
+        type: state.activeTimer.sleepType,
         liveActivityId: liveActivityIdRef.current ?? undefined,
-        isPaused: state.activeTimer.isPaused,
+        isPaused: true,
+        pausedAt: now.toISOString(),
         totalPausedMs: state.activeTimer.totalPausedMs,
-        pausedAt: state.activeTimer.pausedAt?.toISOString(),
         lockState: state.activeTimer.lockState,
         morningClassification: state.activeTimer.morningClassification,
-        morningClassificationVersion: state.activeTimer.morningClassificationVersion,
+        morningClassificationVersion:
+          state.activeTimer.morningClassificationVersion,
       });
-      if (liveActivityIdRef.current) {
-        updateTimerLiveActivity(liveActivityIdRef.current, sleepType);
-      }
+
       if (user?.id) {
-        updateTimerData(selectedBaby.id, "sleep", user.id, {
-          timerInstanceId: state.activeTimer.timerInstanceId,
-          activityId: state.activeTimer.activityId,
-          type: sleepType,
-          morningClassification: state.activeTimer.morningClassification,
-          morningClassificationVersion: state.activeTimer.morningClassificationVersion,
-        }).catch(
-          (error) => console.error("[SleepContext] Failed to update timer data:", error)
-        );
+        try {
+          const totalElapsed = Math.floor(
+            (now.getTime() -
+              state.activeTimer.startTime.getTime() -
+              state.activeTimer.totalPausedMs) /
+              1000
+          );
+          await updateTimerData(selectedBaby.id, "sleep", user.id, {
+            timerInstanceId: state.activeTimer.timerInstanceId,
+            activityId: state.activeTimer.activityId,
+            isPaused: true,
+            pausedAt: now.toISOString(),
+            accumulatedSeconds: totalElapsed,
+            totalPausedMs: state.activeTimer.totalPausedMs,
+            type: state.activeTimer.sleepType,
+            morningClassification: state.activeTimer.morningClassification,
+            morningClassificationVersion:
+              state.activeTimer.morningClassificationVersion,
+          });
+        } catch (error) {
+          console.error("[SleepContext] Failed to update timer data:", error);
+        }
       }
-    }
-  }, [selectedBaby, state.activeTimer, user?.id]);
+    },
+    [selectedBaby, state.activeTimer, user?.id]
+  );
 
-  const pauseSleep = useCallback(async (requestedPauseTime?: Date) => {
-    if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
+  const resumeSleep = useCallback(
+    async (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => {
+      if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused)
+        return;
 
-    const now = requestedPauseTime ?? new Date();
+      const now = requestedResumeTime ?? new Date();
+      const pauseDuration =
+        widgetPauseDurationMs ??
+        (state.activeTimer.pausedAt
+          ? now.getTime() - state.activeTimer.pausedAt.getTime()
+          : 0);
+      const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
 
-    dispatch({ type: "PAUSE_TIMER" });
+      dispatch({ type: "RESUME_TIMER" });
 
-    if (liveActivityIdRef.current) {
-      const activeElapsedSeconds = Math.floor(
-        (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-      );
-      await pauseTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
-    }
-
-    await SleepStorageService.setActiveTimer(selectedBaby.id, {
-      timerInstanceId: state.activeTimer.timerInstanceId,
-      activityId: state.activeTimer.activityId,
-      startedAt: state.activeTimer.startTime.toISOString(),
-      type: state.activeTimer.sleepType,
-      liveActivityId: liveActivityIdRef.current ?? undefined,
-      isPaused: true,
-      pausedAt: now.toISOString(),
-      totalPausedMs: state.activeTimer.totalPausedMs,
-      lockState: state.activeTimer.lockState,
-      morningClassification: state.activeTimer.morningClassification,
-      morningClassificationVersion: state.activeTimer.morningClassificationVersion,
-    });
-
-    if (user?.id) {
-      try {
-        const totalElapsed = Math.floor(
-          (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-        );
-        await updateTimerData(selectedBaby.id, "sleep", user.id, {
-          timerInstanceId: state.activeTimer.timerInstanceId,
-          activityId: state.activeTimer.activityId,
-          isPaused: true,
-          pausedAt: now.toISOString(),
-          accumulatedSeconds: totalElapsed,
-          totalPausedMs: state.activeTimer.totalPausedMs,
-          type: state.activeTimer.sleepType,
-          morningClassification: state.activeTimer.morningClassification,
-          morningClassificationVersion: state.activeTimer.morningClassificationVersion,
-        });
-      } catch (error) {
-        console.error("[SleepContext] Failed to update timer data:", error);
-      }
-    }
-  }, [selectedBaby, state.activeTimer, user?.id]);
-
-  const resumeSleep = useCallback(async (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => {
-    if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused) return;
-
-    const now = requestedResumeTime ?? new Date();
-    const pauseDuration = widgetPauseDurationMs ?? (state.activeTimer.pausedAt
-      ? now.getTime() - state.activeTimer.pausedAt.getTime()
-      : 0);
-    const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
-
-    dispatch({ type: "RESUME_TIMER" });
-
-    if (liveActivityIdRef.current) {
-      const activeElapsedSeconds = Math.floor(
-        (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
-      );
-      await resumeTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
-    }
-
-    await SleepStorageService.setActiveTimer(selectedBaby.id, {
-      timerInstanceId: state.activeTimer.timerInstanceId,
-      activityId: state.activeTimer.activityId,
-      startedAt: state.activeTimer.startTime.toISOString(),
-      type: state.activeTimer.sleepType,
-      liveActivityId: liveActivityIdRef.current ?? undefined,
-      isPaused: false,
-      totalPausedMs: newTotalPausedMs,
-      lockState: state.activeTimer.lockState,
-      morningClassification: state.activeTimer.morningClassification,
-      morningClassificationVersion: state.activeTimer.morningClassificationVersion,
-    });
-
-    if (user?.id) {
-      try {
+      if (liveActivityIdRef.current) {
         const activeElapsedSeconds = Math.floor(
-          (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
+          (now.getTime() -
+            state.activeTimer.startTime.getTime() -
+            newTotalPausedMs) /
+            1000
         );
-        await updateTimerData(selectedBaby.id, "sleep", user.id, {
-          timerInstanceId: state.activeTimer.timerInstanceId,
-          activityId: state.activeTimer.activityId,
-          isPaused: false,
-          totalPausedMs: newTotalPausedMs,
-          type: state.activeTimer.sleepType,
-          effectiveStartTime: new Date(now.getTime() - activeElapsedSeconds * 1000).toISOString(),
-          accumulatedSeconds: activeElapsedSeconds,
-          morningClassification: state.activeTimer.morningClassification,
-          morningClassificationVersion: state.activeTimer.morningClassificationVersion,
-        });
-      } catch (error) {
-        console.error("[SleepContext] Failed to update timer data:", error);
+        await resumeTimerLiveActivity(
+          liveActivityIdRef.current,
+          activeElapsedSeconds
+        );
       }
-    }
-  }, [selectedBaby, state.activeTimer, user?.id]);
 
-  const addSleep = useCallback(async (input: CreateSleepInput): Promise<StoredSleepEntry> => {
-    const morningClassification = input.morningClassification ?? classifyNewMorningSleep(
-      state.sleeps,
-      { startedAt: input.startedAt, endedAt: input.endedAt },
-      state.wakeWindowConfig?.dayStartHour ?? 6,
-      state.wakeWindowConfig?.napContinuationMinutes ?? 25,
-      input.endedAt ?? new Date(Math.max(Date.now(), input.startedAt.getTime()))
-    );
-    const versionedInput: CreateSleepInput = {
-      ...input,
-      morningClassification,
-      morningClassificationVersion: input.morningClassificationVersion
-        ?? MORNING_CLASSIFICATION_VERSION,
-    };
-    let sleep: StoredSleepEntry;
-
-    if (user?.householdId && user?.id) {
-      sleep = await createSleepInDatabase(versionedInput, user.id);
-    } else {
-      sleep = await SleepStorageService.addSleep(versionedInput);
-    }
-
-    dispatch({ type: "ADD_SLEEP", payload: sleep });
-    return sleep;
-  }, [user?.householdId, user?.id, state.sleeps, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.napContinuationMinutes]);
-
-  const updateSleep = useCallback(async (
-    sleepId: string,
-    input: UpdateSleepInput
-  ): Promise<StoredSleepEntry | null> => {
-    if (!selectedBaby) return null;
-
-    const existing = state.sleeps.find((sleep) => sleep.id === sleepId);
-    const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
-    const start = existing ? new Date(existing.startedAt) : null;
-    const startHour = start
-      ? start.getHours() + start.getMinutes() / 60 + start.getSeconds() / 3600
-      : null;
-    const isApplicableMorningEdit = input.type !== undefined
-      && startHour !== null
-      && startHour >= getMorningThreshold(dayStartHour)
-      && startHour < dayStartHour;
-    const effectiveInput: UpdateSleepInput = isApplicableMorningEdit
-      ? {
-        ...input,
-        morningClassification: input.type === "nap"
-          ? "confirmed_first_nap"
-          : "confirmed_night_continuation",
-        morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
-      }
-      : input;
-
-    let updated: StoredSleepEntry | null;
-
-    if (user?.householdId) {
-      updated = await updateSleepInDatabase(selectedBaby.id, sleepId, effectiveInput);
-    } else {
-      updated = await SleepStorageService.updateSleep(selectedBaby.id, sleepId, effectiveInput);
-    }
-
-    if (updated) {
-      dispatch({ type: "UPDATE_SLEEP", payload: updated });
-    }
-    return updated;
-  }, [selectedBaby, user?.householdId, state.sleeps, state.wakeWindowConfig?.dayStartHour]);
-
-  const pendingMorningConfirmations = useMemo(() => findPendingMorningConfirmations(
-    state.sleeps,
-    state.wakeWindowConfig?.dayStartHour ?? 6,
-    state.wakeWindowConfig?.napContinuationMinutes ?? 25
-  ), [state.sleeps, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.napContinuationMinutes]);
-
-  const confirmMorningSleep = useCallback(async (
-    sleepId: string,
-    answer: "first_nap" | "night_continuation"
-  ): Promise<void> => {
-    const sleepType: SleepType = answer === "first_nap" ? "nap" : "night";
-    const morningClassification: MorningClassificationState = answer === "first_nap"
-      ? "confirmed_first_nap"
-      : "confirmed_night_continuation";
-
-    if (selectedBaby && state.activeTimer?.activityId === sleepId) {
-      const activeTimer = state.activeTimer;
-      const stopVersionAtStart = stopVersionRef.current;
-      activeMorningConfirmationRef.current = {
-        activityId: sleepId,
-        sleepType,
-        morningClassification,
-      };
-      dispatch({
-        type: "UPDATE_TIMER_TYPE",
-        payload: { sleepType, morningClassification },
-      });
       await SleepStorageService.setActiveTimer(selectedBaby.id, {
-        timerInstanceId: activeTimer.timerInstanceId,
-        activityId: activeTimer.activityId,
-        startedAt: activeTimer.startTime.toISOString(),
-        type: sleepType,
+        timerInstanceId: state.activeTimer.timerInstanceId,
+        activityId: state.activeTimer.activityId,
+        startedAt: state.activeTimer.startTime.toISOString(),
+        type: state.activeTimer.sleepType,
         liveActivityId: liveActivityIdRef.current ?? undefined,
-        isPaused: activeTimer.isPaused,
-        totalPausedMs: activeTimer.totalPausedMs,
-        pausedAt: activeTimer.pausedAt?.toISOString(),
-        lockState: activeTimer.lockState,
-        morningClassification,
-        morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+        isPaused: false,
+        totalPausedMs: newTotalPausedMs,
+        lockState: state.activeTimer.lockState,
+        morningClassification: state.activeTimer.morningClassification,
+        morningClassificationVersion:
+          state.activeTimer.morningClassificationVersion,
       });
-      if (stopVersionRef.current !== stopVersionAtStart) {
-        await SleepStorageService.clearActiveTimer(selectedBaby.id);
-        await updateSleep(sleepId, {
+
+      if (user?.id) {
+        try {
+          const activeElapsedSeconds = Math.floor(
+            (now.getTime() -
+              state.activeTimer.startTime.getTime() -
+              newTotalPausedMs) /
+              1000
+          );
+          await updateTimerData(selectedBaby.id, "sleep", user.id, {
+            timerInstanceId: state.activeTimer.timerInstanceId,
+            activityId: state.activeTimer.activityId,
+            isPaused: false,
+            totalPausedMs: newTotalPausedMs,
+            type: state.activeTimer.sleepType,
+            effectiveStartTime: new Date(
+              now.getTime() - activeElapsedSeconds * 1000
+            ).toISOString(),
+            accumulatedSeconds: activeElapsedSeconds,
+            morningClassification: state.activeTimer.morningClassification,
+            morningClassificationVersion:
+              state.activeTimer.morningClassificationVersion,
+          });
+        } catch (error) {
+          console.error("[SleepContext] Failed to update timer data:", error);
+        }
+      }
+    },
+    [selectedBaby, state.activeTimer, user?.id]
+  );
+
+  const addSleep = useCallback(
+    async (input: CreateSleepInput): Promise<StoredSleepEntry> => {
+      const morningClassification =
+        input.morningClassification ??
+        classifyNewMorningSleep(
+          state.sleeps,
+          { startedAt: input.startedAt, endedAt: input.endedAt },
+          state.wakeWindowConfig?.dayStartHour ?? 6,
+          state.wakeWindowConfig?.napContinuationMinutes ?? 25,
+          input.endedAt ??
+            new Date(Math.max(Date.now(), input.startedAt.getTime()))
+        );
+      const versionedInput: CreateSleepInput = {
+        ...input,
+        morningClassification,
+        morningClassificationVersion:
+          input.morningClassificationVersion ?? MORNING_CLASSIFICATION_VERSION,
+      };
+      let sleep: StoredSleepEntry;
+
+      if (user?.householdId && user?.id) {
+        sleep = await createSleepInDatabase(versionedInput, user.id);
+      } else {
+        sleep = await SleepStorageService.addSleep(versionedInput);
+      }
+
+      dispatch({ type: "ADD_SLEEP", payload: sleep });
+      return sleep;
+    },
+    [
+      user?.householdId,
+      user?.id,
+      state.sleeps,
+      state.wakeWindowConfig?.dayStartHour,
+      state.wakeWindowConfig?.napContinuationMinutes,
+    ]
+  );
+
+  const updateSleep = useCallback(
+    async (
+      sleepId: string,
+      input: UpdateSleepInput
+    ): Promise<StoredSleepEntry | null> => {
+      if (!selectedBaby) return null;
+
+      const existing = state.sleeps.find((sleep) => sleep.id === sleepId);
+      const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
+      const start = existing ? new Date(existing.startedAt) : null;
+      const startHour = start
+        ? start.getHours() + start.getMinutes() / 60 + start.getSeconds() / 3600
+        : null;
+      const isApplicableMorningEdit =
+        input.type !== undefined &&
+        startHour !== null &&
+        startHour >= getMorningThreshold(dayStartHour) &&
+        startHour < dayStartHour;
+      const effectiveInput: UpdateSleepInput = isApplicableMorningEdit
+        ? {
+            ...input,
+            morningClassification:
+              input.type === "nap"
+                ? "confirmed_first_nap"
+                : "confirmed_night_continuation",
+            morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+          }
+        : input;
+
+      let updated: StoredSleepEntry | null;
+
+      if (user?.householdId) {
+        updated = await updateSleepInDatabase(
+          selectedBaby.id,
+          sleepId,
+          effectiveInput
+        );
+      } else {
+        updated = await SleepStorageService.updateSleep(
+          selectedBaby.id,
+          sleepId,
+          effectiveInput
+        );
+      }
+
+      if (updated) {
+        dispatch({ type: "UPDATE_SLEEP", payload: updated });
+      }
+      return updated;
+    },
+    [
+      selectedBaby,
+      user?.householdId,
+      state.sleeps,
+      state.wakeWindowConfig?.dayStartHour,
+    ]
+  );
+
+  const pendingMorningConfirmations = useMemo(
+    () =>
+      findPendingMorningConfirmations(
+        state.sleeps,
+        state.wakeWindowConfig?.dayStartHour ?? 6,
+        state.wakeWindowConfig?.napContinuationMinutes ?? 25
+      ),
+    [
+      state.sleeps,
+      state.wakeWindowConfig?.dayStartHour,
+      state.wakeWindowConfig?.napContinuationMinutes,
+    ]
+  );
+
+  const confirmMorningSleep = useCallback(
+    async (
+      sleepId: string,
+      answer: "first_nap" | "night_continuation"
+    ): Promise<void> => {
+      const sleepType: SleepType = answer === "first_nap" ? "nap" : "night";
+      const morningClassification: MorningClassificationState =
+        answer === "first_nap"
+          ? "confirmed_first_nap"
+          : "confirmed_night_continuation";
+
+      if (selectedBaby && state.activeTimer?.activityId === sleepId) {
+        const activeTimer = state.activeTimer;
+        const stopVersionAtStart = stopVersionRef.current;
+        activeMorningConfirmationRef.current = {
+          activityId: sleepId,
+          sleepType,
+          morningClassification,
+        };
+        dispatch({
+          type: "UPDATE_TIMER_TYPE",
+          payload: { sleepType, morningClassification },
+        });
+        await SleepStorageService.setActiveTimer(selectedBaby.id, {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          startedAt: activeTimer.startTime.toISOString(),
           type: sleepType,
+          liveActivityId: liveActivityIdRef.current ?? undefined,
+          isPaused: activeTimer.isPaused,
+          totalPausedMs: activeTimer.totalPausedMs,
+          pausedAt: activeTimer.pausedAt?.toISOString(),
+          lockState: activeTimer.lockState,
           morningClassification,
           morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
         });
-        return;
-      }
-      if (liveActivityIdRef.current) {
-        try {
-          await updateTimerLiveActivity(liveActivityIdRef.current, sleepType);
-        } catch (error) {
-          console.error("[SleepContext] Failed to update morning confirmation Live Activity:", error);
-        }
-      }
-      if (user?.id) {
-        try {
-          await updateTimerData(selectedBaby.id, "sleep", user.id, {
-            timerInstanceId: activeTimer.timerInstanceId,
-            activityId: activeTimer.activityId,
+        if (stopVersionRef.current !== stopVersionAtStart) {
+          await SleepStorageService.clearActiveTimer(selectedBaby.id);
+          await updateSleep(sleepId, {
             type: sleepType,
             morningClassification,
             morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
           });
-        } catch (error) {
-          console.error("[SleepContext] Failed to sync active morning confirmation:", error);
+          return;
         }
+        if (liveActivityIdRef.current) {
+          try {
+            await updateTimerLiveActivity(liveActivityIdRef.current, sleepType);
+          } catch (error) {
+            console.error(
+              "[SleepContext] Failed to update morning confirmation Live Activity:",
+              error
+            );
+          }
+        }
+        if (user?.id) {
+          try {
+            await updateTimerData(selectedBaby.id, "sleep", user.id, {
+              timerInstanceId: activeTimer.timerInstanceId,
+              activityId: activeTimer.activityId,
+              type: sleepType,
+              morningClassification,
+              morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+            });
+          } catch (error) {
+            console.error(
+              "[SleepContext] Failed to sync active morning confirmation:",
+              error
+            );
+          }
+        }
+        return;
       }
-      return;
-    }
 
-    await updateSleep(sleepId, {
-      type: sleepType,
-      morningClassification,
-      morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
-    });
-  }, [selectedBaby, state.activeTimer, updateSleep, user?.id]);
+      await updateSleep(sleepId, {
+        type: sleepType,
+        morningClassification,
+        morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+      });
+    },
+    [selectedBaby, state.activeTimer, updateSleep, user?.id]
+  );
 
-  const deleteSleep = useCallback(async (sleepId: string): Promise<boolean> => {
-    if (!selectedBaby) return false;
+  const deleteSleep = useCallback(
+    async (sleepId: string): Promise<boolean> => {
+      if (!selectedBaby) return false;
 
-    let result: boolean;
+      let result: boolean;
 
-    if (user?.householdId) {
-      result = await deleteSleepFromDatabase(selectedBaby.id, sleepId);
-    } else {
-      result = await SleepStorageService.deleteSleep(selectedBaby.id, sleepId);
-    }
+      if (user?.householdId) {
+        result = await deleteSleepFromDatabase(selectedBaby.id, sleepId);
+      } else {
+        result = await SleepStorageService.deleteSleep(
+          selectedBaby.id,
+          sleepId
+        );
+      }
 
-    if (result) {
-      dispatch({ type: "DELETE_SLEEP", payload: sleepId });
-    }
-    return result;
-  }, [selectedBaby, user?.householdId]);
+      if (result) {
+        dispatch({ type: "DELETE_SLEEP", payload: sleepId });
+      }
+      return result;
+    },
+    [selectedBaby, user?.householdId]
+  );
 
   const getLastSleep = useCallback((): StoredSleepEntry | null => {
     if (state.sleeps.length === 0) return null;
 
-    const sorted = [...state.sleeps].sort((a, b) =>
-      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    const sorted = [...state.sleeps].sort(
+      (a, b) =>
+        new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
     );
     return sorted[0];
   }, [state.sleeps]);
@@ -1691,7 +1839,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
       const clampedStart = start < windowStart ? windowStart : start;
       const clampedEnd = end > windowEnd ? windowEnd : end;
-      totalSeconds += Math.floor((clampedEnd.getTime() - clampedStart.getTime()) / 1000);
+      totalSeconds += Math.floor(
+        (clampedEnd.getTime() - clampedStart.getTime()) / 1000
+      );
     }
 
     return Math.floor(totalSeconds / 60);
@@ -1705,7 +1855,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       (Date.now() - new Date(lastSleep.endedAt).getTime()) / (1000 * 60)
     );
 
-    return Math.min(100, Math.round((awakeMinutes / state.wakeWindowMinutes) * 100));
+    return Math.min(
+      100,
+      Math.round((awakeMinutes / state.wakeWindowMinutes) * 100)
+    );
   }, [getLastSleep, state.wakeWindowMinutes]);
 
   const getDailyProgress = useCallback((): number => {
@@ -1722,8 +1875,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_DAILY_GOAL", payload: goalMinutes });
       dispatch({ type: "SET_GOAL_SOURCE", payload: "custom" });
       if (user?.householdId) {
-        upsertActivityGoal(selectedBaby.id, 'sleep', goalMinutes, 'custom').catch(
-          (error) => console.error("[SleepContext] Failed to sync goal:", error)
+        upsertActivityGoal(
+          selectedBaby.id,
+          "sleep",
+          goalMinutes,
+          "custom"
+        ).catch((error) =>
+          console.error("[SleepContext] Failed to sync goal:", error)
         );
       }
     },
@@ -1735,40 +1893,64 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
     await SleepStorageService.clearCustomGoal(selectedBaby.id);
 
-    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    const birthDate = selectedBaby.birthDate
+      ? new Date(selectedBaby.birthDate)
+      : undefined;
     const goalInfo = getSleepGoalInfo(birthDate, null);
 
-    await SleepStorageService.setDailyGoal(selectedBaby.id, goalInfo.targetMinutes);
+    await SleepStorageService.setDailyGoal(
+      selectedBaby.id,
+      goalInfo.targetMinutes
+    );
     dispatch({ type: "SET_DAILY_GOAL", payload: goalInfo.targetMinutes });
     dispatch({ type: "SET_GOAL_SOURCE", payload: "age_based" });
     dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
     if (user?.householdId) {
-      upsertActivityGoal(selectedBaby.id, 'sleep', goalInfo.targetMinutes, 'age_based').catch(
-        (error) => console.error("[SleepContext] Failed to sync goal:", error)
+      upsertActivityGoal(
+        selectedBaby.id,
+        "sleep",
+        goalInfo.targetMinutes,
+        "age_based"
+      ).catch((error) =>
+        console.error("[SleepContext] Failed to sync goal:", error)
       );
     }
   }, [selectedBaby, user?.householdId]);
 
-  const dismissMilestoneSuggestion = useCallback(async (permanent = false): Promise<void> => {
-    if (!selectedBaby || !state.currentAgeGroup) return;
+  const dismissMilestoneSuggestion = useCallback(
+    async (permanent = false): Promise<void> => {
+      if (!selectedBaby || !state.currentAgeGroup) return;
 
-    if (permanent) {
-      await SleepStorageService.dismissMilestone(selectedBaby.id, state.currentAgeGroup.label);
-    }
-    dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
-    dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
-  }, [selectedBaby, state.currentAgeGroup]);
+      if (permanent) {
+        await SleepStorageService.dismissMilestone(
+          selectedBaby.id,
+          state.currentAgeGroup.label
+        );
+      }
+      dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
+      dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
+    },
+    [selectedBaby, state.currentAgeGroup]
+  );
 
   const acceptMilestoneSuggestion = useCallback(async (): Promise<void> => {
     if (!selectedBaby || !state.suggestedGoalMinutes) return;
 
-    await SleepStorageService.setDailyGoal(selectedBaby.id, state.suggestedGoalMinutes);
+    await SleepStorageService.setDailyGoal(
+      selectedBaby.id,
+      state.suggestedGoalMinutes
+    );
     dispatch({ type: "SET_DAILY_GOAL", payload: state.suggestedGoalMinutes });
     dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: false });
     dispatch({ type: "SET_SUGGESTED_GOAL", payload: null });
     if (user?.householdId) {
-      upsertActivityGoal(selectedBaby.id, 'sleep', state.suggestedGoalMinutes, 'age_based').catch(
-        (error) => console.error("[SleepContext] Failed to sync goal:", error)
+      upsertActivityGoal(
+        selectedBaby.id,
+        "sleep",
+        state.suggestedGoalMinutes,
+        "age_based"
+      ).catch((error) =>
+        console.error("[SleepContext] Failed to sync goal:", error)
       );
     }
   }, [selectedBaby, state.suggestedGoalMinutes, user?.householdId]);
@@ -1797,23 +1979,31 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       if (!sleep.endedAt || morning.continuations.includes(sleep)) return false;
       const startedAt = new Date(sleep.startedAt);
       const endedAt = new Date(sleep.endedAt);
-      return startedAt.getTime() > morning.morningWakeTime!.getTime()
-        && startedAt.getTime() < dayEnd.getTime()
-        && endedAt.getTime() <= now.getTime();
+      return (
+        startedAt.getTime() > morning.morningWakeTime!.getTime() &&
+        startedAt.getTime() < dayEnd.getTime() &&
+        endedAt.getTime() <= now.getTime()
+      );
     });
 
     return processSleepData(
       completedNaps,
       state.wakeWindowConfig?.napContinuationMinutes ?? 25
     ).length;
-  }, [state.sleeps, state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour, state.wakeWindowConfig?.napContinuationMinutes]);
+  }, [
+    state.sleeps,
+    state.wakeWindowConfig?.dayStartHour,
+    state.wakeWindowConfig?.dayEndHour,
+    state.wakeWindowConfig?.napContinuationMinutes,
+  ]);
 
   const getCurrentNapSlot = useCallback((): NapSlotWindow | null => {
     if (!state.wakeWindowConfig) return null;
     if (!state.wakeWindowConfig.enabled) return null;
     if (state.wakeWindowConfig.source !== "custom") return null;
 
-    if (isUnderTwoMonths(selectedBaby?.birthDate) && !state.newbornNapOptIn) return null;
+    if (isUnderTwoMonths(selectedBaby?.birthDate) && !state.newbornNapOptIn)
+      return null;
 
     const { slots } = state.wakeWindowConfig;
     if (slots.length === 0) return null;
@@ -1825,28 +2015,41 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const napsDone = getCompletedNapsSinceNightSleep();
     const slotIndex = Math.min(napsDone, slots.length - 1);
     return slots[slotIndex];
-  }, [state.wakeWindowConfig, getCompletedNapsSinceNightSleep, selectedBaby?.birthDate, state.newbornNapOptIn]);
+  }, [
+    state.wakeWindowConfig,
+    getCompletedNapsSinceNightSleep,
+    selectedBaby?.birthDate,
+    state.newbornNapOptIn,
+  ]);
 
-  const setWakeWindowConfigMethod = useCallback(async (config: WakeWindowConfig): Promise<void> => {
-    if (!selectedBaby) return;
-    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-  }, [selectedBaby]);
+  const setWakeWindowConfigMethod = useCallback(
+    async (config: WakeWindowConfig): Promise<void> => {
+      if (!selectedBaby) return;
+      dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+      await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+    },
+    [selectedBaby]
+  );
 
-  const setCustomWakeWindows = useCallback(async (slots: NapSlotWindow[]): Promise<void> => {
-    if (!selectedBaby || !state.wakeWindowConfig) return;
-    const config: WakeWindowConfig = {
-      ...state.wakeWindowConfig,
-      slots,
-      source: "custom",
-    };
-    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig]);
+  const setCustomWakeWindows = useCallback(
+    async (slots: NapSlotWindow[]): Promise<void> => {
+      if (!selectedBaby || !state.wakeWindowConfig) return;
+      const config: WakeWindowConfig = {
+        ...state.wakeWindowConfig,
+        slots,
+        source: "custom",
+      };
+      dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+      await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+    },
+    [selectedBaby, state.wakeWindowConfig]
+  );
 
   const resetToAgeBasedWakeWindows = useCallback(async (): Promise<void> => {
     if (!selectedBaby) return;
-    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
+    const birthDate = selectedBaby.birthDate
+      ? new Date(selectedBaby.birthDate)
+      : undefined;
     if (!birthDate) return;
     const config = getDefaultWakeWindowConfig(birthDate);
     dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
@@ -1857,69 +2060,105 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const dayStart = state.wakeWindowConfig?.dayStartHour ?? 6;
     const dayEnd = state.wakeWindowConfig?.dayEndHour ?? 19;
     return isNightTime(new Date(), dayStart, dayEnd);
-  }, [state.wakeWindowConfig?.dayStartHour, state.wakeWindowConfig?.dayEndHour]);
+  }, [
+    state.wakeWindowConfig?.dayStartHour,
+    state.wakeWindowConfig?.dayEndHour,
+  ]);
 
-  const syncWakeConfigToSupabase = useCallback((babyId: string, config: WakeWindowConfig) => {
-    if (!user?.householdId) return;
-    upsertWakeWindowPreference(
-      babyId,
-      config.enabled,
-      config.napCount,
-      config.slots,
-      config.source,
-      config.dayStartHour,
-      config.dayEndHour,
-      config.napContinuationMinutes,
-      config.driftDismissed
-    ).catch(() => {});
-  }, [user?.householdId]);
+  const syncWakeConfigToSupabase = useCallback(
+    (babyId: string, config: WakeWindowConfig) => {
+      if (!user?.householdId) return;
+      upsertWakeWindowPreference(
+        babyId,
+        config.enabled,
+        config.napCount,
+        config.slots,
+        config.source,
+        config.dayStartHour,
+        config.dayEndHour,
+        config.napContinuationMinutes,
+        config.driftDismissed
+      ).catch(() => {});
+    },
+    [user?.householdId]
+  );
 
-  const setDayNightBoundary = useCallback(async (dayStartHour: number, dayEndHour: number): Promise<void> => {
-    if (!selectedBaby) return;
-    const config: WakeWindowConfig = {
-      ...(state.wakeWindowConfig ?? { enabled: false, napCount: 2, slots: [], source: "age_based" as const }),
-      dayStartHour,
-      dayEndHour,
-      dayBoundariesConfigured: true,
-      driftDismissed: null,
-    };
-    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-    syncWakeConfigToSupabase(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]);
+  const setDayNightBoundary = useCallback(
+    async (dayStartHour: number, dayEndHour: number): Promise<void> => {
+      if (!selectedBaby) return;
+      const config: WakeWindowConfig = {
+        ...(state.wakeWindowConfig ?? {
+          enabled: false,
+          napCount: 2,
+          slots: [],
+          source: "age_based" as const,
+        }),
+        dayStartHour,
+        dayEndHour,
+        dayBoundariesConfigured: true,
+        driftDismissed: null,
+      };
+      dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+      await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+      syncWakeConfigToSupabase(selectedBaby.id, config);
+    },
+    [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]
+  );
 
-  const setNapContinuationMinutes = useCallback(async (minutes: number): Promise<void> => {
-    if (!selectedBaby) return;
-    const config: WakeWindowConfig = {
-      ...(state.wakeWindowConfig ?? { enabled: false, napCount: 2, slots: [], source: "age_based" as const }),
-      napContinuationMinutes: minutes,
-    };
-    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-    syncWakeConfigToSupabase(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]);
+  const setNapContinuationMinutes = useCallback(
+    async (minutes: number): Promise<void> => {
+      if (!selectedBaby) return;
+      const config: WakeWindowConfig = {
+        ...(state.wakeWindowConfig ?? {
+          enabled: false,
+          napCount: 2,
+          slots: [],
+          source: "age_based" as const,
+        }),
+        napContinuationMinutes: minutes,
+      };
+      dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+      await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+      syncWakeConfigToSupabase(selectedBaby.id, config);
+    },
+    [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]
+  );
 
-  const setWakeWindowsEnabled = useCallback(async (enabled: boolean): Promise<void> => {
-    if (!selectedBaby) return;
-    const config: WakeWindowConfig = {
-      ...(state.wakeWindowConfig ?? { enabled: false, napCount: 2, slots: [], source: "age_based" as const }),
-      enabled,
-    };
-    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-    syncWakeConfigToSupabase(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]);
+  const setWakeWindowsEnabled = useCallback(
+    async (enabled: boolean): Promise<void> => {
+      if (!selectedBaby) return;
+      const config: WakeWindowConfig = {
+        ...(state.wakeWindowConfig ?? {
+          enabled: false,
+          napCount: 2,
+          slots: [],
+          source: "age_based" as const,
+        }),
+        enabled,
+      };
+      dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+      await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+      syncWakeConfigToSupabase(selectedBaby.id, config);
+    },
+    [selectedBaby, state.wakeWindowConfig, syncWakeConfigToSupabase]
+  );
 
-  const setNewbornNapOptInMethod = useCallback(async (optIn: boolean): Promise<void> => {
-    if (!selectedBaby) return;
-    dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: optIn });
-    await SleepStorageService.setNewbornNapOptIn(selectedBaby.id, optIn);
-  }, [selectedBaby]);
+  const setNewbornNapOptInMethod = useCallback(
+    async (optIn: boolean): Promise<void> => {
+      if (!selectedBaby) return;
+      dispatch({ type: "SET_NEWBORN_NAP_OPT_IN", payload: optIn });
+      await SleepStorageService.setNewbornNapOptIn(selectedBaby.id, optIn);
+    },
+    [selectedBaby]
+  );
 
   const dismissPredictionBanner = useCallback(async (): Promise<void> => {
     if (!selectedBaby) return;
     dispatch({ type: "SET_PREDICTION_BANNER_DISMISSED", payload: true });
-    await SleepStorageService.setPredictionBannerDismissed(selectedBaby.id, true);
+    await SleepStorageService.setPredictionBannerDismissed(
+      selectedBaby.id,
+      true
+    );
   }, [selectedBaby]);
 
   const dismissDrift = useCallback(async (): Promise<void> => {
@@ -1930,13 +2169,23 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
     await SleepStorageService.setDriftDismissed(selectedBaby.id, dismissed);
     const config: WakeWindowConfig = {
-      ...(state.wakeWindowConfig ?? { enabled: false, napCount: 2, slots: [], source: "age_based" as const }),
+      ...(state.wakeWindowConfig ?? {
+        enabled: false,
+        napCount: 2,
+        slots: [],
+        source: "age_based" as const,
+      }),
       driftDismissed: dismissed,
     };
     dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
     await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
     syncWakeConfigToSupabase(selectedBaby.id, config);
-  }, [selectedBaby, state.driftDetection, state.wakeWindowConfig, syncWakeConfigToSupabase]);
+  }, [
+    selectedBaby,
+    state.driftDetection,
+    state.wakeWindowConfig,
+    syncWakeConfigToSupabase,
+  ]);
 
   const acceptDrift = useCallback(async (): Promise<void> => {
     if (!selectedBaby || !state.driftDetection) return;
@@ -1945,70 +2194,135 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_DRIFT_DETECTION", payload: null });
     await SleepStorageService.clearDriftDismissed(selectedBaby.id);
     if (type === "bedtime") {
-      await setDayNightBoundary(state.wakeWindowConfig?.dayStartHour ?? 6, suggestedHour);
+      await setDayNightBoundary(
+        state.wakeWindowConfig?.dayStartHour ?? 6,
+        suggestedHour
+      );
     } else {
-      await setDayNightBoundary(suggestedHour, state.wakeWindowConfig?.dayEndHour ?? 19);
+      await setDayNightBoundary(
+        suggestedHour,
+        state.wakeWindowConfig?.dayEndHour ?? 19
+      );
     }
-  }, [selectedBaby, state.driftDetection, state.wakeWindowConfig, setDayNightBoundary]);
-
-  const setNapCount = useCallback(async (count: number): Promise<void> => {
-    if (!selectedBaby) return;
-    const birthDate = selectedBaby.birthDate ? new Date(selectedBaby.birthDate) : undefined;
-    if (!birthDate) return;
-
-    const slots = generateSlotsForNapCount(count, birthDate);
-    const config: WakeWindowConfig = {
-      ...(state.wakeWindowConfig ?? { enabled: false, napCount: 2, slots: [], source: "age_based" as const }),
-      napCount: count,
-      slots,
-      source: "age_based",
-    };
-    dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-    await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
-  }, [selectedBaby, state.wakeWindowConfig]);
-
-  const value: SleepContextValue = useMemo(() => ({
-    ...state,
-    babyBinding,
-    isStopping,
-    startSleep,
-    stopSleep,
-    changeSleepType,
-    pauseSleep,
-    resumeSleep,
-    addSleep,
-    updateSleep,
-    deleteSleep,
-    refreshSleeps: loadSleeps,
-    loadSleepRange,
-    getSleepRangeStatus,
-    getLastSleep,
-    getTodaysTotalSleepMinutes,
-    getWakeWindowProgress,
-    getDailyProgress,
-    setCustomGoal,
-    resetToAgeBasedGoal,
-    dismissMilestoneSuggestion,
-    acceptMilestoneSuggestion,
-    getCompletedNapsSinceNightSleep,
-    getCurrentNapSlot,
-    setWakeWindowConfig: setWakeWindowConfigMethod,
-    setCustomWakeWindows,
-    resetToAgeBasedWakeWindows,
-    setNapCount,
-    isCurrentlyNightTime,
+  }, [
+    selectedBaby,
+    state.driftDetection,
+    state.wakeWindowConfig,
     setDayNightBoundary,
-    setNapContinuationMinutes,
-    setWakeWindowsEnabled,
-    setNewbornNapOptIn: setNewbornNapOptInMethod,
-    dismissPredictionBanner,
-    dismissDrift,
-    acceptDrift,
-    pendingMorningConfirmations,
-    confirmMorningSleep,
-  }), [state, babyBinding, isStopping, startSleep, stopSleep, changeSleepType, pauseSleep, resumeSleep, addSleep, updateSleep, deleteSleep, loadSleeps, loadSleepRange, getSleepRangeStatus, getLastSleep, getTodaysTotalSleepMinutes, getWakeWindowProgress, getDailyProgress, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion, getCompletedNapsSinceNightSleep, getCurrentNapSlot, setWakeWindowConfigMethod, setCustomWakeWindows, resetToAgeBasedWakeWindows, setNapCount, isCurrentlyNightTime, setDayNightBoundary, setNapContinuationMinutes, setWakeWindowsEnabled, setNewbornNapOptInMethod, dismissPredictionBanner, dismissDrift, acceptDrift, pendingMorningConfirmations, confirmMorningSleep]);
+  ]);
 
-  return <SleepContext.Provider value={value}>{children}</SleepContext.Provider>;
+  const setNapCount = useCallback(
+    async (count: number): Promise<void> => {
+      if (!selectedBaby) return;
+      const birthDate = selectedBaby.birthDate
+        ? new Date(selectedBaby.birthDate)
+        : undefined;
+      if (!birthDate) return;
+
+      const slots = generateSlotsForNapCount(count, birthDate);
+      const config: WakeWindowConfig = {
+        ...(state.wakeWindowConfig ?? {
+          enabled: false,
+          napCount: 2,
+          slots: [],
+          source: "age_based" as const,
+        }),
+        napCount: count,
+        slots,
+        source: "age_based",
+      };
+      dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
+      await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+    },
+    [selectedBaby, state.wakeWindowConfig]
+  );
+
+  const value: SleepContextValue = useMemo(
+    () => ({
+      ...state,
+      babyBinding,
+      isStopping,
+      startSleep,
+      stopSleep,
+      changeSleepType,
+      pauseSleep,
+      resumeSleep,
+      addSleep,
+      updateSleep,
+      deleteSleep,
+      refreshSleeps: loadSleeps,
+      loadSleepRange,
+      getSleepRangeStatus,
+      getLastSleep,
+      getTodaysTotalSleepMinutes,
+      getWakeWindowProgress,
+      getDailyProgress,
+      setCustomGoal,
+      resetToAgeBasedGoal,
+      dismissMilestoneSuggestion,
+      acceptMilestoneSuggestion,
+      getCompletedNapsSinceNightSleep,
+      getCurrentNapSlot,
+      setWakeWindowConfig: setWakeWindowConfigMethod,
+      setCustomWakeWindows,
+      resetToAgeBasedWakeWindows,
+      setNapCount,
+      isCurrentlyNightTime,
+      setDayNightBoundary,
+      setNapContinuationMinutes,
+      setWakeWindowsEnabled,
+      setNewbornNapOptIn: setNewbornNapOptInMethod,
+      dismissPredictionBanner,
+      dismissDrift,
+      acceptDrift,
+      pendingMorningConfirmations,
+      confirmMorningSleep,
+    }),
+    [
+      state,
+      babyBinding,
+      isStopping,
+      startSleep,
+      stopSleep,
+      changeSleepType,
+      pauseSleep,
+      resumeSleep,
+      addSleep,
+      updateSleep,
+      deleteSleep,
+      loadSleeps,
+      loadSleepRange,
+      getSleepRangeStatus,
+      getLastSleep,
+      getTodaysTotalSleepMinutes,
+      getWakeWindowProgress,
+      getDailyProgress,
+      setCustomGoal,
+      resetToAgeBasedGoal,
+      dismissMilestoneSuggestion,
+      acceptMilestoneSuggestion,
+      getCompletedNapsSinceNightSleep,
+      getCurrentNapSlot,
+      setWakeWindowConfigMethod,
+      setCustomWakeWindows,
+      resetToAgeBasedWakeWindows,
+      setNapCount,
+      isCurrentlyNightTime,
+      setDayNightBoundary,
+      setNapContinuationMinutes,
+      setWakeWindowsEnabled,
+      setNewbornNapOptInMethod,
+      dismissPredictionBanner,
+      dismissDrift,
+      acceptDrift,
+      pendingMorningConfirmations,
+      confirmMorningSleep,
+    ]
+  );
+
+  return (
+    <SleepContext.Provider value={value}>{children}</SleepContext.Provider>
+  );
 }
 
 export function useSleep(): SleepContextValue {
@@ -2019,7 +2333,9 @@ export function useSleep(): SleepContextValue {
   return context;
 }
 
-function transformSleepFromRemote(data: Record<string, unknown>): StoredSleepEntry {
+function transformSleepFromRemote(
+  data: Record<string, unknown>
+): StoredSleepEntry {
   return {
     id: data.id as string,
     babyId: data.baby_id as string,
@@ -2029,8 +2345,12 @@ function transformSleepFromRemote(data: Record<string, unknown>): StoredSleepEnt
     durationSeconds: data.duration_seconds as number | undefined,
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
-    morningClassification: data.morning_classification as StoredSleepEntry["morningClassification"],
-    morningClassificationVersion: data.morning_classification_version as number | null | undefined,
+    morningClassification:
+      data.morning_classification as StoredSleepEntry["morningClassification"],
+    morningClassificationVersion: data.morning_classification_version as
+      | number
+      | null
+      | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
