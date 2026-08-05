@@ -33,9 +33,9 @@ const keys = [
 ] as const;
 
 describe("nap statistics translations", () => {
-  it("labels both nap schedule measurements as averages", () => {
-    expect(en.sleepPatterns.napLength).toBe("Avg. Length");
-    expect(en.sleepPatterns.napStarts).toBe("Avg. Start");
+  it("keeps the approved nap schedule headers", () => {
+    expect(en.sleepPatterns.napLength).toBe("Length");
+    expect(en.sleepPatterns.napStarts).toBe("Starts");
   });
 
   it("uses compact native average labels in the narrow schedule columns", () => {
@@ -49,14 +49,14 @@ describe("nap statistics translations", () => {
       "pt-PT": [ptPT.sleepPatterns.napLength, ptPT.sleepPatterns.napStarts],
       sr: [sr.sleepPatterns.napLength, sr.sleepPatterns.napStarts],
     }).toEqual({
-      de: ["Ø Dauer", "Ø Beginn"],
-      es: ["Dur. media", "Inicio med."],
-      "es-ES": ["Dur. media", "Inicio med."],
-      fr: ["Durée moy.", "Début moy."],
-      it: ["Dur. media", "Inizio med."],
-      "pt-BR": ["Duração méd.", "Início méd."],
-      "pt-PT": ["Duração méd.", "Início méd."],
-      sr: ["Pros. trajanje", "Pros. početak"],
+      de: ["Dauer", "Beginn"],
+      es: ["Duración", "Empieza"],
+      "es-ES": ["Duración", "Empieza"],
+      fr: ["Durée", "Début"],
+      it: ["Durata", "Inizio"],
+      "pt-BR": ["Duração", "Começa"],
+      "pt-PT": ["Duração", "Começa"],
+      sr: ["Trajanje", "Početak"],
     });
   });
 
