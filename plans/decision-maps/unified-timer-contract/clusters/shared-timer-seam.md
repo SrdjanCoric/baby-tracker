@@ -1,6 +1,9 @@
 # Cluster: shared timer seam
 
-**Planned:** none
+**Planned:** Tasks 0066 and 0067 on 2026-08-05 —
+`plans/tasks/0066-extract-shared-timer-lifecycle-tummy-time.md` (module, adapter interface, tummy
+time) and `plans/tasks/0067-migrate-remaining-timers-to-shared-lifecycle.md` (pumping, feeding,
+sleep).
 
 ## Members
 

@@ -33,7 +33,8 @@ Repository facts established while charting:
   and 1400 to 1460. The caregiver in the feedback thread expected the opposite.
 - `plans/allow-household-timer-control.md` is a superseded sketch. It targets migration `039` when the
   tree is at `059`, and it predates migration `056`. Do not use it as input.
-- Open task `0056` constrains the same `active_timers` UPDATE path and adds migration `062`.
+- Task `0056` constrained the same `active_timers` UPDATE path. It was removed by the owner on
+  2026-08-05 and superseded by Task `0070`, which adds migration `060`.
 - Sleep classification, prediction, and statistics read start time, end time, and duration from saved
   rows: `src/utils/sleep-patterns.ts`, `src/utils/statistics.ts`, and the nap continuation setting.
 - Display preferences are device-local and unsynchronized. `src/services/unit-storage.ts` keys
@@ -259,76 +260,6 @@ Summary screen with both additions marked. Read the mock before planning either 
 
 Plannable now:
 
-- [turning the Live Activity off](decisions/resolved/011-live-activity-visibility-toggle.md),
-  standalone. The record does not name the preference's storage scope or default because the
-  repository already fixes both: device-local `AsyncStorage` with a `DEFAULT_` constant, and on.
-
-  ```text
-  /skill:to-plan plans/decision-maps/unified-timer-contract/decisions/resolved/011-live-activity-visibility-toggle.md
-  ```
-
-- [pause semantics](clusters/pause-semantics.md), cluster of 2 decisions. It gained
-  [showing a record whose stored length disagrees with its interval](decisions/resolved/018-disagreeing-length-display.md)
-  from the timer time editing cluster, which extends the counted-pause rule to feeding, pumping, and
-  tummy time and supersedes the per-type split in
-  [what pause means](decisions/resolved/006-pause-semantics.md). Read both, and read the superseded
-  paragraphs in the older record rather than around them. One item of the older record's Required
-  proof, a stop issued while paused on one device and finalized by another, went with the household
-  timer control cut and is already struck in that record; the rest stands on its own.
-
-  The edit-screen proof items in
-  [showing a record whose stored length disagrees with its interval](decisions/resolved/018-disagreeing-length-display.md)
-  need the rebuilt form from
-  [entering and editing activities by clock time](decisions/resolved/009-clock-time-log-editing.md),
-  so they belong to whichever of this cluster and timer time editing is planned second. The write-path
-  change itself needs nothing from that form.
-
-  ```text
-  /skill:to-plan plans/decision-maps/unified-timer-contract/clusters/pause-semantics.md
-  ```
-
-- [shared timer seam](clusters/shared-timer-seam.md), cluster of 1 decision. Plan this before the
-  timer behavior handles, meaning pause semantics and timer time editing, so both change the restore
-  and record paths once instead of four times. It lands the shared lifecycle module as a
-  restructuring that changes no behavior, and it does not reduce the start, pause, and resume paths,
-  which stay outside the module. The statistics and Live Activity handles do not depend on it and can
-  be planned in any order.
-
-  Two of the three arguments that sized it have expired. It was sized partly to absorb the
-  record-construction change the household work would have forced, and that work is cut rather than
-  merely set aside, so no caller will ever need a record builder reachable from outside the context
-  that started the timer. It was sized partly because the
-  pause change reached eight arithmetic sites where sleep's two had to diverge.
-  [Showing a record whose stored length disagrees with its interval](decisions/resolved/018-disagreeing-length-display.md)
-  made those eight identical and took the duration rule out of the adapter, leaving six members. What
-  still argues for it is the duplication itself: eight screens under timer time editing, six under
-  interval overlap detection, and roughly 300 repeated restore lines per context. That is a
-  maintainability case rather than a forcing one, so weigh it before planning.
-
-  ```text
-  /skill:to-plan plans/decision-maps/unified-timer-contract/clusters/shared-timer-seam.md
-  ```
-
-- [timer time editing](clusters/timer-time-editing.md), cluster of 2 decisions. It became complete when
-  [showing a record whose stored length disagrees with its interval](decisions/resolved/018-disagreeing-length-display.md)
-  resolved into the write path and left for pause semantics, so the form is exactly what
-  [entering and editing activities by clock time](decisions/resolved/009-clock-time-log-editing.md)
-  specifies with nothing added. Plan pause semantics first or alongside it: the invariant that a
-  record's stored length equals its interval is what lets this form derive a length and write it back
-  without qualification.
-
-  [Running timer start time edit](decisions/resolved/007-running-timer-start-time-edit.md) was
-  resolved while household timer control was live and is now reduced to the starter's own timer, with
-  the dashboard card's read-only gate left as it is and no row policy change. Its **Scope cut**
-  paragraph and its reduced Required proof carry that; the cluster file repeats it. The server trigger
-  it adds on `active_timers.started_at` guards the same column as open task `0056`, which is unplanned
-  and claims a migration number past the tree's head of `059`, so sequence or merge the two
-  deliberately.
-
-  ```text
-  /skill:to-plan plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md
-  ```
-
 - [interval overlap detection for feeding, pumping, and tummy time](decisions/resolved/019-interval-overlap-non-sleep.md),
   standalone. Plan it after the timer time editing cluster, which rebuilds the same six screens, so
   the check is wired into their final shape once. It stands alone otherwise: the manual screens
@@ -344,6 +275,74 @@ Forming:
 - None. Every cluster is complete.
 
 Planned:
+
+- [timer time editing](clusters/timer-time-editing.md) became Tasks 0070 through 0074 on 2026-08-05.
+  The cluster split in two along a seam its own members already drew, and the two halves are
+  independent: Tasks 0070 and 0071 move a running timer's anchor, and Tasks 0072 through 0074 rebuild
+  the eight hand-entry screens. Their bound rule sets differ deliberately — the clamp puts overlap out
+  of reach for a running timer while saved records warn and allow — so they share no artifact.
+  Task 0070 is the database trigger alone, taking migration `060` against a head of `059`, and is
+  claimable immediately with nothing before it; the owner removed Task `0056` in its favor, since the
+  trigger rejects exactly the future-`started_at` write that task existed for. Task 0071 adds the
+  client edit, the start-time label naming the value and the starter, the tightening of "Started
+  earlier" to the same bounds, and the editing device's own Live Activity re-anchor; it waits on 0070
+  so the picker never offers a value the database rejects, and on 0069 so the anchor arithmetic changes
+  in the shared module once. Task 0072 does sleep and extracts the shared start/end form section that
+  no screen has today, carrying the edit-screen overlap check and the morning predicate reading the
+  edited start; Tasks 0073 and 0074 reuse it and can run in parallel, with 0074 covering pumping and
+  tummy time together by the owner's decision. All three carry the edit-screen proof items
+  [showing a record whose stored length disagrees with its interval](decisions/resolved/018-disagreeing-length-display.md)
+  left to this cluster, and all three depend on Task 0068 for the invariant that makes the derived
+  readout unqualified. Two caps the records do not name — 2h for feeding and 2h for tummy time — were
+  taken from the shipped validators. The duplicate check for the three non-sleep types stayed out, as
+  the handle below directs. The bounds rule and the clock-time form contract are now architectural
+  decisions in `plans/master-plan.md`. Whether the dashboard card eventually edits a start inline, and
+  whether the clamp should ever look at a different activity type, stayed out of the tasks and remain
+  fog above.
+
+- [pause semantics](clusters/pause-semantics.md) became Tasks 0068 and 0069,
+  `plans/tasks/0068-count-resumed-pause-in-recorded-activity.md` and
+  `plans/tasks/0069-show-counted-pause-on-running-timer-surfaces.md`, on 2026-08-05. Task 0068 changes
+  what gets written on all four types — the duration drops its `- totalPausedMs` term so every new
+  record satisfies `durationSeconds === endedAt - startedAt`, and stopping a paused timer truncates to
+  `pausedAt` in the four context stop callbacks and in the module's restore lock-conflict path, which
+  passes the current time today. Those two halves are one rule and were not split: counting a resumed
+  span is only safe because an open pause bills nothing. Task 0069 brings every running readout in
+  line — the ongoing sleep entry, the dashboard card and compact activity row tickers, the four
+  activity screens and their duration alerts, the widget payload, and the Live Activity pause, resume,
+  and restart arithmetic — so the live number equals what stopping at that instant would record. Both
+  sit after Task 0067 so the duration rule, record construction, and the Live Activity restart shift
+  each change in one module rather than in four contexts. Task 0068 carries two manual `[verify]`
+  checkpoints: the `last_sleep_ended_at` denormalization against local Supabase, since the repository
+  has no SQL test harness, and a widget-only then Watch-only pause and resume with the app never
+  foregrounded. The counted-pause rule is now an architectural decision in `plans/master-plan.md`. The
+  edit-screen proof items went to the timer time editing cluster, which is planned second. The tummy
+  time and pumping overcount stayed out of the tasks and remains fog in this map.
+
+- [shared timer seam](clusters/shared-timer-seam.md) became Tasks 0066 and 0067,
+  `plans/tasks/0066-extract-shared-timer-lifecycle-tummy-time.md` and
+  `plans/tasks/0067-migrate-remaining-timers-to-shared-lifecycle.md`, on 2026-08-05. Task 0066 builds
+  `src/services/timer-lifecycle.ts` with the six-member adapter interface and migrates tummy time in
+  one pass, including splitting the timer restore out of the entries load. Task 0067 migrates pumping,
+  feeding, and sleep in that order, moves feeding's per-side arithmetic into its `buildRecord`, and
+  carries sleep's four divergences — the `removeLock` call, the inline obsolescence guards, the
+  morning-classification resolution, and the 5-second start-proximity `alreadyStopped` test as an
+  optional adapter member. The duration rule is module-owned per the amendment from
+  [showing a record whose stored length disagrees with its interval](decisions/resolved/018-disagreeing-length-display.md),
+  shipping today's `- totalPausedMs` arithmetic unchanged; the counted-pause rule stays with the
+  pause-semantics cluster. Task 0067 carries the two-account sleep smoke as a manual `[verify]`
+  checkpoint. The module-and-adapter shape is now an architectural decision in `plans/master-plan.md`.
+  The owner planned this knowing both forcing arguments had expired and doing nothing was live. Plan
+  pause semantics and timer time editing after these two, so both land in the module once. Whether
+  start, pause, and resume also move stayed out of the tasks and remains fog in this map.
+
+- [turning the Live Activity off](decisions/resolved/011-live-activity-visibility-toggle.md),
+  standalone. The record does not name the preference's storage scope or default because the
+  repository already fixes both: device-local `AsyncStorage` with a `DEFAULT_` constant, and on.
+
+  ```text
+  /skill:to-plan plans/decision-maps/unified-timer-contract/decisions/resolved/011-live-activity-visibility-toggle.md
+  ```
 
 - [average daily nap total](decisions/resolved/012-daily-nap-total-average.md) became Task 0064,
   `plans/tasks/0064-add-avg-nap-time-card.md`, on 2026-08-05. One task, no prerequisites: the

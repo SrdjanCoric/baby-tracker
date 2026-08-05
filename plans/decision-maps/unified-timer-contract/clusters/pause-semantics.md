@@ -1,6 +1,10 @@
 # Cluster: pause semantics
 
-**Planned:** none
+**Planned:** Tasks 0068 and 0069 on 2026-08-05 — `plans/tasks/0068-count-resumed-pause-in-recorded-activity.md`
+(the write path: counted duration plus the stop-at-`pausedAt` truncation, one rule) and
+`plans/tasks/0069-show-counted-pause-on-running-timer-surfaces.md` (every running readout). Both sit
+after Task 0067, so the rule lands in the shared lifecycle module once. This cluster was planned
+before timer time editing, so the edit-screen proof items belong to that cluster per the Scope below.
 
 ## Members
 

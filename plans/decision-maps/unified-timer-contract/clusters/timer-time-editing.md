@@ -1,6 +1,6 @@
 # Cluster: timer time editing
 
-**Planned:** none
+**Planned:** Tasks 0070, 0071, 0072, 0073, and 0074 on 2026-08-05
 
 ## Members
 
@@ -19,9 +19,10 @@ can be built. Nothing in
 [entering and editing activities by clock time](../decisions/resolved/009-clock-time-log-editing.md)
 is affected, because a saved record is shared by the household either way.
 
-The server trigger this cluster adds on `active_timers.started_at` guards the same column as open task
-`0056`, which is unplanned and claims a migration number past the tree's head of `059`. Sequence or
-merge the two deliberately.
+The server trigger this cluster adds on `active_timers.started_at` guarded the same column as open task
+`0056`. That was resolved by merging: Task `0070` takes migration `060` and rejects exactly the
+future-`started_at` write `0056` was written for, `0056`'s own finding recorded that row-level security
+already blocks `started_by` reassignment, and the owner removed `0056` on 2026-08-05.
 
 ## Delivers
 

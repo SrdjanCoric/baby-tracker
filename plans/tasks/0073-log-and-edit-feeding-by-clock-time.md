@@ -1,0 +1,146 @@
+# Task 0073: Log and edit a feeding by clock time
+
+**Branch**: `feature/log-and-edit-feeding-by-clock-time`
+**Depends on**: 0072
+**Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
+`decisions/resolved/009-clock-time-log-editing.md` (resolved), with the edit-screen proof items from
+`decisions/resolved/018-disagreeing-length-display.md` · **User stories**: As a caregiver, I want to
+enter and correct a breast feed by its real clock times, so that the length of a feed is something I
+state rather than something I calculate.
+
+## What to build
+
+The rule set Task 0072 applied to sleep, applied to feeding: `app/feeding/manual.tsx` and
+`app/edit/feeding.tsx` take a **start time** and an **end time**, with duration shown as a derived
+read-only readout, built on the shared start/end form section Task 0072 extracted.
+
+The form's shape is settled and drawn in
+[`plans/decision-maps/unified-timer-contract/prototypes/clock-time-entry-mock.html`](../decision-maps/unified-timer-contract/prototypes/clock-time-entry-mock.html).
+Read it before implementing.
+
+### An end time appears only where a duration exists
+
+This is the one place feeding differs from the other three types. **A bottle feed and a solids entry
+are moments** and keep the single time picker they have — `app/feeding/manual.tsx` writes those with a
+start alone, no `endedAt` and no `durationSeconds`. Only **breastfeeding** gains an End Time.
+
+`app/feeding/manual.tsx` is the largest screen in this group and branches its save across breast,
+bottle, and solids. Only the breast branch changes; the bottle branch's `amountMl` and the solids
+branch are untouched, as are the volume chips those branches use. `QUICK_DURATIONS` of
+`[5, 10, 15, 20, 30, 45]` and the `durationMinutes` state serve breastfeeding only and go with it.
+
+`app/edit/feeding.tsx` recomputes `endedAt = startedAt + durationSeconds` on save today and holds a
+`durationMinutes` state alongside `amountMl`. The minutes field and that derivation go for a breast
+feed; a bottle record's edit screen keeps its single time and its volume.
+
+### Bounds
+
+Every bound is shown as the picker's own range, and none is a new number — each restates a validator
+already shipped in `src/validators/feeding.ts`.
+
+- Neither picker accepts a future value, which `validateFeedingStartTimeNotInFuture` already enforces.
+- There is no floor in time.
+- An end must be at least **one minute** after its start, restating the one-minute minimum
+  `validateManualBreastfeeding` already imposes.
+- The **two-hour** feeding cap survives on the derived value. Note that
+  `decisions/resolved/009-clock-time-log-editing.md` names only the twenty-four-hour sleep cap and the
+  sixty-minute pumping cap; feeding's own cap is `7200` seconds in `src/validators/feeding.ts` and is
+  carried here on the same terms.
+- The end picker offers `start + 1 minute` through the earlier of now and `start + 2h`; the start
+  picker offers up to the earlier of now and `end - 1 minute`.
+- Save stays disabled until the two times are a minute apart, on the breast branch only.
+
+`validateManualBreastfeeding` takes `durationSeconds`, so it needs an **end-time-aware entry point**
+reached with a duration derived from two times rather than typed. Its thresholds do not change.
+`validateManualBottleFeeding` is untouched.
+
+### What a save writes
+
+Both forms prefill Start and End from the record's **own stored timestamps**, so a breast feed's real
+end is shown for the first time.
+
+The stored `durationSeconds` is rewritten as `end - start` **only when the caregiver actually changed
+one of the two times**. A save that touched only a note, a side, or a volume leaves `durationSeconds`
+and `endedAt` exactly as stored. That rule protects a feeding written before Task 0068, whose stored
+length is smaller than its own interval because the old code subtracted `totalPausedMs`; the span is
+recoverable from nowhere, since `totalPausedMs` never reaches a saved record. A deliberate time edit
+converges such a record on its interval, because the caregiver has just stated what the interval is.
+
+After Task 0068 every newly written feeding satisfies `durationSeconds === endedAt - startedAt`, so the
+derived readout equals the stored length with nothing to explain. Legacy records are never backfilled.
+
+### What this task does not wire
+
+The duplicate and overlap check for feeding is a separate decision,
+`decisions/resolved/019-interval-overlap-non-sleep.md`, which is planned after this cluster so the
+check is wired into these screens' final shape once. `app/feeding/manual.tsx` and `app/edit/feeding.tsx`
+run no duplicate check today and still run none after this task.
+
+Nothing here reaches the widget, the Watch, or the Live Activity: every surface is a saved record in
+the app. `src/utils/feeding-sessions.ts` merges breast feeds less than an hour apart from their
+endpoints and re-derives from the saved row, so it needs no change.
+
+## Implementation work
+
+- [ ] Add an end-time-aware entry point to `validateManualBreastfeeding` in `src/validators/feeding.ts`
+      reached with a duration derived from two times, leaving every threshold unchanged and
+      `validateManualBottleFeeding` untouched.
+- [ ] Rebuild the breastfeeding branch of `app/feeding/manual.tsx` on the shared start/end form section
+      from Task 0072: add End Time, remove `durationMinutes`, `durationInput`, and `QUICK_DURATIONS`,
+      and derive the saved `durationSeconds` and `endedAt` from the two times.
+- [ ] Leave the bottle and solids branches as moment records with their single time picker, their
+      volume input, and their existing save paths.
+- [ ] Rebuild `app/edit/feeding.tsx` on the shared section for a breast record: add Start Time and End
+      Time, remove the minutes field and the `endedAt = startedAt + durationSeconds` derivation, and
+      prefill both pickers from the record's own stored timestamps. A bottle record keeps its single
+      time and its volume field.
+- [ ] Implement the conditional save: write `durationSeconds = end - start` only when a time actually
+      changed, leaving `durationSeconds` and `endedAt` untouched on a note-only, side-only, or
+      volume-only save.
+- [ ] Add the End Time label, the derived Duration label, and any new validation strings to all nine
+      locale files under `src/i18n/locales/`, and remove keys the dropped chips and minutes field leave
+      unused.
+- [ ] Component tests on both screens for a breast feed: the end picker offers `start + 1 minute`
+      through the earlier of now and `start + 2h`, the start picker offers up to the earlier of now and
+      `end - 1 minute`, the duration readout is derived and not editable, no minutes input and no
+      quick-duration chips remain, and Save is disabled until the two times are a minute apart.
+      `app/edit/feeding.tsx` has no component test today, so this is a new file.
+- [ ] Component tests that a bottle feed and a solids entry show **no** End Time field and still save
+      with a start alone.
+- [ ] A prefill test that a feeding whose stored `durationSeconds` is smaller than its own interval
+      opens showing the real start and end rather than `start + duration`.
+- [ ] Save-rule tests: a save that changes only a note or a side leaves `durationSeconds` and `endedAt`
+      unchanged, and a save that moves a time writes `end - start`.
+- [ ] A test that the two-hour feeding cap is rejected on save as well as bounded in the picker.
+- [ ] The Task 0068 edit-screen proof items: a feeding written after the counted-pause rule opens with
+      a derived length equal to its stored length and no annotation, and one written before it opens
+      showing its real interval while the Timeline row still shows the stored length, converging only
+      when a time is edited and saved.
+
+## Acceptance criteria
+
+- [ ] A breast feed on `app/feeding/manual.tsx` and `app/edit/feeding.tsx` takes a start time and an
+      end time, with a derived read-only duration and no minutes input or quick-duration chips.
+- [ ] A bottle feed and a solids entry keep their single time picker and gain no end time.
+- [ ] Both screens prefill from the record's own stored timestamps, so a legacy paused feeding opens
+      showing its real interval.
+- [ ] Every bound is the picker's own range: no future value, end at least a minute after start, the
+      two-hour cap honored, and Save disabled until the two times are a minute apart.
+- [ ] `durationSeconds` is rewritten as `end - start` only when a time actually changed; a note-only,
+      side-only, or volume-only save leaves the stored length exactly as it was.
+- [ ] A feeding written after Task 0068 opens with a derived length equal to its stored length and no
+      annotation; one written before opens showing its real interval and converges only on a saved time
+      edit.
+- [ ] No duplicate or overlap check is added on either screen.
+- [ ] No schema change and nothing reaching the widget, the Watch, or the Live Activity.
+
+## Non-goals
+
+- Sleep, pumping, and tummy time, which are Tasks 0072 and 0074.
+- Wiring the duplicate or overlap check for feeding, which is
+  `decisions/resolved/019-interval-overlap-non-sleep.md`.
+- An end time on a bottle feed, a solids entry, a diaper, or a growth measurement.
+- Any change to pause accounting, settled by Task 0068, or backfilling records written before it.
+- Changing the bottle volume input, the volume chips, or the feeding-type filter.
+- Changing the running timer's bounds or its clamp, which is Task 0071.
+- Any schema change.

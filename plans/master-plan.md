@@ -139,6 +139,31 @@ Durable decisions that apply across all tasks:
   the form `per napping day · 5 of 7`. Existing metrics keep their current divisors: `Avg Total
   Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and `Avg Nap Duration`
   divides by nap count.
+- **One shared timer lifecycle module with a per-type adapter**: feeding, sleep, pumping, and tummy
+  time run one implementation of the timer restore sequence — obsolescence guards, pending-stop read
+  and match, identity resolution and backfill, the completion-secured short circuit, lock
+  reconciliation and its persisted state, the lock-conflict path, server-only lock hydration, and the
+  Live Activity restart with its `effectiveStartTime` pause arithmetic. Each type registers an adapter
+  supplying only the activity-type literal, the storage service, the `timer_data` codec,
+  `buildRecord(startedAt, endedAt, payload)`, the Live Activity detail argument and type literal, and
+  the `RESTORE_TIMER` dispatch. The duration rule is module-owned, not an adapter member. Record
+  construction is adapter-owned and every path that writes an activity record calls it, the local stop
+  included, so each type has one record definition rather than two. The contexts keep their reducers,
+  entries lists, non-timer surfaces, and public start, stop, pause, and resume APIs; the start, pause,
+  and resume paths stay outside the module. `timer_data` stays `Record<string, unknown>` on the wire.
+  The extraction changes no behavior and is proved by
+  `src/__tests__/external-timer-stop-providers.integration.test.tsx` passing with no edit.
+- **A resumed pause counts and an open pause bills nothing**: on feeding, sleep, pumping, and tummy
+  time alike, a paused span the caregiver returned from counts as elapsed time, so every record
+  written from a timer satisfies `durationSeconds === endedAt - startedAt`, and every running-timer
+  readout shows what stopping at that instant would record — frozen at `pausedAt` while a pause is
+  open, counting the span after a resume, with the start never shifted forward. Stopping a paused
+  timer ends the record at `pausedAt` on every surface that can issue a stop, which is what makes
+  counting safe. No schema change, no stored pause span, no backfill: records written before the rule
+  keep their disagreement permanently. The widget and the Watch keep sending `pauseDurationMs` and
+  `accumulatedSeconds` and neither native target changes; `toggle_timer_pause` keeps its signature,
+  its meaning, and its owner-only guard. The cost taken deliberately is that tummy time and pumping
+  summed minutes now carry resumed pause spans while their record counts do not move.
 - **Nap slots are chronological and earn their row twice over**: a nap slot is the nth nap started
   within a sleep-day, counted forward from the start of the day, so a skipped nap shifts every later
   nap of that day up a slot. Each slot's averages divide by that slot's own occurrence count, never
@@ -146,6 +171,25 @@ Durable decisions that apply across all tasks:
   when it occurred at least 3 times **and** on at least 30% of the napping days in the range, both
   bounds inclusive; when no slot clears both tests the panel does not render at all. Nothing caps the
   number of slots.
+- **A running timer's start belongs to its starter and never leaves the cleanup horizon**: only the
+  caregiver who started a timer may move its `started_at`, in place on the activity screen, to a value
+  between twelve hours ago and now, floored further at the previous saved same-type activity's end. The
+  bound matches `cleanup_stale_timer_locks`, so a rewound start can never make a live lock eligible for
+  deletion, and it governs "Started earlier" identically. The range is shown as the picker's own bounds
+  on both platforms rather than clamped after the fact. The write is a direct `UPDATE` on
+  `active_timers.started_at` under a database trigger that fires only when that column changes, because
+  offline replay writes allowlisted tables generically and would bypass an RPC. The row policy stays
+  `USING (started_by = auth.uid())`, the dashboard card keeps its read-only gate, and no policy widens.
+- **Hand-entered activities are clock times with a derived length**: both the manual add and the saved-
+  record edit paths take a start time and an end time for every type that has a duration — sleep,
+  breastfeeding, pumping, and tummy time — with duration a read-only readout and no minutes field or
+  quick-duration chips. A bottle feed and a solids entry stay moment records. Every bound is shown as
+  the picker's own range and restates a validator already shipped rather than introducing a number: no
+  future value, no floor in time, an end at least a minute after its start, and the per-type caps of
+  24h sleep, 2h feeding, 1h pumping, and 2h tummy time. The stored `durationSeconds` is rewritten as
+  `end - start` only when a caregiver actually moved a time, so a note-only save never silently changes
+  a legacy record's length. Saved records keep the master plan's warn-and-allow overlap policy while the
+  running-timer clamp above does not follow the record, so the app holds two overlap rules on purpose.
 
 ---
 
@@ -205,7 +249,6 @@ Durable decisions that apply across all tasks:
 - [x] 0053 · Include the full selected range in exports and reports (after 0051) → tasks/done/0053-resolve-export-report-ranges.md
 - [-] 0054 · Restrict the wake-window reminder RPC to the service role (deferred by owner 2026-08-04) → tasks/0054-restrict-wake-window-reminder-rpc.md
 - [-] 0055 · Prevent self-assignment of household and owner role (deferred by owner 2026-08-04; after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
-- [-] 0056 · Keep an active timer lock reclaimable (deferred by owner 2026-08-04; after 0055) → tasks/0056-keep-active-timer-locks-reclaimable.md
 - [-] 0057 · Bind Live Activity identity to the timer, not the activity type (deferred by owner 2026-08-04) → tasks/0057-bind-live-activity-to-timer-identity.md
 - [-] 0058 · Recover a queued activity write that the server denies (deferred by owner 2026-08-04) → tasks/0058-recover-denied-queued-activity-writes.md
 - [-] 0059 · Cover WatchConnectivity delivery failures (deferred by owner 2026-08-04) → tasks/0059-cover-watchconnectivity-delivery-failures.md
@@ -215,6 +258,16 @@ Durable decisions that apply across all tasks:
 - [x] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/done/0063-guarantee-exit-from-widget-opened-activity-screens.md
 - [x] 0064 · Add the Avg Nap Time card → tasks/done/0064-add-avg-nap-time-card.md
 - [x] 0065 · Add the Nap Schedule panel (after 0064) → tasks/done/0065-add-nap-schedule-panel.md
+- [ ] 0066 · Extract the shared timer lifecycle module and migrate tummy time → tasks/0066-extract-shared-timer-lifecycle-tummy-time.md
+- [ ] 0067 · Migrate pumping, feeding, and sleep onto the shared timer lifecycle (after 0066) → tasks/0067-migrate-remaining-timers-to-shared-lifecycle.md
+- [ ] 0068 · Count a resumed pause and end a stopped paused timer at `pausedAt` (after 0067) → tasks/0068-count-resumed-pause-in-recorded-activity.md
+- [ ] 0069 · Show what stopping would record on every running-timer surface (after 0068) → tasks/0069-show-counted-pause-on-running-timer-surfaces.md
+- [ ] 0070 · Guard `active_timers.started_at` against out-of-horizon writes → tasks/0070-guard-active-timer-start-bounds.md
+- [ ] 0071 · Edit a running timer's start time in place (after 0069, 0070) → tasks/0071-edit-running-timer-start-time.md
+- [ ] 0072 · Log and edit a sleep by clock time (after 0068) → tasks/0072-log-and-edit-sleep-by-clock-time.md
+- [ ] 0073 · Log and edit a feeding by clock time (after 0072) → tasks/0073-log-and-edit-feeding-by-clock-time.md
+- [ ] 0074 · Log and edit pumping and tummy time by clock time (after 0072) → tasks/0074-log-and-edit-pumping-and-tummy-time-by-clock-time.md
+- [ ] 0075 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0074) → tasks/0075-warn-on-overlapping-non-sleep-records.md
 
 ## Workflow status
 
@@ -232,4 +285,59 @@ depends on the decision behind Task 0064. It depends on 0064 because both tasks 
 section to `SummaryView`, and both add keys to the `sleepPatterns` namespace across the same nine
 locale files. Task 0064 has merged, so Task 0065 is claimable.
 
-Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054 through 0057 and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Tasks 0055 and 0056 depend on their predecessors only because all three add migrations and would otherwise collide on the next migration ordinal.
+Tasks 0066 and 0067 were added on 2026-08-05 from the shared timer seam cluster,
+`plans/decision-maps/unified-timer-contract/clusters/shared-timer-seam.md`, and its single member
+decision `decisions/resolved/010-shared-timer-seam.md`. Both forcing arguments behind that decision
+have expired — the household timer control cut retired the remote record builder, and decision `018`
+made the eight duration sites identical — so the extraction is a maintainability case the owner chose
+to plan anyway. The ordinal `0066` was previously used by a Live Activity toggle task removed in PR
+#212 and is reused here by the owner's decision. Task 0066 builds the module and migrates tummy time
+in one pass; Task 0067 migrates pumping, feeding, and sleep in that order and carries the two-account
+sleep smoke as a manual `[verify]` checkpoint. Plan the shared seam before the pause-semantics and
+timer-time-editing clusters, so those land in the module once instead of in four contexts.
+
+Tasks 0068 and 0069 were added on 2026-08-05 from the pause-semantics cluster,
+`plans/decision-maps/unified-timer-contract/clusters/pause-semantics.md`, and its two member
+decisions `decisions/resolved/006-pause-semantics.md` and
+`decisions/resolved/018-disagreeing-length-display.md`, the second of which supersedes the first's
+per-type split. Task 0068 changes what gets written — the counted-pause duration and the stop-at-
+`pausedAt` truncation, which are one rule and cannot be split — and Task 0069 brings every running
+readout in line with it. Both depend on the shared timer seam so the duration rule, the record
+construction, and the Live Activity restart arithmetic each change in one module rather than in four
+contexts; 0068 therefore waits on 0067. The timer-time-editing cluster is still unplanned, so the
+edit-screen proof items in decision `018` belong to that cluster and are deliberately absent from both
+tasks, as that cluster's Scope directs.
+
+Tasks 0070 through 0074 were added on 2026-08-05 from the timer-time-editing cluster,
+`plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md`, and its two member
+decisions `decisions/resolved/007-running-timer-start-time-edit.md` and
+`decisions/resolved/009-clock-time-log-editing.md`. The cluster splits cleanly in two, and the two
+halves are independent of each other: Tasks 0070 and 0071 change a running timer's anchor on
+`app/*/index.tsx` and in the database, while Tasks 0072 through 0074 change the eight hand-entry
+screens under `app/*/manual.tsx` and `app/edit/`. Their two bound rule sets differ deliberately — the
+running-timer clamp puts overlap out of reach, and saved records warn and allow — so they share no
+artifact and neither depends on the other.
+
+Task 0070 is the server guard alone and is claimable immediately: it takes migration `060` against a
+tree whose head is `059`. The owner removed Task 0056 on 2026-08-05 in its favor, because the trigger
+0070 adds rejects exactly the future-`started_at` write 0056 was written for, and 0056's own finding
+recorded that row-level security already blocks `started_by` reassignment. Nothing depended on 0056 and
+its file is deleted. Task 0071 then adds the client edit and waits on 0070 so the picker never offers a
+value the database rejects, and on 0069 so the Live Activity anchor arithmetic changes in the shared
+module once rather than being written and then rewritten.
+
+Tasks 0072 through 0074 depend on 0068 for the invariant `durationSeconds === endedAt - startedAt`,
+which is what lets the form derive a length and write it back without qualification, and they carry the
+edit-screen proof items from `decisions/resolved/018-disagreeing-length-display.md` that the pause-
+semantics batch deliberately left to this cluster. Task 0072 does sleep and extracts the shared
+start/end form section — no shared date/time pill component exists today, each of the eight screens
+inlines its own — and carries the sleep-only work of the edit-screen overlap check and the morning
+predicate reading the edited start. Tasks 0073 and 0074 reuse that section and can run in parallel.
+Task 0074 covers pumping and tummy time together by the owner's decision, since once the shared section
+exists both are the same mechanical change with no type-specific behavior. The duplicate and overlap
+check for feeding, pumping, and tummy time stays out of all three tasks: it is
+`decisions/resolved/019-interval-overlap-non-sleep.md`, planned after this cluster so it is wired into
+these screens' final shape once. Two caps the decision record does not name are carried from the
+shipped validators: 2h for feeding and 2h for tummy time.
+
+Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054, 0055, 0057, and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Task 0055 depends on its predecessor only because both add migrations and would otherwise collide on the next migration ordinal. Task 0056, the remaining finding, was removed on 2026-08-05 and is superseded by Task 0070.
