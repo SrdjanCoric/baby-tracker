@@ -105,6 +105,25 @@ describe("tummy time timer adapter", () => {
     expect(encoded).not.toHaveProperty("pausedAt");
   });
 
+  it("round-trips a paused timer_data payload", () => {
+    const adapter = createTummyTimeTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer: vi.fn(),
+    });
+    const payload = {
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      isPaused: true,
+      totalPausedMs: 45_000,
+      pausedAt: "2026-08-05T12:00:45.000Z",
+    };
+
+    const encoded = adapter.timerDataCodec.encode(payload);
+
+    expect(encoded).toEqual(payload);
+    expect(adapter.timerDataCodec.decode(encoded)).toEqual(payload);
+  });
+
   it("builds a conflicted timer record with the accepted completion activity id", async () => {
     const adapter = createTummyTimeTimerAdapter({
       babyId: "baby-1",
