@@ -97,3 +97,8 @@ locale resources.
 - No new range beyond 7, 14, and 30 days.
 - No per-nap-slot statistics; that is decision
   `plans/decision-maps/unified-timer-contract/decisions/resolved/014-per-nap-slot-statistics.md`.
+
+## Review decisions
+
+- skipped (minor): TR-3 — No test binds the shipped English subtitle string to its interpolation values — User requested remediation of TR-1 and TR-2 only.
+- skipped (minor): TR-4 — The zero-nap component test's value assertion is vacuous — User requested remediation of TR-1 and TR-2 only.
