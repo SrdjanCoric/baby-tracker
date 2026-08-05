@@ -14,6 +14,12 @@ tags:
 - openLink:
     link: sofibaby://sleep
 
+- runFlow:
+    when:
+      visible: "Open in .*Sofi Baby Tracker.*"
+    commands:
+      - tapOn: "Open"
+
 - extendedWaitUntil:
     visible:
       id: "sleep-screen"
