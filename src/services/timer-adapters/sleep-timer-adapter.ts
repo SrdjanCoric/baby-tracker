@@ -59,7 +59,7 @@ export function createSleepTimerAdapter({
   ): MorningClassificationState =>
     resolveMorningClassification(
       startedAt,
-      typeof value === "string"
+      typeof value === "string" && value !== "unresolved"
         ? (value as MorningClassificationState)
         : undefined
     );
