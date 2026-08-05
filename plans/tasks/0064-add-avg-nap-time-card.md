@@ -65,14 +65,17 @@ locale resources.
       change neither the numerator nor the divisor.
 - [x] A range holding no naps returns `0` for the average and `0` for the napping-day count, and the
       card renders its divisor as `0 of 7`.
-- [x] A nap spanning the day boundary contributes to the day that the existing
-      `splitSleepAtDayBoundary` assigns it to, and its day counts as a napping day.
+- [x] A sleep spanning a day boundary is classified once by `classifySleepByTimeRange`; its full
+      selected duration counts only toward that classification. A classified nap belongs to the
+      local calendar date on which it starts, while a classified night retains shifted sleep-day
+      grouping. `splitSleepAtDayBoundary` affects visual charts only.
 - [x] A component test asserts the card renders its divisor subtitle, and that its value differs
       from `Avg Total Sleep` on data where the two divisors diverge.
 - [x] A locale test asserts both new keys are present and non-empty in all nine locales, and differ
       from English in the non-English ones, following the existing per-feature locale-test pattern.
-- [x] `Avg Total Sleep`, `Avg Naps/Day`, `Avg Nap Duration`, and nap-versus-night classification are
-      unchanged, proved by the existing `calculateSleepSummary` tests continuing to pass unmodified.
+- [x] `Avg Total Sleep` and the nap-versus-night classification algorithm are unchanged. Summary
+      nap and night durations use that whole-session classification rather than visual boundary
+      segments.
 
 ## Implementation evidence
 
@@ -87,12 +90,15 @@ locale resources.
 - Focused pre-review proof: the sleep-summary and locale unit files pass 109 tests; the component
   file passes 3 tests; targeted warning-free lint, repository typecheck, and `git diff --check` pass.
   Logs are retained in `/tmp/agent-workflows/e2f8af45fd34/799711673604`.
+- Review remediation proof: the two-day attribution regression passes with a 75-minute average;
+  full Vitest passes 2,510 tests, the full component suite passes 847 tests, and targeted lint plus
+  repository typecheck pass.
 
 ## Non-goals
 
-- No change to nap versus night classification, to `Avg Total Sleep`, to `Avg Naps/Day`, or to
-  `Avg Nap Duration`, including their labels. Whether `Avg Nap Time` and the adjacent
-  `Avg Nap Duration` label need renaming is unresolved and stays out of this task.
+- No change to the nap-versus-night classification algorithm, `Avg Total Sleep`, or metric labels.
+  Whether `Avg Nap Time` and the adjacent `Avg Nap Duration` label need renaming is unresolved and
+  stays out of this task.
 - No age-band comparison, target, or goal range on the new card.
 - No new range beyond 7, 14, and 30 days.
 - No per-nap-slot statistics; that is decision

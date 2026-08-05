@@ -437,13 +437,17 @@ export function calculateSleepSummary(
     const groupingStart = new Date(
       Math.max(startDate.getTime(), window.start.getTime())
     );
-    const startDay = dailyData.get(sleepDayKey(groupingStart, dayStartHour));
-    if (startDay) {
+    const summaryDayKey =
+      autoType === "nap"
+        ? localDateKey(startDate)
+        : sleepDayKey(groupingStart, dayStartHour);
+    const summaryDay = dailyData.get(summaryDayKey);
+    if (summaryDay) {
       if (autoType === "nap") {
-        startDay.napCount++;
-        startDay.napSeconds += selectedSeconds;
+        summaryDay.napCount++;
+        summaryDay.napSeconds += selectedSeconds;
       } else {
-        startDay.nightSeconds += selectedSeconds;
+        summaryDay.nightSeconds += selectedSeconds;
       }
     }
   }

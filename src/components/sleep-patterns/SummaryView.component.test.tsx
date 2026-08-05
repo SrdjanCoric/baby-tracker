@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react-native";
+import { render, screen, within } from "@testing-library/react-native";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { SleepPatternColors } from "./useSleepPatternColors";
 
@@ -124,7 +124,10 @@ describe("SummaryView", () => {
 
     const { rerender } = renderSummary("24h");
 
-    expect(screen.getByText("8h 25m")).toBeTruthy();
+    const avgTotalSleepCard = screen.getByText(
+      "sleepPatterns.avgTotalSleep"
+    ).parent!.parent!;
+    expect(within(avgTotalSleepCard).getByText("8h 25m")).toBeTruthy();
     expect(screen.getByText("20:35")).toBeTruthy();
     expect(screen.getByTestId("daily-bar-count").props.children).toBe(7);
     expect(screen.getByTestId("daily-bar-keys").props.children).toBe(

@@ -546,9 +546,15 @@ describe("calculateSleepSummary", () => {
     expect(result.nappingDays).toBe(0);
   });
 
-  it("counts the full duration of a nap classified across day start", () => {
+  it("attributes an after-midnight nap to its calendar day", () => {
     const now = new Date(2025, 2, 8, 12, 0, 0);
     const sleeps = [
+      makeSleep({
+        startedAt: localISO(2025, 3, 6, 10, 0),
+        endedAt: localISO(2025, 3, 6, 11, 0),
+        type: "nap",
+        durationSeconds: 60 * 60,
+      }),
       makeSleep({
         startedAt: localISO(2025, 3, 7, 5, 30),
         endedAt: localISO(2025, 3, 7, 7, 0),
@@ -559,8 +565,8 @@ describe("calculateSleepSummary", () => {
 
     const result = calculateSleepSummary(sleeps, 7, now, 6, 19);
 
-    expect(result.avgNapTimeSeconds).toBe(90 * 60);
-    expect(result.nappingDays).toBe(1);
+    expect(result.avgNapTimeSeconds).toBe(75 * 60);
+    expect(result.nappingDays).toBe(2);
   });
 
   it("handles days with no sleep data", () => {
