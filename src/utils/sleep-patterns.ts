@@ -416,33 +416,35 @@ export function calculateSleepSummary(
   }
 
   for (const sleep of recentSleeps) {
+    const startDate = new Date(sleep.startedAt);
+    const endDate = new Date(sleep.endedAt!);
+    const autoType = classifySleepByTimeRange(
+      startDate,
+      endDate,
+      dayStartHour,
+      dayEndHour
+    );
     const segments = splitSleepAtDayBoundary(sleep, dayStartHour, dayEndHour);
+    let selectedSeconds = 0;
     for (const seg of segments) {
       const day = dailyData.get(seg.dateKey);
       if (!day) continue;
 
       day.totalSeconds += seg.seconds;
-
-      if (seg.type === "night") {
-        day.nightSeconds += seg.seconds;
-      } else {
-        day.napSeconds += seg.seconds;
-      }
+      selectedSeconds += seg.seconds;
     }
 
-    const startDate = new Date(sleep.startedAt);
     const groupingStart = new Date(
       Math.max(startDate.getTime(), window.start.getTime())
     );
     const startDay = dailyData.get(sleepDayKey(groupingStart, dayStartHour));
-    const autoType = classifySleepByTimeRange(
-      startDate,
-      new Date(sleep.endedAt!),
-      dayStartHour,
-      dayEndHour
-    );
-    if (startDay && autoType === "nap") {
-      startDay.napCount++;
+    if (startDay) {
+      if (autoType === "nap") {
+        startDay.napCount++;
+        startDay.napSeconds += selectedSeconds;
+      } else {
+        startDay.nightSeconds += selectedSeconds;
+      }
     }
   }
 

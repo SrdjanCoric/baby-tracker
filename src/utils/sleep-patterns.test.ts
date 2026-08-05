@@ -534,9 +534,9 @@ describe("calculateSleepSummary", () => {
     const sleeps = [
       makeSleep({
         startedAt: localISO(2025, 3, 6, 20, 0),
-        endedAt: localISO(2025, 3, 6, 23, 0),
+        endedAt: localISO(2025, 3, 7, 7, 0),
         type: "night",
-        durationSeconds: 3 * 3600,
+        durationSeconds: 11 * 3600,
       }),
     ];
 
