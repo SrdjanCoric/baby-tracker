@@ -121,6 +121,10 @@ yes.
   wall-clock elapsed time, while their conflict-recovery paths already clamped the same input. The
   owner retained the shared helper's safe zero-clamp during review remediation on 2026-08-05. Valid
   timer behavior is unchanged, and inconsistent timer state can no longer save a negative duration.
+- Sleep's pre-migration final restore dispatch checked only whether lock reconciliation was stale;
+  the shared lifecycle also checks whether Stop made the restore obsolete. The owner retained that
+  guard during review remediation on 2026-08-05 so an in-flight local restore cannot resurrect a
+  timer the user just stopped.
 
 ## Implementation evidence
 
