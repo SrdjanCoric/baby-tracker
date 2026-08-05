@@ -66,9 +66,19 @@ export interface TimerDataCodec<TPayload> {
   decode(timerData: Record<string, unknown>): TPayload;
 }
 
-export interface TimerLifecycleStorage<TActiveTimer, TRecord> {
+type HydratedActiveTimer<TPayload extends SharedTimerPayload> =
+  TimerLifecycleActiveTimer & TPayload & TimerIdentity;
+
+export interface TimerLifecycleStorage<
+  TPayload extends SharedTimerPayload,
+  TActiveTimer,
+  TRecord,
+> {
   getActiveTimer(babyId: string): Promise<TActiveTimer | null>;
-  setActiveTimer(babyId: string, activeTimer: TActiveTimer): Promise<void>;
+  setActiveTimer(
+    babyId: string,
+    activeTimer: HydratedActiveTimer<TPayload>
+  ): Promise<void>;
   clearActiveTimer(babyId: string): Promise<void>;
   getRecordById(babyId: string, recordId: string): Promise<TRecord | null>;
 }
@@ -80,7 +90,7 @@ export interface TimerLifecycleAdapter<
   TCreateInput,
 > {
   activityType: TimerActivityType;
-  storage: TimerLifecycleStorage<TActiveTimer, TRecord>;
+  storage: TimerLifecycleStorage<TPayload, TActiveTimer, TRecord>;
   timerDataCodec: TimerDataCodec<TPayload>;
   buildRecord(
     startedAt: Date,
@@ -276,17 +286,18 @@ export async function restoreTimerLifecycle<
       return;
     }
 
-    if (!activeTimer.timerInstanceId || !activeTimer.activityId) {
-      await adapter.storage.setActiveTimer(baby.id, {
-        ...activeTimer,
-        ...identity,
-      });
-    }
-
     const payload = adapter.timerDataCodec.decode(
       activeTimer as unknown as Record<string, unknown>
     );
     const payloadWithIdentity = { ...payload, ...identity };
+
+    if (!activeTimer.timerInstanceId || !activeTimer.activityId) {
+      await adapter.storage.setActiveTimer(baby.id, {
+        ...activeTimer,
+        ...payloadWithIdentity,
+      });
+    }
+
     let isStale = false;
     let lockState: TimerLockReconciliationState =
       activeTimer.lockState ?? "offline";
@@ -299,7 +310,7 @@ export async function restoreTimerLifecycle<
         lockState = nextLockState;
         await adapter.storage.setActiveTimer(baby.id, {
           ...activeTimer,
-          ...identity,
+          ...payloadWithIdentity,
           lockState: nextLockState,
         });
       };
@@ -411,7 +422,7 @@ export async function restoreTimerLifecycle<
           startedAt: lock.startedAt,
           ...payloadWithIdentity,
           lockState: "owned",
-        } as unknown as TActiveTimer);
+        });
         if (!isCurrentBabyBinding()) return;
 
         if (!payload.isPaused) {
