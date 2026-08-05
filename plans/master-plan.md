@@ -132,6 +132,27 @@ Durable decisions that apply across all tasks:
   intact, and the legacy join RPC signature accepts new invitations for older recipient clients. The
   migration starts in legacy-compatible mode; the release owner enables email enforcement after the
   new app version is deployed. Verified HTTPS links and website deployment are deferred.
+- **Nap statistics are averaged over napping days**: a nap metric expressed per day divides by the
+  days in the selected range holding at least one nap, not by days with any sleep and not by calendar
+  days. Night-only and empty days are excluded from both the numerator and the divisor. Because the
+  sleep summary screen then carries more than one divisor, any such card states its own divisor in
+  the form `per napping day · 5 of 7`. Existing metrics keep their current divisors: `Avg Total
+  Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and `Avg Nap Duration`
+  divides by nap count.
+- **Nap slots are chronological and earn their row twice over**: a nap slot is the nth nap started
+  within a sleep-day, counted forward from the start of the day, so a skipped nap shifts every later
+  nap of that day up a slot. Each slot's averages divide by that slot's own occurrence count, never
+  by napping days and never by the range length, and each row states that count. A slot renders only
+  when it occurred at least 3 times **and** on at least 30% of the napping days in the range, both
+  bounds inclusive; when no slot clears both tests the panel does not render at all. Nothing caps the
+  number of slots.
+- **Live Activity visibility is one device-local global switch**: a single settings preference,
+  default on, is checked inside `src/services/live-activity-service.ts` ahead of every start path,
+  including push-to-start registration, so all four timer types are covered by one gate. Turning it
+  off ends any Live Activity already on screen; timers, widget, and Watch behavior are unchanged.
+  Apple owns Live Activity presentation, so the setting copy never promises a shorter or narrower
+  Live Activity or a freed status-bar clock. Per-activity-type control and per-timer dismiss are
+  rejected.
 
 ---
 
@@ -199,11 +220,32 @@ Durable decisions that apply across all tasks:
 - [x] 0061 · Localize the Apple Watch app and the iOS widget → tasks/done/0061-localize-watch-and-widget.md
 - [x] 0062 · Fix the Timeline daily sleep total → tasks/done/0062-fix-timeline-daily-sleep-total.md
 - [x] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/done/0063-guarantee-exit-from-widget-opened-activity-screens.md
+- [ ] 0064 · Add the Avg Nap Time card → tasks/0064-add-avg-nap-time-card.md
+- [ ] 0065 · Add the Nap Schedule panel (after 0064) → tasks/0065-add-nap-schedule-panel.md
+- [ ] 0066 · Let caregivers turn the Live Activity off → tasks/0066-let-caregivers-turn-live-activity-off.md
 
 ## Workflow status
 
 Tasks 0001 through 0045 and Tasks 0047, 0048, and 0050 are closed. Task 0049 is deferred by the release owner and must not be claimed without an explicit owner decision. On 2026-08-01 the owner removed 0049 from Task 0051's prerequisites, because 0051 audits TypeScript/React Native product surfaces while Watch native synchronization already falls inside Task 0052's scope. Task 0052 never listed 0049 as a prerequisite; its implementation work no longer consumes 0049 evidence and instead audits Watch boundaries directly, recording the missing attribution trace as a stated limitation. No remaining task depends on 0049. Tasks 0051 and 0052 complete the adjacent application, native, and sync sweeps. Repository-guideline evidence is recorded in completed task files and in `plans/repository-guidelines-assessment.md`.
 
 On 2026-08-04 the owner deferred Tasks 0054 through 0060 so that Task 0063 takes priority. Task 0063 fixes a trap the owner hit in real usage: opening an activity screen from the iOS widget on a cold launch leaves the caregiver unable to return to the app, which makes the app unusable until it is force-quit. Those deferred tasks keep their existing dependency suffixes and are not claimable without an explicit owner decision; none of them is a prerequisite of 0063. Task 0063 is therefore the only claimable pointer. A separate widget defect found the same day — the configuration intent's activity parameter resolving to nil, so the widget always renders Feeding regardless of the Edit Widget selection — is still under diagnosis and is deliberately outside Task 0063's scope.
+
+Task 0063 merged on 2026-08-05. Task 0064 was added the same day from the resolved decision
+`plans/decision-maps/unified-timer-contract/decisions/resolved/012-daily-nap-total-average.md`, has
+no prerequisites, and is the only claimable pointer; Tasks 0049 and 0052 through 0060 remain deferred
+and are not claimable without an explicit owner decision.
+
+Task 0065 was added on 2026-08-05 from the resolved decision
+`plans/decision-maps/unified-timer-contract/decisions/resolved/014-per-nap-slot-statistics.md`, which
+depends on the decision behind Task 0064. It depends on 0064 because both tasks extend the
+`SleepSummary` contract and `calculateSleepSummary` in `src/utils/sleep-patterns.ts`, both add a
+section to `SummaryView`, and both add keys to the `sleepPatterns` namespace across the same nine
+locale files. Task 0064 therefore remains the only claimable pointer until it merges.
+
+Task 0066 was added on 2026-08-05 from the resolved decision
+`plans/decision-maps/unified-timer-contract/decisions/resolved/011-live-activity-visibility-toggle.md`.
+It has no prerequisites: it touches the Live Activity service seam, a new preference storage module,
+a new settings screen, and the `settings` locale namespace, none of which Tasks 0064 and 0065 touch.
+Tasks 0064 and 0066 are both claimable.
 
 Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054 through 0057 and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Tasks 0055 and 0056 depend on their predecessors only because all three add migrations and would otherwise collide on the next migration ordinal.

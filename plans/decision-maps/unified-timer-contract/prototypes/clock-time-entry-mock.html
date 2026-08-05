@@ -1,0 +1,754 @@
+<title>Clock-time entry — proposed manual and edit forms</title>
+
+<style>
+  :root {
+    --ground: #F5EDE8;
+    --ground-2: #EFE7E2;
+    --card: #FFFFFF;
+    --ink: #2D2A26;
+    --ink-2: #5C5752;
+    --ink-3: #7A756E;
+    --hair: #EDEAE6;
+    --hair-strong: #D5D1CC;
+    --muted-bg: #F1EEF4;
+    --accent: #6B5B95;
+    --accent-wash: #F2EFF4;
+    --go: #4A7F4D;
+    --stop: #A8574B;
+    --bezel: #D9CFC9;
+    --shadow: 0 1px 2px rgba(45, 42, 38, .06), 0 12px 36px rgba(45, 42, 38, .10);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #121110;
+      --ground-2: #1A1918;
+      --card: #2A2725;
+      --ink: #F5F2F0;
+      --ink-2: #B8B3B0;
+      --ink-3: #9E9A97;
+      --hair: #2F2C32;
+      --hair-strong: #4A464F;
+      --muted-bg: #34303A;
+      --accent: #A995C9;
+      --accent-wash: #2E2840;
+      --go: #6DB070;
+      --stop: #D08476;
+      --bezel: #3A363D;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 36px rgba(0, 0, 0, .45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #121110;
+    --ground-2: #1A1918;
+    --card: #2A2725;
+    --ink: #F5F2F0;
+    --ink-2: #B8B3B0;
+    --ink-3: #9E9A97;
+    --hair: #2F2C32;
+    --hair-strong: #4A464F;
+    --muted-bg: #34303A;
+    --accent: #A995C9;
+    --accent-wash: #2E2840;
+    --go: #6DB070;
+    --stop: #D08476;
+    --bezel: #3A363D;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 36px rgba(0, 0, 0, .45);
+  }
+
+  :root[data-theme="light"] {
+    --ground: #F5EDE8;
+    --ground-2: #EFE7E2;
+    --card: #FFFFFF;
+    --ink: #2D2A26;
+    --ink-2: #5C5752;
+    --ink-3: #7A756E;
+    --hair: #EDEAE6;
+    --hair-strong: #D5D1CC;
+    --muted-bg: #F1EEF4;
+    --accent: #6B5B95;
+    --accent-wash: #F2EFF4;
+    --go: #4A7F4D;
+    --stop: #A8574B;
+    --bezel: #D9CFC9;
+    --shadow: 0 1px 2px rgba(45, 42, 38, .06), 0 12px 36px rgba(45, 42, 38, .10);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+  }
+
+  h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+    font-size: clamp(28px, 4.2vw, 40px);
+    line-height: 1.12;
+    letter-spacing: -.015em;
+    font-weight: 600;
+    text-wrap: balance;
+    margin: 10px 0 14px;
+  }
+
+  h2 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h3 {
+    font-size: 13px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 700;
+    margin: 0 0 10px;
+  }
+
+  .lede {
+    max-width: 62ch;
+    color: var(--ink-2);
+    font-size: 17px;
+  }
+
+  .meta {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hair-strong);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .86em;
+    color: var(--ink-2);
+  }
+
+  section.block { margin-top: 56px; }
+
+  .block-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--hair-strong);
+  }
+
+  .block-head p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 15px;
+    max-width: 58ch;
+  }
+
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 340px)) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+
+  @media (max-width: 1000px) {
+    .compare { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .notes-col { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 700px) {
+    .compare { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .col-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex: none;
+  }
+
+  .dot.now { background: var(--hair-strong); }
+  .dot.next { background: var(--go); }
+
+  /* ---------- phone ---------- */
+
+  .phone {
+    background: var(--bezel);
+    border-radius: 44px;
+    padding: 9px;
+    box-shadow: var(--shadow);
+    width: 100%;
+  }
+
+  .screen {
+    background: var(--card);
+    border-radius: 36px;
+    overflow: hidden;
+    padding: 10px 0 18px;
+  }
+
+  .handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 99px;
+    background: var(--hair-strong);
+    margin: 6px auto 12px;
+  }
+
+  .sheet-title {
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .sheet-sub {
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-3);
+    margin: 2px 0 18px;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 18px 16px;
+    font-size: 15px;
+    color: var(--accent);
+  }
+
+  .nav strong {
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .form { padding: 0 22px; display: flex; flex-direction: column; gap: 22px; }
+
+  .field-label {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+
+  .sublabel {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin: 0 0 8px;
+  }
+
+  .pill-row { display: flex; gap: 10px; }
+
+  .pill {
+    flex: 1;
+    background: var(--muted-bg);
+    border-radius: 14px;
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pill span:last-child { color: var(--accent); }
+
+  .input {
+    background: var(--muted-bg);
+    border-radius: 14px;
+    padding: 13px 16px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .input .unit { color: var(--accent); font-size: 15px; font-weight: 500; }
+  .input .ghost { color: var(--ink-3); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .chip {
+    background: var(--muted-bg);
+    border-radius: 999px;
+    padding: 7px 15px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chip.on { background: var(--accent); color: #fff; }
+
+  .type-row { display: flex; gap: 10px; }
+
+  .type {
+    flex: 1;
+    text-align: center;
+    background: var(--muted-bg);
+    border-radius: 14px;
+    padding: 11px 0;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .type.on { background: var(--accent); color: #fff; }
+
+  .textarea {
+    background: var(--muted-bg);
+    border-radius: 14px;
+    padding: 13px 16px;
+    min-height: 62px;
+    font-size: 15px;
+    color: var(--ink-3);
+  }
+
+  .cta {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 16px;
+    text-align: center;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* derived duration readout */
+
+  .derived {
+    border: 1px dashed var(--hair-strong);
+    border-radius: 14px;
+    padding: 11px 16px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    background: var(--accent-wash);
+  }
+
+  .derived .k { font-size: 13px; color: var(--ink-3); }
+
+  .derived .v {
+    font-size: 17px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .added { position: relative; }
+
+  .added::before {
+    content: "";
+    position: absolute;
+    left: -14px;
+    top: 2px;
+    bottom: 2px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--go);
+  }
+
+  .removed { opacity: .42; }
+
+  .removed .field-label { text-decoration: line-through; text-decoration-color: var(--stop); }
+
+  /* ---------- annotation column ---------- */
+
+  .notes-col { display: flex; flex-direction: column; gap: 24px; }
+
+  .note {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .note p { margin: 0 0 10px; font-size: 14.5px; color: var(--ink-2); }
+  .note p:last-child { margin-bottom: 0; }
+  .note strong { color: var(--ink); }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  .tag.add { background: var(--go); color: #fff; }
+  .tag.cut { background: var(--stop); color: #fff; }
+  .tag.same { background: var(--hair-strong); color: var(--ink-2); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+  }
+
+  .table-scroll { overflow-x: auto; }
+
+  th, td {
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--hair);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: 12px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    border-bottom: 1px solid var(--hair-strong);
+  }
+
+  td code { white-space: nowrap; }
+
+  ul.plain { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 15px; }
+  ul.plain li { margin-bottom: 9px; }
+  ul.plain li:last-child { margin-bottom: 0; }
+  ul.plain strong { color: var(--ink); }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Decision map · unified timer contract</p>
+    <h1>Enter times, not arithmetic</h1>
+    <p class="lede">
+      Every manual entry and every edit asks for a duration in minutes. A caregiver who knows the baby
+      woke at 5:30 and reached the phone at 5:43 has to subtract by hand. These forms ask for a start
+      time and an end time instead, and show the duration they imply.
+    </p>
+    <div class="meta">
+      <span>Sleep shown; identical for feeding, pumping, tummy time</span>
+      <span><code>app/sleep/manual.tsx</code></span>
+      <span><code>app/edit/sleep.tsx</code></span>
+      <span>Mock only — no code written</span>
+    </div>
+  </header>
+
+  <!-- ============ BLOCK 1: LOG PAST ============ -->
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Logging a past entry</h2>
+      <p>Reached from <em>Log past sleep</em> on the activity screen. Start time is already a real clock
+        value here; the end is the one you compute in your head.</p>
+    </div>
+
+    <div class="compare">
+
+      <div>
+        <div class="col-label"><span class="dot now"></span> Today</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <p class="sheet-title">Log Past Sleep</p>
+            <p class="sheet-sub">Sofia</p>
+            <div class="form">
+              <div>
+                <p class="field-label">Start Time</p>
+                <div class="pill-row">
+                  <div class="pill"><span>Aug 5</span><span>📅</span></div>
+                  <div class="pill"><span>4:12 AM</span><span>🕐</span></div>
+                </div>
+              </div>
+              <div>
+                <p class="field-label">Duration (minutes)</p>
+                <div class="input"><span>78</span><span class="unit">min</span></div>
+                <p class="sublabel" style="margin-top:12px;">Quick Durations</p>
+                <div class="chips">
+                  <span class="chip">15</span><span class="chip">30</span><span class="chip">45</span>
+                  <span class="chip">60</span><span class="chip">90</span><span class="chip">120</span>
+                </div>
+              </div>
+              <div>
+                <p class="field-label">Notes</p>
+                <div class="textarea">Woke twice</div>
+              </div>
+              <div class="cta">Log Sleep</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="col-label"><span class="dot next"></span> Proposed</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <p class="sheet-title">Log Past Sleep</p>
+            <p class="sheet-sub">Sofia</p>
+            <div class="form">
+              <div>
+                <p class="field-label">Start Time</p>
+                <div class="pill-row">
+                  <div class="pill"><span>Aug 5</span><span>📅</span></div>
+                  <div class="pill"><span>4:12 AM</span><span>🕐</span></div>
+                </div>
+              </div>
+              <div class="added">
+                <p class="field-label">End Time</p>
+                <div class="pill-row">
+                  <div class="pill"><span>Aug 5</span><span>📅</span></div>
+                  <div class="pill"><span>5:30 AM</span><span>🕐</span></div>
+                </div>
+              </div>
+              <div class="added">
+                <div class="derived">
+                  <span class="k">Duration</span>
+                  <span class="v">1 h 18 m</span>
+                </div>
+              </div>
+              <div>
+                <p class="field-label">Notes</p>
+                <div class="textarea">Woke twice</div>
+              </div>
+              <div class="cta">Log Sleep</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes-col">
+        <div class="note">
+          <span class="tag add">Added</span>
+          <p><strong>End Time</strong>, built from the date and time pills the start already uses, so it
+            inherits the same picker, the same formatting, and the same 12/24-hour preference.</p>
+          <p>Its date pill matters: a night sleep starting 11:40 PM ends on the following day, which a
+            minutes field never had to express.</p>
+        </div>
+        <div class="note">
+          <span class="tag cut">Removed</span>
+          <p><strong>Duration (minutes)</strong> and the <strong>Quick Durations</strong> chips
+            (<code>15/30/45/60/90/120</code> for sleep). Duration becomes a derived readout, not an input,
+            so one entry can no longer carry a duration that disagrees with its own times.</p>
+          <p>The two-tap "30 minute nap" path goes with them. That is the cost of this change.</p>
+        </div>
+        <div class="note">
+          <span class="tag same">Unchanged</span>
+          <p>Start Time, Notes, the save button, and every activity-specific field — bottle volume,
+            breast side, food type — keep their current position and behavior.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ BLOCK 2: EDIT SAVED ============ -->
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Editing a saved entry</h2>
+      <p>Reached from the Timeline. This is the worse of the two: there is no start-time field at all
+        today, and saving recomputes the end as <code>startedAt + durationSeconds</code>, so a nap's real
+        end is unreachable from this screen.</p>
+    </div>
+
+    <div class="compare">
+
+      <div>
+        <div class="col-label"><span class="dot now"></span> Today</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="nav"><span>Cancel</span><strong>Sleep</strong><span>Save</span></div>
+            <div class="form">
+              <div>
+                <p class="field-label">Type</p>
+                <div class="type-row">
+                  <div class="type on">Nap</div>
+                  <div class="type">Night</div>
+                </div>
+              </div>
+              <div>
+                <p class="field-label">Duration (minutes)</p>
+                <div class="input"><span>78</span><span class="unit">min</span></div>
+              </div>
+              <div>
+                <p class="field-label">Notes (optional)</p>
+                <div class="textarea">Woke twice</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="col-label"><span class="dot next"></span> Proposed</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="nav"><span>Cancel</span><strong>Sleep</strong><span>Save</span></div>
+            <div class="form">
+              <div>
+                <p class="field-label">Type</p>
+                <div class="type-row">
+                  <div class="type on">Nap</div>
+                  <div class="type">Night</div>
+                </div>
+              </div>
+              <div class="added">
+                <p class="field-label">Start Time</p>
+                <div class="pill-row">
+                  <div class="pill"><span>Aug 5</span><span>📅</span></div>
+                  <div class="pill"><span>4:12 AM</span><span>🕐</span></div>
+                </div>
+              </div>
+              <div class="added">
+                <p class="field-label">End Time</p>
+                <div class="pill-row">
+                  <div class="pill"><span>Aug 5</span><span>📅</span></div>
+                  <div class="pill"><span>5:30 AM</span><span>🕐</span></div>
+                </div>
+              </div>
+              <div class="added">
+                <div class="derived">
+                  <span class="k">Duration</span>
+                  <span class="v">1 h 18 m</span>
+                </div>
+              </div>
+              <div>
+                <p class="field-label">Notes (optional)</p>
+                <div class="textarea">Woke twice</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes-col">
+        <div class="note">
+          <span class="tag add">Added</span>
+          <p><strong>Start Time</strong> and <strong>End Time</strong>. The screen currently exposes
+            neither, so correcting a mistimed start means deleting the entry and logging it again.</p>
+        </div>
+        <div class="note">
+          <span class="tag cut">Removed</span>
+          <p>The minutes input, and with it the <code>endedAt = startedAt + durationSeconds</code>
+            recomputation on save. Editing a paused sleep's duration today collapses its interval onto the
+            stored number and silently discards the pause; with times as the input, there is nothing to
+            collapse.</p>
+        </div>
+        <div class="note">
+          <span class="tag same">Unchanged</span>
+          <p>Sleep type chips, notes, and the Cancel / Save navigation bar.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ BLOCK 3: ACROSS TYPES ============ -->
+
+  <section class="block">
+    <div class="block-head">
+      <h2>The same change, four times</h2>
+      <p>Every activity type carries its own quick-duration set. All four sets go; the type-specific
+        fields beside them stay exactly as they are.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>Quick durations removed</th>
+            <th>Type-specific fields kept</th>
+            <th>Screens touched</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sleep</td>
+            <td><code>15 · 30 · 45 · 60 · 90 · 120</code></td>
+            <td>Nap / Night type</td>
+            <td><code>sleep/manual.tsx</code>, <code>edit/sleep.tsx</code></td>
+          </tr>
+          <tr>
+            <td>Feeding</td>
+            <td><code>5 · 10 · 15 · 20 · 30 · 45</code></td>
+            <td>Side, bottle amount, food type</td>
+            <td><code>feeding/manual.tsx</code>, <code>edit/feeding.tsx</code></td>
+          </tr>
+          <tr>
+            <td>Pumping</td>
+            <td><code>5 · 10 · 15 · 20 · 30 · 45</code></td>
+            <td>Side, volume</td>
+            <td><code>pumping/manual.tsx</code>, <code>edit/pumping.tsx</code></td>
+          </tr>
+          <tr>
+            <td>Tummy time</td>
+            <td><code>1 · 2 · 3 · 5 · 10 · 15</code></td>
+            <td>None</td>
+            <td><code>tummyTime/manual.tsx</code>, <code>edit/tummyTime.tsx</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ BLOCK 4: WHAT THIS FORM STILL HAS TO ANSWER ============ -->
+
+  <section class="block">
+    <div class="block-head">
+      <h2>What the form still has to answer</h2>
+      <p>Shape is settled above. These are the rules behind it, and they are what the decision record has
+        to state before anyone plans the work.</p>
+    </div>
+    <ul class="plain">
+      <li><strong>Bounds.</strong> An end before its start is already rejected by
+        <code>validateSleepEndTime</code>. What is not decided: whether an end in the future is allowed,
+        and whether an edit may push two entries into an overlap the running-timer start edit clamps
+        against.</li>
+      <li><strong>The minimum.</strong> Timers under 60 seconds are discarded in production. A manual
+        entry that lands inside the same window has no such rule today.</li>
+      <li><strong>Paused entries.</strong> A sleep recorded before the pause change stores a duration
+        shorter than its own interval. Opening it in this form shows a duration that disagrees with the
+        one on its Timeline row, and saving would silently correct it.</li>
+      <li><strong>Sleep type and classification.</strong> Moving a start across the day boundary changes
+        what the entry is. The stored <code>morningClassification</code> is written only at stop and on a
+        type change, and no path recomputes it when times move.</li>
+      <li><strong>The wake-window reminder.</strong> Editing an end fires
+        <code>on_sleep_update_last_ended</code>, which recomputes <code>babies.last_sleep_ended_at</code>
+        and moves a scheduled push. A time edit is not a client-only change.</li>
+    </ul>
+  </section>
+
+</div>

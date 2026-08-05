@@ -1,0 +1,937 @@
+<title>Nap statistics — proposed Summary additions</title>
+
+<style>
+  :root {
+    --ground: #F5EDE8;
+    --ground-2: #EFE7E2;
+    --card: #FFFFFF;
+    --ink: #2D2A26;
+    --ink-2: #5C5752;
+    --ink-3: #7A756E;
+    --hair: #EDEAE6;
+    --hair-strong: #D5D1CC;
+    --go: #4A7F4D;
+    --nap: #9E8DA9;
+    --night: #7A6B85;
+    --nap-wash: #F2EFF4;
+    --bezel: #D9CFC9;
+    --shadow: 0 1px 2px rgba(45, 42, 38, .06), 0 12px 36px rgba(45, 42, 38, .10);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #121110;
+      --ground-2: #1A1918;
+      --card: #2A2725;
+      --ink: #F5F2F0;
+      --ink-2: #B8B3B0;
+      --ink-3: #9E9A97;
+      --hair: #2F2C32;
+      --hair-strong: #4A464F;
+      --go: #6DB070;
+      --nap: #B5A7BD;
+      --night: #6A5B75;
+      --nap-wash: #2E2840;
+      --bezel: #3A363D;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 36px rgba(0, 0, 0, .45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #121110;
+    --ground-2: #1A1918;
+    --card: #2A2725;
+    --ink: #F5F2F0;
+    --ink-2: #B8B3B0;
+    --ink-3: #9E9A97;
+    --hair: #2F2C32;
+    --hair-strong: #4A464F;
+    --go: #6DB070;
+    --nap: #B5A7BD;
+    --night: #6A5B75;
+    --nap-wash: #2E2840;
+    --bezel: #3A363D;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 36px rgba(0, 0, 0, .45);
+  }
+
+  :root[data-theme="light"] {
+    --ground: #F5EDE8;
+    --ground-2: #EFE7E2;
+    --card: #FFFFFF;
+    --ink: #2D2A26;
+    --ink-2: #5C5752;
+    --ink-3: #7A756E;
+    --hair: #EDEAE6;
+    --hair-strong: #D5D1CC;
+    --go: #4A7F4D;
+    --nap: #9E8DA9;
+    --night: #7A6B85;
+    --nap-wash: #F2EFF4;
+    --bezel: #D9CFC9;
+    --shadow: 0 1px 2px rgba(45, 42, 38, .06), 0 12px 36px rgba(45, 42, 38, .10);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  /* ---------- document chrome ---------- */
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+  }
+
+  h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+    font-size: clamp(28px, 4.2vw, 40px);
+    line-height: 1.12;
+    letter-spacing: -.015em;
+    font-weight: 600;
+    text-wrap: balance;
+    margin: 10px 0 14px;
+  }
+
+  h2 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h3 {
+    font-size: 13px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .lede {
+    max-width: 62ch;
+    color: var(--ink-2);
+    font-size: 17px;
+  }
+
+  .meta {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hair-strong);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+
+  .meta code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  section.block {
+    margin-top: 56px;
+  }
+
+  .block-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--hair-strong);
+  }
+
+  .block-head p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 15px;
+    max-width: 60ch;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(340px, 390px) minmax(0, 1fr);
+    gap: 44px;
+    align-items: start;
+  }
+
+  @media (max-width: 860px) {
+    .split { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  }
+
+  /* ---------- phone ---------- */
+
+  .phone {
+    background: var(--bezel);
+    border-radius: 46px;
+    padding: 10px;
+    box-shadow: var(--shadow);
+    max-width: 390px;
+    width: 100%;
+    justify-self: center;
+    position: sticky;
+    top: 24px;
+  }
+
+  @media (max-width: 860px) {
+    .phone { position: static; }
+  }
+
+  .screen {
+    background: var(--ground);
+    border-radius: 37px;
+    overflow: hidden;
+    font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  }
+
+  .navbar {
+    padding: 14px 16px 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--hair);
+    background: var(--ground-2);
+  }
+
+  .navbar strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+  }
+
+  .navbar span {
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: .04em;
+  }
+
+  .scrollarea {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .segmented {
+    display: flex;
+    background: var(--ground-2);
+    border-radius: 8px;
+    padding: 2px;
+    align-self: center;
+  }
+
+  .segmented span {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .segmented span.on {
+    background: var(--card);
+    color: var(--go);
+    font-weight: 600;
+  }
+
+  .cardrow {
+    display: flex;
+    gap: 10px;
+  }
+
+  .metric {
+    flex: 1;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 0;
+  }
+
+  .metric .k {
+    font-size: 12px;
+    color: var(--ink-2);
+    margin-bottom: 4px;
+  }
+
+  .metric .v {
+    font-size: 18px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric .s {
+    font-size: 11px;
+    color: var(--ink-3);
+    margin-top: 2px;
+  }
+
+  .spacer { flex: 1; }
+
+  .panel {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .panel > .title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .splitbar {
+    margin-bottom: 14px;
+  }
+
+  .splitbar .lbl {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    margin-bottom: 8px;
+  }
+
+  .bar {
+    display: flex;
+    height: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .bar i { display: block; }
+
+  .keys {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  .keys span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .avgrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--hair);
+    font-size: 14px;
+  }
+
+  .avgrow:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .avgrow .k { color: var(--ink-2); }
+  .avgrow .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+
+  /* nap schedule rows */
+
+  .slotheads,
+  .slot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 74px 82px;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .slotheads {
+    font-size: 10px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .slot {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .slot:last-of-type {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .slot .name {
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+
+  .slot .days {
+    display: block;
+    font-size: 11px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .slot .num {
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tag-new {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--card);
+    background: var(--night);
+    border-radius: 4px;
+    padding: 2px 5px;
+    vertical-align: 2px;
+    margin-left: 7px;
+  }
+
+  .added {
+    position: relative;
+    box-shadow: 0 0 0 2px var(--nap);
+  }
+
+  .marker {
+    position: absolute;
+    top: -11px;
+    left: -11px;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    background: var(--night);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, sans-serif;
+  }
+
+  /* ---------- notes ---------- */
+
+  .notes {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .note {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .note .pin {
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    background: var(--night);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+
+  .note h4 {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -.01em;
+  }
+
+  .note p {
+    margin: 0 0 10px;
+    color: var(--ink-2);
+    font-size: 15px;
+    max-width: 58ch;
+  }
+
+  .note p:last-child { margin-bottom: 0; }
+
+  .note code,
+  .rulewrap code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    background: var(--ground-2);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .formula {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    background: var(--ground-2);
+    border-left: 3px solid var(--nap);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--ink-2);
+  }
+
+  .rulewrap { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 520px;
+    font-size: 14px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 10px 14px 10px 0;
+    border-bottom: 1px solid var(--hair);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 700;
+  }
+
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .verdict-in { color: var(--go); font-weight: 600; }
+  .verdict-out { color: var(--ink-3); font-weight: 600; }
+
+  ul.plain {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--ink-2);
+    font-size: 15px;
+  }
+
+  ul.plain li { margin-bottom: 9px; max-width: 62ch; }
+
+  .legend {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--ink-2);
+    margin-top: 22px;
+  }
+
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+
+  .swatch-new {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    box-shadow: 0 0 0 2px var(--nap);
+    background: var(--card);
+    display: inline-block;
+  }
+
+  .swatch-old {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: var(--card);
+    border: 1px solid var(--hair-strong);
+    display: inline-block;
+  }
+
+  .twoup {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 26px;
+  }
+
+  .miniwrap {
+    background: var(--ground-2);
+    border-radius: 16px;
+    padding: 18px;
+  }
+
+  .miniwrap h3 { margin-bottom: 12px; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Decision map · unified timer contract</div>
+    <h1>Nap statistics: what gets added to the Sleep Summary</h1>
+    <p class="lede">
+      Everything on the screen today stays exactly where it is. Two things get added: one card for
+      how much the baby naps on a day he naps, and one panel that breaks the day into its individual
+      naps. Both appear in Statistics&nbsp;› Sleep&nbsp;› Summary and in the Sleep Patterns tab,
+      because both render the same component.
+    </p>
+    <div class="meta">
+      <span>Screen <code>SummaryView.tsx</code></span>
+      <span>Math <code>sleep-patterns.ts · calculateSleepSummary</code></span>
+      <span>Ranges 7 / 14 / 30 days</span>
+      <span>Mock only — no code written</span>
+    </div>
+    <div class="legend">
+      <span><i class="swatch-old"></i> already on the screen</span>
+      <span><i class="swatch-new"></i> proposed addition</span>
+    </div>
+  </header>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>7-day range</h2>
+      <p>Sample week: 5 of the 7 days have at least one nap.</p>
+    </div>
+
+    <div class="split">
+
+      <div class="phone">
+        <div class="screen">
+          <div class="navbar">
+            <strong>Sleep</strong>
+            <span>STATISTICS · SUMMARY</span>
+          </div>
+
+          <div class="scrollarea">
+
+            <div class="segmented">
+              <span class="on">7 days</span>
+              <span>14 days</span>
+              <span>30 days</span>
+            </div>
+
+            <div class="cardrow">
+              <div class="metric">
+                <div class="k">Avg Total Sleep</div>
+                <div class="v">13h 10m</div>
+                <div class="s">Recommended 12–15h</div>
+              </div>
+              <div class="metric">
+                <div class="k">Longest Stretch</div>
+                <div class="v">6h 20m</div>
+              </div>
+            </div>
+
+            <div class="cardrow">
+              <div class="metric">
+                <div class="k">Night Wakings</div>
+                <div class="v">1.4</div>
+              </div>
+              <div class="metric">
+                <div class="k">Avg Bedtime</div>
+                <div class="v">7:45 PM</div>
+                <div class="s">± 24 min</div>
+              </div>
+            </div>
+
+            <div class="cardrow">
+              <div class="metric added">
+                <div class="marker">A</div>
+                <div class="k">Avg Nap Time</div>
+                <div class="v">3h 21m</div>
+                <div class="s">per napping day · 5 of 7</div>
+              </div>
+              <div class="spacer"></div>
+            </div>
+
+            <div class="panel">
+              <div class="title">Daily Sleep</div>
+              <div style="height:96px;display:flex;align-items:flex-end;gap:7px">
+                <i style="flex:1;height:74%;background:var(--night);border-radius:3px"></i>
+                <i style="flex:1;height:88%;background:var(--night);border-radius:3px"></i>
+                <i style="flex:1;height:62%;background:var(--night);border-radius:3px"></i>
+                <i style="flex:1;height:81%;background:var(--night);border-radius:3px"></i>
+                <i style="flex:1;height:95%;background:var(--night);border-radius:3px"></i>
+                <i style="flex:1;height:70%;background:var(--night);border-radius:3px"></i>
+                <i style="flex:1;height:84%;background:var(--night);border-radius:3px"></i>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="title">Averages</div>
+              <div class="stack">
+                <div class="splitbar">
+                  <div class="lbl">Sleep Split</div>
+                  <div class="bar">
+                    <i style="width:75%;background:var(--night)"></i>
+                    <i style="width:25%;background:var(--nap)"></i>
+                  </div>
+                  <div class="keys">
+                    <span><i class="dot" style="background:var(--night)"></i> Night 75%</span>
+                    <span><i class="dot" style="background:var(--nap)"></i> Naps 25%</span>
+                  </div>
+                </div>
+                <div class="avgrow"><span class="k">Avg Night Sleep</span><span class="v">9h 49m</span></div>
+                <div class="avgrow"><span class="k">Avg Naps/Day</span><span class="v">2.8</span></div>
+                <div class="avgrow"><span class="k">Avg Nap Duration</span><span class="v">1h 12m</span></div>
+              </div>
+            </div>
+
+            <div class="panel added">
+              <div class="marker">B</div>
+              <div class="title">Nap Schedule<span class="tag-new">new</span></div>
+              <div class="slotheads">
+                <span>Nap</span>
+                <span style="text-align:right">Length</span>
+                <span style="text-align:right">Starts</span>
+              </div>
+              <div class="slot">
+                <span class="name">Nap 1<span class="days">5 of 5 days</span></span>
+                <span class="num">1h 05m</span>
+                <span class="num">9:20 AM</span>
+              </div>
+              <div class="slot">
+                <span class="name">Nap 2<span class="days">5 of 5 days</span></span>
+                <span class="num">1h 40m</span>
+                <span class="num">12:45 PM</span>
+              </div>
+              <div class="slot">
+                <span class="name">Nap 3<span class="days">4 of 5 days</span></span>
+                <span class="num">45m</span>
+                <span class="num">4:10 PM</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="notes">
+
+        <div class="note">
+          <div class="pin">A</div>
+          <div>
+            <h4>Avg Nap Time</h4>
+            <p>
+              Total daytime nap seconds in the range, divided by the number of days in that range
+              that hold at least one nap. A day where only the overnight was logged is not counted,
+              and neither is a day with nothing logged.
+            </p>
+            <div class="formula">avgNapTimePerNappingDay =
+  sum(napSeconds over range)
+  ÷ count(days where napSeconds > 0)</div>
+            <p>
+              The subtitle carries the divisor — <code>5 of 7</code> — so the number is never read
+              against a week it was not computed over.
+            </p>
+            <p>
+              It sits below the existing cards rather than replacing one. Its half-width slot mirrors
+              how <code>Avg Bedtime</code> already renders alone when there is no bedtime to show.
+            </p>
+          </div>
+        </div>
+
+        <div class="note">
+          <div class="pin">B</div>
+          <div>
+            <h4>Nap Schedule</h4>
+            <p>
+              Naps are numbered in the order they start within the sleep-day. Each row averages that
+              slot over the days the slot actually happened — never over the whole range — and the
+              day count under the label says how many that was.
+            </p>
+            <div class="formula">slot n = the nth nap started that sleep-day
+
+length[n] = sum(duration of nap n) ÷ occ[n]
+starts[n] = circular mean of start times   ← circularTimeMean()
+occ[n]    = days where an nth nap exists</div>
+            <p>
+              Start time uses the same circular mean the bedtime average already uses, so times
+              straddling an hour boundary average correctly.
+            </p>
+            <p>
+              The panel goes below <em>Averages</em>, so the two existing per-nap figures keep their
+              place and the breakdown reads as detail underneath them.
+            </p>
+          </div>
+        </div>
+
+        <div class="note">
+          <div class="pin">C</div>
+          <div>
+            <h4>A slot earns a row when it clears both tests</h4>
+            <p>
+              It happened at least <strong>3 times</strong>, and on at least <strong>30%</strong> of
+              the napping days in the range. Below either line the row does not render, so a rare
+              fourth nap never reads as part of the routine.
+            </p>
+            <div class="rulewrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Range</th>
+                    <th>Slot</th>
+                    <th class="num">Occurrences</th>
+                    <th class="num">Share</th>
+                    <th>Row</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>7 days · 5 napping</td><td>Nap 3</td><td class="num">4</td><td class="num">80%</td><td class="verdict-in">shown</td></tr>
+                  <tr><td>7 days · 5 napping</td><td>Nap 4</td><td class="num">2</td><td class="num">40%</td><td class="verdict-out">under 3 times</td></tr>
+                  <tr><td>30 days · 24 napping</td><td>Nap 3</td><td class="num">19</td><td class="num">79%</td><td class="verdict-in">shown</td></tr>
+                  <tr><td>30 days · 24 napping</td><td>Nap 4</td><td class="num">5</td><td class="num">21%</td><td class="verdict-out">under 30%</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              On the 7-day range the count floor is almost always the binding one; on 30 days the
+              share is what does the work.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Same panel, other ranges and edge cases</h2>
+      <p>Only the Nap Schedule panel is drawn here; the rest of the screen is unchanged.</p>
+    </div>
+
+    <div class="twoup">
+
+      <div class="miniwrap">
+        <h3>30 days · 24 napping days</h3>
+        <div class="panel">
+          <div class="title">Nap Schedule</div>
+          <div class="slotheads">
+            <span>Nap</span>
+            <span style="text-align:right">Length</span>
+            <span style="text-align:right">Starts</span>
+          </div>
+          <div class="slot">
+            <span class="name">Nap 1<span class="days">24 of 24 days</span></span>
+            <span class="num">1h 00m</span>
+            <span class="num">9:05 AM</span>
+          </div>
+          <div class="slot">
+            <span class="name">Nap 2<span class="days">23 of 24 days</span></span>
+            <span class="num">1h 35m</span>
+            <span class="num">12:50 PM</span>
+          </div>
+          <div class="slot">
+            <span class="name">Nap 3<span class="days">19 of 24 days</span></span>
+            <span class="num">40m</span>
+            <span class="num">4:20 PM</span>
+          </div>
+        </div>
+        <p style="font-size:14px;color:var(--ink-3);margin:12px 0 0">
+          A fourth nap happened on 5 of the 24 days. At 21% it stays off the panel.
+        </p>
+      </div>
+
+      <div class="miniwrap">
+        <h3>Too little data</h3>
+        <div class="panel">
+          <div class="title">Nap Schedule</div>
+          <div class="slotheads">
+            <span>Nap</span>
+            <span style="text-align:right">Length</span>
+            <span style="text-align:right">Starts</span>
+          </div>
+          <div class="slot">
+            <span class="name">Nap 1<span class="days">3 of 3 days</span></span>
+            <span class="num">1h 15m</span>
+            <span class="num">10:05 AM</span>
+          </div>
+        </div>
+        <p style="font-size:14px;color:var(--ink-3);margin:12px 0 0">
+          Two naps a day, but only 3 napping days logged and the second nap fell on 2 of them. One
+          row survives. When no slot clears both tests the whole panel is not rendered, the same way
+          the Daily Sleep chart already hides itself with no bars.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>What this does not change</h2>
+    </div>
+    <ul class="plain">
+      <li>
+        <strong>Avg Total Sleep keeps its own divisor.</strong> It still divides by days with any
+        sleep logged. Only the new card divides by napping days, so the two cards deliberately sit
+        on different bases and the subtitle is what tells them apart.
+      </li>
+      <li>
+        <strong>Avg Naps/Day and Avg Nap Duration stay exactly as they are</strong>, in the Averages
+        panel, computed the way they are computed today.
+      </li>
+      <li>
+        <strong>Nap versus night classification is untouched.</strong> Both additions read the same
+        <code>classifySleepByTimeRange</code> result the rest of the screen already reads.
+      </li>
+      <li>
+        <strong>The newborn screen is unaffected in shape.</strong> Newborns already hide Avg Night
+        Sleep and the split bar; the Nap Schedule panel simply falls away on its own once no slot is
+        stable enough to clear the tests.
+      </li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Still open</h2>
+      <p>Worth a decision before this is planned.</p>
+    </div>
+    <ul class="plain">
+      <li>
+        <strong>The card's label.</strong> <em>Avg Nap Time</em> sits one line away from <em>Avg Nap
+        Duration</em>, and the two mean different things — total per day versus length of one nap.
+        Either the new label or the old one may need to change.
+      </li>
+      <li>
+        <strong>A skipped morning nap shifts the numbering.</strong> On a day the first nap does not
+        happen, the midday nap becomes Nap 1 and pulls that row's average start time later. Accepted
+        for now; the per-row day count is what makes the sample visible.
+      </li>
+      <li>
+        <strong>How far the numbering runs.</strong> Nothing caps the slot count today, so a
+        newborn's 6-nap day would render 6 rows if each cleared the tests.
+      </li>
+    </ul>
+  </section>
+
+</div>
