@@ -32,12 +32,21 @@ export interface SleepSummary {
   avgNapsPerDay: number;
   avgNapTimeSeconds: number;
   nappingDays: number;
+  napScheduleNappingDays: number;
+  napSchedule: NapScheduleSlot[];
   avgNapDurationSeconds: number;
   longestStretchSeconds: number;
   nightWakingsPerNight: number;
   bedtimeTrend: { date: Date; time: Date }[];
   wakeTimeTrend: { date: Date; time: Date }[];
   bedtimeStdDevMinutes: number | null;
+}
+
+export interface NapScheduleSlot {
+  ordinal: number;
+  avgDurationSeconds: number;
+  avgStartTime: Date;
+  occurrenceCount: number;
 }
 
 export interface DailySleepBar {
@@ -384,6 +393,8 @@ export function calculateSleepSummary(
       avgNapsPerDay: 0,
       avgNapTimeSeconds: 0,
       nappingDays: 0,
+      napScheduleNappingDays: 0,
+      napSchedule: [],
       avgNapDurationSeconds: 0,
       longestStretchSeconds: 0,
       nightWakingsPerNight: 0,
@@ -403,6 +414,16 @@ export function calculateSleepSummary(
       napSeconds: number;
     }
   > = new Map();
+  const napSlotData = new Map<
+    number,
+    {
+      totalDurationSeconds: number;
+      startMinutes: number[];
+      occurrenceCount: number;
+    }
+  >();
+  const napCountBySleepDay = new Map<string, number>();
+  const napScheduleDays = new Set<string>();
 
   for (const key of window.keys) {
     const [year, month, day] = key.split("-").map(Number);
@@ -448,6 +469,27 @@ export function calculateSleepSummary(
         summaryDay.napSeconds += selectedSeconds;
       } else {
         summaryDay.nightSeconds += selectedSeconds;
+      }
+    }
+
+    if (autoType === "nap") {
+      const slotDayKey = segments[0]?.dateKey;
+      if (slotDayKey && selectedKeys.has(slotDayKey)) {
+        const ordinal = (napCountBySleepDay.get(slotDayKey) ?? 0) + 1;
+        napCountBySleepDay.set(slotDayKey, ordinal);
+        napScheduleDays.add(slotDayKey);
+
+        const slot = napSlotData.get(ordinal) ?? {
+          totalDurationSeconds: 0,
+          startMinutes: [],
+          occurrenceCount: 0,
+        };
+        slot.totalDurationSeconds += selectedSeconds;
+        slot.startMinutes.push(
+          startDate.getHours() * 60 + startDate.getMinutes()
+        );
+        slot.occurrenceCount++;
+        napSlotData.set(ordinal, slot);
       }
     }
   }
@@ -498,6 +540,32 @@ export function calculateSleepSummary(
     (sum, d) => sum + d.napSeconds,
     0
   );
+  const napSchedule: NapScheduleSlot[] = Array.from(napSlotData.entries())
+    .filter(
+      ([, slot]) =>
+        slot.occurrenceCount >= 3 &&
+        napScheduleDays.size > 0 &&
+        slot.occurrenceCount / napScheduleDays.size >= 0.3
+    )
+    .map(([ordinal, slot]) => {
+      const avgStartMinutes = circularTimeMean(slot.startMinutes);
+      const avgStartTime = new Date(0);
+      avgStartTime.setHours(
+        Math.floor(avgStartMinutes / 60),
+        avgStartMinutes % 60,
+        0,
+        0
+      );
+      return {
+        ordinal,
+        avgDurationSeconds: Math.round(
+          slot.totalDurationSeconds / slot.occurrenceCount
+        ),
+        avgStartTime,
+        occurrenceCount: slot.occurrenceCount,
+      };
+    })
+    .sort((a, b) => a.ordinal - b.ordinal);
 
   let longestStretch = 0;
   for (const sleep of recentSleeps) {
@@ -568,6 +636,8 @@ export function calculateSleepSummary(
         ? Math.round(totalNapSeconds / daysWithNaps.length)
         : 0,
     nappingDays: daysWithNaps.length,
+    napScheduleNappingDays: napScheduleDays.size,
+    napSchedule,
     avgNapDurationSeconds:
       totalNaps > 0 ? Math.round(totalNapSeconds / totalNaps) : 0,
     longestStretchSeconds: longestStretch,

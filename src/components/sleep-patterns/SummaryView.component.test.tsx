@@ -5,10 +5,18 @@ import type { SleepPatternColors } from "./useSleepPatternColors";
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, options?: Record<string, number>) =>
-      key === "sleepPatterns.avgNapTimeSubtitle"
-        ? `per napping day · ${options?.nappingDays} of ${options?.days}`
-        : key,
+    t: (key: string, options?: Record<string, number>) => {
+      if (key === "sleepPatterns.avgNapTimeSubtitle") {
+        return `per napping day · ${options?.nappingDays} of ${options?.days}`;
+      }
+      if (key === "sleepPatterns.napSlot") {
+        return `Nap ${options?.slotNumber}`;
+      }
+      if (key === "sleepPatterns.napOccurrenceCount") {
+        return `${options?.count} of ${options?.nappingDays} days`;
+      }
+      return key;
+    },
   }),
 }));
 
@@ -221,5 +229,82 @@ describe("SummaryView", () => {
 
     expect(screen.getAllByText("0m").length).toBeGreaterThan(0);
     expect(screen.getByText("per napping day · 0 of 7")).toBeTruthy();
+  });
+
+  it("shows qualifying nap slots with their occurrence count and hides failing rows", () => {
+    const scheduleSleeps = [3, 4, 5].flatMap((day) => {
+      const firstNapStart = localISO(2025, 3, day, 9);
+      const naps = [
+        makeSleep(
+          `first-${day}`,
+          firstNapStart,
+          new Date(
+            new Date(firstNapStart).getTime() + (day - 2) * 30 * 60 * 1000
+          ).toISOString()
+        ),
+      ];
+      if (day < 5) {
+        naps.push(
+          makeSleep(
+            `second-${day}`,
+            localISO(2025, 3, day, 13),
+            localISO(2025, 3, day, 13, 30)
+          )
+        );
+      }
+      return naps;
+    });
+
+    render(
+      <SummaryView
+        sleeps={scheduleSleeps}
+        now={new Date(2025, 2, 8, 12, 0, 0)}
+        timeFormat="24h"
+        dayStartHour={6}
+        dayEndHour={19}
+        colors={colors}
+        isNewborn={false}
+        locale="en"
+        period={7}
+        onPeriodChange={() => {}}
+      />
+    );
+
+    expect(screen.getByText("sleepPatterns.napSchedule")).toBeTruthy();
+    expect(screen.getByText("Nap 1")).toBeTruthy();
+    expect(screen.getByText("3 of 3 days")).toBeTruthy();
+    expect(screen.getByText("1h")).toBeTruthy();
+    expect(screen.getByText("9:00")).toBeTruthy();
+    expect(screen.queryByText("Nap 2")).toBeNull();
+  });
+
+  it("omits the nap schedule panel when no slot qualifies", () => {
+    render(
+      <SummaryView
+        sleeps={[
+          makeSleep(
+            "nap-one",
+            localISO(2025, 3, 5, 9),
+            localISO(2025, 3, 5, 10)
+          ),
+          makeSleep(
+            "nap-two",
+            localISO(2025, 3, 6, 9),
+            localISO(2025, 3, 6, 10)
+          ),
+        ]}
+        now={new Date(2025, 2, 8, 12, 0, 0)}
+        timeFormat="24h"
+        dayStartHour={6}
+        dayEndHour={19}
+        colors={colors}
+        isNewborn={false}
+        locale="en"
+        period={7}
+        onPeriodChange={() => {}}
+      />
+    );
+
+    expect(screen.queryByText("sleepPatterns.napSchedule")).toBeNull();
   });
 });
