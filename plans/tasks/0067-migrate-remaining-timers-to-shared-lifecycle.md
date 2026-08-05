@@ -117,6 +117,10 @@ yes.
   local stop path could subtract time. The owner chose the safe shared behavior on 2026-08-05:
   `buildRecord` clamps current-side elapsed time to zero before adding it to the accumulated side
   durations. Valid timer behavior is unchanged, and no saved side duration can become negative.
+- The three pre-migration local stop paths allowed a negative duration when paused time exceeded
+  wall-clock elapsed time, while their conflict-recovery paths already clamped the same input. The
+  owner retained the shared helper's safe zero-clamp during review remediation on 2026-08-05. Valid
+  timer behavior is unchanged, and inconsistent timer state can no longer save a negative duration.
 
 ## Implementation evidence
 
