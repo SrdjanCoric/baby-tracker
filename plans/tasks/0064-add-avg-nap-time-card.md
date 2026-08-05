@@ -108,3 +108,32 @@ locale resources.
 
 - skipped (minor): TR-3 — No test binds the shipped English subtitle string to its interpolation values — User requested remediation of TR-1 and TR-2 only.
 - skipped (minor): TR-4 — The zero-nap component test's value assertion is vacuous — User requested remediation of TR-1 and TR-2 only.
+
+## Completion record
+
+- README: no change required. The README describes Statistics at the feature and data-loading level
+  without enumerating individual sleep-summary metrics, so the new card does not make its current
+  prose inaccurate or incomplete. No `write-well` audit was needed.
+- Built: `SleepSummary` and `calculateSleepSummary` now expose average nap time per napping day and
+  the napping-day count. `SummaryView` renders the localized half-width card and divisor on both
+  Statistics under Sleep → Summary and the Sleep Patterns tab for 7-, 14-, and 30-day ranges.
+- Classification decision: each completed sleep is classified once by `classifySleepByTimeRange`.
+  Its selected duration counts only toward nap or night statistics. Nap sessions belong to their
+  starting local calendar date, night sessions retain shifted sleep-day grouping, and
+  `splitSleepAtDayBoundary` remains visual-only.
+- Relevant implementation and proof: `src/utils/sleep-patterns.ts`,
+  `src/utils/sleep-patterns.test.ts`, `src/components/sleep-patterns/SummaryView.tsx`,
+  `src/components/sleep-patterns/SummaryView.component.test.tsx`, and the nine locale files plus
+  `src/i18n/nap-time-locales.test.ts`.
+- Review: TR-1 and TR-2 were fixed. TR-3 and TR-4 were skipped as minor at the user's request to
+  remediate only TR-1 and TR-2. TR-5 was skipped by user decision and was incidentally resolved by
+  the whole-session classification fix; TR-6 was skipped by user decision because it concerns an
+  unrelated out-of-diff working-tree change. No security risk was accepted.
+- Final automated proof: the canonical `npm run check:code` chain passed lint, strict typecheck,
+  134 Vitest files / 2,510 tests, 92 Jest suites / 847 tests, and 65 CI-contract tests. Its final
+  production-bundle stage passed on an immediate isolated rerun after an artificial 5 MiB process
+  file limit—not application behavior—caused the first Metro export to fail with `EFBIG`. The
+  production bundle excludes development onboarding tools. Logs: `finish-canonical.log` and
+  `finish-production-gating.log` under `/tmp/agent-workflows/e2f8af45fd34/799711673604`.
+- Manual verification: none required. Public calculation regressions and the rendered
+  `SummaryView` component tests cover the task's observable behavior on both consuming surfaces.
