@@ -63,7 +63,9 @@ files. Build on its merged output; do not reopen its decisions.
 ### Reference
 
 Approved mock: `plans/decision-maps/unified-timer-contract/prototypes/nap-stats-mock.html`, markers B
-and C. Marker B draws the row layout and the column headers (`Nap` · `Length` · `Starts`); marker C
+and C. Marker B draws the row layout; the owner clarified the column headers as (`Nap` ·
+`Avg. Length` · `Avg. Start`) after implementation so both calculated values are explicit
+averages. Marker C
 gives the appearance test as a table of worked cases.
 
 ## Implementation work
@@ -127,7 +129,7 @@ locale resources.
 - Localization RED/GREEN: all nine locales initially failed on missing keys, then passed with
   localized panel, header, slot, and occurrence copy (`locales-red.log`, `locales-green.log`).
 - Focused pre-review proof: the sleep-summary suite passes 113 utility tests and 13 component tests;
-  all 9 locale cases, targeted warning-free lint, repository typecheck, and `git diff --check` pass.
+  all 10 locale tests, targeted warning-free lint, repository typecheck, and `git diff --check` pass.
   Logs are retained in `/tmp/agent-workflows/e2f8af45fd34/da1ea81f56d7`.
 - Current-code reconciliation: Task 0064 intentionally keeps legacy nap metrics on calendar dates.
   Task 0065 therefore uses a separate `splitSleepAtDayBoundary` sleep-day counter for slot ordering

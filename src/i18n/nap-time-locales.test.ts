@@ -33,6 +33,11 @@ const keys = [
 ] as const;
 
 describe("nap statistics translations", () => {
+  it("labels both nap schedule measurements as averages", () => {
+    expect(en.sleepPatterns.napLength).toBe("Avg. Length");
+    expect(en.sleepPatterns.napStarts).toBe("Avg. Start");
+  });
+
   it.each(Object.entries(locales))(
     "provides localized card copy for %s",
     (locale, translations) => {
