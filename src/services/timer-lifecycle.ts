@@ -346,7 +346,10 @@ export async function restoreTimerLifecycle<
             adapter.buildRecord(
               new Date(activeTimer.startedAt),
               new Date(completion.stoppedAt),
-              payloadWithIdentity
+              {
+                ...payloadWithIdentity,
+                activityId: completion.activityId,
+              }
             )
           );
           await markTimerCompletionDurable(completion);

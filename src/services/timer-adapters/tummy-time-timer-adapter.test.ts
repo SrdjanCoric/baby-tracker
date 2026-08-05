@@ -1,5 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
-import { calculateTimerDurationSeconds } from "../timer-lifecycle";
+import {
+  calculateTimerDurationSeconds,
+  restoreTimerLifecycle,
+} from "../timer-lifecycle";
+import {
+  acceptTimerCompletion,
+  isTimerCompletionSecured,
+  markTimerCompletionDurable,
+  resolveTimerIdentity,
+} from "../timer-completion-service";
+import { reconcileTimerLock } from "../timer-lock-reconciliation";
 import { createTummyTimeTimerAdapter } from "./tummy-time-timer-adapter";
 
 vi.mock("../live-activity-service", () => ({
@@ -25,6 +35,16 @@ vi.mock("../timer-completion-service", () => ({
   isTimerCompletionSecured: vi.fn(),
   markTimerCompletionDurable: vi.fn(),
   resolveTimerIdentity: vi.fn(),
+}));
+
+vi.mock("../timer-lock-reconciliation", () => ({
+  reconcileTimerLock: vi.fn(),
+}));
+
+vi.mock("../timer-stop-coordinator", () => ({
+  isPendingStopForTimer: vi.fn(() => false),
+  isTimerRestoreObsolete: vi.fn(() => false),
+  readPendingTimerStop: vi.fn(() => Promise.resolve(null)),
 }));
 
 vi.mock("@react-native-async-storage/async-storage", () => ({
@@ -83,6 +103,86 @@ describe("tummy time timer adapter", () => {
     expect(encoded).toEqual(payload);
     expect(adapter.timerDataCodec.decode(encoded)).toEqual(payload);
     expect(encoded).not.toHaveProperty("pausedAt");
+  });
+
+  it("builds a conflicted timer record with the accepted completion activity id", async () => {
+    const adapter = createTummyTimeTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer: vi.fn(),
+    });
+    adapter.storage.getActiveTimer = vi.fn().mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "resolved-activity",
+      startedAt: "2026-08-05T12:00:00.000Z",
+      isPaused: true,
+      totalPausedMs: 0,
+      lockState: "owned",
+    });
+    adapter.storage.getRecordById = vi.fn().mockResolvedValue(null);
+    adapter.storage.setActiveTimer = vi.fn().mockResolvedValue(undefined);
+    adapter.storage.clearActiveTimer = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "resolved-activity",
+    });
+    vi.mocked(isTimerCompletionSecured).mockResolvedValue(false);
+    vi.mocked(reconcileTimerLock).mockResolvedValue({
+      state: "conflicted",
+      lockHolderName: "Other caregiver",
+    });
+    vi.mocked(acceptTimerCompletion).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "accepted-activity",
+      babyId: "baby-1",
+      activityType: "tummy_time",
+      startedAt: "2026-08-05T12:00:00.000Z",
+      stoppedAt: "2026-08-05T12:01:00.000Z",
+      status: "pending",
+    });
+    vi.mocked(markTimerCompletionDurable).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "accepted-activity",
+      babyId: "baby-1",
+      activityType: "tummy_time",
+      startedAt: "2026-08-05T12:00:00.000Z",
+      stoppedAt: "2026-08-05T12:01:00.000Z",
+      status: "completed",
+    });
+    const persistedRecord = {
+      id: "accepted-activity",
+      babyId: "baby-1",
+      startedAt: "2026-08-05T12:00:00.000Z",
+      endedAt: "2026-08-05T12:01:00.000Z",
+      durationSeconds: 60,
+      createdAt: "2026-08-05T12:01:00.000Z",
+      updatedAt: "2026-08-05T12:01:00.000Z",
+    };
+    const persistRecord = vi.fn().mockResolvedValue(persistedRecord);
+
+    await restoreTimerLifecycle({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      user: { id: "user-1", householdId: "household-1" },
+      completedRecords: [],
+      stopVersionAtStart: 0,
+      currentStopVersion: () => 0,
+      isStopping: () => false,
+      isCurrentBabyBinding: () => true,
+      liveActivityIdRef: { current: null },
+      refreshLocks: vi.fn(),
+      persistRecord,
+      dispatchStopTimer: vi.fn(),
+      dispatchAddRecord: vi.fn(),
+      errorLabel: "[TummyTimeContext]",
+    });
+
+    expect(adapter.storage.getRecordById).toHaveBeenCalledWith(
+      "baby-1",
+      "accepted-activity"
+    );
+    expect(persistRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "accepted-activity" })
+    );
   });
 });
 
