@@ -84,4 +84,31 @@ describe("pumping timer adapter", () => {
       "pausedAt"
     );
   });
+
+  it("drops an invalid restored pause timestamp", () => {
+    const dispatchRestoreTimer = vi.fn();
+    const adapter = createPumpingTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer,
+    });
+
+    adapter.dispatchRestoreTimer({
+      startedAt: new Date("2026-08-05T12:00:00.000Z"),
+      lockState: "owned",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        side: "left",
+        isPaused: true,
+        totalPausedMs: 45_000,
+        pausedAt: "not-a-date",
+      },
+    });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({ pausedAt: undefined })
+    );
+  });
 });

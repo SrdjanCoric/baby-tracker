@@ -9,6 +9,7 @@ import {
 } from "../sleep-storage";
 import {
   calculateTimerDurationSeconds,
+  parseTimerDate,
   type RestoredTimer,
   type SharedTimerPayload,
   type TimerLifecycleAdapter,
@@ -168,7 +169,7 @@ export function createSleepTimerAdapter({
         activityId,
         sleepType: payload.type,
         totalPausedMs: payload.totalPausedMs,
-        pausedAt: payload.pausedAt ? new Date(payload.pausedAt) : undefined,
+        pausedAt: parseTimerDate(payload.pausedAt),
         morningClassification: payload.morningClassification,
         morningClassificationVersion: payload.morningClassificationVersion,
       }),

@@ -150,4 +150,38 @@ describe("feeding timer adapter", () => {
     ).toEqual(payload);
     expect(encoded).not.toHaveProperty("pausedAt");
   });
+
+  it("normalizes invalid restored timer timestamps", () => {
+    const dispatchRestoreTimer = vi.fn();
+    const adapter = createFeedingTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer,
+    });
+
+    adapter.dispatchRestoreTimer({
+      startedAt,
+      lockState: "owned",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        side: "left",
+        type: "breast",
+        leftAccumulatedSeconds: 12,
+        rightAccumulatedSeconds: 34,
+        currentSideStartedAt: "not-a-date",
+        isPaused: true,
+        totalPausedMs: 45_000,
+        pausedAt: "also-not-a-date",
+      },
+    });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        currentSideStartedAt: startedAt,
+        pausedAt: undefined,
+      })
+    );
+  });
 });

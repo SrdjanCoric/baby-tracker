@@ -8,6 +8,7 @@ import {
 import type { BreastSide as LiveActivityBreastSide } from "../live-activity-service";
 import {
   calculateTimerDurationSeconds,
+  parseTimerDate,
   type RestoredTimer,
   type SharedTimerPayload,
   type TimerLifecycleAdapter,
@@ -203,11 +204,10 @@ export function createFeedingTimerAdapter({
         side: payload.side,
         leftAccumulatedSeconds: payload.leftAccumulatedSeconds,
         rightAccumulatedSeconds: payload.rightAccumulatedSeconds,
-        currentSideStartedAt: payload.currentSideStartedAt
-          ? new Date(payload.currentSideStartedAt)
-          : startedAt,
+        currentSideStartedAt:
+          parseTimerDate(payload.currentSideStartedAt, startedAt) ?? startedAt,
         totalPausedMs: payload.totalPausedMs,
-        pausedAt: payload.pausedAt ? new Date(payload.pausedAt) : undefined,
+        pausedAt: parseTimerDate(payload.pausedAt),
       }),
   };
 }

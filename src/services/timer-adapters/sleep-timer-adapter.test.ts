@@ -85,6 +85,36 @@ describe("sleep timer adapter", () => {
     expect(encoded).not.toHaveProperty("pausedAt");
   });
 
+  it("drops an invalid restored pause timestamp", () => {
+    const dispatchRestoreTimer = vi.fn();
+    const adapter = createSleepTimerAdapter({
+      babyId: "baby-1",
+      resolveMorningClassification,
+      dispatchRestoreTimer,
+    });
+
+    adapter.dispatchRestoreTimer({
+      startedAt: new Date("2026-08-05T12:00:00.000Z"),
+      lockState: "owned",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        type: "nap",
+        isPaused: true,
+        totalPausedMs: 45_000,
+        pausedAt: "not-a-date",
+        morningClassification: "confirmed_first_nap",
+        morningClassificationVersion: 4,
+      },
+    });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({ pausedAt: undefined })
+    );
+  });
+
   it("matches only sleeps starting within 5000 ms of the lock", () => {
     const adapter = createAdapter();
     const lockStartedAt = "2026-08-05T12:00:00.000Z";

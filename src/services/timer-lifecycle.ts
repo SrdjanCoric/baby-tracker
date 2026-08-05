@@ -144,6 +144,15 @@ export function calculateTimerDurationSeconds(
   );
 }
 
+export function parseTimerDate(
+  value: string | undefined,
+  fallback?: Date
+): Date | undefined {
+  if (!value) return fallback;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date : fallback;
+}
+
 function restoredTimer<TPayload extends SharedTimerPayload>(
   startedAt: string,
   lockState: TimerLockReconciliationState,

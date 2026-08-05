@@ -7,6 +7,7 @@ import {
 } from "../pumping-storage";
 import {
   calculateTimerDurationSeconds,
+  parseTimerDate,
   type RestoredTimer,
   type SharedTimerPayload,
   type TimerLifecycleAdapter,
@@ -130,7 +131,7 @@ export function createPumpingTimerAdapter({
         activityId,
         side: payload.side,
         totalPausedMs: payload.totalPausedMs,
-        pausedAt: payload.pausedAt ? new Date(payload.pausedAt) : undefined,
+        pausedAt: parseTimerDate(payload.pausedAt),
       }),
   };
 }
