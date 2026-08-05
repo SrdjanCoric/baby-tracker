@@ -146,13 +146,6 @@ Durable decisions that apply across all tasks:
   when it occurred at least 3 times **and** on at least 30% of the napping days in the range, both
   bounds inclusive; when no slot clears both tests the panel does not render at all. Nothing caps the
   number of slots.
-- **Live Activity visibility is one device-local global switch**: a single settings preference,
-  default on, is checked inside `src/services/live-activity-service.ts` ahead of every start path,
-  including push-to-start registration, so all four timer types are covered by one gate. Turning it
-  off ends any Live Activity already on screen; timers, widget, and Watch behavior are unchanged.
-  Apple owns Live Activity presentation, so the setting copy never promises a shorter or narrower
-  Live Activity or a freed status-bar clock. Per-activity-type control and per-timer dismiss are
-  rejected.
 
 ---
 
@@ -222,7 +215,6 @@ Durable decisions that apply across all tasks:
 - [x] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/done/0063-guarantee-exit-from-widget-opened-activity-screens.md
 - [x] 0064 · Add the Avg Nap Time card → tasks/done/0064-add-avg-nap-time-card.md
 - [x] 0065 · Add the Nap Schedule panel (after 0064) → tasks/done/0065-add-nap-schedule-panel.md
-- [ ] 0066 · Let caregivers turn the Live Activity off → tasks/0066-let-caregivers-turn-live-activity-off.md
 
 ## Workflow status
 
@@ -239,11 +231,5 @@ depends on the decision behind Task 0064. It depends on 0064 because both tasks 
 `SleepSummary` contract and `calculateSleepSummary` in `src/utils/sleep-patterns.ts`, both add a
 section to `SummaryView`, and both add keys to the `sleepPatterns` namespace across the same nine
 locale files. Task 0064 has merged, so Task 0065 is claimable.
-
-Task 0066 was added on 2026-08-05 from the resolved decision
-`plans/decision-maps/unified-timer-contract/decisions/resolved/011-live-activity-visibility-toggle.md`.
-It has no prerequisites: it touches the Live Activity service seam, a new preference storage module,
-a new settings screen, and the `settings` locale namespace, none of which Tasks 0064 and 0065 touch.
-Tasks 0065 and 0066 are both claimable.
 
 Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054 through 0057 and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Tasks 0055 and 0056 depend on their predecessors only because all three add migrations and would otherwise collide on the next migration ordinal.
