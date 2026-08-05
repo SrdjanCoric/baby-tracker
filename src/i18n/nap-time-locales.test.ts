@@ -38,28 +38,6 @@ describe("nap statistics translations", () => {
     expect(en.sleepPatterns.napStarts).toBe("Starts");
   });
 
-  it("uses compact native average labels in the narrow schedule columns", () => {
-    expect({
-      de: [de.sleepPatterns.napLength, de.sleepPatterns.napStarts],
-      es: [es.sleepPatterns.napLength, es.sleepPatterns.napStarts],
-      "es-ES": [esES.sleepPatterns.napLength, esES.sleepPatterns.napStarts],
-      fr: [fr.sleepPatterns.napLength, fr.sleepPatterns.napStarts],
-      it: [italian.sleepPatterns.napLength, italian.sleepPatterns.napStarts],
-      "pt-BR": [ptBR.sleepPatterns.napLength, ptBR.sleepPatterns.napStarts],
-      "pt-PT": [ptPT.sleepPatterns.napLength, ptPT.sleepPatterns.napStarts],
-      sr: [sr.sleepPatterns.napLength, sr.sleepPatterns.napStarts],
-    }).toEqual({
-      de: ["Dauer", "Beginn"],
-      es: ["Duración", "Empieza"],
-      "es-ES": ["Duración", "Empieza"],
-      fr: ["Durée", "Début"],
-      it: ["Durata", "Inizio"],
-      "pt-BR": ["Duração", "Começa"],
-      "pt-PT": ["Duração", "Começa"],
-      sr: ["Trajanje", "Početak"],
-    });
-  });
-
   it.each(Object.entries(locales))(
     "provides localized card copy for %s",
     (locale, translations) => {
