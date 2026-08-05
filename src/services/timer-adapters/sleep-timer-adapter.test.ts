@@ -26,7 +26,7 @@ vi.mock("react-native", () => ({
 describe("sleep timer adapter", () => {
   const resolveMorningClassification = vi.fn(
     (_startedAt: string, stored: "confirmed_first_nap" | null | undefined) =>
-      stored ?? "confirmed_first_nap"
+      stored ?? "unresolved"
   );
 
   function createAdapter() {
