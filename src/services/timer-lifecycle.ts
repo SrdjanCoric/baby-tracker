@@ -1,0 +1,428 @@
+import {
+  getActiveTimerLock,
+  queuePendingLockRelease,
+  releaseTimerLock,
+  type TimerActivityType,
+} from "./active-timer-service";
+import {
+  endLiveActivityByType,
+  endTimerLiveActivity,
+  isLiveActivityRunningWithTimeout,
+  startTimerLiveActivity,
+  type BreastSide,
+  type SleepType,
+  type TimerActivityType as LiveActivityType,
+} from "./live-activity-service";
+import {
+  acceptTimerCompletion,
+  isTimerCompletionSecured,
+  markTimerCompletionDurable,
+  resolveTimerIdentity,
+  type TimerIdentity,
+} from "./timer-completion-service";
+import {
+  reconcileTimerLock,
+  type TimerLockReconciliationSnapshot,
+  type TimerLockReconciliationState,
+} from "./timer-lock-reconciliation";
+import {
+  isPendingStopForTimer,
+  isTimerRestoreObsolete,
+  readPendingTimerStop,
+} from "./timer-stop-coordinator";
+import { showTimerConflictNotice } from "./timer-conflict-notice";
+
+export interface SharedTimerPayload extends Partial<TimerIdentity> {
+  isPaused: boolean;
+  totalPausedMs: number;
+  pausedAt?: string;
+}
+
+export interface TimerLifecycleActiveTimer
+  extends Partial<TimerIdentity>, TimerLockReconciliationSnapshot {
+  startedAt: string;
+  liveActivityId?: string;
+  isPaused?: boolean;
+  totalPausedMs?: number;
+  pausedAt?: string;
+}
+
+export interface RestoredTimer<TPayload extends SharedTimerPayload>
+  extends TimerIdentity {
+  startedAt: Date;
+  lockState: TimerLockReconciliationState;
+  payload: TPayload & TimerIdentity;
+}
+
+type MutableRef<T> = { current: T };
+
+interface TimerLifecycleUser {
+  id?: string;
+  householdId?: string;
+}
+
+export interface TimerDataCodec<TPayload> {
+  encode(payload: TPayload): Record<string, unknown>;
+  decode(timerData: Record<string, unknown>): TPayload;
+}
+
+export interface TimerLifecycleStorage<TActiveTimer, TRecord> {
+  getActiveTimer(babyId: string): Promise<TActiveTimer | null>;
+  setActiveTimer(babyId: string, activeTimer: TActiveTimer): Promise<void>;
+  clearActiveTimer(babyId: string): Promise<void>;
+  getRecordById(babyId: string, recordId: string): Promise<TRecord | null>;
+}
+
+export interface TimerLifecycleAdapter<
+  TPayload extends SharedTimerPayload,
+  TActiveTimer extends TimerLifecycleActiveTimer,
+  TRecord,
+  TCreateInput,
+> {
+  activityType: TimerActivityType;
+  storage: TimerLifecycleStorage<TActiveTimer, TRecord>;
+  timerDataCodec: TimerDataCodec<TPayload>;
+  buildRecord(
+    startedAt: Date,
+    endedAt: Date,
+    payload: TPayload & TimerIdentity
+  ): TCreateInput;
+  liveActivity: {
+    type: LiveActivityType;
+    detail(payload: TPayload): BreastSide | SleepType | undefined;
+  };
+  dispatchRestoreTimer(restoredTimer: RestoredTimer<TPayload>): void;
+}
+
+export interface RestoreTimerLifecycleOptions<
+  TPayload extends SharedTimerPayload,
+  TActiveTimer extends TimerLifecycleActiveTimer,
+  TRecord extends { id: string },
+  TCreateInput,
+> {
+  adapter: TimerLifecycleAdapter<
+    TPayload,
+    TActiveTimer,
+    TRecord,
+    TCreateInput
+  >;
+  baby: { id: string; name: string };
+  user: TimerLifecycleUser | null | undefined;
+  completedRecords: ReadonlyArray<{ id: string }>;
+  stopVersionAtStart: number;
+  currentStopVersion(): number;
+  isStopping(): boolean;
+  isCurrentBabyBinding(): boolean;
+  liveActivityIdRef: MutableRef<string | null>;
+  refreshLocks(): Promise<unknown> | unknown;
+  persistRecord(input: TCreateInput): Promise<TRecord>;
+  dispatchStopTimer(): void;
+  dispatchAddRecord(record: TRecord): void;
+  errorLabel: string;
+}
+
+export function calculateTimerDurationSeconds(
+  startedAt: Date,
+  endedAt: Date,
+  totalPausedMs: number
+): number {
+  return Math.max(
+    0,
+    Math.floor((endedAt.getTime() - startedAt.getTime() - totalPausedMs) / 1000)
+  );
+}
+
+function restoredTimer<TPayload extends SharedTimerPayload>(
+  startedAt: string,
+  lockState: TimerLockReconciliationState,
+  identity: TimerIdentity,
+  payload: TPayload
+): RestoredTimer<TPayload> {
+  return {
+    startedAt: new Date(startedAt),
+    lockState,
+    ...identity,
+    payload: { ...payload, ...identity },
+  };
+}
+
+export async function restoreTimerLifecycle<
+  TPayload extends SharedTimerPayload,
+  TActiveTimer extends TimerLifecycleActiveTimer,
+  TRecord extends { id: string },
+  TCreateInput,
+>({
+  adapter,
+  baby,
+  user,
+  completedRecords,
+  stopVersionAtStart,
+  currentStopVersion,
+  isStopping,
+  isCurrentBabyBinding,
+  liveActivityIdRef,
+  refreshLocks,
+  persistRecord,
+  dispatchStopTimer,
+  dispatchAddRecord,
+  errorLabel,
+}: RestoreTimerLifecycleOptions<
+  TPayload,
+  TActiveTimer,
+  TRecord,
+  TCreateInput
+>): Promise<void> {
+  const isRestoreObsolete = () =>
+    isTimerRestoreObsolete(
+      stopVersionAtStart,
+      currentStopVersion(),
+      isStopping()
+    );
+  const acceptStartedLiveActivity = async (activityId: string | null) => {
+    if (!isCurrentBabyBinding()) {
+      if (activityId) await endTimerLiveActivity(activityId);
+      return false;
+    }
+    if (activityId) liveActivityIdRef.current = activityId;
+    return true;
+  };
+  const endAdapterLiveActivity = async (activityId?: string | null) => {
+    const endedById = activityId
+      ? await endTimerLiveActivity(activityId)
+      : false;
+    if (!endedById) {
+      await endLiveActivityByType(adapter.liveActivity.type);
+    }
+    liveActivityIdRef.current = null;
+  };
+  const releaseOrQueueLock = async (
+    identity: TimerIdentity,
+    startedAt: string
+  ) => {
+    if (!user?.id) return;
+    try {
+      await releaseTimerLock(
+        baby.id,
+        adapter.activityType,
+        user.id,
+        identity.timerInstanceId,
+        startedAt
+      );
+    } catch {
+      await queuePendingLockRelease(
+        baby.id,
+        adapter.activityType,
+        user.id,
+        identity.timerInstanceId,
+        startedAt
+      );
+    }
+  };
+  const startAdapterLiveActivity = async (
+    startedAt: string,
+    payload: TPayload
+  ) => {
+    const effectiveStartTime =
+      payload.totalPausedMs > 0
+        ? new Date(new Date(startedAt).getTime() + payload.totalPausedMs)
+        : new Date(startedAt);
+    const activityId = await startTimerLiveActivity(
+      adapter.liveActivity.type,
+      baby.name,
+      adapter.liveActivity.detail(payload),
+      effectiveStartTime
+    );
+    return acceptStartedLiveActivity(activityId);
+  };
+
+  if (isRestoreObsolete()) return;
+
+  const activeTimer = await adapter.storage.getActiveTimer(baby.id);
+  const pendingStop = activeTimer
+    ? await readPendingTimerStop(adapter.activityType, baby.id)
+    : null;
+  if (!isCurrentBabyBinding()) return;
+  const hasPendingStop = activeTimer
+    ? isPendingStopForTimer(
+        pendingStop,
+        adapter.activityType,
+        new Date(activeTimer.startedAt),
+        baby.id,
+        activeTimer.timerInstanceId
+      )
+    : false;
+
+  if (activeTimer) {
+    const identity = await resolveTimerIdentity(
+      baby.id,
+      adapter.activityType,
+      activeTimer.startedAt,
+      activeTimer
+    );
+    if (
+      await isTimerCompletionSecured(
+        baby.id,
+        adapter.activityType,
+        identity,
+        completedRecords
+      )
+    ) {
+      await endAdapterLiveActivity(
+        activeTimer.liveActivityId ?? liveActivityIdRef.current
+      );
+      await adapter.storage.clearActiveTimer(baby.id);
+      dispatchStopTimer();
+      await releaseOrQueueLock(identity, activeTimer.startedAt);
+      return;
+    }
+
+    if (!activeTimer.timerInstanceId || !activeTimer.activityId) {
+      await adapter.storage.setActiveTimer(baby.id, {
+        ...activeTimer,
+        ...identity,
+      });
+    }
+
+    const payload = adapter.timerDataCodec.decode(
+      activeTimer as unknown as Record<string, unknown>
+    );
+    const payloadWithIdentity = { ...payload, ...identity };
+    let isStale = false;
+    let lockState: TimerLockReconciliationState =
+      activeTimer.lockState ?? "offline";
+
+    if (user?.id && user.householdId && !hasPendingStop) {
+      const persistLockState = async (
+        nextLockState: TimerLockReconciliationState
+      ) => {
+        if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
+        lockState = nextLockState;
+        await adapter.storage.setActiveTimer(baby.id, {
+          ...activeTimer,
+          ...identity,
+          lockState: nextLockState,
+        });
+      };
+
+      const reconciliation = await reconcileTimerLock({
+        babyId: baby.id,
+        activityType: adapter.activityType,
+        userId: user.id,
+        startedAt: activeTimer.startedAt,
+        timerInstanceId: identity.timerInstanceId,
+        timerData: adapter.timerDataCodec.encode(payloadWithIdentity),
+        persistState: persistLockState,
+      });
+      if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
+      if (reconciliation.state !== "offline") await refreshLocks();
+
+      if (reconciliation.state === "conflicted") {
+        const completion = await acceptTimerCompletion(
+          baby.id,
+          adapter.activityType,
+          activeTimer.startedAt,
+          identity,
+          new Date(Date.now())
+        );
+        dispatchStopTimer();
+        let record = await adapter.storage.getRecordById(
+          baby.id,
+          completion.activityId
+        );
+
+        if (!record) {
+          record = await persistRecord(
+            adapter.buildRecord(
+              new Date(activeTimer.startedAt),
+              new Date(completion.stoppedAt),
+              payloadWithIdentity
+            )
+          );
+          await markTimerCompletionDurable(completion);
+        }
+
+        dispatchAddRecord(record);
+        dispatchStopTimer();
+        isStale = true;
+        await adapter.storage.clearActiveTimer(baby.id);
+        await endAdapterLiveActivity(activeTimer.liveActivityId);
+        showTimerConflictNotice(reconciliation.lockHolderName);
+        if (!isCurrentBabyBinding()) return;
+      }
+    }
+
+    if (!isStale && !isRestoreObsolete()) {
+      adapter.dispatchRestoreTimer(
+        restoredTimer(activeTimer.startedAt, lockState, identity, payload)
+      );
+
+      if (!hasPendingStop && activeTimer.liveActivityId) {
+        const isRunning = await isLiveActivityRunningWithTimeout(
+          activeTimer.liveActivityId
+        );
+        if (!isCurrentBabyBinding()) return;
+        if (isRunning) {
+          liveActivityIdRef.current = activeTimer.liveActivityId;
+        } else if (!payload.isPaused) {
+          if (!(await startAdapterLiveActivity(activeTimer.startedAt, payload))) {
+            return;
+          }
+        }
+      } else if (!hasPendingStop && !payload.isPaused) {
+        if (!(await startAdapterLiveActivity(activeTimer.startedAt, payload))) {
+          return;
+        }
+      }
+    }
+  } else if (user?.id && user.householdId) {
+    try {
+      const lock = await getActiveTimerLock(baby.id, adapter.activityType);
+      if (!isCurrentBabyBinding()) return;
+      if (
+        lock &&
+        lock.startedBy === user.id &&
+        !isRestoreObsolete()
+      ) {
+        const timerData = lock.timerData ?? {};
+        const identity = await resolveTimerIdentity(
+          baby.id,
+          adapter.activityType,
+          lock.startedAt,
+          timerData
+        );
+        if (
+          await isTimerCompletionSecured(
+            baby.id,
+            adapter.activityType,
+            identity,
+            completedRecords
+          )
+        ) {
+          await releaseOrQueueLock(identity, lock.startedAt);
+          return;
+        }
+
+        const payload = adapter.timerDataCodec.decode(timerData);
+        const payloadWithIdentity = { ...payload, ...identity };
+        adapter.dispatchRestoreTimer(
+          restoredTimer(lock.startedAt, "owned", identity, payload)
+        );
+        await adapter.storage.setActiveTimer(baby.id, {
+          startedAt: lock.startedAt,
+          ...payloadWithIdentity,
+          lockState: "owned",
+        } as unknown as TActiveTimer);
+        if (!isCurrentBabyBinding()) return;
+
+        if (!payload.isPaused) {
+          if (!(await startAdapterLiveActivity(lock.startedAt, payload))) {
+            return;
+          }
+        }
+      }
+    } catch (error) {
+      if (!isCurrentBabyBinding()) return;
+      console.error(`${errorLabel} Failed to restore from server:`, error);
+    }
+  }
+}

@@ -113,35 +113,47 @@ and adds no field.
 **Implementation classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**:
 yes.
 
-- [ ] Define the adapter interface and the module's public entry points in
+- [x] Define the adapter interface and the module's public entry points in
       `src/services/timer-lifecycle.ts`, with the module-owned duration rule.
-- [ ] Write the tummy time adapter with all six members over today's payload and record shape.
-- [ ] Route both tummy time record-construction sites — the restore lock-conflict branch and
+- [x] Write the tummy time adapter with all six members over today's payload and record shape.
+- [x] Route both tummy time record-construction sites — the restore lock-conflict branch and
       `stopTummyTime` — through the adapter's `buildRecord`.
-- [ ] Split the timer restore out of `loadTummyTimes` into its own function taking the loaded entries
+- [x] Split the timer restore out of `loadTummyTimes` into its own function taking the loaded entries
       list, preserving call order and `foregroundRefreshKey` behavior.
-- [ ] Move the shared restore sequence listed above into the module and delete the duplicated block
+- [x] Move the shared restore sequence listed above into the module and delete the duplicated block
       from `tummyTime-context.tsx`, keeping every guard, early return, and error log at the same
       point in the sequence.
-- [ ] Keep the context's `refreshLocks`, `liveActivityIdRef`, `isStoppingRef`, `stopVersionRef`, and
+- [x] Keep the context's `refreshLocks`, `liveActivityIdRef`, `isStoppingRef`, `stopVersionRef`, and
       baby-binding state owned by the context and passed into the module.
 
 ## Acceptance criteria
 
-- [ ] A unit test builds a tummy time record from `startedAt`, `endedAt`, and a decoded payload with
+- [x] A unit test builds a tummy time record from `startedAt`, `endedAt`, and a decoded payload with
       no `activeTimer` in scope, asserting the bare span and the module's duration rule.
-- [ ] A unit test round-trips the `timer_data` payload tummy time writes today through the adapter's
+- [x] A unit test round-trips the `timer_data` payload tummy time writes today through the adapter's
       codec — encode, decode, and assert every field survives, including a missing `pausedAt` and a
       zero `totalPausedMs`.
-- [ ] A unit test asserts the module clamps a negative span to `0` seconds and floors a fractional
+- [x] A unit test asserts the module clamps a negative span to `0` seconds and floors a fractional
       second, and that a paused span is subtracted exactly once.
-- [ ] `src/__tests__/external-timer-stop-providers.integration.test.tsx` passes with zero changes to
+- [x] `src/__tests__/external-timer-stop-providers.integration.test.tsx` passes with zero changes to
       the test file, covering tummy time restore, stale-restore races, offline reconnect and
       reconciliation, lock conflicts, sub-minute stops, and Live Activity cleanup.
-- [ ] `tummyTime-context.tsx` no longer contains the restore sequence, and its record-construction
+- [x] `tummyTime-context.tsx` no longer contains the restore sequence, and its record-construction
       arithmetic appears once, inside the adapter.
-- [ ] The full component and unit suites pass unchanged; no test file is edited to accommodate the
+- [x] The full component and unit suites pass unchanged; no test file is edited to accommodate the
       move.
+
+## Implementation notes
+
+- The tummy-time adapter is created with `babyId` in its closure so its required three-argument
+  `buildRecord(startedAt, endedAt, payload)` can return the complete create input without adding a
+  field to `timer_data`.
+- Record persistence remains a restore-call dependency, preserving the adapter's six-member shape
+  while the context keeps the existing household database versus local storage choice.
+- RED: the new adapter/duration unit test failed because neither public module existed.
+- GREEN: the adapter/duration tests pass (3 tests); the unchanged real-provider integration suite
+  passes (42 tests); the full unit suite passes; the full component suite passes (92 suites, 850
+  tests); TypeScript and targeted ESLint checks pass.
 
 ## Non-goals
 
