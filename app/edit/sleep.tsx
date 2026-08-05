@@ -8,6 +8,7 @@ import { useSleep } from "@/contexts/sleep-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import type { SleepType } from "@/constants/activities";
+import { exitModal } from "@/navigation";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_MUTED = "#E8E4F0";
@@ -85,7 +86,7 @@ export default function EditSleepScreen() {
         notes: notes || undefined,
       });
       setIsInitialized(false);
-      router.back();
+      exitModal(router);
     } finally {
       setIsSaving(false);
     }
@@ -104,7 +105,7 @@ export default function EditSleepScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteSleep(sleep.id);
-            router.back();
+            exitModal(router);
           },
         },
       ]

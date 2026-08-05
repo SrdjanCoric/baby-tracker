@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
+import { ModalCloseButton } from "@/components/ModalCloseButton";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -117,15 +118,17 @@ export default function MilestonesScreen() {
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" edges={["top"]}>
       <View className="items-center pt-2 pb-1">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
-        <View className="flex-row items-center">
-          <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary font-nunito-semibold">
-            {t("milestones.title")}
-          </Text>
-          <Pressable
-            onPress={() => setShowInfo(true)}
-            hitSlop={8}
-            className="ml-1.5"
-          >
+        <View className="flex-row items-center w-full px-4">
+          <ModalCloseButton accessibilityLabel={t("common.close")} />
+          <View className="flex-1 flex-row items-center justify-center">
+            <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary font-nunito-semibold">
+              {t("milestones.title")}
+            </Text>
+            <Pressable
+              onPress={() => setShowInfo(true)}
+              hitSlop={8}
+              className="ml-1.5"
+            >
             <View
               className="items-center justify-center"
               style={{
@@ -147,7 +150,9 @@ export default function MilestonesScreen() {
                 i
               </Text>
             </View>
-          </Pressable>
+            </Pressable>
+          </View>
+          <View className="w-touch" />
         </View>
         {selectedBaby && (
           <Text className="text-base text-content-secondary dark:text-content-dark-secondary font-nunito-medium">
@@ -552,4 +557,3 @@ function MilestonesInfoOverlay({
     </Animated.View>
   );
 }
-

@@ -7,6 +7,7 @@ import { useColorScheme } from "nativewind";
 import { useHealth } from "@/contexts/health-context";
 import { useBaby, useUnits } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { ModalCloseButton } from "@/components/ModalCloseButton";
 import type { CreateHealthInput } from "@/services/health-storage";
 import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/constants/activities";
 import { COMMON_MEDICATION_KEYS, COMMON_VACCINE_KEYS, SYMPTOM_OPTIONS, MEASUREMENT_METHODS, DOSAGE_UNITS, DOSAGE_QUICK_VALUES } from "@/constants/activities";
@@ -15,6 +16,7 @@ import { ACTIVITY, TEXT, SURFACE } from "@/constants/colors";
 import { getFeverStatus, getFeverColor, QUICK_TEMPS_CELSIUS, DEFAULT_TEMP_CELSIUS, TEMP_RANGE_CELSIUS, celsiusToFahrenheit } from "@/utils/temperature";
 import { getHealthDisplayName } from "@/utils/health-display";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { exitModal } from "@/navigation";
 
 const HEALTH_ACCENT = ACTIVITY.health.accent;
 const HEALTH_ACCENT_DARK = ACTIVITY.health.accentDark;
@@ -141,7 +143,7 @@ export default function HealthScreen() {
         await NewOwnerOnboardingStorageService.markActivitySaved("health");
         router.replace("/onboarding/owner/saved");
       } else {
-        router.back();
+        exitModal(router);
       }
     } catch {
       Alert.alert(t("common.error"), t("health.saveError"));
@@ -171,19 +173,23 @@ export default function HealthScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="health-screen">
-      <Pressable
-        onPress={() => Keyboard.dismiss()}
-        className="items-center pt-2 pb-3"
-        testID="dismiss-keyboard"
-      >
-        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
-        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-          {t("health.logHealth")}
-        </Text>
-        <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-          {selectedBaby.name}
-        </Text>
-      </Pressable>
+      <View className="items-center pt-2 pb-3">
+        <Pressable onPress={() => Keyboard.dismiss()} testID="dismiss-keyboard">
+          <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        </Pressable>
+        <View className="flex-row items-center w-full px-4">
+          <ModalCloseButton accessibilityLabel={t("common.close")} />
+          <View className="flex-1 items-center">
+            <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+              {t("health.logHealth")}
+            </Text>
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {selectedBaby.name}
+            </Text>
+          </View>
+          <View className="w-touch" />
+        </View>
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

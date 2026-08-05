@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { BabyProfileForm, type CompleteBabyProfileFormData } from "@/components";
 import { useBaby, useFeeding, useSleep, usePumping, useTummyTime } from "@/contexts";
+import { exitModal } from "@/navigation";
 
 const isAndroid = Platform.OS === "android";
 
@@ -36,7 +37,7 @@ export default function AddBabyScreen() {
         if (!hasAnyActiveTimer) {
           await selectBaby(newBaby.id);
         }
-        router.back();
+        exitModal(router);
       } catch {
         setIsLoading(false);
       }
@@ -45,7 +46,7 @@ export default function AddBabyScreen() {
   );
 
   const handleCancel = useCallback(() => {
-    router.back();
+    exitModal(router);
   }, []);
 
   return (

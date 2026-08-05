@@ -1,0 +1,34 @@
+appId: com.sofibaby.app
+name: Widget Cold-Open Sleep Exit
+tags:
+  - regression
+  - activities
+  - sleep
+  - widget
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- stopApp
+
+- openLink:
+    link: sofibaby://sleep
+
+- runFlow:
+    when:
+      visible: "Open in .*Sofi Baby Tracker.*"
+    commands:
+      - tapOn: "Open"
+
+- extendedWaitUntil:
+    visible:
+      id: "sleep-screen"
+    timeout: 15000
+
+- tapOn:
+    id: "e2e-dismiss-sleep-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

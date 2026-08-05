@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Clipboard from "expo-clipboard";
 import { useHousehold, useAuth } from "@/contexts";
+import { exitModal } from "@/navigation";
 import {
   CaregiverInvitation,
   createCaregiverInvitation,
@@ -158,7 +159,7 @@ export default function HouseholdSettingsScreen() {
             setIsLeaving(false);
             if (result.success) {
               Alert.alert(t("common.success"), t("household.leftHousehold"));
-              router.back();
+              exitModal(router);
             } else {
               const errorKey = result.error === "ownerCannotLeave"
                 ? "household.ownerCannotLeave"

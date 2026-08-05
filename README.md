@@ -87,7 +87,7 @@ When the latest completed sleep is the current evening's stored `night` session,
 - **WidgetKit** home screen widgets with push-triggered timeline refresh via APNs
 - **Live Activities + Dynamic Island** for active feeding and sleep timers
 - **Apple Watch** companion app using WCSession with REST API fallback
-- **Deep linking** (`sofibaby://`) for widget and notification actions
+- **Deep linking** (`sofibaby://`) for widget and notification actions, with dismissible activity screens on cold launch
 
 ### Edge Functions
 

@@ -7,10 +7,12 @@ import { useColorScheme } from "nativewind";
 import { useDiaper } from "@/contexts/diaper-context";
 import { useBaby } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { ModalCloseButton } from "@/components/ModalCloseButton";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { STOOL_COLORS } from "@/constants/activities";
 import { ACTIVITY, TEXT, SURFACE } from "@/constants/colors";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { exitModal } from "@/navigation";
 
 const DIAPER_ACCENT = ACTIVITY.diaper.accent;
 const DIAPER_ACCENT_DARK = ACTIVITY.diaper.accentDark;
@@ -81,7 +83,7 @@ export default function DiaperScreen() {
         await NewOwnerOnboardingStorageService.markActivitySaved("diaper");
         router.replace("/onboarding/owner/saved");
       } else {
-        router.back();
+        exitModal(router);
       }
     } finally {
       isSavingRef.current = false;
@@ -100,12 +102,18 @@ export default function DiaperScreen() {
       {/* Header with drag handle */}
       <View className="items-center pt-2 pb-3">
         <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
-        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-          {t("diaper.logDiaperChange")}
-        </Text>
-        <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-          {selectedBaby.name}
-        </Text>
+        <View className="flex-row items-center w-full px-4">
+          <ModalCloseButton accessibilityLabel={t("common.close")} />
+          <View className="flex-1 items-center">
+            <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+              {t("diaper.logDiaperChange")}
+            </Text>
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {selectedBaby.name}
+            </Text>
+          </View>
+          <View className="w-touch" />
+        </View>
       </View>
 
       <KeyboardAvoidingView

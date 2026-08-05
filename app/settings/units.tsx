@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useUnits } from "@/contexts";
+import { exitModal } from "@/navigation";
 
 type UnitSystem = "metric" | "imperial";
 
@@ -37,7 +38,7 @@ export default function UnitsSettingsScreen() {
   const handleSelectUnit = useCallback(
     async (system: UnitSystem) => {
       await setUnitSystem(system);
-      router.back();
+      exitModal(router);
     },
     [setUnitSystem, router]
   );

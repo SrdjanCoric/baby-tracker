@@ -10,6 +10,8 @@ import { formatDuration, formatTime } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { ModalCloseButton } from "@/components/ModalCloseButton";
+import { exitModal } from "@/navigation";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
@@ -112,7 +114,7 @@ export default function PumpingScreen() {
     try {
       resetAlert();
       await stopPumping(volumeMl);
-      router.back();
+      exitModal(router);
     } catch (error) {
       console.error("[PumpingScreen] Failed to stop pumping:", error);
       Alert.alert(t("common.error"), t("pumping.stopError"));
@@ -201,19 +203,23 @@ export default function PumpingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="pumping-screen">
       {/* Header with drag handle - tappable to dismiss keyboard */}
-      <Pressable
-        onPress={() => Keyboard.dismiss()}
-        className="items-center pt-2 pb-3"
-        testID="dismiss-keyboard"
-      >
-        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
-        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-          {t("pumping.title")}
-        </Text>
-        <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-          {selectedBaby.name}
-        </Text>
-      </Pressable>
+      <View className="items-center pt-2 pb-3">
+        <Pressable onPress={() => Keyboard.dismiss()} testID="dismiss-keyboard">
+          <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        </Pressable>
+        <View className="flex-row items-center w-full px-4">
+          <ModalCloseButton accessibilityLabel={t("common.close")} />
+          <View className="flex-1 items-center">
+            <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+              {t("pumping.title")}
+            </Text>
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {selectedBaby.name}
+            </Text>
+          </View>
+          <View className="w-touch" />
+        </View>
+      </View>
 
       <View className="flex-1 items-center justify-center px-6">
         {showVolumeInput ? (

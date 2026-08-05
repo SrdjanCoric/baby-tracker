@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { exitModal } from "@/navigation";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
@@ -97,17 +98,17 @@ export default function WidgetConfigScreen() {
         t("widget.unsavedChangesTitle"),
         t("widget.unsavedChangesMessage"),
         [
-          { text: t("timeline.discard"), style: "destructive", onPress: () => router.back() },
+          { text: t("timeline.discard"), style: "destructive", onPress: () => exitModal(router) },
           { text: t("common.cancel"), style: "cancel" },
           { text: t("common.save"), onPress: async () => {
               await saveConfig();
-              router.back();
+              exitModal(router);
             }
           },
         ]
       );
     } else {
-      router.back();
+      exitModal(router);
     }
   };
 

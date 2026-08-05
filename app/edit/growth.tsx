@@ -8,6 +8,7 @@ import { useGrowth } from "@/contexts/growth-context";
 import { useBaby, useTimeFormat, useUnits } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import { kgToLbs, lbsToKg, cmToInches, inchesToCm } from "@/utils/growth";
+import { exitModal } from "@/navigation";
 
 const GROWTH_TEAL = "#009B77";
 const GROWTH_TEAL_MUTED = "#E0F5EF";
@@ -120,7 +121,7 @@ export default function EditGrowthScreen() {
       });
       // Reset initialized state so hasChanges returns false and navigation can proceed
       setIsInitialized(false);
-      router.back();
+      exitModal(router);
     } finally {
       setIsSaving(false);
     }
@@ -139,7 +140,7 @@ export default function EditGrowthScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteMeasurement(measurement.id);
-            router.back();
+            exitModal(router);
           },
         },
       ]

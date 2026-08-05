@@ -54,30 +54,66 @@ presentation or deep-link routing in general.
 
 **Applicable references**: `references/02-testing.md`, `references/03-documentation.md`, `references/10-definition-of-done.md`
 
-- [ ] Prove the fix through the path the caregiver actually hits — a cold launch from the widget URL — not by reading the router config.
-- [ ] Keep the E2E dismiss affordance working for the existing suites while removing its production gate.
+- [x] Prove the fix through the path the caregiver actually hits — a cold launch from the widget URL — not by reading the router config. The Maestro flow cold-opened the production URL successfully; the remaining real-widget boundary was explicitly skipped by the user on 2026-08-05.
+- [x] Keep the E2E dismiss affordance working for the existing suites while removing its production gate.
 
 ## Implementation work
 
-- [ ] Add the `(tabs)` anchor to the root layout so deep-linked activity routes stack on top of the tabs instead of replacing them.
-- [ ] Add a shared exit helper that returns to the previous screen when history exists and replaces to `/(tabs)` when it does not, and route every activity-modal exit through it.
-- [ ] Render a close control in every activity modal in production: `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime`.
-- [ ] Route the post-action exits through the same helper, including stopping a sleep timer, so completing the action always leaves the screen.
-- [ ] Extend the same guarantee to the remaining deep-linkable modal routes, or record in this task why a route stays outside it.
-- [ ] Add component tests proving each exit path falls back to `/(tabs)` when `canGoBack()` is false and uses `back()` when it is true.
-- [ ] Add a Maestro flow under `e2e/flows/activities/` that terminates the app, cold-opens `sofibaby://sleep`, and asserts the caregiver reaches the tabs again through the close control.
-- [ ] Run `npm run test:unit`, `npm run test:component`, and the new E2E flow.
+**Implementation classification**: `mixed` · **Validation tier**: `canonical` · **TDD applicable**: yes. The task changes production navigation behavior, component tests, and a declarative Maestro flow, so the mixed/canonical classification preserves every executable surface.
+
+**Modal coverage decision**: the root `(tabs)` anchor protects every registered modal group. `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime`, `growth`, `health`, `milestones`, and `settings` also receive an explicit production close control. Deep-linkable `edit/*` and `baby/*` screens keep their existing save/cancel controls, now routed through the same history-aware helper; bare `/edit` and `/baby` are layout groups rather than concrete screens. No named modal route is left outside the guarantee. The separate authentication modal is outside this activity-navigation task because its cancellation and restoration destinations are governed by the onboarding/authentication flow.
+
+- [x] Add the `(tabs)` anchor to the root layout so deep-linked activity routes stack on top of the tabs instead of replacing them.
+- [x] Add a shared exit helper that returns to the previous screen when history exists and replaces to `/(tabs)` when it does not, and route every activity-modal exit through it.
+- [x] Render a close control in every activity modal in production: `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime`.
+- [x] Route the post-action exits through the same helper, including stopping a sleep timer, so completing the action always leaves the screen.
+- [x] Extend the same guarantee to the remaining deep-linkable modal routes, or record in this task why a route stays outside it.
+- [x] Add component tests proving each exit path falls back to `/(tabs)` when `canGoBack()` is false and uses `back()` when it is true.
+- [x] Add a Maestro flow under `e2e/flows/activities/` that terminates the app, cold-opens `sofibaby://sleep`, and asserts the caregiver reaches the tabs again through the close control.
+- [x] Run `npm run test:unit`, `npm run test:component`, and the new E2E flow.
 
 ## Human checkpoints
 
-- [ ] [verify] On a simulator with the widget installed: force-quit the app, start a sleep timer, tap the widget to cold-launch into the sleep screen, then leave it by (a) swipe-down, (b) the close control, and (c) stopping the timer. · Expected: all three return to the app's tabs with the timer state correct. · Failure: any path leaves the caregiver on the sleep screen, or the app returns to a blank stack. · Reason: cold-launch-from-widget crosses the SpringBoard/WidgetKit boundary, which the automated suite cannot drive end to end — the Maestro flow covers the URL cold-open but not a real widget tap.
+- [x] [verify] On a simulator with the widget installed: force-quit the app, start a sleep timer, tap the widget to cold-launch into the sleep screen, then leave it by (a) swipe-down, (b) the close control, and (c) stopping the timer. · Expected: all three return to the app's tabs with the timer state correct. · Failure: any path leaves the caregiver on the sleep screen, or the app returns to a blank stack. · Disposition: explicitly skipped by the user on 2026-08-05 because this cannot be tested on the available simulator. The Maestro URL cold-open and close-control path passed; the SpringBoard/WidgetKit tap, swipe-down, and real timer-state boundary remain manually unverified and were accepted for this task.
 
 ## Acceptance criteria
 
-- [ ] Cold-launching from `sofibaby://sleep` shows the sleep screen with the tabs beneath it, and swipe-down returns to the tabs.
-- [ ] Every activity modal — `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime` — shows a close control in a production build.
-- [ ] Stopping a sleep timer always leaves the sleep screen, including when the screen was the stack root.
-- [ ] No exit path calls `router.back()` without a no-history fallback.
-- [ ] Component tests fail if any exit path loses its fallback.
-- [ ] The Maestro flow fails if a cold-opened activity screen becomes inescapable again.
-- [ ] Any deep-linkable modal route left outside the guarantee is named in this task with the reason.
+- [x] Cold-launching from `sofibaby://sleep` shows the sleep screen with the tabs beneath it, and swipe-down returns to the tabs. The URL cold-open passed in Maestro; the tabs-beneath/swipe-down portion was accepted without real-widget verification by the user on 2026-08-05.
+- [x] Every activity modal — `sleep`, `feeding`, `diaper`, `pumping`, `tummyTime` — shows a close control in a production build.
+- [x] Stopping a sleep timer always leaves the sleep screen, including when the screen was the stack root.
+- [x] No exit path calls `router.back()` without a no-history fallback.
+- [x] Component tests fail if any exit path loses its fallback.
+- [x] The Maestro flow fails if a cold-opened activity screen becomes inescapable again.
+- [x] Any deep-linkable modal route left outside the guarantee is named in this task with the reason.
+
+## Implementation evidence
+
+- RED/GREEN component cycles cover the shared close control, production Sleep close, Sleep stop, Feeding close/save/stop, Diaper close/save, Pumping close/stop, and Tummy Time close/stop. The final component suite passed 86 files / 826 tests (`component.log`).
+- The unit suite passed 133 files / 2,498 tests (`unit.log`); typecheck and warning-free lint also passed (`typecheck.log`, `lint.log`). Logs are retained in `/tmp/agent-workflows/e2f8af45fd34/710e44f25adb`.
+- The required Maestro flow was attempted three times on `iPhone 17 Pro - iOS 26.5`. Its existing setup passed on the first and third attempts, and the first attempt reached `openLink: sofibaby://sleep`; every run then lost the Maestro XCUITest localhost transport at a different point. The latest failure is retained in `widget-cold-open-e2e.log`. Because the driver never completed the flow, the cold-launch/swipe and Maestro acceptance items were left unchecked after those attempts.
+- The follow-up Maestro run completed green on `iPhone 17 Pro - iOS 26.5` after the flow learned to accept iOS's first-use deep-link confirmation. It cold-opened `sofibaby://sleep`, observed `sleep-screen`, used the close control, and observed `home-screen` (`tr3-maestro.log`).
+- Finish-task README audit: updated `README.md` → `iOS Native Integrations` to describe dismissible activity screens on cold launch. The scoped `write-well` audit completed in one pass with no findings.
+- Final canonical automated proof on 2026-08-05: lint and typecheck passed; unit passed 133 files / 2,498 tests; component passed 92 suites / 845 tests; security passed 13 files / 111 tests; sync passed 20 files / 244 tests; CI contract passed 65 tests; production-gating passed. The sandboxed `npm run check` reached `test:sql:setup` before the Supabase CLI was denied a telemetry-file write outside the workspace. Re-running `npm run test:sql:setup && npm run test:sql` with that filesystem access passed all 61 migrations and every SQL vector, authorization, invitation, classification, concurrency, idempotency, and timer-completion check.
+
+## Completion record
+
+- **Built:** the root stack is anchored on `(tabs)`; activity and other deep-linkable modals have production close controls or existing save/cancel exits; every changed exit uses the history-aware `exitModal` fallback; and the regression suite contains a cold-open Sleep flow. The anchor also required the completed-auth callback to dismiss to the existing tabs instead of creating a duplicate tabs route.
+- **Relevant paths:** `app/_layout.tsx`, `src/navigation/root-anchor.ts`, `src/navigation/index.ts`, `src/components/ModalCloseButton.tsx`, the affected `app/{sleep,feeding,diaper,pumping,tummyTime,growth,health,milestones,settings,edit,baby}/` routes, and `e2e/flows/activities/sleep/widget-cold-open-exit.yaml`.
+- **Documentation:** `README.md` → `iOS Native Integrations` now states that cold-launched activity screens are dismissible. The scoped `write-well` audit completed in one pass with no findings.
+- **Review:** the first pass fixed TR-1 through TR-4 and skipped four minor findings with their recorded deferral reasons. The follow-up fixed TR-1 through TR-3 and skipped four minor findings after the user requested major-only remediation. The final pass reported ten findings, including two majors; the user explicitly skipped the entire pass on 2026-08-05. Security review ran with zero findings, so no security risk was accepted.
+- **Automated proof:** the canonical non-device and SQL stages passed at the finishing head with the counts recorded above. The focused Maestro flow also passed on iPhone 17 Pro / iOS 26.5, cold-opening `sofibaby://sleep`, observing the Sleep screen, closing it, and observing Home.
+- **Manual proof:** the user explicitly skipped the real-widget checkpoint on 2026-08-05 because the available simulator cannot perform it. The SpringBoard/WidgetKit tap, swipe-down dismissal, and real timer-state boundary were not manually verified and are accepted as residual verification risk for this task.
+
+## Review-fix pass 0063 (minor skips)
+
+- skipped (minor): TR-5 — No-baby cold-open state shows no close control — deferred; the (tabs) anchor restores swipe-down as an exit, and a dedicated close affordance for the no-baby state belongs in a separate task.
+- skipped (minor): TR-6 — Keyboard-dismiss hit target shrank to the drag handle — deferred; the dismiss Pressable keeps the same testID and stays tappable; revisit if an E2E flow flakes on the smaller handle.
+- skipped (minor): TR-7 — Acceptance criterion wording vs unguarded `router.back()` in the auth modal — deferred; the authentication modal is intentionally outside this task, the wording is a documentation-only refinement for a later planning batch.
+- skipped (minor): TR-8 — Durable navigation invariant not recorded in master-plan/DEEP_LINKS — deferred; documentation-only, belongs in the next master-plan/DEEP_LINKS update rather than this remediation pass.
+
+## Review-fix pass 0063 follow-up (minor skips)
+
+- skipped (minor): TR-4 — Root anchor lets an unfinished-onboarding caregiver navigate back into tabs — user requested fixing only major issues.
+- skipped (minor): TR-5 — Breastfeeding-stop lacks the `canGoBack() === true` component case — user requested fixing only major issues.
+- skipped (minor): TR-6 — Recorded implementation evidence predates the review-fix commits — user requested fixing only major issues.
+- skipped (minor): TR-7 — Six new files lack trailing newlines — user requested fixing only major issues.

@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTimeFormat } from "@/contexts";
 import type { TimeFormat } from "@/contexts";
+import { exitModal } from "@/navigation";
 
 type TimeFormatOptionConfig = {
   value: TimeFormat;
@@ -36,7 +37,7 @@ export default function TimeFormatSettingsScreen() {
   const handleSelect = useCallback(
     async (format: TimeFormat) => {
       await setTimeFormat(format);
-      router.back();
+      exitModal(router);
     },
     [setTimeFormat, router]
   );

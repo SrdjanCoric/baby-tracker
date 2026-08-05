@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 const mockPush = jest.fn();
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
+let mockCanGoBack = false;
 let mockSearchParams: { onboardingActivity?: string } = {};
 const mockCompleteTimerStarted = jest.fn();
 let mockTimeFormat: "12h" | "24h" = "12h";
@@ -13,6 +14,7 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: mockPush,
     back: mockBack,
+    canGoBack: () => mockCanGoBack,
     replace: mockReplace,
   }),
   useLocalSearchParams: () => mockSearchParams,
@@ -73,6 +75,7 @@ jest.mock("react-i18next", () => ({
         "feeding.enterAmountValidation": "Please enter an amount",
         "feeding.enterFoodValidation": "Please enter a food name",
         "common.back": "Back",
+        "common.close": "Close",
         "common.notes": "Notes",
         "common.loading": "Loading...",
         "common.noBabySelected": "No baby selected",
@@ -96,10 +99,18 @@ const mockStartBreastfeeding = jest.fn();
 const mockStopBreastfeeding = jest.fn();
 const mockChangeSide = jest.fn();
 const mockAddFeeding = jest.fn();
+const runningTimer = {
+  isRunning: true,
+  isPaused: false,
+  startTime: new Date("2026-08-04T08:00:00.000Z"),
+  totalPausedMs: 0,
+  side: "left" as const,
+};
+let mockActiveTimer: typeof runningTimer | null = null;
 
 jest.mock("@/contexts", () => ({
   useFeeding: () => ({
-    activeTimer: null,
+    activeTimer: mockActiveTimer,
     suggestedSide: "left",
     startBreastfeeding: mockStartBreastfeeding,
     stopBreastfeeding: mockStopBreastfeeding,
@@ -164,14 +175,26 @@ import FeedingScreen from "./index";
 describe("FeedingScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCanGoBack = false;
     mockSearchParams = {};
+    mockActiveTimer = null;
     mockAddFeeding.mockResolvedValue({ id: "new-feeding" });
     mockStartBreastfeeding.mockResolvedValue({ success: true });
+    mockStopBreastfeeding.mockResolvedValue(undefined);
     mockCompleteTimerStarted.mockResolvedValue(undefined);
     mockTimeFormat = "12h";
   });
 
   describe("rendering", () => {
+    it("lets a caregiver close a cold-opened feeding screen", () => {
+      render(<FeedingScreen />);
+
+      fireEvent.press(screen.getByRole("button", { name: "Close" }));
+
+      expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+      expect(mockBack).not.toHaveBeenCalled();
+    });
+
     it("renders header with baby name", () => {
       render(<FeedingScreen />);
       expect(screen.getByText("Feeding")).toBeTruthy();
@@ -189,6 +212,19 @@ describe("FeedingScreen", () => {
       render(<FeedingScreen />);
       expect(screen.getByText("Start Breastfeeding")).toBeTruthy();
     });
+  });
+
+  it("returns to tabs after stopping a cold-opened feeding timer", async () => {
+    mockActiveTimer = runningTimer;
+    render(<FeedingScreen />);
+
+    fireEvent.press(screen.getByTestId("stop-timer-button"));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+    });
+    expect(mockStopBreastfeeding).toHaveBeenCalledTimes(1);
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
   describe("tab switching", () => {
@@ -320,6 +356,33 @@ describe("FeedingScreen", () => {
   });
 
   describe("bottle form", () => {
+    it("returns to tabs after saving from a cold-opened feeding screen", async () => {
+      render(<FeedingScreen />);
+      fireEvent.press(screen.getByText("Bottle"));
+      fireEvent.press(screen.getByTestId("content-breast-milk"));
+      fireEvent.press(screen.getByTestId("quick-amount-30"));
+      fireEvent.press(screen.getByTestId("save-bottle-button"));
+
+      await waitFor(() => {
+        expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+      });
+      expect(mockBack).not.toHaveBeenCalled();
+    });
+
+    it("returns to the previous screen after saving a bottle feeding when history exists", async () => {
+      mockCanGoBack = true;
+      render(<FeedingScreen />);
+      fireEvent.press(screen.getByText("Bottle"));
+      fireEvent.press(screen.getByTestId("content-breast-milk"));
+      fireEvent.press(screen.getByTestId("quick-amount-30"));
+      fireEvent.press(screen.getByTestId("save-bottle-button"));
+
+      await waitFor(() => {
+        expect(mockBack).toHaveBeenCalledTimes(1);
+      });
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
     it("renders content type selection", () => {
       render(<FeedingScreen />);
       fireEvent.press(screen.getByText("Bottle"));

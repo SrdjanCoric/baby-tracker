@@ -9,6 +9,7 @@ import { useNotificationIntegration } from "@/hooks";
 import { COMMON_FOODS } from "@/constants/foods";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import type { SolidReaction } from "@/constants/activities";
+import { exitModal } from "@/navigation";
 
 const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
@@ -85,7 +86,7 @@ export default function SolidFeedingScreen() {
         notes: notes || undefined,
       });
       await scheduleReminderAfterFeeding(new Date());
-      router.back();
+      exitModal(router);
     } finally {
       setIsSaving(false);
     }

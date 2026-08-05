@@ -46,6 +46,7 @@ jest.mock("@/contexts/unit-context", () => ({
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     back: mockBack,
+    canGoBack: () => true,
     push: jest.fn(),
     replace: jest.fn(),
   }),

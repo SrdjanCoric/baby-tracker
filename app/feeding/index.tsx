@@ -14,6 +14,8 @@ import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/a
 import { ACTIVITY, TEXT } from "@/constants/colors";
 import { useColorScheme } from "nativewind";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
+import { ModalCloseButton } from "@/components/ModalCloseButton";
+import { exitModal } from "@/navigation";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
 const FEEDING_GREEN = ACTIVITY.feeding.accent;
@@ -105,7 +107,7 @@ export default function FeedingScreen() {
       router.replace("/onboarding/owner/saved");
       return;
     }
-    router.back();
+    exitModal(router);
   }, [onboardingActivity, router]);
 
   // Breastfeeding handlers
@@ -123,7 +125,7 @@ export default function FeedingScreen() {
     isStoppingRef.current = true;
     try {
       await stopBreastfeeding();
-      router.back();
+      exitModal(router);
     } finally {
       isStoppingRef.current = false;
     }
@@ -161,19 +163,23 @@ export default function FeedingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="feeding-screen">
       {/* Header with drag handle */}
-      <Pressable
-        onPress={() => Keyboard.dismiss()}
-        className="items-center pt-2 pb-3"
-        testID="dismiss-keyboard"
-      >
-        <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
-        <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
-          {t("feeding.title")}
-        </Text>
-        <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-          {selectedBaby.name}
-        </Text>
-      </Pressable>
+      <View className="items-center pt-2 pb-3">
+        <Pressable onPress={() => Keyboard.dismiss()} testID="dismiss-keyboard">
+          <View className="w-9 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mb-3" />
+        </Pressable>
+        <View className="flex-row items-center w-full px-4">
+          <ModalCloseButton accessibilityLabel={t("common.close")} />
+          <View className="flex-1 items-center">
+            <Text className="text-lg font-semibold text-content-primary dark:text-content-dark-primary">
+              {t("feeding.title")}
+            </Text>
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {selectedBaby.name}
+            </Text>
+          </View>
+          <View className="w-touch" />
+        </View>
+      </View>
 
       {/* Tab Bar */}
       {!isTimerRunning && (

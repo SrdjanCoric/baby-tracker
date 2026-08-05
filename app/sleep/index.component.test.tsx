@@ -6,10 +6,18 @@ const mockConfirmMorningSleep = jest.fn().mockResolvedValue(undefined);
 const mockStartSleep = jest.fn().mockResolvedValue({ success: true });
 const mockStopSleep = jest.fn().mockResolvedValue(undefined);
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
+let mockCanGoBack = false;
 let mockTimeFormat: "12h" | "24h" = "12h";
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ back: mockBack, push: jest.fn(), setParams: jest.fn() }),
+  useRouter: () => ({
+    back: mockBack,
+    canGoBack: () => mockCanGoBack,
+    push: jest.fn(),
+    replace: mockReplace,
+    setParams: jest.fn(),
+  }),
   useLocalSearchParams: () => ({}),
 }));
 
@@ -27,6 +35,7 @@ jest.mock("react-i18next", () => ({
       "sleep.logPastSleep": "Log past sleep",
       "sleep.autoDetectHint": "Timer hint",
       "sleep.morningConfirmationQuestion": "Was this the first nap or back to sleep?",
+      "common.close": "Close",
       "common.reset": "Reset",
       "common.done": "Done",
       "sleep.firstNap": "First nap",
@@ -106,8 +115,53 @@ import SleepScreen from "./index";
 
 describe("SleepScreen morning confirmation", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     mockActiveTimer = runningTimer;
+    mockCanGoBack = false;
     mockTimeFormat = "12h";
+  });
+
+  it("returns to tabs after stopping a cold-opened sleep timer", async () => {
+    render(<SleepScreen />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Wake up" }));
+    });
+
+    expect(mockStopSleep).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+    expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  it("lets a caregiver close a cold-opened sleep screen in production", () => {
+    render(<SleepScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "Close" }));
+
+    expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+    expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  it("returns to the previous screen after stopping a sleep timer when history exists", async () => {
+    mockCanGoBack = true;
+    render(<SleepScreen />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Wake up" }));
+    });
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("returns to the previous screen when a caregiver closes the sleep screen with history", () => {
+    mockCanGoBack = true;
+    render(<SleepScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "Close" }));
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it("keeps the running timer usable while answering the inline question", async () => {

@@ -8,6 +8,7 @@ import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
 import type { BreastSide } from "@/constants/activities";
+import { exitModal } from "@/navigation";
 
 const PUMPING_BLUE = "#7B9BC9";
 const PUMPING_BLUE_MUTED = "#E8EDF5";
@@ -91,7 +92,7 @@ export default function EditPumpingScreen() {
         notes: notes || undefined,
       });
       setIsInitialized(false);
-      router.back();
+      exitModal(router);
     } finally {
       setIsSaving(false);
     }
@@ -110,7 +111,7 @@ export default function EditPumpingScreen() {
           style: "destructive",
           onPress: async () => {
             await deletePumping(pumping.id);
-            router.back();
+            exitModal(router);
           },
         },
       ]
