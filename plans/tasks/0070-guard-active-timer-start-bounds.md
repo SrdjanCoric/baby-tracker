@@ -69,7 +69,12 @@ from 0056's scope is carried forward.
   never writes a timer another started, and that policy already enforces it. The household-wide
   `SELECT` policy also stays, which is why a second phone keeps displaying a timer it cannot touch.
 - **No RPC signature change.** `acquire_timer_lock`, `release_timer_lock`, `toggle_timer_pause`, and
-  `cleanup_stale_timer_locks` keep their signatures, their grants, and their behavior.
+  `cleanup_stale_timer_locks` keep their signatures and their grants. `release_timer_lock`,
+  `toggle_timer_pause`, and `cleanup_stale_timer_locks` also keep their behavior unchanged.
+  `acquire_timer_lock` changes in one respect only: migration `060` replaces its body so the returned
+  `started_at` is the value persisted after the `BEFORE INSERT` trigger runs, rather than the value
+  the caller supplied. The response shape is identical, and the two now agree whenever normalization
+  applies.
 - **Backward-compatible client contract.** Existing RPC signatures remain valid. Ordinary “start
   now” calls omit `p_started_at` and use database time; existing clients that send up to one second
   of positive skew are normalized. Explicit historical/reconciled starts, pause, resume, release,
@@ -113,11 +118,13 @@ future bound alone.
       **Confirmed by owner 2026-08-06:** use one trigger function with explicit `22023` rejection,
       preserve the policies, grants, and RPC signatures, and keep existing client call shapes and
       legitimate timer operations backward compatible.
-- [ ] [verify] On local Supabase, start a timer, leave it running, and confirm normal operation is
+- [x] [verify] On local Supabase, start a timer, leave it running, and confirm normal operation is
       unaffected · Steps: acquire a lock, pause it, resume it, then release it · Expected: every step
       succeeds and no lock is left behind · Failure: any legitimate timer-control step is rejected by
       the new trigger · Reason: the RPC paths run against a live local database with real auth
-      fixtures, and a regression here would be a caregiver unable to use a timer at all.
+      fixtures, and a regression here would be a caregiver unable to use a timer at all. **Verified
+      2026-08-06:** `npm run test:edge:timer` acquired the owner's lock, paused and resumed it through
+      the Edge function, released it through the RPC, and removed the disposable fixtures.
 
 ## Acceptance criteria
 
@@ -138,7 +145,7 @@ future bound alone.
 - [x] Existing client call shapes remain valid, including `acquire_timer_lock` with omitted
       `p_started_at`; only timestamps more than one second ahead or beyond the twelve-hour horizon
       newly fail.
-- [ ] Both checkpoints confirmed by the owner.
+- [x] Both checkpoints confirmed by the owner.
 
 ## Non-goals
 
@@ -148,6 +155,37 @@ future bound alone.
 - Widening or narrowing `active_timers` row access in any direction.
 - Anything else from the removed Task 0056, including `started_by` pinning, which row-level security
   already rejects.
+
+## Completion record
+
+- **Built:** migration `060` installs a trigger that normalizes up to one second of positive client
+  clock skew, rejects larger future values and starts older than twelve hours, and applies on insert
+  or when `started_at` changes. It also normalizes or removes pre-existing out-of-range locks and
+  replaces `acquire_timer_lock` so its response returns the stored timestamp. Ordinary app starts
+  use the RPC's database-time default while explicit historical and reconciled starts keep their
+  timestamps.
+- **Decisions:** the bound matches stale-lock cleanup; unchanged `started_at` updates stay valid;
+  policies, grants, and RPC signatures stay unchanged; direct authenticated inserts remain denied;
+  and owner release/reacquire remains an accepted security risk because blocking forward edits would
+  not close that path and would prevent Task 0071's valid within-window corrections.
+- **Relevant files:** `supabase/migrations/060_guard_active_timer_start_bounds.sql`,
+  `supabase/migrations/056_authorize_active_timer_controls.sql`,
+  `src/services/active-timer-service.ts`, the four timer contexts under `src/contexts/`,
+  `scripts/sql/active-timer-authorization-tests.sql`, `scripts/test-active-timer-edge.mjs`, and the
+  affected unit, provider-integration, and fixture checks.
+- **Documentation:** README project structure now identifies migration `060` as the schema head. The
+  affected line passed one `write-well` audit pass with no findings; no application-usage prose
+  needed revision.
+- **Review:** TR-1 through TR-4 and TR-6 were fixed. The owner accepted TR-5 as a security risk for
+  the reason recorded above. TR-7 through TR-14 were skipped as minor because remediation was limited
+  to TR-1 through TR-6. No finding remains open.
+- **Automated proof:** on 2026-08-06, `npm run test:sql` passed all SQL vectors, including active-timer
+  authorization; `npm run test:edge:timer` passed the local timer authorization and control flow;
+  and `npm run test:security` passed 13 files and 111 tests.
+- **Manual proof:** no separate manual action was required. The executable local-Supabase Edge timer
+  flow performed the task's acquire, pause, resume, and release checkpoint against real Auth, REST,
+  Edge, and PostgreSQL fixtures, verified the resumed row, confirmed release removed the lock, and
+  cleaned up the fixtures.
 
 ## Review decisions
 

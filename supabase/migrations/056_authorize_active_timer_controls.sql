@@ -1,3 +1,6 @@
+-- NOTE: migration 060 replaces this function to return the started_at persisted after its
+-- BEFORE INSERT trigger normalizes client-clock skew. Because 060 sorts later, it wins on every
+-- fresh apply. Mirror any change made here into 060 as well, or it will be silently overwritten.
 CREATE OR REPLACE FUNCTION public.acquire_timer_lock(
   p_baby_id UUID,
   p_activity_type VARCHAR(20),
