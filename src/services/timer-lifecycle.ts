@@ -245,12 +245,17 @@ export async function editRunningTimerStartTime<
   const oldLiveActivityId =
     liveActivityIdRef.current ?? activeTimer.liveActivityId ?? null;
   let replacementLiveActivityId: string | null = null;
+  let endedExistingLiveActivity = false;
   if (oldLiveActivityId) {
-    const endedById = await endTimerLiveActivity(oldLiveActivityId);
-    if (!endedById) {
-      await endLiveActivityByType(adapter.liveActivity.type);
-    }
+    endedExistingLiveActivity = await endTimerLiveActivity(oldLiveActivityId);
+  }
+  if (!endedExistingLiveActivity) {
+    endedExistingLiveActivity = await endLiveActivityByType(
+      adapter.liveActivity.type
+    );
+  }
 
+  if (endedExistingLiveActivity) {
     replacementLiveActivityId = await startTimerLiveActivity(
       adapter.liveActivity.type,
       baby.name,

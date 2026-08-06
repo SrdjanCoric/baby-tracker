@@ -14,6 +14,7 @@ import { readPendingTimerStop } from "./timer-stop-coordinator";
 import { createSleepTimerAdapter } from "./timer-adapters/sleep-timer-adapter";
 import type { ActiveSleepTimerData } from "./sleep-storage";
 import {
+  endLiveActivityByType,
   endTimerLiveActivity,
   startTimerLiveActivity,
 } from "./live-activity-service";
@@ -193,6 +194,75 @@ describe("editRunningTimerStartTime", () => {
     );
     expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
     expect(liveActivityIdRef.current).toBe("live-new");
+  });
+
+  it("re-anchors a running Live Activity when its identifier was lost", async () => {
+    const newStart = new Date("2026-08-06T07:30:00.000Z");
+    const activeTimer: TestActiveTimer = {
+      startedAt: "2026-08-06T08:00:00.000Z",
+      isPaused: false,
+      totalPausedMs: 0,
+      lockState: "owned",
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+    };
+    const setActiveTimer = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn(),
+        setActiveTimer,
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({ timerInstanceId: "timer-1" })),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "record-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn(() => "nap") },
+      dispatchRestoreTimer: vi.fn(),
+    };
+    vi.mocked(updateTimerStartTime).mockResolvedValue(true);
+    vi.mocked(endLiveActivityByType).mockResolvedValue(true);
+    vi.mocked(startTimerLiveActivity).mockResolvedValue("live-new");
+    const liveActivityIdRef = { current: null as string | null };
+
+    await editRunningTimerStartTime({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      userId: "user-1",
+      activeTimer,
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "record-1",
+        isPaused: false,
+        totalPausedMs: 0,
+      },
+      startedAt: newStart,
+      liveActivityIdRef,
+      dispatchEditedStart: vi.fn(),
+    });
+
+    expect(endTimerLiveActivity).not.toHaveBeenCalled();
+    expect(endLiveActivityByType).toHaveBeenCalledWith("sleep");
+    expect(startTimerLiveActivity).toHaveBeenCalledWith(
+      "sleep",
+      "Baby",
+      "nap",
+      newStart
+    );
+    expect(liveActivityIdRef.current).toBe("live-new");
+    expect(setActiveTimer).toHaveBeenCalledWith(
+      "baby-1",
+      expect.objectContaining({ liveActivityId: "live-new" })
+    );
   });
 
   it("queues a transport-failed edit before applying it locally", async () => {
