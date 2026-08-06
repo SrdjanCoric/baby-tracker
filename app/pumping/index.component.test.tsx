@@ -127,22 +127,38 @@ describe("PumpingScreen stop confirmation", () => {
     jest.setSystemTime(now);
     mockShowVolumeInput = "false";
     mockPumpings = [{ endedAt: "2026-08-06T04:30:00.000Z" }];
+    mockTimeFormat = "24h";
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date(2026, 7, 6, 10, 5),
+    };
 
     const { rerender } = render(<PumpingScreen />);
     fireEvent.press(
-      screen.getByRole("button", { name: /pumping.startTime: .* · Alice/ })
+      screen.getByRole("button", { name: "pumping.startTime: 10:05 · Alice" })
     );
     expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
       new Date("2026-08-06T04:30:00.000Z")
     );
     expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(now);
 
+    mockTimeFormat = "12h";
+    rerender(<PumpingScreen />);
+    expect(
+      screen.getByRole("button", {
+        name: "pumping.startTime: 10:05 AM · Alice",
+      })
+    ).toBeTruthy();
     mockLockStartedBy = "user-2";
     rerender(<PumpingScreen />);
     expect(
-      screen.queryByRole("button", { name: /pumping.startTime: .* · Bob/ })
+      screen.queryByRole("button", {
+        name: "pumping.startTime: 10:05 AM · Bob",
+      })
     ).toBeNull();
-    expect(screen.getByLabelText(/pumping.startTime: .* · Bob/)).toBeTruthy();
+    expect(
+      screen.getByLabelText("pumping.startTime: 10:05 AM · Bob")
+    ).toBeTruthy();
   });
 
   it("writes the running picker value through the pumping provider", async () => {

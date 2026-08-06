@@ -133,24 +133,41 @@ describe("TummyTimeScreen custom start time", () => {
     jest.useFakeTimers();
     const now = new Date("2026-08-06T12:00:00.000Z");
     jest.setSystemTime(now);
-    mockActiveTimer = runningTimer;
+    mockTimeFormat = "24h";
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date(2026, 7, 6, 10, 5),
+    };
     mockTummyTimes = [{ endedAt: "2026-08-06T05:00:00.000Z" }];
 
     const { rerender } = render(<TummyTimeScreen />);
     fireEvent.press(
-      screen.getByRole("button", { name: /tummyTime.startTime: .* · Alice/ })
+      screen.getByRole("button", {
+        name: "tummyTime.startTime: 10:05 · Alice",
+      })
     );
     expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
       new Date("2026-08-06T05:00:00.000Z")
     );
     expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(now);
 
+    mockTimeFormat = "12h";
+    rerender(<TummyTimeScreen />);
+    expect(
+      screen.getByRole("button", {
+        name: "tummyTime.startTime: 10:05 AM · Alice",
+      })
+    ).toBeTruthy();
     mockLockStartedBy = "user-2";
     rerender(<TummyTimeScreen />);
     expect(
-      screen.queryByRole("button", { name: /tummyTime.startTime: .* · Bob/ })
+      screen.queryByRole("button", {
+        name: "tummyTime.startTime: 10:05 AM · Bob",
+      })
     ).toBeNull();
-    expect(screen.getByLabelText(/tummyTime.startTime: .* · Bob/)).toBeTruthy();
+    expect(
+      screen.getByLabelText("tummyTime.startTime: 10:05 AM · Bob")
+    ).toBeTruthy();
   });
 
   it("writes the running picker value through the tummy-time provider", async () => {

@@ -232,24 +232,33 @@ describe("FeedingScreen", () => {
       jest.useFakeTimers();
       const now = new Date("2026-08-06T12:00:00.000Z");
       jest.setSystemTime(now);
-      mockActiveTimer = runningTimer;
+      mockTimeFormat = "24h";
+      mockActiveTimer = {
+        ...runningTimer,
+        startTime: new Date(2026, 7, 6, 10, 5),
+      };
       mockFeedings = [{ endedAt: "2026-08-06T04:00:00.000Z" }];
 
       const { rerender } = render(<FeedingScreen />);
       fireEvent.press(
-        screen.getByRole("button", { name: /Start time: .* · Alice/ })
+        screen.getByRole("button", { name: "Start time: 10:05 · Alice" })
       );
       expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
         new Date("2026-08-06T04:00:00.000Z")
       );
       expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(now);
 
+      mockTimeFormat = "12h";
+      rerender(<FeedingScreen />);
+      expect(
+        screen.getByRole("button", { name: "Start time: 10:05 AM · Alice" })
+      ).toBeTruthy();
       mockLockStartedBy = "user-2";
       rerender(<FeedingScreen />);
       expect(
-        screen.queryByRole("button", { name: /Start time: .* · Bob/ })
+        screen.queryByRole("button", { name: "Start time: 10:05 AM · Bob" })
       ).toBeNull();
-      expect(screen.getByLabelText(/Start time: .* · Bob/)).toBeTruthy();
+      expect(screen.getByLabelText("Start time: 10:05 AM · Bob")).toBeTruthy();
     });
 
     it("writes the running picker value through the feeding provider", async () => {

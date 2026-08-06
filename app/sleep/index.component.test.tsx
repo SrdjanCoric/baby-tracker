@@ -176,10 +176,15 @@ describe("SleepScreen morning confirmation", () => {
     const now = new Date("2026-08-06T12:00:00.000Z");
     jest.setSystemTime(now);
     mockSleeps = [{ endedAt: "2026-08-06T03:30:00.000Z" }];
+    mockTimeFormat = "24h";
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date(2026, 7, 6, 10, 5),
+    };
 
     const { rerender } = render(<SleepScreen />);
     const ownerLabel = screen.getByRole("button", {
-      name: /Start time: .* · Alice/,
+      name: "Start time: 10:05 · Alice",
     });
     fireEvent.press(ownerLabel);
     expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
@@ -187,12 +192,17 @@ describe("SleepScreen morning confirmation", () => {
     );
     expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(now);
 
+    mockTimeFormat = "12h";
+    rerender(<SleepScreen />);
+    expect(
+      screen.getByRole("button", { name: "Start time: 10:05 AM · Alice" })
+    ).toBeTruthy();
     mockLockStartedBy = "user-2";
     rerender(<SleepScreen />);
     expect(
-      screen.queryByRole("button", { name: /Start time: .* · Bob/ })
+      screen.queryByRole("button", { name: "Start time: 10:05 AM · Bob" })
     ).toBeNull();
-    expect(screen.getByLabelText(/Start time: .* · Bob/)).toBeTruthy();
+    expect(screen.getByLabelText("Start time: 10:05 AM · Bob")).toBeTruthy();
   });
 
   it("computes running-editor bounds when the picker opens", () => {
