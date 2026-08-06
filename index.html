@@ -1,0 +1,650 @@
+<title>Editing a running timer's start time — proposed UI</title>
+
+<style>
+  :root {
+    --ground: #F5EDE8;
+    --card: #FFFFFF;
+    --ink: #2D2A26;
+    --ink-2: #5C5752;
+    --ink-3: #7A756E;
+    --hair: #EDEAE6;
+    --hair-strong: #D5D1CC;
+    --muted-bg: #E8E4F0;
+    --accent: #6B5B95;
+    --accent-wash: #F2EFF4;
+    --amber: #D4A017;
+    --go: #4A7F4D;
+    --stop: #A8574B;
+    --bezel: #D9CFC9;
+    --shadow: 0 1px 2px rgba(45, 42, 38, .06), 0 12px 36px rgba(45, 42, 38, .10);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #121110;
+      --card: #2A2725;
+      --ink: #F5F2F0;
+      --ink-2: #B8B3B0;
+      --ink-3: #9E9A97;
+      --hair: #2F2C32;
+      --hair-strong: #4A464F;
+      --muted-bg: #2E2840;
+      --accent: #A594CF;
+      --accent-wash: #241F31;
+      --amber: #E0B84A;
+      --go: #6DB070;
+      --stop: #D08476;
+      --bezel: #3A363D;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 36px rgba(0, 0, 0, .45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #121110;
+    --card: #2A2725;
+    --ink: #F5F2F0;
+    --ink-2: #B8B3B0;
+    --ink-3: #9E9A97;
+    --hair: #2F2C32;
+    --hair-strong: #4A464F;
+    --muted-bg: #2E2840;
+    --accent: #A594CF;
+    --accent-wash: #241F31;
+    --amber: #E0B84A;
+    --go: #6DB070;
+    --stop: #D08476;
+    --bezel: #3A363D;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 36px rgba(0, 0, 0, .45);
+  }
+
+  :root[data-theme="light"] {
+    --ground: #F5EDE8;
+    --card: #FFFFFF;
+    --ink: #2D2A26;
+    --ink-2: #5C5752;
+    --ink-3: #7A756E;
+    --hair: #EDEAE6;
+    --hair-strong: #D5D1CC;
+    --muted-bg: #E8E4F0;
+    --accent: #6B5B95;
+    --accent-wash: #F2EFF4;
+    --amber: #D4A017;
+    --go: #4A7F4D;
+    --stop: #A8574B;
+    --bezel: #D9CFC9;
+    --shadow: 0 1px 2px rgba(45, 42, 38, .06), 0 12px 36px rgba(45, 42, 38, .10);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  .eyebrow {
+    font-size: 12px; letter-spacing: .11em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; margin: 0;
+  }
+
+  h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+    font-size: clamp(28px, 4.2vw, 40px); line-height: 1.12; letter-spacing: -.015em;
+    font-weight: 600; text-wrap: balance; margin: 10px 0 14px;
+  }
+
+  h2 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+    font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: -.01em;
+    text-wrap: balance; margin: 0;
+  }
+
+  .lede { max-width: 62ch; color: var(--ink-2); font-size: 17px; }
+
+  .meta {
+    margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--hair-strong);
+    display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 13px; color: var(--ink-3);
+  }
+
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .86em; color: var(--ink-2); }
+
+  section.block { margin-top: 56px; }
+
+  .block-head {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 26px; padding-bottom: 12px; border-bottom: 1px solid var(--hair-strong);
+  }
+
+  .block-head p { margin: 0; color: var(--ink-2); font-size: 15px; max-width: 58ch; }
+
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 320px)) minmax(0, 1fr);
+    gap: 40px; align-items: start;
+  }
+
+  .trio { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  @media (max-width: 1000px) {
+    .compare { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .notes-col { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 700px) {
+    .compare, .trio { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .col-label {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    font-size: 13px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .dot.now { background: var(--hair-strong); }
+  .dot.next { background: var(--go); }
+  .dot.blocked { background: var(--stop); }
+
+  /* ---------- phone ---------- */
+
+  .phone { background: var(--bezel); border-radius: 44px; padding: 9px; box-shadow: var(--shadow); width: 100%; }
+  .screen { background: var(--card); border-radius: 36px; overflow: hidden; padding: 10px 0 18px; position: relative; }
+  .handle { width: 36px; height: 4px; border-radius: 99px; background: var(--hair-strong); margin: 6px auto 12px; }
+
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px 4px; font-size: 20px; color: var(--ink-3);
+  }
+  .nav .titles { text-align: center; }
+  .nav .titles strong { display: block; color: var(--ink); font-size: 17px; font-weight: 600; }
+  .nav .titles span { font-size: 13px; color: var(--ink-3); }
+
+  .timer-body { padding: 26px 20px 10px; display: flex; flex-direction: column; align-items: center; }
+
+  .status-head { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
+  .status-head .emoji { font-size: 30px; }
+  .status-head .word { color: var(--accent); font-size: 17px; font-weight: 600; }
+
+  .timer-card {
+    background: var(--muted-bg); border-radius: 24px;
+    padding: 26px 34px; margin-bottom: 26px;
+  }
+
+  .timer-card .value {
+    color: var(--accent); font-size: 40px; font-weight: 700;
+    letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1;
+  }
+
+  .run-row { display: flex; align-items: center; gap: 8px; margin-bottom: 30px; font-size: 15px; color: var(--ink-2); }
+  .run-row .live { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+
+  .start-pill {
+    background: var(--muted-bg); border-radius: 999px; padding: 11px 20px;
+    font-size: 14px; font-weight: 500; color: var(--accent);
+    font-variant-numeric: tabular-nums; margin-bottom: 20px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+
+  .start-pill.readonly { color: var(--ink-3); background: var(--hair); }
+  .start-pill .caret { font-size: 11px; opacity: .75; }
+
+  .controls { display: flex; align-items: center; gap: 24px; }
+
+  .btn-round {
+    width: 62px; height: 62px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 24px;
+  }
+
+  .btn-round.ghost { border: 2px solid var(--accent); color: var(--accent); }
+  .btn-round.solid { background: var(--accent); color: #fff; width: 74px; height: 74px; font-size: 28px; }
+
+  .hint { font-size: 13px; color: var(--ink-3); margin: 12px 0 0; }
+
+  /* ---------- picker sheet ---------- */
+
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--card); border-top: 1px solid var(--hair-strong);
+    box-shadow: 0 -10px 30px rgba(0,0,0,.12);
+  }
+
+  .sheet-bar {
+    display: flex; justify-content: flex-end; padding: 8px 16px;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .sheet-bar span { color: var(--accent); font-weight: 600; font-size: 15px; }
+
+  .spinner {
+    display: grid; grid-template-columns: 1.4fr 1fr .8fr .8fr; gap: 4px;
+    padding: 10px 12px 18px; text-align: center;
+    font-variant-numeric: tabular-nums; font-size: 19px;
+  }
+
+  .spinner .col { display: flex; flex-direction: column; gap: 4px; }
+  .spinner .o { color: var(--ink-3); opacity: .5; }
+  .spinner .sel {
+    color: var(--ink); font-weight: 600; background: var(--accent-wash);
+    border-radius: 8px; padding: 2px 0;
+  }
+  .spinner .dis { color: var(--ink-3); opacity: .18; text-decoration: line-through; }
+
+  .bound-note {
+    display: flex; justify-content: space-between; gap: 10px;
+    padding: 8px 16px 12px; font-size: 11.5px; color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dim-back { opacity: .32; }
+
+  .added { position: relative; }
+  .added::before {
+    content: ""; position: absolute; left: -14px; top: 2px; bottom: 2px;
+    width: 3px; border-radius: 2px; background: var(--go);
+  }
+
+  /* ---------- notes ---------- */
+
+  .notes-col { display: flex; flex-direction: column; gap: 24px; }
+
+  .note { background: var(--card); border-radius: 16px; padding: 18px 20px; box-shadow: var(--shadow); }
+  .note p { margin: 0 0 10px; font-size: 14.5px; color: var(--ink-2); }
+  .note p:last-child { margin-bottom: 0; }
+  .note strong { color: var(--ink); }
+
+  .tag {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: 999px; margin-bottom: 10px;
+  }
+
+  .tag.add { background: var(--go); color: #fff; }
+  .tag.cut { background: var(--stop); color: #fff; }
+  .tag.same { background: var(--hair-strong); color: var(--ink-2); }
+
+  .caption { font-size: 13px; color: var(--ink-3); margin: 10px 2px 0; max-width: 40ch; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .table-scroll { overflow-x: auto; }
+
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  th {
+    font-size: 12px; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--ink-3); border-bottom: 1px solid var(--hair-strong);
+  }
+  td code { white-space: nowrap; }
+
+  ul.plain { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 15px; }
+  ul.plain li { margin-bottom: 9px; }
+  ul.plain li:last-child { margin-bottom: 0; }
+  ul.plain strong { color: var(--ink); }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Task 0071 · unified timer contract</p>
+    <h1>Correct a running timer's start without stopping it</h1>
+    <p class="lede">
+      The baby fell asleep at 4:12 and the phone was reached at 4:31. Today that costs four steps: stop,
+      delete the record, find the second button, re-enter the time. The running-timer view has no
+      start-time display at all. This adds one tappable label — the value, the caregiver who started it —
+      opening the picker the app already uses, bounded so nothing pickable is rejected afterwards.
+    </p>
+    <div class="meta">
+      <span>Sleep shown; identical on feeding, pumping, tummy time</span>
+      <span><code>app/sleep/index.tsx</code></span>
+      <span><code>src/components/RunningTimerStartEditor.tsx</code></span>
+      <span>Mock — proposed appearance only</span>
+    </div>
+  </header>
+
+  <!-- ============ BLOCK 1: THE LABEL ============ -->
+
+  <section class="block">
+    <div class="block-head">
+      <h2>The running-timer view</h2>
+      <p>One element added between the running-status row and the transport controls. Nothing else on
+        the screen moves in kind, only down.</p>
+    </div>
+
+    <div class="compare">
+
+      <div>
+        <div class="col-label"><span class="dot now"></span> Today</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <div class="nav">
+              <span>✕</span>
+              <div class="titles"><strong>Sleep</strong><span>Sofia</span></div>
+              <span>⚙️</span>
+            </div>
+            <div class="timer-body">
+              <div class="status-head"><span class="emoji">😴</span><span class="word">Sleeping</span></div>
+              <div class="timer-card"><div class="value">00:19:47</div></div>
+              <div class="run-row"><span class="live"></span> Timer running</div>
+              <div class="controls">
+                <div class="btn-round ghost">⏸</div>
+                <div class="btn-round solid">⏹</div>
+              </div>
+              <p class="hint">Tap to stop</p>
+            </div>
+          </div>
+        </div>
+        <p class="caption">No start time anywhere. The elapsed count is the only clue that the timer was
+          started nineteen minutes late.</p>
+      </div>
+
+      <div>
+        <div class="col-label"><span class="dot next"></span> Proposed</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <div class="nav">
+              <span>✕</span>
+              <div class="titles"><strong>Sleep</strong><span>Sofia</span></div>
+              <span>⚙️</span>
+            </div>
+            <div class="timer-body">
+              <div class="status-head"><span class="emoji">😴</span><span class="word">Sleeping</span></div>
+              <div class="added">
+                <div class="start-pill">Start Time: 4:12 AM · Maya <span class="caret">▾</span></div>
+              </div>
+              <div class="timer-card"><div class="value">00:19:47</div></div>
+              <div class="run-row"><span class="live"></span> Timer running</div>
+              <div class="controls">
+                <div class="btn-round ghost">⏸</div>
+                <div class="btn-round solid">⏹</div>
+              </div>
+              <p class="hint">Tap to stop</p>
+            </div>
+          </div>
+        </div>
+        <p class="caption">Label states value and starter. Filled pill in the activity's muted colour =
+          tappable. Same shape the "Started earlier" chip already uses on the start view.</p>
+      </div>
+
+      <div class="notes-col">
+        <div class="note">
+          <span class="tag add">Added</span>
+          <p><strong>One pill, two facts.</strong> <code>Start Time: 4:12 AM · Maya</code> — the value in the
+            caregiver's 12/24-hour preference, and the starter from <code>lock.startedByName</code>, which
+            the timers context already hydrates. No new lookup, no new query.</p>
+          <p>Placed in the same slot as the pre-start "Started earlier" control, above the elapsed card. The
+            pill stays away from Pause and Stop while a caregiver who never edits still gains the answer to
+            "when did this start?"</p>
+        </div>
+        <div class="note">
+          <span class="tag same">Unchanged</span>
+          <p>Pause, stop, the hint line, the header and the elapsed card are untouched. Stopping still
+            finalizes the record from the lock's <code>started_at</code> — an edited start is simply the
+            value the stop writes.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ BLOCK 2: THE PICKER ============ -->
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Tapping the label</h2>
+      <p>The same bottom-sheet spinner "Started earlier" opens. What is new is that its ends are the real
+        limits, drawn rather than enforced after the fact.</p>
+    </div>
+
+    <div class="compare">
+
+      <div>
+        <div class="col-label"><span class="dot next"></span> Picker open · iOS</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <div class="nav dim-back">
+              <span>✕</span>
+              <div class="titles"><strong>Sleep</strong><span>Sofia</span></div>
+              <span>⚙️</span>
+            </div>
+            <div class="timer-body dim-back" style="padding-bottom:0;">
+              <div class="status-head"><span class="emoji">😴</span><span class="word">Sleeping</span></div>
+              <div class="start-pill">Start Time: 4:12 AM · Maya <span class="caret">▾</span></div>
+              <div class="timer-card"><div class="value">00:19:47</div></div>
+              <div class="run-row"><span class="live"></span> Timer running</div>
+            </div>
+            <div class="sheet">
+              <div class="sheet-bar"><span>Done</span></div>
+              <div class="spinner">
+                <div class="col">
+                  <span class="dis">Aug 4</span>
+                  <span class="o">Yesterday</span>
+                  <span class="sel">Today</span>
+                  <span class="dis">Aug 7</span>
+                </div>
+                <div class="col">
+                  <span class="o">2</span><span class="o">3</span>
+                  <span class="sel">4</span><span class="o">5</span>
+                </div>
+                <div class="col">
+                  <span class="o">10</span><span class="o">11</span>
+                  <span class="sel">12</span><span class="o">13</span>
+                </div>
+                <div class="col">
+                  <span class="o">AM</span><span class="sel">AM</span>
+                  <span class="dis">PM</span><span class="o"></span>
+                </div>
+              </div>
+              <div class="bound-note">
+                <span>⌊ 3:58 AM — previous nap ended</span>
+                <span>now 4:31 AM ⌋</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="caption">Struck-through values are outside <code>minimumDate</code>/<code>maximumDate</code>.
+          The spinner physically will not travel there.</p>
+      </div>
+
+      <div>
+        <div class="col-label"><span class="dot next"></span> Picker open · Android</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <div class="nav dim-back">
+              <span>✕</span>
+              <div class="titles"><strong>Sleep</strong><span>Sofia</span></div>
+              <span>⚙️</span>
+            </div>
+            <div class="timer-body dim-back" style="padding-bottom:0;">
+              <div class="status-head"><span class="emoji">😴</span><span class="word">Sleeping</span></div>
+              <div class="start-pill">Start Time: 4:12 AM · Maya <span class="caret">▾</span></div>
+              <div class="timer-card"><div class="value">00:19:47</div></div>
+              <div class="run-row"><span class="live"></span> Timer running</div>
+            </div>
+            <div class="sheet">
+              <div class="sheet-bar"><span>Done</span></div>
+              <div style="padding:14px 18px 6px; display:flex; gap:10px;">
+                <div class="start-pill" style="margin:0; flex:1; justify-content:center;">Aug 6</div>
+                <div class="start-pill" style="margin:0; flex:1; justify-content:center;">4:12 AM</div>
+              </div>
+              <div class="bound-note">
+                <span>⌊ 3:58 AM — previous nap ended</span>
+                <span>now 4:31 AM ⌋</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="caption">Android's native dialogs take the same two bounds instead of the platform
+          <code>undefined</code> they get today, so no Android-only value can reach the server and be
+          refused.</p>
+      </div>
+
+      <div class="notes-col">
+        <div class="note">
+          <span class="tag add">Added</span>
+          <p><strong>The range is shown, not corrected.</strong> Floor is the later of <code>now − 12h</code>
+            and the end of the previous saved sleep; ceiling is <code>now</code>. A caregiver never picks a
+            value the app then silently rewrites.</p>
+          <p>Twelve hours because that is the cleanup horizon. Previous-end because a running timer's anchor
+            drives the widget, the Watch and the Live Activity and has no correction path until it stops —
+            so overlap is put out of reach here, unlike saved records, which stay warn-and-allow.</p>
+        </div>
+        <div class="note">
+          <span class="tag cut">Tightened</span>
+          <p><strong>"Started earlier" gets the identical bounds.</strong> Its floor was yesterday midnight —
+            up to forty-seven hours back. Leaving it would put a 12-hour edit bound and a 47-hour start bound
+            on one screen.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ BLOCK 3: WHO SEES THE CONTROL ============ -->
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Who may edit</h2>
+      <p>The starter alone, on every surface. The second phone still displays the timer and re-anchors when
+        the start moves — it just has nothing to tap.</p>
+    </div>
+
+    <div class="compare trio">
+
+      <div>
+        <div class="col-label"><span class="dot next"></span> Starter's phone</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <div class="timer-body" style="padding-top:16px;">
+              <div class="status-head"><span class="emoji">😴</span><span class="word">Sleeping</span></div>
+              <div class="start-pill">Start Time: 4:12 AM · Maya <span class="caret">▾</span></div>
+              <div class="timer-card"><div class="value">00:19:47</div></div>
+              <div class="run-row"><span class="live"></span> Timer running</div>
+              <div class="controls">
+                <div class="btn-round ghost">⏸</div>
+                <div class="btn-round solid">⏹</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="caption">Accent-coloured, caret, tappable.</p>
+      </div>
+
+      <div>
+        <div class="col-label"><span class="dot blocked"></span> Other caregiver</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <div class="timer-body" style="padding-top:16px;">
+              <div class="status-head"><span class="emoji">😴</span><span class="word">Sleeping</span></div>
+              <div class="start-pill readonly">Start Time: 4:12 AM · Maya</div>
+              <div class="timer-card"><div class="value">00:19:47</div></div>
+              <div class="run-row"><span class="live"></span> Timer running</div>
+              <div class="controls">
+                <div class="btn-round ghost" style="opacity:.3;">⏸</div>
+                <div class="btn-round solid" style="opacity:.3;">⏹</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="caption">Same text, neutral fill, no caret, not a button. The row policy refuses the write
+          regardless — the UI just stops offering it.</p>
+      </div>
+
+      <div>
+        <div class="col-label"><span class="dot next"></span> After the edit</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="handle"></div>
+            <div class="timer-body" style="padding-top:16px;">
+              <div class="status-head"><span class="emoji">😴</span><span class="word">Sleeping</span></div>
+              <div class="added">
+                <div class="start-pill">Start Time: 3:53 AM · Maya <span class="caret">▾</span></div>
+              </div>
+              <div class="timer-card"><div class="value">00:38:12</div></div>
+              <div class="run-row"><span class="live"></span> Timer running</div>
+              <div class="controls">
+                <div class="btn-round ghost">⏸</div>
+                <div class="btn-round solid">⏹</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="caption">Elapsed jumps to match the moved anchor. No confirmation dialog, no toast — the
+          number itself is the receipt.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ BLOCK 4: SURFACES ============ -->
+
+  <section class="block">
+    <div class="block-head">
+      <h2>What the moved anchor reaches</h2>
+      <p>One write, five surfaces. Only one of them needs new code.</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <tr>
+          <th>Surface</th><th>How it re-anchors</th><th>New work</th>
+        </tr>
+        <tr>
+          <td>Starter's screen</td>
+          <td>Local state from the same lock</td>
+          <td>None</td>
+        </tr>
+        <tr>
+          <td>Second household phone</td>
+          <td><code>active_timers</code> Realtime → <code>UPDATE_LOCK</code>; dashboard derives elapsed from
+            <code>lock.startedAt</code></td>
+          <td>None</td>
+        </tr>
+        <tr>
+          <td>iOS widget · Apple Watch</td>
+          <td><code>Text(startDate, style: .timer)</code> against a REST-fetched <code>started_at</code>;
+            re-derives on next fetch</td>
+          <td>None — neither native target changes</td>
+        </tr>
+        <tr>
+          <td>Live Activity</td>
+          <td>Anchor is passed at creation and has no update path today</td>
+          <td><strong>The editing device re-anchors its own</strong> — update the anchor, or end and restart</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="note" style="margin-top:26px;">
+      <span class="tag same">Behind the pill</span>
+      <p>A direct <code>UPDATE</code> on <code>active_timers.started_at</code> — no new RPC, no policy
+        change. The row policy is already <code>USING (started_by = auth.uid())</code>, and the sync engine
+        replays queued writes as direct writes anyway, so an RPC would be an authority the replay path walks
+        past. The server-side trigger stays the binding check.</p>
+      <p>Offline, the edit queues validated against <code>now()</code> at edit time and is revalidated at
+        replay time — a long-queued edit can be rejected then. Stated consequence, not a defect.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Out of frame</h2>
+      <p>Deliberately not in this screen.</p>
+    </div>
+    <ul class="plain">
+      <li><strong>Editing the stop time</strong> — refused separately.</li>
+      <li><strong>Inline editing from the dashboard card, widget, Watch or Live Activity</strong> — the card
+        keeps the read-only gate it applies today; the edit is reachable only from the starter's own running
+        screen.</li>
+      <li><strong>Editing a timer another caregiver started</strong>, or any widening of row access.</li>
+      <li><strong>Clamping against activities of a different type</strong> — the floor is same-type only.</li>
+      <li><strong>Saved-record clock-time editing</strong> — Tasks 0072 through 0074.</li>
+    </ul>
+  </section>
+
+</div>

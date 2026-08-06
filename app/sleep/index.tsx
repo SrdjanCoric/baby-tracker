@@ -492,7 +492,20 @@ function RunningTimerView({
         </Text>
       </View>
 
+      <RunningTimerStartEditor
+        startLabel={t("sleep.startTime")}
+        startedAt={startedAt}
+        starterName={starterName}
+        canEdit={canEdit}
+        getBounds={getBounds}
+        timeFormat={timeFormat}
+        accentColor={accent}
+        mutedBackgroundColor={mutedBg}
+        onEdit={onEditStart}
+      />
+
       <View
+        testID="running-timer-elapsed"
         className="px-12 py-8 rounded-card-lg mb-8"
         style={{ backgroundColor: mutedBg }}
       >
@@ -514,18 +527,6 @@ function RunningTimerView({
           {isPaused ? t("common.timerPaused") : t("sleep.timerRunning")}
         </Text>
       </View>
-
-      <RunningTimerStartEditor
-        startLabel={t("sleep.startTime")}
-        startedAt={startedAt}
-        starterName={starterName}
-        canEdit={canEdit}
-        getBounds={getBounds}
-        timeFormat={timeFormat}
-        accentColor={accent}
-        mutedBackgroundColor={mutedBg}
-        onEdit={onEditStart}
-      />
 
       <View className="flex-row items-center gap-6">
         {onPause && onResume && (

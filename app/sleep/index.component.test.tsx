@@ -190,7 +190,15 @@ describe("SleepScreen morning confirmation", () => {
       startTime: new Date(2026, 7, 6, 10, 5),
     };
 
-    const { rerender } = render(<SleepScreen />);
+    const { rerender, UNSAFE_root } = render(<SleepScreen />);
+    const layoutOrder = UNSAFE_root.findAll(
+      (node) =>
+        node.props.testID === "running-timer-start-editor" ||
+        node.props.testID === "running-timer-elapsed"
+    ).map((node) => node.props.testID);
+    expect(layoutOrder.indexOf("running-timer-start-editor")).toBeLessThan(
+      layoutOrder.indexOf("running-timer-elapsed")
+    );
     const ownerLabel = screen.getByRole("button", {
       name: "Start time: 10:05 · Alice",
     });

@@ -602,7 +602,20 @@ function RunningTimerView({
         />
       </View>
 
+      <RunningTimerStartEditor
+        startLabel={t("pumping.startTime")}
+        startedAt={startedAt}
+        starterName={starterName}
+        canEdit={canEdit}
+        getBounds={getBounds}
+        timeFormat={timeFormat}
+        accentColor={PUMPING_BLUE}
+        mutedBackgroundColor={PUMPING_BLUE_MUTED}
+        onEdit={onEditStart}
+      />
+
       <View
+        testID="running-timer-elapsed"
         className="px-12 py-8 rounded-card-lg mb-8"
         style={{ backgroundColor: PUMPING_BLUE_MUTED }}
       >
@@ -624,18 +637,6 @@ function RunningTimerView({
           {isPaused ? t("common.timerPaused") : t("pumping.timerRunning")}
         </Text>
       </View>
-
-      <RunningTimerStartEditor
-        startLabel={t("pumping.startTime")}
-        startedAt={startedAt}
-        starterName={starterName}
-        canEdit={canEdit}
-        getBounds={getBounds}
-        timeFormat={timeFormat}
-        accentColor={PUMPING_BLUE}
-        mutedBackgroundColor={PUMPING_BLUE_MUTED}
-        onEdit={onEditStart}
-      />
 
       <View className="flex-row items-center gap-6">
         {onPause && onResume && (

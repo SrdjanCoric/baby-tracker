@@ -141,7 +141,15 @@ describe("PumpingScreen stop confirmation", () => {
       startTime: new Date(2026, 7, 6, 10, 5),
     };
 
-    const { rerender } = render(<PumpingScreen />);
+    const { rerender, UNSAFE_root } = render(<PumpingScreen />);
+    const layoutOrder = UNSAFE_root.findAll(
+      (node) =>
+        node.props.testID === "running-timer-start-editor" ||
+        node.props.testID === "running-timer-elapsed"
+    ).map((node) => node.props.testID);
+    expect(layoutOrder.indexOf("running-timer-start-editor")).toBeLessThan(
+      layoutOrder.indexOf("running-timer-elapsed")
+    );
     fireEvent.press(
       screen.getByRole("button", { name: "pumping.startTime: 10:05 · Alice" })
     );

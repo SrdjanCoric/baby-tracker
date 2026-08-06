@@ -637,8 +637,24 @@ function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, 
           <CompactSideButton label={t("feeding.rightShort")} fullLabel={t("feeding.right")} isSelected={side === "right"} onPress={() => onSideChange("right")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
         </View>
 
+        <RunningTimerStartEditor
+          startLabel={t("feeding.startTime")}
+          startedAt={startedAt}
+          starterName={starterName}
+          canEdit={canEdit}
+          getBounds={getBounds}
+          timeFormat={timeFormat}
+          accentColor={accentColor}
+          mutedBackgroundColor={secondaryBg}
+          onEdit={onEditStart}
+        />
+
         {/* Timer display */}
-        <View className="px-12 py-8 rounded-card-lg mb-8" style={{ backgroundColor: mutedBg }}>
+        <View
+          testID="running-timer-elapsed"
+          className="px-12 py-8 rounded-card-lg mb-8"
+          style={{ backgroundColor: mutedBg }}
+        >
           <Text
             className="text-timer-xl text-center font-bold tracking-tight"
             style={{ color: isPaused ? PAUSED_AMBER : accentColor, opacity: isPaused ? 0.5 : 1 }}
@@ -655,18 +671,6 @@ function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, 
             {isPaused ? t("common.timerPaused") : t("feeding.timerRunning")}
           </Text>
         </View>
-
-        <RunningTimerStartEditor
-          startLabel={t("feeding.startTime")}
-          startedAt={startedAt}
-          starterName={starterName}
-          canEdit={canEdit}
-          getBounds={getBounds}
-          timeFormat={timeFormat}
-          accentColor={accentColor}
-          mutedBackgroundColor={secondaryBg}
-          onEdit={onEditStart}
-        />
 
         {/* Pause + Stop buttons */}
         <View className="flex-row items-center gap-6">

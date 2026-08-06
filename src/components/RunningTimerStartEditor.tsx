@@ -104,6 +104,7 @@ export function RunningTimerStartEditor({
     <>
       {canEdit ? (
         <Pressable
+          testID="running-timer-start-editor"
           onPress={handleOpen}
           className="mb-5 py-3 px-5 rounded-full"
           style={{ backgroundColor: mutedBackgroundColor }}
@@ -114,6 +115,7 @@ export function RunningTimerStartEditor({
         </Pressable>
       ) : (
         <View
+          testID="running-timer-start-editor"
           className="mb-5 py-3 px-5 rounded-full"
           style={{ backgroundColor: mutedBackgroundColor }}
           accessibilityLabel={label}

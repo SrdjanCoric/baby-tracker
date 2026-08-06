@@ -20,6 +20,8 @@
   its task file to `plans/tasks/done/` must be committed directly to `main` with `[skip ci]`. Do not
   open a closeout PR or run CI for that limited closeout.
 - Use a documentation PR when closeout includes broader documentation or planning changes.
+- When a task has a settled HTML mock, keep the mock in the repository and link the task file to the
+  exact HTML artifact it implements.
 
 ## Finish-task validation logs
 
@@ -46,3 +48,5 @@
 - If `EFBIG` occurs during Metro/Hermes after a process-wide file limit was applied, treat it as a
   validation-harness failure. Remove that limit and rerun the affected validation with output-only
   log limiting before diagnosing application code.
+- If `npm run e2e:seed` exposes a stale local schema, run the clean household-timer gate instead of
+  retrying the seed so the current migration chain is reapplied.

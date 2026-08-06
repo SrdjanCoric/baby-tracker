@@ -424,7 +424,20 @@ function RunningTimerView({
         </Text>
       </View>
 
+      <RunningTimerStartEditor
+        startLabel={t("tummyTime.startTime")}
+        startedAt={startedAt}
+        starterName={starterName}
+        canEdit={canEdit}
+        getBounds={getBounds}
+        timeFormat={timeFormat}
+        accentColor={TUMMY_ORANGE}
+        mutedBackgroundColor={TUMMY_ORANGE_MUTED}
+        onEdit={onEditStart}
+      />
+
       <View
+        testID="running-timer-elapsed"
         className="px-12 py-8 rounded-card-lg mb-8"
         style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
       >
@@ -446,18 +459,6 @@ function RunningTimerView({
           {isPaused ? t("common.timerPaused") : t("tummyTime.timerRunning")}
         </Text>
       </View>
-
-      <RunningTimerStartEditor
-        startLabel={t("tummyTime.startTime")}
-        startedAt={startedAt}
-        starterName={starterName}
-        canEdit={canEdit}
-        getBounds={getBounds}
-        timeFormat={timeFormat}
-        accentColor={TUMMY_ORANGE}
-        mutedBackgroundColor={TUMMY_ORANGE_MUTED}
-        onEdit={onEditStart}
-      />
 
       <View className="flex-row items-center gap-6">
         {onPause && onResume && (

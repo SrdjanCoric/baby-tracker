@@ -148,7 +148,15 @@ describe("TummyTimeScreen custom start time", () => {
     };
     mockTummyTimes = [{ endedAt: "2026-08-06T05:00:00.000Z" }];
 
-    const { rerender } = render(<TummyTimeScreen />);
+    const { rerender, UNSAFE_root } = render(<TummyTimeScreen />);
+    const layoutOrder = UNSAFE_root.findAll(
+      (node) =>
+        node.props.testID === "running-timer-start-editor" ||
+        node.props.testID === "running-timer-elapsed"
+    ).map((node) => node.props.testID);
+    expect(layoutOrder.indexOf("running-timer-start-editor")).toBeLessThan(
+      layoutOrder.indexOf("running-timer-elapsed")
+    );
     fireEvent.press(
       screen.getByRole("button", {
         name: "tummyTime.startTime: 10:05 · Alice",
