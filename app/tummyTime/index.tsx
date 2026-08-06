@@ -370,8 +370,6 @@ function StartView({
             <BoundedAndroidDateTimePicker
               value={customStartTime ?? pickerBounds.maximumDate}
               bounds={pickerBounds}
-              timeFormat={timeFormat}
-              accentColor={TUMMY_ORANGE}
               onChange={setCustomStartTime}
             />
           ) : (

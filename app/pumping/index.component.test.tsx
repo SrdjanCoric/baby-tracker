@@ -72,6 +72,14 @@ jest.mock("@react-native-community/datetimepicker", () => {
   };
 });
 
+jest.mock("react-native-date-picker", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: (props: Record<string, unknown>) => <View {...props} />,
+  };
+});
+
 jest.mock("@/hooks", () => ({
   useTimerAlertIntegration: () => ({
     checkAndSendAlert: mockCheckAndSendAlert,
@@ -176,13 +184,18 @@ describe("PumpingScreen stop confirmation", () => {
       fireEvent.press(
         screen.getByRole("button", { name: /pumping.startTime: .* · Alice/ })
       );
-      fireEvent.press(screen.getByTestId("timer-start-decrease-minute"));
+      const selectedTime = new Date("2026-08-06T11:23:00.000Z");
+      fireEvent(
+        screen.getByTestId("bounded-android-datetime-picker"),
+        "dateChange",
+        selectedTime
+      );
       await act(async () => {
         fireEvent.press(screen.getByRole("button", { name: "common.done" }));
       });
 
       expect(mockEditPumpingStartTime).toHaveBeenCalledWith(
-        new Date("2026-08-06T11:29:00.000Z")
+        selectedTime
       );
     } finally {
       Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
@@ -274,7 +287,7 @@ describe("PumpingScreen stop confirmation", () => {
     });
   });
 
-  it("formats the bounded Android picker from the current preference", () => {
+  it("renders a bounded native Android picker for Started earlier", () => {
     const originalPlatformOS = Platform.OS;
     Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
     mockActiveTimer = null;
@@ -283,18 +296,14 @@ describe("PumpingScreen stop confirmation", () => {
     jest.setSystemTime(new Date(2026, 0, 2, 10, 0));
 
     try {
-      const { rerender } = render(<PumpingScreen />);
+      render(<PumpingScreen />);
       fireEvent.press(screen.getByRole("button", { name: "pumping.startedEarlier" }));
-      expect(screen.getByTestId("bounded-android-datetime-picker")).toBeTruthy();
-      expect(screen.getByTestId("timer-start-android-value")).toHaveTextContent(
-        /· 10:00$/
+      const picker = screen.getByTestId("bounded-android-datetime-picker");
+      expect(picker.props.mode).toBe("datetime");
+      expect(picker.props.minimumDate).toEqual(
+        new Date(2026, 0, 1, 22, 0)
       );
-
-      mockTimeFormat = "12h";
-      rerender(<PumpingScreen />);
-      expect(screen.getByTestId("timer-start-android-value")).toHaveTextContent(
-        /· 10:00 AM$/
-      );
+      expect(picker.props.maximumDate).toEqual(new Date(2026, 0, 2, 10, 0));
     } finally {
       Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
     }

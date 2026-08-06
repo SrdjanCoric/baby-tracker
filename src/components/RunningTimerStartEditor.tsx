@@ -125,8 +125,6 @@ export function RunningTimerStartEditor({
             <BoundedAndroidDateTimePicker
               value={draftStartedAt}
               bounds={pickerBounds}
-              timeFormat={timeFormat}
-              accentColor={accentColor}
               onChange={setDraftStartedAt}
             />
           ) : (

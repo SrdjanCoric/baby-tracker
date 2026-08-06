@@ -525,8 +525,6 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
               <BoundedAndroidDateTimePicker
                 value={customStartTime ?? pickerBounds.maximumDate}
                 bounds={pickerBounds}
-                timeFormat={timeFormat}
-                accentColor={accentColor}
                 onChange={setCustomStartTime}
               />
             ) : (

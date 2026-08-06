@@ -24,6 +24,14 @@ jest.mock("@react-native-community/datetimepicker", () => {
   };
 });
 
+jest.mock("react-native-date-picker", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: (props: Record<string, unknown>) => <View {...props} />,
+  };
+});
+
 describe("RunningTimerStartEditor", () => {
   const originalPlatformOS = Platform.OS;
 
@@ -132,13 +140,15 @@ describe("RunningTimerStartEditor", () => {
     );
   });
 
-  it("offers only bounded adjustments on Android", async () => {
+  it("offers a bounded native datetime picker on Android", async () => {
     Object.defineProperty(Platform, "OS", {
       value: "android",
       configurable: true,
     });
     const onEdit = jest.fn().mockResolvedValue(undefined);
+    const minimumDate = new Date(2026, 7, 6, 0, 0);
     const maximumDate = new Date(2026, 7, 6, 12, 0);
+    const selectedTime = new Date(2026, 7, 6, 11, 23);
 
     render(
       <RunningTimerStartEditor
@@ -147,7 +157,7 @@ describe("RunningTimerStartEditor", () => {
         starterName="Alice"
         canEdit
         getBounds={() => ({
-          minimumDate: new Date(2026, 7, 6, 0, 0),
+          minimumDate,
           maximumDate,
         })}
         timeFormat="24h"
@@ -161,12 +171,15 @@ describe("RunningTimerStartEditor", () => {
       screen.getByRole("button", { name: "Start time: 12:00 · Alice" })
     );
     expect(screen.queryByTestId("datetime-picker")).toBeNull();
-    expect(screen.getByTestId("timer-start-increase-minute")).toBeDisabled();
-    fireEvent.press(screen.getByTestId("timer-start-decrease-minute"));
+    const picker = screen.getByTestId("bounded-android-datetime-picker");
+    expect(picker.props.mode).toBe("datetime");
+    expect(picker.props.minimumDate).toEqual(minimumDate);
+    expect(picker.props.maximumDate).toEqual(maximumDate);
+    fireEvent(picker, "dateChange", selectedTime);
     await act(async () => {
       fireEvent.press(screen.getByRole("button", { name: "Done" }));
     });
 
-    expect(onEdit).toHaveBeenCalledWith(new Date(2026, 7, 6, 11, 59));
+    expect(onEdit).toHaveBeenCalledWith(selectedTime);
   });
 });

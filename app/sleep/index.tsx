@@ -439,8 +439,6 @@ function SleepStartView({ onStart, onLogPastSleep, getBounds }: SleepStartViewPr
             <BoundedAndroidDateTimePicker
               value={customStartTime ?? pickerBounds.maximumDate}
               bounds={pickerBounds}
-              timeFormat={timeFormat}
-              accentColor={accent}
               onChange={setCustomStartTime}
             />
           ) : (
