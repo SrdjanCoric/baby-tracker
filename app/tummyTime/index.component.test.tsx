@@ -153,6 +153,29 @@ describe("TummyTimeScreen custom start time", () => {
     expect(screen.getByLabelText(/tummyTime.startTime: .* · Bob/)).toBeTruthy();
   });
 
+  it("writes the running picker value through the tummy-time provider", async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
+    mockActiveTimer = runningTimer;
+    const selectedTime = new Date("2026-08-06T11:30:00.000Z");
+    render(<TummyTimeScreen />);
+
+    fireEvent.press(
+      screen.getByRole("button", { name: /tummyTime.startTime: .* · Alice/ })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      selectedTime
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    });
+
+    expect(mockEditTummyTimeStartTime).toHaveBeenCalledWith(selectedTime);
+  });
+
   it("lets a caregiver close a cold-opened tummy-time screen", () => {
     render(<TummyTimeScreen />);
 

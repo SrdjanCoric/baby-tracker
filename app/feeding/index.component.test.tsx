@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react-native";
 import { Platform } from "react-native";
 
 const mockPush = jest.fn();
@@ -250,6 +250,29 @@ describe("FeedingScreen", () => {
         screen.queryByRole("button", { name: /Start time: .* · Bob/ })
       ).toBeNull();
       expect(screen.getByLabelText(/Start time: .* · Bob/)).toBeTruthy();
+    });
+
+    it("writes the running picker value through the feeding provider", async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
+      mockActiveTimer = runningTimer;
+      const selectedTime = new Date("2026-08-06T11:30:00.000Z");
+      render(<FeedingScreen />);
+
+      fireEvent.press(
+        screen.getByRole("button", { name: /Start time: .* · Alice/ })
+      );
+      fireEvent(
+        screen.getByTestId("datetime-picker"),
+        "change",
+        {},
+        selectedTime
+      );
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+      });
+
+      expect(mockEditBreastfeedingStartTime).toHaveBeenCalledWith(selectedTime);
     });
   });
 

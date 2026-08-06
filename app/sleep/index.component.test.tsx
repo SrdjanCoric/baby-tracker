@@ -243,6 +243,28 @@ describe("SleepScreen morning confirmation", () => {
     ).toBeTruthy();
   });
 
+  it("writes the running picker value through the sleep provider", async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
+    const selectedTime = new Date("2026-08-06T11:30:00.000Z");
+    render(<SleepScreen />);
+
+    fireEvent.press(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      selectedTime
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    });
+
+    expect(mockEditSleepStartTime).toHaveBeenCalledWith(selectedTime);
+  });
+
   it("returns to tabs after stopping a cold-opened sleep timer", async () => {
     render(<SleepScreen />);
 
