@@ -504,7 +504,26 @@ struct StopActivityIntent: AppIntent {
         let laPushToken = userDefaults.string(forKey: "liveActivityPushToken")
         NSLog("[StopActivity] liveActivityPushToken=\(laPushToken != nil ? "present" : "nil")")
 
-        let eventAt = ISO8601DateFormatter().string(from: Date())
+        let stopRequestedAt = Date()
+        var effectiveStopDate = stopRequestedAt
+        if let pendingPauseString = userDefaults.string(forKey: "pendingWidgetPauseToggle"),
+           let pendingPauseData = pendingPauseString.data(using: .utf8),
+           let pendingPause = try? JSONSerialization.jsonObject(with: pendingPauseData) as? [String: Any],
+           pendingPause["action"] as? String == "pause",
+           pendingPause["activityType"] as? String == dbType,
+           let pausedAtString = pendingPause["pausedAt"] as? String {
+            let pauseFormatter = ISO8601DateFormatter()
+            pauseFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            var parsedPauseAt = pauseFormatter.date(from: pausedAtString)
+            if parsedPauseAt == nil {
+                pauseFormatter.formatOptions = [.withInternetDateTime]
+                parsedPauseAt = pauseFormatter.date(from: pausedAtString)
+            }
+            if let parsedPauseAt, parsedPauseAt <= stopRequestedAt {
+                effectiveStopDate = parsedPauseAt
+            }
+        }
+        let eventAt = ISO8601DateFormatter().string(from: effectiveStopDate)
         if let babyId {
             var timerInstanceId: String?
             if let dataString = userDefaults.string(forKey: "widgetData"),
