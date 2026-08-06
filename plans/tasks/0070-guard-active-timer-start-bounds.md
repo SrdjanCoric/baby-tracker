@@ -2,6 +2,9 @@
 
 **Branch**: `feature/guard-active-timer-start-bounds`
 **Depends on**: none
+**Change class**: `code`
+**Validation tier**: `focused`
+**TDD applicable**: yes
 **Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
 `decisions/resolved/007-running-timer-start-time-edit.md` (resolved) · **User stories**: As a
 caregiver, I want a household to always be able to start an activity timer, so that no timer lock can
@@ -18,6 +21,12 @@ A write of `active_timers.started_at` is accepted only when the value satisfies 
 
 - `started_at <= now()` — a start in the future is nonsense, and
 - `started_at >= now() - INTERVAL '12 hours'` — a start rewound past the cleanup horizon.
+
+For backward compatibility with already-installed clients, an incoming value no more than one
+second ahead of database time is normalized to `now()` before these stored-value invariants are
+applied. Anything further ahead is rejected. New ordinary “start now” calls omit `p_started_at` and
+use the RPC's database-time default; explicit user-selected and reconciled starts still send their
+timestamp.
 
 The guard fires on `INSERT`, and on `UPDATE` **only when `started_at` actually changes**
 (`NEW.started_at IS DISTINCT FROM OLD.started_at`). That condition is load-bearing: a `timer_data`
@@ -60,9 +69,20 @@ from 0056's scope is carried forward.
   never writes a timer another started, and that policy already enforces it. The household-wide
   `SELECT` policy also stays, which is why a second phone keeps displaying a timer it cannot touch.
 - **No RPC signature change.** `acquire_timer_lock`, `release_timer_lock`, `toggle_timer_pause`, and
-  `cleanup_stale_timer_locks` keep their signatures, their grants, and their behavior.
-- **No client change.** No screen, service, or validator is touched. The picker bounds that keep a
-  caregiver from ever offering a rejected value are Task 0071.
+  `cleanup_stale_timer_locks` keep their signatures and their grants. `release_timer_lock`,
+  `toggle_timer_pause`, and `cleanup_stale_timer_locks` also keep their behavior unchanged.
+  `acquire_timer_lock` changes in one respect only: migration `060` replaces its body so the returned
+  `started_at` is the value persisted after the `BEFORE INSERT` trigger runs, rather than the value
+  the caller supplied. The response shape is identical, and the two now agree whenever normalization
+  applies.
+- **Backward-compatible client contract.** Existing RPC signatures remain valid. Ordinary “start
+  now” calls omit `p_started_at` and use database time; existing clients that send up to one second
+  of positive skew are normalized. Explicit historical/reconciled starts, pause, resume, release,
+  cleanup, and `timer_data`-only updates remain valid. Only a start more than one second ahead or
+  beyond the existing twelve-hour cleanup horizon is newly rejected.
+- **Minimal client call-shape change.** Timer providers omit the already-optional `p_started_at`
+  only for ordinary starts. User-selected historical starts and offline reconciliation keep sending
+  an explicit timestamp. Picker controls and validators remain Task 0071.
 - **No change to the cleanup horizon itself.**
 
 ### The previous-activity floor is not enforced here
@@ -74,46 +94,58 @@ future bound alone.
 
 ## Implementation work
 
-- [ ] Add migration `060` creating the validation function and the trigger on `public.active_timers`,
+- [x] Add migration `060` creating the validation function and the trigger on `public.active_timers`,
       firing on `INSERT` and on `UPDATE` gated by `NEW.started_at IS DISTINCT FROM OLD.started_at`,
-      raising on a future value and on a value older than `now() - INTERVAL '12 hours'`.
-- [ ] Extend `scripts/sql/active-timer-authorization-tests.sql` with vectors covering: a future
+      normalizing at most one second of positive skew and rejecting larger future values or a value
+      older than `now() - INTERVAL '12 hours'`.
+- [x] Extend `scripts/sql/active-timer-authorization-tests.sql` with vectors covering: a future
       `started_at` write is rejected; a `started_at` more than twelve hours back is rejected; a
       `started_at` inside the window is accepted; a `timer_data`-only `UPDATE` on a lock whose
       `started_at` is older than twelve hours still succeeds; `acquire_timer_lock` with a valid
-      `p_started_at` still succeeds and with an out-of-range one is rejected; `toggle_timer_pause`,
-      `release_timer_lock`, and `cleanup_stale_timer_locks` are unaffected; a second caregiver still
-      cannot write a lock they did not start.
-- [ ] Run `npm run test:sql`, `npm run test:edge:timer`, and `npm run test:security`.
-- [ ] Apply and verify the migration on local Supabase only.
+      `p_started_at` still succeeds, its legacy omitted-`p_started_at` call shape still succeeds, and
+      an out-of-range value is rejected; `toggle_timer_pause`, `release_timer_lock`, and
+      `cleanup_stale_timer_locks` are unaffected; a second caregiver still cannot write a lock they
+      did not start.
+- [x] Run `npm run test:sql`, `npm run test:edge:timer`, and `npm run test:security`.
+- [x] Apply and verify the migration on local Supabase only.
 
 ## Human checkpoints
 
-- [ ] [confirm-security] Approve the trigger's shape and its rejection semantics before implementation
+- [x] [confirm-security] Approve the trigger's shape and its rejection semantics before implementation
       — whether it raises an exception or silently clamps, and that it leaves the migration `020` row
       policy and the migration `056` grants untouched. This changes a write path on an authorization
       boundary that the app, both native targets, and offline replay all write through.
-- [ ] [verify] On local Supabase, start a timer, leave it running, and confirm normal operation is
+      **Confirmed by owner 2026-08-06:** use one trigger function with explicit `22023` rejection,
+      preserve the policies, grants, and RPC signatures, and keep existing client call shapes and
+      legitimate timer operations backward compatible.
+- [x] [verify] On local Supabase, start a timer, leave it running, and confirm normal operation is
       unaffected · Steps: acquire a lock, pause it, resume it, then release it · Expected: every step
       succeeds and no lock is left behind · Failure: any legitimate timer-control step is rejected by
       the new trigger · Reason: the RPC paths run against a live local database with real auth
-      fixtures, and a regression here would be a caregiver unable to use a timer at all.
+      fixtures, and a regression here would be a caregiver unable to use a timer at all. **Verified
+      2026-08-06:** `npm run test:edge:timer` acquired the owner's lock, paused and resumed it through
+      the Edge function, released it through the RPC, and removed the disposable fixtures.
 
 ## Acceptance criteria
 
-- [ ] A write setting `active_timers.started_at` in the future is rejected, whether issued through the
-      `acquire_timer_lock` RPC or as a direct table write.
-- [ ] A write setting `active_timers.started_at` more than twelve hours in the past is rejected on the
+- [x] A write setting `active_timers.started_at` at most one second in the future is normalized to
+      database time, while anything further ahead is rejected through both `acquire_timer_lock` and
+      reachable direct table writes.
+- [x] A write setting `active_timers.started_at` more than twelve hours in the past is rejected on the
       same paths.
-- [ ] A `timer_data`-only `UPDATE` on a lock whose `started_at` is older than twelve hours still
+- [x] A `timer_data`-only `UPDATE` on a lock whose `started_at` is older than twelve hours still
       succeeds, proving the guard fires on `started_at` changes alone.
-- [ ] `acquire_timer_lock`, `release_timer_lock`, `toggle_timer_pause`, and `cleanup_stale_timer_locks`
+- [x] `acquire_timer_lock`, `release_timer_lock`, `toggle_timer_pause`, and `cleanup_stale_timer_locks`
       behave exactly as migration `056` intends.
-- [ ] A caregiver who did not start a timer still cannot write its row.
-- [ ] SQL vectors cover every rejection and every legitimate path above, and `npm run test:sql`,
+- [x] A caregiver who did not start a timer still cannot write its row.
+- [x] SQL vectors cover every rejection and every legitimate path above, and `npm run test:sql`,
       `npm run test:edge:timer`, and `npm run test:security` pass.
-- [ ] No row policy, no RPC signature, and no client file changed.
-- [ ] Both checkpoints confirmed by the owner.
+- [x] No row policy or RPC signature changed; ordinary client starts use the existing optional
+      `p_started_at` default while explicit historical and reconciliation starts remain unchanged.
+- [x] Existing client call shapes remain valid, including `acquire_timer_lock` with omitted
+      `p_started_at`; only timestamps more than one second ahead or beyond the twelve-hour horizon
+      newly fail.
+- [x] Both checkpoints confirmed by the owner.
 
 ## Non-goals
 
@@ -123,3 +155,46 @@ future bound alone.
 - Widening or narrowing `active_timers` row access in any direction.
 - Anything else from the removed Task 0056, including `started_by` pinning, which row-level security
   already rejects.
+
+## Completion record
+
+- **Built:** migration `060` installs a trigger that normalizes up to one second of positive client
+  clock skew, rejects larger future values and starts older than twelve hours, and applies on insert
+  or when `started_at` changes. It also normalizes or removes pre-existing out-of-range locks and
+  replaces `acquire_timer_lock` so its response returns the stored timestamp. Ordinary app starts
+  use the RPC's database-time default while explicit historical and reconciled starts keep their
+  timestamps.
+- **Decisions:** the bound matches stale-lock cleanup; unchanged `started_at` updates stay valid;
+  policies, grants, and RPC signatures stay unchanged; direct authenticated inserts remain denied;
+  and owner release/reacquire remains an accepted security risk because blocking forward edits would
+  not close that path and would prevent Task 0071's valid within-window corrections.
+- **Relevant files:** `supabase/migrations/060_guard_active_timer_start_bounds.sql`,
+  `supabase/migrations/056_authorize_active_timer_controls.sql`,
+  `src/services/active-timer-service.ts`, the four timer contexts under `src/contexts/`,
+  `scripts/sql/active-timer-authorization-tests.sql`, `scripts/test-active-timer-edge.mjs`, and the
+  affected unit, provider-integration, and fixture checks.
+- **Documentation:** README project structure now identifies migration `060` as the schema head. The
+  affected line passed one `write-well` audit pass with no findings; no application-usage prose
+  needed revision.
+- **Review:** TR-1 through TR-4 and TR-6 were fixed. The owner accepted TR-5 as a security risk for
+  the reason recorded above. TR-7 through TR-14 were skipped as minor because remediation was limited
+  to TR-1 through TR-6. No finding remains open.
+- **Automated proof:** on 2026-08-06, `npm run test:sql` passed all SQL vectors, including active-timer
+  authorization; `npm run test:edge:timer` passed the local timer authorization and control flow;
+  and `npm run test:security` passed 13 files and 111 tests.
+- **Manual proof:** no separate manual action was required. The executable local-Supabase Edge timer
+  flow performed the task's acquire, pause, resume, and release checkpoint against real Auth, REST,
+  Edge, and PostgreSQL fixtures, verified the resumed row, confirmed release removed the lock, and
+  cleaned up the fixtures.
+
+## Review decisions
+
+- accepted (security): TR-5 — An authenticated owner can repeatedly release and reacquire a timer lock — The forward-only rejection did not prevent that path and blocked Task 0071's valid within-window corrections.
+- skipped (minor): TR-7 — The grandfathered-lock pause vector does not assert the resulting row — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-8 — No vector exercises a full-row offline-replay update with an unchanged out-of-horizon start — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-9 — The implementation commit also amended the task specification — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-10 — The client-call-shape acceptance criterion lacks complete proof — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-11 — The SQL vector fixture depends on `session_replication_role = replica` — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-12 — The twelve-hour horizon is duplicated — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-13 — The trigger and function share the same identifier — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-14 — The trigger function has no explicit privilege block — User requested remediation only for TR-1–TR-6.

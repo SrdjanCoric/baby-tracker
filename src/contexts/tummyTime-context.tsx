@@ -466,7 +466,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
           "tummy_time",
           user.id,
           { ...identity },
-          startTime
+          requestedStartTime
         );
         if (!lockResult.success) {
           return { success: false, lockedByName: lockResult.lockHolderName };

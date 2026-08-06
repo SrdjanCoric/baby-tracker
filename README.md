@@ -114,7 +114,7 @@ src/
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
-└── migrations/             # PostgreSQL migrations through 059
+└── migrations/             # PostgreSQL migrations through 060
 localization/native/        # Nine locale files the Watch app and widget render from;
                             # npm run native:strings rebuilds targets/*/GeneratedStrings.swift
 targets/

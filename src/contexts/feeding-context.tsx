@@ -535,7 +535,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
               leftAccumulatedSeconds: 0,
               rightAccumulatedSeconds: 0,
             },
-            startTime
+            requestedStartTime
           );
           if (!lockResult.success) {
             return { success: false, lockedByName: lockResult.lockHolderName };

@@ -440,7 +440,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             "pumping",
             user.id,
             { side, ...identity },
-            startTime
+            requestedStartTime
           );
           if (!lockResult.success) {
             return { success: false, lockedByName: lockResult.lockHolderName };
