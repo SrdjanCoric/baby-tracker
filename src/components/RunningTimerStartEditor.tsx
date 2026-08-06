@@ -39,29 +39,39 @@ export function RunningTimerStartEditor({
   const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() =>
     getBounds()
   );
+  const [draftStartedAt, setDraftStartedAt] = useState(startedAt);
   const label = `${startLabel}: ${formatTime(startedAt, timeFormat)} · ${starterName}`;
   const handleOpen = useCallback(() => {
     setPickerBounds(getBounds());
+    setDraftStartedAt(startedAt);
     setShowPicker(true);
-  }, [getBounds]);
+  }, [getBounds, startedAt]);
   const handleChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
-      if (Platform.OS === "android") setShowPicker(false);
       if (!selectedTime) return;
       const now = new Date();
       const currentBounds = getBounds();
       setPickerBounds(currentBounds);
-      void onEdit(
-        normalizeTimerStartSelection(
-          selectedTime,
-          currentBounds,
-          now,
-          Platform.OS
-        )
+      const normalized = normalizeTimerStartSelection(
+        selectedTime,
+        currentBounds,
+        now,
+        Platform.OS
       );
+
+      if (Platform.OS === "android") {
+        setShowPicker(false);
+        void onEdit(normalized);
+      } else {
+        setDraftStartedAt(normalized);
+      }
     },
     [getBounds, onEdit]
   );
+  const handleDone = useCallback(async () => {
+    await onEdit(draftStartedAt);
+    setShowPicker(false);
+  }, [draftStartedAt, onEdit]);
 
   const content = (
     <Text className="text-sm font-medium" style={{ color: accentColor }}>
@@ -96,7 +106,7 @@ export function RunningTimerStartEditor({
           {Platform.OS === "ios" && (
             <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
               <Pressable
-                onPress={() => setShowPicker(false)}
+                onPress={() => void handleDone()}
                 className="py-2 px-4"
                 accessibilityRole="button"
                 accessibilityLabel={t("common.done")}
@@ -108,7 +118,7 @@ export function RunningTimerStartEditor({
             </View>
           )}
           <DateTimePicker
-            value={startedAt}
+            value={draftStartedAt}
             mode={Platform.OS === "ios" ? "datetime" : "time"}
             display="spinner"
             onChange={handleChange}
