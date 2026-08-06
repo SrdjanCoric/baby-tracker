@@ -60,8 +60,13 @@ export default function FeedingScreen() {
     ? getLockForActivity(selectedBaby.id, "feeding")
     : null;
   const getTimerStartBoundsForPicker = useCallback(
-    () => getTimerStartBounds(feedings),
-    [feedings]
+    () =>
+      getTimerStartBounds(
+        feedings,
+        new Date(),
+        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+      ),
+    [activeTimer?.isPaused, activeTimer?.pausedAt, feedings]
   );
 
   const accentColor = isDark ? FEEDING_GREEN_LIGHT : FEEDING_GREEN;

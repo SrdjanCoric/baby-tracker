@@ -11,10 +11,17 @@ interface EndedActivity {
 
 export function getTimerStartBounds(
   activities: ReadonlyArray<EndedActivity>,
-  now: Date = new Date()
+  now: Date = new Date(),
+  upperBound?: Date
 ): TimerStartBounds {
-  const maximumDate = new Date(now);
-  let minimumTime = maximumDate.getTime() - TIMER_START_EDIT_HORIZON_MS;
+  const nowTime = now.getTime();
+  const upperBoundTime = upperBound?.getTime();
+  const maximumDate = new Date(
+    upperBoundTime !== undefined && Number.isFinite(upperBoundTime)
+      ? Math.min(nowTime, upperBoundTime)
+      : nowTime
+  );
+  let minimumTime = nowTime - TIMER_START_EDIT_HORIZON_MS;
 
   for (const activity of activities) {
     if (!activity.endedAt) continue;

@@ -57,8 +57,13 @@ export default function PumpingScreen() {
     ? getLockForActivity(selectedBaby.id, "pumping")
     : null;
   const getTimerStartBoundsForPicker = useCallback(
-    () => getTimerStartBounds(pumpings),
-    [pumpings]
+    () =>
+      getTimerStartBounds(
+        pumpings,
+        new Date(),
+        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+      ),
+    [activeTimer?.isPaused, activeTimer?.pausedAt, pumpings]
   );
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("pumping");

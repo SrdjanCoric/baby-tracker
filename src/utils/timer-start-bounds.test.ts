@@ -26,6 +26,19 @@ describe("timer start bounds", () => {
     );
   });
 
+  it("caps a paused timer at its pause instant without moving the twelve-hour floor", () => {
+    expect(
+      getTimerStartBounds(
+        [],
+        new Date("2026-08-06T23:00:00.000Z"),
+        new Date("2026-08-06T22:30:00.000Z")
+      )
+    ).toEqual({
+      minimumDate: new Date("2026-08-06T11:00:00.000Z"),
+      maximumDate: new Date("2026-08-06T22:30:00.000Z"),
+    });
+  });
+
   it("applies both bounds to Android's reconstructed time", () => {
     const bounds = getTimerStartBounds(
       [{ endedAt: "2026-08-06T03:30:00.000Z" }],

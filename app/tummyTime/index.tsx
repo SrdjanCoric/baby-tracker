@@ -50,8 +50,13 @@ export default function TummyTimeScreen() {
     ? getLockForActivity(selectedBaby.id, "tummy_time")
     : null;
   const getTimerStartBoundsForPicker = useCallback(
-    () => getTimerStartBounds(tummyTimes),
-    [tummyTimes]
+    () =>
+      getTimerStartBounds(
+        tummyTimes,
+        new Date(),
+        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+      ),
+    [activeTimer?.isPaused, activeTimer?.pausedAt, tummyTimes]
   );
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("tummyTime");

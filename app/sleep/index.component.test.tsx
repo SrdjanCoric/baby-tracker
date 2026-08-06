@@ -207,6 +207,25 @@ describe("SleepScreen morning confirmation", () => {
     );
   });
 
+  it("does not offer a paused-timer start later than the pause instant", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T11:00:00.000Z"));
+    mockActiveTimer = {
+      ...runningTimer,
+      isPaused: true,
+      pausedAt: new Date("2026-08-06T10:30:00.000Z"),
+    };
+
+    render(<SleepScreen />);
+    fireEvent.press(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    );
+
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date("2026-08-06T10:30:00.000Z")
+    );
+  });
+
   it("returns to tabs after stopping a cold-opened sleep timer", async () => {
     render(<SleepScreen />);
 

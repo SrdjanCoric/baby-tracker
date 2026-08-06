@@ -61,8 +61,13 @@ export default function SleepScreen() {
     ? getLockForActivity(selectedBaby.id, "sleep")
     : null;
   const getTimerStartBoundsForPicker = useCallback(
-    () => getTimerStartBounds(sleeps),
-    [sleeps]
+    () =>
+      getTimerStartBounds(
+        sleeps,
+        new Date(),
+        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+      ),
+    [activeTimer?.isPaused, activeTimer?.pausedAt, sleeps]
   );
 
   const napAlert = useTimerAlertIntegration("nap");
