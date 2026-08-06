@@ -59,7 +59,10 @@ export default function FeedingScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "feeding")
     : null;
-  const timerStartBounds = useMemo(() => getTimerStartBounds(feedings), [feedings]);
+  const getTimerStartBoundsForPicker = useCallback(
+    () => getTimerStartBounds(feedings),
+    [feedings]
+  );
 
   const accentColor = isDark ? FEEDING_GREEN_LIGHT : FEEDING_GREEN;
   const buttonBgColor = isDark ? FEEDING_GREEN_BUTTON_DARK : FEEDING_GREEN;
@@ -242,7 +245,7 @@ export default function FeedingScreen() {
             startedAt={activeTimer!.startTime}
             starterName={timerLock?.startedByName ?? t("common.someone")}
             canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
-            bounds={timerStartBounds}
+            getBounds={getTimerStartBoundsForPicker}
             onEditStart={editBreastfeedingStartTime}
           />
         ) : (
@@ -254,7 +257,7 @@ export default function FeedingScreen() {
             buttonBgColor={buttonBgColor}
             mutedBg={mutedBg}
             secondaryBg={secondaryBg}
-            bounds={timerStartBounds}
+            getBounds={getTimerStartBoundsForPicker}
           />
         )
       )}
@@ -330,16 +333,17 @@ interface BreastfeedingFormProps {
   buttonBgColor: string;
   mutedBg: string;
   secondaryBg: string;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
 }
 
-function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, buttonBgColor, secondaryBg, bounds }: BreastfeedingFormProps) {
+function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, buttonBgColor, secondaryBg, getBounds }: BreastfeedingFormProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() => getBounds());
 
   const handleSidePress = useCallback((side: BreastSide) => {
     if (customStartTime) {
@@ -350,8 +354,9 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
   }, [customStartTime, onSelectSide]);
 
   const handleStartedEarlierPress = useCallback(() => {
+    setPickerBounds(getBounds());
     setShowTimePicker(true);
-  }, []);
+  }, [getBounds]);
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
@@ -359,10 +364,12 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
         setShowTimePicker(false);
       }
       if (selectedTime) {
-        setCustomStartTime(normalizeTimerStartSelection(selectedTime, bounds, new Date(), Platform.OS));
+        const currentBounds = getBounds();
+        setPickerBounds(currentBounds);
+        setCustomStartTime(normalizeTimerStartSelection(selectedTime, currentBounds, new Date(), Platform.OS));
       }
     },
-    [bounds]
+    [getBounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -506,8 +513,8 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
               display="spinner"
               onChange={handleTimeChange}
               is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-              minimumDate={bounds.minimumDate}
-              maximumDate={bounds.maximumDate}
+              minimumDate={pickerBounds.minimumDate}
+              maximumDate={pickerBounds.maximumDate}
             />
           </View>
         )}
@@ -578,13 +585,13 @@ interface BreastfeedingTimerViewProps {
   startedAt: Date;
   starterName: string;
   canEdit: boolean;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
   onEditStart: (startedAt: Date) => Promise<void>;
 }
 
 const PAUSED_AMBER = "#D4A017";
 
-function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg, startedAt, starterName, canEdit, bounds, onEditStart }: BreastfeedingTimerViewProps) {
+function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg, startedAt, starterName, canEdit, getBounds, onEditStart }: BreastfeedingTimerViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const formattedTime = formatDuration(elapsedSeconds);
@@ -635,7 +642,7 @@ function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, 
           startedAt={startedAt}
           starterName={starterName}
           canEdit={canEdit}
-          bounds={bounds}
+          getBounds={getBounds}
           timeFormat={timeFormat}
           accentColor={accentColor}
           mutedBackgroundColor={secondaryBg}

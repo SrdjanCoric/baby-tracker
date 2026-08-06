@@ -16,7 +16,7 @@ interface RunningTimerStartEditorProps {
   startedAt: Date;
   starterName: string;
   canEdit: boolean;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
   timeFormat: TimeFormat;
   accentColor: string;
   mutedBackgroundColor: string;
@@ -28,7 +28,7 @@ export function RunningTimerStartEditor({
   startedAt,
   starterName,
   canEdit,
-  bounds,
+  getBounds,
   timeFormat,
   accentColor,
   mutedBackgroundColor,
@@ -36,22 +36,31 @@ export function RunningTimerStartEditor({
 }: RunningTimerStartEditorProps) {
   const { t } = useTranslation();
   const [showPicker, setShowPicker] = useState(false);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() =>
+    getBounds()
+  );
   const label = `${startLabel}: ${formatTime(startedAt, timeFormat)} · ${starterName}`;
+  const handleOpen = useCallback(() => {
+    setPickerBounds(getBounds());
+    setShowPicker(true);
+  }, [getBounds]);
   const handleChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
       if (Platform.OS === "android") setShowPicker(false);
       if (!selectedTime) return;
       const now = new Date();
+      const currentBounds = getBounds();
+      setPickerBounds(currentBounds);
       void onEdit(
         normalizeTimerStartSelection(
           selectedTime,
-          bounds,
+          currentBounds,
           now,
           Platform.OS
         )
       );
     },
-    [bounds, onEdit]
+    [getBounds, onEdit]
   );
 
   const content = (
@@ -64,7 +73,7 @@ export function RunningTimerStartEditor({
     <>
       {canEdit ? (
         <Pressable
-          onPress={() => setShowPicker(true)}
+          onPress={handleOpen}
           className="mb-5 py-3 px-5 rounded-full"
           style={{ backgroundColor: mutedBackgroundColor }}
           accessibilityRole="button"
@@ -104,8 +113,8 @@ export function RunningTimerStartEditor({
             display="spinner"
             onChange={handleChange}
             is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={bounds.minimumDate}
-            maximumDate={bounds.maximumDate}
+            minimumDate={pickerBounds.minimumDate}
+            maximumDate={pickerBounds.maximumDate}
           />
         </View>
       )}

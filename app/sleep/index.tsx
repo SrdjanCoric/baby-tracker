@@ -60,7 +60,10 @@ export default function SleepScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "sleep")
     : null;
-  const timerStartBounds = useMemo(() => getTimerStartBounds(sleeps), [sleeps]);
+  const getTimerStartBoundsForPicker = useCallback(
+    () => getTimerStartBounds(sleeps),
+    [sleeps]
+  );
 
   const napAlert = useTimerAlertIntegration("nap");
   const nightSleepAlert = useTimerAlertIntegration("nightSleep");
@@ -244,14 +247,14 @@ export default function SleepScreen() {
             startedAt={activeTimer!.startTime}
             starterName={timerLock?.startedByName ?? t("common.someone")}
             canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
-            bounds={timerStartBounds}
+            getBounds={getTimerStartBoundsForPicker}
             onEditStart={editSleepStartTime}
           />
         ) : (
           <SleepStartView
             onStart={handleStartSleep}
             onLogPastSleep={handleLogPastSleep}
-            bounds={timerStartBounds}
+            getBounds={getTimerStartBoundsForPicker}
           />
         )}
         {pendingMorningConfirmation && (
@@ -282,10 +285,10 @@ export default function SleepScreen() {
 interface SleepStartViewProps {
   onStart: (customStartTime?: Date) => void;
   onLogPastSleep: () => void;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
 }
 
-function SleepStartView({ onStart, onLogPastSleep, bounds }: SleepStartViewProps) {
+function SleepStartView({ onStart, onLogPastSleep, getBounds }: SleepStartViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
@@ -294,6 +297,9 @@ function SleepStartView({ onStart, onLogPastSleep, bounds }: SleepStartViewProps
   const mutedBg = isDark ? SLEEP_PURPLE_MUTED_DARK : SLEEP_PURPLE_MUTED;
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() =>
+    getBounds()
+  );
 
   const handleStartPress = useCallback(() => {
     if (customStartTime) {
@@ -304,8 +310,9 @@ function SleepStartView({ onStart, onLogPastSleep, bounds }: SleepStartViewProps
   }, [customStartTime, onStart]);
 
   const handleStartedEarlierPress = useCallback(() => {
+    setPickerBounds(getBounds());
     setShowTimePicker(true);
-  }, []);
+  }, [getBounds]);
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
@@ -313,17 +320,19 @@ function SleepStartView({ onStart, onLogPastSleep, bounds }: SleepStartViewProps
         setShowTimePicker(false);
       }
       if (selectedTime) {
+        const currentBounds = getBounds();
+        setPickerBounds(currentBounds);
         setCustomStartTime(
           normalizeTimerStartSelection(
             selectedTime,
-            bounds,
+            currentBounds,
             new Date(),
             Platform.OS
           )
         );
       }
     },
-    [bounds]
+    [getBounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -418,8 +427,8 @@ function SleepStartView({ onStart, onLogPastSleep, bounds }: SleepStartViewProps
             display="spinner"
             onChange={handleTimeChange}
             is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={bounds.minimumDate}
-            maximumDate={bounds.maximumDate}
+            minimumDate={pickerBounds.minimumDate}
+            maximumDate={pickerBounds.maximumDate}
           />
         </View>
       )}
@@ -436,7 +445,7 @@ interface RunningTimerViewProps {
   startedAt: Date;
   starterName: string;
   canEdit: boolean;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
   onEditStart: (startedAt: Date) => Promise<void>;
 }
 
@@ -449,7 +458,7 @@ function RunningTimerView({
   startedAt,
   starterName,
   canEdit,
-  bounds,
+  getBounds,
   onEditStart,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
@@ -497,7 +506,7 @@ function RunningTimerView({
         startedAt={startedAt}
         starterName={starterName}
         canEdit={canEdit}
-        bounds={bounds}
+        getBounds={getBounds}
         timeFormat={timeFormat}
         accentColor={accent}
         mutedBackgroundColor={mutedBg}

@@ -189,6 +189,24 @@ describe("SleepScreen morning confirmation", () => {
     expect(screen.getByLabelText(/Start time: .* · Bob/)).toBeTruthy();
   });
 
+  it("computes running-editor bounds when the picker opens", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T10:00:00.000Z"));
+
+    render(<SleepScreen />);
+
+    act(() => {
+      jest.setSystemTime(new Date("2026-08-06T10:20:00.000Z"));
+    });
+    fireEvent.press(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    );
+
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date("2026-08-06T10:20:00.000Z")
+    );
+  });
+
   it("returns to tabs after stopping a cold-opened sleep timer", async () => {
     render(<SleepScreen />);
 
@@ -272,6 +290,22 @@ describe("SleepScreen custom start time", () => {
     await waitFor(() => {
       expect(mockStartSleep).toHaveBeenCalledWith("nap", selectedTime);
     });
+  });
+
+  it("computes Started earlier bounds when the picker opens", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T10:00:00.000Z"));
+
+    render(<SleepScreen />);
+
+    act(() => {
+      jest.setSystemTime(new Date("2026-08-06T10:20:00.000Z"));
+    });
+    fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date("2026-08-06T10:20:00.000Z")
+    );
   });
 
   it("configures the Android picker from the current preference", () => {

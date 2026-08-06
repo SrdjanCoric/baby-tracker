@@ -56,7 +56,10 @@ export default function PumpingScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "pumping")
     : null;
-  const timerStartBounds = useMemo(() => getTimerStartBounds(pumpings), [pumpings]);
+  const getTimerStartBoundsForPicker = useCallback(
+    () => getTimerStartBounds(pumpings),
+    [pumpings]
+  );
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("pumping");
 
@@ -255,7 +258,7 @@ export default function PumpingScreen() {
             startedAt={activeTimer!.startTime}
             starterName={timerLock?.startedByName ?? t("common.someone")}
             canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
-            bounds={timerStartBounds}
+            getBounds={getTimerStartBoundsForPicker}
             onEditStart={editPumpingStartTime}
           />
         ) : (
@@ -263,7 +266,7 @@ export default function PumpingScreen() {
             suggestedSide={suggestedSide}
             onSelectSide={handleStartPumping}
             onLogPastPumping={handleLogPastPumping}
-            bounds={timerStartBounds}
+            getBounds={getTimerStartBoundsForPicker}
           />
         )}
       </View>
@@ -275,14 +278,15 @@ interface SideSelectionViewProps {
   suggestedSide: BreastSide;
   onSelectSide: (side: BreastSide, customStartTime?: Date) => void;
   onLogPastPumping: () => void;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
 }
 
-function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, bounds }: SideSelectionViewProps) {
+function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, getBounds }: SideSelectionViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() => getBounds());
 
   const handleSidePress = useCallback((side: BreastSide) => {
     if (customStartTime) {
@@ -293,8 +297,9 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, boun
   }, [customStartTime, onSelectSide]);
 
   const handleStartedEarlierPress = useCallback(() => {
+    setPickerBounds(getBounds());
     setShowTimePicker(true);
-  }, []);
+  }, [getBounds]);
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
@@ -302,10 +307,12 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, boun
         setShowTimePicker(false);
       }
       if (selectedTime) {
-        setCustomStartTime(normalizeTimerStartSelection(selectedTime, bounds, new Date(), Platform.OS));
+        const currentBounds = getBounds();
+        setPickerBounds(currentBounds);
+        setCustomStartTime(normalizeTimerStartSelection(selectedTime, currentBounds, new Date(), Platform.OS));
       }
     },
-    [bounds]
+    [getBounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -450,8 +457,8 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, boun
             display="spinner"
             onChange={handleTimeChange}
             is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={bounds.minimumDate}
-            maximumDate={bounds.maximumDate}
+            minimumDate={pickerBounds.minimumDate}
+            maximumDate={pickerBounds.maximumDate}
           />
         </View>
       )}
@@ -520,7 +527,7 @@ interface RunningTimerViewProps {
   startedAt: Date;
   starterName: string;
   canEdit: boolean;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
   onEditStart: (startedAt: Date) => Promise<void>;
 }
 
@@ -535,7 +542,7 @@ function RunningTimerView({
   startedAt,
   starterName,
   canEdit,
-  bounds,
+  getBounds,
   onEditStart,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
@@ -604,7 +611,7 @@ function RunningTimerView({
         startedAt={startedAt}
         starterName={starterName}
         canEdit={canEdit}
-        bounds={bounds}
+        getBounds={getBounds}
         timeFormat={timeFormat}
         accentColor={PUMPING_BLUE}
         mutedBackgroundColor={PUMPING_BLUE_MUTED}

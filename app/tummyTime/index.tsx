@@ -49,7 +49,10 @@ export default function TummyTimeScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "tummy_time")
     : null;
-  const timerStartBounds = useMemo(() => getTimerStartBounds(tummyTimes), [tummyTimes]);
+  const getTimerStartBoundsForPicker = useCallback(
+    () => getTimerStartBounds(tummyTimes),
+    [tummyTimes]
+  );
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("tummyTime");
 
@@ -192,14 +195,14 @@ export default function TummyTimeScreen() {
             startedAt={activeTimer!.startTime}
             starterName={timerLock?.startedByName ?? t("common.someone")}
             canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
-            bounds={timerStartBounds}
+            getBounds={getTimerStartBoundsForPicker}
             onEditStart={editTummyTimeStartTime}
           />
         ) : (
           <StartView
             onStart={handleStartTummyTime}
             onLogPast={handleLogPastTummyTime}
-            bounds={timerStartBounds}
+            getBounds={getTimerStartBoundsForPicker}
           />
         )}
       </View>
@@ -222,18 +225,19 @@ export default function TummyTimeScreen() {
 interface StartViewProps {
   onStart: (customStartTime?: Date) => void;
   onLogPast: () => void;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
 }
 
 function StartView({
   onStart,
   onLogPast,
-  bounds,
+  getBounds,
 }: StartViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() => getBounds());
 
   const handleStartPress = useCallback(() => {
     if (customStartTime) {
@@ -244,8 +248,9 @@ function StartView({
   }, [customStartTime, onStart]);
 
   const handleStartedEarlierPress = useCallback(() => {
+    setPickerBounds(getBounds());
     setShowTimePicker(true);
-  }, []);
+  }, [getBounds]);
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
@@ -253,10 +258,12 @@ function StartView({
         setShowTimePicker(false);
       }
       if (selectedTime) {
-        setCustomStartTime(normalizeTimerStartSelection(selectedTime, bounds, new Date(), Platform.OS));
+        const currentBounds = getBounds();
+        setPickerBounds(currentBounds);
+        setCustomStartTime(normalizeTimerStartSelection(selectedTime, currentBounds, new Date(), Platform.OS));
       }
     },
-    [bounds]
+    [getBounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -351,8 +358,8 @@ function StartView({
             display="spinner"
             onChange={handleTimeChange}
             is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={bounds.minimumDate}
-            maximumDate={bounds.maximumDate}
+            minimumDate={pickerBounds.minimumDate}
+            maximumDate={pickerBounds.maximumDate}
           />
         </View>
       )}
@@ -369,7 +376,7 @@ interface RunningTimerViewProps {
   startedAt: Date;
   starterName: string;
   canEdit: boolean;
-  bounds: TimerStartBounds;
+  getBounds(): TimerStartBounds;
   onEditStart: (startedAt: Date) => Promise<void>;
 }
 
@@ -382,7 +389,7 @@ function RunningTimerView({
   startedAt,
   starterName,
   canEdit,
-  bounds,
+  getBounds,
   onEditStart,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
@@ -426,7 +433,7 @@ function RunningTimerView({
         startedAt={startedAt}
         starterName={starterName}
         canEdit={canEdit}
-        bounds={bounds}
+        getBounds={getBounds}
         timeFormat={timeFormat}
         accentColor={TUMMY_ORANGE}
         mutedBackgroundColor={TUMMY_ORANGE_MUTED}
