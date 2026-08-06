@@ -462,6 +462,103 @@ describe("external timer stops through production providers", () => {
     ]).toEqual([editedStart, editedStart, editedStart, editedStart]);
   });
 
+  it("keeps feeding side durations within the session after moving the start past a side change", async () => {
+    const originalStart = "2026-07-15T10:00:00.000Z";
+    const sideChangedAt = "2026-07-15T10:05:00.000Z";
+    const editedStart = new Date("2026-07-15T10:20:00.000Z");
+    const stopAt = new Date("2026-07-15T10:30:00.000Z");
+    await FeedingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "feeding-timer",
+      activityId: "feeding-activity",
+      startedAt: originalStart,
+      side: "right",
+      type: "breast",
+      leftAccumulatedSeconds: 300,
+      rightAccumulatedSeconds: 0,
+      currentSideStartedAt: sideChangedAt,
+      isPaused: false,
+      totalPausedMs: 0,
+    });
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect(feedingState?.activeTimer?.currentSideStartedAt).toEqual(
+        new Date(sideChangedAt)
+      )
+    );
+
+    await act(async () => {
+      await feedingState!.editBreastfeedingStartTime(editedStart);
+    });
+    await waitFor(() =>
+      expect(feedingState?.activeTimer?.startTime).toEqual(editedStart)
+    );
+    await act(async () => {
+      await feedingState!.stopBreastfeeding(stopAt);
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+    };
+    expect(activitySync.createFeedingInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startedAt: editedStart,
+        endedAt: stopAt,
+        durationSeconds: 600,
+        leftDurationSeconds: undefined,
+        rightDurationSeconds: 600,
+      }),
+      "user-1"
+    );
+  });
+
+  it("assigns an earlier edited span to the accumulated side before a side change", async () => {
+    const originalStart = "2026-07-15T10:00:00.000Z";
+    const sideChangedAt = "2026-07-15T10:05:00.000Z";
+    const editedStart = new Date("2026-07-15T09:30:00.000Z");
+    const stopAt = new Date("2026-07-15T10:30:00.000Z");
+    await FeedingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "feeding-timer",
+      activityId: "feeding-activity",
+      startedAt: originalStart,
+      side: "right",
+      type: "breast",
+      leftAccumulatedSeconds: 300,
+      rightAccumulatedSeconds: 0,
+      currentSideStartedAt: sideChangedAt,
+      isPaused: false,
+      totalPausedMs: 0,
+    });
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect(feedingState?.activeTimer?.currentSideStartedAt).toEqual(
+        new Date(sideChangedAt)
+      )
+    );
+    await act(async () => {
+      await feedingState!.editBreastfeedingStartTime(editedStart);
+    });
+    await waitFor(() =>
+      expect(feedingState?.activeTimer?.startTime).toEqual(editedStart)
+    );
+    await act(async () => {
+      await feedingState!.stopBreastfeeding(stopAt);
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+    };
+    expect(activitySync.createFeedingInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        durationSeconds: 3600,
+        leftDurationSeconds: 2100,
+        rightDurationSeconds: 1500,
+      }),
+      "user-1"
+    );
+  });
+
   it("counts a resumed pause in every provider's saved record", async () => {
     const resumedStopAt = new Date("2026-07-15T08:01:31.000Z");
     const liveActivities = jest.requireMock("@/services/live-activity-service") as {
