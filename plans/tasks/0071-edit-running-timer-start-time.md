@@ -210,3 +210,8 @@ from that start, and the old Live Activity ends before a replacement starts on t
 - Clamping against activities of a different type.
 - Editing any in-progress detail other than the start time.
 - Changing the manual-entry overlap policy, which stays warn-and-allow.
+
+## Review decisions
+
+- accepted security risk: TR-9 — authenticated users can repoint their own timer row at another
+  household's baby — this is unlikely to happen.
