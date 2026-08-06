@@ -867,29 +867,30 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             var accumulated: Int?
             var timerContext: String?
+            var effectiveStartTime: String?
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
                 accumulated = self.localActiveTimers[index].accumulatedSeconds
                 timerContext = self.localActiveTimers[index].context
-                if let acc = accumulated {
-                    let newStart = Date().addingTimeInterval(-Double(acc))
-                    self.localActiveTimers[index].startTime = ISO8601DateFormatter().string(from: newStart)
-                }
+                effectiveStartTime = self.localActiveTimers[index].startTime
                 self.localActiveTimers[index].isPaused = false
                 self.localActiveTimers[index].accumulatedSeconds = nil
             } else if var serverTimer = self.findServerTimer(activityType: activityType) {
                 accumulated = serverTimer.accumulatedSeconds
                 timerContext = serverTimer.context
-                if let acc = accumulated {
-                    let newStart = Date().addingTimeInterval(-Double(acc))
-                    serverTimer.startTime = ISO8601DateFormatter().string(from: newStart)
-                }
+                effectiveStartTime = serverTimer.startTime
                 serverTimer.isPaused = false
                 serverTimer.accumulatedSeconds = nil
                 self.localActiveTimers.append(serverTimer)
             }
             self.syncOptimisticStateToCache()
 
-            self.supabaseTogglePause(activityType: activityType, action: "resume", accumulatedSeconds: accumulated, timerContext: timerContext)
+            self.supabaseTogglePause(
+                activityType: activityType,
+                action: "resume",
+                accumulatedSeconds: accumulated,
+                timerContext: timerContext,
+                effectiveStartTime: effectiveStartTime
+            )
         }
 
         WKInterfaceDevice.current().play(.click)
@@ -1128,15 +1129,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             guard let watchType = activityTypeMap[timer.activity_type] else { return nil }
             let isRemote = timer.started_by != supabaseUserId
             let context = timer.timer_data?.side ?? timer.timer_data?.sleepType
-            let startTime: String
-            if !(timer.timer_data?.isPaused ?? false), let effective = timer.timer_data?.effectiveStartTime {
-                startTime = effective
-            } else {
-                startTime = timer.started_at
-            }
             return WatchActiveTimer(
                 type: watchType,
-                startTime: startTime,
+                startTime: timer.started_at,
                 timerInstanceId: timer.timer_data?.timerInstanceId,
                 activityId: timer.timer_data?.activityId,
                 context: context,
@@ -1323,7 +1318,13 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
-    private func supabaseTogglePause(activityType: String, action: String, accumulatedSeconds: Int?, timerContext: String? = nil) {
+    private func supabaseTogglePause(
+        activityType: String,
+        action: String,
+        accumulatedSeconds: Int?,
+        timerContext: String? = nil,
+        effectiveStartTime: String? = nil
+    ) {
         guard hasAuthCredentials, let supabaseUrl, let supabaseAnonKey,
               let supabaseAccessToken, let supabaseUserId,
               let babyId = currentBabyId else { return }
@@ -1351,11 +1352,11 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             timerData["isPaused"] = false
             if let accumulatedSeconds {
                 body["elapsedSeconds"] = accumulatedSeconds
-                let newStart = Date().addingTimeInterval(-Double(accumulatedSeconds))
-                let effectiveISO = ISO8601DateFormatter().string(from: newStart)
-                body["effectiveStartTimeISO"] = effectiveISO
-                timerData["effectiveStartTime"] = effectiveISO
                 timerData["accumulatedSeconds"] = accumulatedSeconds
+            }
+            if let effectiveStartTime {
+                body["effectiveStartTimeISO"] = effectiveStartTime
+                timerData["effectiveStartTime"] = effectiveStartTime
             }
         }
 

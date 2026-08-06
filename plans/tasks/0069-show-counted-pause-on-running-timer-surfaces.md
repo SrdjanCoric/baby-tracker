@@ -60,9 +60,11 @@ Each of these subtracts `totalPausedMs`, shifts the start by it, or both, today:
 
 ### What does not change
 
-- No native widget, Watch, or Live Activity source is edited. The widget and the Watch keep sending
-  `pauseDurationMs` and `accumulatedSeconds`; the app keeps accumulating `totalPausedMs` on the running
-  timer and simply stops displaying anything derived from it.
+- Native widget and Watch controls, layout, labels, and pause bookkeeping do not change. Review
+  remediation updates only their resume timeline: both preserve the real start, continue sending
+  `pauseDurationMs` and `accumulatedSeconds`, and ignore legacy shifted `effectiveStartTime` values
+  when refreshing from the server. The app keeps accumulating `totalPausedMs` on the running timer
+  and simply stops displaying anything derived from it.
 - No control, layout, label, or copy changes on any surface.
 - `SleepPredictionCard` keeps its intentional sleeping-state-only presentation with no elapsed
   duration. There is no duration readout on that card to align with the counted-pause rule.
@@ -86,6 +88,8 @@ Each of these subtracts `totalPausedMs`, shifts the start by it, or both, today:
       elapsed-minutes figure driving the sleep, pumping, and tummy time duration alerts.
 - [x] Apply the rule to the widget payload in `widget-context`: real start for `effectiveStart`, and
       `pausedAt - startedAt` for the paused `accumulatedSeconds`, for each of the four types.
+- [x] Preserve the real start when the native widget or Watch resumes a timer, send that start as the
+      resume `effectiveStartTime`, and use the server's `started_at` on native network refresh.
 - [x] Pass total elapsed to `pauseTimerLiveActivity` and `resumeTimerLiveActivity` from all four
       contexts, and remove the `totalPausedMs` shift from the lifecycle module's Live Activity restart.
 - [x] Per type, add coverage that a running timer's readout stops growing while a pause is open and
@@ -108,7 +112,8 @@ Each of these subtracts `totalPausedMs`, shifts the start by it, or both, today:
   equals the `durationSeconds` written by a stop at that instant.
 - Focused pre-review validation: targeted ESLint and repository TypeScript checking pass. Logs are
   under `/tmp/agent-workflows/e2f8af45fd34/cf684b98cfac/`.
-- Scope audit: no native target, control, label, copy, edit/manual form, or record-writing path changed;
+- Scope audit: native changes are limited to preserving/reading the real start on widget and Watch
+  resume; no native control, layout, label, copy, edit/manual form, or record-writing path changed;
   `SleepPredictionCard` retains its intentional no-duration presentation.
 
 ## Acceptance criteria
@@ -127,4 +132,5 @@ Each of these subtracts `totalPausedMs`, shifts the start by it, or both, today:
       `totalPausedMs` shift left anywhere.
 - [x] A running timer's displayed elapsed equals the `durationSeconds` a stop at that instant would
       record, for every type, both paused and resumed.
-- [x] No native target, control, label, or record-writing path is changed by this task.
+- [x] Native widget and Watch resume paths preserve the real start without changing controls, layout,
+      labels, pause bookkeeping, or record-writing behavior.
