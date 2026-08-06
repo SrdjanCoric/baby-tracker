@@ -243,6 +243,17 @@ describe("SleepScreen morning confirmation", () => {
     ).toBeTruthy();
   });
 
+  it("keeps an owned local timer editable during a transient lock fetch failure", () => {
+    mockLockStartedBy = null;
+    mockActiveTimer = { ...runningTimer, lockState: "owned" };
+
+    render(<SleepScreen />);
+
+    expect(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    ).toBeTruthy();
+  });
+
   it("writes the running picker value through the sleep provider", async () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
