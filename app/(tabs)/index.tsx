@@ -661,8 +661,12 @@ export default function HomeScreen() {
       lockedElapsedTime: feedingLock.elapsedTime,
       babyName: selectedBaby?.name,
       isPausedByOther: feedingLock.isPausedByOther,
-      timerStartTime: feedingActiveTimer?.startTime?.getTime() ?? feedingLock.timerStartTime,
-      timerPausedAt: feedingActiveTimer?.pausedAt?.getTime() ?? feedingLock.timerPausedAt,
+      timerStartTime: feedingLock.isLocked
+        ? feedingLock.timerStartTime
+        : feedingActiveTimer?.startTime?.getTime(),
+      timerPausedAt: feedingLock.isLocked
+        ? feedingLock.timerPausedAt
+        : feedingActiveTimer?.pausedAt?.getTime(),
     };
   }, [t, feedingTimeSince, feedingSubtitle, isFeedingActive, feedingActiveLabel, isStoppingFeeding, feedingActiveTimer, handleFeedingCardPress, handleAddFeeding, handleStopFeeding, handleTogglePauseFeeding, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -686,8 +690,12 @@ export default function HomeScreen() {
       lockedElapsedTime: sleepLock.elapsedTime,
       babyName: selectedBaby?.name,
       isPausedByOther: sleepLock.isPausedByOther,
-      timerStartTime: sleepActiveTimer?.startTime?.getTime() ?? sleepLock.timerStartTime,
-      timerPausedAt: sleepActiveTimer?.pausedAt?.getTime() ?? sleepLock.timerPausedAt,
+      timerStartTime: sleepLock.isLocked
+        ? sleepLock.timerStartTime
+        : sleepActiveTimer?.startTime?.getTime(),
+      timerPausedAt: sleepLock.isLocked
+        ? sleepLock.timerPausedAt
+        : sleepActiveTimer?.pausedAt?.getTime(),
     };
   }, [t, sleepTimeSince, sleepSecondaryInfo, isSleepActive, isStoppingSleep, sleepActiveTimer, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, handleTogglePauseSleep, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -724,8 +732,12 @@ export default function HomeScreen() {
       lockedElapsedTime: pumpingLock.elapsedTime,
       babyName: selectedBaby?.name,
       isPausedByOther: pumpingLock.isPausedByOther,
-      timerStartTime: pumpingActiveTimer?.startTime?.getTime() ?? pumpingLock.timerStartTime,
-      timerPausedAt: pumpingActiveTimer?.pausedAt?.getTime() ?? pumpingLock.timerPausedAt,
+      timerStartTime: pumpingLock.isLocked
+        ? pumpingLock.timerStartTime
+        : pumpingActiveTimer?.startTime?.getTime(),
+      timerPausedAt: pumpingLock.isLocked
+        ? pumpingLock.timerPausedAt
+        : pumpingActiveTimer?.pausedAt?.getTime(),
     };
   }, [t, pumpingTimeSince, pumpingSubtitle, isPumpingActive, isStoppingPumping, pumpingActiveTimer, handlePumpingCardPress, handleAddPumping, handleStopPumping, handleTogglePausePumping, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -749,8 +761,12 @@ export default function HomeScreen() {
       lockedByName: tummyTimeLock.lockedByName,
       lockedElapsedTime: tummyTimeLock.elapsedTime,
       isPausedByOther: tummyTimeLock.isPausedByOther,
-      timerStartTime: tummyTimeActiveTimer?.startTime?.getTime() ?? tummyTimeLock.timerStartTime,
-      timerPausedAt: tummyTimeActiveTimer?.pausedAt?.getTime() ?? tummyTimeLock.timerPausedAt,
+      timerStartTime: tummyTimeLock.isLocked
+        ? tummyTimeLock.timerStartTime
+        : tummyTimeActiveTimer?.startTime?.getTime(),
+      timerPausedAt: tummyTimeLock.isLocked
+        ? tummyTimeLock.timerPausedAt
+        : tummyTimeActiveTimer?.pausedAt?.getTime(),
     };
   }, [t, tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, isStoppingTummyTime, tummyTimeActiveTimer, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime, handleStopTummyTime, handleTogglePauseTummyTime, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 

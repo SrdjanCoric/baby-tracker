@@ -425,6 +425,48 @@ describe("HomeScreen", () => {
       }
     });
 
+    it("uses only the remote timer timeline when a local timer coexists with another caregiver's lock", () => {
+      const localStartedAt = new Date("2026-08-06T10:20:00.000Z");
+      const remoteStartedAt = "2026-08-06T10:00:00.000Z";
+      const remotePausedAt = "2026-08-06T10:05:00.000Z";
+
+      for (const activityType of ["feeding", "sleep", "pumping", "tummy_time"]) {
+        mockRemoteLocks[activityType] = {
+          startedAt: remoteStartedAt,
+          startedByName: "Other caregiver",
+          timerData: { isPaused: true, pausedAt: remotePausedAt },
+        };
+      }
+
+      mockUseFeeding.mockReturnValue({
+        ...mockUseFeeding(),
+        activeTimer: { isRunning: true, startTime: localStartedAt, side: "left" },
+      });
+      mockUseSleep.mockReturnValue({
+        ...mockUseSleep(),
+        activeTimer: { isRunning: true, startTime: localStartedAt },
+      });
+      mockUsePumping.mockReturnValue({
+        ...mockUsePumping(),
+        activeTimer: { isRunning: true, startTime: localStartedAt, side: "both" },
+      });
+      mockUseTummyTime.mockReturnValue({
+        ...mockUseTummyTime(),
+        activeTimer: { isRunning: true, startTime: localStartedAt },
+      });
+
+      render(<HomeScreen />);
+
+      for (const activity of ["feeding", "sleep", "pumping", "tummyTime"]) {
+        expect(screen.getByTestId(`timer-start-${activity}`).props.children).toBe(
+          String(new Date(remoteStartedAt).getTime())
+        );
+        expect(screen.getByTestId(`timer-paused-${activity}`).props.children).toBe(
+          String(new Date(remotePausedAt).getTime())
+        );
+      }
+    });
+
     it("shows active state for feeding when timer running", () => {
       mockUseFeeding.mockReturnValue({
         feedings: [],
