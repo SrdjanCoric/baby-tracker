@@ -211,7 +211,16 @@ export async function editRunningTimerStartTime<
         }
       : {}),
   };
-  if (activeTimer.lockState !== "offline") {
+  if (activeTimer.lockState === "offline") {
+    await queuePendingTimerStartEdit(
+      baby.id,
+      adapter.activityType,
+      userId,
+      activeTimer.timerInstanceId,
+      startedAt,
+      timerData
+    );
+  } else {
     try {
       await updateTimerStartTime(
         baby.id,

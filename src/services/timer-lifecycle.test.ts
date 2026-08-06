@@ -284,6 +284,83 @@ describe("editRunningTimerStartTime", () => {
     expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
     expect(startTimerLiveActivity).not.toHaveBeenCalled();
   });
+
+  it("queues an offline edit before applying it locally", async () => {
+    const newStart = new Date("2026-08-06T07:30:00.000Z");
+    const activeTimer: TestActiveTimer = {
+      startedAt: "2026-08-06T08:00:00.000Z",
+      isPaused: false,
+      totalPausedMs: 0,
+      lockState: "offline",
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+    };
+    const timerData = {
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+      isPaused: false,
+      totalPausedMs: 0,
+    };
+    const setActiveTimer = vi.fn();
+    const dispatchEditedStart = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn(),
+        setActiveTimer,
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => timerData),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "record-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn(() => "nap") },
+      dispatchRestoreTimer: vi.fn(),
+    };
+    vi.mocked(queuePendingTimerStartEdit).mockResolvedValue();
+
+    await editRunningTimerStartTime({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      userId: "user-1",
+      activeTimer,
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "record-1",
+        isPaused: false,
+        totalPausedMs: 0,
+      },
+      startedAt: newStart,
+      liveActivityIdRef: { current: null },
+      dispatchEditedStart,
+    });
+
+    expect(updateTimerStartTime).not.toHaveBeenCalled();
+    expect(queuePendingTimerStartEdit).toHaveBeenCalledWith(
+      "baby-1",
+      "sleep",
+      "user-1",
+      "timer-1",
+      newStart,
+      {
+        ...timerData,
+        effectiveStartTime: newStart.toISOString(),
+      }
+    );
+    expect(setActiveTimer).toHaveBeenCalledWith(
+      "baby-1",
+      expect.objectContaining({ startedAt: newStart.toISOString() })
+    );
+    expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
+  });
 });
 
 describe("restoreTimerLifecycle", () => {
