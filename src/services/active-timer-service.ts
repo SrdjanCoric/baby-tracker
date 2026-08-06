@@ -54,7 +54,6 @@ async function getPendingTimerStartEdits(): Promise<PendingTimerStartEdit[]> {
 }
 
 export function isRetryableTimerWriteError(error: unknown): boolean {
-  if (error instanceof TypeError) return true;
   if (!error || typeof error !== "object") return false;
   if ("code" in error && typeof error.code === "string" && error.code) {
     return false;

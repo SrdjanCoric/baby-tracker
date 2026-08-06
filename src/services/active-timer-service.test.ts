@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   acquireTimerLock,
+  isRetryableTimerWriteError,
   queuePendingLockRelease,
   queuePendingTimerStartEdit,
   releaseTimerLock,
@@ -126,6 +127,17 @@ describe("active timer start editing", () => {
         new Date("2026-08-06T07:30:00.000Z")
       )
     ).rejects.toThrow("No matching active timer");
+  });
+
+  it("retries only TypeErrors that describe a transport failure", () => {
+    expect(
+      isRetryableTimerWriteError(new TypeError("Network request failed"))
+    ).toBe(true);
+    expect(
+      isRetryableTimerWriteError(
+        new TypeError("Cannot read properties of undefined")
+      )
+    ).toBe(false);
   });
 });
 
