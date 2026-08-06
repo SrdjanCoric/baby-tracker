@@ -172,7 +172,7 @@ try {
       p_activity_type: "sleep",
       p_user_id: owner.id,
       p_timer_data: {},
-      p_started_at: "2026-07-21T12:00:00.000Z",
+      p_started_at: new Date().toISOString(),
     }),
   });
   assertStatus(acquire, 200, "owner acquire");

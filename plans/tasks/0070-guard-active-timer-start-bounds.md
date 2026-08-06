@@ -2,6 +2,9 @@
 
 **Branch**: `feature/guard-active-timer-start-bounds`
 **Depends on**: none
+**Change class**: `code`
+**Validation tier**: `focused`
+**TDD applicable**: yes
 **Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
 `decisions/resolved/007-running-timer-start-time-edit.md` (resolved) · **User stories**: As a
 caregiver, I want a household to always be able to start an activity timer, so that no timer lock can
@@ -61,6 +64,11 @@ from 0056's scope is carried forward.
   `SELECT` policy also stays, which is why a second phone keeps displaying a timer it cannot touch.
 - **No RPC signature change.** `acquire_timer_lock`, `release_timer_lock`, `toggle_timer_pause`, and
   `cleanup_stale_timer_locks` keep their signatures, their grants, and their behavior.
+- **Backward-compatible client contract.** Existing clients keep using the same direct table writes
+  and RPC call shapes. In particular, `acquire_timer_lock` calls that omit `p_started_at` continue to
+  default to the server's current time, and pause, resume, release, cleanup, and `timer_data`-only
+  updates remain valid. Only a future start or a start beyond the existing twelve-hour cleanup
+  horizon is newly rejected.
 - **No client change.** No screen, service, or validator is touched. The picker bounds that keep a
   caregiver from ever offering a rejected value are Task 0071.
 - **No change to the cleanup horizon itself.**
@@ -74,25 +82,29 @@ future bound alone.
 
 ## Implementation work
 
-- [ ] Add migration `060` creating the validation function and the trigger on `public.active_timers`,
+- [x] Add migration `060` creating the validation function and the trigger on `public.active_timers`,
       firing on `INSERT` and on `UPDATE` gated by `NEW.started_at IS DISTINCT FROM OLD.started_at`,
       raising on a future value and on a value older than `now() - INTERVAL '12 hours'`.
-- [ ] Extend `scripts/sql/active-timer-authorization-tests.sql` with vectors covering: a future
+- [x] Extend `scripts/sql/active-timer-authorization-tests.sql` with vectors covering: a future
       `started_at` write is rejected; a `started_at` more than twelve hours back is rejected; a
       `started_at` inside the window is accepted; a `timer_data`-only `UPDATE` on a lock whose
       `started_at` is older than twelve hours still succeeds; `acquire_timer_lock` with a valid
-      `p_started_at` still succeeds and with an out-of-range one is rejected; `toggle_timer_pause`,
-      `release_timer_lock`, and `cleanup_stale_timer_locks` are unaffected; a second caregiver still
-      cannot write a lock they did not start.
-- [ ] Run `npm run test:sql`, `npm run test:edge:timer`, and `npm run test:security`.
-- [ ] Apply and verify the migration on local Supabase only.
+      `p_started_at` still succeeds, its legacy omitted-`p_started_at` call shape still succeeds, and
+      an out-of-range value is rejected; `toggle_timer_pause`, `release_timer_lock`, and
+      `cleanup_stale_timer_locks` are unaffected; a second caregiver still cannot write a lock they
+      did not start.
+- [x] Run `npm run test:sql`, `npm run test:edge:timer`, and `npm run test:security`.
+- [x] Apply and verify the migration on local Supabase only.
 
 ## Human checkpoints
 
-- [ ] [confirm-security] Approve the trigger's shape and its rejection semantics before implementation
+- [x] [confirm-security] Approve the trigger's shape and its rejection semantics before implementation
       — whether it raises an exception or silently clamps, and that it leaves the migration `020` row
       policy and the migration `056` grants untouched. This changes a write path on an authorization
       boundary that the app, both native targets, and offline replay all write through.
+      **Confirmed by owner 2026-08-06:** use one trigger function with explicit `22023` rejection,
+      preserve the policies, grants, and RPC signatures, and keep existing client call shapes and
+      legitimate timer operations backward compatible.
 - [ ] [verify] On local Supabase, start a timer, leave it running, and confirm normal operation is
       unaffected · Steps: acquire a lock, pause it, resume it, then release it · Expected: every step
       succeeds and no lock is left behind · Failure: any legitimate timer-control step is rejected by
@@ -101,18 +113,20 @@ future bound alone.
 
 ## Acceptance criteria
 
-- [ ] A write setting `active_timers.started_at` in the future is rejected, whether issued through the
+- [x] A write setting `active_timers.started_at` in the future is rejected, whether issued through the
       `acquire_timer_lock` RPC or as a direct table write.
-- [ ] A write setting `active_timers.started_at` more than twelve hours in the past is rejected on the
+- [x] A write setting `active_timers.started_at` more than twelve hours in the past is rejected on the
       same paths.
-- [ ] A `timer_data`-only `UPDATE` on a lock whose `started_at` is older than twelve hours still
+- [x] A `timer_data`-only `UPDATE` on a lock whose `started_at` is older than twelve hours still
       succeeds, proving the guard fires on `started_at` changes alone.
-- [ ] `acquire_timer_lock`, `release_timer_lock`, `toggle_timer_pause`, and `cleanup_stale_timer_locks`
+- [x] `acquire_timer_lock`, `release_timer_lock`, `toggle_timer_pause`, and `cleanup_stale_timer_locks`
       behave exactly as migration `056` intends.
-- [ ] A caregiver who did not start a timer still cannot write its row.
-- [ ] SQL vectors cover every rejection and every legitimate path above, and `npm run test:sql`,
+- [x] A caregiver who did not start a timer still cannot write its row.
+- [x] SQL vectors cover every rejection and every legitimate path above, and `npm run test:sql`,
       `npm run test:edge:timer`, and `npm run test:security` pass.
-- [ ] No row policy, no RPC signature, and no client file changed.
+- [x] No row policy, no RPC signature, and no client file changed.
+- [x] Existing client call shapes remain valid, including `acquire_timer_lock` with omitted
+      `p_started_at`; only out-of-range timestamp writes newly fail.
 - [ ] Both checkpoints confirmed by the owner.
 
 ## Non-goals
