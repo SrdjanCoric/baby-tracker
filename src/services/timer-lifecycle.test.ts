@@ -117,6 +117,7 @@ describe("editRunningTimerStartTime", () => {
       activityId: "record-1",
       isPaused: false,
       totalPausedMs: 0,
+      effectiveStartTime: oldStart,
     };
     const adapter: TimerLifecycleAdapter<
       TestPayload,
@@ -171,7 +172,10 @@ describe("editRunningTimerStartTime", () => {
       "sleep",
       "user-1",
       newStart,
-      encodedTimerData
+      {
+        ...encodedTimerData,
+        effectiveStartTime: newStart.toISOString(),
+      }
     );
     expect(endTimerLiveActivity).toHaveBeenCalledWith("live-old");
     expect(startTimerLiveActivity).toHaveBeenCalledWith(
@@ -195,7 +199,8 @@ describe("editRunningTimerStartTime", () => {
     const newStart = new Date("2026-08-06T07:30:00.000Z");
     const activeTimer: TestActiveTimer = {
       startedAt: "2026-08-06T08:00:00.000Z",
-      isPaused: false,
+      isPaused: true,
+      pausedAt: "2026-08-06T09:00:00.000Z",
       totalPausedMs: 0,
       lockState: "owned",
       timerInstanceId: "timer-1",
@@ -204,8 +209,11 @@ describe("editRunningTimerStartTime", () => {
     const encodedTimerData = {
       timerInstanceId: "timer-1",
       activityId: "record-1",
-      isPaused: false,
+      isPaused: true,
+      pausedAt: "2026-08-06T09:00:00.000Z",
       totalPausedMs: 0,
+      effectiveStartTime: "2026-08-06T08:00:00.000Z",
+      accumulatedSeconds: 3600,
     };
     const setActiveTimer = vi.fn();
     const dispatchEditedStart = vi.fn();
@@ -248,7 +256,8 @@ describe("editRunningTimerStartTime", () => {
       payload: {
         timerInstanceId: "timer-1",
         activityId: "record-1",
-        isPaused: false,
+        isPaused: true,
+        pausedAt: "2026-08-06T09:00:00.000Z",
         totalPausedMs: 0,
       },
       startedAt: newStart,
@@ -262,7 +271,11 @@ describe("editRunningTimerStartTime", () => {
       "user-1",
       "timer-1",
       newStart,
-      encodedTimerData
+      {
+        ...encodedTimerData,
+        effectiveStartTime: newStart.toISOString(),
+        accumulatedSeconds: 5400,
+      }
     );
     expect(setActiveTimer).toHaveBeenCalledWith(
       "baby-1",

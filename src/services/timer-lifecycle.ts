@@ -196,7 +196,21 @@ export async function editRunningTimerStartTime<
   TRecord,
   TCreateInput
 >): Promise<void> {
-  const timerData = adapter.timerDataCodec.encode(payload);
+  const pausedAt = payload.isPaused
+    ? parseTimerDate(payload.pausedAt, new Date())
+    : undefined;
+  const timerData = {
+    ...adapter.timerDataCodec.encode(payload),
+    effectiveStartTime: startedAt.toISOString(),
+    ...(pausedAt
+      ? {
+          accumulatedSeconds: Math.max(
+            0,
+            Math.floor((pausedAt.getTime() - startedAt.getTime()) / 1000)
+          ),
+        }
+      : {}),
+  };
   if (activeTimer.lockState !== "offline") {
     try {
       await updateTimerStartTime(
@@ -238,7 +252,6 @@ export async function editRunningTimerStartTime<
   liveActivityIdRef.current = replacementLiveActivityId;
 
   if (replacementLiveActivityId && payload.isPaused) {
-    const pausedAt = parseTimerDate(payload.pausedAt, new Date());
     const activeElapsedSeconds = Math.max(
       0,
       Math.floor(
