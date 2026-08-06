@@ -128,6 +128,32 @@ describe("tummy time timer adapter", () => {
     ).toEqual(payload);
   });
 
+  it("drops an invalid restored pause timestamp", () => {
+    const dispatchRestoreTimer = vi.fn();
+    const adapter = createTummyTimeTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer,
+    });
+
+    adapter.dispatchRestoreTimer({
+      startedAt: new Date("2026-08-05T12:00:00.000Z"),
+      lockState: "owned",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        isPaused: true,
+        totalPausedMs: 45_000,
+        pausedAt: "not-a-date",
+      },
+    });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({ pausedAt: undefined })
+    );
+  });
+
   it("dispatches paused and unpaused restored tummy timers", () => {
     const startedAt = new Date("2026-08-05T12:00:00.000Z");
     const pausedAt = "2026-08-05T12:00:45.000Z";

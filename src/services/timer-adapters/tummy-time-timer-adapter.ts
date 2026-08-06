@@ -6,6 +6,7 @@ import {
 } from "../tummyTime-storage";
 import {
   calculateTimerDurationSeconds,
+  parseTimerDate,
   type RestoredTimer,
   type SharedTimerPayload,
   type TimerLifecycleAdapter,
@@ -118,7 +119,7 @@ export function createTummyTimeTimerAdapter({
         timerInstanceId,
         activityId,
         totalPausedMs: payload.totalPausedMs,
-        pausedAt: payload.pausedAt ? new Date(payload.pausedAt) : undefined,
+        pausedAt: parseTimerDate(payload.pausedAt),
       }),
   };
 }
