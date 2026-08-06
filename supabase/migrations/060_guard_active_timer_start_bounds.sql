@@ -1,6 +1,6 @@
 -- Keep every active timer lock inside the same reclaimability horizon used by
--- cleanup_stale_timer_locks. Validate inserts from acquire_timer_lock and direct writers, but do
--- not reject unrelated updates to a grandfathered lock whose start is already outside the window.
+-- cleanup_stale_timer_locks. Normalize small positive client-clock skew to database time, reject
+-- larger future values, and do not reject unrelated updates to a grandfathered stale lock.
 
 CREATE OR REPLACE FUNCTION public.validate_active_timer_started_at()
 RETURNS TRIGGER
@@ -9,9 +9,13 @@ SET search_path = ''
 AS $$
 BEGIN
   IF TG_OP = 'INSERT' OR NEW.started_at IS DISTINCT FROM OLD.started_at THEN
-    IF NEW.started_at > pg_catalog.now() THEN
+    IF NEW.started_at > pg_catalog.now() + INTERVAL '5 minutes' THEN
       RAISE EXCEPTION 'active timer start cannot be in the future'
         USING ERRCODE = '22023';
+    END IF;
+
+    IF NEW.started_at > pg_catalog.now() THEN
+      NEW.started_at := pg_catalog.now();
     END IF;
 
     IF NEW.started_at < pg_catalog.now() - INTERVAL '12 hours' THEN
@@ -31,4 +35,4 @@ CREATE TRIGGER validate_active_timer_started_at
   EXECUTE FUNCTION public.validate_active_timer_started_at();
 
 COMMENT ON FUNCTION public.validate_active_timer_started_at() IS
-'Rejects future active-timer starts and starts older than the twelve-hour stale-lock cleanup horizon; unrelated updates to existing locks remain valid.';
+'Normalizes up to five minutes of positive client-clock skew, rejects larger future starts and starts older than the twelve-hour stale-lock cleanup horizon, and allows unrelated updates to existing locks.';

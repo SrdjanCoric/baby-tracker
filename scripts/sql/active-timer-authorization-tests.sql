@@ -148,6 +148,7 @@ DECLARE
   rejected_future_rpc BOOLEAN := false;
   rejected_old_rpc BOOLEAN := false;
   released BOOLEAN;
+  skewed_started_at TIMESTAMPTZ;
   updated_count INTEGER;
   stale_timer_data JSONB;
 BEGIN
@@ -165,9 +166,39 @@ BEGIN
     RAISE EXCEPTION 'the timer owner could not acquire a timer';
   END IF;
 
+  SELECT success
+  INTO acquired
+  FROM public.acquire_timer_lock(
+    '7a000000-0000-0000-0000-000000000001',
+    'feeding',
+    '71111111-1111-1111-1111-111111111111',
+    '{}'::jsonb,
+    pg_catalog.now() + INTERVAL '1 minute'
+  );
+
+  SELECT started_at
+  INTO skewed_started_at
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'feeding';
+
+  IF NOT acquired OR skewed_started_at > pg_catalog.now() THEN
+    RAISE EXCEPTION 'a slightly fast client clock did not acquire a server-normalized timer';
+  END IF;
+
+  SELECT public.release_timer_lock(
+    '7a000000-0000-0000-0000-000000000001',
+    'feeding',
+    '71111111-1111-1111-1111-111111111111'
+  ) INTO released;
+
+  IF NOT released THEN
+    RAISE EXCEPTION 'the owner could not release the server-normalized timer';
+  END IF;
+
   BEGIN
     UPDATE public.active_timers
-    SET started_at = pg_catalog.now() + INTERVAL '1 minute'
+    SET started_at = pg_catalog.now() + INTERVAL '6 minutes'
     WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
       AND activity_type = 'sleep';
   EXCEPTION WHEN invalid_parameter_value THEN
@@ -208,7 +239,7 @@ BEGIN
       'tummy_time',
       '71111111-1111-1111-1111-111111111111',
       '{}'::jsonb,
-      pg_catalog.now() + INTERVAL '1 minute'
+      pg_catalog.now() + INTERVAL '6 minutes'
     );
   EXCEPTION WHEN invalid_parameter_value THEN
     rejected_future_rpc := true;
