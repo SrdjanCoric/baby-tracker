@@ -69,14 +69,14 @@ export default function SleepScreen() {
 
       const now = new Date();
       const elapsedMinutes = Math.floor(
-        (now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000 / 60
+        (now.getTime() - activeTimer.startTime.getTime()) / 1000 / 60
       );
       const alert = getAlertForType(activeTimer.sleepType);
       alert.checkAndSendAlert(elapsedMinutes);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning, activeTimer?.isPaused, activeTimer?.startTime, activeTimer?.totalPausedMs, activeTimer?.sleepType, getAlertForType]);
+  }, [activeTimer?.isRunning, activeTimer?.isPaused, activeTimer?.startTime, activeTimer?.sleepType, getAlertForType]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) {
@@ -85,11 +85,11 @@ export default function SleepScreen() {
     void tick;
     if (activeTimer.isPaused && activeTimer.pausedAt) {
       return Math.floor(
-        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000
+        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime()) / 1000
       );
     }
     const now = new Date();
-    return Math.floor((now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000);
+    return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
   }, [activeTimer, tick]);
 
   const handleStartSleep = useCallback(async (customStartTime?: Date) => {

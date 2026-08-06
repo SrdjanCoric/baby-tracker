@@ -12,6 +12,7 @@ import { reconcileTimerLock } from "./timer-lock-reconciliation";
 import { readPendingTimerStop } from "./timer-stop-coordinator";
 import { createSleepTimerAdapter } from "./timer-adapters/sleep-timer-adapter";
 import type { ActiveSleepTimerData } from "./sleep-storage";
+import { startTimerLiveActivity } from "./live-activity-service";
 
 vi.mock("./live-activity-service", () => ({
   endLiveActivityByType: vi.fn(),
@@ -77,6 +78,72 @@ interface TestActiveTimer extends TimerLifecycleActiveTimer {
 describe("restoreTimerLifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("restarts a resumed timer's Live Activity from the real start", async () => {
+    const startedAt = "2026-08-05T12:00:00.000Z";
+    const activeTimer: TestActiveTimer = {
+      startedAt,
+      isPaused: false,
+      totalPausedMs: 10 * 60 * 1000,
+      lockState: "owned",
+    };
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn().mockResolvedValue(activeTimer),
+        setActiveTimer: vi.fn(),
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({})),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({
+          isPaused: false,
+          totalPausedMs: activeTimer.totalPausedMs,
+        })),
+      },
+      buildRecord: vi.fn(() => ({ id: "record-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn(() => "nap") },
+      dispatchRestoreTimer: vi.fn(),
+    };
+    vi.mocked(readPendingTimerStop).mockResolvedValue(null);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    });
+    vi.mocked(isTimerCompletionSecured).mockResolvedValue(false);
+    vi.mocked(startTimerLiveActivity).mockResolvedValue("live-activity-1");
+
+    await restoreTimerLifecycle({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      user: null,
+      completedRecords: [],
+      stopVersionAtStart: 0,
+      currentStopVersion: () => 0,
+      isStopping: () => false,
+      isCurrentBabyBinding: () => true,
+      liveActivityIdRef: { current: null },
+      refreshLocks: vi.fn(),
+      persistRecord: vi.fn(),
+      dispatchStopTimer: vi.fn(),
+      dispatchAddRecord: vi.fn(),
+      errorLabel: "[TimerLifecycleTest]",
+    });
+
+    expect(startTimerLiveActivity).toHaveBeenCalledWith(
+      "sleep",
+      "Baby",
+      "nap",
+      new Date(startedAt)
+    );
   });
 
   it("abandons a restore when stop becomes obsolete during storage reads", async () => {

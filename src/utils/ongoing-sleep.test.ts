@@ -28,20 +28,20 @@ describe("buildOngoingSleepEntry", () => {
     expect(entry!.type).toBe("nap");
   });
 
-  it("subtracts paused time from the reported duration", () => {
+  it("counts a completed pause in the reported duration", () => {
     const entry = build({ timer: { isRunning: true, startTime: START, totalPausedMs: 600_000 } });
 
-    expect(entry!.durationSeconds).toBe(50 * 60);
+    expect(entry!.durationSeconds).toBe(60 * 60);
   });
 
-  it("shortens the entry interval by completed pauses, so surfaces that measure the interval report unpaused time", () => {
+  it("keeps the real interval after a pause is resumed", () => {
     const entry = build({ timer: { isRunning: true, startTime: START, totalPausedMs: 600_000 } });
 
-    expect(entry!.startedAt).toBe(new Date(2026, 6, 15, 10, 10, 0).toISOString());
+    expect(entry!.startedAt).toBe(START.toISOString());
     expect(entry!.endedAt).toBe(NOW.toISOString());
     expect(
       (new Date(entry!.endedAt!).getTime() - new Date(entry!.startedAt).getTime()) / 60000
-    ).toBe(50);
+    ).toBe(60);
   });
 
   it("stops growing while the timer is paused", () => {
@@ -59,6 +59,8 @@ describe("buildOngoingSleepEntry", () => {
 
     expect(atPause!.durationSeconds).toBe(50 * 60);
     expect(halfHourLater!.durationSeconds).toBe(50 * 60);
+    expect(halfHourLater!.startedAt).toBe(START.toISOString());
+    expect(halfHourLater!.endedAt).toBe(pausedAt.toISOString());
     expect(
       (new Date(halfHourLater!.endedAt!).getTime() -
         new Date(halfHourLater!.startedAt).getTime()) /

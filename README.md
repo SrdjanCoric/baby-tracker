@@ -72,7 +72,10 @@ Development Settings includes an isolated preview for the three entry routes. It
 
 On sleep, feeding, pumping, and tummy-time timers, Started earlier uses the current time format from Settings for both its label and Android picker.
 
-Saved feeding, sleep, pumping, and tummy-time records count the full interval from start to end, including pauses that were later resumed. Stopping while paused ends the saved record at the pause moment, including stops delivered by the widget or Apple Watch.
+Running timer readouts freeze at the pause moment and, after resume, count from the original start,
+including the paused interval. The dashboard, activity screens, sleep summaries, widget, Apple Watch,
+and Live Activities therefore show the duration that stopping at that moment would save. Stopping while
+paused ends the saved record at the pause moment, including stops delivered by the widget or Apple Watch.
 
 Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. If the lock service is unavailable, feeding, sleep, pumping, and tummy-time timers continue locally and keep their reconciliation state through restart. Reconnect attempts to acquire the missing lock. When two offline timers compete, the first successful lock acquisition wins. The other timer is saved to the timeline, and its caregiver sees what happened. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. External Stop requests from widgets and Apple Watch stay in a versioned queue until matching timer completions are durable, even if several arrive while the app is closed. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
 

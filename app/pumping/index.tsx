@@ -67,13 +67,13 @@ export default function PumpingScreen() {
 
       const now = new Date();
       const elapsedMinutes = Math.floor(
-        (now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000 / 60
+        (now.getTime() - activeTimer.startTime.getTime()) / 1000 / 60
       );
       checkAndSendAlert(elapsedMinutes);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimer?.isRunning, activeTimer?.isPaused, activeTimer?.startTime, activeTimer?.totalPausedMs, checkAndSendAlert]);
+  }, [activeTimer?.isRunning, activeTimer?.isPaused, activeTimer?.startTime, checkAndSendAlert]);
 
   const elapsedSeconds = useMemo(() => {
     if (!activeTimer?.isRunning) {
@@ -82,11 +82,11 @@ export default function PumpingScreen() {
     void tick;
     if (activeTimer.isPaused && activeTimer.pausedAt) {
       return Math.floor(
-        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000
+        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime()) / 1000
       );
     }
     const now = new Date();
-    return Math.floor((now.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000);
+    return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
   }, [activeTimer, tick]);
 
   const suggestedSide = useMemo((): BreastSide => {

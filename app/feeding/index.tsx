@@ -83,11 +83,11 @@ export default function FeedingScreen() {
     void tick;
     if (activeTimer.isPaused && activeTimer.pausedAt) {
       return Math.floor(
-        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime() - activeTimer.totalPausedMs) / 1000
+        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime()) / 1000
       );
     }
     const now = new Date();
-    return Math.floor((now.getTime() - activeTimer.startTime.getTime() - (activeTimer.totalPausedMs ?? 0)) / 1000);
+    return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
   }, [activeTimer, tick]);
 
   const handleTabChange = useCallback((tab: FeedingTab) => {

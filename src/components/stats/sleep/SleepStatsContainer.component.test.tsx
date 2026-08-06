@@ -17,7 +17,11 @@ const mockActiveTimer = {
   totalPausedMs: 0,
 };
 
-let mockActiveTimerValue: typeof mockActiveTimer | null = mockActiveTimer;
+type MockActiveTimer = typeof mockActiveTimer & {
+  isPaused?: boolean;
+  pausedAt?: Date;
+};
+let mockActiveTimerValue: MockActiveTimer | null = mockActiveTimer;
 let mockSelectedBabyId = "baby-1";
 let mockBabyBinding = { babyId: "baby-1", status: "ready" as const };
 let mockRefreshTick = 0;
@@ -94,11 +98,19 @@ jest.mock("@/components/sleep-patterns", () => {
       data,
       onNavigate,
     }: {
-      data: Array<{ type: string }>;
+      data: Array<{
+        type: string;
+        startedAt?: string;
+        endedAt?: string;
+        durationSeconds?: number;
+      }>;
       onNavigate: (offset: number) => void;
     }) => (
       <>
         <Text testID="ongoing-sleep-type">{data[0]?.type}</Text>
+        <Text testID="ongoing-sleep-start">{data[0]?.startedAt}</Text>
+        <Text testID="ongoing-sleep-end">{data[0]?.endedAt}</Text>
+        <Text testID="ongoing-sleep-duration">{data[0]?.durationSeconds}</Text>
         <Text testID="navigate-previous-day" onPress={() => onNavigate(-1)}>previous</Text>
       </>
     ),
@@ -309,6 +321,43 @@ describe("SleepStatsContainer", () => {
       8,
       20
     );
+    jest.useRealTimers();
+  });
+
+  it("shows the counted resumed interval and freezes an open pause", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 6, 14, 12, 0, 0));
+    const startTime = new Date(2026, 6, 14, 11, 0, 0);
+    mockActiveTimerValue = {
+      ...mockActiveTimer,
+      startTime,
+      totalPausedMs: 10 * 60 * 1000,
+    };
+
+    const { rerender } = render(<SleepStatsContainer activeTab="day" />);
+    expect(screen.getByTestId("ongoing-sleep-start").props.children).toBe(
+      startTime.toISOString()
+    );
+    expect(screen.getByTestId("ongoing-sleep-end").props.children).toBe(
+      new Date(2026, 6, 14, 12, 0, 0).toISOString()
+    );
+    expect(screen.getByTestId("ongoing-sleep-duration").props.children).toBe(60 * 60);
+
+    const pausedAt = new Date(2026, 6, 14, 11, 30, 0);
+    mockActiveTimerValue = {
+      ...mockActiveTimerValue,
+      isPaused: true,
+      pausedAt,
+    };
+    rerender(<SleepStatsContainer activeTab="day" />);
+
+    expect(screen.getByTestId("ongoing-sleep-start").props.children).toBe(
+      startTime.toISOString()
+    );
+    expect(screen.getByTestId("ongoing-sleep-end").props.children).toBe(
+      pausedAt.toISOString()
+    );
+    expect(screen.getByTestId("ongoing-sleep-duration").props.children).toBe(30 * 60);
     jest.useRealTimers();
   });
 });

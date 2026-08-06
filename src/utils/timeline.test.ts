@@ -125,7 +125,7 @@ describe("calculateDailySummary sleep totals", () => {
 });
 
 describe("calculateDailySummary running sleep", () => {
-  it("totals a running sleep as unpaused elapsed time, matching the day view", () => {
+  it("totals a resumed running sleep with its counted pause, matching the day view", () => {
     const now = new Date(2026, 6, 15, 11, 0, 0);
     const ongoing = buildOngoingSleepEntry({
       timer: {
@@ -142,7 +142,7 @@ describe("calculateDailySummary running sleep", () => {
 
     const summary = calculateDailySummary(DAY, dataWith([ongoing]));
 
-    expect(summary.sleepMinutes).toBe(50);
+    expect(summary.sleepMinutes).toBe(60);
     expect(summary.sleepMinutes).toBe(dayViewMinutes([ongoing]));
     expect(summary.napCount).toBe(1);
   });

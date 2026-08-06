@@ -613,7 +613,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     if (liveActivityIdRef.current) {
       const activeElapsedSeconds = Math.floor(
-        (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+        (now.getTime() - state.activeTimer.startTime.getTime()) / 1000
       );
       await pauseTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
     }
@@ -632,7 +632,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     if (user?.id) {
       try {
         const totalElapsed = Math.floor(
-          (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
+          (now.getTime() - state.activeTimer.startTime.getTime()) / 1000
         );
         await updateTimerData(selectedBaby.id, "tummy_time", user.id, {
           timerInstanceId: state.activeTimer.timerInstanceId,
@@ -661,7 +661,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     if (liveActivityIdRef.current) {
       const activeElapsedSeconds = Math.floor(
-        (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
+        (now.getTime() - state.activeTimer.startTime.getTime()) / 1000
       );
       await resumeTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
     }
@@ -679,14 +679,14 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     if (user?.id) {
       try {
         const activeElapsedSeconds = Math.floor(
-          (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
+          (now.getTime() - state.activeTimer.startTime.getTime()) / 1000
         );
         await updateTimerData(selectedBaby.id, "tummy_time", user.id, {
           timerInstanceId: state.activeTimer.timerInstanceId,
           activityId: state.activeTimer.activityId,
           isPaused: false,
           totalPausedMs: newTotalPausedMs,
-          effectiveStartTime: new Date(now.getTime() - activeElapsedSeconds * 1000).toISOString(),
+          effectiveStartTime: state.activeTimer.startTime.toISOString(),
           accumulatedSeconds: activeElapsedSeconds,
         });
       } catch (error) {

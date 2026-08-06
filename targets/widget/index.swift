@@ -784,9 +784,10 @@ struct TogglePauseActivityIntent: AppIntent {
             }
 
             let accumulatedSeconds = (timer["accumulatedSeconds"] as? Int) ?? 0
-            let newStartTime = Date(timeIntervalSince1970: now.timeIntervalSince1970 - Double(accumulatedSeconds))
-            let effectiveStartISO = ISO8601DateFormatter().string(from: newStartTime)
-            timer["startTime"] = effectiveStartISO
+            guard let effectiveStartISO = timer["startTime"] as? String else {
+                NSLog("[TogglePause] ERROR: paused timer has no real start time")
+                return .result()
+            }
             timer["isPaused"] = false
             timer.removeValue(forKey: "pausedAt")
             timer.removeValue(forKey: "accumulatedSeconds")
@@ -2533,15 +2534,9 @@ func fetchActiveTimersFromNetwork() async -> [ActiveTimerData]? {
     return remoteTimers.compactMap { timer in
         guard let widgetType = activityTypeMap[timer.activity_type] else { return nil }
         let context = timer.timer_data?.side ?? timer.timer_data?.sleepType
-        let startTime: String
-        if !(timer.timer_data?.isPaused ?? false), let effective = timer.timer_data?.effectiveStartTime {
-            startTime = effective
-        } else {
-            startTime = timer.started_at
-        }
         return ActiveTimerData(
             type: widgetType,
-            startTime: startTime,
+            startTime: timer.started_at,
             timerInstanceId: timer.timer_data?.timerInstanceId,
             context: context,
             isRemote: timer.started_by != userId,

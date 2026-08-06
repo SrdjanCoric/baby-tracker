@@ -106,7 +106,8 @@ const runningTimer = {
   totalPausedMs: 0,
   side: "left" as const,
 };
-let mockActiveTimer: typeof runningTimer | null = null;
+type MockFeedingTimer = typeof runningTimer & { pausedAt?: Date };
+let mockActiveTimer: MockFeedingTimer | null = null;
 
 jest.mock("@/contexts", () => ({
   useFeeding: () => ({
@@ -183,6 +184,31 @@ describe("FeedingScreen", () => {
     mockStopBreastfeeding.mockResolvedValue(undefined);
     mockCompleteTimerStarted.mockResolvedValue(undefined);
     mockTimeFormat = "12h";
+  });
+
+  describe("running timer elapsed", () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("freezes while paused and counts the paused span after resume", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date("2026-08-06T11:00:00.000Z"));
+      mockActiveTimer = {
+        ...runningTimer,
+        startTime: new Date("2026-08-06T10:00:00.000Z"),
+        isPaused: true,
+        pausedAt: new Date("2026-08-06T10:30:00.000Z"),
+        totalPausedMs: 10 * 60 * 1000,
+      };
+
+      const { rerender } = render(<FeedingScreen />);
+      expect(screen.getByLabelText("Timer: 30:00")).toBeTruthy();
+
+      mockActiveTimer = { ...mockActiveTimer, isPaused: false, pausedAt: undefined };
+      rerender(<FeedingScreen />);
+      expect(screen.getByLabelText("Timer: 60:00")).toBeTruthy();
+    });
   });
 
   describe("rendering", () => {

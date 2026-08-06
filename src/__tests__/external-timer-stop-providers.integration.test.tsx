@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { act, render, waitFor } from "@testing-library/react-native";
+import { act, render, screen, waitFor, within } from "@testing-library/react-native";
 import React from "react";
 import { Alert, AppState, Platform, type AppStateStatus } from "react-native";
 import { FeedingProvider, useFeeding } from "@/contexts/feeding-context";
 import { PumpingProvider, usePumping } from "@/contexts/pumping-context";
 import { SleepProvider, useSleep } from "@/contexts/sleep-context";
 import { TummyTimeProvider, useTummyTime } from "@/contexts/tummyTime-context";
+import { DashboardCard } from "@/components/DashboardCard";
 import type { CreateFeedingInput, StoredFeedingEntry } from "@/services/feeding-storage";
 import { FeedingStorageService } from "@/services/feeding-storage";
 import type { CreateSleepInput, StoredSleepEntry } from "@/services/sleep-storage";
@@ -165,27 +166,55 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-function ProviderHarness() {
+function ProviderHarness({ showReadouts = false }: { showReadouts?: boolean }) {
   feedingState = useFeeding();
   sleepState = useSleep();
   pumpingState = usePumping();
   tummyTimeState = useTummyTime();
   useWidgetStopHandler();
-  return null;
+  if (!showReadouts) return null;
+
+  const timers = [
+    { activity: "feeding", timer: feedingState.activeTimer },
+    { activity: "sleep", timer: sleepState.activeTimer },
+    { activity: "pumping", timer: pumpingState.activeTimer },
+    { activity: "tummyTime", timer: tummyTimeState.activeTimer },
+  ] as const;
+
+  return (
+    <>
+      {timers.map(({ activity, timer }) => (
+        <DashboardCard
+          key={activity}
+          activity={activity}
+          label={activity}
+          isActive={timer?.isRunning}
+          timerStartTime={timer?.startTime?.getTime()}
+          timerPausedAt={timer?.pausedAt?.getTime()}
+          {...{ timerTotalPausedMs: timer?.totalPausedMs }}
+          testID={`provider-timer-${activity}`}
+        />
+      ))}
+    </>
+  );
 }
 
-function RealTimerProviders() {
+function RealTimerProviders({ showReadouts = false }: { showReadouts?: boolean } = {}) {
   return (
     <FeedingProvider>
       <SleepProvider>
         <PumpingProvider>
           <TummyTimeProvider>
-            <ProviderHarness />
+            <ProviderHarness showReadouts={showReadouts} />
           </TummyTimeProvider>
         </PumpingProvider>
       </SleepProvider>
     </FeedingProvider>
   );
+}
+
+function clockTextToSeconds(value: string): number {
+  return value.split(":").reduce((total, part) => total * 60 + Number(part), 0);
 }
 
 function storedFeeding(input: CreateFeedingInput): StoredFeedingEntry {
@@ -299,6 +328,10 @@ describe("external timer stops through production providers", () => {
 
   it("counts a resumed pause in every provider's saved record", async () => {
     const resumedStopAt = new Date("2026-07-15T08:01:31.000Z");
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      startTimerLiveActivity: jest.Mock;
+    };
+    liveActivities.startTimerLiveActivity.mockResolvedValue("live-activity-1");
     await FeedingStorageService.setActiveTimer("baby-1", {
       timerInstanceId: "resumed-feeding-timer",
       activityId: "resumed-feeding-activity",
@@ -371,6 +404,19 @@ describe("external timer stops through production providers", () => {
         "user-1"
       );
     }
+    const liveElapsedAtStop = liveActivities.startTimerLiveActivity.mock.calls.map(
+      (call) => Math.floor(
+        (resumedStopAt.getTime() - (call[3] as Date).getTime()) / 1000
+      )
+    );
+    const recordedDurations = [
+      activitySync.createFeedingInDatabase,
+      activitySync.createSleepInDatabase,
+      activitySync.createPumpingInDatabase,
+      activitySync.createTummyTimeInDatabase,
+    ].map((createRecord) => createRecord.mock.calls[0][0].durationSeconds);
+    expect(liveElapsedAtStop).toEqual([91, 91, 91, 91]);
+    expect(recordedDurations).toEqual(liveElapsedAtStop);
   });
 
   it("keeps the requested pause instant in every provider's active timer", async () => {
@@ -418,6 +464,121 @@ describe("external timer stops through production providers", () => {
       requestedPauseTime,
       requestedPauseTime,
     ]);
+  });
+
+  it("passes total elapsed time through every Live Activity pause and resume", async () => {
+    const firstPauseAt = new Date("2026-07-15T08:01:00.000Z");
+    const resumeAt = new Date("2026-07-15T08:02:00.000Z");
+    const secondPauseAt = new Date("2026-07-15T08:03:00.000Z");
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      startTimerLiveActivity: jest.Mock;
+      pauseTimerLiveActivity: jest.Mock;
+      resumeTimerLiveActivity: jest.Mock;
+    };
+    liveActivities.startTimerLiveActivity.mockResolvedValue("live-activity-1");
+
+    render(<RealTimerProviders showReadouts />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+
+    await act(async () => {
+      await feedingState!.pauseBreastfeeding(firstPauseAt);
+      await sleepState!.pauseSleep(firstPauseAt);
+      await pumpingState!.pausePumping(firstPauseAt);
+      await tummyTimeState!.pauseTummyTime(firstPauseAt);
+    });
+    expect(
+      liveActivities.pauseTimerLiveActivity.mock.calls.map((call) => call[1])
+    ).toEqual([60, 60, 60, 60]);
+
+    await act(async () => {
+      await feedingState!.resumeBreastfeeding(resumeAt);
+      await sleepState!.resumeSleep(resumeAt);
+      await pumpingState!.resumePumping(resumeAt);
+      await tummyTimeState!.resumeTummyTime(resumeAt);
+    });
+    expect(
+      liveActivities.resumeTimerLiveActivity.mock.calls.map((call) => call[1])
+    ).toEqual([120, 120, 120, 120]);
+
+    await act(async () => {
+      await feedingState!.pauseBreastfeeding(secondPauseAt);
+      await sleepState!.pauseSleep(secondPauseAt);
+      await pumpingState!.pausePumping(secondPauseAt);
+      await tummyTimeState!.pauseTummyTime(secondPauseAt);
+    });
+    expect(
+      liveActivities.pauseTimerLiveActivity.mock.calls.slice(-4).map((call) => call[1])
+    ).toEqual([180, 180, 180, 180]);
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      updateTimerData: jest.Mock;
+    };
+    const resumedHints = activeTimers.updateTimerData.mock.calls
+      .filter((call) => call[3]?.isPaused === false && call[3]?.effectiveStartTime)
+      .map((call) => ({
+        type: call[1],
+        effectiveStartTime: call[3].effectiveStartTime,
+        accumulatedSeconds: call[3].accumulatedSeconds,
+      }));
+    expect(resumedHints).toEqual([
+      { type: "feeding", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
+      { type: "sleep", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
+      { type: "pumping", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
+      { type: "tummy_time", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
+    ]);
+
+    const pausedHints = activeTimers.updateTimerData.mock.calls
+      .filter((call) => call[3]?.pausedAt === secondPauseAt.toISOString())
+      .map((call) => ({ type: call[1], accumulatedSeconds: call[3].accumulatedSeconds }));
+    expect(pausedHints).toEqual([
+      { type: "feeding", accumulatedSeconds: 180 },
+      { type: "sleep", accumulatedSeconds: 180 },
+      { type: "pumping", accumulatedSeconds: 180 },
+      { type: "tummy_time", accumulatedSeconds: 180 },
+    ]);
+
+    const pausedDisplayedElapsed = ["feeding", "sleep", "pumping", "tummyTime"].map(
+      (activity) => {
+        const card = screen.getByTestId(`provider-timer-${activity}-own-active`);
+        const clock = within(card).getByText(/^\d+(?::\d{2}){1,2}$/);
+        return clockTextToSeconds(String(clock.props.children));
+      }
+    );
+
+    const laterStopAt = new Date("2026-07-15T08:05:00.000Z");
+    await act(async () => {
+      await feedingState!.stopBreastfeeding(laterStopAt);
+      await sleepState!.stopSleep(laterStopAt);
+      await pumpingState!.stopPumping(90, laterStopAt);
+      await tummyTimeState!.stopTummyTime(laterStopAt);
+    });
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      createSleepInDatabase: jest.Mock;
+      createPumpingInDatabase: jest.Mock;
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    const recordedDurations = [
+      activitySync.createFeedingInDatabase,
+      activitySync.createSleepInDatabase,
+      activitySync.createPumpingInDatabase,
+      activitySync.createTummyTimeInDatabase,
+    ].map((createRecord) => createRecord.mock.calls[0][0].durationSeconds);
+    expect(recordedDurations).toEqual([180, 180, 180, 180]);
+    expect(recordedDurations).toEqual(pausedDisplayedElapsed);
   });
 
   it("ends every provider's open pause at pausedAt", async () => {
