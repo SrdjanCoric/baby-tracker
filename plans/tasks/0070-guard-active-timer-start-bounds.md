@@ -137,3 +137,14 @@ future bound alone.
 - Widening or narrowing `active_timers` row access in any direction.
 - Anything else from the removed Task 0056, including `started_by` pinning, which row-level security
   already rejects.
+
+## Review decisions
+
+- skipped (minor): TR-7 — The grandfathered-lock pause vector does not assert the resulting row — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-8 — No vector exercises a full-row offline-replay update with an unchanged out-of-horizon start — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-9 — The implementation commit also amended the task specification — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-10 — The client-call-shape acceptance criterion lacks complete proof — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-11 — The SQL vector fixture depends on `session_replication_role = replica` — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-12 — The twelve-hour horizon is duplicated — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-13 — The trigger and function share the same identifier — User requested remediation only for TR-1–TR-6.
+- skipped (minor): TR-14 — The trigger function has no explicit privilege block — User requested remediation only for TR-1–TR-6.
