@@ -96,23 +96,58 @@ module option — never by silently dropping it:
 **Implementation classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**:
 yes.
 
-- [ ] Write the pumping adapter, route both pumping record sites through `buildRecord`, split restore
+- [x] Write the pumping adapter, route both pumping record sites through `buildRecord`, split restore
       out of `loadPumpings`, delegate to the module, and delete the duplicated block.
-- [ ] Run the integration suite unedited and confirm pumping is green before starting feeding.
-- [ ] Write the feeding adapter with the per-side accumulation and side-derivation rules inside
+- [x] Run the integration suite unedited and confirm pumping is green before starting feeding.
+- [x] Write the feeding adapter with the per-side accumulation and side-derivation rules inside
       `buildRecord`, route both feeding record sites through it, split restore out of `loadFeedings`,
       delegate, and delete the duplicated block.
-- [ ] Run the integration suite unedited and confirm feeding is green before starting sleep.
-- [ ] Write the sleep adapter, including the optional `alreadyStopped` proximity member, route both
+- [x] Run the integration suite unedited and confirm feeding is green before starting sleep.
+- [x] Write the sleep adapter, including the optional `alreadyStopped` proximity member, route both
       sleep record sites through `buildRecord`, split restore out of `loadSleeps`, delegate, and
       delete the duplicated block while keeping `removeLock`, the classification resolution, and the
       prediction-facing state in the context.
-- [ ] Confirm no context still contains the restore sequence and no type still computes its record in
+- [x] Confirm no context still contains the restore sequence and no type still computes its record in
       two places.
+
+## Implementation decisions
+
+- Feeding's two pre-migration record paths disagreed for an inconsistent future
+  `currentSideStartedAt`: conflict recovery clamped the current-side elapsed time to zero while the
+  local stop path could subtract time. The owner chose the safe shared behavior on 2026-08-05:
+  `buildRecord` clamps current-side elapsed time to zero before adding it to the accumulated side
+  durations. Valid timer behavior is unchanged, and no saved side duration can become negative.
+- The three pre-migration local stop paths allowed a negative duration when paused time exceeded
+  wall-clock elapsed time, while their conflict-recovery paths already clamped the same input. The
+  owner retained the shared helper's safe zero-clamp during review remediation on 2026-08-05. Valid
+  timer behavior is unchanged, and inconsistent timer state can no longer save a negative duration.
+- Sleep's pre-migration final restore dispatch checked only whether lock reconciliation was stale;
+  the shared lifecycle also checks whether Stop made the restore obsolete. The owner retained that
+  guard during review remediation on 2026-08-05 so an in-flight local restore cannot resurrect a
+  timer the user just stopped.
+
+## Implementation evidence
+
+- Adapter TDD observed RED for each missing adapter module, then GREEN after implementation; the
+  final adapter run passed 4 files and 17 tests.
+- The unedited real-provider integration contract passed after pumping, after feeding, and after
+  sleep; the final run passed all 42 tests.
+- Focused validation passed: TypeScript, targeted ESLint, all 138 unit files (2,535 tests), and all
+  92 component files (851 tests).
+- The clean two-account iOS sleep smoke passed on 2026-08-05. Both caregivers alternated lock
+  ownership, the non-owner had no Stop control, both saved records were visible, and local fixture
+  cleanup succeeded. Evidence: `e2e/artifacts/household-timers/2026-08-05T20-54-06-577Z/`.
+
+## Documentation
+
+- README inspected after review remediation. No update is required because the task changes the
+  internal timer lifecycle implementation and edge-case resilience without changing application
+  setup, configuration, or usage; the existing Timer Exclusivity section already describes the
+  current behavior.
 
 ## Human checkpoints
 
-- [ ] [verify] After sleep migrates, run the two-account sleep smoke: `npm run e2e:household-timers`
+- [x] [verify] After sleep migrates, run the two-account sleep smoke: `npm run e2e:household-timers`
       against local Supabase with two iOS simulators and the separate caregiver accounts it
       provisions. · Expected: the suite passes, the second account keeps seeing a timer it cannot
       control, and it keeps seeing the record the starter's device writes. · Failure: any suite
@@ -122,24 +157,24 @@ yes.
 
 ## Acceptance criteria
 
-- [ ] One unit test per adapter builds that type's record from `startedAt`, `endedAt`, and a decoded
+- [x] One unit test per adapter builds that type's record from `startedAt`, `endedAt`, and a decoded
       payload with no `activeTimer` in scope: pumping's `side`, feeding's per-side durations with the
       derived side and `lastFinishedSide`, and sleep's `type` with both morning-classification fields.
-- [ ] The feeding adapter test covers a running left, right, and `both` timer, a paused timer at stop
+- [x] The feeding adapter test covers a running left, right, and `both` timer, a paused timer at stop
       (no current-side elapsed added), a one-sided feed leaving the other side `undefined`, and the
       tie case resolving to `left`.
-- [ ] One round-trip test per adapter over the `timer_data` each context writes today, asserting every
+- [x] One round-trip test per adapter over the `timer_data` each context writes today, asserting every
       field survives encode and decode, including absent optional fields.
-- [ ] The sleep adapter test proves the `alreadyStopped` proximity member matches a sleep starting
+- [x] The sleep adapter test proves the `alreadyStopped` proximity member matches a sleep starting
       within 5000 ms of the lock start and does not match one outside it, and that no other adapter
       supplies the member.
-- [ ] `src/__tests__/external-timer-stop-providers.integration.test.tsx` passes with zero changes to
+- [x] `src/__tests__/external-timer-stop-providers.integration.test.tsx` passes with zero changes to
       the test file after each of the three migrations.
-- [ ] No context file contains the shared restore sequence, and each type's record arithmetic appears
+- [x] No context file contains the shared restore sequence, and each type's record arithmetic appears
       exactly once, inside its adapter.
-- [ ] The full component and unit suites pass unchanged; no test file is edited to accommodate the
+- [x] The full component and unit suites pass unchanged; no test file is edited to accommodate the
       move.
-- [ ] The two-account sleep smoke `[verify]` checkpoint is confirmed passed.
+- [x] The two-account sleep smoke `[verify]` checkpoint is confirmed passed.
 
 ## Non-goals
 
@@ -148,3 +183,30 @@ yes.
 - The start, pause, and resume paths do not move into the module.
 - No `stopped_at` handling, no remote-stop finalization, and no new `timer_data` field.
 - No change to how pumping volume reaches a record: it stays on the stop command.
+
+## Review decisions
+
+- skipped (minor): TR-9 — Feeding's round-trip assertion is vacuous for the hardcoded `type` field — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+- skipped (minor): TR-10 — The feeding tie-case test name asserts the `both` branch — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+- skipped (minor): TR-11 — Stop paths construct full adapters only to call `buildRecord` — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+- skipped (minor): TR-12 — Conflicted sleep restore dispatches `STOP_TIMER` twice — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+- skipped (minor): TR-13 — Two unrelated master-plan continuation lines were de-indented — Deferred low-impact cleanup to keep remediation focused on TR-1 through TR-8.
+
+## Completion record
+
+- Built the pumping, feeding, and sleep timer adapters and routed their restore sequences and record
+  construction through `src/services/timer-lifecycle.ts`, with context-specific behavior retained in
+  `src/contexts/feeding-context.tsx`, `src/contexts/pumping-context.tsx`, and
+  `src/contexts/sleep-context.tsx`.
+- Retained the implementation decisions above for feeding current-side clamping, shared duration
+  clamping, and sleep restore obsolescence; no security risk was accepted.
+- README disposition: inspected after review remediation; no prose change was required because
+  setup, configuration, and usage are unchanged and Timer Exclusivity already describes the current
+  application behavior.
+- Review outcome: TR-1 through TR-8 fixed; TR-9 through TR-13 skipped as low-impact cleanup to keep
+  remediation focused on TR-1 through TR-8. No finding remains open.
+- Automated proof: `npm run check:code` passed on 2026-08-05. The final focused lifecycle/adapter
+  batch passed 25 tests, and the unchanged real-provider integration contract passed all 42 tests.
+- Device proof: `npm run e2e:household-timers:clean` passed on 2026-08-05 with two iOS simulators and
+  disposable local Supabase fixtures; lock ownership, non-owner controls, restart recovery, saved
+  record visibility, the native day-start picker, and fixture cleanup all completed successfully.

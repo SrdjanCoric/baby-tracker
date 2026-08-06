@@ -101,7 +101,9 @@ describe("tummy time timer adapter", () => {
     const encoded = adapter.timerDataCodec.encode(payload);
 
     expect(encoded).toEqual(payload);
-    expect(adapter.timerDataCodec.decode(encoded)).toEqual(payload);
+    expect(
+      adapter.timerDataCodec.decode(encoded, "2026-08-05T12:00:00.000Z")
+    ).toEqual(payload);
     expect(encoded).not.toHaveProperty("pausedAt");
   });
 
@@ -121,7 +123,9 @@ describe("tummy time timer adapter", () => {
     const encoded = adapter.timerDataCodec.encode(payload);
 
     expect(encoded).toEqual(payload);
-    expect(adapter.timerDataCodec.decode(encoded)).toEqual(payload);
+    expect(
+      adapter.timerDataCodec.decode(encoded, "2026-08-05T12:00:00.000Z")
+    ).toEqual(payload);
   });
 
   it("dispatches paused and unpaused restored tummy timers", () => {

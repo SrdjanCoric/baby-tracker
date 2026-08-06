@@ -6,12 +6,16 @@ import { URL } from "node:url";
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8")
 );
+const vitestConfig = readFileSync(
+  new URL("../vitest.config.ts", import.meta.url),
+  "utf8"
+);
 
 test("the declared npm version matches pinned Node 20 tooling", () => {
   assert.equal(packageJson.packageManager, "npm@10.8.2");
 });
 
-test("the canonical check command runs every maintained non-device suite", () => {
+test("the canonical check command runs every maintained non-device suite once", () => {
   assert.match(
     packageJson.scripts["test:ci"],
     /scripts\/date-picker-codegen\.test\.mjs/
@@ -22,7 +26,17 @@ test("the canonical check command runs every maintained non-device suite", () =>
   );
   assert.equal(
     packageJson.scripts["check:code"],
-    "npm run lint && npm run typecheck && npm run test:unit && npm run test:component -- --runInBand && npm run test:security && npm run test:sync && npm run test:ci && npm run test:production-gating"
+    "npm run lint && npm run typecheck && npm run test:unit && npm run test:component -- --runInBand && npm run test:ci && npm run test:production-gating"
+  );
+  assert.equal(packageJson.scripts["test:unit"], "vitest run");
+  assert.match(vitestConfig, /include:\s*\["src\/\*\*\/\*\.test\.ts"/);
+  assert.equal(
+    packageJson.scripts["test:security"],
+    "vitest run src/__tests__/security/"
+  );
+  assert.equal(
+    packageJson.scripts["test:sync"],
+    "vitest run src/services/sync/"
   );
   assert.equal(
     packageJson.scripts["test:production-gating"],

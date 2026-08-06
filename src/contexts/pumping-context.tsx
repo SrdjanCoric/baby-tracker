@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   PumpingStorageService,
   StoredPumpingEntry,
@@ -17,25 +26,40 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { useActiveTimers } from "./active-timers-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
-import { acquireTimerLock, releaseTimerLock, updateTimerData, getActiveTimerLock, queuePendingLockRelease } from "@/services/active-timer-service";
-import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, updateTimerLiveActivity, pauseTimerLiveActivity, resumeTimerLiveActivity, isLiveActivityRunningWithTimeout } from "@/services/live-activity-service";
-import { isPendingStopForTimer, isTimerRestoreObsolete, readPendingTimerStop } from "@/services/timer-stop-coordinator";
-import { BabyProviderBinding, useBabyProviderBinding } from "@/hooks/useBabyProviderBinding";
+import {
+  acquireTimerLock,
+  releaseTimerLock,
+  updateTimerData,
+  queuePendingLockRelease,
+} from "@/services/active-timer-service";
+import {
+  startTimerLiveActivity,
+  endTimerLiveActivity,
+  endLiveActivityByType,
+  updateTimerLiveActivity,
+  pauseTimerLiveActivity,
+  resumeTimerLiveActivity,
+} from "@/services/live-activity-service";
+import {
+  BabyProviderBinding,
+  type BabyProviderBindingToken,
+  useBabyProviderBinding,
+} from "@/hooks/useBabyProviderBinding";
 import {
   acceptTimerCompletion,
   createTimerIdentity,
-  isTimerCompletionSecured,
   markTimerCompletionDurable,
-  resolveTimerIdentity,
   type TimerIdentity,
 } from "@/services/timer-completion-service";
-import {
-  reconcileTimerLock,
-  type TimerLockReconciliationState,
-} from "@/services/timer-lock-reconciliation";
-import { showTimerConflictNotice } from "@/services/timer-conflict-notice";
+import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
+import { restoreTimerLifecycle } from "@/services/timer-lifecycle";
+import { createPumpingTimerAdapter } from "@/services/timer-adapters/pumping-timer-adapter";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
-import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
+import type {
+  ActivityRangeLoadOptions,
+  ActivityRangeStatus,
+  UtcActivityRange,
+} from "@/services/activity-range-loader";
 
 export interface ActivePumpingTimer extends TimerIdentity {
   isRunning: boolean;
@@ -59,7 +83,14 @@ export type PumpingAction =
   | { type: "UPDATE_PUMPING"; payload: StoredPumpingEntry }
   | { type: "DELETE_PUMPING"; payload: string }
   | { type: "SET_LOADING"; payload: boolean }
-  | { type: "START_TIMER"; payload: { startTime: Date; side: BreastSide; lockState: TimerLockReconciliationState } & TimerIdentity }
+  | {
+      type: "START_TIMER";
+      payload: {
+        startTime: Date;
+        side: BreastSide;
+        lockState: TimerLockReconciliationState;
+      } & TimerIdentity;
+    }
   | { type: "STOP_TIMER" }
   | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide }
   | { type: "PAUSE_TIMER" }
@@ -75,7 +106,10 @@ export const initialPumpingState: PumpingState = {
   isLoading: true,
 };
 
-export function pumpingReducer(state: PumpingState, action: PumpingAction): PumpingState {
+export function pumpingReducer(
+  state: PumpingState,
+  action: PumpingAction
+): PumpingState {
   switch (action.type) {
     case "SET_PUMPINGS":
       return { ...state, pumpings: action.payload };
@@ -84,14 +118,16 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
       return { ...state, pumpings: upsertById(state.pumpings, action.payload) };
 
     case "UPDATE_PUMPING": {
-      const updatedPumpings = state.pumpings.map(p =>
+      const updatedPumpings = state.pumpings.map((p) =>
         p.id === action.payload.id ? action.payload : p
       );
       return { ...state, pumpings: updatedPumpings };
     }
 
     case "DELETE_PUMPING": {
-      const filteredPumpings = state.pumpings.filter(p => p.id !== action.payload);
+      const filteredPumpings = state.pumpings.filter(
+        (p) => p.id !== action.payload
+      );
       return { ...state, pumpings: filteredPumpings };
     }
 
@@ -163,7 +199,9 @@ export function pumpingReducer(state: PumpingState, action: PumpingAction): Pump
     }
 
     case "REMOTE_DELETE": {
-      const filteredPumpings = state.pumpings.filter(p => p.id !== action.payload);
+      const filteredPumpings = state.pumpings.filter(
+        (p) => p.id !== action.payload
+      );
       return { ...state, pumpings: filteredPumpings };
     }
 
@@ -180,13 +218,26 @@ export interface TimerLockResult {
 interface PumpingContextValue extends PumpingState {
   babyBinding: BabyProviderBinding;
   isStopping: boolean;
-  startPumping: (side: BreastSide, requestedStartTime?: Date, requestedIdentity?: TimerIdentity) => Promise<TimerLockResult>;
-  stopPumping: (volumeMl: number, requestedEndTime?: Date) => Promise<StoredPumpingEntry | null>;
+  startPumping: (
+    side: BreastSide,
+    requestedStartTime?: Date,
+    requestedIdentity?: TimerIdentity
+  ) => Promise<TimerLockResult>;
+  stopPumping: (
+    volumeMl: number,
+    requestedEndTime?: Date
+  ) => Promise<StoredPumpingEntry | null>;
   changePumpingSide: (side: BreastSide) => void;
   pausePumping: (requestedPauseTime?: Date) => Promise<void>;
-  resumePumping: (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => Promise<void>;
+  resumePumping: (
+    requestedResumeTime?: Date,
+    widgetPauseDurationMs?: number
+  ) => Promise<void>;
   addPumping: (input: CreatePumpingInput) => Promise<StoredPumpingEntry>;
-  updatePumping: (pumpingId: string, input: UpdatePumpingInput) => Promise<StoredPumpingEntry | null>;
+  updatePumping: (
+    pumpingId: string,
+    input: UpdatePumpingInput
+  ) => Promise<StoredPumpingEntry | null>;
   deletePumping: (pumpingId: string) => Promise<boolean>;
   refreshPumpings: () => Promise<void>;
   loadPumpingRange: (
@@ -211,57 +262,109 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const isStoppingRef = useRef(false);
   const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
-  const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
-    useBabyProviderBinding(selectedBaby?.id ?? null);
+  const {
+    babyBinding,
+    beginBabyBinding,
+    finishBabyBinding,
+    isCurrentBabyBinding,
+  } = useBabyProviderBinding(selectedBaby?.id ?? null);
   const acceptPumpingRange = useCallback((entries: StoredPumpingEntry[]) => {
     dispatch({ type: "SET_PUMPINGS", payload: entries });
   }, []);
-  const {
-    loadRange: loadPumpingRange,
-    getRangeStatus: getPumpingRangeStatus,
-  } = useActivityRangeLoader({
-    table: "pumping_sessions",
-    babyId: selectedBaby?.id ?? null,
-    authenticated: Boolean(user?.householdId),
-    storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
-    acceptEntries: acceptPumpingRange,
-  });
+  const { loadRange: loadPumpingRange, getRangeStatus: getPumpingRangeStatus } =
+    useActivityRangeLoader({
+      table: "pumping_sessions",
+      babyId: selectedBaby?.id ?? null,
+      authenticated: Boolean(user?.householdId),
+      storageScope: `${user?.id ?? "guest"}:${user?.householdId ?? "local"}:${selectedBaby?.id ?? "none"}`,
+      acceptEntries: acceptPumpingRange,
+    });
 
   useEffect(() => {
-    const unsubscribe = subscribeToRemoteChanges('pumping_sessions', (change: RemoteChange) => {
-      if (!selectedBaby) return;
-      const data = change.new || change.old;
-      if (data && data.baby_id !== selectedBaby.id) return;
+    const unsubscribe = subscribeToRemoteChanges(
+      "pumping_sessions",
+      (change: RemoteChange) => {
+        if (!selectedBaby) return;
+        const data = change.new || change.old;
+        if (data && data.baby_id !== selectedBaby.id) return;
 
-      const removeId = tombstonedId(change);
-      if (removeId) {
-        dispatch({ type: "REMOTE_DELETE", payload: removeId });
-        return;
-      }
+        const removeId = tombstonedId(change);
+        if (removeId) {
+          dispatch({ type: "REMOTE_DELETE", payload: removeId });
+          return;
+        }
 
-      switch (change.eventType) {
-        case 'INSERT':
-          if (change.new) dispatch({ type: "REMOTE_INSERT", payload: transformPumpingFromRemote(change.new) });
-          break;
-        case 'UPDATE':
-          if (change.new) dispatch({ type: "REMOTE_UPDATE", payload: transformPumpingFromRemote(change.new) });
-          break;
+        switch (change.eventType) {
+          case "INSERT":
+            if (change.new)
+              dispatch({
+                type: "REMOTE_INSERT",
+                payload: transformPumpingFromRemote(change.new),
+              });
+            break;
+          case "UPDATE":
+            if (change.new)
+              dispatch({
+                type: "REMOTE_UPDATE",
+                payload: transformPumpingFromRemote(change.new),
+              });
+            break;
+        }
       }
-    });
+    );
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
+
+  const restorePumpingTimer = useCallback(
+    async (
+      pumpings: StoredPumpingEntry[],
+      bindingToken: BabyProviderBindingToken,
+      stopVersionAtStart: number
+    ) => {
+      if (!selectedBaby) return;
+
+      const adapter = createPumpingTimerAdapter({
+        babyId: selectedBaby.id,
+        dispatchRestoreTimer: (restoredTimer) => {
+          dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+        },
+      });
+
+      await restoreTimerLifecycle({
+        adapter,
+        baby: selectedBaby,
+        user: user?.id
+          ? { id: user.id, householdId: user.householdId ?? undefined }
+          : null,
+        completedRecords: pumpings,
+        stopVersionAtStart,
+        currentStopVersion: () => stopVersionRef.current,
+        isStopping: () => isStoppingRef.current,
+        isCurrentBabyBinding: () => isCurrentBabyBinding(bindingToken),
+        liveActivityIdRef,
+        refreshLocks,
+        persistRecord: (input) =>
+          user?.householdId && user.id
+            ? createPumpingInDatabase(input, user.id)
+            : PumpingStorageService.addPumping(input),
+        dispatchStopTimer: () => dispatch({ type: "STOP_TIMER" }),
+        dispatchAddRecord: (record) =>
+          dispatch({ type: "ADD_PUMPING", payload: record }),
+        errorLabel: "[PumpingContext]",
+      });
+    },
+    [
+      isCurrentBabyBinding,
+      refreshLocks,
+      selectedBaby,
+      user?.householdId,
+      user?.id,
+    ]
+  );
 
   const loadPumpings = useCallback(async () => {
     const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
     const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
-    const acceptStartedLiveActivity = async (activityId: string | null) => {
-      if (!isCurrentBinding()) {
-        if (activityId) await endTimerLiveActivity(activityId);
-        return false;
-      }
-      if (activityId) liveActivityIdRef.current = activityId;
-      return true;
-    };
     if (!selectedBaby) {
       dispatch({ type: "SET_PUMPINGS", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
@@ -281,8 +384,13 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           pumpings = await fetchPumpingFromDatabase(selectedBaby.id);
         } catch (error) {
           if (!isCurrentBinding()) return;
-          console.error("[PumpingContext] Failed to fetch from database, using local:", error);
-          pumpings = await PumpingStorageService.getAllPumpings(selectedBaby.id);
+          console.error(
+            "[PumpingContext] Failed to fetch from database, using local:",
+            error
+          );
+          pumpings = await PumpingStorageService.getAllPumpings(
+            selectedBaby.id
+          );
         }
       } else {
         pumpings = await PumpingStorageService.getAllPumpings(selectedBaby.id);
@@ -290,274 +398,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
       if (!isCurrentBinding()) return;
       dispatch({ type: "SET_PUMPINGS", payload: pumpings });
-
-      if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
-
-      const activeTimer = await PumpingStorageService.getActiveTimer(selectedBaby.id);
-      const pendingStop = activeTimer
-        ? await readPendingTimerStop("pumping", selectedBaby.id)
-        : null;
-      if (!isCurrentBinding()) return;
-      const hasPendingStop = activeTimer
-        ? isPendingStopForTimer(
-            pendingStop,
-            "pumping",
-            new Date(activeTimer.startedAt),
-            selectedBaby.id,
-            activeTimer.timerInstanceId
-          )
-        : false;
-
-      if (activeTimer) {
-        const identity = await resolveTimerIdentity(
-          selectedBaby.id,
-          "pumping",
-          activeTimer.startedAt,
-          activeTimer
-        );
-        if (await isTimerCompletionSecured(selectedBaby.id, "pumping", identity, pumpings)) {
-          const liveActivityId = activeTimer.liveActivityId ?? liveActivityIdRef.current;
-          const endedById = liveActivityId
-            ? await endTimerLiveActivity(liveActivityId)
-            : false;
-          if (!endedById) {
-            await endLiveActivityByType("pumping");
-          }
-          liveActivityIdRef.current = null;
-          await PumpingStorageService.clearActiveTimer(selectedBaby.id);
-          dispatch({ type: "STOP_TIMER" });
-          if (user?.id) {
-            try {
-              await releaseTimerLock(
-                selectedBaby.id,
-                "pumping",
-                user.id,
-                identity.timerInstanceId,
-                activeTimer.startedAt
-              );
-            } catch {
-              await queuePendingLockRelease(
-                selectedBaby.id,
-                "pumping",
-                user.id,
-                identity.timerInstanceId,
-                activeTimer.startedAt
-              );
-            }
-          }
-          return;
-        }
-        if (!activeTimer.timerInstanceId || !activeTimer.activityId) {
-          await PumpingStorageService.setActiveTimer(selectedBaby.id, {
-            ...activeTimer,
-            ...identity,
-          });
-        }
-
-        let isStale = false;
-        let lockState: TimerLockReconciliationState = activeTimer.lockState ?? "offline";
-        if (user?.id && user?.householdId && !hasPendingStop) {
-          const persistLockState = async (nextLockState: TimerLockReconciliationState) => {
-            if (!isCurrentBinding()) return;
-            if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
-            lockState = nextLockState;
-            await PumpingStorageService.setActiveTimer(selectedBaby.id, {
-              ...activeTimer,
-              ...identity,
-              lockState: nextLockState,
-            });
-          };
-
-          const reconciliation = await reconcileTimerLock({
-            babyId: selectedBaby.id,
-            activityType: "pumping",
-            userId: user.id,
-            startedAt: activeTimer.startedAt,
-            timerInstanceId: identity.timerInstanceId,
-            timerData: {
-              ...identity,
-              side: activeTimer.side,
-              isPaused: activeTimer.isPaused ?? false,
-              totalPausedMs: activeTimer.totalPausedMs ?? 0,
-              pausedAt: activeTimer.pausedAt,
-            },
-            persistState: persistLockState,
-          });
-          if (!isCurrentBinding()) return;
-          if (isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) return;
-          if (reconciliation.state !== "offline") await refreshLocks();
-          if (reconciliation.state === "conflicted") {
-            const completion = await acceptTimerCompletion(
-              selectedBaby.id,
-              "pumping",
-              activeTimer.startedAt,
-              identity,
-              new Date(Date.now())
-            );
-            dispatch({ type: "STOP_TIMER" });
-            let pumping = await PumpingStorageService.getPumpingById(
-              selectedBaby.id,
-              completion.activityId
-            );
-
-            if (!pumping) {
-              const endTime = new Date(completion.stoppedAt);
-              const pumpingInput: CreatePumpingInput = {
-                id: completion.activityId,
-                babyId: selectedBaby.id,
-                side: activeTimer.side,
-                startedAt: new Date(activeTimer.startedAt),
-                endedAt: endTime,
-                durationSeconds: Math.max(
-                  0,
-                  Math.floor(
-                    (endTime.getTime() - new Date(activeTimer.startedAt).getTime() -
-                      (activeTimer.totalPausedMs ?? 0)) / 1000
-                  )
-                ),
-              };
-              pumping = user.householdId
-                ? await createPumpingInDatabase(pumpingInput, user.id)
-                : await PumpingStorageService.addPumping(pumpingInput);
-              await markTimerCompletionDurable(completion);
-            }
-
-            dispatch({ type: "ADD_PUMPING", payload: pumping });
-            dispatch({ type: "STOP_TIMER" });
-            isStale = true;
-            await PumpingStorageService.clearActiveTimer(selectedBaby.id);
-            const endedById = activeTimer.liveActivityId
-              ? await endTimerLiveActivity(activeTimer.liveActivityId)
-              : false;
-            if (!endedById) {
-              await endLiveActivityByType("pumping");
-            }
-            liveActivityIdRef.current = null;
-            showTimerConflictNotice(reconciliation.lockHolderName);
-            if (!isCurrentBinding()) return;
-          }
-        }
-
-        if (!isStale && !isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)) {
-          dispatch({
-            type: "RESTORE_TIMER",
-            payload: {
-              isRunning: true,
-              isPaused: activeTimer.isPaused ?? false,
-              lockState,
-              startTime: new Date(activeTimer.startedAt),
-              ...identity,
-              side: activeTimer.side,
-              totalPausedMs: activeTimer.totalPausedMs ?? 0,
-              pausedAt: activeTimer.pausedAt ? new Date(activeTimer.pausedAt) : undefined,
-            },
-          });
-
-          if (!hasPendingStop && activeTimer.liveActivityId) {
-            const isRunning = await isLiveActivityRunningWithTimeout(activeTimer.liveActivityId);
-            if (!isCurrentBinding()) return;
-            if (isRunning) {
-              liveActivityIdRef.current = activeTimer.liveActivityId;
-            } else if (!(activeTimer.isPaused ?? false)) {
-              const totalPausedMs = activeTimer.totalPausedMs ?? 0;
-              const effectiveStartTime = totalPausedMs > 0
-                ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
-                : new Date(activeTimer.startedAt);
-              const activityId = await startTimerLiveActivity(
-                "pumping", selectedBaby.name, activeTimer.side, effectiveStartTime
-              );
-              if (!await acceptStartedLiveActivity(activityId)) return;
-            }
-          } else if (!hasPendingStop && !(activeTimer.isPaused ?? false)) {
-            const totalPausedMs = activeTimer.totalPausedMs ?? 0;
-            const effectiveStartTime = totalPausedMs > 0
-              ? new Date(new Date(activeTimer.startedAt).getTime() + totalPausedMs)
-              : new Date(activeTimer.startedAt);
-            const activityId = await startTimerLiveActivity(
-              "pumping", selectedBaby.name, activeTimer.side, effectiveStartTime
-            );
-            if (!await acceptStartedLiveActivity(activityId)) return;
-          }
-        }
-      } else if (user?.id && user?.householdId) {
-        try {
-          const lock = await getActiveTimerLock(selectedBaby.id, "pumping");
-          if (!isCurrentBinding()) return;
-          if (
-            lock &&
-            lock.startedBy === user.id &&
-            !isTimerRestoreObsolete(stopVersionAtStart, stopVersionRef.current, isStoppingRef.current)
-          ) {
-            const td = lock.timerData || {};
-            const identity = await resolveTimerIdentity(
-              selectedBaby.id,
-              "pumping",
-              lock.startedAt,
-              td
-            );
-            if (await isTimerCompletionSecured(selectedBaby.id, "pumping", identity, pumpings)) {
-              try {
-                await releaseTimerLock(
-                  selectedBaby.id,
-                  "pumping",
-                  user.id,
-                  identity.timerInstanceId,
-                  lock.startedAt
-                );
-              } catch {
-                await queuePendingLockRelease(
-                  selectedBaby.id,
-                  "pumping",
-                  user.id,
-                  identity.timerInstanceId,
-                  lock.startedAt
-                );
-              }
-              return;
-            }
-            const side = (typeof td.side === "string" ? td.side : "both") as BreastSide;
-            const isPaused = td.isPaused === true;
-            const totalPausedMs = typeof td.totalPausedMs === "number" ? td.totalPausedMs : 0;
-            const pausedAt = typeof td.pausedAt === "string" ? td.pausedAt : undefined;
-
-            dispatch({
-              type: "RESTORE_TIMER",
-              payload: {
-                isRunning: true,
-                isPaused,
-                lockState: "owned",
-                startTime: new Date(lock.startedAt),
-                ...identity,
-                side,
-                totalPausedMs,
-                pausedAt: pausedAt ? new Date(pausedAt) : undefined,
-              },
-            });
-
-            await PumpingStorageService.setActiveTimer(selectedBaby.id, {
-              startedAt: lock.startedAt,
-              ...identity,
-              side,
-              isPaused,
-              totalPausedMs,
-              pausedAt,
-              lockState: "owned",
-            });
-            if (!isCurrentBinding()) return;
-
-            if (!isPaused) {
-              const effectiveStartTime = totalPausedMs > 0
-                ? new Date(new Date(lock.startedAt).getTime() + totalPausedMs)
-                : new Date(lock.startedAt);
-              const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side, effectiveStartTime);
-              if (!await acceptStartedLiveActivity(activityId)) return;
-            }
-          }
-        } catch (error) {
-          if (!isCurrentBinding()) return;
-          console.error("[PumpingContext] Failed to restore from server:", error);
-        }
-      }
+      await restorePumpingTimer(pumpings, bindingToken, stopVersionAtStart);
     } catch (error) {
       if (!isCurrentBinding()) return;
       bindingStatus = "error";
@@ -568,344 +409,452 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         finishBabyBinding(bindingToken, bindingStatus);
       }
     }
-  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, refreshLocks, selectedBaby, user?.householdId, user?.id]);
+  }, [
+    beginBabyBinding,
+    finishBabyBinding,
+    isCurrentBabyBinding,
+    restorePumpingTimer,
+    selectedBaby,
+    user?.householdId,
+  ]);
 
   useEffect(() => {
     loadPumpings();
   }, [loadPumpings, foregroundRefreshKey]);
 
-  const startPumping = useCallback(async (side: BreastSide, requestedStartTime?: Date, requestedIdentity?: TimerIdentity): Promise<{ success: boolean; lockedByName?: string }> => {
-    if (!selectedBaby) return { success: false };
+  const startPumping = useCallback(
+    async (
+      side: BreastSide,
+      requestedStartTime?: Date,
+      requestedIdentity?: TimerIdentity
+    ): Promise<{ success: boolean; lockedByName?: string }> => {
+      if (!selectedBaby) return { success: false };
 
-    const startTime = requestedStartTime ?? new Date();
-    const identity = requestedIdentity ?? createTimerIdentity();
-    let lockState: TimerLockReconciliationState = "offline";
-    if (user?.id) {
-      try {
-        const lockResult = await acquireTimerLock(
-          selectedBaby.id,
-          "pumping",
-          user.id,
-          { side, ...identity },
-          startTime
-        );
-        if (!lockResult.success) {
-          return { success: false, lockedByName: lockResult.lockHolderName };
-        }
-        lockState = "owned";
-      } catch (error) {
-        console.error("[PumpingContext] Failed to acquire timer lock (proceeding offline):", error);
-      }
-    }
-
-    dispatch({ type: "START_TIMER", payload: { startTime, side, lockState, ...identity } });
-
-    const activityId = await startTimerLiveActivity("pumping", selectedBaby.name, side, startTime);
-    if (activityId) {
-      liveActivityIdRef.current = activityId;
-    }
-
-    await PumpingStorageService.setActiveTimer(selectedBaby.id, {
-      ...identity,
-      startedAt: startTime.toISOString(),
-      side,
-      liveActivityId: activityId ?? undefined,
-      lockState,
-    });
-
-    return { success: true };
-  }, [selectedBaby, user?.id]);
-
-  const stopPumping = useCallback(async (volumeMl: number, requestedEndTime?: Date): Promise<StoredPumpingEntry | null> => {
-    if (!selectedBaby || !state.activeTimer) return null;
-    if (isStoppingRef.current) return null;
-    isStoppingRef.current = true;
-    setIsStopping(true);
-    stopVersionRef.current++;
-    const activeTimer = state.activeTimer;
-
-    const finishTimer = async () => {
-      dispatch({ type: "STOP_TIMER" });
-      try {
-        await PumpingStorageService.clearActiveTimer(selectedBaby.id);
-      } catch (error) {
-        console.error("[PumpingContext] Failed to clear completed timer snapshot:", error);
-      }
-      try {
-        const endedById = liveActivityIdRef.current
-          ? await endTimerLiveActivity(liveActivityIdRef.current)
-          : false;
-        if (!endedById) {
-          await endLiveActivityByType("pumping");
-        }
-        liveActivityIdRef.current = null;
-      } catch (error) {
-        console.error("[PumpingContext] Failed to end completed Live Activity:", error);
-      }
+      const startTime = requestedStartTime ?? new Date();
+      const identity = requestedIdentity ?? createTimerIdentity();
+      let lockState: TimerLockReconciliationState = "offline";
       if (user?.id) {
         try {
-          await releaseTimerLock(
+          const lockResult = await acquireTimerLock(
             selectedBaby.id,
             "pumping",
             user.id,
-            activeTimer.timerInstanceId,
-            activeTimer.startTime.toISOString()
+            { side, ...identity },
+            startTime
           );
+          if (!lockResult.success) {
+            return { success: false, lockedByName: lockResult.lockHolderName };
+          }
+          lockState = "owned";
         } catch (error) {
-          console.error("[PumpingContext] Failed to release timer lock, queuing retry:", error);
-          await queuePendingLockRelease(
-            selectedBaby.id,
-            "pumping",
-            user.id,
-            activeTimer.timerInstanceId,
-            activeTimer.startTime.toISOString()
+          console.error(
+            "[PumpingContext] Failed to acquire timer lock (proceeding offline):",
+            error
           );
         }
       }
-    };
 
-    try {
-      const requestedStopTime = requestedEndTime ?? new Date();
-      const requestedDurationSeconds = Math.floor(
-        (requestedStopTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-      );
-      if (requestedDurationSeconds < 60) {
-        await finishTimer();
-        return null;
-      }
+      dispatch({
+        type: "START_TIMER",
+        payload: { startTime, side, lockState, ...identity },
+      });
 
-      const completion = await acceptTimerCompletion(
-        selectedBaby.id,
+      const activityId = await startTimerLiveActivity(
         "pumping",
-        state.activeTimer.startTime.toISOString(),
-        state.activeTimer,
-        requestedStopTime
+        selectedBaby.name,
+        side,
+        startTime
       );
-      const endTime = new Date(completion.stoppedAt);
-      if (completion.status === "completed") {
-        const existing = await PumpingStorageService.getPumpingById(
-          selectedBaby.id,
-          completion.activityId
-        );
-        await finishTimer();
-        return existing;
+      if (activityId) {
+        liveActivityIdRef.current = activityId;
       }
 
-      const durationSeconds = Math.floor(
-        (endTime.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-      );
-      const pumpingInput: CreatePumpingInput = {
-        id: completion.activityId,
-        babyId: selectedBaby.id,
-        side: state.activeTimer.side,
-        startedAt: state.activeTimer.startTime,
-        endedAt: endTime,
-        durationSeconds,
-        volumeMl,
+      await PumpingStorageService.setActiveTimer(selectedBaby.id, {
+        ...identity,
+        startedAt: startTime.toISOString(),
+        side,
+        liveActivityId: activityId ?? undefined,
+        lockState,
+      });
+
+      return { success: true };
+    },
+    [selectedBaby, user?.id]
+  );
+
+  const stopPumping = useCallback(
+    async (
+      volumeMl: number,
+      requestedEndTime?: Date
+    ): Promise<StoredPumpingEntry | null> => {
+      if (!selectedBaby || !state.activeTimer) return null;
+      if (isStoppingRef.current) return null;
+      isStoppingRef.current = true;
+      setIsStopping(true);
+      stopVersionRef.current++;
+      const activeTimer = state.activeTimer;
+
+      const finishTimer = async () => {
+        dispatch({ type: "STOP_TIMER" });
+        try {
+          await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+        } catch (error) {
+          console.error(
+            "[PumpingContext] Failed to clear completed timer snapshot:",
+            error
+          );
+        }
+        try {
+          const endedById = liveActivityIdRef.current
+            ? await endTimerLiveActivity(liveActivityIdRef.current)
+            : false;
+          if (!endedById) {
+            await endLiveActivityByType("pumping");
+          }
+          liveActivityIdRef.current = null;
+        } catch (error) {
+          console.error(
+            "[PumpingContext] Failed to end completed Live Activity:",
+            error
+          );
+        }
+        if (user?.id) {
+          try {
+            await releaseTimerLock(
+              selectedBaby.id,
+              "pumping",
+              user.id,
+              activeTimer.timerInstanceId,
+              activeTimer.startTime.toISOString()
+            );
+          } catch (error) {
+            console.error(
+              "[PumpingContext] Failed to release timer lock, queuing retry:",
+              error
+            );
+            await queuePendingLockRelease(
+              selectedBaby.id,
+              "pumping",
+              user.id,
+              activeTimer.timerInstanceId,
+              activeTimer.startTime.toISOString()
+            );
+          }
+        }
       };
 
-      let pumping: StoredPumpingEntry;
       try {
-        if (user?.householdId && user?.id) {
-          pumping = await createPumpingInDatabase(pumpingInput, user.id);
-        } else {
-          pumping = await PumpingStorageService.addPumping(pumpingInput);
+        const requestedStopTime = requestedEndTime ?? new Date();
+        const requestedDurationSeconds = Math.floor(
+          (requestedStopTime.getTime() -
+            state.activeTimer.startTime.getTime() -
+            state.activeTimer.totalPausedMs) /
+            1000
+        );
+        if (requestedDurationSeconds < 60) {
+          await finishTimer();
+          return null;
         }
-      } catch (saveError) {
-        console.error("[PumpingContext] Failed to durably complete timer:", saveError);
-        throw saveError;
+
+        const completion = await acceptTimerCompletion(
+          selectedBaby.id,
+          "pumping",
+          state.activeTimer.startTime.toISOString(),
+          state.activeTimer,
+          requestedStopTime
+        );
+        const endTime = new Date(completion.stoppedAt);
+        if (completion.status === "completed") {
+          const existing = await PumpingStorageService.getPumpingById(
+            selectedBaby.id,
+            completion.activityId
+          );
+          await finishTimer();
+          return existing;
+        }
+
+        const adapter = createPumpingTimerAdapter({
+          babyId: selectedBaby.id,
+          dispatchRestoreTimer: (restoredTimer) => {
+            dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+          },
+        });
+        const pumpingInput: CreatePumpingInput = {
+          ...adapter.buildRecord(activeTimer.startTime, endTime, {
+            timerInstanceId: activeTimer.timerInstanceId,
+            activityId: completion.activityId,
+            side: activeTimer.side,
+            isPaused: activeTimer.isPaused,
+            totalPausedMs: activeTimer.totalPausedMs,
+            pausedAt: activeTimer.pausedAt?.toISOString(),
+          }),
+          volumeMl,
+        };
+
+        let pumping: StoredPumpingEntry;
+        try {
+          if (user?.householdId && user?.id) {
+            pumping = await createPumpingInDatabase(pumpingInput, user.id);
+          } else {
+            pumping = await PumpingStorageService.addPumping(pumpingInput);
+          }
+        } catch (saveError) {
+          console.error(
+            "[PumpingContext] Failed to durably complete timer:",
+            saveError
+          );
+          throw saveError;
+        }
+
+        await markTimerCompletionDurable(completion);
+        dispatch({ type: "ADD_PUMPING", payload: pumping });
+        await finishTimer();
+        return pumping;
+      } finally {
+        isStoppingRef.current = false;
+        setIsStopping(false);
+      }
+    },
+    [selectedBaby, state.activeTimer, user?.householdId, user?.id]
+  );
+
+  const changePumpingSide = useCallback(
+    (side: BreastSide) => {
+      if (state.activeTimer?.isPaused) return;
+      dispatch({ type: "UPDATE_TIMER_SIDE", payload: side });
+      if (selectedBaby && state.activeTimer) {
+        PumpingStorageService.setActiveTimer(selectedBaby.id, {
+          timerInstanceId: state.activeTimer.timerInstanceId,
+          activityId: state.activeTimer.activityId,
+          startedAt: state.activeTimer.startTime.toISOString(),
+          side,
+          liveActivityId: liveActivityIdRef.current ?? undefined,
+          isPaused: state.activeTimer.isPaused,
+          totalPausedMs: state.activeTimer.totalPausedMs,
+          pausedAt: state.activeTimer.pausedAt?.toISOString(),
+          lockState: state.activeTimer.lockState,
+        });
+        if (liveActivityIdRef.current) {
+          updateTimerLiveActivity(liveActivityIdRef.current, side);
+        }
+        if (user?.id) {
+          updateTimerData(selectedBaby.id, "pumping", user.id, {
+            timerInstanceId: state.activeTimer.timerInstanceId,
+            activityId: state.activeTimer.activityId,
+            side,
+          }).catch((error) =>
+            console.error(
+              "[PumpingContext] Failed to update timer data:",
+              error
+            )
+          );
+        }
+      }
+    },
+    [selectedBaby, state.activeTimer, user?.id]
+  );
+
+  const pausePumping = useCallback(
+    async (requestedPauseTime?: Date) => {
+      if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused)
+        return;
+
+      const now = requestedPauseTime ?? new Date();
+
+      dispatch({ type: "PAUSE_TIMER" });
+
+      if (liveActivityIdRef.current) {
+        const activeElapsedSeconds = Math.floor(
+          (now.getTime() -
+            state.activeTimer.startTime.getTime() -
+            state.activeTimer.totalPausedMs) /
+            1000
+        );
+        await pauseTimerLiveActivity(
+          liveActivityIdRef.current,
+          activeElapsedSeconds
+        );
       }
 
-      await markTimerCompletionDurable(completion);
-      dispatch({ type: "ADD_PUMPING", payload: pumping });
-      await finishTimer();
-      return pumping;
-    } finally {
-      isStoppingRef.current = false;
-      setIsStopping(false);
-    }
-  }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
-
-  const changePumpingSide = useCallback((side: BreastSide) => {
-    if (state.activeTimer?.isPaused) return;
-    dispatch({ type: "UPDATE_TIMER_SIDE", payload: side });
-    if (selectedBaby && state.activeTimer) {
-      PumpingStorageService.setActiveTimer(selectedBaby.id, {
+      await PumpingStorageService.setActiveTimer(selectedBaby.id, {
         timerInstanceId: state.activeTimer.timerInstanceId,
         activityId: state.activeTimer.activityId,
         startedAt: state.activeTimer.startTime.toISOString(),
-        side,
+        side: state.activeTimer.side,
         liveActivityId: liveActivityIdRef.current ?? undefined,
-        isPaused: state.activeTimer.isPaused,
+        isPaused: true,
+        pausedAt: now.toISOString(),
         totalPausedMs: state.activeTimer.totalPausedMs,
-        pausedAt: state.activeTimer.pausedAt?.toISOString(),
         lockState: state.activeTimer.lockState,
       });
-      if (liveActivityIdRef.current) {
-        updateTimerLiveActivity(liveActivityIdRef.current, side);
-      }
+
       if (user?.id) {
-        updateTimerData(selectedBaby.id, "pumping", user.id, {
-          timerInstanceId: state.activeTimer.timerInstanceId,
-          activityId: state.activeTimer.activityId,
-          side,
-        }).catch(
-          (error) => console.error("[PumpingContext] Failed to update timer data:", error)
-        );
+        try {
+          const totalElapsed = Math.floor(
+            (now.getTime() -
+              state.activeTimer.startTime.getTime() -
+              state.activeTimer.totalPausedMs) /
+              1000
+          );
+          await updateTimerData(selectedBaby.id, "pumping", user.id, {
+            timerInstanceId: state.activeTimer.timerInstanceId,
+            activityId: state.activeTimer.activityId,
+            isPaused: true,
+            pausedAt: now.toISOString(),
+            accumulatedSeconds: totalElapsed,
+            totalPausedMs: state.activeTimer.totalPausedMs,
+            side: state.activeTimer.side,
+          });
+        } catch (error) {
+          console.error("[PumpingContext] Failed to update timer data:", error);
+        }
       }
-    }
-  }, [selectedBaby, state.activeTimer, user?.id]);
+    },
+    [selectedBaby, state.activeTimer, user?.id]
+  );
 
-  const pausePumping = useCallback(async (requestedPauseTime?: Date) => {
-    if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
+  const resumePumping = useCallback(
+    async (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => {
+      if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused)
+        return;
 
-    const now = requestedPauseTime ?? new Date();
+      const now = requestedResumeTime ?? new Date();
+      const pauseDuration =
+        widgetPauseDurationMs ??
+        (state.activeTimer.pausedAt
+          ? now.getTime() - state.activeTimer.pausedAt.getTime()
+          : 0);
+      const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
 
-    dispatch({ type: "PAUSE_TIMER" });
+      dispatch({ type: "RESUME_TIMER" });
 
-    if (liveActivityIdRef.current) {
-      const activeElapsedSeconds = Math.floor(
-        (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-      );
-      await pauseTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
-    }
-
-    await PumpingStorageService.setActiveTimer(selectedBaby.id, {
-      timerInstanceId: state.activeTimer.timerInstanceId,
-      activityId: state.activeTimer.activityId,
-      startedAt: state.activeTimer.startTime.toISOString(),
-      side: state.activeTimer.side,
-      liveActivityId: liveActivityIdRef.current ?? undefined,
-      isPaused: true,
-      pausedAt: now.toISOString(),
-      totalPausedMs: state.activeTimer.totalPausedMs,
-      lockState: state.activeTimer.lockState,
-    });
-
-    if (user?.id) {
-      try {
-        const totalElapsed = Math.floor(
-          (now.getTime() - state.activeTimer.startTime.getTime() - state.activeTimer.totalPausedMs) / 1000
-        );
-        await updateTimerData(selectedBaby.id, "pumping", user.id, {
-          timerInstanceId: state.activeTimer.timerInstanceId,
-          activityId: state.activeTimer.activityId,
-          isPaused: true,
-          pausedAt: now.toISOString(),
-          accumulatedSeconds: totalElapsed,
-          totalPausedMs: state.activeTimer.totalPausedMs,
-          side: state.activeTimer.side,
-        });
-      } catch (error) {
-        console.error("[PumpingContext] Failed to update timer data:", error);
-      }
-    }
-  }, [selectedBaby, state.activeTimer, user?.id]);
-
-  const resumePumping = useCallback(async (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => {
-    if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused) return;
-
-    const now = requestedResumeTime ?? new Date();
-    const pauseDuration = widgetPauseDurationMs ?? (state.activeTimer.pausedAt
-      ? now.getTime() - state.activeTimer.pausedAt.getTime()
-      : 0);
-    const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
-
-    dispatch({ type: "RESUME_TIMER" });
-
-    if (liveActivityIdRef.current) {
-      const activeElapsedSeconds = Math.floor(
-        (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
-      );
-      await resumeTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
-    }
-
-    await PumpingStorageService.setActiveTimer(selectedBaby.id, {
-      timerInstanceId: state.activeTimer.timerInstanceId,
-      activityId: state.activeTimer.activityId,
-      startedAt: state.activeTimer.startTime.toISOString(),
-      side: state.activeTimer.side,
-      liveActivityId: liveActivityIdRef.current ?? undefined,
-      isPaused: false,
-      totalPausedMs: newTotalPausedMs,
-      lockState: state.activeTimer.lockState,
-    });
-
-    if (user?.id) {
-      try {
+      if (liveActivityIdRef.current) {
         const activeElapsedSeconds = Math.floor(
-          (now.getTime() - state.activeTimer.startTime.getTime() - newTotalPausedMs) / 1000
+          (now.getTime() -
+            state.activeTimer.startTime.getTime() -
+            newTotalPausedMs) /
+            1000
         );
-        await updateTimerData(selectedBaby.id, "pumping", user.id, {
-          timerInstanceId: state.activeTimer.timerInstanceId,
-          activityId: state.activeTimer.activityId,
-          isPaused: false,
-          totalPausedMs: newTotalPausedMs,
-          side: state.activeTimer.side,
-          effectiveStartTime: new Date(now.getTime() - activeElapsedSeconds * 1000).toISOString(),
-          accumulatedSeconds: activeElapsedSeconds,
-        });
-      } catch (error) {
-        console.error("[PumpingContext] Failed to update timer data:", error);
+        await resumeTimerLiveActivity(
+          liveActivityIdRef.current,
+          activeElapsedSeconds
+        );
       }
-    }
-  }, [selectedBaby, state.activeTimer, user?.id]);
 
-  const addPumping = useCallback(async (input: CreatePumpingInput): Promise<StoredPumpingEntry> => {
-    let pumping: StoredPumpingEntry;
+      await PumpingStorageService.setActiveTimer(selectedBaby.id, {
+        timerInstanceId: state.activeTimer.timerInstanceId,
+        activityId: state.activeTimer.activityId,
+        startedAt: state.activeTimer.startTime.toISOString(),
+        side: state.activeTimer.side,
+        liveActivityId: liveActivityIdRef.current ?? undefined,
+        isPaused: false,
+        totalPausedMs: newTotalPausedMs,
+        lockState: state.activeTimer.lockState,
+      });
 
-    if (user?.householdId && user?.id) {
-      pumping = await createPumpingInDatabase(input, user.id);
-    } else {
-      pumping = await PumpingStorageService.addPumping(input);
-    }
+      if (user?.id) {
+        try {
+          const activeElapsedSeconds = Math.floor(
+            (now.getTime() -
+              state.activeTimer.startTime.getTime() -
+              newTotalPausedMs) /
+              1000
+          );
+          await updateTimerData(selectedBaby.id, "pumping", user.id, {
+            timerInstanceId: state.activeTimer.timerInstanceId,
+            activityId: state.activeTimer.activityId,
+            isPaused: false,
+            totalPausedMs: newTotalPausedMs,
+            side: state.activeTimer.side,
+            effectiveStartTime: new Date(
+              now.getTime() - activeElapsedSeconds * 1000
+            ).toISOString(),
+            accumulatedSeconds: activeElapsedSeconds,
+          });
+        } catch (error) {
+          console.error("[PumpingContext] Failed to update timer data:", error);
+        }
+      }
+    },
+    [selectedBaby, state.activeTimer, user?.id]
+  );
 
-    dispatch({ type: "ADD_PUMPING", payload: pumping });
-    return pumping;
-  }, [user?.householdId, user?.id]);
+  const addPumping = useCallback(
+    async (input: CreatePumpingInput): Promise<StoredPumpingEntry> => {
+      let pumping: StoredPumpingEntry;
 
-  const updatePumping = useCallback(async (
-    pumpingId: string,
-    input: UpdatePumpingInput
-  ): Promise<StoredPumpingEntry | null> => {
-    if (!selectedBaby) return null;
+      if (user?.householdId && user?.id) {
+        pumping = await createPumpingInDatabase(input, user.id);
+      } else {
+        pumping = await PumpingStorageService.addPumping(input);
+      }
 
-    let updated: StoredPumpingEntry | null;
+      dispatch({ type: "ADD_PUMPING", payload: pumping });
+      return pumping;
+    },
+    [user?.householdId, user?.id]
+  );
 
-    if (user?.householdId) {
-      updated = await updatePumpingInDatabase(selectedBaby.id, pumpingId, input);
-    } else {
-      updated = await PumpingStorageService.updatePumping(selectedBaby.id, pumpingId, input);
-    }
+  const updatePumping = useCallback(
+    async (
+      pumpingId: string,
+      input: UpdatePumpingInput
+    ): Promise<StoredPumpingEntry | null> => {
+      if (!selectedBaby) return null;
 
-    if (updated) {
-      dispatch({ type: "UPDATE_PUMPING", payload: updated });
-    }
-    return updated;
-  }, [selectedBaby, user?.householdId]);
+      let updated: StoredPumpingEntry | null;
 
-  const deletePumping = useCallback(async (pumpingId: string): Promise<boolean> => {
-    if (!selectedBaby) return false;
+      if (user?.householdId) {
+        updated = await updatePumpingInDatabase(
+          selectedBaby.id,
+          pumpingId,
+          input
+        );
+      } else {
+        updated = await PumpingStorageService.updatePumping(
+          selectedBaby.id,
+          pumpingId,
+          input
+        );
+      }
 
-    let result: boolean;
+      if (updated) {
+        dispatch({ type: "UPDATE_PUMPING", payload: updated });
+      }
+      return updated;
+    },
+    [selectedBaby, user?.householdId]
+  );
 
-    if (user?.householdId) {
-      result = await deletePumpingFromDatabase(selectedBaby.id, pumpingId);
-    } else {
-      result = await PumpingStorageService.deletePumping(selectedBaby.id, pumpingId);
-    }
+  const deletePumping = useCallback(
+    async (pumpingId: string): Promise<boolean> => {
+      if (!selectedBaby) return false;
 
-    if (result) {
-      dispatch({ type: "DELETE_PUMPING", payload: pumpingId });
-    }
-    return result;
-  }, [selectedBaby, user?.householdId]);
+      let result: boolean;
+
+      if (user?.householdId) {
+        result = await deletePumpingFromDatabase(selectedBaby.id, pumpingId);
+      } else {
+        result = await PumpingStorageService.deletePumping(
+          selectedBaby.id,
+          pumpingId
+        );
+      }
+
+      if (result) {
+        dispatch({ type: "DELETE_PUMPING", payload: pumpingId });
+      }
+      return result;
+    },
+    [selectedBaby, user?.householdId]
+  );
 
   const getLastPumping = useCallback((): StoredPumpingEntry | null => {
     if (state.pumpings.length === 0) return null;
 
-    const sorted = [...state.pumpings].sort((a, b) =>
-      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    const sorted = [...state.pumpings].sort(
+      (a, b) =>
+        new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
     );
     return sorted[0];
   }, [state.pumpings]);
@@ -914,7 +863,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const todaysPumpings = state.pumpings.filter(p => {
+    const todaysPumpings = state.pumpings.filter((p) => {
       const pumpingDate = new Date(p.startedAt);
       pumpingDate.setHours(0, 0, 0, 0);
       return pumpingDate.getTime() === today.getTime();
@@ -928,27 +877,50 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     return lastPumping?.side ?? null;
   }, [getLastPumping]);
 
-  const value: PumpingContextValue = useMemo(() => ({
-    ...state,
-    babyBinding,
-    isStopping,
-    startPumping,
-    stopPumping,
-    changePumpingSide,
-    pausePumping,
-    resumePumping,
-    addPumping,
-    updatePumping,
-    deletePumping,
-    refreshPumpings: loadPumpings,
-    loadPumpingRange,
-    getPumpingRangeStatus,
-    getLastPumping,
-    getTodaysTotalVolume,
-    getLastSide,
-  }), [state, babyBinding, isStopping, startPumping, stopPumping, changePumpingSide, pausePumping, resumePumping, addPumping, updatePumping, deletePumping, loadPumpings, loadPumpingRange, getPumpingRangeStatus, getLastPumping, getTodaysTotalVolume, getLastSide]);
+  const value: PumpingContextValue = useMemo(
+    () => ({
+      ...state,
+      babyBinding,
+      isStopping,
+      startPumping,
+      stopPumping,
+      changePumpingSide,
+      pausePumping,
+      resumePumping,
+      addPumping,
+      updatePumping,
+      deletePumping,
+      refreshPumpings: loadPumpings,
+      loadPumpingRange,
+      getPumpingRangeStatus,
+      getLastPumping,
+      getTodaysTotalVolume,
+      getLastSide,
+    }),
+    [
+      state,
+      babyBinding,
+      isStopping,
+      startPumping,
+      stopPumping,
+      changePumpingSide,
+      pausePumping,
+      resumePumping,
+      addPumping,
+      updatePumping,
+      deletePumping,
+      loadPumpings,
+      loadPumpingRange,
+      getPumpingRangeStatus,
+      getLastPumping,
+      getTodaysTotalVolume,
+      getLastSide,
+    ]
+  );
 
-  return <PumpingContext.Provider value={value}>{children}</PumpingContext.Provider>;
+  return (
+    <PumpingContext.Provider value={value}>{children}</PumpingContext.Provider>
+  );
 }
 
 export function usePumping(): PumpingContextValue {
@@ -959,7 +931,9 @@ export function usePumping(): PumpingContextValue {
   return context;
 }
 
-function transformPumpingFromRemote(data: Record<string, unknown>): StoredPumpingEntry {
+function transformPumpingFromRemote(
+  data: Record<string, unknown>
+): StoredPumpingEntry {
   return {
     id: data.id as string,
     babyId: data.baby_id as string,
