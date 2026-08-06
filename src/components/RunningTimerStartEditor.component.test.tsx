@@ -227,7 +227,7 @@ describe("RunningTimerStartEditor", () => {
     const maximumDate = new Date(2026, 7, 6, 12, 0);
     const selectedTime = new Date(2026, 7, 6, 11, 23);
 
-    render(
+    const { rerender } = render(
       <RunningTimerStartEditor
         startLabel="Start time"
         startedAt={maximumDate}
@@ -252,6 +252,26 @@ describe("RunningTimerStartEditor", () => {
     expect(picker.props.mode).toBe("datetime");
     expect(picker.props.minimumDate).toEqual(minimumDate);
     expect(picker.props.maximumDate).toEqual(maximumDate);
+    expect(picker.props.is24hourSource).toBe("locale");
+    expect(picker.props.locale).toBe("en_GB");
+
+    rerender(
+      <RunningTimerStartEditor
+        startLabel="Start time"
+        startedAt={maximumDate}
+        starterName="Alice"
+        canEdit
+        getBounds={() => ({ minimumDate, maximumDate })}
+        timeFormat="12h"
+        accentColor="#000"
+        mutedBackgroundColor="#fff"
+        onEdit={onEdit}
+      />
+    );
+    expect(
+      screen.getByTestId("bounded-android-datetime-picker").props.locale
+    ).toBe("en_US");
+
     fireEvent(picker, "dateChange", selectedTime);
     await act(async () => {
       fireEvent.press(screen.getByRole("button", { name: "Done" }));

@@ -288,6 +288,8 @@ describe("TummyTimeScreen custom start time", () => {
       fireEvent.press(screen.getByRole("button", { name: "tummyTime.startedEarlier" }));
       const picker = screen.getByTestId("bounded-android-datetime-picker");
       expect(picker.props.mode).toBe("datetime");
+      expect(picker.props.is24hourSource).toBe("locale");
+      expect(picker.props.locale).toBe("en_GB");
       expect(picker.props.minimumDate).toEqual(
         new Date(2026, 0, 1, 22, 0)
       );

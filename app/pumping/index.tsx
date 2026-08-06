@@ -466,6 +466,7 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, getB
             <BoundedAndroidDateTimePicker
               value={customStartTime ?? pickerBounds.maximumDate}
               bounds={pickerBounds}
+              timeFormat={timeFormat}
               onChange={setCustomStartTime}
             />
           ) : (
