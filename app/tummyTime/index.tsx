@@ -49,6 +49,16 @@ export default function TummyTimeScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "tummy_time")
     : null;
+  const hasLocalTimerOwnership =
+    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
+  const timerStarterName =
+    timerLock?.startedByName ??
+    (hasLocalTimerOwnership ? user?.displayName : null) ??
+    t("common.someone");
+  const canEditTimerStart = Boolean(
+    user?.id &&
+      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+  );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
       getTimerStartBounds(
@@ -198,8 +208,8 @@ export default function TummyTimeScreen() {
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
             startedAt={activeTimer!.startTime}
-            starterName={timerLock?.startedByName ?? t("common.someone")}
-            canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
+            starterName={timerStarterName}
+            canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editTummyTimeStartTime}
           />

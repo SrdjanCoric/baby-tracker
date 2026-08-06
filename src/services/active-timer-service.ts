@@ -3,7 +3,9 @@ import { supabase } from "@/services/supabase";
 import i18n from "@/i18n";
 
 const PENDING_LOCK_RELEASES_KEY = "@pending_lock_releases";
+const PENDING_TIMER_START_EDITS_KEY = "@pending_timer_start_edits";
 let pendingLockReleaseMutation = Promise.resolve();
+let pendingTimerStartEditMutation = Promise.resolve();
 
 interface PendingLockRelease {
   babyId: string;
@@ -14,10 +16,128 @@ interface PendingLockRelease {
   queuedAt: string;
 }
 
+interface PendingTimerStartEdit {
+  babyId: string;
+  activityType: TimerActivityType;
+  userId: string;
+  timerInstanceId: string;
+  startedAt: string;
+  timerData: Record<string, unknown>;
+  queuedAt: string;
+}
+
 function withPendingLockReleaseMutation<T>(operation: () => Promise<T>): Promise<T> {
   const result = pendingLockReleaseMutation.then(operation, operation);
   pendingLockReleaseMutation = result.then(() => undefined, () => undefined);
   return result;
+}
+
+function withPendingTimerStartEditMutation<T>(
+  operation: () => Promise<T>
+): Promise<T> {
+  const result = pendingTimerStartEditMutation.then(operation, operation);
+  pendingTimerStartEditMutation = result.then(
+    () => undefined,
+    () => undefined
+  );
+  return result;
+}
+
+async function getPendingTimerStartEdits(): Promise<PendingTimerStartEdit[]> {
+  const raw = await AsyncStorage.getItem(PENDING_TIMER_START_EDITS_KEY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as PendingTimerStartEdit[];
+  } catch {
+    return [];
+  }
+}
+
+export function isRetryableTimerWriteError(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  if (!error || typeof error !== "object") return false;
+  if ("code" in error && typeof error.code === "string" && error.code) {
+    return false;
+  }
+  const message = "message" in error ? String(error.message) : "";
+  return /network|fetch|offline|timeout|connection/i.test(message);
+}
+
+export function queuePendingTimerStartEdit(
+  babyId: string,
+  activityType: TimerActivityType,
+  userId: string,
+  timerInstanceId: string,
+  startedAt: Date,
+  timerData: Record<string, unknown>
+): Promise<void> {
+  return withPendingTimerStartEditMutation(async () => {
+    const pending = (await getPendingTimerStartEdits()).filter(
+      edit =>
+        !(
+          edit.babyId === babyId &&
+          edit.activityType === activityType &&
+          edit.userId === userId &&
+          edit.timerInstanceId === timerInstanceId
+        )
+    );
+    pending.push({
+      babyId,
+      activityType,
+      userId,
+      timerInstanceId,
+      startedAt: startedAt.toISOString(),
+      timerData,
+      queuedAt: new Date().toISOString(),
+    });
+    await AsyncStorage.setItem(
+      PENDING_TIMER_START_EDITS_KEY,
+      JSON.stringify(pending)
+    );
+  });
+}
+
+export function retryPendingTimerStartEdits(): Promise<void> {
+  return withPendingTimerStartEditMutation(async () => {
+    const pending = await getPendingTimerStartEdits();
+    if (pending.length === 0) return;
+
+    const remaining: PendingTimerStartEdit[] = [];
+    for (const edit of pending) {
+      try {
+        const lock = await getActiveTimerLock(edit.babyId, edit.activityType);
+        if (
+          !lock ||
+          lock.startedBy !== edit.userId ||
+          lock.timerData?.timerInstanceId !== edit.timerInstanceId
+        ) {
+          continue;
+        }
+        await updateTimerStartTime(
+          edit.babyId,
+          edit.activityType,
+          edit.userId,
+          new Date(edit.startedAt),
+          edit.timerData
+        );
+      } catch (error) {
+        if (isRetryableTimerWriteError(error)) {
+          remaining.push(edit);
+        } else {
+          console.error(
+            "[ActiveTimerService] Pending start edit was rejected:",
+            edit,
+            error
+          );
+        }
+      }
+    }
+
+    await AsyncStorage.setItem(
+      PENDING_TIMER_START_EDITS_KEY,
+      JSON.stringify(remaining)
+    );
+  });
 }
 
 export function queuePendingLockRelease(

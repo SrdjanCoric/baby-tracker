@@ -59,6 +59,16 @@ export default function FeedingScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "feeding")
     : null;
+  const hasLocalTimerOwnership =
+    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
+  const timerStarterName =
+    timerLock?.startedByName ??
+    (hasLocalTimerOwnership ? user?.displayName : null) ??
+    t("common.someone");
+  const canEditTimerStart = Boolean(
+    user?.id &&
+      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+  );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
       getTimerStartBounds(
@@ -248,8 +258,8 @@ export default function FeedingScreen() {
             mutedBg={mutedBg}
             secondaryBg={secondaryBg}
             startedAt={activeTimer!.startTime}
-            starterName={timerLock?.startedByName ?? t("common.someone")}
-            canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
+            starterName={timerStarterName}
+            canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editBreastfeedingStartTime}
           />

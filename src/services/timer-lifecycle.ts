@@ -1,6 +1,8 @@
 import {
   getActiveTimerLock,
+  isRetryableTimerWriteError,
   queuePendingLockRelease,
+  queuePendingTimerStartEdit,
   releaseTimerLock,
   updateTimerStartTime,
   type TimerActivityType,
@@ -195,13 +197,27 @@ export async function editRunningTimerStartTime<
   TCreateInput
 >): Promise<void> {
   const timerData = adapter.timerDataCodec.encode(payload);
-  await updateTimerStartTime(
-    baby.id,
-    adapter.activityType,
-    userId,
-    startedAt,
-    timerData
-  );
+  if (activeTimer.lockState !== "offline") {
+    try {
+      await updateTimerStartTime(
+        baby.id,
+        adapter.activityType,
+        userId,
+        startedAt,
+        timerData
+      );
+    } catch (error) {
+      if (!isRetryableTimerWriteError(error)) throw error;
+      await queuePendingTimerStartEdit(
+        baby.id,
+        adapter.activityType,
+        userId,
+        activeTimer.timerInstanceId,
+        startedAt,
+        timerData
+      );
+    }
+  }
 
   const oldLiveActivityId =
     liveActivityIdRef.current ?? activeTimer.liveActivityId ?? null;

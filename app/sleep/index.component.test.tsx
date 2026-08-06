@@ -10,7 +10,7 @@ const mockBack = jest.fn();
 const mockReplace = jest.fn();
 let mockCanGoBack = false;
 let mockTimeFormat: "12h" | "24h" = "12h";
-let mockLockStartedBy = "user-1";
+let mockLockStartedBy: string | null = "user-1";
 let mockSleeps: Array<{ endedAt?: string }> = [];
 
 jest.mock("expo-router", () => ({
@@ -85,14 +85,20 @@ jest.mock("@/contexts", () => ({
     pendingMorningConfirmations: [],
     confirmMorningSleep: mockConfirmMorningSleep,
   }),
-  useAuth: () => ({ session: { access_token: "token" }, user: { id: "user-1" } }),
+  useAuth: () => ({
+    session: { access_token: "token" },
+    user: { id: "user-1", displayName: "Alice" },
+  }),
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
   useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
   useActiveTimers: () => ({
-    getLockForActivity: () => ({
-      startedBy: mockLockStartedBy,
-      startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
-    }),
+    getLockForActivity: () =>
+      mockLockStartedBy
+        ? {
+            startedBy: mockLockStartedBy,
+            startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
+          }
+        : null,
   }),
 }));
 
@@ -224,6 +230,17 @@ describe("SleepScreen morning confirmation", () => {
     expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
       new Date("2026-08-06T10:30:00.000Z")
     );
+  });
+
+  it("keeps an offline local timer editable when the lock fetch is unavailable", () => {
+    mockLockStartedBy = null;
+    mockActiveTimer = { ...runningTimer, lockState: "offline" };
+
+    render(<SleepScreen />);
+
+    expect(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    ).toBeTruthy();
   });
 
   it("returns to tabs after stopping a cold-opened sleep timer", async () => {

@@ -60,6 +60,16 @@ export default function SleepScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "sleep")
     : null;
+  const hasLocalTimerOwnership =
+    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
+  const timerStarterName =
+    timerLock?.startedByName ??
+    (hasLocalTimerOwnership ? user?.displayName : null) ??
+    t("common.someone");
+  const canEditTimerStart = Boolean(
+    user?.id &&
+      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+  );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
       getTimerStartBounds(
@@ -250,8 +260,8 @@ export default function SleepScreen() {
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
             startedAt={activeTimer!.startTime}
-            starterName={timerLock?.startedByName ?? t("common.someone")}
-            canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
+            starterName={timerStarterName}
+            canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editSleepStartTime}
           />

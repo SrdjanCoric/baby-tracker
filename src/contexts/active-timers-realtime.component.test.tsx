@@ -1,9 +1,10 @@
 import React from "react";
 import { act, render, screen, waitFor } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { AppState, Text, type AppStateStatus } from "react-native";
 import type { RemoteChange } from "@/services/sync/real-time-sync";
 
 let remoteChangeHandler: ((change: RemoteChange) => Promise<void>) | null = null;
+let appStateHandler: ((state: AppStateStatus) => void) | null = null;
 
 jest.mock("./baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Baby" } }),
@@ -38,6 +39,7 @@ jest.mock("@/services/active-timer-service", () => ({
     },
   ]),
   retryPendingLockReleases: jest.fn().mockResolvedValue(undefined),
+  retryPendingTimerStartEdits: jest.fn().mockResolvedValue(undefined),
   transformActiveTimerFromRemote: (data: Record<string, unknown>) => ({
     id: data.id,
     babyId: data.baby_id,
@@ -74,9 +76,17 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
     remoteChangeHandler = null;
+    appStateHandler = null;
+    jest
+      .spyOn(AppState, "addEventListener")
+      .mockImplementation((_type, handler) => {
+        appStateHandler = handler;
+        return { remove: jest.fn() };
+      });
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.useRealTimers();
   });
 
@@ -106,5 +116,28 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     });
 
     expect(screen.getByText("90 minutes")).toBeTruthy();
+  });
+
+  it("replays pending start edits when the app becomes active", async () => {
+    render(
+      <ActiveTimersProvider>
+        <RemoteElapsed />
+      </ActiveTimersProvider>
+    );
+    await waitFor(() => expect(appStateHandler).not.toBeNull());
+
+    await act(async () => {
+      appStateHandler!("active");
+      await Promise.resolve();
+    });
+
+    const activeTimerService = jest.requireMock(
+      "@/services/active-timer-service"
+    ) as {
+      retryPendingLockReleases: jest.Mock;
+      retryPendingTimerStartEdits: jest.Mock;
+    };
+    expect(activeTimerService.retryPendingLockReleases).toHaveBeenCalled();
+    expect(activeTimerService.retryPendingTimerStartEdits).toHaveBeenCalled();
   });
 });
