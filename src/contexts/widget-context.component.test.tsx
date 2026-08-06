@@ -27,6 +27,14 @@ function makeTimerState(isPaused: boolean) {
 }
 
 let mockTimerState = makeTimerState(false);
+let mockLocks: Array<{
+  babyId: string;
+  activityType: string;
+  startedAt: string;
+  startedBy: string;
+  startedByName: string;
+  timerData: Record<string, unknown>;
+}> = [];
 
 jest.mock("./baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
@@ -75,11 +83,11 @@ jest.mock("./tummyTime-context", () => ({
 }));
 
 jest.mock("./active-timers-context", () => ({
-  useActiveTimers: () => ({ locks: [] }),
+  useActiveTimers: () => ({ locks: mockLocks }),
 }));
 
 jest.mock("./auth-context", () => ({
-  useAuth: () => ({ user: null, session: null }),
+  useAuth: () => ({ user: { id: "user-1" }, session: null }),
 }));
 
 jest.mock("@/services/widget-data-service", () => ({
@@ -124,12 +132,14 @@ function activeTimers() {
     type: string;
     startTime: string;
     accumulatedSeconds?: number;
+    isRemote?: boolean;
   }>;
 }
 
 describe("WidgetProvider running timer payload", () => {
   beforeEach(() => {
     mockTimerState = makeTimerState(false);
+    mockLocks = [];
     capturedJson = null;
   });
 
@@ -148,6 +158,32 @@ describe("WidgetProvider running timer payload", () => {
     mockTimerState = makeTimerState(true);
 
     const timers = activeTimers();
+
+    expect(timers.map(({ type, startTime, accumulatedSeconds }) => ({
+      type,
+      startTime,
+      accumulatedSeconds,
+    }))).toEqual([
+      { type: "feeding", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+      { type: "sleep", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+      { type: "pumping", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+      { type: "tummyTime", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+    ]);
+  });
+
+  it("freezes every remotely owned paused timer at pausedAt minus the real start", () => {
+    mockLocks = ["feeding", "sleep", "pumping", "tummy_time"].map(
+      (activityType) => ({
+        babyId: "baby-1",
+        activityType,
+        startedAt: START.toISOString(),
+        startedBy: "user-2",
+        startedByName: "Other caregiver",
+        timerData: { isPaused: true, pausedAt: PAUSED_AT.toISOString() },
+      })
+    );
+
+    const timers = activeTimers().filter(({ isRemote }) => isRemote);
 
     expect(timers.map(({ type, startTime, accumulatedSeconds }) => ({
       type,

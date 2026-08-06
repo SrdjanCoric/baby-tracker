@@ -244,6 +244,16 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     for (const lock of remoteLocks) {
       const widgetType = ACTIVITY_TYPE_MAP[lock.activityType];
       if (widgetType) {
+        const isPaused = lock.timerData?.isPaused === true;
+        const pausedAt = typeof lock.timerData?.pausedAt === "string"
+          ? new Date(lock.timerData.pausedAt).getTime()
+          : Number.NaN;
+        const startedAt = new Date(lock.startedAt).getTime();
+        const accumulatedSeconds = isPaused
+          && Number.isFinite(pausedAt)
+          && Number.isFinite(startedAt)
+          ? Math.max(0, Math.floor((pausedAt - startedAt) / 1000))
+          : undefined;
         activeTimers.push({
           type: widgetType,
           startTime: lock.startedAt,
@@ -252,7 +262,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
             : undefined,
           context: lock.startedByName,
           isRemote: true,
-          isPaused: lock.timerData?.isPaused === true || undefined,
+          isPaused: isPaused || undefined,
+          accumulatedSeconds,
         });
       }
     }
