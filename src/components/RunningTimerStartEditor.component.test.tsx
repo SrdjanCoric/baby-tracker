@@ -140,6 +140,53 @@ describe("RunningTimerStartEditor", () => {
     );
   });
 
+  it("revalidates the staged value against fresh bounds when Done is pressed", async () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "ios",
+      configurable: true,
+    });
+    const onEdit = jest.fn().mockResolvedValue(undefined);
+    const openedBounds = {
+      minimumDate: new Date(2026, 7, 5, 22, 0),
+      maximumDate: new Date(2026, 7, 6, 10, 0),
+    };
+    const refreshedBounds = {
+      minimumDate: new Date(2026, 7, 5, 22, 20),
+      maximumDate: new Date(2026, 7, 6, 10, 20),
+    };
+    let currentBounds = openedBounds;
+
+    render(
+      <RunningTimerStartEditor
+        startLabel="Start time"
+        startedAt={new Date(2026, 7, 6, 9, 0)}
+        starterName="Alice"
+        canEdit
+        getBounds={() => currentBounds}
+        timeFormat="24h"
+        accentColor="#000"
+        mutedBackgroundColor="#fff"
+        onEdit={onEdit}
+      />
+    );
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "Start time: 9:00 · Alice" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      openedBounds.minimumDate
+    );
+    currentBounds = refreshedBounds;
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    });
+
+    expect(onEdit).toHaveBeenCalledWith(refreshedBounds.minimumDate);
+  });
+
   it("offers a bounded native datetime picker on Android", async () => {
     Object.defineProperty(Platform, "OS", {
       value: "android",

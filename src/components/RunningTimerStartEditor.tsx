@@ -76,8 +76,17 @@ export function RunningTimerStartEditor({
     [getBounds]
   );
   const handleDone = useCallback(async () => {
-    await commitEdit(draftStartedAt);
-  }, [commitEdit, draftStartedAt]);
+    const currentBounds = getBounds();
+    const revalidatedStart = normalizeTimerStartSelection(
+      draftStartedAt,
+      currentBounds,
+      new Date(),
+      "ios"
+    );
+    setPickerBounds(currentBounds);
+    setDraftStartedAt(revalidatedStart);
+    await commitEdit(revalidatedStart);
+  }, [commitEdit, draftStartedAt, getBounds]);
 
   const content = (
     <Text className="text-sm font-medium" style={{ color: accentColor }}>
