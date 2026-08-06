@@ -92,6 +92,7 @@ interface TestActiveTimer extends TimerLifecycleActiveTimer {
 describe("editRunningTimerStartTime", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(endLiveActivityByType).mockResolvedValue(false);
   });
 
   it("writes, persists, updates provider state, and re-anchors the Live Activity", async () => {
