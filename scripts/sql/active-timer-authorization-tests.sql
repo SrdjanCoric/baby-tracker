@@ -395,6 +395,25 @@ END
 $$;
 RESET ROLE;
 
+-- Simulate unrelated stale database state present before this vector runs. Cleanup is global, so
+-- its returned count must not be treated as the count of this file's own stale-lock fixture.
+SET LOCAL session_replication_role = replica;
+INSERT INTO public.active_timers (
+  baby_id,
+  activity_type,
+  started_by,
+  started_at,
+  timer_data
+)
+VALUES (
+  '7a000000-0000-0000-0000-000000000001',
+  'tummy_time',
+  '71111111-1111-1111-1111-111111111111',
+  pg_catalog.now() - INTERVAL '14 hours',
+  '{}'::jsonb
+);
+SET LOCAL session_replication_role = origin;
+
 SET LOCAL ROLE service_role;
 DO $$
 DECLARE
@@ -402,12 +421,35 @@ DECLARE
 BEGIN
   SELECT public.cleanup_stale_timer_locks() INTO cleaned_count;
 
-  IF cleaned_count <> 1 THEN
-    RAISE EXCEPTION 'stale timer cleanup did not remove exactly the grandfathered lock: %', cleaned_count;
+  IF cleaned_count < 1 THEN
+    RAISE EXCEPTION 'stale cleanup did not report removing the stale fixture';
   END IF;
 END
 $$;
 RESET ROLE;
+
+DO $$
+DECLARE
+  live_fixture_count INTEGER;
+  stale_fixture_count INTEGER;
+BEGIN
+  SELECT count(*)
+  INTO stale_fixture_count
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'pumping';
+
+  SELECT count(*)
+  INTO live_fixture_count
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'sleep';
+
+  IF stale_fixture_count <> 0 OR live_fixture_count <> 1 THEN
+    RAISE EXCEPTION 'stale cleanup did not remove the stale fixture while preserving the live fixture';
+  END IF;
+END
+$$;
 
 SELECT set_config(
   'request.jwt.claims',
