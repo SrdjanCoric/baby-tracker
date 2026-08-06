@@ -21,7 +21,7 @@ export function getTimerStartBounds(
       ? Math.min(nowTime, upperBoundTime)
       : nowTime
   );
-  let minimumTime = nowTime - TIMER_START_EDIT_HORIZON_MS;
+  let minimumTime = maximumDate.getTime() - TIMER_START_EDIT_HORIZON_MS;
 
   for (const activity of activities) {
     if (!activity.endedAt) continue;

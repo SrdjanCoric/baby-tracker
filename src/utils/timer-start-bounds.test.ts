@@ -26,16 +26,16 @@ describe("timer start bounds", () => {
     );
   });
 
-  it("caps a paused timer at its pause instant without moving the twelve-hour floor", () => {
+  it("keeps paused-timer bounds ordered from the same reference instant", () => {
     expect(
       getTimerStartBounds(
         [],
         new Date("2026-08-06T23:00:00.000Z"),
-        new Date("2026-08-06T22:30:00.000Z")
+        new Date("2026-08-06T08:00:00.000Z")
       )
     ).toEqual({
-      minimumDate: new Date("2026-08-06T11:00:00.000Z"),
-      maximumDate: new Date("2026-08-06T22:30:00.000Z"),
+      minimumDate: new Date("2026-08-05T20:00:00.000Z"),
+      maximumDate: new Date("2026-08-06T08:00:00.000Z"),
     });
   });
 
