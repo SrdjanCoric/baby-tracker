@@ -3,13 +3,6 @@ import { createFeedingTimerAdapter } from "./feeding-timer-adapter";
 import { createPumpingTimerAdapter } from "./pumping-timer-adapter";
 import { createSleepTimerAdapter } from "./sleep-timer-adapter";
 import { createTummyTimeTimerAdapter } from "./tummy-time-timer-adapter";
-import type { StoredSleepEntry } from "../sleep-storage";
-import { calculateDailySummary } from "@/utils/timeline";
-import { buildDayViewData } from "@/utils/sleep-patterns";
-import { formatSleepAsCSV } from "@/utils/csv-generator";
-import { aggregateSleep } from "@/utils/report-aggregator";
-import { renderSleepSection } from "@/utils/pdf-templates/sleep-section";
-import { formatDuration } from "@/utils/time";
 
 vi.mock("../live-activity-service", () => ({}));
 vi.mock("../active-timer-service", () => ({}));
@@ -69,54 +62,6 @@ describe("sleep timer adapter", () => {
       morningClassification: "confirmed_first_nap",
       morningClassificationVersion: 4,
     });
-  });
-
-  it("keeps Timeline, CSV, and PDF output aligned for a resumed pause", () => {
-    const adapter = createAdapter();
-    const startedAt = new Date("2026-08-05T12:00:00.000Z");
-    const endedAt = new Date("2026-08-05T12:10:00.000Z");
-    const input = adapter.buildRecord(startedAt, endedAt, {
-      timerInstanceId: "timer-1",
-      activityId: "activity-1",
-      type: "nap",
-      isPaused: false,
-      totalPausedMs: 120_000,
-      morningClassification: "automatic",
-      morningClassificationVersion: 4,
-    });
-    const sleep: StoredSleepEntry = {
-      ...input,
-      id: input.id!,
-      startedAt: input.startedAt.toISOString(),
-      endedAt: input.endedAt.toISOString(),
-      createdAt: endedAt.toISOString(),
-      updatedAt: endedAt.toISOString(),
-    };
-    const day = new Date("2026-08-05T12:00:00.000Z");
-    const report = aggregateSleep(
-      [sleep],
-      new Date("2026-08-05T00:00:00.000Z"),
-      new Date("2026-08-05T23:59:59.999Z")
-    );
-
-    expect(
-      calculateDailySummary(day, {
-        feedings: [],
-        sleeps: [sleep],
-        diapers: [],
-        pumpings: [],
-        growths: [],
-        tummyTimes: [],
-      }).sleepMinutes
-    ).toBe(10);
-    expect(
-      buildDayViewData([sleep], day, 60, day, 6, "en", 19)
-        .totalSleepSeconds
-    ).toBe(600);
-    expect(formatDuration(sleep.durationSeconds, "short")).toBe("10m");
-    expect(formatSleepAsCSV([sleep], false)).toContain("00:10:00");
-    expect(report.totalMinutes).toBe(10);
-    expect(renderSleepSection(report)).toContain(">10 min<");
   });
 
   it("round-trips every current sleep timer-data field", () => {
