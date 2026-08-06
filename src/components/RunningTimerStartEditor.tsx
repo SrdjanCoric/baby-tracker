@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { TimeFormat } from "@/contexts/time-format-context";
 import { formatTime } from "@/utils/time";
@@ -46,6 +46,17 @@ export function RunningTimerStartEditor({
     setDraftStartedAt(startedAt);
     setShowPicker(true);
   }, [getBounds, startedAt]);
+  const commitEdit = useCallback(
+    async (nextStartedAt: Date) => {
+      try {
+        await onEdit(nextStartedAt);
+        setShowPicker(false);
+      } catch {
+        Alert.alert(t("common.error"), t("errors.generic"));
+      }
+    },
+    [onEdit, t]
+  );
   const handleChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
       if (!selectedTime) return;
@@ -60,18 +71,16 @@ export function RunningTimerStartEditor({
       );
 
       if (Platform.OS === "android") {
-        setShowPicker(false);
-        void onEdit(normalized);
+        void commitEdit(normalized);
       } else {
         setDraftStartedAt(normalized);
       }
     },
-    [getBounds, onEdit]
+    [commitEdit, getBounds]
   );
   const handleDone = useCallback(async () => {
-    await onEdit(draftStartedAt);
-    setShowPicker(false);
-  }, [draftStartedAt, onEdit]);
+    await commitEdit(draftStartedAt);
+  }, [commitEdit, draftStartedAt]);
 
   const content = (
     <Text className="text-sm font-medium" style={{ color: accentColor }}>
