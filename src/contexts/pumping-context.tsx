@@ -553,7 +553,11 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             activeTimer.startTime.getTime()) /
             1000
         );
-        if (requestedDurationSeconds < 60) {
+        const savesVolumeOnly =
+          requestedDurationSeconds >= 0 &&
+          requestedDurationSeconds < 60 &&
+          volumeMl > 0;
+        if (requestedDurationSeconds < 60 && !savesVolumeOnly) {
           await finishTimer();
           return null;
         }
@@ -581,17 +585,25 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
           },
         });
-        const pumpingInput: CreatePumpingInput = {
-          ...adapter.buildRecord(activeTimer.startTime, endTime, {
-            timerInstanceId: activeTimer.timerInstanceId,
-            activityId: completion.activityId,
-            side: activeTimer.side,
-            isPaused: activeTimer.isPaused,
-            totalPausedMs: activeTimer.totalPausedMs,
-            pausedAt: activeTimer.pausedAt?.toISOString(),
-          }),
-          volumeMl,
-        };
+        const pumpingInput: CreatePumpingInput = savesVolumeOnly
+          ? {
+              id: completion.activityId,
+              babyId: selectedBaby.id,
+              side: activeTimer.side,
+              startedAt: activeTimer.startTime,
+              volumeMl,
+            }
+          : {
+              ...adapter.buildRecord(activeTimer.startTime, endTime, {
+                timerInstanceId: activeTimer.timerInstanceId,
+                activityId: completion.activityId,
+                side: activeTimer.side,
+                isPaused: activeTimer.isPaused,
+                totalPausedMs: activeTimer.totalPausedMs,
+                pausedAt: activeTimer.pausedAt?.toISOString(),
+              }),
+              volumeMl,
+            };
 
         let pumping: StoredPumpingEntry;
         try {

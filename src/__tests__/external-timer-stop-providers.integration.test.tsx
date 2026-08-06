@@ -2114,6 +2114,51 @@ describe("external timer stops through production providers", () => {
     await expect(PumpingStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
   });
 
+  it("preserves entered volume when a paused pumping timer is under one minute", async () => {
+    const pausedAt = "2026-07-15T08:00:40.000Z";
+    await PumpingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "short-pumping-timer",
+      activityId: "short-pumping-activity",
+      startedAt,
+      side: "left",
+      isPaused: true,
+      pausedAt,
+      totalPausedMs: 0,
+    });
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect(pumpingState?.activeTimer?.pausedAt).toEqual(new Date(pausedAt))
+    );
+
+    let savedPumping: StoredPumpingEntry | null = null;
+    await act(async () => {
+      savedPumping = await pumpingState!.stopPumping(120, new Date(stoppedAt));
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createPumpingInDatabase: jest.Mock;
+    };
+    expect(activitySync.createPumpingInDatabase).toHaveBeenCalledWith(
+      {
+        id: "short-pumping-activity",
+        babyId: "baby-1",
+        side: "left",
+        startedAt: new Date(startedAt),
+        volumeMl: 120,
+      },
+      "user-1"
+    );
+    expect(savedPumping).toEqual(
+      expect.objectContaining({
+        id: "short-pumping-activity",
+        volumeMl: 120,
+        durationSeconds: undefined,
+      })
+    );
+    expect(pumpingState?.activeTimer).toBeNull();
+  });
+
   it("preserves the provider's sub-minute tummy-time activity behavior", async () => {
     await TummyTimeStorageService.setActiveTimer("baby-1", {
       startedAt: "2026-07-15T08:04:30.000Z",
