@@ -117,8 +117,7 @@ export function retryPendingTimerStartEdits(): Promise<void> {
           edit.babyId,
           edit.activityType,
           edit.userId,
-          new Date(edit.startedAt),
-          edit.timerData
+          new Date(edit.startedAt)
         );
       } catch (error) {
         if (isRetryableTimerWriteError(error)) {

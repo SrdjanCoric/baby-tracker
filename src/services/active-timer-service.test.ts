@@ -262,7 +262,7 @@ describe("pending active timer start edits", () => {
     ]);
   });
 
-  it("replays a queued edit only onto the same timer instance", async () => {
+  it("replays a queued start without overwriting newer timer data", async () => {
     await queuePendingTimerStartEdit(
       "baby-1",
       "feeding",
@@ -289,7 +289,11 @@ describe("pending active timer start edits", () => {
         activity_type: "feeding",
         started_by: "user-1",
         started_at: "2026-08-06T08:00:00.000Z",
-        timer_data: { timerInstanceId: "timer-1" },
+        timer_data: {
+          timerInstanceId: "timer-1",
+          isPaused: true,
+          pausedAt: "2026-08-06T08:15:00.000Z",
+        },
         users: { display_name: "Caregiver" },
       },
       error: null,
@@ -299,10 +303,7 @@ describe("pending active timer start edits", () => {
     await retryPendingTimerStartEdits();
 
     expect(updateMock).toHaveBeenCalledWith(
-      {
-        started_at: "2026-08-06T07:30:00.000Z",
-        timer_data: { timerInstanceId: "timer-1", revision: 1 },
-      },
+      { started_at: "2026-08-06T07:30:00.000Z" },
       { count: "exact" }
     );
     expect(storage.get("@pending_timer_start_edits")).toBe("[]");
