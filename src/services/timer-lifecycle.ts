@@ -31,6 +31,7 @@ import {
   readPendingTimerStop,
 } from "./timer-stop-coordinator";
 import { showTimerConflictNotice } from "./timer-conflict-notice";
+import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
 
 export interface SharedTimerPayload extends Partial<TimerIdentity> {
   isPaused: boolean;
@@ -340,6 +341,25 @@ export async function restoreTimerLifecycle<
         const requestedStopTime = activeTimer.isPaused
           ? (parseTimerDate(activeTimer.pausedAt, currentTime) ?? currentTime)
           : currentTime;
+        const startedAt = new Date(activeTimer.startedAt);
+        const startedAtMs = startedAt.getTime();
+        const requestedStopTimeMs = requestedStopTime.getTime();
+        const requestedDurationSeconds = Math.floor(
+          (requestedStopTimeMs - startedAtMs) / 1000
+        );
+        if (
+          !Number.isFinite(startedAtMs) ||
+          !Number.isFinite(requestedStopTimeMs) ||
+          requestedStopTimeMs < startedAtMs ||
+          shouldDiscardTimerDuration(requestedDurationSeconds)
+        ) {
+          dispatchStopTimer();
+          isStale = true;
+          await adapter.storage.clearActiveTimer(baby.id);
+          await endAdapterLiveActivity(activeTimer.liveActivityId);
+          showTimerConflictNotice(reconciliation.lockHolderName);
+          return;
+        }
         const completion = await acceptTimerCompletion(
           baby.id,
           adapter.activityType,
@@ -356,7 +376,7 @@ export async function restoreTimerLifecycle<
         if (!record) {
           record = await persistRecord(
             adapter.buildRecord(
-              new Date(activeTimer.startedAt),
+              startedAt,
               new Date(completion.stoppedAt),
               {
                 ...payloadWithIdentity,
