@@ -260,7 +260,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0065 · Add the Nap Schedule panel (after 0064) → tasks/done/0065-add-nap-schedule-panel.md
 - [x] 0066 · Extract the shared timer lifecycle module and migrate tummy time → tasks/done/0066-extract-shared-timer-lifecycle-tummy-time.md
 - [x] 0067 · Migrate pumping, feeding, and sleep onto the shared timer lifecycle (after 0066) → tasks/done/0067-migrate-remaining-timers-to-shared-lifecycle.md
-- [~] 0068 · Count a resumed pause and end a stopped paused timer at `pausedAt` (after 0067) → tasks/0068-count-resumed-pause-in-recorded-activity.md
+- [>] 0068 · Count a resumed pause and end a stopped paused timer at `pausedAt` (after 0067) → tasks/0068-count-resumed-pause-in-recorded-activity.md
 - [ ] 0069 · Show what stopping would record on every running-timer surface (after 0068) → tasks/0069-show-counted-pause-on-running-timer-surfaces.md
 - [ ] 0070 · Guard `active_timers.started_at` against out-of-horizon writes → tasks/0070-guard-active-timer-start-bounds.md
 - [ ] 0071 · Edit a running timer's start time in place (after 0069, 0070) → tasks/0071-edit-running-timer-start-time.md
