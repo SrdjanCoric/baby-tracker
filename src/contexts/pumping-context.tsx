@@ -93,7 +93,7 @@ export type PumpingAction =
     }
   | { type: "STOP_TIMER" }
   | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide }
-  | { type: "PAUSE_TIMER" }
+  | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
   | { type: "RESUME_TIMER" }
   | { type: "RESTORE_TIMER"; payload: ActivePumpingTimer }
   | { type: "REMOTE_INSERT"; payload: StoredPumpingEntry }
@@ -166,7 +166,7 @@ export function pumpingReducer(
         activeTimer: {
           ...state.activeTimer,
           isPaused: true,
-          pausedAt: new Date(),
+          pausedAt: action.payload.pausedAt,
         },
       };
     }
@@ -544,14 +544,20 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       };
 
       try {
-        const requestedStopTime = requestedEndTime ?? new Date();
+        const requestedStopTime =
+          activeTimer.isPaused && activeTimer.pausedAt
+            ? activeTimer.pausedAt
+            : (requestedEndTime ?? new Date());
         const requestedDurationSeconds = Math.floor(
           (requestedStopTime.getTime() -
-            state.activeTimer.startTime.getTime() -
-            state.activeTimer.totalPausedMs) /
+            activeTimer.startTime.getTime()) /
             1000
         );
-        if (requestedDurationSeconds < 60) {
+        const savesVolumeOnly =
+          requestedDurationSeconds >= 0 &&
+          requestedDurationSeconds < 60 &&
+          volumeMl > 0;
+        if (requestedDurationSeconds < 60 && !savesVolumeOnly) {
           await finishTimer();
           return null;
         }
@@ -559,8 +565,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         const completion = await acceptTimerCompletion(
           selectedBaby.id,
           "pumping",
-          state.activeTimer.startTime.toISOString(),
-          state.activeTimer,
+          activeTimer.startTime.toISOString(),
+          activeTimer,
           requestedStopTime
         );
         const endTime = new Date(completion.stoppedAt);
@@ -579,17 +585,25 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
           },
         });
-        const pumpingInput: CreatePumpingInput = {
-          ...adapter.buildRecord(activeTimer.startTime, endTime, {
-            timerInstanceId: activeTimer.timerInstanceId,
-            activityId: completion.activityId,
-            side: activeTimer.side,
-            isPaused: activeTimer.isPaused,
-            totalPausedMs: activeTimer.totalPausedMs,
-            pausedAt: activeTimer.pausedAt?.toISOString(),
-          }),
-          volumeMl,
-        };
+        const pumpingInput: CreatePumpingInput = savesVolumeOnly
+          ? {
+              id: completion.activityId,
+              babyId: selectedBaby.id,
+              side: activeTimer.side,
+              startedAt: activeTimer.startTime,
+              volumeMl,
+            }
+          : {
+              ...adapter.buildRecord(activeTimer.startTime, endTime, {
+                timerInstanceId: activeTimer.timerInstanceId,
+                activityId: completion.activityId,
+                side: activeTimer.side,
+                isPaused: activeTimer.isPaused,
+                totalPausedMs: activeTimer.totalPausedMs,
+                pausedAt: activeTimer.pausedAt?.toISOString(),
+              }),
+              volumeMl,
+            };
 
         let pumping: StoredPumpingEntry;
         try {
@@ -661,7 +675,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
       const now = requestedPauseTime ?? new Date();
 
-      dispatch({ type: "PAUSE_TIMER" });
+      dispatch({ type: "PAUSE_TIMER", payload: { pausedAt: now } });
 
       if (liveActivityIdRef.current) {
         const activeElapsedSeconds = Math.floor(

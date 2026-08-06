@@ -114,34 +114,42 @@ describe("feeding timer adapter", () => {
     });
   });
 
-  it("builds a breastfeed span and round-trips every current timer-data field", () => {
+  it("counts a resumed pause in the breastfeed span", () => {
     const adapter = createFeedingTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
     });
+    const resumedPauseStartedAt = new Date("2026-08-05T10:00:00.000Z");
+    const resumedPauseEndedAt = new Date("2026-08-05T10:20:00.000Z");
     const payload = {
       timerInstanceId: "timer-1",
       activityId: "activity-1",
-      side: "right" as const,
+      side: "left" as const,
       type: "breast" as const,
-      leftAccumulatedSeconds: 12,
-      rightAccumulatedSeconds: 34,
-      currentSideStartedAt: "2026-08-05T12:00:30.000Z",
-      isPaused: true,
-      totalPausedMs: 4_000,
+      leftAccumulatedSeconds: 300,
+      rightAccumulatedSeconds: 0,
+      currentSideStartedAt: "2026-08-05T10:15:00.000Z",
+      isPaused: false,
+      totalPausedMs: 600_000,
     };
 
-    expect(adapter.buildRecord(startedAt, endedAt, payload)).toEqual({
+    expect(
+      adapter.buildRecord(
+        resumedPauseStartedAt,
+        resumedPauseEndedAt,
+        payload
+      )
+    ).toEqual({
       id: "activity-1",
       babyId: "baby-1",
       type: "breast",
-      side: "both",
-      lastFinishedSide: "right",
-      startedAt,
-      endedAt,
-      durationSeconds: 56,
-      leftDurationSeconds: 12,
-      rightDurationSeconds: 34,
+      side: "left",
+      lastFinishedSide: "left",
+      startedAt: resumedPauseStartedAt,
+      endedAt: resumedPauseEndedAt,
+      durationSeconds: 1200,
+      leftDurationSeconds: 1200,
+      rightDurationSeconds: undefined,
     });
     const encoded = adapter.timerDataCodec.encode(payload);
     expect(encoded).toEqual(payload);

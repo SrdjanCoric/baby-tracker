@@ -62,7 +62,7 @@ vi.mock("react-native", () => ({
 }));
 
 describe("tummy time timer adapter", () => {
-  it("builds the bare tummy time span from decoded timer data", () => {
+  it("counts a resumed pause in the bare tummy time span", () => {
     const adapter = createTummyTimeTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
@@ -75,7 +75,7 @@ describe("tummy time timer adapter", () => {
         timerInstanceId: "timer-1",
         activityId: "activity-1",
         isPaused: false,
-        totalPausedMs: 0,
+        totalPausedMs: 3_000,
       })
     ).toEqual({
       id: "activity-1",
@@ -126,6 +126,32 @@ describe("tummy time timer adapter", () => {
     expect(
       adapter.timerDataCodec.decode(encoded, "2026-08-05T12:00:00.000Z")
     ).toEqual(payload);
+  });
+
+  it("drops an invalid restored pause timestamp", () => {
+    const dispatchRestoreTimer = vi.fn();
+    const adapter = createTummyTimeTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer,
+    });
+
+    adapter.dispatchRestoreTimer({
+      startedAt: new Date("2026-08-05T12:00:00.000Z"),
+      lockState: "owned",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        isPaused: true,
+        totalPausedMs: 45_000,
+        pausedAt: "not-a-date",
+      },
+    });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({ pausedAt: undefined })
+    );
   });
 
   it("dispatches paused and unpaused restored tummy timers", () => {
@@ -179,6 +205,79 @@ describe("tummy time timer adapter", () => {
     }
   });
 
+  it("discards a sub-minute paused timer that loses restore reconciliation", async () => {
+    const adapter = createTummyTimeTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer: vi.fn(),
+    });
+    adapter.storage.getActiveTimer = vi.fn().mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      startedAt: "2026-08-05T12:00:00.000Z",
+      isPaused: true,
+      totalPausedMs: 0,
+      pausedAt: "2026-08-05T12:00:20.000Z",
+      lockState: "owned",
+    });
+    adapter.storage.getRecordById = vi.fn().mockResolvedValue(null);
+    adapter.storage.setActiveTimer = vi.fn().mockResolvedValue(undefined);
+    adapter.storage.clearActiveTimer = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    });
+    vi.mocked(isTimerCompletionSecured).mockResolvedValue(false);
+    vi.mocked(reconcileTimerLock).mockResolvedValue({
+      state: "conflicted",
+      lockHolderName: "Other caregiver",
+    });
+    vi.mocked(acceptTimerCompletion).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      babyId: "baby-1",
+      activityType: "tummy_time",
+      startedAt: "2026-08-05T12:00:00.000Z",
+      stoppedAt: "2026-08-05T12:00:20.000Z",
+      status: "pending",
+    });
+    vi.mocked(markTimerCompletionDurable).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      babyId: "baby-1",
+      activityType: "tummy_time",
+      startedAt: "2026-08-05T12:00:00.000Z",
+      stoppedAt: "2026-08-05T12:00:20.000Z",
+      status: "completed",
+    });
+    const persistRecord = vi.fn().mockResolvedValue({ id: "activity-1" });
+    const dispatchStopTimer = vi.fn();
+    const dispatchAddRecord = vi.fn();
+
+    await restoreTimerLifecycle({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      user: { id: "user-1", householdId: "household-1" },
+      completedRecords: [],
+      stopVersionAtStart: 0,
+      currentStopVersion: () => 0,
+      isStopping: () => false,
+      isCurrentBabyBinding: () => true,
+      liveActivityIdRef: { current: null },
+      refreshLocks: vi.fn(),
+      persistRecord,
+      dispatchStopTimer,
+      dispatchAddRecord,
+      errorLabel: "[TummyTimeContext]",
+    });
+
+    expect(acceptTimerCompletion).not.toHaveBeenCalled();
+    expect(persistRecord).not.toHaveBeenCalled();
+    expect(markTimerCompletionDurable).not.toHaveBeenCalled();
+    expect(dispatchAddRecord).not.toHaveBeenCalled();
+    expect(dispatchStopTimer).toHaveBeenCalled();
+    expect(adapter.storage.clearActiveTimer).toHaveBeenCalledWith("baby-1");
+  });
+
   it("builds a conflicted timer record with the accepted completion activity id", async () => {
     const adapter = createTummyTimeTimerAdapter({
       babyId: "baby-1",
@@ -191,6 +290,7 @@ describe("tummy time timer adapter", () => {
       startedAt: "2026-08-05T12:00:00.000Z",
       isPaused: true,
       totalPausedMs: 0,
+      pausedAt: "2026-08-05T12:01:00.000Z",
       lockState: "owned",
     });
     adapter.storage.getRecordById = vi.fn().mockResolvedValue(null);
@@ -255,6 +355,13 @@ describe("tummy time timer adapter", () => {
       "baby-1",
       "accepted-activity"
     );
+    expect(acceptTimerCompletion).toHaveBeenCalledWith(
+      "baby-1",
+      "tummy_time",
+      "2026-08-05T12:00:00.000Z",
+      expect.objectContaining({ timerInstanceId: "timer-1" }),
+      new Date("2026-08-05T12:01:00.000Z")
+    );
     expect(persistRecord).toHaveBeenCalledWith(
       expect.objectContaining({ id: "accepted-activity" })
     );
@@ -263,7 +370,7 @@ describe("tummy time timer adapter", () => {
 });
 
 describe("calculateTimerDurationSeconds", () => {
-  it("clamps negative spans, floors fractional seconds, and subtracts a pause once", () => {
+  it("clamps negative spans, floors fractional seconds, and counts resumed pauses", () => {
     const startedAt = new Date("2026-08-05T12:00:00.000Z");
 
     expect(
@@ -286,6 +393,6 @@ describe("calculateTimerDurationSeconds", () => {
         new Date("2026-08-05T12:00:08.750Z"),
         2_500
       )
-    ).toBe(6);
+    ).toBe(8);
   });
 });

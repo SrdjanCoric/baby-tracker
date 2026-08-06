@@ -137,6 +137,18 @@ export function createFeedingTimerAdapter({
     buildRecord: (startedAt, endedAt, payload) => {
       let leftDurationSeconds = payload.leftAccumulatedSeconds;
       let rightDurationSeconds = payload.rightAccumulatedSeconds;
+      const resumedPauseSeconds = Math.max(
+        0,
+        Math.floor(payload.totalPausedMs / 1000)
+      );
+
+      if (payload.side === "left") leftDurationSeconds += resumedPauseSeconds;
+      if (payload.side === "right")
+        rightDurationSeconds += resumedPauseSeconds;
+      if (payload.side === "both") {
+        leftDurationSeconds += resumedPauseSeconds;
+        rightDurationSeconds += resumedPauseSeconds;
+      }
 
       if (!payload.isPaused) {
         const currentSideStartedAt = payload.currentSideStartedAt

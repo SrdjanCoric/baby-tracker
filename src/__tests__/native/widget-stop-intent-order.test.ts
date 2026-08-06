@@ -58,4 +58,47 @@ describe("StopActivityIntent", () => {
     expect(source).toContain("queue.commands.removeAll { $0.id == id }");
     expect(source).toContain("timerInstanceId: resolvedTimerInstanceId");
   });
+
+  it("applies a matching pending pause before queuing and clearing a widget stop", () => {
+    const source = readFileSync(
+      new URL("../../../targets/widget/index.swift", import.meta.url),
+      "utf8"
+    );
+    const intentStart = source.indexOf("struct StopActivityIntent");
+    const nextDeclaration = source.indexOf("\nstruct ", intentStart + 1);
+    const intentSource = source.slice(
+      intentStart,
+      nextDeclaration === -1 ? source.length : nextDeclaration
+    );
+
+    const readPendingPause = intentSource.indexOf(
+      'string(forKey: "pendingWidgetPauseToggle")'
+    );
+    const matchPauseAction = intentSource.indexOf(
+      'pendingPause["action"] as? String == "pause"'
+    );
+    const matchActivity = intentSource.indexOf(
+      'pendingPause["activityType"] as? String == dbType'
+    );
+    const rejectFuturePause = intentSource.indexOf(
+      "parsedPauseAt <= stopRequestedAt"
+    );
+    const applyPause = intentSource.indexOf(
+      "effectiveStopDate = parsedPauseAt"
+    );
+    const persistStop = intentSource.indexOf(
+      "appendExternalTimerCommand(command, to: userDefaults)"
+    );
+    const clearPendingPause = intentSource.indexOf(
+      'removeObject(forKey: "pendingWidgetPauseToggle")'
+    );
+
+    expect(readPendingPause).toBeGreaterThanOrEqual(0);
+    expect(matchPauseAction).toBeGreaterThan(readPendingPause);
+    expect(matchActivity).toBeGreaterThan(matchPauseAction);
+    expect(rejectFuturePause).toBeGreaterThan(matchActivity);
+    expect(applyPause).toBeGreaterThan(rejectFuturePause);
+    expect(persistStop).toBeGreaterThan(applyPause);
+    expect(clearPendingPause).toBeGreaterThan(persistStop);
+  });
 });

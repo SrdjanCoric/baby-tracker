@@ -31,6 +31,7 @@ import {
   readPendingTimerStop,
 } from "./timer-stop-coordinator";
 import { showTimerConflictNotice } from "./timer-conflict-notice";
+import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
 
 export interface SharedTimerPayload extends Partial<TimerIdentity> {
   isPaused: boolean;
@@ -136,12 +137,9 @@ export interface RestoreTimerLifecycleOptions<
 export function calculateTimerDurationSeconds(
   startedAt: Date,
   endedAt: Date,
-  totalPausedMs: number
+  _totalPausedMs: number
 ): number {
-  return Math.max(
-    0,
-    Math.floor((endedAt.getTime() - startedAt.getTime() - totalPausedMs) / 1000)
-  );
+  return Math.max(0, Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000));
 }
 
 export function parseTimerDate(
@@ -339,12 +337,35 @@ export async function restoreTimerLifecycle<
       if (reconciliation.state !== "offline") await refreshLocks();
 
       if (reconciliation.state === "conflicted") {
+        const currentTime = new Date(Date.now());
+        const requestedStopTime = activeTimer.isPaused
+          ? (parseTimerDate(activeTimer.pausedAt, currentTime) ?? currentTime)
+          : currentTime;
+        const startedAt = new Date(activeTimer.startedAt);
+        const startedAtMs = startedAt.getTime();
+        const requestedStopTimeMs = requestedStopTime.getTime();
+        const requestedDurationSeconds = Math.floor(
+          (requestedStopTimeMs - startedAtMs) / 1000
+        );
+        if (
+          !Number.isFinite(startedAtMs) ||
+          !Number.isFinite(requestedStopTimeMs) ||
+          requestedStopTimeMs < startedAtMs ||
+          shouldDiscardTimerDuration(requestedDurationSeconds)
+        ) {
+          dispatchStopTimer();
+          isStale = true;
+          await adapter.storage.clearActiveTimer(baby.id);
+          await endAdapterLiveActivity(activeTimer.liveActivityId);
+          showTimerConflictNotice(reconciliation.lockHolderName);
+          return;
+        }
         const completion = await acceptTimerCompletion(
           baby.id,
           adapter.activityType,
           activeTimer.startedAt,
           identity,
-          new Date(Date.now())
+          requestedStopTime
         );
         dispatchStopTimer();
         let record = await adapter.storage.getRecordById(
@@ -355,7 +376,7 @@ export async function restoreTimerLifecycle<
         if (!record) {
           record = await persistRecord(
             adapter.buildRecord(
-              new Date(activeTimer.startedAt),
+              startedAt,
               new Date(completion.stoppedAt),
               {
                 ...payloadWithIdentity,

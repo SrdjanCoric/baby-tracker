@@ -37,7 +37,7 @@ describe("sleep timer adapter", () => {
     });
   }
 
-  it("builds the classified sleep span from decoded timer data", () => {
+  it("counts a resumed pause in the classified sleep span", () => {
     const adapter = createAdapter();
     const startedAt = new Date("2026-08-05T12:00:00.000Z");
     const endedAt = new Date("2026-08-05T12:02:03.999Z");
@@ -58,7 +58,7 @@ describe("sleep timer adapter", () => {
       type: "night",
       startedAt,
       endedAt,
-      durationSeconds: 120,
+      durationSeconds: 123,
       morningClassification: "confirmed_first_nap",
       morningClassificationVersion: 4,
     });

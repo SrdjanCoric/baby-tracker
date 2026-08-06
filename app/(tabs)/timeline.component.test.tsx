@@ -43,11 +43,20 @@ jest.mock("react-native-safe-area-context", () => ({
 }));
 
 jest.mock("@/components", () => ({
-  TimelineItem: ({ title, onPress }: { title: string; onPress: () => void }) => {
+  TimelineItem: ({
+    title,
+    subtitle,
+    onPress,
+  }: {
+    title: string;
+    subtitle?: string;
+    onPress: () => void;
+  }) => {
     const { Pressable, Text } = require("react-native");
     return (
       <Pressable testID="timeline-item" onPress={onPress}>
         <Text>{title}</Text>
+        <Text testID="timeline-item-subtitle">{subtitle}</Text>
       </Pressable>
     );
   },
@@ -364,6 +373,26 @@ describe("Timeline daily summary wiring", () => {
     render(<TimelineScreen />);
 
     expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("50");
+  });
+
+  it("shows the same completed resumed-pause duration in the summary and row", () => {
+    mockSleepState.sleeps = [
+      {
+        id: "resumed-pause-sleep",
+        babyId: "baby-1",
+        type: "nap",
+        startedAt: new Date(2026, 0, 20, 11, 0, 0).toISOString(),
+        endedAt: new Date(2026, 0, 20, 11, 10, 0).toISOString(),
+        durationSeconds: 600,
+        createdAt: new Date(2026, 0, 20, 11, 0, 0).toISOString(),
+        updatedAt: new Date(2026, 0, 20, 11, 10, 0).toISOString(),
+      },
+    ];
+
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("10");
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).toBe("10m");
   });
 
   it("adds a running sleep to the completed sleeps already logged that day", async () => {
