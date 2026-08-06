@@ -322,12 +322,16 @@ export async function updateTimerStartTime(
   babyId: string,
   activityType: TimerActivityType,
   userId: string,
-  startedAt: Date
+  startedAt: Date,
+  timerData?: Record<string, unknown>
 ): Promise<boolean> {
   const { error, count } = await supabase
     .from("active_timers")
     .update(
-      { started_at: startedAt.toISOString() },
+      {
+        started_at: startedAt.toISOString(),
+        ...(timerData ? { timer_data: timerData } : {}),
+      },
       { count: "exact" }
     )
     .eq("baby_id", babyId)

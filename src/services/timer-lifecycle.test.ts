@@ -105,6 +105,12 @@ describe("editRunningTimerStartTime", () => {
     const dispatchEditedStart = vi.fn(() => {
       events.push("dispatch");
     });
+    const encodedTimerData = {
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+      isPaused: false,
+      totalPausedMs: 0,
+    };
     const adapter: TimerLifecycleAdapter<
       TestPayload,
       TestActiveTimer,
@@ -119,7 +125,7 @@ describe("editRunningTimerStartTime", () => {
         getRecordById: vi.fn(),
       },
       timerDataCodec: {
-        encode: vi.fn(() => ({})),
+        encode: vi.fn(() => encodedTimerData),
         decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
         fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
       },
@@ -157,7 +163,8 @@ describe("editRunningTimerStartTime", () => {
       "baby-1",
       "sleep",
       "user-1",
-      newStart
+      newStart,
+      encodedTimerData
     );
     expect(endTimerLiveActivity).toHaveBeenCalledWith("live-old");
     expect(startTimerLiveActivity).toHaveBeenCalledWith(

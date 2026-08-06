@@ -194,11 +194,13 @@ export async function editRunningTimerStartTime<
   TRecord,
   TCreateInput
 >): Promise<void> {
+  const timerData = adapter.timerDataCodec.encode(payload);
   await updateTimerStartTime(
     baby.id,
     adapter.activityType,
     userId,
-    startedAt
+    startedAt,
+    timerData
   );
 
   const oldLiveActivityId =
