@@ -14,6 +14,7 @@ import {
   getActiveTimersForBaby,
   transformActiveTimerFromRemote,
   retryPendingLockReleases,
+  retryPendingTimerStartEdits,
   type ActiveTimerLock,
   type TimerActivityType,
 } from "@/services/active-timer-service";
@@ -165,7 +166,12 @@ export function ActiveTimersProvider({
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === "active") {
-        retryPendingLockReleases().then(() => refreshLocks()).catch(() => refreshLocks());
+        Promise.all([
+          retryPendingLockReleases(),
+          retryPendingTimerStartEdits(),
+        ])
+          .then(() => refreshLocks())
+          .catch(() => refreshLocks());
       }
     };
     const subscription = AppState.addEventListener("change", handleAppStateChange);

@@ -5,7 +5,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { usePumping } from "@/contexts/pumping-context";
-import { useBaby, useUnits, useAuth, useTimeFormat } from "@/contexts";
+import { useBaby, useUnits, useAuth, useTimeFormat, useActiveTimers } from "@/contexts";
 import { formatDuration, formatTime } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useTimerAlertIntegration } from "@/hooks";
@@ -15,6 +15,9 @@ import { exitModal } from "@/navigation";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
+import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
+import { getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
 
 const PUMPING_BLUE = "#7B9BC9";
 const PUMPING_BLUE_MUTED = "#E8EDF5";
@@ -35,7 +38,8 @@ export default function PumpingScreen() {
     onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const { getLockForActivity } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
   const { volumeUnit } = useUnits();
   const {
@@ -43,11 +47,35 @@ export default function PumpingScreen() {
     isStopping,
     startPumping,
     stopPumping,
+    editPumpingStartTime,
     changePumpingSide,
     pausePumping,
     resumePumping,
     getLastSide,
+    pumpings,
   } = usePumping();
+  const timerLock = selectedBaby
+    ? getLockForActivity(selectedBaby.id, "pumping")
+    : null;
+  const hasLocalTimerOwnership =
+    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
+  const timerStarterName =
+    timerLock?.startedByName ??
+    (hasLocalTimerOwnership ? user?.displayName : null) ??
+    t("common.someone");
+  const canEditTimerStart = Boolean(
+    user?.id &&
+      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+  );
+  const getTimerStartBoundsForPicker = useCallback(
+    () =>
+      getTimerStartBounds(
+        pumpings,
+        new Date(),
+        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+      ),
+    [activeTimer?.isPaused, activeTimer?.pausedAt, pumpings]
+  );
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("pumping");
 
@@ -243,12 +271,18 @@ export default function PumpingScreen() {
             onStop={handleRequestStop}
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
+            startedAt={activeTimer!.startTime}
+            starterName={timerStarterName}
+            canEdit={canEditTimerStart}
+            getBounds={getTimerStartBoundsForPicker}
+            onEditStart={editPumpingStartTime}
           />
         ) : (
           <SideSelectionView
             suggestedSide={suggestedSide}
             onSelectSide={handleStartPumping}
             onLogPastPumping={handleLogPastPumping}
+            getBounds={getTimerStartBoundsForPicker}
           />
         )}
       </View>
@@ -260,13 +294,15 @@ interface SideSelectionViewProps {
   suggestedSide: BreastSide;
   onSelectSide: (side: BreastSide, customStartTime?: Date) => void;
   onLogPastPumping: () => void;
+  getBounds(): TimerStartBounds;
 }
 
-function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: SideSelectionViewProps) {
+function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, getBounds }: SideSelectionViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() => getBounds());
 
   const handleSidePress = useCallback((side: BreastSide) => {
     if (customStartTime) {
@@ -277,40 +313,19 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
   }, [customStartTime, onSelectSide]);
 
   const handleStartedEarlierPress = useCallback(() => {
+    setPickerBounds(getBounds());
     setShowTimePicker(true);
-  }, []);
-
-  const yesterdayStart = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
+  }, [getBounds]);
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
-      if (Platform.OS === "android") {
-        setShowTimePicker(false);
-      }
       if (selectedTime) {
-        const now = new Date();
-        let finalTime: Date;
-        if (Platform.OS === "android") {
-          finalTime = new Date();
-          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
-          if (finalTime > now) {
-            finalTime.setDate(finalTime.getDate() - 1);
-          }
-          if (finalTime < yesterdayStart) {
-            finalTime = new Date(yesterdayStart);
-          }
-        } else {
-          finalTime = selectedTime > now ? now : selectedTime;
-        }
-        setCustomStartTime(finalTime);
+        const currentBounds = getBounds();
+        setPickerBounds(currentBounds);
+        setCustomStartTime(normalizeTimerStartSelection(selectedTime, currentBounds));
       }
     },
-    [yesterdayStart]
+    [getBounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -435,29 +450,35 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
       {/* Time Picker */}
       {showTimePicker && (
         <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
-          {Platform.OS === "ios" && (
-            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
-              <Pressable
-                onPress={handleTimeDone}
-                className="py-2 px-4"
-                accessibilityRole="button"
-                accessibilityLabel={t("common.done")}
-              >
-                <Text className="font-semibold" style={{ color: PUMPING_BLUE }}>
-                  {t("common.done")}
-                </Text>
-              </Pressable>
-            </View>
+          <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+            <Pressable
+              onPress={handleTimeDone}
+              className="py-2 px-4"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.done")}
+            >
+              <Text className="font-semibold" style={{ color: PUMPING_BLUE }}>
+                {t("common.done")}
+              </Text>
+            </Pressable>
+          </View>
+          {Platform.OS === "android" ? (
+            <BoundedAndroidDateTimePicker
+              value={customStartTime ?? pickerBounds.maximumDate}
+              bounds={pickerBounds}
+              timeFormat={timeFormat}
+              onChange={setCustomStartTime}
+            />
+          ) : (
+            <DateTimePicker
+              value={customStartTime ?? new Date()}
+              mode="datetime"
+              display="spinner"
+              onChange={handleTimeChange}
+              minimumDate={pickerBounds.minimumDate}
+              maximumDate={pickerBounds.maximumDate}
+            />
           )}
-          <DateTimePicker
-            value={customStartTime ?? new Date()}
-            mode={Platform.OS === "ios" ? "datetime" : "time"}
-            display="spinner"
-            onChange={handleTimeChange}
-            is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
-            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
-          />
         </View>
       )}
     </View>
@@ -522,6 +543,11 @@ interface RunningTimerViewProps {
   onStop: () => void;
   onPause?: () => void;
   onResume?: () => void;
+  startedAt: Date;
+  starterName: string;
+  canEdit: boolean;
+  getBounds(): TimerStartBounds;
+  onEditStart: (startedAt: Date) => Promise<void>;
 }
 
 function RunningTimerView({
@@ -532,8 +558,14 @@ function RunningTimerView({
   onStop,
   onPause,
   onResume,
+  startedAt,
+  starterName,
+  canEdit,
+  getBounds,
+  onEditStart,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const formattedTime = formatDuration(elapsedSeconds);
 
   return (
@@ -570,7 +602,20 @@ function RunningTimerView({
         />
       </View>
 
+      <RunningTimerStartEditor
+        startLabel={t("pumping.startTime")}
+        startedAt={startedAt}
+        starterName={starterName}
+        canEdit={canEdit}
+        getBounds={getBounds}
+        timeFormat={timeFormat}
+        accentColor={PUMPING_BLUE}
+        mutedBackgroundColor={PUMPING_BLUE_MUTED}
+        onEdit={onEditStart}
+      />
+
       <View
+        testID="running-timer-elapsed"
         className="px-12 py-8 rounded-card-lg mb-8"
         style={{ backgroundColor: PUMPING_BLUE_MUTED }}
       >

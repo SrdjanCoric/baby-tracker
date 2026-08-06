@@ -96,7 +96,10 @@ import {
   type TimerIdentity,
 } from "@/services/timer-completion-service";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
-import { restoreTimerLifecycle } from "@/services/timer-lifecycle";
+import {
+  editRunningTimerStartTime,
+  restoreTimerLifecycle,
+} from "@/services/timer-lifecycle";
 import { createSleepTimerAdapter } from "@/services/timer-adapters/sleep-timer-adapter";
 import {
   MORNING_CLASSIFICATION_VERSION,
@@ -170,6 +173,7 @@ export type SleepAction =
   | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
   | { type: "RESUME_TIMER" }
   | { type: "RESTORE_TIMER"; payload: ActiveSleepTimer }
+  | { type: "EDIT_TIMER_START"; payload: Date }
   | { type: "SET_NEWBORN_NAP_OPT_IN"; payload: boolean }
   | { type: "REMOTE_INSERT"; payload: StoredSleepEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredSleepEntry }
@@ -350,6 +354,13 @@ export function sleepReducer(
         activeTimer: action.payload,
       };
 
+    case "EDIT_TIMER_START":
+      if (!state.activeTimer) return state;
+      return {
+        ...state,
+        activeTimer: { ...state.activeTimer, startTime: action.payload },
+      };
+
     case "SET_NEWBORN_NAP_OPT_IN":
       return { ...state, newbornNapOptIn: action.payload };
 
@@ -416,6 +427,7 @@ interface SleepContextValue extends SleepState {
     requestedIdentity?: TimerIdentity
   ) => Promise<TimerLockResult>;
   stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
+  editSleepStartTime: (startedAt: Date) => Promise<void>;
   changeSleepType: (sleepType: SleepType) => void;
   pauseSleep: (requestedPauseTime?: Date) => Promise<void>;
   resumeSleep: (
@@ -1457,6 +1469,59 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     [selectedBaby, state.activeTimer, user?.id]
   );
 
+  const editSleepStartTime = useCallback(
+    async (startedAt: Date) => {
+      if (!selectedBaby || !user?.id || !state.activeTimer) return;
+      const activeTimer = state.activeTimer;
+      const adapter = createSleepTimerAdapter({
+        babyId: selectedBaby.id,
+        resolveMorningClassification: (_startedAt, stored) =>
+          stored ?? activeTimer.morningClassification,
+        dispatchRestoreTimer: (restoredTimer) => {
+          dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+        },
+      });
+
+      await editRunningTimerStartTime({
+        adapter,
+        baby: selectedBaby,
+        userId: user.id,
+        activeTimer: {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          startedAt: activeTimer.startTime.toISOString(),
+          type: activeTimer.sleepType,
+          liveActivityId: liveActivityIdRef.current ?? undefined,
+          isPaused: activeTimer.isPaused,
+          pausedAt: activeTimer.pausedAt?.toISOString(),
+          totalPausedMs: activeTimer.totalPausedMs,
+          lockState: activeTimer.lockState,
+          morningClassification: activeTimer.morningClassification,
+          morningClassificationVersion:
+            activeTimer.morningClassificationVersion,
+        },
+        payload: {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          type: activeTimer.sleepType,
+          isPaused: activeTimer.isPaused,
+          pausedAt: activeTimer.pausedAt?.toISOString(),
+          totalPausedMs: activeTimer.totalPausedMs,
+          morningClassification: activeTimer.morningClassification,
+          morningClassificationVersion:
+            activeTimer.morningClassificationVersion,
+        },
+        startedAt,
+        liveActivityIdRef,
+        dispatchEditedStart: (nextStart) => {
+          dispatch({ type: "EDIT_TIMER_START", payload: nextStart });
+        },
+      });
+      await refreshLocks();
+    },
+    [refreshLocks, selectedBaby, state.activeTimer, user?.id]
+  );
+
   const pauseSleep = useCallback(
     async (requestedPauseTime?: Date) => {
       if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused)
@@ -2231,6 +2296,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startSleep,
       stopSleep,
+      editSleepStartTime,
       changeSleepType,
       pauseSleep,
       resumeSleep,
@@ -2271,6 +2337,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startSleep,
       stopSleep,
+      editSleepStartTime,
       changeSleepType,
       pauseSleep,
       resumeSleep,

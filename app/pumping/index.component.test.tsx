@@ -20,6 +20,9 @@ type MockPumpingTimer = typeof runningTimer & { pausedAt?: Date };
 let mockActiveTimer: MockPumpingTimer | null = runningTimer;
 let mockIsStopping = false;
 let mockTimeFormat: "12h" | "24h" = "12h";
+let mockLockStartedBy = "user-1";
+let mockPumpings: Array<{ endedAt?: string }> = [];
+const mockEditPumpingStartTime = jest.fn().mockResolvedValue(undefined);
 const mockCheckAndSendAlert = jest.fn();
 
 jest.mock("expo-router", () => ({
@@ -39,18 +42,26 @@ jest.mock("@/contexts/pumping-context", () => ({
     isStopping: mockIsStopping,
     startPumping: mockStartPumping,
     stopPumping: mockStopPumping,
+    editPumpingStartTime: mockEditPumpingStartTime,
     changePumpingSide: jest.fn(),
     pausePumping: jest.fn(),
     resumePumping: jest.fn(),
     getLastSide: () => null,
+    pumpings: mockPumpings,
   }),
 }));
 
 jest.mock("@/contexts", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Test Baby" } }),
   useUnits: () => ({ volumeUnit: "ml" }),
-  useAuth: () => ({ session: { access_token: "test" } }),
+  useAuth: () => ({ session: { access_token: "test" }, user: { id: "user-1" } }),
   useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
+  useActiveTimers: () => ({
+    getLockForActivity: () => ({
+      startedBy: mockLockStartedBy,
+      startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
+    }),
+  }),
 }));
 
 jest.mock("@react-native-community/datetimepicker", () => {
@@ -58,6 +69,14 @@ jest.mock("@react-native-community/datetimepicker", () => {
   return {
     __esModule: true,
     default: (props: Record<string, unknown>) => <View testID="datetime-picker" {...props} />,
+  };
+});
+
+jest.mock("react-native-date-picker", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: (props: Record<string, unknown>) => <View {...props} />,
   };
 });
 
@@ -76,6 +95,8 @@ describe("PumpingScreen stop confirmation", () => {
     mockActiveTimer = runningTimer;
     mockIsStopping = false;
     mockTimeFormat = "12h";
+    mockLockStartedBy = "user-1";
+    mockPumpings = [];
     mockStartPumping.mockResolvedValue({ success: true });
   });
 
@@ -106,6 +127,87 @@ describe("PumpingScreen stop confirmation", () => {
       jest.advanceTimersByTime(1000);
     });
     expect(mockCheckAndSendAlert).toHaveBeenCalledWith(60);
+  });
+
+  it("shows the starter and keeps another caregiver's label read-only", () => {
+    jest.useFakeTimers();
+    const now = new Date("2026-08-06T12:00:00.000Z");
+    jest.setSystemTime(now);
+    mockShowVolumeInput = "false";
+    mockPumpings = [{ endedAt: "2026-08-06T04:30:00.000Z" }];
+    mockTimeFormat = "24h";
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date(2026, 7, 6, 10, 5),
+    };
+
+    const { rerender, UNSAFE_root } = render(<PumpingScreen />);
+    const layoutOrder = UNSAFE_root.findAll(
+      (node) =>
+        node.props.testID === "running-timer-start-editor" ||
+        node.props.testID === "running-timer-elapsed"
+    ).map((node) => node.props.testID);
+    expect(layoutOrder.indexOf("running-timer-start-editor")).toBeLessThan(
+      layoutOrder.indexOf("running-timer-elapsed")
+    );
+    fireEvent.press(
+      screen.getByRole("button", { name: "pumping.startTime: 10:05 · Alice" })
+    );
+    expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
+      new Date("2026-08-06T04:30:00.000Z")
+    );
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(now);
+
+    mockTimeFormat = "12h";
+    rerender(<PumpingScreen />);
+    expect(
+      screen.getByRole("button", {
+        name: "pumping.startTime: 10:05 AM · Alice",
+      })
+    ).toBeTruthy();
+    mockLockStartedBy = "user-2";
+    rerender(<PumpingScreen />);
+    expect(
+      screen.queryByRole("button", {
+        name: "pumping.startTime: 10:05 AM · Bob",
+      })
+    ).toBeNull();
+    expect(
+      screen.getByLabelText("pumping.startTime: 10:05 AM · Bob")
+    ).toBeTruthy();
+  });
+
+  it("writes the running picker value through the pumping provider", async () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
+    mockShowVolumeInput = "false";
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date("2026-08-06T11:30:00.000Z"),
+    };
+    try {
+      render(<PumpingScreen />);
+      fireEvent.press(
+        screen.getByRole("button", { name: /pumping.startTime: .* · Alice/ })
+      );
+      const selectedTime = new Date("2026-08-06T11:23:00.000Z");
+      fireEvent(
+        screen.getByTestId("bounded-android-datetime-picker"),
+        "dateChange",
+        selectedTime
+      );
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+      });
+
+      expect(mockEditPumpingStartTime).toHaveBeenCalledWith(
+        selectedTime
+      );
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
   });
 
   it("lets a caregiver close a cold-opened pumping screen", () => {
@@ -172,6 +274,8 @@ describe("PumpingScreen stop confirmation", () => {
   it("reacts to the current custom start preference and uses the selected time", async () => {
     mockActiveTimer = null;
     mockTimeFormat = "24h";
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 0, 1, 16, 0));
     const selectedTime = new Date(2020, 0, 1, 14, 30);
     const { rerender } = render(<PumpingScreen />);
 
@@ -191,20 +295,25 @@ describe("PumpingScreen stop confirmation", () => {
     });
   });
 
-  it("configures the Android custom start picker from the current preference", () => {
+  it("renders a bounded native Android picker for Started earlier", () => {
     const originalPlatformOS = Platform.OS;
     Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
     mockActiveTimer = null;
     mockTimeFormat = "24h";
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 2, 10, 0));
 
     try {
-      const { rerender } = render(<PumpingScreen />);
+      render(<PumpingScreen />);
       fireEvent.press(screen.getByRole("button", { name: "pumping.startedEarlier" }));
-      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(true);
-
-      mockTimeFormat = "12h";
-      rerender(<PumpingScreen />);
-      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(false);
+      const picker = screen.getByTestId("bounded-android-datetime-picker");
+      expect(picker.props.mode).toBe("datetime");
+      expect(picker.props.is24hourSource).toBe("locale");
+      expect(picker.props.locale).toBe("en_GB");
+      expect(picker.props.minimumDate).toEqual(
+        new Date(2026, 0, 1, 22, 0)
+      );
+      expect(picker.props.maximumDate).toEqual(new Date(2026, 0, 2, 10, 0));
     } finally {
       Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
     }

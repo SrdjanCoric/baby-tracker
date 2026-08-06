@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useSleep, useAuth, useBaby, useTimeFormat } from "@/contexts";
+import { useSleep, useAuth, useBaby, useTimeFormat, useActiveTimers } from "@/contexts";
 import { formatDuration, formatTime } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
@@ -15,6 +15,13 @@ import { ModalCloseButton } from "@/components/ModalCloseButton";
 import { exitModal } from "@/navigation";
 import { useColorScheme } from "nativewind";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
+import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
+import {
+  getTimerStartBounds,
+  normalizeTimerStartSelection,
+  type TimerStartBounds,
+} from "@/utils/timer-start-bounds";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_LIGHT = "#A594CF";
@@ -30,11 +37,14 @@ export default function SleepScreen() {
     onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const { getLockForActivity } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
   const {
     activeTimer,
+    sleeps,
     startSleep,
+    editSleepStartTime,
     stopSleep,
     pauseSleep,
     resumeSleep,
@@ -48,6 +58,28 @@ export default function SleepScreen() {
     pendingMorningConfirmations,
     confirmMorningSleep,
   } = useSleep();
+  const timerLock = selectedBaby
+    ? getLockForActivity(selectedBaby.id, "sleep")
+    : null;
+  const hasLocalTimerOwnership =
+    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
+  const timerStarterName =
+    timerLock?.startedByName ??
+    (hasLocalTimerOwnership ? user?.displayName : null) ??
+    t("common.someone");
+  const canEditTimerStart = Boolean(
+    user?.id &&
+      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+  );
+  const getTimerStartBoundsForPicker = useCallback(
+    () =>
+      getTimerStartBounds(
+        sleeps,
+        new Date(),
+        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+      ),
+    [activeTimer?.isPaused, activeTimer?.pausedAt, sleeps]
+  );
 
   const napAlert = useTimerAlertIntegration("nap");
   const nightSleepAlert = useTimerAlertIntegration("nightSleep");
@@ -228,11 +260,17 @@ export default function SleepScreen() {
             onStop={handleStopSleep}
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
+            startedAt={activeTimer!.startTime}
+            starterName={timerStarterName}
+            canEdit={canEditTimerStart}
+            getBounds={getTimerStartBoundsForPicker}
+            onEditStart={editSleepStartTime}
           />
         ) : (
           <SleepStartView
             onStart={handleStartSleep}
             onLogPastSleep={handleLogPastSleep}
+            getBounds={getTimerStartBoundsForPicker}
           />
         )}
         {pendingMorningConfirmation && (
@@ -263,9 +301,10 @@ export default function SleepScreen() {
 interface SleepStartViewProps {
   onStart: (customStartTime?: Date) => void;
   onLogPastSleep: () => void;
+  getBounds(): TimerStartBounds;
 }
 
-function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
+function SleepStartView({ onStart, onLogPastSleep, getBounds }: SleepStartViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
@@ -274,6 +313,9 @@ function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
   const mutedBg = isDark ? SLEEP_PURPLE_MUTED_DARK : SLEEP_PURPLE_MUTED;
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() =>
+    getBounds()
+  );
 
   const handleStartPress = useCallback(() => {
     if (customStartTime) {
@@ -284,40 +326,21 @@ function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
   }, [customStartTime, onStart]);
 
   const handleStartedEarlierPress = useCallback(() => {
+    setPickerBounds(getBounds());
     setShowTimePicker(true);
-  }, []);
-
-  const yesterdayStart = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
+  }, [getBounds]);
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
-      if (Platform.OS === "android") {
-        setShowTimePicker(false);
-      }
       if (selectedTime) {
-        const now = new Date();
-        let finalTime: Date;
-        if (Platform.OS === "android") {
-          finalTime = new Date();
-          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
-          if (finalTime > now) {
-            finalTime.setDate(finalTime.getDate() - 1);
-          }
-          if (finalTime < yesterdayStart) {
-            finalTime = new Date(yesterdayStart);
-          }
-        } else {
-          finalTime = selectedTime > now ? now : selectedTime;
-        }
-        setCustomStartTime(finalTime);
+        const currentBounds = getBounds();
+        setPickerBounds(currentBounds);
+        setCustomStartTime(
+          normalizeTimerStartSelection(selectedTime, currentBounds)
+        );
       }
     },
-    [yesterdayStart]
+    [getBounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -392,29 +415,35 @@ function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
 
       {showTimePicker && (
         <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
-          {Platform.OS === "ios" && (
-            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
-              <Pressable
-                onPress={handleTimeDone}
-                className="py-2 px-4"
-                accessibilityRole="button"
-                accessibilityLabel={t("common.done")}
-              >
-                <Text className="font-semibold" style={{ color: accent }}>
-                  {t("common.done")}
-                </Text>
-              </Pressable>
-            </View>
+          <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+            <Pressable
+              onPress={handleTimeDone}
+              className="py-2 px-4"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.done")}
+            >
+              <Text className="font-semibold" style={{ color: accent }}>
+                {t("common.done")}
+              </Text>
+            </Pressable>
+          </View>
+          {Platform.OS === "android" ? (
+            <BoundedAndroidDateTimePicker
+              value={customStartTime ?? pickerBounds.maximumDate}
+              bounds={pickerBounds}
+              timeFormat={timeFormat}
+              onChange={setCustomStartTime}
+            />
+          ) : (
+            <DateTimePicker
+              value={customStartTime ?? new Date()}
+              mode="datetime"
+              display="spinner"
+              onChange={handleTimeChange}
+              minimumDate={pickerBounds.minimumDate}
+              maximumDate={pickerBounds.maximumDate}
+            />
           )}
-          <DateTimePicker
-            value={customStartTime ?? new Date()}
-            mode={Platform.OS === "ios" ? "datetime" : "time"}
-            display="spinner"
-            onChange={handleTimeChange}
-            is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
-            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
-          />
         </View>
       )}
     </View>
@@ -427,6 +456,11 @@ interface RunningTimerViewProps {
   onStop: () => void;
   onPause?: () => void;
   onResume?: () => void;
+  startedAt: Date;
+  starterName: string;
+  canEdit: boolean;
+  getBounds(): TimerStartBounds;
+  onEditStart: (startedAt: Date) => Promise<void>;
 }
 
 function RunningTimerView({
@@ -435,8 +469,14 @@ function RunningTimerView({
   onStop,
   onPause,
   onResume,
+  startedAt,
+  starterName,
+  canEdit,
+  getBounds,
+  onEditStart,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const accent = isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE;
@@ -452,7 +492,20 @@ function RunningTimerView({
         </Text>
       </View>
 
+      <RunningTimerStartEditor
+        startLabel={t("sleep.startTime")}
+        startedAt={startedAt}
+        starterName={starterName}
+        canEdit={canEdit}
+        getBounds={getBounds}
+        timeFormat={timeFormat}
+        accentColor={accent}
+        mutedBackgroundColor={mutedBg}
+        onEdit={onEditStart}
+      />
+
       <View
+        testID="running-timer-elapsed"
         className="px-12 py-8 rounded-card-lg mb-8"
         style={{ backgroundColor: mutedBg }}
       >

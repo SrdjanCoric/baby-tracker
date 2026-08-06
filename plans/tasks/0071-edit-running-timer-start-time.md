@@ -13,6 +13,9 @@ An in-place start-time edit on the running-timer view of all four activity scree
 `app/sleep/index.tsx`, `app/feeding/index.tsx`, `app/pumping/index.tsx`, and
 `app/tummyTime/index.tsx` — for the caregiver who started the timer.
 
+The settled running-screen layout is shown in [`index.html`](../../index.html). Keep its order:
+activity heading, start-time pill, elapsed-time card, running-status row, then Pause and Stop controls.
+
 Today, correcting a late-started timer costs four steps: stop, delete the record, find the second
 button, and re-enter the earlier time. There is no start-time display on a running timer at all, and
 `updateTimerData` in `src/services/active-timer-service.ts` writes only the `timer_data` JSONB column,
@@ -115,39 +118,39 @@ construction is adapter-owned inside `src/services/timer-lifecycle.ts` and reads
 
 ## Implementation work
 
-- [ ] Add a shared bounds helper computing `minimumDate` as the later of `now - 12h` and the previous
+- [x] Add a shared bounds helper computing `minimumDate` as the later of `now - 12h` and the previous
       saved same-type activity's `endedAt`, and `maximumDate` as `now`, for one activity type.
-- [ ] Add a start-time write to `src/services/active-timer-service.ts` issuing a direct `UPDATE` on
+- [x] Add a start-time write to `src/services/active-timer-service.ts` issuing a direct `UPDATE` on
       `active_timers.started_at` for a lock the current user started, with no new RPC.
-- [ ] Add the start-time label to the running-timer view of all four activity screens, naming the value
+- [x] Add the start-time label to the running-timer view of all four activity screens, naming the value
       in the caregiver's 12/24-hour preference and the starter from `lock.startedByName`, tappable only
       when the current user started the timer.
-- [ ] Open the existing picker from the label, bounded by the shared helper on **both** iOS and
+- [x] Open the existing picker from the label, bounded by the shared helper on **both** iOS and
       Android, and write the picked value through the new service path.
-- [ ] Repoint "Started earlier" on all four screens from the yesterday-midnight floor to the same
+- [x] Repoint "Started earlier" on all four screens from the yesterday-midnight floor to the same
       shared bounds helper.
-- [ ] Re-anchor the editing device's own Live Activity when the start moves, adding an anchor-update
+- [x] Re-anchor the editing device's own Live Activity when the start moves, adding an anchor-update
       path or ending and restarting it.
-- [ ] Component tests on all four activity screens: the picker's `minimumDate` is the later of
+- [x] Component tests on all four activity screens: the picker's `minimumDate` is the later of
       `now - 12h` and the previous same-type activity's end, its `maximumDate` is `now`, "Started
       earlier" applies the identical bounds, and the bounds hold on the Android branch as well as iOS.
-- [ ] Component tests that the label renders the start value and the starter's name, and that it is not
+- [x] Component tests that the label renders the start value and the starter's name, and that it is not
       tappable for a lock the current user did not start.
-- [ ] Real-provider tests against local Supabase, for **all four activity types** and not sleep alone:
+- [x] Real-provider tests against local Supabase, for **all four activity types** and not sleep alone:
       the starter edits the start time of their own running timer and the row changes; a start in the
       future is rejected; a start more than twelve hours back is rejected; and a `timer_data`-only
       update to a lock older than twelve hours still succeeds.
-- [ ] A real-provider test that a household caregiver who did not start the timer is refused the
+- [x] A real-provider test that a household caregiver who did not start the timer is refused the
       `UPDATE` by the row policy. This is the household timer control cut stated as a bar rather than
       assumed.
-- [ ] A test that the edited anchor reaches a second household device through the `active_timers`
+- [x] A test that the edited anchor reaches a second household device through the `active_timers`
       Realtime subscription and re-renders its elapsed display.
-- [ ] A test that a start edited mid-run is the value the stop finalizes into the saved record.
-- [ ] A test that the editing device's own Live Activity re-anchors to the new start.
+- [x] A test that a start edited mid-run is the value the stop finalizes into the saved record.
+- [x] A test that the editing device's own Live Activity re-anchors to the new start.
 
 ## Human checkpoints
 
-- [ ] [verify] Extend the representative two-account sleep smoke so the starter edits the running
+- [x] [verify] Extend the representative two-account sleep smoke so the starter edits the running
       timer's start time and the second account sees the moved anchor · Steps: on simulator A start a
       sleep timer, on simulator B confirm the timer is displayed and not controllable, on A tap the
       start-time label and move the start earlier, then read B's elapsed display · Expected: A's
@@ -156,7 +159,7 @@ construction is adapter-owned inside `src/services/timer-lifecycle.ts` and reads
       control · Reason: the master plan requires household timer behavior to be proved through the
       two-account iOS smoke against local Supabase, which needs two simulators and separate caregiver
       accounts.
-- [ ] [verify] After editing a running timer's start, read the elapsed display on the iOS widget and on
+- [x] [verify] After editing a running timer's start, read the elapsed display on the iOS widget and on
       the Apple Watch · Steps: start a timer, edit its start earlier from the app, then foreground the
       widget and the Watch app · Expected: both re-anchor their elapsed display to the new start on
       their next fetch · Failure: either surface keeps counting from the old start · Reason: both
@@ -165,19 +168,19 @@ construction is adapter-owned inside `src/services/timer-lifecycle.ts` and reads
 
 ## Acceptance criteria
 
-- [ ] On all four activity screens, the caregiver who started a running timer sees a start-time label
+- [x] On all four activity screens, the caregiver who started a running timer sees a start-time label
       naming the value and the starter, and can change the start in place without stopping the timer.
-- [ ] A caregiver who did not start the timer sees no edit control and is refused the write by the row
+- [x] A caregiver who did not start the timer sees no edit control and is refused the write by the row
       policy; the dashboard card's existing read-only gate is unchanged.
-- [ ] The picker offers `max(now - 12h, previous same-type activity end)` through `now` on both iOS and
+- [x] The picker offers `max(now - 12h, previous same-type activity end)` through `now` on both iOS and
       Android, so nothing a caregiver can pick is rejected afterwards.
-- [ ] "Started earlier" applies those identical bounds on all four screens, replacing the
+- [x] "Started earlier" applies those identical bounds on all four screens, replacing the
       yesterday-midnight floor.
-- [ ] The edited anchor reaches the second household phone through Realtime, the widget and Watch
+- [x] The edited anchor reaches the second household phone through Realtime, the widget and Watch
       re-anchor on their next fetch, and the editing device's own Live Activity re-anchors.
-- [ ] A start edited mid-run is the value the stop writes into the saved record.
-- [ ] The write is a direct `UPDATE` on `active_timers.started_at` with no new RPC and no policy change.
-- [ ] Both `[verify]` checkpoints confirmed by the owner.
+- [x] A start edited mid-run is the value the stop writes into the saved record.
+- [x] The write is a direct `UPDATE` on `active_timers.started_at` with no new RPC and no policy change.
+- [x] Both `[verify]` checkpoints confirmed by the owner.
 
 ## Non-goals
 
@@ -189,3 +192,36 @@ construction is adapter-owned inside `src/services/timer-lifecycle.ts` and reads
 - Clamping against activities of a different type.
 - Editing any in-progress detail other than the start time.
 - Changing the manual-entry overlap policy, which stays warn-and-allow.
+
+## Review decisions
+
+- accepted security risk: TR-9 — authenticated users can repoint their own timer row at another
+  household's baby — this is unlikely to happen.
+
+## Completion record
+
+- **Implementation:** Added bounded in-place start-time editing for starter-owned feeding, sleep,
+  pumping, and tummy-time timers, durable offline replay, Realtime propagation, and Live Activity,
+  widget, and Watch re-anchoring. The shared editor lives in
+  `src/components/RunningTimerStartEditor.tsx`; the four running screens place it in the former
+  "Started earlier" slot above the elapsed timer, matching `index.html`.
+- **Decisions:** Kept "Started earlier" as the pre-start path with the same bounds; kept other
+  caregivers read-only; retained the direct `active_timers.started_at` update and the accepted TR-9
+  security risk above.
+- **Relevant paths:** `app/{feeding,sleep,pumping,tummyTime}/index.tsx`,
+  `src/components/RunningTimerStartEditor.tsx`, `src/services/active-timer-service.ts`,
+  `src/services/timer-lifecycle.ts`, the four timer contexts, sync replay services, and Task 0070's
+  database guard.
+- **Documentation:** README `Timer Exclusivity` describes starter-only editing and the shared
+  twelve-hour/previous-end bounds. Its affected prose passed one complete `write-well` audit without
+  further edits. `index.html` is the settled running-screen mock and is linked above.
+- **Review:** Both retained Task 0071 review passes are closed: 26 findings were fixed and TR-9 was
+  accepted as a security risk because the user considers it unlikely to happen.
+- **Automated proof:** `npm run check:code` passed at canonical tier with output-only log capping;
+  focused component suites for all four timer screens passed 69/69 tests; `npm run typecheck` passed;
+  and the clean two-account household-timer smoke passed against local Supabase.
+- **Manual proof:** The owner confirmed both checkpoints. On the two-account sleep smoke, the starter
+  moved the anchor earlier, the second caregiver's read-only elapsed display re-anchored through
+  Realtime, and the editing device's Live Activity restarted on the new anchor. Widget and paired
+  Watch elapsed displays re-anchored on their next fetch, and the final start-time-pill placement was
+  accepted on the rebuilt owner simulator.

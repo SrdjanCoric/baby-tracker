@@ -60,7 +60,10 @@ import {
   type TimerIdentity,
 } from "@/services/timer-completion-service";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
-import { restoreTimerLifecycle } from "@/services/timer-lifecycle";
+import {
+  editRunningTimerStartTime,
+  restoreTimerLifecycle,
+} from "@/services/timer-lifecycle";
 import { createFeedingTimerAdapter } from "@/services/timer-adapters/feeding-timer-adapter";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
 import type {
@@ -105,6 +108,15 @@ export type FeedingAction =
       } & TimerIdentity;
     }
   | { type: "RESTORE_TIMER"; payload: ActiveTimer }
+  | {
+      type: "EDIT_TIMER_START";
+      payload: {
+        startedAt: Date;
+        currentSideStartedAt: Date;
+        leftAccumulatedSeconds: number;
+        rightAccumulatedSeconds: number;
+      };
+    }
   | { type: "STOP_TIMER" }
   | {
       type: "UPDATE_TIMER_SIDE";
@@ -188,6 +200,19 @@ export function feedingReducer(
       return {
         ...state,
         activeTimer: action.payload,
+      };
+
+    case "EDIT_TIMER_START":
+      if (!state.activeTimer) return state;
+      return {
+        ...state,
+        activeTimer: {
+          ...state.activeTimer,
+          startTime: action.payload.startedAt,
+          currentSideStartedAt: action.payload.currentSideStartedAt,
+          leftAccumulatedSeconds: action.payload.leftAccumulatedSeconds,
+          rightAccumulatedSeconds: action.payload.rightAccumulatedSeconds,
+        },
       };
 
     case "STOP_TIMER":
@@ -309,6 +334,7 @@ interface FeedingContextValue extends FeedingState {
   stopBreastfeeding: (
     requestedEndTime?: Date
   ) => Promise<StoredFeedingEntry | null>;
+  editBreastfeedingStartTime: (startedAt: Date) => Promise<void>;
   changeSide: (side: BreastSide) => void;
   pauseBreastfeeding: (requestedPauseTime?: Date) => Promise<void>;
   resumeBreastfeeding: (
@@ -803,6 +829,102 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     [selectedBaby, state.activeTimer, user?.id]
   );
 
+  const editBreastfeedingStartTime = useCallback(
+    async (startedAt: Date) => {
+      if (!selectedBaby || !user?.id || !state.activeTimer) return;
+      const activeTimer = state.activeTimer;
+      const adapter = createFeedingTimerAdapter({
+        babyId: selectedBaby.id,
+        dispatchRestoreTimer: (restoredTimer) => {
+          dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+        },
+      });
+      const movedPastCurrentSide =
+        startedAt.getTime() >= activeTimer.currentSideStartedAt.getTime();
+      const currentSideStartedAt = movedPastCurrentSide
+        ? startedAt
+        : activeTimer.currentSideStartedAt.getTime() ===
+            activeTimer.startTime.getTime()
+          ? startedAt
+          : activeTimer.currentSideStartedAt;
+      let leftAccumulatedSeconds = movedPastCurrentSide
+        ? 0
+        : activeTimer.leftAccumulatedSeconds;
+      let rightAccumulatedSeconds = movedPastCurrentSide
+        ? 0
+        : activeTimer.rightAccumulatedSeconds;
+      if (
+        !movedPastCurrentSide &&
+        activeTimer.currentSideStartedAt.getTime() !==
+          activeTimer.startTime.getTime()
+      ) {
+        const shiftedSeconds = Math.floor(
+          (startedAt.getTime() - activeTimer.startTime.getTime()) / 1000
+        );
+        if (activeTimer.side === "right" || activeTimer.side === "both") {
+          leftAccumulatedSeconds = Math.max(
+            0,
+            leftAccumulatedSeconds - shiftedSeconds
+          );
+        }
+        if (activeTimer.side === "left" || activeTimer.side === "both") {
+          rightAccumulatedSeconds = Math.max(
+            0,
+            rightAccumulatedSeconds - shiftedSeconds
+          );
+        }
+      }
+
+      await editRunningTimerStartTime({
+        adapter,
+        baby: selectedBaby,
+        userId: user.id,
+        activeTimer: {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          startedAt: activeTimer.startTime.toISOString(),
+          side: activeTimer.side,
+          type: "breast",
+          leftAccumulatedSeconds,
+          rightAccumulatedSeconds,
+          currentSideStartedAt: currentSideStartedAt.toISOString(),
+          liveActivityId: liveActivityIdRef.current ?? undefined,
+          isPaused: activeTimer.isPaused,
+          pausedAt: activeTimer.pausedAt?.toISOString(),
+          totalPausedMs: activeTimer.totalPausedMs,
+          lockState: activeTimer.lockState,
+        },
+        payload: {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          side: activeTimer.side ?? "left",
+          type: "breast",
+          leftAccumulatedSeconds,
+          rightAccumulatedSeconds,
+          currentSideStartedAt: currentSideStartedAt.toISOString(),
+          isPaused: activeTimer.isPaused,
+          pausedAt: activeTimer.pausedAt?.toISOString(),
+          totalPausedMs: activeTimer.totalPausedMs,
+        },
+        startedAt,
+        liveActivityIdRef,
+        dispatchEditedStart: (nextStart) => {
+          dispatch({
+            type: "EDIT_TIMER_START",
+            payload: {
+              startedAt: nextStart,
+              currentSideStartedAt,
+              leftAccumulatedSeconds,
+              rightAccumulatedSeconds,
+            },
+          });
+        },
+      });
+      await refreshLocks();
+    },
+    [refreshLocks, selectedBaby, state.activeTimer, user?.id]
+  );
+
   const pauseBreastfeeding = useCallback(
     async (requestedPauseTime?: Date) => {
       if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused)
@@ -1038,6 +1160,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startBreastfeeding,
       stopBreastfeeding,
+      editBreastfeedingStartTime,
       changeSide,
       pauseBreastfeeding,
       resumeBreastfeeding,
@@ -1056,6 +1179,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startBreastfeeding,
       stopBreastfeeding,
+      editBreastfeedingStartTime,
       changeSide,
       pauseBreastfeeding,
       resumeBreastfeeding,

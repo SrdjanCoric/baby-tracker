@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useFeeding, useBaby, useUnits, useAuth, useTimeFormat } from "@/contexts";
+import { useFeeding, useBaby, useUnits, useAuth, useTimeFormat, useActiveTimers } from "@/contexts";
 import type { CreateFeedingInput, StoredFeedingEntry } from "@/services/feeding-storage";
 import { formatDuration, formatTime } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
@@ -17,6 +17,9 @@ import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { ModalCloseButton } from "@/components/ModalCloseButton";
 import { exitModal } from "@/navigation";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
+import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
+import { getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
 
 const FEEDING_GREEN = ACTIVITY.feeding.accent;
 const FEEDING_GREEN_LIGHT = ACTIVITY.feeding.accentDark;
@@ -37,7 +40,8 @@ export default function FeedingScreen() {
     onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const { getLockForActivity } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -46,12 +50,35 @@ export default function FeedingScreen() {
     suggestedSide,
     startBreastfeeding,
     stopBreastfeeding,
+    editBreastfeedingStartTime,
     changeSide,
     pauseBreastfeeding,
     resumeBreastfeeding,
     addFeeding,
     feedings,
   } = useFeeding();
+  const timerLock = selectedBaby
+    ? getLockForActivity(selectedBaby.id, "feeding")
+    : null;
+  const hasLocalTimerOwnership =
+    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
+  const timerStarterName =
+    timerLock?.startedByName ??
+    (hasLocalTimerOwnership ? user?.displayName : null) ??
+    t("common.someone");
+  const canEditTimerStart = Boolean(
+    user?.id &&
+      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+  );
+  const getTimerStartBoundsForPicker = useCallback(
+    () =>
+      getTimerStartBounds(
+        feedings,
+        new Date(),
+        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+      ),
+    [activeTimer?.isPaused, activeTimer?.pausedAt, feedings]
+  );
 
   const accentColor = isDark ? FEEDING_GREEN_LIGHT : FEEDING_GREEN;
   const buttonBgColor = isDark ? FEEDING_GREEN_BUTTON_DARK : FEEDING_GREEN;
@@ -231,6 +258,11 @@ export default function FeedingScreen() {
             buttonBgColor={buttonBgColor}
             mutedBg={mutedBg}
             secondaryBg={secondaryBg}
+            startedAt={activeTimer!.startTime}
+            starterName={timerStarterName}
+            canEdit={canEditTimerStart}
+            getBounds={getTimerStartBoundsForPicker}
+            onEditStart={editBreastfeedingStartTime}
           />
         ) : (
           <BreastfeedingForm
@@ -241,6 +273,7 @@ export default function FeedingScreen() {
             buttonBgColor={buttonBgColor}
             mutedBg={mutedBg}
             secondaryBg={secondaryBg}
+            getBounds={getTimerStartBoundsForPicker}
           />
         )
       )}
@@ -316,15 +349,17 @@ interface BreastfeedingFormProps {
   buttonBgColor: string;
   mutedBg: string;
   secondaryBg: string;
+  getBounds(): TimerStartBounds;
 }
 
-function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, buttonBgColor, secondaryBg }: BreastfeedingFormProps) {
+function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor, buttonBgColor, secondaryBg, getBounds }: BreastfeedingFormProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() => getBounds());
 
   const handleSidePress = useCallback((side: BreastSide) => {
     if (customStartTime) {
@@ -335,40 +370,19 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
   }, [customStartTime, onSelectSide]);
 
   const handleStartedEarlierPress = useCallback(() => {
+    setPickerBounds(getBounds());
     setShowTimePicker(true);
-  }, []);
-
-  const yesterdayStart = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
+  }, [getBounds]);
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
-      if (Platform.OS === "android") {
-        setShowTimePicker(false);
-      }
       if (selectedTime) {
-        const now = new Date();
-        let finalTime: Date;
-        if (Platform.OS === "android") {
-          finalTime = new Date();
-          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
-          if (finalTime > now) {
-            finalTime.setDate(finalTime.getDate() - 1);
-          }
-          if (finalTime < yesterdayStart) {
-            finalTime = new Date(yesterdayStart);
-          }
-        } else {
-          finalTime = selectedTime > now ? now : selectedTime;
-        }
-        setCustomStartTime(finalTime);
+        const currentBounds = getBounds();
+        setPickerBounds(currentBounds);
+        setCustomStartTime(normalizeTimerStartSelection(selectedTime, currentBounds));
       }
     },
-    [yesterdayStart]
+    [getBounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -492,29 +506,35 @@ function BreastfeedingForm({ suggestedSide, onSelectSide, onLogPast, accentColor
         {/* Time Picker */}
         {showTimePicker && (
           <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
-            {Platform.OS === "ios" && (
-              <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
-                <Pressable
-                  onPress={handleTimeDone}
-                  className="py-2 px-4"
-                  accessibilityRole="button"
-                  accessibilityLabel={t("common.done")}
-                >
-                  <Text className="font-semibold" style={{ color: accentColor }}>
-                    {t("common.done")}
-                  </Text>
-                </Pressable>
-              </View>
+            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+              <Pressable
+                onPress={handleTimeDone}
+                className="py-2 px-4"
+                accessibilityRole="button"
+                accessibilityLabel={t("common.done")}
+              >
+                <Text className="font-semibold" style={{ color: accentColor }}>
+                  {t("common.done")}
+                </Text>
+              </Pressable>
+            </View>
+            {Platform.OS === "android" ? (
+              <BoundedAndroidDateTimePicker
+                value={customStartTime ?? pickerBounds.maximumDate}
+                bounds={pickerBounds}
+                timeFormat={timeFormat}
+                onChange={setCustomStartTime}
+              />
+            ) : (
+              <DateTimePicker
+                value={customStartTime ?? new Date()}
+                mode="datetime"
+                display="spinner"
+                onChange={handleTimeChange}
+                minimumDate={pickerBounds.minimumDate}
+                maximumDate={pickerBounds.maximumDate}
+              />
             )}
-            <DateTimePicker
-              value={customStartTime ?? new Date()}
-              mode={Platform.OS === "ios" ? "datetime" : "time"}
-              display="spinner"
-              onChange={handleTimeChange}
-              is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-              minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
-              maximumDate={Platform.OS === "ios" ? new Date() : undefined}
-            />
           </View>
         )}
       </View>
@@ -581,12 +601,18 @@ interface BreastfeedingTimerViewProps {
   buttonBgColor: string;
   mutedBg: string;
   secondaryBg: string;
+  startedAt: Date;
+  starterName: string;
+  canEdit: boolean;
+  getBounds(): TimerStartBounds;
+  onEditStart: (startedAt: Date) => Promise<void>;
 }
 
 const PAUSED_AMBER = "#D4A017";
 
-function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg }: BreastfeedingTimerViewProps) {
+function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg, startedAt, starterName, canEdit, getBounds, onEditStart }: BreastfeedingTimerViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const formattedTime = formatDuration(elapsedSeconds);
 
   return (
@@ -611,8 +637,24 @@ function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, 
           <CompactSideButton label={t("feeding.rightShort")} fullLabel={t("feeding.right")} isSelected={side === "right"} onPress={() => onSideChange("right")} accentColor={accentColor} buttonBgColor={buttonBgColor} />
         </View>
 
+        <RunningTimerStartEditor
+          startLabel={t("feeding.startTime")}
+          startedAt={startedAt}
+          starterName={starterName}
+          canEdit={canEdit}
+          getBounds={getBounds}
+          timeFormat={timeFormat}
+          accentColor={accentColor}
+          mutedBackgroundColor={secondaryBg}
+          onEdit={onEditStart}
+        />
+
         {/* Timer display */}
-        <View className="px-12 py-8 rounded-card-lg mb-8" style={{ backgroundColor: mutedBg }}>
+        <View
+          testID="running-timer-elapsed"
+          className="px-12 py-8 rounded-card-lg mb-8"
+          style={{ backgroundColor: mutedBg }}
+        >
           <Text
             className="text-timer-xl text-center font-bold tracking-tight"
             style={{ color: isPaused ? PAUSED_AMBER : accentColor, opacity: isPaused ? 0.5 : 1 }}

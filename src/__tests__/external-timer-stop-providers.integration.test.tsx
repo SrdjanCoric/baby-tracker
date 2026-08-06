@@ -124,6 +124,7 @@ jest.mock("@/services/active-timer-service", () => ({
   acquireTimerLock: jest.fn(),
   releaseTimerLock: jest.fn(),
   updateTimerData: jest.fn(),
+  updateTimerStartTime: jest.fn(),
   getActiveTimerLock: jest.fn(),
   queuePendingLockRelease: jest.fn(),
 }));
@@ -299,11 +300,13 @@ describe("external timer stops through production providers", () => {
       getActiveTimerLock: jest.Mock;
       releaseTimerLock: jest.Mock;
       queuePendingLockRelease: jest.Mock;
+      updateTimerStartTime: jest.Mock;
     };
     activeTimers.acquireTimerLock.mockResolvedValue({ success: true });
     activeTimers.getActiveTimerLock.mockResolvedValue(null);
     activeTimers.releaseTimerLock.mockResolvedValue(false);
     activeTimers.queuePendingLockRelease.mockResolvedValue(undefined);
+    activeTimers.updateTimerStartTime.mockResolvedValue(true);
 
     const liveActivities = jest.requireMock("@/services/live-activity-service") as {
       startTimerLiveActivity: jest.Mock;
@@ -353,6 +356,207 @@ describe("external timer stops through production providers", () => {
       undefined,
       undefined,
     ]);
+  });
+
+  it("edits all four provider anchors, persists them, re-anchors Live Activities, and stops from the edit", async () => {
+    const editedStart = new Date("2026-07-15T07:30:00.000Z");
+    const stopAt = new Date("2026-07-15T08:05:00.000Z");
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      startTimerLiveActivity: jest.Mock;
+      endTimerLiveActivity: jest.Mock;
+    };
+    for (const activityId of [
+      "old-feeding",
+      "old-sleep",
+      "old-pumping",
+      "old-tummy",
+      "new-feeding",
+      "new-sleep",
+      "new-pumping",
+      "new-tummy",
+    ]) {
+      liveActivities.startTimerLiveActivity.mockResolvedValueOnce(activityId);
+    }
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    await act(async () => {
+      await feedingState!.editBreastfeedingStartTime(editedStart);
+      await sleepState!.editSleepStartTime(editedStart);
+      await pumpingState!.editPumpingStartTime(editedStart);
+      await tummyTimeState!.editTummyTimeStartTime(editedStart);
+    });
+
+    expect([
+      feedingState?.activeTimer?.startTime,
+      sleepState?.activeTimer?.startTime,
+      pumpingState?.activeTimer?.startTime,
+      tummyTimeState?.activeTimer?.startTime,
+    ]).toEqual([editedStart, editedStart, editedStart, editedStart]);
+    await expect(
+      Promise.all([
+        FeedingStorageService.getActiveTimer("baby-1"),
+        SleepStorageService.getActiveTimer("baby-1"),
+        PumpingStorageService.getActiveTimer("baby-1"),
+        TummyTimeStorageService.getActiveTimer("baby-1"),
+      ])
+    ).resolves.toEqual([
+      expect.objectContaining({ startedAt: editedStart.toISOString(), liveActivityId: "new-feeding" }),
+      expect.objectContaining({ startedAt: editedStart.toISOString(), liveActivityId: "new-sleep" }),
+      expect.objectContaining({ startedAt: editedStart.toISOString(), liveActivityId: "new-pumping" }),
+      expect.objectContaining({ startedAt: editedStart.toISOString(), liveActivityId: "new-tummy" }),
+    ]);
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      updateTimerStartTime: jest.Mock;
+    };
+    expect(activeTimers.updateTimerStartTime.mock.calls.map(call => call[1])).toEqual([
+      "feeding",
+      "sleep",
+      "pumping",
+      "tummy_time",
+    ]);
+    expect(liveActivities.endTimerLiveActivity.mock.calls.slice(0, 4).map(call => call[0])).toEqual([
+      "old-feeding",
+      "old-sleep",
+      "old-pumping",
+      "old-tummy",
+    ]);
+    expect(liveActivities.startTimerLiveActivity.mock.calls.slice(4).map(call => call[3])).toEqual([
+      editedStart,
+      editedStart,
+      editedStart,
+      editedStart,
+    ]);
+
+    await act(async () => {
+      await feedingState!.stopBreastfeeding(stopAt);
+      await sleepState!.stopSleep(stopAt);
+      await pumpingState!.stopPumping(90, stopAt);
+      await tummyTimeState!.stopTummyTime(stopAt);
+    });
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      createSleepInDatabase: jest.Mock;
+      createPumpingInDatabase: jest.Mock;
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    expect([
+      activitySync.createFeedingInDatabase.mock.calls[0][0].startedAt,
+      activitySync.createSleepInDatabase.mock.calls[0][0].startedAt,
+      activitySync.createPumpingInDatabase.mock.calls[0][0].startedAt,
+      activitySync.createTummyTimeInDatabase.mock.calls[0][0].startedAt,
+    ]).toEqual([editedStart, editedStart, editedStart, editedStart]);
+  });
+
+  it("keeps feeding side durations within the session after moving the start past a side change", async () => {
+    const originalStart = "2026-07-15T10:00:00.000Z";
+    const sideChangedAt = "2026-07-15T10:05:00.000Z";
+    const editedStart = new Date("2026-07-15T10:20:00.000Z");
+    const stopAt = new Date("2026-07-15T10:30:00.000Z");
+    await FeedingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "feeding-timer",
+      activityId: "feeding-activity",
+      startedAt: originalStart,
+      side: "right",
+      type: "breast",
+      leftAccumulatedSeconds: 300,
+      rightAccumulatedSeconds: 0,
+      currentSideStartedAt: sideChangedAt,
+      isPaused: false,
+      totalPausedMs: 0,
+    });
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect(feedingState?.activeTimer?.currentSideStartedAt).toEqual(
+        new Date(sideChangedAt)
+      )
+    );
+
+    await act(async () => {
+      await feedingState!.editBreastfeedingStartTime(editedStart);
+    });
+    await waitFor(() =>
+      expect(feedingState?.activeTimer?.startTime).toEqual(editedStart)
+    );
+    await act(async () => {
+      await feedingState!.stopBreastfeeding(stopAt);
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+    };
+    expect(activitySync.createFeedingInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startedAt: editedStart,
+        endedAt: stopAt,
+        durationSeconds: 600,
+        leftDurationSeconds: undefined,
+        rightDurationSeconds: 600,
+      }),
+      "user-1"
+    );
+  });
+
+  it("assigns an earlier edited span to the accumulated side before a side change", async () => {
+    const originalStart = "2026-07-15T10:00:00.000Z";
+    const sideChangedAt = "2026-07-15T10:05:00.000Z";
+    const editedStart = new Date("2026-07-15T09:30:00.000Z");
+    const stopAt = new Date("2026-07-15T10:30:00.000Z");
+    await FeedingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "feeding-timer",
+      activityId: "feeding-activity",
+      startedAt: originalStart,
+      side: "right",
+      type: "breast",
+      leftAccumulatedSeconds: 300,
+      rightAccumulatedSeconds: 0,
+      currentSideStartedAt: sideChangedAt,
+      isPaused: false,
+      totalPausedMs: 0,
+    });
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect(feedingState?.activeTimer?.currentSideStartedAt).toEqual(
+        new Date(sideChangedAt)
+      )
+    );
+    await act(async () => {
+      await feedingState!.editBreastfeedingStartTime(editedStart);
+    });
+    await waitFor(() =>
+      expect(feedingState?.activeTimer?.startTime).toEqual(editedStart)
+    );
+    await act(async () => {
+      await feedingState!.stopBreastfeeding(stopAt);
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+    };
+    expect(activitySync.createFeedingInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        durationSeconds: 3600,
+        leftDurationSeconds: 2100,
+        rightDurationSeconds: 1500,
+      }),
+      "user-1"
+    );
   });
 
   it("counts a resumed pause in every provider's saved record", async () => {

@@ -1,13 +1,17 @@
 import {
   getActiveTimerLock,
+  isRetryableTimerWriteError,
   queuePendingLockRelease,
+  queuePendingTimerStartEdit,
   releaseTimerLock,
+  updateTimerStartTime,
   type TimerActivityType,
 } from "./active-timer-service";
 import {
   endLiveActivityByType,
   endTimerLiveActivity,
   isLiveActivityRunningWithTimeout,
+  pauseTimerLiveActivity,
   startTimerLiveActivity,
   type BreastSide,
   type SleepType,
@@ -111,6 +115,27 @@ export interface TimerLifecycleAdapter<
   ): boolean;
 }
 
+export interface EditRunningTimerStartTimeOptions<
+  TPayload extends SharedTimerPayload,
+  TActiveTimer extends TimerLifecycleActiveTimer,
+  TRecord,
+  TCreateInput,
+> {
+  adapter: TimerLifecycleAdapter<
+    TPayload,
+    TActiveTimer,
+    TRecord,
+    TCreateInput
+  >;
+  baby: { id: string; name: string };
+  userId: string;
+  activeTimer: TActiveTimer & TimerIdentity;
+  payload: TPayload & TimerIdentity;
+  startedAt: Date;
+  liveActivityIdRef: MutableRef<string | null>;
+  dispatchEditedStart(startedAt: Date): void;
+}
+
 export interface RestoreTimerLifecycleOptions<
   TPayload extends SharedTimerPayload,
   TActiveTimer extends TimerLifecycleActiveTimer,
@@ -149,6 +174,117 @@ export function parseTimerDate(
   if (!value) return fallback;
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date : fallback;
+}
+
+export async function editRunningTimerStartTime<
+  TPayload extends SharedTimerPayload,
+  TActiveTimer extends TimerLifecycleActiveTimer,
+  TRecord,
+  TCreateInput,
+>({
+  adapter,
+  baby,
+  userId,
+  activeTimer,
+  payload,
+  startedAt,
+  liveActivityIdRef,
+  dispatchEditedStart,
+}: EditRunningTimerStartTimeOptions<
+  TPayload,
+  TActiveTimer,
+  TRecord,
+  TCreateInput
+>): Promise<void> {
+  const pausedAt = payload.isPaused
+    ? parseTimerDate(payload.pausedAt, new Date())
+    : undefined;
+  const timerData = {
+    ...adapter.timerDataCodec.encode(payload),
+    effectiveStartTime: startedAt.toISOString(),
+    ...(pausedAt
+      ? {
+          accumulatedSeconds: Math.max(
+            0,
+            Math.floor((pausedAt.getTime() - startedAt.getTime()) / 1000)
+          ),
+        }
+      : {}),
+  };
+  if (activeTimer.lockState === "offline") {
+    await queuePendingTimerStartEdit(
+      baby.id,
+      adapter.activityType,
+      userId,
+      activeTimer.timerInstanceId,
+      startedAt,
+      timerData
+    );
+  } else {
+    try {
+      await updateTimerStartTime(
+        baby.id,
+        adapter.activityType,
+        userId,
+        startedAt,
+        timerData
+      );
+    } catch (error) {
+      if (!isRetryableTimerWriteError(error)) throw error;
+      await queuePendingTimerStartEdit(
+        baby.id,
+        adapter.activityType,
+        userId,
+        activeTimer.timerInstanceId,
+        startedAt,
+        timerData
+      );
+    }
+  }
+
+  const oldLiveActivityId =
+    liveActivityIdRef.current ?? activeTimer.liveActivityId ?? null;
+  let replacementLiveActivityId: string | null = null;
+  let endedExistingLiveActivity = false;
+  if (oldLiveActivityId) {
+    endedExistingLiveActivity = await endTimerLiveActivity(oldLiveActivityId);
+  }
+  if (!endedExistingLiveActivity) {
+    endedExistingLiveActivity = await endLiveActivityByType(
+      adapter.liveActivity.type
+    );
+  }
+
+  if (endedExistingLiveActivity) {
+    replacementLiveActivityId = await startTimerLiveActivity(
+      adapter.liveActivity.type,
+      baby.name,
+      adapter.liveActivity.detail(payload),
+      startedAt
+    );
+  }
+  liveActivityIdRef.current = replacementLiveActivityId;
+
+  if (replacementLiveActivityId && payload.isPaused) {
+    const activeElapsedSeconds = Math.max(
+      0,
+      Math.floor(
+        ((pausedAt ?? new Date()).getTime() - startedAt.getTime()) / 1000
+      )
+    );
+    await pauseTimerLiveActivity(
+      replacementLiveActivityId,
+      activeElapsedSeconds
+    );
+  }
+
+  await adapter.storage.setActiveTimer(baby.id, {
+    ...activeTimer,
+    ...payload,
+    startedAt: startedAt.toISOString(),
+    liveActivityId: replacementLiveActivityId ?? undefined,
+  });
+  dispatchEditedStart(startedAt);
 }
 
 function restoredTimer<TPayload extends SharedTimerPayload>(

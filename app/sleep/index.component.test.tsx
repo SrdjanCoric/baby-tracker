@@ -5,10 +5,13 @@ import { Platform } from "react-native";
 const mockConfirmMorningSleep = jest.fn().mockResolvedValue(undefined);
 const mockStartSleep = jest.fn().mockResolvedValue({ success: true });
 const mockStopSleep = jest.fn().mockResolvedValue(undefined);
+const mockEditSleepStartTime = jest.fn().mockResolvedValue(undefined);
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 let mockCanGoBack = false;
 let mockTimeFormat: "12h" | "24h" = "12h";
+let mockLockStartedBy: string | null = "user-1";
+let mockSleeps: Array<{ endedAt?: string }> = [];
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -42,6 +45,7 @@ jest.mock("react-i18next", () => ({
       "sleep.backToSleep": "Back to sleep",
       "sleep.morningConfirmationAccessibility": "Classify morning sleep",
       "common.timer": "Timer",
+      "common.someone": "Someone",
     }[key] ?? key),
   }),
 }));
@@ -65,7 +69,9 @@ const mockCheckAndSendAlert = jest.fn();
 jest.mock("@/contexts", () => ({
   useSleep: () => ({
     activeTimer: mockActiveTimer,
+    sleeps: mockSleeps,
     startSleep: mockStartSleep,
+    editSleepStartTime: mockEditSleepStartTime,
     stopSleep: mockStopSleep,
     pauseSleep: jest.fn(),
     resumeSleep: jest.fn(),
@@ -79,9 +85,21 @@ jest.mock("@/contexts", () => ({
     pendingMorningConfirmations: [],
     confirmMorningSleep: mockConfirmMorningSleep,
   }),
-  useAuth: () => ({ session: { access_token: "token" } }),
+  useAuth: () => ({
+    session: { access_token: "token" },
+    user: { id: "user-1", displayName: "Alice" },
+  }),
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
   useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
+  useActiveTimers: () => ({
+    getLockForActivity: () =>
+      mockLockStartedBy
+        ? {
+            startedBy: mockLockStartedBy,
+            startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
+          }
+        : null,
+  }),
 }));
 
 jest.mock("@/hooks", () => ({
@@ -111,6 +129,14 @@ jest.mock("@react-native-community/datetimepicker", () => {
     default: (props: Record<string, unknown>) => <View testID="datetime-picker" {...props} />,
   };
 });
+
+jest.mock("react-native-date-picker", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: (props: Record<string, unknown>) => <View {...props} />,
+  };
+});
 jest.mock("@/utils/e2e-mode", () => ({ isE2EMode: () => false }));
 
 import SleepScreen from "./index";
@@ -121,6 +147,8 @@ describe("SleepScreen morning confirmation", () => {
     mockActiveTimer = runningTimer;
     mockCanGoBack = false;
     mockTimeFormat = "12h";
+    mockLockStartedBy = "user-1";
+    mockSleeps = [];
   });
 
   afterEach(() => {
@@ -149,6 +177,139 @@ describe("SleepScreen morning confirmation", () => {
       jest.advanceTimersByTime(1000);
     });
     expect(mockCheckAndSendAlert).toHaveBeenCalledWith(60);
+  });
+
+  it("shows the starter and lets only that caregiver open the bounded editor", () => {
+    jest.useFakeTimers();
+    const now = new Date("2026-08-06T12:00:00.000Z");
+    jest.setSystemTime(now);
+    mockSleeps = [{ endedAt: "2026-08-06T03:30:00.000Z" }];
+    mockTimeFormat = "24h";
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date(2026, 7, 6, 10, 5),
+    };
+
+    const { rerender, UNSAFE_root } = render(<SleepScreen />);
+    const layoutOrder = UNSAFE_root.findAll(
+      (node) =>
+        node.props.testID === "running-timer-start-editor" ||
+        node.props.testID === "running-timer-elapsed"
+    ).map((node) => node.props.testID);
+    expect(layoutOrder.indexOf("running-timer-start-editor")).toBeLessThan(
+      layoutOrder.indexOf("running-timer-elapsed")
+    );
+    const ownerLabel = screen.getByRole("button", {
+      name: "Start time: 10:05 · Alice",
+    });
+    fireEvent.press(ownerLabel);
+    expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
+      new Date("2026-08-06T03:30:00.000Z")
+    );
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(now);
+
+    mockTimeFormat = "12h";
+    rerender(<SleepScreen />);
+    expect(
+      screen.getByRole("button", { name: "Start time: 10:05 AM · Alice" })
+    ).toBeTruthy();
+    mockLockStartedBy = "user-2";
+    rerender(<SleepScreen />);
+    expect(
+      screen.queryByRole("button", { name: "Start time: 10:05 AM · Bob" })
+    ).toBeNull();
+    expect(screen.getByLabelText("Start time: 10:05 AM · Bob")).toBeTruthy();
+  });
+
+  it("computes running-editor bounds when the picker opens", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T10:00:00.000Z"));
+
+    render(<SleepScreen />);
+
+    act(() => {
+      jest.setSystemTime(new Date("2026-08-06T10:20:00.000Z"));
+    });
+    fireEvent.press(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    );
+
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date("2026-08-06T10:20:00.000Z")
+    );
+  });
+
+  it("does not offer a paused-timer start later than the pause instant", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T11:00:00.000Z"));
+    mockActiveTimer = {
+      ...runningTimer,
+      isPaused: true,
+      pausedAt: new Date("2026-08-06T10:30:00.000Z"),
+    };
+
+    render(<SleepScreen />);
+    fireEvent.press(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    );
+
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date("2026-08-06T10:30:00.000Z")
+    );
+  });
+
+  it("keeps an offline local timer editable when the lock fetch is unavailable", () => {
+    mockLockStartedBy = null;
+    mockActiveTimer = { ...runningTimer, lockState: "offline" };
+
+    render(<SleepScreen />);
+
+    expect(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    ).toBeTruthy();
+  });
+
+  it("keeps an owned local timer editable during a transient lock fetch failure", () => {
+    mockLockStartedBy = null;
+    mockActiveTimer = { ...runningTimer, lockState: "owned" };
+
+    render(<SleepScreen />);
+
+    expect(
+      screen.getByRole("button", { name: /Start time: .* · Alice/ })
+    ).toBeTruthy();
+  });
+
+  it("writes the running picker value through the sleep provider", async () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date("2026-08-06T11:30:00.000Z"),
+    };
+    try {
+      render(<SleepScreen />);
+      fireEvent.press(
+        screen.getByRole("button", { name: /Start time: .* · Alice/ })
+      );
+      const selectedTime = new Date("2026-08-06T11:23:00.000Z");
+      fireEvent(
+        screen.getByTestId("bounded-android-datetime-picker"),
+        "dateChange",
+        selectedTime
+      );
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "Done" }));
+      });
+
+      expect(mockEditSleepStartTime).toHaveBeenCalledWith(
+        selectedTime
+      );
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
   });
 
   it("returns to tabs after stopping a cold-opened sleep timer", async () => {
@@ -215,6 +376,8 @@ describe("SleepScreen custom start time", () => {
   });
 
   it("reacts to the current preference and starts at the selected time", async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 0, 1, 16, 0));
     const selectedTime = new Date(2020, 0, 1, 14, 30);
     const { rerender } = render(<SleepScreen />);
 
@@ -234,24 +397,45 @@ describe("SleepScreen custom start time", () => {
     });
   });
 
-  it("configures the Android picker from the current preference", () => {
+  it("computes Started earlier bounds when the picker opens", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T10:00:00.000Z"));
+
+    render(<SleepScreen />);
+
+    act(() => {
+      jest.setSystemTime(new Date("2026-08-06T10:20:00.000Z"));
+    });
+    fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date("2026-08-06T10:20:00.000Z")
+    );
+  });
+
+  it("renders a bounded native Android picker for Started earlier", () => {
     const originalPlatformOS = Platform.OS;
     Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
 
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 2, 10, 0));
     try {
-      const { rerender } = render(<SleepScreen />);
+      render(<SleepScreen />);
       fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
-      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(true);
-
-      mockTimeFormat = "12h";
-      rerender(<SleepScreen />);
-      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(false);
+      const picker = screen.getByTestId("bounded-android-datetime-picker");
+      expect(picker.props.mode).toBe("datetime");
+      expect(picker.props.is24hourSource).toBe("locale");
+      expect(picker.props.locale).toBe("en_GB");
+      expect(picker.props.minimumDate).toEqual(
+        new Date(2026, 0, 1, 22, 0)
+      );
+      expect(picker.props.maximumDate).toEqual(new Date(2026, 0, 2, 10, 0));
     } finally {
       Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
     }
   });
 
-  it("keeps Android future-time rollover when selecting a custom start", async () => {
+  it("accepts an arbitrary in-range native Android value for Started earlier", async () => {
     const originalPlatformOS = Platform.OS;
     Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
     jest.useFakeTimers();
@@ -260,19 +444,17 @@ describe("SleepScreen custom start time", () => {
     try {
       render(<SleepScreen />);
       fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
+      const selectedTime = new Date(2026, 0, 2, 9, 37);
       fireEvent(
-        screen.getByTestId("datetime-picker"),
-        "change",
-        {},
-        new Date(2026, 0, 2, 14, 30)
+        screen.getByTestId("bounded-android-datetime-picker"),
+        "dateChange",
+        selectedTime
       );
+      fireEvent.press(screen.getByRole("button", { name: "Done" }));
       fireEvent.press(screen.getByRole("button", { name: "Start sleep" }));
 
       await waitFor(() => {
-        expect(mockStartSleep).toHaveBeenCalledWith(
-          "nap",
-          new Date(2026, 0, 1, 14, 30)
-        );
+        expect(mockStartSleep).toHaveBeenCalledWith("nap", selectedTime);
       });
     } finally {
       jest.useRealTimers();
@@ -293,7 +475,7 @@ describe("SleepScreen custom start time", () => {
 
       const picker = screen.getByTestId("datetime-picker");
       expect(picker.props.mode).toBe("datetime");
-      expect(picker.props.minimumDate).toEqual(new Date(2026, 0, 1, 0, 0));
+      expect(picker.props.minimumDate).toEqual(new Date(2026, 0, 1, 22, 0));
       expect(picker.props.maximumDate).toEqual(now);
       expect(picker.props.is24Hour).toBeUndefined();
 

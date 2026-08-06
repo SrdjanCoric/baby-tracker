@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useTummyTime, useBaby, useAuth, useTimeFormat } from "@/contexts";
+import { useTummyTime, useBaby, useAuth, useTimeFormat, useActiveTimers } from "@/contexts";
 import { formatDuration, formatTime } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
@@ -12,6 +12,9 @@ import { ModalCloseButton } from "@/components/ModalCloseButton";
 import { exitModal } from "@/navigation";
 import { MilestoneSuggestionModal } from "@/components";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
+import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
+import { getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
 
 const TUMMY_ORANGE = "#E67E22";
 const TUMMY_ORANGE_MUTED = "#FEF3E2";
@@ -26,12 +29,14 @@ export default function TummyTimeScreen() {
     onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const { getLockForActivity } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
   const {
     activeTimer,
     startTummyTime,
     stopTummyTime,
+    editTummyTimeStartTime,
     pauseTummyTime,
     resumeTummyTime,
     dailyGoalSeconds,
@@ -40,7 +45,30 @@ export default function TummyTimeScreen() {
     suggestedGoalSeconds,
     acceptMilestoneSuggestion,
     dismissMilestoneSuggestion,
+    tummyTimes,
   } = useTummyTime();
+  const timerLock = selectedBaby
+    ? getLockForActivity(selectedBaby.id, "tummy_time")
+    : null;
+  const hasLocalTimerOwnership =
+    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
+  const timerStarterName =
+    timerLock?.startedByName ??
+    (hasLocalTimerOwnership ? user?.displayName : null) ??
+    t("common.someone");
+  const canEditTimerStart = Boolean(
+    user?.id &&
+      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+  );
+  const getTimerStartBoundsForPicker = useCallback(
+    () =>
+      getTimerStartBounds(
+        tummyTimes,
+        new Date(),
+        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+      ),
+    [activeTimer?.isPaused, activeTimer?.pausedAt, tummyTimes]
+  );
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("tummyTime");
 
@@ -180,11 +208,17 @@ export default function TummyTimeScreen() {
             onStop={handleStopTummyTime}
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
+            startedAt={activeTimer!.startTime}
+            starterName={timerStarterName}
+            canEdit={canEditTimerStart}
+            getBounds={getTimerStartBoundsForPicker}
+            onEditStart={editTummyTimeStartTime}
           />
         ) : (
           <StartView
             onStart={handleStartTummyTime}
             onLogPast={handleLogPastTummyTime}
+            getBounds={getTimerStartBoundsForPicker}
           />
         )}
       </View>
@@ -207,16 +241,19 @@ export default function TummyTimeScreen() {
 interface StartViewProps {
   onStart: (customStartTime?: Date) => void;
   onLogPast: () => void;
+  getBounds(): TimerStartBounds;
 }
 
 function StartView({
   onStart,
   onLogPast,
+  getBounds,
 }: StartViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customStartTime, setCustomStartTime] = useState<Date | null>(null);
+  const [pickerBounds, setPickerBounds] = useState<TimerStartBounds>(() => getBounds());
 
   const handleStartPress = useCallback(() => {
     if (customStartTime) {
@@ -227,40 +264,19 @@ function StartView({
   }, [customStartTime, onStart]);
 
   const handleStartedEarlierPress = useCallback(() => {
+    setPickerBounds(getBounds());
     setShowTimePicker(true);
-  }, []);
-
-  const yesterdayStart = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
+  }, [getBounds]);
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
-      if (Platform.OS === "android") {
-        setShowTimePicker(false);
-      }
       if (selectedTime) {
-        const now = new Date();
-        let finalTime: Date;
-        if (Platform.OS === "android") {
-          finalTime = new Date();
-          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
-          if (finalTime > now) {
-            finalTime.setDate(finalTime.getDate() - 1);
-          }
-          if (finalTime < yesterdayStart) {
-            finalTime = new Date(yesterdayStart);
-          }
-        } else {
-          finalTime = selectedTime > now ? now : selectedTime;
-        }
-        setCustomStartTime(finalTime);
+        const currentBounds = getBounds();
+        setPickerBounds(currentBounds);
+        setCustomStartTime(normalizeTimerStartSelection(selectedTime, currentBounds));
       }
     },
-    [yesterdayStart]
+    [getBounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -335,29 +351,35 @@ function StartView({
       {/* Time Picker */}
       {showTimePicker && (
         <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
-          {Platform.OS === "ios" && (
-            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
-              <Pressable
-                onPress={handleTimeDone}
-                className="py-2 px-4"
-                accessibilityRole="button"
-                accessibilityLabel={t("common.done")}
-              >
-                <Text className="font-semibold" style={{ color: TUMMY_ORANGE }}>
-                  {t("common.done")}
-                </Text>
-              </Pressable>
-            </View>
+          <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+            <Pressable
+              onPress={handleTimeDone}
+              className="py-2 px-4"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.done")}
+            >
+              <Text className="font-semibold" style={{ color: TUMMY_ORANGE }}>
+                {t("common.done")}
+              </Text>
+            </Pressable>
+          </View>
+          {Platform.OS === "android" ? (
+            <BoundedAndroidDateTimePicker
+              value={customStartTime ?? pickerBounds.maximumDate}
+              bounds={pickerBounds}
+              timeFormat={timeFormat}
+              onChange={setCustomStartTime}
+            />
+          ) : (
+            <DateTimePicker
+              value={customStartTime ?? new Date()}
+              mode="datetime"
+              display="spinner"
+              onChange={handleTimeChange}
+              minimumDate={pickerBounds.minimumDate}
+              maximumDate={pickerBounds.maximumDate}
+            />
           )}
-          <DateTimePicker
-            value={customStartTime ?? new Date()}
-            mode={Platform.OS === "ios" ? "datetime" : "time"}
-            display="spinner"
-            onChange={handleTimeChange}
-            is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
-            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
-          />
         </View>
       )}
     </View>
@@ -370,6 +392,11 @@ interface RunningTimerViewProps {
   onStop: () => void;
   onPause?: () => void;
   onResume?: () => void;
+  startedAt: Date;
+  starterName: string;
+  canEdit: boolean;
+  getBounds(): TimerStartBounds;
+  onEditStart: (startedAt: Date) => Promise<void>;
 }
 
 function RunningTimerView({
@@ -378,8 +405,14 @@ function RunningTimerView({
   onStop,
   onPause,
   onResume,
+  startedAt,
+  starterName,
+  canEdit,
+  getBounds,
+  onEditStart,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const formattedTime = formatDuration(elapsedSeconds);
 
   return (
@@ -391,7 +424,20 @@ function RunningTimerView({
         </Text>
       </View>
 
+      <RunningTimerStartEditor
+        startLabel={t("tummyTime.startTime")}
+        startedAt={startedAt}
+        starterName={starterName}
+        canEdit={canEdit}
+        getBounds={getBounds}
+        timeFormat={timeFormat}
+        accentColor={TUMMY_ORANGE}
+        mutedBackgroundColor={TUMMY_ORANGE_MUTED}
+        onEdit={onEditStart}
+      />
+
       <View
+        testID="running-timer-elapsed"
         className="px-12 py-8 rounded-card-lg mb-8"
         style={{ backgroundColor: TUMMY_ORANGE_MUTED }}
       >

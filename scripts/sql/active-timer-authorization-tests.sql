@@ -487,6 +487,92 @@ $$;
 
 SELECT set_config(
   'request.jwt.claims',
+  json_build_object('sub', '71111111-1111-1111-1111-111111111111', 'role', 'authenticated')::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  activity TEXT;
+  acquired BOOLEAN;
+  released BOOLEAN;
+  updated_count INTEGER;
+  valid_updates INTEGER := 0;
+  rejected_future_updates INTEGER := 0;
+  rejected_old_updates INTEGER := 0;
+BEGIN
+  FOREACH activity IN ARRAY ARRAY['feeding', 'pumping', 'tummy_time']
+  LOOP
+    SELECT success
+    INTO acquired
+    FROM public.acquire_timer_lock(
+      '7a000000-0000-0000-0000-000000000001',
+      activity,
+      '71111111-1111-1111-1111-111111111111',
+      '{}'::jsonb,
+      pg_catalog.now()
+    );
+    IF NOT acquired THEN
+      RAISE EXCEPTION 'the owner could not acquire % for the all-type edit vector', activity;
+    END IF;
+  END LOOP;
+
+  FOREACH activity IN ARRAY ARRAY['feeding', 'sleep', 'pumping', 'tummy_time']
+  LOOP
+    UPDATE public.active_timers
+    SET started_at = pg_catalog.now() - INTERVAL '1 hour'
+    WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+      AND activity_type = activity;
+    GET DIAGNOSTICS updated_count = ROW_COUNT;
+    valid_updates := valid_updates + updated_count;
+
+    BEGIN
+      UPDATE public.active_timers
+      SET started_at = pg_catalog.now() + INTERVAL '2 seconds'
+      WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+        AND activity_type = activity;
+    EXCEPTION WHEN invalid_parameter_value THEN
+      rejected_future_updates := rejected_future_updates + 1;
+    END;
+
+    BEGIN
+      UPDATE public.active_timers
+      SET started_at = pg_catalog.now() - INTERVAL '12 hours 1 minute'
+      WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+        AND activity_type = activity;
+    EXCEPTION WHEN invalid_parameter_value THEN
+      rejected_old_updates := rejected_old_updates + 1;
+    END;
+  END LOOP;
+
+  IF valid_updates <> 4
+    OR rejected_future_updates <> 4
+    OR rejected_old_updates <> 4
+  THEN
+    RAISE EXCEPTION
+      'all-type start edits failed: valid %, future %, old %',
+      valid_updates,
+      rejected_future_updates,
+      rejected_old_updates;
+  END IF;
+
+  FOREACH activity IN ARRAY ARRAY['feeding', 'pumping', 'tummy_time']
+  LOOP
+    SELECT public.release_timer_lock(
+      '7a000000-0000-0000-0000-000000000001',
+      activity,
+      '71111111-1111-1111-1111-111111111111'
+    ) INTO released;
+    IF NOT released THEN
+      RAISE EXCEPTION 'the owner could not release % after the all-type edit vector', activity;
+    END IF;
+  END LOOP;
+END
+$$;
+RESET ROLE;
+
+SELECT set_config(
+  'request.jwt.claims',
   json_build_object('sub', '72222222-2222-2222-2222-222222222222', 'role', 'authenticated')::text,
   true
 );

@@ -1,18 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   acquireTimerLock,
+  isRetryableTimerWriteError,
   queuePendingLockRelease,
+  queuePendingTimerStartEdit,
   releaseTimerLock,
+  retryPendingTimerStartEdits,
+  updateTimerStartTime,
 } from "./active-timer-service";
 
 const storage = new Map<string, string>();
-const { fromMock, rpcMock, deleteMock, eqMock, selectMock, singleMock } = vi.hoisted(() => ({
+const { fromMock, rpcMock, deleteMock, eqMock, selectMock, singleMock, updateMock } = vi.hoisted(() => ({
   fromMock: vi.fn(),
   rpcMock: vi.fn(),
   deleteMock: vi.fn(),
   eqMock: vi.fn(),
   selectMock: vi.fn(),
   singleMock: vi.fn(),
+  updateMock: vi.fn(),
 }));
 
 vi.mock("@react-native-async-storage/async-storage", () => ({
@@ -67,6 +72,72 @@ describe("active timer acquisition", () => {
     expect(rpcMock).toHaveBeenCalledWith("acquire_timer_lock", expect.objectContaining({
       p_started_at: requestedStart.toISOString(),
     }));
+  });
+});
+
+describe("active timer start editing", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const query = {
+      update: updateMock,
+      eq: eqMock,
+      then: (resolve: (value: { error: null; count: number }) => unknown) =>
+        Promise.resolve({ error: null, count: 1 }).then(resolve),
+    };
+    updateMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    fromMock.mockReturnValue(query);
+  });
+
+  it("directly updates started_at for the current user's lock", async () => {
+    const startedAt = new Date("2026-08-06T07:30:00.000Z");
+
+    await expect(
+      updateTimerStartTime("baby-1", "feeding", "user-1", startedAt)
+    ).resolves.toBe(true);
+
+    expect(fromMock).toHaveBeenCalledWith("active_timers");
+    expect(updateMock).toHaveBeenCalledWith(
+      { started_at: "2026-08-06T07:30:00.000Z" },
+      { count: "exact" }
+    );
+    expect(eqMock).toHaveBeenCalledWith("baby_id", "baby-1");
+    expect(eqMock).toHaveBeenCalledWith("activity_type", "feeding");
+    expect(eqMock).toHaveBeenCalledWith("started_by", "user-1");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an edit when no active lock matches", async () => {
+    const zeroMatchQuery = {
+      update: updateMock,
+      eq: eqMock,
+      then: (
+        resolve: (value: { error: null; count: number }) => unknown
+      ) => Promise.resolve({ error: null, count: 0 }).then(resolve),
+    };
+    updateMock.mockReturnValue(zeroMatchQuery);
+    eqMock.mockReturnValue(zeroMatchQuery);
+    fromMock.mockReturnValue(zeroMatchQuery);
+
+    await expect(
+      updateTimerStartTime(
+        "baby-1",
+        "feeding",
+        "user-1",
+        new Date("2026-08-06T07:30:00.000Z")
+      )
+    ).rejects.toThrow("No matching active timer");
+  });
+
+  it("retries only TypeErrors that describe a transport failure", () => {
+    expect(
+      isRetryableTimerWriteError(new TypeError("Network request failed"))
+    ).toBe(true);
+    expect(
+      isRetryableTimerWriteError(
+        new TypeError("Cannot read properties of undefined")
+      )
+    ).toBe(false);
   });
 });
 
@@ -165,5 +236,88 @@ describe("active timer cleanup", () => {
       )
     ).resolves.toBe(false);
     expect(deleteMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("pending active timer start edits", () => {
+  beforeEach(() => {
+    storage.clear();
+    vi.clearAllMocks();
+  });
+
+  it("keeps only the latest queued edit for one timer instance", async () => {
+    await queuePendingTimerStartEdit(
+      "baby-1",
+      "feeding",
+      "user-1",
+      "timer-1",
+      new Date("2026-08-06T07:30:00.000Z"),
+      { timerInstanceId: "timer-1", revision: 1 }
+    );
+    await queuePendingTimerStartEdit(
+      "baby-1",
+      "feeding",
+      "user-1",
+      "timer-1",
+      new Date("2026-08-06T07:15:00.000Z"),
+      { timerInstanceId: "timer-1", revision: 2 }
+    );
+
+    expect(
+      JSON.parse(storage.get("@pending_timer_start_edits") ?? "[]")
+    ).toEqual([
+      expect.objectContaining({
+        timerInstanceId: "timer-1",
+        startedAt: "2026-08-06T07:15:00.000Z",
+        timerData: { timerInstanceId: "timer-1", revision: 2 },
+      }),
+    ]);
+  });
+
+  it("replays a queued start without overwriting newer timer data", async () => {
+    await queuePendingTimerStartEdit(
+      "baby-1",
+      "feeding",
+      "user-1",
+      "timer-1",
+      new Date("2026-08-06T07:30:00.000Z"),
+      { timerInstanceId: "timer-1", revision: 1 }
+    );
+    const query = {
+      update: updateMock,
+      select: selectMock,
+      eq: eqMock,
+      single: singleMock,
+      then: (resolve: (value: { error: null; count: number }) => unknown) =>
+        Promise.resolve({ error: null, count: 1 }).then(resolve),
+    };
+    updateMock.mockReturnValue(query);
+    selectMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    singleMock.mockResolvedValue({
+      data: {
+        id: "lock-1",
+        baby_id: "baby-1",
+        activity_type: "feeding",
+        started_by: "user-1",
+        started_at: "2026-08-06T08:00:00.000Z",
+        timer_data: {
+          timerInstanceId: "timer-1",
+          isPaused: true,
+          pausedAt: "2026-08-06T08:15:00.000Z",
+        },
+        users: { display_name: "Caregiver" },
+      },
+      error: null,
+    });
+    fromMock.mockReturnValue(query);
+
+    await retryPendingTimerStartEdits();
+
+    expect(updateMock).toHaveBeenCalledWith(
+      { started_at: "2026-08-06T07:30:00.000Z" },
+      { count: "exact" }
+    );
+    expect(storage.get("@pending_timer_start_edits")).toBe("[]");
   });
 });

@@ -52,7 +52,10 @@ import {
   type TimerIdentity,
 } from "@/services/timer-completion-service";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
-import { restoreTimerLifecycle } from "@/services/timer-lifecycle";
+import {
+  editRunningTimerStartTime,
+  restoreTimerLifecycle,
+} from "@/services/timer-lifecycle";
 import { createPumpingTimerAdapter } from "@/services/timer-adapters/pumping-timer-adapter";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
 import type {
@@ -96,6 +99,7 @@ export type PumpingAction =
   | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
   | { type: "RESUME_TIMER" }
   | { type: "RESTORE_TIMER"; payload: ActivePumpingTimer }
+  | { type: "EDIT_TIMER_START"; payload: Date }
   | { type: "REMOTE_INSERT"; payload: StoredPumpingEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredPumpingEntry }
   | { type: "REMOTE_DELETE"; payload: string };
@@ -191,6 +195,13 @@ export function pumpingReducer(
         activeTimer: action.payload,
       };
 
+    case "EDIT_TIMER_START":
+      if (!state.activeTimer) return state;
+      return {
+        ...state,
+        activeTimer: { ...state.activeTimer, startTime: action.payload },
+      };
+
     case "REMOTE_INSERT":
       return { ...state, pumpings: upsertById(state.pumpings, action.payload) };
 
@@ -227,6 +238,7 @@ interface PumpingContextValue extends PumpingState {
     volumeMl: number,
     requestedEndTime?: Date
   ) => Promise<StoredPumpingEntry | null>;
+  editPumpingStartTime: (startedAt: Date) => Promise<void>;
   changePumpingSide: (side: BreastSide) => void;
   pausePumping: (requestedPauseTime?: Date) => Promise<void>;
   resumePumping: (
@@ -668,6 +680,51 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     [selectedBaby, state.activeTimer, user?.id]
   );
 
+  const editPumpingStartTime = useCallback(
+    async (startedAt: Date) => {
+      if (!selectedBaby || !user?.id || !state.activeTimer) return;
+      const activeTimer = state.activeTimer;
+      const adapter = createPumpingTimerAdapter({
+        babyId: selectedBaby.id,
+        dispatchRestoreTimer: (restoredTimer) => {
+          dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+        },
+      });
+
+      await editRunningTimerStartTime({
+        adapter,
+        baby: selectedBaby,
+        userId: user.id,
+        activeTimer: {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          startedAt: activeTimer.startTime.toISOString(),
+          side: activeTimer.side,
+          liveActivityId: liveActivityIdRef.current ?? undefined,
+          isPaused: activeTimer.isPaused,
+          pausedAt: activeTimer.pausedAt?.toISOString(),
+          totalPausedMs: activeTimer.totalPausedMs,
+          lockState: activeTimer.lockState,
+        },
+        payload: {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          side: activeTimer.side,
+          isPaused: activeTimer.isPaused,
+          pausedAt: activeTimer.pausedAt?.toISOString(),
+          totalPausedMs: activeTimer.totalPausedMs,
+        },
+        startedAt,
+        liveActivityIdRef,
+        dispatchEditedStart: (nextStart) => {
+          dispatch({ type: "EDIT_TIMER_START", payload: nextStart });
+        },
+      });
+      await refreshLocks();
+    },
+    [refreshLocks, selectedBaby, state.activeTimer, user?.id]
+  );
+
   const pausePumping = useCallback(
     async (requestedPauseTime?: Date) => {
       if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused)
@@ -884,6 +941,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startPumping,
       stopPumping,
+      editPumpingStartTime,
       changePumpingSide,
       pausePumping,
       resumePumping,
@@ -903,6 +961,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startPumping,
       stopPumping,
+      editPumpingStartTime,
       changePumpingSide,
       pausePumping,
       resumePumping,
