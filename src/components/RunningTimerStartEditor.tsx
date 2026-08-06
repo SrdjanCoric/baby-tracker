@@ -24,6 +24,10 @@ interface RunningTimerStartEditorProps {
   onEdit(startedAt: Date): void | Promise<void>;
 }
 
+function hasSelectableRange(bounds: TimerStartBounds): boolean {
+  return bounds.minimumDate.getTime() <= bounds.maximumDate.getTime();
+}
+
 export function RunningTimerStartEditor({
   startLabel,
   startedAt,
@@ -43,9 +47,10 @@ export function RunningTimerStartEditor({
   const [draftStartedAt, setDraftStartedAt] = useState(startedAt);
   const label = `${startLabel}: ${formatTime(startedAt, timeFormat)} · ${starterName}`;
   const handleOpen = useCallback(() => {
-    setPickerBounds(getBounds());
+    const currentBounds = getBounds();
+    setPickerBounds(currentBounds);
     setDraftStartedAt(startedAt);
-    setShowPicker(true);
+    setShowPicker(hasSelectableRange(currentBounds));
   }, [getBounds, startedAt]);
   const commitEdit = useCallback(
     async (nextStartedAt: Date) => {
@@ -74,6 +79,12 @@ export function RunningTimerStartEditor({
   );
   const handleDone = useCallback(async () => {
     const currentBounds = getBounds();
+    if (!hasSelectableRange(currentBounds)) {
+      setPickerBounds(currentBounds);
+      setShowPicker(false);
+      Alert.alert(t("common.error"), t("errors.generic"));
+      return;
+    }
     const revalidatedStart = normalizeTimerStartSelection(
       draftStartedAt,
       currentBounds
@@ -81,7 +92,7 @@ export function RunningTimerStartEditor({
     setPickerBounds(currentBounds);
     setDraftStartedAt(revalidatedStart);
     await commitEdit(revalidatedStart);
-  }, [commitEdit, draftStartedAt, getBounds]);
+  }, [commitEdit, draftStartedAt, getBounds, t]);
 
   const content = (
     <Text className="text-sm font-medium" style={{ color: accentColor }}>

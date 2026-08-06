@@ -187,6 +187,36 @@ describe("RunningTimerStartEditor", () => {
     expect(onEdit).toHaveBeenCalledWith(refreshedBounds.minimumDate);
   });
 
+  it("does not render a picker when a paused timer has no valid edit range", () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "ios",
+      configurable: true,
+    });
+
+    render(
+      <RunningTimerStartEditor
+        startLabel="Start time"
+        startedAt={new Date(2026, 7, 6, 7, 0)}
+        starterName="Alice"
+        canEdit
+        getBounds={() => ({
+          minimumDate: new Date(2026, 7, 6, 10, 0),
+          maximumDate: new Date(2026, 7, 6, 8, 0),
+        })}
+        timeFormat="24h"
+        accentColor="#000"
+        mutedBackgroundColor="#fff"
+        onEdit={jest.fn()}
+      />
+    );
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "Start time: 7:00 · Alice" })
+    );
+
+    expect(screen.queryByTestId("datetime-picker")).toBeNull();
+  });
+
   it("offers a bounded native datetime picker on Android", async () => {
     Object.defineProperty(Platform, "OS", {
       value: "android",

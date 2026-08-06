@@ -26,7 +26,7 @@ describe("timer start bounds", () => {
     );
   });
 
-  it("keeps paused-timer bounds ordered from the same reference instant", () => {
+  it("retains the server horizon when a paused timer has no edit range", () => {
     expect(
       getTimerStartBounds(
         [],
@@ -34,7 +34,7 @@ describe("timer start bounds", () => {
         new Date("2026-08-06T08:00:00.000Z")
       )
     ).toEqual({
-      minimumDate: new Date("2026-08-05T20:00:00.000Z"),
+      minimumDate: new Date("2026-08-06T11:00:00.000Z"),
       maximumDate: new Date("2026-08-06T08:00:00.000Z"),
     });
   });
