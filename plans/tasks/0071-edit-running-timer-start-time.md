@@ -2,9 +2,6 @@
 
 **Branch**: `feature/edit-running-timer-start-time`
 **Depends on**: 0069, 0070
-**Change class**: `code`
-**Validation tier**: `canonical`
-**TDD applicable**: yes
 **Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
 `decisions/resolved/007-running-timer-start-time-edit.md` (resolved) · **User stories**: As the
 caregiver who started a timer, I want to correct its start time without stopping it, so that noticing
@@ -115,24 +112,6 @@ consequence, not a defect to engineer around. The queued edit is always the star
 A start edited mid-run is the value the stop finalizes into the saved record. After Task 0067 record
 construction is adapter-owned inside `src/services/timer-lifecycle.ts` and reads the lock's
 `started_at`, so this should hold by construction — prove it rather than assume it.
-
-### Implementation clarification (2026-08-06)
-
-Reconnaissance found that the normal in-app stop paths do not read the active-timer lock. Each
-provider builds its record from its separately persisted local `activeTimer.startTime`, so changing
-only `active_timers.started_at` would leave the screen and eventual saved record on the old anchor.
-
-The edit is therefore a provider operation rather than a screen-only service call. Each activity
-context exposes one start-edit method to its screen. A shared timer-lifecycle operation coordinates
-the direct lock write, the provider's persisted active-timer snapshot and reducer state, and the
-editing device's end-then-restart Live Activity re-anchor while preserving the adapter-provided
-detail. Screens remain presentation callers and do not update those stores independently. This is
-not a new product behavior or scope expansion; it is the implementation seam required for the
-already-stated elapsed-display, stop-record, restart-recovery, and Live Activity outcomes to agree.
-
-Required automated proof covers the shared operation through provider integration: after an edit,
-the provider state and persisted snapshot use the new start, a subsequent stop builds the record
-from that start, and the old Live Activity ends before a replacement starts on the new anchor.
 
 ## Implementation work
 
