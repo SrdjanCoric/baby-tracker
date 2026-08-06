@@ -84,7 +84,63 @@ VALUES (
   pg_catalog.now() - INTERVAL '13 hours',
   '{}'::jsonb
 );
+INSERT INTO public.active_timers (
+  baby_id,
+  activity_type,
+  started_by,
+  started_at,
+  timer_data
+)
+VALUES
+  (
+    '7a000000-0000-0000-0000-000000000001',
+    'tummy_time',
+    '71111111-1111-1111-1111-111111111111',
+    pg_catalog.now() + INTERVAL '1 hour',
+    '{}'::jsonb
+  ),
+  (
+    '7a000000-0000-0000-0000-000000000001',
+    'feeding',
+    '71111111-1111-1111-1111-111111111111',
+    pg_catalog.now() + INTERVAL '1 minute',
+    '{}'::jsonb
+  );
 SET LOCAL session_replication_role = origin;
+
+-- Re-run the migration against rows written before its guard existed. Invalid future locks must be
+-- removed immediately, while small client-clock skew is retained and normalized to database time.
+\ir ../../supabase/migrations/060_guard_active_timer_start_bounds.sql
+DO $$
+DECLARE
+  far_future_count INTEGER;
+  near_future_started_at TIMESTAMPTZ;
+BEGIN
+  SELECT count(*)
+  INTO far_future_count
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'tummy_time';
+
+  SELECT started_at
+  INTO near_future_started_at
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'feeding';
+
+  IF far_future_count <> 0 THEN
+    RAISE EXCEPTION 'migration left a far-future timer lock in place';
+  END IF;
+
+  IF near_future_started_at IS NULL OR near_future_started_at > pg_catalog.now() THEN
+    RAISE EXCEPTION 'migration did not normalize a near-future timer lock';
+  END IF;
+END
+$$;
+
+DELETE FROM public.active_timers
+WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+  AND activity_type = 'feeding';
 
 SELECT set_config(
   'request.jwt.claims',

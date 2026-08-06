@@ -28,6 +28,16 @@ BEGIN
 END;
 $$;
 
+-- Repair locks written before this guard existed. A far-future lock cannot represent a valid
+-- running timer and would otherwise remain unreclaimable; small client-clock skew is preserved by
+-- normalizing it to the database clock, matching the trigger's behavior for new writes.
+DELETE FROM public.active_timers
+WHERE started_at > pg_catalog.now() + INTERVAL '5 minutes';
+
+UPDATE public.active_timers
+SET started_at = pg_catalog.now()
+WHERE started_at > pg_catalog.now();
+
 DROP TRIGGER IF EXISTS validate_active_timer_started_at ON public.active_timers;
 CREATE TRIGGER validate_active_timer_started_at
   BEFORE INSERT OR UPDATE ON public.active_timers
