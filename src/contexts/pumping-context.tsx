@@ -93,7 +93,7 @@ export type PumpingAction =
     }
   | { type: "STOP_TIMER" }
   | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide }
-  | { type: "PAUSE_TIMER" }
+  | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
   | { type: "RESUME_TIMER" }
   | { type: "RESTORE_TIMER"; payload: ActivePumpingTimer }
   | { type: "REMOTE_INSERT"; payload: StoredPumpingEntry }
@@ -166,7 +166,7 @@ export function pumpingReducer(
         activeTimer: {
           ...state.activeTimer,
           isPaused: true,
-          pausedAt: new Date(),
+          pausedAt: action.payload.pausedAt,
         },
       };
     }
@@ -663,7 +663,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
       const now = requestedPauseTime ?? new Date();
 
-      dispatch({ type: "PAUSE_TIMER" });
+      dispatch({ type: "PAUSE_TIMER", payload: { pausedAt: now } });
 
       if (liveActivityIdRef.current) {
         const activeElapsedSeconds = Math.floor(

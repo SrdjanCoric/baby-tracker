@@ -167,7 +167,7 @@ export type SleepAction =
   | { type: "SET_SHOW_MILESTONE_SUGGESTION"; payload: boolean }
   | { type: "SET_SUGGESTED_GOAL"; payload: number | null }
   | { type: "SET_WAKE_WINDOW_CONFIG"; payload: WakeWindowConfig | null }
-  | { type: "PAUSE_TIMER" }
+  | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
   | { type: "RESUME_TIMER" }
   | { type: "RESTORE_TIMER"; payload: ActiveSleepTimer }
   | { type: "SET_NEWBORN_NAP_OPT_IN"; payload: boolean }
@@ -325,7 +325,7 @@ export function sleepReducer(
         activeTimer: {
           ...state.activeTimer,
           isPaused: true,
-          pausedAt: new Date(),
+          pausedAt: action.payload.pausedAt,
         },
       };
     }
@@ -1464,7 +1464,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
       const now = requestedPauseTime ?? new Date();
 
-      dispatch({ type: "PAUSE_TIMER" });
+      dispatch({ type: "PAUSE_TIMER", payload: { pausedAt: now } });
 
       if (liveActivityIdRef.current) {
         const activeElapsedSeconds = Math.floor(

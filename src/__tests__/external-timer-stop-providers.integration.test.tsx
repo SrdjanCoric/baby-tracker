@@ -373,6 +373,53 @@ describe("external timer stops through production providers", () => {
     }
   });
 
+  it("keeps the requested pause instant in every provider's active timer", async () => {
+    const requestedPauseTime = new Date("2026-07-15T08:01:00.000Z");
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    await waitFor(() =>
+      expect([
+        feedingState?.activeTimer?.isRunning,
+        sleepState?.activeTimer?.isRunning,
+        pumpingState?.activeTimer?.isRunning,
+        tummyTimeState?.activeTimer?.isRunning,
+      ]).toEqual([true, true, true, true])
+    );
+
+    await act(async () => {
+      await feedingState!.pauseBreastfeeding(requestedPauseTime);
+      await sleepState!.pauseSleep(requestedPauseTime);
+      await pumpingState!.pausePumping(requestedPauseTime);
+      await tummyTimeState!.pauseTummyTime(requestedPauseTime);
+    });
+
+    expect([
+      feedingState?.activeTimer?.pausedAt,
+      sleepState?.activeTimer?.pausedAt,
+      pumpingState?.activeTimer?.pausedAt,
+      tummyTimeState?.activeTimer?.pausedAt,
+    ]).toEqual([
+      requestedPauseTime,
+      requestedPauseTime,
+      requestedPauseTime,
+      requestedPauseTime,
+    ]);
+  });
+
   it("ends every provider's open pause at pausedAt", async () => {
     const pausedAt = "2026-07-15T08:03:00.000Z";
 

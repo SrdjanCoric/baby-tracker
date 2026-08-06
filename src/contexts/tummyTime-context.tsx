@@ -75,7 +75,7 @@ export type TummyTimeAction =
   | { type: "SET_SUGGESTED_GOAL"; payload: number | null }
   | { type: "START_TIMER"; payload: { startTime: Date; lockState: TimerLockReconciliationState } & TimerIdentity }
   | { type: "STOP_TIMER" }
-  | { type: "PAUSE_TIMER" }
+  | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
   | { type: "RESUME_TIMER" }
   | { type: "RESTORE_TIMER"; payload: ActiveTummyTimeTimer }
   | { type: "REMOTE_INSERT"; payload: StoredTummyTimeEntry }
@@ -160,7 +160,7 @@ export function tummyTimeReducer(
         activeTimer: {
           ...state.activeTimer,
           isPaused: true,
-          pausedAt: new Date(),
+          pausedAt: action.payload.pausedAt,
         },
       };
     }
@@ -609,7 +609,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     const now = requestedPauseTime ?? new Date();
 
-    dispatch({ type: "PAUSE_TIMER" });
+    dispatch({ type: "PAUSE_TIMER", payload: { pausedAt: now } });
 
     if (liveActivityIdRef.current) {
       const activeElapsedSeconds = Math.floor(

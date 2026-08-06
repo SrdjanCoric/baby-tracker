@@ -110,7 +110,10 @@ export type FeedingAction =
       type: "UPDATE_TIMER_SIDE";
       payload: { side: BreastSide; accumulatedSeconds: number };
     }
-  | { type: "PAUSE_TIMER"; payload: { accumulatedSeconds: number } }
+  | {
+      type: "PAUSE_TIMER";
+      payload: { accumulatedSeconds: number; pausedAt: Date };
+    }
   | { type: "RESUME_TIMER" }
   | { type: "REMOTE_INSERT"; payload: StoredFeedingEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredFeedingEntry }
@@ -221,7 +224,7 @@ export function feedingReducer(
 
     case "PAUSE_TIMER": {
       if (!state.activeTimer) return state;
-      const { accumulatedSeconds } = action.payload;
+      const { accumulatedSeconds, pausedAt } = action.payload;
       const prevSide = state.activeTimer.side;
       let leftAccumulated = state.activeTimer.leftAccumulatedSeconds;
       let rightAccumulated = state.activeTimer.rightAccumulatedSeconds;
@@ -240,7 +243,7 @@ export function feedingReducer(
         activeTimer: {
           ...state.activeTimer,
           isPaused: true,
-          pausedAt: new Date(),
+          pausedAt,
           leftAccumulatedSeconds: leftAccumulated,
           rightAccumulatedSeconds: rightAccumulated,
         },
@@ -811,7 +814,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           1000
       );
 
-      dispatch({ type: "PAUSE_TIMER", payload: { accumulatedSeconds } });
+      dispatch({
+        type: "PAUSE_TIMER",
+        payload: { accumulatedSeconds, pausedAt: now },
+      });
 
       if (liveActivityIdRef.current) {
         const activeElapsedSeconds = Math.floor(
