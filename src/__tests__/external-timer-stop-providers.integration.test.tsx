@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { act, render, waitFor } from "@testing-library/react-native";
+import { act, render, screen, waitFor, within } from "@testing-library/react-native";
 import React from "react";
 import { Alert, AppState, Platform, type AppStateStatus } from "react-native";
 import { FeedingProvider, useFeeding } from "@/contexts/feeding-context";
 import { PumpingProvider, usePumping } from "@/contexts/pumping-context";
 import { SleepProvider, useSleep } from "@/contexts/sleep-context";
 import { TummyTimeProvider, useTummyTime } from "@/contexts/tummyTime-context";
+import { DashboardCard } from "@/components/DashboardCard";
 import type { CreateFeedingInput, StoredFeedingEntry } from "@/services/feeding-storage";
 import { FeedingStorageService } from "@/services/feeding-storage";
 import type { CreateSleepInput, StoredSleepEntry } from "@/services/sleep-storage";
@@ -165,27 +166,55 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-function ProviderHarness() {
+function ProviderHarness({ showReadouts = false }: { showReadouts?: boolean }) {
   feedingState = useFeeding();
   sleepState = useSleep();
   pumpingState = usePumping();
   tummyTimeState = useTummyTime();
   useWidgetStopHandler();
-  return null;
+  if (!showReadouts) return null;
+
+  const timers = [
+    { activity: "feeding", timer: feedingState.activeTimer },
+    { activity: "sleep", timer: sleepState.activeTimer },
+    { activity: "pumping", timer: pumpingState.activeTimer },
+    { activity: "tummyTime", timer: tummyTimeState.activeTimer },
+  ] as const;
+
+  return (
+    <>
+      {timers.map(({ activity, timer }) => (
+        <DashboardCard
+          key={activity}
+          activity={activity}
+          label={activity}
+          isActive={timer?.isRunning}
+          timerStartTime={timer?.startTime?.getTime()}
+          timerPausedAt={timer?.pausedAt?.getTime()}
+          {...{ timerTotalPausedMs: timer?.totalPausedMs }}
+          testID={`provider-timer-${activity}`}
+        />
+      ))}
+    </>
+  );
 }
 
-function RealTimerProviders() {
+function RealTimerProviders({ showReadouts = false }: { showReadouts?: boolean } = {}) {
   return (
     <FeedingProvider>
       <SleepProvider>
         <PumpingProvider>
           <TummyTimeProvider>
-            <ProviderHarness />
+            <ProviderHarness showReadouts={showReadouts} />
           </TummyTimeProvider>
         </PumpingProvider>
       </SleepProvider>
     </FeedingProvider>
   );
+}
+
+function clockTextToSeconds(value: string): number {
+  return value.split(":").reduce((total, part) => total * 60 + Number(part), 0);
 }
 
 function storedFeeding(input: CreateFeedingInput): StoredFeedingEntry {
@@ -448,7 +477,7 @@ describe("external timer stops through production providers", () => {
     };
     liveActivities.startTimerLiveActivity.mockResolvedValue("live-activity-1");
 
-    render(<RealTimerProviders />);
+    render(<RealTimerProviders showReadouts />);
     await waitFor(() =>
       expect([
         feedingState?.isLoading,
@@ -521,6 +550,14 @@ describe("external timer stops through production providers", () => {
       { type: "tummy_time", accumulatedSeconds: 180 },
     ]);
 
+    const pausedDisplayedElapsed = ["feeding", "sleep", "pumping", "tummyTime"].map(
+      (activity) => {
+        const card = screen.getByTestId(`provider-timer-${activity}-own-active`);
+        const clock = within(card).getByText(/^\d+(?::\d{2}){1,2}$/);
+        return clockTextToSeconds(String(clock.props.children));
+      }
+    );
+
     const laterStopAt = new Date("2026-07-15T08:05:00.000Z");
     await act(async () => {
       await feedingState!.stopBreastfeeding(laterStopAt);
@@ -540,9 +577,6 @@ describe("external timer stops through production providers", () => {
       activitySync.createPumpingInDatabase,
       activitySync.createTummyTimeInDatabase,
     ].map((createRecord) => createRecord.mock.calls[0][0].durationSeconds);
-    const pausedDisplayedElapsed = liveActivities.pauseTimerLiveActivity.mock.calls
-      .slice(-4)
-      .map((call) => call[1]);
     expect(recordedDurations).toEqual([180, 180, 180, 180]);
     expect(recordedDurations).toEqual(pausedDisplayedElapsed);
   });
