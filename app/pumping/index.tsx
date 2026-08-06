@@ -5,7 +5,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { usePumping } from "@/contexts/pumping-context";
-import { useBaby, useUnits, useAuth, useTimeFormat } from "@/contexts";
+import { useBaby, useUnits, useAuth, useTimeFormat, useActiveTimers } from "@/contexts";
 import { formatDuration, formatTime } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { useTimerAlertIntegration } from "@/hooks";
@@ -15,6 +15,8 @@ import { exitModal } from "@/navigation";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
+import { getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
 
 const PUMPING_BLUE = "#7B9BC9";
 const PUMPING_BLUE_MUTED = "#E8EDF5";
@@ -35,7 +37,8 @@ export default function PumpingScreen() {
     onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const { getLockForActivity } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
   const { volumeUnit } = useUnits();
   const {
@@ -43,11 +46,17 @@ export default function PumpingScreen() {
     isStopping,
     startPumping,
     stopPumping,
+    editPumpingStartTime,
     changePumpingSide,
     pausePumping,
     resumePumping,
     getLastSide,
+    pumpings,
   } = usePumping();
+  const timerLock = selectedBaby
+    ? getLockForActivity(selectedBaby.id, "pumping")
+    : null;
+  const timerStartBounds = useMemo(() => getTimerStartBounds(pumpings), [pumpings]);
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("pumping");
 
@@ -243,12 +252,18 @@ export default function PumpingScreen() {
             onStop={handleRequestStop}
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
+            startedAt={activeTimer!.startTime}
+            starterName={timerLock?.startedByName ?? t("common.someone")}
+            canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
+            bounds={timerStartBounds}
+            onEditStart={editPumpingStartTime}
           />
         ) : (
           <SideSelectionView
             suggestedSide={suggestedSide}
             onSelectSide={handleStartPumping}
             onLogPastPumping={handleLogPastPumping}
+            bounds={timerStartBounds}
           />
         )}
       </View>
@@ -260,9 +275,10 @@ interface SideSelectionViewProps {
   suggestedSide: BreastSide;
   onSelectSide: (side: BreastSide, customStartTime?: Date) => void;
   onLogPastPumping: () => void;
+  bounds: TimerStartBounds;
 }
 
-function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: SideSelectionViewProps) {
+function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, bounds }: SideSelectionViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -280,37 +296,16 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
     setShowTimePicker(true);
   }, []);
 
-  const yesterdayStart = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
-
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
       if (Platform.OS === "android") {
         setShowTimePicker(false);
       }
       if (selectedTime) {
-        const now = new Date();
-        let finalTime: Date;
-        if (Platform.OS === "android") {
-          finalTime = new Date();
-          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
-          if (finalTime > now) {
-            finalTime.setDate(finalTime.getDate() - 1);
-          }
-          if (finalTime < yesterdayStart) {
-            finalTime = new Date(yesterdayStart);
-          }
-        } else {
-          finalTime = selectedTime > now ? now : selectedTime;
-        }
-        setCustomStartTime(finalTime);
+        setCustomStartTime(normalizeTimerStartSelection(selectedTime, bounds, new Date(), Platform.OS));
       }
     },
-    [yesterdayStart]
+    [bounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -455,8 +450,8 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping }: Si
             display="spinner"
             onChange={handleTimeChange}
             is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
-            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
+            minimumDate={bounds.minimumDate}
+            maximumDate={bounds.maximumDate}
           />
         </View>
       )}
@@ -522,6 +517,11 @@ interface RunningTimerViewProps {
   onStop: () => void;
   onPause?: () => void;
   onResume?: () => void;
+  startedAt: Date;
+  starterName: string;
+  canEdit: boolean;
+  bounds: TimerStartBounds;
+  onEditStart: (startedAt: Date) => Promise<void>;
 }
 
 function RunningTimerView({
@@ -532,8 +532,14 @@ function RunningTimerView({
   onStop,
   onPause,
   onResume,
+  startedAt,
+  starterName,
+  canEdit,
+  bounds,
+  onEditStart,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const formattedTime = formatDuration(elapsedSeconds);
 
   return (
@@ -592,6 +598,18 @@ function RunningTimerView({
           {isPaused ? t("common.timerPaused") : t("pumping.timerRunning")}
         </Text>
       </View>
+
+      <RunningTimerStartEditor
+        startLabel={t("pumping.startTime")}
+        startedAt={startedAt}
+        starterName={starterName}
+        canEdit={canEdit}
+        bounds={bounds}
+        timeFormat={timeFormat}
+        accentColor={PUMPING_BLUE}
+        mutedBackgroundColor={PUMPING_BLUE_MUTED}
+        onEdit={onEditStart}
+      />
 
       <View className="flex-row items-center gap-6">
         {onPause && onResume && (

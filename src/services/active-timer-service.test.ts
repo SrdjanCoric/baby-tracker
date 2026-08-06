@@ -3,16 +3,18 @@ import {
   acquireTimerLock,
   queuePendingLockRelease,
   releaseTimerLock,
+  updateTimerStartTime,
 } from "./active-timer-service";
 
 const storage = new Map<string, string>();
-const { fromMock, rpcMock, deleteMock, eqMock, selectMock, singleMock } = vi.hoisted(() => ({
+const { fromMock, rpcMock, deleteMock, eqMock, selectMock, singleMock, updateMock } = vi.hoisted(() => ({
   fromMock: vi.fn(),
   rpcMock: vi.fn(),
   deleteMock: vi.fn(),
   eqMock: vi.fn(),
   selectMock: vi.fn(),
   singleMock: vi.fn(),
+  updateMock: vi.fn(),
 }));
 
 vi.mock("@react-native-async-storage/async-storage", () => ({
@@ -67,6 +69,38 @@ describe("active timer acquisition", () => {
     expect(rpcMock).toHaveBeenCalledWith("acquire_timer_lock", expect.objectContaining({
       p_started_at: requestedStart.toISOString(),
     }));
+  });
+});
+
+describe("active timer start editing", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const query = {
+      update: updateMock,
+      eq: eqMock,
+      then: (resolve: (value: { error: null }) => unknown) =>
+        Promise.resolve({ error: null }).then(resolve),
+    };
+    updateMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    fromMock.mockReturnValue(query);
+  });
+
+  it("directly updates started_at for the current user's lock", async () => {
+    const startedAt = new Date("2026-08-06T07:30:00.000Z");
+
+    await expect(
+      updateTimerStartTime("baby-1", "feeding", "user-1", startedAt)
+    ).resolves.toBe(true);
+
+    expect(fromMock).toHaveBeenCalledWith("active_timers");
+    expect(updateMock).toHaveBeenCalledWith({
+      started_at: "2026-08-06T07:30:00.000Z",
+    });
+    expect(eqMock).toHaveBeenCalledWith("baby_id", "baby-1");
+    expect(eqMock).toHaveBeenCalledWith("activity_type", "feeding");
+    expect(eqMock).toHaveBeenCalledWith("started_by", "user-1");
+    expect(rpcMock).not.toHaveBeenCalled();
   });
 });
 

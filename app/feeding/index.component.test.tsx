@@ -9,6 +9,8 @@ let mockCanGoBack = false;
 let mockSearchParams: { onboardingActivity?: string } = {};
 const mockCompleteTimerStarted = jest.fn();
 let mockTimeFormat: "12h" | "24h" = "12h";
+let mockLockStartedBy = "user-1";
+let mockFeedings: Array<{ endedAt?: string }> = [];
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -81,6 +83,7 @@ jest.mock("react-i18next", () => ({
         "common.noBabySelected": "No baby selected",
         "common.stopTimer": "Stop timer",
         "common.timer": "Timer",
+        "common.someone": "Someone",
         "feeding.notesPlaceholder": "Add notes...",
         "feeding.suggestedSideHint": `${params?.side || ""} side suggested`,
         "foods.banana": "Banana",
@@ -98,6 +101,7 @@ jest.mock("react-native-safe-area-context", () => ({
 const mockStartBreastfeeding = jest.fn();
 const mockStopBreastfeeding = jest.fn();
 const mockChangeSide = jest.fn();
+const mockEditBreastfeedingStartTime = jest.fn().mockResolvedValue(undefined);
 const mockAddFeeding = jest.fn();
 const runningTimer = {
   isRunning: true,
@@ -115,9 +119,10 @@ jest.mock("@/contexts", () => ({
     suggestedSide: "left",
     startBreastfeeding: mockStartBreastfeeding,
     stopBreastfeeding: mockStopBreastfeeding,
+    editBreastfeedingStartTime: mockEditBreastfeedingStartTime,
     changeSide: mockChangeSide,
     addFeeding: mockAddFeeding,
-    feedings: [],
+    feedings: mockFeedings,
   }),
   useBaby: () => ({
     selectedBaby: { id: "1", name: "Emma" },
@@ -132,8 +137,15 @@ jest.mock("@/contexts", () => ({
   }),
   useAuth: () => ({
     session: { access_token: "test-token" },
+    user: { id: "user-1" },
   }),
   useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
+  useActiveTimers: () => ({
+    getLockForActivity: () => ({
+      startedBy: mockLockStartedBy,
+      startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
+    }),
+  }),
 }));
 
 jest.mock("@/utils/time", () => {
@@ -184,6 +196,12 @@ describe("FeedingScreen", () => {
     mockStopBreastfeeding.mockResolvedValue(undefined);
     mockCompleteTimerStarted.mockResolvedValue(undefined);
     mockTimeFormat = "12h";
+    mockLockStartedBy = "user-1";
+    mockFeedings = [];
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   describe("running timer elapsed", () => {
@@ -208,6 +226,30 @@ describe("FeedingScreen", () => {
       mockActiveTimer = { ...mockActiveTimer, isPaused: false, pausedAt: undefined };
       rerender(<FeedingScreen />);
       expect(screen.getByLabelText("Timer: 60:00")).toBeTruthy();
+    });
+
+    it("shows the starter and keeps another caregiver's label read-only", () => {
+      jest.useFakeTimers();
+      const now = new Date("2026-08-06T12:00:00.000Z");
+      jest.setSystemTime(now);
+      mockActiveTimer = runningTimer;
+      mockFeedings = [{ endedAt: "2026-08-06T04:00:00.000Z" }];
+
+      const { rerender } = render(<FeedingScreen />);
+      fireEvent.press(
+        screen.getByRole("button", { name: /Start time: .* · Alice/ })
+      );
+      expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
+        new Date("2026-08-06T04:00:00.000Z")
+      );
+      expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(now);
+
+      mockLockStartedBy = "user-2";
+      rerender(<FeedingScreen />);
+      expect(
+        screen.queryByRole("button", { name: /Start time: .* · Bob/ })
+      ).toBeNull();
+      expect(screen.getByLabelText(/Start time: .* · Bob/)).toBeTruthy();
     });
   });
 
@@ -337,6 +379,8 @@ describe("FeedingScreen", () => {
 
     it("reacts to the current custom start preference and uses the selected time", async () => {
       mockTimeFormat = "24h";
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2020, 0, 1, 16, 0));
       const selectedTime = new Date(2020, 0, 1, 14, 30);
       const { rerender } = render(<FeedingScreen />);
 
@@ -364,7 +408,11 @@ describe("FeedingScreen", () => {
       try {
         const { rerender } = render(<FeedingScreen />);
         fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
-        expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(true);
+        const picker = screen.getByTestId("datetime-picker");
+        expect(picker.props.is24Hour).toBe(true);
+        expect(
+          picker.props.maximumDate.getTime() - picker.props.minimumDate.getTime()
+        ).toBe(12 * 60 * 60 * 1000);
 
         mockTimeFormat = "12h";
         rerender(<FeedingScreen />);

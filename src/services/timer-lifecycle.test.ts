@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  editRunningTimerStartTime,
   restoreTimerLifecycle,
   type TimerLifecycleAdapter,
   type TimerLifecycleActiveTimer,
@@ -12,7 +13,11 @@ import { reconcileTimerLock } from "./timer-lock-reconciliation";
 import { readPendingTimerStop } from "./timer-stop-coordinator";
 import { createSleepTimerAdapter } from "./timer-adapters/sleep-timer-adapter";
 import type { ActiveSleepTimerData } from "./sleep-storage";
-import { startTimerLiveActivity } from "./live-activity-service";
+import {
+  endTimerLiveActivity,
+  startTimerLiveActivity,
+} from "./live-activity-service";
+import { updateTimerStartTime } from "./active-timer-service";
 
 vi.mock("./live-activity-service", () => ({
   endLiveActivityByType: vi.fn(),
@@ -25,6 +30,7 @@ vi.mock("./active-timer-service", () => ({
   getActiveTimerLock: vi.fn(),
   queuePendingLockRelease: vi.fn(),
   releaseTimerLock: vi.fn(),
+  updateTimerStartTime: vi.fn(),
 }));
 
 vi.mock("./timer-conflict-notice", () => ({
@@ -74,6 +80,103 @@ interface TestActiveTimer extends TimerLifecycleActiveTimer {
   isPaused: boolean;
   totalPausedMs: number;
 }
+
+describe("editRunningTimerStartTime", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("writes, persists, updates provider state, and re-anchors the Live Activity", async () => {
+    const events: string[] = [];
+    const oldStart = "2026-08-06T08:00:00.000Z";
+    const newStart = new Date("2026-08-06T07:30:00.000Z");
+    const activeTimer: TestActiveTimer = {
+      startedAt: oldStart,
+      isPaused: false,
+      totalPausedMs: 0,
+      lockState: "owned",
+      liveActivityId: "live-old",
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+    };
+    const setActiveTimer = vi.fn(async () => {
+      events.push("persist");
+    });
+    const dispatchEditedStart = vi.fn(() => {
+      events.push("dispatch");
+    });
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn(),
+        setActiveTimer,
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({})),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "record-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn(() => "nap") },
+      dispatchRestoreTimer: vi.fn(),
+    };
+    vi.mocked(updateTimerStartTime).mockImplementation(async () => {
+      events.push("write");
+      return true;
+    });
+    vi.mocked(endTimerLiveActivity).mockImplementation(async () => {
+      events.push("end");
+      return true;
+    });
+    vi.mocked(startTimerLiveActivity).mockImplementation(async () => {
+      events.push("start");
+      return "live-new";
+    });
+    const liveActivityIdRef = { current: "live-old" as string | null };
+
+    await editRunningTimerStartTime({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      userId: "user-1",
+      activeTimer,
+      payload: { isPaused: false, totalPausedMs: 0 },
+      startedAt: newStart,
+      liveActivityIdRef,
+      dispatchEditedStart,
+    });
+
+    expect(events).toEqual(["write", "end", "start", "persist", "dispatch"]);
+    expect(updateTimerStartTime).toHaveBeenCalledWith(
+      "baby-1",
+      "sleep",
+      "user-1",
+      newStart
+    );
+    expect(endTimerLiveActivity).toHaveBeenCalledWith("live-old");
+    expect(startTimerLiveActivity).toHaveBeenCalledWith(
+      "sleep",
+      "Baby",
+      "nap",
+      newStart
+    );
+    expect(setActiveTimer).toHaveBeenCalledWith(
+      "baby-1",
+      expect.objectContaining({
+        startedAt: newStart.toISOString(),
+        liveActivityId: "live-new",
+      })
+    );
+    expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
+    expect(liveActivityIdRef.current).toBe("live-new");
+  });
+});
 
 describe("restoreTimerLifecycle", () => {
   beforeEach(() => {

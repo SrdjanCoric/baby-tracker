@@ -37,7 +37,7 @@ import {
   type TimerIdentity,
 } from "@/services/timer-completion-service";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
-import { restoreTimerLifecycle } from "@/services/timer-lifecycle";
+import { editRunningTimerStartTime, restoreTimerLifecycle } from "@/services/timer-lifecycle";
 import { createTummyTimeTimerAdapter } from "@/services/timer-adapters/tummy-time-timer-adapter";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
 import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
@@ -78,6 +78,7 @@ export type TummyTimeAction =
   | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
   | { type: "RESUME_TIMER" }
   | { type: "RESTORE_TIMER"; payload: ActiveTummyTimeTimer }
+  | { type: "EDIT_TIMER_START"; payload: Date }
   | { type: "REMOTE_INSERT"; payload: StoredTummyTimeEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredTummyTimeEntry }
   | { type: "REMOTE_DELETE"; payload: string };
@@ -185,6 +186,13 @@ export function tummyTimeReducer(
         activeTimer: action.payload,
       };
 
+    case "EDIT_TIMER_START":
+      if (!state.activeTimer) return state;
+      return {
+        ...state,
+        activeTimer: { ...state.activeTimer, startTime: action.payload },
+      };
+
     case "REMOTE_INSERT":
       return { ...state, tummyTimes: upsertById(state.tummyTimes, action.payload) };
 
@@ -212,6 +220,7 @@ interface TummyTimeContextValue extends TummyTimeState {
   isStopping: boolean;
   startTummyTime: (requestedStartTime?: Date, requestedIdentity?: TimerIdentity) => Promise<TimerLockResult>;
   stopTummyTime: (requestedEndTime?: Date) => Promise<StoredTummyTimeEntry | null>;
+  editTummyTimeStartTime: (startedAt: Date) => Promise<void>;
   pauseTummyTime: (requestedPauseTime?: Date) => Promise<void>;
   resumeTummyTime: (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => Promise<void>;
   addTummyTime: (input: CreateTummyTimeInput) => Promise<StoredTummyTimeEntry>;
@@ -604,6 +613,46 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedBaby, state.activeTimer, user?.householdId, user?.id]);
 
+  const editTummyTimeStartTime = useCallback(async (startedAt: Date) => {
+    if (!selectedBaby || !user?.id || !state.activeTimer) return;
+    const activeTimer = state.activeTimer;
+    const adapter = createTummyTimeTimerAdapter({
+      babyId: selectedBaby.id,
+      dispatchRestoreTimer: restoredTimer => {
+        dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+      },
+    });
+
+    await editRunningTimerStartTime({
+      adapter,
+      baby: selectedBaby,
+      userId: user.id,
+      activeTimer: {
+        timerInstanceId: activeTimer.timerInstanceId,
+        activityId: activeTimer.activityId,
+        startedAt: activeTimer.startTime.toISOString(),
+        liveActivityId: liveActivityIdRef.current ?? undefined,
+        isPaused: activeTimer.isPaused,
+        pausedAt: activeTimer.pausedAt?.toISOString(),
+        totalPausedMs: activeTimer.totalPausedMs,
+        lockState: activeTimer.lockState,
+      },
+      payload: {
+        timerInstanceId: activeTimer.timerInstanceId,
+        activityId: activeTimer.activityId,
+        isPaused: activeTimer.isPaused,
+        pausedAt: activeTimer.pausedAt?.toISOString(),
+        totalPausedMs: activeTimer.totalPausedMs,
+      },
+      startedAt,
+      liveActivityIdRef,
+      dispatchEditedStart: nextStart => {
+        dispatch({ type: "EDIT_TIMER_START", payload: nextStart });
+      },
+    });
+    await refreshLocks();
+  }, [refreshLocks, selectedBaby, state.activeTimer, user?.id]);
+
   const pauseTummyTime = useCallback(async (requestedPauseTime?: Date) => {
     if (!selectedBaby || !state.activeTimer || state.activeTimer.isPaused) return;
 
@@ -877,6 +926,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     isStopping,
     startTummyTime,
     stopTummyTime,
+    editTummyTimeStartTime,
     pauseTummyTime,
     resumeTummyTime,
     addTummyTime,
@@ -894,7 +944,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     resetToAgeBasedGoal,
     dismissMilestoneSuggestion,
     acceptMilestoneSuggestion,
-  }), [state, babyBinding, isStopping, startTummyTime, stopTummyTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, loadTummyTimeRange, getTummyTimeRangeStatus, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
+  }), [state, babyBinding, isStopping, startTummyTime, stopTummyTime, editTummyTimeStartTime, pauseTummyTime, resumeTummyTime, addTummyTime, updateTummyTime, deleteTummyTime, loadTummyTimes, loadTummyTimeRange, getTummyTimeRangeStatus, getLastTummyTime, getTodaysTotalSeconds, getDailyProgress, getTodaysSessionCount, setDailyGoalCallback, setCustomGoal, resetToAgeBasedGoal, dismissMilestoneSuggestion, acceptMilestoneSuggestion]);
 
   return (
     <TummyTimeContext.Provider value={value}>{children}</TummyTimeContext.Provider>

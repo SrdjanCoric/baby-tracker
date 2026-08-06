@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useSleep, useAuth, useBaby, useTimeFormat } from "@/contexts";
+import { useSleep, useAuth, useBaby, useTimeFormat, useActiveTimers } from "@/contexts";
 import { formatDuration, formatTime } from "@/utils/time";
 import { useTimerAlertIntegration } from "@/hooks";
 import type { SleepType } from "@/constants/activities";
@@ -15,6 +15,12 @@ import { ModalCloseButton } from "@/components/ModalCloseButton";
 import { exitModal } from "@/navigation";
 import { useColorScheme } from "nativewind";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
+import {
+  getTimerStartBounds,
+  normalizeTimerStartSelection,
+  type TimerStartBounds,
+} from "@/utils/timer-start-bounds";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_LIGHT = "#A594CF";
@@ -30,11 +36,14 @@ export default function SleepScreen() {
     onboardingActivity?: string;
   }>();
   const { selectedBaby } = useBaby();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const { getLockForActivity } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
   const {
     activeTimer,
+    sleeps,
     startSleep,
+    editSleepStartTime,
     stopSleep,
     pauseSleep,
     resumeSleep,
@@ -48,6 +57,10 @@ export default function SleepScreen() {
     pendingMorningConfirmations,
     confirmMorningSleep,
   } = useSleep();
+  const timerLock = selectedBaby
+    ? getLockForActivity(selectedBaby.id, "sleep")
+    : null;
+  const timerStartBounds = useMemo(() => getTimerStartBounds(sleeps), [sleeps]);
 
   const napAlert = useTimerAlertIntegration("nap");
   const nightSleepAlert = useTimerAlertIntegration("nightSleep");
@@ -228,11 +241,17 @@ export default function SleepScreen() {
             onStop={handleStopSleep}
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
+            startedAt={activeTimer!.startTime}
+            starterName={timerLock?.startedByName ?? t("common.someone")}
+            canEdit={Boolean(user?.id && timerLock?.startedBy === user.id)}
+            bounds={timerStartBounds}
+            onEditStart={editSleepStartTime}
           />
         ) : (
           <SleepStartView
             onStart={handleStartSleep}
             onLogPastSleep={handleLogPastSleep}
+            bounds={timerStartBounds}
           />
         )}
         {pendingMorningConfirmation && (
@@ -263,9 +282,10 @@ export default function SleepScreen() {
 interface SleepStartViewProps {
   onStart: (customStartTime?: Date) => void;
   onLogPastSleep: () => void;
+  bounds: TimerStartBounds;
 }
 
-function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
+function SleepStartView({ onStart, onLogPastSleep, bounds }: SleepStartViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
@@ -287,37 +307,23 @@ function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
     setShowTimePicker(true);
   }, []);
 
-  const yesterdayStart = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
-
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
       if (Platform.OS === "android") {
         setShowTimePicker(false);
       }
       if (selectedTime) {
-        const now = new Date();
-        let finalTime: Date;
-        if (Platform.OS === "android") {
-          finalTime = new Date();
-          finalTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds(), 0);
-          if (finalTime > now) {
-            finalTime.setDate(finalTime.getDate() - 1);
-          }
-          if (finalTime < yesterdayStart) {
-            finalTime = new Date(yesterdayStart);
-          }
-        } else {
-          finalTime = selectedTime > now ? now : selectedTime;
-        }
-        setCustomStartTime(finalTime);
+        setCustomStartTime(
+          normalizeTimerStartSelection(
+            selectedTime,
+            bounds,
+            new Date(),
+            Platform.OS
+          )
+        );
       }
     },
-    [yesterdayStart]
+    [bounds]
   );
 
   const handleTimeDone = useCallback(() => {
@@ -412,8 +418,8 @@ function SleepStartView({ onStart, onLogPastSleep }: SleepStartViewProps) {
             display="spinner"
             onChange={handleTimeChange}
             is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={Platform.OS === "ios" ? yesterdayStart : undefined}
-            maximumDate={Platform.OS === "ios" ? new Date() : undefined}
+            minimumDate={bounds.minimumDate}
+            maximumDate={bounds.maximumDate}
           />
         </View>
       )}
@@ -427,6 +433,11 @@ interface RunningTimerViewProps {
   onStop: () => void;
   onPause?: () => void;
   onResume?: () => void;
+  startedAt: Date;
+  starterName: string;
+  canEdit: boolean;
+  bounds: TimerStartBounds;
+  onEditStart: (startedAt: Date) => Promise<void>;
 }
 
 function RunningTimerView({
@@ -435,8 +446,14 @@ function RunningTimerView({
   onStop,
   onPause,
   onResume,
+  startedAt,
+  starterName,
+  canEdit,
+  bounds,
+  onEditStart,
 }: RunningTimerViewProps) {
   const { t } = useTranslation();
+  const { timeFormat } = useTimeFormat();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const accent = isDark ? SLEEP_PURPLE_LIGHT : SLEEP_PURPLE;
@@ -474,6 +491,18 @@ function RunningTimerView({
           {isPaused ? t("common.timerPaused") : t("sleep.timerRunning")}
         </Text>
       </View>
+
+      <RunningTimerStartEditor
+        startLabel={t("sleep.startTime")}
+        startedAt={startedAt}
+        starterName={starterName}
+        canEdit={canEdit}
+        bounds={bounds}
+        timeFormat={timeFormat}
+        accentColor={accent}
+        mutedBackgroundColor={mutedBg}
+        onEdit={onEditStart}
+      />
 
       <View className="flex-row items-center gap-6">
         {onPause && onResume && (

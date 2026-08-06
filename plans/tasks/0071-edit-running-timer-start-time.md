@@ -2,6 +2,9 @@
 
 **Branch**: `feature/edit-running-timer-start-time`
 **Depends on**: 0069, 0070
+**Change class**: `code`
+**Validation tier**: `canonical`
+**TDD applicable**: yes
 **Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
 `decisions/resolved/007-running-timer-start-time-edit.md` (resolved) · **User stories**: As the
 caregiver who started a timer, I want to correct its start time without stopping it, so that noticing
@@ -113,37 +116,55 @@ A start edited mid-run is the value the stop finalizes into the saved record. Af
 construction is adapter-owned inside `src/services/timer-lifecycle.ts` and reads the lock's
 `started_at`, so this should hold by construction — prove it rather than assume it.
 
+### Implementation clarification (2026-08-06)
+
+Reconnaissance found that the normal in-app stop paths do not read the active-timer lock. Each
+provider builds its record from its separately persisted local `activeTimer.startTime`, so changing
+only `active_timers.started_at` would leave the screen and eventual saved record on the old anchor.
+
+The edit is therefore a provider operation rather than a screen-only service call. Each activity
+context exposes one start-edit method to its screen. A shared timer-lifecycle operation coordinates
+the direct lock write, the provider's persisted active-timer snapshot and reducer state, and the
+editing device's end-then-restart Live Activity re-anchor while preserving the adapter-provided
+detail. Screens remain presentation callers and do not update those stores independently. This is
+not a new product behavior or scope expansion; it is the implementation seam required for the
+already-stated elapsed-display, stop-record, restart-recovery, and Live Activity outcomes to agree.
+
+Required automated proof covers the shared operation through provider integration: after an edit,
+the provider state and persisted snapshot use the new start, a subsequent stop builds the record
+from that start, and the old Live Activity ends before a replacement starts on the new anchor.
+
 ## Implementation work
 
-- [ ] Add a shared bounds helper computing `minimumDate` as the later of `now - 12h` and the previous
+- [x] Add a shared bounds helper computing `minimumDate` as the later of `now - 12h` and the previous
       saved same-type activity's `endedAt`, and `maximumDate` as `now`, for one activity type.
-- [ ] Add a start-time write to `src/services/active-timer-service.ts` issuing a direct `UPDATE` on
+- [x] Add a start-time write to `src/services/active-timer-service.ts` issuing a direct `UPDATE` on
       `active_timers.started_at` for a lock the current user started, with no new RPC.
-- [ ] Add the start-time label to the running-timer view of all four activity screens, naming the value
+- [x] Add the start-time label to the running-timer view of all four activity screens, naming the value
       in the caregiver's 12/24-hour preference and the starter from `lock.startedByName`, tappable only
       when the current user started the timer.
-- [ ] Open the existing picker from the label, bounded by the shared helper on **both** iOS and
+- [x] Open the existing picker from the label, bounded by the shared helper on **both** iOS and
       Android, and write the picked value through the new service path.
-- [ ] Repoint "Started earlier" on all four screens from the yesterday-midnight floor to the same
+- [x] Repoint "Started earlier" on all four screens from the yesterday-midnight floor to the same
       shared bounds helper.
-- [ ] Re-anchor the editing device's own Live Activity when the start moves, adding an anchor-update
+- [x] Re-anchor the editing device's own Live Activity when the start moves, adding an anchor-update
       path or ending and restarting it.
-- [ ] Component tests on all four activity screens: the picker's `minimumDate` is the later of
+- [x] Component tests on all four activity screens: the picker's `minimumDate` is the later of
       `now - 12h` and the previous same-type activity's end, its `maximumDate` is `now`, "Started
       earlier" applies the identical bounds, and the bounds hold on the Android branch as well as iOS.
-- [ ] Component tests that the label renders the start value and the starter's name, and that it is not
+- [x] Component tests that the label renders the start value and the starter's name, and that it is not
       tappable for a lock the current user did not start.
-- [ ] Real-provider tests against local Supabase, for **all four activity types** and not sleep alone:
+- [x] Real-provider tests against local Supabase, for **all four activity types** and not sleep alone:
       the starter edits the start time of their own running timer and the row changes; a start in the
       future is rejected; a start more than twelve hours back is rejected; and a `timer_data`-only
       update to a lock older than twelve hours still succeeds.
-- [ ] A real-provider test that a household caregiver who did not start the timer is refused the
+- [x] A real-provider test that a household caregiver who did not start the timer is refused the
       `UPDATE` by the row policy. This is the household timer control cut stated as a bar rather than
       assumed.
-- [ ] A test that the edited anchor reaches a second household device through the `active_timers`
+- [x] A test that the edited anchor reaches a second household device through the `active_timers`
       Realtime subscription and re-renders its elapsed display.
-- [ ] A test that a start edited mid-run is the value the stop finalizes into the saved record.
-- [ ] A test that the editing device's own Live Activity re-anchors to the new start.
+- [x] A test that a start edited mid-run is the value the stop finalizes into the saved record.
+- [x] A test that the editing device's own Live Activity re-anchors to the new start.
 
 ## Human checkpoints
 
