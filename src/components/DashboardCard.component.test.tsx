@@ -13,6 +13,7 @@ describe("DashboardCard", () => {
   describe("running timer elapsed", () => {
     const activities = ["feeding", "sleep", "pumping", "tummyTime"] as const;
     const start = new Date("2026-08-06T10:00:00.000Z").getTime();
+    const legacyAccumulatedPause = { timerTotalPausedMs: 10 * 60 * 1000 };
 
     beforeEach(() => {
       jest.useFakeTimers();
@@ -31,6 +32,7 @@ describe("DashboardCard", () => {
           isActive
           timerStartTime={start}
           timerPausedAt={new Date("2026-08-06T10:30:00.000Z").getTime()}
+          {...legacyAccumulatedPause}
           testID="card"
         />
       );
@@ -45,6 +47,7 @@ describe("DashboardCard", () => {
           label={activity}
           isActive
           timerStartTime={start}
+          {...legacyAccumulatedPause}
           testID="card"
         />
       );
