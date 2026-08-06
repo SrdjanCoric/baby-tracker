@@ -40,26 +40,24 @@ describe("timer start bounds", () => {
   });
 
   it("applies both bounds to Android's reconstructed time", () => {
-    const bounds = getTimerStartBounds(
-      [{ endedAt: "2026-08-06T03:30:00.000Z" }],
-      now
-    );
+    const androidNow = new Date(2026, 7, 6, 10, 0);
+    const bounds = getTimerStartBounds([], androidNow);
 
     expect(
       normalizeTimerStartSelection(
-        new Date("2020-01-01T02:00:00.000Z"),
+        new Date(2020, 0, 1, 20, 0),
         bounds,
-        now,
+        androidNow,
         "android"
       )
     ).toEqual(bounds.minimumDate);
     expect(
       normalizeTimerStartSelection(
-        new Date("2020-01-01T13:00:00.000Z"),
+        new Date(2020, 0, 1, 23, 0),
         bounds,
-        now,
+        androidNow,
         "android"
-      ).getTime()
-    ).toBeLessThanOrEqual(bounds.maximumDate.getTime());
+      )
+    ).toEqual(new Date(2026, 7, 5, 23, 0));
   });
 });
