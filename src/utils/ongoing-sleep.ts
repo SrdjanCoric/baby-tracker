@@ -20,14 +20,9 @@ export interface OngoingSleepEntryInput {
 }
 
 /**
- * Represents a running sleep timer as a completed entry ending now, so that sleep surfaces
- * report the sleep in progress instead of waiting for it to be stopped. Shared by the
- * Statistics sleep screens and the Timeline daily summary so both report the same day.
- *
- * The entry starts at the pause-adjusted start rather than the real one, because the surfaces
- * that total sleep measure the interval and ignore durationSeconds. Shifting the start keeps
- * the entry ending now — so the day view still draws the block up to the current time — while
- * the interval carries only unpaused time, and stops growing while a pause is open.
+ * Represents a running sleep timer as the interval that stopping it now would record. A paused
+ * timer ends at its pause instant; otherwise it ends now. Shared by the Statistics sleep screens
+ * and the Timeline daily summary so their blocks and totals report the same interval.
  */
 export function buildOngoingSleepEntry({
   timer,
@@ -39,21 +34,19 @@ export function buildOngoingSleepEntry({
 }: OngoingSleepEntryInput): StoredSleepEntry | null {
   if (!timer?.isRunning || !babyId || !isCurrentBaby) return null;
 
-  const openPauseMs = timer.pausedAt
-    ? Math.max(0, now.getTime() - timer.pausedAt.getTime())
-    : 0;
-  const pausedMs = timer.totalPausedMs + openPauseMs;
-  const effectiveStart = new Date(
-    Math.min(timer.startTime.getTime() + pausedMs, now.getTime())
+  const endedAt = timer.isPaused && timer.pausedAt ? timer.pausedAt : now;
+  const durationSeconds = Math.max(
+    0,
+    Math.floor((endedAt.getTime() - timer.startTime.getTime()) / 1000)
   );
 
   return {
     id: `ongoing-${babyId}`,
     babyId,
-    type: classifySleepByTimeRange(effectiveStart, now, dayStartHour, dayEndHour),
-    startedAt: effectiveStart.toISOString(),
-    endedAt: now.toISOString(),
-    durationSeconds: Math.floor((now.getTime() - effectiveStart.getTime()) / 1000),
+    type: classifySleepByTimeRange(timer.startTime, endedAt, dayStartHour, dayEndHour),
+    startedAt: timer.startTime.toISOString(),
+    endedAt: endedAt.toISOString(),
+    durationSeconds,
     createdAt: timer.startTime.toISOString(),
     updatedAt: now.toISOString(),
   };

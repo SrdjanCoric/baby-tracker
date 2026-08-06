@@ -3,6 +3,82 @@ import { fireEvent, render, screen, within } from "@testing-library/react-native
 import { CompactActivityRow } from "./CompactActivityRow";
 
 describe("CompactActivityRow", () => {
+  describe("running timer elapsed", () => {
+    const activities = ["feeding", "sleep", "pumping", "tummyTime"] as const;
+    const start = new Date("2026-08-06T10:00:00.000Z").getTime();
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date("2026-08-06T11:00:00.000Z"));
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it.each(activities)("freezes a paused %s timer at its pause instant", (activity) => {
+      render(
+        <CompactActivityRow
+          activity={activity}
+          label={activity}
+          isActive
+          timerStartTime={start}
+          timerPausedAt={new Date("2026-08-06T10:30:00.000Z").getTime()}
+          testID="row"
+        />
+      );
+
+      expect(screen.getByText("30:00")).toBeTruthy();
+    });
+
+    it.each(activities)("counts a resumed pause in a %s timer", (activity) => {
+      render(
+        <CompactActivityRow
+          activity={activity}
+          label={activity}
+          isActive
+          timerStartTime={start}
+          testID="row"
+        />
+      );
+
+      expect(screen.getByText("1:00:00")).toBeTruthy();
+    });
+
+    it.each(activities)("freezes a remotely owned paused %s timer", (activity) => {
+      render(
+        <CompactActivityRow
+          activity={activity}
+          label={activity}
+          isLockedByOther
+          lockedByName="Other caregiver"
+          lockedElapsedTime="stale elapsed"
+          timerStartTime={start}
+          timerPausedAt={new Date("2026-08-06T10:30:00.000Z").getTime()}
+          testID="row"
+        />
+      );
+
+      expect(screen.getByText("30:00")).toBeTruthy();
+    });
+
+    it("counts a remotely owned timer from its real start after resume", () => {
+      render(
+        <CompactActivityRow
+          activity="pumping"
+          label="pumping"
+          isLockedByOther
+          lockedByName="Other caregiver"
+          lockedElapsedTime="stale elapsed"
+          timerStartTime={start}
+          testID="row"
+        />
+      );
+
+      expect(screen.getByText("1:00:00")).toBeTruthy();
+    });
+  });
+
   it("renders a locked row without an actionable nested control", () => {
     const onPress = jest.fn();
     const onActionPress = jest.fn();

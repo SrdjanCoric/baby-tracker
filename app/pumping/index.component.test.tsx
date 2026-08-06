@@ -1,11 +1,12 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { Alert, Platform } from "react-native";
 import PumpingScreen from "./index";
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 let mockCanGoBack = false;
+let mockShowVolumeInput = "true";
 const mockStopPumping = jest.fn(() => new Promise(() => undefined));
 const mockStartPumping = jest.fn();
 const runningTimer = {
@@ -15,9 +16,11 @@ const runningTimer = {
   totalPausedMs: 0,
   side: "both" as const,
 };
-let mockActiveTimer: typeof runningTimer | null = runningTimer;
+type MockPumpingTimer = typeof runningTimer & { pausedAt?: Date };
+let mockActiveTimer: MockPumpingTimer | null = runningTimer;
 let mockIsStopping = false;
 let mockTimeFormat: "12h" | "24h" = "12h";
+const mockCheckAndSendAlert = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -27,7 +30,7 @@ jest.mock("expo-router", () => ({
     replace: mockReplace,
     setParams: jest.fn(),
   }),
-  useLocalSearchParams: () => ({ showVolumeInput: "true" }),
+  useLocalSearchParams: () => ({ showVolumeInput: mockShowVolumeInput }),
 }));
 
 jest.mock("@/contexts/pumping-context", () => ({
@@ -60,7 +63,7 @@ jest.mock("@react-native-community/datetimepicker", () => {
 
 jest.mock("@/hooks", () => ({
   useTimerAlertIntegration: () => ({
-    checkAndSendAlert: jest.fn(),
+    checkAndSendAlert: mockCheckAndSendAlert,
     resetAlert: jest.fn(),
   }),
 }));
@@ -69,10 +72,40 @@ describe("PumpingScreen stop confirmation", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCanGoBack = false;
+    mockShowVolumeInput = "true";
     mockActiveTimer = runningTimer;
     mockIsStopping = false;
     mockTimeFormat = "12h";
     mockStartPumping.mockResolvedValue({ success: true });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("freezes while paused and counts the paused span after resume", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T11:00:00.000Z"));
+    mockShowVolumeInput = "false";
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date("2026-08-06T10:00:00.000Z"),
+      isPaused: true,
+      pausedAt: new Date("2026-08-06T10:30:00.000Z"),
+      totalPausedMs: 10 * 60 * 1000,
+    };
+
+    const { rerender } = render(<PumpingScreen />);
+    expect(screen.getByLabelText("common.timer: 30:00")).toBeTruthy();
+
+    mockActiveTimer = { ...mockActiveTimer, isPaused: false, pausedAt: undefined };
+    rerender(<PumpingScreen />);
+    expect(screen.getByLabelText("common.timer: 1:00:00")).toBeTruthy();
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(mockCheckAndSendAlert).toHaveBeenCalledWith(60);
   });
 
   it("lets a caregiver close a cold-opened pumping screen", () => {

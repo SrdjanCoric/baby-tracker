@@ -299,6 +299,10 @@ describe("external timer stops through production providers", () => {
 
   it("counts a resumed pause in every provider's saved record", async () => {
     const resumedStopAt = new Date("2026-07-15T08:01:31.000Z");
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      startTimerLiveActivity: jest.Mock;
+    };
+    liveActivities.startTimerLiveActivity.mockResolvedValue("live-activity-1");
     await FeedingStorageService.setActiveTimer("baby-1", {
       timerInstanceId: "resumed-feeding-timer",
       activityId: "resumed-feeding-activity",
@@ -371,6 +375,19 @@ describe("external timer stops through production providers", () => {
         "user-1"
       );
     }
+    const liveElapsedAtStop = liveActivities.startTimerLiveActivity.mock.calls.map(
+      (call) => Math.floor(
+        (resumedStopAt.getTime() - (call[3] as Date).getTime()) / 1000
+      )
+    );
+    const recordedDurations = [
+      activitySync.createFeedingInDatabase,
+      activitySync.createSleepInDatabase,
+      activitySync.createPumpingInDatabase,
+      activitySync.createTummyTimeInDatabase,
+    ].map((createRecord) => createRecord.mock.calls[0][0].durationSeconds);
+    expect(liveElapsedAtStop).toEqual([91, 91, 91, 91]);
+    expect(recordedDurations).toEqual(liveElapsedAtStop);
   });
 
   it("keeps the requested pause instant in every provider's active timer", async () => {
@@ -418,6 +435,116 @@ describe("external timer stops through production providers", () => {
       requestedPauseTime,
       requestedPauseTime,
     ]);
+  });
+
+  it("passes total elapsed time through every Live Activity pause and resume", async () => {
+    const firstPauseAt = new Date("2026-07-15T08:01:00.000Z");
+    const resumeAt = new Date("2026-07-15T08:02:00.000Z");
+    const secondPauseAt = new Date("2026-07-15T08:03:00.000Z");
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      startTimerLiveActivity: jest.Mock;
+      pauseTimerLiveActivity: jest.Mock;
+      resumeTimerLiveActivity: jest.Mock;
+    };
+    liveActivities.startTimerLiveActivity.mockResolvedValue("live-activity-1");
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+
+    await act(async () => {
+      await feedingState!.pauseBreastfeeding(firstPauseAt);
+      await sleepState!.pauseSleep(firstPauseAt);
+      await pumpingState!.pausePumping(firstPauseAt);
+      await tummyTimeState!.pauseTummyTime(firstPauseAt);
+    });
+    expect(
+      liveActivities.pauseTimerLiveActivity.mock.calls.map((call) => call[1])
+    ).toEqual([60, 60, 60, 60]);
+
+    await act(async () => {
+      await feedingState!.resumeBreastfeeding(resumeAt);
+      await sleepState!.resumeSleep(resumeAt);
+      await pumpingState!.resumePumping(resumeAt);
+      await tummyTimeState!.resumeTummyTime(resumeAt);
+    });
+    expect(
+      liveActivities.resumeTimerLiveActivity.mock.calls.map((call) => call[1])
+    ).toEqual([120, 120, 120, 120]);
+
+    await act(async () => {
+      await feedingState!.pauseBreastfeeding(secondPauseAt);
+      await sleepState!.pauseSleep(secondPauseAt);
+      await pumpingState!.pausePumping(secondPauseAt);
+      await tummyTimeState!.pauseTummyTime(secondPauseAt);
+    });
+    expect(
+      liveActivities.pauseTimerLiveActivity.mock.calls.slice(-4).map((call) => call[1])
+    ).toEqual([180, 180, 180, 180]);
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      updateTimerData: jest.Mock;
+    };
+    const resumedHints = activeTimers.updateTimerData.mock.calls
+      .filter((call) => call[3]?.isPaused === false && call[3]?.effectiveStartTime)
+      .map((call) => ({
+        type: call[1],
+        effectiveStartTime: call[3].effectiveStartTime,
+        accumulatedSeconds: call[3].accumulatedSeconds,
+      }));
+    expect(resumedHints).toEqual([
+      { type: "feeding", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
+      { type: "sleep", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
+      { type: "pumping", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
+      { type: "tummy_time", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
+    ]);
+
+    const pausedHints = activeTimers.updateTimerData.mock.calls
+      .filter((call) => call[3]?.pausedAt === secondPauseAt.toISOString())
+      .map((call) => ({ type: call[1], accumulatedSeconds: call[3].accumulatedSeconds }));
+    expect(pausedHints).toEqual([
+      { type: "feeding", accumulatedSeconds: 180 },
+      { type: "sleep", accumulatedSeconds: 180 },
+      { type: "pumping", accumulatedSeconds: 180 },
+      { type: "tummy_time", accumulatedSeconds: 180 },
+    ]);
+
+    const laterStopAt = new Date("2026-07-15T08:05:00.000Z");
+    await act(async () => {
+      await feedingState!.stopBreastfeeding(laterStopAt);
+      await sleepState!.stopSleep(laterStopAt);
+      await pumpingState!.stopPumping(90, laterStopAt);
+      await tummyTimeState!.stopTummyTime(laterStopAt);
+    });
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      createSleepInDatabase: jest.Mock;
+      createPumpingInDatabase: jest.Mock;
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    const recordedDurations = [
+      activitySync.createFeedingInDatabase,
+      activitySync.createSleepInDatabase,
+      activitySync.createPumpingInDatabase,
+      activitySync.createTummyTimeInDatabase,
+    ].map((createRecord) => createRecord.mock.calls[0][0].durationSeconds);
+    const pausedDisplayedElapsed = liveActivities.pauseTimerLiveActivity.mock.calls
+      .slice(-4)
+      .map((call) => call[1]);
+    expect(recordedDurations).toEqual([180, 180, 180, 180]);
+    expect(recordedDurations).toEqual(pausedDisplayedElapsed);
   });
 
   it("ends every provider's open pause at pausedAt", async () => {

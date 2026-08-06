@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { Platform } from "react-native";
 
 const mockStartTummyTime = jest.fn().mockResolvedValue({ success: true });
@@ -13,8 +13,10 @@ const runningTimer = {
   startTime: new Date("2026-08-04T08:00:00.000Z"),
   totalPausedMs: 0,
 };
-let mockActiveTimer: typeof runningTimer | null = null;
+type MockTummyTimeTimer = typeof runningTimer & { pausedAt?: Date };
+let mockActiveTimer: MockTummyTimeTimer | null = null;
 let mockTimeFormat: "12h" | "24h" = "12h";
+const mockCheckAndSendAlert = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -48,7 +50,7 @@ jest.mock("@/contexts", () => ({
 
 jest.mock("@/hooks", () => ({
   useTimerAlertIntegration: () => ({
-    checkAndSendAlert: jest.fn(),
+    checkAndSendAlert: mockCheckAndSendAlert,
     resetAlert: jest.fn(),
   }),
 }));
@@ -84,6 +86,34 @@ describe("TummyTimeScreen custom start time", () => {
     mockCanGoBack = false;
     mockStartTummyTime.mockResolvedValue({ success: true });
     mockTimeFormat = "12h";
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("freezes while paused and counts the paused span after resume", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-06T11:00:00.000Z"));
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date("2026-08-06T10:00:00.000Z"),
+      isPaused: true,
+      pausedAt: new Date("2026-08-06T10:30:00.000Z"),
+      totalPausedMs: 10 * 60 * 1000,
+    };
+
+    const { rerender } = render(<TummyTimeScreen />);
+    expect(screen.getByLabelText("common.timer: 30:00")).toBeTruthy();
+
+    mockActiveTimer = { ...mockActiveTimer, isPaused: false, pausedAt: undefined };
+    rerender(<TummyTimeScreen />);
+    expect(screen.getByLabelText("common.timer: 1:00:00")).toBeTruthy();
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(mockCheckAndSendAlert).toHaveBeenCalledWith(60);
   });
 
   it("lets a caregiver close a cold-opened tummy-time screen", () => {

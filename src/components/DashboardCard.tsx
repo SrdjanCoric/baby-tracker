@@ -57,7 +57,6 @@ interface DashboardCardProps {
   todayBadge?: string;
   timerStartTime?: number;
   timerPausedAt?: number;
-  timerTotalPausedMs?: number;
 }
 
 const DashboardCardInner = forwardRef<View, DashboardCardProps>(
@@ -86,7 +85,6 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       todayBadge,
       timerStartTime,
       timerPausedAt,
-      timerTotalPausedMs,
     },
     ref
   ) => {
@@ -97,14 +95,12 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
     const [localElapsed, setLocalElapsed] = useState<string | null>(null);
     const timerStartTimeRef = useRef(timerStartTime);
     const timerPausedAtRef = useRef(timerPausedAt);
-    const timerTotalPausedMsRef = useRef(timerTotalPausedMs);
 
     timerStartTimeRef.current = timerStartTime;
     timerPausedAtRef.current = timerPausedAt;
-    timerTotalPausedMsRef.current = timerTotalPausedMs;
 
     useEffect(() => {
-      if (!isActive || !timerStartTime) {
+      if ((!isActive && !isLockedByOther) || !timerStartTime) {
         setLocalElapsed(null);
         return;
       }
@@ -112,13 +108,12 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       const computeElapsed = () => {
         const start = timerStartTimeRef.current!;
         const pausedAt = timerPausedAtRef.current;
-        const totalPaused = timerTotalPausedMsRef.current ?? 0;
 
         let elapsed: number;
         if (pausedAt) {
-          elapsed = Math.floor((pausedAt - start - totalPaused) / 1000);
+          elapsed = Math.floor((pausedAt - start) / 1000);
         } else {
-          elapsed = Math.floor((Date.now() - start - totalPaused) / 1000);
+          elapsed = Math.floor((Date.now() - start) / 1000);
         }
         setLocalElapsed(formatDuration(elapsed, "long"));
       };
@@ -126,7 +121,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       computeElapsed();
       const interval = setInterval(computeElapsed, 1000);
       return () => clearInterval(interval);
-    }, [isActive, timerStartTime, timerPausedAt, timerTotalPausedMs]);
+    }, [isActive, isLockedByOther, timerStartTime, timerPausedAt]);
     const config = ACTIVITY_CONFIG[activity];
     const activityColors = ACTIVITY[activity as keyof typeof ACTIVITY];
     const bgColor = isDark ? SURFACE.dark.card : SURFACE.light.card;
@@ -362,13 +357,13 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                                   name: lockedByName,
                                 })}
                   </Text>
-                  {lockedElapsedTime && (
+                  {(localElapsed ?? lockedElapsedTime) && (
                     <Text
                       className="text-sm mt-1"
                       style={{ color: secondaryTextColor }}
                       numberOfLines={1}
                     >
-                      {lockedElapsedTime}
+                      {localElapsed ?? lockedElapsedTime}
                     </Text>
                   )}
                 </View>
@@ -649,7 +644,6 @@ const DashboardCard = memo(DashboardCardInner, (prev, next) => {
     prev.testID === next.testID &&
     prev.timerStartTime === next.timerStartTime &&
     prev.timerPausedAt === next.timerPausedAt &&
-    prev.timerTotalPausedMs === next.timerTotalPausedMs &&
     prev.onPress === next.onPress &&
     prev.onActionPress === next.onActionPress &&
     prev.onPausePress === next.onPausePress

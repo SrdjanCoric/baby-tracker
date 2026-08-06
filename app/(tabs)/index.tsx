@@ -54,7 +54,6 @@ interface CardProps {
   todayBadge?: string;
   timerStartTime?: number;
   timerPausedAt?: number;
-  timerTotalPausedMs?: number;
 }
 
 export default function HomeScreen() {
@@ -624,12 +623,22 @@ export default function HomeScreen() {
     }
 
     const isPausedByOther = lock?.timerData?.isPaused === true;
+    const pausedAtValue = lock?.timerData?.pausedAt;
+    const pausedAt = typeof pausedAtValue === "string"
+      ? new Date(pausedAtValue).getTime()
+      : undefined;
 
     return {
       isLocked: true,
       lockedByName: lockedByName || undefined,
       elapsedTime,
       isPausedByOther,
+      timerStartTime: lock?.startedAt
+        ? new Date(lock.startedAt).getTime()
+        : undefined,
+      timerPausedAt: pausedAt !== undefined && Number.isFinite(pausedAt)
+        ? pausedAt
+        : undefined,
     };
   }, [selectedBaby?.id, isLockedByOther, getLockedByName, getLockForActivity]);
 
@@ -652,9 +661,8 @@ export default function HomeScreen() {
       lockedElapsedTime: feedingLock.elapsedTime,
       babyName: selectedBaby?.name,
       isPausedByOther: feedingLock.isPausedByOther,
-      timerStartTime: feedingActiveTimer?.startTime?.getTime(),
-      timerPausedAt: feedingActiveTimer?.pausedAt?.getTime(),
-      timerTotalPausedMs: feedingActiveTimer?.totalPausedMs,
+      timerStartTime: feedingActiveTimer?.startTime?.getTime() ?? feedingLock.timerStartTime,
+      timerPausedAt: feedingActiveTimer?.pausedAt?.getTime() ?? feedingLock.timerPausedAt,
     };
   }, [t, feedingTimeSince, feedingSubtitle, isFeedingActive, feedingActiveLabel, isStoppingFeeding, feedingActiveTimer, handleFeedingCardPress, handleAddFeeding, handleStopFeeding, handleTogglePauseFeeding, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -678,9 +686,8 @@ export default function HomeScreen() {
       lockedElapsedTime: sleepLock.elapsedTime,
       babyName: selectedBaby?.name,
       isPausedByOther: sleepLock.isPausedByOther,
-      timerStartTime: sleepActiveTimer?.startTime?.getTime(),
-      timerPausedAt: sleepActiveTimer?.pausedAt?.getTime(),
-      timerTotalPausedMs: sleepActiveTimer?.totalPausedMs,
+      timerStartTime: sleepActiveTimer?.startTime?.getTime() ?? sleepLock.timerStartTime,
+      timerPausedAt: sleepActiveTimer?.pausedAt?.getTime() ?? sleepLock.timerPausedAt,
     };
   }, [t, sleepTimeSince, sleepSecondaryInfo, isSleepActive, isStoppingSleep, sleepActiveTimer, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, handleTogglePauseSleep, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -717,9 +724,8 @@ export default function HomeScreen() {
       lockedElapsedTime: pumpingLock.elapsedTime,
       babyName: selectedBaby?.name,
       isPausedByOther: pumpingLock.isPausedByOther,
-      timerStartTime: pumpingActiveTimer?.startTime?.getTime(),
-      timerPausedAt: pumpingActiveTimer?.pausedAt?.getTime(),
-      timerTotalPausedMs: pumpingActiveTimer?.totalPausedMs,
+      timerStartTime: pumpingActiveTimer?.startTime?.getTime() ?? pumpingLock.timerStartTime,
+      timerPausedAt: pumpingActiveTimer?.pausedAt?.getTime() ?? pumpingLock.timerPausedAt,
     };
   }, [t, pumpingTimeSince, pumpingSubtitle, isPumpingActive, isStoppingPumping, pumpingActiveTimer, handlePumpingCardPress, handleAddPumping, handleStopPumping, handleTogglePausePumping, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -743,9 +749,8 @@ export default function HomeScreen() {
       lockedByName: tummyTimeLock.lockedByName,
       lockedElapsedTime: tummyTimeLock.elapsedTime,
       isPausedByOther: tummyTimeLock.isPausedByOther,
-      timerStartTime: tummyTimeActiveTimer?.startTime?.getTime(),
-      timerPausedAt: tummyTimeActiveTimer?.pausedAt?.getTime(),
-      timerTotalPausedMs: tummyTimeActiveTimer?.totalPausedMs,
+      timerStartTime: tummyTimeActiveTimer?.startTime?.getTime() ?? tummyTimeLock.timerStartTime,
+      timerPausedAt: tummyTimeActiveTimer?.pausedAt?.getTime() ?? tummyTimeLock.timerPausedAt,
     };
   }, [t, tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, isStoppingTummyTime, tummyTimeActiveTimer, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime, handleStopTummyTime, handleTogglePauseTummyTime, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 

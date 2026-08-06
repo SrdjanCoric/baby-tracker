@@ -343,7 +343,7 @@ describe("Timeline daily summary wiring", () => {
     expect(lastSummaryProps().dayEndHour).toBe(19);
   });
 
-  it("summarizes a running sleep as unpaused elapsed time", async () => {
+  it("summarizes a resumed running sleep with its counted pause", async () => {
     mockSleepState.activeTimer = {
       isRunning: true,
       startTime: new Date(2026, 0, 20, 11, 0, 0),
@@ -352,7 +352,7 @@ describe("Timeline daily summary wiring", () => {
 
     render(<TimelineScreen />);
 
-    expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("50");
+    expect(screen.getByTestId("summary-sleep-minutes").props.children).toBe("60");
     expect(screen.getByTestId("summary-nap-count").props.children).toBe("1");
   });
 

@@ -242,15 +242,11 @@ export async function restoreTimerLifecycle<
     startedAt: string,
     payload: TPayload
   ) => {
-    const effectiveStartTime =
-      payload.totalPausedMs > 0
-        ? new Date(new Date(startedAt).getTime() + payload.totalPausedMs)
-        : new Date(startedAt);
     const activityId = await startTimerLiveActivity(
       adapter.liveActivity.type,
       baby.name,
       adapter.liveActivity.detail(payload),
-      effectiveStartTime
+      new Date(startedAt)
     );
     return acceptStartedLiveActivity(activityId);
   };

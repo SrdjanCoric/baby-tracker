@@ -2,6 +2,11 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 
 const mockPush = jest.fn();
+let mockRemoteLocks: Record<string, {
+  startedAt: string;
+  startedByName: string;
+  timerData?: Record<string, unknown>;
+}> = {};
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -61,6 +66,8 @@ jest.mock("@/components", () => ({
     onActionPress,
     progress,
     subtitle,
+    timerStartTime,
+    timerPausedAt,
   }: {
     activity: string;
     label: string;
@@ -71,6 +78,8 @@ jest.mock("@/components", () => ({
     onActionPress?: () => void;
     progress?: number;
     subtitle?: string;
+    timerStartTime?: number;
+    timerPausedAt?: number;
   }) => {
     const { Pressable, Text } = require("react-native");
     return (
@@ -81,6 +90,8 @@ jest.mock("@/components", () => ({
         {isStopping && <Text testID={`stopping-${activity}`}>Stopping</Text>}
         {progress !== undefined && <Text testID={`progress-${activity}`}>{progress}%</Text>}
         {subtitle && <Text testID={`subtitle-${activity}`}>{subtitle}</Text>}
+        <Text testID={`timer-start-${activity}`}>{String(timerStartTime)}</Text>
+        <Text testID={`timer-paused-${activity}`}>{String(timerPausedAt)}</Text>
         <Pressable testID={`action-${activity}`} onPress={onActionPress} disabled={isStopping}>
           <Text>+</Text>
         </Pressable>
@@ -93,17 +104,23 @@ jest.mock("@/components", () => ({
     isStopping,
     onPress,
     onActionPress,
+    timerStartTime,
+    timerPausedAt,
   }: {
     activity: string;
     label: string;
     isStopping?: boolean;
     onPress?: () => void;
     onActionPress?: () => void;
+    timerStartTime?: number;
+    timerPausedAt?: number;
   }) => {
     const { Pressable, Text } = require("react-native");
     return (
       <Pressable testID={`compact-row-${activity}`} onPress={onPress}>
         <Text>{label}</Text>
+        <Text testID={`timer-start-${activity}`}>{String(timerStartTime)}</Text>
+        <Text testID={`timer-paused-${activity}`}>{String(timerPausedAt)}</Text>
         {isStopping && <Text testID={`stopping-${activity}`}>Stopping</Text>}
         <Pressable testID={`action-${activity}`} onPress={onActionPress} disabled={isStopping}>
           <Text>+</Text>
@@ -185,9 +202,9 @@ jest.mock("@/contexts", () => ({
     unitSystem: "metric",
   }),
   useActiveTimers: () => ({
-    isLockedByOther: () => false,
-    getLockedByName: () => null,
-    getLockForActivity: () => null,
+    isLockedByOther: (_babyId: string, activityType: string) => Boolean(mockRemoteLocks[activityType]),
+    getLockedByName: (_babyId: string, activityType: string) => mockRemoteLocks[activityType]?.startedByName ?? null,
+    getLockForActivity: (_babyId: string, activityType: string) => mockRemoteLocks[activityType] ?? null,
     refreshLocks: jest.fn(),
   }),
   useDashboardConfig: () => ({
@@ -249,6 +266,7 @@ import HomeScreen from "./index";
 describe("HomeScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRemoteLocks = {};
 
     mockUseFeeding.mockReturnValue({
       feedings: [],
@@ -384,6 +402,29 @@ describe("HomeScreen", () => {
   });
 
   describe("active state", () => {
+    it("passes remote timers' real start and pause instant to every dashboard surface", () => {
+      const startedAt = "2026-08-06T10:00:00.000Z";
+      const pausedAt = "2026-08-06T10:30:00.000Z";
+      for (const activityType of ["feeding", "sleep", "pumping", "tummy_time"]) {
+        mockRemoteLocks[activityType] = {
+          startedAt,
+          startedByName: "Other caregiver",
+          timerData: { isPaused: true, pausedAt },
+        };
+      }
+
+      render(<HomeScreen />);
+
+      for (const activity of ["feeding", "sleep", "pumping", "tummyTime"]) {
+        expect(screen.getByTestId(`timer-start-${activity}`).props.children).toBe(
+          String(new Date(startedAt).getTime())
+        );
+        expect(screen.getByTestId(`timer-paused-${activity}`).props.children).toBe(
+          String(new Date(pausedAt).getTime())
+        );
+      }
+    });
+
     it("shows active state for feeding when timer running", () => {
       mockUseFeeding.mockReturnValue({
         feedings: [],
