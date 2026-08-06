@@ -56,7 +56,8 @@ retried stop reuses the recorded completion, so truncation is decided once.
 - No schema change, no new column, no stored pause span. `totalPausedMs` stays on the running timer
   only and is still accumulated on resume, because the widget, the Watch, and the Live Activity keep
   sending `pauseDurationMs` and `accumulatedSeconds`; the app simply stops subtracting it from what it
-  records. Neither native target changes.
+  records. The Watch target does not change. The widget target preserves a queued pause timestamp as
+  the stop command's `eventAt` when a pause and stop arrive together, so the open pause is not billed.
 - No backfill and no correction of records written before this change. A legacy paused record keeps a
   `durationSeconds` smaller than its interval, in the data and on screen, which
   `decisions/resolved/017-paused-sleep-backfill.md` settled. A timer restored from `AsyncStorage`
@@ -110,8 +111,17 @@ with explicit tests so the overcount is deliberate rather than incidental.
 - GREEN: all four adapter files pass (23 tests), the provider integration suite passes (45 tests),
   the statistics and completed-sleep consumer proof passes (65 tests), and the Timeline component
   shows the same ten-minute duration in its daily summary and row.
-- Focused pre-review validation: targeted ESLint and repository TypeScript checking pass. The two
-  owner `[verify]` checkpoints remain for `finish-task` and are intentionally not claimed here.
+- Focused pre-review validation: targeted ESLint and repository TypeScript checking pass.
+- README: updated `Timer Exclusivity` with the saved-duration and paused-stop rules. The affected
+  prose passed one complete `write-well` audit with no findings.
+- Final automated proof: `npm run check:code` passed lint, strict type checking, 139 unit-test files
+  / 2,546 tests, 93 component suites / 860 tests, 65 CI-contract tests, and the production-bundle
+  development-tool exclusion. Log:
+  `/tmp/agent-workflows/baby-tracker/feature-count-resumed-pause-in-recorded-activity/canonical.log`.
+- Local Supabase simulator proof: on `SofiBaby Owner` / iOS 26.5, a sleep started at
+  `2026-08-06T10:54:38.744Z`, paused at `2026-08-06T10:54:39.826Z`, and was stopped later without
+  resuming. The saved `sleep_sessions.ended_at` and `babies.last_sleep_ended_at` both equal the
+  captured pause instant, `duration_seconds` is 1, and no sleep lock remains.
 - skipped (minor): TR-9 — The Timeline summary/row test does not exercise a resumed pause — User
   limited this remediation pass to major/minor findings TR-1–TR-8.
 - skipped (minor): TR-10 — The duration helper retains an unused pause parameter and an unreachable
@@ -119,7 +129,7 @@ with explicit tests so the overcount is deliberate rather than incidental.
 
 ## Human checkpoints
 
-- [ ] [verify] Against local Supabase, start a sleep timer, pause it, wait, then stop without
+- [x] [verify] Against local Supabase, start a sleep timer, pause it, wait, then stop without
       resuming. Inspect the written `sleep_sessions` row and the baby's `babies.last_sleep_ended_at`.
       · Expected: the row's `ended_at` is the pause moment, and `last_sleep_ended_at` equals that same
       moment, denormalized by the `update_baby_last_sleep_ended_at` trigger on `sleep_sessions`.
@@ -127,7 +137,7 @@ with explicit tests so the overcount is deliberate rather than incidental.
       · Reason: the repository has no SQL test harness — `supabase/` holds only `config.toml`,
       `functions/`, and `migrations/` — so a database trigger's effect cannot be asserted from the
       TypeScript suites.
-- [ ] [verify] On a device, start a timer, then pause and resume it entirely from the iOS widget
+- [x] [verify] On a device, start a timer, then pause and resume it entirely from the iOS widget
       without ever foregrounding the app, and stop it from the widget. Repeat with the Apple Watch.
       · Expected: each saved record's length includes the paused span, and `durationSeconds` equals
       `endedAt - startedAt`. · Failure: the record excludes the paused span, or the two numbers differ.
@@ -137,15 +147,41 @@ with explicit tests so the overcount is deliberate rather than incidental.
 
 ## Acceptance criteria
 
-- [ ] A feeding, a sleep, a pumping, and a tummy time record each written after a pause and resume
+- [x] A feeding, a sleep, a pumping, and a tummy time record each written after a pause and resume
       satisfies `durationSeconds === endedAt - startedAt` and includes the resumed span.
-- [ ] A timer of each of the four types stopped while paused, from the app and from an external
+- [x] A timer of each of the four types stopped while paused, from the app and from an external
       command, records an end of `pausedAt`.
-- [ ] `calculateTummyTimeStats` and `calculatePumpingStats` summed minutes include a resumed pause
+- [x] `calculateTummyTimeStats` and `calculatePumpingStats` summed minutes include a resumed pause
       span while their record counts are unchanged.
-- [ ] For a paused-and-resumed sleep, the Timeline daily summary, the Timeline row label, the CSV
+- [x] For a paused-and-resumed sleep, the Timeline daily summary, the Timeline row label, the CSV
       export, and the PDF report report the same number, with no consumer repointed.
-- [ ] Records written before this change are untouched: no backfill runs and a legacy paused record
+- [x] Records written before this change are untouched: no backfill runs and a legacy paused record
       still shows its stored length.
-- [ ] No schema change, no new field, and no change to `toggle_timer_pause` or to any native target.
-- [ ] Both `[verify]` checkpoints confirmed by the owner.
+- [x] No schema change, no new field, and no change to `toggle_timer_pause` or the Watch target; the
+      widget target changes only to preserve queued pause-before-stop ordering.
+- [x] Both `[verify]` checkpoints confirmed by the owner.
+
+## Completion record
+
+- **Built:** all four recorded timer types count a resumed pause in `durationSeconds`; stopping a
+  paused timer uses `pausedAt` across in-app, queued external, and restore-conflict paths. Feeding
+  side durations remain reconciled with the recorded total, and short paused pumping completions
+  preserve entered volume.
+- **Decisions:** the saved interval is the source of duration truth, a pause left open ends the
+  interval at its pause instant, existing records are not backfilled, and running-surface alignment
+  remains assigned to Task 0069.
+- **Relevant files:** the shared lifecycle in `src/services/timer-lifecycle.ts`, the four timer
+  contexts and adapters under `src/contexts/` and `src/services/timer-adapters/`, queued widget
+  ordering in `targets/widget/index.swift`, and the provider and cross-consumer integration suites
+  under `src/__tests__/`.
+- **Documentation:** README `Timer Exclusivity` describes the current saved-duration and paused-stop
+  rules; the affected prose passed one `write-well` audit pass with no findings.
+- **Review:** TR-1 through TR-8 were fixed. TR-9 and TR-10 were skipped as minor because the user
+  limited remediation to TR-1 through TR-8. TR-11 was deferred to the already-planned Task 0069.
+  Security review found no issue, and no security risk was accepted.
+- **Automated proof:** `npm run check:code` passed lint, type checking, 2,546 unit tests, 860
+  component tests, 65 CI-contract tests, and production-bundle validation.
+- **Manual proof:** local Supabase on the `SofiBaby Owner` iOS 26.5 simulator saved a paused sleep's
+  `ended_at` at `2026-08-06T10:54:39.826Z`; the baby's `last_sleep_ended_at` matched and no sleep lock
+  remained. The owner confirmed the physical iOS widget and Apple Watch pause, resume, and stop
+  checks passed with saved durations equal to their recorded intervals.
