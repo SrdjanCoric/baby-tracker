@@ -544,11 +544,13 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       };
 
       try {
-        const requestedStopTime = requestedEndTime ?? new Date();
+        const requestedStopTime =
+          activeTimer.isPaused && activeTimer.pausedAt
+            ? activeTimer.pausedAt
+            : (requestedEndTime ?? new Date());
         const requestedDurationSeconds = Math.floor(
           (requestedStopTime.getTime() -
-            state.activeTimer.startTime.getTime() -
-            state.activeTimer.totalPausedMs) /
+            activeTimer.startTime.getTime()) /
             1000
         );
         if (requestedDurationSeconds < 60) {
@@ -559,8 +561,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         const completion = await acceptTimerCompletion(
           selectedBaby.id,
           "pumping",
-          state.activeTimer.startTime.toISOString(),
-          state.activeTimer,
+          activeTimer.startTime.toISOString(),
+          activeTimer,
           requestedStopTime
         );
         const endTime = new Date(completion.stoppedAt);

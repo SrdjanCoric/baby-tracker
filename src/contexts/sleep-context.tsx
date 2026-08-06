@@ -1320,11 +1320,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       };
 
       try {
-        const requestedStopTime = requestedEndTime ?? new Date();
+        const requestedStopTime =
+          activeTimer.isPaused && activeTimer.pausedAt
+            ? activeTimer.pausedAt
+            : (requestedEndTime ?? new Date());
         const requestedDurationSeconds = Math.floor(
-          (requestedStopTime.getTime() -
-            timerStartTime.getTime() -
-            state.activeTimer.totalPausedMs) /
+          (requestedStopTime.getTime() - timerStartTime.getTime()) /
             1000
         );
         if (shouldDiscardTimerDuration(requestedDurationSeconds)) {

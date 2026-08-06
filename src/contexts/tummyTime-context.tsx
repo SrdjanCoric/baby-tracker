@@ -543,12 +543,16 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     };
 
     try {
+      const requestedStopTime =
+        activeTimer.isPaused && activeTimer.pausedAt
+          ? activeTimer.pausedAt
+          : (requestedEndTime ?? new Date());
       const completion = await acceptTimerCompletion(
         selectedBaby.id,
         "tummy_time",
-        state.activeTimer.startTime.toISOString(),
-        state.activeTimer,
-        requestedEndTime ?? new Date()
+        activeTimer.startTime.toISOString(),
+        activeTimer,
+        requestedStopTime
       );
       const endTime = new Date(completion.stoppedAt);
       if (completion.status === "completed") {

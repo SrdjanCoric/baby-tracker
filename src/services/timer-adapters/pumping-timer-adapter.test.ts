@@ -23,7 +23,7 @@ vi.mock("react-native", () => ({
 }));
 
 describe("pumping timer adapter", () => {
-  it("builds a pumping span without inventing a volume", () => {
+  it("counts a resumed pause in the pumping span without inventing a volume", () => {
     const adapter = createPumpingTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
@@ -45,7 +45,7 @@ describe("pumping timer adapter", () => {
       side: "right",
       startedAt,
       endedAt,
-      durationSeconds: 120,
+      durationSeconds: 123,
     });
   });
 

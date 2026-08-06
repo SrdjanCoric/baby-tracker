@@ -136,12 +136,9 @@ export interface RestoreTimerLifecycleOptions<
 export function calculateTimerDurationSeconds(
   startedAt: Date,
   endedAt: Date,
-  totalPausedMs: number
+  _totalPausedMs: number
 ): number {
-  return Math.max(
-    0,
-    Math.floor((endedAt.getTime() - startedAt.getTime() - totalPausedMs) / 1000)
-  );
+  return Math.max(0, Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000));
 }
 
 export function parseTimerDate(
@@ -339,12 +336,16 @@ export async function restoreTimerLifecycle<
       if (reconciliation.state !== "offline") await refreshLocks();
 
       if (reconciliation.state === "conflicted") {
+        const currentTime = new Date(Date.now());
+        const requestedStopTime = activeTimer.isPaused
+          ? (parseTimerDate(activeTimer.pausedAt, currentTime) ?? currentTime)
+          : currentTime;
         const completion = await acceptTimerCompletion(
           baby.id,
           adapter.activityType,
           activeTimer.startedAt,
           identity,
-          new Date(Date.now())
+          requestedStopTime
         );
         dispatchStopTimer();
         let record = await adapter.storage.getRecordById(

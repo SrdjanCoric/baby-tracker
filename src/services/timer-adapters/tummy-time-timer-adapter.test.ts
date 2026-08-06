@@ -62,7 +62,7 @@ vi.mock("react-native", () => ({
 }));
 
 describe("tummy time timer adapter", () => {
-  it("builds the bare tummy time span from decoded timer data", () => {
+  it("counts a resumed pause in the bare tummy time span", () => {
     const adapter = createTummyTimeTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
@@ -75,7 +75,7 @@ describe("tummy time timer adapter", () => {
         timerInstanceId: "timer-1",
         activityId: "activity-1",
         isPaused: false,
-        totalPausedMs: 0,
+        totalPausedMs: 3_000,
       })
     ).toEqual({
       id: "activity-1",
@@ -191,6 +191,7 @@ describe("tummy time timer adapter", () => {
       startedAt: "2026-08-05T12:00:00.000Z",
       isPaused: true,
       totalPausedMs: 0,
+      pausedAt: "2026-08-05T12:00:30.000Z",
       lockState: "owned",
     });
     adapter.storage.getRecordById = vi.fn().mockResolvedValue(null);
@@ -255,6 +256,13 @@ describe("tummy time timer adapter", () => {
       "baby-1",
       "accepted-activity"
     );
+    expect(acceptTimerCompletion).toHaveBeenCalledWith(
+      "baby-1",
+      "tummy_time",
+      "2026-08-05T12:00:00.000Z",
+      expect.objectContaining({ timerInstanceId: "timer-1" }),
+      new Date("2026-08-05T12:00:30.000Z")
+    );
     expect(persistRecord).toHaveBeenCalledWith(
       expect.objectContaining({ id: "accepted-activity" })
     );
@@ -263,7 +271,7 @@ describe("tummy time timer adapter", () => {
 });
 
 describe("calculateTimerDurationSeconds", () => {
-  it("clamps negative spans, floors fractional seconds, and subtracts a pause once", () => {
+  it("clamps negative spans, floors fractional seconds, and counts resumed pauses", () => {
     const startedAt = new Date("2026-08-05T12:00:00.000Z");
 
     expect(
@@ -286,6 +294,6 @@ describe("calculateTimerDurationSeconds", () => {
         new Date("2026-08-05T12:00:08.750Z"),
         2_500
       )
-    ).toBe(6);
+    ).toBe(8);
   });
 });

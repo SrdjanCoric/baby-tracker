@@ -9,6 +9,8 @@ caregiver, I want a timer I paused and came back to keep counting, and a timer I
 resumed to record nothing after the pause, so that the number I see on a saved activity is the one I
 lived through.
 
+**Execution classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
+
 ## What to build
 
 One pause rule for the recorded activity across all four timer types — feeding, sleep, pumping, and
@@ -76,29 +78,40 @@ with explicit tests so the overcount is deliberate rather than incidental.
 
 ## Implementation work
 
-- [ ] Drop the `- totalPausedMs` term from the module-owned duration rule so it reads
+- [x] Drop the `- totalPausedMs` term from the module-owned duration rule so it reads
       `durationSeconds = Math.max(0, Math.floor((endedAt - startedAt) / 1000))`, and update the module's
       duration tests to assert the invariant rather than the subtraction.
-- [ ] Truncate the requested stop time to `pausedAt` when the timer is paused, in each of the four
+- [x] Truncate the requested stop time to `pausedAt` when the timer is paused, in each of the four
       context stop callbacks, so an in-app stop, a widget stop, a Watch stop, and a routed stop all
       record an end of `pausedAt`.
-- [ ] Truncate the same way in the lifecycle module's restore lock-conflict path, using the restored
+- [x] Truncate the same way in the lifecycle module's restore lock-conflict path, using the restored
       snapshot's `pausedAt` when it is paused instead of the current time.
-- [ ] Per type, write tests for a timer paused and resumed: the saved record's `durationSeconds`
+- [x] Per type, write tests for a timer paused and resumed: the saved record's `durationSeconds`
       equals `endedAt - startedAt` and includes the resumed span.
-- [ ] Per type, write tests for a timer paused and then stopped without resuming: the record ends at
+- [x] Per type, write tests for a timer paused and then stopped without resuming: the record ends at
       `pausedAt`, and the span between the pause and the stop reaches nothing.
-- [ ] Prove the truncation through the external stop seam, so a widget, Watch, or routed stop issued
+- [x] Prove the truncation through the external stop seam, so a widget, Watch, or routed stop issued
       while paused records `pausedAt` rather than the command's `eventAt`.
-- [ ] Add explicit total tests: `calculateTummyTimeStats` and `calculatePumpingStats` include a resumed
+- [x] Add explicit total tests: `calculateTummyTimeStats` and `calculatePumpingStats` include a resumed
       pause span in their summed minutes while `sessionCount` and `totalCount` stay unchanged.
-- [ ] For one paused-and-resumed sleep, prove the Timeline daily summary, the Timeline row label, the
+- [x] For one paused-and-resumed sleep, prove the Timeline daily summary, the Timeline row label, the
       CSV export, and the PDF report all report the same number, without changing any of those
       consumers. This is the standing bar from
       `decisions/resolved/003-sleep-derivation-blast-radius.md` and it is met by construction once the
       invariant holds.
-- [ ] Keep `src/__tests__/external-timer-stop-providers.integration.test.tsx` passing, adjusting only
+- [x] Keep `src/__tests__/external-timer-stop-providers.integration.test.tsx` passing, adjusting only
       assertions that encode the old subtraction.
+
+## Implementation evidence
+
+- RED: the four adapter seams and shared duration test failed on the old pause subtraction; the real
+  providers failed on resumed-pause discard and paused-stop truncation; the restore-conflict seam
+  failed because it requested the current time.
+- GREEN: all four adapter files pass (23 tests), the provider integration suite passes (45 tests),
+  the statistics and completed-sleep consumer proof passes (65 tests), and the Timeline component
+  shows the same ten-minute duration in its daily summary and row.
+- Focused pre-review validation: targeted ESLint and repository TypeScript checking pass. The two
+  owner `[verify]` checkpoints remain for `finish-task` and are intentionally not claimed here.
 
 ## Human checkpoints
 

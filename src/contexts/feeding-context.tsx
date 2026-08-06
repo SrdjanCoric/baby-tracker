@@ -637,11 +637,13 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       };
 
       try {
-        const requestedStopTime = requestedEndTime ?? new Date();
+        const requestedStopTime =
+          activeTimer.isPaused && activeTimer.pausedAt
+            ? activeTimer.pausedAt
+            : (requestedEndTime ?? new Date());
         const durationSeconds = Math.floor(
           (requestedStopTime.getTime() -
-            state.activeTimer.startTime.getTime() -
-            state.activeTimer.totalPausedMs) /
+            activeTimer.startTime.getTime()) /
             1000
         );
 
@@ -653,8 +655,8 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         const completion = await acceptTimerCompletion(
           selectedBaby.id,
           "feeding",
-          state.activeTimer.startTime.toISOString(),
-          state.activeTimer,
+          activeTimer.startTime.toISOString(),
+          activeTimer,
           requestedStopTime
         );
         const endTime = new Date(completion.stoppedAt);

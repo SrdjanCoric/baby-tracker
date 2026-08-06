@@ -114,7 +114,7 @@ describe("feeding timer adapter", () => {
     });
   });
 
-  it("builds a breastfeed span and round-trips every current timer-data field", () => {
+  it("counts a resumed pause in the breastfeed span", () => {
     const adapter = createFeedingTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
@@ -139,7 +139,7 @@ describe("feeding timer adapter", () => {
       lastFinishedSide: "right",
       startedAt,
       endedAt,
-      durationSeconds: 56,
+      durationSeconds: 60,
       leftDurationSeconds: 12,
       rightDurationSeconds: 34,
     });
