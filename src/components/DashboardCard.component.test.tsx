@@ -55,6 +55,21 @@ describe("DashboardCard", () => {
       expect(screen.getByText("1:00:00")).toBeTruthy();
     });
 
+    it("keeps the remote elapsed line hidden when the caller did not provide one", () => {
+      render(
+        <DashboardCard
+          activity="feeding"
+          label="feeding"
+          isLockedByOther
+          lockedByName="Other caregiver"
+          timerStartTime={start}
+          testID="card"
+        />
+      );
+
+      expect(screen.queryByText("1h")).toBeNull();
+    });
+
     it.each(activities)("freezes a remotely owned paused %s timer", (activity) => {
       render(
         <DashboardCard
@@ -69,7 +84,7 @@ describe("DashboardCard", () => {
         />
       );
 
-      expect(screen.getByText("30:00")).toBeTruthy();
+      expect(screen.getByText("30m")).toBeTruthy();
     });
 
     it("counts a remotely owned timer from its real start after resume", () => {
@@ -85,7 +100,7 @@ describe("DashboardCard", () => {
         />
       );
 
-      expect(screen.getByText("1:00:00")).toBeTruthy();
+      expect(screen.getByText("1h")).toBeTruthy();
     });
   });
 

@@ -89,7 +89,7 @@ const CompactActivityRowInner = ({
       } else {
         elapsed = Math.floor((Date.now() - start) / 1000);
       }
-      setLocalElapsed(formatDuration(elapsed, "long"));
+      setLocalElapsed(formatDuration(elapsed, isLockedByOther ? "short" : "long"));
     };
 
     computeElapsed();
@@ -148,7 +148,9 @@ const CompactActivityRowInner = ({
         ? localElapsed
         : timeSince || "--";
   const secondaryValue = isLockedByOther
-    ? localElapsed ?? lockedElapsedTime
+    ? lockedElapsedTime
+      ? localElapsed ?? lockedElapsedTime
+      : undefined
     : subtitle;
   const resolvedTestID = !testID
     ? undefined

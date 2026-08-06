@@ -115,7 +115,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
         } else {
           elapsed = Math.floor((Date.now() - start) / 1000);
         }
-        setLocalElapsed(formatDuration(elapsed, "long"));
+        setLocalElapsed(formatDuration(elapsed, isLockedByOther ? "short" : "long"));
       };
 
       computeElapsed();
@@ -357,7 +357,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
                                   name: lockedByName,
                                 })}
                   </Text>
-                  {(localElapsed ?? lockedElapsedTime) && (
+                  {lockedElapsedTime && (
                     <Text
                       className="text-sm mt-1"
                       style={{ color: secondaryTextColor }}
