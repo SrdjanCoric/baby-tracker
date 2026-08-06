@@ -43,24 +43,9 @@ export function getTimerStartBounds(
 
 export function normalizeTimerStartSelection(
   selectedTime: Date,
-  bounds: TimerStartBounds,
-  now: Date = new Date(),
-  platform: "android" | "ios" | string
+  bounds: TimerStartBounds
 ): Date {
-  let normalized = new Date(selectedTime);
-
-  if (platform === "android") {
-    normalized = new Date(now);
-    normalized.setHours(
-      selectedTime.getHours(),
-      selectedTime.getMinutes(),
-      selectedTime.getSeconds(),
-      0
-    );
-    if (normalized > bounds.maximumDate) {
-      normalized.setDate(normalized.getDate() - 1);
-    }
-  }
+  const normalized = new Date(selectedTime);
 
   if (normalized < bounds.minimumDate) {
     return new Date(bounds.minimumDate);

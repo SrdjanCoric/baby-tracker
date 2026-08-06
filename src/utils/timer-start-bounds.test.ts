@@ -39,25 +39,20 @@ describe("timer start bounds", () => {
     });
   });
 
-  it("applies both bounds to Android's reconstructed time", () => {
-    const androidNow = new Date(2026, 7, 6, 10, 0);
-    const bounds = getTimerStartBounds([], androidNow);
+  it("clamps a complete datetime selection to both bounds", () => {
+    const bounds = getTimerStartBounds([], now);
 
     expect(
       normalizeTimerStartSelection(
-        new Date(2020, 0, 1, 20, 0),
-        bounds,
-        androidNow,
-        "android"
+        new Date("2026-08-05T23:00:00.000Z"),
+        bounds
       )
     ).toEqual(bounds.minimumDate);
     expect(
       normalizeTimerStartSelection(
-        new Date(2020, 0, 1, 23, 0),
-        bounds,
-        androidNow,
-        "android"
+        new Date("2026-08-06T13:00:00.000Z"),
+        bounds
       )
-    ).toEqual(new Date(2026, 7, 5, 23, 0));
+    ).toEqual(bounds.maximumDate);
   });
 });

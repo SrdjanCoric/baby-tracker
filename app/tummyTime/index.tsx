@@ -270,13 +270,10 @@ function StartView({
 
   const handleTimeChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
-      if (Platform.OS === "android") {
-        setShowTimePicker(false);
-      }
       if (selectedTime) {
         const currentBounds = getBounds();
         setPickerBounds(currentBounds);
-        setCustomStartTime(normalizeTimerStartSelection(selectedTime, currentBounds, new Date(), Platform.OS));
+        setCustomStartTime(normalizeTimerStartSelection(selectedTime, currentBounds));
       }
     },
     [getBounds]

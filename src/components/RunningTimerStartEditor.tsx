@@ -61,14 +61,11 @@ export function RunningTimerStartEditor({
   const handleChange = useCallback(
     (_event: DateTimePickerEvent, selectedTime?: Date) => {
       if (!selectedTime) return;
-      const now = new Date();
       const currentBounds = getBounds();
       setPickerBounds(currentBounds);
       const normalized = normalizeTimerStartSelection(
         selectedTime,
-        currentBounds,
-        now,
-        Platform.OS
+        currentBounds
       );
 
       setDraftStartedAt(normalized);
@@ -79,9 +76,7 @@ export function RunningTimerStartEditor({
     const currentBounds = getBounds();
     const revalidatedStart = normalizeTimerStartSelection(
       draftStartedAt,
-      currentBounds,
-      new Date(),
-      "ios"
+      currentBounds
     );
     setPickerBounds(currentBounds);
     setDraftStartedAt(revalidatedStart);
