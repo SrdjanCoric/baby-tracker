@@ -324,9 +324,12 @@ export async function updateTimerStartTime(
   userId: string,
   startedAt: Date
 ): Promise<boolean> {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from("active_timers")
-    .update({ started_at: startedAt.toISOString() })
+    .update(
+      { started_at: startedAt.toISOString() },
+      { count: "exact" }
+    )
     .eq("baby_id", babyId)
     .eq("activity_type", activityType)
     .eq("started_by", userId);
@@ -334,6 +337,10 @@ export async function updateTimerStartTime(
   if (error) {
     console.error("[ActiveTimerService] Failed to update timer start:", error);
     throw error;
+  }
+
+  if (count !== 1) {
+    throw new Error("No matching active timer was updated");
   }
 
   return true;

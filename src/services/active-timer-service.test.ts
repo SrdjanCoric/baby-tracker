@@ -78,8 +78,8 @@ describe("active timer start editing", () => {
     const query = {
       update: updateMock,
       eq: eqMock,
-      then: (resolve: (value: { error: null }) => unknown) =>
-        Promise.resolve({ error: null }).then(resolve),
+      then: (resolve: (value: { error: null; count: number }) => unknown) =>
+        Promise.resolve({ error: null, count: 1 }).then(resolve),
     };
     updateMock.mockReturnValue(query);
     eqMock.mockReturnValue(query);
@@ -94,13 +94,36 @@ describe("active timer start editing", () => {
     ).resolves.toBe(true);
 
     expect(fromMock).toHaveBeenCalledWith("active_timers");
-    expect(updateMock).toHaveBeenCalledWith({
-      started_at: "2026-08-06T07:30:00.000Z",
-    });
+    expect(updateMock).toHaveBeenCalledWith(
+      { started_at: "2026-08-06T07:30:00.000Z" },
+      { count: "exact" }
+    );
     expect(eqMock).toHaveBeenCalledWith("baby_id", "baby-1");
     expect(eqMock).toHaveBeenCalledWith("activity_type", "feeding");
     expect(eqMock).toHaveBeenCalledWith("started_by", "user-1");
     expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an edit when no active lock matches", async () => {
+    const zeroMatchQuery = {
+      update: updateMock,
+      eq: eqMock,
+      then: (
+        resolve: (value: { error: null; count: number }) => unknown
+      ) => Promise.resolve({ error: null, count: 0 }).then(resolve),
+    };
+    updateMock.mockReturnValue(zeroMatchQuery);
+    eqMock.mockReturnValue(zeroMatchQuery);
+    fromMock.mockReturnValue(zeroMatchQuery);
+
+    await expect(
+      updateTimerStartTime(
+        "baby-1",
+        "feeding",
+        "user-1",
+        new Date("2026-08-06T07:30:00.000Z")
+      )
+    ).rejects.toThrow("No matching active timer");
   });
 });
 
