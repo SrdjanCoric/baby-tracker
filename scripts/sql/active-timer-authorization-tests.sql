@@ -200,6 +200,7 @@ DO $$
 DECLARE
   acquired BOOLEAN;
   rejected_future_direct BOOLEAN := false;
+  rejected_forward_update BOOLEAN := false;
   rejected_old_direct BOOLEAN := false;
   rejected_future_rpc BOOLEAN := false;
   rejected_old_rpc BOOLEAN := false;
@@ -286,6 +287,19 @@ BEGIN
 
   IF updated_count <> 1 THEN
     RAISE EXCEPTION 'a direct update rejected a timer start inside the valid window';
+  END IF;
+
+  BEGIN
+    UPDATE public.active_timers
+    SET started_at = pg_catalog.now() - INTERVAL '30 minutes'
+    WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+      AND activity_type = 'sleep';
+  EXCEPTION WHEN invalid_parameter_value THEN
+    rejected_forward_update := true;
+  END;
+
+  IF NOT rejected_forward_update THEN
+    RAISE EXCEPTION 'a timer owner moved an existing lock start forward';
   END IF;
 
   BEGIN

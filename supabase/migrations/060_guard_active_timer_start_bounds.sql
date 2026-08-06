@@ -18,6 +18,11 @@ BEGIN
       NEW.started_at := pg_catalog.now();
     END IF;
 
+    IF TG_OP = 'UPDATE' AND NEW.started_at > OLD.started_at THEN
+      RAISE EXCEPTION 'active timer start cannot move forward'
+        USING ERRCODE = '22023';
+    END IF;
+
     IF NEW.started_at < pg_catalog.now() - INTERVAL '12 hours' THEN
       RAISE EXCEPTION 'active timer start cannot be older than twelve hours'
         USING ERRCODE = '22023';
@@ -45,4 +50,4 @@ CREATE TRIGGER validate_active_timer_started_at
   EXECUTE FUNCTION public.validate_active_timer_started_at();
 
 COMMENT ON FUNCTION public.validate_active_timer_started_at() IS
-'Normalizes up to five minutes of positive client-clock skew, rejects larger future starts and starts older than the twelve-hour stale-lock cleanup horizon, and allows unrelated updates to existing locks.';
+'Normalizes up to five minutes of positive client-clock skew, rejects larger future starts, starts older than the twelve-hour stale-lock cleanup horizon, and forward movement of an existing start, while allowing unrelated updates to existing locks.';
