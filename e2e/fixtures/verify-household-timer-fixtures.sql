@@ -8,9 +8,12 @@ DECLARE
   baby_count integer;
   achievement_count integer;
 BEGIN
-  IF NOT has_table_privilege('authenticated', 'public.users', 'SELECT')
-    OR NOT has_table_privilege('authenticated', 'public.active_timers', 'INSERT') THEN
+  IF NOT has_table_privilege('authenticated', 'public.users', 'SELECT') THEN
     RAISE EXCEPTION 'authenticated role is missing local API table grants';
+  END IF;
+
+  IF has_table_privilege('authenticated', 'public.active_timers', 'INSERT') THEN
+    RAISE EXCEPTION 'authenticated callers must acquire timer locks through the RPC';
   END IF;
 
   IF NOT has_function_privilege(

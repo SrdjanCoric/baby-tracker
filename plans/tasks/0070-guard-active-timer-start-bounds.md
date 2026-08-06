@@ -140,6 +140,7 @@ future bound alone.
 
 ## Review decisions
 
+- accepted (security): TR-5 — An authenticated owner can repeatedly release and reacquire a timer lock — The forward-only rejection did not prevent that path and blocked Task 0071's valid within-window corrections.
 - skipped (minor): TR-7 — The grandfathered-lock pause vector does not assert the resulting row — User requested remediation only for TR-1–TR-6.
 - skipped (minor): TR-8 — No vector exercises a full-row offline-replay update with an unchanged out-of-horizon start — User requested remediation only for TR-1–TR-6.
 - skipped (minor): TR-9 — The implementation commit also amended the task specification — User requested remediation only for TR-1–TR-6.

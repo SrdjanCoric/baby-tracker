@@ -1,6 +1,6 @@
 -- Keep every active timer lock inside the same reclaimability horizon used by
--- cleanup_stale_timer_locks. Normalize small positive client-clock skew to database time, reject
--- larger future values, and do not reject unrelated updates to a grandfathered stale lock.
+-- cleanup_stale_timer_locks. Reject every future start, and do not reject unrelated updates to a
+-- grandfathered stale lock.
 
 CREATE OR REPLACE FUNCTION public.validate_active_timer_started_at()
 RETURNS TRIGGER
@@ -9,17 +9,8 @@ SET search_path = ''
 AS $$
 BEGIN
   IF TG_OP = 'INSERT' OR NEW.started_at IS DISTINCT FROM OLD.started_at THEN
-    IF NEW.started_at > pg_catalog.now() + INTERVAL '5 minutes' THEN
-      RAISE EXCEPTION 'active timer start cannot be in the future'
-        USING ERRCODE = '22023';
-    END IF;
-
     IF NEW.started_at > pg_catalog.now() THEN
-      NEW.started_at := pg_catalog.now();
-    END IF;
-
-    IF TG_OP = 'UPDATE' AND NEW.started_at > OLD.started_at THEN
-      RAISE EXCEPTION 'active timer start cannot move forward'
+      RAISE EXCEPTION 'active timer start cannot be in the future'
         USING ERRCODE = '22023';
     END IF;
 
@@ -33,14 +24,9 @@ BEGIN
 END;
 $$;
 
--- Repair locks written before this guard existed. A far-future lock cannot represent a valid
--- running timer and would otherwise remain unreclaimable; small client-clock skew is preserved by
--- normalizing it to the database clock, matching the trigger's behavior for new writes.
+-- Repair locks written before this guard existed. A future lock cannot represent a valid running
+-- timer and would otherwise remain unreclaimable.
 DELETE FROM public.active_timers
-WHERE started_at > pg_catalog.now() + INTERVAL '5 minutes';
-
-UPDATE public.active_timers
-SET started_at = pg_catalog.now()
 WHERE started_at > pg_catalog.now();
 
 DROP TRIGGER IF EXISTS validate_active_timer_started_at ON public.active_timers;
@@ -50,4 +36,4 @@ CREATE TRIGGER validate_active_timer_started_at
   EXECUTE FUNCTION public.validate_active_timer_started_at();
 
 COMMENT ON FUNCTION public.validate_active_timer_started_at() IS
-'Normalizes up to five minutes of positive client-clock skew, rejects larger future starts, starts older than the twelve-hour stale-lock cleanup horizon, and forward movement of an existing start, while allowing unrelated updates to existing locks.';
+'Rejects future active-timer starts and starts older than the twelve-hour stale-lock cleanup horizon while allowing valid started-at corrections and unrelated updates to existing locks.';

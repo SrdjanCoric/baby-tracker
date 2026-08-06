@@ -2,7 +2,6 @@
 BEGIN;
 
 GRANT SELECT ON public.users, public.babies TO authenticated;
-GRANT INSERT ON public.active_timers TO authenticated;
 
 DO $$
 BEGIN
@@ -40,6 +39,10 @@ BEGIN
     OR has_table_privilege('anon', 'public.active_timers', 'DELETE')
   THEN
     RAISE EXCEPTION 'anonymous callers must not access active timers';
+  END IF;
+
+  IF has_table_privilege('authenticated', 'public.active_timers', 'INSERT') THEN
+    RAISE EXCEPTION 'authenticated callers must acquire timer locks through the RPC';
   END IF;
 END
 $$;
@@ -109,39 +112,24 @@ VALUES
   );
 SET LOCAL session_replication_role = origin;
 
--- Re-run the migration against rows written before its guard existed. Invalid future locks must be
--- removed immediately, while small client-clock skew is retained and normalized to database time.
+-- Re-run the migration against rows written before its guard existed. Every future lock must be
+-- removed immediately.
 \ir ../../supabase/migrations/060_guard_active_timer_start_bounds.sql
 DO $$
 DECLARE
-  far_future_count INTEGER;
-  near_future_started_at TIMESTAMPTZ;
+  future_count INTEGER;
 BEGIN
   SELECT count(*)
-  INTO far_future_count
+  INTO future_count
   FROM public.active_timers
   WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
-    AND activity_type = 'tummy_time';
+    AND activity_type IN ('tummy_time', 'feeding');
 
-  SELECT started_at
-  INTO near_future_started_at
-  FROM public.active_timers
-  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
-    AND activity_type = 'feeding';
-
-  IF far_future_count <> 0 THEN
-    RAISE EXCEPTION 'migration left a far-future timer lock in place';
-  END IF;
-
-  IF near_future_started_at IS NULL OR near_future_started_at > pg_catalog.now() THEN
-    RAISE EXCEPTION 'migration did not normalize a near-future timer lock';
+  IF future_count <> 0 THEN
+    RAISE EXCEPTION 'migration left a future timer lock in place';
   END IF;
 END
 $$;
-
-DELETE FROM public.active_timers
-WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
-  AND activity_type = 'feeding';
 
 SELECT set_config(
   'request.jwt.claims',
@@ -200,40 +188,14 @@ SET LOCAL ROLE authenticated;
 DO $$
 DECLARE
   acquired BOOLEAN;
-  rejected_future_insert BOOLEAN := false;
   rejected_future_direct BOOLEAN := false;
-  rejected_forward_update BOOLEAN := false;
   rejected_old_direct BOOLEAN := false;
   rejected_future_rpc BOOLEAN := false;
   rejected_old_rpc BOOLEAN := false;
   released BOOLEAN;
-  skewed_started_at TIMESTAMPTZ;
   updated_count INTEGER;
   stale_timer_data JSONB;
 BEGIN
-  BEGIN
-    INSERT INTO public.active_timers (
-      baby_id,
-      activity_type,
-      started_by,
-      started_at,
-      timer_data
-    )
-    VALUES (
-      '7a000000-0000-0000-0000-000000000001',
-      'tummy_time',
-      '71111111-1111-1111-1111-111111111111',
-      pg_catalog.now() + INTERVAL '1 hour',
-      '{}'::jsonb
-    );
-  EXCEPTION WHEN invalid_parameter_value THEN
-    rejected_future_insert := true;
-  END;
-
-  IF NOT rejected_future_insert THEN
-    RAISE EXCEPTION 'an authenticated direct insert accepted a future timer start';
-  END IF;
-
   SELECT success
   INTO acquired
   FROM public.acquire_timer_lock(
@@ -248,39 +210,9 @@ BEGIN
     RAISE EXCEPTION 'the timer owner could not acquire a timer';
   END IF;
 
-  SELECT success
-  INTO acquired
-  FROM public.acquire_timer_lock(
-    '7a000000-0000-0000-0000-000000000001',
-    'feeding',
-    '71111111-1111-1111-1111-111111111111',
-    '{}'::jsonb,
-    pg_catalog.now() + INTERVAL '1 minute'
-  );
-
-  SELECT started_at
-  INTO skewed_started_at
-  FROM public.active_timers
-  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
-    AND activity_type = 'feeding';
-
-  IF NOT acquired OR skewed_started_at > pg_catalog.now() THEN
-    RAISE EXCEPTION 'a slightly fast client clock did not acquire a server-normalized timer';
-  END IF;
-
-  SELECT public.release_timer_lock(
-    '7a000000-0000-0000-0000-000000000001',
-    'feeding',
-    '71111111-1111-1111-1111-111111111111'
-  ) INTO released;
-
-  IF NOT released THEN
-    RAISE EXCEPTION 'the owner could not release the server-normalized timer';
-  END IF;
-
   BEGIN
     UPDATE public.active_timers
-    SET started_at = pg_catalog.now() + INTERVAL '6 minutes'
+    SET started_at = pg_catalog.now() + INTERVAL '1 minute'
     WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
       AND activity_type = 'sleep';
   EXCEPTION WHEN invalid_parameter_value THEN
@@ -314,17 +246,14 @@ BEGIN
     RAISE EXCEPTION 'a direct update rejected a timer start inside the valid window';
   END IF;
 
-  BEGIN
-    UPDATE public.active_timers
-    SET started_at = pg_catalog.now() - INTERVAL '30 minutes'
-    WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
-      AND activity_type = 'sleep';
-  EXCEPTION WHEN invalid_parameter_value THEN
-    rejected_forward_update := true;
-  END;
+  UPDATE public.active_timers
+  SET started_at = pg_catalog.now() - INTERVAL '30 minutes'
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'sleep';
+  GET DIAGNOSTICS updated_count = ROW_COUNT;
 
-  IF NOT rejected_forward_update THEN
-    RAISE EXCEPTION 'a timer owner moved an existing lock start forward';
+  IF updated_count <> 1 THEN
+    RAISE EXCEPTION 'a direct update rejected a forward correction inside the valid window';
   END IF;
 
   BEGIN
@@ -334,7 +263,7 @@ BEGIN
       'tummy_time',
       '71111111-1111-1111-1111-111111111111',
       '{}'::jsonb,
-      pg_catalog.now() + INTERVAL '6 minutes'
+      pg_catalog.now() + INTERVAL '1 minute'
     );
   EXCEPTION WHEN invalid_parameter_value THEN
     rejected_future_rpc := true;
