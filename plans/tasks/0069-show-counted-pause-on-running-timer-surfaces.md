@@ -134,3 +134,35 @@ Each of these subtracts `totalPausedMs`, shifts the start by it, or both, today:
       record, for every type, both paused and resumed.
 - [x] Native widget and Watch resume paths preserve the real start without changing controls, layout,
       labels, pause bookkeeping, or record-writing behavior.
+
+## Completion record
+
+- **Built:** Feeding, sleep, pumping, and tummy-time readouts now freeze at `pausedAt` while a pause
+  is open and count from the real start after resume. The same interval drives dashboard and compact
+  cards, activity screens and duration alerts, ongoing-sleep statistics and Timeline summaries,
+  widget and Watch payloads, and Live Activity pause, resume, and restart calls.
+- **Decisions:** `startedAt` remains the timeline anchor on every surface. `totalPausedMs` remains in
+  timer state for compatibility but no longer shifts a displayed or native-resume start. Dashboard
+  values for another caregiver come entirely from the remote lock, keep their short-duration format,
+  and widget payloads freeze remote paused timers from the lock's real start and `pausedAt`.
+- **Relevant paths:** `app/(tabs)/index.tsx`, the four `app/*/index.tsx` activity screens,
+  `src/components/DashboardCard.tsx`, `src/components/CompactActivityRow.tsx`,
+  `src/contexts/widget-context.tsx`, the four activity contexts, `src/services/timer-lifecycle.ts`,
+  `src/utils/ongoing-sleep.ts`, `targets/widget/index.swift`, `targets/watch/index.swift`, and their
+  focused component, integration, lifecycle, utility, and native-source regression tests.
+- **Documentation:** Updated README `Timer Exclusivity` to describe the readout interval and the
+  surfaces that preview the saved duration. The affected paragraph completed one `write-well` audit
+  pass with no findings.
+- **Review:** The retained task review found seven issues. All were fixed: native widget and Watch
+  resume preserve the real start (TR-1); remote-lock dashboard values use one remote source (TR-2);
+  dashboard and compact-row tests discriminate against legacy pause subtraction (TR-3 and TR-4);
+  real rendered clocks are compared with stop-produced durations (TR-5); remote timer short
+  formatting and visibility are preserved (TR-6); and remote paused widget payloads include frozen
+  elapsed seconds (TR-7). No finding was skipped, and no security risk was accepted. The security
+  lens was recorded as `skipped-no-relevant-surface`.
+- **Automated proof:** `npm run check:code` passed on 2026-08-06 with zero exit status: ESLint with
+  zero warnings, strict TypeScript checking, 2,550 unit tests in 140 files, 899 component tests in 94
+  suites, 65 CI contract tests, and the production-bundle development-tool exclusion. Captured output:
+  `/tmp/agent-workflows/e2f8af45fd34/cf684b98cfac/finish-task-canonical.log`.
+- **Manual verification:** Not required. This task has no `[verify]` checkpoint, and its acceptance
+  criteria do not require a device, simulator, store release, or production deployment check.
