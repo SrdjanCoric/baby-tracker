@@ -269,6 +269,7 @@ describe("editRunningTimerStartTime", () => {
       expect.objectContaining({ startedAt: newStart.toISOString() })
     );
     expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
+    expect(startTimerLiveActivity).not.toHaveBeenCalled();
   });
 });
 

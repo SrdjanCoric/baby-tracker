@@ -221,19 +221,20 @@ export async function editRunningTimerStartTime<
 
   const oldLiveActivityId =
     liveActivityIdRef.current ?? activeTimer.liveActivityId ?? null;
-  const endedById = oldLiveActivityId
-    ? await endTimerLiveActivity(oldLiveActivityId)
-    : false;
-  if (!endedById) {
-    await endLiveActivityByType(adapter.liveActivity.type);
-  }
+  let replacementLiveActivityId: string | null = null;
+  if (oldLiveActivityId) {
+    const endedById = await endTimerLiveActivity(oldLiveActivityId);
+    if (!endedById) {
+      await endLiveActivityByType(adapter.liveActivity.type);
+    }
 
-  const replacementLiveActivityId = await startTimerLiveActivity(
-    adapter.liveActivity.type,
-    baby.name,
-    adapter.liveActivity.detail(payload),
-    startedAt
-  );
+    replacementLiveActivityId = await startTimerLiveActivity(
+      adapter.liveActivity.type,
+      baby.name,
+      adapter.liveActivity.detail(payload),
+      startedAt
+    );
+  }
   liveActivityIdRef.current = replacementLiveActivityId;
 
   if (replacementLiveActivityId && payload.isPaused) {
