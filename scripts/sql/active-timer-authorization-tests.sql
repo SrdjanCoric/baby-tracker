@@ -2,6 +2,7 @@
 BEGIN;
 
 GRANT SELECT ON public.users, public.babies TO authenticated;
+GRANT INSERT ON public.active_timers TO authenticated;
 
 DO $$
 BEGIN
@@ -199,6 +200,7 @@ SET LOCAL ROLE authenticated;
 DO $$
 DECLARE
   acquired BOOLEAN;
+  rejected_future_insert BOOLEAN := false;
   rejected_future_direct BOOLEAN := false;
   rejected_forward_update BOOLEAN := false;
   rejected_old_direct BOOLEAN := false;
@@ -209,6 +211,29 @@ DECLARE
   updated_count INTEGER;
   stale_timer_data JSONB;
 BEGIN
+  BEGIN
+    INSERT INTO public.active_timers (
+      baby_id,
+      activity_type,
+      started_by,
+      started_at,
+      timer_data
+    )
+    VALUES (
+      '7a000000-0000-0000-0000-000000000001',
+      'tummy_time',
+      '71111111-1111-1111-1111-111111111111',
+      pg_catalog.now() + INTERVAL '1 hour',
+      '{}'::jsonb
+    );
+  EXCEPTION WHEN invalid_parameter_value THEN
+    rejected_future_insert := true;
+  END;
+
+  IF NOT rejected_future_insert THEN
+    RAISE EXCEPTION 'an authenticated direct insert accepted a future timer start';
+  END IF;
+
   SELECT success
   INTO acquired
   FROM public.acquire_timer_lock(
