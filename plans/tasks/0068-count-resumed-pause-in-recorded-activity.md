@@ -112,6 +112,10 @@ with explicit tests so the overcount is deliberate rather than incidental.
   shows the same ten-minute duration in its daily summary and row.
 - Focused pre-review validation: targeted ESLint and repository TypeScript checking pass. The two
   owner `[verify]` checkpoints remain for `finish-task` and are intentionally not claimed here.
+- skipped (minor): TR-9 — The Timeline summary/row test does not exercise a resumed pause — User
+  limited this remediation pass to major/minor findings TR-1–TR-8.
+- skipped (minor): TR-10 — The duration helper retains an unused pause parameter and an unreachable
+  fallback — User limited this remediation pass to major/minor findings TR-1–TR-8.
 
 ## Human checkpoints
 
