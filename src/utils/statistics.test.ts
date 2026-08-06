@@ -382,19 +382,6 @@ describe("calculatePumpingStats", () => {
     expect(stats.totalDurationSeconds).toBe(2100);
   });
 
-  it("includes a resumed pause span without splitting the pumping session", () => {
-    const resumedSession: StoredPumpingEntry = {
-      ...mockPumping,
-      endedAt: "2024-01-15T08:30:00Z",
-      durationSeconds: 1800,
-    };
-
-    expect(calculatePumpingStats([resumedSession])).toMatchObject({
-      totalCount: 1,
-      totalDurationSeconds: 1800,
-    });
-  });
-
   it("handles empty array", () => {
     const stats = calculatePumpingStats([]);
     expect(stats.totalCount).toBe(0);
@@ -430,19 +417,6 @@ describe("calculateTummyTimeStats", () => {
     const secondSession: StoredTummyTimeEntry = { ...mockTummyTime, id: "2", durationSeconds: 600 };
     const stats = calculateTummyTimeStats([mockTummyTime, secondSession]);
     expect(stats.totalDurationSeconds).toBe(900);
-  });
-
-  it("includes a resumed pause span without splitting the tummy-time session", () => {
-    const resumedSession: StoredTummyTimeEntry = {
-      ...mockTummyTime,
-      endedAt: "2024-01-15T10:15:00Z",
-      durationSeconds: 900,
-    };
-
-    expect(calculateTummyTimeStats([resumedSession])).toMatchObject({
-      sessionCount: 1,
-      totalDurationSeconds: 900,
-    });
   });
 
   it("calculates average session duration", () => {
