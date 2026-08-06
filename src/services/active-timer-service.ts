@@ -130,13 +130,17 @@ export async function acquireTimerLock(
   timerData?: Record<string, unknown>,
   startedAt?: Date
 ): Promise<AcquireLockResult> {
-  const { data, error } = await supabase.rpc("acquire_timer_lock", {
+  const params: Record<string, unknown> = {
     p_baby_id: babyId,
     p_activity_type: activityType,
     p_user_id: userId,
     p_timer_data: timerData || null,
-    p_started_at: startedAt?.toISOString() || null,
-  });
+  };
+  if (startedAt) {
+    params.p_started_at = startedAt.toISOString();
+  }
+
+  const { data, error } = await supabase.rpc("acquire_timer_lock", params);
 
   if (error) {
     console.error("[ActiveTimerService] Failed to acquire lock:", error);

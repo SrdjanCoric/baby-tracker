@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  acquireTimerLock,
   queuePendingLockRelease,
   releaseTimerLock,
 } from "./active-timer-service";
 
 const storage = new Map<string, string>();
-const { fromMock, deleteMock, eqMock, selectMock, singleMock } = vi.hoisted(() => ({
+const { fromMock, rpcMock, deleteMock, eqMock, selectMock, singleMock } = vi.hoisted(() => ({
   fromMock: vi.fn(),
+  rpcMock: vi.fn(),
   deleteMock: vi.fn(),
   eqMock: vi.fn(),
   selectMock: vi.fn(),
@@ -21,10 +23,52 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
 }));
 
 vi.mock("@/services/supabase", () => ({
-  supabase: { from: fromMock },
+  supabase: { from: fromMock, rpc: rpcMock },
 }));
 
 vi.mock("@/i18n", () => ({ default: { t: vi.fn(() => "Someone") } }));
+
+describe("active timer acquisition", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    rpcMock.mockResolvedValue({
+      data: [{
+        success: true,
+        lock_holder_id: "user-1",
+        lock_holder_name: "Caregiver",
+        started_at: "2026-07-15T08:00:00.000Z",
+      }],
+      error: null,
+    });
+  });
+
+  it("omits p_started_at when the database should supply start-now time", async () => {
+    await acquireTimerLock("baby-1", "feeding", "user-1", { timerInstanceId: "timer-1" });
+
+    expect(rpcMock).toHaveBeenCalledWith("acquire_timer_lock", {
+      p_baby_id: "baby-1",
+      p_activity_type: "feeding",
+      p_user_id: "user-1",
+      p_timer_data: { timerInstanceId: "timer-1" },
+    });
+  });
+
+  it("sends an explicitly requested historical start", async () => {
+    const requestedStart = new Date("2026-07-15T07:45:00.000Z");
+
+    await acquireTimerLock(
+      "baby-1",
+      "feeding",
+      "user-1",
+      { timerInstanceId: "timer-1" },
+      requestedStart
+    );
+
+    expect(rpcMock).toHaveBeenCalledWith("acquire_timer_lock", expect.objectContaining({
+      p_started_at: requestedStart.toISOString(),
+    }));
+  });
+});
 
 describe("active timer cleanup", () => {
   beforeEach(() => {

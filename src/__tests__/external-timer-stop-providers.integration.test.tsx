@@ -326,6 +326,35 @@ describe("external timer stops through production providers", () => {
     pushTokens.fetchWakeWindowPreference.mockResolvedValue(null);
   });
 
+  it("lets the database timestamp ordinary starts for every provider", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left");
+      await sleepState!.startSleep("nap");
+      await pumpingState!.startPumping("both");
+      await tummyTimeState!.startTummyTime();
+    });
+
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+    };
+    expect(activeTimers.acquireTimerLock.mock.calls.map(call => call[4])).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+  });
+
   it("counts a resumed pause in every provider's saved record", async () => {
     const resumedStopAt = new Date("2026-07-15T08:01:31.000Z");
     const liveActivities = jest.requireMock("@/services/live-activity-service") as {

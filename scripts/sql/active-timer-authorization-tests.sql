@@ -100,36 +100,51 @@ VALUES
     '7a000000-0000-0000-0000-000000000001',
     'tummy_time',
     '71111111-1111-1111-1111-111111111111',
-    pg_catalog.now() + INTERVAL '1 hour',
+    pg_catalog.now() + INTERVAL '2 seconds',
     '{}'::jsonb
   ),
   (
     '7a000000-0000-0000-0000-000000000001',
     'feeding',
     '71111111-1111-1111-1111-111111111111',
-    pg_catalog.now() + INTERVAL '1 minute',
+    pg_catalog.now() + INTERVAL '1 second',
     '{}'::jsonb
   );
 SET LOCAL session_replication_role = origin;
 
--- Re-run the migration against rows written before its guard existed. Every future lock must be
--- removed immediately.
+-- Re-run the migration against rows written before its guard existed. Values inside the one-second
+-- compatibility band must be normalized, while larger future values are removed immediately.
 \ir ../../supabase/migrations/060_guard_active_timer_start_bounds.sql
 DO $$
 DECLARE
-  future_count INTEGER;
+  rejected_future_count INTEGER;
+  normalized_started_at TIMESTAMPTZ;
 BEGIN
   SELECT count(*)
-  INTO future_count
+  INTO rejected_future_count
   FROM public.active_timers
   WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
-    AND activity_type IN ('tummy_time', 'feeding');
+    AND activity_type = 'tummy_time';
 
-  IF future_count <> 0 THEN
-    RAISE EXCEPTION 'migration left a future timer lock in place';
+  SELECT started_at
+  INTO normalized_started_at
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'feeding';
+
+  IF rejected_future_count <> 0 THEN
+    RAISE EXCEPTION 'migration left a timer lock beyond the one-second future band';
+  END IF;
+
+  IF normalized_started_at IS NULL OR normalized_started_at > pg_catalog.now() THEN
+    RAISE EXCEPTION 'migration did not normalize a timer lock inside the one-second future band';
   END IF;
 END
 $$;
+
+DELETE FROM public.active_timers
+WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+  AND activity_type = 'feeding';
 
 SELECT set_config(
   'request.jwt.claims',
@@ -193,6 +208,8 @@ DECLARE
   rejected_future_rpc BOOLEAN := false;
   rejected_old_rpc BOOLEAN := false;
   released BOOLEAN;
+  rpc_started_at TIMESTAMPTZ;
+  stored_started_at TIMESTAMPTZ;
   updated_count INTEGER;
   stale_timer_data JSONB;
 BEGIN
@@ -210,9 +227,25 @@ BEGIN
     RAISE EXCEPTION 'the timer owner could not acquire a timer';
   END IF;
 
+  UPDATE public.active_timers
+  SET started_at = pg_catalog.now() + INTERVAL '1 second'
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'sleep';
+  GET DIAGNOSTICS updated_count = ROW_COUNT;
+
+  SELECT started_at
+  INTO stored_started_at
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'sleep';
+
+  IF updated_count <> 1 OR stored_started_at > pg_catalog.now() THEN
+    RAISE EXCEPTION 'a direct update inside the one-second future band was not normalized';
+  END IF;
+
   BEGIN
     UPDATE public.active_timers
-    SET started_at = pg_catalog.now() + INTERVAL '1 minute'
+    SET started_at = pg_catalog.now() + INTERVAL '2 seconds'
     WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
       AND activity_type = 'sleep';
   EXCEPTION WHEN invalid_parameter_value THEN
@@ -256,6 +289,39 @@ BEGIN
     RAISE EXCEPTION 'a direct update rejected a forward correction inside the valid window';
   END IF;
 
+  SELECT result.success, result.started_at
+  INTO acquired, rpc_started_at
+  FROM public.acquire_timer_lock(
+    '7a000000-0000-0000-0000-000000000001',
+    'feeding',
+    '71111111-1111-1111-1111-111111111111',
+    '{}'::jsonb,
+    pg_catalog.now() + INTERVAL '1 second'
+  ) AS result;
+
+  SELECT started_at
+  INTO stored_started_at
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'feeding';
+
+  IF NOT acquired
+    OR rpc_started_at IS DISTINCT FROM stored_started_at
+    OR stored_started_at > pg_catalog.now()
+  THEN
+    RAISE EXCEPTION 'acquire_timer_lock did not return its normalized stored start';
+  END IF;
+
+  SELECT public.release_timer_lock(
+    '7a000000-0000-0000-0000-000000000001',
+    'feeding',
+    '71111111-1111-1111-1111-111111111111'
+  ) INTO released;
+
+  IF NOT released THEN
+    RAISE EXCEPTION 'the owner could not release the normalized timer';
+  END IF;
+
   BEGIN
     PERFORM *
     FROM public.acquire_timer_lock(
@@ -263,7 +329,7 @@ BEGIN
       'tummy_time',
       '71111111-1111-1111-1111-111111111111',
       '{}'::jsonb,
-      pg_catalog.now() + INTERVAL '1 minute'
+      pg_catalog.now() + INTERVAL '2 seconds'
     );
   EXCEPTION WHEN invalid_parameter_value THEN
     rejected_future_rpc := true;

@@ -1181,7 +1181,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               morningClassification,
               morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
             },
-            startTime
+            customStartTime
           );
           if (!lockResult.success) {
             return { success: false, lockedByName: lockResult.lockHolderName };

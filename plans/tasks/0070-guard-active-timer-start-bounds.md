@@ -22,6 +22,12 @@ A write of `active_timers.started_at` is accepted only when the value satisfies 
 - `started_at <= now()` — a start in the future is nonsense, and
 - `started_at >= now() - INTERVAL '12 hours'` — a start rewound past the cleanup horizon.
 
+For backward compatibility with already-installed clients, an incoming value no more than one
+second ahead of database time is normalized to `now()` before these stored-value invariants are
+applied. Anything further ahead is rejected. New ordinary “start now” calls omit `p_started_at` and
+use the RPC's database-time default; explicit user-selected and reconciled starts still send their
+timestamp.
+
 The guard fires on `INSERT`, and on `UPDATE` **only when `started_at` actually changes**
 (`NEW.started_at IS DISTINCT FROM OLD.started_at`). That condition is load-bearing: a `timer_data`
 write to a lock that stale cleanup has not yet swept — a pause, a resume, or a widget update on a lock
@@ -64,13 +70,14 @@ from 0056's scope is carried forward.
   `SELECT` policy also stays, which is why a second phone keeps displaying a timer it cannot touch.
 - **No RPC signature change.** `acquire_timer_lock`, `release_timer_lock`, `toggle_timer_pause`, and
   `cleanup_stale_timer_locks` keep their signatures, their grants, and their behavior.
-- **Backward-compatible client contract.** Existing clients keep using the same direct table writes
-  and RPC call shapes. In particular, `acquire_timer_lock` calls that omit `p_started_at` continue to
-  default to the server's current time, and pause, resume, release, cleanup, and `timer_data`-only
-  updates remain valid. Only a future start or a start beyond the existing twelve-hour cleanup
-  horizon is newly rejected.
-- **No client change.** No screen, service, or validator is touched. The picker bounds that keep a
-  caregiver from ever offering a rejected value are Task 0071.
+- **Backward-compatible client contract.** Existing RPC signatures remain valid. Ordinary “start
+  now” calls omit `p_started_at` and use database time; existing clients that send up to one second
+  of positive skew are normalized. Explicit historical/reconciled starts, pause, resume, release,
+  cleanup, and `timer_data`-only updates remain valid. Only a start more than one second ahead or
+  beyond the existing twelve-hour cleanup horizon is newly rejected.
+- **Minimal client call-shape change.** Timer providers omit the already-optional `p_started_at`
+  only for ordinary starts. User-selected historical starts and offline reconciliation keep sending
+  an explicit timestamp. Picker controls and validators remain Task 0071.
 - **No change to the cleanup horizon itself.**
 
 ### The previous-activity floor is not enforced here
@@ -84,7 +91,8 @@ future bound alone.
 
 - [x] Add migration `060` creating the validation function and the trigger on `public.active_timers`,
       firing on `INSERT` and on `UPDATE` gated by `NEW.started_at IS DISTINCT FROM OLD.started_at`,
-      raising on a future value and on a value older than `now() - INTERVAL '12 hours'`.
+      normalizing at most one second of positive skew and rejecting larger future values or a value
+      older than `now() - INTERVAL '12 hours'`.
 - [x] Extend `scripts/sql/active-timer-authorization-tests.sql` with vectors covering: a future
       `started_at` write is rejected; a `started_at` more than twelve hours back is rejected; a
       `started_at` inside the window is accepted; a `timer_data`-only `UPDATE` on a lock whose
@@ -113,8 +121,9 @@ future bound alone.
 
 ## Acceptance criteria
 
-- [x] A write setting `active_timers.started_at` in the future is rejected, whether issued through the
-      `acquire_timer_lock` RPC or as a direct table write.
+- [x] A write setting `active_timers.started_at` at most one second in the future is normalized to
+      database time, while anything further ahead is rejected through both `acquire_timer_lock` and
+      reachable direct table writes.
 - [x] A write setting `active_timers.started_at` more than twelve hours in the past is rejected on the
       same paths.
 - [x] A `timer_data`-only `UPDATE` on a lock whose `started_at` is older than twelve hours still
@@ -124,9 +133,11 @@ future bound alone.
 - [x] A caregiver who did not start a timer still cannot write its row.
 - [x] SQL vectors cover every rejection and every legitimate path above, and `npm run test:sql`,
       `npm run test:edge:timer`, and `npm run test:security` pass.
-- [x] No row policy, no RPC signature, and no client file changed.
+- [x] No row policy or RPC signature changed; ordinary client starts use the existing optional
+      `p_started_at` default while explicit historical and reconciliation starts remain unchanged.
 - [x] Existing client call shapes remain valid, including `acquire_timer_lock` with omitted
-      `p_started_at`; only out-of-range timestamp writes newly fail.
+      `p_started_at`; only timestamps more than one second ahead or beyond the twelve-hour horizon
+      newly fail.
 - [ ] Both checkpoints confirmed by the owner.
 
 ## Non-goals
