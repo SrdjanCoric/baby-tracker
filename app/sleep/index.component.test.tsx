@@ -366,28 +366,31 @@ describe("SleepScreen custom start time", () => {
     );
   });
 
-  it("configures the Android picker from the current preference", () => {
+  it("formats the bounded Android picker from the current preference", () => {
     const originalPlatformOS = Platform.OS;
     Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
 
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 2, 10, 0));
     try {
       const { rerender } = render(<SleepScreen />);
       fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
-      const picker = screen.getByTestId("datetime-picker");
-      expect(picker.props.is24Hour).toBe(true);
-      expect(
-        picker.props.maximumDate.getTime() - picker.props.minimumDate.getTime()
-      ).toBe(12 * 60 * 60 * 1000);
+      expect(screen.getByTestId("bounded-android-datetime-picker")).toBeTruthy();
+      expect(screen.getByTestId("timer-start-android-value")).toHaveTextContent(
+        /· 10:00$/
+      );
 
       mockTimeFormat = "12h";
       rerender(<SleepScreen />);
-      expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(false);
+      expect(screen.getByTestId("timer-start-android-value")).toHaveTextContent(
+        /· 10:00 AM$/
+      );
     } finally {
       Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
     }
   });
 
-  it("keeps Android future-time rollover when selecting a custom start", async () => {
+  it("offers only in-range Android adjustments for Started earlier", async () => {
     const originalPlatformOS = Platform.OS;
     Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
     jest.useFakeTimers();
@@ -396,18 +399,15 @@ describe("SleepScreen custom start time", () => {
     try {
       render(<SleepScreen />);
       fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
-      fireEvent(
-        screen.getByTestId("datetime-picker"),
-        "change",
-        {},
-        new Date(2026, 0, 2, 14, 30)
-      );
+      expect(screen.getByTestId("timer-start-increase-minute")).toBeDisabled();
+      fireEvent.press(screen.getByTestId("timer-start-decrease-hour"));
+      fireEvent.press(screen.getByRole("button", { name: "Done" }));
       fireEvent.press(screen.getByRole("button", { name: "Start sleep" }));
 
       await waitFor(() => {
         expect(mockStartSleep).toHaveBeenCalledWith(
-          "night",
-          new Date(2026, 0, 1, 22, 0)
+          "nap",
+          new Date(2026, 0, 2, 9, 0)
         );
       });
     } finally {

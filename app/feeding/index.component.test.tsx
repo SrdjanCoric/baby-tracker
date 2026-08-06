@@ -423,23 +423,26 @@ describe("FeedingScreen", () => {
       });
     });
 
-    it("configures the Android custom start picker from the current preference", () => {
+    it("formats the bounded Android picker from the current preference", () => {
       const originalPlatformOS = Platform.OS;
       Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
       mockTimeFormat = "24h";
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 0, 2, 10, 0));
 
       try {
         const { rerender } = render(<FeedingScreen />);
         fireEvent.press(screen.getByRole("button", { name: "Started earlier" }));
-        const picker = screen.getByTestId("datetime-picker");
-        expect(picker.props.is24Hour).toBe(true);
-        expect(
-          picker.props.maximumDate.getTime() - picker.props.minimumDate.getTime()
-        ).toBe(12 * 60 * 60 * 1000);
+        expect(screen.getByTestId("bounded-android-datetime-picker")).toBeTruthy();
+        expect(screen.getByTestId("timer-start-android-value")).toHaveTextContent(
+          /· 10:00$/
+        );
 
         mockTimeFormat = "12h";
         rerender(<FeedingScreen />);
-        expect(screen.getByTestId("datetime-picker").props.is24Hour).toBe(false);
+        expect(screen.getByTestId("timer-start-android-value")).toHaveTextContent(
+          /· 10:00 AM$/
+        );
       } finally {
         Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
       }

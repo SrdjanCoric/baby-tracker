@@ -16,6 +16,7 @@ import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
+import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
 import { getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
 
 const PUMPING_BLUE = "#7B9BC9";
@@ -452,29 +453,36 @@ function SideSelectionView({ suggestedSide, onSelectSide, onLogPastPumping, getB
       {/* Time Picker */}
       {showTimePicker && (
         <View className="absolute bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark">
-          {Platform.OS === "ios" && (
-            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
-              <Pressable
-                onPress={handleTimeDone}
-                className="py-2 px-4"
-                accessibilityRole="button"
-                accessibilityLabel={t("common.done")}
-              >
-                <Text className="font-semibold" style={{ color: PUMPING_BLUE }}>
-                  {t("common.done")}
-                </Text>
-              </Pressable>
-            </View>
+          <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+            <Pressable
+              onPress={handleTimeDone}
+              className="py-2 px-4"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.done")}
+            >
+              <Text className="font-semibold" style={{ color: PUMPING_BLUE }}>
+                {t("common.done")}
+              </Text>
+            </Pressable>
+          </View>
+          {Platform.OS === "android" ? (
+            <BoundedAndroidDateTimePicker
+              value={customStartTime ?? pickerBounds.maximumDate}
+              bounds={pickerBounds}
+              timeFormat={timeFormat}
+              accentColor={PUMPING_BLUE}
+              onChange={setCustomStartTime}
+            />
+          ) : (
+            <DateTimePicker
+              value={customStartTime ?? new Date()}
+              mode="datetime"
+              display="spinner"
+              onChange={handleTimeChange}
+              minimumDate={pickerBounds.minimumDate}
+              maximumDate={pickerBounds.maximumDate}
+            />
           )}
-          <DateTimePicker
-            value={customStartTime ?? new Date()}
-            mode={Platform.OS === "ios" ? "datetime" : "time"}
-            display="spinner"
-            onChange={handleTimeChange}
-            is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={pickerBounds.minimumDate}
-            maximumDate={pickerBounds.maximumDate}
-          />
         </View>
       )}
     </View>

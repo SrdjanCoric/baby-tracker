@@ -5,6 +5,7 @@ import DateTimePicker, {
 import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { TimeFormat } from "@/contexts/time-format-context";
+import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
 import { formatTime } from "@/utils/time";
 import {
   normalizeTimerStartSelection,
@@ -70,13 +71,9 @@ export function RunningTimerStartEditor({
         Platform.OS
       );
 
-      if (Platform.OS === "android") {
-        void commitEdit(normalized);
-      } else {
-        setDraftStartedAt(normalized);
-      }
+      setDraftStartedAt(normalized);
     },
-    [commitEdit, getBounds]
+    [getBounds]
   );
   const handleDone = useCallback(async () => {
     await commitEdit(draftStartedAt);
@@ -112,29 +109,36 @@ export function RunningTimerStartEditor({
 
       {showPicker && (
         <View className="absolute bottom-0 left-0 right-0 z-10 bg-surface dark:bg-surface-dark">
-          {Platform.OS === "ios" && (
-            <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
-              <Pressable
-                onPress={() => void handleDone()}
-                className="py-2 px-4"
-                accessibilityRole="button"
-                accessibilityLabel={t("common.done")}
-              >
-                <Text className="font-semibold" style={{ color: accentColor }}>
-                  {t("common.done")}
-                </Text>
-              </Pressable>
-            </View>
+          <View className="flex-row justify-end px-4 py-2 border-t border-border dark:border-border-dark">
+            <Pressable
+              onPress={() => void handleDone()}
+              className="py-2 px-4"
+              accessibilityRole="button"
+              accessibilityLabel={t("common.done")}
+            >
+              <Text className="font-semibold" style={{ color: accentColor }}>
+                {t("common.done")}
+              </Text>
+            </Pressable>
+          </View>
+          {Platform.OS === "android" ? (
+            <BoundedAndroidDateTimePicker
+              value={draftStartedAt}
+              bounds={pickerBounds}
+              timeFormat={timeFormat}
+              accentColor={accentColor}
+              onChange={setDraftStartedAt}
+            />
+          ) : (
+            <DateTimePicker
+              value={draftStartedAt}
+              mode="datetime"
+              display="spinner"
+              onChange={handleChange}
+              minimumDate={pickerBounds.minimumDate}
+              maximumDate={pickerBounds.maximumDate}
+            />
           )}
-          <DateTimePicker
-            value={draftStartedAt}
-            mode={Platform.OS === "ios" ? "datetime" : "time"}
-            display="spinner"
-            onChange={handleChange}
-            is24Hour={Platform.OS === "android" ? timeFormat === "24h" : undefined}
-            minimumDate={pickerBounds.minimumDate}
-            maximumDate={pickerBounds.maximumDate}
-          />
         </View>
       )}
     </>

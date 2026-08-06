@@ -131,4 +131,42 @@ describe("RunningTimerStartEditor", () => {
       selectedTime
     );
   });
+
+  it("offers only bounded adjustments on Android", async () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "android",
+      configurable: true,
+    });
+    const onEdit = jest.fn().mockResolvedValue(undefined);
+    const maximumDate = new Date(2026, 7, 6, 12, 0);
+
+    render(
+      <RunningTimerStartEditor
+        startLabel="Start time"
+        startedAt={maximumDate}
+        starterName="Alice"
+        canEdit
+        getBounds={() => ({
+          minimumDate: new Date(2026, 7, 6, 0, 0),
+          maximumDate,
+        })}
+        timeFormat="24h"
+        accentColor="#000"
+        mutedBackgroundColor="#fff"
+        onEdit={onEdit}
+      />
+    );
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "Start time: 12:00 · Alice" })
+    );
+    expect(screen.queryByTestId("datetime-picker")).toBeNull();
+    expect(screen.getByTestId("timer-start-increase-minute")).toBeDisabled();
+    fireEvent.press(screen.getByTestId("timer-start-decrease-minute"));
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    });
+
+    expect(onEdit).toHaveBeenCalledWith(new Date(2026, 7, 6, 11, 59));
+  });
 });
