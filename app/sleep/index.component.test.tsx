@@ -255,25 +255,30 @@ describe("SleepScreen morning confirmation", () => {
   });
 
   it("writes the running picker value through the sleep provider", async () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
-    const selectedTime = new Date("2026-08-06T11:30:00.000Z");
-    render(<SleepScreen />);
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date("2026-08-06T11:30:00.000Z"),
+    };
+    try {
+      render(<SleepScreen />);
+      fireEvent.press(
+        screen.getByRole("button", { name: /Start time: .* · Alice/ })
+      );
+      fireEvent.press(screen.getByTestId("timer-start-decrease-minute"));
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "Done" }));
+      });
 
-    fireEvent.press(
-      screen.getByRole("button", { name: /Start time: .* · Alice/ })
-    );
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      selectedTime
-    );
-    await act(async () => {
-      fireEvent.press(screen.getByRole("button", { name: "Done" }));
-    });
-
-    expect(mockEditSleepStartTime).toHaveBeenCalledWith(selectedTime);
+      expect(mockEditSleepStartTime).toHaveBeenCalledWith(
+        new Date("2026-08-06T11:29:00.000Z")
+      );
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
   });
 
   it("returns to tabs after stopping a cold-opened sleep timer", async () => {

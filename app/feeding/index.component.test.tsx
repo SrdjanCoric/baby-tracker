@@ -253,26 +253,30 @@ describe("FeedingScreen", () => {
     });
 
     it("writes the running picker value through the feeding provider", async () => {
+      const originalPlatformOS = Platform.OS;
+      Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
       jest.useFakeTimers();
       jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
-      mockActiveTimer = runningTimer;
-      const selectedTime = new Date("2026-08-06T11:30:00.000Z");
-      render(<FeedingScreen />);
+      mockActiveTimer = {
+        ...runningTimer,
+        startTime: new Date("2026-08-06T11:30:00.000Z"),
+      };
+      try {
+        render(<FeedingScreen />);
+        fireEvent.press(
+          screen.getByRole("button", { name: /Start time: .* · Alice/ })
+        );
+        fireEvent.press(screen.getByTestId("timer-start-decrease-minute"));
+        await act(async () => {
+          fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+        });
 
-      fireEvent.press(
-        screen.getByRole("button", { name: /Start time: .* · Alice/ })
-      );
-      fireEvent(
-        screen.getByTestId("datetime-picker"),
-        "change",
-        {},
-        selectedTime
-      );
-      await act(async () => {
-        fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-      });
-
-      expect(mockEditBreastfeedingStartTime).toHaveBeenCalledWith(selectedTime);
+        expect(mockEditBreastfeedingStartTime).toHaveBeenCalledWith(
+          new Date("2026-08-06T11:29:00.000Z")
+        );
+      } finally {
+        Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+      }
     });
   });
 

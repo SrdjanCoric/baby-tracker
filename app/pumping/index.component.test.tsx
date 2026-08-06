@@ -146,26 +146,31 @@ describe("PumpingScreen stop confirmation", () => {
   });
 
   it("writes the running picker value through the pumping provider", async () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
     mockShowVolumeInput = "false";
-    const selectedTime = new Date("2026-08-06T11:30:00.000Z");
-    render(<PumpingScreen />);
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date("2026-08-06T11:30:00.000Z"),
+    };
+    try {
+      render(<PumpingScreen />);
+      fireEvent.press(
+        screen.getByRole("button", { name: /pumping.startTime: .* · Alice/ })
+      );
+      fireEvent.press(screen.getByTestId("timer-start-decrease-minute"));
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+      });
 
-    fireEvent.press(
-      screen.getByRole("button", { name: /pumping.startTime: .* · Alice/ })
-    );
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      selectedTime
-    );
-    await act(async () => {
-      fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    });
-
-    expect(mockEditPumpingStartTime).toHaveBeenCalledWith(selectedTime);
+      expect(mockEditPumpingStartTime).toHaveBeenCalledWith(
+        new Date("2026-08-06T11:29:00.000Z")
+      );
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
   });
 
   it("lets a caregiver close a cold-opened pumping screen", () => {
