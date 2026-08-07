@@ -135,14 +135,16 @@ export default function EditSleepScreen() {
     if (!selectedBaby || !sleep || !startTime || !endTime) return;
 
     setErrors({});
-    const validation = validateManualSleepTimes({
-      type: sleepType,
-      startedAt: startTime,
-      endedAt: endTime,
-    });
-    if (!validation.isValid) {
-      setErrors(validation.errors);
-      return;
+    if (timeChanged) {
+      const validation = validateManualSleepTimes({
+        type: sleepType,
+        startedAt: startTime,
+        endedAt: endTime,
+      });
+      if (!validation.isValid) {
+        setErrors(validation.errors);
+        return;
+      }
     }
 
     const durationSeconds = Math.floor(
@@ -249,14 +251,15 @@ export default function EditSleepScreen() {
       boundaryNow,
       startTimestamp + MAXIMUM_SLEEP_MS
     );
-    const minimumTimestamp = sleep?.endedAt
-      ? startTimestamp + MINIMUM_SLEEP_MS
-      : Math.min(startTimestamp + MINIMUM_SLEEP_MS, maximumTimestamp);
+    const minimumTimestamp = Math.min(
+      startTimestamp + MINIMUM_SLEEP_MS,
+      maximumTimestamp
+    );
     return {
       minimumDate: new Date(minimumTimestamp),
       maximumDate: new Date(maximumTimestamp),
     };
-  }, [sleep?.endedAt, startTime]);
+  }, [startTime]);
 
   if (!selectedBaby || !sleep || !startTime || !endTime) {
     return (
@@ -271,10 +274,11 @@ export default function EditSleepScreen() {
   const now = new Date();
   const durationMs = endTime.getTime() - startTime.getTime();
   const canSave =
-    durationMs >= MINIMUM_SLEEP_MS &&
-    durationMs <= MAXIMUM_SLEEP_MS &&
-    startTime <= now &&
-    endTime <= now;
+    !timeChanged ||
+    (durationMs >= MINIMUM_SLEEP_MS &&
+      durationMs <= MAXIMUM_SLEEP_MS &&
+      startTime <= now &&
+      endTime <= now);
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
       <Pressable

@@ -148,6 +148,30 @@ describe("EditSleepScreen clock-time editing", () => {
     expect(rendered.getByTestId("datetime-picker")).toBeTruthy();
   });
 
+  it("opens both End Time pickers for a stored sub-minute sleep", async () => {
+    mockSleeps = [
+      {
+        ...mockSleeps[0],
+        startedAt: new Date(now.getTime() - 45 * 1000).toISOString(),
+        endedAt: new Date(now.getTime() - 5 * 1000).toISOString(),
+        durationSeconds: 40,
+      },
+    ];
+    const rendered = render(<EditSleepScreen />);
+    await waitFor(() => expect(rendered.getByText("0m")).toBeTruthy());
+
+    fireEvent.press(
+      rendered.getByRole("button", { name: "sleep.endTime feeding.selectDate" })
+    );
+    expect(rendered.getByTestId("datetime-picker")).toBeTruthy();
+    fireEvent.press(rendered.getByRole("button", { name: "common.done" }));
+
+    fireEvent.press(
+      rendered.getByRole("button", { name: "sleep.endTime feeding.selectTime" })
+    );
+    expect(rendered.getByTestId("datetime-picker")).toBeTruthy();
+  });
+
   it("preserves the existing chip and action interaction styles", async () => {
     const rendered = await renderInitialized();
 
@@ -188,6 +212,34 @@ describe("EditSleepScreen clock-time editing", () => {
       "updated note"
     );
     fireEvent.press(rendered.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(mockUpdateSleep).toHaveBeenCalledTimes(1));
+    expect(mockUpdateSleep).toHaveBeenCalledWith("sleep-1", {
+      notes: "updated note",
+    });
+  });
+
+  it("allows a note-only save for a stored sub-minute sleep", async () => {
+    mockSleeps = [
+      {
+        ...mockSleeps[0],
+        startedAt: new Date(now.getTime() - 45 * 1000).toISOString(),
+        endedAt: new Date(now.getTime() - 5 * 1000).toISOString(),
+        durationSeconds: 40,
+      },
+    ];
+    const rendered = render(<EditSleepScreen />);
+    await waitFor(() => expect(rendered.getByText("0m")).toBeTruthy());
+
+    fireEvent.changeText(
+      rendered.getByPlaceholderText("sleep.notesPlaceholder"),
+      "updated note"
+    );
+    const save = rendered.getByRole("button", { name: "common.save" });
+    expect(save.props.accessibilityState).toEqual(
+      expect.objectContaining({ disabled: false })
+    );
+    fireEvent.press(save);
 
     await waitFor(() => expect(mockUpdateSleep).toHaveBeenCalledTimes(1));
     expect(mockUpdateSleep).toHaveBeenCalledWith("sleep-1", {

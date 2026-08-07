@@ -105,6 +105,16 @@ Nothing here reaches the widget, the Watch, or the Live Activity: every surface 
 the app. `src/utils/feeding-sessions.ts` merges breast feeds less than an hour apart from their
 endpoints and re-derives from the saved row, so it needs no change.
 
+### User-authorized sleep parity extension
+
+During remediation of the feeding edit bounds, the same pre-existing failure was confirmed in Task
+0072's sleep edit screen. A stored sleep shorter than one minute produced an inverted End picker
+range, so both End controls were inert; the same record also could not receive a note-only or
+type-only edit because Save revalidated its unchanged interval. This task now carries the settled
+parity fix: clamp the sleep End minimum to its live maximum when no valid End value exists, validate
+the interval only after an actual time edit, and otherwise preserve the stored timestamps and
+duration exactly. Sleep retains its own 24-hour maximum.
+
 ## Implementation work
 
 - [x] Use Task 0072's sleep screens and component tests as the executable template, reusing
@@ -149,6 +159,9 @@ endpoints and re-derives from the saved row, so it needs no change.
       a derived length equal to its stored length and no annotation, and one written before it opens
       showing its real interval while the Timeline row still shows the stored length, converging only
       when a time is edited and saved.
+- [x] Apply the same legacy-interval recovery policy to `app/edit/sleep.tsx`: a stored sub-minute sleep
+      opens both End pickers, accepts a note-only or type-only save without rewriting time fields, and
+      still enforces the one-minute floor and 24-hour cap after a time edit.
 
 ## Acceptance criteria
 
@@ -168,10 +181,13 @@ endpoints and re-derives from the saved row, so it needs no change.
 - [x] Feeding reuses Task 0072's shared time section and caller pattern; it introduces no parallel
       picker implementation and makes no running-timer adapter change.
 - [x] No schema change and nothing reaching the widget, the Watch, or the Live Activity.
+- [x] A stored sub-minute sleep has operable End controls and preserves its stored interval on a
+      non-time save; changing either time must satisfy the existing sleep limits.
 
 ## Non-goals
 
-- Sleep, pumping, and tummy time, which are Tasks 0072 and 0074.
+- Sleep except for the user-authorized legacy-interval parity fix above; pumping and tummy time remain
+  Tasks 0072 and 0074.
 - Wiring the duplicate or overlap check for feeding, which is
   `decisions/resolved/019-interval-overlap-non-sleep.md`.
 - An end time on a bottle feed, a solids entry, a diaper, or a growth measurement.
