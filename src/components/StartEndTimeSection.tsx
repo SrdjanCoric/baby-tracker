@@ -182,7 +182,7 @@ export function StartEndTimeSection({
             </Pressable>
           </View>
           <DateTimePicker
-            value={valueFor(iosTarget)}
+            value={clampToBounds(valueFor(iosTarget), boundsFor(iosTarget))}
             mode="datetime"
             display="spinner"
             minimumDate={boundsFor(iosTarget).minimumDate}
@@ -196,7 +196,10 @@ export function StartEndTimeSection({
 
       {androidPicker ? (
         <DateTimePicker
-          value={valueFor(androidPicker.target)}
+          value={clampToBounds(
+            valueFor(androidPicker.target),
+            boundsFor(androidPicker.target)
+          )}
           mode={androidPicker.mode}
           display="default"
           minimumDate={boundsFor(androidPicker.target).minimumDate}

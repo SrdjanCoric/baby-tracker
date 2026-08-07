@@ -79,6 +79,42 @@ describe("StartEndTimeSection", () => {
     );
   });
 
+  it("clamps the rendered picker value into the supplied bounds", () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "ios",
+      configurable: true,
+    });
+    const startTime = new Date(2026, 7, 6, 10, 0);
+    const startMaximum = new Date(2026, 7, 6, 9, 59);
+
+    render(
+      <StartEndTimeSection
+        startTime={startTime}
+        endTime={startTime}
+        onStartTimeChange={jest.fn()}
+        onEndTimeChange={jest.fn()}
+        startBounds={{ maximumDate: startMaximum }}
+        endBounds={{
+          minimumDate: new Date(2026, 7, 6, 10, 1),
+          maximumDate: new Date(2026, 7, 6, 12, 0),
+        }}
+        timeFormat="24h"
+        startLabel="Start Time"
+        endLabel="End Time"
+        durationLabel="Duration"
+        doneLabel="Done"
+        selectDateLabel="Select Date"
+        selectTimeLabel="Select Time"
+        accentColor="#6B5B95"
+        mutedBackgroundColor="#E8E4F0"
+        textColor="#2D2A26"
+      />
+    );
+
+    fireEvent.press(screen.getByRole("button", { name: "Start Time Select Time" }));
+    expect(screen.getByTestId("datetime-picker").props.value).toEqual(startMaximum);
+  });
+
   it("leaves the value unchanged when an Android picker is dismissed", () => {
     Object.defineProperty(Platform, "OS", {
       value: "android",
