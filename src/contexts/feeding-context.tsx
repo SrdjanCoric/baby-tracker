@@ -547,7 +547,9 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
       const startTime = requestedStartTime ?? new Date();
       const identity = requestedIdentity ?? createTimerIdentity();
-      let lockState: TimerLockReconciliationState = "offline";
+      let lockState: TimerLockReconciliationState = user?.id
+        ? "offline"
+        : "accountless";
       if (user?.id) {
         try {
           const lockResult = await acquireTimerLock(
@@ -831,7 +833,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
   const editBreastfeedingStartTime = useCallback(
     async (startedAt: Date) => {
-      if (!selectedBaby || !user?.id || !state.activeTimer) return;
+      if (!selectedBaby || !state.activeTimer) return;
       const activeTimer = state.activeTimer;
       const adapter = createFeedingTimerAdapter({
         babyId: selectedBaby.id,
@@ -878,7 +880,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       await editRunningTimerStartTime({
         adapter,
         baby: selectedBaby,
-        userId: user.id,
+        userId: user?.id,
         activeTimer: {
           timerInstanceId: activeTimer.timerInstanceId,
           activityId: activeTimer.activityId,

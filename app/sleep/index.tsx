@@ -62,14 +62,11 @@ export default function SleepScreen() {
     ? getLockForActivity(selectedBaby.id, "sleep")
     : null;
   const hasLocalTimerOwnership =
-    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
-  const timerStarterName =
-    timerLock?.startedByName ??
-    (hasLocalTimerOwnership ? user?.displayName : null) ??
-    t("common.someone");
+    activeTimer?.lockState === "owned" ||
+    activeTimer?.lockState === "offline" ||
+    activeTimer?.lockState === "accountless";
   const canEditTimerStart = Boolean(
-    user?.id &&
-      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+    timerLock ? timerLock.startedBy === user?.id : hasLocalTimerOwnership
   );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
@@ -261,7 +258,6 @@ export default function SleepScreen() {
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
             startedAt={activeTimer!.startTime}
-            starterName={timerStarterName}
             canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editSleepStartTime}
@@ -457,7 +453,6 @@ interface RunningTimerViewProps {
   onPause?: () => void;
   onResume?: () => void;
   startedAt: Date;
-  starterName: string;
   canEdit: boolean;
   getBounds(): TimerStartBounds;
   onEditStart: (startedAt: Date) => Promise<void>;
@@ -470,7 +465,6 @@ function RunningTimerView({
   onPause,
   onResume,
   startedAt,
-  starterName,
   canEdit,
   getBounds,
   onEditStart,
@@ -495,7 +489,6 @@ function RunningTimerView({
       <RunningTimerStartEditor
         startLabel={t("sleep.startTime")}
         startedAt={startedAt}
-        starterName={starterName}
         canEdit={canEdit}
         getBounds={getBounds}
         timeFormat={timeFormat}

@@ -432,11 +432,143 @@ describe("editRunningTimerStartTime", () => {
     );
     expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
   });
+
+  it("applies an account-less edit locally without writing or queuing", async () => {
+    const newStart = new Date("2026-08-06T07:30:00.000Z");
+    const activeTimer: TestActiveTimer = {
+      startedAt: "2026-08-06T08:00:00.000Z",
+      isPaused: false,
+      totalPausedMs: 0,
+      lockState: "accountless",
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+    };
+    const setActiveTimer = vi.fn();
+    const dispatchEditedStart = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn(),
+        setActiveTimer,
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({
+          timerInstanceId: "timer-1",
+          activityId: "record-1",
+          isPaused: false,
+          totalPausedMs: 0,
+        })),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "record-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn(() => "nap") },
+      dispatchRestoreTimer: vi.fn(),
+    };
+
+    await editRunningTimerStartTime({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      activeTimer,
+      payload: {
+        timerInstanceId: "timer-1",
+        activityId: "record-1",
+        isPaused: false,
+        totalPausedMs: 0,
+      },
+      startedAt: newStart,
+      liveActivityIdRef: { current: null },
+      dispatchEditedStart,
+    });
+
+    expect(updateTimerStartTime).not.toHaveBeenCalled();
+    expect(queuePendingTimerStartEdit).not.toHaveBeenCalled();
+    expect(setActiveTimer).toHaveBeenCalledWith(
+      "baby-1",
+      expect.objectContaining({ startedAt: newStart.toISOString() })
+    );
+    expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
+  });
 });
 
 describe("restoreTimerLifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("restores a timer without an account into the account-less state", async () => {
+    const activeTimer: TestActiveTimer = {
+      startedAt: "2026-08-05T12:00:00.000Z",
+      isPaused: false,
+      totalPausedMs: 0,
+      lockState: "offline",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    };
+    const setActiveTimer = vi.fn();
+    const dispatchRestoreTimer = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn().mockResolvedValue(activeTimer),
+        setActiveTimer,
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({})),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "activity-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn(() => "nap") },
+      dispatchRestoreTimer,
+    };
+    vi.mocked(readPendingTimerStop).mockResolvedValue(null);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    });
+    vi.mocked(isTimerCompletionSecured).mockResolvedValue(false);
+    vi.mocked(startTimerLiveActivity).mockResolvedValue(null);
+
+    await restoreTimerLifecycle({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      user: null,
+      completedRecords: [],
+      stopVersionAtStart: 0,
+      currentStopVersion: () => 0,
+      isStopping: () => false,
+      isCurrentBabyBinding: () => true,
+      liveActivityIdRef: { current: null },
+      refreshLocks: vi.fn(),
+      persistRecord: vi.fn(),
+      dispatchStopTimer: vi.fn(),
+      dispatchAddRecord: vi.fn(),
+      errorLabel: "[TimerLifecycleTest]",
+    });
+
+    expect(reconcileTimerLock).not.toHaveBeenCalled();
+    expect(setActiveTimer).toHaveBeenCalledWith(
+      "baby-1",
+      expect.objectContaining({ lockState: "accountless" })
+    );
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({ lockState: "accountless" })
+    );
   });
 
   it("restarts a resumed timer's Live Activity from the real start", async () => {

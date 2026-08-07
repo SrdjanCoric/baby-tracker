@@ -5,6 +5,7 @@ import {
 } from "./active-timer-service";
 
 export type TimerLockReconciliationState =
+  | "accountless"
   | "offline"
   | "reconciling"
   | "owned"

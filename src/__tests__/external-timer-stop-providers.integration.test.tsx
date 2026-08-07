@@ -125,6 +125,7 @@ jest.mock("@/services/active-timer-service", () => ({
   releaseTimerLock: jest.fn(),
   updateTimerData: jest.fn(),
   updateTimerStartTime: jest.fn(),
+  queuePendingTimerStartEdit: jest.fn(),
   getActiveTimerLock: jest.fn(),
   queuePendingLockRelease: jest.fn(),
 }));
@@ -301,12 +302,14 @@ describe("external timer stops through production providers", () => {
       releaseTimerLock: jest.Mock;
       queuePendingLockRelease: jest.Mock;
       updateTimerStartTime: jest.Mock;
+      queuePendingTimerStartEdit: jest.Mock;
     };
     activeTimers.acquireTimerLock.mockResolvedValue({ success: true });
     activeTimers.getActiveTimerLock.mockResolvedValue(null);
     activeTimers.releaseTimerLock.mockResolvedValue(false);
     activeTimers.queuePendingLockRelease.mockResolvedValue(undefined);
     activeTimers.updateTimerStartTime.mockResolvedValue(true);
+    activeTimers.queuePendingTimerStartEdit.mockResolvedValue(undefined);
 
     const liveActivities = jest.requireMock("@/services/live-activity-service") as {
       startTimerLiveActivity: jest.Mock;
@@ -356,6 +359,57 @@ describe("external timer stops through production providers", () => {
       undefined,
       undefined,
     ]);
+  });
+
+  it("starts and edits all four account-less timers locally without server writes or queued edits", async () => {
+    const editedStart = new Date("2026-07-15T07:30:00.000Z");
+    mockAuthUser = null;
+    setStorageUserId(null);
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    expect([
+      feedingState?.activeTimer?.lockState,
+      sleepState?.activeTimer?.lockState,
+      pumpingState?.activeTimer?.lockState,
+      tummyTimeState?.activeTimer?.lockState,
+    ]).toEqual(["accountless", "accountless", "accountless", "accountless"]);
+
+    await act(async () => {
+      await feedingState!.editBreastfeedingStartTime(editedStart);
+      await sleepState!.editSleepStartTime(editedStart);
+      await pumpingState!.editPumpingStartTime(editedStart);
+      await tummyTimeState!.editTummyTimeStartTime(editedStart);
+    });
+
+    expect([
+      feedingState?.activeTimer?.startTime,
+      sleepState?.activeTimer?.startTime,
+      pumpingState?.activeTimer?.startTime,
+      tummyTimeState?.activeTimer?.startTime,
+    ]).toEqual([editedStart, editedStart, editedStart, editedStart]);
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      acquireTimerLock: jest.Mock;
+      updateTimerStartTime: jest.Mock;
+      queuePendingTimerStartEdit: jest.Mock;
+    };
+    expect(activeTimers.acquireTimerLock).not.toHaveBeenCalled();
+    expect(activeTimers.updateTimerStartTime).not.toHaveBeenCalled();
+    expect(activeTimers.queuePendingTimerStartEdit).not.toHaveBeenCalled();
   });
 
   it("edits all four provider anchors, persists them, re-anchors Live Activities, and stops from the edit", async () => {

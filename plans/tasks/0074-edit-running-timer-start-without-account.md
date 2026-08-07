@@ -2,6 +2,7 @@
 
 **Branch**: `feature/edit-running-timer-start-without-account`
 **Depends on**: none
+**Execution classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
 **Source**: conversation 2026-08-07, from a simulator session on Task 0073's branch · **User stories**:
 As a caregiver using the app without an account, I want to correct my running timer's start time, so
 that noticing the baby fell asleep before I hit the button costs one step instead of four — the same as
@@ -92,54 +93,54 @@ and is correct. Do not remove the key and do not change those five call sites.
 
 ## Implementation work
 
-- [ ] Add a distinct account-less value to `TimerLockReconciliationState` and set it wherever a timer is
+- [x] Add a distinct account-less value to `TimerLockReconciliationState` and set it wherever a timer is
       started or restored with no user id, in all four contexts. Leave `"offline"` meaning "signed in,
       write deferred" and confirm every existing `"offline"` consumer keeps its behavior for a signed-in
       caregiver.
-- [ ] Branch `editRunningTimerStartTime` on the new state: run the local tail only — payload recompute,
+- [x] Branch `editRunningTimerStartTime` on the new state: run the local tail only — payload recompute,
       Live Activity refresh, `adapter.storage.setActiveTimer`, dispatch — and call neither
       `updateTimerStartTime` nor `queuePendingTimerStartEdit`.
-- [ ] Make `userId` optional through the edit path so the account-less call needs no placeholder or
+- [x] Make `userId` optional through the edit path so the account-less call needs no placeholder or
       sentinel user id.
-- [ ] Drop the `!user?.id` early return from the four context edit callbacks so an account-less caregiver
+- [x] Drop the `!user?.id` early return from the four context edit callbacks so an account-less caregiver
       with a local running timer reaches the lifecycle function.
-- [ ] Drop the `user?.id &&` prefix from `canEditTimerStart` on all four screens so local ownership alone
+- [x] Drop the `user?.id &&` prefix from `canEditTimerStart` on all four screens so local ownership alone
       authorizes the edit, keeping `timerLock.startedBy === user.id` as the rule whenever a lock exists.
-- [ ] Remove the `starterName` prop from `RunningTimerStartEditor` and the ` · <name>` segment from its
+- [x] Remove the `starterName` prop from `RunningTimerStartEditor` and the ` · <name>` segment from its
       label, and delete the `timerStarterName` computation from all four screens.
-- [ ] Tests that an account-less caregiver's start-time pill is a `Pressable` with
+- [x] Tests that an account-less caregiver's start-time pill is a `Pressable` with
       `accessibilityRole="button"` on each of the four screens, opens the picker, and commits.
-- [ ] A test that an account-less edit calls `setActiveTimer` and dispatches the edited start while
+- [x] A test that an account-less edit calls `setActiveTimer` and dispatches the edited start while
       calling neither `updateTimerStartTime` nor `queuePendingTimerStartEdit`.
-- [ ] A test that a signed-in offline edit still queues through `queuePendingTimerStartEdit`, proving the
+- [x] A test that a signed-in offline edit still queues through `queuePendingTimerStartEdit`, proving the
       two states did not collapse back together.
-- [ ] A test that a signed-in caregiver still cannot edit a timer another caregiver started.
-- [ ] A test that the start-edit label renders the field name and the time with no name segment and no
+- [x] A test that a signed-in caregiver still cannot edit a timer another caregiver started.
+- [x] A test that the start-edit label renders the field name and the time with no name segment and no
       trailing separator, for both a signed-in and an account-less caregiver.
-- [ ] A test that the Task 0071 bounds still apply on the account-less path: `now - 12h` through `now`,
+- [x] A test that the Task 0071 bounds still apply on the account-less path: `now - 12h` through `now`,
       floored at the previous saved activity of the same type.
 
 ## Human checkpoints
 
-- [ ] [confirm-security] This widens the `canEditTimerStart` authorization gate. Confirm the account-less
+- [x] [confirm-security] This widens the `canEditTimerStart` authorization gate. Confirm the account-less
       branch can reach neither `active_timers` nor the pending-edit queue, that no placeholder user id is
       ever written or enqueued, and that the `USING (started_by = auth.uid())` policy and the signed-in
-      starter-only rule are untouched.
+      starter-only rule are untouched. Approved by the owner on 2026-08-07.
 
 ## Acceptance criteria
 
-- [ ] A caregiver with no account, with a running timer on any of the four activity screens, can tap the
+- [x] A caregiver with no account, with a running timer on any of the four activity screens, can tap the
       start-time pill, pick a value within the Task 0071 bounds, and see the timer's elapsed time and
       stored start reflect it.
-- [ ] That edit produces no `active_timers` write and no queued pending edit.
-- [ ] An account-less timer carries a lock state distinct from `"offline"`, and a signed-in offline edit
+- [x] That edit produces no `active_timers` write and no queued pending edit.
+- [x] An account-less timer carries a lock state distinct from `"offline"`, and a signed-in offline edit
       still queues exactly as it does today.
-- [ ] A signed-in caregiver still cannot edit a timer another caregiver started, and the `active_timers`
+- [x] A signed-in caregiver still cannot edit a timer another caregiver started, and the `active_timers`
       row policy is unchanged.
-- [ ] The start-edit control shows the field name and the time only — no caregiver name, no dangling
+- [x] The start-edit control shows the field name and the time only — no caregiver name, no dangling
       separator — for every caregiver.
-- [ ] `common.someone` and its five non-screen call sites are unchanged.
-- [ ] No schema change and no migration.
+- [x] `common.someone` and its five non-screen call sites are unchanged.
+- [x] No schema change and no migration.
 
 ## Non-goals
 

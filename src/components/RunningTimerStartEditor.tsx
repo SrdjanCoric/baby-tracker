@@ -15,7 +15,6 @@ import {
 interface RunningTimerStartEditorProps {
   startLabel: string;
   startedAt: Date;
-  starterName: string;
   canEdit: boolean;
   getBounds(): TimerStartBounds;
   timeFormat: TimeFormat;
@@ -31,7 +30,6 @@ function hasSelectableRange(bounds: TimerStartBounds): boolean {
 export function RunningTimerStartEditor({
   startLabel,
   startedAt,
-  starterName,
   canEdit,
   getBounds,
   timeFormat,
@@ -45,7 +43,7 @@ export function RunningTimerStartEditor({
     getBounds()
   );
   const [draftStartedAt, setDraftStartedAt] = useState(startedAt);
-  const label = `${startLabel}: ${formatTime(startedAt, timeFormat)} · ${starterName}`;
+  const label = `${startLabel}: ${formatTime(startedAt, timeFormat)}`;
   const handleOpen = useCallback(() => {
     const currentBounds = getBounds();
     setPickerBounds(currentBounds);
