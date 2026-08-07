@@ -1,6 +1,7 @@
 # Cluster: timer time editing
 
-**Planned:** Tasks 0070, 0071, 0072, 0073, and 0074 on 2026-08-05
+**Planned:** Tasks 0070, 0071, 0072, 0073, and 0074 on 2026-08-05 (the last renumbered to 0075 on
+2026-08-07, when a new 0074 was inserted after 0073)
 
 ## Members
 

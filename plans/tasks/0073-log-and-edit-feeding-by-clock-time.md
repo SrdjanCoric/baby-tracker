@@ -203,7 +203,7 @@ always-true branch.
 ## Non-goals
 
 - Sleep except for the user-authorized legacy-interval parity fix above; pumping and tummy time remain
-  Tasks 0072 and 0074.
+  Tasks 0072 and 0075.
 - Wiring the duplicate or overlap check for feeding, which is
   `decisions/resolved/019-interval-overlap-non-sleep.md`.
 - An end time on a bottle feed, a solids entry, a diaper, or a growth measurement.

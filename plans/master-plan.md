@@ -266,8 +266,9 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0071 · Edit a running timer's start time in place (after 0069, 0070) → tasks/done/0071-edit-running-timer-start-time.md
 - [x] 0072 · Log and edit a sleep by clock time (after 0068) → tasks/done/0072-log-and-edit-sleep-by-clock-time.md
 - [~] 0073 · Log and edit a feeding by clock time (after 0072) → tasks/0073-log-and-edit-feeding-by-clock-time.md
-- [ ] 0074 · Log and edit pumping and tummy time by clock time (after 0072) → tasks/0074-log-and-edit-pumping-and-tummy-time-by-clock-time.md
-- [ ] 0075 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0074) → tasks/0075-warn-on-overlapping-non-sleep-records.md
+- [ ] 0074 · Edit a running timer's start time without an account → tasks/0074-edit-running-timer-start-without-account.md
+- [ ] 0075 · Log and edit pumping and tummy time by clock time (after 0072, 0074) → tasks/0075-log-and-edit-pumping-and-tummy-time-by-clock-time.md
+- [ ] 0076 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0075) → tasks/0076-warn-on-overlapping-non-sleep-records.md
 
 ## Workflow status
 
@@ -308,12 +309,12 @@ contexts; 0068 therefore waits on 0067. The timer-time-editing cluster is still 
 edit-screen proof items in decision `018` belong to that cluster and are deliberately absent from both
 tasks, as that cluster's Scope directs.
 
-Tasks 0070 through 0074 were added on 2026-08-05 from the timer-time-editing cluster,
+Tasks 0070, 0071, 0072, 0073, and 0075 were added on 2026-08-05 from the timer-time-editing cluster,
 `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md`, and its two member
 decisions `decisions/resolved/007-running-timer-start-time-edit.md` and
 `decisions/resolved/009-clock-time-log-editing.md`. The cluster splits cleanly in two, and the two
 halves are independent of each other: Tasks 0070 and 0071 change a running timer's anchor on
-`app/*/index.tsx` and in the database, while Tasks 0072 through 0074 change the eight hand-entry
+`app/*/index.tsx` and in the database, while Tasks 0072, 0073, and 0075 change the eight hand-entry
 screens under `app/*/manual.tsx` and `app/edit/`. Their two bound rule sets differ deliberately — the
 running-timer clamp puts overlap out of reach, and saved records warn and allow — so they share no
 artifact and neither depends on the other.
@@ -326,18 +327,39 @@ its file is deleted. Task 0071 then adds the client edit and waits on 0070 so th
 value the database rejects, and on 0069 so the Live Activity anchor arithmetic changes in the shared
 module once rather than being written and then rewritten.
 
-Tasks 0072 through 0074 depend on 0068 for the invariant `durationSeconds === endedAt - startedAt`,
+Tasks 0072, 0073, and 0075 depend on 0068 for the invariant `durationSeconds === endedAt - startedAt`,
 which is what lets the form derive a length and write it back without qualification, and they carry the
 edit-screen proof items from `decisions/resolved/018-disagreeing-length-display.md` that the pause-
 semantics batch deliberately left to this cluster. Task 0072 does sleep and extracts the shared
 start/end form section — no shared date/time pill component exists today, each of the eight screens
 inlines its own — and carries the sleep-only work of the edit-screen overlap check and the morning
-predicate reading the edited start. Tasks 0073 and 0074 reuse that section and can run in parallel.
-Task 0074 covers pumping and tummy time together by the owner's decision, since once the shared section
+predicate reading the edited start. Tasks 0073 and 0075 reuse that section and can run in parallel.
+Task 0075 covers pumping and tummy time together by the owner's decision, since once the shared section
 exists both are the same mechanical change with no type-specific behavior. The duplicate and overlap
 check for feeding, pumping, and tummy time stays out of all three tasks: it is
 `decisions/resolved/019-interval-overlap-non-sleep.md`, planned after this cluster so it is wired into
 these screens' final shape once. Two caps the decision record does not name are carried from the
 shipped validators: 2h for feeding and 2h for tummy time.
+
+Task 0074 was added on 2026-08-07 after the owner found, in a simulator session on Task 0073's branch,
+that a caregiver with no account cannot edit a running timer's start time: the Task 0071 control renders
+identically and does nothing on tap, because `canEditTimerStart` short-circuits on a missing user id
+before it reaches its local-ownership branch. The owner placed it immediately after Task 0073, so the
+two unstarted tasks below it were renumbered the same day: the pumping and tummy-time clock-time task
+became 0075, and the overlap-warning task became 0076. Every reference in this plan, in the task files,
+in the timer-time-editing cluster, and in the merged Tasks 0071 and 0072 was repointed at the same time,
+so a statement dated 2026-08-05 that reads "Tasks 0070 through 0074" in an untouched copy elsewhere means
+what this plan now calls 0070 through 0073 plus 0075. Task 0075 depends on 0074 because both edit
+`src/contexts/pumping-context.tsx` and `src/contexts/tummyTime-context.tsx`. Task 0074 carries two
+durable decisions the owner settled the same day. An account-less caregiver is **not** an offline
+caregiver: today both land on `TimerLockReconciliationState` `"offline"`, one because lock acquisition
+was skipped for want of an account and the other because a signed-in acquisition threw, and 0074 splits
+them so an account-less edit writes locally and never queues while a signed-in offline edit still queues
+and reconciles. And the
+running-timer start-edit control **drops the caregiver name entirely**, reversing Task 0071's decision to
+name the starter there: only the starter may edit, so the name tells them nothing, and with no account it
+resolved to "Someone" — the app attributing a timer to a stranger on a single-user device. The
+`common.someone` key and its five other call sites, which describe a genuinely unknown *other* caregiver,
+are unaffected.
 
 Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054, 0055, 0057, and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Task 0055 depends on its predecessor only because both add migrations and would otherwise collide on the next migration ordinal. Task 0056, the remaining finding, was removed on 2026-08-05 and is superseded by Task 0070.

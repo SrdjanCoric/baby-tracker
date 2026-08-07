@@ -185,7 +185,8 @@ construction is adapter-owned inside `src/services/timer-lifecycle.ts` and reads
 ## Non-goals
 
 - Editing the stop time, refused by `decisions/resolved/008-stop-time-rewind.md`.
-- Editing saved records by clock time, which is Tasks 0072 through 0074.
+- Editing saved records by clock time, which is Tasks 0072, 0073, and 0075 (0075 was 0074 until the
+  2026-08-07 renumber).
 - Inline editing from the dashboard card, the widget, the Watch, or the Live Activity.
 - Editing a timer another caregiver started, or any widening of `active_timers` row access.
 - Changing the twelve-hour cleanup horizon or the server-side guard, which is Task 0070.
