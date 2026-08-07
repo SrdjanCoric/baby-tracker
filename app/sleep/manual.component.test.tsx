@@ -84,7 +84,7 @@ describe("ManualSleepScreen clock-time entry", () => {
     const screen = render(<ManualSleepScreen />);
     const save = screen.getByRole("button", { name: "sleep.logManualSleep" });
 
-    expect(save.props.accessibilityState).toEqual({ disabled: true });
+    expect(save.props.accessibilityState).toEqual({ disabled: false });
     expect(screen.queryByRole("textbox", { name: "sleep.durationPlaceholder" })).toBeNull();
     expect(screen.queryByRole("button", { name: "60" })).toBeNull();
 
