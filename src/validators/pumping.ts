@@ -156,3 +156,24 @@ export function validateManualPumping(entry: Partial<PumpingEntry>): PumpingVali
     errors
   };
 }
+
+export function validateManualPumpingTimes(
+  entry: Partial<PumpingEntry>
+): PumpingValidationResult {
+  const durationSeconds =
+    entry.startedAt && entry.endedAt
+      ? Math.floor((entry.endedAt.getTime() - entry.startedAt.getTime()) / 1000)
+      : undefined;
+
+  const result = validateManualPumping({
+    ...entry,
+    durationSeconds,
+  });
+
+  if (entry.endedAt && validateStartTimeNotInFuture(entry.endedAt) !== null) {
+    result.errors.endedAt = "validation.endTimeNotInFuture";
+    result.isValid = false;
+  }
+
+  return result;
+}

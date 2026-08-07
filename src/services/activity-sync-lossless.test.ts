@@ -21,7 +21,9 @@ import {
   syncGuestActivitiesToDatabase,
   updateDiaperInDatabase,
   updateFeedingInDatabase,
+  updatePumpingInDatabase,
   updateSleepInDatabase,
+  updateTummyTimeInDatabase,
   upsertMilestoneResponseInDatabase,
 } from "./activity-sync-service";
 import { setStorageUserId } from "./storage-prefix";
@@ -403,6 +405,74 @@ describe("lossless activity sync", () => {
       durationSeconds: 2700,
     });
 
+    expect(updated).toEqual(expect.objectContaining({
+      startedAt: "2026-07-14T09:45:00.000Z",
+      endedAt: "2026-07-14T10:30:00.000Z",
+      durationSeconds: 2700,
+    }));
+    expect(vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "UPDATE",
+        data: expect.objectContaining({
+          started_at: "2026-07-14T09:45:00.000Z",
+          ended_at: "2026-07-14T10:30:00.000Z",
+          duration_seconds: 2700,
+        }),
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("stores and durably queues an edited pumping interval", async () => {
+    storage.set("@pumpings:baby-1", JSON.stringify([{
+      id: "pumping-1",
+      babyId: "baby-1",
+      side: "left",
+      startedAt: "2026-07-14T10:00:00.000Z",
+      endedAt: "2026-07-14T11:00:00.000Z",
+      durationSeconds: 3600,
+      volumeMl: 120,
+      createdAt: "2026-07-14T10:00:00.000Z",
+      updatedAt: "2026-07-14T11:00:00.000Z",
+    }]));
+    const updated = await updatePumpingInDatabase("baby-1", "pumping-1", {
+      startedAt: new Date("2026-07-14T09:45:00.000Z"),
+      endedAt: new Date("2026-07-14T10:30:00.000Z"),
+      durationSeconds: 2700,
+    });
+    expect(updated).toEqual(expect.objectContaining({
+      startedAt: "2026-07-14T09:45:00.000Z",
+      endedAt: "2026-07-14T10:30:00.000Z",
+      durationSeconds: 2700,
+    }));
+    expect(vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "UPDATE",
+        data: expect.objectContaining({
+          started_at: "2026-07-14T09:45:00.000Z",
+          ended_at: "2026-07-14T10:30:00.000Z",
+          duration_seconds: 2700,
+        }),
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("stores and durably queues an edited tummy-time interval", async () => {
+    storage.set("@tummyTimes:baby-1", JSON.stringify([{
+      id: "tummy-1",
+      babyId: "baby-1",
+      startedAt: "2026-07-14T10:00:00.000Z",
+      endedAt: "2026-07-14T11:00:00.000Z",
+      durationSeconds: 3600,
+      createdAt: "2026-07-14T10:00:00.000Z",
+      updatedAt: "2026-07-14T11:00:00.000Z",
+    }]));
+    const updated = await updateTummyTimeInDatabase("baby-1", "tummy-1", {
+      startedAt: new Date("2026-07-14T09:45:00.000Z"),
+      endedAt: new Date("2026-07-14T10:30:00.000Z"),
+      durationSeconds: 2700,
+    });
     expect(updated).toEqual(expect.objectContaining({
       startedAt: "2026-07-14T09:45:00.000Z",
       endedAt: "2026-07-14T10:30:00.000Z",

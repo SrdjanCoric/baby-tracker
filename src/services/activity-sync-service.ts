@@ -1232,6 +1232,7 @@ export async function updatePumpingInDatabase(
   const now = new Date().toISOString();
 
   const updateData: Record<string, unknown> = {};
+  if (input.startedAt !== undefined) updateData.started_at = input.startedAt.toISOString();
   if (input.endedAt !== undefined) updateData.ended_at = input.endedAt.toISOString();
   if (input.durationSeconds !== undefined) updateData.duration_seconds = input.durationSeconds;
   if (input.volumeMl !== undefined) updateData.amount_ml = input.volumeMl;
@@ -1247,6 +1248,7 @@ export async function updatePumpingInDatabase(
           updatedPumping = {
             ...p,
             ...input,
+            startedAt: input.startedAt?.toISOString() ?? p.startedAt,
             endedAt: input.endedAt?.toISOString() ?? p.endedAt,
             updatedAt: now,
           };
@@ -1541,6 +1543,7 @@ export async function updateTummyTimeInDatabase(
   const now = new Date().toISOString();
 
   const updateData: Record<string, unknown> = {};
+  if (input.startedAt !== undefined) updateData.started_at = input.startedAt.toISOString();
   if (input.endedAt !== undefined) updateData.ended_at = input.endedAt.toISOString();
   if (input.durationSeconds !== undefined) updateData.duration_seconds = input.durationSeconds;
   if (input.notes !== undefined) updateData.notes = input.notes;
@@ -1554,6 +1557,7 @@ export async function updateTummyTimeInDatabase(
           updatedTummyTime = {
             ...t,
             ...input,
+            startedAt: input.startedAt?.toISOString() ?? t.startedAt,
             endedAt: input.endedAt?.toISOString() ?? t.endedAt,
             updatedAt: now,
           };

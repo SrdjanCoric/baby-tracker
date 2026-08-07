@@ -36,6 +36,7 @@ export interface CreateTummyTimeInput {
 }
 
 export interface UpdateTummyTimeInput {
+  startedAt?: Date;
   endedAt?: Date;
   durationSeconds?: number;
   notes?: string;
@@ -134,6 +135,7 @@ export const TummyTimeStorageService = {
 
     const updatedTummyTime: StoredTummyTimeEntry = {
       ...tummyTimes[index],
+      ...(input.startedAt !== undefined && { startedAt: input.startedAt.toISOString() }),
       ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
       ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
       ...(input.notes !== undefined && { notes: input.notes }),

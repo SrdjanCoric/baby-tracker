@@ -2,6 +2,7 @@
 
 **Branch**: `feature/log-and-edit-pumping-and-tummy-time-by-clock-time`
 **Depends on**: 0072, 0074
+**Execution classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
 **Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
 `decisions/resolved/009-clock-time-log-editing.md` (resolved), with the edit-screen proof items from
 `decisions/resolved/018-disagreeing-length-display.md` · **User stories**: As a caregiver, I want to
@@ -125,71 +126,71 @@ pumping or tummy-time test in this task asserts on that label, assert the field 
 
 ## Implementation work
 
-- [ ] Use Task 0072's sleep screens and component tests as the executable template, reusing
+- [x] Use Task 0072's sleep screens and component tests as the executable template, reusing
       `StartEndTimeSection` directly and substituting only the activity fields and cap: one hour for
       pumping and two hours for tummy time. Do not change `TimerLifecycleAdapter` or any activity
       timer adapter.
-- [ ] Add end-time-aware entry points to `validateManualPumping` in `src/validators/pumping.ts` and
+- [x] Add end-time-aware entry points to `validateManualPumping` in `src/validators/pumping.ts` and
       `validateManualTummyTime` in `src/validators/tummyTime.ts`, reached with a duration derived from
       two times, leaving every threshold unchanged.
-- [ ] Rebuild `app/pumping/manual.tsx` on the shared start/end form section from Task 0072: add End
+- [x] Rebuild `app/pumping/manual.tsx` on the shared start/end form section from Task 0072: add End
       Time, remove `durationMinutes` and `QUICK_DURATIONS`, derive the saved `durationSeconds` and
       `endedAt` from the two times, and leave the `volumeMl` input and its 500 ml cap untouched.
-- [ ] Rebuild `app/tummyTime/manual.tsx` the same way, removing its own `durationMinutes`,
+- [x] Rebuild `app/tummyTime/manual.tsx` the same way, removing its own `durationMinutes`,
       `durationInput`, and `QUICK_DURATIONS`.
-- [ ] Rebuild `app/edit/pumping.tsx` and `app/edit/tummyTime.tsx` on the shared section: add Start Time
+- [x] Rebuild `app/edit/pumping.tsx` and `app/edit/tummyTime.tsx` on the shared section: add Start Time
       and End Time, remove the minutes field and the `endedAt = startedAt + durationSeconds`
       derivation, and prefill both pickers from each record's own stored timestamps. Pumping's edit
       screen keeps its volume field.
-- [ ] Implement the conditional save on all four screens: write `durationSeconds = end - start` only
+- [x] Implement the conditional save on all four screens: write `durationSeconds = end - start` only
       when a time actually changed, leaving `durationSeconds` and `endedAt` untouched on a note-only or
       volume-only save.
-- [ ] Add the End Time label, the derived Duration label, and any new validation strings for both types
+- [x] Add the End Time label, the derived Duration label, and any new validation strings for both types
       to all nine locale files under `src/i18n/locales/`, and remove keys the dropped chips and minutes
       fields leave unused.
-- [ ] Component tests on all four screens: the end picker offers `start + 1 minute` through the earlier
+- [x] Component tests on all four screens: the end picker offers `start + 1 minute` through the earlier
       of now and the type's cap, the start picker offers up to the earlier of now and `end - 1 minute`,
       the duration readout is derived and not editable, no minutes input and no quick-duration chips
       remain, and Save is disabled until the two times are a minute apart. Neither edit screen has a
       component test today, so both are new files.
-- [ ] Port the Task 0072 call-site regression proofs for each type: a fresh manual form opens both End
+- [x] Port the Task 0072 call-site regression proofs for each type: a fresh manual form opens both End
       pickers, an edit with a recent start and no stored `endedAt` opens both End pickers without
       becoming dirty, and a picker opened after the screen has remained mounted receives a freshly
       evaluated `now` ceiling. Rely on `StartEndTimeSection` tests rather than duplicating its
       platform-internal tests in all four screens.
-- [ ] Prefill tests, one per type, that a record whose stored `durationSeconds` is smaller than its own
+- [x] Prefill tests, one per type, that a record whose stored `durationSeconds` is smaller than its own
       interval opens showing the real start and end rather than `start + duration`.
-- [ ] Save-rule tests, one per type: a save that changes only a note — or, for pumping, only the volume
+- [x] Save-rule tests, one per type: a save that changes only a note — or, for pumping, only the volume
       — leaves `durationSeconds` and `endedAt` unchanged, and a save that moves a time writes
       `end - start`.
-- [ ] Tests that the one-hour pumping cap and the two-hour tummy time cap are rejected on save as well
+- [x] Tests that the one-hour pumping cap and the two-hour tummy time cap are rejected on save as well
       as bounded in the picker.
-- [ ] The Task 0068 edit-screen proof items, per type: a record written after the counted-pause rule
+- [x] The Task 0068 edit-screen proof items, per type: a record written after the counted-pause rule
       opens with a derived length equal to its stored length and no annotation, and one written before
       it opens showing its real interval while the Timeline row still shows the stored length,
       converging only when a time is edited and saved.
 
 ## Acceptance criteria
 
-- [ ] All four screens take a start time and an end time, with a derived read-only duration and no
+- [x] All four screens take a start time and an end time, with a derived read-only duration and no
       minutes input or quick-duration chips.
-- [ ] All four prefill from each record's own stored timestamps, so a legacy paused record opens
+- [x] All four prefill from each record's own stored timestamps, so a legacy paused record opens
       showing its real interval.
-- [ ] Every bound is the picker's own range: no future value, end at least a minute after start, the
+- [x] Every bound is the picker's own range: no future value, end at least a minute after start, the
       one-hour pumping and two-hour tummy time caps honored, and Save disabled until the two times are
       a minute apart.
-- [ ] `durationSeconds` is rewritten as `end - start` only when a time actually changed; a note-only or
+- [x] `durationSeconds` is rewritten as `end - start` only when a time actually changed; a note-only or
       volume-only save leaves the stored length exactly as it was.
-- [ ] Pumping's `volumeMl` input, its 500 ml cap, and every non-time field on all four screens are
+- [x] Pumping's `volumeMl` input, its 500 ml cap, and every non-time field on all four screens are
       unchanged.
-- [ ] A record of each type written after Task 0068 opens with a derived length equal to its stored
+- [x] A record of each type written after Task 0068 opens with a derived length equal to its stored
       length and no annotation; one written before opens showing its real interval and converges only
       on a saved time edit.
-- [ ] No duplicate or overlap check is added on any of the four screens.
-- [ ] Pumping and tummy time reuse Task 0072's shared time section and caller pattern; they introduce
+- [x] No duplicate or overlap check is added on any of the four screens.
+- [x] Pumping and tummy time reuse Task 0072's shared time section and caller pattern; they introduce
       no parallel picker implementation and make no running-timer adapter change.
-- [ ] No schema change and nothing reaching the widget, the Watch, or the Live Activity.
-- [ ] With this task merged, all eight hand-entry screens across the four activity types take clock
+- [x] No schema change and nothing reaching the widget, the Watch, or the Live Activity.
+- [x] With this task merged, all eight hand-entry screens across the four activity types take clock
       times under one rule set.
 
 ## Non-goals

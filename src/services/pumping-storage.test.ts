@@ -250,6 +250,26 @@ describe("PumpingStorageService", () => {
       expect(result?.durationSeconds).toBe(1800);
       expect(result?.volumeMl).toBe(120);
     });
+
+    it("should update the start time", async () => {
+      const existingPumping: StoredPumpingEntry = {
+        id: "pumping-1",
+        babyId: "baby-123",
+        side: "left",
+        startedAt: "2024-01-17T13:00:00.000Z",
+        createdAt: "2024-01-17T13:00:00.000Z",
+        updatedAt: "2024-01-17T13:30:00.000Z",
+      };
+      vi.mocked(AsyncStorage.getItem).mockResolvedValue(
+        JSON.stringify([existingPumping])
+      );
+      const result = await PumpingStorageService.updatePumping(
+        "baby-123",
+        "pumping-1",
+        { startedAt: new Date("2024-01-17T12:45:00.000Z") }
+      );
+      expect(result?.startedAt).toBe("2024-01-17T12:45:00.000Z");
+    });
   });
 
   describe("deletePumping", () => {

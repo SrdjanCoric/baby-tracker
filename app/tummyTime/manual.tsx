@@ -12,17 +12,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useColorScheme } from "nativewind";
 import { useTummyTime, useBaby, useTimeFormat } from "@/contexts";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
-import { formatTime as formatTimeUtil } from "@/utils/time";
+import { StartEndTimeSection } from "@/components/StartEndTimeSection";
 import { te } from "@/utils/translate-errors";
-import { validateManualTummyTime } from "@/validators/tummyTime";
+import { validateManualTummyTimeTimes } from "@/validators/tummyTime";
 import { ACTIVITY } from "@/constants/colors";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 
-const QUICK_DURATIONS = [1, 2, 3, 5, 10, 15];
+const MINIMUM_TUMMY_TIME_MS = 60_000;
+const MAXIMUM_TUMMY_TIME_MS = 2 * 60 * 60 * 1000;
 
 export default function ManualTummyTimeScreen() {
   const { t } = useTranslation();
@@ -39,74 +39,15 @@ export default function ManualTummyTimeScreen() {
     textOnMuted: isDark ? ACTIVITY.tummyTime.textAccentDark : ACTIVITY.tummyTime.textAccent,
   };
 
-  const [startTime, setStartTime] = useState(new Date());
-  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
-  const [durationInput, setDurationInput] = useState("");
+  const [startTime, setStartTime] = useState(
+    () => new Date(Date.now() - MINIMUM_TUMMY_TIME_MS)
+  );
+  const [endTime, setEndTime] = useState(() => new Date());
 
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const handleDateChange = useCallback(
-    (_event: unknown, selectedDate?: Date) => {
-      if (Platform.OS === "android") {
-        setShowDatePicker(false);
-      }
-      if (selectedDate) {
-        const newDateTime = new Date(startTime);
-        newDateTime.setFullYear(selectedDate.getFullYear());
-        newDateTime.setMonth(selectedDate.getMonth());
-        newDateTime.setDate(selectedDate.getDate());
-        setStartTime(newDateTime);
-      }
-    },
-    [startTime]
-  );
-
-  const handleTimeChange = useCallback(
-    (_event: unknown, selectedTime?: Date) => {
-      if (Platform.OS === "android") {
-        setShowTimePicker(false);
-      }
-      if (selectedTime) {
-        const newDateTime = new Date(startTime);
-        newDateTime.setHours(selectedTime.getHours());
-        newDateTime.setMinutes(selectedTime.getMinutes());
-        setStartTime(newDateTime);
-      }
-    },
-    [startTime]
-  );
-
-  const handleDateTimeChange = useCallback(
-    (_event: unknown, selectedDateTime?: Date) => {
-      if (selectedDateTime) {
-        setStartTime(selectedDateTime);
-      }
-    },
-    []
-  );
-
-  const handleDurationChange = useCallback((text: string) => {
-    setDurationInput(text);
-    const value = parseInt(text, 10);
-    if (!isNaN(value) && value > 0) {
-      setDurationMinutes(value);
-    } else {
-      setDurationMinutes(null);
-    }
-  }, []);
-
-  const handleQuickDurationSelect = useCallback((minutes: number) => {
-    setDurationMinutes(minutes);
-    setDurationInput(minutes.toString());
-    Keyboard.dismiss();
-  }, []);
 
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
@@ -114,10 +55,9 @@ export default function ManualTummyTimeScreen() {
 
     setErrors({});
 
-    const durationSeconds = durationMinutes ? durationMinutes * 60 : undefined;
-    const validation = validateManualTummyTime({
+    const validation = validateManualTummyTimeTimes({
       startedAt: startTime,
-      durationSeconds,
+      endedAt: endTime,
     });
 
     if (!validation.isValid) {
@@ -128,13 +68,13 @@ export default function ManualTummyTimeScreen() {
     isSavingRef.current = true;
     setIsSaving(true);
     try {
-      const endedAt = new Date(
-        startTime.getTime() + (durationSeconds ?? 0) * 1000
+      const durationSeconds = Math.floor(
+        (endTime.getTime() - startTime.getTime()) / 1000
       );
       await addTummyTime({
         babyId: selectedBaby.id,
         startedAt: startTime,
-        endedAt,
+        endedAt: endTime,
         durationSeconds,
         notes: notes || undefined,
       });
@@ -148,24 +88,37 @@ export default function ManualTummyTimeScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, startTime, durationMinutes, notes, addTummyTime, onboardingActivity, router]);
+  }, [selectedBaby, startTime, endTime, notes, addTummyTime, onboardingActivity, router]);
 
-  const canSave = durationMinutes !== null && durationMinutes > 0;
+  const startBounds = useCallback(() => {
+    const boundaryNow = Date.now();
+    return {
+      maximumDate: new Date(
+        Math.min(boundaryNow, endTime.getTime() - MINIMUM_TUMMY_TIME_MS)
+      ),
+    };
+  }, [endTime]);
+  const endBounds = useCallback(() => {
+    const boundaryNow = Date.now();
+    return {
+      minimumDate: new Date(startTime.getTime() + MINIMUM_TUMMY_TIME_MS),
+      maximumDate: new Date(
+        Math.min(boundaryNow, startTime.getTime() + MAXIMUM_TUMMY_TIME_MS)
+      ),
+    };
+  }, [startTime]);
+
+  const durationMs = endTime.getTime() - startTime.getTime();
+  const now = new Date();
+  const canSave =
+    durationMs >= MINIMUM_TUMMY_TIME_MS &&
+    durationMs <= MAXIMUM_TUMMY_TIME_MS &&
+    startTime <= now &&
+    endTime <= now;
 
   if (!selectedBaby) {
     return <NoBabyScreen />;
   }
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "2-digit",
-    });
-  };
-
-  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -193,137 +146,29 @@ export default function ManualTummyTimeScreen() {
         contentContainerClassName="px-6 pb-6"
         keyboardShouldPersistTaps="handled"
       >
-        {/* Start Time Selection */}
-        <View className="mb-6">
-          <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
-            {t("tummyTime.startTime")}
-          </Text>
-          <View className="flex-row gap-3">
-            <Pressable
-              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowDatePicker(true)}
-              className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: colors.mutedBg }}
-              accessibilityRole="button"
-              accessibilityLabel={t("feeding.selectDate")}
-            >
-              <Text className="text-base" style={{ color: colors.textOnMuted }}>
-                {formatDate(startTime)}
-              </Text>
-              <Text style={{ color: colors.accent }}>📅</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => Platform.OS === "ios" ? setShowDateTimePicker(true) : setShowTimePicker(true)}
-              className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
-              style={{ backgroundColor: colors.mutedBg }}
-              accessibilityRole="button"
-              accessibilityLabel={t("feeding.selectTime")}
-            >
-              <Text className="text-base" style={{ color: colors.textOnMuted }}>
-                {formatTime(startTime)}
-              </Text>
-              <Text style={{ color: colors.accent }}>🕐</Text>
-            </Pressable>
-          </View>
-          {errors.startedAt && (
-            <Text className="text-red-500 text-sm mt-2">{te(t, errors.startedAt)}</Text>
-          )}
-        </View>
-
-        {/* iOS: Combined datetime picker */}
-        {showDateTimePicker && Platform.OS === "ios" && (
-          <View>
-            <View className="flex-row justify-end px-2">
-              <Pressable
-                onPress={() => setShowDateTimePicker(false)}
-                className="py-1 px-3"
-              >
-                <Text className="text-sm font-semibold" style={{ color: colors.accent }}>
-                  {t("common.done")}
-                </Text>
-              </Pressable>
-            </View>
-            <DateTimePicker
-              value={startTime}
-              mode="datetime"
-              display="spinner"
-              onChange={handleDateTimeChange}
-              maximumDate={new Date()}
-            />
-          </View>
-        )}
-
-        {/* Android: Separate date picker */}
-        {showDatePicker && Platform.OS === "android" && (
-          <DateTimePicker
-            value={startTime}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
-            maximumDate={new Date()}
-          />
-        )}
-
-        {/* Android: Separate time picker */}
-        {showTimePicker && Platform.OS === "android" && (
-          <DateTimePicker
-            value={startTime}
-            mode="time"
-            display="default"
-            onChange={handleTimeChange}
-          />
-        )}
-
-        {/* Duration Input */}
-        <View className="mb-6">
-          <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
-            {t("tummyTime.durationMinutes")}
-          </Text>
-          <View
-            className="flex-row items-center rounded-card-lg px-4 py-3 mb-4"
-            style={{ backgroundColor: colors.mutedBg }}
-          >
-            <TextInput
-              className="flex-1 text-2xl font-semibold text-center"
-              style={{ color: colors.textOnMuted }}
-              value={durationInput}
-              onChangeText={handleDurationChange}
-              placeholder="0"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="number-pad"
-              returnKeyType="done"
-              accessibilityLabel={t("tummyTime.durationPlaceholder")}
-            />
-            <Text
-              className="text-lg font-medium ml-2"
-              style={{ color: colors.accent }}
-            >
-              {t("common.min")}
-            </Text>
-          </View>
-
-          {/* Quick duration buttons */}
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary mb-2">
-            {t("tummyTime.quickDurations")}
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {QUICK_DURATIONS.map((minutes) => (
-              <QuickButton
-                key={minutes}
-                label={`${minutes}`}
-                isSelected={durationMinutes === minutes}
-                onPress={() => handleQuickDurationSelect(minutes)}
-                accentColor={colors.accent}
-                mutedColor={colors.mutedBg}
-                textColor={colors.textOnMuted}
-              />
-            ))}
-          </View>
-          {errors.durationSeconds && (
-            <Text className="text-red-500 text-sm mt-2">
-              {te(t, errors.durationSeconds)}
-            </Text>
-          )}
-        </View>
+        <StartEndTimeSection
+          startTime={startTime}
+          endTime={endTime}
+          onStartTimeChange={setStartTime}
+          onEndTimeChange={setEndTime}
+          startBounds={startBounds}
+          endBounds={endBounds}
+          timeFormat={timeFormat}
+          startLabel={t("tummyTime.startTime")}
+          endLabel={t("tummyTime.endTime")}
+          durationLabel={t("tummyTime.duration")}
+          doneLabel={t("common.done")}
+          selectDateLabel={t("feeding.selectDate")}
+          selectTimeLabel={t("feeding.selectTime")}
+          accentColor={colors.accent}
+          mutedBackgroundColor={colors.mutedBg}
+          textColor={colors.textOnMuted}
+          startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
+          endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
+          durationError={
+            errors.durationSeconds ? te(t, errors.durationSeconds) : undefined
+          }
+        />
 
         {/* Notes */}
         <View className="mb-6">
@@ -364,36 +209,5 @@ export default function ManualTummyTimeScreen() {
       </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  );
-}
-
-interface QuickButtonProps {
-  label: string;
-  isSelected: boolean;
-  onPress: () => void;
-  accentColor: string;
-  mutedColor: string;
-  textColor: string;
-}
-
-function QuickButton({ label, isSelected, onPress, accentColor, mutedColor, textColor }: QuickButtonProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="min-w-[56px] py-2 px-3 rounded-button-lg items-center active:scale-95"
-      style={{
-        backgroundColor: isSelected ? accentColor : mutedColor,
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected: isSelected }}
-    >
-      <Text
-        className="text-base font-semibold"
-        style={{ color: isSelected ? "#FFFFFF" : textColor }}
-      >
-        {label}
-      </Text>
-    </Pressable>
   );
 }

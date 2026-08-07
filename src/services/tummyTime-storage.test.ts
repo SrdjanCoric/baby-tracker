@@ -191,6 +191,25 @@ describe("TummyTimeStorageService", () => {
       expect(result?.endedAt).toBe("2024-01-17T13:10:00.000Z");
       expect(result?.durationSeconds).toBe(600);
     });
+
+    it("should update the start time", async () => {
+      const existingEntry: StoredTummyTimeEntry = {
+        id: "tt-1",
+        babyId: "baby-123",
+        startedAt: "2024-01-17T13:00:00.000Z",
+        createdAt: "2024-01-17T13:00:00.000Z",
+        updatedAt: "2024-01-17T13:10:00.000Z",
+      };
+      vi.mocked(AsyncStorage.getItem).mockResolvedValue(
+        JSON.stringify([existingEntry])
+      );
+      const result = await TummyTimeStorageService.updateTummyTime(
+        "baby-123",
+        "tt-1",
+        { startedAt: new Date("2024-01-17T12:45:00.000Z") }
+      );
+      expect(result?.startedAt).toBe("2024-01-17T12:45:00.000Z");
+    });
   });
 
   describe("deleteTummyTime", () => {
