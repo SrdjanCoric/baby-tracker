@@ -122,4 +122,58 @@ describe("StartEndTimeSection", () => {
 
     expect(onStartTimeChange).not.toHaveBeenCalled();
   });
+
+  it("merges Android date and time selections and clamps them to bounds", () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "android",
+      configurable: true,
+    });
+    const startTime = new Date(2026, 7, 6, 8, 30);
+    const endTime = new Date(2026, 7, 6, 10, 0);
+    const endMaximum = new Date(2026, 7, 6, 12, 0);
+    const onStartTimeChange = jest.fn();
+    const onEndTimeChange = jest.fn();
+
+    render(
+      <StartEndTimeSection
+        startTime={startTime}
+        endTime={endTime}
+        onStartTimeChange={onStartTimeChange}
+        onEndTimeChange={onEndTimeChange}
+        startBounds={{ maximumDate: new Date(2026, 7, 6, 9, 59) }}
+        endBounds={{
+          minimumDate: new Date(2026, 7, 6, 8, 31),
+          maximumDate: endMaximum,
+        }}
+        timeFormat="24h"
+        startLabel="Start Time"
+        endLabel="End Time"
+        durationLabel="Duration"
+        doneLabel="Done"
+        selectDateLabel="Select Date"
+        selectTimeLabel="Select Time"
+        accentColor="#6B5B95"
+        mutedBackgroundColor="#E8E4F0"
+        textColor="#2D2A26"
+      />
+    );
+
+    fireEvent.press(screen.getByRole("button", { name: "Start Time Select Date" }));
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      { type: "set" },
+      new Date(2026, 7, 5, 14, 45)
+    );
+    expect(onStartTimeChange).toHaveBeenCalledWith(new Date(2026, 7, 5, 8, 30));
+
+    fireEvent.press(screen.getByRole("button", { name: "End Time Select Time" }));
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      { type: "set" },
+      new Date(2026, 7, 6, 13, 30)
+    );
+    expect(onEndTimeChange).toHaveBeenCalledWith(endMaximum);
+  });
 });
