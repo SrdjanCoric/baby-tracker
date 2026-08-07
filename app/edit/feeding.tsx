@@ -209,16 +209,14 @@ export default function EditFeedingScreen() {
     );
     return {
       minimumDate: new Date(
-        feeding?.endedAt
-          ? startTimestamp + MINIMUM_BREASTFEEDING_MS
-          : Math.min(
-              startTimestamp + MINIMUM_BREASTFEEDING_MS,
-              maximumTimestamp
-            )
+        Math.min(
+          startTimestamp + MINIMUM_BREASTFEEDING_MS,
+          maximumTimestamp
+        )
       ),
       maximumDate: new Date(maximumTimestamp),
     };
-  }, [feeding?.endedAt, startTime]);
+  }, [startTime]);
 
   const foodTranslations: Record<string, string> = useMemo(() => ({
     banana: t("foods.banana"), avocado: t("foods.avocado"), apple: t("foods.apple"),

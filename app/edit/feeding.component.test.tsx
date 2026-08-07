@@ -167,6 +167,29 @@ describe("EditFeedingScreen clock-time editing", () => {
     expect(screen.getByTestId("datetime-picker")).toBeTruthy();
   });
 
+  it("opens both End pickers for a stored sub-minute breast feed", async () => {
+    mockFeedings = [
+      {
+        ...mockFeedings[0],
+        startedAt: new Date(now.getTime() - 45 * 1000).toISOString(),
+        endedAt: new Date(now.getTime() - 5 * 1000).toISOString(),
+        durationSeconds: 40,
+      },
+    ];
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() => expect(screen.getByText("0m")).toBeTruthy());
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" })
+    );
+    expect(screen.getByTestId("datetime-picker")).toBeTruthy();
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
+    );
+    expect(screen.getByTestId("datetime-picker")).toBeTruthy();
+  });
+
   it("leaves stored times and duration untouched on a note-only or side-only save", async () => {
     const noteScreen = await renderInitialized();
     fireEvent.changeText(
