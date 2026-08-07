@@ -94,7 +94,8 @@ export function showDuplicateConfirmation(options: DuplicateDialogOptions): void
         ),
         onPress: onConfirm,
       },
-    ]
+    ],
+    { cancelable: false }
   );
 }
 

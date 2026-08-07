@@ -27,7 +27,8 @@ describe("DuplicateConfirmationDialog overlap copy", () => {
       `duplicateDetection.${activityType}OverlapMessage`,
       expect.arrayContaining([
         expect.objectContaining({ text: "duplicateDetection.continueAnyway" }),
-      ])
+      ]),
+      { cancelable: false }
     );
     }
   );
