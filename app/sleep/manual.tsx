@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -137,13 +137,23 @@ export default function ManualSleepScreen() {
     durationMs <= MAXIMUM_SLEEP_MS &&
     startTime <= now &&
     endTime <= now;
-  const startMaximum = new Date(
-    Math.min(now.getTime(), endTime.getTime() - MINIMUM_SLEEP_MS)
-  );
-  const endMinimum = new Date(startTime.getTime() + MINIMUM_SLEEP_MS);
-  const endMaximum = new Date(
-    Math.min(now.getTime(), startTime.getTime() + MAXIMUM_SLEEP_MS)
-  );
+  const startBounds = useMemo(() => {
+    const boundaryNow = Date.now();
+    return {
+      maximumDate: new Date(
+        Math.min(boundaryNow, endTime.getTime() - MINIMUM_SLEEP_MS)
+      ),
+    };
+  }, [endTime]);
+  const endBounds = useMemo(() => {
+    const boundaryNow = Date.now();
+    return {
+      minimumDate: new Date(startTime.getTime() + MINIMUM_SLEEP_MS),
+      maximumDate: new Date(
+        Math.min(boundaryNow, startTime.getTime() + MAXIMUM_SLEEP_MS)
+      ),
+    };
+  }, [startTime]);
 
   if (!selectedBaby) return <NoBabyScreen />;
 
@@ -177,8 +187,8 @@ export default function ManualSleepScreen() {
             endTime={endTime}
             onStartTimeChange={setStartTime}
             onEndTimeChange={setEndTime}
-            startBounds={{ maximumDate: startMaximum }}
-            endBounds={{ minimumDate: endMinimum, maximumDate: endMaximum }}
+            startBounds={startBounds}
+            endBounds={endBounds}
             timeFormat={timeFormat}
             startLabel={t("sleep.startTime")}
             endLabel={t("sleep.endTime")}

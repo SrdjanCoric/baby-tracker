@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import EditSleepScreen from "./sleep";
@@ -49,6 +49,7 @@ jest.mock("@react-navigation/native", () => ({
 
 describe("EditSleepScreen clock-time editing", () => {
   const now = new Date("2026-08-06T12:00:00.000Z");
+  const originalPlatformOS = Platform.OS;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -72,6 +73,10 @@ describe("EditSleepScreen clock-time editing", () => {
   afterEach(() => {
     jest.useRealTimers();
     jest.restoreAllMocks();
+    Object.defineProperty(Platform, "OS", {
+      value: originalPlatformOS,
+      configurable: true,
+    });
   });
 
   async function renderInitialized() {
@@ -131,6 +136,25 @@ describe("EditSleepScreen clock-time editing", () => {
     expect(rendered.getByRole("button", { name: "common.save" }).props.className).toContain(
       "active:scale-[0.98]"
     );
+  });
+
+  it("keeps an open Android picker stable across unrelated rerenders", async () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "android",
+      configurable: true,
+    });
+    const rendered = await renderInitialized();
+    fireEvent.press(
+      rendered.getByRole("button", { name: "sleep.startTime feeding.selectDate" })
+    );
+    const initialOnChange = rendered.getByTestId("datetime-picker").props.onChange;
+
+    fireEvent.changeText(
+      rendered.getByPlaceholderText("sleep.notesPlaceholder"),
+      "unrelated rerender"
+    );
+
+    expect(rendered.getByTestId("datetime-picker").props.onChange).toBe(initialOnChange);
   });
 
   it("leaves stored times and duration untouched on a note-only save", async () => {

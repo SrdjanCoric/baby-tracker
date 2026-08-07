@@ -228,6 +228,28 @@ export default function EditSleepScreen() {
     );
   }, [sleep, deleteSleep, router, t]);
 
+  const startBounds = useMemo(() => {
+    const boundaryNow = Date.now();
+    return {
+      maximumDate: new Date(
+        Math.min(
+          boundaryNow,
+          (endTime?.getTime() ?? boundaryNow + MINIMUM_SLEEP_MS) - MINIMUM_SLEEP_MS
+        )
+      ),
+    };
+  }, [endTime]);
+  const endBounds = useMemo(() => {
+    const boundaryNow = Date.now();
+    const startTimestamp = startTime?.getTime() ?? boundaryNow - MINIMUM_SLEEP_MS;
+    return {
+      minimumDate: new Date(startTimestamp + MINIMUM_SLEEP_MS),
+      maximumDate: new Date(
+        Math.min(boundaryNow, startTimestamp + MAXIMUM_SLEEP_MS)
+      ),
+    };
+  }, [startTime]);
+
   if (!selectedBaby || !sleep || !startTime || !endTime) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
@@ -245,14 +267,6 @@ export default function EditSleepScreen() {
     durationMs <= MAXIMUM_SLEEP_MS &&
     startTime <= now &&
     endTime <= now;
-  const startMaximum = new Date(
-    Math.min(now.getTime(), endTime.getTime() - MINIMUM_SLEEP_MS)
-  );
-  const endMinimum = new Date(startTime.getTime() + MINIMUM_SLEEP_MS);
-  const endMaximum = new Date(
-    Math.min(now.getTime(), startTime.getTime() + MAXIMUM_SLEEP_MS)
-  );
-
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
       <Pressable
@@ -338,8 +352,8 @@ export default function EditSleepScreen() {
             endTime={endTime}
             onStartTimeChange={handleStartChange}
             onEndTimeChange={handleEndChange}
-            startBounds={{ maximumDate: startMaximum }}
-            endBounds={{ minimumDate: endMinimum, maximumDate: endMaximum }}
+            startBounds={startBounds}
+            endBounds={endBounds}
             timeFormat={timeFormat}
             startLabel={t("sleep.startTime")}
             endLabel={t("sleep.endTime")}
