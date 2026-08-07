@@ -115,6 +115,16 @@ parity fix: clamp the sleep End minimum to its live maximum when no valid End va
 the interval only after an actual time edit, and otherwise preserve the stored timestamps and
 duration exactly. Sleep retains its own 24-hour maximum.
 
+### User-authorized moment-picker and edit cleanup
+
+The restored bottle/solids Android picker retained two pre-existing mainline defects after the
+parallel `SingleTimeSection` was removed: merging today's date into a late prior-day time could
+produce a future moment, and merging a selected time preserved stale seconds and milliseconds. This
+task now fixes those root behaviors in `app/feeding/manual.tsx` by clamping merged date/time values to
+live `now` and normalizing time selections to minute precision. The feeding edit screen also derives
+its breast time-change flags once and expresses non-breast Save eligibility without a literal
+always-true branch.
+
 ## Implementation work
 
 - [x] Use Task 0072's sleep screens and component tests as the executable template, reusing
@@ -162,6 +172,10 @@ duration exactly. Sleep retains its own 24-hour maximum.
 - [x] Apply the same legacy-interval recovery policy to `app/edit/sleep.tsx`: a stored sub-minute sleep
       opens both End pickers, accepts a note-only or type-only save without rewriting time fields, and
       still enforces the one-minute floor and 24-hour cap after a time edit.
+- [x] Clamp restored Android bottle/solids date and time merges to live `now`, clear seconds and
+      milliseconds after a time selection, and cover both behaviors through the manual screen.
+- [x] Derive `startChanged`, `endChanged`, and `timeChanged` once in `app/edit/feeding.tsx`; preserve
+      read-only non-breast Save behavior through an explicit type condition rather than `: true`.
 
 ## Acceptance criteria
 
@@ -183,6 +197,8 @@ duration exactly. Sleep retains its own 24-hour maximum.
 - [x] No schema change and nothing reaching the widget, the Watch, or the Live Activity.
 - [x] A stored sub-minute sleep has operable End controls and preserves its stored interval on a
       non-time save; changing either time must satisfy the existing sleep limits.
+- [x] Android bottle/solids moment edits cannot merge into the future and save exactly the displayed
+      minute, while feeding edit change detection has one source of truth.
 
 ## Non-goals
 
@@ -204,5 +220,5 @@ duration exactly. Sleep retains its own 24-hour maximum.
 - skipped (minor): TR-14 — Edit End-ceiling test does not prove a fresh `now` value — User requested remediation focus on TR-1 through TR-10.
 - skipped (minor): TR-15 — Feeding clock-time behavior is absent from README.md — User requested remediation focus on TR-1 through TR-10.
 - skipped (minor): TR-16 — Reversed manual times surface the minimum-duration error instead of end-before-start — User requested remediation focus on TR-1 through TR-10.
-- skipped (minor): TR-17 — Android single-time merge preserves stale seconds and milliseconds — User requested remediation focus on TR-1 through TR-10.
+- fixed after follow-up: TR-17 — Android single-time merge preserves stale seconds and milliseconds — User later authorized the root fix in the restored manual picker.
 - skipped (minor): TR-18 — Disabled-button press assertion does not exercise save-path rejection — User requested remediation focus on TR-1 through TR-10.

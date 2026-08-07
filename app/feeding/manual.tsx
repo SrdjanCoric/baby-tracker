@@ -135,7 +135,8 @@ export default function ManualFeedingScreen() {
         newDateTime.setFullYear(selectedDate.getFullYear());
         newDateTime.setMonth(selectedDate.getMonth());
         newDateTime.setDate(selectedDate.getDate());
-        setMomentTime(newDateTime);
+        const boundaryNow = new Date();
+        setMomentTime(newDateTime > boundaryNow ? boundaryNow : newDateTime);
       }
     },
     [momentTime]
@@ -148,9 +149,14 @@ export default function ManualFeedingScreen() {
       }
       if (selectedTime) {
         const newDateTime = new Date(momentTime);
-        newDateTime.setHours(selectedTime.getHours());
-        newDateTime.setMinutes(selectedTime.getMinutes());
-        setMomentTime(newDateTime);
+        newDateTime.setHours(
+          selectedTime.getHours(),
+          selectedTime.getMinutes(),
+          0,
+          0
+        );
+        const boundaryNow = new Date();
+        setMomentTime(newDateTime > boundaryNow ? boundaryNow : newDateTime);
       }
     },
     [momentTime]

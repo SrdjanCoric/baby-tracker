@@ -225,6 +225,58 @@ describe("ManualFeedingScreen clock-time entry", () => {
     expect(mockAddFeeding.mock.calls[0][0]).not.toHaveProperty("durationSeconds");
   });
 
+  it("clamps an Android date merge that would move a moment into the future", () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "android",
+      configurable: true,
+    });
+    mockParams = { type: "bottle" };
+    const screen = render(<ManualFeedingScreen />);
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const lateTime = new Date(now);
+    lateTime.setHours(23, 0, 0, 0);
+
+    fireEvent.press(screen.getByRole("button", { name: "feeding.selectDate" }));
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, yesterday);
+    fireEvent.press(screen.getByRole("button", { name: "feeding.selectTime" }));
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, lateTime);
+    fireEvent.press(screen.getByRole("button", { name: "feeding.selectDate" }));
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, now);
+    fireEvent.press(screen.getByRole("button", { name: "feeding.selectTime" }));
+
+    expect(screen.getByTestId("datetime-picker").props.value).toEqual(now);
+  });
+
+  it("clears stale seconds and milliseconds after an Android time edit", async () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "android",
+      configurable: true,
+    });
+    const mountTime = new Date("2026-08-07T10:00:37.412Z");
+    jest.setSystemTime(mountTime);
+    mockParams = { type: "bottle" };
+    const screen = render(<ManualFeedingScreen />);
+    const selectedTime = new Date(mountTime.getTime() - 20 * 60 * 1000);
+    selectedTime.setSeconds(0, 0);
+
+    fireEvent.press(screen.getByRole("button", { name: "feeding.selectTime" }));
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      selectedTime
+    );
+    fireEvent.press(screen.getByRole("button", { name: "feeding.formula" }));
+    fireEvent.changeText(screen.getByLabelText("feeding.enterAmount"), "120");
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.logManualBottleFeeding" })
+    );
+
+    await waitFor(() => expect(mockAddFeeding).toHaveBeenCalledTimes(1));
+    expect(mockAddFeeding.mock.calls[0][0].startedAt).toEqual(selectedTime);
+  });
+
   it("keeps an open Android Start picker stable across unrelated rerenders", () => {
     Object.defineProperty(Platform, "OS", {
       value: "android",

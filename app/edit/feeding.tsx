@@ -64,21 +64,25 @@ export default function EditFeedingScreen() {
     }
   }, [feeding, isInitialized]);
 
+  const startChanged = Boolean(
+    feeding?.type === "breast" &&
+      startTime &&
+      startTime.getTime() !== new Date(feeding.startedAt).getTime()
+  );
+  const endChanged = Boolean(
+    feeding?.type === "breast" &&
+      endTime &&
+      initialEndTime &&
+      endTime.getTime() !== initialEndTime.getTime()
+  );
+  const timeChanged = startChanged || endChanged;
+
   const hasChanges = useMemo(() => {
     if (!feeding || !isInitialized || !startTime) return false;
 
     const originalAmount = feeding.amountMl ? String(feeding.amountMl) : "";
     const originalNotes = feeding.notes ?? "";
     const originalFoodType = feeding.foodType ?? "";
-    const startChanged =
-      feeding.type === "breast" &&
-      startTime.getTime() !== new Date(feeding.startedAt).getTime();
-    const endChanged = Boolean(
-      feeding.type === "breast" &&
-        endTime &&
-        initialEndTime &&
-        endTime.getTime() !== initialEndTime.getTime()
-    );
 
     return (
       side !== feeding.side ||
@@ -91,7 +95,7 @@ export default function EditFeedingScreen() {
       reaction !== feeding.reaction ||
       notes !== originalNotes
     );
-  }, [feeding, isInitialized, startTime, endTime, initialEndTime, side, amountMl, contentType, foodType, amount, reaction, notes]);
+  }, [feeding, isInitialized, startTime, startChanged, endChanged, side, amountMl, contentType, foodType, amount, reaction, notes]);
 
   usePreventRemove(hasChanges, ({ data }) => {
     Alert.alert(
@@ -110,17 +114,6 @@ export default function EditFeedingScreen() {
 
   const handleSave = useCallback(async () => {
     if (!selectedBaby || !feeding || !startTime) return;
-
-    const startChanged =
-      feeding.type === "breast" &&
-      startTime.getTime() !== new Date(feeding.startedAt).getTime();
-    const endChanged = Boolean(
-      feeding.type === "breast" &&
-        endTime &&
-        initialEndTime &&
-        endTime.getTime() !== initialEndTime.getTime()
-    );
-    const timeChanged = startChanged || endChanged;
 
     setErrors({});
     if (feeding.type === "breast" && timeChanged) {
@@ -170,7 +163,7 @@ export default function EditFeedingScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, feeding, startTime, endTime, initialEndTime, side, amountMl, contentType, foodType, amount, reaction, notes, updateFeeding, router]);
+  }, [selectedBaby, feeding, startTime, endTime, endChanged, timeChanged, side, amountMl, contentType, foodType, amount, reaction, notes, updateFeeding, router]);
 
   const handleDelete = useCallback(() => {
     if (!feeding) return;
@@ -431,24 +424,13 @@ export default function EditFeedingScreen() {
   const durationMs = endTime
     ? endTime.getTime() - startTime.getTime()
     : 0;
-  const startChanged =
-    feeding.type === "breast" &&
-    startTime.getTime() !== new Date(feeding.startedAt).getTime();
-  const endChanged = Boolean(
-    feeding.type === "breast" &&
-      endTime &&
-      initialEndTime &&
-      endTime.getTime() !== initialEndTime.getTime()
-  );
-  const timeChanged = startChanged || endChanged;
   const canSave =
-    feeding.type === "breast"
-      ? !timeChanged ||
-        (durationMs >= MINIMUM_BREASTFEEDING_MS &&
-          durationMs <= MAXIMUM_BREASTFEEDING_MS &&
-          startTime <= now &&
-          Boolean(endTime && endTime <= now))
-      : true;
+    feeding.type !== "breast" ||
+    !timeChanged ||
+    (durationMs >= MINIMUM_BREASTFEEDING_MS &&
+      durationMs <= MAXIMUM_BREASTFEEDING_MS &&
+      startTime <= now &&
+      Boolean(endTime && endTime <= now));
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
