@@ -179,3 +179,14 @@ endpoints and re-derives from the saved row, so it needs no change.
 - Changing the bottle volume input, the volume chips, or the feeding-type filter.
 - Changing the running timer's bounds or its clamp, which is Task 0071.
 - Any schema change.
+
+## Review decisions
+
+- skipped (minor): TR-11 — No test proves the required one-minute Save-disabled gate on either screen — User requested remediation focus on TR-1 through TR-10.
+- skipped (minor): TR-12 — Edit-screen no-minutes and no-chip assertions are vacuous — User requested remediation focus on TR-1 through TR-10.
+- skipped (minor): TR-13 — Counted-pause derived-length test cannot prove equality with stored length — User requested remediation focus on TR-1 through TR-10.
+- skipped (minor): TR-14 — Edit End-ceiling test does not prove a fresh `now` value — User requested remediation focus on TR-1 through TR-10.
+- skipped (minor): TR-15 — Feeding clock-time behavior is absent from README.md — User requested remediation focus on TR-1 through TR-10.
+- skipped (minor): TR-16 — Reversed manual times surface the minimum-duration error instead of end-before-start — User requested remediation focus on TR-1 through TR-10.
+- skipped (minor): TR-17 — Android single-time merge preserves stale seconds and milliseconds — User requested remediation focus on TR-1 through TR-10.
+- skipped (minor): TR-18 — Disabled-button press assertion does not exercise save-path rejection — User requested remediation focus on TR-1 through TR-10.
