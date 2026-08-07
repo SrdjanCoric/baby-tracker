@@ -1058,6 +1058,7 @@ export async function updateSleepInDatabase(
   const updateData: Record<string, unknown> = {
     updated_at: now,
   };
+  if (input.startedAt !== undefined) updateData.started_at = input.startedAt.toISOString();
   if (input.endedAt !== undefined) updateData.ended_at = input.endedAt.toISOString();
   if (input.durationSeconds !== undefined) updateData.duration_seconds = input.durationSeconds;
   if (input.notes !== undefined) updateData.notes = input.notes;
@@ -1078,6 +1079,7 @@ export async function updateSleepInDatabase(
           updatedSleep = {
             ...s,
             ...input,
+            startedAt: input.startedAt?.toISOString() ?? s.startedAt,
             endedAt: input.endedAt?.toISOString() ?? s.endedAt,
             updatedAt: now,
           };

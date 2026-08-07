@@ -72,3 +72,31 @@ BEGIN
 END $$;
 ROLLBACK;
 SELECT 'PASS: get_due_wake_window_reminders nap count excludes tombstoned naps';
+
+-- 3. Editing a saved sleep end moves the denormalized wake time used by reminders.
+BEGIN;
+DO $$
+DECLARE
+  uid uuid := gen_random_uuid();
+  hid uuid; bid uuid; sid uuid;
+  original_end timestamptz := now() - interval '2 hours';
+  edited_end timestamptz := now() - interval '90 minutes';
+  got timestamptz;
+BEGIN
+  INSERT INTO auth.users(id) VALUES (uid);
+  SELECT household_id INTO hid FROM users WHERE id = uid;
+  INSERT INTO babies(household_id, name) VALUES (hid, 'Test') RETURNING id INTO bid;
+
+  INSERT INTO sleep_sessions(baby_id, type, started_at, ended_at, logged_by)
+    VALUES (bid, 'nap', original_end - interval '30 min', original_end, uid)
+    RETURNING id INTO sid;
+
+  UPDATE sleep_sessions SET ended_at = edited_end WHERE id = sid;
+
+  SELECT last_sleep_ended_at INTO got FROM babies WHERE id = bid;
+  IF got <> edited_end THEN
+    RAISE EXCEPTION 'edited ended_at did not reach babies.last_sleep_ended_at, got %', got;
+  END IF;
+END $$;
+ROLLBACK;
+SELECT 'PASS: edited sleep end updates babies.last_sleep_ended_at';

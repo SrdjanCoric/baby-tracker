@@ -1692,12 +1692,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
       const existing = state.sleeps.find((sleep) => sleep.id === sleepId);
       const dayStartHour = state.wakeWindowConfig?.dayStartHour ?? 6;
-      const start = existing ? new Date(existing.startedAt) : null;
+      const start = input.startedAt ?? (existing ? new Date(existing.startedAt) : null);
       const startHour = start
         ? start.getHours() + start.getMinutes() / 60 + start.getSeconds() / 3600
         : null;
       const isApplicableMorningEdit =
         input.type !== undefined &&
+        input.morningClassification === undefined &&
         startHour !== null &&
         startHour >= getMorningThreshold(dayStartHour) &&
         startHour < dayStartHour;

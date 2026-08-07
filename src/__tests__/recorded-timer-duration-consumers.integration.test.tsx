@@ -130,4 +130,43 @@ describe("recorded timer duration consumers", () => {
     expect(report.totalMinutes).toBe(10);
     expect(renderSleepSection(report)).toContain(">10 min<");
   });
+
+  it("keeps every sleep duration consumer aligned after a legacy paused interval is time-edited", () => {
+    const editedStart = new Date("2026-08-05T12:00:00.000Z");
+    const editedEnd = new Date("2026-08-05T12:07:00.000Z");
+    const sleep: StoredSleepEntry = {
+      id: "legacy-paused-sleep",
+      babyId: "baby-1",
+      type: "nap",
+      startedAt: editedStart.toISOString(),
+      endedAt: editedEnd.toISOString(),
+      durationSeconds: 420,
+      createdAt: editedStart.toISOString(),
+      updatedAt: editedEnd.toISOString(),
+    };
+    const day = new Date("2026-08-05T12:00:00.000Z");
+    const report = aggregateSleep(
+      [sleep],
+      new Date("2026-08-05T00:00:00.000Z"),
+      new Date("2026-08-05T23:59:59.999Z")
+    );
+
+    expect(
+      calculateDailySummary(day, {
+        feedings: [],
+        sleeps: [sleep],
+        diapers: [],
+        pumpings: [],
+        growths: [],
+        tummyTimes: [],
+      }).sleepMinutes
+    ).toBe(7);
+    expect(
+      buildDayViewData([sleep], day, 60, day, 6, "en", 19).totalSleepSeconds
+    ).toBe(420);
+    expect(formatDuration(sleep.durationSeconds, "short")).toBe("7m");
+    expect(formatSleepAsCSV([sleep], false)).toContain("00:07:00");
+    expect(report.totalMinutes).toBe(7);
+    expect(renderSleepSection(report)).toContain(">7 min<");
+  });
 });

@@ -51,6 +51,7 @@ export interface CreateSleepInput {
 }
 
 export interface UpdateSleepInput {
+  startedAt?: Date;
   endedAt?: Date;
   durationSeconds?: number;
   notes?: string;
@@ -182,6 +183,7 @@ export const SleepStorageService = {
 
     const updatedSleep: StoredSleepEntry = {
       ...sleeps[index],
+      ...(input.startedAt !== undefined && { startedAt: input.startedAt.toISOString() }),
       ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
       ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
       ...(input.notes !== undefined && { notes: input.notes }),

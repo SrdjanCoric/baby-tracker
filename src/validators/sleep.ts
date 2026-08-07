@@ -133,3 +133,27 @@ export function validateManualSleep(entry: Partial<SleepEntry>): SleepValidation
     errors
   };
 }
+
+export function validateManualSleepTimes(
+  entry: Partial<SleepEntry>
+): SleepValidationResult {
+  const durationSeconds =
+    entry.startedAt && entry.endedAt
+      ? Math.floor((entry.endedAt.getTime() - entry.startedAt.getTime()) / 1000)
+      : undefined;
+
+  const result = validateManualSleep({
+    ...entry,
+    durationSeconds,
+  });
+
+  if (
+    entry.endedAt &&
+    validateSleepStartTimeNotInFuture(entry.endedAt) !== null
+  ) {
+    result.errors.endedAt = "validation.endTimeNotInFuture";
+    result.isValid = false;
+  }
+
+  return result;
+}

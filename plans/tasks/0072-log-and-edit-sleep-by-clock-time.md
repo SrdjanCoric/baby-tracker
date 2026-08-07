@@ -2,6 +2,7 @@
 
 **Branch**: `feature/log-and-edit-sleep-by-clock-time`
 **Depends on**: 0068
+**Execution classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
 **Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
 `decisions/resolved/009-clock-time-log-editing.md` (resolved), with the edit-screen proof items from
 `decisions/resolved/018-disagreeing-length-display.md` · **User stories**: As a caregiver, I want to

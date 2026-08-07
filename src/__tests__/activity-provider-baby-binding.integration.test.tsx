@@ -169,6 +169,18 @@ function TummyTimeProbe() {
   return null;
 }
 
+function SleepProbe() {
+  const sleep = useSleep();
+  providerState = {
+    feeding: null as never,
+    sleep,
+    diaper: null as never,
+    pumping: null as never,
+    tummyTime: null as never,
+  };
+  return null;
+}
+
 function RealActivityProviders() {
   return (
     <FeedingProvider>
@@ -199,6 +211,59 @@ describe("real activity provider baby binding", () => {
     mockSelectedBaby = { id: "baby-a", name: "Baby A" };
     mockAuthUser = null;
     await AsyncStorage.clear();
+  });
+
+  it("applies an explicit morning type edit using the edited start time", async () => {
+    const existing: StoredSleepEntry = {
+      id: "sleep-a",
+      babyId: "baby-a",
+      type: "night",
+      startedAt: new Date(2026, 7, 6, 10, 0).toISOString(),
+      endedAt: new Date(2026, 7, 6, 11, 0).toISOString(),
+      durationSeconds: 3600,
+      morningClassification: "automatic",
+      morningClassificationVersion: 1,
+      createdAt: new Date(2026, 7, 6, 10, 0).toISOString(),
+      updatedAt: new Date(2026, 7, 6, 11, 0).toISOString(),
+    };
+    jest.spyOn(SleepStorageService, "getAllSleeps").mockResolvedValue([existing]);
+    jest.spyOn(SleepStorageService, "getActiveTimer").mockResolvedValue(null);
+    const update = jest
+      .spyOn(SleepStorageService, "updateSleep")
+      .mockImplementation(async (_babyId, _sleepId, input) => ({
+        ...existing,
+        type: input.type ?? existing.type,
+        startedAt: input.startedAt?.toISOString() ?? existing.startedAt,
+      }));
+
+    const view = render(
+      <SleepProvider>
+        <SleepProbe />
+      </SleepProvider>
+    );
+    await waitFor(() => {
+      expect(providerState?.sleep.babyBinding).toEqual({
+        babyId: "baby-a",
+        status: "ready",
+      });
+    });
+
+    await act(async () => {
+      await providerState!.sleep.updateSleep("sleep-a", {
+        type: "nap",
+        startedAt: new Date(2026, 7, 6, 4, 0),
+      });
+    });
+
+    expect(update).toHaveBeenCalledWith(
+      "baby-a",
+      "sleep-a",
+      expect.objectContaining({
+        morningClassification: "confirmed_first_nap",
+        morningClassificationVersion: 1,
+      })
+    );
+    view.unmount();
   });
 
   it("records the first guest activity through a production provider before confirmation", async () => {
