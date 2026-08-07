@@ -277,6 +277,33 @@ describe("EditFeedingScreen clock-time editing", () => {
     );
   });
 
+  it("does not synthesize an endpoint when only Start changes on an unfinished breast feed", async () => {
+    mockFeedings = [
+      {
+        ...mockFeedings[0],
+        startedAt: "2026-08-07T11:00:00.000Z",
+        endedAt: undefined,
+        durationSeconds: undefined,
+      },
+    ];
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() => expect(screen.getByText("1h")).toBeTruthy());
+    const editedStart = new Date("2026-08-07T11:15:00.000Z");
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+    );
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, editedStart);
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1].startedAt).toEqual(editedStart);
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("endedAt");
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty(
+      "durationSeconds"
+    );
+  });
+
   it("refreshes the End ceiling and enforces the two-hour cap", async () => {
     const screen = await renderInitialized();
     jest.setSystemTime(new Date("2026-08-07T12:05:00.000Z"));

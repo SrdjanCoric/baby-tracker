@@ -152,7 +152,11 @@ export default function EditFeedingScreen() {
       };
       if (timeChanged) {
         input.startedAt = startTime;
-        if (feeding.type === "breast" && endTime) {
+        if (
+          feeding.type === "breast" &&
+          endTime &&
+          (feeding.endedAt || endChanged)
+        ) {
           input.endedAt = endTime;
           input.durationSeconds = Math.floor(
             (endTime.getTime() - startTime.getTime()) / 1000
