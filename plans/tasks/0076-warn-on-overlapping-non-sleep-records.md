@@ -158,11 +158,18 @@ is blocked, nothing is merged, and statistics are untouched.
   sentence was retained so each standalone activity section states the available choice.
 - **Review:** `reviews/0076-warn-on-overlapping-non-sleep-records-32cfb05.md` is closed. TR-1 through
   TR-8 were fixed and re-proved. TR-9 through TR-11 were skipped as nits outside the requested
-  major/minor remediation scope. No security risk was accepted.
-- **Automated proof (2026-08-07):** `npm run check:code` passed at the recorded canonical tier. ESLint
-  and TypeScript passed; Vitest passed 144 files and 2,629 tests; Jest passed 105 suites and 1,026
-  tests; the CI contract suite passed 65 tests; and the production bundle excluded development
-  onboarding tools. The capped log is
-  `/tmp/agent-workflows/baby-tracker/feature-warn-overlap/canonical.log`.
+  major/minor remediation scope. No review finding classified as a security risk was accepted.
+- **CI security decision:** The user accepted temporary exceptions through 2026-08-21 for
+  `GHSA-w3rx-r6r6-pgpr` and `GHSA-5p2g-fcmc-qvqq`. Metro exposes `image-size` only to
+  repository-controlled build assets, no new images will be added during the exception window, no
+  patched release exists, and npm's available remediation requires a major Expo 57 upgrade. The
+  separately reported `nanoid` advisory was fixed by pinning `nanoid@3.3.17`.
+- **Automated proof (2026-08-07):** After the CI advisory remediation, `npm ci` passed,
+  `npm run audit:dependencies` passed with the two active exceptions, and all nine dependency-policy
+  tests passed. A fresh `npm run check:code` passed at the recorded canonical tier: ESLint and
+  TypeScript passed; Vitest passed 144 files and 2,629 tests; Jest passed 105 suites and 1,026 tests;
+  the CI contract suite passed 65 tests; and the production bundle excluded development onboarding
+  tools. The capped canonical log is
+  `/tmp/agent-workflows/baby-tracker/feature-warn-overlap/canonical-after-deps.log`.
 - **Manual verification:** None required. The task has no `[verify]` item and no device, simulator,
   store-release, or production-deployment acceptance criterion.
