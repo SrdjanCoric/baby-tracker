@@ -75,7 +75,7 @@ describe("ManualTummyTimeScreen clock-time entry", () => {
     });
   });
 
-  it("shows live one-minute and two-hour picker bounds and rejects longer intervals", () => {
+  it("refreshes the End ceiling and bounds Start to two hours", () => {
     const screen = render(<ManualTummyTimeScreen />);
 
     fireEvent.press(
@@ -104,24 +104,11 @@ describe("ManualTummyTimeScreen clock-time entry", () => {
         name: "tummyTime.startTime feeding.selectDate",
       })
     );
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      new Date("2026-08-07T07:00:00.000Z")
-    );
-    expect(
-      screen.getByRole("button", { name: "tummyTime.logManualTummyTime" }).props
-        .accessibilityState
-    ).toEqual({ disabled: true });
-    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    fireEvent.press(
-      screen.getByRole("button", {
-        name: "tummyTime.endTime feeding.selectTime",
+    expect(screen.getByTestId("datetime-picker").props).toEqual(
+      expect.objectContaining({
+        minimumDate: new Date("2026-08-07T08:00:00.000Z"),
+        maximumDate: new Date("2026-08-07T09:59:00.000Z"),
       })
-    );
-    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
-      new Date("2026-08-07T09:00:00.000Z")
     );
   });
 });

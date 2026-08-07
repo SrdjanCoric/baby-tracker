@@ -164,6 +164,7 @@ export default function ManualPumpingScreen() {
   const startBounds = useCallback(() => {
     const boundaryNow = Date.now();
     return {
+      minimumDate: new Date(endTime.getTime() - MAXIMUM_PUMPING_MS),
       maximumDate: new Date(
         Math.min(boundaryNow, endTime.getTime() - MINIMUM_PUMPING_MS)
       ),

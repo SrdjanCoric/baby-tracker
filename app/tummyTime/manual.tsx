@@ -93,6 +93,7 @@ export default function ManualTummyTimeScreen() {
   const startBounds = useCallback(() => {
     const boundaryNow = Date.now();
     return {
+      minimumDate: new Date(endTime.getTime() - MAXIMUM_TUMMY_TIME_MS),
       maximumDate: new Date(
         Math.min(boundaryNow, endTime.getTime() - MINIMUM_TUMMY_TIME_MS)
       ),

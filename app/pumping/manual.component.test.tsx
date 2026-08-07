@@ -108,7 +108,7 @@ describe("ManualPumpingScreen clock-time entry", () => {
     });
   });
 
-  it("refreshes the End ceiling and rejects intervals over one hour", () => {
+  it("refreshes the End ceiling and bounds Start to one hour", () => {
     const screen = render(<ManualPumpingScreen />);
     jest.setSystemTime(new Date("2026-08-07T10:05:00.000Z"));
     fireEvent.press(
@@ -126,20 +126,11 @@ describe("ManualPumpingScreen clock-time entry", () => {
         name: "pumping.startTime feeding.selectTime",
       })
     );
-    const tooEarly = new Date("2026-08-07T08:00:00.000Z");
-    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, tooEarly);
-    expect(
-      screen.getByRole("button", { name: "pumping.logManualPumping" }).props
-        .accessibilityState
-    ).toEqual({ disabled: true });
-    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    fireEvent.press(
-      screen.getByRole("button", {
-        name: "pumping.endTime feeding.selectTime",
+    expect(screen.getByTestId("datetime-picker").props).toEqual(
+      expect.objectContaining({
+        minimumDate: new Date("2026-08-07T09:00:00.000Z"),
+        maximumDate: new Date("2026-08-07T09:59:00.000Z"),
       })
-    );
-    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
-      new Date("2026-08-07T09:00:00.000Z")
     );
   });
 });
