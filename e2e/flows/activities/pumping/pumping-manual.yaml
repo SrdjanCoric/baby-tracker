@@ -15,12 +15,6 @@ tags:
     id: "log-past-pumping-button"
 
 - tapOn:
-    id: "duration-input"
-- inputText: "15"
-- tapOn:
-    id: "dismiss-keyboard"
-
-- tapOn:
     id: "volume-input"
 - inputText: "120"
 - tapOn:
