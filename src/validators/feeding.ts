@@ -194,6 +194,27 @@ export function validateManualBreastfeeding(entry: Partial<FeedingEntry>): Feedi
   };
 }
 
+export function validateManualBreastfeedingTimes(
+  entry: Partial<FeedingEntry>
+): FeedingValidationResult {
+  const durationSeconds =
+    entry.startedAt && entry.endedAt
+      ? Math.floor((entry.endedAt.getTime() - entry.startedAt.getTime()) / 1000)
+      : undefined;
+
+  const result = validateManualBreastfeeding({
+    ...entry,
+    durationSeconds,
+  });
+
+  if (entry.endedAt && validateStartTimeNotInFuture(entry.endedAt) !== null) {
+    result.errors.endedAt = "validation.endTimeNotInFuture";
+    result.isValid = false;
+  }
+
+  return result;
+}
+
 export function validateManualBottleFeeding(entry: Partial<FeedingEntry>): FeedingValidationResult {
   const errors: Record<string, string> = {};
 

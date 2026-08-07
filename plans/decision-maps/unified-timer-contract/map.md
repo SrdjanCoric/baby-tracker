@@ -276,9 +276,10 @@ Forming:
 
 Planned:
 
-- [timer time editing](clusters/timer-time-editing.md) became Tasks 0070 through 0074 on 2026-08-05.
+- [timer time editing](clusters/timer-time-editing.md) became Tasks 0070 through 0073 and 0075 on
+  2026-08-05 (planned as 0070 through 0074; the last was renumbered to 0075 on 2026-08-07).
   The cluster split in two along a seam its own members already drew, and the two halves are
-  independent: Tasks 0070 and 0071 move a running timer's anchor, and Tasks 0072 through 0074 rebuild
+  independent: Tasks 0070 and 0071 move a running timer's anchor, and Tasks 0072, 0073, and 0075 rebuild
   the eight hand-entry screens. Their bound rule sets differ deliberately — the clamp puts overlap out
   of reach for a running timer while saved records warn and allow — so they share no artifact.
   Task 0070 is the database trigger alone, taking migration `060` against a head of `059`, and is
@@ -289,7 +290,7 @@ Planned:
   so the picker never offers a value the database rejects, and on 0069 so the anchor arithmetic changes
   in the shared module once. Task 0072 does sleep and extracts the shared start/end form section that
   no screen has today, carrying the edit-screen overlap check and the morning predicate reading the
-  edited start; Tasks 0073 and 0074 reuse it and can run in parallel, with 0074 covering pumping and
+  edited start; Tasks 0073 and 0075 reuse it and can run in parallel, with 0075 covering pumping and
   tummy time together by the owner's decision. All three carry the edit-screen proof items
   [showing a record whose stored length disagrees with its interval](decisions/resolved/018-disagreeing-length-display.md)
   left to this cluster, and all three depend on Task 0068 for the invariant that makes the derived

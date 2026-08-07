@@ -226,6 +226,7 @@
     "logPastFeedingDesc": "Enregistrer un repas antérieur",
     "manualEntry": "Saisie manuelle",
     "startTime": "Heure de début",
+    "endTime": "Heure de fin",
     "selectDate": "Sélectionner la date",
     "selectTime": "Sélectionner l'heure",
     "durationMinutes": "Durée (minutes)",

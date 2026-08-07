@@ -13,6 +13,7 @@ import {
   validateStartTimeNotInFuture,
   validateManualFeedingDuration,
   validateManualBreastfeeding,
+  validateManualBreastfeedingTimes,
   validateManualBottleFeeding,
   validateFoodType,
   validateSolidAmount,
@@ -379,6 +380,42 @@ describe("validateManualBreastfeeding", () => {
     });
     expect(result.isValid).toBe(false);
     expect(result.errors.side).toBe("validation.sideRequiredBreast");
+  });
+});
+
+describe("validateManualBreastfeedingTimes", () => {
+  const startedAt = new Date(Date.now() - 3 * 60 * 60 * 1000);
+
+  it.each([
+    [60, true, undefined],
+    [7200, true, undefined],
+    [59, false, "validation.durationMinimum1m"],
+    [7201, false, "validation.durationTooLong2h"],
+  ] as const)(
+    "validates a %i-second interval against the existing duration thresholds",
+    (durationSeconds, isValid, durationError) => {
+      const result = validateManualBreastfeedingTimes({
+        type: "breast",
+        side: "left",
+        startedAt,
+        endedAt: new Date(startedAt.getTime() + durationSeconds * 1000),
+      });
+
+      expect(result.isValid).toBe(isValid);
+      expect(result.errors.durationSeconds).toBe(durationError);
+    }
+  );
+
+  it("rejects an end time in the future", () => {
+    const result = validateManualBreastfeedingTimes({
+      type: "breast",
+      side: "left",
+      startedAt,
+      endedAt: new Date(Date.now() + 60 * 60 * 1000),
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors.endedAt).toBe("validation.endTimeNotInFuture");
   });
 });
 

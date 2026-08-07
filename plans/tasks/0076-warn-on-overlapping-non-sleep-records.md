@@ -1,7 +1,7 @@
-# Task 0075: Warn on an overlapping feeding, pumping session, or tummy time
+# Task 0076: Warn on an overlapping feeding, pumping session, or tummy time
 
 **Branch**: `feature/warn-on-overlapping-non-sleep-records`
-**Depends on**: 0073, 0074
+**Depends on**: 0073, 0075
 **Source**: `plans/decision-maps/unified-timer-contract/decisions/resolved/019-interval-overlap-non-sleep.md`
 (resolved), which depends on `decisions/resolved/009-clock-time-log-editing.md` · **User stories**: As a
 caregiver, I want the app to tell me when a feeding, pumping session, or tummy time I am logging
@@ -15,7 +15,7 @@ Six screens gain a duplicate check they have never run — `app/feeding/manual.t
 — and the three checkers behind them learn to compare intervals the way `checkSleepDuplicate` already
 does.
 
-The three types are one task because, once Tasks 0073 and 0074 have given all six screens their final
+The three types are one task because, once Tasks 0073 and 0075 have given all six screens their final
 clock-time shape, wiring them is a single mechanical application of one rule set, and the checkers,
 the hook, the dialog, and their tests already exist as dead code.
 

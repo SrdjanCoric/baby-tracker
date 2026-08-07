@@ -44,7 +44,7 @@ with an iOS combined-datetime branch and an Android separate-date-then-time bran
 - Sleep type chips, notes, and the Cancel/Save navigation bar are unchanged.
 
 Extract the inline date/time pill into a shared form section carrying both pickers and the derived
-readout, handling the iOS and Android picker strategies once. Tasks 0073 and 0074 reuse it.
+readout, handling the iOS and Android picker strategies once. Tasks 0073 and 0075 reuse it.
 
 ### Bounds
 
@@ -105,7 +105,7 @@ match itself. `checkSleepDuplicate` already compares intervals and reports `over
 
 Feeding, pumping, and tummy time are wired by a separate decision,
 `decisions/resolved/019-interval-overlap-non-sleep.md`, and are out of scope here and in Tasks 0073 and
-0074.
+0075.
 
 ### Sleep type and morning classification
 
@@ -224,12 +224,12 @@ recomputation named above.
       edit.
 - [x] After a time-editing save on a paused sleep, the Day view block, Timeline daily summary, Timeline
       row label, CSV export, and PDF report report the same number, with no consumer repointed.
-- [x] The shared start/end form section is reusable by Tasks 0073 and 0074.
+- [x] The shared start/end form section is reusable by Tasks 0073 and 0075.
 - [x] The `[verify]` checkpoint confirmed by the owner.
 
 ## Non-goals
 
-- Feeding, pumping, and tummy time, which are Tasks 0073 and 0074.
+- Feeding, pumping, and tummy time, which are Tasks 0073 and 0075.
 - Wiring the duplicate check for any type other than sleep, which is
   `decisions/resolved/019-interval-overlap-non-sleep.md`.
 - Any change to pause accounting, settled by Task 0068.

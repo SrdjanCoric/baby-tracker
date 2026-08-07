@@ -1,7 +1,7 @@
-# Task 0074: Log and edit pumping and tummy time by clock time
+# Task 0075: Log and edit pumping and tummy time by clock time
 
 **Branch**: `feature/log-and-edit-pumping-and-tummy-time-by-clock-time`
-**Depends on**: 0072
+**Depends on**: 0072, 0074
 **Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
 `decisions/resolved/009-clock-time-log-editing.md` (resolved), with the edit-screen proof items from
 `decisions/resolved/018-disagreeing-length-display.md` · **User stories**: As a caregiver, I want to
@@ -109,6 +109,19 @@ Task 0068 and is already accepted there.
 
 Nothing here reaches the widget, the Watch, or the Live Activity: every surface is a saved record in
 the app.
+
+### Why this task waits on Task 0074
+
+Task 0074 opens running-timer start editing to a caregiver with no account, and it edits
+`src/contexts/pumping-context.tsx` and `src/contexts/tummyTime-context.tsx` — the same two contexts this
+task adds a manual-entry entry point to. That shared artifact is the reason for the dependency, not any
+overlap in screens: 0074 changes the running-timer views `app/pumping/index.tsx` and
+`app/tummyTime/index.tsx`, while this task changes only `manual.tsx` and the `app/edit/` screens.
+
+Two consequences to expect on a tree that already has 0074. `TimerLockReconciliationState` carries a
+distinct account-less value alongside `"offline"`, so any lock-state handling touched here must keep
+those two apart. And the running-timer start-edit label no longer renders a caregiver name — if a
+pumping or tummy-time test in this task asserts on that label, assert the field name and time only.
 
 ## Implementation work
 

@@ -234,6 +234,7 @@
     "logPastFeedingDesc": "Zabeležite hranjenje odranije",
     "manualEntry": "Ručni unos",
     "startTime": "Vreme početka",
+    "endTime": "Vreme završetka",
     "selectDate": "Izaberite datum",
     "selectTime": "Izaberite vreme",
     "durationMinutes": "Trajanje (minuti)",

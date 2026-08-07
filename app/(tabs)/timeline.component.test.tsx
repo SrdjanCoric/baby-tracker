@@ -395,6 +395,31 @@ describe("Timeline daily summary wiring", () => {
     expect(screen.getByTestId("timeline-item-subtitle").props.children).toBe("10m");
   });
 
+  it("keeps a legacy feeding row on its stored duration instead of its longer interval", () => {
+    mockFeedings = [
+      {
+        id: "legacy-paused-feeding",
+        babyId: "baby-1",
+        type: "breast",
+        side: "left",
+        startedAt: new Date(2026, 0, 20, 8, 0, 0).toISOString(),
+        endedAt: new Date(2026, 0, 20, 10, 0, 0).toISOString(),
+        durationSeconds: 1800,
+        createdAt: new Date(2026, 0, 20, 8, 0, 0).toISOString(),
+        updatedAt: new Date(2026, 0, 20, 10, 0, 0).toISOString(),
+      },
+    ];
+
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).toContain(
+      "30m"
+    );
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).not.toContain(
+      "2h"
+    );
+  });
+
   it("adds a running sleep to the completed sleeps already logged that day", async () => {
     mockSleepState.sleeps = [
       {
