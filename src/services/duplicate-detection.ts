@@ -75,7 +75,7 @@ export function checkFeedingDuplicate(
     if (existing.type !== newEntry.type) continue;
 
     const existingTimestamp = getTimestamp(existing);
-    if (newEntry.type === 'breast' && hasRealInterval(newEntry) && hasRealInterval(existing)) {
+    if (hasRealInterval(newEntry) && hasRealInterval(existing)) {
       if (
         newTimestamp < new Date(existing.endedAt).getTime() &&
         existingTimestamp < new Date(newEntry.endedAt).getTime()

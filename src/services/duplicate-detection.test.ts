@@ -169,21 +169,22 @@ describe('checkFeedingDuplicate', () => {
   });
 
   describe('bottle feeding', () => {
-    it('always uses proximity even when bottle records carry interval-shaped data', () => {
+    it('reports overlapping bottle intervals outside the proximity threshold', () => {
       const existing = createFeedingEntry({
         type: 'bottle',
         amountMl: 100,
-        startedAt: '2024-06-15T09:50:00.000Z',
-        endedAt: '2024-06-15T10:10:00.000Z',
+        startedAt: '2024-06-15T09:00:00.000Z',
+        endedAt: '2024-06-15T10:00:00.000Z',
       });
       const newEntry = createFeedingEntry({
         type: 'bottle',
         amountMl: 110,
-        endedAt: '2024-06-15T10:30:00.000Z',
+        startedAt: '2024-06-15T09:40:00.000Z',
+        endedAt: '2024-06-15T10:40:00.000Z',
       });
 
       expect(checkFeedingDuplicate(newEntry, [existing]).candidates[0]).toEqual(
-        expect.objectContaining({ matchReason: 'time_proximity', confidence: 'high' })
+        expect.objectContaining({ matchReason: 'overlapping_session', confidence: 'high' })
       );
     });
 
