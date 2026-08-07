@@ -329,6 +329,7 @@ describe("ManualFeedingScreen clock-time entry", () => {
     fireEvent.press(screen.getByRole("button", { name: "feeding.logManualBottleFeeding" }));
 
     await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    expect(alertSpy.mock.calls[0][0]).toBe("duplicateDetection.title");
     await act(async () => alertSpy.mock.calls[0][2]?.[0]?.onPress?.());
     expect(mockAddFeeding).not.toHaveBeenCalled();
   });

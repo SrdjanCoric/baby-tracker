@@ -32,4 +32,27 @@ describe("DuplicateConfirmationDialog overlap copy", () => {
     );
     }
   );
+
+  it("keeps generic copy for a feeding proximity match", () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const t = jest.fn((key: string) => key) as unknown as TFunction;
+
+    showDuplicateConfirmation({
+      activityType: "feeding",
+      existingEntryTime: "2026-08-07T09:55:00.000Z",
+      matchReason: "time_proximity",
+      onConfirm: jest.fn(),
+      onCancel: jest.fn(),
+      t,
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "duplicateDetection.title",
+      "duplicateDetection.message",
+      expect.arrayContaining([
+        expect.objectContaining({ text: "duplicateDetection.logAnyway" }),
+      ]),
+      { cancelable: false }
+    );
+  });
 });
