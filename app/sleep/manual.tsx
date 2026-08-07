@@ -43,8 +43,10 @@ export default function ManualSleepScreen() {
     textOnMuted: isDark ? ACTIVITY.sleep.textAccentDark : ACTIVITY.sleep.textAccent,
   };
 
-  const [startTime, setStartTime] = useState(() => new Date());
-  const [endTime, setEndTime] = useState(() => new Date(startTime));
+  const [startTime, setStartTime] = useState(
+    () => new Date(Date.now() - MINIMUM_SLEEP_MS)
+  );
+  const [endTime, setEndTime] = useState(() => new Date());
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const isSavingRef = useRef(false);

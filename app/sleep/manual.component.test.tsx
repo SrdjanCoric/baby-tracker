@@ -65,6 +65,21 @@ describe("ManualSleepScreen clock-time entry", () => {
     fireEvent(screen.getByTestId("datetime-picker"), "change", {}, value);
   }
 
+  it("opens both End Time pickers on a fresh form", () => {
+    const screen = render(<ManualSleepScreen />);
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "sleep.endTime feeding.selectDate" })
+    );
+    expect(screen.getByTestId("datetime-picker").props.mode).toBe("datetime");
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "sleep.endTime feeding.selectTime" })
+    );
+    expect(screen.getByTestId("datetime-picker").props.mode).toBe("datetime");
+  });
+
   it("derives a read-only duration from bounded start and end times", () => {
     const screen = render(<ManualSleepScreen />);
     const save = screen.getByRole("button", { name: "sleep.logManualSleep" });
