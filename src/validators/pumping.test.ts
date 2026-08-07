@@ -5,6 +5,7 @@ import {
   validatePumpingDuration,
   validatePumping,
   validateManualPumping,
+  validateManualPumpingTimes,
   validateStartTimeNotInFuture,
 } from "./pumping";
 
@@ -274,5 +275,53 @@ describe("validateManualPumping", () => {
     });
     expect(result.isValid).toBe(false);
     expect(Object.keys(result.errors).length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("validateManualPumpingTimes", () => {
+  const baseEntry = {
+    babyId: "baby-1",
+    side: "left" as const,
+    volumeMl: 120,
+    startedAt: new Date("2026-08-05T10:00:00.000Z"),
+  };
+
+  it("validates the duration derived from the entered start and end times", () => {
+    expect(
+      validateManualPumpingTimes({
+        ...baseEntry,
+        endedAt: new Date("2026-08-05T10:00:59.000Z"),
+      })
+    ).toEqual({
+      isValid: false,
+      errors: { durationSeconds: "validation.durationMinimum1m" },
+    });
+    expect(
+      validateManualPumpingTimes({
+        ...baseEntry,
+        endedAt: new Date("2026-08-05T11:00:01.000Z"),
+      })
+    ).toEqual({
+      isValid: false,
+      errors: { durationSeconds: "validation.durationTooLong1h" },
+    });
+    expect(
+      validateManualPumpingTimes({
+        ...baseEntry,
+        endedAt: new Date("2026-08-05T11:00:00.000Z"),
+      })
+    ).toEqual({ isValid: true, errors: {} });
+  });
+
+  it("rejects a future end time", () => {
+    const result = validateManualPumpingTimes({
+      ...baseEntry,
+      startedAt: new Date(Date.now() - 30_000),
+      endedAt: new Date(Date.now() + 30_000),
+    });
+    expect(result).toEqual({
+      isValid: false,
+      errors: { endedAt: "validation.endTimeNotInFuture" },
+    });
   });
 });

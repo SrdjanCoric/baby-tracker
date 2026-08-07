@@ -151,3 +151,27 @@ export function validateManualTummyTime(
     errors,
   };
 }
+
+export function validateManualTummyTimeTimes(
+  entry: Partial<TummyTimeEntry>
+): TummyTimeValidationResult {
+  const durationSeconds =
+    entry.startedAt && entry.endedAt
+      ? calculateTummyTimeDuration(entry.startedAt, entry.endedAt)
+      : undefined;
+
+  const result = validateManualTummyTime({
+    ...entry,
+    durationSeconds,
+  });
+
+  if (
+    entry.endedAt &&
+    validateTummyTimeStartTimeNotInFuture(entry.endedAt) !== null
+  ) {
+    result.errors.endedAt = "validation.endTimeNotInFuture";
+    result.isValid = false;
+  }
+
+  return result;
+}

@@ -6,11 +6,16 @@ import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTummyTime } from "@/contexts/tummyTime-context";
 import { useBaby, useTimeFormat } from "@/contexts";
-import { formatDate, formatTime } from "@/utils/time";
 import { exitModal } from "@/navigation";
+import { StartEndTimeSection } from "@/components/StartEndTimeSection";
+import { validateManualTummyTimeTimes } from "@/validators/tummyTime";
+import { te } from "@/utils/translate-errors";
+import type { UpdateTummyTimeInput } from "@/services/tummyTime-storage";
 
 const TUMMY_TIME_ORANGE = "#E67E22";
 const TUMMY_TIME_ORANGE_MUTED = "#FEF3E2";
+const MINIMUM_TUMMY_TIME_MS = 60_000;
+const MAXIMUM_TUMMY_TIME_MS = 2 * 60 * 60 * 1000;
 
 export default function EditTummyTimeScreen() {
   const { t } = useTranslation();
@@ -25,30 +30,42 @@ export default function EditTummyTimeScreen() {
     return tummyTimes.find((tt) => tt.id === id) ?? null;
   }, [tummyTimes, id]);
 
-  const [durationMinutes, setDurationMinutes] = useState("");
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState<Date | null>(null);
+  const [initialEndTime, setInitialEndTime] = useState<Date | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (tummyTime && !isInitialized) {
-      setDurationMinutes(tummyTime.durationSeconds ? String(Math.round(tummyTime.durationSeconds / 60)) : "");
+      const displayedEnd = tummyTime.endedAt ? new Date(tummyTime.endedAt) : new Date();
+      setStartTime(new Date(tummyTime.startedAt));
+      setEndTime(displayedEnd);
+      setInitialEndTime(displayedEnd);
       setNotes(tummyTime.notes ?? "");
       setIsInitialized(true);
     }
   }, [tummyTime, isInitialized]);
 
+  const startChanged = Boolean(
+    tummyTime && startTime &&
+      startTime.getTime() !== new Date(tummyTime.startedAt).getTime()
+  );
+  const endChanged = Boolean(
+    tummyTime && endTime && initialEndTime &&
+      endTime.getTime() !== initialEndTime.getTime()
+  );
+  const timeChanged = startChanged || endChanged;
+
   const hasChanges = useMemo(() => {
     if (!tummyTime || !isInitialized) return false;
 
-    const originalDuration = tummyTime.durationSeconds ? String(Math.round(tummyTime.durationSeconds / 60)) : "";
     const originalNotes = tummyTime.notes ?? "";
 
-    return (
-      durationMinutes !== originalDuration ||
-      notes !== originalNotes
-    );
-  }, [tummyTime, isInitialized, durationMinutes, notes]);
+    return timeChanged || notes !== originalNotes;
+  }, [tummyTime, isInitialized, timeChanged, notes]);
 
   usePreventRemove(hasChanges, ({ data }) => {
     Alert.alert(
@@ -66,26 +83,40 @@ export default function EditTummyTimeScreen() {
   });
 
   const handleSave = useCallback(async () => {
-    if (!selectedBaby || !tummyTime) return;
+    if (!selectedBaby || !tummyTime || !startTime || !endTime) return;
+
+    setErrors({});
+    if (timeChanged) {
+      const validation = validateManualTummyTimeTimes({
+        babyId: tummyTime.babyId,
+        startedAt: startTime,
+        endedAt: endTime,
+      });
+      if (!validation.isValid) {
+        setErrors(validation.errors);
+        return;
+      }
+    }
 
     setIsSaving(true);
     try {
-      const durationSeconds = durationMinutes ? parseInt(durationMinutes, 10) * 60 : undefined;
-      const endedAt = durationSeconds
-        ? new Date(new Date(tummyTime.startedAt).getTime() + durationSeconds * 1000)
-        : undefined;
-
-      await updateTummyTime(tummyTime.id, {
-        durationSeconds,
-        endedAt,
+      const input: UpdateTummyTimeInput = {
         notes: notes || undefined,
-      });
+      };
+      if (timeChanged) {
+        input.startedAt = startTime;
+        if (tummyTime.endedAt || endChanged) {
+          input.endedAt = endTime;
+          input.durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+        }
+      }
+      await updateTummyTime(tummyTime.id, input);
       setIsInitialized(false);
       exitModal(router);
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, tummyTime, durationMinutes, notes, updateTummyTime, router]);
+  }, [selectedBaby, tummyTime, startTime, endTime, endChanged, timeChanged, notes, updateTummyTime, router]);
 
   const handleDelete = useCallback(() => {
     if (!tummyTime) return;
@@ -107,7 +138,26 @@ export default function EditTummyTimeScreen() {
     );
   }, [tummyTime, deleteTummyTime, router, t]);
 
-  if (!selectedBaby || !tummyTime) {
+  const startBounds = useCallback(() => {
+    const boundaryNow = Date.now();
+    return {
+      maximumDate: new Date(Math.min(
+        boundaryNow,
+        (endTime?.getTime() ?? boundaryNow + MINIMUM_TUMMY_TIME_MS) - MINIMUM_TUMMY_TIME_MS
+      )),
+    };
+  }, [endTime]);
+  const endBounds = useCallback(() => {
+    const boundaryNow = Date.now();
+    const startTimestamp = startTime?.getTime() ?? boundaryNow;
+    const maximumTimestamp = Math.min(boundaryNow, startTimestamp + MAXIMUM_TUMMY_TIME_MS);
+    return {
+      minimumDate: new Date(Math.min(startTimestamp + MINIMUM_TUMMY_TIME_MS, maximumTimestamp)),
+      maximumDate: new Date(maximumTimestamp),
+    };
+  }, [startTime]);
+
+  if (!selectedBaby || !tummyTime || !startTime || !endTime) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
         <Text className="text-content-secondary dark:text-content-dark-secondary">
@@ -116,6 +166,13 @@ export default function EditTummyTimeScreen() {
       </SafeAreaView>
     );
   }
+
+  const now = new Date();
+  const durationMs = endTime.getTime() - startTime.getTime();
+  const canSave = !timeChanged || (
+    durationMs >= MINIMUM_TUMMY_TIME_MS && durationMs <= MAXIMUM_TUMMY_TIME_MS &&
+    startTime <= now && endTime <= now
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="edit-activity-screen">
@@ -167,30 +224,27 @@ export default function EditTummyTimeScreen() {
           </View>
         </View>
 
-        {/* Date/Time display */}
-        <View className="items-center mb-6">
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-            {formatDate(new Date(tummyTime.startedAt))}
-          </Text>
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatTime(new Date(tummyTime.startedAt), timeFormat)}
-          </Text>
-        </View>
-
-        {/* Duration */}
-        <View className="mb-4">
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("tummyTime.durationMinutes")}
-          </Text>
-          <TextInput
-            value={durationMinutes}
-            onChangeText={setDurationMinutes}
-            placeholder="0"
-            keyboardType="number-pad"
-            className="h-14 px-4 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-lg text-content-primary dark:text-content-dark-primary"
-            placeholderTextColor="#999"
-          />
-        </View>
+        <StartEndTimeSection
+          startTime={startTime}
+          endTime={endTime}
+          onStartTimeChange={setStartTime}
+          onEndTimeChange={setEndTime}
+          startBounds={startBounds}
+          endBounds={endBounds}
+          timeFormat={timeFormat}
+          startLabel={t("tummyTime.startTime")}
+          endLabel={t("tummyTime.endTime")}
+          durationLabel={t("tummyTime.duration")}
+          doneLabel={t("common.done")}
+          selectDateLabel={t("feeding.selectDate")}
+          selectTimeLabel={t("feeding.selectTime")}
+          accentColor={TUMMY_TIME_ORANGE}
+          mutedBackgroundColor={TUMMY_TIME_ORANGE_MUTED}
+          textColor="#2D2A26"
+          startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
+          endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
+          durationError={errors.durationSeconds ? te(t, errors.durationSeconds) : undefined}
+        />
 
         {/* Notes */}
         <View>
@@ -215,13 +269,14 @@ export default function EditTummyTimeScreen() {
       <View className="px-6 pb-6">
         <Pressable
           onPress={handleSave}
-          disabled={isSaving}
+          disabled={!canSave || isSaving}
           className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
-            isSaving ? "opacity-50" : ""
+            !canSave || isSaving ? "opacity-50" : ""
           }`}
           style={{ backgroundColor: TUMMY_TIME_ORANGE }}
           accessibilityRole="button"
           accessibilityLabel={t("common.save")}
+          accessibilityState={{ disabled: !canSave || isSaving }}
           testID="save-button"
         >
           <Text className="text-white text-lg font-semibold">

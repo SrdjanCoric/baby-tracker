@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import TimelineScreen from "./timeline";
 
 let mockFeedings: Array<Record<string, unknown>> = [];
+let mockPumpings: Array<Record<string, unknown>> = [];
+let mockTummyTimes: Array<Record<string, unknown>> = [];
 const mockRouterPush = jest.fn();
 const mockRangeLoaders = {
   feeding: jest.fn(async () => {}),
@@ -140,7 +142,7 @@ jest.mock("@/contexts", () => ({
     getDiaperRangeStatus: mockGetRangeStatus,
   }),
   usePumping: () => ({
-    pumpings: [],
+    pumpings: mockPumpings,
     isLoading: false,
     refreshPumpings: jest.fn(async () => {}),
     loadPumpingRange: mockRangeLoaders.pumping,
@@ -154,7 +156,7 @@ jest.mock("@/contexts", () => ({
     getGrowthRangeStatus: mockGetRangeStatus,
   }),
   useTummyTime: () => ({
-    tummyTimes: [],
+    tummyTimes: mockTummyTimes,
     isLoading: false,
     refreshTummyTimes: jest.fn(async () => {}),
     loadTummyTimeRange: mockRangeLoaders.tummyTime,
@@ -185,6 +187,8 @@ describe("Timeline historical ranges", () => {
     jest.clearAllMocks();
     mockRangeStatus = "unverified";
     mockFeedings = [];
+    mockPumpings = [];
+    mockTummyTimes = [];
     mockSleepState = emptySleepState();
     mockSummaryCardProps.length = 0;
     jest.useFakeTimers();
@@ -305,6 +309,8 @@ describe("Timeline daily summary wiring", () => {
     jest.clearAllMocks();
     mockRangeStatus = "loaded";
     mockFeedings = [];
+    mockPumpings = [];
+    mockTummyTimes = [];
     mockSleepState = emptySleepState();
     mockSummaryCardProps.length = 0;
     jest.useFakeTimers();
@@ -418,6 +424,37 @@ describe("Timeline daily summary wiring", () => {
     expect(screen.getByTestId("timeline-item-subtitle").props.children).not.toContain(
       "2h"
     );
+  });
+
+  it("keeps a legacy pumping row on its stored duration instead of its longer interval", () => {
+    mockPumpings = [{
+      id: "legacy-paused-pumping",
+      babyId: "baby-1",
+      side: "left",
+      startedAt: new Date(2026, 0, 20, 8, 0, 0).toISOString(),
+      endedAt: new Date(2026, 0, 20, 9, 0, 0).toISOString(),
+      durationSeconds: 600,
+      createdAt: new Date(2026, 0, 20, 8, 0, 0).toISOString(),
+      updatedAt: new Date(2026, 0, 20, 9, 0, 0).toISOString(),
+    }];
+    render(<TimelineScreen />);
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).toContain("10m");
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).not.toContain("1h");
+  });
+
+  it("keeps a legacy tummy-time row on its stored duration instead of its longer interval", () => {
+    mockTummyTimes = [{
+      id: "legacy-paused-tummy-time",
+      babyId: "baby-1",
+      startedAt: new Date(2026, 0, 20, 8, 0, 0).toISOString(),
+      endedAt: new Date(2026, 0, 20, 9, 0, 0).toISOString(),
+      durationSeconds: 600,
+      createdAt: new Date(2026, 0, 20, 8, 0, 0).toISOString(),
+      updatedAt: new Date(2026, 0, 20, 9, 0, 0).toISOString(),
+    }];
+    render(<TimelineScreen />);
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).toBe("10m");
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).not.toBe("1h");
   });
 
   it("adds a running sleep to the completed sleeps already logged that day", async () => {

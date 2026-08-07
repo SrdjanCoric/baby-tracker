@@ -36,6 +36,7 @@ export interface CreatePumpingInput {
 }
 
 export interface UpdatePumpingInput {
+  startedAt?: Date;
   endedAt?: Date;
   durationSeconds?: number;
   volumeMl?: number;
@@ -123,6 +124,7 @@ export const PumpingStorageService = {
 
     const updatedPumping: StoredPumpingEntry = {
       ...pumpings[index],
+      ...(input.startedAt !== undefined && { startedAt: input.startedAt.toISOString() }),
       ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
       ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
       ...(input.volumeMl !== undefined && { volumeMl: input.volumeMl }),
