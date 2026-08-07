@@ -82,6 +82,14 @@ paused ends the saved record at the pause moment, including stops delivered by t
 
 Household-wide timer locks via Supabase RPC (`acquire_timer_lock`) prevent simultaneous timers per baby and activity type across all devices. Server controls verify the authenticated caregiver and baby household; only the caregiver who started a timer can pause, resume, or release it. If the lock service is unavailable, feeding, sleep, pumping, and tummy-time timers continue locally and keep their reconciliation state through restart. Reconnect attempts to acquire the missing lock. When two offline timers compete, the first successful lock acquisition wins. The other timer is saved to the timeline, and its caregiver sees what happened. Unregistered solo users keep timers on their device and do not use server locks. Timer starts reserve a stable completion ID, so repeated Stop actions return the first saved activity instead of creating another one. External Stop requests from widgets and Apple Watch stay in a versioned queue until matching timer completions are durable, even if several arrive while the app is closed. While a timer is being saved, the dashboard replaces its Stop and pause controls with a disabled "Stopping..." state. If the save fails, the controls return and the app shows an error. Failed lock cleanup retries against the original timer instance and cannot release a newer timer. Stale locks auto-expire after 12 hours.
 
+### Feeding
+
+Manual breastfeeding entry and completed-feed editing use start and end clock times, with duration
+calculated from the interval. A saved breastfeeding interval must span from one minute through two
+hours, and neither time can be in the future. Saving a time change replaces the stored duration with
+the new interval, while changing only the notes or side preserves the stored timestamps and duration.
+Bottle feeds and solid-food entries remain timestamped moments, and bottle volume stays editable.
+
 ### Sleep Predictions
 
 Manual sleep entry and completed-sleep editing use start and end clock times, with duration calculated

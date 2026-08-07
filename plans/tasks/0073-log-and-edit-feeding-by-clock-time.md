@@ -222,3 +222,35 @@ always-true branch.
 - skipped (minor): TR-16 — Reversed manual times surface the minimum-duration error instead of end-before-start — User requested remediation focus on TR-1 through TR-10.
 - fixed after follow-up: TR-17 — Android single-time merge preserves stale seconds and milliseconds — User later authorized the root fix in the restored manual picker.
 - skipped (minor): TR-18 — Disabled-button press assertion does not exercise save-path rejection — User requested remediation focus on TR-1 through TR-10.
+
+## Completion record
+
+Completed on 2026-08-07.
+
+- **Built:** Manual breastfeeding entry and completed-feed editing now use start and end clock times
+  with a derived duration, live picker bounds, conditional legacy-record convergence, and nine-locale
+  coverage. Bottle feeds and solids remain moment records. The reviewed follow-up also preserves
+  out-of-range legacy feeding and sleep intervals on non-time edits and normalizes Android moment
+  selections to the displayed minute.
+- **Decisions:** A fresh breast form starts with a valid one-minute interval. Breast time edits derive
+  and save duration from the edited interval; note-only and side-only edits preserve stored time
+  fields. Bottle and solids editing remains read-only for time, and manual bottle or solids date/time
+  merges clamp to live `now`. No overlap check, schema change, or running-timer adapter change was
+  added.
+- **Relevant files:** `app/feeding/manual.tsx`, `app/edit/feeding.tsx`, `app/edit/sleep.tsx`,
+  `src/components/StartEndTimeSection.tsx`, `src/validators/feeding.ts`, locale files under
+  `src/i18n/locales/`, feeding storage and sync services, and their component, validation,
+  localization, storage, sync, and timeline tests.
+- **README:** Added the Feeding section describing breast start/end clock-time entry, the one-minute
+  through two-hour saved range, future-time rejection, conditional duration rewriting, and unchanged
+  bottle and solids moment behavior. The affected prose passed two `write-well` audit passes; pass 1
+  corrected the section hierarchy and pass 2 found no new issues.
+- **Review:** The independent standards, spec, bug, and security review reported no security finding.
+  TR-1 through TR-10 and TR-17 were fixed and verified. TR-11 through TR-16 and TR-18 were skipped as
+  minor or nit findings after the user limited remediation; their individual reasons remain recorded
+  above. No security risk was accepted.
+- **Automated proof:** `npm run check:code` passed on 2026-08-07 with exit 0 using output-only log
+  capping. It included lint, strict type checking, 143 Vitest files with 2,593 tests, 100 Jest suites
+  with 972 tests, 65 CI-contract tests, and the production-bundle gate.
+- **Manual proof:** No device, simulator, deployment, or other manual `[verify]` checkpoint is recorded
+  for this task. The final behavior is covered by the canonical automated proof above.
