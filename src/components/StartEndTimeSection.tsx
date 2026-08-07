@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { formatDate, formatDuration, formatTime } from "@/utils/time";
 import type { TimeFormat } from "@/contexts/time-format-context";
 
@@ -98,10 +100,10 @@ export function StartEndTimeSection({
   );
 
   const handleAndroidChange = useCallback(
-    (_event: unknown, selected?: Date) => {
+    (event: DateTimePickerEvent, selected?: Date) => {
       if (!androidPicker) return;
       setAndroidPicker(null);
-      if (!selected) return;
+      if (event.type === "dismissed" || !selected) return;
 
       const current = valueFor(androidPicker.target);
       const next = new Date(current);
