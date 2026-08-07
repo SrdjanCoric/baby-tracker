@@ -109,8 +109,18 @@ export default function EditFeedingScreen() {
   const handleSave = useCallback(async () => {
     if (!selectedBaby || !feeding || !startTime) return;
 
+    const startChanged =
+      startTime.getTime() !== new Date(feeding.startedAt).getTime();
+    const endChanged = Boolean(
+      feeding.type === "breast" &&
+        endTime &&
+        initialEndTime &&
+        endTime.getTime() !== initialEndTime.getTime()
+    );
+    const timeChanged = startChanged || endChanged;
+
     setErrors({});
-    if (feeding.type === "breast") {
+    if (feeding.type === "breast" && timeChanged) {
       if (!endTime) return;
       const validation = validateManualBreastfeedingTimes({
         type: "breast",
@@ -127,13 +137,6 @@ export default function EditFeedingScreen() {
     setIsSaving(true);
     try {
       const parsedAmount = amountMl ? parseInt(amountMl, 10) : undefined;
-      const startChanged = startTime.getTime() !== new Date(feeding.startedAt).getTime();
-      const endChanged = Boolean(
-        feeding.type === "breast" &&
-          endTime &&
-          initialEndTime &&
-          endTime.getTime() !== initialEndTime.getTime()
-      );
       const input: UpdateFeedingInput = {
         side,
         ...(feeding.type === "breast" && { leftDurationSeconds: 0, rightDurationSeconds: 0 }),
@@ -144,7 +147,7 @@ export default function EditFeedingScreen() {
         reaction,
         notes: notes || undefined,
       };
-      if (startChanged || endChanged) {
+      if (timeChanged) {
         input.startedAt = startTime;
         if (feeding.type === "breast" && endTime) {
           input.endedAt = endTime;
@@ -423,12 +426,22 @@ export default function EditFeedingScreen() {
   const durationMs = endTime
     ? endTime.getTime() - startTime.getTime()
     : 0;
+  const startChanged =
+    startTime.getTime() !== new Date(feeding.startedAt).getTime();
+  const endChanged = Boolean(
+    feeding.type === "breast" &&
+      endTime &&
+      initialEndTime &&
+      endTime.getTime() !== initialEndTime.getTime()
+  );
+  const timeChanged = startChanged || endChanged;
   const canSave =
     feeding.type === "breast"
-      ? durationMs >= MINIMUM_BREASTFEEDING_MS &&
-        durationMs <= MAXIMUM_BREASTFEEDING_MS &&
-        startTime <= now &&
-        Boolean(endTime && endTime <= now)
+      ? !timeChanged ||
+        (durationMs >= MINIMUM_BREASTFEEDING_MS &&
+          durationMs <= MAXIMUM_BREASTFEEDING_MS &&
+          startTime <= now &&
+          Boolean(endTime && endTime <= now))
       : startTime <= now;
 
   return (

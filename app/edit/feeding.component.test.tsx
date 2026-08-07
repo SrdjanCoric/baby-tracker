@@ -190,6 +190,54 @@ describe("EditFeedingScreen clock-time editing", () => {
     expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("durationSeconds");
   });
 
+  it.each([
+    [
+      "shorter than one minute",
+      "2026-08-07T11:59:20.000Z",
+      "2026-08-07T12:00:00.000Z",
+      40,
+    ],
+    [
+      "longer than two hours",
+      "2026-08-07T08:50:00.000Z",
+      "2026-08-07T12:00:00.000Z",
+      11_400,
+    ],
+  ])(
+    "allows a note-only save when the stored breast interval is %s",
+    async (_description, startedAt, endedAt, durationSeconds) => {
+      mockFeedings = [
+        {
+          ...mockFeedings[0],
+          startedAt,
+          endedAt,
+          durationSeconds,
+        },
+      ];
+      const screen = render(<EditFeedingScreen />);
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "common.save" })).toBeTruthy()
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText("feeding.notesPlaceholder"),
+        "updated note"
+      );
+      const save = screen.getByRole("button", { name: "common.save" });
+      expect(save.props.accessibilityState).toEqual(
+        expect.objectContaining({ disabled: false })
+      );
+      fireEvent.press(save);
+
+      await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+      expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("startedAt");
+      expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("endedAt");
+      expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty(
+        "durationSeconds"
+      );
+    }
+  );
+
   it("writes both entered times and their interval after a time edit", async () => {
     const screen = await renderInitialized();
     const editedEnd = new Date("2026-08-07T09:30:00.000Z");
