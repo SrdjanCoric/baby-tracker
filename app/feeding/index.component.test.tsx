@@ -9,8 +9,9 @@ let mockCanGoBack = false;
 let mockSearchParams: { onboardingActivity?: string } = {};
 const mockCompleteTimerStarted = jest.fn();
 let mockTimeFormat: "12h" | "24h" = "12h";
-let mockLockStartedBy = "user-1";
+let mockLockStartedBy: string | null = "user-1";
 let mockFeedings: Array<{ endedAt?: string }> = [];
+let mockAuthUser: { id: string } | null = { id: "user-1" };
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -106,6 +107,7 @@ const mockAddFeeding = jest.fn();
 const runningTimer = {
   isRunning: true,
   isPaused: false,
+  lockState: "owned",
   startTime: new Date("2026-08-04T08:00:00.000Z"),
   totalPausedMs: 0,
   side: "left" as const,
@@ -136,15 +138,18 @@ jest.mock("@/contexts", () => ({
     setUnitSystem: jest.fn(),
   }),
   useAuth: () => ({
-    session: { access_token: "test-token" },
-    user: { id: "user-1" },
+    session: mockAuthUser ? { access_token: "test-token" } : null,
+    user: mockAuthUser,
   }),
   useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
   useActiveTimers: () => ({
-    getLockForActivity: () => ({
-      startedBy: mockLockStartedBy,
-      startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
-    }),
+    getLockForActivity: () =>
+      mockLockStartedBy
+        ? {
+            startedBy: mockLockStartedBy,
+            startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
+          }
+        : null,
   }),
 }));
 
@@ -206,6 +211,7 @@ describe("FeedingScreen", () => {
     mockTimeFormat = "12h";
     mockLockStartedBy = "user-1";
     mockFeedings = [];
+    mockAuthUser = { id: "user-1" };
   });
 
   afterEach(() => {
@@ -236,7 +242,7 @@ describe("FeedingScreen", () => {
       expect(screen.getByLabelText("Timer: 60:00")).toBeTruthy();
     });
 
-    it("shows the starter and keeps another caregiver's label read-only", () => {
+    it("keeps another caregiver's unnamed start label read-only", () => {
       jest.useFakeTimers();
       const now = new Date("2026-08-06T12:00:00.000Z");
       jest.setSystemTime(now);
@@ -257,7 +263,7 @@ describe("FeedingScreen", () => {
         layoutOrder.indexOf("running-timer-elapsed")
       );
       fireEvent.press(
-        screen.getByRole("button", { name: "Start time: 10:05 · Alice" })
+        screen.getByRole("button", { name: "Start time: 10:05" })
       );
       expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
         new Date("2026-08-06T04:00:00.000Z")
@@ -267,14 +273,14 @@ describe("FeedingScreen", () => {
       mockTimeFormat = "12h";
       rerender(<FeedingScreen />);
       expect(
-        screen.getByRole("button", { name: "Start time: 10:05 AM · Alice" })
+        screen.getByRole("button", { name: "Start time: 10:05 AM" })
       ).toBeTruthy();
       mockLockStartedBy = "user-2";
       rerender(<FeedingScreen />);
       expect(
-        screen.queryByRole("button", { name: "Start time: 10:05 AM · Bob" })
+        screen.queryByRole("button", { name: "Start time: 10:05 AM" })
       ).toBeNull();
-      expect(screen.getByLabelText("Start time: 10:05 AM · Bob")).toBeTruthy();
+      expect(screen.getByLabelText("Start time: 10:05 AM")).toBeTruthy();
     });
 
     it("writes the running picker value through the feeding provider", async () => {
@@ -289,7 +295,7 @@ describe("FeedingScreen", () => {
       try {
         render(<FeedingScreen />);
         fireEvent.press(
-          screen.getByRole("button", { name: /Start time: .* · Alice/ })
+          screen.getByRole("button", { name: /Start time:/ })
         );
         const selectedTime = new Date("2026-08-06T11:23:00.000Z");
         fireEvent(
@@ -307,6 +313,54 @@ describe("FeedingScreen", () => {
       } finally {
         Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
       }
+    });
+
+    it("lets an account-less caregiver open the bounded start editor and commit", async () => {
+      const originalPlatformOS = Platform.OS;
+      Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+      jest.useFakeTimers();
+      const now = new Date("2026-08-06T12:00:00.000Z");
+      const selectedTime = new Date(2026, 7, 6, 9, 45);
+      jest.setSystemTime(now);
+      mockAuthUser = null;
+      mockLockStartedBy = null;
+      mockTimeFormat = "24h";
+      mockFeedings = [{ endedAt: "2026-08-06T04:00:00.000Z" }];
+      mockActiveTimer = {
+        ...runningTimer,
+        startTime: new Date(2026, 7, 6, 10, 5),
+        lockState: "accountless",
+      };
+
+      try {
+        render(<FeedingScreen />);
+        fireEvent.press(
+          screen.getByRole("button", { name: "Start time: 10:05" })
+        );
+        const picker = screen.getByTestId("bounded-android-datetime-picker");
+        expect(picker.props.minimumDate).toEqual(
+          new Date("2026-08-06T04:00:00.000Z")
+        );
+        expect(picker.props.maximumDate).toEqual(now);
+        fireEvent(picker, "dateChange", selectedTime);
+        await act(async () => {
+          fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+        });
+        expect(mockEditBreastfeedingStartTime).toHaveBeenCalledWith(selectedTime);
+      } finally {
+        Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+      }
+    });
+
+    it("keeps a stale signed-in timer read-only after sign-out", () => {
+      mockAuthUser = null;
+      mockLockStartedBy = null;
+      mockActiveTimer = { ...runningTimer, lockState: "owned" };
+
+      render(<FeedingScreen />);
+
+      expect(screen.queryByRole("button", { name: /Start time:/ })).toBeNull();
+      expect(screen.getByLabelText(/Start time:/)).toBeTruthy();
     });
   });
 

@@ -71,9 +71,11 @@ Development Settings includes an isolated preview for the three entry routes. It
 ### Timer Exclusivity
 
 On sleep, feeding, pumping, and tummy-time timers, Started earlier and the running timer's tappable
-start-time label use the current time format from Settings. Only the caregiver who started a running
-timer can edit it. Both start-time flows offer values from the later of twelve hours ago and the
-previous same-type activity's end through the current time.
+start-time label use the current time format from Settings. The running label shows the field name
+and time without a caregiver name. Only the caregiver who started a running timer can edit it.
+Unregistered solo users can edit their device-local timers through the same control; the edit stays
+local and is not queued for sync. Both start-time flows offer values from the later of twelve hours
+ago and the previous same-type activity's end through the current time.
 
 Running timer readouts freeze at the pause moment and, after resume, count from the original start,
 including the paused interval. The dashboard, activity screens, sleep summaries, widget, Apple Watch,

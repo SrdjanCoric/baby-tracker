@@ -128,7 +128,7 @@ export interface EditRunningTimerStartTimeOptions<
     TCreateInput
   >;
   baby: { id: string; name: string };
-  userId: string;
+  userId?: string;
   activeTimer: TActiveTimer & TimerIdentity;
   payload: TPayload & TimerIdentity;
   startedAt: Date;
@@ -211,7 +211,15 @@ export async function editRunningTimerStartTime<
         }
       : {}),
   };
-  if (activeTimer.lockState === "offline") {
+  if (!userId) {
+    if (activeTimer.lockState !== "accountless") {
+      throw new Error("A signed-in timer edit requires a user id");
+    }
+    // Account-less timers have no server row or attributable queue owner.
+  } else if (
+    activeTimer.lockState === "accountless" ||
+    activeTimer.lockState === "offline"
+  ) {
     await queuePendingTimerStartEdit(
       baby.id,
       adapter.activityType,
@@ -440,8 +448,20 @@ export async function restoreTimerLifecycle<
     }
 
     let isStale = false;
-    let lockState: TimerLockReconciliationState =
-      activeTimer.lockState ?? "offline";
+    let lockState: TimerLockReconciliationState = user?.id
+      ? activeTimer.lockState === "accountless"
+        ? "offline"
+        : (activeTimer.lockState ?? "offline")
+      : "accountless";
+
+    if (activeTimer.lockState !== lockState) {
+      if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
+      await adapter.storage.setActiveTimer(baby.id, {
+        ...activeTimer,
+        ...payloadWithIdentity,
+        lockState,
+      });
+    }
 
     if (user?.id && user.householdId && !hasPendingStop) {
       const persistLockState = async (

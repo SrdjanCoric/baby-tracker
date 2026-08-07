@@ -2,6 +2,7 @@
 
 **Branch**: `feature/edit-running-timer-start-without-account`
 **Depends on**: none
+**Execution classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
 **Source**: conversation 2026-08-07, from a simulator session on Task 0073's branch · **User stories**:
 As a caregiver using the app without an account, I want to correct my running timer's start time, so
 that noticing the baby fell asleep before I hit the button costs one step instead of four — the same as
@@ -92,54 +93,54 @@ and is correct. Do not remove the key and do not change those five call sites.
 
 ## Implementation work
 
-- [ ] Add a distinct account-less value to `TimerLockReconciliationState` and set it wherever a timer is
+- [x] Add a distinct account-less value to `TimerLockReconciliationState` and set it wherever a timer is
       started or restored with no user id, in all four contexts. Leave `"offline"` meaning "signed in,
       write deferred" and confirm every existing `"offline"` consumer keeps its behavior for a signed-in
       caregiver.
-- [ ] Branch `editRunningTimerStartTime` on the new state: run the local tail only — payload recompute,
+- [x] Branch `editRunningTimerStartTime` on the new state: run the local tail only — payload recompute,
       Live Activity refresh, `adapter.storage.setActiveTimer`, dispatch — and call neither
       `updateTimerStartTime` nor `queuePendingTimerStartEdit`.
-- [ ] Make `userId` optional through the edit path so the account-less call needs no placeholder or
+- [x] Make `userId` optional through the edit path so the account-less call needs no placeholder or
       sentinel user id.
-- [ ] Drop the `!user?.id` early return from the four context edit callbacks so an account-less caregiver
+- [x] Drop the `!user?.id` early return from the four context edit callbacks so an account-less caregiver
       with a local running timer reaches the lifecycle function.
-- [ ] Drop the `user?.id &&` prefix from `canEditTimerStart` on all four screens so local ownership alone
+- [x] Drop the `user?.id &&` prefix from `canEditTimerStart` on all four screens so local ownership alone
       authorizes the edit, keeping `timerLock.startedBy === user.id` as the rule whenever a lock exists.
-- [ ] Remove the `starterName` prop from `RunningTimerStartEditor` and the ` · <name>` segment from its
+- [x] Remove the `starterName` prop from `RunningTimerStartEditor` and the ` · <name>` segment from its
       label, and delete the `timerStarterName` computation from all four screens.
-- [ ] Tests that an account-less caregiver's start-time pill is a `Pressable` with
+- [x] Tests that an account-less caregiver's start-time pill is a `Pressable` with
       `accessibilityRole="button"` on each of the four screens, opens the picker, and commits.
-- [ ] A test that an account-less edit calls `setActiveTimer` and dispatches the edited start while
+- [x] A test that an account-less edit calls `setActiveTimer` and dispatches the edited start while
       calling neither `updateTimerStartTime` nor `queuePendingTimerStartEdit`.
-- [ ] A test that a signed-in offline edit still queues through `queuePendingTimerStartEdit`, proving the
+- [x] A test that a signed-in offline edit still queues through `queuePendingTimerStartEdit`, proving the
       two states did not collapse back together.
-- [ ] A test that a signed-in caregiver still cannot edit a timer another caregiver started.
-- [ ] A test that the start-edit label renders the field name and the time with no name segment and no
+- [x] A test that a signed-in caregiver still cannot edit a timer another caregiver started.
+- [x] A test that the start-edit label renders the field name and the time with no name segment and no
       trailing separator, for both a signed-in and an account-less caregiver.
-- [ ] A test that the Task 0071 bounds still apply on the account-less path: `now - 12h` through `now`,
+- [x] A test that the Task 0071 bounds still apply on the account-less path: `now - 12h` through `now`,
       floored at the previous saved activity of the same type.
 
 ## Human checkpoints
 
-- [ ] [confirm-security] This widens the `canEditTimerStart` authorization gate. Confirm the account-less
+- [x] [confirm-security] This widens the `canEditTimerStart` authorization gate. Confirm the account-less
       branch can reach neither `active_timers` nor the pending-edit queue, that no placeholder user id is
       ever written or enqueued, and that the `USING (started_by = auth.uid())` policy and the signed-in
-      starter-only rule are untouched.
+      starter-only rule are untouched. Approved by the owner on 2026-08-07.
 
 ## Acceptance criteria
 
-- [ ] A caregiver with no account, with a running timer on any of the four activity screens, can tap the
+- [x] A caregiver with no account, with a running timer on any of the four activity screens, can tap the
       start-time pill, pick a value within the Task 0071 bounds, and see the timer's elapsed time and
       stored start reflect it.
-- [ ] That edit produces no `active_timers` write and no queued pending edit.
-- [ ] An account-less timer carries a lock state distinct from `"offline"`, and a signed-in offline edit
+- [x] That edit produces no `active_timers` write and no queued pending edit.
+- [x] An account-less timer carries a lock state distinct from `"offline"`, and a signed-in offline edit
       still queues exactly as it does today.
-- [ ] A signed-in caregiver still cannot edit a timer another caregiver started, and the `active_timers`
+- [x] A signed-in caregiver still cannot edit a timer another caregiver started, and the `active_timers`
       row policy is unchanged.
-- [ ] The start-edit control shows the field name and the time only — no caregiver name, no dangling
+- [x] The start-edit control shows the field name and the time only — no caregiver name, no dangling
       separator — for every caregiver.
-- [ ] `common.someone` and its five non-screen call sites are unchanged.
-- [ ] No schema change and no migration.
+- [x] `common.someone` and its five non-screen call sites are unchanged.
+- [x] No schema change and no migration.
 
 ## Non-goals
 
@@ -151,3 +152,59 @@ and is correct. Do not remove the key and do not change those five call sites.
   create an account.
 - Pause, resume, stop, or duration accounting on a running timer.
 - The clock-time entry and edit screens for saved records, which are Tasks 0072, 0073, and 0075.
+
+## Review decisions
+
+- skipped (minor): TR-4 — Resolved decision record retains the starter-name claim — user directed skip after selecting TR-1 through TR-3.
+- skipped (minor): TR-5 — Account-less bounds tests do not isolate the twelve-hour floor — user directed skip after selecting TR-1 through TR-3.
+- skipped (minor): TR-6 — Signed-in user-id error guards have no direct test — user directed skip after selecting TR-1 through TR-3.
+- skipped (minor): TR-7 — Two screen tests retain dead `common.someone` stubs — user directed skip after selecting TR-1 through TR-3.
+- skipped (minor): TR-8 — Legacy guest restoration performs duplicate backfill writes — user directed skip after selecting TR-1 through TR-3.
+
+## Completion record
+
+### Documentation
+
+- Updated README `Timer Exclusivity` to describe the running label and the local-only start edit for
+  unregistered solo users. The affected paragraph passed one full `write-well` audit with no findings.
+
+### Implementation and decisions
+
+- Added the `accountless` reconciliation state in
+  `src/services/timer-lock-reconciliation.ts`, and taught the sleep, feeding, pumping, and tummy-time
+  contexts under `src/contexts/` to distinguish a device-local guest timer from a signed-in offline
+  timer when starting and restoring it.
+- Updated `src/services/timer-lifecycle.ts` so an account-less start edit recomputes and persists the
+  local timer, refreshes its Live Activity, and dispatches the edited start without a server write or
+  pending-edit queue entry. Signed-in offline edits still queue, including when an account-less timer
+  survives a sign-in transition, and obsolete restores cannot overwrite the current local timer.
+- Updated the four activity screens under `app/` and
+  `src/components/RunningTimerStartEditor.tsx` so a current account-less timer is editable, a stale
+  signed-in timer after sign-out is read-only, the signed-in starter-only rule remains in force, and
+  the control shows only the field name and time.
+- Added lifecycle, component, and provider-integration coverage in
+  `src/services/timer-lifecycle.test.ts`, the four activity-screen component suites,
+  `src/components/RunningTimerStartEditor.component.test.tsx`, and
+  `src/__tests__/external-timer-stop-providers.integration.test.tsx`.
+- Kept the `active_timers` row policy, schema, migrations, server-side start bounds, and the five
+  non-screen `common.someone` call sites unchanged. No placeholder user id is written or queued.
+
+### Review outcome
+
+- `reviews/0074-edit-running-timer-start-without-account-934e16f.md` closed with TR-1 through TR-3
+  fixed. The fixes preserve queued signed-in edits across sign-in transitions, keep stale signed-in
+  timers read-only after sign-out, and guard the account-less restore backfill against obsolete writes.
+- TR-4 through TR-8 were skipped as minor findings at the owner's direction after selecting TR-1
+  through TR-3 for remediation. TR-9 records a pre-existing identity-backfill race as deferred and
+  out of scope. No security risk was accepted; the reviewed security contract and the approved human
+  checkpoint found no authorization-boundary change.
+
+### Final proof
+
+- On 2026-08-07, `npm run check:code` passed at the canonical tier: lint and strict typecheck passed;
+  unit passed 143 files / 2,598 tests; component passed 100 suites / 982 tests; the CI contract passed
+  65 tests; and the production bundle excluded development onboarding tools. The output-capped log is
+  `/tmp/agent-workflows/baby-tracker/feature-edit-running-timer-start-without-account/canonical.log`.
+- `git diff --check` passed after the README and completion-record updates. The task has no `[verify]`
+  device, simulator, deployment, or other manual behavior check; automated coverage supplies the final
+  behavior proof, and the security checkpoint was approved by the owner on 2026-08-07.

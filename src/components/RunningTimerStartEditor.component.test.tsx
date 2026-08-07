@@ -43,6 +43,32 @@ describe("RunningTimerStartEditor", () => {
     });
   });
 
+  it("labels editable and read-only values with the field name and time only", () => {
+    const props = {
+      startLabel: "Start time",
+      startedAt: new Date(2026, 7, 6, 10, 0),
+      getBounds: () => ({
+        minimumDate: new Date(2026, 7, 6, 0, 0),
+        maximumDate: new Date(2026, 7, 6, 12, 0),
+      }),
+      timeFormat: "24h" as const,
+      accentColor: "#000",
+      mutedBackgroundColor: "#fff",
+      onEdit: jest.fn(),
+    };
+
+    const { rerender } = render(
+      <RunningTimerStartEditor {...props} canEdit />
+    );
+    expect(
+      screen.getByRole("button", { name: "Start time: 10:00" })
+    ).toBeTruthy();
+
+    rerender(<RunningTimerStartEditor {...props} canEdit={false} />);
+    expect(screen.getByLabelText("Start time: 10:00")).toBeTruthy();
+    expect(screen.queryByLabelText(/ · /)).toBeNull();
+  });
+
   it("commits only the final iOS spinner value when Done is pressed", async () => {
     Object.defineProperty(Platform, "OS", {
       value: "ios",
@@ -56,7 +82,6 @@ describe("RunningTimerStartEditor", () => {
       <RunningTimerStartEditor
         startLabel="Start time"
         startedAt={new Date(2026, 7, 6, 10, 0)}
-        starterName="Alice"
         canEdit
         getBounds={() => ({
           minimumDate: new Date(2026, 7, 6, 0, 0),
@@ -70,7 +95,7 @@ describe("RunningTimerStartEditor", () => {
     );
 
     fireEvent.press(
-      screen.getByRole("button", { name: "Start time: 10:00 · Alice" })
+      screen.getByRole("button", { name: "Start time: 10:00" })
     );
     fireEvent(
       screen.getByTestId("datetime-picker"),
@@ -107,7 +132,6 @@ describe("RunningTimerStartEditor", () => {
       <RunningTimerStartEditor
         startLabel="Start time"
         startedAt={new Date(2026, 7, 6, 10, 0)}
-        starterName="Alice"
         canEdit
         getBounds={() => ({
           minimumDate: new Date(2026, 7, 6, 0, 0),
@@ -121,7 +145,7 @@ describe("RunningTimerStartEditor", () => {
     );
 
     fireEvent.press(
-      screen.getByRole("button", { name: "Start time: 10:00 · Alice" })
+      screen.getByRole("button", { name: "Start time: 10:00" })
     );
     fireEvent(
       screen.getByTestId("datetime-picker"),
@@ -160,7 +184,6 @@ describe("RunningTimerStartEditor", () => {
       <RunningTimerStartEditor
         startLabel="Start time"
         startedAt={new Date(2026, 7, 6, 9, 0)}
-        starterName="Alice"
         canEdit
         getBounds={() => currentBounds}
         timeFormat="24h"
@@ -171,7 +194,7 @@ describe("RunningTimerStartEditor", () => {
     );
 
     fireEvent.press(
-      screen.getByRole("button", { name: "Start time: 9:00 · Alice" })
+      screen.getByRole("button", { name: "Start time: 9:00" })
     );
     fireEvent(
       screen.getByTestId("datetime-picker"),
@@ -197,7 +220,6 @@ describe("RunningTimerStartEditor", () => {
       <RunningTimerStartEditor
         startLabel="Start time"
         startedAt={new Date(2026, 7, 6, 7, 0)}
-        starterName="Alice"
         canEdit
         getBounds={() => ({
           minimumDate: new Date(2026, 7, 6, 10, 0),
@@ -211,7 +233,7 @@ describe("RunningTimerStartEditor", () => {
     );
 
     fireEvent.press(
-      screen.getByRole("button", { name: "Start time: 7:00 · Alice" })
+      screen.getByRole("button", { name: "Start time: 7:00" })
     );
 
     expect(screen.queryByTestId("datetime-picker")).toBeNull();
@@ -231,7 +253,6 @@ describe("RunningTimerStartEditor", () => {
       <RunningTimerStartEditor
         startLabel="Start time"
         startedAt={maximumDate}
-        starterName="Alice"
         canEdit
         getBounds={() => ({
           minimumDate,
@@ -245,7 +266,7 @@ describe("RunningTimerStartEditor", () => {
     );
 
     fireEvent.press(
-      screen.getByRole("button", { name: "Start time: 12:00 · Alice" })
+      screen.getByRole("button", { name: "Start time: 12:00" })
     );
     expect(screen.queryByTestId("datetime-picker")).toBeNull();
     const picker = screen.getByTestId("bounded-android-datetime-picker");
@@ -259,7 +280,6 @@ describe("RunningTimerStartEditor", () => {
       <RunningTimerStartEditor
         startLabel="Start time"
         startedAt={maximumDate}
-        starterName="Alice"
         canEdit
         getBounds={() => ({ minimumDate, maximumDate })}
         timeFormat="12h"

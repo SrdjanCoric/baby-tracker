@@ -10,14 +10,16 @@ let mockCanGoBack = false;
 const runningTimer = {
   isRunning: true,
   isPaused: false,
+  lockState: "owned",
   startTime: new Date("2026-08-04T08:00:00.000Z"),
   totalPausedMs: 0,
 };
 type MockTummyTimeTimer = typeof runningTimer & { pausedAt?: Date };
 let mockActiveTimer: MockTummyTimeTimer | null = null;
 let mockTimeFormat: "12h" | "24h" = "12h";
-let mockLockStartedBy = "user-1";
+let mockLockStartedBy: string | null = "user-1";
 let mockTummyTimes: Array<{ endedAt?: string }> = [];
+let mockAuthUser: { id: string } | null = { id: "user-1" };
 const mockEditTummyTimeStartTime = jest.fn().mockResolvedValue(undefined);
 const mockCheckAndSendAlert = jest.fn();
 
@@ -49,13 +51,19 @@ jest.mock("@/contexts", () => ({
     tummyTimes: mockTummyTimes,
   }),
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Test Baby" } }),
-  useAuth: () => ({ session: { access_token: "test" }, user: { id: "user-1" } }),
+  useAuth: () => ({
+    session: mockAuthUser ? { access_token: "test" } : null,
+    user: mockAuthUser,
+  }),
   useTimeFormat: () => ({ timeFormat: mockTimeFormat }),
   useActiveTimers: () => ({
-    getLockForActivity: () => ({
-      startedBy: mockLockStartedBy,
-      startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
-    }),
+    getLockForActivity: () =>
+      mockLockStartedBy
+        ? {
+            startedBy: mockLockStartedBy,
+            startedByName: mockLockStartedBy === "user-1" ? "Alice" : "Bob",
+          }
+        : null,
   }),
 }));
 
@@ -107,6 +115,7 @@ describe("TummyTimeScreen custom start time", () => {
     mockTimeFormat = "12h";
     mockLockStartedBy = "user-1";
     mockTummyTimes = [];
+    mockAuthUser = { id: "user-1" };
   });
 
   afterEach(() => {
@@ -137,7 +146,7 @@ describe("TummyTimeScreen custom start time", () => {
     expect(mockCheckAndSendAlert).toHaveBeenCalledWith(60);
   });
 
-  it("shows the starter and keeps another caregiver's label read-only", () => {
+  it("keeps another caregiver's unnamed start label read-only", () => {
     jest.useFakeTimers();
     const now = new Date("2026-08-06T12:00:00.000Z");
     jest.setSystemTime(now);
@@ -159,7 +168,7 @@ describe("TummyTimeScreen custom start time", () => {
     );
     fireEvent.press(
       screen.getByRole("button", {
-        name: "tummyTime.startTime: 10:05 · Alice",
+        name: "tummyTime.startTime: 10:05",
       })
     );
     expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
@@ -171,18 +180,18 @@ describe("TummyTimeScreen custom start time", () => {
     rerender(<TummyTimeScreen />);
     expect(
       screen.getByRole("button", {
-        name: "tummyTime.startTime: 10:05 AM · Alice",
+        name: "tummyTime.startTime: 10:05 AM",
       })
     ).toBeTruthy();
     mockLockStartedBy = "user-2";
     rerender(<TummyTimeScreen />);
     expect(
       screen.queryByRole("button", {
-        name: "tummyTime.startTime: 10:05 AM · Bob",
+        name: "tummyTime.startTime: 10:05 AM",
       })
     ).toBeNull();
     expect(
-      screen.getByLabelText("tummyTime.startTime: 10:05 AM · Bob")
+      screen.getByLabelText("tummyTime.startTime: 10:05 AM")
     ).toBeTruthy();
   });
 
@@ -198,7 +207,7 @@ describe("TummyTimeScreen custom start time", () => {
     try {
       render(<TummyTimeScreen />);
       fireEvent.press(
-        screen.getByRole("button", { name: /tummyTime.startTime: .* · Alice/ })
+        screen.getByRole("button", { name: /tummyTime.startTime:/ })
       );
       const selectedTime = new Date("2026-08-06T11:23:00.000Z");
       fireEvent(
@@ -216,6 +225,56 @@ describe("TummyTimeScreen custom start time", () => {
     } finally {
       Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
     }
+  });
+
+  it("lets an account-less caregiver open the bounded start editor and commit", async () => {
+    const originalPlatformOS = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+    jest.useFakeTimers();
+    const now = new Date("2026-08-06T12:00:00.000Z");
+    const selectedTime = new Date(2026, 7, 6, 9, 45);
+    jest.setSystemTime(now);
+    mockAuthUser = null;
+    mockLockStartedBy = null;
+    mockTimeFormat = "24h";
+    mockTummyTimes = [{ endedAt: "2026-08-06T05:00:00.000Z" }];
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date(2026, 7, 6, 10, 5),
+      lockState: "accountless",
+    };
+
+    try {
+      render(<TummyTimeScreen />);
+      fireEvent.press(
+        screen.getByRole("button", { name: "tummyTime.startTime: 10:05" })
+      );
+      const picker = screen.getByTestId("bounded-android-datetime-picker");
+      expect(picker.props.minimumDate).toEqual(
+        new Date("2026-08-06T05:00:00.000Z")
+      );
+      expect(picker.props.maximumDate).toEqual(now);
+      fireEvent(picker, "dateChange", selectedTime);
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+      });
+      expect(mockEditTummyTimeStartTime).toHaveBeenCalledWith(selectedTime);
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
+    }
+  });
+
+  it("keeps a stale signed-in timer read-only after sign-out", () => {
+    mockAuthUser = null;
+    mockLockStartedBy = null;
+    mockActiveTimer = { ...runningTimer, lockState: "owned" };
+
+    render(<TummyTimeScreen />);
+
+    expect(
+      screen.queryByRole("button", { name: /tummyTime.startTime:/ })
+    ).toBeNull();
+    expect(screen.getByLabelText(/tummyTime.startTime:/)).toBeTruthy();
   });
 
   it("lets a caregiver close a cold-opened tummy-time screen", () => {

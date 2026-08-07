@@ -61,14 +61,15 @@ export default function FeedingScreen() {
     ? getLockForActivity(selectedBaby.id, "feeding")
     : null;
   const hasLocalTimerOwnership =
-    activeTimer?.lockState === "owned" || activeTimer?.lockState === "offline";
-  const timerStarterName =
-    timerLock?.startedByName ??
-    (hasLocalTimerOwnership ? user?.displayName : null) ??
-    t("common.someone");
+    activeTimer?.lockState === "owned" ||
+    activeTimer?.lockState === "offline" ||
+    activeTimer?.lockState === "accountless";
   const canEditTimerStart = Boolean(
-    user?.id &&
-      (timerLock ? timerLock.startedBy === user.id : hasLocalTimerOwnership)
+    timerLock
+      ? user?.id && timerLock.startedBy === user.id
+      : activeTimer?.lockState === "accountless"
+        ? !user?.id
+        : user?.id && hasLocalTimerOwnership
   );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
@@ -259,7 +260,6 @@ export default function FeedingScreen() {
             mutedBg={mutedBg}
             secondaryBg={secondaryBg}
             startedAt={activeTimer!.startTime}
-            starterName={timerStarterName}
             canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editBreastfeedingStartTime}
@@ -602,7 +602,6 @@ interface BreastfeedingTimerViewProps {
   mutedBg: string;
   secondaryBg: string;
   startedAt: Date;
-  starterName: string;
   canEdit: boolean;
   getBounds(): TimerStartBounds;
   onEditStart: (startedAt: Date) => Promise<void>;
@@ -610,7 +609,7 @@ interface BreastfeedingTimerViewProps {
 
 const PAUSED_AMBER = "#D4A017";
 
-function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg, startedAt, starterName, canEdit, getBounds, onEditStart }: BreastfeedingTimerViewProps) {
+function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg, startedAt, canEdit, getBounds, onEditStart }: BreastfeedingTimerViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const formattedTime = formatDuration(elapsedSeconds);
@@ -640,7 +639,6 @@ function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, 
         <RunningTimerStartEditor
           startLabel={t("feeding.startTime")}
           startedAt={startedAt}
-          starterName={starterName}
           canEdit={canEdit}
           getBounds={getBounds}
           timeFormat={timeFormat}

@@ -1180,7 +1180,9 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         state.wakeWindowConfig?.napContinuationMinutes ?? 25,
         new Date(Math.max(Date.now(), startTime.getTime()))
       );
-      let lockState: TimerLockReconciliationState = "offline";
+      let lockState: TimerLockReconciliationState = user?.id
+        ? "offline"
+        : "accountless";
       if (user?.id) {
         try {
           const lockResult = await acquireTimerLock(
@@ -1471,7 +1473,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
 
   const editSleepStartTime = useCallback(
     async (startedAt: Date) => {
-      if (!selectedBaby || !user?.id || !state.activeTimer) return;
+      if (!selectedBaby || !state.activeTimer) return;
       const activeTimer = state.activeTimer;
       const adapter = createSleepTimerAdapter({
         babyId: selectedBaby.id,
@@ -1485,7 +1487,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       await editRunningTimerStartTime({
         adapter,
         baby: selectedBaby,
-        userId: user.id,
+        userId: user?.id,
         activeTimer: {
           timerInstanceId: activeTimer.timerInstanceId,
           activityId: activeTimer.activityId,
