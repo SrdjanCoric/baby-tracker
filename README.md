@@ -91,6 +91,8 @@ calculated from the interval. A saved breastfeeding interval must span from one 
 hours, and neither time can be in the future. Saving a time change replaces the stored duration with
 the new interval, while changing only the notes or side preserves the stored timestamps and duration.
 Bottle feeds and solid-food entries remain timestamped moments, and bottle volume stays editable.
+Logging a past feeding or changing a saved feeding warns when the proposed interval overlaps a
+completed feeding of the same type. Caregivers can cancel or keep both entries.
 
 ### Pumping and Tummy Time
 
@@ -99,6 +101,9 @@ from the interval. Pumping sessions must span from one minute through one hour, 
 sessions may span up to two hours. Neither time can be in the future. Saving a time change replaces
 the stored duration with the new interval, while changing only notes or pumping volume preserves the
 stored timestamps and duration. Pumping volume stays editable with a 500 ml maximum.
+Logging a past pumping or tummy-time session, or changing a saved session, warns when the proposed
+interval overlaps a completed record of the same activity type. Caregivers can cancel or keep both
+entries.
 
 ### Sleep Predictions
 
