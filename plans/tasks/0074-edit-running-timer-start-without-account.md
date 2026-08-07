@@ -160,3 +160,51 @@ and is correct. Do not remove the key and do not change those five call sites.
 - skipped (minor): TR-6 — Signed-in user-id error guards have no direct test — user directed skip after selecting TR-1 through TR-3.
 - skipped (minor): TR-7 — Two screen tests retain dead `common.someone` stubs — user directed skip after selecting TR-1 through TR-3.
 - skipped (minor): TR-8 — Legacy guest restoration performs duplicate backfill writes — user directed skip after selecting TR-1 through TR-3.
+
+## Completion record
+
+### Documentation
+
+- Updated README `Timer Exclusivity` to describe the running label and the local-only start edit for
+  unregistered solo users. The affected paragraph passed one full `write-well` audit with no findings.
+
+### Implementation and decisions
+
+- Added the `accountless` reconciliation state in
+  `src/services/timer-lock-reconciliation.ts`, and taught the sleep, feeding, pumping, and tummy-time
+  contexts under `src/contexts/` to distinguish a device-local guest timer from a signed-in offline
+  timer when starting and restoring it.
+- Updated `src/services/timer-lifecycle.ts` so an account-less start edit recomputes and persists the
+  local timer, refreshes its Live Activity, and dispatches the edited start without a server write or
+  pending-edit queue entry. Signed-in offline edits still queue, including when an account-less timer
+  survives a sign-in transition, and obsolete restores cannot overwrite the current local timer.
+- Updated the four activity screens under `app/` and
+  `src/components/RunningTimerStartEditor.tsx` so a current account-less timer is editable, a stale
+  signed-in timer after sign-out is read-only, the signed-in starter-only rule remains in force, and
+  the control shows only the field name and time.
+- Added lifecycle, component, and provider-integration coverage in
+  `src/services/timer-lifecycle.test.ts`, the four activity-screen component suites,
+  `src/components/RunningTimerStartEditor.component.test.tsx`, and
+  `src/__tests__/external-timer-stop-providers.integration.test.tsx`.
+- Kept the `active_timers` row policy, schema, migrations, server-side start bounds, and the five
+  non-screen `common.someone` call sites unchanged. No placeholder user id is written or queued.
+
+### Review outcome
+
+- `reviews/0074-edit-running-timer-start-without-account-934e16f.md` closed with TR-1 through TR-3
+  fixed. The fixes preserve queued signed-in edits across sign-in transitions, keep stale signed-in
+  timers read-only after sign-out, and guard the account-less restore backfill against obsolete writes.
+- TR-4 through TR-8 were skipped as minor findings at the owner's direction after selecting TR-1
+  through TR-3 for remediation. TR-9 records a pre-existing identity-backfill race as deferred and
+  out of scope. No security risk was accepted; the reviewed security contract and the approved human
+  checkpoint found no authorization-boundary change.
+
+### Final proof
+
+- On 2026-08-07, `npm run check:code` passed at the canonical tier: lint and strict typecheck passed;
+  unit passed 143 files / 2,598 tests; component passed 100 suites / 982 tests; the CI contract passed
+  65 tests; and the production bundle excluded development onboarding tools. The output-capped log is
+  `/tmp/agent-workflows/baby-tracker/feature-edit-running-timer-start-without-account/canonical.log`.
+- `git diff --check` passed after the README and completion-record updates. The task has no `[verify]`
+  device, simulator, deployment, or other manual behavior check; automated coverage supplies the final
+  behavior proof, and the security checkpoint was approved by the owner on 2026-08-07.
