@@ -119,6 +119,20 @@ describe("EditSleepScreen clock-time editing", () => {
     expect(rendered.queryByRole("textbox", { name: "sleep.durationPlaceholder" })).toBeNull();
   });
 
+  it("preserves the existing chip and action interaction styles", async () => {
+    const rendered = await renderInitialized();
+
+    expect(rendered.getByText("sleep.night").props.className).toContain(
+      "dark:text-content-dark-primary"
+    );
+    expect(rendered.getByRole("button", { name: "common.delete" }).props.className).toContain(
+      "dark:active:bg-surface-dark-secondary"
+    );
+    expect(rendered.getByRole("button", { name: "common.save" }).props.className).toContain(
+      "active:scale-[0.98]"
+    );
+  });
+
   it("leaves stored times and duration untouched on a note-only save", async () => {
     const rendered = await renderInitialized();
     fireEvent.changeText(

@@ -271,7 +271,7 @@ export default function EditSleepScreen() {
           </View>
           <Pressable
             onPress={handleDelete}
-            className="w-touch h-touch items-center justify-center rounded-full"
+            className="w-touch h-touch items-center justify-center rounded-full active:bg-surface-secondary dark:active:bg-surface-dark-secondary"
             accessibilityRole="button"
             accessibilityLabel={t("common.delete")}
           >
@@ -317,7 +317,13 @@ export default function EditSleepScreen() {
                   }`}
                   style={sleepType === type ? { backgroundColor: SLEEP_PURPLE } : undefined}
                 >
-                  <Text className={sleepType === type ? "text-white" : "text-content-primary"}>
+                  <Text
+                    className={
+                      sleepType === type
+                        ? "text-white"
+                        : "text-content-primary dark:text-content-dark-primary"
+                    }
+                  >
                     {t(`sleep.${type}`)}
                   </Text>
                 </Pressable>
@@ -370,7 +376,7 @@ export default function EditSleepScreen() {
           <Pressable
             onPress={handleSave}
             disabled={!canSave || isSaving}
-            className={`w-full py-4 rounded-button-lg items-center justify-center ${
+            className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
               !canSave || isSaving ? "opacity-50" : ""
             }`}
             style={{ backgroundColor: SLEEP_PURPLE }}
