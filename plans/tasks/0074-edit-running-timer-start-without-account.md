@@ -152,3 +152,11 @@ and is correct. Do not remove the key and do not change those five call sites.
   create an account.
 - Pause, resume, stop, or duration accounting on a running timer.
 - The clock-time entry and edit screens for saved records, which are Tasks 0072, 0073, and 0075.
+
+## Review decisions
+
+- skipped (minor): TR-4 — Resolved decision record retains the starter-name claim — user directed skip after selecting TR-1 through TR-3.
+- skipped (minor): TR-5 — Account-less bounds tests do not isolate the twelve-hour floor — user directed skip after selecting TR-1 through TR-3.
+- skipped (minor): TR-6 — Signed-in user-id error guards have no direct test — user directed skip after selecting TR-1 through TR-3.
+- skipped (minor): TR-7 — Two screen tests retain dead `common.someone` stubs — user directed skip after selecting TR-1 through TR-3.
+- skipped (minor): TR-8 — Legacy guest restoration performs duplicate backfill writes — user directed skip after selecting TR-1 through TR-3.
