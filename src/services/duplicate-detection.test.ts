@@ -104,14 +104,14 @@ describe('checkFeedingDuplicate', () => {
 
     it.each([
       ['a missing end', undefined],
-      ['an end equal to its start', '2024-06-15T09:55:00.000Z'],
+      ['an end equal to its start', '2024-06-15T10:00:00.000Z'],
     ])('uses breast proximity confidence when one interval has %s', (_case, endedAt) => {
       const existing = createFeedingEntry({
         side: 'left',
         startedAt: '2024-06-15T09:55:00.000Z',
-        endedAt,
+        endedAt: '2024-06-15T10:05:00.000Z',
       });
-      const newEntry = createFeedingEntry({ side: 'right' });
+      const newEntry = createFeedingEntry({ side: 'right', endedAt });
 
       expect(checkFeedingDuplicate(newEntry, [existing]).candidates[0]).toEqual(
         expect.objectContaining({ matchReason: 'time_proximity', confidence: 'medium' })
@@ -607,14 +607,14 @@ describe('checkPumpingDuplicate', () => {
 
   it.each([
     ['a missing end', undefined],
-    ['an end equal to its start', '2024-06-15T09:55:00.000Z'],
+    ['an end equal to its start', '2024-06-15T10:00:00.000Z'],
   ])('uses pumping proximity confidence when one interval has %s', (_case, endedAt) => {
     const existing = createPumpingEntry({
       startedAt: '2024-06-15T09:55:00.000Z',
-      endedAt,
+      endedAt: '2024-06-15T10:05:00.000Z',
       amountMl: 100,
     });
-    const newEntry = createPumpingEntry({ amountMl: 110 });
+    const newEntry = createPumpingEntry({ endedAt, amountMl: 110 });
 
     expect(checkPumpingDuplicate(newEntry, [existing]).candidates[0]).toEqual(
       expect.objectContaining({ matchReason: 'time_proximity', confidence: 'high' })
@@ -815,14 +815,14 @@ describe('checkTummyTimeDuplicate', () => {
 
   it.each([
     ['a missing end', undefined],
-    ['an end equal to its start', '2024-06-15T09:58:00.000Z'],
+    ['an end equal to its start', '2024-06-15T10:00:00.000Z'],
   ])('uses tummy-time proximity confidence when one interval has %s', (_case, endedAt) => {
     const existing = createTummyTimeEntry({
       startedAt: '2024-06-15T09:58:00.000Z',
-      endedAt,
+      endedAt: '2024-06-15T10:02:00.000Z',
       durationSeconds: 300,
     });
-    const newEntry = createTummyTimeEntry({ durationSeconds: 310 });
+    const newEntry = createTummyTimeEntry({ endedAt, durationSeconds: 310 });
 
     expect(checkTummyTimeDuplicate(newEntry, [existing]).candidates[0]).toEqual(
       expect.objectContaining({ matchReason: 'time_proximity', confidence: 'high' })
