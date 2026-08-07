@@ -203,3 +203,12 @@ pumping or tummy-time test in this task asserts on that label, assert the field 
 - Changing the running timer's bounds or its clamp, which is Task 0071.
 - Recording a session shorter than a minute, which no manual validator permits today either.
 - Any schema change.
+
+## Review decisions
+
+- skipped (minor): TR-5 — The pumping edit screen now enforces the 500 ml volume cap on save, a
+  non-time behavior change the task excludes — excluded from this remediation pass.
+- skipped (minor): TR-6 — Locale keys orphaned by the removed pumping minutes field and
+  quick-duration chips were left in all nine locale files — excluded from this remediation pass.
+- skipped (minor): TR-7 — The counted-pause tests on both new edit screens cannot fail — excluded
+  from this remediation pass.
