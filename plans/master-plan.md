@@ -268,7 +268,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0073 · Log and edit a feeding by clock time (after 0072) → tasks/done/0073-log-and-edit-feeding-by-clock-time.md
 - [x] 0074 · Edit a running timer's start time without an account → tasks/done/0074-edit-running-timer-start-without-account.md
 - [x] 0075 · Log and edit pumping and tummy time by clock time (after 0072, 0074) → tasks/done/0075-log-and-edit-pumping-and-tummy-time-by-clock-time.md
-- [>] 0076 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0075) → tasks/0076-warn-on-overlapping-non-sleep-records.md
+- [x] 0076 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0075) → tasks/done/0076-warn-on-overlapping-non-sleep-records.md
 
 ## Workflow status
 
