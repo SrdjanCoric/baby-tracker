@@ -1,6 +1,6 @@
 import React from "react";
-import { Platform } from "react-native";
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { Alert, Platform } from "react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import EditFeedingScreen from "./feeding";
 
@@ -72,6 +72,7 @@ describe("EditFeedingScreen clock-time editing", () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
     Object.defineProperty(Platform, "OS", {
       value: originalPlatformOS,
       configurable: true,
@@ -262,6 +263,7 @@ describe("EditFeedingScreen clock-time editing", () => {
   );
 
   it("writes both entered times and their interval after a time edit", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const screen = await renderInitialized();
     const editedEnd = new Date("2026-08-07T09:30:00.000Z");
     chooseTime(screen, "feeding.endTime feeding.selectTime", editedEnd);
@@ -275,6 +277,56 @@ describe("EditFeedingScreen clock-time editing", () => {
         durationSeconds: 5400,
       })
     );
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it("cancels a feeding edit that overlaps another record", async () => {
+    mockFeedings = [
+      mockFeedings[0],
+      {
+        ...mockFeedings[0],
+        id: "feeding-2",
+        startedAt: "2026-08-07T08:15:00.000Z",
+        endedAt: "2026-08-07T08:45:00.000Z",
+        durationSeconds: 1800,
+      },
+    ];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = await renderInitialized();
+    chooseTime(
+      screen,
+      "feeding.startTime feeding.selectTime",
+      new Date("2026-08-07T08:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await act(async () => alertSpy.mock.calls[0][2]?.[0]?.onPress?.());
+    expect(mockUpdateFeeding).not.toHaveBeenCalled();
+  });
+
+  it("continues through a feeding edit warning and keeps the other record", async () => {
+    const overlap: StoredFeedingEntry = {
+      ...mockFeedings[0],
+      id: "feeding-2",
+      startedAt: "2026-08-07T08:15:00.000Z",
+      endedAt: "2026-08-07T08:45:00.000Z",
+      durationSeconds: 1800,
+    };
+    mockFeedings = [mockFeedings[0], overlap];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = await renderInitialized();
+    chooseTime(
+      screen,
+      "feeding.startTime feeding.selectTime",
+      new Date("2026-08-07T08:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockFeedings[1]).toEqual(overlap);
   });
 
   it("does not synthesize an endpoint when only Start changes on an unfinished breast feed", async () => {

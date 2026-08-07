@@ -42,6 +42,11 @@ function isWithinThreshold(newTimestamp: number, existingTimestamp: number, thre
   return Math.abs(newTimestamp - existingTimestamp) <= threshold;
 }
 
+function hasRealInterval(entry: { startedAt?: string; endedAt?: string }): entry is { startedAt: string; endedAt: string } {
+  if (!entry.startedAt || !entry.endedAt) return false;
+  return new Date(entry.endedAt).getTime() > new Date(entry.startedAt).getTime();
+}
+
 function sortByTimeDescWithUserPriority<T extends { startedAt?: string; changedAt?: string; createdAt: string }>(
   candidates: DuplicateCandidate<T>[],
   options?: DuplicateCheckOptions
@@ -70,6 +75,21 @@ export function checkFeedingDuplicate(
     if (existing.type !== newEntry.type) continue;
 
     const existingTimestamp = getTimestamp(existing);
+    if (newEntry.type === 'breast' && hasRealInterval(newEntry) && hasRealInterval(existing)) {
+      if (
+        newTimestamp < new Date(existing.endedAt).getTime() &&
+        existingTimestamp < new Date(newEntry.endedAt).getTime()
+      ) {
+        candidates.push({
+          entry: existing,
+          matchReason: 'overlapping_session',
+          confidence: 'high',
+          loggedBy: existing.loggedBy,
+        });
+      }
+      continue;
+    }
+
     if (!isWithinThreshold(newTimestamp, existingTimestamp, DUPLICATE_THRESHOLDS.feeding)) continue;
 
     let confidence: Confidence = 'medium';
@@ -204,6 +224,21 @@ export function checkPumpingDuplicate(
     if (existing.babyId !== newEntry.babyId) continue;
 
     const existingTimestamp = getTimestamp(existing);
+    if (hasRealInterval(newEntry) && hasRealInterval(existing)) {
+      if (
+        newTimestamp < new Date(existing.endedAt).getTime() &&
+        existingTimestamp < new Date(newEntry.endedAt).getTime()
+      ) {
+        candidates.push({
+          entry: existing,
+          matchReason: 'overlapping_session',
+          confidence: 'high',
+          loggedBy: existing.loggedBy,
+        });
+      }
+      continue;
+    }
+
     if (!isWithinThreshold(newTimestamp, existingTimestamp, DUPLICATE_THRESHOLDS.pumping)) continue;
 
     let confidence: Confidence = 'medium';
@@ -306,6 +341,21 @@ export function checkTummyTimeDuplicate(
     if (existing.babyId !== newEntry.babyId) continue;
 
     const existingTimestamp = getTimestamp(existing);
+    if (hasRealInterval(newEntry) && hasRealInterval(existing)) {
+      if (
+        newTimestamp < new Date(existing.endedAt).getTime() &&
+        existingTimestamp < new Date(newEntry.endedAt).getTime()
+      ) {
+        candidates.push({
+          entry: existing,
+          matchReason: 'overlapping_session',
+          confidence: 'high',
+          loggedBy: existing.loggedBy,
+        });
+      }
+      continue;
+    }
+
     if (!isWithinThreshold(newTimestamp, existingTimestamp, DUPLICATE_THRESHOLDS.tummyTime)) continue;
 
     let confidence: Confidence = 'medium';

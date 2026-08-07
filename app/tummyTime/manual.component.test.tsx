@@ -1,9 +1,14 @@
 import React from "react";
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { Alert } from "react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
+import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import ManualTummyTimeScreen from "./manual";
 
 const mockAddTummyTime = jest.fn();
 const mockReplace = jest.fn();
+let mockTummyTimes: StoredTummyTimeEntry[] = [];
+let mockFeedings: StoredFeedingEntry[] = [];
 
 jest.mock("@react-native-community/datetimepicker", () => {
   const { View } = require("react-native");
@@ -16,7 +21,8 @@ jest.mock("@react-native-community/datetimepicker", () => {
 });
 
 jest.mock("@/contexts", () => ({
-  useTummyTime: () => ({ addTummyTime: mockAddTummyTime }),
+  useTummyTime: () => ({ addTummyTime: mockAddTummyTime, tummyTimes: mockTummyTimes }),
+  useFeeding: () => ({ feedings: mockFeedings }),
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
   useTimeFormat: () => ({ timeFormat: "24h" }),
 }));
@@ -32,10 +38,13 @@ describe("ManualTummyTimeScreen clock-time entry", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers().setSystemTime(now);
+    mockTummyTimes = [];
+    mockFeedings = [];
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   it("logs the entered Start and End with a derived read-only duration", async () => {
@@ -73,6 +82,90 @@ describe("ManualTummyTimeScreen clock-time entry", () => {
       durationSeconds: 1800,
       notes: undefined,
     });
+  });
+
+  it("cancels an overlapping tummy-time session without writing", async () => {
+    mockTummyTimes = [
+      {
+        id: "tummy-existing",
+        babyId: "baby-1",
+        startedAt: "2026-08-07T08:30:00.000Z",
+        endedAt: "2026-08-07T09:45:00.000Z",
+        durationSeconds: 4500,
+        createdAt: "2026-08-07T08:30:00.000Z",
+        updatedAt: "2026-08-07T09:45:00.000Z",
+      },
+    ];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = render(<ManualTummyTimeScreen />);
+    fireEvent.press(
+      screen.getByRole("button", { name: "tummyTime.startTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(screen.getByRole("button", { name: "tummyTime.logManualTummyTime" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    expect(alertSpy.mock.calls[0][0]).toBe("duplicateDetection.tummyTimeOverlapTitle");
+    await act(async () => alertSpy.mock.calls[0][2]?.[0]?.onPress?.());
+    expect(mockAddTummyTime).not.toHaveBeenCalled();
+  });
+
+  it("continues through a tummy-time overlap warning and keeps the existing record", async () => {
+    const existing: StoredTummyTimeEntry = {
+      id: "tummy-existing",
+      babyId: "baby-1",
+      startedAt: "2026-08-07T08:30:00.000Z",
+      endedAt: "2026-08-07T09:45:00.000Z",
+      durationSeconds: 4500,
+      createdAt: "2026-08-07T08:30:00.000Z",
+      updatedAt: "2026-08-07T09:45:00.000Z",
+    };
+    mockTummyTimes = [existing];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = render(<ManualTummyTimeScreen />);
+    fireEvent.press(
+      screen.getByRole("button", { name: "tummyTime.startTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(screen.getByRole("button", { name: "tummyTime.logManualTummyTime" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
+    await waitFor(() => expect(mockAddTummyTime).toHaveBeenCalledTimes(1));
+    expect(mockTummyTimes).toEqual([existing]);
+  });
+
+  it("does not compare tummy time with an overlapping feeding", async () => {
+    mockFeedings = [
+      {
+        id: "feeding-existing",
+        babyId: "baby-1",
+        type: "breast",
+        side: "left",
+        startedAt: "2026-08-07T09:30:00.000Z",
+        endedAt: "2026-08-07T10:00:00.000Z",
+        createdAt: "2026-08-07T09:30:00.000Z",
+        updatedAt: "2026-08-07T10:00:00.000Z",
+      },
+    ];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = render(<ManualTummyTimeScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "tummyTime.logManualTummyTime" }));
+
+    await waitFor(() => expect(mockAddTummyTime).toHaveBeenCalledTimes(1));
+    expect(alertSpy).not.toHaveBeenCalled();
   });
 
   it("refreshes the End ceiling and bounds Start to two hours", () => {

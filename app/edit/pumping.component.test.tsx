@@ -1,5 +1,6 @@
 import React from "react";
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { Alert } from "react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import EditPumpingScreen from "./pumping";
 
@@ -70,6 +71,7 @@ describe("EditPumpingScreen clock-time editing", () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   async function renderInitialized() {
@@ -134,6 +136,7 @@ describe("EditPumpingScreen clock-time editing", () => {
   });
 
   it("writes both entered times and their interval after a time edit", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const screen = await renderInitialized();
     const editedEnd = new Date("2026-08-07T09:30:00.000Z");
     fireEvent.press(
@@ -152,6 +155,64 @@ describe("EditPumpingScreen clock-time editing", () => {
         durationSeconds: 1800,
       })
     );
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it("cancels a pumping edit that overlaps another record", async () => {
+    mockPumpings = [
+      mockPumpings[0],
+      {
+        ...mockPumpings[0],
+        id: "pumping-2",
+        startedAt: "2026-08-07T09:20:00.000Z",
+        endedAt: "2026-08-07T10:00:00.000Z",
+        durationSeconds: 2400,
+      },
+    ];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = await renderInitialized();
+    fireEvent.press(
+      screen.getByRole("button", { name: "pumping.endTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await act(async () => alertSpy.mock.calls[0][2]?.[0]?.onPress?.());
+    expect(mockUpdatePumping).not.toHaveBeenCalled();
+  });
+
+  it("continues through a pumping edit warning and keeps the other record", async () => {
+    const overlap: StoredPumpingEntry = {
+      ...mockPumpings[0],
+      id: "pumping-2",
+      startedAt: "2026-08-07T09:20:00.000Z",
+      endedAt: "2026-08-07T10:00:00.000Z",
+      durationSeconds: 2400,
+    };
+    mockPumpings = [mockPumpings[0], overlap];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = await renderInitialized();
+    fireEvent.press(
+      screen.getByRole("button", { name: "pumping.endTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
+    await waitFor(() => expect(mockUpdatePumping).toHaveBeenCalledTimes(1));
+    expect(mockPumpings[1]).toEqual(overlap);
   });
 
   it("allows a time edit when the stored pumping has no volume", async () => {

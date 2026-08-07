@@ -1,5 +1,6 @@
 import React from "react";
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { Alert } from "react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import EditTummyTimeScreen from "./tummyTime";
 
@@ -68,6 +69,7 @@ describe("EditTummyTimeScreen clock-time editing", () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   async function renderInitialized() {
@@ -131,6 +133,7 @@ describe("EditTummyTimeScreen clock-time editing", () => {
   });
 
   it("writes both entered times and their interval after a time edit", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const screen = await renderInitialized();
     const editedEnd = new Date("2026-08-07T10:00:00.000Z");
     fireEvent.press(
@@ -148,6 +151,64 @@ describe("EditTummyTimeScreen clock-time editing", () => {
       endedAt: editedEnd,
       durationSeconds: 3600,
     });
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it("cancels a tummy-time edit that overlaps another record", async () => {
+    mockTummyTimes = [
+      mockTummyTimes[0],
+      {
+        ...mockTummyTimes[0],
+        id: "tummy-2",
+        startedAt: "2026-08-07T09:30:00.000Z",
+        endedAt: "2026-08-07T11:00:00.000Z",
+        durationSeconds: 5400,
+      },
+    ];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = await renderInitialized();
+    fireEvent.press(
+      screen.getByRole("button", { name: "tummyTime.endTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T10:00:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await act(async () => alertSpy.mock.calls[0][2]?.[0]?.onPress?.());
+    expect(mockUpdateTummyTime).not.toHaveBeenCalled();
+  });
+
+  it("continues through a tummy-time edit warning and keeps the other record", async () => {
+    const overlap: StoredTummyTimeEntry = {
+      ...mockTummyTimes[0],
+      id: "tummy-2",
+      startedAt: "2026-08-07T09:30:00.000Z",
+      endedAt: "2026-08-07T11:00:00.000Z",
+      durationSeconds: 5400,
+    };
+    mockTummyTimes = [mockTummyTimes[0], overlap];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = await renderInitialized();
+    fireEvent.press(
+      screen.getByRole("button", { name: "tummyTime.endTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T10:00:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
+    await waitFor(() => expect(mockUpdateTummyTime).toHaveBeenCalledTimes(1));
+    expect(mockTummyTimes[1]).toEqual(overlap);
   });
 
   it("opens both End pickers for a recent row without endedAt without becoming dirty", async () => {
