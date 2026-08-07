@@ -218,7 +218,8 @@ always-true branch.
 - skipped (minor): TR-12 — Edit-screen no-minutes and no-chip assertions are vacuous — User requested remediation focus on TR-1 through TR-10.
 - skipped (minor): TR-13 — Counted-pause derived-length test cannot prove equality with stored length — User requested remediation focus on TR-1 through TR-10.
 - skipped (minor): TR-14 — Edit End-ceiling test does not prove a fresh `now` value — User requested remediation focus on TR-1 through TR-10.
-- skipped (minor): TR-15 — Feeding clock-time behavior is absent from README.md — User requested remediation focus on TR-1 through TR-10.
+- fixed during finish-task: TR-15 — Feeding clock-time behavior is absent from README.md — The
+  required README audit added the missing current-behavior section.
 - skipped (minor): TR-16 — Reversed manual times surface the minimum-duration error instead of end-before-start — User requested remediation focus on TR-1 through TR-10.
 - fixed after follow-up: TR-17 — Android single-time merge preserves stale seconds and milliseconds — User later authorized the root fix in the restored manual picker.
 - skipped (minor): TR-18 — Disabled-button press assertion does not exercise save-path rejection — User requested remediation focus on TR-1 through TR-10.
@@ -246,9 +247,10 @@ Completed on 2026-08-07.
   bottle and solids moment behavior. The affected prose passed two `write-well` audit passes; pass 1
   corrected the section hierarchy and pass 2 found no new issues.
 - **Review:** The independent standards, spec, bug, and security review reported no security finding.
-  TR-1 through TR-10 and TR-17 were fixed and verified. TR-11 through TR-16 and TR-18 were skipped as
-  minor or nit findings after the user limited remediation; their individual reasons remain recorded
-  above. No security risk was accepted.
+  TR-1 through TR-10 and TR-17 were fixed and verified during remediation, and the required README
+  audit resolved TR-15 during finish-task. TR-11 through TR-14, TR-16, and TR-18 were skipped as minor
+  or nit findings after the user limited remediation; their individual reasons remain recorded above.
+  No security risk was accepted.
 - **Automated proof:** `npm run check:code` passed on 2026-08-07 with exit 0 using output-only log
   capping. It included lint, strict type checking, 143 Vitest files with 2,593 tests, 100 Jest suites
   with 972 tests, 65 CI-contract tests, and the production-bundle gate.
