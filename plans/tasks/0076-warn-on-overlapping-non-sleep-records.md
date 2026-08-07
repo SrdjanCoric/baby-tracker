@@ -134,3 +134,9 @@ is blocked, nothing is merged, and statistics are untouched.
 - Changing what the dialog says it found — whether overlap copy should name the overlap rather than the
   elapsed time is left open by the source decision.
 - Any schema change.
+
+## Review decisions
+
+- skipped (minor): TR-9 — The overlap-copy lookup suppresses exhaustive type checking and can throw for an unsupported activity type — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
+- skipped (minor): TR-10 — The task file uses a nonstandard `Implementation proof` section — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
+- skipped (minor): TR-11 — Interval-overlap detection duplicates parsing work across three checkers — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
