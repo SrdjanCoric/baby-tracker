@@ -840,6 +840,78 @@ describe("restoreTimerLifecycle", () => {
     expect(dispatchRestoreTimer).not.toHaveBeenCalled();
   });
 
+  it("does not backfill account-less lock state after the restore becomes obsolete", async () => {
+    let resolveCompletionCheck: (value: false) => void = () => undefined;
+    const completionCheck = new Promise<false>((resolve) => {
+      resolveCompletionCheck = resolve;
+    });
+    vi.mocked(readPendingTimerStop).mockResolvedValue(null);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    });
+    vi.mocked(isTimerCompletionSecured).mockReturnValueOnce(completionCheck);
+
+    const setActiveTimer = vi.fn();
+    const dispatchRestoreTimer = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn().mockResolvedValue({
+          startedAt: "2026-08-05T12:00:00.000Z",
+          isPaused: false,
+          totalPausedMs: 0,
+          timerInstanceId: "timer-1",
+          activityId: "activity-1",
+        }),
+        setActiveTimer,
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({})),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "record-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn() },
+      dispatchRestoreTimer,
+    };
+    let stopVersion = 0;
+
+    const restore = restoreTimerLifecycle({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      user: null,
+      completedRecords: [],
+      stopVersionAtStart: 0,
+      currentStopVersion: () => stopVersion,
+      isStopping: () => false,
+      isCurrentBabyBinding: () => true,
+      liveActivityIdRef: { current: null },
+      refreshLocks: vi.fn(),
+      persistRecord: vi.fn(),
+      dispatchStopTimer: vi.fn(),
+      dispatchAddRecord: vi.fn(),
+      errorLabel: "[TimerLifecycleTest]",
+    });
+
+    await vi.waitFor(() => {
+      expect(isTimerCompletionSecured).toHaveBeenCalledOnce();
+    });
+    stopVersion = 1;
+    resolveCompletionCheck(false);
+    await restore;
+
+    expect(setActiveTimer).not.toHaveBeenCalled();
+    expect(dispatchRestoreTimer).not.toHaveBeenCalled();
+  });
+
   it("re-derives unresolved morning classification on a later restore", async () => {
     let derivedClassification: "unresolved" | "automatic" = "unresolved";
     let storedActiveTimer: ActiveSleepTimerData = {

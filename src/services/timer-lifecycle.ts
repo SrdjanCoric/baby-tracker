@@ -455,6 +455,7 @@ export async function restoreTimerLifecycle<
       : "accountless";
 
     if (activeTimer.lockState !== lockState) {
+      if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
       await adapter.storage.setActiveTimer(baby.id, {
         ...activeTimer,
         ...payloadWithIdentity,
