@@ -153,7 +153,17 @@ describe("ManualTummyTimeScreen clock-time entry", () => {
     });
   });
 
-  it("does not compare tummy time with an overlapping feeding", async () => {
+  it("uses the tummy-time proximity result instead of an overlapping feeding", async () => {
+    mockTummyTimes = [
+      {
+        id: "tummy-existing",
+        babyId: "baby-1",
+        startedAt: "2026-08-07T09:55:00.000Z",
+        durationSeconds: 0,
+        createdAt: "2026-08-07T09:55:00.000Z",
+        updatedAt: "2026-08-07T09:55:00.000Z",
+      },
+    ];
     mockFeedings = [
       {
         id: "feeding-existing",
@@ -170,8 +180,10 @@ describe("ManualTummyTimeScreen clock-time entry", () => {
     const screen = render(<ManualTummyTimeScreen />);
     fireEvent.press(screen.getByRole("button", { name: "tummyTime.logManualTummyTime" }));
 
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    expect(alertSpy.mock.calls[0][0]).toBe("duplicateDetection.title");
+    await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
     await waitFor(() => expect(mockAddTummyTime).toHaveBeenCalledTimes(1));
-    expect(alertSpy).not.toHaveBeenCalled();
   });
 
   it("refreshes the End ceiling and bounds Start to two hours", () => {

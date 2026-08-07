@@ -193,7 +193,18 @@ describe("ManualPumpingScreen clock-time entry", () => {
     });
   });
 
-  it("does not compare a pumping session with an overlapping feeding", async () => {
+  it("uses the pumping proximity result instead of an overlapping feeding", async () => {
+    mockPumpings = [
+      {
+        id: "pumping-existing",
+        babyId: "baby-1",
+        side: "both",
+        startedAt: "2026-08-07T09:55:00.000Z",
+        durationSeconds: 0,
+        createdAt: "2026-08-07T09:55:00.000Z",
+        updatedAt: "2026-08-07T09:55:00.000Z",
+      },
+    ];
     mockFeedings = [
       {
         id: "feeding-existing",
@@ -211,8 +222,10 @@ describe("ManualPumpingScreen clock-time entry", () => {
     fireEvent.changeText(screen.getByLabelText("pumping.enterVolume"), "120");
     fireEvent.press(screen.getByRole("button", { name: "pumping.logManualPumping" }));
 
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    expect(alertSpy.mock.calls[0][0]).toBe("duplicateDetection.title");
+    await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
     await waitFor(() => expect(mockAddPumping).toHaveBeenCalledTimes(1));
-    expect(alertSpy).not.toHaveBeenCalled();
   });
 
   it("refreshes the End ceiling and bounds Start to one hour", () => {
