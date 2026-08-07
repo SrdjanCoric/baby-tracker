@@ -154,6 +154,28 @@ describe("EditPumpingScreen clock-time editing", () => {
     );
   });
 
+  it("allows a time edit when the stored pumping has no volume", async () => {
+    mockPumpings = [{ ...mockPumpings[0], volumeMl: 0 }];
+    const screen = await renderInitialized();
+    const editedEnd = new Date("2026-08-07T09:30:00.000Z");
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "pumping.endTime feeding.selectTime",
+      })
+    );
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, editedEnd);
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(mockUpdatePumping).toHaveBeenCalledTimes(1));
+    expect(mockUpdatePumping.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        endedAt: editedEnd,
+        durationSeconds: 1800,
+        volumeMl: undefined,
+      })
+    );
+  });
+
   it("opens both End pickers for a recent row without endedAt without becoming dirty", async () => {
     mockPumpings = [
       {

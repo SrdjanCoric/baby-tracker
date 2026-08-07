@@ -105,10 +105,10 @@ export default function EditPumpingScreen() {
         side,
         startedAt: startTime,
         endedAt: endTime,
-        volumeMl: parsedVolume,
       });
-      if (!validation.isValid) {
-        setErrors(validation.errors);
+      const { volumeMl: _volumeError, ...timeErrors } = validation.errors;
+      if (Object.keys(timeErrors).length > 0) {
+        setErrors(timeErrors);
         return;
       }
     }
