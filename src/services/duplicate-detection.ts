@@ -52,6 +52,11 @@ function sortByTimeDescWithUserPriority<T extends { startedAt?: string; changedA
   options?: DuplicateCheckOptions
 ): DuplicateCandidate<T>[] {
   return candidates.sort((a, b) => {
+    const aIsOverlap = a.matchReason === 'overlapping_session';
+    const bIsOverlap = b.matchReason === 'overlapping_session';
+    if (aIsOverlap && !bIsOverlap) return -1;
+    if (!aIsOverlap && bIsOverlap) return 1;
+
     if (options?.currentUserId) {
       const aIsCurrentUser = a.loggedBy === options.currentUserId;
       const bIsCurrentUser = b.loggedBy === options.currentUserId;

@@ -66,6 +66,29 @@ describe('checkFeedingDuplicate', () => {
       );
     });
 
+    it('prioritizes an overlapping interval over a newer proximity match', () => {
+      const overlapping = createFeedingEntry({
+        id: 'overlapping',
+        startedAt: '2024-06-15T08:00:00.000Z',
+        endedAt: '2024-06-15T09:00:00.000Z',
+      });
+      const nearbyMoment = createFeedingEntry({
+        id: 'nearby-moment',
+        startedAt: '2024-06-15T08:40:00.000Z',
+        endedAt: undefined,
+      });
+      const newEntry = createFeedingEntry({
+        startedAt: '2024-06-15T08:30:00.000Z',
+        endedAt: '2024-06-15T09:30:00.000Z',
+      });
+
+      const result = checkFeedingDuplicate(newEntry, [overlapping, nearbyMoment]);
+
+      expect(result.candidates[0]).toEqual(
+        expect.objectContaining({ entry: overlapping, matchReason: 'overlapping_session' })
+      );
+    });
+
     it('does not treat completed intervals that only touch as duplicates', () => {
       const existing = createFeedingEntry({
         startedAt: '2024-06-15T09:50:00.000Z',
