@@ -74,6 +74,7 @@ export default function ManualFeedingScreen() {
     () => new Date(Date.now() - MINIMUM_BREASTFEEDING_MS)
   );
   const [endTime, setEndTime] = useState(() => new Date());
+  const [endTimeTouched, setEndTimeTouched] = useState(false);
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -163,6 +164,11 @@ export default function ManualFeedingScreen() {
     },
     []
   );
+
+  const handleEndTimeChange = useCallback((value: Date) => {
+    setEndTimeTouched(true);
+    setEndTime(value);
+  }, []);
 
   const handleAmountChange = useCallback(
     (text: string) => {
@@ -380,15 +386,21 @@ export default function ManualFeedingScreen() {
 
   const startBounds = useCallback(() => {
     const boundaryNow = Date.now();
+    const effectiveEndTimestamp = endTimeTouched
+      ? endTime.getTime()
+      : boundaryNow;
     return {
       minimumDate: new Date(
-        endTime.getTime() - MAXIMUM_BREASTFEEDING_MS
+        effectiveEndTimestamp - MAXIMUM_BREASTFEEDING_MS
       ),
       maximumDate: new Date(
-        Math.min(boundaryNow, endTime.getTime() - MINIMUM_BREASTFEEDING_MS)
+        Math.min(
+          boundaryNow,
+          effectiveEndTimestamp - MINIMUM_BREASTFEEDING_MS
+        )
       ),
     };
-  }, [endTime]);
+  }, [endTime, endTimeTouched]);
   const endBounds = useCallback(() => {
     const boundaryNow = Date.now();
     const maximumTimestamp = Math.min(
@@ -505,7 +517,7 @@ export default function ManualFeedingScreen() {
             startTime={startTime}
             endTime={endTime}
             onStartTimeChange={setStartTime}
-            onEndTimeChange={setEndTime}
+            onEndTimeChange={handleEndTimeChange}
             startBounds={startBounds}
             endBounds={endBounds}
             timeFormat={timeFormat}

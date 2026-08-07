@@ -155,6 +155,45 @@ describe("ManualFeedingScreen clock-time entry", () => {
   });
 
   it.each([
+    [
+      "refreshes an untouched default End",
+      false,
+      new Date("2026-08-07T08:30:00.000Z"),
+      new Date("2026-08-07T10:29:00.000Z"),
+    ],
+    [
+      "keeps an explicitly chosen End",
+      true,
+      new Date("2026-08-07T08:00:00.000Z"),
+      new Date("2026-08-07T09:59:00.000Z"),
+    ],
+  ])(
+    "%s when the Start picker opens later",
+    (_description, chooseEnd, expectedMinimum, expectedMaximum) => {
+      const screen = render(<ManualFeedingScreen />);
+      if (chooseEnd) {
+        fireEvent.press(
+          screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
+        );
+        fireEvent(screen.getByTestId("datetime-picker"), "change", {}, now);
+        fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+      }
+
+      jest.setSystemTime(new Date("2026-08-07T10:30:00.000Z"));
+      fireEvent.press(
+        screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" })
+      );
+
+      expect(screen.getByTestId("datetime-picker").props).toEqual(
+        expect.objectContaining({
+          minimumDate: expectedMinimum,
+          maximumDate: expectedMaximum,
+        })
+      );
+    }
+  );
+
+  it.each([
     ["bottle" as const, "feeding.formula", "feeding.enterAmount", "120"],
     ["solids" as const, null, "feeding.foodPlaceholder", "banana"],
   ])("keeps %s as a moment record with no End Time", async (type, choice, input, value) => {
