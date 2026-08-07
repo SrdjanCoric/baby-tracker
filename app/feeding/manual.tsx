@@ -29,6 +29,8 @@ import { formatTime as formatTimeUtil } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
+import type { StoredFeedingEntry } from "@/services/feeding-storage";
 
 const QUICK_AMOUNTS_OZ = [1, 2, 3, 4, 5, 6];
 const QUICK_AMOUNTS_ML = [30, 60, 90, 120, 150, 180];
@@ -48,6 +50,7 @@ export default function ManualFeedingScreen() {
   }>();
   const { selectedBaby } = useBaby();
   const { addFeeding, feedings } = useFeeding();
+  const { checkAndConfirmFeeding } = useDuplicateCheck();
   const { volumeUnit } = useUnits();
   const { timeFormat } = useTimeFormat();
   const { scheduleReminderAfterFeeding } = useNotificationIntegration();
@@ -302,6 +305,20 @@ export default function ManualFeedingScreen() {
         const durationSeconds = Math.floor(
           (endTime.getTime() - startTime.getTime()) / 1000
         );
+        const proposedFeeding: StoredFeedingEntry = {
+          id: "manual-feeding-candidate",
+          babyId: selectedBaby.id,
+          type: "breast",
+          side: side!,
+          startedAt: startTime.toISOString(),
+          endedAt: endTime.toISOString(),
+          durationSeconds,
+          notes: notes || undefined,
+          createdAt: startTime.toISOString(),
+          updatedAt: startTime.toISOString(),
+        };
+        if (!(await checkAndConfirmFeeding(proposedFeeding, feedings))) return;
+
         await addFeeding({
           babyId: selectedBaby.id,
           type: "breast",
@@ -333,6 +350,19 @@ export default function ManualFeedingScreen() {
       isSavingRef.current = true;
       setIsSaving(true);
       try {
+        const proposedFeeding: StoredFeedingEntry = {
+          id: "manual-feeding-candidate",
+          babyId: selectedBaby.id,
+          type: "bottle",
+          contentType: contentType!,
+          amountMl: amountMl!,
+          startedAt: momentTime.toISOString(),
+          notes: notes || undefined,
+          createdAt: momentTime.toISOString(),
+          updatedAt: momentTime.toISOString(),
+        };
+        if (!(await checkAndConfirmFeeding(proposedFeeding, feedings))) return;
+
         await addFeeding({
           babyId: selectedBaby.id,
           type: "bottle",
@@ -357,6 +387,19 @@ export default function ManualFeedingScreen() {
       isSavingRef.current = true;
       setIsSaving(true);
       try {
+        const proposedFeeding: StoredFeedingEntry = {
+          id: "manual-feeding-candidate",
+          babyId: selectedBaby.id,
+          type: "solid",
+          foodType: foodType.trim(),
+          reaction: reaction ?? undefined,
+          startedAt: momentTime.toISOString(),
+          notes: notes || undefined,
+          createdAt: momentTime.toISOString(),
+          updatedAt: momentTime.toISOString(),
+        };
+        if (!(await checkAndConfirmFeeding(proposedFeeding, feedings))) return;
+
         await addFeeding({
           babyId: selectedBaby.id,
           type: "solid",
@@ -385,6 +428,8 @@ export default function ManualFeedingScreen() {
     reaction,
     notes,
     addFeeding,
+    feedings,
+    checkAndConfirmFeeding,
     scheduleReminderAfterFeeding,
     finishSave,
     t,

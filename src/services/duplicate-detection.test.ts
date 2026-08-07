@@ -45,6 +45,79 @@ describe('checkFeedingDuplicate', () => {
   }
 
   describe('breast feeding', () => {
+    it('reports overlapping completed intervals regardless of start proximity', () => {
+      const existing = createFeedingEntry({
+        startedAt: '2024-06-15T08:00:00.000Z',
+        endedAt: '2024-06-15T10:00:00.000Z',
+      });
+      const newEntry = createFeedingEntry({
+        startedAt: '2024-06-15T09:30:00.000Z',
+        endedAt: '2024-06-15T10:30:00.000Z',
+      });
+
+      const result = checkFeedingDuplicate(newEntry, [existing]);
+
+      expect(result.candidates[0]).toEqual(
+        expect.objectContaining({
+          entry: existing,
+          matchReason: 'overlapping_session',
+          confidence: 'high',
+        })
+      );
+    });
+
+    it('prioritizes an overlapping interval over a newer proximity match', () => {
+      const overlapping = createFeedingEntry({
+        id: 'overlapping',
+        startedAt: '2024-06-15T08:00:00.000Z',
+        endedAt: '2024-06-15T09:00:00.000Z',
+      });
+      const nearbyMoment = createFeedingEntry({
+        id: 'nearby-moment',
+        startedAt: '2024-06-15T08:40:00.000Z',
+        endedAt: undefined,
+      });
+      const newEntry = createFeedingEntry({
+        startedAt: '2024-06-15T08:30:00.000Z',
+        endedAt: '2024-06-15T09:30:00.000Z',
+      });
+
+      const result = checkFeedingDuplicate(newEntry, [overlapping, nearbyMoment]);
+
+      expect(result.candidates[0]).toEqual(
+        expect.objectContaining({ entry: overlapping, matchReason: 'overlapping_session' })
+      );
+    });
+
+    it('does not treat completed intervals that only touch as duplicates', () => {
+      const existing = createFeedingEntry({
+        startedAt: '2024-06-15T09:50:00.000Z',
+        endedAt: '2024-06-15T10:00:00.000Z',
+      });
+      const newEntry = createFeedingEntry({
+        startedAt: '2024-06-15T10:00:00.000Z',
+        endedAt: '2024-06-15T10:30:00.000Z',
+      });
+
+      expect(checkFeedingDuplicate(newEntry, [existing]).hasPotentialDuplicate).toBe(false);
+    });
+
+    it.each([
+      ['a missing end', undefined],
+      ['an end equal to its start', '2024-06-15T10:00:00.000Z'],
+    ])('uses breast proximity confidence when one interval has %s', (_case, endedAt) => {
+      const existing = createFeedingEntry({
+        side: 'left',
+        startedAt: '2024-06-15T09:55:00.000Z',
+        endedAt: '2024-06-15T10:05:00.000Z',
+      });
+      const newEntry = createFeedingEntry({ side: 'right', endedAt });
+
+      expect(checkFeedingDuplicate(newEntry, [existing]).candidates[0]).toEqual(
+        expect.objectContaining({ matchReason: 'time_proximity', confidence: 'medium' })
+      );
+    });
+
     it('should detect duplicate within 15 min for same baby + type', () => {
       const existing = createFeedingEntry({
         startedAt: new Date(now.getTime() - 10 * 60 * 1000).toISOString(),
@@ -119,6 +192,25 @@ describe('checkFeedingDuplicate', () => {
   });
 
   describe('bottle feeding', () => {
+    it('reports overlapping bottle intervals outside the proximity threshold', () => {
+      const existing = createFeedingEntry({
+        type: 'bottle',
+        amountMl: 100,
+        startedAt: '2024-06-15T09:00:00.000Z',
+        endedAt: '2024-06-15T10:00:00.000Z',
+      });
+      const newEntry = createFeedingEntry({
+        type: 'bottle',
+        amountMl: 110,
+        startedAt: '2024-06-15T09:40:00.000Z',
+        endedAt: '2024-06-15T10:40:00.000Z',
+      });
+
+      expect(checkFeedingDuplicate(newEntry, [existing]).candidates[0]).toEqual(
+        expect.objectContaining({ matchReason: 'overlapping_session', confidence: 'high' })
+      );
+    });
+
     it('should detect within 15 min', () => {
       const existing = createFeedingEntry({
         type: 'bottle',
@@ -488,6 +580,47 @@ describe('checkPumpingDuplicate', () => {
     };
   }
 
+  it('reports overlapping completed intervals regardless of start proximity', () => {
+    const existing = createPumpingEntry({
+      startedAt: '2024-06-15T08:00:00.000Z',
+      endedAt: '2024-06-15T10:00:00.000Z',
+    });
+    const newEntry = createPumpingEntry({
+      startedAt: '2024-06-15T09:30:00.000Z',
+      endedAt: '2024-06-15T10:30:00.000Z',
+    });
+
+    expect(checkPumpingDuplicate(newEntry, [existing]).candidates[0]).toEqual(
+      expect.objectContaining({ matchReason: 'overlapping_session', confidence: 'high' })
+    );
+  });
+
+  it('does not treat completed intervals that only touch as duplicates', () => {
+    const existing = createPumpingEntry({
+      startedAt: '2024-06-15T09:50:00.000Z',
+      endedAt: '2024-06-15T10:00:00.000Z',
+    });
+    const newEntry = createPumpingEntry({ endedAt: '2024-06-15T10:30:00.000Z' });
+
+    expect(checkPumpingDuplicate(newEntry, [existing]).hasPotentialDuplicate).toBe(false);
+  });
+
+  it.each([
+    ['a missing end', undefined],
+    ['an end equal to its start', '2024-06-15T10:00:00.000Z'],
+  ])('uses pumping proximity confidence when one interval has %s', (_case, endedAt) => {
+    const existing = createPumpingEntry({
+      startedAt: '2024-06-15T09:55:00.000Z',
+      endedAt: '2024-06-15T10:05:00.000Z',
+      amountMl: 100,
+    });
+    const newEntry = createPumpingEntry({ endedAt, amountMl: 110 });
+
+    expect(checkPumpingDuplicate(newEntry, [existing]).candidates[0]).toEqual(
+      expect.objectContaining({ matchReason: 'time_proximity', confidence: 'high' })
+    );
+  });
+
   it('should detect within threshold for same baby', () => {
     const existing = createPumpingEntry({
       startedAt: new Date(now.getTime() - 10 * 60 * 1000).toISOString(),
@@ -654,6 +787,47 @@ describe('checkTummyTimeDuplicate', () => {
       ...overrides,
     };
   }
+
+  it('reports overlapping completed intervals regardless of start proximity', () => {
+    const existing = createTummyTimeEntry({
+      startedAt: '2024-06-15T08:00:00.000Z',
+      endedAt: '2024-06-15T10:00:00.000Z',
+    });
+    const newEntry = createTummyTimeEntry({
+      startedAt: '2024-06-15T09:30:00.000Z',
+      endedAt: '2024-06-15T10:30:00.000Z',
+    });
+
+    expect(checkTummyTimeDuplicate(newEntry, [existing]).candidates[0]).toEqual(
+      expect.objectContaining({ matchReason: 'overlapping_session', confidence: 'high' })
+    );
+  });
+
+  it('does not treat completed intervals that only touch as duplicates', () => {
+    const existing = createTummyTimeEntry({
+      startedAt: '2024-06-15T09:58:00.000Z',
+      endedAt: '2024-06-15T10:00:00.000Z',
+    });
+    const newEntry = createTummyTimeEntry({ endedAt: '2024-06-15T10:30:00.000Z' });
+
+    expect(checkTummyTimeDuplicate(newEntry, [existing]).hasPotentialDuplicate).toBe(false);
+  });
+
+  it.each([
+    ['a missing end', undefined],
+    ['an end equal to its start', '2024-06-15T10:00:00.000Z'],
+  ])('uses tummy-time proximity confidence when one interval has %s', (_case, endedAt) => {
+    const existing = createTummyTimeEntry({
+      startedAt: '2024-06-15T09:58:00.000Z',
+      endedAt: '2024-06-15T10:02:00.000Z',
+      durationSeconds: 300,
+    });
+    const newEntry = createTummyTimeEntry({ endedAt, durationSeconds: 310 });
+
+    expect(checkTummyTimeDuplicate(newEntry, [existing]).candidates[0]).toEqual(
+      expect.objectContaining({ matchReason: 'time_proximity', confidence: 'high' })
+    );
+  });
 
   it('should detect within threshold for same baby', () => {
     const existing = createTummyTimeEntry({

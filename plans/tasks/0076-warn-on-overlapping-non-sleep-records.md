@@ -71,45 +71,57 @@ is blocked, nothing is merged, and statistics are untouched.
 
 ## Implementation work
 
-- [ ] Add the interval branch to `checkFeedingDuplicate`, `checkPumpingDuplicate`, and
+- [x] Add the interval branch to `checkFeedingDuplicate`, `checkPumpingDuplicate`, and
       `checkTummyTimeDuplicate` in `src/services/duplicate-detection.ts`, ahead of each threshold test,
       leaving every threshold and confidence heuristic on the proximity path unchanged.
-- [ ] Pass `matchReason` to the dialog from the feeding, pumping, and tummy time paths of
+- [x] Pass `matchReason` to the dialog from the feeding, pumping, and tummy time paths of
       `useDuplicateCheck`.
-- [ ] Key the overlap wording in `DuplicateConfirmationDialog` on `matchReason` rather than on
+- [x] Key the overlap wording in `DuplicateConfirmationDialog` on `matchReason` rather than on
       `activityType === 'sleep'`, with per-activity title and message, preserving sleep's current copy.
-- [ ] Add overlap title and message keys for feeding, pumping, and tummy time to all nine locale files
+- [x] Add overlap title and message keys for feeding, pumping, and tummy time to all nine locale files
       under `src/i18n/locales/`.
-- [ ] Wire `checkAndConfirmFeeding` into `app/feeding/manual.tsx` and `app/edit/feeding.tsx`,
+- [x] Wire `checkAndConfirmFeeding` into `app/feeding/manual.tsx` and `app/edit/feeding.tsx`,
       `checkAndConfirmPumping` into `app/pumping/manual.tsx` and `app/edit/pumping.tsx`, and
       `checkAndConfirmTummyTime` into `app/tummyTime/manual.tsx` and `app/edit/tummyTime.tsx`.
-- [ ] Take the entry list from context in `app/pumping/manual.tsx` and `app/tummyTime/manual.tsx`.
-- [ ] Exclude the record being edited by id on all three edit screens.
-- [ ] Checker unit tests for each of the three types: overlapping intervals report `overlapping_session`
+- [x] Take the entry list from context in `app/pumping/manual.tsx` and `app/tummyTime/manual.tsx`.
+- [x] Exclude the record being edited by id on all three edit screens.
+- [x] Checker unit tests for each of the three types: overlapping intervals report `overlapping_session`
       at `high`; intervals that touch at a boundary do not match; a record with no end, or with
       `endedAt` equal to `startedAt`, takes the proximity path with its existing threshold and
       confidence; bottle against bottle stays on proximity; breast against bottle never compares.
-- [ ] Component tests on all six screens: an overlapping same-type record raises the dialog, Continue
+- [x] Component tests on all six screens: an overlapping same-type record raises the dialog, Continue
       anyway saves both records, Cancel writes nothing, and an edit never matches the record being
       edited.
-- [ ] Tests that no comparison crosses activity types: a pumping session overlapping a feed raises
+- [x] Tests that no comparison crosses activity types: a pumping session overlapping a feed raises
       nothing, and tummy time logged across a feed raises nothing.
-- [ ] Tests that the overlap title and message resolve in all nine locales, and that the dialog shows
+- [x] Tests that the overlap title and message resolve in all nine locales, and that the dialog shows
       overlap wording — not the proximity copy — for a feeding, a pumping, and a tummy time match.
 
 ## Acceptance criteria
 
-- [ ] All six screens run a same-type duplicate check on save, and none did before.
-- [ ] Two records of one type whose intervals overlap raise the dialog at `high` confidence with
+- [x] All six screens run a same-type duplicate check on save, and none did before.
+- [x] Two records of one type whose intervals overlap raise the dialog at `high` confidence with
       `overlapping_session`, regardless of how far apart their starts are.
-- [ ] A record lacking a real interval — no `endedAt`, or `endedAt` equal to `startedAt` — takes its
+- [x] A record lacking a real interval — no `endedAt`, or `endedAt` equal to `startedAt` — takes its
       type's existing proximity threshold and confidence heuristic, unchanged.
-- [ ] Breast never compares against bottle, and no check ever compares across activity types.
-- [ ] Continue anyway saves both records; Cancel writes nothing; no save is ever blocked.
-- [ ] An edit never matches the record being edited.
-- [ ] Overlap wording reaches the dialog for feeding, pumping, and tummy time in all nine locales, and
+- [x] Breast never compares against bottle, and no check ever compares across activity types.
+- [x] Continue anyway saves both records; Cancel writes nothing; no save is ever blocked.
+- [x] An edit never matches the record being edited.
+- [x] Overlap wording reaches the dialog for feeding, pumping, and tummy time in all nine locales, and
       sleep's overlap wording is unchanged.
-- [ ] No schema change, no statistics change, and no check on a timer-stop save.
+- [x] No schema change, no statistics change, and no check on a timer-stop save.
+
+## Implementation proof
+
+- Checker RED/GREEN cycles covered far-start overlap, boundary contact, missing and zero-length ends,
+  bottle proximity, and feeding-type isolation. Focused result: 71 checker tests pass.
+- Screen RED/GREEN cycles covered cancellation before each save flow was wired. The completed six-screen
+  component matrix proves overlap wording, Cancel, Continue anyway, edit self-exclusion, and no
+  pumping/tummy-time comparison against feeding. Focused result: 7 suites and 64 tests pass.
+- Locale parity was RED in all nine locales before the new keys and GREEN afterward; the dialog test
+  resolves per-activity overlap keys for feeding, pumping, tummy time, and the unchanged sleep path.
+- Focused pre-review validation passed: affected unit tests, affected component tests, affected-file
+  ESLint, repository typecheck, and `git diff --check`. Logs are retained in the task workflow directory.
 
 ## Non-goals
 
@@ -122,3 +134,42 @@ is blocked, nothing is merged, and statistics are untouched.
 - Changing what the dialog says it found — whether overlap copy should name the overlap rather than the
   elapsed time is left open by the source decision.
 - Any schema change.
+
+## Review decisions
+
+- skipped (minor): TR-9 — The overlap-copy lookup suppresses exhaustive type checking and can throw for an unsupported activity type — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
+- skipped (minor): TR-10 — The task file uses a nonstandard `Implementation proof` section — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
+- skipped (minor): TR-11 — Interval-overlap detection duplicates parsing work across three checkers — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
+
+## Completion record
+
+- **Built:** Feeding, pumping, and tummy-time duplicate detection now prefers real interval overlap at
+  high confidence, retains each type's proximity fallback, and runs from all six manual and edit
+  screens. Edit checks exclude the current record. The confirmation hook, dialog, and all nine locale
+  files carry the overlap reason and let the caregiver cancel or keep both entries.
+- **Decisions:** Overlap wins duplicate-match ranking, boundary contact is not overlap, incomplete or
+  zero-length intervals use proximity, and checks remain within one activity and feeding type. Saves
+  warn without blocking or merging records.
+- **Relevant files:** `src/services/duplicate-detection.ts`, `src/hooks/useDuplicateCheck.ts`,
+  `src/components/DuplicateConfirmationDialog.ts`, the six screens named under Implementation work,
+  their focused tests, and `src/i18n/locales/` plus the locale parity test.
+- **Documentation:** `README.md` documents the current behavior in **Feeding** and **Pumping and Tummy
+  Time**. A two-pass `write-well` audit required no further prose changes; the repeated cancel-or-keep
+  sentence was retained so each standalone activity section states the available choice.
+- **Review:** `reviews/0076-warn-on-overlapping-non-sleep-records-32cfb05.md` is closed. TR-1 through
+  TR-8 were fixed and re-proved. TR-9 through TR-11 were skipped as nits outside the requested
+  major/minor remediation scope. No review finding classified as a security risk was accepted.
+- **CI security decision:** The user accepted temporary exceptions through 2026-08-21 for
+  `GHSA-w3rx-r6r6-pgpr` and `GHSA-5p2g-fcmc-qvqq`. Metro exposes `image-size` only to
+  repository-controlled build assets, no new images will be added during the exception window, no
+  patched release exists, and npm's available remediation requires a major Expo 57 upgrade. The
+  separately reported `nanoid` advisory was fixed by pinning `nanoid@3.3.17`.
+- **Automated proof (2026-08-07):** After the CI advisory remediation, `npm ci` passed,
+  `npm run audit:dependencies` passed with the two active exceptions, and all nine dependency-policy
+  tests passed. A fresh `npm run check:code` passed at the recorded canonical tier: ESLint and
+  TypeScript passed; Vitest passed 144 files and 2,629 tests; Jest passed 105 suites and 1,026 tests;
+  the CI contract suite passed 65 tests; and the production bundle excluded development onboarding
+  tools. The capped canonical log is
+  `/tmp/agent-workflows/baby-tracker/feature-warn-overlap/canonical-after-deps.log`.
+- **Manual verification:** None required. The task has no `[verify]` item and no device, simulator,
+  store-release, or production-deployment acceptance criterion.

@@ -12,7 +12,8 @@ import { exitModal } from "@/navigation";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
 import { validateManualBreastfeedingTimes } from "@/validators/feeding";
 import { te } from "@/utils/translate-errors";
-import type { UpdateFeedingInput } from "@/services/feeding-storage";
+import type { StoredFeedingEntry, UpdateFeedingInput } from "@/services/feeding-storage";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
 
 const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
@@ -27,6 +28,7 @@ export default function EditFeedingScreen() {
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { feedings, updateFeeding, deleteFeeding } = useFeeding();
+  const { checkAndConfirmFeeding } = useDuplicateCheck();
 
   const feeding = useMemo(() => {
     return feedings.find((f) => f.id === id) ?? null;
@@ -130,6 +132,27 @@ export default function EditFeedingScreen() {
       }
     }
 
+    if (timeChanged) {
+      const proposedFeeding: StoredFeedingEntry = {
+        ...feeding,
+        side,
+        startedAt: startTime.toISOString(),
+        endedAt:
+          feeding.type === "breast" && endTime && (feeding.endedAt || endChanged)
+            ? endTime.toISOString()
+            : feeding.endedAt,
+        notes: notes || undefined,
+      };
+      if (
+        !(await checkAndConfirmFeeding(
+          proposedFeeding,
+          feedings.filter((candidate) => candidate.id !== feeding.id)
+        ))
+      ) {
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       const parsedAmount = amountMl ? parseInt(amountMl, 10) : undefined;
@@ -163,7 +186,7 @@ export default function EditFeedingScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, feeding, startTime, endTime, endChanged, timeChanged, side, amountMl, contentType, foodType, amount, reaction, notes, updateFeeding, router]);
+  }, [selectedBaby, feeding, startTime, endTime, endChanged, timeChanged, side, amountMl, contentType, foodType, amount, reaction, notes, checkAndConfirmFeeding, feedings, updateFeeding, router]);
 
   const handleDelete = useCallback(() => {
     if (!feeding) return;

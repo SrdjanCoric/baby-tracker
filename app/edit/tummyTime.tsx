@@ -10,7 +10,8 @@ import { exitModal } from "@/navigation";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
 import { validateManualTummyTimeTimes } from "@/validators/tummyTime";
 import { te } from "@/utils/translate-errors";
-import type { UpdateTummyTimeInput } from "@/services/tummyTime-storage";
+import type { StoredTummyTimeEntry, UpdateTummyTimeInput } from "@/services/tummyTime-storage";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
 
 const TUMMY_TIME_ORANGE = "#E67E22";
 const TUMMY_TIME_ORANGE_MUTED = "#FEF3E2";
@@ -25,6 +26,7 @@ export default function EditTummyTimeScreen() {
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { tummyTimes, updateTummyTime, deleteTummyTime } = useTummyTime();
+  const { checkAndConfirmTummyTime } = useDuplicateCheck();
 
   const tummyTime = useMemo(() => {
     return tummyTimes.find((tt) => tt.id === id) ?? null;
@@ -98,6 +100,24 @@ export default function EditTummyTimeScreen() {
       }
     }
 
+    if (timeChanged) {
+      const proposedTummyTime: StoredTummyTimeEntry = {
+        ...tummyTime,
+        startedAt: startTime.toISOString(),
+        endedAt:
+          tummyTime.endedAt || endChanged ? endTime.toISOString() : tummyTime.endedAt,
+        notes: notes || undefined,
+      };
+      if (
+        !(await checkAndConfirmTummyTime(
+          proposedTummyTime,
+          tummyTimes.filter((candidate) => candidate.id !== tummyTime.id)
+        ))
+      ) {
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       const input: UpdateTummyTimeInput = {
@@ -116,7 +136,7 @@ export default function EditTummyTimeScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, tummyTime, startTime, endTime, endChanged, timeChanged, notes, updateTummyTime, router]);
+  }, [selectedBaby, tummyTime, startTime, endTime, endChanged, timeChanged, notes, checkAndConfirmTummyTime, tummyTimes, updateTummyTime, router]);
 
   const handleDelete = useCallback(() => {
     if (!tummyTime) return;

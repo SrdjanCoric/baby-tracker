@@ -11,7 +11,8 @@ import { exitModal } from "@/navigation";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
 import { validateManualPumpingTimes, validatePumpingVolume } from "@/validators/pumping";
 import { te } from "@/utils/translate-errors";
-import type { UpdatePumpingInput } from "@/services/pumping-storage";
+import type { StoredPumpingEntry, UpdatePumpingInput } from "@/services/pumping-storage";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
 
 const PUMPING_BLUE = "#7B9BC9";
 const PUMPING_BLUE_MUTED = "#E8EDF5";
@@ -26,6 +27,7 @@ export default function EditPumpingScreen() {
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
   const { pumpings, updatePumping, deletePumping } = usePumping();
+  const { checkAndConfirmPumping } = useDuplicateCheck();
 
   const pumping = useMemo(() => {
     return pumpings.find((p) => p.id === id) ?? null;
@@ -117,6 +119,26 @@ export default function EditPumpingScreen() {
       }
     }
 
+    if (timeChanged) {
+      const proposedPumping: StoredPumpingEntry = {
+        ...pumping,
+        side,
+        volumeMl: parsedVolume,
+        startedAt: startTime.toISOString(),
+        endedAt:
+          pumping.endedAt || endChanged ? endTime.toISOString() : pumping.endedAt,
+        notes: notes || undefined,
+      };
+      if (
+        !(await checkAndConfirmPumping(
+          proposedPumping,
+          pumpings.filter((candidate) => candidate.id !== pumping.id)
+        ))
+      ) {
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       const input: UpdatePumpingInput = {
@@ -137,7 +159,7 @@ export default function EditPumpingScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, pumping, startTime, endTime, endChanged, timeChanged, side, volumeMl, notes, updatePumping, router]);
+  }, [selectedBaby, pumping, startTime, endTime, endChanged, timeChanged, side, volumeMl, notes, checkAndConfirmPumping, pumpings, updatePumping, router]);
 
   const handleDelete = useCallback(() => {
     if (!pumping) return;

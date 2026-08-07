@@ -1,3 +1,28 @@
 {
-  "exceptions": []
+  "exceptions": [
+    {
+      "advisory": "GHSA-w3rx-r6r6-pgpr",
+      "package": "image-size",
+      "dependencyPaths": [
+        "node_modules/image-size"
+      ],
+      "exposure": "Metro uses image-size only while bundling repository-controlled assets; runtime user-selected images do not pass through it, and no new repository images will be added during the exception window.",
+      "reason": "No patched image-size release exists. Expo 54's Metro constrains image-size to the affected 1.x line, and npm offers only a major Expo 57 upgrade.",
+      "upstream": "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+      "owner": "Srdjan Coric",
+      "expiresOn": "2026-08-21"
+    },
+    {
+      "advisory": "GHSA-5p2g-fcmc-qvqq",
+      "package": "image-size",
+      "dependencyPaths": [
+        "node_modules/image-size"
+      ],
+      "exposure": "Metro uses image-size only while bundling repository-controlled assets; runtime user-selected images do not pass through it, and no new repository images will be added during the exception window.",
+      "reason": "No patched image-size release exists. Expo 54's Metro constrains image-size to the affected 1.x line, and npm offers only a major Expo 57 upgrade.",
+      "upstream": "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
+      "owner": "Srdjan Coric",
+      "expiresOn": "2026-08-21"
+    }
+  ]
 }

@@ -1,6 +1,7 @@
 import React from "react";
-import { Platform } from "react-native";
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { Alert, Platform } from "react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import ManualFeedingScreen from "./manual";
 
 type FeedingTypeParam = "breastfeed" | "bottle" | "solids";
@@ -9,6 +10,7 @@ const mockAddFeeding = jest.fn();
 const mockReplace = jest.fn();
 const mockScheduleReminderAfterFeeding = jest.fn();
 let mockParams: { type?: FeedingTypeParam } = {};
+let mockFeedings: StoredFeedingEntry[] = [];
 
 jest.mock("@react-native-community/datetimepicker", () => {
   const { View } = require("react-native");
@@ -21,7 +23,7 @@ jest.mock("@react-native-community/datetimepicker", () => {
 });
 
 jest.mock("@/contexts", () => ({
-  useFeeding: () => ({ addFeeding: mockAddFeeding, feedings: [] }),
+  useFeeding: () => ({ addFeeding: mockAddFeeding, feedings: mockFeedings }),
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
   useUnits: () => ({ volumeUnit: "ml" }),
   useTimeFormat: () => ({ timeFormat: "24h" }),
@@ -46,10 +48,12 @@ describe("ManualFeedingScreen clock-time entry", () => {
     jest.clearAllMocks();
     jest.useFakeTimers().setSystemTime(now);
     mockParams = {};
+    mockFeedings = [];
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
     Object.defineProperty(Platform, "OS", {
       value: originalPlatformOS,
       configurable: true,
@@ -86,6 +90,86 @@ describe("ManualFeedingScreen clock-time entry", () => {
     fireEvent.press(
       screen.getByRole("button", { name: "feeding.logManualBreastfeeding" })
     );
+
+    await waitFor(() => expect(mockAddFeeding).toHaveBeenCalledTimes(1));
+    expect(mockAddFeeding).toHaveBeenCalledWith({
+      babyId: "baby-1",
+      type: "breast",
+      side: "left",
+      startedAt: new Date("2026-08-07T09:30:00.000Z"),
+      endedAt: now,
+      durationSeconds: 1800,
+      notes: undefined,
+    });
+  });
+
+  it("cancels an overlapping breast feed without writing", async () => {
+    mockFeedings = [
+      {
+        id: "feeding-existing",
+        babyId: "baby-1",
+        type: "breast",
+        side: "left",
+        startedAt: "2026-08-07T08:30:00.000Z",
+        endedAt: "2026-08-07T09:45:00.000Z",
+        durationSeconds: 4500,
+        createdAt: "2026-08-07T08:30:00.000Z",
+        updatedAt: "2026-08-07T09:45:00.000Z",
+      },
+    ];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = render(<ManualFeedingScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(screen.getByRole("button", { name: "feeding.logManualBreastfeeding" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    expect(alertSpy.mock.calls[0][0]).toBe("duplicateDetection.feedingOverlapTitle");
+    await act(async () => alertSpy.mock.calls[0][2]?.[0]?.onPress?.());
+
+    expect(mockAddFeeding).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("continues through an overlap warning and keeps the existing breast feed", async () => {
+    const existing: StoredFeedingEntry = {
+      id: "feeding-existing",
+      babyId: "baby-1",
+      type: "breast",
+      side: "left",
+      startedAt: "2026-08-07T08:30:00.000Z",
+      endedAt: "2026-08-07T09:45:00.000Z",
+      durationSeconds: 4500,
+      createdAt: "2026-08-07T08:30:00.000Z",
+      updatedAt: "2026-08-07T09:45:00.000Z",
+    };
+    mockFeedings = [existing];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = render(<ManualFeedingScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(screen.getByRole("button", { name: "feeding.logManualBreastfeeding" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
 
     await waitFor(() => expect(mockAddFeeding).toHaveBeenCalledTimes(1));
     expect(mockAddFeeding).toHaveBeenCalledWith({
@@ -223,6 +307,31 @@ describe("ManualFeedingScreen clock-time entry", () => {
     );
     expect(mockAddFeeding.mock.calls[0][0]).not.toHaveProperty("endedAt");
     expect(mockAddFeeding.mock.calls[0][0]).not.toHaveProperty("durationSeconds");
+  });
+
+  it("runs the proximity warning for a bottle moment", async () => {
+    mockParams = { type: "bottle" };
+    mockFeedings = [
+      {
+        id: "bottle-existing",
+        babyId: "baby-1",
+        type: "bottle",
+        amountMl: 120,
+        startedAt: "2026-08-07T09:55:00.000Z",
+        createdAt: "2026-08-07T09:55:00.000Z",
+        updatedAt: "2026-08-07T09:55:00.000Z",
+      },
+    ];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const screen = render(<ManualFeedingScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "feeding.formula" }));
+    fireEvent.changeText(screen.getByLabelText("feeding.enterAmount"), "120");
+    fireEvent.press(screen.getByRole("button", { name: "feeding.logManualBottleFeeding" }));
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    expect(alertSpy.mock.calls[0][0]).toBe("duplicateDetection.title");
+    await act(async () => alertSpy.mock.calls[0][2]?.[0]?.onPress?.());
+    expect(mockAddFeeding).not.toHaveBeenCalled();
   });
 
   it("clamps an Android date merge that would move a moment into the future", () => {

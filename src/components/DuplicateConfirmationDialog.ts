@@ -13,6 +13,25 @@ export interface DuplicateDialogOptions {
   t: TFunction;
 }
 
+const OVERLAP_COPY = {
+  feeding: {
+    title: 'duplicateDetection.feedingOverlapTitle',
+    message: 'duplicateDetection.feedingOverlapMessage',
+  },
+  pumping: {
+    title: 'duplicateDetection.pumpingOverlapTitle',
+    message: 'duplicateDetection.pumpingOverlapMessage',
+  },
+  tummyTime: {
+    title: 'duplicateDetection.tummyTimeOverlapTitle',
+    message: 'duplicateDetection.tummyTimeOverlapMessage',
+  },
+  sleep: {
+    title: 'duplicateDetection.sleepOverlapTitle',
+    message: 'duplicateDetection.sleepOverlapMessage',
+  },
+} as const;
+
 function formatTimeDifference(entryTime: string, t: TFunction): string {
   const now = new Date();
   const entry = new Date(entryTime);
@@ -37,13 +56,14 @@ function formatTimeDifference(entryTime: string, t: TFunction): string {
 export function showDuplicateConfirmation(options: DuplicateDialogOptions): void {
   const { activityType, existingEntryTime, loggedByName, matchReason, onConfirm, onCancel, t } = options;
 
-  const isSleepOverlap = activityType === 'sleep' && matchReason === 'overlapping_session';
+  const isOverlap = matchReason === 'overlapping_session';
+  const overlapCopy = OVERLAP_COPY[activityType as keyof typeof OVERLAP_COPY];
   const timeDiff = formatTimeDifference(existingEntryTime, t);
   const activityName = t(`activities.${activityType}`);
 
   let message: string;
-  if (isSleepOverlap) {
-    message = t('duplicateDetection.sleepOverlapMessage');
+  if (isOverlap) {
+    message = t(overlapCopy.message);
   } else if (loggedByName) {
     message = t('duplicateDetection.messageWithUser', {
       activity: activityName,
@@ -58,7 +78,7 @@ export function showDuplicateConfirmation(options: DuplicateDialogOptions): void
   }
 
   Alert.alert(
-    t(isSleepOverlap ? 'duplicateDetection.sleepOverlapTitle' : 'duplicateDetection.title'),
+    t(isOverlap ? overlapCopy.title : 'duplicateDetection.title'),
     message,
     [
       {
@@ -68,13 +88,14 @@ export function showDuplicateConfirmation(options: DuplicateDialogOptions): void
       },
       {
         text: t(
-          isSleepOverlap
+          isOverlap
             ? 'duplicateDetection.continueAnyway'
             : 'duplicateDetection.logAnyway'
         ),
         onPress: onConfirm,
       },
-    ]
+    ],
+    { cancelable: false }
   );
 }
 

@@ -24,6 +24,8 @@ import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
+import type { StoredPumpingEntry } from "@/services/pumping-storage";
 
 const QUICK_AMOUNTS_OZ = [1, 2, 3, 4, 5, 6];
 const QUICK_AMOUNTS_ML = [30, 60, 90, 120, 150, 180];
@@ -39,7 +41,8 @@ export default function ManualPumpingScreen() {
   const { selectedBaby } = useBaby();
   const { volumeUnit } = useUnits();
   const { timeFormat } = useTimeFormat();
-  const { addPumping, getLastSide } = usePumping();
+  const { addPumping, pumpings, getLastSide } = usePumping();
+  const { checkAndConfirmPumping } = useDuplicateCheck();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const colors = {
@@ -130,6 +133,20 @@ export default function ManualPumpingScreen() {
       const durationSeconds = Math.floor(
         (endTime.getTime() - startTime.getTime()) / 1000
       );
+      const proposedPumping: StoredPumpingEntry = {
+        id: "manual-pumping-candidate",
+        babyId: selectedBaby.id,
+        side,
+        startedAt: startTime.toISOString(),
+        endedAt: endTime.toISOString(),
+        durationSeconds,
+        volumeMl: volumeMl ?? undefined,
+        notes: notes || undefined,
+        createdAt: startTime.toISOString(),
+        updatedAt: startTime.toISOString(),
+      };
+      if (!(await checkAndConfirmPumping(proposedPumping, pumpings))) return;
+
       await addPumping({
         babyId: selectedBaby.id,
         side,
@@ -157,6 +174,8 @@ export default function ManualPumpingScreen() {
     volumeMl,
     notes,
     addPumping,
+    pumpings,
+    checkAndConfirmPumping,
     onboardingActivity,
     router,
   ]);

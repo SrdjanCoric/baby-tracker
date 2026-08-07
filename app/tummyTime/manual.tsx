@@ -20,6 +20,8 @@ import { te } from "@/utils/translate-errors";
 import { validateManualTummyTimeTimes } from "@/validators/tummyTime";
 import { ACTIVITY } from "@/constants/colors";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
+import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 
 const MINIMUM_TUMMY_TIME_MS = 60_000;
 const MAXIMUM_TUMMY_TIME_MS = 2 * 60 * 60 * 1000;
@@ -30,7 +32,8 @@ export default function ManualTummyTimeScreen() {
   const { onboardingActivity } = useLocalSearchParams<{ onboardingActivity?: string }>();
   const { selectedBaby } = useBaby();
   const { timeFormat } = useTimeFormat();
-  const { addTummyTime } = useTummyTime();
+  const { addTummyTime, tummyTimes } = useTummyTime();
+  const { checkAndConfirmTummyTime } = useDuplicateCheck();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const colors = {
@@ -71,6 +74,18 @@ export default function ManualTummyTimeScreen() {
       const durationSeconds = Math.floor(
         (endTime.getTime() - startTime.getTime()) / 1000
       );
+      const proposedTummyTime: StoredTummyTimeEntry = {
+        id: "manual-tummy-time-candidate",
+        babyId: selectedBaby.id,
+        startedAt: startTime.toISOString(),
+        endedAt: endTime.toISOString(),
+        durationSeconds,
+        notes: notes || undefined,
+        createdAt: startTime.toISOString(),
+        updatedAt: startTime.toISOString(),
+      };
+      if (!(await checkAndConfirmTummyTime(proposedTummyTime, tummyTimes))) return;
+
       await addTummyTime({
         babyId: selectedBaby.id,
         startedAt: startTime,
@@ -88,7 +103,17 @@ export default function ManualTummyTimeScreen() {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [selectedBaby, startTime, endTime, notes, addTummyTime, onboardingActivity, router]);
+  }, [
+    selectedBaby,
+    startTime,
+    endTime,
+    notes,
+    addTummyTime,
+    tummyTimes,
+    checkAndConfirmTummyTime,
+    onboardingActivity,
+    router,
+  ]);
 
   const startBounds = useCallback(() => {
     const boundaryNow = Date.now();

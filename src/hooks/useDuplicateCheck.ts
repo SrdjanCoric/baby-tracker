@@ -59,6 +59,7 @@ export function useDuplicateCheck() {
         activityType: 'feeding',
         existingEntryTime: candidate.entry.startedAt,
         loggedByName: candidate.loggedBy,
+        matchReason: candidate.matchReason,
         t,
       });
     },
@@ -141,6 +142,7 @@ export function useDuplicateCheck() {
         activityType: 'pumping',
         existingEntryTime: candidate.entry.startedAt,
         loggedByName: candidate.loggedBy,
+        matchReason: candidate.matchReason,
         t,
       });
     },
@@ -195,6 +197,7 @@ export function useDuplicateCheck() {
         activityType: 'tummyTime',
         existingEntryTime: candidate.entry.startedAt,
         loggedByName: candidate.loggedBy,
+        matchReason: candidate.matchReason,
         t,
       });
     },
