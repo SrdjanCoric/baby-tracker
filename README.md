@@ -92,6 +92,14 @@ hours, and neither time can be in the future. Saving a time change replaces the 
 the new interval, while changing only the notes or side preserves the stored timestamps and duration.
 Bottle feeds and solid-food entries remain timestamped moments, and bottle volume stays editable.
 
+### Pumping and Tummy Time
+
+Manual entry and completed-record editing use start and end clock times, with duration calculated
+from the interval. Pumping sessions must span from one minute through one hour, while tummy-time
+sessions may span up to two hours. Neither time can be in the future. Saving a time change replaces
+the stored duration with the new interval, while changing only notes or pumping volume preserves the
+stored timestamps and duration. Pumping volume stays editable with a 500 ml maximum.
+
 ### Sleep Predictions
 
 Manual sleep entry and completed-sleep editing use start and end clock times, with duration calculated

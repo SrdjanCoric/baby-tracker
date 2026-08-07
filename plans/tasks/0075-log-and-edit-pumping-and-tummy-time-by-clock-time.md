@@ -212,3 +212,36 @@ pumping or tummy-time test in this task asserts on that label, assert the field 
   quick-duration chips were left in all nine locale files — excluded from this remediation pass.
 - skipped (minor): TR-7 — The counted-pause tests on both new edit screens cannot fail — excluded
   from this remediation pass.
+
+## Completion record
+
+Completed on 2026-08-07.
+
+- **Built:** Manual pumping and tummy-time entry and completed-record editing now use start and end
+  clock times through the shared `StartEndTimeSection`, with a derived duration, live picker bounds,
+  conditional legacy-record convergence, and nine-locale coverage. Pumping keeps its volume field
+  and 500 ml cap.
+- **Decisions:** A fresh form starts with a valid one-minute interval. Pumping intervals are limited
+  to one hour and tummy-time intervals to two hours. A time edit derives and saves duration from the
+  edited interval, while a note-only or pumping-volume-only edit preserves stored time fields. An
+  open legacy row gains an endpoint only when the caregiver moves End. No overlap check, schema
+  change, running-timer adapter change, or native-surface change was added.
+- **Relevant files:** `app/pumping/manual.tsx`, `app/edit/pumping.tsx`,
+  `app/tummyTime/manual.tsx`, `app/edit/tummyTime.tsx`, `src/components/StartEndTimeSection.tsx`,
+  `src/validators/pumping.ts`, `src/validators/tummyTime.ts`, locale files under
+  `src/i18n/locales/`, pumping and tummy-time storage and sync services, the pumping Maestro flow,
+  and their component, validation, storage, sync, and timeline tests.
+- **README:** Added the `Pumping and Tummy Time` section describing start/end clock-time entry, the
+  one-minute through type-specific maximum ranges, future-time rejection, conditional duration
+  rewriting, and pumping-volume behavior. The affected prose passed one full `write-well` audit with
+  no findings.
+- **Review:** The independent standards, spec, bug, and security review reported zero security
+  findings. TR-1 through TR-4 were fixed and verified during remediation. TR-5 through TR-7 were
+  skipped as minor findings because they were excluded from the remediation pass; their individual
+  reasons remain recorded above. No security risk was accepted.
+- **Automated proof:** `npm run check:code` passed on 2026-08-07 with exit 0 using output-only log
+  capping. It included lint, strict type checking, 143 Vitest files with 2,606 tests, 104 Jest suites
+  with 1,006 tests, 65 CI-contract tests, and the production-bundle gate. The log is
+  `/tmp/agent-workflows/baby-tracker/feature-log-and-edit-pumping-and-tummy-time-by-clock-time/canonical.log`.
+- **Manual proof:** No device, simulator, deployment, or other manual `[verify]` checkpoint is
+  recorded for this task. The canonical automated proof covers the final behavior.
