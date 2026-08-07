@@ -66,7 +66,11 @@ export default function SleepScreen() {
     activeTimer?.lockState === "offline" ||
     activeTimer?.lockState === "accountless";
   const canEditTimerStart = Boolean(
-    timerLock ? timerLock.startedBy === user?.id : hasLocalTimerOwnership
+    timerLock
+      ? user?.id && timerLock.startedBy === user.id
+      : activeTimer?.lockState === "accountless"
+        ? !user?.id
+        : user?.id && hasLocalTimerOwnership
   );
   const getTimerStartBoundsForPicker = useCallback(
     () =>

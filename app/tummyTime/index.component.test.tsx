@@ -264,6 +264,19 @@ describe("TummyTimeScreen custom start time", () => {
     }
   });
 
+  it("keeps a stale signed-in timer read-only after sign-out", () => {
+    mockAuthUser = null;
+    mockLockStartedBy = null;
+    mockActiveTimer = { ...runningTimer, lockState: "owned" };
+
+    render(<TummyTimeScreen />);
+
+    expect(
+      screen.queryByRole("button", { name: /tummyTime.startTime:/ })
+    ).toBeNull();
+    expect(screen.getByLabelText(/tummyTime.startTime:/)).toBeTruthy();
+  });
+
   it("lets a caregiver close a cold-opened tummy-time screen", () => {
     render(<TummyTimeScreen />);
 

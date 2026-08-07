@@ -351,6 +351,17 @@ describe("FeedingScreen", () => {
         Object.defineProperty(Platform, "OS", { value: originalPlatformOS, configurable: true });
       }
     });
+
+    it("keeps a stale signed-in timer read-only after sign-out", () => {
+      mockAuthUser = null;
+      mockLockStartedBy = null;
+      mockActiveTimer = { ...runningTimer, lockState: "owned" };
+
+      render(<FeedingScreen />);
+
+      expect(screen.queryByRole("button", { name: /Start time:/ })).toBeNull();
+      expect(screen.getByLabelText(/Start time:/)).toBeTruthy();
+    });
   });
 
   describe("rendering", () => {

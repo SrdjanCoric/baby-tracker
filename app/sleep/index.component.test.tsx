@@ -274,6 +274,17 @@ describe("SleepScreen morning confirmation", () => {
     ).toBeTruthy();
   });
 
+  it("keeps a stale signed-in timer read-only after sign-out", () => {
+    mockAuthUser = null;
+    mockLockStartedBy = null;
+    mockActiveTimer = { ...runningTimer, lockState: "owned" };
+
+    render(<SleepScreen />);
+
+    expect(screen.queryByRole("button", { name: /Start time:/ })).toBeNull();
+    expect(screen.getByLabelText(/Start time:/)).toBeTruthy();
+  });
+
   it("lets an account-less caregiver open the bounded start editor and commit", async () => {
     const originalPlatformOS = Platform.OS;
     Object.defineProperty(Platform, "OS", { value: "android", configurable: true });

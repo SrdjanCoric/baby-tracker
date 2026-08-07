@@ -257,6 +257,20 @@ describe("PumpingScreen stop confirmation", () => {
     }
   });
 
+  it("keeps a stale signed-in timer read-only after sign-out", () => {
+    mockAuthUser = null;
+    mockLockStartedBy = null;
+    mockShowVolumeInput = "false";
+    mockActiveTimer = { ...runningTimer, lockState: "owned" };
+
+    render(<PumpingScreen />);
+
+    expect(
+      screen.queryByRole("button", { name: /pumping.startTime:/ })
+    ).toBeNull();
+    expect(screen.getByLabelText(/pumping.startTime:/)).toBeTruthy();
+  });
+
   it("lets a caregiver close a cold-opened pumping screen", () => {
     render(<PumpingScreen />);
 
