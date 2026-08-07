@@ -1,8 +1,11 @@
+import React from "react";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import EditSleepScreen from "../../app/edit/sleep";
 import { createPumpingTimerAdapter } from "@/services/timer-adapters/pumping-timer-adapter";
 import { createSleepTimerAdapter } from "@/services/timer-adapters/sleep-timer-adapter";
 import { createTummyTimeTimerAdapter } from "@/services/timer-adapters/tummy-time-timer-adapter";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
-import type { StoredSleepEntry } from "@/services/sleep-storage";
+import type { StoredSleepEntry, UpdateSleepInput } from "@/services/sleep-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import { formatSleepAsCSV } from "@/utils/csv-generator";
 import { renderSleepSection } from "@/utils/pdf-templates/sleep-section";
@@ -14,6 +17,51 @@ import {
 } from "@/utils/statistics";
 import { formatDuration } from "@/utils/time";
 import { calculateDailySummary } from "@/utils/timeline";
+
+const mockUpdateSleep = jest.fn();
+let mockEditSleeps: StoredSleepEntry[] = [];
+
+jest.mock("@react-native-community/datetimepicker", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: (props: Record<string, unknown>) => (
+      <View testID="datetime-picker" {...props} />
+    ),
+  };
+});
+
+jest.mock("@/contexts/sleep-context", () => ({
+  useSleep: () => ({
+    sleeps: mockEditSleeps,
+    updateSleep: mockUpdateSleep,
+    deleteSleep: jest.fn(),
+    wakeWindowConfig: { dayStartHour: 6, dayEndHour: 19 },
+  }),
+}));
+
+jest.mock("@/contexts", () => ({
+  useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
+  useTimeFormat: () => ({ timeFormat: "24h" }),
+}));
+
+jest.mock("@/hooks/useDuplicateCheck", () => ({
+  useDuplicateCheck: () => ({ checkAndConfirmSleep: jest.fn().mockResolvedValue(true) }),
+}));
+
+jest.mock("expo-router", () => ({
+  useRouter: () => ({
+    canGoBack: () => false,
+    back: jest.fn(),
+    replace: jest.fn(),
+  }),
+  useLocalSearchParams: () => ({ id: "legacy-paused-sleep" }),
+}));
+
+jest.mock("@react-navigation/native", () => ({
+  useNavigation: () => ({ dispatch: jest.fn() }),
+  usePreventRemove: jest.fn(),
+}));
 
 jest.mock("@/services/live-activity-service", () => ({}));
 jest.mock("@/services/active-timer-service", () => ({}));
@@ -131,18 +179,41 @@ describe("recorded timer duration consumers", () => {
     expect(renderSleepSection(report)).toContain(">10 min<");
   });
 
-  it("keeps every sleep duration consumer aligned after a legacy paused interval is time-edited", () => {
-    const editedStart = new Date("2026-08-05T12:00:00.000Z");
-    const editedEnd = new Date("2026-08-05T12:07:00.000Z");
-    const sleep: StoredSleepEntry = {
+  it("keeps every sleep duration consumer aligned after a legacy paused interval is time-edited", async () => {
+    const legacySleep: StoredSleepEntry = {
       id: "legacy-paused-sleep",
       babyId: "baby-1",
       type: "nap",
-      startedAt: editedStart.toISOString(),
-      endedAt: editedEnd.toISOString(),
-      durationSeconds: 420,
-      createdAt: editedStart.toISOString(),
-      updatedAt: editedEnd.toISOString(),
+      startedAt: "2026-08-05T12:00:00.000Z",
+      endedAt: "2026-08-05T12:10:00.000Z",
+      durationSeconds: 300,
+      createdAt: "2026-08-05T12:00:00.000Z",
+      updatedAt: "2026-08-05T12:10:00.000Z",
+    };
+    mockEditSleeps = [legacySleep];
+    mockUpdateSleep.mockReset().mockResolvedValue(legacySleep);
+
+    const rendered = render(<EditSleepScreen />);
+    await waitFor(() => expect(rendered.getByText("10m")).toBeTruthy());
+    fireEvent.press(
+      rendered.getByRole("button", { name: "sleep.endTime feeding.selectTime" })
+    );
+    fireEvent(
+      rendered.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-05T12:07:00.000Z")
+    );
+    fireEvent.press(rendered.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(mockUpdateSleep).toHaveBeenCalledTimes(1));
+    const update = mockUpdateSleep.mock.calls[0][1] as UpdateSleepInput;
+    const sleep: StoredSleepEntry = {
+      ...legacySleep,
+      ...update,
+      startedAt: update.startedAt!.toISOString(),
+      endedAt: update.endedAt!.toISOString(),
+      durationSeconds: update.durationSeconds!,
     };
     const day = new Date("2026-08-05T12:00:00.000Z");
     const report = aggregateSleep(
