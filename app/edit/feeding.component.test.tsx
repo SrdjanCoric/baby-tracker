@@ -326,7 +326,14 @@ describe("EditFeedingScreen clock-time editing", () => {
     await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
     await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
     await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
-    expect(mockFeedings[1]).toEqual(overlap);
+    expect(mockUpdateFeeding).toHaveBeenCalledWith(
+      "feeding-1",
+      expect.objectContaining({
+        startedAt: new Date("2026-08-07T08:30:00.000Z"),
+        endedAt: new Date("2026-08-07T10:00:00.000Z"),
+        durationSeconds: 5400,
+      })
+    );
   });
 
   it("does not synthesize an endpoint when only Start changes on an unfinished breast feed", async () => {

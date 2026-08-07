@@ -172,7 +172,15 @@ describe("ManualFeedingScreen clock-time entry", () => {
     await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
 
     await waitFor(() => expect(mockAddFeeding).toHaveBeenCalledTimes(1));
-    expect(mockFeedings).toEqual([existing]);
+    expect(mockAddFeeding).toHaveBeenCalledWith({
+      babyId: "baby-1",
+      type: "breast",
+      side: "left",
+      startedAt: new Date("2026-08-07T09:30:00.000Z"),
+      endedAt: now,
+      durationSeconds: 1800,
+      notes: undefined,
+    });
   });
 
   it("opens both End pickers with live one-minute and two-hour bounds", () => {

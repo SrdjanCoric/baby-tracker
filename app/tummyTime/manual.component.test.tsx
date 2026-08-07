@@ -144,7 +144,13 @@ describe("ManualTummyTimeScreen clock-time entry", () => {
     await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
     await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
     await waitFor(() => expect(mockAddTummyTime).toHaveBeenCalledTimes(1));
-    expect(mockTummyTimes).toEqual([existing]);
+    expect(mockAddTummyTime).toHaveBeenCalledWith({
+      babyId: "baby-1",
+      startedAt: new Date("2026-08-07T09:30:00.000Z"),
+      endedAt: now,
+      durationSeconds: 1800,
+      notes: undefined,
+    });
   });
 
   it("does not compare tummy time with an overlapping feeding", async () => {

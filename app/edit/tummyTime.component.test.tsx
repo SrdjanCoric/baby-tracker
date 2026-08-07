@@ -208,7 +208,14 @@ describe("EditTummyTimeScreen clock-time editing", () => {
     await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
     await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
     await waitFor(() => expect(mockUpdateTummyTime).toHaveBeenCalledTimes(1));
-    expect(mockTummyTimes[1]).toEqual(overlap);
+    expect(mockUpdateTummyTime).toHaveBeenCalledWith(
+      "tummy-1",
+      expect.objectContaining({
+        startedAt: new Date("2026-08-07T09:00:00.000Z"),
+        endedAt: new Date("2026-08-07T10:00:00.000Z"),
+        durationSeconds: 3600,
+      })
+    );
   });
 
   it("opens both End pickers for a recent row without endedAt without becoming dirty", async () => {

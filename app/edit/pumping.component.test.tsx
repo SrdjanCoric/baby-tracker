@@ -212,7 +212,14 @@ describe("EditPumpingScreen clock-time editing", () => {
     await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
     await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
     await waitFor(() => expect(mockUpdatePumping).toHaveBeenCalledTimes(1));
-    expect(mockPumpings[1]).toEqual(overlap);
+    expect(mockUpdatePumping).toHaveBeenCalledWith(
+      "pumping-1",
+      expect.objectContaining({
+        startedAt: new Date("2026-08-07T09:00:00.000Z"),
+        endedAt: new Date("2026-08-07T09:30:00.000Z"),
+        durationSeconds: 1800,
+      })
+    );
   });
 
   it("allows a time edit when the stored pumping has no volume", async () => {

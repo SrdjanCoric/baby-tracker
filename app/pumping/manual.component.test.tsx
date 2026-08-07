@@ -182,7 +182,15 @@ describe("ManualPumpingScreen clock-time entry", () => {
     await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
     await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
     await waitFor(() => expect(mockAddPumping).toHaveBeenCalledTimes(1));
-    expect(mockPumpings).toEqual([existing]);
+    expect(mockAddPumping).toHaveBeenCalledWith({
+      babyId: "baby-1",
+      side: "both",
+      startedAt: new Date("2026-08-07T09:30:00.000Z"),
+      endedAt: now,
+      durationSeconds: 1800,
+      volumeMl: 120,
+      notes: undefined,
+    });
   });
 
   it("does not compare a pumping session with an overlapping feeding", async () => {
