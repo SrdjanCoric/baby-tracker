@@ -140,3 +140,29 @@ is blocked, nothing is merged, and statistics are untouched.
 - skipped (minor): TR-9 — The overlap-copy lookup suppresses exhaustive type checking and can throw for an unsupported activity type — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
 - skipped (minor): TR-10 — The task file uses a nonstandard `Implementation proof` section — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
 - skipped (minor): TR-11 — Interval-overlap detection duplicates parsing work across three checkers — user requested fixes for major and minor findings only; nits are outside the requested severity scope.
+
+## Completion record
+
+- **Built:** Feeding, pumping, and tummy-time duplicate detection now prefers real interval overlap at
+  high confidence, retains each type's proximity fallback, and runs from all six manual and edit
+  screens. Edit checks exclude the current record. The confirmation hook, dialog, and all nine locale
+  files carry the overlap reason and let the caregiver cancel or keep both entries.
+- **Decisions:** Overlap wins duplicate-match ranking, boundary contact is not overlap, incomplete or
+  zero-length intervals use proximity, and checks remain within one activity and feeding type. Saves
+  warn without blocking or merging records.
+- **Relevant files:** `src/services/duplicate-detection.ts`, `src/hooks/useDuplicateCheck.ts`,
+  `src/components/DuplicateConfirmationDialog.ts`, the six screens named under Implementation work,
+  their focused tests, and `src/i18n/locales/` plus the locale parity test.
+- **Documentation:** `README.md` documents the current behavior in **Feeding** and **Pumping and Tummy
+  Time**. A two-pass `write-well` audit required no further prose changes; the repeated cancel-or-keep
+  sentence was retained so each standalone activity section states the available choice.
+- **Review:** `reviews/0076-warn-on-overlapping-non-sleep-records-32cfb05.md` is closed. TR-1 through
+  TR-8 were fixed and re-proved. TR-9 through TR-11 were skipped as nits outside the requested
+  major/minor remediation scope. No security risk was accepted.
+- **Automated proof (2026-08-07):** `npm run check:code` passed at the recorded canonical tier. ESLint
+  and TypeScript passed; Vitest passed 144 files and 2,629 tests; Jest passed 105 suites and 1,026
+  tests; the CI contract suite passed 65 tests; and the production bundle excluded development
+  onboarding tools. The capped log is
+  `/tmp/agent-workflows/baby-tracker/feature-warn-overlap/canonical.log`.
+- **Manual verification:** None required. The task has no `[verify]` item and no device, simulator,
+  store-release, or production-deployment acceptance criterion.
