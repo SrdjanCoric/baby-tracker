@@ -211,6 +211,36 @@ describe("EditPumpingScreen clock-time editing", () => {
     expect(screen.getByTestId("datetime-picker")).toBeTruthy();
   });
 
+  it("does not fabricate an end time when only Start changes on an open row", async () => {
+    mockPumpings = [
+      {
+        ...mockPumpings[0],
+        startedAt: new Date(now.getTime() - 30_000).toISOString(),
+        endedAt: undefined,
+        durationSeconds: 0,
+      },
+    ];
+    const screen = render(<EditPumpingScreen />);
+    await waitFor(() => expect(screen.getByText("0m")).toBeTruthy());
+    const editedStart = new Date(now.getTime() - 60_000);
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "pumping.startTime feeding.selectTime",
+      })
+    );
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, editedStart);
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(mockUpdatePumping).toHaveBeenCalledTimes(1));
+    expect(mockUpdatePumping.mock.calls[0][1]).toEqual(
+      expect.objectContaining({ startedAt: editedStart })
+    );
+    expect(mockUpdatePumping.mock.calls[0][1]).not.toHaveProperty("endedAt");
+    expect(mockUpdatePumping.mock.calls[0][1]).not.toHaveProperty(
+      "durationSeconds"
+    );
+  });
+
   it("disables Save and bounds End when an edit exceeds one hour", async () => {
     const screen = await renderInitialized();
     fireEvent.press(

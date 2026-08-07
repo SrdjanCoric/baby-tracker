@@ -54,11 +54,15 @@ export default function EditPumpingScreen() {
     }
   }, [pumping, isInitialized]);
 
-  const timeChanged = Boolean(
-    pumping && startTime && endTime && initialEndTime &&
-      (startTime.getTime() !== new Date(pumping.startedAt).getTime() ||
-        endTime.getTime() !== initialEndTime.getTime())
+  const startChanged = Boolean(
+    pumping && startTime &&
+      startTime.getTime() !== new Date(pumping.startedAt).getTime()
   );
+  const endChanged = Boolean(
+    pumping && endTime && initialEndTime &&
+      endTime.getTime() !== initialEndTime.getTime()
+  );
+  const timeChanged = startChanged || endChanged;
 
   const hasChanges = useMemo(() => {
     if (!pumping || !isInitialized) return false;
@@ -122,8 +126,10 @@ export default function EditPumpingScreen() {
       };
       if (timeChanged) {
         input.startedAt = startTime;
-        input.endedAt = endTime;
-        input.durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+        if (pumping.endedAt || endChanged) {
+          input.endedAt = endTime;
+          input.durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+        }
       }
       await updatePumping(pumping.id, input);
       setIsInitialized(false);
@@ -131,7 +137,7 @@ export default function EditPumpingScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, pumping, startTime, endTime, timeChanged, side, volumeMl, notes, updatePumping, router]);
+  }, [selectedBaby, pumping, startTime, endTime, endChanged, timeChanged, side, volumeMl, notes, updatePumping, router]);
 
   const handleDelete = useCallback(() => {
     if (!pumping) return;

@@ -49,11 +49,15 @@ export default function EditTummyTimeScreen() {
     }
   }, [tummyTime, isInitialized]);
 
-  const timeChanged = Boolean(
-    tummyTime && startTime && endTime && initialEndTime &&
-      (startTime.getTime() !== new Date(tummyTime.startedAt).getTime() ||
-        endTime.getTime() !== initialEndTime.getTime())
+  const startChanged = Boolean(
+    tummyTime && startTime &&
+      startTime.getTime() !== new Date(tummyTime.startedAt).getTime()
   );
+  const endChanged = Boolean(
+    tummyTime && endTime && initialEndTime &&
+      endTime.getTime() !== initialEndTime.getTime()
+  );
+  const timeChanged = startChanged || endChanged;
 
   const hasChanges = useMemo(() => {
     if (!tummyTime || !isInitialized) return false;
@@ -101,8 +105,10 @@ export default function EditTummyTimeScreen() {
       };
       if (timeChanged) {
         input.startedAt = startTime;
-        input.endedAt = endTime;
-        input.durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+        if (tummyTime.endedAt || endChanged) {
+          input.endedAt = endTime;
+          input.durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+        }
       }
       await updateTummyTime(tummyTime.id, input);
       setIsInitialized(false);
@@ -110,7 +116,7 @@ export default function EditTummyTimeScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, tummyTime, startTime, endTime, timeChanged, notes, updateTummyTime, router]);
+  }, [selectedBaby, tummyTime, startTime, endTime, endChanged, timeChanged, notes, updateTummyTime, router]);
 
   const handleDelete = useCallback(() => {
     if (!tummyTime) return;
