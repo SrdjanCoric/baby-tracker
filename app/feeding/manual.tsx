@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useColorScheme } from "nativewind";
 import { useFeeding, useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { useNotificationIntegration } from "@/hooks";
@@ -24,7 +25,7 @@ import {
 import { COMMON_FOODS } from "@/constants/foods";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
-import { SingleTimeSection } from "@/components/SingleTimeSection";
+import { formatTime as formatTimeUtil } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
@@ -70,6 +71,9 @@ export default function ManualFeedingScreen() {
   const isTypeFromParam = !!params.type;
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   // Breastfeeding state
   const [side, setSide] = useState<BreastSide | null>(null);
@@ -116,6 +120,46 @@ export default function ManualFeedingScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const isSavingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleDateChange = useCallback(
+    (_event: unknown, selectedDate?: Date) => {
+      if (Platform.OS === "android") {
+        setShowDatePicker(false);
+      }
+      if (selectedDate) {
+        const newDateTime = new Date(startTime);
+        newDateTime.setFullYear(selectedDate.getFullYear());
+        newDateTime.setMonth(selectedDate.getMonth());
+        newDateTime.setDate(selectedDate.getDate());
+        setStartTime(newDateTime);
+      }
+    },
+    [startTime]
+  );
+
+  const handleTimeChange = useCallback(
+    (_event: unknown, selectedTime?: Date) => {
+      if (Platform.OS === "android") {
+        setShowTimePicker(false);
+      }
+      if (selectedTime) {
+        const newDateTime = new Date(startTime);
+        newDateTime.setHours(selectedTime.getHours());
+        newDateTime.setMinutes(selectedTime.getMinutes());
+        setStartTime(newDateTime);
+      }
+    },
+    [startTime]
+  );
+
+  const handleDateTimeChange = useCallback(
+    (_event: unknown, selectedDateTime?: Date) => {
+      if (selectedDateTime) {
+        setStartTime(selectedDateTime);
+      }
+    },
+    []
+  );
 
   const handleAmountChange = useCallback(
     (text: string) => {
@@ -390,6 +434,17 @@ export default function ManualFeedingScreen() {
     return <NoBabyScreen />;
   }
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "2-digit",
+    });
+  };
+
+  const formatTime = (date: Date) => formatTimeUtil(date, timeFormat);
+
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
       {/* Header with drag handle */}
@@ -466,19 +521,96 @@ export default function ManualFeedingScreen() {
             }
           />
         ) : (
-          <SingleTimeSection
-            value={startTime}
-            onChange={setStartTime}
-            timeFormat={timeFormat}
-            label={t("feeding.startTime")}
-            doneLabel={t("common.done")}
-            selectDateLabel={t("feeding.selectDate")}
-            selectTimeLabel={t("feeding.selectTime")}
-            accentColor={colors.accent}
-            mutedBackgroundColor={colors.mutedBg}
-            textColor={colors.textOnMuted}
-            error={errors.startedAt ? te(t, errors.startedAt) : undefined}
-          />
+          <>
+            <View className="mb-6">
+              <Text className="text-base font-semibold text-content-primary dark:text-content-dark-primary mb-3">
+                {t("feeding.startTime")}
+              </Text>
+              <View className="flex-row gap-3">
+                <Pressable
+                  onPress={() =>
+                    Platform.OS === "ios"
+                      ? setShowDateTimePicker(true)
+                      : setShowDatePicker(true)
+                  }
+                  className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
+                  style={{ backgroundColor: colors.mutedBg }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("feeding.selectDate")}
+                >
+                  <Text className="text-base" style={{ color: colors.textOnMuted }}>
+                    {formatDate(startTime)}
+                  </Text>
+                  <Text style={{ color: colors.accent }}>📅</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    Platform.OS === "ios"
+                      ? setShowDateTimePicker(true)
+                      : setShowTimePicker(true)
+                  }
+                  className="flex-1 flex-row items-center justify-between rounded-card-lg px-4 py-3"
+                  style={{ backgroundColor: colors.mutedBg }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("feeding.selectTime")}
+                >
+                  <Text className="text-base" style={{ color: colors.textOnMuted }}>
+                    {formatTime(startTime)}
+                  </Text>
+                  <Text style={{ color: colors.accent }}>🕐</Text>
+                </Pressable>
+              </View>
+              {errors.startedAt && (
+                <Text className="text-red-500 text-sm mt-2">
+                  {te(t, errors.startedAt)}
+                </Text>
+              )}
+            </View>
+
+            {showDateTimePicker && Platform.OS === "ios" && (
+              <View>
+                <View className="flex-row justify-end px-2">
+                  <Pressable
+                    onPress={() => setShowDateTimePicker(false)}
+                    className="py-1 px-3"
+                  >
+                    <Text
+                      className="text-sm font-semibold"
+                      style={{ color: colors.accent }}
+                    >
+                      {t("common.done")}
+                    </Text>
+                  </Pressable>
+                </View>
+                <DateTimePicker
+                  value={startTime}
+                  mode="datetime"
+                  display="spinner"
+                  onChange={handleDateTimeChange}
+                  maximumDate={new Date()}
+                />
+              </View>
+            )}
+
+            {showDatePicker && Platform.OS === "android" && (
+              <DateTimePicker
+                value={startTime}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+
+            {showTimePicker && Platform.OS === "android" && (
+              <DateTimePicker
+                value={startTime}
+                mode="time"
+                display="default"
+                onChange={handleTimeChange}
+              />
+            )}
+          </>
         )}
 
         {activeTab === "breast" ? (
