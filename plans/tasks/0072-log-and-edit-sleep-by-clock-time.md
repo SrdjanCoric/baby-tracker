@@ -239,3 +239,15 @@ recomputation named above.
 - Storing a paused span on a saved record, or any other schema change.
 - Changing how statistics union overlapping sleep.
 - Making the Timeline's edit route easier to find.
+
+## Review decisions
+
+- skipped (minor): TR-10 — Morning re-classification changes more than the frozen predicate line — user requested remediation only through TR-9.
+- skipped (minor): TR-11 — A stale confirmed classification can survive a move out of the morning window — user requested remediation only through TR-9.
+- skipped (minor): TR-12 — Over-24-hour selections have no visible explanation — user requested remediation only through TR-9.
+- skipped (minor): TR-13 — Two Task 0068 edit-screen proof cases are missing — user requested remediation only through TR-9.
+- skipped (minor): TR-14 — The 24-hour save-rejection assertion is vacuous — user requested remediation only through TR-9.
+- skipped (minor): TR-15 — The edit screen lacks a minimum-duration disabled-state test — user requested remediation only through TR-9.
+- skipped (minor): TR-16 — Sleep picker labels depend on unguarded feeding locale keys — user requested remediation only through TR-9.
+- skipped (minor): TR-17 — The SQL vector only proves moving an end later — user requested remediation only through TR-9.
+- skipped (minor): TR-18 — The implementation commit added task-body metadata — user requested remediation only through TR-9.
