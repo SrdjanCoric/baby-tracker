@@ -277,7 +277,10 @@ Completed on 2026-08-07.
   after the user requested remediation only through TR-9; their individual reasons remain recorded
   above. No security risk was accepted.
 - **Automated proof:** `npm run check:code` passed on 2026-08-07 with exit 0, including 98 Jest suites
-  and 946 tests, 65 CI-contract tests, and the production-bundle gate.
+  and 946 tests, 65 CI-contract tests, and the production-bundle gate. PR CI then exposed
+  `GHSA-5p4m-2wfm-xmqj` in the unchanged transitive `js-yaml` lock entries. Updating 3.15.0 to 3.15.1
+  and 4.3.0 to 4.3.1 cleared `npm run audit:dependencies`; `npm run check:code` passed again on the
+  revised working tree.
 - **Manual proof:** Local Supabase plus the `SofiBaby Owner` and `SofiBaby Member` iOS simulators passed
   the representative household sleep flow. The member changed the owner's sleep from 7:20–8:20 AM to
   7:20–8:19 AM and saw the derived duration change from 1h to 59m. The saved row retained the owner's
