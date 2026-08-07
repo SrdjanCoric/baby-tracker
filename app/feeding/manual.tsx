@@ -69,8 +69,11 @@ export default function ManualFeedingScreen() {
 
   const [activeTab, setActiveTab] = useState<FeedingTab>(getInitialTab);
   const isTypeFromParam = !!params.type;
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
+  const [momentTime, setMomentTime] = useState(() => new Date());
+  const [startTime, setStartTime] = useState(
+    () => new Date(Date.now() - MINIMUM_BREASTFEEDING_MS)
+  );
+  const [endTime, setEndTime] = useState(() => new Date());
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -127,14 +130,14 @@ export default function ManualFeedingScreen() {
         setShowDatePicker(false);
       }
       if (selectedDate) {
-        const newDateTime = new Date(startTime);
+        const newDateTime = new Date(momentTime);
         newDateTime.setFullYear(selectedDate.getFullYear());
         newDateTime.setMonth(selectedDate.getMonth());
         newDateTime.setDate(selectedDate.getDate());
-        setStartTime(newDateTime);
+        setMomentTime(newDateTime);
       }
     },
-    [startTime]
+    [momentTime]
   );
 
   const handleTimeChange = useCallback(
@@ -143,19 +146,19 @@ export default function ManualFeedingScreen() {
         setShowTimePicker(false);
       }
       if (selectedTime) {
-        const newDateTime = new Date(startTime);
+        const newDateTime = new Date(momentTime);
         newDateTime.setHours(selectedTime.getHours());
         newDateTime.setMinutes(selectedTime.getMinutes());
-        setStartTime(newDateTime);
+        setMomentTime(newDateTime);
       }
     },
-    [startTime]
+    [momentTime]
   );
 
   const handleDateTimeChange = useCallback(
     (_event: unknown, selectedDateTime?: Date) => {
       if (selectedDateTime) {
-        setStartTime(selectedDateTime);
+        setMomentTime(selectedDateTime);
       }
     },
     []
@@ -305,7 +308,7 @@ export default function ManualFeedingScreen() {
     } else if (activeTab === "bottle") {
       const validation = validateManualBottleFeeding({
         type: "bottle",
-        startedAt: startTime,
+        startedAt: momentTime,
         amountMl: amountMl ?? undefined,
         contentType: contentType ?? undefined,
       });
@@ -323,10 +326,10 @@ export default function ManualFeedingScreen() {
           type: "bottle",
           contentType: contentType!,
           amountMl: amountMl!,
-          startedAt: startTime,
+          startedAt: momentTime,
           notes: notes || undefined,
         });
-        await scheduleReminderAfterFeeding(startTime);
+        await scheduleReminderAfterFeeding(momentTime);
         await finishSave();
       } finally {
         isSavingRef.current = false;
@@ -347,10 +350,10 @@ export default function ManualFeedingScreen() {
           type: "solid",
           foodType: foodType.trim(),
           reaction: reaction ?? undefined,
-          startedAt: startTime,
+          startedAt: momentTime,
           notes: notes || undefined,
         });
-        await scheduleReminderAfterFeeding(startTime);
+        await scheduleReminderAfterFeeding(momentTime);
         await finishSave();
       } finally {
         isSavingRef.current = false;
@@ -360,6 +363,7 @@ export default function ManualFeedingScreen() {
   }, [
     selectedBaby,
     activeTab,
+    momentTime,
     startTime,
     endTime,
     side,
@@ -390,10 +394,7 @@ export default function ManualFeedingScreen() {
     );
     return {
       minimumDate: new Date(
-        Math.min(
-          startTime.getTime() + MINIMUM_BREASTFEEDING_MS,
-          maximumTimestamp
-        )
+        startTime.getTime() + MINIMUM_BREASTFEEDING_MS
       ),
       maximumDate: new Date(maximumTimestamp),
     };
@@ -539,7 +540,7 @@ export default function ManualFeedingScreen() {
                   accessibilityLabel={t("feeding.selectDate")}
                 >
                   <Text className="text-base" style={{ color: colors.textOnMuted }}>
-                    {formatDate(startTime)}
+                    {formatDate(momentTime)}
                   </Text>
                   <Text style={{ color: colors.accent }}>📅</Text>
                 </Pressable>
@@ -555,7 +556,7 @@ export default function ManualFeedingScreen() {
                   accessibilityLabel={t("feeding.selectTime")}
                 >
                   <Text className="text-base" style={{ color: colors.textOnMuted }}>
-                    {formatTime(startTime)}
+                    {formatTime(momentTime)}
                   </Text>
                   <Text style={{ color: colors.accent }}>🕐</Text>
                 </Pressable>
@@ -583,7 +584,7 @@ export default function ManualFeedingScreen() {
                   </Pressable>
                 </View>
                 <DateTimePicker
-                  value={startTime}
+                  value={momentTime}
                   mode="datetime"
                   display="spinner"
                   onChange={handleDateTimeChange}
@@ -594,7 +595,7 @@ export default function ManualFeedingScreen() {
 
             {showDatePicker && Platform.OS === "android" && (
               <DateTimePicker
-                value={startTime}
+                value={momentTime}
                 mode="date"
                 display="default"
                 onChange={handleDateChange}
@@ -604,7 +605,7 @@ export default function ManualFeedingScreen() {
 
             {showTimePicker && Platform.OS === "android" && (
               <DateTimePicker
-                value={startTime}
+                value={momentTime}
                 mode="time"
                 display="default"
                 onChange={handleTimeChange}

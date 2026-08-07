@@ -59,11 +59,16 @@ describe("ManualFeedingScreen clock-time entry", () => {
   it("logs a breast feed from Start and End with a derived read-only duration", async () => {
     const screen = render(<ManualFeedingScreen />);
 
-    expect(screen.getByText("0m")).toBeTruthy();
+    expect(screen.getByText("1m")).toBeTruthy();
     expect(
       screen.queryByRole("textbox", { name: "feeding.durationPlaceholder" })
     ).toBeNull();
     expect(screen.queryByRole("button", { name: "30" })).toBeNull();
+    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
+    expect(
+      screen.getByRole("button", { name: "feeding.logManualBreastfeeding" })
+        .props.accessibilityState
+    ).toEqual({ disabled: false });
 
     fireEvent.press(
       screen.getByRole("button", {
@@ -77,8 +82,6 @@ describe("ManualFeedingScreen clock-time entry", () => {
       new Date("2026-08-07T09:30:00.000Z")
     );
     fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
-
     expect(screen.getByText("30m")).toBeTruthy();
     fireEvent.press(
       screen.getByRole("button", { name: "feeding.logManualBreastfeeding" })
