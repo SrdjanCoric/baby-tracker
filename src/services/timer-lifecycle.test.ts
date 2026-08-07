@@ -496,6 +496,71 @@ describe("editRunningTimerStartTime", () => {
     );
     expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
   });
+
+  it("queues an account-less timer edit after the caregiver signs in", async () => {
+    const newStart = new Date("2026-08-06T07:30:00.000Z");
+    const activeTimer: TestActiveTimer = {
+      startedAt: "2026-08-06T08:00:00.000Z",
+      isPaused: false,
+      totalPausedMs: 0,
+      lockState: "accountless",
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+    };
+    const timerData = {
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+      isPaused: false,
+      totalPausedMs: 0,
+    };
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn(),
+        setActiveTimer: vi.fn(),
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => timerData),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "record-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn(() => "nap") },
+      dispatchRestoreTimer: vi.fn(),
+    };
+    vi.mocked(queuePendingTimerStartEdit).mockResolvedValue();
+
+    await editRunningTimerStartTime({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      userId: "user-1",
+      activeTimer,
+      payload: timerData,
+      startedAt: newStart,
+      liveActivityIdRef: { current: null },
+      dispatchEditedStart: vi.fn(),
+    });
+
+    expect(updateTimerStartTime).not.toHaveBeenCalled();
+    expect(queuePendingTimerStartEdit).toHaveBeenCalledWith(
+      "baby-1",
+      "sleep",
+      "user-1",
+      "timer-1",
+      newStart,
+      {
+        ...timerData,
+        effectiveStartTime: newStart.toISOString(),
+      }
+    );
+  });
 });
 
 describe("restoreTimerLifecycle", () => {
@@ -568,6 +633,73 @@ describe("restoreTimerLifecycle", () => {
     );
     expect(dispatchRestoreTimer).toHaveBeenCalledWith(
       expect.objectContaining({ lockState: "accountless" })
+    );
+  });
+
+  it("restores an account-less timer as offline after the caregiver signs in", async () => {
+    const activeTimer: TestActiveTimer = {
+      startedAt: "2026-08-05T12:00:00.000Z",
+      isPaused: false,
+      totalPausedMs: 0,
+      lockState: "accountless",
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    };
+    const setActiveTimer = vi.fn();
+    const dispatchRestoreTimer = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn().mockResolvedValue(activeTimer),
+        setActiveTimer,
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({})),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "activity-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn(() => "nap") },
+      dispatchRestoreTimer,
+    };
+    vi.mocked(readPendingTimerStop).mockResolvedValue(null);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    });
+    vi.mocked(isTimerCompletionSecured).mockResolvedValue(false);
+    vi.mocked(startTimerLiveActivity).mockResolvedValue(null);
+
+    await restoreTimerLifecycle({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      user: { id: "user-1", householdId: null },
+      completedRecords: [],
+      stopVersionAtStart: 0,
+      currentStopVersion: () => 0,
+      isStopping: () => false,
+      isCurrentBabyBinding: () => true,
+      liveActivityIdRef: { current: null },
+      refreshLocks: vi.fn(),
+      persistRecord: vi.fn(),
+      dispatchStopTimer: vi.fn(),
+      dispatchAddRecord: vi.fn(),
+      errorLabel: "[TimerLifecycleTest]",
+    });
+
+    expect(setActiveTimer).toHaveBeenCalledWith(
+      "baby-1",
+      expect.objectContaining({ lockState: "offline" })
+    );
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({ lockState: "offline" })
     );
   });
 

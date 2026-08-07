@@ -211,10 +211,15 @@ export async function editRunningTimerStartTime<
         }
       : {}),
   };
-  if (activeTimer.lockState === "accountless") {
+  if (!userId) {
+    if (activeTimer.lockState !== "accountless") {
+      throw new Error("A signed-in timer edit requires a user id");
+    }
     // Account-less timers have no server row or attributable queue owner.
-  } else if (activeTimer.lockState === "offline") {
-    if (!userId) throw new Error("A signed-in timer edit requires a user id");
+  } else if (
+    activeTimer.lockState === "accountless" ||
+    activeTimer.lockState === "offline"
+  ) {
     await queuePendingTimerStartEdit(
       baby.id,
       adapter.activityType,
@@ -224,7 +229,6 @@ export async function editRunningTimerStartTime<
       timerData
     );
   } else {
-    if (!userId) throw new Error("A signed-in timer edit requires a user id");
     try {
       await updateTimerStartTime(
         baby.id,
@@ -445,10 +449,12 @@ export async function restoreTimerLifecycle<
 
     let isStale = false;
     let lockState: TimerLockReconciliationState = user?.id
-      ? (activeTimer.lockState ?? "offline")
+      ? activeTimer.lockState === "accountless"
+        ? "offline"
+        : (activeTimer.lockState ?? "offline")
       : "accountless";
 
-    if (!user?.id && activeTimer.lockState !== "accountless") {
+    if (activeTimer.lockState !== lockState) {
       await adapter.storage.setActiveTimer(baby.id, {
         ...activeTimer,
         ...payloadWithIdentity,
