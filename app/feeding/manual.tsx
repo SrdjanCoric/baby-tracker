@@ -381,6 +381,9 @@ export default function ManualFeedingScreen() {
   const startBounds = useCallback(() => {
     const boundaryNow = Date.now();
     return {
+      minimumDate: new Date(
+        endTime.getTime() - MAXIMUM_BREASTFEEDING_MS
+      ),
       maximumDate: new Date(
         Math.min(boundaryNow, endTime.getTime() - MINIMUM_BREASTFEEDING_MS)
       ),

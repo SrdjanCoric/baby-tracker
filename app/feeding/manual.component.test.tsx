@@ -125,8 +125,11 @@ describe("ManualFeedingScreen clock-time entry", () => {
     fireEvent.press(
       screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" })
     );
-    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
-      new Date("2026-08-07T09:59:00.000Z")
+    expect(screen.getByTestId("datetime-picker").props).toEqual(
+      expect.objectContaining({
+        minimumDate: new Date("2026-08-07T08:00:00.000Z"),
+        maximumDate: new Date("2026-08-07T09:59:00.000Z"),
+      })
     );
     fireEvent(
       screen.getByTestId("datetime-picker"),
