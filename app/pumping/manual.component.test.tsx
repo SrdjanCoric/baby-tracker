@@ -133,4 +133,42 @@ describe("ManualPumpingScreen clock-time entry", () => {
       })
     );
   });
+
+  it("disables Save when End exceeds one hour", () => {
+    const screen = render(<ManualPumpingScreen />);
+    fireEvent.changeText(screen.getByLabelText("pumping.enterVolume"), "120");
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "pumping.startTime feeding.selectTime",
+      })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:00:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    expect(
+      screen.getByRole("button", { name: "pumping.logManualPumping" }).props
+        .accessibilityState
+    ).toEqual({ disabled: false });
+
+    jest.setSystemTime(new Date("2026-08-07T10:05:00.000Z"));
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "pumping.endTime feeding.selectTime",
+      })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T10:01:00.000Z")
+    );
+    expect(
+      screen.getByRole("button", { name: "pumping.logManualPumping" }).props
+        .accessibilityState
+    ).toEqual({ disabled: true });
+  });
 });

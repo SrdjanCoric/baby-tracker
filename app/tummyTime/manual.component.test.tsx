@@ -111,4 +111,43 @@ describe("ManualTummyTimeScreen clock-time entry", () => {
       })
     );
   });
+
+  it("disables Save when End exceeds two hours", () => {
+    const screen = render(<ManualTummyTimeScreen />);
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "tummyTime.startTime feeding.selectTime",
+      })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T08:00:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    expect(
+      screen.getByRole("button", {
+        name: "tummyTime.logManualTummyTime",
+      }).props.accessibilityState
+    ).toEqual({ disabled: false });
+
+    jest.setSystemTime(new Date("2026-08-07T10:05:00.000Z"));
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "tummyTime.endTime feeding.selectTime",
+      })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T10:01:00.000Z")
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "tummyTime.logManualTummyTime",
+      }).props.accessibilityState
+    ).toEqual({ disabled: true });
+  });
 });
