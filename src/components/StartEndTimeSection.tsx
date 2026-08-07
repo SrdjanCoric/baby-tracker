@@ -11,13 +11,15 @@ export interface DateTimeBounds {
   maximumDate: Date;
 }
 
+type DateTimeBoundsSource = DateTimeBounds | (() => DateTimeBounds);
+
 interface StartEndTimeSectionProps {
   startTime: Date;
   endTime: Date;
   onStartTimeChange(value: Date): void;
   onEndTimeChange(value: Date): void;
-  startBounds: DateTimeBounds;
-  endBounds: DateTimeBounds;
+  startBounds: DateTimeBoundsSource;
+  endBounds: DateTimeBoundsSource;
   timeFormat: TimeFormat;
   startLabel: string;
   endLabel: string;
@@ -78,7 +80,10 @@ export function StartEndTimeSection({
     [startTime, endTime]
   );
   const boundsFor = useCallback(
-    (target: PickerTarget) => (target === "start" ? startBounds : endBounds),
+    (target: PickerTarget) => {
+      const source = target === "start" ? startBounds : endBounds;
+      return typeof source === "function" ? source() : source;
+    },
     [startBounds, endBounds]
   );
   const update = useCallback(
@@ -161,13 +166,15 @@ export function StartEndTimeSection({
     0,
     Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
   );
+  const iosBounds = iosTarget ? boundsFor(iosTarget) : null;
+  const androidBounds = androidPicker ? boundsFor(androidPicker.target) : null;
 
   return (
     <>
       {renderTimeRow("start", startLabel, startTime, startError)}
       {renderTimeRow("end", endLabel, endTime, endError)}
 
-      {iosTarget ? (
+      {iosTarget && iosBounds ? (
         <View className="mb-6">
           <View className="flex-row justify-end px-2">
             <Pressable
@@ -182,11 +189,11 @@ export function StartEndTimeSection({
             </Pressable>
           </View>
           <DateTimePicker
-            value={clampToBounds(valueFor(iosTarget), boundsFor(iosTarget))}
+            value={clampToBounds(valueFor(iosTarget), iosBounds)}
             mode="datetime"
             display="spinner"
-            minimumDate={boundsFor(iosTarget).minimumDate}
-            maximumDate={boundsFor(iosTarget).maximumDate}
+            minimumDate={iosBounds.minimumDate}
+            maximumDate={iosBounds.maximumDate}
             onChange={(_event, value) => {
               if (value) update(iosTarget, value);
             }}
@@ -194,16 +201,13 @@ export function StartEndTimeSection({
         </View>
       ) : null}
 
-      {androidPicker ? (
+      {androidPicker && androidBounds ? (
         <DateTimePicker
-          value={clampToBounds(
-            valueFor(androidPicker.target),
-            boundsFor(androidPicker.target)
-          )}
+          value={clampToBounds(valueFor(androidPicker.target), androidBounds)}
           mode={androidPicker.mode}
           display="default"
-          minimumDate={boundsFor(androidPicker.target).minimumDate}
-          maximumDate={boundsFor(androidPicker.target).maximumDate}
+          minimumDate={androidBounds.minimumDate}
+          maximumDate={androidBounds.maximumDate}
           onChange={handleAndroidChange}
         />
       ) : null}

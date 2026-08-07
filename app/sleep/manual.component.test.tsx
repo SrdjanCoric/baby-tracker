@@ -80,6 +80,19 @@ describe("ManualSleepScreen clock-time entry", () => {
     expect(screen.getByTestId("datetime-picker").props.mode).toBe("datetime");
   });
 
+  it("refreshes the End Time ceiling when the picker opens later", () => {
+    const screen = render(<ManualSleepScreen />);
+    jest.setSystemTime(new Date(now.getTime() + 5 * 60 * 1000));
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "sleep.endTime feeding.selectTime" })
+    );
+
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date(now.getTime() + 5 * 60 * 1000)
+    );
+  });
+
   it("derives a read-only duration from bounded start and end times", () => {
     const screen = render(<ManualSleepScreen />);
     const save = screen.getByRole("button", { name: "sleep.logManualSleep" });

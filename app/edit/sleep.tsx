@@ -50,6 +50,7 @@ export default function EditSleepScreen() {
   const [sleepType, setSleepType] = useState<SleepType>("nap");
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
+  const [initialEndTime, setInitialEndTime] = useState<Date | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -59,9 +60,11 @@ export default function EditSleepScreen() {
   useEffect(() => {
     if (sleep && !isInitialized) {
       const storedStart = new Date(sleep.startedAt);
+      const displayedEnd = sleep.endedAt ? new Date(sleep.endedAt) : new Date();
       setSleepType(sleep.type);
       setStartTime(storedStart);
-      setEndTime(sleep.endedAt ? new Date(sleep.endedAt) : storedStart);
+      setEndTime(displayedEnd);
+      setInitialEndTime(displayedEnd);
       setNotes(sleep.notes ?? "");
       setTypeSelectedAfterTimeEdit(false);
       setIsInitialized(true);
@@ -69,7 +72,7 @@ export default function EditSleepScreen() {
   }, [sleep, isInitialized]);
 
   const originalStart = sleep ? new Date(sleep.startedAt) : null;
-  const originalEnd = sleep?.endedAt ? new Date(sleep.endedAt) : originalStart;
+  const originalEnd = initialEndTime;
   const timeChanged = Boolean(
     startTime &&
       endTime &&
@@ -228,7 +231,7 @@ export default function EditSleepScreen() {
     );
   }, [sleep, deleteSleep, router, t]);
 
-  const startBounds = useMemo(() => {
+  const startBounds = useCallback(() => {
     const boundaryNow = Date.now();
     return {
       maximumDate: new Date(
@@ -239,16 +242,21 @@ export default function EditSleepScreen() {
       ),
     };
   }, [endTime]);
-  const endBounds = useMemo(() => {
+  const endBounds = useCallback(() => {
     const boundaryNow = Date.now();
     const startTimestamp = startTime?.getTime() ?? boundaryNow - MINIMUM_SLEEP_MS;
+    const maximumTimestamp = Math.min(
+      boundaryNow,
+      startTimestamp + MAXIMUM_SLEEP_MS
+    );
+    const minimumTimestamp = sleep?.endedAt
+      ? startTimestamp + MINIMUM_SLEEP_MS
+      : Math.min(startTimestamp + MINIMUM_SLEEP_MS, maximumTimestamp);
     return {
-      minimumDate: new Date(startTimestamp + MINIMUM_SLEEP_MS),
-      maximumDate: new Date(
-        Math.min(boundaryNow, startTimestamp + MAXIMUM_SLEEP_MS)
-      ),
+      minimumDate: new Date(minimumTimestamp),
+      maximumDate: new Date(maximumTimestamp),
     };
-  }, [startTime]);
+  }, [sleep?.endedAt, startTime]);
 
   if (!selectedBaby || !sleep || !startTime || !endTime) {
     return (

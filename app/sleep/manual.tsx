@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -137,7 +137,7 @@ export default function ManualSleepScreen() {
     durationMs <= MAXIMUM_SLEEP_MS &&
     startTime <= now &&
     endTime <= now;
-  const startBounds = useMemo(() => {
+  const startBounds = useCallback(() => {
     const boundaryNow = Date.now();
     return {
       maximumDate: new Date(
@@ -145,7 +145,7 @@ export default function ManualSleepScreen() {
       ),
     };
   }, [endTime]);
-  const endBounds = useMemo(() => {
+  const endBounds = useCallback(() => {
     const boundaryNow = Date.now();
     return {
       minimumDate: new Date(startTime.getTime() + MINIMUM_SLEEP_MS),

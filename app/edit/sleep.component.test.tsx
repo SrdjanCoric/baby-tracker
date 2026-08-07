@@ -124,6 +124,30 @@ describe("EditSleepScreen clock-time editing", () => {
     expect(rendered.queryByRole("textbox", { name: "sleep.durationPlaceholder" })).toBeNull();
   });
 
+  it("opens both End Time pickers for a recent sleep without an endedAt", async () => {
+    mockSleeps = [
+      {
+        ...mockSleeps[0],
+        startedAt: new Date(now.getTime() - 30 * 1000).toISOString(),
+        endedAt: undefined,
+        durationSeconds: 0,
+      },
+    ];
+    const rendered = render(<EditSleepScreen />);
+    await waitFor(() => expect(rendered.getByText("0m")).toBeTruthy());
+
+    fireEvent.press(
+      rendered.getByRole("button", { name: "sleep.endTime feeding.selectDate" })
+    );
+    expect(rendered.getByTestId("datetime-picker")).toBeTruthy();
+    fireEvent.press(rendered.getByRole("button", { name: "common.done" }));
+
+    fireEvent.press(
+      rendered.getByRole("button", { name: "sleep.endTime feeding.selectTime" })
+    );
+    expect(rendered.getByTestId("datetime-picker")).toBeTruthy();
+  });
+
   it("preserves the existing chip and action interaction styles", async () => {
     const rendered = await renderInitialized();
 
