@@ -285,6 +285,30 @@ describe("EditSleepScreen clock-time editing", () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
+  it("does not re-prompt an existing overlap for a notes-only edit", async () => {
+    mockSleeps = [
+      mockSleeps[0],
+      {
+        ...mockSleeps[0],
+        id: "sleep-2",
+        startedAt: "2026-08-06T09:00:00.000Z",
+        endedAt: "2026-08-06T11:00:00.000Z",
+        durationSeconds: 7200,
+      },
+    ];
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const rendered = await renderInitialized();
+    fireEvent.changeText(
+      rendered.getByPlaceholderText("sleep.notesPlaceholder"),
+      "notes only"
+    );
+    fireEvent.press(rendered.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(mockUpdateSleep).toHaveBeenCalledTimes(1));
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(mockUpdateSleep).toHaveBeenCalledWith("sleep-1", { notes: "notes only" });
+  });
+
   it("continues through an overlap warning and preserves both records", async () => {
     const overlappingRecord: StoredSleepEntry = {
       ...mockSleeps[0],

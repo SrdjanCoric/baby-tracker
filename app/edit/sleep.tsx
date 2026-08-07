@@ -145,21 +145,23 @@ export default function EditSleepScreen() {
     const durationSeconds = Math.floor(
       (endTime.getTime() - startTime.getTime()) / 1000
     );
-    const proposedSleep: StoredSleepEntry = {
-      ...sleep,
-      type: sleepType,
-      startedAt: startTime.toISOString(),
-      endedAt: endTime.toISOString(),
-      durationSeconds,
-      notes: notes || undefined,
-    };
-    const shouldSave = await checkAndConfirmSleep(
-      proposedSleep,
-      sleeps.filter(
-        (candidate) => candidate.id !== sleep.id && Boolean(candidate.endedAt)
-      )
-    );
-    if (!shouldSave) return;
+    if (timeChanged) {
+      const proposedSleep: StoredSleepEntry = {
+        ...sleep,
+        type: sleepType,
+        startedAt: startTime.toISOString(),
+        endedAt: endTime.toISOString(),
+        durationSeconds,
+        notes: notes || undefined,
+      };
+      const shouldSave = await checkAndConfirmSleep(
+        proposedSleep,
+        sleeps.filter(
+          (candidate) => candidate.id !== sleep.id && Boolean(candidate.endedAt)
+        )
+      );
+      if (!shouldSave) return;
+    }
 
     setIsSaving(true);
     try {
