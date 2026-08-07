@@ -6,10 +6,10 @@ import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useFeeding } from "@/contexts/feeding-context";
 import { useBaby, useTimeFormat } from "@/contexts";
+import { formatDate, formatTime } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 import { exitModal } from "@/navigation";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
-import { SingleTimeSection } from "@/components/SingleTimeSection";
 import { validateManualBreastfeedingTimes } from "@/validators/feeding";
 import { te } from "@/utils/translate-errors";
 import type { UpdateFeedingInput } from "@/services/feeding-storage";
@@ -70,7 +70,9 @@ export default function EditFeedingScreen() {
     const originalAmount = feeding.amountMl ? String(feeding.amountMl) : "";
     const originalNotes = feeding.notes ?? "";
     const originalFoodType = feeding.foodType ?? "";
-    const startChanged = startTime.getTime() !== new Date(feeding.startedAt).getTime();
+    const startChanged =
+      feeding.type === "breast" &&
+      startTime.getTime() !== new Date(feeding.startedAt).getTime();
     const endChanged = Boolean(
       feeding.type === "breast" &&
         endTime &&
@@ -110,6 +112,7 @@ export default function EditFeedingScreen() {
     if (!selectedBaby || !feeding || !startTime) return;
 
     const startChanged =
+      feeding.type === "breast" &&
       startTime.getTime() !== new Date(feeding.startedAt).getTime();
     const endChanged = Boolean(
       feeding.type === "breast" &&
@@ -427,6 +430,7 @@ export default function EditFeedingScreen() {
     ? endTime.getTime() - startTime.getTime()
     : 0;
   const startChanged =
+    feeding.type === "breast" &&
     startTime.getTime() !== new Date(feeding.startedAt).getTime();
   const endChanged = Boolean(
     feeding.type === "breast" &&
@@ -442,7 +446,7 @@ export default function EditFeedingScreen() {
           durationMs <= MAXIMUM_BREASTFEEDING_MS &&
           startTime <= now &&
           Boolean(endTime && endTime <= now))
-      : startTime <= now;
+      : true;
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -518,19 +522,14 @@ export default function EditFeedingScreen() {
             }
           />
         ) : (
-          <SingleTimeSection
-            value={startTime}
-            onChange={setStartTime}
-            timeFormat={timeFormat}
-            label={t("feeding.startTime")}
-            doneLabel={t("common.done")}
-            selectDateLabel={t("feeding.selectDate")}
-            selectTimeLabel={t("feeding.selectTime")}
-            accentColor={FEEDING_GREEN}
-            mutedBackgroundColor={FEEDING_GREEN_MUTED}
-            textColor="#2D2A26"
-            includeFieldLabelInAccessibilityLabel
-          />
+          <View className="items-center mb-6">
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {formatDate(new Date(feeding.startedAt))}
+            </Text>
+            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
+              {formatTime(new Date(feeding.startedAt), timeFormat)}
+            </Text>
+          </View>
         )}
 
         {/* Type-specific form */}

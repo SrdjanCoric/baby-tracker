@@ -276,7 +276,7 @@ describe("EditFeedingScreen clock-time editing", () => {
   });
 
   it.each(["bottle", "solid"] as const)(
-    "keeps a %s edit as a Start-only moment record",
+    "keeps a %s edit time read-only and saves only non-time changes",
     async (type) => {
       mockFeedings = [
         {
@@ -291,22 +291,22 @@ describe("EditFeedingScreen clock-time editing", () => {
         },
       ];
       const screen = render(<EditFeedingScreen />);
-      await waitFor(() =>
-        expect(
-          screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
-        ).toBeTruthy()
-      );
+      await waitFor(() => expect(screen.getByRole("button", { name: "common.save" })).toBeTruthy());
 
+      expect(
+        screen.queryByRole("button", {
+          name: "feeding.startTime feeding.selectTime",
+        })
+      ).toBeNull();
       expect(screen.queryByText("feeding.endTime")).toBeNull();
-      const editedStart = new Date("2026-08-07T07:45:00.000Z");
-      fireEvent.press(
-        screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+      fireEvent.changeText(
+        screen.getByDisplayValue(type === "bottle" ? "120" : "banana"),
+        type === "bottle" ? "150" : "avocado"
       );
-      fireEvent(screen.getByTestId("datetime-picker"), "change", {}, editedStart);
       fireEvent.press(screen.getByRole("button", { name: "common.save" }));
 
       await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
-      expect(mockUpdateFeeding.mock.calls[0][1].startedAt).toEqual(editedStart);
+      expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("startedAt");
       expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("endedAt");
       expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty(
         "durationSeconds"
