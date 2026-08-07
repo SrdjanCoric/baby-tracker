@@ -2,6 +2,7 @@
 
 **Branch**: `feature/log-and-edit-sleep-by-clock-time`
 **Depends on**: 0068
+**Execution classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
 **Source**: `plans/decision-maps/unified-timer-contract/clusters/timer-time-editing.md` and its member
 `decisions/resolved/009-clock-time-log-editing.md` (resolved), with the edit-screen proof items from
 `decisions/resolved/018-disagreeing-length-display.md` · **User stories**: As a caregiver, I want to
@@ -147,56 +148,56 @@ recomputation named above.
 
 ## Implementation work
 
-- [ ] Extract a shared start/end form section carrying two date-and-time pill pickers and a derived
+- [x] Extract a shared start/end form section carrying two date-and-time pill pickers and a derived
       read-only duration readout, handling the iOS combined-datetime and Android separate-picker
       strategies once, with picker ranges supplied by the caller.
-- [ ] Add an end-time-aware entry point to `src/validators/sleep.ts` reached with a duration derived
+- [x] Add an end-time-aware entry point to `src/validators/sleep.ts` reached with a duration derived
       from two times, leaving every threshold unchanged.
-- [ ] Rebuild `app/sleep/manual.tsx` on the shared section: add End Time, remove `durationMinutes`,
+- [x] Rebuild `app/sleep/manual.tsx` on the shared section: add End Time, remove `durationMinutes`,
       `durationInput`, and `QUICK_DURATIONS`, and derive the saved `durationSeconds` and `endedAt` from
       the two times.
-- [ ] Rebuild `app/edit/sleep.tsx` on the shared section: add Start Time and End Time, remove the
+- [x] Rebuild `app/edit/sleep.tsx` on the shared section: add Start Time and End Time, remove the
       minutes field and the `endedAt = startedAt + durationSeconds` derivation, and prefill both
       pickers from the record's own stored timestamps.
-- [ ] Implement the conditional save: write `durationSeconds = end - start` only when a time actually
+- [x] Implement the conditional save: write `durationSeconds = end - start` only when a time actually
       changed, leaving `durationSeconds` and `endedAt` untouched on a note-only or type-only save.
-- [ ] Wire `checkAndConfirmSleep` into `app/edit/sleep.tsx` against the post-edit values, excluding the
+- [x] Wire `checkAndConfirmSleep` into `app/edit/sleep.tsx` against the post-edit values, excluding the
       edited record by id.
-- [ ] Change the `isApplicableMorningEdit` predicate in `updateSleep` to read the edited start rather
+- [x] Change the `isApplicableMorningEdit` predicate in `updateSleep` to read the edited start rather
       than `existing.startedAt`, keeping `MORNING_CLASSIFICATION_VERSION` stamped as it is today.
-- [ ] Add the End Time label, the derived Duration label, and any new validation strings to all nine
+- [x] Add the End Time label, the derived Duration label, and any new validation strings to all nine
       locale files under `src/i18n/locales/`, and remove keys the dropped chips and minutes field
       leave unused.
-- [ ] Component tests on both screens: the end picker offers `start + 1 minute` through the earlier of
+- [x] Component tests on both screens: the end picker offers `start + 1 minute` through the earlier of
       now and `start + 24h`, the start picker offers up to the earlier of now and `end - 1 minute`, the
       duration readout is derived and not editable, no minutes input and no quick-duration chips
       remain, and Save is disabled until the two times are a minute apart. `app/edit/sleep.tsx` has no
       component test today, so this is a new file.
-- [ ] A prefill test that a sleep whose stored `durationSeconds` is smaller than its own interval opens
+- [x] A prefill test that a sleep whose stored `durationSeconds` is smaller than its own interval opens
       showing the real start and end rather than `start + duration`.
-- [ ] Save-rule tests: a save that changes only a note leaves `durationSeconds` and `endedAt`
+- [x] Save-rule tests: a save that changes only a note leaves `durationSeconds` and `endedAt`
       unchanged, and a save that moves a time writes `end - start`.
-- [ ] Overlap tests: editing a sleep so that it overlaps another warns and preserves both records
+- [x] Overlap tests: editing a sleep so that it overlaps another warns and preserves both records
       through Continue anyway, Cancel writes nothing, and the record being edited never matches itself.
-- [ ] Classification tests: moving a start across the day boundary re-derives Nap or Night, a toggle
+- [x] Classification tests: moving a start across the day boundary re-derives Nap or Night, a toggle
       after that wins, a start moved into `[getMorningThreshold(dayStartHour), dayStartHour)` re-runs
       classification and can land `unresolved`, a start moved out of it returns a `confirmed_*` to
       `automatic`, and the predicate reads the edited start rather than the stored one.
-- [ ] The Task 0068 edit-screen proof items: a sleep written after the counted-pause rule opens with a
+- [x] The Task 0068 edit-screen proof items: a sleep written after the counted-pause rule opens with a
       derived length equal to its stored length and no annotation, and a sleep written before it opens
       showing its real interval while the Timeline row still shows the stored length, converging only
       when a time is edited and saved.
-- [ ] SQL vectors against local Supabase: an edited `ended_at` reaches `babies.last_sleep_ended_at`
+- [x] SQL vectors against local Supabase: an edited `ended_at` reaches `babies.last_sleep_ended_at`
       through `on_sleep_update_last_ended`. Extend an existing file under `scripts/sql/` or add one and
       register it in `scripts/run-sql-vectors.mjs`.
-- [ ] A test that the twenty-four-hour sleep cap is rejected on save as well as bounded in the picker.
-- [ ] The standing bar from `decisions/resolved/003-sleep-derivation-blast-radius.md`: after a
+- [x] A test that the twenty-four-hour sleep cap is rejected on save as well as bounded in the picker.
+- [x] The standing bar from `decisions/resolved/003-sleep-derivation-blast-radius.md`: after a
       time-editing save on a paused sleep, the Day view block, the Timeline daily summary, the Timeline
       row label, the CSV export, and the PDF report all report the same number.
 
 ## Human checkpoints
 
-- [ ] [verify] Extend the representative two-account sleep smoke so one caregiver edits the times of a
+- [x] [verify] Extend the representative two-account sleep smoke so one caregiver edits the times of a
       record the other created · Steps: on simulator A record a sleep, on simulator B open it from the
       Timeline and move its end time earlier, then read the record on A · Expected: both accounts show
       the edited start, end, and derived length · Failure: the two accounts disagree, or the edit does
@@ -205,26 +206,26 @@ recomputation named above.
 
 ## Acceptance criteria
 
-- [ ] `app/sleep/manual.tsx` and `app/edit/sleep.tsx` both take a start time and an end time, with a
+- [x] `app/sleep/manual.tsx` and `app/edit/sleep.tsx` both take a start time and an end time, with a
       derived read-only duration and no minutes input or quick-duration chips.
-- [ ] Both screens prefill from the record's own stored timestamps, so a legacy paused sleep opens
+- [x] Both screens prefill from the record's own stored timestamps, so a legacy paused sleep opens
       showing its real interval.
-- [ ] Every bound is the picker's own range: no future value, end at least a minute after start, the
+- [x] Every bound is the picker's own range: no future value, end at least a minute after start, the
       24-hour cap honored, and Save disabled until the two times are a minute apart.
-- [ ] `durationSeconds` is rewritten as `end - start` only when a time actually changed; a note-only or
+- [x] `durationSeconds` is rewritten as `end - start` only when a time actually changed; a note-only or
       type-only save leaves the stored length exactly as it was.
-- [ ] Editing a sleep into an overlap warns, Continue anyway preserves both records, Cancel writes
+- [x] Editing a sleep into an overlap warns, Continue anyway preserves both records, Cancel writes
       nothing, and the edited record never matches itself.
-- [ ] Moving a sleep's start re-derives Nap or Night, a later toggle wins, and the morning predicate
+- [x] Moving a sleep's start re-derives Nap or Night, a later toggle wins, and the morning predicate
       reads the edited start.
-- [ ] An edited `ended_at` moves `babies.last_sleep_ended_at`, proved by an SQL vector.
-- [ ] A sleep written after Task 0068 opens with a derived length equal to its stored length and no
+- [x] An edited `ended_at` moves `babies.last_sleep_ended_at`, proved by an SQL vector.
+- [x] A sleep written after Task 0068 opens with a derived length equal to its stored length and no
       annotation; one written before opens showing its real interval and converges only on a saved time
       edit.
-- [ ] After a time-editing save on a paused sleep, the Day view block, Timeline daily summary, Timeline
+- [x] After a time-editing save on a paused sleep, the Day view block, Timeline daily summary, Timeline
       row label, CSV export, and PDF report report the same number, with no consumer repointed.
-- [ ] The shared start/end form section is reusable by Tasks 0073 and 0074.
-- [ ] The `[verify]` checkpoint confirmed by the owner.
+- [x] The shared start/end form section is reusable by Tasks 0073 and 0074.
+- [x] The `[verify]` checkpoint confirmed by the owner.
 
 ## Non-goals
 
@@ -238,3 +239,50 @@ recomputation named above.
 - Storing a paused span on a saved record, or any other schema change.
 - Changing how statistics union overlapping sleep.
 - Making the Timeline's edit route easier to find.
+
+## Review decisions
+
+- skipped (minor): TR-10 — Morning re-classification changes more than the frozen predicate line — user requested remediation only through TR-9.
+- skipped (minor): TR-11 — A stale confirmed classification can survive a move out of the morning window — user requested remediation only through TR-9.
+- skipped (minor): TR-12 — Over-24-hour selections have no visible explanation — user requested remediation only through TR-9.
+- skipped (minor): TR-13 — Two Task 0068 edit-screen proof cases are missing — user requested remediation only through TR-9.
+- skipped (minor): TR-14 — The 24-hour save-rejection assertion is vacuous — user requested remediation only through TR-9.
+- skipped (minor): TR-15 — The edit screen lacks a minimum-duration disabled-state test — user requested remediation only through TR-9.
+- skipped (minor): TR-16 — Sleep picker labels depend on unguarded feeding locale keys — user requested remediation only through TR-9.
+- skipped (minor): TR-17 — The SQL vector only proves moving an end later — user requested remediation only through TR-9.
+- skipped (minor): TR-18 — The implementation commit added task-body metadata — user requested remediation only through TR-9.
+
+## Completion record
+
+Completed on 2026-08-07.
+
+- **Built:** Manual sleep entry and completed-sleep editing now use a shared start/end clock-time
+  section with derived duration, platform-specific date/time pickers, bounded validation, overlap
+  confirmation, conditional legacy-record convergence, morning reclassification, nine-locale
+  coverage, and a wake-window reminder SQL vector.
+- **Decisions:** A fresh manual form starts with a valid one-minute interval. Android dismissal leaves
+  values unchanged, rendered picker values clamp to their displayed bounds, and caller bounds stay
+  stable across unrelated rerenders. Metadata-only edits preserve stored timestamps and duration;
+  time edits derive duration from the edited interval and run overlap confirmation.
+- **Relevant files:** `src/components/StartEndTimeSection.tsx`, `app/sleep/manual.tsx`,
+  `app/edit/sleep.tsx`, `src/validators/sleep.ts`, `src/contexts/sleep-context.tsx`, locale files under
+  `src/i18n/locales/`, `scripts/sql/tombstone-reminder-tests.sql`, and their component, integration,
+  validation, localization, storage, sync, and SQL tests.
+- **README:** Updated the Sleep Predictions section to describe start/end clock-time entry, the
+  one-minute through 24-hour saved range, future-time rejection, conditional duration rewriting, and
+  overlap warnings for time edits. The affected prose passed two `write-well` audit passes; pass 1
+  corrected an overbroad picker claim and pass 2 found no new issues.
+- **Review:** The independent standards, spec, bug, and security review reported no security finding.
+  TR-1 through TR-9 were fixed and verified. TR-10 through TR-18 were skipped as minor or nit findings
+  after the user requested remediation only through TR-9; their individual reasons remain recorded
+  above. No security risk was accepted.
+- **Automated proof:** `npm run check:code` passed on 2026-08-07 with exit 0, including 98 Jest suites
+  and 946 tests, 65 CI-contract tests, and the production-bundle gate. PR CI then exposed
+  `GHSA-5p4m-2wfm-xmqj` in the unchanged transitive `js-yaml` lock entries. Updating 3.15.0 to 3.15.1
+  and 4.3.0 to 4.3.1 cleared `npm run audit:dependencies`; `npm run check:code` passed again on the
+  revised working tree.
+- **Manual proof:** Local Supabase plus the `SofiBaby Owner` and `SofiBaby Member` iOS simulators passed
+  the representative household sleep flow. The member changed the owner's sleep from 7:20–8:20 AM to
+  7:20–8:19 AM and saw the derived duration change from 1h to 59m. The saved row retained the owner's
+  attribution with `ended_at` 06:19 UTC and `duration_seconds` 3540. The owner then reopened the record
+  and displayed 7:20 AM, 8:19 AM, and 59m.

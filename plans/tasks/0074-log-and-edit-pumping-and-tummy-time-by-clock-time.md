@@ -23,6 +23,32 @@ The form's shape is settled and drawn in
 [`plans/decision-maps/unified-timer-contract/prototypes/clock-time-entry-mock.html`](../decision-maps/unified-timer-contract/prototypes/clock-time-entry-mock.html).
 Read it before implementing.
 
+### Task 0072 is the executable reference
+
+Task 0072's merged sleep implementation is the reference for all four screens in this task. Read
+`src/components/StartEndTimeSection.tsx`, `app/sleep/manual.tsx`, `app/edit/sleep.tsx`, and their
+component tests before implementing. Reuse `StartEndTimeSection` directly; do not create pumping- or
+tummy-time-specific copies or duplicate its iOS/Android merge, dismiss, clamp, display, or live-bound
+behavior.
+
+Carry the sleep screens' caller-side pattern across, parameterized only by the activity's fields and
+duration cap:
+
+- provide stable bound callbacks so `Date.now()` is evaluated when the picker opens, while the
+  shared Android callback remains stable across unrelated renders;
+- keep the picker value inside the displayed range and ensure a fresh form and an edit whose stored
+  `endedAt` is absent never render inert End pills or inverted bounds;
+- keep a separate initialized baseline for change detection, so a display fallback for a missing
+  endpoint does not make the edit dirty or rewrite stored times by itself; and
+- write start, end, and derived duration only after an actual time edit, leaving non-time-only saves
+  on their existing path.
+
+Pumping keeps its `volumeMl` field and 500 ml validation beside the shared section; they do not
+belong in the shared time component. `TimerLifecycleAdapter` is also intentionally not the seam for
+this work: it adapts running-timer storage, lock payloads, restoration, Live Activities, and
+stop-to-record construction. Manual entry and saved-record editing continue through their existing
+add/update context APIs, and all activity timer adapters remain unchanged.
+
 ### Today
 
 Both manual screens pair a start-time picker with a `durationMinutes` input and a `QUICK_DURATIONS`
@@ -86,6 +112,10 @@ the app.
 
 ## Implementation work
 
+- [ ] Use Task 0072's sleep screens and component tests as the executable template, reusing
+      `StartEndTimeSection` directly and substituting only the activity fields and cap: one hour for
+      pumping and two hours for tummy time. Do not change `TimerLifecycleAdapter` or any activity
+      timer adapter.
 - [ ] Add end-time-aware entry points to `validateManualPumping` in `src/validators/pumping.ts` and
       `validateManualTummyTime` in `src/validators/tummyTime.ts`, reached with a duration derived from
       two times, leaving every threshold unchanged.
@@ -109,6 +139,11 @@ the app.
       the duration readout is derived and not editable, no minutes input and no quick-duration chips
       remain, and Save is disabled until the two times are a minute apart. Neither edit screen has a
       component test today, so both are new files.
+- [ ] Port the Task 0072 call-site regression proofs for each type: a fresh manual form opens both End
+      pickers, an edit with a recent start and no stored `endedAt` opens both End pickers without
+      becoming dirty, and a picker opened after the screen has remained mounted receives a freshly
+      evaluated `now` ceiling. Rely on `StartEndTimeSection` tests rather than duplicating its
+      platform-internal tests in all four screens.
 - [ ] Prefill tests, one per type, that a record whose stored `durationSeconds` is smaller than its own
       interval opens showing the real start and end rather than `start + duration`.
 - [ ] Save-rule tests, one per type: a save that changes only a note — or, for pumping, only the volume
@@ -138,6 +173,8 @@ the app.
       length and no annotation; one written before opens showing its real interval and converges only
       on a saved time edit.
 - [ ] No duplicate or overlap check is added on any of the four screens.
+- [ ] Pumping and tummy time reuse Task 0072's shared time section and caller pattern; they introduce
+      no parallel picker implementation and make no running-timer adapter change.
 - [ ] No schema change and nothing reaching the widget, the Watch, or the Live Activity.
 - [ ] With this task merged, all eight hand-entry screens across the four activity types take clock
       times under one rule set.

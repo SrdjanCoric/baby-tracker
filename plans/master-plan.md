@@ -264,7 +264,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0069 · Show what stopping would record on every running-timer surface (after 0068) → tasks/done/0069-show-counted-pause-on-running-timer-surfaces.md
 - [x] 0070 · Guard `active_timers.started_at` against out-of-horizon writes → tasks/done/0070-guard-active-timer-start-bounds.md
 - [x] 0071 · Edit a running timer's start time in place (after 0069, 0070) → tasks/done/0071-edit-running-timer-start-time.md
-- [ ] 0072 · Log and edit a sleep by clock time (after 0068) → tasks/0072-log-and-edit-sleep-by-clock-time.md
+- [>] 0072 · Log and edit a sleep by clock time (after 0068) → tasks/0072-log-and-edit-sleep-by-clock-time.md
 - [ ] 0073 · Log and edit a feeding by clock time (after 0072) → tasks/0073-log-and-edit-feeding-by-clock-time.md
 - [ ] 0074 · Log and edit pumping and tummy time by clock time (after 0072) → tasks/0074-log-and-edit-pumping-and-tummy-time-by-clock-time.md
 - [ ] 0075 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0074) → tasks/0075-warn-on-overlapping-non-sleep-records.md

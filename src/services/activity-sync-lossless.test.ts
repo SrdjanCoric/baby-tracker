@@ -348,6 +348,42 @@ describe("lossless activity sync", () => {
     );
   });
 
+  it("stores and durably queues an edited sleep interval", async () => {
+    storage.set("@sleeps:baby-1", JSON.stringify([{
+      id: "sleep-1",
+      babyId: "baby-1",
+      type: "nap",
+      startedAt: "2026-07-14T10:00:00.000Z",
+      endedAt: "2026-07-14T11:00:00.000Z",
+      durationSeconds: 3600,
+      createdAt: "2026-07-14T10:00:00.000Z",
+      updatedAt: "2026-07-14T11:00:00.000Z",
+    }]));
+
+    const updated = await updateSleepInDatabase("baby-1", "sleep-1", {
+      startedAt: new Date("2026-07-14T09:45:00.000Z"),
+      endedAt: new Date("2026-07-14T10:30:00.000Z"),
+      durationSeconds: 2700,
+    });
+
+    expect(updated).toEqual(expect.objectContaining({
+      startedAt: "2026-07-14T09:45:00.000Z",
+      endedAt: "2026-07-14T10:30:00.000Z",
+      durationSeconds: 2700,
+    }));
+    expect(vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "UPDATE",
+        data: expect.objectContaining({
+          started_at: "2026-07-14T09:45:00.000Z",
+          ended_at: "2026-07-14T10:30:00.000Z",
+          duration_seconds: 2700,
+        }),
+      }),
+      expect.any(Object)
+    );
+  });
+
   it("stores and durably queues sleep morning-classification metadata", async () => {
     const created = await createSleepInDatabase({
       babyId: "baby-1",

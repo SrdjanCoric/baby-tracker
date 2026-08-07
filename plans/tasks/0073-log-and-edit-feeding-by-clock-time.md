@@ -18,6 +18,30 @@ The form's shape is settled and drawn in
 [`plans/decision-maps/unified-timer-contract/prototypes/clock-time-entry-mock.html`](../decision-maps/unified-timer-contract/prototypes/clock-time-entry-mock.html).
 Read it before implementing.
 
+### Task 0072 is the executable reference
+
+Task 0072's merged sleep implementation is the reference for this task, not merely its prose. Read
+`src/components/StartEndTimeSection.tsx`, `app/sleep/manual.tsx`, `app/edit/sleep.tsx`, and their
+component tests before changing feeding. Reuse `StartEndTimeSection` directly; do not create a
+feeding-specific copy or duplicate its iOS/Android merge, dismiss, clamp, display, or live-bound
+behavior.
+
+Carry the sleep screens' caller-side pattern across with only feeding's policy substituted:
+
+- provide stable bound callbacks so `Date.now()` is evaluated when the picker opens, while the
+  shared Android callback remains stable across unrelated renders;
+- keep the picker value inside the displayed range and ensure a fresh form and an edit whose stored
+  `endedAt` is absent never render inert End pills or inverted bounds;
+- keep a separate initialized baseline for change detection, so a display fallback for a missing
+  endpoint does not make the edit dirty or rewrite stored times by itself; and
+- write start, end, and derived duration only after an actual time edit, leaving non-time-only saves
+  on their existing path.
+
+`TimerLifecycleAdapter` is intentionally not the seam for this work. It adapts running-timer
+storage, lock payloads, restoration, Live Activities, and stop-to-record construction. These manual
+and saved-record edit screens continue to call their existing add/update context APIs. The timer
+adapters and running-timer lifecycle remain unchanged.
+
 ### An end time appears only where a duration exists
 
 This is the one place feeding differs from the other three types. **A bottle feed and a solids entry
@@ -82,6 +106,9 @@ endpoints and re-derives from the saved row, so it needs no change.
 
 ## Implementation work
 
+- [ ] Use Task 0072's sleep screens and component tests as the executable template, reusing
+      `StartEndTimeSection` directly and substituting only feeding's fields, validator, and two-hour
+      cap. Do not change `TimerLifecycleAdapter` or any activity timer adapter.
 - [ ] Add an end-time-aware entry point to `validateManualBreastfeeding` in `src/validators/feeding.ts`
       reached with a duration derived from two times, leaving every threshold unchanged and
       `validateManualBottleFeeding` untouched.
@@ -105,6 +132,11 @@ endpoints and re-derives from the saved row, so it needs no change.
       `end - 1 minute`, the duration readout is derived and not editable, no minutes input and no
       quick-duration chips remain, and Save is disabled until the two times are a minute apart.
       `app/edit/feeding.tsx` has no component test today, so this is a new file.
+- [ ] Port the Task 0072 call-site regression proofs: a fresh manual form opens both End pickers, an
+      edit with a recent start and no stored `endedAt` opens both End pickers without becoming dirty,
+      and a picker opened after the screen has remained mounted receives a freshly evaluated `now`
+      ceiling. Rely on `StartEndTimeSection` tests rather than duplicating its platform-internal tests
+      in each feeding screen.
 - [ ] Component tests that a bottle feed and a solids entry show **no** End Time field and still save
       with a start alone.
 - [ ] A prefill test that a feeding whose stored `durationSeconds` is smaller than its own interval
@@ -132,6 +164,8 @@ endpoints and re-derives from the saved row, so it needs no change.
       annotation; one written before opens showing its real interval and converges only on a saved time
       edit.
 - [ ] No duplicate or overlap check is added on either screen.
+- [ ] Feeding reuses Task 0072's shared time section and caller pattern; it introduces no parallel
+      picker implementation and makes no running-timer adapter change.
 - [ ] No schema change and nothing reaching the widget, the Watch, or the Live Activity.
 
 ## Non-goals

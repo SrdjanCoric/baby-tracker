@@ -10,6 +10,7 @@ import {
   determineSleepType,
   validateSleepStartTimeNotInFuture,
   validateManualSleepDuration,
+  validateManualSleepTimes,
 } from "./sleep";
 
 describe("validateSleepType", () => {
@@ -374,5 +375,58 @@ describe("validateManualSleep", () => {
     expect(result.errors.type).toBeDefined();
     expect(result.errors.startedAt).toBeDefined();
     expect(result.errors.durationSeconds).toBeDefined();
+  });
+});
+
+describe("validateManualSleepTimes", () => {
+  it("validates the duration derived from the entered start and end times", () => {
+    const startedAt = new Date("2026-08-05T10:00:00.000Z");
+
+    expect(
+      validateManualSleepTimes({
+        babyId: "baby-123",
+        type: "nap",
+        startedAt,
+        endedAt: new Date("2026-08-05T10:00:59.000Z"),
+      })
+    ).toEqual({
+      isValid: false,
+      errors: { durationSeconds: "validation.durationMinimum1m" },
+    });
+
+    expect(
+      validateManualSleepTimes({
+        babyId: "baby-123",
+        type: "nap",
+        startedAt,
+        endedAt: new Date("2026-08-06T10:00:01.000Z"),
+      })
+    ).toEqual({
+      isValid: false,
+      errors: { durationSeconds: "validation.durationTooLong24h" },
+    });
+
+    expect(
+      validateManualSleepTimes({
+        babyId: "baby-123",
+        type: "nap",
+        startedAt,
+        endedAt: new Date("2026-08-06T10:00:00.000Z"),
+      })
+    ).toEqual({ isValid: true, errors: {} });
+  });
+
+  it("rejects a future end time", () => {
+    const result = validateManualSleepTimes({
+      babyId: "baby-123",
+      type: "nap",
+      startedAt: new Date(Date.now() - 30_000),
+      endedAt: new Date(Date.now() + 30_000),
+    });
+
+    expect(result).toEqual({
+      isValid: false,
+      errors: { endedAt: "validation.endTimeNotInFuture" },
+    });
   });
 });

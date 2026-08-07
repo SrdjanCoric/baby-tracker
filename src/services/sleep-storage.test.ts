@@ -238,6 +238,26 @@ describe("SleepStorageService", () => {
       expect(result?.endedAt).toBe("2024-01-17T14:30:00.000Z");
       expect(result?.durationSeconds).toBe(5400);
     });
+
+    it("updates the stored start time when a caregiver edits the interval", async () => {
+      const existingSleep: StoredSleepEntry = {
+        id: "sleep-1",
+        babyId: "baby-123",
+        type: "nap",
+        startedAt: "2024-01-17T13:00:00.000Z",
+        endedAt: "2024-01-17T14:30:00.000Z",
+        durationSeconds: 5400,
+        createdAt: "2024-01-17T13:00:00.000Z",
+        updatedAt: "2024-01-17T14:30:00.000Z",
+      };
+      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingSleep]));
+
+      const result = await SleepStorageService.updateSleep("baby-123", "sleep-1", {
+        startedAt: new Date("2024-01-17T12:45:00.000Z"),
+      });
+
+      expect(result?.startedAt).toBe("2024-01-17T12:45:00.000Z");
+    });
   });
 
   describe("deleteSleep", () => {
