@@ -286,16 +286,13 @@ describe("EditSleepScreen clock-time editing", () => {
   });
 
   it("continues through an overlap warning and preserves both records", async () => {
-    const originalRecords = [...mockSleeps];
-    mockSleeps = [
-      ...mockSleeps,
-      {
-        ...mockSleeps[0],
-        id: "sleep-2",
-        startedAt: "2026-08-06T09:00:00.000Z",
-        endedAt: "2026-08-06T11:00:00.000Z",
-      },
-    ];
+    const overlappingRecord: StoredSleepEntry = {
+      ...mockSleeps[0],
+      id: "sleep-2",
+      startedAt: "2026-08-06T09:00:00.000Z",
+      endedAt: "2026-08-06T11:00:00.000Z",
+    };
+    mockSleeps = [...mockSleeps, overlappingRecord];
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const rendered = await renderInitialized();
     chooseTime(
@@ -309,6 +306,14 @@ describe("EditSleepScreen clock-time editing", () => {
     const buttons = alertSpy.mock.calls[0][2];
     await act(async () => buttons?.[1]?.onPress?.());
     await waitFor(() => expect(mockUpdateSleep).toHaveBeenCalledTimes(1));
-    expect(mockSleeps).toHaveLength(originalRecords.length + 1);
+    expect(mockUpdateSleep).toHaveBeenCalledWith(
+      "sleep-1",
+      expect.objectContaining({
+        endedAt: new Date("2026-08-06T10:30:00.000Z"),
+        durationSeconds: 9000,
+      })
+    );
+    expect(mockUpdateSleep.mock.calls.map(([sleepId]) => sleepId)).toEqual(["sleep-1"]);
+    expect(mockSleeps.find(({ id }) => id === "sleep-2")).toEqual(overlappingRecord);
   });
 });
