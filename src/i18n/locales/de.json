@@ -226,6 +226,7 @@
     "logPastFeedingDesc": "Eine frühere Fütterung aufzeichnen",
     "manualEntry": "Manuelle Eingabe",
     "startTime": "Startzeit",
+    "endTime": "Endzeit",
     "selectDate": "Datum wählen",
     "selectTime": "Uhrzeit wählen",
     "durationMinutes": "Dauer (Minuten)",

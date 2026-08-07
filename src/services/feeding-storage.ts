@@ -53,6 +53,7 @@ export interface CreateFeedingInput {
 }
 
 export interface UpdateFeedingInput {
+  startedAt?: Date;
   endedAt?: Date;
   durationSeconds?: number;
   leftDurationSeconds?: number;
@@ -149,6 +150,7 @@ export const FeedingStorageService = {
 
     const updatedFeeding: StoredFeedingEntry = {
       ...feedings[index],
+      ...(input.startedAt !== undefined && { startedAt: input.startedAt.toISOString() }),
       ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
       ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
       ...(input.leftDurationSeconds !== undefined && { leftDurationSeconds: input.leftDurationSeconds }),

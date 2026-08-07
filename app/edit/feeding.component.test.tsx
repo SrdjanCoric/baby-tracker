@@ -1,0 +1,285 @@
+import React from "react";
+import { Platform } from "react-native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import type { StoredFeedingEntry } from "@/services/feeding-storage";
+import EditFeedingScreen from "./feeding";
+
+const mockUpdateFeeding = jest.fn();
+const mockDeleteFeeding = jest.fn();
+const mockReplace = jest.fn();
+let mockFeedings: StoredFeedingEntry[] = [];
+
+jest.mock("@react-native-community/datetimepicker", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: (props: Record<string, unknown>) => (
+      <View testID="datetime-picker" {...props} />
+    ),
+  };
+});
+
+jest.mock("@/contexts/feeding-context", () => ({
+  useFeeding: () => ({
+    feedings: mockFeedings,
+    updateFeeding: mockUpdateFeeding,
+    deleteFeeding: mockDeleteFeeding,
+  }),
+}));
+
+jest.mock("@/contexts", () => ({
+  useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
+  useTimeFormat: () => ({ timeFormat: "24h" }),
+}));
+
+jest.mock("expo-router", () => ({
+  useRouter: () => ({
+    canGoBack: () => false,
+    back: jest.fn(),
+    replace: mockReplace,
+  }),
+  useLocalSearchParams: () => ({ id: "feeding-1" }),
+}));
+
+jest.mock("@react-navigation/native", () => ({
+  useNavigation: () => ({ dispatch: jest.fn() }),
+  usePreventRemove: jest.fn(),
+}));
+
+describe("EditFeedingScreen clock-time editing", () => {
+  const now = new Date("2026-08-07T12:00:00.000Z");
+  const originalPlatformOS = Platform.OS;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers().setSystemTime(now);
+    mockFeedings = [
+      {
+        id: "feeding-1",
+        babyId: "baby-1",
+        type: "breast",
+        side: "left",
+        startedAt: "2026-08-07T08:00:00.000Z",
+        endedAt: "2026-08-07T10:00:00.000Z",
+        durationSeconds: 1800,
+        notes: "legacy paused feeding",
+        createdAt: "2026-08-07T08:00:00.000Z",
+        updatedAt: "2026-08-07T10:00:00.000Z",
+      },
+    ];
+    mockUpdateFeeding.mockResolvedValue(mockFeedings[0]);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    Object.defineProperty(Platform, "OS", {
+      value: originalPlatformOS,
+      configurable: true,
+    });
+  });
+
+  async function renderInitialized() {
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() => expect(screen.getByText("2h")).toBeTruthy());
+    return screen;
+  }
+
+  function chooseTime(
+    screen: Awaited<ReturnType<typeof renderInitialized>>,
+    label: string,
+    value: Date
+  ) {
+    fireEvent.press(screen.getByRole("button", { name: label }));
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, value);
+  }
+
+  it("prefills a breast feed's real interval and presents duration as read-only", async () => {
+    const screen = await renderInitialized();
+
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "feeding.startTime feeding.selectDate",
+      })
+    );
+    expect(screen.getByTestId("datetime-picker").props).toEqual(
+      expect.objectContaining({
+        value: new Date("2026-08-07T08:00:00.000Z"),
+        maximumDate: new Date("2026-08-07T09:59:00.000Z"),
+      })
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" })
+    );
+    expect(screen.getByTestId("datetime-picker").props).toEqual(
+      expect.objectContaining({
+        value: new Date("2026-08-07T10:00:00.000Z"),
+        minimumDate: new Date("2026-08-07T08:01:00.000Z"),
+        maximumDate: new Date("2026-08-07T10:00:00.000Z"),
+      })
+    );
+    expect(
+      screen.queryByRole("textbox", { name: "feeding.durationPlaceholder" })
+    ).toBeNull();
+    expect(screen.queryByText("30")).toBeNull();
+  });
+
+  it("shows a counted-pause feed with one matching derived length and no annotation", async () => {
+    mockFeedings = [
+      {
+        ...mockFeedings[0],
+        durationSeconds: 7200,
+        notes: undefined,
+      },
+    ];
+
+    const screen = await renderInitialized();
+
+    expect(screen.getByText("2h")).toBeTruthy();
+    expect(screen.queryByText(/elapsed|not counted/i)).toBeNull();
+  });
+
+  it("opens both End pickers for a recent feed without an endedAt without becoming dirty", async () => {
+    mockFeedings = [
+      {
+        ...mockFeedings[0],
+        startedAt: new Date(now.getTime() - 30 * 1000).toISOString(),
+        endedAt: undefined,
+        durationSeconds: 0,
+      },
+    ];
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() => expect(screen.getByText("0m")).toBeTruthy());
+
+    const preventRemove = jest.requireMock("@react-navigation/native")
+      .usePreventRemove as jest.Mock;
+    const lastPreventRemoveCall =
+      preventRemove.mock.calls[preventRemove.mock.calls.length - 1];
+    expect(lastPreventRemoveCall[0]).toBe(false);
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" })
+    );
+    expect(screen.getByTestId("datetime-picker")).toBeTruthy();
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
+    );
+    expect(screen.getByTestId("datetime-picker")).toBeTruthy();
+  });
+
+  it("leaves stored times and duration untouched on a note-only or side-only save", async () => {
+    const noteScreen = await renderInitialized();
+    fireEvent.changeText(
+      noteScreen.getByPlaceholderText("feeding.notesPlaceholder"),
+      "updated note"
+    );
+    fireEvent.press(noteScreen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("startedAt");
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("endedAt");
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("durationSeconds");
+
+    mockUpdateFeeding.mockClear();
+    const sideScreen = await renderInitialized();
+    fireEvent.press(sideScreen.getByText("feeding.right"));
+    fireEvent.press(sideScreen.getByRole("button", { name: "common.save" }));
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("startedAt");
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("endedAt");
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("durationSeconds");
+  });
+
+  it("writes both entered times and their interval after a time edit", async () => {
+    const screen = await renderInitialized();
+    const editedEnd = new Date("2026-08-07T09:30:00.000Z");
+    chooseTime(screen, "feeding.endTime feeding.selectTime", editedEnd);
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        startedAt: new Date("2026-08-07T08:00:00.000Z"),
+        endedAt: editedEnd,
+        durationSeconds: 5400,
+      })
+    );
+  });
+
+  it("refreshes the End ceiling and enforces the two-hour cap", async () => {
+    const screen = await renderInitialized();
+    jest.setSystemTime(new Date("2026-08-07T12:05:00.000Z"));
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
+    );
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date("2026-08-07T10:00:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+
+    chooseTime(
+      screen,
+      "feeding.startTime feeding.selectTime",
+      new Date("2026-08-07T07:00:00.000Z")
+    );
+    expect(
+      screen.getByRole("button", { name: "common.save" }).props.accessibilityState
+    ).toEqual({ disabled: true });
+  });
+
+  it.each(["bottle", "solid"] as const)(
+    "keeps a %s edit as a Start-only moment record",
+    async (type) => {
+      mockFeedings = [
+        {
+          ...mockFeedings[0],
+          type,
+          side: undefined,
+          endedAt: undefined,
+          durationSeconds: undefined,
+          amountMl: type === "bottle" ? 120 : undefined,
+          contentType: type === "bottle" ? "formula" : undefined,
+          foodType: type === "solid" ? "banana" : undefined,
+        },
+      ];
+      const screen = render(<EditFeedingScreen />);
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+        ).toBeTruthy()
+      );
+
+      expect(screen.queryByText("feeding.endTime")).toBeNull();
+      const editedStart = new Date("2026-08-07T07:45:00.000Z");
+      fireEvent.press(
+        screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+      );
+      fireEvent(screen.getByTestId("datetime-picker"), "change", {}, editedStart);
+      fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+
+      await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+      expect(mockUpdateFeeding.mock.calls[0][1].startedAt).toEqual(editedStart);
+      expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("endedAt");
+      expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty(
+        "durationSeconds"
+      );
+    }
+  );
+
+  it("keeps an open Android picker stable across unrelated rerenders", async () => {
+    Object.defineProperty(Platform, "OS", {
+      value: "android",
+      configurable: true,
+    });
+    const screen = await renderInitialized();
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" })
+    );
+    const initialOnChange = screen.getByTestId("datetime-picker").props.onChange;
+    fireEvent.changeText(
+      screen.getByPlaceholderText("feeding.notesPlaceholder"),
+      "unrelated rerender"
+    );
+    expect(screen.getByTestId("datetime-picker").props.onChange).toBe(initialOnChange);
+  });
+});

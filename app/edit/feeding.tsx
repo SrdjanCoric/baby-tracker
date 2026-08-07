@@ -6,12 +6,18 @@ import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useFeeding } from "@/contexts/feeding-context";
 import { useBaby, useTimeFormat } from "@/contexts";
-import { formatDate, formatTime } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 import { exitModal } from "@/navigation";
+import { StartEndTimeSection } from "@/components/StartEndTimeSection";
+import { SingleTimeSection } from "@/components/SingleTimeSection";
+import { validateManualBreastfeedingTimes } from "@/validators/feeding";
+import { te } from "@/utils/translate-errors";
+import type { UpdateFeedingInput } from "@/services/feeding-storage";
 
 const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
+const MINIMUM_BREASTFEEDING_MS = 60_000;
+const MAXIMUM_BREASTFEEDING_MS = 2 * 60 * 60 * 1000;
 
 export default function EditFeedingScreen() {
   const { t } = useTranslation();
@@ -27,7 +33,9 @@ export default function EditFeedingScreen() {
   }, [feedings, id]);
 
   const [side, setSide] = useState<BreastSide | undefined>(undefined);
-  const [durationMinutes, setDurationMinutes] = useState("");
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState<Date | null>(null);
+  const [initialEndTime, setInitialEndTime] = useState<Date | null>(null);
   const [amountMl, setAmountMl] = useState("");
   const [contentType, setContentType] = useState<BottleContentType | undefined>(undefined);
   const [foodType, setFoodType] = useState("");
@@ -36,11 +44,16 @@ export default function EditFeedingScreen() {
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (feeding && !isInitialized) {
+      const storedStart = new Date(feeding.startedAt);
+      const displayedEnd = feeding.endedAt ? new Date(feeding.endedAt) : new Date();
       setSide(feeding.side);
-      setDurationMinutes(feeding.durationSeconds ? String(Math.round(feeding.durationSeconds / 60)) : "");
+      setStartTime(storedStart);
+      setEndTime(displayedEnd);
+      setInitialEndTime(displayedEnd);
       setAmountMl(feeding.amountMl ? String(feeding.amountMl) : "");
       setContentType(feeding.contentType);
       setFoodType(feeding.foodType ?? "");
@@ -52,16 +65,23 @@ export default function EditFeedingScreen() {
   }, [feeding, isInitialized]);
 
   const hasChanges = useMemo(() => {
-    if (!feeding || !isInitialized) return false;
+    if (!feeding || !isInitialized || !startTime) return false;
 
-    const originalDuration = feeding.durationSeconds ? String(Math.round(feeding.durationSeconds / 60)) : "";
     const originalAmount = feeding.amountMl ? String(feeding.amountMl) : "";
     const originalNotes = feeding.notes ?? "";
     const originalFoodType = feeding.foodType ?? "";
+    const startChanged = startTime.getTime() !== new Date(feeding.startedAt).getTime();
+    const endChanged = Boolean(
+      feeding.type === "breast" &&
+        endTime &&
+        initialEndTime &&
+        endTime.getTime() !== initialEndTime.getTime()
+    );
 
     return (
       side !== feeding.side ||
-      durationMinutes !== originalDuration ||
+      startChanged ||
+      endChanged ||
       amountMl !== originalAmount ||
       contentType !== feeding.contentType ||
       foodType !== originalFoodType ||
@@ -69,7 +89,7 @@ export default function EditFeedingScreen() {
       reaction !== feeding.reaction ||
       notes !== originalNotes
     );
-  }, [feeding, isInitialized, side, durationMinutes, amountMl, contentType, foodType, amount, reaction, notes]);
+  }, [feeding, isInitialized, startTime, endTime, initialEndTime, side, amountMl, contentType, foodType, amount, reaction, notes]);
 
   usePreventRemove(hasChanges, ({ data }) => {
     Alert.alert(
@@ -87,20 +107,35 @@ export default function EditFeedingScreen() {
   });
 
   const handleSave = useCallback(async () => {
-    if (!selectedBaby || !feeding) return;
+    if (!selectedBaby || !feeding || !startTime) return;
+
+    setErrors({});
+    if (feeding.type === "breast") {
+      if (!endTime) return;
+      const validation = validateManualBreastfeedingTimes({
+        type: "breast",
+        side,
+        startedAt: startTime,
+        endedAt: endTime,
+      });
+      if (!validation.isValid) {
+        setErrors(validation.errors);
+        return;
+      }
+    }
 
     setIsSaving(true);
     try {
-      const durationSeconds = durationMinutes ? parseInt(durationMinutes, 10) * 60 : undefined;
       const parsedAmount = amountMl ? parseInt(amountMl, 10) : undefined;
-      const endedAt = durationSeconds
-        ? new Date(new Date(feeding.startedAt).getTime() + durationSeconds * 1000)
-        : undefined;
-
-      await updateFeeding(feeding.id, {
+      const startChanged = startTime.getTime() !== new Date(feeding.startedAt).getTime();
+      const endChanged = Boolean(
+        feeding.type === "breast" &&
+          endTime &&
+          initialEndTime &&
+          endTime.getTime() !== initialEndTime.getTime()
+      );
+      const input: UpdateFeedingInput = {
         side,
-        durationSeconds,
-        endedAt,
         ...(feeding.type === "breast" && { leftDurationSeconds: 0, rightDurationSeconds: 0 }),
         amountMl: parsedAmount,
         contentType,
@@ -108,13 +143,24 @@ export default function EditFeedingScreen() {
         amount,
         reaction,
         notes: notes || undefined,
-      });
+      };
+      if (startChanged || endChanged) {
+        input.startedAt = startTime;
+        if (feeding.type === "breast" && endTime) {
+          input.endedAt = endTime;
+          input.durationSeconds = Math.floor(
+            (endTime.getTime() - startTime.getTime()) / 1000
+          );
+        }
+      }
+
+      await updateFeeding(feeding.id, input);
       setIsInitialized(false);
       exitModal(router);
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, feeding, side, durationMinutes, amountMl, contentType, foodType, amount, reaction, notes, updateFeeding, router]);
+  }, [selectedBaby, feeding, startTime, endTime, initialEndTime, side, amountMl, contentType, foodType, amount, reaction, notes, updateFeeding, router]);
 
   const handleDelete = useCallback(() => {
     if (!feeding) return;
@@ -136,6 +182,38 @@ export default function EditFeedingScreen() {
     );
   }, [feeding, deleteFeeding, router, t]);
 
+  const startBounds = useCallback(() => {
+    const boundaryNow = Date.now();
+    return {
+      maximumDate: new Date(
+        Math.min(
+          boundaryNow,
+          (endTime?.getTime() ?? boundaryNow + MINIMUM_BREASTFEEDING_MS) -
+            MINIMUM_BREASTFEEDING_MS
+        )
+      ),
+    };
+  }, [endTime]);
+  const endBounds = useCallback(() => {
+    const boundaryNow = Date.now();
+    const startTimestamp = startTime?.getTime() ?? boundaryNow;
+    const maximumTimestamp = Math.min(
+      boundaryNow,
+      startTimestamp + MAXIMUM_BREASTFEEDING_MS
+    );
+    return {
+      minimumDate: new Date(
+        feeding?.endedAt
+          ? startTimestamp + MINIMUM_BREASTFEEDING_MS
+          : Math.min(
+              startTimestamp + MINIMUM_BREASTFEEDING_MS,
+              maximumTimestamp
+            )
+      ),
+      maximumDate: new Date(maximumTimestamp),
+    };
+  }, [feeding?.endedAt, startTime]);
+
   const foodTranslations: Record<string, string> = useMemo(() => ({
     banana: t("foods.banana"), avocado: t("foods.avocado"), apple: t("foods.apple"),
     sweetPotato: t("foods.sweetPotato"), carrot: t("foods.carrot"),
@@ -145,7 +223,7 @@ export default function EditFeedingScreen() {
 
   const commonFoods = useMemo(() => Object.entries(foodTranslations), [foodTranslations]);
 
-  if (!selectedBaby || !feeding) {
+  if (!selectedBaby || !feeding || !startTime || (feeding.type === "breast" && !endTime)) {
     return (
       <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark items-center justify-center">
         <Text className="text-content-secondary dark:text-content-dark-secondary">
@@ -185,19 +263,6 @@ export default function EditFeedingScreen() {
         </View>
       </View>
 
-      <View>
-        <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-          {t("feeding.duration")} ({t("feeding.durationMinutes")})
-        </Text>
-        <TextInput
-          value={durationMinutes}
-          onChangeText={setDurationMinutes}
-          placeholder="0"
-          keyboardType="number-pad"
-          className="h-14 px-4 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-lg text-content-primary dark:text-content-dark-primary"
-          placeholderTextColor="#999"
-        />
-      </View>
     </View>
   );
 
@@ -354,6 +419,18 @@ export default function EditFeedingScreen() {
     return t("feeding.solidFood");
   };
 
+  const now = new Date();
+  const durationMs = endTime
+    ? endTime.getTime() - startTime.getTime()
+    : 0;
+  const canSave =
+    feeding.type === "breast"
+      ? durationMs >= MINIMUM_BREASTFEEDING_MS &&
+        durationMs <= MAXIMUM_BREASTFEEDING_MS &&
+        startTime <= now &&
+        Boolean(endTime && endTime <= now)
+      : startTime <= now;
+
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
       {/* Header with drag handle */}
@@ -403,15 +480,45 @@ export default function EditFeedingScreen() {
           </View>
         </View>
 
-        {/* Date/Time display */}
-        <View className="items-center mb-6">
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-            {formatDate(new Date(feeding.startedAt))}
-          </Text>
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-            {formatTime(new Date(feeding.startedAt), timeFormat)}
-          </Text>
-        </View>
+        {feeding.type === "breast" && endTime ? (
+          <StartEndTimeSection
+            startTime={startTime}
+            endTime={endTime}
+            onStartTimeChange={setStartTime}
+            onEndTimeChange={setEndTime}
+            startBounds={startBounds}
+            endBounds={endBounds}
+            timeFormat={timeFormat}
+            startLabel={t("feeding.startTime")}
+            endLabel={t("feeding.endTime")}
+            durationLabel={t("feeding.duration")}
+            doneLabel={t("common.done")}
+            selectDateLabel={t("feeding.selectDate")}
+            selectTimeLabel={t("feeding.selectTime")}
+            accentColor={FEEDING_GREEN}
+            mutedBackgroundColor={FEEDING_GREEN_MUTED}
+            textColor="#2D2A26"
+            startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
+            endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
+            durationError={
+              errors.durationSeconds ? te(t, errors.durationSeconds) : undefined
+            }
+          />
+        ) : (
+          <SingleTimeSection
+            value={startTime}
+            onChange={setStartTime}
+            timeFormat={timeFormat}
+            label={t("feeding.startTime")}
+            doneLabel={t("common.done")}
+            selectDateLabel={t("feeding.selectDate")}
+            selectTimeLabel={t("feeding.selectTime")}
+            accentColor={FEEDING_GREEN}
+            mutedBackgroundColor={FEEDING_GREEN_MUTED}
+            textColor="#2D2A26"
+            includeFieldLabelInAccessibilityLabel
+          />
+        )}
 
         {/* Type-specific form */}
         {feeding.type === "breast" && renderBreastfeedingForm()}
@@ -438,15 +545,16 @@ export default function EditFeedingScreen() {
 
       {/* Save Button */}
       <View className="px-6 pb-6">
-        <Pressable
-          onPress={handleSave}
-          disabled={isSaving}
-          className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
-            isSaving ? "opacity-50" : ""
-          }`}
+          <Pressable
+            onPress={handleSave}
+            disabled={!canSave || isSaving}
+            className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
+              !canSave || isSaving ? "opacity-50" : ""
+            }`}
           style={{ backgroundColor: FEEDING_GREEN }}
-          accessibilityRole="button"
-          accessibilityLabel={t("common.save")}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.save")}
+            accessibilityState={{ disabled: !canSave || isSaving }}
         >
           <Text className="text-white text-lg font-semibold">
             {isSaving ? t("common.loading") : t("common.save")}

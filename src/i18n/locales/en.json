@@ -226,6 +226,7 @@
     "logPastFeedingDesc": "Record a feeding from earlier",
     "manualEntry": "Manual Entry",
     "startTime": "Start Time",
+    "endTime": "End Time",
     "selectDate": "Select Date",
     "selectTime": "Select Time",
     "durationMinutes": "Duration (minutes)",

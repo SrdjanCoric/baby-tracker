@@ -183,6 +183,31 @@ describe("FeedingStorageService", () => {
       expect(result?.notes).toBe("Baby was fussy");
       expect(result?.updatedAt).not.toBe(existingFeeding.updatedAt);
     });
+
+    it("updates the stored start time when a caregiver edits it", async () => {
+      const existingFeeding: StoredFeedingEntry = {
+        id: "feeding-1",
+        babyId: "baby-123",
+        type: "breast",
+        side: "left",
+        startedAt: "2024-01-17T10:00:00.000Z",
+        endedAt: "2024-01-17T10:15:00.000Z",
+        durationSeconds: 900,
+        createdAt: "2024-01-17T10:00:00.000Z",
+        updatedAt: "2024-01-17T10:15:00.000Z",
+      };
+      vi.mocked(AsyncStorage.getItem).mockResolvedValue(
+        JSON.stringify([existingFeeding])
+      );
+
+      const result = await FeedingStorageService.updateFeeding(
+        "baby-123",
+        "feeding-1",
+        { startedAt: new Date("2024-01-17T09:45:00.000Z") }
+      );
+
+      expect(result?.startedAt).toBe("2024-01-17T09:45:00.000Z");
+    });
   });
 
   describe("deleteFeeding", () => {

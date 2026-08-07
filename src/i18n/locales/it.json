@@ -230,6 +230,7 @@
     "logPastFeedingDesc": "Registra una poppata precedente",
     "manualEntry": "Inserimento manuale",
     "startTime": "Ora di inizio",
+    "endTime": "Ora di fine",
     "selectDate": "Seleziona la data",
     "selectTime": "Seleziona l'ora",
     "durationMinutes": "Durata (minuti)",

@@ -730,6 +730,7 @@ export async function updateFeedingInDatabase(
   const updateData: Record<string, unknown> = {
     updated_at: now,
   };
+  if (input.startedAt !== undefined) updateData.started_at = input.startedAt.toISOString();
   if (input.endedAt !== undefined) updateData.ended_at = input.endedAt.toISOString();
   if (input.durationSeconds !== undefined) updateData.duration_seconds = input.durationSeconds;
   if (input.leftDurationSeconds !== undefined) updateData.left_duration_seconds = input.leftDurationSeconds;
@@ -751,6 +752,7 @@ export async function updateFeedingInDatabase(
           updatedFeeding = {
             ...f,
             ...input,
+            startedAt: input.startedAt?.toISOString() ?? f.startedAt,
             endedAt: input.endedAt?.toISOString() ?? f.endedAt,
             updatedAt: now,
           };

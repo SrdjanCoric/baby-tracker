@@ -228,6 +228,7 @@
     "logPastFeedingDesc": "Registe uma alimentação de mais cedo",
     "manualEntry": "Entrada Manual",
     "startTime": "Hora de Início",
+    "endTime": "Hora de Fim",
     "selectDate": "Selecionar Data",
     "selectTime": "Selecionar Hora",
     "durationMinutes": "Duração (minutos)",
