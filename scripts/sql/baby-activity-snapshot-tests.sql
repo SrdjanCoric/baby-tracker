@@ -859,6 +859,47 @@ END
 $$;
 RESET ROLE;
 
+WITH clock AS (
+  SELECT pg_catalog.date_trunc(
+    'day',
+    pg_catalog.now() AT TIME ZONE pg_catalog.current_setting('test.snapshot_timezone')
+  ) AT TIME ZONE pg_catalog.current_setting('test.snapshot_timezone') AS day_start
+)
+INSERT INTO public.active_timers (
+  baby_id, activity_type, started_by, started_at, timer_data
+)
+SELECT
+  '8a000000-0000-0000-0000-000000000001',
+  'feeding',
+  '81111111-1111-1111-1111-111111111111',
+  day_start + INTERVAL '11 hours 50 minutes',
+  '{"timerInstanceId":"own-feeding-without-side","type":"breast"}'::jsonb
+FROM clock;
+
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_snapshot jsonb;
+BEGIN
+  v_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000001',
+    pg_catalog.current_setting('test.snapshot_timezone')
+  );
+  IF pg_catalog.jsonb_array_length(v_snapshot->'activeTimers') <> 1
+    OR v_snapshot->'activeTimer'->>'type' IS DISTINCT FROM 'feeding'
+    OR v_snapshot->'activeTimer'->>'isRemote' IS DISTINCT FROM 'false'
+    OR v_snapshot->'activeTimer' ? 'context'
+  THEN
+    RAISE EXCEPTION 'own feeding timer without a side invented a context label: %', v_snapshot;
+  END IF;
+END
+$$;
+RESET ROLE;
+
+DELETE FROM public.active_timers
+WHERE baby_id = '8a000000-0000-0000-0000-000000000001'
+  AND activity_type = 'feeding';
+
 \echo 'PASS: baby activity snapshot keeps lock-only, persisted-plus-lock, and released states coherent'
 SET LOCAL ROLE authenticated;
 SELECT pg_catalog.format(

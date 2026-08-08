@@ -175,7 +175,9 @@ AS $$
           ELSE COALESCE(
             timer.timer_data->>'side',
             timer.timer_data->>'sleepType',
-            timer.timer_data->>'type'
+            CASE WHEN timer.activity_type = 'sleep'
+              THEN timer.timer_data->>'type'
+            END
           )
         END,
         'isRemote', timer.started_by <> auth.uid(),
