@@ -384,6 +384,16 @@ enum WatchLegacyCacheOwnership {
     }
 }
 
+enum WatchMainThreadDispatcher {
+    static func dispatch(_ work: @escaping () -> Void) {
+        if Thread.isMainThread {
+            work()
+        } else {
+            DispatchQueue.main.async(execute: work)
+        }
+    }
+}
+
 struct WatchSummaryIdentity: Equatable, Sendable {
     let accountId: String
     let babyId: String

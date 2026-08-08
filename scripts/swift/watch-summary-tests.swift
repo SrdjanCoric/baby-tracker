@@ -227,6 +227,18 @@ enum WatchSummaryTests {
         )
         legacyDefaults.removePersistentDomain(forName: legacySuiteName)
 
+        let applicationContextRanOnMain = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                WatchMainThreadDispatcher.dispatch {
+                    continuation.resume(returning: Thread.isMainThread)
+                }
+            }
+        }
+        requireWatch(
+            applicationContextRanOnMain,
+            "application-context state mutation did not run on the main thread"
+        )
+
         let result = await coordinator.acceptTimerProbe(
             WatchTimerFingerprint(timers: cached.activeTimers ?? [])
         )

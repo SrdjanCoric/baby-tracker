@@ -501,6 +501,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func parseApplicationContext(_ context: [String: Any]) {
+        WatchMainThreadDispatcher.dispatch { [weak self] in
+            self?.parseApplicationContextOnMain(context)
+        }
+    }
+
+    private func parseApplicationContextOnMain(_ context: [String: Any]) {
         if context["signedOut"] as? Bool == true {
             let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
             for key in [
