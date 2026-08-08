@@ -115,6 +115,9 @@ and Watch RPC shapes and the latest clean two-caregiver simulator gate.
 
 ## Review decisions
 
+- unresolved (major): TR-8 — legacy payload timestamps with fractional seconds are rejected — owner declined remediation for this pass.
+- unresolved (major): TR-9 — pending diaper logs clear without correlated confirmation — owner declined remediation for this pass.
+- unresolved (major): TR-10 — the release gate tests a JavaScript twin instead of the Swift coordinator — owner declined remediation for this pass.
 - accepted (security risk): TR-11 — sign-out invalidation can be dropped before WatchConnectivity loads — user requested this remediation pass focus only on TR-1–TR-7.
 - skipped (minor): TR-12 — optimistic overlay storage is not connected to rendered Watch state — user requested this remediation pass focus only on TR-1–TR-7.
 - skipped (minor): TR-13 — a completed coalesced fetch can briefly serve stale bytes — user requested this remediation pass focus only on TR-1–TR-7.
