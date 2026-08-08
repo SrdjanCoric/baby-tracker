@@ -224,6 +224,28 @@ enum WatchSummaryTests {
             "REST timer timestamp did not match the RPC timer fingerprint"
         )
 
+        let restTimerWithoutPause = Data(#"""
+        [{
+          "id": "lock-2",
+          "activity_type": "sleep",
+          "started_by": "account-a",
+          "started_at": "2026-08-08T09:30:00.123Z",
+          "timer_data": {
+            "sleepType": "nap",
+            "timerInstanceId": "timer-rest"
+          }
+        }]
+        """#.utf8)
+        let timersWithoutPause = try WatchTimerProbeDecoder.decode(
+            restTimerWithoutPause,
+            currentUserId: identity.accountId
+        )
+        requireWatch(
+            WatchTimerFingerprint(timers: timersWithoutPause) ==
+                WatchTimerFingerprint(timers: [rpcTimer]),
+            "REST timer without isPaused did not match the RPC false default"
+        )
+
         let baseTimer: [String: Any] = [
             "type": "sleep",
             "startTime": "2026-08-08T09:30:00.000Z",

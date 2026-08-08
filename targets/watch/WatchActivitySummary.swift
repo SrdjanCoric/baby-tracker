@@ -342,7 +342,7 @@ enum WatchTimerProbeDecoder {
                 timerInstanceId: row.timerData?.timerInstanceId,
                 context: row.timerData?.side ?? row.timerData?.sleepType,
                 isRemote: row.startedBy != currentUserId,
-                isPaused: row.timerData?.isPaused,
+                isPaused: row.timerData?.isPaused ?? false,
                 accumulatedSeconds: row.timerData?.accumulatedSeconds
             )
         }
