@@ -19,6 +19,7 @@
       "sleepType": "nap",
       "wakeWindowMinutes": 150,
       "wakeWindowSlotLabel": "Third",
+      "wakeWindowRequiresNewbornOptIn": true,
       "lastSleepEndedAt": "2026-08-08T09:45:00.000Z",
       "napCountToday": 2,
       "morningConfirmationPending": false

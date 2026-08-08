@@ -90,11 +90,17 @@ describe("sleep extension data", () => {
       userId: "user-1",
       selectedBabyId: "baby-1",
       timezone: "Europe/Belgrade",
+      newbornNapOptIn: true,
     });
 
     expect(mocks.extensionStorage.set).toHaveBeenCalledWith(
       "widgetTimezone",
       "Europe/Belgrade",
+      "group.com.sofibaby.app"
+    );
+    expect(mocks.extensionStorage.set).toHaveBeenCalledWith(
+      "widgetNewbornNapOptIn.baby-1",
+      "true",
       "group.com.sofibaby.app"
     );
   });
@@ -136,7 +142,9 @@ describe("sleep extension data", () => {
     for (const key of [
       "widgetData",
       "widgetSnapshot.baby-1",
+      "widgetNewbornNapOptIn.baby-1",
       "widgetSnapshot.baby-2",
+      "widgetNewbornNapOptIn.baby-2",
       "widgetSnapshotBabyIds",
       "supabaseAccessToken",
       "userId",

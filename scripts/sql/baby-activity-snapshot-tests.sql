@@ -317,8 +317,14 @@ ORDER BY zone.name
 LIMIT 1;
 
 UPDATE public.babies
-SET birth_date = CURRENT_DATE - 300
-WHERE id = '8a000000-0000-0000-0000-000000000001';
+SET birth_date = CASE id
+  WHEN '8a000000-0000-0000-0000-000000000001' THEN CURRENT_DATE - 300
+  ELSE CURRENT_DATE - 21
+END
+WHERE id IN (
+  '8a000000-0000-0000-0000-000000000001',
+  '8a000000-0000-0000-0000-000000000004'
+);
 
 INSERT INTO public.activity_goals (baby_id, goal_type, target_value, source)
 VALUES
@@ -513,6 +519,7 @@ BEGIN
     OR v_snapshot->'activities'->'sleep'->>'napCountToday' <> '2'
     OR v_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' <> '150'
     OR v_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' <> 'Third'
+    OR v_snapshot->'activities'->'sleep'->>'wakeWindowRequiresNewbornOptIn' <> 'false'
     OR v_snapshot->'activities'->'sleep'->>'morningConfirmationPending' <> 'false'
     OR v_snapshot->'activities'->'sleep'->>'lastSleepEndedAt' IS NULL
     OR v_snapshot->'activities'->'diaper'->'todayCounts' <> '{"wet":1,"dirty":1,"mixed":1,"dry":1}'::jsonb
@@ -537,6 +544,7 @@ BEGIN
   IF v_sibling_snapshot->'activities'->'sleep'->>'napCountToday' IS DISTINCT FROM '0'
     OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' IS DISTINCT FROM '77'
     OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Sibling First'
+    OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowRequiresNewbornOptIn' IS DISTINCT FROM 'true'
     OR v_sibling_snapshot->'activities'->'sleep'->>'morningConfirmationPending' IS DISTINCT FROM 'true'
   THEN
     RAISE EXCEPTION 'historical night anchor changed the current nap count or wake slot: %', v_sibling_snapshot;

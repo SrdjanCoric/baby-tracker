@@ -1974,7 +1974,9 @@ func formatDuration(minutes: Int) -> String {
 }
 
 func getWakeWindowCountdown(data: WidgetDataModel) -> String? {
-    guard let windowMinutes = data.activities.sleep.wakeWindowMinutes,
+    let newbornNapOptIn = UserDefaults(suiteName: appGroupId)?.string(forKey: "widgetNewbornNapOptIn.\(data.babyId)") == "true"
+    guard data.canPresentWakeWindow(newbornNapOptIn: newbornNapOptIn),
+          let windowMinutes = data.activities.sleep.wakeWindowMinutes,
           let lastEndedStr = data.activities.sleep.lastSleepEndedAt,
           !data.activities.sleep.isActive else {
         return nil

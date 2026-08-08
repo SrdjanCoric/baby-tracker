@@ -35,6 +35,7 @@ describe("widget activity snapshot decoder", () => {
     expect(decoded?.data.schemaVersion).toBe(1);
     expect(decoded?.data.babyId).toBe("baby-versioned");
     expect(decoded?.data.activities.sleep.lastSleepEndedAt).toBe("2026-08-08T09:45:00.000Z");
+    expect(decoded?.data.activities.sleep.wakeWindowRequiresNewbornOptIn).toBe(true);
   });
 
   it("accepts a versioned weight-only growth measurement", () => {
@@ -62,5 +63,14 @@ describe("widget activity snapshot decoder", () => {
       },
       activeTimers: []
     }))).toBeNull();
+  });
+
+  it("rejects a non-boolean newborn wake-window requirement", () => {
+    const base = JSON.parse(fixture("versioned")) as {
+      activities: { sleep: Record<string, unknown> };
+    };
+    base.activities.sleep.wakeWindowRequiresNewbornOptIn = "true";
+
+    expect(decodeWidgetActivitySnapshotJson(JSON.stringify(base))).toBeNull();
   });
 });

@@ -686,6 +686,10 @@ AS $$
         'sleepType', latest_sleep.type,
         'wakeWindowMinutes', (wake_slot.value->>'durationMinutes')::integer,
         'wakeWindowSlotLabel', wake_slot.value->>'label',
+        'wakeWindowRequiresNewbornOptIn', config.birth_date IS NOT NULL
+          AND (
+            config.server_as_of AT TIME ZONE config.timezone_name
+          )::date - config.birth_date < 61,
         'lastSleepEndedAt', CASE WHEN last_ended_sleep.ended_at IS NULL THEN NULL ELSE
           pg_catalog.to_char(
             last_ended_sleep.ended_at AT TIME ZONE 'UTC',

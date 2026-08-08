@@ -53,4 +53,15 @@ describe("Widget coherent snapshot wiring", () => {
     expect(widgetSource).not.toContain("func fetchActiveTimersFromNetwork");
     expect(widgetSource).not.toContain("func mergeNetworkTimers");
   });
+
+  it("gates newborn wake windows with the device-local Widget preference", () => {
+    const countdown = between(
+      widgetSource,
+      "func getWakeWindowCountdown",
+      "func computeWakeWindowText"
+    );
+
+    expect(countdown).toContain('string(forKey: "widgetNewbornNapOptIn.\\(data.babyId)") == "true"');
+    expect(countdown).toContain("canPresentWakeWindow");
+  });
 });

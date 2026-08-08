@@ -16,6 +16,7 @@ export interface WidgetActivityData {
     sleepType: SleepType | null;
     wakeWindowMinutes: number | null;
     wakeWindowSlotLabel: string | null;
+    wakeWindowRequiresNewbornOptIn?: boolean;
     lastSleepEndedAt: string | null;
     napCountToday: number;
     morningConfirmationPending: boolean;
@@ -135,6 +136,8 @@ function hasValidActivities(
     || !isNullableString(sleep.sleepType)
     || !isNullableNumber(sleep.wakeWindowMinutes)
     || !isNullableString(sleep.wakeWindowSlotLabel)
+    || !(sleep.wakeWindowRequiresNewbornOptIn === undefined
+      || typeof sleep.wakeWindowRequiresNewbornOptIn === "boolean")
     || !isNullableString(sleep.lastSleepEndedAt)
     || !(isFiniteNumber(sleep.napCountToday)
       || (allowLegacySleepDefaults && sleep.napCountToday === undefined))

@@ -24,6 +24,7 @@ struct WidgetActivityData: Codable, Equatable {
         var sleepType: String?
         var wakeWindowMinutes: Int?
         var wakeWindowSlotLabel: String?
+        var wakeWindowRequiresNewbornOptIn: Bool?
         var lastSleepEndedAt: String?
         var napCountToday: Int?
         var morningConfirmationPending: Bool?
@@ -196,6 +197,10 @@ struct WidgetDataModel: Codable, Equatable {
 
     func isTimerPaused(for type: ActivityType) -> Bool {
         getActiveTimer(for: type)?.isPaused == true
+    }
+
+    func canPresentWakeWindow(newbornNapOptIn: Bool) -> Bool {
+        activities.sleep.wakeWindowRequiresNewbornOptIn != true || newbornNapOptIn
     }
 }
 

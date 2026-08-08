@@ -110,6 +110,18 @@ enum WidgetSnapshotTests {
         let versionedDecoded = try WidgetSnapshotDecoder.decodeNetwork(versioned, expectedBabyId: "baby-versioned")
         require(versionedDecoded.schemaVersion == 1, "versioned fixture lost its schema version")
         require(versionedDecoded.activities.sleep.lastSleepEndedAt == "2026-08-08T09:45:00.000Z", "sleep anchor changed")
+        require(
+            versionedDecoded.activities.sleep.wakeWindowRequiresNewbornOptIn == true,
+            "newborn wake-window requirement was not decoded"
+        )
+        require(
+            !versionedDecoded.canPresentWakeWindow(newbornNapOptIn: false),
+            "newborn wake window ignored the local opt-in gate"
+        )
+        require(
+            versionedDecoded.canPresentWakeWindow(newbornNapOptIn: true),
+            "newborn wake window stayed hidden after local opt-in"
+        )
 
         let weightOnlyDecoded = try WidgetSnapshotDecoder.decodeNetwork(
             weightOnly,

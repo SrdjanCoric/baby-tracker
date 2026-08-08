@@ -360,6 +360,7 @@ export async function writeAuthToAppGroup(params: {
   userId: string;
   selectedBabyId: string;
   timezone: string;
+  newbornNapOptIn: boolean;
 }): Promise<void> {
   if (Platform.OS !== "ios") return;
 
@@ -372,6 +373,11 @@ export async function writeAuthToAppGroup(params: {
       await extensionStorage.set("userId", params.userId, APP_GROUP);
       await extensionStorage.set("selectedBabyId", params.selectedBabyId, APP_GROUP);
       await extensionStorage.set("widgetTimezone", params.timezone, APP_GROUP);
+      await extensionStorage.set(
+        `widgetNewbornNapOptIn.${params.selectedBabyId}`,
+        String(params.newbornNapOptIn),
+        APP_GROUP
+      );
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to write auth to App Group:", error);
@@ -477,6 +483,7 @@ export async function clearWidgetData(): Promise<void> {
         await extensionStorage.remove("widgetData", APP_GROUP);
         for (const babyId of new Set(snapshotBabyIds)) {
           await extensionStorage.remove(`widgetSnapshot.${babyId}`, APP_GROUP);
+          await extensionStorage.remove(`widgetNewbornNapOptIn.${babyId}`, APP_GROUP);
         }
         await extensionStorage.remove("widgetSnapshotBabyIds", APP_GROUP);
         await extensionStorage.remove("supabaseAccessToken", APP_GROUP);
