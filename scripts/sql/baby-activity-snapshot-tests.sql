@@ -314,7 +314,7 @@ VALUES (
   '8a000000-0000-0000-0000-000000000004',
   true,
   1,
-  '[{"slotIndex":0,"label":"Sibling","durationMinutes":77}]'::jsonb,
+  '[{"slotIndex":0,"label":"Sibling First","durationMinutes":77},{"slotIndex":1,"label":"Sibling Second","durationMinutes":88},{"slotIndex":2,"label":"Sibling Third","durationMinutes":99}]'::jsonb,
   'custom',
   5,
   20,
@@ -365,6 +365,10 @@ SELECT * FROM (
   SELECT '81000000-0000-0000-0000-000000000004', '8a000000-0000-0000-0000-000000000001', '82222222-2222-2222-2222-222222222222', 'nap', day_start + INTERVAL '10 hours', day_start + INTERVAL '10 hours 30 minutes', 1800, 'unresolved', 1, false FROM clock
   UNION ALL
   SELECT '81000000-0000-0000-0000-000000000005', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', 'night', day_start + INTERVAL '10 hours 45 minutes', day_start + INTERVAL '11 hours', 900, 'automatic', 1, true FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000008', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', 'night', day_start - INTERVAL '2 days' + INTERVAL '30 minutes', day_start - INTERVAL '2 days' + INTERVAL '6 hours', 19800, 'automatic', 1, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000010', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', 'nap', day_start - INTERVAL '1 day' + INTERVAL '8 hours', day_start - INTERVAL '1 day' + INTERVAL '8 hours 30 minutes', 1800, 'automatic', 1, false FROM clock
   UNION ALL
   SELECT '81000000-0000-0000-0000-000000000009', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '11 hours 30 minutes', day_start + INTERVAL '11 hours 40 minutes', 600, 'automatic', 1, false FROM clock
 ) AS rows;
@@ -442,6 +446,7 @@ SET LOCAL ROLE authenticated;
 DO $$
 DECLARE
   v_snapshot jsonb;
+  v_sibling_snapshot jsonb;
 BEGIN
   v_snapshot := public.get_baby_activity_snapshot(
     '8a000000-0000-0000-0000-000000000001',
@@ -475,6 +480,17 @@ BEGIN
     OR v_snapshot->'activities'->'tummyTime'->>'lastDurationMinutes' <> '15'
   THEN
     RAISE EXCEPTION 'snapshot fields diverged from shipped meanings or included tombstones: %', v_snapshot;
+  END IF;
+
+  v_sibling_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000004',
+    pg_catalog.current_setting('test.snapshot_timezone')
+  );
+  IF v_sibling_snapshot->'activities'->'sleep'->>'napCountToday' IS DISTINCT FROM '0'
+    OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' IS DISTINCT FROM '77'
+    OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Sibling First'
+  THEN
+    RAISE EXCEPTION 'historical night anchor changed the current nap count or wake slot: %', v_sibling_snapshot;
   END IF;
 END
 $$;

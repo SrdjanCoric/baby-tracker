@@ -11,7 +11,7 @@ STABLE
 SECURITY INVOKER
 SET search_path = ''
 AS $$
-  WITH request_clock AS (
+  WITH RECURSIVE request_clock AS (
     SELECT pg_catalog.statement_timestamp() AS server_as_of
   ),
   valid_timezone AS (
@@ -353,43 +353,179 @@ AS $$
       ON completed_sleep.started_at >= config.local_day_start
       AND completed_sleep.started_at < config.local_day_end
   ),
-  last_night_sleep AS (
-    SELECT pg_catalog.max(completed_sleep.ended_at) AS ended_at
+  morning_window AS (
+    SELECT
+      config.*,
+      (
+        pg_catalog.date_trunc(
+          'day',
+          config.server_as_of AT TIME ZONE config.timezone_name
+        ) + pg_catalog.make_interval(hours => config.day_start_hour)
+      ) AT TIME ZONE config.timezone_name AS morning_day_start
+    FROM config
+  ),
+  overnight_sleep AS (
+    SELECT
+      completed_sleep.id,
+      completed_sleep.ended_at
     FROM completed_sleep
-    JOIN config ON true
-    WHERE completed_sleep.type = 'night'
-      AND completed_sleep.ended_at <= config.server_as_of
+    CROSS JOIN morning_window
+    WHERE completed_sleep.started_at
+        < morning_window.morning_day_start - INTERVAL '183 minutes'
+      AND completed_sleep.ended_at
+        >= morning_window.morning_day_start - INTERVAL '183 minutes'
+      AND completed_sleep.ended_at <= morning_window.server_as_of
+    ORDER BY completed_sleep.ended_at DESC, completed_sleep.id DESC
+    LIMIT 1
+  ),
+  early_morning_candidates AS (
+    SELECT
+      sleep.id,
+      sleep.started_at,
+      sleep.ended_at,
+      sleep.morning_classification,
+      pg_catalog.row_number() OVER (
+        ORDER BY sleep.started_at, sleep.id
+      )::integer AS sequence
+    FROM visible_sleep AS sleep
+    CROSS JOIN morning_window
+    LEFT JOIN overnight_sleep ON true
+    WHERE sleep.id IS DISTINCT FROM overnight_sleep.id
+      AND sleep.started_at >= COALESCE(
+        overnight_sleep.ended_at,
+        morning_window.morning_day_start - INTERVAL '183 minutes'
+      )
+      AND sleep.started_at < morning_window.morning_day_start
+      AND sleep.started_at <= morning_window.server_as_of
+      AND (sleep.ended_at IS NULL OR sleep.ended_at <= morning_window.server_as_of)
+  ),
+  morning_resolution AS (
+    SELECT
+      0::integer AS sequence,
+      ARRAY[]::uuid[] AS continuation_ids,
+      overnight_sleep.ended_at AS morning_wake_time,
+      overnight_sleep.ended_at AS last_relevant_end,
+      false AS first_nap_settled
+    FROM (SELECT true) AS seed
+    LEFT JOIN overnight_sleep ON true
+
+    UNION ALL
+
+    SELECT
+      candidate.sequence,
+      CASE WHEN decision.is_continuation
+        THEN pg_catalog.array_append(resolution.continuation_ids, candidate.id)
+        ELSE resolution.continuation_ids
+      END,
+      CASE WHEN decision.is_continuation AND candidate.ended_at IS NOT NULL
+        THEN candidate.ended_at
+        ELSE resolution.morning_wake_time
+      END,
+      CASE
+        WHEN resolution.first_nap_settled
+          OR candidate.morning_classification = 'confirmed_first_nap'
+        THEN resolution.last_relevant_end
+        ELSE COALESCE(candidate.ended_at, resolution.last_relevant_end)
+      END,
+      resolution.first_nap_settled
+        OR candidate.morning_classification = 'confirmed_first_nap'
+    FROM morning_resolution AS resolution
+    JOIN early_morning_candidates AS candidate
+      ON candidate.sequence = resolution.sequence + 1
+    CROSS JOIN morning_window
+    LEFT JOIN overnight_sleep ON true
+    CROSS JOIN LATERAL (
+      SELECT
+        NOT resolution.first_nap_settled
+        AND candidate.morning_classification IS DISTINCT FROM 'confirmed_first_nap'
+        AND (
+          candidate.morning_classification = 'confirmed_night_continuation'
+          OR (
+            overnight_sleep.id IS NULL
+            AND pg_catalog.cardinality(resolution.continuation_ids) = 0
+          )
+          OR (
+            candidate.morning_classification = 'automatic'
+            AND (
+              resolution.last_relevant_end IS NULL
+              OR candidate.started_at - resolution.last_relevant_end
+                <= pg_catalog.make_interval(
+                  mins => morning_window.nap_continuation_minutes
+                )
+            )
+          )
+          OR (
+            candidate.morning_classification IS NULL
+            AND (
+              resolution.last_relevant_end IS NULL
+              OR candidate.started_at - resolution.last_relevant_end
+                <= pg_catalog.make_interval(
+                  mins => morning_window.nap_continuation_minutes
+                )
+            )
+          )
+        ) AS is_continuation
+    ) AS decision
+  ),
+  morning_result AS (
+    SELECT
+      morning_resolution.morning_wake_time,
+      morning_resolution.continuation_ids
+    FROM morning_resolution
+    ORDER BY morning_resolution.sequence DESC
+    LIMIT 1
   ),
   nap_candidates AS (
     SELECT
+      completed_sleep.id,
       completed_sleep.started_at,
-      completed_sleep.ended_at,
-      pg_catalog.lag(completed_sleep.ended_at) OVER (
-        ORDER BY completed_sleep.started_at, completed_sleep.id
-      ) AS previous_end
+      completed_sleep.ended_at
     FROM completed_sleep
-    JOIN config ON true
-    CROSS JOIN last_night_sleep
-    WHERE completed_sleep.type = 'nap'
-      AND completed_sleep.started_at > COALESCE(last_night_sleep.ended_at, config.sleep_day_start)
+    CROSS JOIN config
+    CROSS JOIN morning_result
+    WHERE morning_result.morning_wake_time IS NOT NULL
+      AND completed_sleep.started_at > morning_result.morning_wake_time
       AND completed_sleep.started_at < config.current_day_end
       AND completed_sleep.ended_at <= config.server_as_of
+      AND NOT (completed_sleep.id = ANY(morning_result.continuation_ids))
   ),
-  nap_summary AS (
-    SELECT COALESCE(
+  nap_candidates_ordered AS (
+    SELECT
+      nap_candidates.*,
+      pg_catalog.max(nap_candidates.ended_at) OVER (
+        ORDER BY nap_candidates.started_at, nap_candidates.id
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+      ) AS previous_max_end
+    FROM nap_candidates
+  ),
+  nap_groups AS (
+    SELECT
+      nap_candidates_ordered.*,
       pg_catalog.sum(
         CASE
-          WHEN nap_candidates.previous_end IS NULL
-            OR nap_candidates.started_at - nap_candidates.previous_end
+          WHEN nap_candidates_ordered.previous_max_end IS NULL
+            OR nap_candidates_ordered.started_at - nap_candidates_ordered.previous_max_end
               > pg_catalog.make_interval(mins => config.nap_continuation_minutes)
           THEN 1
           ELSE 0
         END
-      ),
-      0
-    )::integer AS nap_count
-    FROM config
-    LEFT JOIN nap_candidates ON true
+      ) OVER (
+        ORDER BY nap_candidates_ordered.started_at, nap_candidates_ordered.id
+      ) AS group_number
+    FROM nap_candidates_ordered
+    CROSS JOIN config
+  ),
+  nap_islands AS (
+    SELECT
+      pg_catalog.min(nap_groups.started_at) AS started_at,
+      pg_catalog.max(nap_groups.ended_at) AS ended_at
+    FROM nap_groups
+    GROUP BY nap_groups.group_number
+  ),
+  nap_summary AS (
+    SELECT pg_catalog.count(*)::integer AS nap_count
+    FROM nap_islands
+    WHERE nap_islands.ended_at - nap_islands.started_at >= INTERVAL '15 minutes'
   ),
   morning_summary AS (
     SELECT pg_catalog.bool_or(
