@@ -124,7 +124,9 @@ When the latest completed sleep is the current evening's stored `night` session,
   timeline updates and after timer-change pushes or Widget actions. A failed refresh keeps the previous
   summary intact.
 - **Live Activities + Dynamic Island** for active feeding and sleep timers
-- **Apple Watch** companion app using WCSession with REST API fallback
+- **Apple Watch** companion app using WCSession as an optional fast path and direct Supabase fallback.
+  While a timer is active, it probes that baby's timer state every 30 seconds and requests a complete
+  activity summary only after a change. Failed refreshes keep the previous summary intact.
 - **Deep linking** (`sofibaby://`) for widget and notification actions, with dismissible activity screens on cold launch
 
 ### Edge Functions
@@ -147,7 +149,7 @@ src/
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
-└── migrations/             # PostgreSQL migrations through 060
+└── migrations/             # PostgreSQL migrations through 062
 localization/native/        # Nine locale files the Watch app and widget render from;
                             # npm run native:strings rebuilds targets/*/GeneratedStrings.swift
 targets/
